@@ -38,7 +38,7 @@ it('sums the ledger of a period by tranche', function (): void {
     LeaveEntry::factory()->of($period)->taken(5)->create();
 
     expect(Balances::of([$this->ana->id]))->toEqual([$this->ana->id => [
-        new PeriodBalance($period->id, CarbonImmutable::parse('2026-03-15'), CarbonImmutable::parse('2026-09-15'), CarbonImmutable::parse('2027-09-15'), 7, 3),
+        new PeriodBalance($period->id, CarbonImmutable::parse('2026-03-15'), CarbonImmutable::parse('2026-09-15'), CarbonImmutable::parse('2027-09-15'), 7, 3, 15),
     ]])->and(Balances::available($this->ana->id))->toBe(10);
 });
 

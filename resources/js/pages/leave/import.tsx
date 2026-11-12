@@ -1,4 +1,5 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
+import { leaveTrail } from '@/lib/leave/trail';
 import { Download } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import ImportForm from '@/components/leave/import-form';
@@ -17,7 +18,7 @@ export default function LeaveImport({ maxRows }: { maxRows: number }) {
     const summary = usePage().flash.leave_import;
 
     setLayoutProps({
-        breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Saldos iniciales' }],
+        breadcrumbs: leaveTrail('Saldos iniciales'),
     });
 
     return (

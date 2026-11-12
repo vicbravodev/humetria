@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { dateSpan } from '@/lib/leave/format';
+import { shortDate } from '@/lib/leave/format';
 import { entryDays } from '@/lib/leave/record';
 import type { LeaveLedgerEntry, Paginated } from '@/types';
 
@@ -26,10 +26,11 @@ export default function LedgerTable({
                     Movimientos de los días de vacaciones
                 </TableCaption>
                 <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-muted hover:bg-muted">
                         <TableHead>Fecha</TableHead>
                         <TableHead>Movimiento</TableHead>
                         <TableHead>Días</TableHead>
+                        <TableHead className="text-right">Saldo</TableHead>
                         <TableHead>Nota</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -37,7 +38,7 @@ export default function LedgerTable({
                     {entries.data.map((entry) => (
                         <TableRow key={entry.id}>
                             <TableCell className="whitespace-normal">
-                                {dateSpan(entry.on, entry.on)}
+                                {shortDate(entry.on)}
                             </TableCell>
                             <TableCell className="whitespace-normal">
                                 <p className="font-medium">{entry.kindLabel}</p>
@@ -59,6 +60,12 @@ export default function LedgerTable({
                                 >
                                     {entryDays(entry.days)}
                                 </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-medium tabular-nums">
+                                <span className="text-meta font-normal text-muted-foreground md:sr-only">
+                                    Saldo:{' '}
+                                </span>
+                                {entry.balance}
                             </TableCell>
                             <TableCell className="whitespace-normal text-muted-foreground">
                                 {entry.note ?? '—'}

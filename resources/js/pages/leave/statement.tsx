@@ -4,6 +4,7 @@ import PrintButton from '@/components/humetria/print-button';
 import StatementSheet from '@/components/leave/statement-sheet';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { leaveTrail } from '@/lib/leave/trail';
 import { show } from '@/routes/tenant/vacations/employees';
 import type { StatementSheetData } from '@/types';
 
@@ -17,11 +18,7 @@ export default function LeaveStatement({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Vacaciones' },
-            { title: sheet.name },
-            { title: 'Constancia' },
-        ],
+        breadcrumbs: leaveTrail(sheet.name, 'Constancia'),
     });
 
     return (
@@ -42,20 +39,22 @@ export default function LeaveStatement({
                     </Button>
                     <PrintButton />
                 </div>
-                <p className="flex items-center gap-2 font-medium text-primary print:hidden">
-                    {sheet.acknowledgedOn === null ? (
-                        <>
-                            <CircleDashed aria-hidden className="size-5" />
-                            Sin acuse
-                        </>
-                    ) : (
-                        <>
-                            <CircleCheck aria-hidden className="size-5" />
-                            Recibida por la persona el {sheet.acknowledgedOn}
-                        </>
-                    )}
-                </p>
-                <StatementSheet sheet={sheet} />
+                <StatementSheet sheet={sheet}>
+                    <p className="flex items-center gap-2 font-medium text-primary">
+                        {sheet.acknowledgedOn === null ? (
+                            <>
+                                <CircleDashed aria-hidden className="size-5" />
+                                Sin acuse
+                            </>
+                        ) : (
+                            <>
+                                <CircleCheck aria-hidden className="size-5" />
+                                Recibida por la persona el{' '}
+                                {sheet.acknowledgedOn}
+                            </>
+                        )}
+                    </p>
+                </StatementSheet>
             </div>
         </>
     );

@@ -85,6 +85,11 @@ function watchedLines(?string $failingTenantId = null): ReportingLines
             return $this->real->directReportIds($employeeId);
         }
 
+        public function peersOf(array $employeeIds): array
+        {
+            return $this->real->peersOf($employeeIds);
+        }
+
         public function subtreeIds(string $employeeId): array
         {
             return $this->real->subtreeIds($employeeId);

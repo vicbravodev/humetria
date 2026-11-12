@@ -18,6 +18,8 @@ final readonly class PeriodBalance
         public CarbonImmutable $prescribesOn,
         public int $statutoryLeft,
         public int $extraLeft,
+        /** The days the period gave in all, whatever is left. */
+        public int $granted = 0,
     ) {}
 
     public function left(): int

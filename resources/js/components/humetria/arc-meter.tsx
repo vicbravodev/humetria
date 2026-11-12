@@ -1,8 +1,23 @@
 import type { ReactNode } from 'react';
+import { percentLabel } from '@/lib/chart';
 import { cn } from '@/lib/utils';
 
 // The shape of the "h" in the logo: up one leg, over the arch, down the other.
 const ARC = 'M10 49V33A22 22 0 0 1 54 33V49';
+
+type Size = 'sm' | 'md' | 'lg';
+
+const BOX: Record<Size, string> = {
+    sm: 'h-[50px] w-[68px]',
+    md: 'h-[113px] w-[156px]',
+    lg: 'h-[141px] w-[196px]',
+};
+
+const FIGURE: Record<Size, string> = {
+    sm: 'text-lg',
+    md: 'text-[32px]',
+    lg: 'text-[40px]',
+};
 
 /**
  * How far something has come (answers, participation), drawn as the arch of the logo's "h" (pantallas: Panel,
@@ -13,13 +28,16 @@ export default function ArcMeter({
     max,
     label,
     size = 'lg',
+    showPercent = false,
     children,
 }: {
     value: number;
     max: number;
     /** Read by screen readers instead of the drawing, e.g. "18 de 60 contestaron". */
     label: string;
-    size?: 'sm' | 'md' | 'lg';
+    size?: Size;
+    /** The percentage inside the arch ("30 %") with `children` (the count) below it. */
+    showPercent?: boolean;
     children?: ReactNode;
 }) {
     const percent = max <= 0 ? 0 : Math.min(100, (value / max) * 100);
@@ -29,12 +47,7 @@ export default function ArcMeter({
             role="img"
             aria-label={label}
             data-slot="arc-meter"
-            className={cn(
-                'relative shrink-0',
-                size === 'sm' && 'h-[50px] w-[68px]',
-                size === 'md' && 'h-[113px] w-[156px]',
-                size === 'lg' && 'h-[141px] w-[196px]',
-            )}
+            className={cn('relative shrink-0', BOX[size])}
         >
             <svg
                 viewBox="0 5 64 46"
@@ -62,8 +75,18 @@ export default function ArcMeter({
                     visibility={percent === 0 ? 'hidden' : 'visible'}
                 />
             </svg>
-            {children !== undefined && (
+            {(showPercent || children !== undefined) && (
                 <div className="absolute inset-x-0 bottom-0.5 flex flex-col items-center gap-0.5 text-center">
+                    {showPercent && (
+                        <span
+                            className={cn(
+                                'leading-none font-semibold tracking-[-0.03em] tabular-nums',
+                                FIGURE[size],
+                            )}
+                        >
+                            {percentLabel(value, max)}
+                        </span>
+                    )}
                     {children}
                 </div>
             )}

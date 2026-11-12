@@ -30,6 +30,8 @@ function climateCommentsPanel(bool $failed = false): string
 it('shows RH the summary, the originals and the notice of mentions', function (bool $dark, bool $mobile): void {
     visitPage('engagement/comments', climateCommentsPanel(), $dark, $mobile)
         ->assertSee('Comentarios sobre la empresa')
+        ->assertSee('Sin quién lo escribió · se muestran con 10 o más')
+        ->assertSee('Resumen hecho con IA al cerrar la encuesta.')
         ->assertSee('Hubo menciones de posible acoso o violencia.')
         ->assertSee('Resumen de los comentarios')
         ->assertSee('Buen trato entre compañeros')

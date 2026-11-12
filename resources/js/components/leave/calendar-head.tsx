@@ -15,13 +15,13 @@ export default function CalendarHead({
     return (
         <>
             <div className="flex border-b bg-muted">
-                <div className="sticky left-0 z-10 flex w-44 shrink-0 items-center bg-muted px-4 text-sm font-medium text-muted-foreground">
+                <div className="sticky left-0 z-10 flex w-[220px] shrink-0 items-center bg-muted px-4 text-sm font-medium text-muted-foreground">
                     Persona
                 </div>
                 <div
                     className="grid flex-1"
                     style={{
-                        gridTemplateColumns: `repeat(${days.length}, minmax(28px, 1fr))`,
+                        gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`,
                     }}
                 >
                     {days.map((day) => (
@@ -30,7 +30,7 @@ export default function CalendarHead({
                             className={cn(
                                 'flex flex-col items-center py-2 text-caption text-muted-foreground',
                                 day.date === today &&
-                                    'font-semibold text-primary',
+                                    'rounded-t-md border-x-2 border-t-2 border-primary font-semibold text-primary',
                             )}
                             aria-current={
                                 day.date === today ? 'date' : undefined
@@ -45,13 +45,13 @@ export default function CalendarHead({
                 </div>
             </div>
             <div className="flex border-b">
-                <div className="sticky left-0 z-10 flex w-44 shrink-0 items-center bg-card px-4 text-sm font-medium">
+                <div className="sticky left-0 z-10 flex w-[220px] shrink-0 items-center bg-card px-4 text-sm font-medium">
                     Fuera cada día
                 </div>
                 <div
                     className="grid flex-1"
                     style={{
-                        gridTemplateColumns: `repeat(${days.length}, minmax(28px, 1fr))`,
+                        gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`,
                     }}
                 >
                     {days.map((day) => (
@@ -61,7 +61,9 @@ export default function CalendarHead({
                                 'py-2 text-center text-caption tabular-nums',
                                 (out[day.day - 1] ?? 0) === 0
                                     ? 'text-muted-foreground'
-                                    : 'font-semibold',
+                                    : 'bg-accent font-medium',
+                                day.date === today &&
+                                    'border-x-2 border-primary',
                             )}
                         >
                             {out[day.day - 1] ?? 0}

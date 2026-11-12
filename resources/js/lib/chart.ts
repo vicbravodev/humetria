@@ -64,3 +64,19 @@ const DELAYS = [
 export function growDelay(index: number): string {
     return DELAYS[Math.min(index, DELAYS.length - 1)] ?? '';
 }
+
+/** "30 %": how much of the whole `value` is, whole, with a space before the sign (voice of the panel). */
+export function percentLabel(value: number, max: number): string {
+    return `${Math.round(percentOf(value, max))} %`;
+}
+
+/** "+16 pts", "−27 pts", "0 pts": how far `value` is from its reference, in whole points, with the typographic minus. */
+export function pointsDelta(value: number, reference: number): string {
+    const points = Math.round(value - reference);
+
+    if (points === 0) {
+        return '0 pts';
+    }
+
+    return `${points > 0 ? '+' : '−'}${Math.abs(points)} pts`;
+}

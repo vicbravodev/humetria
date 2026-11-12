@@ -6,11 +6,11 @@ import { balancesQuery } from '@/lib/leave/balances';
 import { index } from '@/routes/tenant/vacations/balances';
 import type { LeaveBalanceFilters, LeaveBalanceTab } from '@/types';
 
-const TABS: { tab: LeaveBalanceTab; label: string }[] = [
-    { tab: 'all', label: 'Todos' },
-    { tab: 'missing', label: 'Sin fecha de ingreso' },
-    { tab: 'statements', label: 'Constancia sin acuse' },
-    { tab: 'terminations', label: 'Bajas por finiquitar' },
+const TABS: { tab: LeaveBalanceTab; label: string; asksAction: boolean }[] = [
+    { tab: 'statements', label: 'Constancia sin acuse', asksAction: true },
+    { tab: 'missing', label: 'Sin fecha de ingreso', asksAction: true },
+    { tab: 'all', label: 'Todos', asksAction: false },
+    { tab: 'terminations', label: 'Bajas por finiquitar', asksAction: true },
 ];
 
 /** Narrows the list of balances: a tab per thing RH has to chase with how many it holds, and a search by name. */
@@ -34,9 +34,11 @@ export default function BalancesToolbar({
             />
             <CountTabs
                 label="Qué revisar de los saldos"
-                tabs={TABS.map(({ tab, label }) => ({
+                byAction
+                tabs={TABS.map(({ tab, label, asksAction }) => ({
                     label,
                     count: counts[tab],
+                    needsAction: asksAction,
                     active: filters.tab === tab,
                     href: index.url(tenantSlug, {
                         query: balancesQuery({ ...filters, tab }),

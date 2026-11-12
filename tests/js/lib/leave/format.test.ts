@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     balanceLine,
     dateSpan,
+    shortDate,
     statusTone,
     workingDaysOf,
 } from '@/lib/leave/format';
@@ -97,5 +98,16 @@ describe('balanceLine', () => {
         ).toBe(
             'Solo tiene días del periodo 2026 (5): le faltan 4. Su política no permite adelantar días, así que no se puede aprobar.',
         );
+    });
+});
+
+describe('shortDate', () => {
+    it('writes a day short, with its year: «1 mar 2027»', () => {
+        expect(shortDate('2027-03-01')).toBe('1 mar 2027');
+        expect(shortDate('2026-12-01')).toBe('1 dic 2026');
+    });
+
+    it('is empty when the text is not a date', () => {
+        expect(shortDate('nope')).toBe('');
     });
 });

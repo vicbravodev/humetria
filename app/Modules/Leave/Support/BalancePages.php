@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Support;
 
 use App\Modules\Leave\Actions\GrantEntitlements;
+use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Models\LeaveTermination;
 use App\Modules\Organization\Contracts\Roster;
@@ -20,23 +21,22 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * their next period comes, with a tab for what RH has to chase (no start date, a statement nobody confirmed, a person who
  * left with days to settle). Days only, never an amount. The tabs count the whole company, whatever is searched.
  *
- * @phpstan-type Row array{id: string, name: string, active: bool, policy: string, available: int, advanced: int, nextAnniversary: string|null}
+ * @phpstan-type Row array{id: string, name: string, active: bool, policy: string, available: int, advanced: int, granted: int|null, nextAnniversary: string|null}
  */
 final readonly class BalancePages
 {
-    public const int PER_PAGE = 25;
+    public const int PER_PAGE = 10;
 
-    /** The tabs, the first is the default. */
-    public const array TABS = ['all', 'missing', 'statements', 'terminations'];
+    /** The tabs, in the order of what asks for action; it opens on the first that has someone, or on everybody. */
+    public const array TABS = ['statements', 'missing', 'all', 'terminations'];
 
     public function __construct(private Roster $roster, private Seniority $seniority, private PolicyResolver $policies, private GrantEntitlements $grants) {}
 
     /**
-     * @return array{tab: string, q: string, counts: array{all: int, missing: int, statements: int, terminations: int}, people: LengthAwarePaginator<int, Row>}
+     * @return array{tab: string, q: string, today: string, owedDays: int, counts: array{all: int, missing: int, statements: int, terminations: int}, people: LengthAwarePaginator<int, Row>}
      */
     public function index(string $tab, string $search): array
     {
-        $tab = in_array($tab, self::TABS, true) ? $tab : self::TABS[0];
         $ids = [
             'missing' => $this->grants->missingStartDate(),
             'statements' => self::ids(LeaveStatement::query()->whereNull('acknowledged_at')),
@@ -45,12 +45,26 @@ final readonly class BalancePages
         // ponytail: counts the roster by its ids; a count query in Roster if companies reach tens of thousands.
         $counts = ['all' => count($this->roster->matchingIds(new RosterQuery)), 'missing' => count($ids['missing']), 'statements' => count($ids['statements']), 'terminations' => count($ids['terminations'])];
 
+        $tab = in_array($tab, self::TABS, true) ? $tab : self::opening($counts);
+
         return [
             'tab' => $tab,
             'q' => $search,
+            'today' => PeriodWindow::today()->toDateString(),
+            'owedDays' => (int) LeaveEntry::query()->whereNotNull('leave_entitlement_id')->sum('days'),
             'counts' => $counts,
             'people' => $this->page(new RosterQuery(employeeIds: $ids[$tab] ?? null, search: $search)),
         ];
+    }
+
+    /**
+     * What it opens on: the first thing RH has to chase that has someone, or everybody.
+     *
+     * @param  array{all: int, missing: int, statements: int, terminations: int}  $counts
+     */
+    private static function opening(array $counts): string
+    {
+        return $counts['statements'] > 0 ? 'statements' : ($counts['missing'] > 0 ? 'missing' : 'all');
     }
 
     /**
@@ -82,8 +96,21 @@ final readonly class BalancePages
             'policy' => ($terms[$person->id] ?? null)->name ?? 'Ley',
             'available' => array_sum(array_map(fn (PeriodBalance $period): int => $period->left(), $periods[$person->id] ?? [])) + ($advanced[$person->id] ?? 0),
             'advanced' => -($advanced[$person->id] ?? 0),
+            'granted' => self::granted($periods[$person->id] ?? []),
             'nextAnniversary' => isset($starts[$person->id]) ? self::next($starts[$person->id], $today)->toDateString() : null,
         ]);
+    }
+
+    /**
+     * The days given in the periods that still hold days; null when there are none, which leaves a bar without a whole.
+     *
+     * @param  list<PeriodBalance>  $periods
+     */
+    private static function granted(array $periods): ?int
+    {
+        $granted = array_sum(array_map(fn (PeriodBalance $period): int => $period->left() > 0 ? $period->granted : 0, $periods));
+
+        return $granted > 0 ? $granted : null;
     }
 
     /**

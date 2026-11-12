@@ -1,16 +1,17 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { Briefcase, CalendarCheck, MapPin } from 'lucide-react';
-import EmptyState from '@/components/humetria/empty-state';
+import { Briefcase, CalendarCheck, FileText } from 'lucide-react';
+import { useState } from 'react';
 import PageHeader from '@/components/humetria/page-header';
-import LedgerTable from '@/components/leave/ledger-table';
-import PeriodsSection from '@/components/leave/periods-section';
-import RecordSection from '@/components/leave/record-section';
-import RecordRequests from '@/components/leave/record-requests';
-import RecordStatements from '@/components/leave/record-statements';
-import RecordSummary from '@/components/leave/record-summary';
+import AdjustDialog from '@/components/leave/adjust-dialog';
+import RecordActions from '@/components/leave/record-actions';
+import RecordBody from '@/components/leave/record-body';
+import RecordCurrent from '@/components/leave/record-current';
 import TerminationCard from '@/components/leave/termination-card';
 import { Badge } from '@/components/ui/badge';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dateSpan } from '@/lib/leave/format';
+import { leaveTrail } from '@/lib/leave/trail';
+import { index as balances } from '@/routes/tenant/vacations/balances';
 import type {
     LeaveLedgerEntry,
     LeaveRecordPeriod,
@@ -18,18 +19,20 @@ import type {
     LeaveRecordRequest,
     LeaveRecordStatement,
     LeaveRecordTermination,
+    LeaveTypeOption,
     PageFact,
     Paginated,
 } from '@/types';
 
 /**
- * The record of one person: their days by period, every movement of the ledger, their requests with who answered, their
- * annual statements and, if they left, what they are owed in days. Days and dates only, never an amount.
+ * The record of one person, to explain their days: the current period as an arch with its three dates, and under it their
+ * movements (with the balance after each), requests, statements and periods. Days and dates only, never an amount.
  */
 export default function LeaveEmployee({
     person,
     canManage,
     balance,
+    types,
     periods,
     entries,
     requests,
@@ -39,22 +42,18 @@ export default function LeaveEmployee({
     person: LeaveRecordPerson;
     canManage: boolean;
     balance: { available: number; advanced: number };
+    types: LeaveTypeOption[];
     periods: LeaveRecordPeriod[];
     entries: Paginated<LeaveLedgerEntry>;
     requests: Paginated<LeaveRecordRequest>;
     statements: LeaveRecordStatement[];
     termination: LeaveRecordTermination | null;
 }) {
-    setLayoutProps({
-        breadcrumbs: [
-            { title: 'Vacaciones' },
-            { title: 'Saldos' },
-            { title: person.name },
-        ],
-    });
+    const tenantSlug = useTenantSlug();
+    const [adjusting, setAdjusting] = useState<LeaveRecordPeriod | null>(null);
+    const current = periods[0];
     const facts: PageFact[] = [
-        { icon: Briefcase, text: person.jobTitle },
-        { icon: MapPin, text: person.area },
+        { icon: Briefcase, text: `${person.jobTitle} · ${person.area}` },
         ...(person.startedOn === null
             ? []
             : [
@@ -63,14 +62,21 @@ export default function LeaveEmployee({
                       text: `Ingreso: ${dateSpan(person.startedOn, person.startedOn)}`,
                   },
               ]),
+        { icon: FileText, text: `Política: ${person.policy}` },
     ];
+
+    setLayoutProps({
+        breadcrumbs: leaveTrail(
+            { title: 'Saldos', href: balances.url(tenantSlug) },
+            person.name,
+        ),
+    });
 
     return (
         <>
             <Head title={`Vacaciones de ${person.name}`} />
             <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Vacaciones"
                     title={person.name}
                     status={
                         <Badge
@@ -80,43 +86,41 @@ export default function LeaveEmployee({
                         </Badge>
                     }
                     facts={facts}
-                />
-                <RecordSummary
-                    available={balance.available}
-                    advanced={balance.advanced}
-                    policy={person.policy}
-                />
+                >
+                    {canManage && (
+                        <RecordActions
+                            person={person}
+                            types={types}
+                            current={current}
+                            onAdjust={setAdjusting}
+                        />
+                    )}
+                </PageHeader>
+                {canManage && (
+                    <AdjustDialog
+                        employeeId={person.id}
+                        period={adjusting}
+                        onClose={() => setAdjusting(null)}
+                    />
+                )}
                 {termination !== null && (
                     <TerminationCard termination={termination} />
                 )}
-                <RecordSection title="Periodos">
-                    {periods.length === 0 ? (
-                        <EmptyState
-                            icon={CalendarCheck}
-                            title="Aún no tiene periodos"
-                        >
-                            El primero se otorga en su primer aniversario, o al
-                            cargar sus saldos iniciales.
-                        </EmptyState>
-                    ) : (
-                        <PeriodsSection
-                            employeeId={person.id}
-                            periods={periods}
-                            canManage={canManage}
-                        />
-                    )}
-                </RecordSection>
-                <RecordSection title="Movimientos de sus días">
-                    <LedgerTable entries={entries} />
-                </RecordSection>
-                <RecordSection title="Solicitudes">
-                    <RecordRequests requests={requests} />
-                </RecordSection>
-                {statements.length > 0 && (
-                    <RecordSection title="Constancias anuales">
-                        <RecordStatements statements={statements} />
-                    </RecordSection>
-                )}
+                <RecordCurrent
+                    person={person}
+                    current={current}
+                    advanced={balance.advanced}
+                    statements={statements}
+                    canManage={canManage}
+                />
+                <RecordBody
+                    canManage={canManage}
+                    periods={periods}
+                    entries={entries}
+                    requests={requests}
+                    statements={statements}
+                    onAdjust={setAdjusting}
+                />
             </div>
         </>
     );

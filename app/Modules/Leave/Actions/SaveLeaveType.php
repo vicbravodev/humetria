@@ -7,6 +7,7 @@ namespace App\Modules\Leave\Actions;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -30,7 +31,7 @@ final readonly class SaveLeaveType
             $name === '' => 'Escribe el nombre del permiso.',
             mb_strlen($name) > 80 => 'El nombre no puede pasar de 80 caracteres.',
             LeaveType::query()->where('name', $name)->whereKeyNot($type->id)->exists() => 'Ya hay un permiso con ese nombre.',
-            default => null,
+            default => ($law = self::lawTypeLike($name)) === null ? null : "«{$law}» ya viene de la ley: úsalo en vez de crear otro igual.",
         };
 
         if ($error !== null) {
@@ -41,6 +42,31 @@ final readonly class SaveLeaveType
         Log::info('leave.type_saved', ['type_id' => $type->id]);
 
         return $type;
+    }
+
+    /**
+     * The type of the law a name repeats with other words («Permiso de paternidad» is «Paternidad»; «Permiso especial con goce
+     * de sueldo» is «Permiso especial con goce»): same stem, or the stem of the law followed by more words.
+     */
+    private static function lawTypeLike(string $name): ?string
+    {
+        $stem = self::stem($name);
+
+        foreach (LeaveType::SEEDED as [, $law]) {
+            $lawStem = self::stem($law);
+
+            if ($stem === $lawStem || str_starts_with($stem, "{$lawStem} ")) {
+                return $law;
+            }
+        }
+
+        return null;
+    }
+
+    /** Lower case, no accents, no «permiso de / por» in front. */
+    private static function stem(string $name): string
+    {
+        return trim(preg_replace('/^permiso (?:de la |de |por )?/', '', Str::lower(Str::ascii(trim($name)))) ?? '');
     }
 
     /**

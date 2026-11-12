@@ -30,6 +30,15 @@ interface ReportingLines
     public function directReportIds(string $employeeId): array;
 
     /**
+     * The active people who share the direct manager of each person, by name, without the person: one query for any
+     * number of people. Whoever has no manager or no peers is not in the answer.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, list<string>> by employee id
+     */
+    public function peersOf(array $employeeIds): array;
+
+    /**
      * Every active person below, without the person. A manager in between who left is not listed, but their reports
      * still belong to the line.
      *

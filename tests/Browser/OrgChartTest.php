@@ -10,11 +10,21 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 
+// The org chart is drawn as a canvas (React Flow) with a tray and a panel, and the list is a table with views and a
+// search: the nested list and its keyboard walk, the indicator cards and the «Calidad de datos» tabs these tests held
+// before are gone by the product decision of the redesign (docs/rediseno-personas/ORG-V2.md).
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
     'light mobile' => [false, true],
     'dark mobile' => [true, true],
+];
+
+/** The looks of the canvas, which a phone does not have: it gets one person at a time. */
+$desktop = [
+    'light' => [false],
+    'dark' => [true],
 ];
 
 /**
@@ -46,60 +56,221 @@ function acmeOrgChart(bool $lines = true): array
     ];
 }
 
-it('shows who is at the top, and their reports when they are opened', function (bool $dark, bool $mobile): void {
+/**
+ * Drags a card of the canvas onto another with a mouse that moves in steps, as a hand does: the canvas follows the
+ * pointer and a single jump is not a drag to it.
+ */
+function orgDragCard(mixed $page, string $from, string $to): mixed
+{
+    $page->script(<<<JS
+        () => new Promise((resolve) => {
+            const from = document.querySelector('{$from}');
+            const to = document.querySelector('{$to}');
+            const a = from.getBoundingClientRect();
+            const b = to.getBoundingClientRect();
+            const start = { x: a.x + a.width / 2, y: a.y + a.height / 2 };
+            const end = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+            const fire = (target, type, point) => target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, clientX: point.x, clientY: point.y, button: 0, buttons: type === 'mouseup' ? 0 : 1 }));
+            fire(from, 'mousedown', start);
+            let step = 0;
+            const tick = () => {
+                step += 1;
+                fire(window, 'mousemove', { x: start.x + (end.x - start.x) * step / 10, y: start.y + (end.y - start.y) * step / 10 });
+                if (step < 10) { requestAnimationFrame(tick); } else { fire(window, 'mouseup', end); resolve(true); }
+            };
+            requestAnimationFrame(tick);
+        })
+    JS);
+
+    return $page;
+}
+
+/** The card of a person of the canvas, by their name. */
+function orgCard(string $name): string
+{
+    return '[data-slot="org-node"][aria-label^="'.$name.',"]';
+}
+
+it('draws the chart as a canvas: the person at the top with their team, two levels open', function (bool $dark): void {
     acmeOrgChart();
 
-    visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, $mobile)
-        ->assertSee('5 personas activas, 4 con jefe directo.')
-        ->assertSee('Diana Torres')
-        ->assertSee('Directora general')
-        ->assertSee('2 directos · 4 en total')
-        ->assertSeeIn('section[aria-label="Indicadores"]', 'Niveles')
-        ->assertSeeIn('section[aria-label="Indicadores"]', 'Mediana de reportes directos')
-        ->assertSeeIn('section[aria-label="Indicadores"]', '2.0')
-        ->assertSeeIn('section[aria-label="Indicadores"]', 'Es una señal, no una regla.')
-        ->assertDontSee('Gerardo Paz')
-        ->click('[aria-label="Ver los reportes de Diana Torres"]')
-        ->assertSee('Gerardo Paz')
-        ->assertSee('Sofía Luna')
-        ->assertSee('Revisar: pocos reportes')
-        ->assertDontSee('Ana López')
+    visitPage('organization/org-chart', '/admin/acme/org-chart', $dark)
+        ->assertSee('5 personas activas')
+        ->assertSee('3 niveles')
+        ->assertSee('4 con jefe directo')
+        ->assertSee('De aquí salen quién aprueba las vacaciones')
+        ->assertPresent(orgCard('Diana Torres'))
+        ->assertAttribute(orgCard('Diana Torres'), 'aria-label', 'Diana Torres, Directora general, 2 directos, 4 en total')
+        ->assertPresent(orgCard('Gerardo Paz'))
+        ->assertPresent(orgCard('Sofía Luna'))
+        // The third level waits behind the pill of Gerardo.
+        ->assertNotPresent(orgCard('Ana López'))
+        ->assertSee('+2 · 2 en total')
+        ->assertSeeIn('[aria-label="Organigrama"]', 'Clic en una persona para ver su equipo')
         ->assertNoAccessibilityIssues(1)
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
-})->with($looks);
+})->with($desktop);
 
-it('says who is away today, and nothing more', function (bool $dark, bool $mobile): void {
+it('opens a branch with its pill and closes it with the same one', function (): void {
+    acmeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->click('[aria-label="Ver el equipo de Gerardo Paz"]')
+        ->assertPresent(orgCard('Ana López'))
+        ->assertPresent(orgCard('Beto Díaz'))
+        ->assertAttribute('[aria-label="Ocultar el equipo de Gerardo Paz"]', 'aria-expanded', 'true')
+        ->assertSee('2 directos')
+        ->click('[aria-label="Ocultar el equipo de Gerardo Paz"]')
+        ->assertNotPresent(orgCard('Ana López'))
+        ->assertSee('Mostrar: a tu gusto')
+        ->assertNoJavaScriptErrors();
+});
+
+it('opens the levels asked for, and everything at once', function (): void {
+    acmeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->click('button:has-text("Mostrar: 2 niveles")')
+        ->click('[role="menuitemradio"]:has-text("3 niveles")')
+        ->assertPresent(orgCard('Ana López'))
+        // The menu is still closing, and a click on its button now would close it again.
+        ->wait(0.4)
+        ->click('button:has-text("Mostrar: 3 niveles")')
+        ->click('[role="menuitemradio"]:has-text("1 nivel")')
+        ->assertNotPresent(orgCard('Gerardo Paz'))
+        ->click('Expandir todo')
+        ->assertPresent(orgCard('Beto Díaz'))
+        ->assertSee('Mostrar: todos')
+        ->click('Contraer')
+        ->assertNotPresent(orgCard('Gerardo Paz'))
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows the panel of a person: their manager, their team and what comes out of the chart', function (bool $dark): void {
+    $people = acmeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart', $dark)
+        ->click(orgCard('Gerardo Paz'))
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Gerente de planta')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Su jefe')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Diana Torres')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Su equipo directo (2)')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Ana López')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Beto Díaz')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Equipo total: 2 personas')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Qué sale de aquí')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'mínimo de respondientes (5)')
+        // Nothing of their pay, their evaluations or their contact: only who they are and their team.
+        ->assertDontSeeIn('aside[aria-label="Panel de Gerardo Paz"]', '@')
+        ->assertNoAccessibilityIssues(1)
+        ->click('aside[aria-label="Panel de Gerardo Paz"] [data-slot="org-mini-person"]:has-text("Diana Torres")')
+        ->assertPresent('aside[aria-label="Panel de Diana Torres"]')
+        ->assertSeeIn('aside[aria-label="Panel de Diana Torres"]', 'Nadie: está hasta arriba.')
+        ->assertAttribute('aside[aria-label="Panel de Diana Torres"] a:has-text("Ver su ficha de empleado")', 'href', '/admin/acme/employees?q=Diana+Torres')
+        ->click('[aria-label="Cerrar el panel"]')
+        ->assertNotPresent('aside[aria-label="Panel de Diana Torres"]')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect($people['dir']->refresh()->manager_id)->toBeNull();
+})->with($desktop);
+
+it('says nothing of who is away today: the chart is not the place for absences', function (): void {
     $people = acmeOrgChart();
     $today = CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString();
     LeaveRequest::factory()->approved()->create(['tenant_id' => $people['dir']->tenant_id, 'employee_id' => $people['dir']->id, 'starts_on' => $today, 'ends_on' => $today, 'working_days' => 1]);
 
-    visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, $mobile)
-        ->assertSee('Diana Torres')
-        ->assertSee('Ausente hoy')
-        ->assertNoAccessibilityIssues(1)
-        ->assertNoJavaScriptErrors()
-        ->assertScript(cspViolations(), '[]');
-})->with($looks);
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->assertPresent(orgCard('Diana Torres'))
+        ->assertDontSee('Ausente')
+        ->click(orgCard('Diana Torres'))
+        ->assertDontSee('Ausente')
+        ->assertNoJavaScriptErrors();
+});
 
 it('invites a company where nobody has a manager to assign them', function (bool $dark, bool $mobile): void {
     acmeOrgChart(lines: false);
 
     visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, $mobile)
-        ->assertSee('5 personas activas, ninguna con jefe directo.')
-        ->assertSee('Todavía nadie tiene jefe asignado.')
+        ->assertSee('5 personas activas')
+        ->assertSee('Ninguna con jefe directo')
+        ->assertSee('Todavía nadie tiene jefe directo')
+        ->assertSee('Asígnalo al editar a cada persona o súbelo en el CSV de empleados.')
         ->assertSee('Ir a Empleados')
-        ->assertSee('Importar CSV')
-        ->assertDontSee('Jefes por revisar')
-        ->assertSee('Diana Torres')
+        ->assertNotPresent('[data-slot="org-node"]')
         ->click('Ir a Empleados')
         ->assertPathIs('/admin/acme/employees');
 })->with($looks);
 
-it('focuses the person searched: the way down to them and their card', function (bool $dark, bool $mobile): void {
+it('does not offer to edit to whoever only sees the chart', function (): void {
+    $user = App\Models\User::factory()->create();
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    App\Modules\Tenancy\Models\TenantMembership::factory()->for($tenant)->for($user)->viewer()->create();
+    test()->actingAs($user);
+    $dir = Employee::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Diana Torres', 'job_title' => 'Directora general']);
+    Employee::factory()->reportingTo($dir)->create(['name' => 'Gerardo Paz', 'job_title' => 'Gerente de planta']);
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->assertPresent(orgCard('Diana Torres'))
+        ->assertDontSee('Editar estructura')
+        ->click(orgCard('Gerardo Paz'))
+        ->assertDontSee('Cambiar jefe')
+        ->assertNoJavaScriptErrors();
+});
+
+it('finds the person searched: the page opens on their way down, the others dimmed', function (): void {
     $people = acmeOrgChart();
 
-    $page = visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, $mobile)
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->click('#org-chart-person')
+        ->type('[role="combobox"][aria-controls="org-chart-person-options"]', 'ana')
+        ->assertSee('Ana López · Operadora')
+        ->keys('[role="combobox"][aria-controls="org-chart-person-options"]', 'Enter')
+        ->assertQueryStringHas('focus', $people['ana']->id)
+        ->assertSeeIn('[aria-label="Panel de Ana López"]', 'Gerardo Paz')
+        ->assertPresent(orgCard('Ana López'))
+        // Only the way down to her: the rest of Gerardo's team waits behind «Ver 1 más».
+        ->assertSee('Ver 1 más')
+        // Sofía is not on her way: her card is dimmed.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[aria-label^="Sofía Luna,"]\')).opacity', '0.45')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[aria-label^="Ana López,"]\').closest("[data-slot=org-node]") ?? document.querySelector(\'[aria-label^="Ana López,"]\')).opacity', '1')
+        ->assertNoAccessibilityIssues(1)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('is one person at a time on a phone: their manager above, their team below, and the way back', function (bool $dark): void {
+    $people = acmeOrgChart();
+
+    $page = visitPage('organization/org-chart', '/admin/acme/org-chart', $dark, mobile: true)
+        ->assertNotPresent('.react-flow')
+        ->assertSeeIn('[aria-label="Persona: Diana Torres"]', 'Diana Torres')
+        ->assertSeeIn('[aria-label="Persona: Diana Torres"]', '2 directos · 4 en total')
+        ->assertSeeIn('[aria-label="Su equipo directo"]', 'Su equipo directo (2)')
+        ->assertSeeIn('[aria-label="Su equipo directo"]', 'Gerardo Paz')
+        ->assertSee('Qué sale de aquí')
+        ->assertNoAccessibilityIssues(1);
+
+    $page->click('[aria-label="Su equipo directo"] [data-slot="org-mini-person"]:has-text("Gerardo Paz")')
+        ->assertSeeIn('[aria-label="Persona: Gerardo Paz"]', 'Gerente de planta')
+        ->assertSeeIn('[aria-label="Su jefe"]', 'Diana Torres')
+        ->assertSeeIn('[aria-label="Su equipo directo"]', 'Ana López')
+        ->assertSeeIn('nav[aria-label="Línea de mando"]', 'Diana Torres')
+        ->click('[aria-label="Su equipo directo"] [data-slot="org-mini-person"]:has-text("Ana López")')
+        ->assertSeeIn('[aria-label="Persona: Ana López"]', 'No tiene un equipo directo')
+        ->click('nav[aria-label="Línea de mando"] button:has-text("Diana Torres")')
+        ->assertSeeIn('[aria-label="Persona: Diana Torres"]', 'Directora general')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect($people['ana']->refresh()->manager_id)->toBe($people['gerardo']->id);
+})->with([[false], [true]]);
+
+it('finds a person on a phone: it opens on them with their way in the crumbs', function (): void {
+    $people = acmeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart', mobile: true)
         ->click('#org-chart-person')
         ->type('[role="combobox"][aria-controls="org-chart-person-options"]', 'ana')
         ->assertSee('Ana López · Operadora')
@@ -107,194 +278,281 @@ it('focuses the person searched: the way down to them and their card', function 
         ->assertQueryStringHas('focus', $people['ana']->id)
         ->assertSeeIn('nav[aria-label="Línea de mando"]', 'Diana Torres')
         ->assertSeeIn('nav[aria-label="Línea de mando"]', 'Gerardo Paz')
-        ->assertSeeIn('[aria-current="true"]', 'Ana López')
-        // Only the way down to her: the other manager waits behind «Ver más».
-        ->assertDontSee('Sofía Luna')
-        ->assertDontSee('Beto Díaz')
-        ->assertNoAccessibilityIssues(1)
-        ->assertScript(cspViolations(), '[]');
-
-    $page->click('[aria-label="Ver 1 más: reportes de Diana Torres"]')
-        ->assertSee('Sofía Luna')
-        ->click('nav[aria-label="Línea de mando"] a:has-text("Gerardo Paz")')
-        ->assertQueryStringHas('focus', $people['gerardo']->id)
-        ->assertSee('Beto Díaz')
-        ->click('nav[aria-label="Línea de mando"] a:has-text("Organigrama")')
-        ->assertQueryStringMissing('focus')
-        ->assertNoJavaScriptErrors();
-})->with($looks);
-
-it('walks the tree with the keyboard', function (): void {
-    acmeOrgChart();
-    $focused = '() => document.activeElement?.getAttribute("aria-label")';
-
-    visitPage('organization/org-chart', '/admin/acme/org-chart')
-        ->keys('[role="treeitem"][tabindex="0"]', 'ArrowRight')
-        ->assertSee('Gerardo Paz')
-        ->assertAttribute('[role="treeitem"][tabindex="0"]', 'aria-expanded', 'true')
-        ->keys('[role="treeitem"][tabindex="0"]', 'ArrowDown')
-        ->assertScript($focused, 'Gerardo Paz, Gerente de planta')
-        ->keys('[role="treeitem"][tabindex="0"]', 'ArrowRight')
-        ->assertSee('Ana López')
-        ->keys('[role="treeitem"][tabindex="0"]', 'End')
-        ->assertScript($focused, 'Sofía Luna, Gerente de ventas')
-        ->keys('[role="treeitem"][tabindex="0"]', 'Home')
-        ->assertScript($focused, 'Diana Torres, Directora general')
-        ->keys('[role="treeitem"][tabindex="0"]', 'ArrowLeft')
-        ->assertDontSee('Gerardo Paz')
-        ->assertNoAccessibilityIssues(1);
-});
-
-it('narrows the tree to an area, dimming whoever is only on the way', function (): void {
-    $people = acmeOrgChart();
-    $sales = Area::factory()->create(['tenant_id' => $people['ana']->tenant_id, 'name' => 'Ventas']);
-    $people['ana']->update(['area_id' => $sales->id]);
-
-    visitPage('organization/org-chart', '/admin/acme/org-chart')
-        ->click('#org-chart-area')
-        ->type('[role="combobox"][aria-controls="org-chart-area-options"]', 'ventas')
-        ->assertSee('Ventas')
-        ->keys('[role="combobox"][aria-controls="org-chart-area-options"]', 'Enter')
-        ->assertQueryStringHas('area', $sales->id)
-        // Diana is not in Ventas, only on the way to Ana: her card is an outline.
-        ->assertScript('() => { const style = getComputedStyle(document.querySelector(\'[data-slot="org-node"]\')); return [style.borderTopStyle, style.backgroundColor].join(); }', 'dashed,rgba(0, 0, 0, 0)')
-        ->click('[aria-label="Ver los reportes de Diana Torres"]')
-        ->assertSee('Gerardo Paz')
-        ->assertDontSee('Sofía Luna')
-        ->click('Limpiar')
-        ->assertQueryStringMissing('area')
+        ->assertSeeIn('[aria-label="Persona: Ana López"]', 'Operadora')
         ->assertNoJavaScriptErrors();
 });
 
-it('loads the reports of a large team a page at a time', function (): void {
+it('loads the team of a large manager a page at a time, from their panel', function (): void {
     $people = acmeOrgChart();
     Employee::factory()->count(58)->reportingTo($people['sofia'])->create(['work_center_id' => $people['sofia']->work_center_id, 'area_id' => $people['sofia']->area_id]);
     Employee::factory()->reportingTo($people['sofia'])->create(['name' => 'Zoe Última', 'work_center_id' => $people['sofia']->work_center_id, 'area_id' => $people['sofia']->area_id]);
 
-    visitPage('organization/org-chart', '/admin/acme/org-chart?focus='.$people['sofia']->id)
-        ->assertSee('Revisar: muchos reportes')
-        ->assertDontSee('Zoe Última')
-        ->click('Ver 9 más')
-        ->assertSee('Zoe Última')
-        ->assertDontSee('Ver 9 más')
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->click(orgCard('Sofía Luna'))
+        ->assertSeeIn('aside[aria-label="Panel de Sofía Luna"]', 'Su equipo directo (59)')
+        ->assertSeeIn('aside[aria-label="Panel de Sofía Luna"]', 'Ver los 59')
+        ->assertDontSeeIn('aside[aria-label="Panel de Sofía Luna"]', 'Zoe Última')
+        ->click('aside[aria-label="Panel de Sofía Luna"] button:has-text("Ver los 59")')
+        ->click('aside[aria-label="Panel de Sofía Luna"] button:has-text("Ver más personas")')
+        ->assertSeeIn('aside[aria-label="Panel de Sofía Luna"]', 'Zoe Última')
         ->assertNoJavaScriptErrors();
 });
 
-it('says when the reports could not be loaded, and loads them on trying again', function (): void {
-    acmeOrgChart();
+it('says when the team could not be loaded, and loads it on trying again', function (): void {
+    $people = acmeOrgChart();
 
     $page = visitPage('organization/org-chart', '/admin/acme/org-chart');
     // The first request for somebody's reports fails, as when the connection drops; the next ones go through.
     $page->script('() => { const real = window.fetch; window.fetch = (url, init) => { if (String(url).includes("/reports")) { window.fetch = real; return Promise.reject(new TypeError("offline")); } return real(url, init); }; }');
 
-    $page->click('[aria-label="Ver los reportes de Diana Torres"]')
-        ->assertSeeIn('[role="alert"]', 'No se pudieron cargar los reportes.')
-        ->assertDontSee('Gerardo Paz')
+    $page->click(orgCard('Gerardo Paz'))
+        ->assertSeeIn('[role="alert"]', 'No se pudo cargar a su equipo.')
         ->assertNoAccessibilityIssues(1)
-        ->click('Reintentar')
-        ->assertSee('Gerardo Paz')
-        ->assertSee('Sofía Luna')
-        ->assertDontSee('No se pudieron cargar los reportes.')
+        ->click('aside[aria-label="Panel de Gerardo Paz"] button:has-text("Reintentar")')
+        ->assertSeeIn('aside[aria-label="Panel de Gerardo Paz"]', 'Ana López')
         ->assertNoJavaScriptErrors();
+
+    expect($people['gerardo']->refresh()->manager_id)->toBe($people['dir']->id);
 });
 
-it('fits the tree inside the page at every width, three levels down', function (): void {
+it('fits the chart inside the page at every width', function (): void {
     $people = acmeOrgChart();
     $page = visitPage('organization/org-chart', '/admin/acme/org-chart?focus='.$people['ana']->id);
 
+    // The canvas clips what is outside it (it is panned, not scrolled): what must not spill is the page around it.
+    $spills = '() => { const inset = document.querySelector(\'[data-slot="sidebar-inset"]\'); return inset.scrollWidth > inset.clientWidth + 1 || document.documentElement.scrollWidth > window.innerWidth + 1 ? "spills" : ""; }';
+
     foreach ([375, 768, 1280] as $width) {
-        resizeTo($page, $width)->assertScript(spilledOut(), '');
+        resizeTo($page, $width)->assertScript($spills, '');
     }
 });
 
-it('reaches the org chart and its data quality from the sidebar', function (): void {
+it('reaches the org chart and its list from the sidebar', function (): void {
     acmeOrgChart();
 
     visit('/admin/acme')
         ->click('[data-sidebar="sidebar"] >> text=Organigrama')
-        ->click('[data-sidebar="sidebar"] >> text=Calidad de datos')
+        ->click('[data-sidebar="sidebar"] >> text=Lista')
         ->assertPathIs('/admin/acme/org-chart/quality')
         ->click('[data-sidebar="menu-sub"] >> text=Organigrama')
         ->assertPathIs('/admin/acme/org-chart')
         ->assertNoJavaScriptErrors();
 });
 
-it('fixes on its row the manager of whoever has none, and the count goes down', function (bool $dark, bool $mobile): void {
-    $people = acmeOrgChart();
-    $place = ['tenant_id' => $people['dir']->tenant_id, 'work_center_id' => $people['dir']->work_center_id, 'area_id' => $people['dir']->area_id];
-    $lupe = Employee::factory()->create([...$place, 'name' => 'Lupe Sola', 'job_title' => 'Analista']);
-    Employee::factory()->create([...$place, 'name' => 'Memo Solo', 'job_title' => 'Analista']);
+it('switches between the chart and the list with the segmented control', function (): void {
+    acmeOrgChart();
 
-    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality', $dark, $mobile)
-        ->assertSee('2 personas por revisar en la línea de reporte.')
-        ->assertSeeIn('nav[aria-label="Problemas de la línea de reporte"] [aria-current="page"]', 'Sin jefe')
-        ->assertSee('Personas activas sin jefe directo y sin nadie que les reporte.')
-        ->assertSee('Lupe Sola')
-        ->assertSee('Producción · Planta Norte')
-        ->assertNoAccessibilityIssues(1)
-        ->click('#manager-'.$lupe->id)
-        ->type('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'diana')
-        ->assertSee('Diana Torres · Directora general')
-        ->keys('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'Enter')
-        ->click('[aria-label="Guardar el jefe directo de Lupe Sola"]')
-        ->assertSee('Jefe actualizado.')
-        ->assertSee('1 persona por revisar en la línea de reporte.')
-        ->assertDontSee('Lupe Sola')
-        ->assertSee('Memo Solo')
-        ->assertNoJavaScriptErrors()
-        ->assertScript(cspViolations(), '[]');
-
-    expect($lupe->refresh()->manager_id)->toBe($people['dir']->id);
-})->with($looks);
-
-it('opens the roots when there is more than one, and saves nothing until a manager is chosen', function (): void {
-    $people = acmeOrgChart();
-    $other = Employee::factory()->create(['tenant_id' => $people['dir']->tenant_id, 'name' => 'Olga Raíz', 'job_title' => 'Socia']);
-    Employee::factory()->reportingTo($other)->create(['name' => 'Pepe Díaz']);
-
-    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality')
-        ->assertSeeIn('nav[aria-label="Problemas de la línea de reporte"] [aria-current="page"]', 'Raíces')
-        ->assertSee('Hay 2 personas hasta arriba. Normalmente solo hay una.')
-        ->assertSee('Olga Raíz')
-        ->assertDisabled('[aria-label="Guardar el jefe directo de Olga Raíz"]')
-        ->click('nav[aria-label="Problemas de la línea de reporte"] >> text=Jefe dado de baja')
-        ->assertQueryStringHas('issue', 'inactive_manager')
-        ->assertSee('Nadie en esta lista')
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->assertAttribute('nav[aria-label="Vista del organigrama"] a[aria-current="page"]', 'href', '/admin/acme/org-chart')
+        ->click('nav[aria-label="Vista del organigrama"] >> text=Lista')
+        ->assertPathIs('/admin/acme/org-chart/quality')
+        ->assertSeeIn('nav[aria-label="Vista del organigrama"] [aria-current="page"]', 'Lista')
+        ->click('nav[aria-label="Vista del organigrama"] >> text=Organigrama')
+        ->assertPathIs('/admin/acme/org-chart')
         ->assertNoJavaScriptErrors();
 });
 
-it('leaves with nobody above, if asked, whoever reports to someone who left', function (): void {
+it('can be closed: the note that says what the chart is for does not come back', function (): void {
+    acmeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->assertSee('De aquí salen quién aprueba')
+        ->click('[aria-label="Cerrar esta nota"]')
+        ->assertDontSee('De aquí salen quién aprueba')
+        ->refresh()
+        ->assertDontSee('De aquí salen quién aprueba')
+        ->assertNoJavaScriptErrors();
+});
+
+it('edits in the same screen: the band, the tray, and «Cambiar jefe» with its undo', function (): void {
+    $people = acmeOrgChart();
+    Employee::factory()->create(['tenant_id' => $people['dir']->tenant_id, 'name' => 'Lupe Sola', 'job_title' => 'Analista']);
+
+    $page = visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->click('Editar estructura')
+        ->assertSee('Editando')
+        ->assertSeeIn('[data-slot="org-edit-band"]', 'Modo edición')
+        ->assertSeeIn('[data-slot="org-edit-band"]', 'Los cambios se guardan al soltar.')
+        ->assertSeeIn('aside[aria-label="Personas sin jefe"]', 'Lupe Sola')
+        ->assertSeeIn('aside[aria-label="Personas sin jefe"]', 'Solo aparecen quienes no tienen jefe')
+        ->assertSee('Listo')
+        ->assertNoAccessibilityIssues(1);
+
+    $page->click('[aria-label="Ver el equipo de Gerardo Paz"]')
+        ->click(orgCard('Ana López'))
+        ->click('aside[aria-label="Panel de Ana López"] button:has-text("Cambiar jefe")')
+        ->assertSee('Cambiar jefe de Ana López')
+        ->click('#manager-of-'.$people['ana']->id)
+        ->type('[role="combobox"][aria-controls="manager-of-'.$people['ana']->id.'-options"]', 'sofía')
+        ->assertSee('Sofía Luna · Gerente de ventas')
+        ->keys('[role="combobox"][aria-controls="manager-of-'.$people['ana']->id.'-options"]', 'Enter')
+        ->click('[role="dialog"] button:has-text("Asignar")')
+        ->assertSee('Ana López ahora reporta a Sofía Luna')
+        ->assertSee('Deshacer')
+        ->assertNoJavaScriptErrors();
+
+    expect($people['ana']->refresh()->manager_id)->toBe($people['sofia']->id);
+
+    $page->click('Deshacer')
+        ->assertSee('Cambio deshecho')
+        ->assertNoJavaScriptErrors();
+
+    expect($people['ana']->refresh()->manager_id)->toBe($people['gerardo']->id);
+
+    $page->click('Listo')
+        ->assertDontSee('Modo edición')
+        ->assertSee('Editar estructura');
+});
+
+it('drags a person of the tray onto their manager', function (): void {
+    $people = acmeOrgChart();
+    $lupe = Employee::factory()->create(['tenant_id' => $people['dir']->tenant_id, 'name' => 'Lupe Sola', 'job_title' => 'Analista']);
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->click('Editar estructura')
+        ->drag('[data-slot="org-tray-person"]:has-text("Lupe Sola")', orgCard('Sofía Luna'))
+        ->assertSee('Lupe Sola ahora reporta a Sofía Luna')
+        ->assertSee('Nadie sin jefe: todas las personas tienen su lugar en el organigrama.')
+        ->assertNoJavaScriptErrors();
+
+    expect($lupe->refresh()->manager_id)->toBe($people['sofia']->id);
+});
+
+it('drags a card onto a new manager, and refuses to make a loop: it says why, calmly', function (): void {
+    $people = acmeOrgChart();
+
+    $page = visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->click('Editar estructura')
+        ->click('[aria-label="Ver el equipo de Gerardo Paz"]');
+
+    orgDragCard($page, orgCard('Ana López'), orgCard('Sofía Luna'))
+        ->assertSee('Ana López ahora reporta a Sofía Luna')
+        ->assertNoJavaScriptErrors();
+
+    expect($people['ana']->refresh()->manager_id)->toBe($people['sofia']->id);
+
+    // Diana leads Sofía, who now leads Ana: Diana cannot report to Ana.
+    orgDragCard($page, orgCard('Diana Torres'), orgCard('Ana López'))
+        ->assertSeeIn('[data-slot="org-edit-message"]', 'No se puede: Ana López reporta a Diana Torres.')
+        // The toast of the first move is still fading in: axe reads colors as painted.
+        ->wait(1)
+        ->assertNoAccessibilityIssues(1)
+        ->assertNoJavaScriptErrors();
+
+    expect($people['dir']->refresh()->manager_id)->toBeNull();
+});
+
+it('lists the people with the views that ask for action first, and the ones that need a manager tinted', function (bool $dark, bool $mobile): void {
+    $people = acmeOrgChart();
+    Employee::factory()->create(['tenant_id' => $people['dir']->tenant_id, 'name' => 'Lupe Sola', 'job_title' => 'Analista']);
+
+    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality', $dark, $mobile)
+        ->assertSee('6 personas activas')
+        ->assertSee('Cómo se completa')
+        ->assertSee('Elige el jefe directo de cada persona (o súbelo en el CSV)')
+        ->assertSeeIn('nav[aria-label="Vistas de la lista"] [aria-current="page"]', 'Sin jefe')
+        // What asks for action goes first; the views with nobody wait under «Otros filtros».
+        ->assertSeeIn('nav[aria-label="Vistas de la lista"]', 'Todas')
+        ->assertSeeIn('nav[aria-label="Vistas de la lista"]', 'Otros filtros')
+        ->assertDontSeeIn('nav[aria-label="Vistas de la lista"]', 'Más de 15 directos')
+        ->assertSee('Lupe Sola')
+        ->assertSee('Diana Torres')
+        ->assertSee('Producción')
+        ->assertAttribute('a:has-text("Descargar la lista (CSV)")', 'href', '/admin/acme/org-chart/quality/export')
+        ->assertAttribute('a:has-text("Subir CSV de empleados")', 'href', '/admin/acme/employees/import')
+        ->assertNoAccessibilityIssues(1)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($looks);
+
+it('chooses the manager on the row of whoever has none: «Asignar» is the primary button only once chosen', function (bool $dark, bool $mobile): void {
+    $people = acmeOrgChart();
+    $lupe = Employee::factory()->create(['tenant_id' => $people['dir']->tenant_id, 'name' => 'Lupe Sola', 'job_title' => 'Analista']);
+
+    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality', $dark, $mobile)
+        ->assertDisabled('[aria-label="Asignar jefe a Lupe Sola"]')
+        ->click('#manager-'.$lupe->id)
+        ->type('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'sofía')
+        ->assertSee('Sofía Luna · Gerente de ventas')
+        ->keys('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'Enter')
+        ->click('[aria-label="Asignar jefe a Lupe Sola"]')
+        ->assertSee('Jefe actualizado.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect($lupe->refresh()->manager_id)->toBe($people['sofia']->id);
+})->with($looks);
+
+it('searches on the server and narrows by name', function (): void {
+    $people = acmeOrgChart();
+    Employee::factory()->create(['tenant_id' => $people['dir']->tenant_id, 'name' => 'Lupe Sola']);
+
+    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality?issue=all')
+        ->assertSee('Gerardo Paz')
+        ->type('input[type="search"]', 'lupe')
+        ->assertQueryStringHas('q', 'lupe')
+        ->assertSee('Lupe Sola')
+        ->assertDontSee('Gerardo Paz')
+        ->assertSeeIn('nav[aria-label="Vistas de la lista"] [aria-current="page"]', 'Todas')
+        ->assertNoJavaScriptErrors();
+});
+
+it('marks whoever reports to somebody who left, and lets them leave with nobody above', function (): void {
     $people = acmeOrgChart();
     $people['gerardo']->update(['deactivated_at' => now()]);
 
     visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality')
-        ->assertSeeIn('nav[aria-label="Problemas de la línea de reporte"] [aria-current="page"]', 'Jefe dado de baja')
-        ->assertSee('Gerardo Paz · Gerente de planta')
+        ->assertSeeIn('nav[aria-label="Vistas de la lista"] [aria-current="page"]', 'Jefe dado de baja')
+        ->assertSee('Su jefe fue dado de baja')
+        ->assertSee('Ana López')
         ->click('#manager-'.$people['ana']->id)
         ->click('[role="option"]:has-text("Sin jefe directo")')
-        ->click('[aria-label="Guardar el jefe directo de Ana López"]')
+        ->click('[aria-label="Asignar jefe a Ana López"]')
         ->assertSee('Jefe actualizado.')
-        ->assertDontSee('Ana López')
-        ->assertSee('Beto Díaz')
         ->assertNoAccessibilityIssues(1)
         ->assertNoJavaScriptErrors();
 
     expect($people['ana']->refresh()->manager_id)->toBeNull();
 });
 
-it('says the reporting line is complete, with the way back to the chart', function (bool $dark, bool $mobile): void {
+it('says the reporting line is in order, with the way back to the chart', function (bool $dark, bool $mobile): void {
     acmeOrgChart();
 
     visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality', $dark, $mobile)
-        ->assertSee('La línea de reporte está completa.')
-        ->assertDontSee('Raíces')
+        ->assertSee('Todo en orden.')
+        ->assertSee('Las 5 personas tienen su línea de reporte completa.')
+        ->assertSeeIn('nav[aria-label="Vistas de la lista"] [aria-current="page"]', 'Todas')
         ->assertNoAccessibilityIssues(1)
         ->click('Ver organigrama')
         ->assertPathIs('/admin/acme/org-chart')
-        ->click('Calidad de datos')
-        ->assertPathIs('/admin/acme/org-chart/quality')
         ->assertNoJavaScriptErrors();
 })->with($looks);
+
+it('closes the help of the list and keeps it closed', function (): void {
+    acmeOrgChart();
+
+    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality')
+        ->assertSee('Cómo se completa')
+        ->click('[aria-label="Cerrar esta ayuda"]')
+        ->assertDontSee('Cómo se completa')
+        ->refresh()
+        ->assertDontSee('Cómo se completa')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows a viewer the list without a way to change a manager', function (): void {
+    $user = App\Models\User::factory()->create();
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    App\Modules\Tenancy\Models\TenantMembership::factory()->for($tenant)->for($user)->viewer()->create();
+    test()->actingAs($user);
+    Employee::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Lupe Sola']);
+
+    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality')
+        ->assertSee('Lupe Sola')
+        ->assertDontSee('Asignar')
+        ->assertNoAccessibilityIssues(1)
+        ->assertNoJavaScriptErrors();
+});
 
 /** The address of the personal portal of one of the people of Acme's org chart. */
 function teamPortal(string $who, bool $lines = true): string

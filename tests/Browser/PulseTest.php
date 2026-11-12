@@ -64,10 +64,45 @@ it('schedules the pulse from its home and says when the next one goes out', func
         ->assertSee('Programar el pulso')
         ->assertScript(cspViolations(), '[]')
         ->click('Guardar')
-        ->assertSee('El siguiente pulso sale el')
+        ->assertSee('Sale el')
+        ->assertSee('de cada mes')
         ->assertSee('Pausar')
         ->click('Pausar')
         ->assertSee('En pausa')
+        ->assertNoJavaScriptErrors();
+});
+
+it('opens on the next pulse and how the engagement moves, never on an empty pulse, once there is history', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    pulseResultsSurvey($tenant, PulseMode::Tour, 12, 4);
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => now()->addDays(4)->toDateString()]);
+
+    visitPage('engagement/index', "{$url}/pulse", $dark, $mobile)
+        ->assertDontSee('Todavía no hay un pulso')
+        ->assertSee('Siguiente pulso')
+        ->assertSee('Sale en 4 días')
+        ->assertSee('Cómo vamos')
+        ->assertSee('Ver tendencia')
+        ->assertSee('Crear un pulso ahora')
+        ->assertSee('Historial')
+        ->assertSee('Recorrido')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($pulseLooks);
+
+it('creates a pulse now from a dialog while one is scheduled', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => now()->addDays(4)->toDateString()]);
+
+    visitPage('engagement/index', "{$url}/pulse")
+        ->assertSeeIn('nav[aria-label="Ruta"]', 'Escucha a tu gente')
+        ->click('Crear un pulso ahora')
+        ->assertSee('¿Qué quieres mirar en este pulso?')
+        ->click('Crear borrador')
+        ->assertSee('Pulso ·')
         ->assertNoJavaScriptErrors();
 });
 
@@ -93,12 +128,31 @@ it('shows how the company moves from survey to survey', function (bool $dark, bo
 
     visitPage('engagement/trend', "{$url}/pulse/trend", $dark, $mobile)
         ->assertSee('Tendencia')
+        ->assertSee('2 mediciones')
+        ->assertSee('El compromiso bajó')
         ->assertSee('Índice de compromiso')
+        ->assertSee('Línea base')
         ->assertSee('Índice de recomendación')
+        ->assertSee('Por tema')
         ->assertSee('Claridad y alineación')
+        ->assertSee('Bajó')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($pulseLooks);
+
+it('says when the next pulse goes out while there is a single wave', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    climateResultsSurvey($tenant, 40);
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => now()->addDays(4)->toDateString()]);
+
+    visitPage('engagement/trend', "{$url}/pulse/trend")
+        ->assertSeeIn('nav[aria-label="Ruta"]', 'Escucha a tu gente')
+        ->assertSee('Con el siguiente pulso verás aquí la tendencia')
+        ->assertSee('El siguiente sale el')
+        ->assertSee('Ver el pulso programado')
+        ->assertNoJavaScriptErrors();
+});
 
 it('says there is nothing to compare yet, with the next step', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
@@ -128,7 +182,7 @@ it('shows RH the results of a pulse with the improvements seen and only the them
     $survey = closedPulseWithAnswers();
 
     visitPage('engagement/results', "{$url}/pulse/{$survey->id}/results", $dark, $mobile)
-        ->assertSee('Resultados de pulso')
+        ->assertSee('Grupos de 5 o más')
         ->assertSee('Mejoras vistas')
         ->assertSee('Claridad y alineación')
         ->assertDontSee('Compensación y prestaciones')

@@ -1,11 +1,7 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import SurveyBody from '@/components/engagement/survey-body';
 import SurveyHeader from '@/components/engagement/survey-header';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import {
-    useEngagementName,
-    useEngagementRoutes,
-} from '@/hooks/use-engagement-routes';
+import { useEngagementTrail } from '@/hooks/use-engagement-routes';
 import type {
     ClimateDraft,
     ClimateParticipation,
@@ -30,15 +26,8 @@ export default function EngagementShow({
     resultsUrl: string | null;
     openCommitments: OpenCommitments | null;
 }) {
-    const tenantSlug = useTenantSlug();
-    const routes = useEngagementRoutes();
-    const name = useEngagementName();
-
     setLayoutProps({
-        breadcrumbs: [
-            { title: name, href: routes.index(tenantSlug) },
-            { title: props.survey.name },
-        ],
+        breadcrumbs: useEngagementTrail({ title: props.survey.name }),
     });
 
     return (

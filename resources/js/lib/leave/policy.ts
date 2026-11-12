@@ -65,3 +65,50 @@ export function draftsOf(rows: LeavePolicyRowData[]): PolicyRowDraft[] {
         days: String(row.days),
     }));
 }
+
+/** «1 día fijo cada año», «3 días fijos cada año»: days that come every year whatever the seniority. */
+export function fixedDaysLine(days: number): string {
+    return `${days} ${days === 1 ? 'día fijo' : 'días fijos'} cada año`;
+}
+
+/**
+ * The days the policy gives in years 1 to 6 as its rows stand now (half typed ones count for nothing): the tier of the year
+ * or the law, never under the law, plus the fixed days that come every year.
+ */
+export function previewDays(
+    rows: PolicyRowDraft[],
+    floors: number[],
+): number[] {
+    const fixed = rows
+        .filter((row) => row.kind === 'fixed')
+        .reduce((total, row) => total + (Number(row.days) || 0), 0);
+
+    return [1, 2, 3, 4, 5, 6].map((year) => {
+        const law = floors[year - 1] ?? 0;
+        const tier = rows.find(
+            (row) =>
+                row.kind === 'tier' &&
+                Number(row.yearFrom) >= 1 &&
+                Number(row.yearFrom) <= year &&
+                year <= Number(row.yearTo) &&
+                Number(row.days) > 0,
+        );
+
+        return Math.max(law, Number(tier?.days ?? 0)) + fixed;
+    });
+}
+
+/** What the fixed bar of the editor says: nothing to save, something to save, or how many fields to fix first. */
+export function saveBarText({
+    dirty,
+    errors,
+}: {
+    dirty: boolean;
+    errors: number;
+}): string {
+    if (errors > 0) {
+        return `Corrige ${countOf(errors, 'campo', 'campos')} para guardar`;
+    }
+
+    return dirty ? 'Hay cambios sin guardar' : 'Sin cambios por guardar';
+}

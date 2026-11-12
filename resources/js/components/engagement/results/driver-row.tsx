@@ -1,63 +1,59 @@
-import TrendBadge from '@/components/engagement/results/trend-badge';
-import BarMeter from '@/components/humetria/bar-meter';
-import { favorableText, shareWidth } from '@/lib/engagement/format';
-import type { EngagementDriver } from '@/types';
+import TopicBar from '@/components/engagement/results/topic-bar';
+import { Badge } from '@/components/ui/badge';
+import type { Topic } from '@/lib/engagement/results';
 
 /**
- * One driver of the company: its favorable share as a bar and how it moved. A driver of two questions has no score of its
- * own, so it lists its questions instead.
+ * One theme of «Dónde actuar primero»: its name and priority, and its favorable share against the company's engagement.
+ * A theme of two questions, or one the survey asked only in part, is read question by question, each under its own
+ * minimum.
  */
 export default function DriverRow({
-    driver,
+    topic,
+    reference,
     index,
 }: {
-    driver: EngagementDriver;
+    topic: Topic;
+    reference: number | null;
     /** Its place in the list, so the bars grow one after another. */
     index: number;
 }) {
+    const { driver, priority } = topic;
+    const byQuestion = driver.descriptive || driver.partial;
+
     return (
-        <li className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <li className="grid gap-3 py-5 first:pt-0 last:pb-0 md:grid-cols-[200px_1fr] md:gap-8">
+            <div className="flex flex-col items-start gap-2">
                 <span className="font-medium">{driver.label}</span>
-                <span className="flex items-baseline gap-3">
-                    <TrendBadge delta={driver.delta} />
-                    {!driver.descriptive && (
-                        <span className="font-semibold tabular-nums">
-                            {favorableText(driver.favorable)}
-                        </span>
-                    )}
-                </span>
+                {priority !== null && (
+                    <Badge
+                        variant={
+                            priority.level === 'high' ? 'warning' : 'secondary'
+                        }
+                    >
+                        Prioridad {priority.levelLabel.toLowerCase()}
+                    </Badge>
+                )}
             </div>
-            {driver.descriptive ? (
-                <>
-                    <p className="text-caption text-muted-foreground">
-                        Se reporta pregunta por pregunta.
-                    </p>
-                    <ul className="flex flex-col gap-2">
-                        {driver.items.map((item, position) => (
-                            <li key={item.key} className="grid gap-1">
-                                <span className="flex flex-wrap justify-between gap-x-4 text-sm text-muted-foreground">
-                                    {item.text}
-                                    <span className="font-medium text-foreground tabular-nums">
-                                        {favorableText(item.favorable)}
-                                    </span>
-                                </span>
-                                <BarMeter
-                                    percent={shareWidth(item.favorable)}
-                                    tooltip={`${item.text}: ${favorableText(item.favorable)}`}
-                                    index={index + position}
-                                />
-                            </li>
-                        ))}
-                    </ul>
-                </>
-            ) : (
-                <BarMeter
-                    percent={shareWidth(driver.favorable)}
-                    tooltip={`${driver.label}: ${favorableText(driver.favorable)}`}
-                    index={index}
-                />
-            )}
+            <div className="flex min-w-0 flex-col gap-4">
+                {byQuestion ? (
+                    driver.items.map((item, position) => (
+                        <TopicBar
+                            key={item.key}
+                            text={item.text}
+                            favorable={item.favorable}
+                            reference={reference}
+                            index={index + position}
+                        />
+                    ))
+                ) : (
+                    <TopicBar
+                        text={null}
+                        favorable={driver.favorable}
+                        reference={reference}
+                        index={index}
+                    />
+                )}
+            </div>
         </li>
     );
 }

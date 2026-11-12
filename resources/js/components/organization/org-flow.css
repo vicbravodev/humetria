@@ -1,0 +1,82 @@
+@import '@xyflow/react/dist/style.css';
+
+/* The org chart canvas wears the design system: every color is a token, so light and dark follow the app. */
+.react-flow.org-flow {
+    --xy-background-color: var(--muted);
+    --xy-edge-stroke: var(--input);
+    --xy-edge-stroke-width: 1.5;
+    --xy-controls-button-background-color: var(--card);
+    --xy-controls-button-background-color-hover: var(--accent);
+    --xy-controls-button-color: var(--foreground);
+    --xy-controls-button-color-hover: var(--accent-foreground);
+    --xy-controls-button-border-color: var(--border);
+    --xy-minimap-background-color: var(--card);
+    --xy-minimap-mask-background-color: color-mix(
+        in oklab,
+        var(--muted) 70%,
+        transparent
+    );
+    --xy-minimap-mask-stroke-color: var(--primary);
+    --xy-minimap-mask-stroke-width: 2;
+    --xy-minimap-node-background-color: var(--border);
+    --xy-attribution-background-color: transparent;
+    font-family: inherit;
+}
+
+.org-flow .react-flow__node {
+    cursor: pointer;
+}
+
+.org-flow.org-flow--editing .react-flow__node {
+    cursor: grab;
+}
+
+.org-flow .react-flow__pane {
+    cursor: grab;
+}
+
+.org-flow .react-flow__controls {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--elevation-raised);
+}
+
+.org-flow .react-flow__controls-button {
+    width: 44px;
+    height: 44px;
+    border-bottom: 1px solid var(--border);
+}
+
+.org-flow .react-flow__controls-button:last-child {
+    border-bottom: 0;
+}
+
+.org-flow .react-flow__controls-button svg {
+    width: 18px;
+    height: 18px;
+    max-width: none;
+    max-height: none;
+    fill: currentColor;
+}
+
+.org-flow .react-flow__controls-button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+
+.org-flow .react-flow__minimap {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.org-flow .react-flow__attribution a {
+    color: var(--muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .org-flow .react-flow__viewport {
+        transition: none !important;
+    }
+}

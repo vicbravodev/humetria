@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vacaciones · Políticas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+
+.hm-display{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.01em}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h2{font-size:24px;line-height:32px;font-weight:600}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-body{font-size:16px;line-height:24px}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+```
+
+/* íconos */
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+/* botones: 44 px de alto */
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border-color:var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+/* tarjeta */
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+/* encabezado de página */
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+/* píldora de estado */
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--vencido{background:var(--risk-alto-bg);color:var(--risk-alto-fg)}
+.hm-pill--plain::before{display:none}
+/* KPI */
+.hm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:24px}
+.hm-kpi-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.hm-kpi-card--lead{border-color:var(--primary);grid-column:span 1}
+.hm-kpi-label{display:flex;align-items:center;gap:8px;color:var(--muted-foreground)}
+/* pestañas con conteo */
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap}
+.hm .hm-tab[aria-selected="true"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-tab--cero{opacity:1;color:var(--muted-foreground)}
+/* tabla */
+.hm-tablewrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm-table{width:100%;border-collapse:collapse;font-size:16px;line-height:24px}
+.hm-table th{background:var(--muted);color:var(--muted-foreground);font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;text-align:left;padding:12px 16px;white-space:nowrap}
+.hm-table td{padding:12px 16px;border-top:1px solid var(--border);vertical-align:middle;height:64px}
+.hm-table .hm-num{text-align:right}
+.hm-table tr[aria-selected="true"] td{background:var(--accent)}
+.hm-person{display:flex;align-items:center;gap:12px;min-width:0}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+/* medidor de arco: la "h" del logo */
+.hm-arc{--p:0;position:relative;width:196px;height:141px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px}
+.hm-arc::before{content:"";position:absolute;inset:0;border-radius:98px 98px 0 0;padding:16px 16px 0;
+  background:conic-gradient(from 270deg at 50% 100%,var(--primary) calc(var(--p)*1.8deg),var(--track) 0 180deg,transparent 0);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.hm-arc-value{position:relative;font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-arc-label{position:relative;font-size:14px;line-height:20px;color:var(--muted-foreground);text-align:center;max-width:150px}
+/* barra con referencia */
+.hm-bar{--p:0;--ref:0;position:relative;height:8px;border-radius:9999px;background:var(--track)}
+.hm-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);border-radius:9999px;background:var(--primary)}
+.hm-bar::after{content:"";position:absolute;top:-5px;bottom:-5px;left:calc(var(--ref)*1%);width:2px;border-radius:1px;background:var(--foreground)}
+.hm-bar--sinref::after{display:none}
+.hm-bar--bajo::before{background:var(--risk-alto)}
+.hm-barrow{display:flex;flex-direction:column;gap:8px}
+.hm-barrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+/* columnas desde cero (tendencia) */
+.hm-cols{position:relative;display:flex;align-items:flex-end;gap:16px;height:160px;border-bottom:1px solid var(--input)}
+.hm-col{--v:0;flex:1 1 0;min-width:0;height:calc(var(--v)*1%);background:var(--primary);border-radius:6px 6px 0 0}
+.hm-col--base{background:var(--chart-4)}
+.hm-cols-ref{--ref:0;position:absolute;left:0;right:0;bottom:calc(var(--ref)*1%);border-top:2px dashed var(--foreground)}
+.hm-cols-labels{display:flex;gap:16px}
+.hm-cols-labels>span{flex:1 1 0;text-align:center;font-size:14px;line-height:20px}
+/* celda del mapa por grupo */
+.hm-heat{display:grid;gap:4px}
+.hm-cell{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:6px;font-weight:500;background:var(--muted);color:var(--foreground)}
+.hm-cell--2{background:var(--accent)}
+.hm-cell--3{background:var(--chart-3);color:var(--background)}
+.hm-cell--protegida{background:transparent;border:1px dashed var(--input);color:var(--muted-foreground);gap:6px;font-size:14px}
+/* aviso único */
+.hm-notice{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:10px;background:var(--warning);color:var(--warning-foreground)}
+.hm-notice-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.hm-notice a{font-weight:500;text-decoration:underline;text-underline-offset:3px}
+/* estado vacío */
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+/* barra de acciones masivas */
+.hm-bulk{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border);background:var(--accent)}
+/* menú de fila abierto (solo se dibuja abierto en una fila por board) */
+.hm-menu{display:flex;flex-direction:column;min-width:200px;padding:4px;border-radius:8px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);box-shadow:var(--shadow-float)}
+.hm .hm-menu-item{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;text-align:left}
+
+
+.hm.t-dark{color-scheme:dark}.hm.t-light{color-scheme:light}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.hm-check{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px}
+.hm-check input{width:20px;height:20px;margin:0;accent-color:var(--primary)}
+.fm-box{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--foreground);transition:border-color 150ms}
+.fm-box input,.fm-box select{flex:1 1 0;min-width:0;min-height:42px;border:0;background:transparent;font:inherit;color:inherit;outline:none;padding:0}
+.fm-box input::placeholder{color:var(--muted-foreground)}
+.fm-box:focus-within{outline:2px solid var(--ring);outline-offset:2px}
+.fm-box--error{border-color:var(--destructive)}
+.fm-box .hm-i{color:var(--muted-foreground)}
+.fm-field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fm-label{font-size:14px;line-height:20px;font-weight:500;display:flex;align-items:center;gap:8px}
+.fm-hint{font-size:14px;line-height:20px;color:var(--muted-foreground)}
+.fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px 24px}
+.hm-th-plain{text-transform:none;letter-spacing:0}
+
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.pc-colhead{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+.pc-lock{display:inline-flex;align-items:center;gap:6px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted-foreground)}
+.pc-table th.hm-th-plain{text-transform:none;letter-spacing:0;font-size:16px;line-height:24px;font-weight:600;background:var(--muted);padding-top:4px;padding-bottom:4px}
+.pc-table td,.pc-table th.pc-rowhead{vertical-align:top}
+.pc-table td{width:27%}
+.pc-table th.pc-rowhead{width:19%;text-align:left;padding:20px 16px;border-top:1px solid var(--border);font-size:14px;line-height:20px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted-foreground);background:var(--card);white-space:normal}
+.pc-table td{padding-top:20px;padding-bottom:20px;height:auto}
+.pc-val-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.pc-delta{font-size:14px;line-height:20px;font-weight:500;color:var(--primary)}
+.pc-vals,.pc-xs{display:flex;gap:6px}
+.pc-vals>span,.pc-xs>span{flex:1 1 0;min-width:0;text-align:center;font-size:13px;line-height:18px}
+.pc-vals>span{font-weight:500}
+.pc-xs>span{color:var(--muted-foreground)}
+.pc-bars{display:flex;align-items:flex-end;gap:6px;height:112px;border-bottom:1px solid var(--input)}
+.pc-slot{position:relative;flex:1 1 0;min-width:0;height:100%;display:flex;align-items:flex-end}
+.pc-slot::after{content:"";position:absolute;left:-2px;right:-2px;bottom:calc(var(--ref)*1% - 2px);height:4px;border-radius:2px;background:var(--foreground);border:1px solid var(--card)}
+.pc-bar{--v:0;display:block;width:100%;height:calc(var(--v)*1%);background:var(--primary);border-radius:4px 4px 0 0}
+.pc-bar--ley{background:var(--chart-4)}
+.pc-assign{display:flex;flex-direction:column}
+.pc-assign-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;min-height:60px;padding:8px 0;border-top:1px solid var(--border)}
+.pc-arch{border:1px solid var(--border);border-radius:10px;background:var(--card);padding:0 16px}
+.pc-arch summary{display:flex;align-items:center;gap:8px;min-height:56px;cursor:pointer;list-style:none}
+.pc-arch summary::-webkit-details-marker{display:none}
+.pc-arch p{padding:0 0 16px 24px}
+
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="vacaciones.politicas" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Ordena tu operación › Vacaciones › Políticas" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page">
+<sc-if value="{{ esDatos }}" hint-placeholder-val="{{ true }}">
+<header class="hm-head">
+  <div class="hm-head-text">
+    <div class="hm-head-title">
+      <h1 class="hm-h1">Políticas</h1>
+    </div>
+    <div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Una política solo puede mejorar la ley</span></div>
+  </div>
+  <div class="hm-head-actions"><a class="hm-btn hm-btn-primary" href="PoliticaEditar.dc.html"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Nueva política</a></div>
+</header>
+</sc-if>
+<sc-if value="{{ esSoloLey }}" hint-placeholder-val="{{ true }}">
+<header class="hm-head">
+  <div class="hm-head-text">
+    <div class="hm-head-title">
+      <h1 class="hm-h1">Políticas</h1>
+    </div>
+    <div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Una política solo puede mejorar la ley</span></div>
+  </div>
+  <div class="hm-head-actions"><a class="hm-btn hm-btn-outline" href="PoliticaEditar.dc.html"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Nueva política</a></div>
+</header>
+</sc-if>
+<sc-if value="{{ esDatos }}" hint-placeholder-val="{{ true }}">
+<p class="hm-lead">Dos políticas mejoran la ley. Personal de confianza da 2 días más el primer año y 5 pts más de prima.</p>
+<div class="hm-tablewrap">
+<table class="hm-table pc-table" style="min-width:900px">
+<caption class="sr">Comparador de políticas contra la ley</caption>
+<thead><tr><th scope="col"><span class="sr">Concepto</span></th><th scope="col" class="hm-th-plain"><div class="pc-colhead"><span class="hm-strong" style="color:var(--foreground)">Ley</span><span class="hm-small hm-muted pc-lock"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No se puede editar</span></div></th><th scope="col" class="hm-th-plain" style="color:var(--foreground)"><div class="pc-colhead"><span class="hm-strong">Contrato colectivo</span><span style="display:inline-flex;gap:0"><button type="button" class="hm-iconbtn" aria-label="Editar Contrato colectivo"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button><button type="button" class="hm-iconbtn" aria-label="Más acciones de Contrato colectivo: Archivar"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></span></div></th><th scope="col" class="hm-th-plain" style="color:var(--foreground)"><div class="pc-colhead"><span class="hm-strong">Personal de confianza</span><span style="display:inline-flex;gap:0"><button type="button" class="hm-iconbtn" aria-label="Editar Personal de confianza"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button><button type="button" class="hm-iconbtn" aria-label="Más acciones de Personal de confianza: Archivar"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></span></div></th></tr></thead>
+<tbody>
+<tr><th scope="row" class="pc-rowhead">Días el primer año</th><td><div class="pc-val-row"><span class="hm-h3">12 días</span></div></td><td><div class="pc-val-row"><span class="hm-h3">12 días</span></div></td><td><div class="pc-val-row"><span class="hm-h3">14 días</span><span class="pc-delta">+2 días</span></div></td></tr>
+<tr><th scope="row" class="pc-rowhead">Prima vacacional</th><td><div class="pc-val-row"><span class="hm-h3">25 %</span></div></td><td><div class="pc-val-row"><span class="hm-h3">25 %</span></div></td><td><div class="pc-val-row"><span class="hm-h3">30 %</span><span class="pc-delta">+5 pts</span></div></td></tr>
+<tr><th scope="row" class="pc-rowhead">Días fijos</th><td><div class="pc-val-row"><span class="hm-h3">Ninguno</span></div></td><td><div class="pc-val-row"><span class="hm-h3">1 día cada año</span><span class="pc-delta">+1 día</span></div></td><td><div class="pc-val-row"><span class="hm-h3">1 día cada año</span><span class="pc-delta">+1 día</span></div></td></tr>
+<tr><th scope="row" class="pc-rowhead">A quién aplica</th><td><span class="hm-body">Quien no tiene política</span></td><td><span class="hm-body">Sindicalizados</span></td><td><span class="hm-body">Toda la empresa</span></td></tr>
+<tr><th scope="row" class="pc-rowhead">Días por antigüedad<span class="hm-small hm-muted" style="display:block;font-weight:400">Años 1 a 10. La raya marca el mínimo de la ley.</span></th><td style="height:auto;padding:20px 16px"><div role="img" aria-label="Ley, días por antigüedad en los años 1, 2, 3, 4, 5 y 6 a 10: 12, 14, 16, 18, 20, 22. La raya marca el mínimo de la ley." style="display:flex;flex-direction:column;gap:6px"><div class="pc-vals"><span>12</span><span>14</span><span>16</span><span>18</span><span>20</span><span>22</span></div><div class="pc-bars"><div class="pc-slot" style="--ref:50.0"><span class="pc-bar pc-bar--ley" style="--v:50.0"></span></div><div class="pc-slot" style="--ref:58.3"><span class="pc-bar pc-bar--ley" style="--v:58.3"></span></div><div class="pc-slot" style="--ref:66.7"><span class="pc-bar pc-bar--ley" style="--v:66.7"></span></div><div class="pc-slot" style="--ref:75.0"><span class="pc-bar pc-bar--ley" style="--v:75.0"></span></div><div class="pc-slot" style="--ref:83.3"><span class="pc-bar pc-bar--ley" style="--v:83.3"></span></div><div class="pc-slot" style="--ref:91.7"><span class="pc-bar pc-bar--ley" style="--v:91.7"></span></div></div><div class="pc-xs"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6–10</span></div></div></td><td style="height:auto;padding:20px 16px"><div role="img" aria-label="Contrato colectivo, días por antigüedad en los años 1, 2, 3, 4, 5 y 6 a 10: 12, 14, 16, 18, 20, 22. La raya marca el mínimo de la ley." style="display:flex;flex-direction:column;gap:6px"><div class="pc-vals"><span>12</span><span>14</span><span>16</span><span>18</span><span>20</span><span>22</span></div><div class="pc-bars"><div class="pc-slot" style="--ref:50.0"><span class="pc-bar" style="--v:50.0"></span></div><div class="pc-slot" style="--ref:58.3"><span class="pc-bar" style="--v:58.3"></span></div><div class="pc-slot" style="--ref:66.7"><span class="pc-bar" style="--v:66.7"></span></div><div class="pc-slot" style="--ref:75.0"><span class="pc-bar" style="--v:75.0"></span></div><div class="pc-slot" style="--ref:83.3"><span class="pc-bar" style="--v:83.3"></span></div><div class="pc-slot" style="--ref:91.7"><span class="pc-bar" style="--v:91.7"></span></div></div><div class="pc-xs"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6–10</span></div></div></td><td style="height:auto;padding:20px 16px"><div role="img" aria-label="Personal de confianza, días por antigüedad en los años 1, 2, 3, 4, 5 y 6 a 10: 14, 16, 18, 20, 22, 24. La raya marca el mínimo de la ley." style="display:flex;flex-direction:column;gap:6px"><div class="pc-vals"><span>14</span><span>16</span><span>18</span><span>20</span><span>22</span><span>24</span></div><div class="pc-bars"><div class="pc-slot" style="--ref:50.0"><span class="pc-bar" style="--v:58.3"></span></div><div class="pc-slot" style="--ref:58.3"><span class="pc-bar" style="--v:66.7"></span></div><div class="pc-slot" style="--ref:66.7"><span class="pc-bar" style="--v:75.0"></span></div><div class="pc-slot" style="--ref:75.0"><span class="pc-bar" style="--v:83.3"></span></div><div class="pc-slot" style="--ref:83.3"><span class="pc-bar" style="--v:91.7"></span></div><div class="pc-slot" style="--ref:91.7"><span class="pc-bar" style="--v:100.0"></span></div></div><div class="pc-xs"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6–10</span></div></div></td></tr>
+</tbody>
+</table>
+</div>
+<section class="hm-card" aria-labelledby="quien" style="gap:8px">
+<h2 class="hm-h3" id="quien">A quién le toca cada una</h2>
+<p class="hm-small hm-muted">Gana lo más específico: nivel de puesto, luego grupo, luego toda la empresa y, al final, la ley.</p>
+<ul class="pc-assign"><li class="pc-assign-row"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;flex:1 1 320px;min-width:0"><p class="hm-body">Toda la empresa sigue <strong>Personal de confianza</strong></p></div><button type="button" class="hm-btn hm-btn-ghost">Cambiar<span class="sr"> la política de Toda la empresa</span></button></li><li class="pc-assign-row"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;flex:1 1 320px;min-width:0"><p class="hm-body">Sindicalizados siguen <strong>Contrato colectivo</strong></p></div><button type="button" class="hm-btn hm-btn-ghost">Cambiar<span class="sr"> la política de Sindicalizados</span></button></li><li class="pc-assign-row"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;flex:1 1 320px;min-width:0"><p class="hm-body"><strong>Personal de confianza</strong> sigue la <strong>Ley</strong> (sin política)</p><span class="hm-pill hm-pill--atencion">Revisa: el grupo se llama igual que una política</span></div><button type="button" class="hm-btn hm-btn-ghost">Cambiar<span class="sr"> la política de Personal de confianza</span></button></li></ul>
+<div><a class="hm-btn hm-btn-outline" href="#"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Agregar nivel de puesto</a></div>
+</section>
+<details class="pc-arch"><summary><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span><strong style="font-weight:500">1 política archivada:</strong> Política 2024 (anterior)</span></summary><p class="hm-small hm-muted">30 días el primer año · prima 25 %. Ya no se asigna a nadie.</p></details>
+</sc-if>
+<sc-if value="{{ esSoloLey }}" hint-placeholder-val="{{ true }}">
+<p class="hm-lead">Tu empresa sigue la ley tal cual: 12 días el primer año y prima de 25 %.</p>
+<div class="hm-split">
+<div class="hm-main"><section class="hm-card" aria-labelledby="ley" style="gap:20px"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px"><h2 class="hm-h3" id="ley">Ley</h2><span class="hm-small hm-muted pc-lock"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No se puede editar</span></div><div style="display:flex;flex-wrap:wrap;gap:24px 48px"><div><span class="hm-small hm-muted" style="display:block">Días el primer año</span><span class="hm-kpi-2">12 días</span></div><div><span class="hm-small hm-muted" style="display:block">Prima vacacional</span><span class="hm-kpi-2">25 %</span></div></div><div><span class="hm-strong" style="display:block;margin-bottom:12px">Días por antigüedad</span><div role="img" aria-label="Ley, días por antigüedad en los años 1, 2, 3, 4, 5 y 6 a 10: 12, 14, 16, 18, 20, 22. La raya marca el mínimo de la ley." style="display:flex;flex-direction:column;gap:6px"><div class="pc-vals"><span>12</span><span>14</span><span>16</span><span>18</span><span>20</span><span>22</span></div><div class="pc-bars"><div class="pc-slot" style="--ref:50.0"><span class="pc-bar pc-bar--ley" style="--v:50.0"></span></div><div class="pc-slot" style="--ref:58.3"><span class="pc-bar pc-bar--ley" style="--v:58.3"></span></div><div class="pc-slot" style="--ref:66.7"><span class="pc-bar pc-bar--ley" style="--v:66.7"></span></div><div class="pc-slot" style="--ref:75.0"><span class="pc-bar pc-bar--ley" style="--v:75.0"></span></div><div class="pc-slot" style="--ref:83.3"><span class="pc-bar pc-bar--ley" style="--v:83.3"></span></div><div class="pc-slot" style="--ref:91.7"><span class="pc-bar pc-bar--ley" style="--v:91.7"></span></div></div><div class="pc-xs"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6–10</span></div></div><p class="hm-small hm-muted" style="margin-top:12px">Años 1 a 10. Es lo que sigue quien no tiene política.</p></div></section></div>
+<div class="hm-side"><div class="hm-empty"><span class="hm-empty-icon"><svg class="hm-i hm-i-24" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span><h2 class="hm-h3">Tu empresa sigue la ley tal cual</h2><p>Crea una política para dar más días o más prima. Nunca puede quedar por debajo de la ley.</p><a class="hm-btn hm-btn-primary" href="PoliticaEditar.dc.html">Crear la primera política</a></div></div>
+</div>
+</sc-if>
+    </div>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["datos","solo-ley"],"default":"datos","section":"Estado"},"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const v = this.props.variant ?? 'datos';
+    return {
+      theme,
+      themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light',
+      esDatos: v !== 'solo-ley',
+      esSoloLey: v === 'solo-ley',
+    };
+  }
+}
+</script>
+</body>
+</html>

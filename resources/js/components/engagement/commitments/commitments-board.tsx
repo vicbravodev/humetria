@@ -58,7 +58,7 @@ export default function CommitmentsBoard(props: EngagementCommitments) {
                         : 'Cuando RH registre los compromisos de la empresa, aparecerán aquí.'}
                 </EmptyState>
             ) : (
-                <ul className="flex flex-col gap-4">
+                <ul className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {commitments.data.map((commitment) => (
                         <CommitmentCard
                             key={commitment.id}

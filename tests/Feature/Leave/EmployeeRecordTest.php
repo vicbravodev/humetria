@@ -19,7 +19,7 @@ use App\Modules\Tenancy\Models\Tenant;
 mutates(EmployeeRecordController::class, RecordPages::class);
 
 /** The queries of the record of a person, whatever the number of entries and requests (the session and the panel frame included). */
-const LEAVE_RECORD_QUERIES = 31;
+const LEAVE_RECORD_QUERIES = 32;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));

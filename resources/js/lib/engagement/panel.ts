@@ -44,6 +44,74 @@ export function pendingText(count: number): string {
         : `${count === 1 ? 'Falta' : 'Faltan'} ${count} por contestar.`;
 }
 
+/**
+ * The sentence over a survey in progress: "Va 44 %. Todavía faltan 118 personas y quedan 14 días." Only counts:
+ * never who.
+ */
+export function progressReading(
+    { rate, pending }: { rate: number | null; pending: number },
+    daysLeft: number | null,
+): string | null {
+    if (rate === null) {
+        return null;
+    }
+
+    if (pending === 0) {
+        return `Va ${rate} %. Ya contestaron todas las personas.`;
+    }
+
+    const missing = `Todavía ${pending === 1 ? 'falta' : 'faltan'} ${countOf(pending, 'persona', 'personas')}`;
+    const days =
+        daysLeft === null
+            ? ''
+            : daysLeft === 1
+              ? ' y es el último día'
+              : ` y quedan ${countOf(daysLeft, 'día', 'días')}`;
+
+    return `Va ${rate} %. ${missing}${days}.`;
+}
+
+/** What the home of Clima or Pulso leads with. */
+export type HomeState = 'current' | 'scheduled' | 'history' | 'first-time';
+
+/**
+ * The survey in progress or in draft first; otherwise the next pulse when one is scheduled; otherwise the history. Only
+ * with no survey at all and nothing scheduled is it a first time: a closed survey is never "there is no pulse yet".
+ */
+export function homeState({
+    current,
+    closed,
+    scheduled,
+}: {
+    current: boolean;
+    closed: number;
+    scheduled: boolean;
+}): HomeState {
+    if (current) {
+        return 'current';
+    }
+
+    if (scheduled) {
+        return 'scheduled';
+    }
+
+    return closed > 0 ? 'history' : 'first-time';
+}
+
+/** The average participation of the surveys that have one, whole; nothing without any. */
+export function averageRate(rows: { rate: number | null }[]): number | null {
+    const rates = rows.flatMap((row) => (row.rate === null ? [] : [row.rate]));
+
+    return rates.length === 0
+        ? null
+        : Math.round(rates.reduce((sum, rate) => sum + rate, 0) / rates.length);
+}
+
+/** Whose results a page shows: the caption over its title. */
+export function resultsCaption(kind: 'climate' | 'pulse'): string {
+    return kind === 'pulse' ? 'Resultados del pulso' : 'Resultados de clima';
+}
+
 type HomeCopy = {
     title: string;
     description: string;

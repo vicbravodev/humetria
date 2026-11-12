@@ -62,6 +62,14 @@ it('draws the engagement index of two waves, one column each, with the arrow bet
         ->where('series.0.points.1.direction', 'down'));
 });
 
+it('lists the waves, oldest first, by their month only, so every chart shares one axis', function (): void {
+    $first = trendWaveSurvey($this->tenant, '2026-10-20 12:00:00');
+    $second = trendWaveSurvey($this->tenant, '2026-11-20 12:00:00', count: 4);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('waves', [['surveyId' => $first->id, 'label' => 'oct 2026'], ['surveyId' => $second->id, 'label' => 'nov 2026']]));
+});
+
 it('lists the engagement, recommendation, improvements seen and the ten themes, in that order', function (): void {
     trendWaveSurvey($this->tenant, '2026-11-20 12:00:00');
 
@@ -159,6 +167,36 @@ it('audits the view with the number of waves and nothing else', function (): voi
 
     $entry = AuditEntry::query()->where('event', 'engagement.results_viewed')->sole();
     expect($entry->metadata)->toBe(['view' => 'trend', 'waves' => 1]);
+});
+
+it('points to the latest pulse among the waves, and to none when only climate closed', function (): void {
+    trendWaveSurvey($this->tenant, '2026-09-20 12:00:00', count: 6, attributes: ['kind' => SurveyKind::Pulse, 'pulse_mode' => 'tour']);
+    $latest = trendWaveSurvey($this->tenant, '2026-10-20 12:00:00', count: 6, attributes: ['kind' => SurveyKind::Pulse, 'pulse_mode' => 'tour']);
+    trendWaveSurvey($this->tenant, '2026-11-20 12:00:00', count: 6);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('latestPulseId', $latest->id));
+});
+
+it('points to no pulse when only climate closed', function (): void {
+    trendWaveSurvey($this->tenant, '2026-11-20 12:00:00', count: 6);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('latestPulseId', null));
+});
+
+it('says when the next pulse goes out while there is a single wave to compare', function (): void {
+    trendWaveSurvey($this->tenant, '2026-11-20 12:00:00', count: 6);
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'next_run_on' => '2027-01-15']);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('nextPulseOn', '2027-01-15'));
+
+    trendWaveSurvey($this->tenant, '2026-12-01 12:00:00', count: 6);
+    $this->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('nextPulseOn', null));
+});
+
+it('has no next pulse to tell when none is scheduled', function (): void {
+    trendWaveSurvey($this->tenant, '2026-11-20 12:00:00', count: 6);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('nextPulseOn', null));
 });
 
 it('draws climate and pulse waves together', function (): void {

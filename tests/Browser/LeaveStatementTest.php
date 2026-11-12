@@ -40,7 +40,7 @@ it('shows RH the sheet with its acknowledgment', function (bool $dark, bool $mob
         ->assertSee('Constancia de vacaciones')
         ->assertSee('Ana Solís')
         ->assertSee('14 días')
-        ->assertSee('25% sobre los días de vacaciones')
+        ->assertSee('25 % sobre los días de vacaciones')
         ->assertSee('Recibida por la persona el 16 de marzo de 2026')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
@@ -71,6 +71,7 @@ it('is reached from the record of the person', function (): void {
     $panel = leaveStatementPanel(acknowledged: false);
 
     visitPage('leave/employee', dirname($panel['url'], 2).'/employees/'.$panel['statement']->employee_id)
+        ->click('[role=tab]:has-text("Constancias")')
         ->click('Constancia del periodo 2026')
         ->assertSee('Sin acuse')
         ->assertSee('Volver al expediente')

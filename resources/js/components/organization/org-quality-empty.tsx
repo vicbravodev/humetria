@@ -1,29 +1,32 @@
 import { Link } from '@inertiajs/react';
-import { CircleCheck, Network } from 'lucide-react';
-import EmptyState from '@/components/humetria/empty-state';
-import { Button } from '@/components/ui/button';
+import { CircleCheck } from 'lucide-react';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { orderText } from '@/lib/org-chart/quality';
 import { index } from '@/routes/tenant/org-chart';
 
-/** Nothing to fix: everyone has a manager who is still here, and one person at the top at most. */
-export default function OrgQualityEmpty() {
+/**
+ * Nothing to fix: everyone has a manager who is still here, with one person at the top and nobody leading too many.
+ * A line of its own, not an empty page: the list below is still the way to change a manager.
+ */
+export default function OrgQualityEmpty({ people }: { people: number }) {
     const tenantSlug = useTenantSlug();
 
     return (
-        <EmptyState
-            icon={CircleCheck}
-            title="La línea de reporte está completa."
-            action={
-                <Button asChild>
-                    <Link href={index(tenantSlug)}>
-                        <Network />
-                        Ver organigrama
-                    </Link>
-                </Button>
-            }
+        <p
+            role="status"
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 card px-5 py-3.5 text-meta"
         >
-            Nadie está sin jefe ni reporta a alguien dado de baja. Lo que una
-            carga deje pendiente aparecerá aquí.
-        </EmptyState>
+            <CircleCheck aria-hidden className="size-5 text-primary" />
+            <span>
+                <strong className="font-semibold">Todo en orden.</strong>{' '}
+                {orderText(people)}
+            </span>
+            <Link
+                href={index(tenantSlug)}
+                className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+                Ver organigrama
+            </Link>
+        </p>
     );
 }
