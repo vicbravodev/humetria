@@ -43,6 +43,18 @@ it('welcomes a new owner and opens the steps', function (bool $dark, bool $mobil
     expect(firstStepsRow()?->welcomed_at)->not->toBeNull();
 })->with($looks);
 
+it('sits on the same line as Humi, above the tab bar and in its own transition layer', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+
+    visitPage('dashboard', '/admin/acme', $dark, $mobile)
+        ->click('Ahora no')
+        ->assertScript('() => { const steps = document.querySelector(\'[aria-label^="Primeros pasos"]\').getBoundingClientRect(); const humi = document.querySelector(\'[aria-label="Abrir a Humi"]\').getBoundingClientRect(); return Math.abs(steps.bottom - humi.bottom) < 1 && steps.right <= humi.left; }', true)
+        ->assertScript('() => { const steps = document.querySelector(\'[aria-label^="Primeros pasos"]\').getBoundingClientRect(); const bar = document.querySelector(\'nav[style*="tab-bar"], [class*="view-transition-name:tab-bar"]\'); return bar === null || bar.getBoundingClientRect().height === 0 || steps.bottom <= bar.getBoundingClientRect().top; }', true)
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[aria-label^="Primeros pasos"]\')).viewTransitionName', 'first-steps')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($looks);
+
 it('leaves only the button after «Ahora no»', function (): void {
     signInToPanel();
 

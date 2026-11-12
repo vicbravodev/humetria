@@ -18,7 +18,7 @@ export default function FirstStepsLauncher({ steps }: { steps: FirstStep[] }) {
             <button
                 type="button"
                 aria-label={`Primeros pasos: ${label} pasos`}
-                className="fixed right-[4.75rem] bottom-20 z-40 flex h-12 items-center gap-2 rounded-full border bg-card pr-4 pl-3 text-sm font-medium shadow-float transition-transform duration-150 ease-out group-has-[aside[aria-label=Humi]]/sidebar-wrapper:right-[436px] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none md:bottom-4 print:hidden"
+                className="fixed right-[4.75rem] bottom-24 z-40 flex h-12 items-center gap-2 rounded-full border bg-card pr-4 pl-3 text-sm font-medium shadow-float transition-transform duration-150 ease-out [view-transition-name:first-steps] group-has-[aside[aria-label=Humi]]/sidebar-wrapper:right-[436px] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none md:bottom-4 print:hidden"
             >
                 <svg
                     aria-hidden
