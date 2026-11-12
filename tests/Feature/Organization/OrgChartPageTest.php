@@ -16,8 +16,9 @@ mutates(OrgChartController::class, OrgChartPeopleController::class);
 // 8 of every page of the panel (company, membership, roles, shared props) and 14 of the org chart: the counts, the
 // indicators (2), the roots (3), the chain (2) and the reports of the focus (3), each with the work centers, the
 // name of the filter, and who is away today of the roots and of the chain (1 each; the focus here leads nobody, and an
-// empty batch asks nothing).
-const ORG_CHART_PAGE_QUERIES = 22;
+// empty batch asks nothing), plus 3 for the first level of the roots (the work centers, the people and who is away).
+// Changed by the product decision «la carga inicial trae el primer nivel de cada raíz»: 22 before it.
+const ORG_CHART_PAGE_QUERIES = 25;
 // 5 of every request of the panel, the person, their reports (3) and who of them is away today.
 const ORG_CHART_REPORTS_QUERIES = 10;
 

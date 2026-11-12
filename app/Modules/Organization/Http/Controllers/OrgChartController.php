@@ -38,8 +38,17 @@ final class OrgChartController extends Controller
         abort_if($focus !== null && array_last($chain)?->active !== true, 404);
         $counts = Employee::query()->whereNull('deactivated_at')->toBase()->selectRaw('count(*) AS total, count(manager_id) AS with_manager')->first();
 
+        $roots = $tree->roots($filters);
+        // Before `nodes()` turns them into arrays.
+        $rootIds = array_values(array_map(fn (OrgNode $node): string => $node->id, $roots->items()));
+
         return Inertia::render('organization/org-chart', [
-            'roots' => $this->nodes($tree->roots($filters)),
+            'roots' => $this->nodes($roots),
+            // The first page of the reports of each root, so the chart opens with two levels and no request more.
+            'first_level' => array_map(
+                fn (array $nodes): array => array_map(fn (OrgNode $node): array => $node->toArray(), $nodes),
+                $tree->firstLevel($rootIds, $filters),
+            ),
             'chain' => array_map(fn (OrgNode $node): array => $node->toArray(), $chain),
             'focus' => is_string($focus) ? ['id' => $focus, 'children' => $this->nodes($tree->children($focus, $filters))] : null,
             // Each chosen filter with its name, for the fields that search them on the server.
