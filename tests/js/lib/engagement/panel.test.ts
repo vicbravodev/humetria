@@ -1,5 +1,50 @@
 import { describe, expect, it } from 'vite-plus/test';
 
+import { averageRate, homeState } from '@/lib/engagement/panel';
+
+describe('homeState', () => {
+    it('leads with the survey in progress or in draft', () => {
+        expect(homeState({ current: true, closed: 3, scheduled: true })).toBe(
+            'current',
+        );
+    });
+
+    it('leads with the next pulse when one is scheduled, history or not', () => {
+        expect(homeState({ current: false, closed: 0, scheduled: true })).toBe(
+            'scheduled',
+        );
+        expect(homeState({ current: false, closed: 3, scheduled: true })).toBe(
+            'scheduled',
+        );
+    });
+
+    it('leads with the history when nothing is in progress nor scheduled', () => {
+        expect(homeState({ current: false, closed: 3, scheduled: false })).toBe(
+            'history',
+        );
+    });
+
+    it('is a first time only with no survey at all and nothing scheduled', () => {
+        expect(homeState({ current: false, closed: 0, scheduled: false })).toBe(
+            'first-time',
+        );
+    });
+});
+
+describe('averageRate', () => {
+    it('averages the participation of the rows that have one, whole', () => {
+        expect(averageRate([{ rate: 74 }, { rate: 66 }, { rate: 71 }])).toBe(
+            70,
+        );
+        expect(averageRate([{ rate: 50 }, { rate: null }])).toBe(50);
+    });
+
+    it('has no average without rates', () => {
+        expect(averageRate([{ rate: null }])).toBeNull();
+        expect(averageRate([])).toBeNull();
+    });
+});
+
 import {
     answeredText,
     deadlineText,

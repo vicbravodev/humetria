@@ -44,6 +44,42 @@ export function pendingText(count: number): string {
         : `${count === 1 ? 'Falta' : 'Faltan'} ${count} por contestar.`;
 }
 
+/** What the home of Clima or Pulso leads with. */
+export type HomeState = 'current' | 'scheduled' | 'history' | 'first-time';
+
+/**
+ * The survey in progress or in draft first; otherwise the next pulse when one is scheduled; otherwise the history. Only
+ * with no survey at all and nothing scheduled is it a first time: a closed survey is never "there is no pulse yet".
+ */
+export function homeState({
+    current,
+    closed,
+    scheduled,
+}: {
+    current: boolean;
+    closed: number;
+    scheduled: boolean;
+}): HomeState {
+    if (current) {
+        return 'current';
+    }
+
+    if (scheduled) {
+        return 'scheduled';
+    }
+
+    return closed > 0 ? 'history' : 'first-time';
+}
+
+/** The average participation of the surveys that have one, whole; nothing without any. */
+export function averageRate(rows: { rate: number | null }[]): number | null {
+    const rates = rows.flatMap((row) => (row.rate === null ? [] : [row.rate]));
+
+    return rates.length === 0
+        ? null
+        : Math.round(rates.reduce((sum, rate) => sum + rate, 0) / rates.length);
+}
+
 /** Whose results a page shows: the caption over its title. */
 export function resultsCaption(kind: 'climate' | 'pulse'): string {
     return kind === 'pulse' ? 'Resultados del pulso' : 'Resultados de clima';
