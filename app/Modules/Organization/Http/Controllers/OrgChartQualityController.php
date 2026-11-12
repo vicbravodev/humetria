@@ -11,6 +11,7 @@ use App\Modules\Organization\Http\Requests\ManagerRequest;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\ReportingGaps;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -65,12 +66,18 @@ final class OrgChartQualityController extends Controller
      * Another company's person is not found: the same 404 as one that does not exist. Someone who left is a 409:
      * their place in the line is not touched.
      */
-    public function update(ManagerRequest $request, mixed $tenant, string $employee, SetManager $setManager): RedirectResponse
+    public function update(ManagerRequest $request, mixed $tenant, string $employee, SetManager $setManager): RedirectResponse|JsonResponse
     {
         $person = Employee::query()->findOrFail($employee);
         abort_if($person->deactivated_at !== null, 409);
 
         $setManager->handle($person, $request->managerId());
+
+        // The chart moves people with its own request and tells the person itself (with «Deshacer»): no flash.
+        if ($request->expectsJson()) {
+            return response()->json(['manager_id' => $request->managerId()]);
+        }
+
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Jefe actualizado.']);
 
         return back();
