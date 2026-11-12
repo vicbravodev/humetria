@@ -175,6 +175,32 @@ it('requires every part of the report but the professional license', function (s
     ['responsible_license', str_repeat('1', 21), 'El campo cédula profesional no debe tener más de 20 caracteres.'],
 ]);
 
+it('asks the professional license to be 7 or 8 digits, when given', function (?string $license, bool $valid): void {
+    $response = $this->actingAs($this->hr)
+        ->from(route('tenant.campaigns.report', [$this->tenant, $this->evaluation->id]))
+        ->put(route('tenant.campaigns.report.update', [$this->tenant, $this->evaluation->id]), reportForm(['responsible_license' => $license]));
+
+    $valid ? $response->assertSessionHasNoErrors() : $response->assertSessionHasErrors(['responsible_license' => 'La cédula profesional son 7 u 8 dígitos.']);
+
+    expect(ReportDetails::query()->withoutGlobalScopes()->exists())->toBe($valid);
+})->with([
+    'letters' => ['abc', false],
+    'six digits' => ['123456', false],
+    'nine digits' => ['123456789', false],
+    'seven digits' => ['1234567', true],
+    'eight digits' => ['12345678', true],
+    'none' => [null, true],
+]);
+
+it('gives the day the report was issued, to print it with a line for the signature', function (): void {
+    Carbon::setTestNow('2026-11-20 03:00:00');
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.report', [$this->tenant, $this->evaluation->id]))
+        // 03:00 UTC is still the 19th in Mexico City.
+        ->assertInertia(fn (Assert $page) => $page->where('report.issuedOn', '19 nov 2026'));
+});
+
 it('lets only those who manage campaigns fill in the report', function (): void {
     $viewer = memberOf($this->tenant, TenantRole::Viewer);
 

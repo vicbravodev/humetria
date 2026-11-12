@@ -50,6 +50,8 @@ final readonly class ReportBuilder
             'guide' => 'Guía '.self::NUMERALS[$guide],
             'itemCount' => count($this->instruments->definition($guide)->itemNumbers()),
             'period' => self::period($campaign),
+            // The day it is printed, in the display time zone: the report keeps no copy of it.
+            'issuedOn' => ResultsClock::day(now()),
             'participation' => ['invited' => $campaign->invited[$guide] ?? 0, 'answered' => $campaign->answered[$guide] ?? 0],
             'method' => $this->method($campaign, $guide),
             'objective' => $details->objective ?? self::objective($guide),
@@ -102,9 +104,17 @@ final readonly class ReportBuilder
             'activities' => self::text($report['activities']),
             'conclusions' => self::text($report['conclusions']),
             'recommendations' => self::text($report['recommendations']),
-            'responsible_name' => self::text($responsible['name'] ?? null),
+            // Until HR names someone, the one who answers for the Programa.
+            'responsible_name' => self::text($responsible['name'] ?? self::programResponsible($report['intervention'])),
             'responsible_license' => self::text($responsible['license'] ?? null),
         ];
+    }
+
+    private static function programResponsible(mixed $intervention): ?string
+    {
+        $program = is_array($intervention) ? ($intervention['program'] ?? null) : null;
+
+        return $program instanceof ProgramOutline ? $program->responsible : null;
     }
 
     private static function text(mixed $value): string

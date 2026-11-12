@@ -668,6 +668,9 @@ it('completes the report with what HR writes', function (): void {
         ->assertSee('Informe guardado.')
         ->assertSee('La mayoría queda en riesgo medio.')
         ->assertSee('Dra. Laura Méndez · Cédula profesional 12345678')
+        // The day issued and the line for the signature are only for paper: they take no room on screen.
+        ->assertScript("getComputedStyle(document.querySelector('[data-slot=\"report-signature\"]')).display", 'none')
+        ->assertScript("document.querySelector('[data-slot=\"report-signature\"]').textContent.includes('Fecha de emisión: ')", true)
         ->assertDontSee('Pendiente de capturar')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
