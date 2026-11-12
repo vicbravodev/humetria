@@ -153,8 +153,7 @@ describe('weekPeople', () => {
     const week = weekOf(daysOfMonth('2026-11'), '2026-11-18');
     const person = (
         name: string,
-        from: string,
-        to: string,
+        [from, to]: [string, string],
         pending = false,
     ) => ({
         id: name,
@@ -164,10 +163,10 @@ describe('weekPeople', () => {
 
     it('keeps the people with a stretch inside the week, cut to it, in the order they came', () => {
         const people = [
-            person('Alonso', '2026-11-17', '2026-11-18'),
-            person('Iván', '2026-11-18', '2026-11-20', true),
-            person('Otra semana', '2026-11-25', '2026-11-26'),
-            person('Desde antes', '2026-11-10', '2026-11-17'),
+            person('Alonso', ['2026-11-17', '2026-11-18']),
+            person('Iván', ['2026-11-18', '2026-11-20'], true),
+            person('Otra semana', ['2026-11-25', '2026-11-26']),
+            person('Desde antes', ['2026-11-10', '2026-11-17']),
         ];
 
         expect(weekPeople(people, week)).toEqual([
