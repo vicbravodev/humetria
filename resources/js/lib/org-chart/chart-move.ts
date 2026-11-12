@@ -1,4 +1,4 @@
-import { ancestorsOf, parentsOf } from '@/lib/org-chart/chart-state';
+import { ancestorsOf, frozen, parentsOf } from '@/lib/org-chart/chart-state';
 import type { Branch, ChartState } from '@/lib/org-chart/chart-state';
 import type { OrgNode } from '@/types';
 
@@ -98,7 +98,7 @@ export function moveInChart(
         }
     }
 
-    const expanded = new Set(state.expanded);
+    const expanded = new Set(frozen(state).expanded);
     const roots = state.roots.filter((id) => id !== node.id);
 
     if (to === null) {
@@ -113,5 +113,5 @@ export function moveInChart(
         expanded.add(to);
     }
 
-    return { people, roots, branches, expanded };
+    return { people, roots, branches, expanded, levels: null };
 }

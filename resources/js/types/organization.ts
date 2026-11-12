@@ -76,6 +76,18 @@ export type OrgNode = {
     absent_today: boolean;
 };
 
+/** The first page of the reports of each root of the page, keyed by the root; a root who leads nobody has no entry. */
+export type OrgFirstLevel = Record<string, OrgNode[]>;
+
+/** Someone with no manager who leads nobody, in the tray of the editing mode. Never contact data. */
+export type UnassignedPerson = {
+    id: string;
+    name: string;
+    job_title: string;
+    area: string;
+    work_center: string;
+};
+
 /** The shape of the company: its levels, and how many people a manager leads. */
 export type OrgIndicators = {
     levels: number;

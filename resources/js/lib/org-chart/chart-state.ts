@@ -16,6 +16,8 @@ export type ChartState = {
     roots: readonly string[];
     branches: ReadonlyMap<string, Branch>;
     expanded: ReadonlySet<string>;
+    /** How many levels «Mostrar» keeps open, whatever is loaded; null once a branch was opened or closed by hand. */
+    levels: number | null;
 };
 
 export type ChartAction =
@@ -24,6 +26,7 @@ export type ChartAction =
     | { type: 'loaded'; id: string; nodes: OrgNode[]; nextPage: number | null }
     | { type: 'failed'; id: string }
     | { type: 'expand'; ids: string[] }
+    | { type: 'levels'; levels: number }
     | { type: 'replace'; state: ChartState };
 
 /** A page of reports as the server sends it, with what the chart needs of it. */
@@ -39,7 +42,6 @@ export type ChartInit = {
     focusChildren: ReportsPage | null;
 };
 
-const PAGE_SIZE = 50;
 const NO_BRANCH: Branch = { ids: [], nextPage: null, status: 'ready' };
 
 function withBranch(state: ChartState, id: string, branch: Branch): ChartState {
@@ -143,7 +145,13 @@ export function initialChart({
         }
     });
 
-    return { people, roots: heads.map(({ id }) => id), branches, expanded };
+    return {
+        people,
+        roots: heads.map(({ id }) => id),
+        branches,
+        expanded,
+        levels: chain.length > 0 ? null : 2,
+    };
 }
 
 export function reduceChart(
@@ -155,14 +163,21 @@ export function reduceChart(
     }
 
     if (action.type === 'expand') {
-        return { ...state, expanded: new Set(action.ids) };
+        return { ...state, expanded: new Set(action.ids), levels: null };
+    }
+
+    if (action.type === 'levels') {
+        return { ...state, levels: action.levels };
     }
 
     const branch = state.branches.get(action.id) ?? NO_BRANCH;
 
     switch (action.type) {
         case 'toggle':
-            return { ...state, expanded: toggled(state.expanded, action.id) };
+            return {
+                ...frozen(state),
+                expanded: toggled(frozen(state).expanded, action.id),
+            };
         case 'loading':
             return withBranch(state, action.id, {
                 ...branch,
@@ -272,4 +287,14 @@ export function missingBranches(state: ChartState): string[] {
     );
 }
 
-export { PAGE_SIZE };
+/** What «Mostrar: N niveles» keeps open, as the open people of the state; the same state when it was opened by hand. */
+export function shown(state: ChartState): ChartState {
+    return state.levels === null
+        ? state
+        : { ...state, expanded: new Set(levelsToExpand(state, state.levels)) };
+}
+
+/** The state with the open people written down and no levels: what opening or closing one by hand starts from. */
+export function frozen(state: ChartState): ChartState {
+    return { ...shown(state), levels: null };
+}

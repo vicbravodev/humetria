@@ -33,6 +33,9 @@ export type ChartNodeData =
           status: Branch['status'];
       };
 
+/** A card of a person, with whether their reports are open and how they are lit. */
+export type PersonData = Extract<ChartNodeData, { kind: 'person' }>;
+
 export type ViewNode = {
     id: string;
     width: number;
