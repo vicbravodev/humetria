@@ -1,3 +1,5 @@
+import type { Paginated } from '@/types/demos';
+
 export type {
     EmployeeCounts,
     EmployeeFilters,
@@ -76,6 +78,18 @@ export type OrgNode = {
     absent_today: boolean;
 };
 
+/** The first page of the reports of each root of the page, keyed by the root; a root who leads nobody has no entry. */
+export type OrgFirstLevel = Record<string, OrgNode[]>;
+
+/** Someone with no manager who leads nobody, in the tray of the editing mode. Never contact data. */
+export type UnassignedPerson = {
+    id: string;
+    name: string;
+    job_title: string;
+    area: string;
+    work_center: string;
+};
+
 /** The shape of the company: its levels, and how many people a manager leads. */
 export type OrgIndicators = {
     levels: number;
@@ -92,18 +106,16 @@ export type OrgChartFilters = {
     area: { value: string; label: string } | null;
 };
 
-/** A gap of the reporting line, with how many people it holds. */
+/** A view of the list of the reporting line, with how many people it holds. */
 export type ReportingIssue = {
-    value: 'without_manager' | 'roots' | 'inactive_manager';
+    value: 'all' | 'no_manager' | 'many_reports' | 'inactive_manager';
     label: string;
-    /** What its list holds, said to whoever will fix it. */
-    hint: string;
     count: number;
-    /** Whether that many people are something to fix: one person at the top is not. */
+    /** Whether that many people are something to fix: one person at the top is not; everybody never is. */
     pending: boolean;
 };
 
-/** A person in a list of «Calidad de datos». Never contact data. */
+/** A person in the list. Never contact data. */
 export type QualityPerson = {
     id: string;
     name: string;
@@ -112,6 +124,10 @@ export type QualityPerson = {
     work_center: string;
     /** Their manager as it is saved, who may have left. */
     manager: ChoiceOption | null;
+    /** Their manager left and nobody took their place. */
+    manager_inactive: boolean;
+    /** Active people who report to them. */
+    direct_reports: number;
 };
 
 /** The person's manager as their portal names them. */
@@ -122,4 +138,20 @@ export type PortalTeamPerson = {
     name: string;
     job_title: string;
     area: string;
+};
+
+/** What the org chart page receives. */
+export type OrgChartPageProps = {
+    roots: Paginated<OrgNode>;
+    first_level: OrgFirstLevel;
+    /** From the top down to the focused person, who comes last; empty without a focus. */
+    chain: OrgNode[];
+    focus: { id: string; children: Paginated<OrgNode> } | null;
+    filters: OrgChartFilters;
+    total_people: number;
+    with_manager: number;
+    /** People with no manager who lead nobody: the chart does not draw them. */
+    without_manager: number;
+    indicators: OrgIndicators;
+    can_manage: boolean;
 };

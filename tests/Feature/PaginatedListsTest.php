@@ -277,7 +277,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.org-chart.index', [$tenant, 'focus' => $boss->id]);
     }, ['roots', 'focus.children']],
-    'org chart data quality' => ['organization/org-chart-quality', fn () => route('tenant.org-chart.quality', [listsCompany()[0], 'issue' => 'without_manager']), ['people']],
+    'org chart data quality' => ['organization/org-chart-quality', fn () => route('tenant.org-chart.quality', [listsCompany()[0], 'issue' => 'no_manager']), ['people']],
     'the managers of a climate survey' => ['engagement/managers', function () {
         [$tenant] = listsCompany();
         workIn($tenant);

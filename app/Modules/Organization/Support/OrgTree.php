@@ -43,6 +43,16 @@ final readonly class OrgTree
             WHERE e.tenant_id = :tenant AND e.deactivated_at IS NULL AND e.manager_id = :person
         SQL;
 
+    /** The first page of the reports of several people at once, each person's by name. */
+    private const string FIRST_LEVEL = <<<'SQL'
+        candidates AS (
+            SELECT id, manager_id, position FROM (
+                SELECT e.id, e.manager_id, row_number() OVER (PARTITION BY e.manager_id ORDER BY e.name, e.id) AS position
+                FROM employees e
+                WHERE e.tenant_id = :tenant AND e.deactivated_at IS NULL AND e.manager_id = ANY(CAST(:people AS uuid[]))
+            ) ranked WHERE position <= :per_page
+        SQL;
+
     /** From the person up, whoever left included; it stops on a cycle already in the data. */
     private const string CHAIN = <<<'SQL'
         line AS (
@@ -74,7 +84,7 @@ final readonly class OrgTree
         SQL;
 
     private const string NODES = <<<'SQL'
-        SELECT e.id, e.name, e.employee_number, e.job_title, e.work_center_id, a.name AS area,
+        SELECT e.id, e.manager_id, e.name, e.employee_number, e.job_title, e.work_center_id, a.name AS area,
                e.deactivated_at IS NULL AS active, t.direct_reports, t.total_reports, t.matches,
                COALESCE(m.deactivated_at IS NOT NULL, false) AS manager_inactive
         FROM totals t
@@ -108,6 +118,35 @@ final readonly class OrgTree
         }
 
         return $this->page(self::CHILDREN, ['person' => $managerId], $filters, $perPage);
+    }
+
+    /**
+     * The first page of the active reports of each of several people, by name and keyed by their manager: whoever
+     * leads nobody is not in the answer. Two queries however many people are asked.
+     *
+     * @param  list<string>  $managerIds
+     * @return array<string, list<OrgNode>>
+     */
+    public function firstLevel(array $managerIds, OrgFilters $filters, int $perPage = 50): array
+    {
+        $managerIds = array_values(array_filter($managerIds, Str::isUuid(...)));
+
+        if ($managerIds === []) {
+            return [];
+        }
+
+        $bindings = [...$this->bindings([], $filters), 'people' => '{'.implode(',', $managerIds).'}', 'per_page' => $perPage];
+        $rows = DB::select('WITH RECURSIVE '.self::FIRST_LEVEL.self::WALK.self::NODES, $bindings);
+        $nodes = $this->nodes($rows);
+        $groups = [];
+
+        foreach ($rows as $index => $row) {
+            if ($row instanceof stdClass && is_string($row->manager_id) && isset($nodes[$index])) {
+                $groups[$row->manager_id][] = $nodes[$index];
+            }
+        }
+
+        return $groups;
     }
 
     /**
