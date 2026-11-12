@@ -298,12 +298,13 @@
 }
 
 /*
- * The frame around the content is made of layers of its own: the sidebar and the top bar (app-sidebar.tsx,
- * app-sidebar-layout.tsx), the phone's menu bar and Humi (mobile-tab-bar.tsx, humi-launcher.tsx). The content's layer is
+ * The frame around the content is made of layers of its own: the sidebar (on a phone, its sheet and veil) and the top bar
+ * (app-sidebar.tsx, app-sidebar-layout.tsx), the phone's menu bar and Humi (mobile-tab-bar.tsx, humi-launcher.tsx). The content's layer is
  * painted above the page and is not clipped by its frame, so without them a tall or wide page would cover them while it
  * cross-fades. They show their new, live state at once, so the bar's chip glides in place instead of blending two places.
  */
 ::view-transition-old(sidebar),
+::view-transition-old(sheet-overlay),
 ::view-transition-old(top-bar),
 ::view-transition-old(tab-bar),
 ::view-transition-old(humi) {
@@ -311,6 +312,7 @@
 }
 
 ::view-transition-new(sidebar),
+::view-transition-new(sheet-overlay),
 ::view-transition-new(top-bar),
 ::view-transition-new(tab-bar),
 ::view-transition-new(humi) {

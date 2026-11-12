@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
     Briefcase,
@@ -18,7 +19,9 @@ import {
     SidebarHeader,
     SidebarMenu,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
+import { useCloseMenuOnVisit } from '@/hooks/use-close-menu-on-visit';
 import { useScrollEdges } from '@/hooks/use-scroll-edges';
 import type { NavSectionKey } from '@/lib/app-navigation';
 import { navSections } from '@/lib/nav-sections';
@@ -36,6 +39,10 @@ const familyIcons: Partial<Record<NavSectionKey, LucideIcon>> = {
 export function AppSidebar() {
     const { auth, tenant, inCourse } = usePage().props;
     const nav = useScrollEdges<HTMLDivElement>();
+    const { setOpenMobile } = useSidebar();
+    useCloseMenuOnVisit(
+        useCallback(() => setOpenMobile(false), [setOpenMobile]),
+    );
     const sections = navSections({
         tenant,
         isStaff: auth.isStaff,

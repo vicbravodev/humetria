@@ -238,6 +238,19 @@ it('keeps the sidebar and the top bar above the content while a new page cross-f
         ->assertScript('() => [getComputedStyle(document.querySelector(\'[data-sidebar="sidebar"]\').parentElement).viewTransitionName, getComputedStyle(document.querySelector(\'[data-slot="app-topbar"]\').parentElement).viewTransitionName].join(" ")', 'sidebar top-bar');
 });
 
+it('closes the phone\'s whole menu on the way to the page picked in it, sliding out above the page that comes in', function (): void {
+    $sheet = 'document.querySelector(\'[data-mobile="true"]\')';
+
+    visit(panelCompany())->on()->mobile()
+        ->click('nav[aria-label="Menú principal"] button:has-text("Más")')
+        // The menu and its veil are layers of their own, so the page fading in never paints over them while they leave.
+        ->assertScript("() => [getComputedStyle({$sheet}).viewTransitionName, getComputedStyle(document.querySelector('[data-slot=\"sheet-overlay\"]')).viewTransitionName].join(' ')", 'sidebar sheet-overlay')
+        ->click('[data-mobile="true"] >> text=Centros de trabajo')
+        ->assertPathIs('/admin/acme/work-centers')
+        ->assertScript("() => new Promise((resolve) => setTimeout(() => resolve({$sheet} === null), 600))", true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('keeps the bottom bar off a wide screen', function (): void {
     visit(panelCompany())->assertScript('() => getComputedStyle(document.querySelector(\'nav[aria-label="Menú principal"]\')).display', 'none');
 });
