@@ -71,7 +71,7 @@ describe('operationsNavItems', () => {
                 ?.children?.map((item) => [item.title, toUrl(item.href)]),
         ).toEqual([
             ['Organigrama', '/admin/acme/org-chart'],
-            ['Calidad de datos', '/admin/acme/org-chart/quality'],
+            ['Lista', '/admin/acme/org-chart/quality'],
         ]);
     });
 

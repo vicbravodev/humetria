@@ -37,7 +37,7 @@ const orgChartItem = (tenant: NavTenant): NavItem => ({
     icon: Network,
     children: [
         { title: 'Organigrama', href: orgChart(tenant.slug) },
-        { title: 'Calidad de datos', href: quality(tenant.slug) },
+        { title: 'Lista', href: quality(tenant.slug) },
     ],
 });
 

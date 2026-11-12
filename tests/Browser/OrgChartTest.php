@@ -212,7 +212,7 @@ it('reaches the org chart and its data quality from the sidebar', function (): v
 
     visit('/admin/acme')
         ->click('[data-sidebar="sidebar"] >> text=Organigrama')
-        ->click('[data-sidebar="sidebar"] >> text=Calidad de datos')
+        ->click('[data-sidebar="sidebar"] >> text=Lista')
         ->assertPathIs('/admin/acme/org-chart/quality')
         ->click('[data-sidebar="menu-sub"] >> text=Organigrama')
         ->assertPathIs('/admin/acme/org-chart')
