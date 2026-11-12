@@ -69,6 +69,7 @@ async function drive(
 /** The spotlight tours of the first steps: `start` runs one here or carries it to the page where its controls are. */
 export function useFirstStepsTour(): { start: (step: FirstStep) => void } {
     const { url, props } = usePage();
+    const slug = props.tenant?.slug;
     const steps = useRef(props.firstSteps?.steps);
     const question = useRef(humiQuestion(props.tenant?.modules));
     const [runner] = useState(() =>
@@ -88,7 +89,7 @@ export function useFirstStepsTour(): { start: (step: FirstStep) => void } {
 
     // Only a new page asks for the remembered tour; a reloaded prop must not end the one that runs.
     useEffect(() => {
-        const key = takeTour();
+        const key = slug === undefined ? null : takeTour(slug);
         const found =
             key === null
                 ? undefined
@@ -99,12 +100,14 @@ export function useFirstStepsTour(): { start: (step: FirstStep) => void } {
         }
 
         return runner.cancel;
-    }, [url, run, runner]);
+    }, [url, slug, run, runner]);
 
     const start = useCallback(
         (next: FirstStep) => {
             if (next.href !== null && next.href !== url) {
-                rememberTour(next.key);
+                if (slug !== undefined) {
+                    rememberTour(next.key, slug);
+                }
                 router.visit(next.href);
 
                 return;
@@ -112,7 +115,7 @@ export function useFirstStepsTour(): { start: (step: FirstStep) => void } {
 
             run(next);
         },
-        [url, run],
+        [url, slug, run],
     );
 
     return { start };

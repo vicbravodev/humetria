@@ -32,26 +32,48 @@ describe('tour session', () => {
     afterEach(() => vi.unstubAllGlobals());
 
     it('remembers a tour once', () => {
-        rememberTour('people');
-        expect(takeTour()).toBe('people');
-        expect(takeTour()).toBeNull();
+        rememberTour('people', 'acme');
+        expect(takeTour('acme')).toBe('people');
+        expect(takeTour('acme')).toBeNull();
     });
 
     it('gives no tour when there is nothing stored', () =>
-        expect(takeTour()).toBeNull());
+        expect(takeTour('acme')).toBeNull());
 
     it('gives no tour for something that is not a step key', () => {
-        stubStorage().set(KEY, 'whatever');
-        expect(takeTour()).toBeNull();
+        stubStorage().set(KEY, 'acme:whatever');
+        expect(takeTour('acme')).toBeNull();
+    });
+
+    it('gives no tour that was remembered for another company', () => {
+        rememberTour('people', 'acme');
+        expect(takeTour('globex')).toBeNull();
+    });
+
+    it('clears a tour of another company when it is looked at', () => {
+        const data = stubStorage();
+        rememberTour('people', 'acme');
+        takeTour('globex');
+        expect(data.has(KEY)).toBe(false);
+    });
+
+    it('gives no tour for a value without a company', () => {
+        stubStorage().set(KEY, 'people');
+        expect(takeTour('acme')).toBeNull();
+    });
+
+    it('keeps a slug with a colon apart from the key', () => {
+        rememberTour('team', 'a:b');
+        expect(takeTour('a:b')).toBe('team');
     });
 
     it('gives no tour when sessionStorage throws', () => {
         stubStorage({ getItem: blocked });
-        expect(takeTour()).toBeNull();
+        expect(takeTour('acme')).toBeNull();
     });
 
     it('does not break when sessionStorage throws on write', () => {
         stubStorage({ setItem: blocked });
-        expect(() => rememberTour('team')).not.toThrow();
+        expect(() => rememberTour('team', 'acme')).not.toThrow();
     });
 });

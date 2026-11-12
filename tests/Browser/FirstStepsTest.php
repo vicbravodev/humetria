@@ -161,7 +161,7 @@ it('shows a centered bubble when the control is not on the page', function (): v
     signInToPanel();
 
     $page = visitPage('dashboard', '/admin/acme');
-    $page->script('sessionStorage.setItem("humetria:first-steps-tour", "team")');
+    $page->script('sessionStorage.setItem("humetria:first-steps-tour", "acme:team")');
 
     $page->navigate('/admin/acme')
         ->assertSee('Invita a tu equipo')
