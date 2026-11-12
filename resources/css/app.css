@@ -251,6 +251,36 @@
 }
 
 /*
+ * A list that scrolls inside a fixed frame (the sidebar's navigation) without a native scrollbar: an edge fades only
+ * while there is more to scroll that way (`data-more-above`/`data-more-below`, set by hooks/use-scroll-edges.ts). Wheel,
+ * touch and keyboard still scroll it.
+ */
+@utility scroll-fade {
+    --fade-top: 0px;
+    --fade-bottom: 0px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black var(--fade-top),
+        black calc(100% - var(--fade-bottom)),
+        transparent
+    );
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    &[data-more-above] {
+        --fade-top: 32px;
+    }
+
+    &[data-more-below] {
+        --fade-bottom: 40px;
+    }
+}
+
+/*
  * Page changes (lib/page-transition.ts): the sidebar stays put and only the panel's content cross-fades,
  * the new page rising 4 px. Fast exit, slightly longer entry.
  */

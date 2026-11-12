@@ -12,12 +12,14 @@ import {
     SidebarMenu,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useScrollEdges } from '@/hooks/use-scroll-edges';
 import { navSections } from '@/lib/nav-sections';
 import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 
 export function AppSidebar() {
     const { auth, tenant, inCourse } = usePage().props;
+    const nav = useScrollEdges<HTMLDivElement>();
     const sections = navSections({
         tenant,
         isStaff: auth.isStaff,
@@ -56,7 +58,11 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="gap-4 px-1">
+            {/* No scrollbar: the list fades where it continues. On a short screen the rows tighten so it fits more often. */}
+            <SidebarContent
+                ref={nav}
+                className="scroll-fade gap-4 px-1 [@media(min-width:768px)_and_(max-height:900px)]:gap-2 [@media(min-width:768px)_and_(max-height:900px)]:[&_[data-sidebar=menu-button]]:h-9"
+            >
                 {/* The company's own pages go without a heading; each family of tools under its name. */}
                 {sections.map((section) =>
                     section.key === 'main' ? (

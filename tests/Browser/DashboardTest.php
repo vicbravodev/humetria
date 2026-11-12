@@ -102,6 +102,18 @@ it('counts the evaluations in course in the sidebar and tells when the next one 
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-test="next-obligation"]\')).display', 'none');
 });
 
+it('scrolls the sidebar on a short screen without a scrollbar, fading the edge that has more', function (): void {
+    $page = visitPage('dashboard', panelCompany());
+    $nav = 'document.querySelector(\'[data-sidebar="content"]\')';
+    $state = "() => [getComputedStyle({$nav}).scrollbarWidth, {$nav}.hasAttribute('data-more-above'), {$nav}.hasAttribute('data-more-below')].join(' ')";
+
+    resizeTo($page, 1440, 560)->assertScript("() => {$nav}.scrollHeight > {$nav}.clientHeight", true)
+        ->assertScript($state, 'none false true');
+    $page->assertScript("() => { {$nav}.scrollTop = {$nav}.scrollHeight; return new Promise((resolve) => requestAnimationFrame(() => resolve(true))); }", true)
+        ->assertScript($state, 'none true false');
+    resizeTo($page, 1440, 1400)->assertScript($state, 'none false false');
+});
+
 it('shows no next obligation without an evaluation in course', function (): void {
     visitPage('dashboard', signInToPanel())->assertMissing('[data-test="next-obligation"]');
 });
