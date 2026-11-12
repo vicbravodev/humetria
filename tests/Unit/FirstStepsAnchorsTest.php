@@ -22,3 +22,20 @@ it('has in the pages every control a tour points at', function (): void {
         ->and(array_diff($targets, $anchors))->toBe([])
         ->and(array_diff($anchors, $targets))->toBe([]);
 });
+
+it('runs exactly one tour runner per page: the dock owns it, the bare component only where there is no dock', function (): void {
+    $root = dirname(__DIR__, 2).'/resources/js';
+    $dock = (string) file_get_contents($root.'/components/first-steps/first-steps-dock.tsx');
+    $withTour = array_map(
+        fn (string $file): string => str_replace($root.'/', '', $file),
+        array_values(array_filter(
+            glob($root.'/{pages,layouts,components}/{*,*/*,*/*/*}.tsx', GLOB_BRACE) ?: [],
+            fn (string $file): bool => str_contains((string) file_get_contents($file), '<FirstStepsTour'),
+        )),
+    );
+
+    // The dock calls the hook itself, so it must not also render the component (a second runner), but it keeps the styles.
+    expect($dock)->toContain('useFirstStepsTour()')
+        ->and($dock)->toContain("first-steps-tour.css")
+        ->and($withTour)->toBe(['pages/tenancy/onboarding.tsx']);
+});

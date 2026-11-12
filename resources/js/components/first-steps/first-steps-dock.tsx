@@ -1,22 +1,24 @@
-import { router, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import FirstStepsDone from '@/components/first-steps/first-steps-done';
 import FirstStepsLauncher from '@/components/first-steps/first-steps-launcher';
 import FirstStepsPanel from '@/components/first-steps/first-steps-panel';
-import FirstStepsTour from '@/components/first-steps/first-steps-tour';
+import '@/components/first-steps/first-steps-tour.css';
 import FirstStepsWelcome from '@/components/first-steps/first-steps-welcome';
 import { Popover, PopoverContent } from '@/components/ui/popover';
+import { useFirstStepsActions } from '@/hooks/use-first-steps-actions';
 import { useFirstStepsTour } from '@/hooks/use-first-steps-tour';
 import { OPEN_FIRST_STEPS } from '@/lib/first-steps/open';
-import { hide, welcome } from '@/routes/tenant/first-steps';
 
 /** The "Primeros pasos" button beside Humi, its panel, the welcome and the closing message; nothing for who has no steps. */
 export default function FirstStepsDock() {
     const { props } = usePage();
-    const { firstSteps, tenant, impersonator } = props;
+    const { firstSteps, tenant } = props;
     const finished = firstSteps?.steps.every((step) => step.done) === true;
     const [open, setOpen] = useState(finished);
+    // The one tour runner of the panel layout (a page without the dock mounts the bare tour component itself).
     const { start } = useFirstStepsTour();
+    const { welcomePending, seen, hide } = useFirstStepsActions();
 
     useEffect(() => {
         const show = () => setOpen(true);
@@ -36,21 +38,10 @@ export default function FirstStepsDock() {
         return null;
     }
 
-    const post = (url: string) =>
-        router.post(url, {}, { preserveScroll: true, preserveState: true });
-    // Whoever works as the owner changes nothing of theirs.
-    const seen = () =>
-        impersonator === null ? post(welcome.url(tenant.slug)) : undefined;
-
     return (
         <>
-            <FirstStepsTour />
             <FirstStepsWelcome
-                open={
-                    !firstSteps.welcomed &&
-                    !firstSteps.hidden &&
-                    impersonator === null
-                }
+                open={welcomePending}
                 total={firstSteps.steps.length}
                 onStart={() => {
                     seen();
@@ -77,14 +68,12 @@ export default function FirstStepsDock() {
                                     start(step);
                                 }}
                                 onHide={
-                                    impersonator === null
-                                        ? () => {
+                                    hide === undefined
+                                        ? undefined
+                                        : () => {
                                               setOpen(false);
-                                              router.post(
-                                                  hide.url(tenant.slug),
-                                              );
+                                              hide();
                                           }
-                                        : undefined
                                 }
                             />
                         )}
