@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
+use App\Modules\FirstSteps\Contracts\FirstSteps;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -58,8 +59,25 @@ final class HandleInertiaRequests extends Middleware
             // has shared the company: outside one, nothing is asked.
             // The Comisión and the handlers of complaints see nothing of NOM-035's evaluations (criterio C-25), not even its counts.
             'inCourse' => fn (): ?array => $this->seesNom035() ? $this->inCourse() : null,
+            // The guided tour of the company's owner: nobody else is asked anything, and outside a company nothing is.
+            'firstSteps' => fn (): ?array => $this->firstSteps($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function firstSteps(Request $request): ?array
+    {
+        $tenant = Inertia::getShared('tenant');
+        $user = $request->user();
+
+        if ($user === null || ! is_array($tenant) || ($tenant['role'] ?? null) !== 'owner') {
+            return null;
+        }
+
+        return app(FirstSteps::class)->forUser($user->id)?->toArray();
     }
 
     private function seesNom035(): bool
