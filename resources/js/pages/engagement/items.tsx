@@ -6,7 +6,11 @@ import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { EngagementItems } from '@/types';
-import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
+import {
+    useEngagementRoutes,
+    useEngagementTrail,
+    useSurveyCrumb,
+} from '@/hooks/use-engagement-routes';
 
 export default function Items({
     survey,
@@ -16,14 +20,9 @@ export default function Items({
     const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Clima' },
-            {
-                title: survey.name,
-                href: routes.results.url([tenantSlug, survey.id]),
-            },
-            { title: 'Por pregunta' },
-        ],
+        breadcrumbs: useEngagementTrail(useSurveyCrumb(survey), {
+            title: 'Por pregunta',
+        }),
     });
 
     return (

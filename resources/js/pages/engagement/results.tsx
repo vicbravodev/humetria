@@ -4,17 +4,19 @@ import ResultsBody from '@/components/engagement/results/results-body';
 import ResultsHeader from '@/components/engagement/results/results-header';
 import EmptyState from '@/components/humetria/empty-state';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import {
+    useEngagementTrail,
+    useSurveyCrumb,
+} from '@/hooks/use-engagement-routes';
 import type { EngagementResults } from '@/types';
 
 export default function Results(props: EngagementResults) {
     const tenantSlug = useTenantSlug();
     const { participation, survey } = props;
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Clima' },
-            { title: survey.name },
-            { title: 'Resultados' },
-        ],
+        breadcrumbs: useEngagementTrail(useSurveyCrumb(survey), {
+            title: 'Resultados',
+        }),
     });
 
     return (

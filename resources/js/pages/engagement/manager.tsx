@@ -13,7 +13,11 @@ import type {
     ManagerRow,
     Paginated,
 } from '@/types';
-import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
+import {
+    useEngagementRoutes,
+    useEngagementTrail,
+    useSurveyCrumb,
+} from '@/hooks/use-engagement-routes';
 
 /** The feedback of one manager as they will read it, plus the original comments of the group for who manages climate. */
 export default function Manager({
@@ -32,18 +36,14 @@ export default function Manager({
     const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Clima' },
-            {
-                title: survey.name,
-                href: routes.results.url([tenantSlug, survey.id]),
-            },
+        breadcrumbs: useEngagementTrail(
+            useSurveyCrumb(survey),
             {
                 title: 'Por jefe',
                 href: routes.managers.url([tenantSlug, survey.id]),
             },
             { title: manager.name },
-        ],
+        ),
     });
 
     return (

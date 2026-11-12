@@ -7,6 +7,7 @@ import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/pulse';
+import { useEngagementTrail } from '@/hooks/use-engagement-routes';
 import type { TrendSeries } from '@/types';
 
 /** How the company moves from survey to survey, as a whole: no groups, only what each wave may show. */
@@ -22,10 +23,7 @@ export default function EngagementTrend({
     const tenantSlug = useTenantSlug();
 
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Pulso', href: index(tenantSlug) },
-            { title: 'Tendencia' },
-        ],
+        breadcrumbs: useEngagementTrail({ title: 'Tendencia' }),
     });
 
     return (

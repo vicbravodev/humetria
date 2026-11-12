@@ -8,7 +8,10 @@ import SurveyCard from '@/components/engagement/survey-card';
 import SurveyHistory from '@/components/engagement/survey-history';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
-import { useEngagementKind } from '@/hooks/use-engagement-routes';
+import {
+    useEngagementKind,
+    useEngagementTrail,
+} from '@/hooks/use-engagement-routes';
 import { homeCopy } from '@/lib/engagement/panel';
 import type {
     ClimateSurveyCard,
@@ -39,7 +42,7 @@ export default function EngagementIndex({
 }) {
     const copy = homeCopy(useEngagementKind(), surveys.total);
 
-    setLayoutProps({ breadcrumbs: [{ title: copy.title }] });
+    setLayoutProps({ breadcrumbs: useEngagementTrail() });
 
     return (
         <>

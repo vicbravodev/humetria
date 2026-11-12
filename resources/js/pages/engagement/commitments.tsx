@@ -9,18 +9,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { EngagementCommitments } from '@/types';
-import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
+import {
+    useEngagementRoutes,
+    useEngagementTrail,
+    useSurveyCrumb,
+} from '@/hooks/use-engagement-routes';
 
 export default function Commitments(props: EngagementCommitments) {
     const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
     const { survey, available } = props;
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Clima' },
-            { title: survey.name },
-            { title: 'Compromisos' },
-        ],
+        breadcrumbs: useEngagementTrail(useSurveyCrumb(survey), {
+            title: 'Compromisos',
+        }),
     });
 
     return (

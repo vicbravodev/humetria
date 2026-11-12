@@ -8,7 +8,10 @@ import EmptyState from '@/components/humetria/empty-state';
 import Notice from '@/components/humetria/notice';
 import PageHeader from '@/components/humetria/page-header';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { results } from '@/routes/tenant/climate';
+import {
+    useEngagementTrail,
+    useSurveyCrumb,
+} from '@/hooks/use-engagement-routes';
 import type {
     CommentSummary,
     ManagerComment,
@@ -41,11 +44,9 @@ export default function Comments({
 }) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Clima' },
-            { title: survey.name, href: results.url([tenantSlug, survey.id]) },
-            { title: 'Comentarios' },
-        ],
+        breadcrumbs: useEngagementTrail(useSurveyCrumb(survey), {
+            title: 'Comentarios',
+        }),
     });
 
     return (
