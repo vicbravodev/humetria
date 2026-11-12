@@ -36,6 +36,6 @@ it('runs exactly one tour runner per page: the dock owns it, the bare component 
 
     // The dock calls the hook itself, so it must not also render the component (a second runner), but it keeps the styles.
     expect($dock)->toContain('useFirstStepsTour()')
-        ->and($dock)->toContain("first-steps-tour.css")
+        ->and($dock)->toContain('first-steps-tour.css')
         ->and($withTour)->toBe(['pages/tenancy/onboarding.tsx']);
 });
