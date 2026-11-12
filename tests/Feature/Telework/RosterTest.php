@@ -456,6 +456,18 @@ it('labels a cancelled checklist as cancelled, not as pending', function (): voi
         ->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.label', 'Cancelada'));
 });
 
+// F2 (C-07): the page of the person says what the portal says once the Comisión decided the list.
+it('labels a checklist the Comisión already decided as reviewed, not as in review', function (): void {
+    $application = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $url = route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]);
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.label', 'En revisión de la Comisión'));
+
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'application_id' => $application->id]);
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.label', 'Revisada por la Comisión'));
+});
+
 it('puts no individual answers in the props of the page', function (): void {
     ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'special_needs' => 'Necesito un escritorio alto.']);
 
