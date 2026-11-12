@@ -246,6 +246,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
     'the vacations policies' => ['leave/policies', fn () => route('tenant.vacations.policies.index', listsCompany()[0]), ['policies']],
     'the vacations settings' => ['leave/settings', fn () => route('tenant.vacations.settings.show', listsCompany()[0]), ['types', 'holidays']],
     'the vacations calendar' => ['leave/calendar', fn () => route('tenant.vacations.calendar', listsCompany()[0]), ['people']],
+    'the vacations calendar with everybody' => ['leave/calendar', fn () => route('tenant.vacations.calendar', [listsCompany()[0], 'with_absence' => '0']), ['people']],
     'the vacations requests queue' => ['leave/requests', fn () => route('tenant.vacations.requests.index', listsCompany()[0]), ['requests']],
     'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
     'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],

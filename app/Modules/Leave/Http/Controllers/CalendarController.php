@@ -33,6 +33,7 @@ final readonly class CalendarController
             $center === '' ? null : (Str::isUuid($center) && $this->centers->findActive($center) !== null ? $center : abort(404)),
             $area === '' ? null : (Str::isUuid($area) ? $area : abort(404)),
             Gate::allows('manage-vacations'),
+            $request->boolean('with_absence', true),
         ));
     }
 }
