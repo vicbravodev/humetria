@@ -1,3 +1,4 @@
+import { shortDate } from '@/lib/calendar-date';
 import { Wrench } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
@@ -57,7 +58,9 @@ export default function ReportsTable({
                                 {report.description}
                             </TableCell>
                             <TableCell>{report.positionName ?? '—'}</TableCell>
-                            <TableCell>{report.reportedOn}</TableCell>
+                            <TableCell>
+                                {shortDate(report.reportedOn)}
+                            </TableCell>
                             <TableCell className="min-w-64 whitespace-normal">
                                 {open ? (
                                     canResolve && (
@@ -69,7 +72,9 @@ export default function ReportsTable({
                                     <>
                                         {report.resolution}
                                         <span className="block text-caption text-muted-foreground">
-                                            {report.resolvedOn}
+                                            {report.resolvedOn === null
+                                                ? ''
+                                                : shortDate(report.resolvedOn)}
                                         </span>
                                     </>
                                 )}

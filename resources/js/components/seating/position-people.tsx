@@ -1,3 +1,4 @@
+import { shortDate } from '@/lib/calendar-date';
 import { Form } from '@inertiajs/react';
 import { Users } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
@@ -62,7 +63,9 @@ export default function PositionPeople({
                                     {person.name}
                                 </TableCell>
                                 <TableCell>{person.area}</TableCell>
-                                <TableCell>{person.startsOn}</TableCell>
+                                <TableCell>
+                                    {shortDate(person.startsOn)}
+                                </TableCell>
                                 <TableCell className="text-right">
                                     {canManage && (
                                         <Form

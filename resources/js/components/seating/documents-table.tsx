@@ -1,3 +1,4 @@
+import { shortDate } from '@/lib/calendar-date';
 import { FileText } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
@@ -48,7 +49,9 @@ export default function DocumentsTable({
                                     {document.kindLabel}
                                 </span>
                             </TableCell>
-                            <TableCell>{document.documentOn}</TableCell>
+                            <TableCell>
+                                {shortDate(document.documentOn)}
+                            </TableCell>
                             <TableCell>
                                 {document.incisos.length === 0
                                     ? '—'

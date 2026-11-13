@@ -567,6 +567,15 @@ it('shows the survey in progress and closes it before its last day', function (b
         ->assertSee('Cerrar la encuesta ahora');
 })->with($looks);
 
+it('writes the last day of the survey as a date, not as the year-month-day the server sends', function (): void {
+    [$url, $center] = seatingCenter();
+    Campaign::factory()->active('2026-11-25')->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
+
+    visit("{$url}/seating/centers/{$center->id}/survey")
+        ->assertSee('Cierra el 25 de noviembre de 2026')
+        ->assertDontSee('2026-11-25');
+});
+
 it('closes the survey from its page after asking', function (): void {
     [$url, $center] = seatingCenter();
     $survey = Campaign::factory()->active(now()->addDays(10)->toDateString())->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
