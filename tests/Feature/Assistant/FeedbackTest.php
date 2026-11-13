@@ -92,6 +92,12 @@ it('is closed to whoever is not signed in, a member, or allowed to use Humi', fu
     rate($this->answerId, [], memberOf($this->a, TenantRole::Committee))->assertForbidden();
 });
 
+it('refuses with 403 before it validates anything: whoever may not use Humi never learns the body was invalid', function (): void {
+    $committee = memberOf($this->a, TenantRole::Committee);
+
+    rate($this->answerId, ['rating' => 'meh', 'message_id' => 'x'], $committee)->assertForbidden();
+});
+
 it('does not let a rating of one company reach another', function (): void {
     rate($this->answerId)->assertNoContent();
     workIn($this->b);
