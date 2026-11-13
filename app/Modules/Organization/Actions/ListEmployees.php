@@ -34,7 +34,7 @@ final class ListEmployees
             ->when($filters->workCenterId !== null, fn (Builder $query) => $query->where('work_center_id', $filters->workCenterId))
             ->when($filters->areaId !== null, fn (Builder $query) => $query->where('area_id', $filters->areaId))
             ->when($filters->withoutEmail, fn (Builder $query) => $query->whereNull('email'))
-            ->matching(['name', 'email', 'employee_number'], $filters->search)
+            ->matching(['name', 'email', 'employee_number'], $filters->search, ['mobile'])
             ->orderBy('name')
             ->orderBy('employee_number')
             ->orderBy('id')
