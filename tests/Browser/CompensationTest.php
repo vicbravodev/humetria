@@ -110,6 +110,20 @@ it('shows the tabulator with the salary of each category and level', function (b
         ->assertSee('Descargar plantilla');
 })->with($looks);
 
+it('marks in its row a salary under the minimum, and counts those on the card of the tabulator', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+
+    foreach (['Auxiliar', 'Ayudante'] as $category) {
+        $grade = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => $category, 'level' => 'A']);
+        GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 25000, 'effective_from' => '2025-01-01']);
+    }
+
+    visitPage('compensation/tabulator', "{$url}/compensation/tabulator", $dark, $mobile)
+        ->assertSee('2 categorías bajo el salario mínimo')
+        ->assertScript('() => document.querySelectorAll("tbody tr").length === 2 && [...document.querySelectorAll("tbody tr")].every((row) => row.textContent.includes("Bajo el salario mínimo."))', true);
+})->with($looks);
+
 it('captures the salary of a category that has none in its own row (board V4-Comp-Datos)', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();

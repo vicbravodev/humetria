@@ -67,7 +67,7 @@ it('shows the data of the contract with what each lacks and the one notice of ac
             ->where('first_time', false)
             ->where('status', [
                 'roster' => ['people' => 11, 'missing' => 1, 'without_grade' => 1, 'without_hire_date' => 1, 'without_group' => 1],
-                'tabulator' => ['grades' => 2, 'without_salary' => 1],
+                'tabulator' => ['grades' => 2, 'without_salary' => 1, 'below_minimum' => 0],
                 // The 2 of the company and the 11 the base catalog gives it, which the start now makes sure of.
                 'benefits' => ['active' => 13],
                 'overrides' => ['people' => 1],

@@ -61,3 +61,12 @@ it('takes the minimum in force on the date of the salary, not the one of today',
 it('says nothing of a salary dated before the platform has any minimum wage, and does not fail', function (): void {
     expect(resolve(MinimumWageCheck::class)->warning(100, CarbonImmutable::parse('2000-01-01')))->toBeNull();
 });
+
+it('holds the salary in force today to today\'s minimum, however old it is, and a later one to its own day', function (): void {
+    $check = resolve(MinimumWageCheck::class);
+    $today = CarbonImmutable::parse('2026-11-03');
+
+    expect($check->inForce(25000, CarbonImmutable::parse('2000-01-01'), $today))->toContain('$315.04')
+        ->and($check->inForce(31504, CarbonImmutable::parse('2000-01-01'), $today))->toBeNull()
+        ->and($check->inForce(25000, CarbonImmutable::parse('2026-12-01'), $today))->toContain('$315.04');
+});

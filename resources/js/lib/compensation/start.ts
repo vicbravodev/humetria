@@ -24,7 +24,12 @@ export function gapCauses(causes: GapCauses): string {
 /** Where the data of the contract stands, as the server counts it (boards V4-Comp-Inicio and V4-Comp-Datos). */
 export type ContractStatus = {
     roster: { people: number; missing: number } & GapCauses;
-    tabulator: { grades: number; without_salary: number };
+    tabulator: {
+        grades: number;
+        without_salary: number;
+        /** Categories whose salary in force today is under the minimum wage. */
+        below_minimum: number;
+    };
     benefits: { active: number };
     overrides: { people: number };
     risk_premium: { set: boolean };
@@ -68,16 +73,21 @@ function rosterItem(
 function tabulatorItem({
     grades,
     without_salary,
+    below_minimum,
 }: ContractStatus['tabulator']): StatusItem {
+    const problems = [
+        without_salary > 0 &&
+            `${countOf(without_salary, 'categoría', 'categorías')} sin salario`,
+        below_minimum > 0 &&
+            `${countOf(below_minimum, 'categoría', 'categorías')} bajo el salario mínimo`,
+    ].filter((problem) => problem !== false);
+
     return {
         key: 'tabulator',
         label: 'Tabulador',
         value: countOf(grades, 'categoría', 'categorías'),
-        note:
-            without_salary === 0
-                ? 'Al día'
-                : `${countOf(without_salary, 'categoría', 'categorías')} sin salario`,
-        problem: without_salary > 0,
+        note: problems.length === 0 ? 'Al día' : problems.join(' · '),
+        problem: without_salary > 0 || below_minimum > 0,
     };
 }
 

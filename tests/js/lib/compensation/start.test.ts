@@ -18,7 +18,7 @@ const status: ContractStatus = {
         without_hire_date: 0,
         without_group: 0,
     },
-    tabulator: { grades: 7, without_salary: 0 },
+    tabulator: { grades: 7, without_salary: 0, below_minimum: 0 },
     benefits: { active: 12 },
     overrides: { people: 3 },
     risk_premium: { set: false },
@@ -70,7 +70,7 @@ describe('statusItems', () => {
                     without_hire_date: 0,
                     without_group: 0,
                 },
-                tabulator: { grades: 1, without_salary: 1 },
+                tabulator: { grades: 1, without_salary: 1, below_minimum: 0 },
                 benefits: { active: 1 },
                 risk_premium: { set: true },
             },
@@ -182,5 +182,27 @@ describe('gapCauses', () => {
                 without_group: 0,
             }),
         ).toBe('');
+    });
+});
+
+describe('statusItems, the tabulator under the minimum', () => {
+    it('says how many categories pay under the minimum wage today, next to the ones without salary', () => {
+        const note = (tabulator: ContractStatus['tabulator']) =>
+            statusItems({ ...status, tabulator }, false, false).find(
+                (item) => item.key === 'tabulator',
+            );
+
+        expect(
+            note({ grades: 7, without_salary: 0, below_minimum: 2 }),
+        ).toMatchObject({
+            note: '2 categorías bajo el salario mínimo',
+            problem: true,
+        });
+        expect(
+            note({ grades: 7, without_salary: 1, below_minimum: 1 }),
+        ).toMatchObject({
+            note: '1 categoría sin salario · 1 categoría bajo el salario mínimo',
+            problem: true,
+        });
     });
 });
