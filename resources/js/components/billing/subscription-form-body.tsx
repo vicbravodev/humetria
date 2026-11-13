@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import type { PlanDefaults } from '@/lib/billing-form';
+import { saveLabel } from '@/lib/billing-preview';
 import type {
     AccountKind,
     Plan,
@@ -69,7 +70,7 @@ export default function SubscriptionFormBody({
                 </DialogClose>
                 <Button type="submit" disabled={processing}>
                     {processing && <Spinner />}
-                    Guardar plan
+                    {saveLabel(preview?.modules ?? null)}
                 </Button>
             </DialogFooter>
         </>

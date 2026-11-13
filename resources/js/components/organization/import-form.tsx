@@ -2,8 +2,11 @@ import { Form, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import ImportActions from '@/components/organization/import-actions';
+import ImportDefaultCenter from '@/components/organization/import-default-center';
 import ImportErrors from '@/components/organization/import-errors';
 import ImportFileField from '@/components/organization/import-file-field';
+import ImportChanges from '@/components/organization/import-changes';
+import ImportWarnings from '@/components/organization/import-warnings';
 import ImportStats from '@/components/organization/import-stats';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/employees/import';
@@ -14,9 +17,12 @@ import { store } from '@/routes/tenant/employees/import';
  */
 export default function ImportForm({
     aside,
+    defaultCenter,
 }: {
     /** How to fill the file, beside it. */
     aside: ReactNode;
+    /** The center whose card sent here: the rows without one go to it. */
+    defaultCenter: { id: string; name: string } | null;
 }) {
     const tenantSlug = useTenantSlug();
     const summary = usePage().flash.import;
@@ -42,12 +48,23 @@ export default function ImportForm({
                         name="confirm"
                         defaultValue="0"
                     />
+                    <ImportDefaultCenter center={defaultCenter} />
                     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
                         <div className="grid gap-6">
                             <ImportFileField error={errors['file']} />
                             {summary !== undefined && (
                                 <ImportStats summary={summary} />
                             )}
+                            {summary?.status === 'ready' &&
+                                summary.warnings !== undefined && (
+                                    <ImportWarnings
+                                        warnings={summary.warnings}
+                                    />
+                                )}
+                            {summary?.status === 'ready' &&
+                                summary.changes !== undefined && (
+                                    <ImportChanges changes={summary.changes} />
+                                )}
                             {summary?.status === 'invalid' && (
                                 <ImportErrors summary={summary} />
                             )}

@@ -9,6 +9,7 @@ import {
     Settings,
     Sun,
     Upload,
+    UserRound,
 } from 'lucide-react';
 import type { Appearance } from '@/hooks/use-appearance';
 import { type NavTenant, settingsEntryHref } from '@/lib/app-navigation';
@@ -17,7 +18,10 @@ import { navSections } from '@/lib/nav-sections';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
 import { index as campaigns } from '@/routes/tenant/campaigns';
+import { index as employees } from '@/routes/tenant/employees';
 import { create as importCsv } from '@/routes/tenant/employees/import';
+import type { TenantCan } from '@/types';
+import type { Option } from '@/lib/option-search';
 
 export type PaletteCommand = Command & {
     group: string;
@@ -27,7 +31,10 @@ export type PaletteCommand = Command & {
 
 type Options = {
     isStaff: boolean;
+    isSuperadmin?: boolean | undefined;
     tenant: NavTenant | null;
+    /** What the role may write right now: a read-only company has it off. The menu's `tenant.can` keeps what it may still read. */
+    writing?: TenantCan | undefined;
     sidebarExpanded: boolean;
     impersonating: boolean;
     actions: {
@@ -46,9 +53,10 @@ const THEMES: { id: Appearance; label: string; icon: LucideIcon }[] = [
 /** What a role may start from the palette inside a company: a new evaluation, loading employees. */
 function companyActions(
     tenant: NavTenant | null,
+    can: TenantCan | undefined,
     visit: Options['actions']['visit'],
 ): PaletteCommand[] {
-    if (tenant === null) {
+    if (tenant === null || can === undefined) {
         return [];
     }
 
@@ -70,29 +78,31 @@ function companyActions(
     };
 
     return [
-        ...(tenant.can.manage_campaigns &&
+        ...(can.manage_campaigns &&
         tenant.type !== 'union' &&
         hasModule(tenant, 'nom035')
             ? [newEvaluation]
             : []),
-        ...(tenant.can.manage_organization ? [importEmployees] : []),
+        ...(can.manage_organization ? [importEmployees] : []),
     ];
 }
 
 /** What the ⌘K palette offers: what this person can start, the pages they can open, the theme and the sidebar. */
 export function paletteCommands({
     isStaff,
+    isSuperadmin,
     tenant,
+    writing = tenant?.can,
     sidebarExpanded,
     impersonating,
     actions,
 }: Options): PaletteCommand[] {
-    const pages = navSections({ tenant, isStaff }).flatMap(
+    const pages = navSections({ tenant, isStaff, isSuperadmin }).flatMap(
         (section) => section.items,
     );
 
     return [
-        ...companyActions(tenant, actions.visit),
+        ...companyActions(tenant, writing, actions.visit),
         ...pages.map(({ title, href, icon }) => ({
             id: toUrl(href),
             label: title,
@@ -125,4 +135,27 @@ export function paletteCommands({
             run: actions.toggleSidebar,
         },
     ];
+}
+
+/**
+ * The people a search found, as commands under «Personas»: each opens Empleados narrowed to their name (there is no
+ * person page yet). The label is «Nombre · Puesto»; the server already matched them, so they are not filtered again.
+ */
+export function peopleCommands(
+    people: Option[],
+    tenantSlug: string,
+    visit: Options['actions']['visit'],
+): PaletteCommand[] {
+    return people.map(({ value, label }) => ({
+        id: `person-${value}`,
+        label,
+        group: 'Personas',
+        icon: UserRound,
+        run: () =>
+            visit(
+                employees(tenantSlug, {
+                    query: { q: label.split(' · ')[0] ?? label },
+                }),
+            ),
+    }));
 }

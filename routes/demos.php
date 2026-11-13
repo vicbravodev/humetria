@@ -13,3 +13,7 @@ Route::post('demo', [DemoRequestController::class, 'store'])
 Route::get('admin/demo-requests', [DemoRequestConsoleController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('demo-requests.index');
+
+Route::put('admin/demo-requests/{demoRequest}', [DemoRequestConsoleController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('demo-requests.update');

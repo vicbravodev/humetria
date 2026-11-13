@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
 import IconTile from '@/components/humetria/icon-tile';
+import { gapCauses } from '@/lib/compensation/start';
 import { countOf } from '@/lib/plural';
 import type { ScenarioReport } from '@/types';
 
@@ -38,8 +39,7 @@ export default function ReportCoverage({ report }: { report: ScenarioReport }) {
                                 'persona queda fuera',
                                 'personas quedan fuera',
                             )}
-                            : les falta categoría y nivel, fecha de ingreso o
-                            grupo en el padrón.
+                            : {gapCauses(coverage.causes)}.
                         </p>
                         {coverage.missing.length > 0 && (
                             <p className="text-sm">

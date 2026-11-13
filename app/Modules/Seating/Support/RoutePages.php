@@ -39,6 +39,17 @@ final readonly class RoutePages
         'r13' => 'La Comisión asignada al centro',
     ];
 
+    /** What is behind a requirement with nothing registered to judge it by (pending): it is not met, and it is not missing yet. */
+    private const array PENDING = [
+        'r3' => 'Aún no hay evaluaciones firmadas',
+        'r5' => 'Aún no hay puestos clasificados',
+        'r6' => 'Aún no hay asientos registrados',
+        'r7' => 'Aún no hay evaluaciones firmadas',
+        'r8' => 'Aún no hay evaluaciones firmadas',
+        'r9' => 'Aún no hay evaluaciones firmadas',
+        'r11' => 'Aún no hay puestos clasificados',
+    ];
+
     /** What is behind a requirement that is not met: [missing, one] [missing, many] [warning, one] [warning, many]. */
     private const array DETAIL = [
         'r1' => ['Declara el sector y registra los puestos de pie', 'Declara el sector y registra los puestos de pie', '1 puesto sin nadie asignado', '%d puestos sin nadie asignado'],
@@ -87,6 +98,8 @@ final readonly class RoutePages
      */
     public function inspection(mixed $tenant, WorkCenterSummary $center, array $rows): array
     {
+        // What does not apply is neither shown nor counted: it is not «Cumple» and it is not missing.
+        $rows = array_values(array_filter($rows, fn (ComplianceRow $row): bool => $row->state !== RowState::NotApplicable));
         usort($rows, fn (ComplianceRow $a, ComplianceRow $b): int => RouteStages::rank($a->key) <=> RouteStages::rank($b->key));
         $items = fn (bool $met): array => array_values(array_map(fn (ComplianceRow $row): array => $this->item($tenant, $center, $row), array_filter($rows, fn (ComplianceRow $row): bool => ($row->state === RowState::Met) === $met)));
 
@@ -111,6 +124,8 @@ final readonly class RoutePages
             RowState::Met => null,
             RowState::Missing => sprintf($row->count === 1 ? $missingOne : $missingMany, $row->count),
             RowState::Warning => sprintf($row->count === 1 ? $warningOne : $warningMany, $row->count),
+            RowState::Pending => self::PENDING[$row->key],
+            RowState::NotApplicable => 'Ningún puesto del centro lo requiere',
         };
 
         return [
@@ -121,6 +136,8 @@ final readonly class RoutePages
                 RowState::Met => 'done',
                 RowState::Warning => 'partial',
                 RowState::Missing => 'missing',
+                RowState::Pending => 'pending',
+                RowState::NotApplicable => 'not_applicable',
             },
             ...$this->fix($tenant, $center, $row->key, $row->state === RowState::Met),
         ];

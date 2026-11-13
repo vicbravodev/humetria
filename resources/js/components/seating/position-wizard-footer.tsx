@@ -11,11 +11,14 @@ export default function PositionWizardFooter({
     saved,
     processing,
     onStep,
+    onNext,
 }: {
     step: number;
     saved: boolean;
     processing: boolean;
     onStep: (step: number) => void;
+    /** «Siguiente»: receives the form, so the step can check what it still misses before moving on. */
+    onNext: (form: HTMLFormElement | null) => void;
 }) {
     const last = step === 4;
 
@@ -49,7 +52,7 @@ export default function PositionWizardFooter({
                         key="next"
                         type="button"
                         data-test="position-next"
-                        onClick={() => onStep(step + 1)}
+                        onClick={(event) => onNext(event.currentTarget.form)}
                     >
                         {POSITION_STEPS[step - 1]?.next}
                     </Button>

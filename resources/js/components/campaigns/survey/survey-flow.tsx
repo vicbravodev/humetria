@@ -3,6 +3,7 @@ import { useState } from 'react';
 import SurveyIntro from '@/components/campaigns/survey/survey-intro';
 import SurveyRunner from '@/components/campaigns/survey/survey-runner';
 import { Button } from '@/components/ui/button';
+import type { IntroCopy } from '@/lib/survey';
 import type { SurveyInstrument } from '@/types';
 
 /**
@@ -13,12 +14,14 @@ export default function SurveyFlow({
     token,
     company,
     closesOn,
+    copy,
     instruments,
     next,
 }: {
     token: string;
     company: string;
     closesOn: string | null;
+    copy: IntroCopy;
     instruments: SurveyInstrument[];
     next: SurveyInstrument;
 }) {
@@ -33,13 +36,14 @@ export default function SurveyFlow({
                 token={token}
                 instruments={instruments}
                 instrument={next}
+                noun={copy.noun}
                 onBack={() => setStarted(false)}
             />
         );
     }
 
     return (
-        <SurveyIntro company={company} closesOn={closesOn}>
+        <SurveyIntro company={company} closesOn={closesOn} copy={copy}>
             <ol className="overflow-hidden rounded-lg border bg-card">
                 {instruments.map((instrument, index) => (
                     <li
@@ -53,7 +57,7 @@ export default function SurveyFlow({
                             {index + 1}
                         </span>
                         <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="text-[17px] font-medium">
+                            <span className="text-[1.0625rem] font-medium">
                                 {instrument.shortTitle}
                             </span>
                             <span className="text-base text-muted-foreground">
@@ -75,10 +79,12 @@ export default function SurveyFlow({
             </ol>
             <Button
                 size="lg"
-                className="w-full rounded-[10px] text-[17px]"
+                className="w-full rounded-[10px] text-[1.0625rem]"
                 onClick={() => setStarted(true)}
             >
-                {answered ? `Continuar con la ${next.shortTitle}` : 'Comenzar'}
+                {answered
+                    ? `Continuar con la ${copy.noun === 'guía' ? next.shortTitle : copy.noun}`
+                    : 'Comenzar'}
             </Button>
         </SurveyIntro>
     );

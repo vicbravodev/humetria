@@ -7,7 +7,8 @@ export default function RequirementsSummaryCard({
 }: {
     summary: RequirementsSummary;
 }) {
-    const total = summary.met + summary.warning + summary.missing;
+    const total =
+        summary.met + summary.warning + summary.missing + summary.pending;
 
     return (
         <div className="flex flex-col items-center gap-4 card p-6 text-center lg:self-start">
@@ -23,7 +24,7 @@ export default function RequirementsSummaryCard({
                     de {total} cumplen
                 </span>
             </ArcMeter>
-            <dl className="grid w-full grid-cols-2 gap-3 border-t pt-4 text-left text-sm">
+            <dl className="grid w-full grid-cols-3 gap-3 border-t pt-4 text-left text-sm">
                 <div>
                     <dt className="text-muted-foreground">Con aviso</dt>
                     <dd className="font-semibold tabular-nums">
@@ -36,7 +37,20 @@ export default function RequirementsSummaryCard({
                         {summary.missing}
                     </dd>
                 </div>
+                <div>
+                    <dt className="text-muted-foreground">Sin registros</dt>
+                    <dd className="font-semibold tabular-nums">
+                        {summary.pending}
+                    </dd>
+                </div>
             </dl>
+            {summary.notApplicable > 0 && (
+                <p className="text-meta text-muted-foreground">
+                    {summary.notApplicable === 1
+                        ? '1 requisito no aplica y no se cuenta.'
+                        : `${summary.notApplicable} requisitos no aplican y no se cuentan.`}
+                </p>
+            )}
         </div>
     );
 }

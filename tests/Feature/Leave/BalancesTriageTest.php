@@ -101,3 +101,25 @@ it('says how many days are still owed in all, for the head of the page', functio
 
     expect(triageProps()['owedDays'])->toBe(15);
 });
+
+describe('a search that finds nobody in the tab', function (): void {
+    it('says how many people match it in the other tabs', function (): void {
+        triageUnacknowledged(Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Pendiente', 'hired_on' => '2024-03-15']));
+
+        expect(triageProps(['tab' => 'statements', 'q' => 'Solís'])['elsewhere'])->toBe(1);
+    });
+
+    it('says none when the tab already has the match, when it is everybody, or when nothing is searched', function (): void {
+        triageUnacknowledged($this->ana);
+
+        expect(triageProps(['tab' => 'statements', 'q' => 'Solís'])['elsewhere'])->toBe(0)
+            ->and(triageProps(['tab' => 'all', 'q' => 'Nadie Existe'])['elsewhere'])->toBe(0)
+            ->and(triageProps(['tab' => 'statements'])['elsewhere'])->toBe(0);
+    });
+
+    it('says none when nobody matches anywhere', function (): void {
+        triageUnacknowledged(Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Pendiente', 'hired_on' => '2024-03-15']));
+
+        expect(triageProps(['tab' => 'statements', 'q' => 'Zzz'])['elsewhere'])->toBe(0);
+    });
+});

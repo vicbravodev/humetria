@@ -57,7 +57,7 @@ export default function AssessmentForm({
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor="verified-on">
-                                Fecha de verificación
+                                Fecha de verificación (obligatoria para firmar)
                             </Label>
                             <DatePicker
                                 id="verified-on"
@@ -71,8 +71,8 @@ export default function AssessmentForm({
                         </div>
                         <div className="grid gap-2 sm:col-span-2">
                             <Label htmlFor="other-aspects">
-                                Otros aspectos a considerar (edad, estado de
-                                salud, embarazo…)
+                                Otros aspectos a considerar, obligatorio para
+                                firmar (edad, estado de salud, embarazo…)
                             </Label>
                             <Textarea
                                 id="other-aspects"

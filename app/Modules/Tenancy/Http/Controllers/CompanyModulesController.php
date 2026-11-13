@@ -39,6 +39,7 @@ final class CompanyModulesController extends Controller
                 'trade_name' => $tenant->trade_name,
                 'rfc' => $tenant->rfc,
                 'slug' => $tenant->slug,
+                'type' => $tenant->type->value,
                 'status' => $status->value,
                 'status_label' => $status->label(),
                 'restriction_reason' => $tenant->restriction_reason,
@@ -79,6 +80,7 @@ final class CompanyModulesController extends Controller
                 ['meter' => 'storage_bytes', 'label' => 'Archivos', 'unit' => 'bytes'],
             ]),
             'can_manage' => Gate::allows('manage-tenants'),
+            'can_audit' => Gate::allows('view-audit'),
         ]);
     }
 

@@ -6,6 +6,7 @@ namespace App\Modules\Compensation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Compensation\Actions\ListScenarios;
+use App\Modules\Compensation\Support\BaseCatalog;
 use App\Modules\Compensation\Support\CompensationStart;
 use App\Modules\Compensation\Support\ContractStatus;
 use App\Modules\Compensation\Support\ScenarioRows;
@@ -21,9 +22,12 @@ use Inertia\Response;
  */
 final class CompensationController extends Controller
 {
-    public function index(ListScenarios $list, ScenarioRows $rows, ContractStatus $status, CompensationStart $start): Response
+    public function index(ListScenarios $list, ScenarioRows $rows, ContractStatus $status, CompensationStart $start, BaseCatalog $catalog): Response
     {
         Gate::authorize('view-compensation');
+
+        // The base benefits count from the start, not from the first time Prestaciones is opened.
+        $catalog->ensure();
 
         $today = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfDay();
         $contract = $status->handle($today);

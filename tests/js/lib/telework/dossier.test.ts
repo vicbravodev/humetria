@@ -5,6 +5,7 @@ import {
     dossierBlock,
     inapplicableText,
     isFixedPlace,
+    reviewCells,
 } from '@/lib/telework/dossier';
 
 const NUMERALS = [
@@ -64,5 +65,45 @@ describe('inapplicableText', () => {
     it('speaks of notices for 5.11 and of people elsewhere', () => {
         expect(inapplicableText('5.11')).toContain('aviso');
         expect(inapplicableText('5.1')).toContain('teletrabaj');
+    });
+});
+
+describe('reviewCells', () => {
+    it('says «Falta» before any review, with a dash in the rest', () => {
+        expect(reviewCells(null)).toEqual({
+            decidedOn: 'Falta',
+            decision: '—',
+            method: '—',
+            validUntil: '—',
+            unfavorable: '—',
+            note: '—',
+        });
+    });
+
+    it('prints the decision with how many answers were unfavorable and the note of the Comisión', () => {
+        expect(
+            reviewCells({
+                decidedOn: '2026-03-01',
+                decision: 'Validado',
+                method: 'Comprobación a distancia',
+                validUntil: '2027-02-28',
+                unfavorable: 0,
+                note: 'Todo en orden.',
+            }),
+        ).toMatchObject({
+            unfavorable: '0',
+            note: 'Todo en orden.',
+            decision: 'Validado',
+        });
+        expect(
+            reviewCells({
+                decidedOn: '2026-03-01',
+                decision: 'No validado',
+                method: 'Visita',
+                validUntil: null,
+                unfavorable: null,
+                note: 'No es seguro.',
+            }),
+        ).toMatchObject({ validUntil: '—', unfavorable: '—' });
     });
 });

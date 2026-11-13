@@ -36,7 +36,7 @@ final class DeviceLinked extends Notification implements MailBag, ShouldQueue
     {
         $when = $this->at->setTimezone(config()->string('app.display_timezone'))->isoFormat('D [de] MMMM [de] YYYY [a las] H:mm');
 
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])
             ->subject('Se vinculó un dispositivo a su registro de jornada')
             ->greeting("Hola, {$this->name}")
             // Only plain characters of the label reach the markdown line: never a link.

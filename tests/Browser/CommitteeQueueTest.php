@@ -32,6 +32,21 @@ it('shows a member of the Comisión their queue, in both themes and on a phone',
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
 
+// C-11: a center where people telework and the checklist is not published blocks the Comisión, and its queue says so.
+it('tells the Comisión that its center has no checklist published', function (): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    $ruben = memberOf($tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'user_id' => $ruben->id]);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id])->id]);
+    test()->actingAs($ruben);
+
+    visit('/admin/acme')
+        ->assertSee('Publica la lista de verificación · Planta Querétaro')
+        ->assertSee('no tiene lista de verificación publicada')
+        ->assertNoJavaScriptErrors();
+});
+
 // Rediseño v2 (PR 3): the Ley Silla assessments to sign wait in the same queue, with their standard.
 it('shows the Comisión the Ley Silla assessments it has to sign', function (): void {
     $tenant = Tenant::factory()->create(['slug' => 'acme']);

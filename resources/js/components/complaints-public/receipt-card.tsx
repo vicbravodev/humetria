@@ -1,6 +1,8 @@
 import { Check, KeyRound } from 'lucide-react';
 import CodeRow from '@/components/complaints-public/code-row';
+import ShareReceipt from '@/components/complaints-public/share-receipt';
 import { Button } from '@/components/ui/button';
+import { keyNote } from '@/lib/complaints/receipt';
 import type { Receipt } from '@/lib/complaints/receipt';
 import { show } from '@/routes/complaints/follow-up';
 
@@ -12,11 +14,14 @@ export default function ReceiptCard({
     receipt,
     code,
     acknowledgeBy,
+    named,
 }: {
     receipt: Receipt;
     code: string;
     /** «5 de noviembre de 2026»: the last day the company set to acknowledge it. */
     acknowledgeBy: string;
+    /** Whether the person gave their name: the note about the key does not say «no sabemos quién es» to them. */
+    named: boolean;
 }) {
     return (
         <section className="flex flex-col gap-5" aria-live="polite">
@@ -42,11 +47,11 @@ export default function ReceiptCard({
             <p className="flex items-start gap-3 rounded-lg bg-warning px-4 py-3 text-base text-warning-foreground">
                 <KeyRound aria-hidden className="mt-1 size-4 shrink-0" />
                 <span>
-                    Guarde la referencia y su clave ahora: esta pantalla no se
-                    vuelve a mostrar y la clave no se puede recuperar. Sin ellas
-                    no podemos responderle, porque no sabemos quién es.
+                    Guárdela ahora: no se vuelve a mostrar. Si el dispositivo no
+                    es suyo, cierre esta pantalla al terminar. {keyNote(named)}
                 </span>
             </p>
+            <ShareReceipt receipt={receipt} />
             <Button variant="outline" className="w-full" asChild>
                 <a href={show.url({ code })}>Ver cómo va</a>
             </Button>

@@ -35,23 +35,25 @@ it('shows the superadmin every company with its status', function (bool $dark, b
     TenantMembership::factory()->for($both)->for(User::factory()->create(['name' => 'Dora Luna', 'email' => 'dora@acme.mx']))->create();
     TenantInvitation::factory()->for($both)->create(['name' => 'Eva Mora', 'email' => 'eva@acme.mx']);
 
-    visitPage('tenancy/index', '/admin/companies', $dark, $mobile)
+    $page = visitPage('tenancy/index', '/admin/companies', $dark, $mobile)
         ->assertSee('Empresas')
         ->assertSee('5 empresas')
-        ->assertSee('Sin invitar')
+        ->assertSee('Grupo Ejemplo')
+        ->assertSee('Grupo Ejemplo S.A. de C.V.')
+        ->assertSee('GEJ0101011A1')
+        ->assertSee('Sin iniciar');
+
+    $page->assertSee('Sin invitar')
         ->assertSee('Ana Pérez')
         ->assertSee('ana@acme.mx')
         ->assertSee('Invitación enviada · vence el')
         ->assertSee('Vencida')
         ->assertSee('carla@acme.mx')
         ->assertSee('dora@acme.mx')
-        ->assertSee('eva@acme.mx')
-        ->assertSee('Grupo Ejemplo')
-        ->assertSee('Grupo Ejemplo S.A. de C.V.')
-        ->assertSee('GEJ0101011A1')
-        ->assertSee('Sin iniciar')
-        // A company with an owner offers to change it, from its row's menu.
-        ->click('[aria-label="Acciones de Con owner"]')
+        ->assertSee('eva@acme.mx');
+
+    // A company with an owner offers to change it, from its row's menu.
+    $page->click('[aria-label="Acciones de Con owner"]')
         ->assertSee('Cambiar owner');
 })->with($looks);
 
@@ -59,8 +61,8 @@ it('keeps the actions of each row in one menu, so the table fits without scrolli
     signInAsSuperadmin();
     TenantInvitation::factory()->for(Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']))->create();
 
-    visit('/admin/companies')
-        ->resize(1280, 800)
+    // Measured once the layout has settled at that width, not mid-transition.
+    resizeTo(visit('/admin/companies')->assertNoJavaScriptErrors(), 1280, 800)
         ->assertScript('() => { const box = document.querySelector(\'[data-slot="table-container"]\'); return box.scrollWidth <= box.clientWidth; }')
         ->assertScript('() => document.querySelectorAll(\'[data-test="tenant-actions"]\').length', 1)
         ->click('[aria-label="Acciones de Grupo Ejemplo"]')
@@ -121,6 +123,9 @@ it('creates a company from the dialog, suggesting its address from the trade nam
         ->assertSee('La empresa queda sin iniciar: su prueba de 14 días empieza cuando su responsable entre por primera vez.')
         ->type('trade_name', 'Grupo Ejemplo')
         ->assertValue('slug', 'grupo-ejemplo')
+        ->assertSee('Dirección web')
+        ->assertSee('Así se verá:')
+        ->assertSee('/admin/grupo-ejemplo')
         ->type('rfc', 'gej0101011a1')
         ->type('legal_name', 'Grupo Ejemplo S.A. de C.V.')
         ->press('Dar de alta')
@@ -582,7 +587,55 @@ it('narrows the companies by name or RFC and by status', function (): void {
         ->assertSee('Autopartes Querétaro')
         ->assertQueryStringHas('q', 'queretaro')
         ->click('a[href*="status=trial"]')
-        ->assertSee('Ninguna empresa coincide')
+        ->assertSee('Nada coincide con tu búsqueda')
+        ->assertSee('Quitar filtros')
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the search and the tabs in view when nothing matches, and offers to clear the filters', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+
+    visit('/admin/companies?q=zzz')
+        ->assertSee('Nada coincide con tu búsqueda')
+        ->assertSee('Quitar filtros')
+        ->assertPresent('input[type="search"]')
+        ->assertDontSee('Aún no hay empresas')
+        ->click('Quitar filtros')
+        ->assertSee('Grupo Ejemplo')
+        ->assertNoJavaScriptErrors();
+});
+
+it('says there are no companies yet only when there are none', function (): void {
+    signInAsSuperadmin();
+
+    visit('/admin/companies')
+        ->assertSee('Aún no hay empresas')
+        ->assertMissing('input[type="search"]');
+});
+
+it('keeps the name, RFC, status and menu of a row in view on a phone, without scrolling sideways', function (): void {
+    signInAsSuperadmin();
+    Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo', 'rfc' => 'GEJ0101011A1']);
+
+    visitPage('tenancy/index', '/admin/companies', false, true)
+        ->assertSee('GEJ0101011A1')
+        ->assertSee('Sin iniciar')
+        ->assertPresent('[aria-label="Acciones de Grupo Ejemplo"]')
+        ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
+        // The table does not scroll inside its frame either: the menu is in reach without sliding it.
+        ->assertScript('(() => { const frame = document.querySelector(\'[data-slot="table-container"]\'); return frame.scrollWidth <= frame.clientWidth; })()', true);
+});
+
+it('warns, when replacing the owner, who loses access to the company', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Con owner']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+    Tenant::factory()->create(['trade_name' => 'Sin owner']);
+
+    visit('/admin/companies')
+        ->click('[aria-label="Acciones de Con owner"]')->click('Cambiar owner')
+        ->assertSee('Cuando acepte, Ana Pérez dejará de tener acceso a Con owner.')
         ->assertNoJavaScriptErrors();
 });
 
@@ -618,4 +671,100 @@ it('does not undo a status tab clicked while a search waits to go out', function
         ->assertValue('input[type="search"]', '')
         ->assertSee('Ninguna empresa coincide')
         ->assertNoJavaScriptErrors();
+});
+
+it('shows the superadmin the audit trail, with an entry opening its context', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+    $actor = User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'tenant_id' => $tenant->id,
+        'actor_id' => $actor->id,
+        'event' => 'campaign.launched',
+        'metadata' => ['centro' => 'Planta Norte'],
+        'created_at' => now(),
+    ]);
+
+    visitPage('tenancy/audit', '/admin/audit', $dark, $mobile)
+        ->assertSee('Bitácora')
+        ->assertSee('Campaña lanzada')
+        ->assertSee('Ana Pérez')
+        ->click('[aria-label="Detalle: Campaña lanzada"]')
+        ->assertSee('Planta Norte');
+})->with($looks);
+
+it('reads an entry made while impersonating as the superadmin acting as the person', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create();
+    $owner = User::factory()->create(['name' => 'Dueña Acme', 'email' => 'duena@acme.mx']);
+    $staff = User::factory()->create(['name' => 'Soporte Uno', 'email' => 'uno@humetria.mx']);
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'tenant_id' => $tenant->id,
+        'actor_id' => $owner->id,
+        'impersonator_id' => $staff->id,
+        'event' => 'campaign.launched',
+        'metadata' => [],
+        'created_at' => now(),
+    ]);
+
+    visit('/admin/audit')
+        ->assertSee('Soporte Uno como Dueña Acme')
+        ->assertDontSee('Impersonando:');
+});
+
+it('says so when the filters of the audit trail match nothing', function (bool $dark): void {
+    signInAsSuperadmin();
+
+    visitPage('tenancy/audit', '/admin/audit?family=billing', $dark)
+        ->assertSee('Nada coincide con estos filtros')
+        ->assertSee('Quitar filtros');
+})->with(['light' => false, 'dark' => true]);
+
+it('shows the superadmin the platform users, each with a menu that asks before it acts', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'two_factor_confirmed_at' => now(), 'two_factor_secret' => 's', 'two_factor_recovery_codes' => 'c']);
+
+    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
+        ->assertSee('Usuarios')
+        ->assertSee('Ana Pérez')
+        ->assertSee('ana@acme.mx')
+        ->assertSee('Superadmin')
+        ->click('[aria-label="Acciones de Ana Pérez"]')
+        ->assertSee('Quitar verificación en dos pasos')
+        ->assertSee('Dar rol de soporte')
+        ->click('Quitar verificación en dos pasos')
+        ->assertSee('¿Quitar la verificación en dos pasos de Ana Pérez?')
+        ->assertSee('ana@acme.mx');
+})->with($looks);
+
+it('says so when no user matches the search', function (bool $dark): void {
+    signInAsSuperadmin();
+
+    visitPage('tenancy/users', '/admin/platform-users?q=zzzz', $dark)
+        ->assertSee('Nadie coincide con tu búsqueda');
+})->with(['light' => false, 'dark' => true]);
+
+it('shows the superadmin the platform in four figures, each a way into its list', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->count(2)->create();
+    Tenant::factory()->suspended()->create();
+    App\Modules\Demos\Models\DemoRequest::factory()->create();
+
+    visitPage('tenancy/overview', '/admin/overview', $dark, $mobile)
+        ->assertSee('Resumen')
+        ->assertSee('Ingreso mensual contratado')
+        ->assertSee('Solicitudes de demo')
+        ->assertSee('Sin entrar en 30 días')
+        ->assertSee('Suspendidas')
+        ->assertSee('1 espera respuesta.');
+})->with($looks);
+
+it('shows when each company and each user last came in', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['last_login_at' => '2026-11-10 18:00:00']))->create();
+
+    visitPage('tenancy/index', '/admin/companies')->assertSee('Último acceso')->assertSee('10 nov 2026');
 });

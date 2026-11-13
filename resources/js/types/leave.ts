@@ -169,6 +169,8 @@ export type LeaveQueueRequest = {
     note: string | null;
     rejectionReason: string | null;
     canDecide: boolean;
+    /** False when approving would be refused: no days and a policy that does not give them in advance. */
+    canApprove: boolean;
     canCancel: boolean;
     /** Only for RH, for vacations that wait. */
     coverage: LeaveCoverage | null;
@@ -191,6 +193,7 @@ export type LeaveBalanceRow = {
     policy: string;
     /** What they can still ask for; below zero when they were given days in advance. */
     available: number;
+    waiting: number;
     /** The days they were given in advance. */
     advanced: number;
     /** The days given in the periods that still hold days: the whole the bar measures; null when not known. */
@@ -210,6 +213,7 @@ export type LeaveRecordPeriod = {
     available: number;
     /** Past its eighteen months with days still in it: marked, never taken off. */
     mayPrescribe: boolean;
+    overdue: boolean;
 };
 
 /** A movement of the ledger of a person. The note only reaches whoever may manage vacations. */

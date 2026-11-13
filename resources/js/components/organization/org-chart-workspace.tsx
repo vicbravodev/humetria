@@ -25,6 +25,34 @@ export default function OrgChartWorkspace({
     person: OrgNode | undefined;
 }) {
     const { editor, tree, panel } = ws;
+    // Over the canvas to look; beside it while editing, so the bar and the cards stay clear.
+    const panelView =
+        panel === null ? null : (
+            <OrgPersonPanel
+                panel={panel}
+                docked={editor.editing}
+                actions={{
+                    onSelect: ws.reveal,
+                    onClose: () => ws.select(null),
+                    onMore: () => tree.loadMore(panel.node.id),
+                }}
+                footer={
+                    editor.editing ? (
+                        <OrgChangeManager
+                            person={panel.node}
+                            manager={panel.manager}
+                            editor={editor}
+                            trigger={
+                                <Button variant="outline">
+                                    <Pencil />
+                                    Cambiar jefe
+                                </Button>
+                            }
+                        />
+                    ) : null
+                }
+            />
+        );
 
     return (
         <section aria-label="Organigrama" className="grid gap-3">
@@ -42,7 +70,8 @@ export default function OrgChartWorkspace({
                         <OrgChartToolbar
                             filters={filters}
                             person={person}
-                            reserve={panel !== null}
+                            reserve={panel !== null && !editor.editing}
+                            editing={editor.editing}
                             depth={{
                                 levels: tree.levels,
                                 onChange: ws.showLevels,
@@ -67,31 +96,7 @@ export default function OrgChartWorkspace({
                                 onTrayLeave: ws.drag.trayDrag.onLeave,
                             }}
                         />
-                        {panel !== null && (
-                            <OrgPersonPanel
-                                panel={panel}
-                                actions={{
-                                    onSelect: ws.reveal,
-                                    onClose: () => ws.select(null),
-                                    onMore: () => tree.loadMore(panel.node.id),
-                                }}
-                                footer={
-                                    editor.editing ? (
-                                        <OrgChangeManager
-                                            person={panel.node}
-                                            manager={panel.manager}
-                                            editor={editor}
-                                            trigger={
-                                                <Button variant="outline">
-                                                    <Pencil />
-                                                    Cambiar jefe
-                                                </Button>
-                                            }
-                                        />
-                                    ) : null
-                                }
-                            />
-                        )}
+                        {!editor.editing && panelView}
                         {editor.message !== null && (
                             <OrgEditMessage
                                 message={editor.message}
@@ -99,6 +104,7 @@ export default function OrgChartWorkspace({
                             />
                         )}
                     </div>
+                    {editor.editing && panelView}
                 </div>
             </div>
             <p className="text-meta text-muted-foreground print:hidden">

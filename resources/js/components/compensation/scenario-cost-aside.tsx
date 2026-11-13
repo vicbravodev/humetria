@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react';
 import LeftOutNotice from '@/components/compensation/left-out-notice';
 import ScenarioCompareBars from '@/components/compensation/scenario-compare-bars';
 import { Button } from '@/components/ui/button';
@@ -17,11 +18,13 @@ export default function ScenarioCostAside({
     preview,
     loading,
     others,
+    vacationNotice,
     processing,
 }: {
     preview: ScenarioPreview | null;
     loading: boolean;
     others: OtherScenario[];
+    vacationNotice: string | null;
     processing: boolean;
 }) {
     const today = useIsUnion()
@@ -56,7 +59,9 @@ export default function ScenarioCostAside({
             </div>
             <dl className="grid gap-3 border-y py-4">
                 <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">Cada año después</dt>
+                    <dt className="text-muted-foreground">
+                        Al año, al arranque
+                    </dt>
                     <dd className="font-semibold tabular-nums">
                         {texts.recurring}
                     </dd>
@@ -71,6 +76,15 @@ export default function ScenarioCostAside({
                 </div>
             </dl>
             {bars.length > 0 && <ScenarioCompareBars bars={bars} />}
+            {vacationNotice !== null && (
+                <p className="flex items-start gap-1.5 text-caption text-warning-foreground">
+                    <TriangleAlert
+                        aria-hidden="true"
+                        className="mt-0.5 size-3.5 shrink-0"
+                    />
+                    {vacationNotice}
+                </p>
+            )}
             {preview !== null && preview.left_out > 0 && (
                 <LeftOutNotice people={preview.left_out} />
             )}

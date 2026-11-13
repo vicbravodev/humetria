@@ -1,4 +1,5 @@
 import type {
+    CampaignKind,
     SurveyGate,
     SurveyInstrument,
     SurveyItem,
@@ -214,4 +215,48 @@ export function tokenFromPath(path: string): string | null {
     const match = /^\/survey\/([^/]+)$/.exec(path);
 
     return match?.[1] === undefined ? null : decodeURIComponent(match[1]);
+}
+
+export type IntroCopy = {
+    /** The tab's title. */
+    headTitle: string;
+    title: string;
+    /** What the company says it applies this for, after its name. */
+    purpose: string;
+    /** The period the person should think of; none when the questions are not about one. */
+    period: string | null;
+    /** What each part is called: «Continuar con la guía». */
+    noun: 'guía' | 'encuesta';
+};
+
+/** What the first screen says, by the kind of campaign: Ley Silla's survey never speaks of NOM-035 or of two months. */
+export function introCopy(kind: CampaignKind): IntroCopy {
+    if (kind === 'seating_survey') {
+        return {
+            headTitle: 'Encuesta',
+            title: 'Encuesta sobre su trabajo de pie',
+            purpose:
+                'le hace esta encuesta para entender cómo es su trabajo de pie y cuidar su salud.',
+            period: null,
+            noun: 'encuesta',
+        };
+    }
+
+    return {
+        headTitle: 'Evaluación',
+        title: 'Evaluación de factores de riesgo psicosocial',
+        purpose:
+            'aplica esta evaluación para identificar y prevenir los factores de riesgo psicosocial en el trabajo, como lo pide la NOM-035-STPS-2018.',
+        period: 'los dos últimos meses',
+        noun: 'guía',
+    };
+}
+
+/** «Pregunta 2 de 8» of a question inside its block: the gate counts, as in the progress above the screen. */
+export function captionOf(section: SurveySection, number: number): string {
+    const gate = section.gate === null ? 0 : 1;
+    const position =
+        section.items.findIndex((item) => item.number === number) + 1 + gate;
+
+    return `Pregunta ${position} de ${section.items.length + gate}`;
 }

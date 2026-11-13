@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\DashboardPage;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +15,7 @@ use Inertia\Response;
 
 final class TenantDashboardController extends Controller
 {
-    public function __invoke(Request $request, Tenant $tenant, DashboardPage $page): Response|RedirectResponse
+    public function __invoke(Request $request, Tenant $tenant, DashboardPage $page, CompanyModules $modules): Response|RedirectResponse
     {
         // A union has no compliance panel; its start is Compensación.
         if ($tenant->isUnion()) {
@@ -31,6 +32,7 @@ final class TenantDashboardController extends Controller
             seesScreenings: $user->can('view-trauma-screenings'),
             reviewsNotices: $user->can('review-workplaces'),
             handlesComplaints: $user->can('handle-complaints'),
+            managesVacations: $user->can('manage-vacations') && $modules->enabled($tenant->id, 'vacations'),
         ));
     }
 }

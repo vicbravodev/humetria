@@ -78,7 +78,7 @@ export default function PersonWeekRow({
             </TableCell>
             <TableCell className="text-right">
                 {!person.hasSchedule && (
-                    <Button asChild size="sm">
+                    <Button asChild size="sm" variant="outline">
                         <Link href={toSchedule}>Fijar horario</Link>
                     </Button>
                 )}

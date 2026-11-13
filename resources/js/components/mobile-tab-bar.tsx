@@ -3,6 +3,7 @@ import { domMax, LazyMotion, MotionConfig } from 'motion/react';
 import GlideChips from '@/components/humetria/glide-chips';
 import { MobileTabControl } from '@/components/mobile-tab-control';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useNavTenant } from '@/hooks/use-nav-tenant';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cspNonce } from '@/lib/csp-nonce';
 import { currentTab, mobileTabs } from '@/lib/mobile-tabs';
@@ -14,7 +15,8 @@ import { currentTab, mobileTabs } from '@/lib/mobile-tabs';
  * glides to the next one, as the landing's sections do.
  */
 export function MobileTabBar() {
-    const { auth, tenant, inCourse } = usePage().props;
+    const { auth, inCourse } = usePage().props;
+    const tenant = useNavTenant();
     const { setOpenMobile } = useSidebar();
     const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
     const tabs = mobileTabs(tenant, auth.isStaff, inCourse?.count);
@@ -32,10 +34,10 @@ export function MobileTabBar() {
             >
                 <nav
                     aria-label="Menú principal"
-                    className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 grid auto-cols-fr grid-flow-col gap-1 rounded-full border bg-card/85 p-1 shadow-raised backdrop-blur-xl backdrop-saturate-150 [view-transition-name:tab-bar] md:hidden print:hidden"
+                    className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 flex gap-1 rounded-full border bg-card/85 p-1 shadow-raised backdrop-blur-xl backdrop-saturate-150 [view-transition-name:tab-bar] md:hidden print:hidden"
                 >
                     {tabs.map((tab) => (
-                        <div key={tab.key} className="relative flex">
+                        <div key={tab.key} className="relative flex flex-auto">
                             <GlideChips
                                 group="tab-bar"
                                 current={here === tab.key}

@@ -5,6 +5,7 @@ import {
     companiesQuery,
     companiesSummary,
     ownerAction,
+    tenantsFiltered,
     tenantStatusVariant,
     trialLabel,
 } from '@/lib/tenant-status';
@@ -128,5 +129,31 @@ describe('companiesQuery', () => {
             q: 'acme',
             status: 'trial',
         });
+    });
+});
+
+describe('tenantsFiltered', () => {
+    it('is true when a search matches nothing, even with no company counted', () => {
+        expect(tenantsFiltered({ all: 0 }, { q: 'zzz', status: 'all' })).toBe(
+            true,
+        );
+    });
+
+    it('is true when a view matches nothing', () => {
+        expect(tenantsFiltered({ all: 0 }, { q: '', status: 'trial' })).toBe(
+            true,
+        );
+    });
+
+    it('is true when there are companies, whatever the filters', () => {
+        expect(tenantsFiltered({ all: 3 }, { q: '', status: 'all' })).toBe(
+            true,
+        );
+    });
+
+    it('is false for a console that has no companies and no filters', () => {
+        expect(tenantsFiltered({ all: 0 }, { q: '', status: 'all' })).toBe(
+            false,
+        );
     });
 });

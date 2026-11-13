@@ -82,7 +82,7 @@ final class RouteStages
             $met[$row->key] = $row;
         }
 
-        $stages = array_map(fn (array $keys): bool => array_all($keys, fn (string $key): bool => ($met[$key]->state ?? RowState::Missing) === RowState::Met), self::STAGES);
+        $stages = array_map(fn (array $keys): bool => array_all($keys, fn (string $key): bool => in_array($met[$key]->state ?? RowState::Missing, [RowState::Met, RowState::NotApplicable], true)), self::STAGES);
 
         // Seats, assessments and pauses are for the positions: without one, they wait for the first stage.
         foreach ([1, 2, 3] as $stage) {

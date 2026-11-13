@@ -52,7 +52,7 @@ export default function CompareDistance({
                     {distance.first_year_text} el primer año
                 </h2>
                 <p className="text-muted-foreground">
-                    Y {distance.recurring_text} cada año después.
+                    Y {distance.recurring_text} al año, al arranque.
                     {distance.mostly === null
                         ? ''
                         : ` La mayor parte viene de ${distance.mostly}.`}

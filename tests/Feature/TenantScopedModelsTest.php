@@ -18,6 +18,7 @@ use App\Modules\Billing\Models\UsageEvent;
 use App\Modules\Billing\Models\UsageGrant;
 use App\Modules\Billing\Models\UsageReservation;
 use App\Modules\Compensation\Models\FiscalParameter;
+use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -35,6 +36,8 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     TenantInvitation::class => 'accepted from outside the company',
     // The audit trail is the superadmin's too, across companies, and some entries have no company.
     AuditEntry::class => 'read across companies by the superadmin',
+    // A demo request is the platform's, from someone who is not a company yet: its tenant_id is only the company it became.
+    DemoRequest::class => 'platform data: the company it became, read by the staff console',
     // What each company pays and who pays it is read across all of them, by the staff's console, never from inside a company.
     AccountCompany::class => 'read across companies by the billing console',
     Subscription::class => 'read across companies by the billing console',

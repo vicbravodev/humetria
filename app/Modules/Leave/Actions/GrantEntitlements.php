@@ -73,6 +73,39 @@ final readonly class GrantEntitlements
         return array_values(array_diff($active, array_keys($this->seniority->startDatesFor($active))));
     }
 
+    /**
+     * The periods one person of the current company is due and does not have, the same rule as the daily grant: so whoever
+     * joins (or comes back) with seniority has their days at once. Nothing when the company does not use Vacaciones.
+     *
+     * @return int how many periods were granted
+     */
+    public function grantFor(string $employeeId): int
+    {
+        if (! LeaveSetting::query()->exists()) {
+            return 0;
+        }
+
+        $setting = LeaveSetting::query()->sole();
+        $start = $this->seniority->startDatesFor([$employeeId])[$employeeId] ?? null;
+
+        if ($start === null) {
+            return 0;
+        }
+
+        $terms = $this->policies->for([$employeeId])[$employeeId] ?? PolicyTerms::statutory($setting->statutory_work_week);
+        $had = LeaveEntitlement::query()->where('employee_id', $employeeId)->pluck('years_of_service')->all();
+        $granted = 0;
+
+        foreach (PeriodWindow::anniversaries($start, $setting->tracking_since, PeriodWindow::today()) as $years => $anniversary) {
+            if (! in_array($years, $had, true)) {
+                $this->grant->handle($employeeId, $years, $anniversary, $terms);
+                $granted++;
+            }
+        }
+
+        return $granted;
+    }
+
     private function grantIn(string $tenantId): int
     {
         if ($this->companies->enter($tenantId)->stopped('vacations')) {

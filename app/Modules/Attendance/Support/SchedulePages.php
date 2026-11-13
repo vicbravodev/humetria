@@ -48,7 +48,7 @@ final readonly class SchedulePages
         ), self::PER_PAGE)->withQueryString();
         $schedules = AttendanceSchedule::query()
             ->among('employee_id', array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())))
-            ->get(['employee_id', 'shift_type', 'work_mode', 'minutes_by_weekday'])->keyBy('employee_id');
+            ->get(['employee_id', 'shift_type', 'work_mode', 'minutes_by_weekday', 'starts_by_weekday'])->keyBy('employee_id');
         $year = CarbonImmutable::now(config()->string('app.display_timezone'))->year;
 
         return [
@@ -73,6 +73,7 @@ final readonly class SchedulePages
                     'shiftType' => $schedule->shift_type->value,
                     'workMode' => $schedule->work_mode->value,
                     'minutes' => $schedule->minutes_by_weekday,
+                    'starts' => $schedule->starts_by_weekday,
                 ],
             ]),
             'canManage' => Gate::allows('manage-attendance'),

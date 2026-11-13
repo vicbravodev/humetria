@@ -150,6 +150,35 @@ it('puts first what is urgent, for whoever may act on it, and never what a compl
     'viewer' => [TenantRole::Viewer, []],
 ]);
 
+it('puts among the urgent the vacation requests that wait for an answer, for whoever manages vacations', function (int $waiting, TenantRole $role, ?string $title): void {
+    foreach ($waiting === 0 ? [] : range(1, $waiting) as $ignored) {
+        App\Modules\Leave\Models\LeaveRequest::factory()->escalated()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);
+    }
+
+    // Those that still wait for the manager are not RH's to answer: «Por atender» does not hold them either.
+    App\Modules\Leave\Models\LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);
+
+    // Answered requests do not wait.
+    App\Modules\Leave\Models\LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);
+
+    $this->actingAs(memberOf($this->tenant, $role))->get(route('tenant.dashboard', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $title === null
+            ? $page->where('urgencies', [])
+            : $page->where('urgencies.0', ['norm' => 'Vacaciones', 'title' => $title, 'detail' => 'RH responde cuando el jefe no pudo o no lo hizo a tiempo', 'action' => 'Responder', 'href' => route('tenant.vacations.requests.index', $this->tenant, false)]));
+})->with([
+    'three, for the owner' => [3, TenantRole::Owner, '3 solicitudes de vacaciones esperan respuesta'],
+    'one, for hr' => [1, TenantRole::Hr, '1 solicitud de vacaciones espera respuesta'],
+    'none' => [0, TenantRole::Owner, null],
+    'not for a viewer' => [3, TenantRole::Viewer, null],
+]);
+
+it('leaves the vacation requests out of the panel of a company without the module', function (): void {
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom035'], now()->toImmutable());
+    App\Modules\Leave\Models\LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);
+
+    $this->actingAs(ownerOf($this->tenant))->get(route('tenant.dashboard', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('urgencies', []));
+});
+
 it('tells when the acknowledgment of a complaint falls due, and gathers the accidents and the people to channel', function (string $received, string $when): void {
     $plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Querétaro']);
     $owner = ownerOf($this->tenant);
@@ -213,5 +242,5 @@ it('reads the panel in the same number of queries however much the company holds
     $this->get(route('tenant.dashboard', $this->tenant))->assertOk();
 })->with([1, 3]);
 
-// Measured, then fixed so that a query per center or per evaluation breaks the test. 57: the NOM-037 declarations (A2).
-const QUERIES_OF_THE_PANEL = 57;
+// Measured, then fixed so that a query per center or per evaluation breaks the test. 57: the NOM-037 declarations (A2); +1: the vacation requests that wait.
+const QUERIES_OF_THE_PANEL = 61;

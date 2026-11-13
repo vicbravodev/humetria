@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { nothingPending } from '@/lib/telework/portal';
+import { nothingPending, portalSectionIcon } from '@/lib/telework/portal';
 import type { PortalPending } from '@/types';
 
 const empty: PortalPending = {
@@ -32,5 +32,16 @@ describe('nothingPending', () => {
                 visits: [{ id: 'v', workplace: 'Casa' }],
             }),
         ).toBe(false);
+    });
+});
+
+describe('portalSectionIcon', () => {
+    it('gives each tool its own icon and an unknown tool the generic one', () => {
+        expect(portalSectionIcon('vacations')).not.toBe(
+            portalSectionIcon('seating'),
+        );
+        expect(portalSectionIcon('telework')).toBe(
+            portalSectionIcon('something-new'),
+        );
     });
 });

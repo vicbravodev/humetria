@@ -1,6 +1,10 @@
 import { useReactFlow, useStore } from '@xyflow/react';
 import { useEffect, useRef } from 'react';
-import { viewportFor } from '@/lib/org-chart/camera';
+import {
+    clearLeftEdge,
+    readableViewport,
+    viewportFor,
+} from '@/lib/org-chart/camera';
 import type { Box } from '@/lib/org-chart/camera';
 import type { CameraRequest } from '@/lib/org-chart/flow';
 
@@ -17,7 +21,7 @@ export default function OrgChartCamera({
     /** Where the cards of those people are now (all of them when null); null when there are none. */
     boundsOf: (ids: string[] | null) => Box | null;
 }) {
-    const { setViewport } = useReactFlow();
+    const { setViewport, getNodes } = useReactFlow();
     const width = useStore((state) => state.width);
     const height = useStore((state) => state.height);
     const handled = useRef<CameraRequest>(null);
@@ -32,15 +36,43 @@ export default function OrgChartCamera({
 
             handled.current = request;
 
+            const top =
+                request.readable === undefined
+                    ? null
+                    : boundsOf(request.readable);
+
+            const [first] = request.readable ?? [];
+            const root = first === undefined ? null : boundsOf([first]);
+
             if (box !== null) {
-                void setViewport(viewportFor(box, { width, height }), {
-                    duration: 250,
-                });
+                const screen = { width, height };
+
+                const cards = getNodes().map((node) => ({
+                    x: node.position.x,
+                    y: node.position.y,
+                    width: node.measured?.width ?? 0,
+                    height: node.measured?.height ?? 0,
+                }));
+
+                void setViewport(
+                    top === null
+                        ? viewportFor(box, screen)
+                        : clearLeftEdge(
+                              readableViewport(
+                                  box,
+                                  top,
+                                  root === null ? screen : { ...screen, root },
+                              ),
+                              cards,
+                              screen,
+                          ),
+                    { duration: 250 },
+                );
             }
         });
 
         return () => cancelAnimationFrame(frame);
-    }, [request, boundsOf, width, height, setViewport]);
+    }, [request, boundsOf, width, height, setViewport, getNodes]);
 
     return null;
 }

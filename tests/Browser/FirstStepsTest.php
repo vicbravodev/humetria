@@ -17,6 +17,24 @@ $looks = [
 
 const FIRST_STEPS_BUTTON = '[aria-label^="Primeros pasos"]';
 
+/**
+ * A script that resolves once the «Primeros pasos» button says its panel is open: the panel and the button's
+ * aria-expanded update in separate renders, so a slow runner can read the button a frame before it catches up.
+ */
+function firstStepsOpened(): string
+{
+    return <<<'JS'
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const check = () => {
+                const open = document.querySelector('[aria-label^="Primeros pasos"]')?.getAttribute('aria-expanded') === 'true';
+                open || performance.now() - start > 3000 ? resolve(open) : requestAnimationFrame(check);
+            };
+            check();
+        })
+        JS;
+}
+
 beforeEach(function (): void {
     config(['first_steps.enabled' => true]);
 });
@@ -36,7 +54,7 @@ it('welcomes a new owner and opens the steps', function (bool $dark, bool $mobil
         ->assertSee('Primeros pasos')
         ->assertSee('0 de 5 pasos')
         ->assertSee('Guíame')
-        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertScript(firstStepsOpened(), true)
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 
@@ -84,7 +102,7 @@ it('hides the steps and takes them back from the user menu', function (): void {
         ->click('@sidebar-menu-button')
         ->click('Primeros pasos')
         ->assertSee('0 de 5 pasos')
-        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertScript(firstStepsOpened(), true)
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 
@@ -120,7 +138,7 @@ it('says it is done once, then the button is gone', function (): void {
 
     $page = visitPage('dashboard', '/admin/acme')
         ->assertSee('Listo: Humetria ya está trabajando para ti')
-        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertScript(firstStepsOpened(), true)
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 
@@ -160,6 +178,8 @@ it('guides the owner to load their people', function (bool $dark, bool $mobile):
     visitPage('dashboard', '/admin/acme', $dark, $mobile)
         ->click('Empezar')
         ->click('li:has-text("Carga a tu gente") button')
+        // The step navigates with Inertia: wait for the page and its tour before reading the path.
+        ->waitForText('Importa tu plantilla')
         ->assertPathIs('/admin/acme/employees')
         ->assertSee('Importa tu plantilla')
         ->assertScript('document.querySelector(\'[data-tour="import-employees"]\')?.classList.contains("driver-active-element") === true', true)
@@ -196,7 +216,7 @@ it('points the panel card at the button instead of repeating the third step', fu
         ->assertDontSee('abajo a la derecha')
         ->assertDontSee('Continuar')
         ->click('Ver mis pasos')
-        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertScript(firstStepsOpened(), true)
         ->assertSee('Lanza tu primera evaluación NOM-035')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');

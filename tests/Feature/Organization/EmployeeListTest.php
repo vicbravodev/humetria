@@ -49,7 +49,7 @@ it('lists the active employees by name, with their center and area', function ()
             ->where('employees.data.0', [
                 'id' => $ana->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5512345678',
                 'gender' => 'female', 'gender_label' => 'Mujer', 'work_center_id' => $this->office->id, 'work_center' => 'Oficinas',
-                'area' => 'Ventas', 'job_title' => 'Vendedora', 'employee_number' => 'A-1', 'deactivated_on' => null,
+                'area' => 'Ventas', 'job_title' => 'Vendedora', 'employee_number' => 'A-1', 'deactivated_on' => null, 'deactivation_reason' => null,
                 'job_category' => '', 'job_level' => '', 'hired_on' => null, 'staff_group' => '', 'state' => '',
                 'seniority_on' => null, 'manager' => null, 'direct_reports' => 0,
             ])
@@ -169,4 +169,34 @@ it('is for those who manage the organization, never a viewer', function (): void
 
 it('answers 404 outside the company', function (): void {
     $this->actingAs(ownerOf(Tenant::factory()->create()))->get(route('tenant.employees.index', $this->tenant))->assertNotFound();
+});
+
+it('finds a person by their words in any order, and by their mobile with or without spaces', function (string $q, array $names): void {
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '5512345678', 'employee_number' => 'N-1']);
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Juan Gómez', 'email' => 'jg@acme.mx', 'mobile' => '5598765432', 'employee_number' => 'N-2']);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', ['tenant' => $this->tenant, 'q' => $q]))
+        ->assertInertia(fn (Assert $page) => $page->where('employees.data', fn ($rows): bool => collect($rows)->pluck('name')->all() === $names));
+})->with([
+    'words in another order' => ['perez juan', ['Juan Pérez']],
+    'every word must match' => ['juan lopez', []],
+    'one word for both' => ['  JUAN ', ['Juan Gómez', 'Juan Pérez']],
+    'accents' => ['Pérez', ['Juan Pérez']],
+    'mobile with spaces' => ['55 1234 5678', ['Juan Pérez']],
+    'mobile without spaces' => ['5512345678', ['Juan Pérez']],
+    'a piece of the mobile, four digits at least' => ['2345', ['Juan Pérez']],
+    'too few digits are not a mobile' => ['123', []],
+    'only spaces filters nothing' => ['   ', ['Juan Gómez', 'Juan Pérez']],
+    'wildcards are literal in a word' => ['ju_n', []],
+    'a very long search does not break' => [str_repeat('juan ', 40), ['Juan Gómez', 'Juan Pérez']],
+]);
+
+it('says in the list of people who left why, in words', function (): void {
+    Employee::factory()->deactivated()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Luna', 'deactivation_reason' => 'resignation']);
+    Employee::factory()->deactivated()->create(['tenant_id' => $this->tenant->id, 'name' => 'Carla Paz', 'deactivation_reason' => null]);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', [$this->tenant, 'status' => 'inactive']))
+        ->assertInertia(fn (Assert $page) => $page->where('employees.data', fn ($rows): bool => collect($rows)->pluck('deactivation_reason', 'name')->all() === ['Beto Luna' => 'Renuncia', 'Carla Paz' => null]));
 });

@@ -20,7 +20,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 mutates(RequestController::class, RequestPages::class);
 
 /** The queries of the queue, whatever the number of requests, people or filters (the session and the panel frame included). */
-const LEAVE_REQUESTS_QUERIES = 26;
+const LEAVE_REQUESTS_QUERIES = 30;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));
@@ -457,9 +457,16 @@ describe('recording on behalf of somebody', function (): void {
         $this->dan->update(['deactivated_at' => now()]);
         $options = route('tenant.vacations.people.options', [$this->tenant, 'q' => 'ANA']);
 
-        $this->actingAs($this->hr)->getJson($options)->assertOk()->assertExactJson([['value' => $this->ana->id, 'label' => 'Ana Solís']]);
+        $this->actingAs($this->hr)->getJson($options)->assertOk()->assertExactJson([['value' => $this->ana->id, 'label' => 'Ana Solís', 'hint' => '14 días disponibles']]);
         $this->getJson(route('tenant.vacations.people.options', [$this->tenant, 'q' => 'gil']))->assertOk()->assertExactJson([]);
         $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->getJson($options)->assertForbidden();
+    });
+
+    it('says next to each person how many days they have and how many wait for an answer, so RH sees it before recording', function (): void {
+        LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'leave_type_id' => null, 'status' => 'requested', 'working_days' => 2]);
+
+        $this->actingAs($this->hr)->getJson(route('tenant.vacations.people.options', [$this->tenant, 'q' => 'ana']))
+            ->assertExactJson([['value' => $this->ana->id, 'label' => 'Ana Solís', 'hint' => '14 días disponibles · 2 en espera']]);
     });
 
     it('offers the types of the company to record a leave', function (): void {

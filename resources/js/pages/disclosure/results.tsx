@@ -8,7 +8,7 @@ import type { ResultsProps } from '@/types';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { disclosureCrumbs } from '@/lib/nom035/crumbs';
 
-export default function Results({ evaluations }: ResultsProps) {
+export default function Results({ evaluations, pageActive }: ResultsProps) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
         breadcrumbs: disclosureCrumbs(tenantSlug, {
@@ -38,7 +38,10 @@ export default function Results({ evaluations }: ResultsProps) {
                         aria-label="Evaluaciones cerradas"
                         className="flex flex-col gap-3.5"
                     >
-                        <ResultsTable rows={evaluations.data} />
+                        <ResultsTable
+                            rows={evaluations.data}
+                            pageActive={pageActive}
+                        />
                         <Pagination
                             page={evaluations}
                             label="Páginas de evaluaciones"

@@ -45,6 +45,8 @@ final class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            // Where to write to Humetria; null while none is configured, so no notice carries an empty mail link.
+            'support' => ['email' => $this->supportEmail()],
             'auth' => [
                 'user' => $request->user(),
                 'isSuperadmin' => $request->user()?->isSuperadmin() ?? false,
@@ -63,6 +65,13 @@ final class HandleInertiaRequests extends Middleware
             'firstSteps' => fn (): ?array => $this->firstSteps($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    private function supportEmail(): ?string
+    {
+        $email = config('app.support_email');
+
+        return is_string($email) && $email !== '' ? $email : null;
     }
 
     /**

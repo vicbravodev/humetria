@@ -70,14 +70,20 @@ it('opens the policy on its first question, with the commitments of Guía IV as 
             ->where('sections.1', ['key' => 'signature', 'heading' => 'Quién la firma', 'text' => 'La firma la dirección general.', 'base' => false, 'edited' => false])
             ->where('sections.2.text', null)
             ->where('publication', ['draftId' => null, 'centersInUse' => 1, 'version' => null])
-            ->where('back', ['href' => route('tenant.disclosure.policy', $this->tenant), 'label' => 'Guardar y volver', 'center' => null]));
+            ->where('back', ['href' => route('tenant.disclosure.policy', $this->tenant), 'label' => 'Guardar y volver', 'center' => null, 'centerName' => null]));
+});
+
+it('names the center in the preview of the policy when it is written from the route of one', function (): void {
+    $this->actingAs($this->hr)
+        ->get(route('tenant.disclosure.write', [$this->tenant, 'policy']).'?center='.$this->center->id)
+        ->assertInertia(fn (Assert $page) => $page->where('document.owner', "Autopartes Demo · {$this->center->name}"));
 });
 
 it('goes back to the route of the center it came from', function (): void {
     $this->actingAs($this->hr)
         ->get(route('tenant.disclosure.write', [$this->tenant, 'policy']).'?center='.$this->center->id)
         ->assertInertia(fn (Assert $page) => $page
-            ->where('back', ['href' => route('tenant.nom035.route', [$this->tenant, $this->center->id]), 'label' => 'Guardar y volver a la ruta', 'center' => $this->center->id]));
+            ->where('back', ['href' => route('tenant.nom035.route', [$this->tenant, $this->center->id]), 'label' => 'Guardar y volver a la ruta', 'center' => $this->center->id, 'centerName' => $this->center->name]));
 });
 
 it('keeps each answer in the draft of the policy, with the text it makes', function (): void {

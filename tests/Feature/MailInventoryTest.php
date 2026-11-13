@@ -11,6 +11,7 @@ use App\Modules\Complaints\Notifications\DailyCapReached;
 use App\Modules\Complaints\Notifications\HandlersChanged;
 use App\Modules\Complaints\Notifications\NewsOnYourCase;
 use App\Modules\Complaints\Notifications\YouWereDesignated;
+use App\Modules\Demos\Notifications\DemoRequested;
 use App\Modules\Disclosure\Notifications\DisclosureDigest;
 use App\Modules\Disclosure\Notifications\PolicyToConfirm;
 use App\Modules\Interventions\Notifications\ProgramDigest;
@@ -28,8 +29,13 @@ use App\Modules\Telework\Notifications\PortalReminder;
 use App\Modules\Telework\Notifications\TeleworkDigest;
 use App\Modules\Telework\Notifications\TeleworkMoved;
 use App\Modules\Tenancy\Data\CompanySummary;
+use App\Modules\Tenancy\Enums\TenantRestriction;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Notifications\CompanyReactivated;
+use App\Modules\Tenancy\Notifications\CompanyRestricted;
 use App\Modules\Tenancy\Notifications\InvitationEmail;
+use App\Modules\Tenancy\Notifications\OwnerReplaced;
+use App\Modules\Tenancy\Notifications\ToolsChanged;
 use Carbon\CarbonImmutable;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notification;
@@ -80,6 +86,7 @@ function inventory(): array
         'documents to confirm' => [fn () => new DocumentsToConfirm($url, 'Cora', $company, ['Política · versión 1']), true],
         'notice answered' => [fn () => new NoticeAnswered($url, 'Ana', $company), true],
         'portal invitation' => [fn () => new PortalInvitation('tok', 'Ana', $company), true],
+        'portal link' => [fn () => new App\Modules\Telework\Notifications\PortalLinkEmail('tok', 'Ana', $company), true],
         'portal reminder' => [fn () => new PortalReminder($url, 'Ana', $company, new PortalPendingData([], [])), true],
         'telework digest' => [fn () => new TeleworkDigest($company, 'Olga', ['1 lista por revisar.'], $url), true],
         'telework moved' => [fn () => new TeleworkMoved($company, 'Ana', 'A', 'B', $url), true],
@@ -89,6 +96,11 @@ function inventory(): array
         'leave request escalated' => [fn () => new App\Modules\Leave\Notifications\RequestEscalated($url, $company, 'Ana', App\Modules\Leave\Enums\EscalationReason::Timeout, new App\Modules\Leave\Support\RequestSummary(false, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, null)), true],
         'leave request decided' => [fn () => new App\Modules\Leave\Notifications\RequestDecided($url, $company, 'Ana', new App\Modules\Leave\Support\RequestSummary(true, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, true), false, 'Cierre de mes'), true],
         'vacations portal link' => [fn () => new App\Modules\Leave\Notifications\VacationsPortalLink($url, $company, 'Ana'), true],
+        'demo requested' => [fn () => new DemoRequested('Empresa Ejemplo', 'Ana López', 'id'), false],
+        'company restricted' => [fn () => new CompanyRestricted($company, TenantRestriction::Suspended, 'Falta de pago', 'soporte@humetria.mx'), true],
+        'company reactivated' => [fn () => new CompanyReactivated($company, 'soporte@humetria.mx'), true],
+        'tools changed' => [fn () => new ToolsChanged($company, ['Ley Silla'], ['Asistencia'], '1 dic 2026', false, 'soporte@humetria.mx'), true],
+        'owner replaced' => [fn () => new OwnerReplaced($company, 'Pedro'), true],
         'invitation' => [fn () => new InvitationEmail('Autopartes Demo', 'ana@x.mx', 'tok', CarbonImmutable::now()->addDays(7), TenantRole::Hr, null, 1, 3), false],
     ];
 }
@@ -106,3 +118,24 @@ it('lays out every email the same way: one button and the seal', function (Closu
         expect($html)->toContain('alt="Humetría"')->not->toContain('<span class="company-name"');
     }
 })->with(inventory());
+
+// H-13: the link spelled out sat against its sentence in the plain-text email («navegador:https://…»).
+it('keeps a space between the sentence and the link spelled out under the button', function (Closure $make): void {
+    $html = (string) $make()->toMail(new AnonymousNotifiable)->render();
+
+    expect($html)->toMatch('#navegador: <br><a href="https?://[^"]+"#')->not->toContain('navegador:<br>');
+})->with([
+    'survey invitation reminder' => [fn () => new SurveyInvitation(SurveyEmail::Reminder, 'tok', 'Ana', inventoryCompany(), null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15)],
+]);
+
+// E-12: what a person of the company receives speaks of «usted», the spelled-out link included. The Comisión's «documents to
+// confirm» is written in the panel voice (AcknowledgementsTest) and stays out.
+it('speaks to the worker as usted under the button too', function (Closure $make): void {
+    $html = (string) $make()->toMail(new AnonymousNotifiable)->render();
+
+    expect($html)->toContain('copie este enlace en su navegador')->not->toContain('en tu navegador');
+})->with(array_map(fn (array $row): array => [$row[0]], array_intersect_key(inventory(), array_flip([
+    'vacations portal link', 'leave request decided', 'leave request to decide', 'attendance enrollment', 'attendance device linked',
+    'policy to confirm', 'support waiting', 'risks to confirm', 'standing questions', 'portal invitation', 'portal link', 'portal reminder',
+    'notice answered', 'climate feedback published',
+]))));

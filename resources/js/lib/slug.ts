@@ -12,3 +12,8 @@ export function slugify(text: string): string {
         .slice(0, MAX_LENGTH)
         .replace(/-$/, '');
 }
+
+/** Where a company will live, as it is read to someone: the app's address without the protocol, then /admin/ and its slug. */
+export function companyUrl(origin: string, slug: string): string {
+    return `${origin.replace(/^https?:\/\//, '')}/admin/${slug === '' ? '…' : slug}`;
+}

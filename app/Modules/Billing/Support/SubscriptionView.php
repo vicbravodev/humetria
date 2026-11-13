@@ -24,6 +24,7 @@ final class SubscriptionView
             'status_label' => $subscription->status->label(),
             'seats' => $subscription->seats,
             'centers' => $subscription->centers,
+            'allowed_centers' => $subscription->allowedCenters(),
             'starts_on' => $subscription->starts_on->toDateString(),
             'renews_on' => ShortDate::format($subscription->renews_on),
             'catalog_version' => $subscription->catalog_version,

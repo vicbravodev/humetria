@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -62,6 +64,19 @@ it('shows RH the report of a center\'s week: its figures, each person\'s days an
     'light, phone' => [false, true],
     'dark, phone' => [true, true],
 ]);
+
+it('shows RH the lateness of a day and the count of each person, apart from the notices', function (): void {
+    [$url, $plant] = reportPanel();
+    // Ana starts at 07:30 on Mondays and marked at 08:00: 30 minutes late. Her Tuesday has no start time.
+    AttendanceSchedule::factory()->create(['tenant_id' => $plant->tenant_id, 'employee_id' => Employee::query()->where('name', 'Ana López')->sole()->id, 'starts_by_weekday' => [1 => 450, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]]);
+
+    visit("{$url}/attendance/report?center={$plant->id}")
+        ->assertSee('Retardo de 30 min')
+        ->assertSee('1 retardo')
+        ->assertDontSee('2 retardos')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
 
 it('offers only the CSV for a period too long for the screen, saying why', function (): void {
     [$url, $plant] = reportPanel();

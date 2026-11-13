@@ -10,9 +10,11 @@ use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Models\Campaign;
 
-final class CompanyEvaluationSchedule implements EvaluationSchedule
+final readonly class CompanyEvaluationSchedule implements EvaluationSchedule
 {
-    public function forWorkCenters(array $workCenterIds): array
+    public function __construct(private InstrumentTally $tally, private CampaignPages $pages) {}
+
+    public function forWorkCenters(array $workCenterIds, bool $withAnswers = false): array
     {
         $standings = [];
 
@@ -22,10 +24,11 @@ final class CompanyEvaluationSchedule implements EvaluationSchedule
             ->where('kind', CampaignKind::Nom035Evaluation)
             ->whereIn('work_center_id', $workCenterIds)
             ->orderBy('closed_at')
-            ->get(['work_center_id', 'status', 'closes_on', 'closed_at']);
+            ->get(['id', 'work_center_id', 'status', 'closes_on', 'closed_at', 'instruments', 'sample_size']);
+        $tally = $withAnswers ? $this->tally->of(array_values($evaluations->where('status', CampaignStatus::Closed)->map(fn (Campaign $campaign): string => $campaign->id)->all())) : [];
 
         foreach ($evaluations as $campaign) {
-            $standing = $this->standing($campaign);
+            $standing = $this->standing($campaign, $withAnswers ? $tally[$campaign->id] ?? [] : null);
             // A draft is not an evaluation yet: the last one stays overdue until the next one runs (C-26).
             $overdue = ($standings[$campaign->work_center_id] ?? null)?->state === 'overdue';
             $standings[$campaign->work_center_id] = $standing->state === 'draft' && $overdue ? $standings[$campaign->work_center_id] : $standing;
@@ -34,7 +37,10 @@ final class CompanyEvaluationSchedule implements EvaluationSchedule
         return $standings;
     }
 
-    private function standing(Campaign $campaign): EvaluationStanding
+    /**
+     * @param  array<string, array<string, int>>|null  $counts  how many answered each guide; null when not asked for
+     */
+    private function standing(Campaign $campaign, ?array $counts): EvaluationStanding
     {
         if ($campaign->status === CampaignStatus::Draft) {
             return new EvaluationStanding('draft', null);
@@ -46,6 +52,9 @@ final class CompanyEvaluationSchedule implements EvaluationSchedule
 
         $due = $campaign->closed_at->addYears(2);
 
-        return new EvaluationStanding($due->isPast() ? 'overdue' : 'due', CampaignClock::day($due), CampaignClock::date($due));
+        $overdue = $due->isPast();
+        $progress = $overdue || $counts === null ? null : $this->pages->progress($campaign, $counts);
+
+        return new EvaluationStanding($overdue ? 'overdue' : 'due', CampaignClock::day($due), CampaignClock::date($due), $progress['completed'] ?? null, $progress['target'] ?? null);
     }
 }

@@ -102,6 +102,17 @@ function ownerOf(Tenant $tenant): User
 /**
  * Makes `$tenant` the company the code under test works in, as ResolveTenant does for a request inside it.
  */
+/**
+ * What deactivating someone asks for: the day they left (today, in the company's day) and why.
+ *
+ * @param  array<string, mixed>  $with
+ * @return array<string, mixed>
+ */
+function departure(array $with = []): array
+{
+    return ['terminated_on' => Carbon\CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString(), 'reason' => 'resignation', ...$with];
+}
+
 function workIn(Tenant $tenant): void
 {
     resolve(TenantContext::class)->set($tenant);
@@ -315,7 +326,22 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
         // axe reads colors as painted: let fade-ins finish so it judges the settled page, not a frame mid-transition
         // (endless ones, like the OTP caret blink, never finish and are left alone). An animation the page cancels while we wait (the
         // kiosk restarts its countdown) rejects `finished` with an AbortError: that one is over too, so it is not a failure.
-        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => undefined))).then(() => true)');
+        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => undefined))).then(() => true)')
+        // An enter animation can start after that check (an IntersectionObserver fires a frame later, or a slow runner
+        // reaches it late), so the page counts as settled only after ten frames in a row with nothing finite running. A page that
+        // restarts a finite animation on purpose (the kiosk countdown) never goes still, so the wait gives up after 800 ms.
+        ->assertScript(<<<'JS'
+            () => new Promise((resolve) => {
+                let still = 0;
+                const start = performance.now();
+                const frame = () => {
+                    const moving = document.getAnimations().some((animation) => animation.playState === 'running' && animation.effect?.getTiming().iterations !== Infinity);
+                    still = moving ? 0 : still + 1;
+                    still >= 10 || performance.now() - start > 800 ? resolve(true) : requestAnimationFrame(frame);
+                };
+                requestAnimationFrame(frame);
+            })
+            JS);
 
     if ($mobile) {
         $page->assertScript(smallTouchTargets(), '');
@@ -355,6 +381,49 @@ function smallTouchTargets(): string
                 return reach(element) < 43.5;
             }).map((element) => `${element.getAttribute('aria-label') ?? element.textContent.trim().slice(0, 40)} (${Math.round(reach(element))} px)`).join(' | ');
         }
+        JS;
+}
+
+/**
+ * The source files under a directory of resources/js. The lint probes of FrontendArchitectureTest write and delete
+ * `zz-probe-*` files and folders there while other tests run in parallel: they are left out, so a walk never trips on
+ * a folder that vanished halfway.
+ *
+ * @return list<SplFileInfo>
+ */
+function frontendSourceFiles(string $directory = ''): array
+{
+    $root = dirname(__DIR__).'/resources/js'.($directory === '' ? '' : '/'.$directory);
+    $filter = new RecursiveCallbackFilterIterator(
+        new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+        fn (SplFileInfo $file): bool => ! str_starts_with($file->getFilename(), 'zz-probe-'),
+    );
+    $files = [];
+
+    foreach (new RecursiveIteratorIterator($filter) as $file) {
+        if ($file instanceof SplFileInfo) {
+            $files[] = $file;
+        }
+    }
+
+    return $files;
+}
+
+/**
+ * A script that resolves once no calendar popover is open: picking a day closes its popover with a short animation,
+ * and on a slow runner the click that opens the next date field can land while the first one is still closing.
+ */
+function calendarClosed(): string
+{
+    return <<<'JS'
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const check = () => {
+                const open = document.querySelector('[data-state="open"] [data-day]') !== null;
+                ! open || performance.now() - start > 3000 ? resolve(! open) : requestAnimationFrame(check);
+            };
+            check();
+        })
         JS;
 }
 
@@ -833,4 +902,33 @@ function climateManagerSurvey(Tenant $tenant, array $groups): App\Modules\Engage
     }
 
     return $survey;
+}
+
+/**
+ * Switches the page to the print media, as the browser does for paper or a PDF, without firing `beforeprint`.
+ * Pest's browser plugin has no emulateMedia, so this sends Playwright's own message to the page.
+ */
+function emulatePrint(AwaitableWebpage $page): AwaitableWebpage
+{
+    $inner = (new ReflectionProperty(AwaitableWebpage::class, 'page'))->getValue($page);
+    $guid = (new ReflectionProperty($inner, 'guid'))->getValue($inner);
+    iterator_to_array(Pest\Browser\Playwright\Client::instance()->execute($guid, 'emulateMedia', ['media' => 'print']));
+
+    return $page;
+}
+
+/**
+ * What a dossier carries on paper and not on screen: the letterhead with the Humetría logo, the company and the center,
+ * and the date it was issued (the sheet's page number comes from the `dossier` named page).
+ */
+function assertPrintLetterhead(AwaitableWebpage $page, string $center): void
+{
+    $page->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'none');
+
+    emulatePrint($page)
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'flex')
+        ->assertScript('() => document.querySelector(\'[data-slot="print-letterhead"] img\').getBoundingClientRect().width > 0', true)
+        ->assertScript('() => /Emitido el \\d{1,2} \\w+ \\d{4}/.test(document.querySelector(\'[data-slot="print-letterhead"]\').innerText)', true)
+        ->assertScript("() => document.querySelector('[data-slot=\"print-letterhead\"]').innerText.includes(".json_encode($center).')', true)
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\').parentElement).page', 'dossier');
 }

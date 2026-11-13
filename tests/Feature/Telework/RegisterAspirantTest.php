@@ -472,6 +472,7 @@ it('sends the teleworker page in full: the person, their equipment, their notice
             'today' => '2026-03-01',
             'startedOn' => '2026-01-10',
             'noEquipmentReason' => null,
+            'homeDefault' => null,
             'endReason' => null,
             'endedOn' => null,
             'endNote' => null,

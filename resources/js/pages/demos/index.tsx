@@ -1,14 +1,21 @@
 import { Head } from '@inertiajs/react';
-import Pagination from '@/components/humetria/pagination';
 import DemoRequestsEmpty from '@/components/demos/demo-requests-empty';
 import DemoRequestsInbox from '@/components/demos/demo-requests-inbox';
+import DemoRequestsToolbar from '@/components/demos/demo-requests-toolbar';
 import PageHeader from '@/components/humetria/page-header';
-import type { DemoRequestRow, Paginated } from '@/types';
+import Pagination from '@/components/humetria/pagination';
+import type { DemoFilters, DemoRequestRow, DemoView, Paginated } from '@/types';
 
 export default function DemoRequests({
     demoRequests,
+    filters,
+    counts,
+    can_manage: canManage,
 }: {
     demoRequests: Paginated<DemoRequestRow>;
+    filters: DemoFilters;
+    counts: Record<DemoView, number>;
+    can_manage: boolean;
 }) {
     return (
         <>
@@ -17,18 +24,22 @@ export default function DemoRequests({
                 <PageHeader
                     title="Solicitudes de demo"
                     description={
-                        demoRequests.total === 1
-                            ? '1 solicitud, la más reciente primero.'
-                            : `${demoRequests.total} solicitudes, la más reciente primero.`
+                        counts.new === 1
+                            ? '1 solicitud nueva por atender.'
+                            : `${counts.new} solicitudes nuevas por atender.`
                     }
                 />
+                {counts.all > 0 && (
+                    <DemoRequestsToolbar filters={filters} counts={counts} />
+                )}
                 {demoRequests.data.length === 0 ? (
-                    <DemoRequestsEmpty />
+                    <DemoRequestsEmpty view={filters.status} />
                 ) : (
-                    // Keyed by page: a new page opens on its newest request.
+                    // Keyed by page and view: a new one opens on its newest request.
                     <DemoRequestsInbox
-                        key={demoRequests.current_page}
+                        key={`${filters.status}-${demoRequests.current_page}`}
                         requests={demoRequests.data}
+                        canManage={canManage}
                     />
                 )}
                 <Pagination

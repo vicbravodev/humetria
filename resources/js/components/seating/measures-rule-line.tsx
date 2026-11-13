@@ -10,7 +10,12 @@ export default function MeasuresRuleLine({ rule }: { rule: MeasuresRule }) {
     if (!met) {
         return (
             <Notice>
-                <strong>R7 falta:</strong> {text}
+                <strong>
+                    {rule.state === 'pending'
+                        ? 'R7 sin registros:'
+                        : 'R7 falta:'}
+                </strong>{' '}
+                {text}
             </Notice>
         );
     }

@@ -64,10 +64,17 @@ export function NavMain({
                             isActive={isActive(item)}
                             tooltip={item.title}
                         >
-                            <Link href={item.href} prefetch>
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
-                            </Link>
+                            {item.external === true ? (
+                                <a href={toUrl(item.href)}>
+                                    {item.icon && <item.icon />}
+                                    <span>{item.title}</span>
+                                </a>
+                            ) : (
+                                <Link href={item.href} prefetch>
+                                    {item.icon && <item.icon />}
+                                    <span>{item.title}</span>
+                                </Link>
+                            )}
                         </SidebarMenuButton>
                         {item.badge !== undefined && item.badge > 0 && (
                             <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>

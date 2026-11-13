@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Models;
 
 use App\Modules\Demos\Enums\DemoProfile;
+use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use Database\Factories\Demos\DemoRequestFactory;
@@ -29,6 +30,10 @@ use Illuminate\Support\Collection;
  * @property Workforce $workforce
  * @property Collection<int, Tool> $tools
  * @property string|null $message
+ * @property DemoStatus $status
+ * @property string|null $note
+ * @property Carbon|null $handled_at
+ * @property string|null $tenant_id
  * @property Carbon $created_at
  */
 #[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message'])]
@@ -49,6 +54,8 @@ final class DemoRequest extends Model
             'profile' => DemoProfile::class,
             'workforce' => Workforce::class,
             'tools' => AsEnumCollection::of(Tool::class),
+            'status' => DemoStatus::class,
+            'handled_at' => 'datetime',
             'created_at' => 'datetime',
         ];
     }

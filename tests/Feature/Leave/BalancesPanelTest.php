@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Leave\Http\Controllers\BalanceController;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
+use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Models\LeaveTermination;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Notification;
 mutates(BalanceController::class, BalancePages::class);
 
 /** The queries of the list of balances, whatever the number of people on the page (the session and the panel frame included). */
-const LEAVE_BALANCES_QUERIES = 30;
+const LEAVE_BALANCES_QUERIES = 31;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));
@@ -57,11 +58,13 @@ it('lists the people with their policy, the days they can ask for, those given i
     LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 2, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14]);
     LeaveEntry::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->beto->id, 'leave_entitlement_id' => null, 'kind' => 'taken', 'days' => -2]);
 
+    LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'leave_type_id' => null, 'status' => 'requested', 'working_days' => 3]);
+
     $props = leaveBalancesProps();
     $people = collect($props['people']['data'])->keyBy('name');
 
-    expect($people['Ana Solís'])->toMatchArray(['available' => 29, 'advanced' => 0, 'policy' => 'Ley', 'nextAnniversary' => '2027-03-15', 'active' => true])
-        ->and($people['Beto Ruiz'])->toMatchArray(['available' => -2, 'advanced' => 2, 'nextAnniversary' => '2027-01-15']);
+    expect($people['Ana Solís'])->toMatchArray(['available' => 29, 'waiting' => 3, 'advanced' => 0, 'policy' => 'Ley', 'nextAnniversary' => '2027-03-15', 'active' => true])
+        ->and($people['Beto Ruiz'])->toMatchArray(['available' => -2, 'waiting' => 0, 'advanced' => 2, 'nextAnniversary' => '2027-01-15']);
 });
 
 it('counts each tab and lists everybody on the one that is asked for', function (): void {

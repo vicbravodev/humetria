@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Compensation\Support;
 
 use App\Modules\Compensation\Data\FiscalSnapshot;
+use App\Modules\Compensation\Enums\BaseBenefit;
 use App\Modules\Compensation\Enums\SbcIntegration;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
+use App\Modules\Leave\Contracts\VacationTerms;
+use App\Modules\Leave\Data\CompanyVacationTerms;
 use App\Modules\Organization\Contracts\JobGrades;
 use App\Modules\Organization\Data\JobGradeData;
 use Carbon\CarbonImmutable;
@@ -19,7 +22,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class BenefitRows
 {
-    public function __construct(private JobGrades $jobGrades, private FiscalParameters $fiscal) {}
+    public function __construct(private JobGrades $jobGrades, private FiscalParameters $fiscal, private VacationTerms $vacation) {}
 
     /**
      * @param  LengthAwarePaginator<int, Benefit>  $page  with its terms loaded
@@ -29,15 +32,45 @@ final readonly class BenefitRows
     {
         $grades = $this->jobGrades->findMany(array_values(array_unique(array_merge(...$page->getCollection()->map(fn (Benefit $benefit): array => $benefit->job_grade_ids)->all()))));
         $legal = $this->fiscal->at($today);
+        $notice = $this->vacationNotice($today->toDateString());
 
-        return $page->through(fn (Benefit $benefit): array => $this->row($benefit, $grades, $legal, $today->toDateString()));
+        return $page->through(fn (Benefit $benefit): array => $this->row($benefit, $grades, $legal, $today->toDateString(), $notice));
+    }
+
+    /**
+     * Where the Vacaciones policy and the contract of Compensación disagree, in words; null when they say the same or the
+     * company does not use Vacaciones. The days are those of the first year; the premium, the percentage.
+     */
+    public function vacationNotice(string $today): ?string
+    {
+        $policy = $this->vacation->company();
+
+        if (! $policy instanceof CompanyVacationTerms) {
+            return null;
+        }
+
+        $terms = [];
+
+        foreach (Benefit::query()->whereIn('base_key', [BaseBenefit::Vacation->value, BaseBenefit::VacationPremium->value])->with('terms')->get() as $benefit) {
+            $current = $benefit->terms->first(fn (ContractTerm $term): bool => $term->effective_from->toDateString() <= $today);
+            $terms[(string) $benefit->base_key] = $current === null ? null : TenureTable::valueAt($current->tenure_table, $current->value, 1);
+        }
+
+        $days = $terms[BaseBenefit::Vacation->value] ?? null;
+        $premium = $terms[BaseBenefit::VacationPremium->value] ?? null;
+
+        if ($days === null || $premium === null || ($days === $policy->firstYearDays * 100 && $premium === $policy->premiumPercent * 100)) {
+            return null;
+        }
+
+        return sprintf('Tu política de Vacaciones da %d días y %d %% de prima; aquí el contrato dice %s y %s %%.', $policy->firstYearDays, $policy->premiumPercent, BenefitValue::decimal($days), BenefitValue::decimal($premium));
     }
 
     /**
      * @param  array<string, JobGradeData>  $grades
      * @return array<string, mixed>
      */
-    private function row(Benefit $benefit, array $grades, FiscalSnapshot $legal, string $today): array
+    private function row(Benefit $benefit, array $grades, FiscalSnapshot $legal, string $today, ?string $vacationNotice): array
     {
         $terms = $benefit->terms->map(fn (ContractTerm $term): array => $this->term($benefit, $term, $legal))->values()->all();
         $current = $benefit->terms->first(fn (ContractTerm $term): bool => $term->effective_from->toDateString() <= $today);
@@ -70,6 +103,9 @@ final readonly class BenefitRows
             'current' => $current === null ? null : ['value_text' => BenefitValue::format($benefit->kind, $current->value), 'effective_from' => $current->effective_from->toDateString()],
             'warning' => $current === null ? null : LegalMinimum::problem($benefit->baseKey(), $current->value, $current->tenure_table, $legal),
             'terms' => $terms,
+            // The vacations policy says one thing and the contract another: both rows of the same matter say so.
+            'policy_notice' => in_array($benefit->baseKey(), [BaseBenefit::Vacation, BaseBenefit::VacationPremium], true) ? $vacationNotice : null,
+            'note' => $benefit->baseKey() === BaseBenefit::SeniorityPremium ? 'Adicional a la de ley (los 12 días por año se calculan aparte)' : null,
         ];
     }
 

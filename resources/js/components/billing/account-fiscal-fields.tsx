@@ -1,8 +1,9 @@
+import AccountCatalogField from '@/components/billing/account-catalog-field';
 import AccountField from '@/components/billing/account-field';
 import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { AccountDetail } from '@/types';
+import type { AccountDetail, SatOption } from '@/types';
 
 type Errors = Partial<Record<string, string>>;
 
@@ -10,17 +11,21 @@ type Errors = Partial<Record<string, string>>;
 export default function AccountFiscalFields({
     errors,
     account,
+    taxRegimes,
+    cfdiUses,
 }: {
     errors: Errors;
     account: AccountDetail | undefined;
+    taxRegimes: SatOption[];
+    cfdiUses: SatOption[];
 }) {
     return (
         <>
             <div className="grid gap-4 sm:grid-cols-3">
-                <AccountField
+                <AccountCatalogField
                     name="tax_regime"
                     label="Régimen fiscal"
-                    maxLength={120}
+                    options={taxRegimes}
                     defaultValue={account?.tax_regime ?? ''}
                     error={errors['tax_regime']}
                 />
@@ -32,10 +37,10 @@ export default function AccountFiscalFields({
                     defaultValue={account?.postal_code ?? ''}
                     error={errors['postal_code']}
                 />
-                <AccountField
+                <AccountCatalogField
                     name="cfdi_use"
                     label="Uso de CFDI"
-                    maxLength={10}
+                    options={cfdiUses}
                     defaultValue={account?.cfdi_use ?? ''}
                     error={errors['cfdi_use']}
                 />

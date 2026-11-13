@@ -1,3 +1,5 @@
+import type { AttendanceZone } from '@/types';
+
 /** A point on the map of a zone, in degrees. */
 export type Point = { lat: number; lng: number };
 
@@ -86,4 +88,34 @@ export async function findPlaces(
             : [];
 
     return Array.isArray(places) ? places.filter(isPlace) : [];
+}
+
+/** The address a new zone's map opens on: the center's own; none once the zone has a center, or when there is no address to search. */
+export function initialSearch(
+    zone: AttendanceZone | null,
+    centerAddress: string | null,
+): string | null {
+    const address = centerAddress?.trim() ?? '';
+
+    return zone?.latitude === undefined && address.length >= 3 ? address : null;
+}
+
+/** The map looks at a street for an address, and at a city for the fallback when the street is not found. */
+export const STREET_ZOOM = 17;
+export const CITY_ZOOM = 12;
+/** A center touched on a map zoomed out beyond this is more likely a slip than a place: it is confirmed. */
+const MIN_PLACING_ZOOM = 15;
+
+export function tooFarToPlace(zoom: number): boolean {
+    return zoom < MIN_PLACING_ZOOM;
+}
+
+/** The municipality and the state of an address (its last two parts), to look at the city when the street is not found. */
+export function cityOf(address: string): string | null {
+    const parts = address
+        .split(',')
+        .map((part) => part.trim())
+        .filter((part) => part !== '');
+
+    return parts.length < 3 ? null : parts.slice(-2).join(', ');
 }

@@ -13,8 +13,15 @@ describe('punchMessage', () => {
         'no_location',
         'qr_required',
         'qr_invalid',
+        'center_not_ready',
     ])('says what to do about %s, and to ask RH for a correction', (reason) => {
         expect(punchMessage(reason)).toContain('Recursos Humanos');
+    });
+
+    it('does not send a person of a center that is not ready to a screen', () => {
+        expect(punchMessage('center_not_ready')).toBe(
+            'Su centro aún no está listo para marcar. Avise a Recursos Humanos; mientras tanto puede pedir una corrección.',
+        );
     });
 
     it.each([

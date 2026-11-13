@@ -13,6 +13,7 @@ import type { AssessmentCondition, AssessmentRecord } from '@/types';
 export default function AssessmentWorkspace({
     assessment,
     conditions,
+    lacking,
     canEdit,
     canSign,
     signError,
@@ -21,6 +22,7 @@ export default function AssessmentWorkspace({
 }: {
     assessment: AssessmentRecord;
     conditions: AssessmentCondition[];
+    lacking: string[];
     canEdit: boolean;
     canSign: boolean;
     signError: string | undefined;
@@ -56,6 +58,7 @@ export default function AssessmentWorkspace({
                         answered={scoreSummary(scores, keys).answered}
                         conditions={keys.length}
                         verifiedOn={assessment.verifiedOn}
+                        lacking={lacking}
                         error={signError}
                     />
                 )}

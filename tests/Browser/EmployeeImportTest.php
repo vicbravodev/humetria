@@ -71,3 +71,41 @@ it('lists the rows to fix and imports nothing', function (bool $dark, bool $mobi
 
     expect(Employee::query()->withoutGlobalScopes()->count())->toBe(0);
 })->with($looks);
+
+it('shows what changes in a person who is updated without having to open anything', function (): void {
+    $center = WorkCenter::query()->withoutGlobalScopes()->where('name', 'Planta Norte')->sole();
+    Employee::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Alma Torres', 'email' => 'alma@acme.mx', 'mobile' => null, 'gender' => 'female', 'job_title' => 'Operador', 'employee_number' => 'A-1', 'hired_on' => null]);
+    $path = csvOnDisk("nombre,correo,celular,genero,centro_de_trabajo,area,puesto,numero_de_empleado,fecha_de_ingreso,jefe\nAlma Torres,alma@acme.mx,,Mujer,Planta Norte,Producción,Operador Senior,A-1,,\n");
+
+    visit('/admin/acme/employees/import')
+        ->attach('file', $path)
+        ->press('Revisar archivo')
+        ->assertSee('Qué cambia en 1 persona')
+        // A table of Campo / Antes / Después (visual round 5, point 4), not a sentence with an arrow.
+        ->assertScript('() => [...document.querySelectorAll(\'#import-changes ~ * table th, section[aria-labelledby="import-changes"] table th\')].map((cell) => cell.textContent.trim()).join()', 'Campo,Antes,Después')
+        ->assertScript('() => [...document.querySelectorAll(\'section[aria-labelledby="import-changes"] tbody tr\')].some((row) => [...row.cells].map((cell) => cell.textContent.trim()).join("|") === "Puesto|Operador|Operador Senior")', true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('marks in the table of changes the value that the file erases', function (): void {
+    $center = WorkCenter::query()->withoutGlobalScopes()->where('name', 'Planta Norte')->sole();
+    Employee::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Alma Torres', 'email' => 'alma@acme.mx', 'mobile' => '5511111111', 'gender' => 'female', 'job_title' => 'Operador', 'employee_number' => 'A-1', 'hired_on' => null]);
+    $path = csvOnDisk("nombre,correo,celular,genero,centro_de_trabajo,area,puesto,numero_de_empleado,fecha_de_ingreso,jefe\nAlma Torres,alma@acme.mx,,Mujer,Planta Norte,Producción,Operador,A-1,,\n");
+
+    visit('/admin/acme/employees/import')
+        ->attach('file', $path)
+        ->press('Revisar archivo')
+        ->assertSee('Qué cambia en 1 persona')
+        ->assertScript(<<<'JS'
+            () => {
+                const row = [...document.querySelectorAll('section[aria-labelledby="import-changes"] tbody tr')].find((tr) => tr.cells[0].textContent.trim() === 'Celular');
+                const probe = document.createElement('div');
+                probe.style.backgroundColor = 'var(--warning)';
+                document.body.append(probe);
+                const warning = getComputedStyle(probe).backgroundColor;
+                probe.remove();
+                const erased = row.cells[2].querySelector('[data-erased]');
+                return row.cells[1].textContent.includes('5511111111') && erased !== null && getComputedStyle(erased).backgroundColor === warning && erased.textContent.includes('Se borra');
+            }
+            JS, true);
+});

@@ -67,7 +67,7 @@ it('lists the people with an individual salary paginated, each with the salary i
             ->where('people.data.0.grade', 'Operador · A')
             ->where('people.data.0.active', true)
             // The one in force today is the 2026 salary, not the one of next year.
-            ->where('people.data.0.current', ['daily_salary' => '650.25', 'daily_salary_text' => '$650.25', 'effective_from' => '2026-01-01', 'note' => 'Por antigüedad'])
+            ->where('people.data.0.current', ['daily_salary' => '650.25', 'daily_salary_text' => '$650.25', 'effective_from' => '2026-01-01', 'note' => 'Por antigüedad', 'below_minimum' => null])
             ->where('people.data.0.salaries.0.effective_from', '2027-01-01')
             ->where('people.data.0.salaries.1.effective_from', '2026-01-01')
             ->where('people.data.0.salaries.2.daily_salary', '600')
@@ -279,4 +279,23 @@ it('keeps two accounts\' individual salaries apart', function (): void {
     // Another account's page answers 404 (not 403) even to its own owner.
     $this->get(route('tenant.compensation.overrides.index', $other))->assertNotFound();
     $this->post(route('tenant.compensation.overrides.store', $other), overrideForm())->assertNotFound();
+});
+
+it('saves an individual salary under the minimum and says so, without blocking', function (): void {
+    overridePerson($this->tenant, $this->grade, 'E-001');
+
+    $this->post(route('tenant.compensation.overrides.store', $this->tenant), overrideForm(['daily_salary' => '250']))->assertSessionHasNoErrors();
+
+    $flash = session(Inertia\Support\SessionKey::FLASH_DATA);
+
+    expect(SalaryOverride::query()->sole()->daily_salary_cents)->toBe(25000)
+        ->and($flash['toast']['type'] ?? null)->toBe('warning')
+        ->and($flash['toast']['message'] ?? '')->toContain('Sueldo individual guardado.')->toContain('salario mínimo general');
+});
+
+it('marks the individual salary that is under the general minimum', function (): void {
+    SalaryOverride::factory()->create(['tenant_id' => $this->tenant->id, 'employee_number' => 'E-009', 'daily_salary_cents' => 10000, 'effective_from' => '2026-01-01']);
+
+    $this->get(route('tenant.compensation.overrides.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('people.data.0.current.below_minimum', fn (string $text) => str_starts_with($text, 'Está por debajo del salario mínimo general')));
 });

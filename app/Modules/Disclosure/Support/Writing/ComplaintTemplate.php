@@ -57,7 +57,7 @@ final readonly class ComplaintTemplate implements WrittenTemplate
         $channels = $answers->list('channels', ['channel' => 'por el canal de quejas, también sin dar su nombre', 'hr' => 'con Recursos Humanos, en persona o por correo', 'person' => 'con una persona de confianza designada', 'committee' => 'con la Comisión de seguridad e higiene']);
 
         return [
-            new Section('channels', 'Dónde presentarla', $channels === null ? null : "Puede presentar una queja o denuncia {$channels}. Nadie recibirá represalias por hacerlo."),
+            new Section('channels', 'Dónde presentarla', $channels === null ? null : "Puede presentar una queja o denuncia {$channels}."),
         ];
     }
 }

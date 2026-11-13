@@ -32,6 +32,15 @@ export function describeDate(text: string): string | undefined {
     return date === undefined ? undefined : longDate.format(date);
 }
 
+const mediumDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium' });
+
+/** "25 nov 2026" for a table or a line; a text that is not a calendar date comes back as it was. */
+export function shortDate(text: string): string {
+    const date = fromCalendarDate(text);
+
+    return date === undefined ? text : mediumDate.format(date).replace('.', '');
+}
+
 /** What a calendar closes: the days before `min` and after `max` (Y-m-d); nothing when neither is a date. */
 export function pickableDays(
     min: string | undefined,

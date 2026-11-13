@@ -55,6 +55,13 @@ it('shows RH what reached them first and lets them see the rest by tab', functio
         ->assertNoJavaScriptErrors();
 })->with($looks);
 
+it('writes the days of a request short, on one line, so the row of the queue stays low', function (): void {
+    $queue = leaveRequestsPanel();
+
+    resizeTo(visit($queue['url'])->assertSee('Ana Solís'), 1440, 900)
+        ->assertScript('() => { const cell = document.querySelector("tbody tr td:nth-child(2)"); const range = document.createRange(); range.selectNodeContents(cell); return range.getClientRects().length === 1 && !/ de /.test(cell.textContent); }', true);
+});
+
 it('says so when a tab has nothing', function (): void {
     $url = signInToPanel();
     workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
@@ -128,6 +135,7 @@ it('lets RH record vacations for somebody and approve them in the same step', fu
         ->click('[role="option"]:has-text("Ana Solís")')
         ->click('#record-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-02"] button')
+        ->assertScript(calendarClosed(), true)
         ->click('#record-ends-on')
         ->click('[data-state="open"] [data-day="2026-11-03"] button')
         ->type('#record-note', 'Lo pidió por teléfono')

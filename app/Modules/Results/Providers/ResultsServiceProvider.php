@@ -14,6 +14,7 @@ use App\Modules\Results\Support\AnswerDistribution;
 use App\Modules\Results\Support\CompanyEvaluationResults;
 use App\Modules\Results\Support\CompanyRiskResults;
 use App\Modules\Results\Support\GroupMinimum;
+use App\Modules\Results\Support\SupportPortalSection;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -24,6 +25,7 @@ final class ResultsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->tag([SupportPortalSection::class], 'portal.sections');
         $this->app->bind(EvaluationResults::class, CompanyEvaluationResults::class);
         $this->app->bind(AnswerDistributions::class, AnswerDistribution::class);
         $this->app->bind(RiskResults::class, CompanyRiskResults::class);

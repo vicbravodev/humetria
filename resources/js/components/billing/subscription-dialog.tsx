@@ -40,8 +40,7 @@ export default function SubscriptionDialog({
                     {company.trade_name}
                 </DialogTitle>
                 <DialogDescription>
-                    Cambiar el plan no cambia el acceso de la empresa: sus
-                    fechas, sus módulos y su estado siguen como están.
+                    Las herramientas pasan a ser las del plan.
                 </DialogDescription>
                 <SubscriptionForm
                     company={company}

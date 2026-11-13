@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Support;
 
+use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
+use App\Modules\Leave\Models\LeaveRequest;
 use Carbon\CarbonImmutable;
 
 /**
@@ -94,6 +96,40 @@ final class Balances
         }
 
         return $advanced;
+    }
+
+    /**
+     * The working days of the vacations each person asked for that nobody has answered: they take nothing off the balance
+     * yet. A leave (with a type) uses no vacation days, so it is not here. Whoever has none is not in the answer.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, int> by employee id
+     */
+    public static function waiting(array $employeeIds): array
+    {
+        if ($employeeIds === []) {
+            return [];
+        }
+
+        $rows = LeaveRequest::query()
+            ->among('employee_id', $employeeIds)
+            ->whereNull('leave_type_id')
+            ->where('status', RequestStatus::Requested)
+            ->groupBy('employee_id')
+            ->orderBy('employee_id')
+            ->toBase()
+            ->selectRaw('employee_id, sum(working_days)::int as days')
+            ->get();
+
+        $waiting = [];
+
+        foreach ($rows as $row) {
+            if (is_string($row->employee_id) && is_int($row->days)) { // @pest-mutate-ignore: BooleanAndToBooleanOr
+                $waiting[$row->employee_id] = $row->days;
+            }
+        }
+
+        return $waiting;
     }
 
     /**

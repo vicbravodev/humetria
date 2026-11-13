@@ -10,8 +10,11 @@ import type { EmployeeChoices } from '@/types';
 
 export default function CreateEmployeeSheet({
     choices,
+    full,
 }: {
     choices: EmployeeChoices;
+    /** The plan has no room for another person: the button is off, and the notice above says what to do. */
+    full: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const union = useIsUnion();
@@ -32,7 +35,15 @@ export default function CreateEmployeeSheet({
             choices={choices}
             trigger={
                 <SheetTrigger asChild>
-                    <Button data-tour="add-employee">
+                    <Button
+                        data-tour="add-employee"
+                        disabled={full}
+                        title={
+                            full
+                                ? 'Tu plan ya cubre a todas las personas que incluye: pide una ampliación.'
+                                : undefined
+                        }
+                    >
                         <UserPlus />
                         Dar de alta
                     </Button>

@@ -19,18 +19,19 @@ enum Module: string
     case Pulse = 'pulse';
     case Climate = 'climate';
 
+    /** The name the menu gives the tool: the console says the same thing the company sees. */
     public function label(): string
     {
         return match ($this) {
-            self::Attendance => 'Registro de jornada',
+            self::Attendance => 'Asistencia',
             self::Vacations => 'Vacaciones',
-            self::OrgChart => 'Organigramas',
+            self::OrgChart => 'Organigrama',
             self::Nom035 => 'NOM-035',
             self::Nom037 => 'NOM-037',
             self::Seating => 'Ley Silla',
-            self::Complaints => 'Buzón de quejas',
+            self::Complaints => 'Quejas',
             self::Pulse => 'Pulso',
-            self::Climate => 'Clima laboral',
+            self::Climate => 'Clima',
         };
     }
 

@@ -1,7 +1,7 @@
 import DossierMissing from '@/components/telework/dossier-missing';
 import DossierTable from '@/components/telework/dossier-table';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { describeDate } from '@/lib/calendar-date';
+import { shortDate } from '@/lib/calendar-date';
 import { isFixedPlace } from '@/lib/telework/dossier';
 import type { DossierWorkplace } from '@/types';
 
@@ -32,10 +32,14 @@ export default function DossierFixedPlaces({
                     </TableCell>
                     <TableCell>{place.review?.decision ?? '—'}</TableCell>
                     <TableCell>
-                        {describeDate(place.review?.decidedOn ?? '') ?? '—'}
+                        {place.review === null
+                            ? '—'
+                            : shortDate(place.review.decidedOn)}
                     </TableCell>
                     <TableCell>
-                        {describeDate(place.review?.validUntil ?? '') ?? '—'}
+                        {place.review?.validUntil == null
+                            ? '—'
+                            : shortDate(place.review.validUntil)}
                     </TableCell>
                 </TableRow>
             ))}

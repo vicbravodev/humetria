@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { countOf } from '@/lib/plural';
 import { TableCell } from '@/components/ui/table';
 import type { SubscriptionView } from '@/types';
 
@@ -43,7 +44,9 @@ export default function AccountCompanyPlan({
                     <span className="text-caption text-muted-foreground">
                         {subscription.profile_label}
                     </span>
-                    <Badge variant="outline">{subscription.status_label}</Badge>
+                    <Badge variant="outline">
+                        Suscripción {subscription.status_label.toLowerCase()}
+                    </Badge>
                     {subscription.scheduled !== null && (
                         <span
                             data-test="plan-scheduled"
@@ -58,10 +61,16 @@ export default function AccountCompanyPlan({
             <TableCell className="text-sm whitespace-normal tabular-nums">
                 <div className="flex flex-col">
                     <span>
-                        {people} de {subscription.seats} personas
+                        {people} de{' '}
+                        {countOf(subscription.seats, 'persona', 'personas')}
                     </span>
                     <span className="text-caption text-muted-foreground">
-                        {workCenters} de {subscription.centers} centros
+                        {workCenters} de{' '}
+                        {countOf(
+                            subscription.allowed_centers,
+                            'centro',
+                            'centros',
+                        )}
                     </span>
                 </div>
             </TableCell>

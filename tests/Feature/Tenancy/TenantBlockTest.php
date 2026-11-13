@@ -66,7 +66,7 @@ it('carries nothing but the shared props to the blocked page', function (): void
         ->get(route('tenant.dashboard', $tenant))
         ->viewData('page')['props'];
 
-    expect(array_keys($props))->toEqualCanonicalizing(['name', 'auth', 'impersonator', 'tenant', 'tenants', 'inCourse', 'firstSteps', 'sidebarOpen', 'errors']);
+    expect(array_keys($props))->toEqualCanonicalizing(['name', 'support', 'auth', 'impersonator', 'tenant', 'tenants', 'inCourse', 'firstSteps', 'sidebarOpen', 'errors']);
 });
 
 it('answers HEAD with the blocked page too', function (): void {
@@ -100,6 +100,36 @@ it('lets the members of a read-only company read its pages, told that it is read
             ->where('tenant.blocked', false)
             ->where('tenant.read_only', true));
 })->with($readOnly);
+
+it('turns off every writing permission of a read-only company, keeps the ones that read, and keeps the full set for the menu', function (Closure $make): void {
+    $tenant = $make();
+
+    $this->actingAs(ownerOf($tenant))
+        ->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(function (Assert $page): void {
+            $props = $page->toArray()['props']['tenant'];
+
+            foreach ($props['can'] as $key => $allowed) {
+                $writes = str_starts_with($key, 'manage_') || in_array($key, ['assess_seating', 'review_workplaces', 'handle_complaints'], true);
+
+                expect($allowed)->toBe($writes ? false : $props['permissions'][$key], $key);
+            }
+
+            // What the role allows is still there for the menu: a read-only company reads and exports everything.
+            expect($props['permissions']['manage_organization'])->toBeTrue()->and($props['can']['view_attendance'])->toBeTrue();
+        });
+})->with($readOnly);
+
+it('leaves the writing permissions of a company that works as usual as its role gives them', function (Closure $make): void {
+    $tenant = $make();
+
+    $this->actingAs(ownerOf($tenant))
+        ->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('tenant.can.manage_organization', true)
+            ->where('tenant.can.manage_campaigns', true)
+            ->where('tenant.permissions.manage_organization', true));
+})->with($open);
 
 it('rejects with 423 any change to a read-only company, leaving no effect and a log', function (Closure $make): void {
     $tenant = $make();
@@ -158,4 +188,30 @@ it('keeps the other companies of the person reachable', function (): void {
 
     $this->actingAs($user)->get(route('tenant.dashboard', $open))
         ->assertInertia(fn (Assert $page) => $page->component('dashboard')->has('tenants', 2));
+});
+
+it('shares the address to write to Humetria, and null while none is configured, even if the setting is empty', function (?string $configured, ?string $shared): void {
+    config(['app.support_email' => $configured]);
+    $tenant = Tenant::factory()->activeUntil(now()->addMonth())->create();
+
+    $this->actingAs(ownerOf($tenant))->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('support.email', $shared));
+})->with([
+    'configured' => ['soporte@humetria.mx', 'soporte@humetria.mx'],
+    'not configured' => [null, null],
+    'empty' => ['', null],
+]);
+
+it('shares the reason a person gave for suspending or archiving the company, so the notice can say it', function (): void {
+    $tenant = Tenant::factory()->suspended('Falta de pago de octubre')->create();
+
+    $this->actingAs(ownerOf($tenant))->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.restriction_reason', 'Falta de pago de octubre'));
+});
+
+it('shares no reason for a company that is not blocked', function (): void {
+    $tenant = Tenant::factory()->readOnly('Auditoría')->create();
+
+    $this->actingAs(ownerOf($tenant))->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.restriction_reason', null));
 });

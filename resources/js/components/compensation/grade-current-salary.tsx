@@ -1,3 +1,4 @@
+import BelowMinimumNote from '@/components/compensation/below-minimum-note';
 import { Badge } from '@/components/ui/badge';
 import { describeDate } from '@/lib/calendar-date';
 import type { SalaryEntry } from '@/types';
@@ -20,6 +21,9 @@ export default function GradeCurrentSalary({
             <p className="text-caption text-muted-foreground">
                 Desde el {describeDate(current.effective_from)}
             </p>
+            {current.below_minimum !== null && (
+                <BelowMinimumNote reason={current.below_minimum} />
+            )}
         </div>
     );
 }

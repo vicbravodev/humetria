@@ -642,6 +642,18 @@ html:has([data-smooth-scroll]) {
     margin: 2cm;
 }
 
+/* A dossier prints on A4 with its page number at the foot of each sheet. */
+@page dossier {
+    size: A4;
+    margin: 1.5cm;
+
+    @bottom-right {
+        content: 'Página ' counter(page) ' de ' counter(pages);
+        font-size: 9pt;
+        color: var(--muted-foreground);
+    }
+}
+
 @media print {
     *,
     ::before,

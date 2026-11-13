@@ -85,3 +85,14 @@ export function companiesQuery(
         ...(filters.status === 'all' ? {} : { status: filters.status }),
     };
 }
+
+/**
+ * Whether an empty list is the filters' doing and not a console with no companies: the counts follow the search, so a
+ * search that matches nothing also counts zero.
+ */
+export function tenantsFiltered(
+    counts: { all: number },
+    filters: TenantFilters,
+): boolean {
+    return counts.all > 0 || filters.q !== '' || filters.status !== 'all';
+}

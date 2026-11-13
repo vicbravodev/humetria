@@ -1,3 +1,4 @@
+import { describeDate } from '@/lib/calendar-date';
 import ProgressBar from '@/components/humetria/progress-bar';
 import SurveyCloseDialog from '@/components/seating/survey-close-dialog';
 import { countOf } from '@/lib/plural';
@@ -26,7 +27,9 @@ export default function SurveyProgress({
             <p className="text-muted-foreground tabular-nums">
                 Han contestado {survey.answered} de{' '}
                 {countOf(survey.participants, 'persona', 'personas')}
-                {survey.closesOn !== null && `. Cierra el ${survey.closesOn}`}.
+                {survey.closesOn !== null &&
+                    `. Cierra el ${describeDate(survey.closesOn) ?? survey.closesOn}`}
+                .
             </p>
             {survey.status === 'active' && (
                 <p className="text-sm text-muted-foreground">

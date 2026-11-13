@@ -1,3 +1,4 @@
+import ModulesNote from '@/components/billing/modules-note';
 import QuoteLines from '@/components/billing/quote-lines';
 import { priceChange } from '@/lib/billing-preview';
 import type { SubscriptionPreview } from '@/types';
@@ -13,10 +14,13 @@ export default function SubscriptionPreviewAnswer({
 
     if (preview.quote.requires_quotation) {
         return (
-            <p className="text-sm">
-                {preview.quote.explanation}. Pon un precio negociado para fijar
-                el importe.
-            </p>
+            <>
+                <ModulesNote modules={preview.modules} />
+                <p className="text-sm">
+                    {preview.quote.explanation}. Pon un precio negociado para
+                    fijar el importe.
+                </p>
+            </>
         );
     }
 
@@ -41,6 +45,7 @@ export default function SubscriptionPreviewAnswer({
                     anteriores. Lo que sube aplica hoy.
                 </p>
             )}
+            <ModulesNote modules={preview.modules} />
             <QuoteLines quote={preview.quote} />
             {first !== null && first.subtotal !== null && (
                 <p className="text-sm text-muted-foreground">

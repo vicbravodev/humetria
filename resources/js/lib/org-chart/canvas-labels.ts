@@ -54,7 +54,7 @@ export function headsRibbon(heads: number, unplaced: number): string {
 
         return unplaced === 0
             ? top
-            : `${top}. Otras ${unplaced} no tienen jefe ni equipo y no se dibujan`;
+            : `${top}. ${unplaced === 1 ? 'Otra persona no tiene jefe ni equipo y no se dibuja' : `Otras ${unplaced} no tienen jefe ni equipo y no se dibujan`}`;
     }
 
     return unplaced === 1

@@ -147,6 +147,11 @@ final readonly class Requirements
                 : $row(RequirementState::Notice, "Hay una evaluación cerrada el {$fact->latest->closedOn}, más reciente que la publicada, sin publicar.");
         }
 
+        // Published is not delivered: 7.8 asks that the people can see them (criterio C-52).
+        if (! $facts->delivered('e')) {
+            return $row(RequirementState::Missing, 'Están publicados, pero no están a la vista: activa la página de las personas o registra un medio físico.');
+        }
+
         return $fact->shownBreakdown?->state === RiskBreakdown::BELOW_MINIMUM
             ? $row(RequirementState::Notice, 'Publicada, pero con muy pocas respuestas: las cifras no se muestran para proteger la confidencialidad.')
             : $row(RequirementState::Met, null);

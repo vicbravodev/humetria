@@ -274,3 +274,14 @@ it('writes a quote for the screen: pesos as text, lines with their explanation a
         'total' => null,
     ]);
 });
+
+it('shows the centers the company may really have: never fewer than the plan includes', function (): void {
+    $account = BillingAccount::factory()->consultant()->create();
+    planFor($account, ['plan' => Plan::Cumplimiento, 'centers' => 1]);
+    planFor($account, ['plan' => Plan::Integral, 'profile' => Profile::ChannelIntegral, 'centers' => 9]);
+
+    $page = $this->actingAs(superadmin())->get(route('billing.accounts.show', $account))->viewData('page');
+    $centers = collect($page['props']['companies']['data'])->mapWithKeys(fn (array $row): array => [$row['subscription']['plan'] => [$row['subscription']['centers'], $row['subscription']['allowed_centers']]]);
+
+    expect($centers->sortKeys()->all())->toBe(['cumplimiento' => [1, 2], 'integral' => [9, 9]]);
+});

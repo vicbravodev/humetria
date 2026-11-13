@@ -123,7 +123,7 @@ it('asserts the query count of the inbox', function (): void {
     }
     $this->actingAs($this->cora)->get(inboxUrl())->assertOk();
 
-    $this->expectsDatabaseQueryCount(19);
+    $this->expectsDatabaseQueryCount(18);
     $this->get(inboxUrl())->assertOk();
 });
 
@@ -258,7 +258,7 @@ it('shows the decision of a reviewed checklist and no longer offers to decide', 
         ->where('review.current.decision', 'valid')
         ->where('review.current.notes', 'Todo en orden.')
         ->where('review.workplace.status', 'valid')
-        ->where('review.workplace.expiresOn', now()->setTimezone(config()->string('app.display_timezone'))->addMonthsNoOverflow(12)->toDateString())
+        ->where('review.workplace.expiresOn', now()->setTimezone(config()->string('app.display_timezone'))->addMonthsNoOverflow(12)->subDay()->toDateString())
         ->where('review.previous', null));
 
     $this->get(inboxUrl())->assertInertia(fn (Assert $page) => $page->where('applications.total', 0));
@@ -335,7 +335,7 @@ it('sends the detail of a checklist in full', function (): void {
     $this->actingAs($this->cora)->get(route('tenant.telework.reviews.show', [$this->tenant, $application->id]))->assertInertia(fn (Assert $page) => $page
         ->where('workCenter', ['id' => $this->center->id, 'name' => $this->center->name])
         ->where('review.application', ['id' => $application->id, 'section' => 1, 'submittedOn' => '2026-05-09', 'consentAccepted' => true, 'specialNeeds' => 'Escritorio alto'])
-        ->where('review.workplace', ['id' => $this->workplace->id, 'address' => 'Calle Hidalgo 45, Centro, Querétaro, Querétaro', 'status' => 'pending', 'statusLabel' => 'Pendiente de validar', 'expiresOn' => '2026-01-15'])
+        ->where('review.workplace', ['id' => $this->workplace->id, 'address' => 'Calle Hidalgo 45, Centro, Querétaro, Querétaro', 'status' => 'pending', 'statusLabel' => 'Pendiente de validar', 'expiresOn' => '2026-01-14'])
         ->where('review.answers.unfavorable.0', ['id' => $q['risk']->id, 'code' => $q['risk']->code, 'heading' => $q['risk']->heading, 'text' => $q['risk']->text, 'answer' => 'no', 'note' => 'La luz es muy poca', 'photos' => [['id' => $photo->id]]])
         ->where('review.previous', ['decision' => 'valid_with_plan', 'decisionLabel' => 'Validado con plan de acción', 'methodLabel' => 'Comprobación a distancia', 'decidedOn' => '2025-01-15', 'visitedOn' => '2025-01-14', 'notes' => 'Revisada.', 'actionPlan' => 'Cambiar la silla.', 'planDueOn' => now()->addMonth()->toDateString()])
         ->where('review.evidence', [['id' => $request->id, 'kind' => $request->kind->value, 'note' => $request->note, 'requestedOn' => $request->requested_at->setTimezone('America/Mexico_City')->toDateString(), 'fulfilled' => false, 'photos' => []]])

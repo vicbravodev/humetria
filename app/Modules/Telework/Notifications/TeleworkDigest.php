@@ -43,7 +43,7 @@ final class TeleworkDigest extends Notification implements MailBag, ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $subject = $this->pending === null ? 'Resumen de teletrabajo' : "Tienes {$this->pending} pendientes como integrante de la Comisión";
+        $subject = $this->pending === null ? 'Resumen de teletrabajo' : trans_choice('{1} Tienes :count pendiente como integrante de la Comisión|[2,*] Tienes :count pendientes como integrante de la Comisión', $this->pending);
         $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject($subject)->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
             ->line("Esto espera tu atención en {$this->company->tradeName}:");
 

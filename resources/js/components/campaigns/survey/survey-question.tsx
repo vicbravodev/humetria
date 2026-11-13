@@ -39,7 +39,7 @@ export default function SurveyQuestion({
                             {caption}
                         </span>
                     )}
-                    <span className="text-xl leading-[30px] font-medium tracking-[-0.005em]">
+                    <span className="text-xl leading-[1.875rem] font-medium tracking-[-0.005em]">
                         {text}
                     </span>
                 </legend>
@@ -49,7 +49,7 @@ export default function SurveyQuestion({
                             key={option.value}
                             className={cn(
                                 'flex min-h-14 cursor-pointer items-center gap-3 rounded-lg border border-input bg-card px-4 py-3 text-lg leading-7 transition-[border-color,background-color] duration-150 hover:bg-muted',
-                                'md:flex-1 md:basis-0 md:flex-col md:justify-center md:gap-2 md:px-2 md:py-3.5 md:text-center md:text-base md:leading-[22px]',
+                                'md:flex-1 md:basis-0 md:flex-col md:justify-center md:gap-2 md:px-2 md:py-3.5 md:text-center md:text-base md:leading-[1.375rem]',
                                 'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring',
                                 value === option.value &&
                                     'border-2 border-primary bg-accent px-[15px] py-[11px] font-medium hover:bg-accent md:px-[7px] md:py-[13px]',

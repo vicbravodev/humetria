@@ -8,6 +8,8 @@ use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Listeners\CancelOnDeactivation;
 use App\Modules\Engagement\Listeners\NotifyManagers;
 use App\Modules\Engagement\Listeners\QueueCommentSummaries;
+use App\Modules\Engagement\Support\ClimatePortalSection;
+use App\Modules\Engagement\Support\FeedbackPortalSection;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -22,6 +24,11 @@ use Illuminate\Support\ServiceProvider;
  */
 final class EngagementServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->tag([ClimatePortalSection::class, FeedbackPortalSection::class], 'portal.sections');
+    }
+
     public function boot(): void
     {
         // Per link, so a plant of people on one Wi-Fi can answer at once; a generous cap per address keeps anyone from

@@ -30,6 +30,7 @@ export default function OrgChartToolbar({
     person,
     depth,
     reserve,
+    editing,
 }: {
     filters: OrgChartFilters;
     /** The focused person, to keep them while the filters change. */
@@ -40,10 +41,12 @@ export default function OrgChartToolbar({
     };
     /** Leaves room on the right for the panel of the person selected. */
     reserve: boolean;
+    /** The editing mode is on: it stays on when the page reloads with a filter or a person. */
+    editing: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const visit = (next: OrgChartFilters, focus = person?.id) =>
-        router.get(index.url(tenantSlug), orgChartQuery(next, focus), {
+        router.get(index.url(tenantSlug), orgChartQuery(next, focus, editing), {
             preserveScroll: true,
         });
     const everything = depth.levels === Infinity;
@@ -52,14 +55,18 @@ export default function OrgChartToolbar({
         <div
             role="search"
             className={cn(
-                'pointer-events-none absolute top-3 left-3 z-10 flex flex-wrap gap-2 print:hidden',
+                'pointer-events-none absolute top-3 left-3 z-10 flex gap-2 print:hidden',
                 reserve ? 'right-[384px]' : 'right-3',
             )}
         >
-            <div className="pointer-events-auto w-full sm:w-[280px]">
-                <OrgPersonSearch filters={filters} person={person} />
+            <div className="pointer-events-auto min-w-0 flex-[1_1_200px] sm:max-w-[280px]">
+                <OrgPersonSearch
+                    filters={filters}
+                    person={person}
+                    editing={editing}
+                />
             </div>
-            <div className="pointer-events-auto w-[210px]">
+            <div className="pointer-events-auto max-w-[210px] min-w-0 flex-[1_1_150px]">
                 <Combobox
                     id="org-chart-work-center"
                     name="work_center"
@@ -78,7 +85,10 @@ export default function OrgChartToolbar({
             </div>
             <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="pointer-events-auto">
+                    <Button
+                        variant="outline"
+                        className="pointer-events-auto shrink-0"
+                    >
                         {depthLabel(depth.levels)}
                         <ChevronDown aria-hidden />
                     </Button>
@@ -101,7 +111,7 @@ export default function OrgChartToolbar({
             </DropdownMenu>
             <Button
                 variant="outline"
-                className="pointer-events-auto"
+                className="pointer-events-auto shrink-0"
                 onClick={() => depth.onChange(everything ? 1 : Infinity)}
             >
                 {everything ? <ChevronsDownUp /> : <ChevronsUpDown />}

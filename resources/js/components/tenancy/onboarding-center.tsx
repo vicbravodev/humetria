@@ -51,7 +51,7 @@ export default function OnboardingCenter({
             />
             <PillChoice
                 name={`standing-${center.id}`}
-                legend="¿Alguien trabaja de pie la mayor parte de su jornada?"
+                legend="¿Alguien hace su trabajo de pie, aunque sea parte de su jornada?"
                 options={YES_NO}
                 value={choice(answers.standing)}
                 onChange={(value) =>

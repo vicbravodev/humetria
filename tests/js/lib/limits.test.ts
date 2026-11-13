@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { limitLine, planUsage } from '@/lib/limits';
+import { atLimit, expansionMailto, limitLine, planUsage } from '@/lib/limits';
 
 describe('limitLine', () => {
     it('says how many places are left', () => {
@@ -40,7 +40,7 @@ describe('planUsage', () => {
         expect(
             planUsage({ used: 1, amount: 1, remaining: 0, over: false }, seats),
         ).toEqual({
-            text: 'Tu plan cubre 1 persona y ya llegaste al tope. Pide una ampliación a Humetria.',
+            text: 'Tu plan cubre 1 persona y ya llegaste al tope. Pide una ampliación a Humetría.',
             full: true,
         });
     });
@@ -52,7 +52,7 @@ describe('planUsage', () => {
                 seats,
             ),
         ).toEqual({
-            text: 'Tu plan cubre 50 personas y ya llegaste al tope. Pide una ampliación a Humetria.',
+            text: 'Tu plan cubre 50 personas y ya llegaste al tope. Pide una ampliación a Humetría.',
             full: true,
         });
         expect(
@@ -61,8 +61,49 @@ describe('planUsage', () => {
                 seats,
             ),
         ).toEqual({
-            text: 'Tu plan cubre 50 personas y tienes 53. Pide una ampliación a Humetria.',
+            text: 'Tu plan cubre 50 personas y tienes 53. Pide una ampliación a Humetría.',
             full: true,
         });
+    });
+});
+
+describe('atLimit', () => {
+    const limit = { used: 3, amount: 5, remaining: 2, over: false };
+
+    it('is false while there is room, and for a company without a plan', () => {
+        expect(atLimit(limit)).toBe(false);
+        expect(atLimit(null)).toBe(false);
+    });
+
+    it('is true at the limit and above it', () => {
+        expect(atLimit({ ...limit, used: 5, remaining: 0 })).toBe(true);
+        expect(atLimit({ used: 7, amount: 5, remaining: 0, over: true })).toBe(
+            true,
+        );
+    });
+});
+
+describe('expansionMailto', () => {
+    it('writes to the support address with the subject that says what to expand and for whom', () => {
+        expect(
+            expansionMailto(
+                'soporte@humetria.mx',
+                'centros',
+                'Autopartes Demo',
+            ),
+        ).toBe(
+            'mailto:soporte@humetria.mx?subject=Ampliar%20centros%20de%20Autopartes%20Demo',
+        );
+    });
+
+    it('is null without an address, so no empty link is shown', () => {
+        expect(expansionMailto(null, 'personas', 'Autopartes Demo')).toBeNull();
+        expect(expansionMailto('', 'personas', 'Autopartes Demo')).toBeNull();
+    });
+
+    it('keeps accents and an ampersand of the company name safe in the link', () => {
+        expect(expansionMailto('s@h.mx', 'personas', 'Peña & Hijos')).toBe(
+            'mailto:s@h.mx?subject=Ampliar%20personas%20de%20Pe%C3%B1a%20%26%20Hijos',
+        );
     });
 });

@@ -130,6 +130,15 @@ it('shows the person the survey with its gate, as any other survey', function ()
         ->where('instruments.0.identified', false)->where('instruments.0.sections.0.gate.key', 'stands')->has('instruments.0.sections.0.items', 8));
 });
 
+it('tells the survey page its kind, so Ley Silla gets its own cover and NOM-035 keeps its own', function (): void {
+    Bus::fake();
+    $this->actingAs($this->hr);
+    launchSurvey();
+    Participant::query()->firstOrFail()->forceFill(['token_hash' => Participant::hashToken('the-token')])->save();
+
+    $this->get(route('survey.show', 'the-token'))->assertInertia(fn (Assert $page) => $page->where('kind', 'seating_survey'));
+});
+
 it('keeps the NOM-035 pages, counts, records and digests unchanged with a seating survey open', function (): void {
     Bus::fake();
     Notification::fake();

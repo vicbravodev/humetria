@@ -59,6 +59,16 @@ export type PortalVisit = {
     workplace: string;
 };
 
+/** A tool in the home of the portal, as its module offers it to the person. */
+export type PortalSection = {
+    key: string;
+    label: string;
+    description: string;
+    href: string;
+    /** How many things wait for the person in it, when the tool counts them. */
+    pending: number | null;
+};
+
 export type PortalPending = {
     /** Still to answer. */
     checklists: PortalChecklist[];
@@ -105,7 +115,7 @@ export type TeleworkerWorkplace = {
     /** Derived by the server from the latest review; never edited by hand. */
     status: WorkplaceStatusValue;
     statusLabel: string;
-    /** The first day the validation no longer holds, Y-m-d. */
+    /** The last day the validation holds, Y-m-d: «vigente hasta». */
     expiresOn: string | null;
 };
 
@@ -114,6 +124,17 @@ export type EndReasonValue =
     | 'left_company'
     | 'transfer'
     | 'other';
+
+/** The address of a workplace, as the roster form asks for the home (the same fields, by their names). */
+export type HomeAddress = {
+    street: string;
+    exterior_number: string;
+    interior_number: string | null;
+    neighborhood: string;
+    postal_code: string;
+    municipality: string;
+    state: string;
+};
 
 export type TeleworkerSummary = {
     id: string;
@@ -135,6 +156,8 @@ export type TeleworkerSummary = {
     endedOn: string | null;
     endNote: string | null;
     workplaces: TeleworkerWorkplace[];
+    /** The first workplace validated, offered as their home; null while none is. */
+    homeDefault: HomeAddress | null;
 };
 
 /** A question as the person sees it in their portal. */

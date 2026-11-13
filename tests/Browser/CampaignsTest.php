@@ -165,6 +165,54 @@ it('chooses the work center in the new-evaluation assistant, and everyone instea
     expect(Campaign::query()->withoutGlobalScopes()->sole()->population->value)->toBe('all');
 });
 
+// H-04: the launch dialog counts only who has an email and says how many will not get the invitation.
+it('says in the launch dialog how many people will not get the email', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 17);
+    $people->first()->forceFill(['email' => null])->save();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->assertSee('1 persona no tiene correo.')
+        ->click('Lanzar e invitar a 16 personas')
+        ->assertSeeIn('[role="dialog"]', 'Se enviarán 16 correos hoy. 1 persona no lo recibirá por no tener correo: agrégalo en Empleados.')
+        ->assertNoJavaScriptErrors();
+});
+
+it('highlights the figures of the launch dialog: the emails that go and the people with none', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 18);
+    $people->first()->forceFill(['email' => null])->save();
+    $people->last()->forceFill(['email' => null])->save();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Lanzar e invitar a 16 personas')
+        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] [data-test="launch-figures"] > div\')].map((box) => box.innerText.replace(/\\s+/g, " ").trim()).join("|")', '16 correos|2 sin correo')
+        // The figures are big, not running text.
+        ->assertScript('() => parseFloat(getComputedStyle(document.querySelector(\'[data-test="launch-figures"] p:first-child\')).fontSize) >= 24', true);
+});
+
+it('keeps the checkbox of the close dialog 16 px away from its text', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, female: 60);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id, 'population' => 'sample']);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('[aria-label="Más acciones"]')
+        ->click('[role="menuitem"]:has-text("Cerrar evaluación")')
+        ->assertSee('Entiendo y quiero cerrar así')
+        ->assertScript('() => { const box = document.querySelector(\'#acknowledged-shortfall\').getBoundingClientRect(); const label = document.querySelector(\'label[for="acknowledged-shortfall"]\').getBoundingClientRect(); return Math.round(label.left - box.right); }', 16);
+});
+
 it('launches a draft with the deadline suggested, inviting everyone by email', function (): void {
     Illuminate\Support\Facades\Notification::fake();
     $tenant = campaignsCompany();
@@ -176,7 +224,11 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->assertSee('Último día para contestar')
         ->assertSee('Así le llega a cada persona')
+        ->assertSeeIn('[aria-label="Así le llega a cada persona"]', 'sí lleva su nombre')
         ->click('Lanzar e invitar a 20 personas')
+        ->assertSee('Se enviarán 20 correos hoy.')
+        ->assertSee('Solo recibe la evaluación quien está en Empleados')
+        ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Evaluación lanzada. Las invitaciones van en camino.')
         ->assertSee('En curso')
         ->assertSee('0 de 20')
@@ -184,6 +236,44 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
         ->assertNoJavaScriptErrors();
 
     Illuminate\Support\Facades\Notification::assertSentOnDemandTimes(App\Modules\Campaigns\Notifications\SurveyInvitation::class, 20);
+});
+
+it('keeps the evaluation a draft until the launch is confirmed', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Lanzar e invitar a 20 personas')
+        ->assertSee('¿Lanzar la evaluación?')
+        ->click('Cancelar')
+        ->assertNoJavaScriptErrors();
+
+    expect($campaign->refresh()->status->value)->toBe('draft');
+    Illuminate\Support\Facades\Notification::assertNothingSent();
+});
+
+it('holds a second reminder back and says when the last one went out', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Recordar a 20')
+        ->assertSee('Aún no has enviado ningún recordatorio.')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Enlace reenviado a 20 personas.')
+        ->click('Recordar a 20')
+        ->assertSee('Podrás enviar otro en 12 horas.')
+        ->assertScript("document.querySelector('[role=\"dialog\"] button[type=\"submit\"]').disabled", true)
+        ->assertNoJavaScriptErrors();
 });
 
 it('follows a launched evaluation: answers per guide, the sample and who answered', function (bool $dark, bool $mobile): void {
@@ -343,6 +433,9 @@ it('extends the deadline and closes the evaluation, warning when the sample is s
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Cerrar evaluación")')
         ->assertSee('Faltan 53 respuestas para el mínimo de la muestra que pide la norma.')
+        ->assertSee('La norma pide las guías a todas las personas del centro.')
+        ->assertScript("document.querySelector('[role=\"dialog\"] button[type=\"submit\"]').disabled", true)
+        ->click('#acknowledged-shortfall')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Evaluación cerrada. Los enlaces ya no funcionan.')
         ->assertSee('Cerrada')
@@ -518,6 +611,7 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
 
     visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver canalización'))
         ->assertSee('Canaliza a quien lo necesite')
+        ->assertSee('Solo la ven quienes administran la empresa y Recursos Humanos.')
         ->assertSee('0 de 1 canalizada')
         ->assertSee('Ana López');
 })->with($looks);
@@ -624,9 +718,29 @@ it('completes the report with what HR writes', function (): void {
         ->assertSee('Informe guardado.')
         ->assertSee('La mayoría queda en riesgo medio.')
         ->assertSee('Dra. Laura Méndez · Cédula profesional 12345678')
+        // The day issued and the line for the signature are only for paper: they take no room on screen.
+        ->assertScript("getComputedStyle(document.querySelector('[data-slot=\"report-signature\"]')).display", 'none')
+        ->assertScript("document.querySelector('[data-slot=\"report-signature\"]').textContent.includes('Fecha de emisión: ')", true)
         ->assertDontSee('Pendiente de capturar')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+// Informe 7.7: the error of a field goes as soon as it is edited, not when the answer of the next save arrives.
+it('clears the error of the license of the report as it is edited', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/report")
+        ->click('Completar informe')
+        ->fill('#report-responsible_name', 'Dra. Laura Méndez')
+        ->fill('#report-responsible_license', '123')
+        ->press('Guardar')
+        ->assertAttribute('#report-responsible_license', 'aria-invalid', 'true')
+        ->fill('#report-responsible_license', '1234567')
+        ->assertAttribute('#report-responsible_license', 'aria-invalid', 'false')
+        ->assertNoJavaScriptErrors();
 });
 
 it('shares the report through a temporary link that opens with no account until it is revoked', function (): void {
@@ -718,6 +832,35 @@ it('keeps the parts of the 7.7 report on one row of its bar, or leaves them out 
     foreach ([800, 1024, 1100, 1280, 1440, 1600] as $width) {
         resizeTo($page, $width)->assertScript($rows, true);
     }
+});
+
+// H-10: the figures count up on screen, but paper must never carry a frame in the middle of the count.
+it('prints the final figures of the report, not a frame of their count', function (): void {
+    $tenant = campaignsCompany();
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/results")
+        // The frames of the count come a minute apart, so it has not moved from 0 when the print starts.
+        ->assertScript('(() => { window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 60000); return true; })()', true)
+        ->click('Informe 7.7')
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial')
+        ->assertScript("[...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.innerText).join()", "0\u{00a0}%,0\u{00a0}%,0\u{00a0}%")
+        ->assertScript("(async () => { window.dispatchEvent(new Event('beforeprint')); await new Promise((resolve) => setTimeout(resolve, 300)); return [...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.innerText).join(); })()", "0\u{00a0}%,100\u{00a0}%,100\u{00a0}%");
+});
+
+// H-10: with the print media on (no `beforeprint`), the final figures are in the page from the start.
+it('has the final figures of the report in print without waiting for the count', function (): void {
+    $tenant = campaignsCompany();
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+
+    $page = visit("/admin/acme/campaigns/{$campaign->id}/results")
+        ->assertScript('(() => { window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 60000); return true; })()', true)
+        ->click('Informe 7.7')
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial');
+
+    emulatePrint($page)->assertScript("[...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.innerText).join()", "0\u{00a0}%,100\u{00a0}%,100\u{00a0}%");
 });
 
 // Rediseño v2 (C7): a list with nobody in its view says why, and «Nadie coincide» is kept for a search that found nobody.

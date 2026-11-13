@@ -110,6 +110,44 @@ it('shows the tabulator with the salary of each category and level', function (b
         ->assertSee('Descargar plantilla');
 })->with($looks);
 
+it('marks in its row a salary under the minimum, and counts those on the card of the tabulator', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+
+    foreach (['Auxiliar', 'Ayudante'] as $category) {
+        $grade = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => $category, 'level' => 'A']);
+        GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 25000, 'effective_from' => '2025-01-01']);
+    }
+
+    visitPage('compensation/tabulator', "{$url}/compensation/tabulator", $dark, $mobile)
+        ->assertSee('2 categorías bajo el salario mínimo')
+        ->assertScript('() => document.querySelectorAll("tbody tr").length === 2 && [...document.querySelectorAll("tbody tr")].every((row) => row.textContent.includes("Bajo el salario mínimo."))', true);
+})->with($looks);
+
+it('fits the tabulator with a below-minimum note in a 1440 px window, and at 375 px only the table scrolls', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $grade = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Auxiliar', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 25000, 'effective_from' => '2025-01-01']);
+
+    $overflow = '() => { const frame = document.querySelector("[data-slot=table-container]"); return frame.scrollWidth - frame.clientWidth; }';
+
+    visit("{$url}/compensation/tabulator")
+        ->resize(1440, 900)
+        ->assertSee('Bajo el salario mínimo.')
+        ->assertScript($overflow, 0)
+        // The warning is a one-line chip in the cell: the row keeps its height, and the whole reason is in the chip for a screen
+        // reader and in a tooltip for the mouse and the keyboard.
+        ->assertScript('() => { const chip = document.querySelector("tbody [data-slot=below-minimum]"); return chip.getClientRects().length === 1 && chip.closest("tr").getBoundingClientRect().height < 80; }', true)
+        ->assertScript('() => document.querySelector("tbody [data-slot=below-minimum]").textContent.includes("Está por debajo del salario mínimo")', true)
+        ->assertScript('() => new Promise((resolve) => { document.querySelector("tbody [data-slot=below-minimum]").focus(); setTimeout(resolve, 300); }).then(() => true)')
+        ->assertScript('() => document.querySelector("[data-slot=tooltip-content]")?.textContent.includes("Está por debajo del salario mínimo")', true);
+
+    visit("{$url}/compensation/tabulator")
+        ->resize(375, 800)
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true);
+});
+
 it('captures the salary of a category that has none in its own row (board V4-Comp-Datos)', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();
@@ -326,6 +364,17 @@ it('shows the report of a scenario with its analysis, one notice of accuracy and
         ->assertSee('Meta de inflación del Banco de México')
         ->assertDontSee('Valor para la persona y costo para la empresa');
 })->with($looks);
+
+it('has the final figures of the report in print without waiting for the count', function (): void {
+    $url = signInToPanel();
+    $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
+
+    $page = visit("{$url}/compensation/scenarios/{$scenario->id}/report")
+        ->assertScript('(() => { window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 60000); return true; })()', true)
+        ->assertSee('Costo del primer año');
+
+    emulatePrint($page)->assertScript("(() => { const figures = [...document.querySelectorAll('dd.tabular-nums')].map((figure) => figure.innerText.trim()); return figures.length >= 3 && figures.every((text) => text !== '' && !/^[$]?0(\\.0)?( %)?$/.test(text)); })()", true);
+});
 
 /** A script that waits a moment for the tooltip and says whether it opened telling `$start`. */
 function tooltipTells(string $start): string
@@ -651,7 +700,7 @@ it('shows the data of the contract and the scenarios with their cost on the star
     visitPage('compensation/index', "{$url}/compensation", $dark, $mobile)
         ->assertSee('Los datos de tu contrato')
         ->assertSee('El cálculo cubre 1 de 2 personas. Con 2 datos más, el número es exacto.')
-        ->assertSee('1 sin categoría ni nivel')
+        ->assertSee('1 sin categoría y nivel')
         ->assertSee('Tus escenarios')
         ->assertSee('5 % sindicalizados · 3 % confianza · 2 meses de retroactivo')
         ->assertSee('Comparar los 2')

@@ -68,6 +68,20 @@ it('is told who it is, how it talks and what it never does, in the voice of the 
     });
 });
 
+it('says what it cannot read yet and where to see it in Humetría, never sending anyone to "el sistema de tu empresa"', function (): void {
+    HumiAssistant::fake(['Hola.']);
+    HumiAssistant::make(scope: $this->scope)->prompt('¿Cuántos días de vacaciones le quedan a Ana?');
+
+    HumiAssistant::assertPrompted(function (AgentPrompt $prompt): bool {
+        $instructions = instructionsOf($prompt);
+
+        return str_contains($instructions, 'vacaciones, asistencia o personas')
+            && str_contains($instructions, 'aún no puedes leer')
+            && str_contains($instructions, 'la pantalla de Humetría')
+            && str_contains($instructions, 'Nunca mandes a la persona al sistema de su empresa');
+    });
+});
+
 it('speaks to RH without exclamation marks or emoji, and so do its instructions', function (): void {
     $template = (string) file_get_contents(resource_path('ai/humi.system.md'));
 

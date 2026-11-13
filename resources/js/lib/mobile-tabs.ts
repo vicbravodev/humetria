@@ -1,12 +1,29 @@
 import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
-import { listeningNavItems } from '@/lib/tool-navigation';
+import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
 import type { NavItem, NavTenant } from '@/types';
 
 export type MobileTab =
     | { key: 'panel' | 'complaints'; title: string; item: NavItem }
-    | { key: 'compliance'; title: string; items: NavItem[] }
+    | { key: 'compliance' | 'operation'; title: string; items: NavItem[] }
     | { key: 'more'; title: string };
+
+/** Empleados, Vacaciones and Asistencia: what a company's day-to-day runs on, for whoever has their tools. A union has none of them here. */
+function operationItems(
+    tenant: NavTenant | null,
+    main: NavItem[],
+    compliance: NavItem[],
+): NavItem[] {
+    if (tenant === null || tenant.type === 'union') {
+        return [];
+    }
+
+    return [
+        main.find(({ title }) => title === 'Empleados'),
+        operationsNavItems(tenant).find(({ title }) => title === 'Vacaciones'),
+        compliance.find(({ title }) => title === 'Asistencia'),
+    ].filter((item) => item !== undefined);
+}
 
 /**
  * The phone's bottom bar (board 40, V4-Menu-Roles): Panel, Normas (the sidebar's "Cumple la norma"), Quejas and Más,
@@ -24,6 +41,8 @@ export function mobileTabs(
         listeningNavItems(tenant).find((item) => item.title === 'Quejas') ??
         (tenant?.role === 'complaints' ? main[0] : undefined);
 
+    const operation = operationItems(tenant, main, compliance);
+
     const tabs: MobileTab[] = [];
 
     if (panel !== undefined) {
@@ -36,6 +55,10 @@ export function mobileTabs(
             title: 'Normas',
             items: compliance,
         });
+    }
+
+    if (operation.length > 0) {
+        tabs.push({ key: 'operation', title: 'Operación', items: operation });
     }
 
     if (complaints !== undefined) {
@@ -66,6 +89,7 @@ export function currentTab(
             case 'complaints':
                 return within(tab.item);
             case 'compliance':
+            case 'operation':
                 return tab.items.some(within);
             default:
                 return false;

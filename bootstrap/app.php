@@ -17,7 +17,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
-use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -49,7 +48,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ForbidWhileImpersonating::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -96,8 +94,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            // The survey speaks "usted" to the person answering it; the panel, "tú".
-            Inertia::flash('toast', ['type' => 'error', 'message' => $request->routeIs('survey.*', 'engagement.survey.*')
+            // What a person opens with their own link speaks "usted"; the panel, "tú".
+            Inertia::flash('toast', ['type' => 'error', 'message' => $request->routeIs(...ErrorPage::WORKER_ROUTES)
                 ? 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.'
                 : 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
 

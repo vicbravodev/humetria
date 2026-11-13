@@ -41,9 +41,9 @@ final class SurveyInvitation extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        $daysLeft = SurveyClock::daysToAnswer($this->closesOn);
         $lastDay = $this->closesOn->isoFormat('D [de] MMMM');
-        $title = $daysLeft <= 1 ? 'Hoy es su último día para dar su opinión' : "Le quedan {$daysLeft} días para dar su opinión";
+        // The last day, not a count of days: the panel counts from tomorrow and a count here said another number (as in NOM-035).
+        $title = SurveyClock::daysToAnswer($this->closesOn) <= 1 ? 'Hoy es su último día para dar su opinión' : 'Tiene hasta el '.$this->closesOn->isoFormat('dddd D [de] MMMM').' para dar su opinión';
 
         return (new MailMessage)
             ->subject($this->reminder ? $title : "Su opinión sobre el trabajo en {$this->company->tradeName}")

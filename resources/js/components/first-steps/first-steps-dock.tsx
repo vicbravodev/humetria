@@ -55,6 +55,9 @@ export default function FirstStepsDock() {
                     <PopoverContent
                         side="top"
                         aria-label="Lista de primeros pasos"
+                        // Opened from the user menu, the menu hands focus back to its trigger as it closes: that focus
+                        // move is not the person leaving the panel, so only a click outside or Escape closes it.
+                        onFocusOutside={(event) => event.preventDefault()}
                         align="end"
                         className="max-h-(--radix-popover-content-available-height) w-[min(22rem,calc(100vw-2rem))] overflow-y-auto"
                     >

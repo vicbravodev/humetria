@@ -37,6 +37,7 @@ export default function ComplaintForm({
                 receipt={state.receipt}
                 code={form.code}
                 acknowledgeBy={describeDate(due) ?? due}
+                named={state.draft.identityMode === 'confidential'}
             />
         );
     }

@@ -1,4 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
+import PrintLetterhead from '@/components/print-letterhead';
+import { shortDate } from '@/lib/calendar-date';
 import DossierExtras from '@/components/seating/dossier-extras';
 import DossierHeaderBlock from '@/components/seating/dossier-header';
 import DossierSection from '@/components/seating/dossier-section';
@@ -42,8 +44,12 @@ export default function SeatingDossier({
     return (
         <>
             <Head title={`Expediente · ${header.workCenter}`} />
-            <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 print:max-w-none print:p-0">
+            <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 px-4 py-6 [page:dossier] md:px-6 md:py-8 print:max-w-none print:p-0">
                 <DossierToolbar workCenterId={workCenterId} />
+                <PrintLetterhead
+                    center={header.workCenter}
+                    issued={shortDate(header.generatedOn)}
+                />
                 <DossierHeaderBlock header={header} />
                 {rows.map((row) => (
                     <DossierSection key={row.key} row={row} />

@@ -1,3 +1,4 @@
+import PortalHomeLink from '@/components/portal-home-link';
 import { Head } from '@inertiajs/react';
 import { ClipboardCheck, Users } from 'lucide-react';
 import HighlightsCard from '@/components/engagement/results/highlights-card';
@@ -13,6 +14,7 @@ import type { ManagerFeedback } from '@/types';
  * summary of the comments. Group figures only: never an answer or a comment, and not how many people there are.
  */
 export default function PortalFeedback({
+    token,
     company,
     survey,
     feedback,
@@ -26,6 +28,7 @@ export default function PortalFeedback({
         <PortalShell company={company}>
             <Head title="Retroalimentación de su equipo" />
             <div className="flex w-full max-w-3xl flex-col gap-6">
+                <PortalHomeLink token={token} />
                 {survey === null || feedback === null ? (
                     <FeedbackEmpty />
                 ) : (

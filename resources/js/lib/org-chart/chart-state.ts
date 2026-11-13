@@ -250,29 +250,26 @@ export function teamIds(state: ChartState, id: string): string[] {
     return [...found];
 }
 
+/** A team with more direct reports than this waits behind its pill when the levels are asked: only «Todos» opens it. */
+export const LARGE_TEAM = 15;
+
 /** Whoever leads people and sits above the level asked (the roots are the first level): who «Mostrar: N niveles» opens. */
 export function levelsToExpand(state: ChartState, levels: number): string[] {
     const open: string[] = [];
     const seen = new Set<string>();
+    const opens = (id: string): boolean => {
+        const reports = state.people.get(id)?.direct_reports ?? 0;
+
+        return reports > 0 && (reports <= LARGE_TEAM || levels === Infinity);
+    };
     let row = [...state.roots];
 
     for (let level = 1; level < levels && row.length > 0; level += 1) {
-        const next: string[] = [];
+        const leaders = row.filter((id) => !seen.has(id) && seen.add(id));
+        const opened = leaders.filter(opens);
 
-        for (const id of row) {
-            if (seen.has(id)) {
-                continue;
-            }
-
-            seen.add(id);
-
-            if ((state.people.get(id)?.direct_reports ?? 0) > 0) {
-                open.push(id);
-                next.push(...(state.branches.get(id)?.ids ?? []));
-            }
-        }
-
-        row = next;
+        open.push(...opened);
+        row = opened.flatMap((id) => state.branches.get(id)?.ids ?? []);
     }
 
     return open;

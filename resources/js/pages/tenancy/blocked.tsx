@@ -22,6 +22,7 @@ export default function Blocked() {
             {tenant !== null && (
                 <TenantBlockedDialog
                     tradeName={tenant.trade_name}
+                    reason={tenant.restriction_reason}
                     canSwitch={tenants.total > 1}
                     impersonating={false}
                 />

@@ -1,4 +1,5 @@
 import { fromCalendarDate } from '@/lib/calendar-date';
+import { dateRange } from '@/lib/evaluation';
 import { countOf, plural } from '@/lib/plural';
 import type { LeaveRequestStatus, TeamLeaveRequest } from '@/types';
 
@@ -100,4 +101,16 @@ export function shortDate(day: string): string {
     return date === undefined
         ? ''
         : compact.format(date).replaceAll('.', '').replace(/ de /g, ' ');
+}
+
+/** "23 al 27 nov 2026": two days (Y-m-d) short, the month and the year said once when they are shared; for a narrow cell. */
+export function shortSpan(startsOn: string, endsOn: string): string {
+    const first = shortDate(startsOn);
+    const last = shortDate(endsOn);
+
+    if (first === '' || last === '') {
+        return '';
+    }
+
+    return startsOn === endsOn ? first : dateRange(first, last);
 }

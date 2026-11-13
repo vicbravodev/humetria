@@ -186,6 +186,13 @@ return [
         'minutes.*' => [
             'between' => 'Un día puede tener de 0 a 12 horas.',
         ],
+        'starts' => [
+            'array' => 'Escribe la hora de entrada de cada día de la semana.',
+        ],
+        'starts.*' => [
+            'between' => 'La hora de entrada debe ser entre las 00:00 y las 23:59.',
+            'integer' => 'La hora de entrada debe ser entre las 00:00 y las 23:59.',
+        ],
         'employee_ids' => [
             'max' => 'Elige hasta 100 personas a la vez.',
         ],
@@ -240,6 +247,7 @@ return [
         'contact_name' => 'nombre del contacto',
         'contact_email' => 'correo del contacto',
         'contact_phone' => 'teléfono del contacto',
+        'marital_status' => 'estado civil',
         'mode' => 'modalidad',
         'next_mode' => 'modalidad del siguiente pulso',
         'day_of_month' => 'día del mes',
@@ -263,6 +271,8 @@ return [
         'acknowledge_within_days' => 'plazo para acusar recibo',
         'resolve_within_days' => 'plazo para responder',
         'retention_months' => 'meses de conservación',
+        'late_tolerance_minutes' => 'tolerancia de retardo',
+        'starts' => 'horas de entrada',
         'title' => 'título',
         'level' => 'nivel',
         'subjects' => 'a quién va dirigida',
@@ -417,6 +427,7 @@ return [
         'job_category' => 'categoría',
         'job_level' => 'nivel',
         'hired_on' => 'fecha de ingreso',
+        'terminated_on' => 'fecha de baja',
         'seniority_on' => 'antigüedad reconocida',
         'manager_id' => 'jefe directo',
         'reassign_to' => 'nuevo jefe directo',
@@ -463,7 +474,7 @@ return [
         'sections.*.text' => 'texto',
         'sections.*.items' => 'elementos',
         'sections.*.items.*' => 'elemento',
-        'slug' => 'dirección',
+        'slug' => 'dirección web',
         'special_needs' => 'necesidad especial',
         'state' => 'estado',
         'street' => 'calle',

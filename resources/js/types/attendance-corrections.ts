@@ -10,7 +10,8 @@ export type CorrectionRow = {
     requestedAt: string;
     /** The mark's time before the correction, local; null for a mark the person forgot. */
     previousAt: string | null;
-    reason: string;
+    /** What the person wrote; null for whoever only views (it may be medical). */
+    reason: string | null;
     /** Days the request waits since it was asked. */
     ageDays: number;
     status: CorrectionStatus;

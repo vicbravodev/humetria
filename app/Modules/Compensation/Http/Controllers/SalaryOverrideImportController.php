@@ -36,7 +36,9 @@ final class SalaryOverrideImportController extends Controller
         $outcome = $import->handle($request->content());
 
         if ($outcome->imported()) {
-            Inertia::flash('toast', ['type' => 'success', 'message' => $outcome->rows === 1 ? 'Se importó 1 sueldo individual.' : sprintf('Se importaron %d sueldos individuales.', $outcome->rows)]);
+            $note = $outcome->lowSalaryNote();
+            $message = $outcome->rows === 1 ? 'Se importó 1 sueldo individual.' : sprintf('Se importaron %d sueldos individuales.', $outcome->rows);
+            Inertia::flash('toast', ['type' => $note === null ? 'success' : 'warning', 'message' => $note === null ? $message : "{$message} {$note}"]);
         } else {
             Inertia::flash('salary_import', $outcome->summary());
         }

@@ -7,6 +7,8 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/work-centers';
 import type { MexicanStateOption } from '@/types';
 
+const FULL_REASON = 'Tu plan ya cubre todos sus centros: pide una ampliación.';
+
 /**
  * Adds a work center: from the header's button, or from the dashed tile that closes the grid of cards (pantallas:
  * Centros).
@@ -14,9 +16,12 @@ import type { MexicanStateOption } from '@/types';
 export default function CreateWorkCenterDialog({
     states,
     tile = false,
+    full,
 }: {
     states: MexicanStateOption[];
     tile?: boolean;
+    /** The plan has no room for another center: the button is off, and the notice above says what to do. */
+    full: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
@@ -38,7 +43,9 @@ export default function CreateWorkCenterDialog({
                     {tile ? (
                         <button
                             type="button"
-                            className="flex min-h-[260px] flex-col items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-dashed border-input bg-muted p-6 text-center transition-colors duration-150 ease-out hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                            disabled={full}
+                            title={full ? FULL_REASON : undefined}
+                            className="flex min-h-[260px] flex-col items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-dashed border-input bg-muted p-6 text-center transition-colors duration-150 ease-out hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-60"
                         >
                             <span className="inline-flex size-11 items-center justify-center card text-primary">
                                 <Plus aria-hidden className="size-5" />
@@ -52,7 +59,11 @@ export default function CreateWorkCenterDialog({
                             </span>
                         </button>
                     ) : (
-                        <Button data-tour="add-work-center">
+                        <Button
+                            data-tour="add-work-center"
+                            disabled={full}
+                            title={full ? FULL_REASON : undefined}
+                        >
                             <Plus aria-hidden />
                             Dar de alta centro
                         </Button>

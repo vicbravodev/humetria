@@ -55,10 +55,11 @@ final class SurveyInvitation extends Notification implements MailBag
     public function toMail(object $notifiable): MailMessage
     {
         $lastDay = CarbonImmutable::parse($this->closesOn->format('Y-m-d'), config()->string('app.display_timezone'));
-        $daysLeft = CampaignClock::daysToAnswer($this->closesOn);
+        // The last day, not a count of days: the panel counts from tomorrow and a count here said another number (H-13).
+        $deadline = CampaignClock::daysToAnswer($this->closesOn) <= 1 ? 'Hoy es su último día' : 'Tiene hasta el '.$lastDay->isoFormat('dddd D [de] MMMM');
         [$subject, $action] = match ($this->email) {
             SurveyEmail::Invitation => ['Su opinión sobre su trabajo · evaluación confidencial', 'Contestar la evaluación'],
-            SurveyEmail::Reminder => [self::daysLeft($daysLeft).' para contestar su evaluación', 'Continuar la evaluación'],
+            SurveyEmail::Reminder => [$deadline.' para contestar su evaluación', 'Continuar la evaluación'],
             SurveyEmail::Trauma => ['Una evaluación breve después de lo ocurrido', 'Contestar la Guía I'],
             SurveyEmail::Seating => ['Unos minutos sobre los asientos y las pausas en su trabajo', 'Contestar la encuesta'],
         };
@@ -73,17 +74,12 @@ final class SurveyInvitation extends Notification implements MailBag
                 'workCenter' => $this->workCenter,
                 'minutes' => $this->minutes,
                 'minGroup' => config()->integer('results.min_group'),
-                'title' => self::daysLeft($daysLeft).' para contestar',
+                'title' => $deadline.' para contestar',
                 'lastDay' => $lastDay->isoFormat('D [de] MMMM'),
                 'lastDayLong' => $lastDay->isoFormat('dddd D [de] MMMM'),
                 'month' => mb_strtoupper(str_replace('.', '', $lastDay->isoFormat('MMM'))),
                 'day' => $lastDay->day,
             ]);
-    }
-
-    private static function daysLeft(int $days): string
-    {
-        return $days <= 1 ? 'Hoy es su último día' : "Le quedan {$days} días";
     }
 
     public function mailBag(): string

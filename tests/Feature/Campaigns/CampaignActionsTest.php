@@ -76,6 +76,7 @@ it('keeps the link someone already opened working after a reminder, and still si
     $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->firstOrFail();
     $links = [];
     $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
+    Carbon::setTestNow(now()->addHours(12));
     $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
     Notification::assertSentOnDemand(SurveyInvitation::class, function (SurveyInvitation $notification, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable) use (&$links): bool {
         $links[] = (string) $notification->toMail($notifiable)->actionUrl;
@@ -88,6 +89,7 @@ it('keeps the link someone already opened working after a reminder, and still si
     $this->get($mine[0])->assertInertia(fn ($page) => $page->where('unavailable', null));
 
     ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $participant->id)->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()]);
+    Carbon::setTestNow(now()->addHours(12));
     $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
 
     $this->get($mine[0])->assertInertia(fn ($page) => $page->where('unavailable', 'done'));
@@ -123,8 +125,69 @@ it('reminds only who has the chosen guide pending, and whoever has any when none
     $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]), ['guide' => 'nom035.guide-ii']);
     Notification::assertSentOnDemandTimes(SurveyInvitation::class, 19);
 
+    Carbon::setTestNow(now()->addHours(12));
     $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
     Notification::assertSentOnDemandTimes(SurveyInvitation::class, 19 + 20);
+});
+
+// Decision 33 of the launch plan: one reminder every 12 hours per evaluation, with the day of the last one in view.
+it('refuses a second reminder inside the wait and sends it once the wait is over', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+    $url = route('tenant.campaigns.resend', [$this->tenant, $campaign->id]);
+
+    $this->actingAs($this->hr)->post($url)->assertSessionHasNoErrors();
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 20);
+
+    Carbon::setTestNow(now()->addHours(11)->addMinutes(59));
+    $this->actingAs($this->hr)->post($url)->assertSessionHasErrors(['resend' => 'Ya enviaste un recordatorio hoy. Podrás enviar otro en 1 hora.']);
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 20);
+
+    Carbon::setTestNow(Carbon::parse('2026-11-02 17:00:00')->addHours(12));
+    $this->actingAs($this->hr)->post($url)->assertSessionHasNoErrors();
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 40);
+});
+
+it('tells how many hours are left in the wait', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+    $url = route('tenant.campaigns.resend', [$this->tenant, $campaign->id]);
+    $this->actingAs($this->hr)->post($url);
+
+    Carbon::setTestNow(now()->addHours(2));
+    $this->actingAs($this->hr)->post($url)->assertSessionHasErrors(['resend' => 'Ya enviaste un recordatorio hoy. Podrás enviar otro en 10 horas.']);
+});
+
+it('lets only one of two reminders sent at the same moment go out', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+
+    expect(resolve(ResendInvitations::class)->handle($campaign, reminder: true))->toBe(20)
+        ->and(fn () => resolve(ResendInvitations::class)->handle($campaign, reminder: true))->toThrow(App\Modules\Campaigns\Exceptions\ReminderTooSoon::class);
+});
+
+it('does not hold back the retry of failed links, nor the link of one person, because of a reminder', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
+    $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->firstOrFail();
+    $participant->update(['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]), ['status' => 'failed'])->assertSessionHasNoErrors();
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.participants.resend', [$this->tenant, $campaign->id, $participant->id]))->assertSessionHasNoErrors();
+
+    expect($campaign->refresh()->last_resent_at?->toIso8601String())->toBe('2026-11-02T17:00:00+00:00');
+});
+
+it('shows the day of the last reminder, without the hour, and whether it can go out', function (): void {
+    $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
+    $show = fn () => $this->actingAs($this->hr)->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]));
+
+    $show()->assertInertia(fn (Assert $page) => $page->where('lastResentOn', null)->where('reminderWait', null));
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.resend', [$this->tenant, $campaign->id]));
+    Carbon::setTestNow(now()->addHours(2));
+
+    $show()->assertInertia(fn (Assert $page) => $page->where('lastResentOn', '2 nov 2026')->where('reminderWait', 10));
+
+    Carbon::setTestNow(now()->addHours(10));
+    $show()->assertInertia(fn (Assert $page) => $page->where('lastResentOn', '2 nov 2026')->where('reminderWait', null));
 });
 
 it('sends the link again to whoever it failed to reach, and no one else, when the list shows them', function (): void {

@@ -48,11 +48,21 @@ const withEffect = (
 describe('firstName', () => {
     it('is the first word of the name', () => {
         expect(firstName('Bob Díaz')).toBe('Bob');
+        expect(firstName('Ing. Bob Díaz')).toBe('Bob');
         expect(firstName('Ana')).toBe('Ana');
     });
 });
 
 describe('approveLines', () => {
+    it('leaves out the bitácora line for who cannot resolve: it would not be theirs', () => {
+        const lines = approveLines(detail(), false);
+
+        expect(lines.map(({ text }) => text)).not.toContain(
+            'Queda en la bitácora a tu nombre, con tu nota.',
+        );
+        expect(lines).toHaveLength(2);
+    });
+
     it('says a forgotten mark is added, with its evidence, and goes to the bitácora', () => {
         expect(approveLines(detail())).toEqual([
             {

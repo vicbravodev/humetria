@@ -112,6 +112,21 @@ it('draws the chart as a canvas: the person at the top with their team, two leve
         ->assertScript(cspViolations(), '[]');
 })->with($desktop);
 
+it('opens readable, whatever the width of the first level: cards at 0.9 or more, with the root clear of the filter bar', function (): void {
+    $people = acmeOrgChart();
+
+    foreach (['Elena', 'Fabián', 'Gisela', 'Hugo', 'Irma', 'Jaime'] as $name) {
+        Employee::factory()->create(['tenant_id' => $people['dir']->tenant_id, 'work_center_id' => $people['dir']->work_center_id, 'area_id' => $people['dir']->area_id, 'name' => $name, 'job_title' => 'Gerente', 'manager_id' => $people['dir']->id]);
+    }
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.9', true)
+        ->assertScript('() => document.querySelector(\'[data-slot="org-node"][aria-label^="Diana Torres,"]\').getBoundingClientRect().top >= document.querySelector(\'[role="search"]\').getBoundingClientRect().bottom', true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('opens a branch with its pill and closes it with the same one', function (): void {
     acmeOrgChart();
 
@@ -167,7 +182,7 @@ it('shows the panel of a person: their manager, their team and what comes out of
         ->click('aside[aria-label="Panel de Gerardo Paz"] [data-slot="org-mini-person"]:has-text("Diana Torres")')
         ->assertPresent('aside[aria-label="Panel de Diana Torres"]')
         ->assertSeeIn('aside[aria-label="Panel de Diana Torres"]', 'Nadie: está hasta arriba.')
-        ->assertAttribute('aside[aria-label="Panel de Diana Torres"] a:has-text("Ver su ficha de empleado")', 'href', '/admin/acme/employees?q=Diana+Torres')
+        ->assertAttribute('aside[aria-label="Panel de Diana Torres"] a:has-text("Ver en Empleados")', 'href', '/admin/acme/employees?q=Diana+Torres')
         ->click('[aria-label="Cerrar el panel"]')
         ->assertNotPresent('aside[aria-label="Panel de Diana Torres"]')
         ->assertNoJavaScriptErrors()
@@ -385,8 +400,8 @@ it('edits in the same screen: the band, the tray, and «Cambiar jefe» with its 
         ->assertSee('Cambiar jefe de Ana López')
         ->click('#manager-of-'.$people['ana']->id)
         ->type('[role="combobox"][aria-controls="manager-of-'.$people['ana']->id.'-options"]', 'sofía')
-        ->assertSee('Sofía Luna · Gerente de ventas')
-        ->keys('[role="combobox"][aria-controls="manager-of-'.$people['ana']->id.'-options"]', 'Enter')
+        // Pick the option itself: Enter right after typing can land before the server search narrows the list.
+        ->click('#manager-of-'.$people['ana']->id.'-options [role="option"]:has-text("Sofía Luna")')
         ->click('[role="dialog"] button:has-text("Asignar")')
         ->assertSee('Ana López ahora reporta a Sofía Luna')
         ->assertSee('Deshacer')
@@ -474,8 +489,8 @@ it('chooses the manager on the row of whoever has none: «Asignar» is the prima
         ->assertDisabled('[aria-label="Asignar jefe a Lupe Sola"]')
         ->click('#manager-'.$lupe->id)
         ->type('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'sofía')
-        ->assertSee('Sofía Luna · Gerente de ventas')
-        ->keys('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'Enter')
+        // Pick the option itself: Enter right after typing can land before the server search narrows the list.
+        ->click('#manager-'.$lupe->id.'-options [role="option"]:has-text("Sofía Luna")')
         ->click('[aria-label="Asignar jefe a Lupe Sola"]')
         ->assertSee('Jefe actualizado.')
         ->assertNoJavaScriptErrors()
@@ -626,5 +641,124 @@ it('turns the pages of the reports without moving the peers', function (): void 
         ->assertQueryStringHas('reports', '2')
         ->assertSee('Beto Díaz')
         ->assertSee('Sofía Luna')
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the editing mode on when a person is searched, and opens readable from the top', function (): void {
+    acmeOrgChart();
+
+    visit('/admin/acme/org-chart')
+        ->click('Editar estructura')
+        ->assertSee('Editando')
+        ->click('#org-chart-person')
+        ->type('[role="combobox"][aria-controls="org-chart-person-options"]', 'ana')
+        ->assertSeeIn('#org-chart-person-options', 'Ana López')
+        ->keys('[role="combobox"][aria-controls="org-chart-person-options"]', 'Enter')
+        ->assertSee('Editando')
+        ->assertScript('() => new URL(location.href).searchParams.get("edit")', '1')
+        ->assertNoJavaScriptErrors();
+});
+
+/** A company like the demo: several heads, one with a team of 19 who lead nobody and two managers with their own teams. */
+function demoLikeOrgChart(): void
+{
+    $people = acmeOrgChart();
+    $place = ['tenant_id' => $people['dir']->tenant_id, 'work_center_id' => $people['dir']->work_center_id, 'area_id' => $people['dir']->area_id];
+    $head = fn (string $name): Employee => Employee::factory()->create([...$place, 'name' => $name, 'job_title' => 'Director', 'manager_id' => null]);
+
+    $big = $head('Hugo Vega');
+    foreach (range(1, 19) as $number) {
+        Employee::factory()->create([...$place, 'name' => "Operario {$number}", 'job_title' => 'Operador', 'manager_id' => $big->id]);
+    }
+
+    $raquel = $head('Raquel Burgos');
+    foreach (['Mario', 'Nora', 'Olga', 'Pablo'] as $name) {
+        $manager = Employee::factory()->create([...$place, 'name' => $name, 'job_title' => 'Gerente', 'manager_id' => $raquel->id]);
+        Employee::factory()->count(3)->create([...$place, 'job_title' => 'Operador', 'manager_id' => $manager->id]);
+    }
+}
+
+it('opens on the heads and their first level at a readable size, the company card and the head clear of the filter bar, and a team of 19 behind its pill', function (): void {
+    demoLikeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.5', true)
+        ->assertScript(<<<'JS'
+            () => {
+                const bar = document.querySelector('[role="search"]').getBoundingClientRect().bottom;
+                const company = document.querySelector('.react-flow__node-company').getBoundingClientRect();
+                const head = document.querySelector('[data-slot="org-node"][aria-label^="Raquel Burgos,"]').getBoundingClientRect();
+                const first = document.querySelector('[data-slot="org-node"][aria-label^="Mario,"]').getBoundingClientRect();
+
+                // The first level is right under its head (a row apart), not halfway down the tallest column of its row.
+                return company.top >= bar && head.top >= bar && first.top - head.bottom < 200;
+            }
+        JS, true)
+        ->assertNotPresent(orgCard('Operario 1'))
+        ->assertSee('+19 · 19 en total')
+        ->assertNoJavaScriptErrors();
+});
+
+it('opens with no card cut off at the left, and the company card in view', function (): void {
+    demoLikeOrgChart();
+    $place = ['tenant_id' => Employee::query()->withoutGlobalScopes()->firstOrFail()->tenant_id];
+
+    // Two more heads with three managers each: the first level is wider than the screen at a readable size.
+    foreach (['Ángeles Girón', 'Iván Soto'] as $name) {
+        $head = Employee::factory()->create([...$place, 'name' => $name, 'job_title' => 'Director', 'manager_id' => null]);
+        Employee::factory()->count(3)->create([...$place, 'job_title' => 'Gerente', 'manager_id' => $head->id]);
+    }
+
+    visit('/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->assertScript(<<<'JS'
+            () => {
+                const canvas = document.querySelector('.react-flow').getBoundingClientRect();
+                const cards = [...document.querySelectorAll('.react-flow__node-person, .react-flow__node-company')].map((node) => node.getBoundingClientRect());
+                const company = document.querySelector('.react-flow__node-company').getBoundingClientRect();
+                const cut = cards.filter((box) => box.top < canvas.bottom && box.bottom > canvas.top && box.left < canvas.left - 1 && box.right > canvas.left + 1);
+
+                return cut.length === 0 && company.left >= canvas.left && company.right <= canvas.right;
+            }
+            JS, true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('fits the chart at a readable size with «Ajustar a la pantalla», from the top', function (): void {
+    demoLikeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->click('[aria-label="Alejar"]')
+        ->click('[aria-label="Alejar"]')
+        ->click('[aria-label="Alejar"]')
+        ->click('[aria-label="Ajustar a la pantalla"]')
+        ->wait(1)
+        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.5', true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the bar on one line and the panel beside the canvas, not over it, while editing', function (): void {
+    demoLikeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->click('Editar estructura')
+        ->wait(1)
+        ->click(orgCard('Raquel Burgos'))
+        ->wait(1)
+        ->assertScript(<<<'JS'
+            () => {
+                const bar = document.querySelector('[role="search"]').getBoundingClientRect();
+                const canvas = document.querySelector('.react-flow').getBoundingClientRect();
+                const panel = document.querySelector('aside[aria-label^="Panel de"]').getBoundingClientRect();
+
+                return bar.height < 60 && bar.right <= canvas.right && panel.left >= canvas.right - 1;
+            }
+        JS, true)
         ->assertNoJavaScriptErrors();
 });

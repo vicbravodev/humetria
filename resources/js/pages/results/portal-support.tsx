@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Lock } from 'lucide-react';
+import PortalHomeLink from '@/components/portal-home-link';
 import Initials from '@/components/humetria/initials';
 
 /**
@@ -7,11 +8,13 @@ import Initials from '@/components/humetria/initials';
  * «Aviso en su portal»), as «usted». Nothing of what they answered.
  */
 export default function PortalSupport({
+    token,
     company,
     name,
     on,
     message,
 }: {
+    token: string;
     company: string;
     name: string;
     /** "4 nov 2026". */
@@ -35,6 +38,7 @@ export default function PortalSupport({
                         Confidencial
                     </span>
                 </header>
+                <PortalHomeLink token={token} />
                 <section
                     aria-labelledby="support-title"
                     className="flex flex-col gap-4"

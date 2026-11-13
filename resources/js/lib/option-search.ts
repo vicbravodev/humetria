@@ -1,10 +1,17 @@
 import { fold } from '@/lib/commands';
+import { countOf } from '@/lib/plural';
 
 /**
  * One choice of a Combobox: what the form sends and what the person reads. `isNew` marks the choice of adding
  * what was typed, in a Combobox that allows it.
  */
-export type Option = { value: string; label: string; isNew?: boolean };
+export type Option = {
+    value: string;
+    label: string;
+    isNew?: boolean;
+    /** A line the form shows once the option is chosen (a person's days, say). */
+    hint?: string;
+};
 
 /** Options with their label already folded, so typing does not fold every label again on each key. */
 export type OptionIndex = { option: Option; text: string }[];
@@ -74,7 +81,7 @@ export function searchNote({
     const notes: Record<SearchState['status'], string | null> = {
         loading: 'Buscando…',
         error: 'No se pudo buscar. Intenta de nuevo.',
-        idle: `Escribe al menos ${minLength} letras para buscar.`,
+        idle: `Escribe al menos ${countOf(minLength, 'letra', 'letras')} para buscar.`,
         done: null,
     };
 
@@ -90,16 +97,19 @@ export function searchNote({
 }
 
 /**
- * The options with, first, one that adds what was typed, unless an option already has that label (ignoring case and
- * accents) or nothing was typed.
+ * The options with, last, one that adds what was typed: not while an option already starts with it (ignoring case and
+ * accents), since then it is still being typed, nor when nothing was typed. The ones that exist always come first, so
+ * Enter never creates a half-written one.
  */
 export function withNewOption(options: Option[], query: string): Option[] {
     const typed = query.trim();
-    const exists = options.some(({ label }) => fold(label) === fold(typed));
+    const started = options.some(({ label }) =>
+        fold(label).startsWith(fold(typed)),
+    );
 
-    return typed === '' || exists
+    return typed === '' || started
         ? options
-        : [{ value: typed, label: typed, isNew: true }, ...options];
+        : [...options, { value: typed, label: typed, isNew: true }];
 }
 
 /** How an option reads in the list. */

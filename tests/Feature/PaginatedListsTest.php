@@ -344,6 +344,17 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('companies.show', $tenant);
     }, ['usage_history']],
+    'platform users' => ['tenancy/users', function () {
+        signInAsSuperadmin();
+
+        return route('platform-users.index');
+    }, ['users']],
+    'audit trail' => ['tenancy/audit', function () {
+        App\Models\AuditEntry::query()->forceCreate(['id' => (string) Illuminate\Support\Str::uuid(), 'event' => 'tenant.created', 'metadata' => [], 'created_at' => now()]);
+        signInAsSuperadmin();
+
+        return route('audit.index');
+    }, ['entries']],
     'demo requests' => ['demos/index', function () {
         DemoRequest::factory()->create();
         signInAsSuperadmin();

@@ -30,7 +30,7 @@ function accountInput(array $overrides = []): array
         'kind' => 'consultant',
         'legal_name' => 'Consultores Asociados S.C.',
         'rfc' => 'CAS010101AB1',
-        'tax_regime' => '601 General de Ley Personas Morales',
+        'tax_regime' => '601',
         'postal_code' => '06600',
         'cfdi_use' => 'G03',
         'contact_name' => 'Laura Pérez',
@@ -65,7 +65,7 @@ it('creates an account, logs it and audits it without personal data', function (
     expect($account->kind)->toBe(AccountKind::Consultant)
         ->and($account->legal_name)->toBe('Consultores Asociados S.C.')
         ->and($account->rfc)->toBe('CAS010101AB1')
-        ->and($account->tax_regime)->toBe('601 General de Ley Personas Morales')
+        ->and($account->tax_regime)->toBe('601')
         ->and($account->postal_code)->toBe('06600')
         ->and($account->cfdi_use)->toBe('G03')
         ->and($account->contact_name)->toBe('Laura Pérez')
@@ -112,7 +112,11 @@ it('refuses what the database would refuse, with a message', function (array $ov
     'a contact email that is not one' => [['contact_email' => 'laura'], 'contact_email'],
     'a postal code of four digits' => [['postal_code' => '0660'], 'postal_code'],
     'a postal code of letters' => [['postal_code' => 'abcde'], 'postal_code'],
-    'a CFDI use that is too long' => [['cfdi_use' => str_repeat('G', 11)], 'cfdi_use'],
+    'a tax regime that is not in the SAT catalog' => [['tax_regime' => 'zzz'], 'tax_regime'],
+    'a retired tax regime' => [['tax_regime' => '602'], 'tax_regime'],
+    'a tax regime written with its name' => [['tax_regime' => '601 General de Ley Personas Morales'], 'tax_regime'],
+    'a CFDI use that is not in the SAT catalog' => [['cfdi_use' => 'X99'], 'cfdi_use'],
+    'a CFDI use in lowercase' => [['cfdi_use' => 'g03'], 'cfdi_use'],
     'notes that are too long' => [['notes' => str_repeat('a', 2001)], 'notes'],
 ]);
 
@@ -241,4 +245,23 @@ it('keeps the routes that change an account out of reach while impersonating', f
     foreach (['billing.accounts.store', 'billing.accounts.update'] as $name) {
         expect(ForbidWhileImpersonating::guards($name))->toBeTrue("{$name} is not guarded");
     }
+});
+
+it('takes any regime and CFDI use of the SAT catalog', function (string $regime, string $use): void {
+    $this->actingAs(superadmin())->post(route('billing.accounts.store'), accountInput(['tax_regime' => $regime, 'cfdi_use' => $use]))
+        ->assertSessionHasNoErrors();
+
+    expect(BillingAccount::query()->sole())->tax_regime->toBe($regime)->cfdi_use->toBe($use);
+})->with([
+    'the first and the first' => ['601', 'G01'],
+    'the last regime and payroll' => ['626', 'CN01'],
+    'an individual and a payment' => ['612', 'CP01'],
+    'education' => ['603', 'D10'],
+]);
+
+it('offers the SAT catalogs to the form, each option with its code and name', function (): void {
+    $this->actingAs(superadmin())->get(route('billing.accounts.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('taxRegimes.0', ['value' => '601', 'label' => '601 · General de Ley Personas Morales'])
+            ->where('cfdiUses.2', ['value' => 'G03', 'label' => 'G03 · Gastos en general']));
 });

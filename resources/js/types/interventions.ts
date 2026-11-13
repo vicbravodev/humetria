@@ -182,6 +182,8 @@ export type ProgramTools = {
     evaluations: FollowUpEvaluation[];
     suggestion: string | undefined;
     today: string;
+    /** The name an action takes when its responsible is left empty: the Programa's. */
+    responsible: string | null;
 };
 
 /** The tools of the menu of an action: each opens a dialog or a side panel. */

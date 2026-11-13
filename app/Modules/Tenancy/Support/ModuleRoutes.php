@@ -44,6 +44,7 @@ final class ModuleRoutes
             'tenant.first-steps.*',
             'tenant.job-grades.*',
             'tenant.members.*',
+            'tenant.plan',
             'tenant.work-centers.*',
         ];
     }

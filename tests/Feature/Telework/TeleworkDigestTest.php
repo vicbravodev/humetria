@@ -301,3 +301,9 @@ it('counts in the Comisión email what waits in Ley Silla for their centers', fu
     Notification::assertSentOnDemand(TeleworkDigest::class, fn (TeleworkDigest $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === $cora->email
         && $notification->toMail($notifiable)->subject === 'Tienes 4 pendientes como integrante de la Comisión');
 });
+
+it('writes the Comisión subject in the singular for a single thing', function (): void {
+    $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false);
+
+    expect((new TeleworkDigest($company, 'Cora', ['1 lista por revisar.'], 'https://x.test', 1))->toMail(new AnonymousNotifiable)->subject)->toBe('Tienes 1 pendiente como integrante de la Comisión');
+});

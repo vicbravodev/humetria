@@ -11,10 +11,13 @@ import type { OrgChartFilters, OrgNode } from '@/types';
 export default function OrgPersonSearch({
     filters,
     person,
+    editing = false,
 }: {
     filters: OrgChartFilters;
     /** The focused person, shown as chosen. */
     person: OrgNode | undefined;
+    /** Finding someone reloads the page: the editing mode goes with it. */
+    editing?: boolean;
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -28,7 +31,7 @@ export default function OrgPersonSearch({
             onChange={(option) =>
                 router.get(
                     index.url(tenantSlug),
-                    orgChartQuery(filters, option.value),
+                    orgChartQuery(filters, option.value, editing),
                     { preserveScroll: true },
                 )
             }

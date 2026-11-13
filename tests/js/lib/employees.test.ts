@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    changeLine,
     employeeDetails,
     employeeQuery,
+    deactivationReasons,
     formatMobile,
     headcountText,
     importButtonText,
+    localToday,
     importStep,
     importStepState,
     importStats,
@@ -85,6 +88,16 @@ describe('employeeDetails', () => {
         expect(
             employeeDetails({ ...person, deactivated_on: '3 nov 2026' }),
         ).toBe('Operadora · A-001 · Baja el 3 nov 2026');
+    });
+
+    it('says why a deactivated person left', () => {
+        expect(
+            employeeDetails({
+                ...person,
+                deactivated_on: '3 nov 2026',
+                deactivation_reason: 'Renuncia',
+            }),
+        ).toBe('Operadora · A-001 · Baja el 3 nov 2026 · Renuncia');
     });
 
     it('leaves out what is missing', () => {
@@ -191,5 +204,39 @@ describe('importStats', () => {
             ['Filas en el archivo', 5, false],
             ['Por corregir', 1, true],
         ]);
+    });
+});
+
+describe('localToday', () => {
+    it('is the day in Mexico City, not the UTC one', () => {
+        // 03:00 UTC of the 12th is still the 11th at 21:00 in Mexico City.
+        expect(localToday(new Date('2026-11-12T03:00:00Z'))).toBe('2026-11-11');
+        expect(localToday(new Date('2026-11-12T07:00:00Z'))).toBe('2026-11-12');
+    });
+});
+
+describe('deactivationReasons', () => {
+    it('offers the six reasons of the catalog, in Spanish', () => {
+        expect(deactivationReasons.map((reason) => reason.value)).toEqual([
+            'resignation',
+            'dismissal',
+            'contract_end',
+            'mutual_agreement',
+            'death',
+            'other',
+        ]);
+        expect(deactivationReasons[1]?.label).toBe('Rescisión o despido');
+    });
+});
+
+describe('changeLine', () => {
+    it('reads field, before and after', () => {
+        expect(
+            changeLine({
+                label: 'Celular',
+                before: '5511111111',
+                after: '5522222222',
+            }),
+        ).toBe('Celular: 5511111111 → 5522222222');
     });
 });

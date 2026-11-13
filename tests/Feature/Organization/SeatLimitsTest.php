@@ -61,7 +61,7 @@ describe('adding a person', function (): void {
         expect(planSeatsUsed($this->tenant))->toBe(2);
 
         $this->actingAs($this->owner)->post(route('tenant.employees.store', $this->tenant), planSeatForm($this->plant, 'b@acme.mx'))
-            ->assertSessionHasErrors(['seats' => 'Tu plan cubre 2 personas y ya las tienes todas. Pide una ampliación a Humetria para dar de alta a más.']);
+            ->assertSessionHasErrors(['seats' => 'Tu plan cubre 2 personas y ya las tienes todas. Pide una ampliación a Humetría para dar de alta a más.']);
 
         expect(planSeatsUsed($this->tenant))->toBe(2)
             ->and(Employee::query()->withoutGlobalScopes()->where('tenant_id', $this->tenant->id)->count())->toBe(2);
@@ -76,7 +76,7 @@ describe('adding a person', function (): void {
         resolve(CompanyLimits::class)->reconcile();
 
         $this->actingAs(ownerOf($tenant))->post(route('tenant.employees.store', $tenant), planSeatForm($center))
-            ->assertSessionHasErrors(['seats' => 'Tu plan cubre 50 personas y ya las tienes todas. Pide una ampliación a Humetria para dar de alta a más. Con 51 personas el importe pasa de $2,490 a $3,990 al mes, sin IVA.']);
+            ->assertSessionHasErrors(['seats' => 'Tu plan cubre 50 personas y ya las tienes todas. Pide una ampliación a Humetría para dar de alta a más. Con 51 personas el importe pasa de $2,490 a $3,990 al mes, sin IVA.']);
     });
 
     it('does not limit a company without a plan', function (): void {
@@ -102,7 +102,7 @@ describe('deactivating and reactivating', function (): void {
         planSeatsFor($this->tenant, 2, 2);
         $first = Employee::query()->withoutGlobalScopes()->where('tenant_id', $this->tenant->id)->orderBy('id')->firstOrFail();
 
-        $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $first->id]))->assertSessionHasNoErrors();
+        $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $first->id]), departure())->assertSessionHasNoErrors();
         expect(planSeatsUsed($this->tenant))->toBe(1);
 
         $this->actingAs($this->owner)->post(route('tenant.employees.store', $this->tenant), planSeatForm($this->plant, 'n@acme.mx'))->assertSessionHasNoErrors();
@@ -132,7 +132,7 @@ describe('deactivating and reactivating', function (): void {
 
         $this->actingAs($this->owner)->get(route('tenant.employees.index', $this->tenant))->assertOk();
         $this->actingAs($this->owner)->post(route('tenant.employees.store', $this->tenant), planSeatForm($this->plant))->assertSessionHasErrors('seats');
-        $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $first->id]))->assertSessionHasNoErrors();
+        $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $first->id]), departure())->assertSessionHasNoErrors();
         $this->actingAs($this->owner)->post(route('tenant.employees.store', $this->tenant), planSeatForm($this->plant))->assertSessionHasErrors('seats');
 
         expect(planSeatsUsed($this->tenant))->toBe(2);
@@ -153,7 +153,7 @@ describe('importing a file', function (): void {
         planSeatsFor($this->tenant, 5, 2);
 
         $this->actingAs($this->owner)->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => planSeatCsv(planSeatRows(4))])
-            ->assertSessionHasErrors(['file' => 'Tu plan cubre 5 personas y te quedan 3 lugares; esto agrega 4. No se agregó a nadie. Pide una ampliación a Humetria.']);
+            ->assertSessionHasErrors(['file' => 'Tu plan cubre 5 personas y te quedan 3 lugares; esto agrega 4. No se agregó a nadie. Pide una ampliación a Humetría.']);
 
         expect(planSeatsUsed($this->tenant))->toBe(2)
             ->and(Employee::query()->withoutGlobalScopes()->where('tenant_id', $this->tenant->id)->count())->toBe(2);
@@ -163,7 +163,7 @@ describe('importing a file', function (): void {
         planSeatsFor($this->tenant, 5, 4);
 
         $this->actingAs($this->owner)->post(route('tenant.employees.import.store', $this->tenant), ['file' => planSeatCsv(planSeatRows(2))])
-            ->assertSessionHasErrors(['file' => 'Tu plan cubre 5 personas y te queda 1 lugar; esto agrega 2. No se agregó a nadie. Pide una ampliación a Humetria.']);
+            ->assertSessionHasErrors(['file' => 'Tu plan cubre 5 personas y te queda 1 lugar; esto agrega 2. No se agregó a nadie. Pide una ampliación a Humetría.']);
     });
 
     it('does not count the people a file only updates', function (): void {

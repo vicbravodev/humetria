@@ -255,3 +255,13 @@ it('looks the people up in one go, not one by one', function (): void {
 
     expect($queries(['E-001,500,2026-03-01', 'E-002,500,2026-03-01', 'E-003,500,2026-03-01']))->toBe($one);
 });
+
+it('imports the salaries under the minimum and points their rows out as a warning', function (): void {
+    importOverrides(overridesFile(['E-001,650,2026-01-01', 'E-002,100,2026-01-01']))->assertSessionHasNoErrors();
+
+    $flash = session(SessionKey::FLASH_DATA);
+
+    expect(SalaryOverride::query()->count())->toBe(2)
+        ->and($flash['toast']['type'] ?? null)->toBe('warning')
+        ->and($flash['toast']['message'] ?? '')->toContain('Se importaron 2 sueldos individuales.')->toContain('fila 3')->toContain('salario mínimo general');
+});

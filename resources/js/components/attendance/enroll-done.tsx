@@ -10,17 +10,22 @@ export default function EnrollDone({
     company,
     device,
     punchUrl,
+    ready,
 }: {
     company: string;
     device: string;
     punchUrl: string;
+    /** Their center can already mark; when it cannot, the step does not promise that they can. */
+    ready: boolean;
 }) {
     return (
         <PersonFrame
             company={company}
             actions={
                 <Button asChild className="h-14 w-full text-lg font-semibold">
-                    <Link href={punchUrl}>Ir a marcar</Link>
+                    <Link href={punchUrl}>
+                        {ready ? 'Ir a marcar' : 'Ver mi página de marcar'}
+                    </Link>
                 </Button>
             }
         >
@@ -35,8 +40,10 @@ export default function EnrollDone({
                         Listo, su teléfono está vinculado
                     </h1>
                     <p className="text-muted-foreground">
-                        Desde ahora puede marcar su entrada y su salida. Tiene
-                        la llave en este teléfono, no en el servidor.
+                        {ready
+                            ? 'Desde ahora puede marcar su entrada y su salida. '
+                            : 'Todavía no puede marcar: su centro de trabajo aún no está listo y Recursos Humanos tiene que terminar de configurarlo. Su teléfono ya quedó vinculado, no tiene que hacerlo otra vez. '}
+                        Tiene la llave en este teléfono, no en el servidor.
                     </p>
                 </section>
                 <section className="flex items-center gap-4 card p-5">

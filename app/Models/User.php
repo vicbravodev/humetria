@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Concerns\SearchesText;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 use App\Support\RequestOrigin;
@@ -31,6 +32,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
+ * @property Carbon|null $last_login_at
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -40,7 +42,7 @@ use Spatie\Permission\Traits\HasRoles;
 final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, SearchesText, TwoFactorAuthenticatable;
 
     /** Platform role (Humetría staff): passes every ability, see AppServiceProvider. */
     public const string SUPERADMIN = 'superadmin';
@@ -112,7 +114,11 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         // Fortify asks for it while serving the request: where it came from is read now, before the queue.
         $request = request();
-        $origin = resolve(RequestOrigin::class)->describe($request->userAgent() ?? '', $request->ip() ?? '', now());
+        // Not when somebody else signed in asked for it (support sending the link): that device is theirs, not this person's.
+        $asker = $request->user();
+        $origin = $asker !== null && ! $asker->is($this)
+            ? null
+            : resolve(RequestOrigin::class)->describe($request->userAgent() ?? '', $request->ip() ?? '', now());
 
         $this->notify(new ResetPasswordNotification($token, $origin));
     }
@@ -133,6 +139,7 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 }

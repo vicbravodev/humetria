@@ -57,7 +57,8 @@ it('opens with the people costed of the total and lists the missing by company I
             ->component('compensation/report')
             ->where('scenario.name', 'Revisión 2027')->where('scenario.horizon_years', 4)
             ->where('coverage.total', 11)->where('coverage.costed', 9)
-            ->where('coverage.missing', ['E-900'])->where('coverage.missing_without_number', 1));
+            ->where('coverage.missing', ['E-900'])->where('coverage.missing_without_number', 1)
+            ->where('coverage.causes', ['without_grade' => 1, 'without_hire_date' => 2, 'without_group' => 1]));
 });
 
 it('shows the cost of the first year with its retroactivity and the recurring cost', function (): void {

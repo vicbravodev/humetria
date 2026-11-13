@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import {
+    BriefcaseBusiness,
     ClipboardCheck,
     House,
     Menu,
@@ -18,12 +19,13 @@ import { cn } from '@/lib/utils';
 const ICONS: Record<MobileTab['key'], LucideIcon> = {
     panel: House,
     compliance: ClipboardCheck,
+    operation: BriefcaseBusiness,
     complaints: MessageSquareWarning,
     more: Menu,
 };
 
 const TAB =
-    'relative flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-full text-caption font-medium transition-colors duration-150 ease-out focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring';
+    'relative flex min-h-14 w-full flex-col px-3 items-center justify-center gap-0.5 rounded-full text-caption font-medium transition-colors duration-150 ease-out focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring';
 
 /** One tab: a link to its page, the standards' menu (Normas) or the button that opens the whole menu (Más). */
 export function MobileTabControl({
@@ -49,6 +51,7 @@ export function MobileTabControl({
 
     switch (tab.key) {
         case 'compliance':
+        case 'operation':
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger className={className}>

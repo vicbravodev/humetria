@@ -57,7 +57,17 @@ it('sends the statement to the people RH ticks, from a bar that appears only the
         ->assertDontSee('Quitar selección')
         ->click('input[type=checkbox][aria-label="Elegir a Ana Solís"], button[aria-label="Elegir a Ana Solís"]')
         ->assertSee('1 seleccionada')
-        ->press('Enviar constancia para acuse')
+        ->press('Enviar enlace a su portal')
         ->assertSee('enlace')
+        ->assertNoJavaScriptErrors();
+});
+
+it('says a name that is not in the tab is in everybody, and offers to go there', function (): void {
+    // The full name: «Ana» alone also matches a random Mariana or Juliana the factories create in that tab.
+    visitPage('leave/balances', leaveBalancesPanel().'?tab=missing&q='.rawurlencode('Ana Solís'))
+        ->assertSee('No está en esta pestaña')
+        ->assertSee('1 persona coincide en Todos')
+        ->click('Ver en Todos')
+        ->assertSee('Ana Solís')
         ->assertNoJavaScriptErrors();
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    isEditing,
     orgChartQuery,
     placeText,
     teamPersonText,
@@ -49,5 +50,18 @@ describe('org chart labels', () => {
             ),
         ).toEqual({ work_center: 'c1', area: 'a1', focus: 'p1' });
         expect(orgChartQuery(none, 'p1')).toEqual({ focus: 'p1' });
+    });
+
+    it('keeps the editing mode in the address, so finding someone does not take it away', () => {
+        const none = { work_center: null, area: null };
+
+        expect(orgChartQuery(none, 'p1', true)).toEqual({
+            focus: 'p1',
+            edit: '1',
+        });
+        expect(orgChartQuery(none, undefined, true)).toEqual({ edit: '1' });
+        expect(isEditing('/admin/acme/org-chart?focus=p1&edit=1')).toBe(true);
+        expect(isEditing('/admin/acme/org-chart?edit=0')).toBe(false);
+        expect(isEditing('/admin/acme/org-chart')).toBe(false);
     });
 });

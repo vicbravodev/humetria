@@ -1,3 +1,4 @@
+import type { ModulesChange } from '@/types/billing-parts';
 import type { TenantRow } from '@/types/tenancy';
 
 export type AccountKind = 'direct' | 'consultant';
@@ -91,6 +92,8 @@ export type SubscriptionView = {
     status_label: string;
     seats: number;
     centers: number;
+    /** What the company may really have: never fewer than the plan includes. */
+    allowed_centers: number;
     /** The first day, Y-m-d, for the form. */
     starts_on: string;
     /** The next cut, written for display. */
@@ -112,6 +115,7 @@ export type SubscriptionPreview = {
     eligibility: DiscountNote | null;
     /** When a reduction in the plan being typed takes effect (the next cut); null when everything applies at once. */
     scheduled: { effective_on: string } | null;
+    modules: ModulesChange;
 };
 
 /** What an account adds up to across its companies. */

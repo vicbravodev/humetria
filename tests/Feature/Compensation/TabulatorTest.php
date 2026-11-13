@@ -50,7 +50,7 @@ it('lists the tabulator paginated by category and level with server-side search'
             ->where('grades.data.0.category', 'Operador')
             ->where('grades.data.0.level', 'A')
             // The one in force today is the 2026 salary, not the one of next year.
-            ->where('grades.data.0.current', ['daily_salary' => '524.65', 'daily_salary_text' => '$524.65', 'effective_from' => '2026-01-01'])
+            ->where('grades.data.0.current', ['daily_salary' => '524.65', 'daily_salary_text' => '$524.65', 'effective_from' => '2026-01-01', 'below_minimum' => null])
             ->where('grades.data.0.salaries.0.effective_from', '2027-01-01')
             ->where('grades.data.0.salaries.1.effective_from', '2026-01-01')
             ->where('grades.data.0.salaries.2.daily_salary', '500')
@@ -226,11 +226,58 @@ it('says how many people each category has and where the data of the contract st
         ->assertInertia(fn (Assert $page) => $page
             ->where('grades.data.0.category', 'Coordinador')->where('grades.data.0.people', 0)
             ->where('grades.data.1.category', 'Operador')->where('grades.data.1.people', 3)
-            ->where('status.tabulator', ['grades' => 2, 'without_salary' => 1])
+            ->where('status.tabulator', ['grades' => 2, 'without_salary' => 1, 'below_minimum' => 0])
             ->where('today', '2026-11-03'));
 });
 
 it('shows where the data of the contract stand on the benefits and the individual salaries too', function (string $route): void {
     $this->get(route($route, $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('status.roster', ['people' => 0, 'missing' => 0])->has('status.accuracy'));
+        ->assertInertia(fn (Assert $page) => $page->where('status.roster', ['people' => 0, 'missing' => 0, 'without_grade' => 0, 'without_hire_date' => 0, 'without_group' => 0])->has('status.accuracy'));
 })->with(['tenant.compensation.benefits.index', 'tenant.compensation.overrides.index']);
+
+it('saves a salary under the minimum and says so, without blocking', function (): void {
+    $this->post(route('tenant.compensation.tabulator.store', $this->tenant), tabulatorForm(['daily_salary' => '250']))->assertSessionHasNoErrors()->assertRedirect();
+
+    $flash = session(Inertia\Support\SessionKey::FLASH_DATA);
+
+    expect(GradeSalary::query()->sole()->daily_salary_cents)->toBe(25000)
+        ->and($flash['toast']['type'] ?? null)->toBe('warning')
+        ->and($flash['toast']['message'] ?? '')->toContain('Salario guardado.')->toContain('Está por debajo del salario mínimo general ($315.04 diarios');
+});
+
+it('saves a salary at the minimum as always', function (): void {
+    $this->post(route('tenant.compensation.tabulator.store', $this->tenant), tabulatorForm(['daily_salary' => '315.04']))->assertSessionHasNoErrors();
+
+    expect(session(Inertia\Support\SessionKey::FLASH_DATA)['toast'] ?? null)->toBe(['type' => 'success', 'message' => 'Salario guardado.']);
+});
+
+it('marks in its own row a salary under the general minimum, so it stays after the toast is gone', function (): void {
+    $grade = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Auxiliar', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 10000, 'effective_from' => '2026-01-01']);
+
+    $this->get(route('tenant.compensation.tabulator.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('grades.data.0.current.below_minimum', fn (string $text) => str_starts_with($text, 'Está por debajo del salario mínimo general')));
+});
+
+it('marks a salary under the minimum even when it started before the first minimum the platform has', function (): void {
+    $grade = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Auxiliar', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 25000, 'effective_from' => '2024-06-01']);
+
+    $this->get(route('tenant.compensation.tabulator.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('grades.data.0.current.below_minimum', fn (string $text) => str_contains($text, '$315.04')));
+});
+
+it('counts in the start of the contract the categories whose salary today is under the minimum', function (): void {
+    foreach (['A' => 25000, 'B' => 25000, 'C' => 40000] as $level => $cents) {
+        $grade = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Operador', 'level' => $level]);
+        GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => $cents, 'effective_from' => '2026-01-01']);
+    }
+
+    // A replaced salary under the minimum is history: only the one in force today counts.
+    $replaced = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Técnico', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $replaced->id, 'daily_salary_cents' => 20000, 'effective_from' => '2026-01-01']);
+    GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $replaced->id, 'daily_salary_cents' => 50000, 'effective_from' => '2026-06-01']);
+
+    $this->get(route('tenant.compensation.tabulator.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('status.tabulator', ['grades' => 4, 'without_salary' => 0, 'below_minimum' => 2]));
+});

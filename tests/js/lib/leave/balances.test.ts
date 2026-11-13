@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    balanceHint,
     balanceNote,
     balancesQuery,
     availablePercent,
@@ -99,5 +100,13 @@ describe('newPeriodSoon', () => {
         expect(newPeriodSoon('2026-11-10', '2026-11-11')).toBeNull();
         expect(newPeriodSoon(null, '2026-11-11')).toBeNull();
         expect(newPeriodSoon('nope', '2026-11-11')).toBeNull();
+    });
+});
+
+describe('balanceHint', () => {
+    it('says the days there are and, only when some wait for an answer, how many', () => {
+        expect(balanceHint(12, 0)).toBe('12 días disponibles');
+        expect(balanceHint(1, 0)).toBe('1 día disponible');
+        expect(balanceHint(6, 2)).toBe('6 días disponibles · 2 en espera');
     });
 });

@@ -1,6 +1,6 @@
 import DossierTable from '@/components/telework/dossier-table';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { describeDate } from '@/lib/calendar-date';
+import { describeDate, shortDate } from '@/lib/calendar-date';
 import type { DossierOverdue, DossierTraining } from '@/types';
 
 /** 5.9 and 8: the trainings of the last twelve months and the people whose yearly training is overdue. */
@@ -23,9 +23,7 @@ export default function DossierTrainings({
                 >
                     {trainings.map((training, index) => (
                         <TableRow key={`${training.heldOn}-${index}`}>
-                            <TableCell>
-                                {describeDate(training.heldOn) ?? '—'}
-                            </TableCell>
+                            <TableCell>{shortDate(training.heldOn)}</TableCell>
                             <TableCell>{training.modality}</TableCell>
                             <TableCell className="whitespace-normal">
                                 {training.topics.join('; ')}

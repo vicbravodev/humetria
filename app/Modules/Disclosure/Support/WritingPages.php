@@ -24,8 +24,8 @@ final readonly class WritingPages
     public function __construct(private Writer $writer, private Companies $companies, private WorkCenters $workCenters) {}
 
     /**
-     * @param  array{href: string, label: string, center: string|null}  $back  Where «Guardar y volver» leads, and the center
-     *                                                                         whose route it is.
+     * @param  array{href: string, label: string, center: string|null, centerName: string|null}  $back  Where «Guardar y volver» leads, and the center
+     *                                                                                                  whose route it is.
      * @return array<string, mixed>
      */
     public function props(WrittenTemplate $template, DocumentKind $kind, array $back): array
@@ -42,7 +42,7 @@ final readonly class WritingPages
                 'inciso' => $kind->inciso(),
                 'title' => $template->title(),
                 'caption' => $kind === DocumentKind::Policy ? "NOM-035 · Etapa 1 · {$template->name()}" : "NOM-035 · Difusión · {$template->name()}",
-                'owner' => "{$company} · todos los centros",
+                'owner' => "{$company} · ".($back['centerName'] ?? 'todos los centros'),
                 'company' => $company,
             ],
             'questions' => $this->writer->questions($template),

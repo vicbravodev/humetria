@@ -3,6 +3,7 @@ import {
     balanceLine,
     dateSpan,
     shortDate,
+    shortSpan,
     statusTone,
     workingDaysOf,
 } from '@/lib/leave/format';
@@ -29,6 +30,21 @@ describe('dateSpan', () => {
     it('writes nothing for what is not a date', () => {
         expect(dateSpan('', '2026-11-20')).toBe('');
         expect(dateSpan('2026-11-09', 'mañana')).toBe('');
+    });
+});
+
+describe('shortSpan', () => {
+    it.each([
+        ['2026-11-09', '2026-11-09', '9 nov 2026'],
+        ['2026-11-23', '2026-11-27', '23 al 27 nov 2026'],
+        ['2026-11-30', '2026-12-04', '30 nov al 4 dic 2026'],
+        ['2026-12-28', '2027-01-08', '28 dic 2026 al 8 ene 2027'],
+    ])('writes %s to %s as «%s»', (startsOn, endsOn, text) => {
+        expect(shortSpan(startsOn, endsOn)).toBe(text);
+    });
+
+    it('writes nothing for what is not a date', () => {
+        expect(shortSpan('', '2026-11-20')).toBe('');
     });
 });
 

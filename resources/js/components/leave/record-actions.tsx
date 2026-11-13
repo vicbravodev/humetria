@@ -2,6 +2,7 @@ import { FilePen } from 'lucide-react';
 import { useState } from 'react';
 import RowMenu from '@/components/humetria/row-menu';
 import RecordLeaveForm from '@/components/leave/record-leave-form';
+import { balanceHint } from '@/lib/leave/balances';
 import { Button } from '@/components/ui/button';
 import type {
     LeaveRecordPeriod,
@@ -14,11 +15,13 @@ export default function RecordActions({
     person,
     types,
     current,
+    balance,
     onAdjust,
 }: {
     person: LeaveRecordPerson;
     types: LeaveTypeOption[];
     current: LeaveRecordPeriod | undefined;
+    balance: { available: number; waiting: number };
     onAdjust: (period: LeaveRecordPeriod) => void;
 }) {
     const [recording, setRecording] = useState(false);
@@ -48,7 +51,11 @@ export default function RecordActions({
                 open={recording}
                 onOpenChange={setRecording}
                 types={types}
-                person={{ value: person.id, label: person.name }}
+                person={{
+                    value: person.id,
+                    label: person.name,
+                    hint: balanceHint(balance.available, balance.waiting),
+                }}
             />
         </>
     );

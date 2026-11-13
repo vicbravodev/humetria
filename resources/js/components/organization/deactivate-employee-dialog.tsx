@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import DepartureFields from '@/components/organization/departure-fields';
 import EmployeeChoiceField from '@/components/organization/employee-choice-field';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { localToday } from '@/lib/employees';
 import { countOf } from '@/lib/plural';
 import { serverSource } from '@/lib/server-options';
 import { deactivate } from '@/routes/tenant/employees';
@@ -25,6 +27,9 @@ export default function DeactivateEmployeeDialog({
     const [replacement, setReplacement] = useState(
         employee.manager?.value ?? '',
     );
+    const today = localToday();
+    const [terminatedOn, setTerminatedOn] = useState(today);
+    const [reason, setReason] = useState('');
     const managed = employee.direct_reports > 0;
     // Only the person is left out: whoever reports to them may take their place.
     const people = `${peopleOptions.url(tenantSlug)}?${new URLSearchParams({ except: employee.id, keep_reports: '1' }).toString()}`;
@@ -40,10 +45,26 @@ export default function DeactivateEmployeeDialog({
                 tenant: tenantSlug,
                 employee: employee.id,
             })}
-            transform={() => (managed ? { reassign_to: replacement } : {})}
-            disabled={managed && replacement === ''}
+            transform={() => ({
+                terminated_on: terminatedOn,
+                reason,
+                ...(managed ? { reassign_to: replacement } : {}),
+            })}
+            disabled={
+                reason === '' ||
+                terminatedOn === '' ||
+                (managed && replacement === '')
+            }
             preserveScroll
         >
+            <DepartureFields
+                date={terminatedOn}
+                onDate={setTerminatedOn}
+                reason={reason}
+                onReason={setReason}
+                max={today}
+                min={employee.hired_on}
+            />
             {managed && (
                 <div className="grid gap-3">
                     <p className="text-sm">

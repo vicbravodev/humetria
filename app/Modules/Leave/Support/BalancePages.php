@@ -21,7 +21,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * their next period comes, with a tab for what RH has to chase (no start date, a statement nobody confirmed, a person who
  * left with days to settle). Days only, never an amount. The tabs count the whole company, whatever is searched.
  *
- * @phpstan-type Row array{id: string, name: string, active: bool, policy: string, available: int, advanced: int, granted: int|null, nextAnniversary: string|null}
+ * @phpstan-type Row array{id: string, name: string, active: bool, policy: string, available: int, waiting: int, advanced: int, granted: int|null, nextAnniversary: string|null}
  */
 final readonly class BalancePages
 {
@@ -33,7 +33,7 @@ final readonly class BalancePages
     public function __construct(private Roster $roster, private Seniority $seniority, private PolicyResolver $policies, private GrantEntitlements $grants) {}
 
     /**
-     * @return array{tab: string, q: string, today: string, owedDays: int, counts: array{all: int, missing: int, statements: int, terminations: int}, people: LengthAwarePaginator<int, Row>}
+     * @return array{tab: string, q: string, today: string, owedDays: int, counts: array{all: int, missing: int, statements: int, terminations: int}, people: LengthAwarePaginator<int, Row>, elsewhere: int}
      */
     public function index(string $tab, string $search): array
     {
@@ -47,13 +47,17 @@ final readonly class BalancePages
 
         $tab = in_array($tab, self::TABS, true) ? $tab : self::opening($counts);
 
+        $people = $this->page(new RosterQuery(employeeIds: $ids[$tab] ?? null, search: $search));
+
         return [
             'tab' => $tab,
             'q' => $search,
             'today' => PeriodWindow::today()->toDateString(),
             'owedDays' => (int) LeaveEntry::query()->whereNotNull('leave_entitlement_id')->sum('days'),
             'counts' => $counts,
-            'people' => $this->page(new RosterQuery(employeeIds: $ids[$tab] ?? null, search: $search)),
+            'people' => $people,
+            // A search that finds nobody in a tab may find them in another: how many, so the screen can offer everybody.
+            'elsewhere' => $people->total() === 0 && $search !== '' && $tab !== 'all' ? count($this->roster->matchingIds(new RosterQuery(search: $search))) : 0,
         ];
     }
 
@@ -86,6 +90,7 @@ final readonly class BalancePages
         $terms = $this->policies->for($ids);
         $periods = Balances::of($ids);
         $advanced = Balances::advanced($ids);
+        $waiting = Balances::waiting($ids);
         $starts = $this->seniority->startDatesFor($ids);
         $today = PeriodWindow::today();
 
@@ -95,6 +100,7 @@ final readonly class BalancePages
             'active' => $person->active,
             'policy' => ($terms[$person->id] ?? null)->name ?? 'Ley',
             'available' => array_sum(array_map(fn (PeriodBalance $period): int => $period->left(), $periods[$person->id] ?? [])) + ($advanced[$person->id] ?? 0),
+            'waiting' => $waiting[$person->id] ?? 0,
             'advanced' => -($advanced[$person->id] ?? 0),
             'granted' => self::granted($periods[$person->id] ?? []),
             'nextAnniversary' => isset($starts[$person->id]) ? self::next($starts[$person->id], $today)->toDateString() : null,

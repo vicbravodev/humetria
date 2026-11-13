@@ -80,14 +80,17 @@ it('lets a person ask for days and see the request waiting', function (bool $dar
     $portal = leaveVacationsPortal();
 
     visitPage('leave/portal', $portal['url'], $dark, $mobile)
+        // The button waits for both dates, and says so instead of just being off.
+        ->assertSee('Elija el día en que empieza y el día en que termina para poder enviar la solicitud.')
         // The dates are picked in a calendar, never typed; it opens on the month of the first day it allows.
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-09"] button')
-        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertScript(calendarClosed(), true)
         ->click('#leave-ends-on')
         ->click('[data-state="open"] [data-day="2026-11-20"] button')
-        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertScript(calendarClosed(), true)
         ->assertSee('Son 9 días laborables.')
+        ->assertDontSee('Elija el día en que empieza y el día en que termina')
         // A reminder that never stops the request.
         ->assertSee('La ley le da derecho a 12 días seguidos de vacaciones. Dividirlos es decisión suya.')
         ->assertDontSee('No tiene días disponibles para estas fechas.')
@@ -108,10 +111,10 @@ it('says a person has no days for the dates and still lets them send the request
     visitPage('leave/portal', $portal['url'])
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-09"] button')
-        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertScript(calendarClosed(), true)
         ->click('#leave-ends-on')
         ->click('[data-state="open"] [data-day="2026-11-10"] button')
-        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertScript(calendarClosed(), true)
         ->assertSee('Son 2 días laborables.')
         ->assertSee('No tiene días disponibles para estas fechas. Puede enviar la solicitud; quien la apruebe lo verá.')
         ->press('Enviar solicitud')
@@ -125,10 +128,10 @@ it('says why dates cannot be asked as soon as they are picked', function (): voi
     visitPage('leave/portal', leaveVacationsPortal()['url'])
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-07"] button')
-        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertScript(calendarClosed(), true)
         ->click('#leave-ends-on')
         ->click('[data-state="open"] [data-day="2026-11-08"] button')
-        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertScript(calendarClosed(), true)
         ->assertSee('Esas fechas no incluyen ningún día laborable.')
         ->assertDontSee('días laborables.');
 });
@@ -142,10 +145,10 @@ it('lets a person ask for a leave of the company, which uses none of their days'
         ->click('[role="option"]:has-text("Paternidad")')
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-09"] button')
-        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertScript(calendarClosed(), true)
         ->click('#leave-ends-on')
         ->click('[data-state="open"] [data-day="2026-11-10"] button')
-        ->assertMissing('[data-slot=\"calendar\"]')
+        ->assertScript(calendarClosed(), true)
         ->assertSee('Son 2 días laborables.')
         ->assertDontSee('La ley le da derecho a 12 días seguidos')
         ->press('Enviar solicitud')
@@ -169,3 +172,40 @@ it('lets a person cancel a request of theirs, after asking', function (bool $dar
 
     expect($request->refresh()->status->value)->toBe('cancelled');
 })->with($looks);
+
+// E-02: the home of the portal lists the person's tools, and every tool leads back to it.
+it('leads from the home of the portal to vacations and back', function (bool $dark, bool $mobile): void {
+    $portal = leaveVacationsPortal();
+    $home = preg_replace('#/vacations$#', '', $portal['url']) ?? '';
+
+    visitPage('telework/portal', $home, $dark, $mobile)
+        ->assertSee('Hola, Ana Solís')
+        ->assertSee('Mis vacaciones')
+        ->assertDontSee('teletrabajo')
+        ->click('Mis vacaciones')
+        ->assertSee('Sus días')
+        ->click('Volver a mi portal')
+        ->assertSee('Hola, Ana Solís')
+        ->assertSee('Mis vacaciones')
+        ->assertNoJavaScriptErrors();
+})->with($looks);
+
+// E-10 and E-11: days asked for and not answered are told apart, and a second tap right after sending finds nothing to send.
+it('tells the days waiting for an answer and leaves nothing to send twice', function (): void {
+    $portal = leaveVacationsPortal();
+
+    $page = visitPage('leave/portal', $portal['url'])
+        ->assertButtonDisabled('Enviar solicitud')
+        ->click('#leave-starts-on')
+        ->click('[data-state="open"] [data-day="2026-11-09"] button')
+        ->assertScript(calendarClosed(), true)
+        ->click('#leave-ends-on')
+        ->click('[data-state="open"] [data-day="2026-11-20"] button')
+        ->assertButtonEnabled('Enviar solicitud')
+        ->press('Enviar solicitud')
+        ->assertSee('Enviamos su solicitud.')
+        ->assertSeeIn('section[aria-labelledby="leave-balance"]', '9 días en espera de respuesta')
+        ->assertButtonDisabled('Enviar solicitud');
+
+    $page->assertDontSee('Seleccione')->assertNoJavaScriptErrors();
+});

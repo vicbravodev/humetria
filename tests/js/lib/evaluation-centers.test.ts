@@ -37,7 +37,13 @@ const campaign: CampaignSummary = {
     closesOn: '10 nov 2026',
     closedOn: null,
     launchedOn: '27 oct 2026',
-    progress: { completed: 18, target: 60, againstSample: false },
+    progress: {
+        completed: 18,
+        target: 60,
+        againstSample: false,
+        screeningPending: 0,
+        screeningTarget: 0,
+    },
 };
 
 describe('numeralsText', () => {
@@ -151,7 +157,13 @@ describe('openCampaignLine', () => {
         expect(
             openCampaignLine({
                 ...campaign,
-                progress: { completed: 60, target: 60, againstSample: false },
+                progress: {
+                    completed: 60,
+                    target: 60,
+                    againstSample: false,
+                    screeningPending: 0,
+                    screeningTarget: 0,
+                },
             }),
         ).toBe('Cierra el 10 nov 2026 · completa');
         expect(openCampaignLine({ ...campaign, progress: null })).toBe(

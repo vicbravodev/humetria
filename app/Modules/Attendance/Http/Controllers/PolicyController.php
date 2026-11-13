@@ -30,6 +30,7 @@ final readonly class PolicyController
                 'requireQrOnsite' => $policy->require_qr_onsite,
                 'trustedMayUseBrowser' => $policy->trusted_may_use_browser,
                 'retentionMonths' => $policy->retention_months,
+                'lateToleranceMinutes' => $policy->late_tolerance_minutes,
             ],
             'saved' => $policy->exists,
             'canManage' => Gate::allows('manage-attendance'),
@@ -38,7 +39,7 @@ final readonly class PolicyController
 
     public function update(PolicyRequest $request, SavePolicy $save): RedirectResponse
     {
-        $save->handle($request->outOfZone(), $request->maxAccuracy(), $request->requireQrOnsite(), $request->trustedMayUseBrowser(), $request->retentionMonths());
+        $save->handle($request->outOfZone(), $request->maxAccuracy(), $request->requireQrOnsite(), $request->trustedMayUseBrowser(), $request->retentionMonths(), $request->lateToleranceMinutes());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Política guardada. Aplica desde la siguiente marca.']);
 
         return back();

@@ -98,7 +98,7 @@ it('uses no raw colors in the frontend', function () {
 // components/ui stays out, as above: the shadcn primitives keep their own spelling, pinned by ShadcnAdjustmentsTest.
 it('writes the caption and meta sizes with their tokens', function (): void {
     $offenders = [];
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../../resources/js', FilesystemIterator::SKIP_DOTS));
+    $files = frontendSourceFiles();
 
     foreach ($files as $file) {
         if (! str_contains((string) $file, '/components/ui/')

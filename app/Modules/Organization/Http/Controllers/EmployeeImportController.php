@@ -14,6 +14,7 @@ use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -28,13 +29,17 @@ final class EmployeeImportController extends Controller
 {
     public function __construct(private readonly WorkCenters $workCenters, private readonly Companies $companies, private readonly CompanyLimits $limits) {}
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         Gate::authorize('manage-organization');
+
+        $center = $this->defaultCenter($request->query('center'));
 
         return Inertia::render('organization/employee-import', [
             'maxRows' => EmployeeCsv::MAX_ROWS,
             'hasWorkCenters' => $this->activeCenters() !== [],
+            // The center whose card sent here: the rows of the file without one go to it.
+            'defaultCenter' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],
         ]);
     }
 
@@ -61,7 +66,7 @@ final class EmployeeImportController extends Controller
             throw ValidationException::withMessages(['file' => $read['error']]);
         }
 
-        $plan = $planImport->handle($read['rows']);
+        $plan = $planImport->handle($read['rows'], $this->defaultCenter($request->center())?->id);
 
         if (! $plan->isValid() || ! $request->confirmed()) {
             // Said before it is confirmed: the file is not worth fixing row by row if it does not fit the plan.
@@ -91,6 +96,12 @@ final class EmployeeImportController extends Controller
             $created, $created === 1 ? 'nuevo' : 'nuevos',
             $updated, $updated === 1 ? 'actualizado' : 'actualizados',
         );
+    }
+
+    /** The company's active center with that id, if the text names one: an id from the request is never trusted as it comes. */
+    private function defaultCenter(mixed $id): ?WorkCenterSummary
+    {
+        return is_string($id) ? array_find($this->activeCenters(), fn (WorkCenterSummary $center): bool => $center->id === $id) : null;
     }
 
     /**

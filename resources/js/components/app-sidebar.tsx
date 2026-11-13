@@ -21,6 +21,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar';
+import { useNavTenant } from '@/hooks/use-nav-tenant';
 import { useCloseMenuOnVisit } from '@/hooks/use-close-menu-on-visit';
 import { useScrollEdges } from '@/hooks/use-scroll-edges';
 import type { NavSectionKey } from '@/lib/app-navigation';
@@ -37,7 +38,8 @@ const familyIcons: Partial<Record<NavSectionKey, LucideIcon>> = {
 };
 
 export function AppSidebar() {
-    const { auth, tenant, inCourse } = usePage().props;
+    const { auth, inCourse } = usePage().props;
+    const tenant = useNavTenant();
     const nav = useScrollEdges<HTMLDivElement>();
     const { setOpenMobile } = useSidebar();
     useCloseMenuOnVisit(
@@ -46,6 +48,7 @@ export function AppSidebar() {
     const sections = navSections({
         tenant,
         isStaff: auth.isStaff,
+        isSuperadmin: auth.isSuperadmin,
         inCourse: inCourse?.count ?? 0,
     });
 

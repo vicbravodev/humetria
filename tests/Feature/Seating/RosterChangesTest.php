@@ -32,7 +32,7 @@ function endOf(PositionAssignment $assignment): ?string
 }
 
 it('ends the assignment when the person is deactivated, keeping the history and leaving the others', function (): void {
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure())->assertRedirect();
 
     expect(endOf($this->assignment))->toBe('2026-03-01')
         ->and(endOf($this->colleagueAssignment))->toBeNull();
@@ -53,7 +53,7 @@ it('does not touch an assignment that already ended', function (): void {
     workIn($this->tenant);
     $this->assignment->update(['ends_on' => '2026-02-01']);
 
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure())->assertRedirect();
 
     expect(endOf($this->assignment))->toBe('2026-02-01');
 });
@@ -61,7 +61,7 @@ it('does not touch an assignment that already ended', function (): void {
 it('does nothing for a person with no position', function (): void {
     $free = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
 
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $free->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $free->id]), departure())->assertRedirect();
 
     workIn($this->tenant);
 

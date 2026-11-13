@@ -8,6 +8,7 @@ use App\Modules\Tenancy\Enums\TenantView;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 final class ListTenants
 {
@@ -21,6 +22,12 @@ final class ListTenants
     public function handle(string $search = '', TenantView $view = TenantView::All): LengthAwarePaginator
     {
         return $this->matching($search, $view)
+            ->select('tenants.*')
+            // The latest sign-in of anyone who belongs to the company, in the same query as the page.
+            ->selectSub(DB::table('tenant_memberships')
+                ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
+                ->whereColumn('tenant_memberships.tenant_id', 'tenants.id')
+                ->selectRaw('max(users.last_login_at)'), 'last_access_at')
             ->with(['ownerMembership.user', 'openInvitation'])
             ->latest()
             ->orderByDesc('id')

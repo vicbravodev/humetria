@@ -107,10 +107,25 @@ it('sends their link to everyone of a center without a device, leaving who has n
     visit("{$url}/attendance/devices?center={$plant->id}")
         ->click('Enviar enlaces a todos los que no tienen dispositivo')
         ->assertSee('¿Enviar su enlace de alta a las 2 personas de Planta Norte sin dispositivo?')
+        ->assertSee('Hoy nadie puede marcar en Planta Norte: le falta una zona o una pantalla.')
+        ->assertSee('Configurar el centro')
         ->click('Enviar enlaces')
         ->waitForText('Enviamos 1 enlace de alta. 1 persona no tiene correo')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('warns, in the link of a single person, that the center cannot mark yet, as the one for everybody does', function (): void {
+    $url = devicesPanel();
+    $plant = WorkCenter::query()->where('name', 'Planta Norte')->sole();
+    EmployeeFactory::new()->create(['tenant_id' => $plant->tenant_id, 'work_center_id' => $plant->id, 'name' => 'Carla Ruiz', 'email' => 'carla@acme.test']);
+
+    visit("{$url}/attendance/devices?center={$plant->id}")
+        ->click('[aria-label="Enviar enlace de alta a Carla Ruiz"], tr:has-text("Carla Ruiz") >> text=Enviar enlace de alta')
+        ->assertSee('¿Enviar el enlace de alta a Carla Ruiz?')
+        ->assertSee('Hoy nadie puede marcar en Planta Norte: le falta una zona o una pantalla.')
+        ->assertSee('Configurar el centro')
+        ->assertNoJavaScriptErrors();
 });
 
 it('tells a viewer the devices are theirs to see and not to change', function (): void {

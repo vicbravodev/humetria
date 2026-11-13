@@ -1,3 +1,4 @@
+import BelowMinimumNote from '@/components/compensation/below-minimum-note';
 import GradeRowAction from '@/components/compensation/grade-row-action';
 import GradeSalaryInline from '@/components/compensation/grade-salary-inline';
 import {
@@ -45,16 +46,26 @@ export default function TabulatorTable({
                                 {grade.category}
                             </TableCell>
                             <TableCell>{grade.level}</TableCell>
-                            <TableCell>
+                            <TableCell className="max-w-72 min-w-48 whitespace-normal">
                                 {grade.current === null ? (
                                     <GradeSalaryInline
                                         grade={grade}
                                         today={today}
                                     />
                                 ) : (
-                                    <span className="font-medium tabular-nums">
-                                        {grade.current.daily_salary_text}
-                                    </span>
+                                    <>
+                                        <span className="font-medium tabular-nums">
+                                            {grade.current.daily_salary_text}
+                                        </span>
+                                        {grade.current.below_minimum !==
+                                            null && (
+                                            <BelowMinimumNote
+                                                reason={
+                                                    grade.current.below_minimum
+                                                }
+                                            />
+                                        )}
+                                    </>
                                 )}
                             </TableCell>
                             <TableCell className="text-muted-foreground">

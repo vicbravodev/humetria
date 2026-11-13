@@ -158,12 +158,19 @@ it('deactivates an employee and reactivates them from the deactivated ones', fun
     visit('/admin/acme/employees')
         ->click('[aria-label="Acciones de Ana López"]')->click('Dar de baja')
         ->assertSee('¿Dar de baja a Ana López?')
+        ->assertSee('Los días de vacaciones pendientes se calculan a esta fecha.')
+        ->assertDisabled('[role="dialog"] button[type="submit"]')
+        ->type('#terminated-on', now(config()->string('app.display_timezone'))->subWeek()->toDateString())
+        ->click('#deactivation-reason')->click('[role="option"]:has-text("Renuncia")')
         ->press('Dar de baja')
         ->assertSee('Empleado dado de baja.')
         ->assertDontSee('Ana López')
         ->click('nav[aria-label="Estado de las personas"] a:has-text("Bajas")')
         ->assertSee('Ana López')
+        ->assertSee('Renuncia')
         ->click('[aria-label="Acciones de Ana López"]')->click('Reactivar')
+        ->assertSee('¿Reactivar a Ana López?')
+        ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Empleado reactivado.')
         ->assertNoJavaScriptErrors();
 });
@@ -176,6 +183,8 @@ it('asks who takes the reports of a manager before deactivating them', function 
     visit('/admin/acme/employees')
         ->click('[aria-label="Acciones de Ana López"]')->click('Dar de baja')
         ->assertSee('Ana López tiene 1 reporte directo. Elige a quién le reportarán.')
+        ->assertDisabled('[role="dialog"] button[type="submit"]')
+        ->click('#deactivation-reason')->click('[role="option"]:has-text("Mutuo acuerdo")')
         ->assertDisabled('[role="dialog"] button[type="submit"]')
         ->click('#employee-reassign_to')
         ->type('[role="combobox"][aria-controls="employee-reassign_to-options"]', 'carla')
@@ -196,4 +205,45 @@ it('shows Empleados in the sidebar to owner and hr, never to a viewer', function
     $this->actingAs(memberOf($tenant, TenantRole::Hr));
 
     visit('/admin/acme')->click('Empleados')->assertPathIs('/admin/acme/employees');
+});
+
+// E-08: RH sends a person the link of their portal from the row, and is told when there is no email to send it to.
+it('sends a person the link of their portal from their row, or says why it cannot', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    acmeWithEmployees();
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Enviar enlace a su portal')
+        ->assertSee('Le enviamos su enlace por correo.')
+        ->click('[aria-label="Acciones de Carla Ruiz"]')->click('Enviar enlace a su portal')
+        ->assertSee('No tiene correo registrado: agrégalo en su ficha para enviarle el enlace.')
+        ->assertNoJavaScriptErrors();
+});
+
+it('finds a person from the ⌘K palette and opens Empleados narrowed to them', function (): void {
+    acmeWithEmployees();
+
+    visit('/admin/acme/employees')
+        // The top bar exists only once React mounted the app: the shortcut is listening by then.
+        ->assertVisible('@command-palette')
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
+        ->type('#command-search', 'ló')
+        ->assertSeeIn('[role="listbox"] [role="group"]', 'Personas')
+        ->assertSee('Ana López')
+        ->keys('#command-search', 'Enter')
+        ->assertPathIs('/admin/acme/employees')
+        ->assertScript('() => new URL(location.href).searchParams.get("q")', 'Ana López')
+        ->assertNoJavaScriptErrors();
+});
+
+it('offers no people in the ⌘K palette to whoever cannot manage the organization', function (): void {
+    $tenant = acmeWithEmployees();
+    $this->actingAs(memberOf($tenant, TenantRole::Viewer));
+
+    visit('/admin/acme')
+        // The top bar exists only once React mounted the app: the shortcut is listening by then.
+        ->assertVisible('@command-palette')
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
+        ->type('#command-search', 'ló')
+        ->assertDontSee('Ana López');
 });

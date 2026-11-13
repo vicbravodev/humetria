@@ -27,7 +27,7 @@ export default function CompareCard({
                     </p>
                 )}
                 <p className="text-sm">
-                    Cada año después:{' '}
+                    Al año, al arranque:{' '}
                     <strong className="font-semibold tabular-nums">
                         {scenario.recurring_text}
                     </strong>

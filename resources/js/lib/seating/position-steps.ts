@@ -20,6 +20,13 @@ const FIGURE_ONE = [
     'has_space_for_seat',
     'needs_to_be_nearby',
 ];
+const BASICS = [
+    'name',
+    'tasks',
+    'bipedestation_type',
+    'continuous_minutes',
+    'max_people_at_once',
+];
 const AREA = ['area_conditions', 'tools', 'physical_load', 'attention_level'];
 
 function stepOf(field: string): number {
@@ -66,4 +73,43 @@ export function figureOne(answers: {
     }
 
     return { result: needsToBeNearby ? 'B' : 'C', thirdNeeded: true };
+}
+
+/** What the form holds as text, by field name: a radio nobody chose and an empty box are absent or empty. */
+export function textValues(data: FormData): Record<string, string> {
+    const values: Record<string, string> = {};
+
+    data.forEach((value, key) => {
+        if (typeof value === 'string') {
+            values[key] = value;
+        }
+    });
+
+    return values;
+}
+
+/**
+ * The required fields of a step still empty, so «Siguiente» does not move on over them: the data of the position and the
+ * three questions of Figura 1 (the server asks for the same, PositionRequest). The other steps ask nothing here.
+ */
+export function missingInStep(
+    step: number,
+    values: Record<string, string>,
+): string[] {
+    const asked = step === 1 ? BASICS : step === 2 ? FIGURE_ONE : [];
+
+    return asked.filter((field) => (values[field] ?? '').trim() === '');
+}
+
+/** The errors the server sent plus «obligatorio» on the fields «Siguiente» found empty; the server's words win. */
+export function withMissing(
+    sent: Record<string, string>,
+    missing: string[],
+): Record<string, string> {
+    return {
+        ...Object.fromEntries(
+            missing.map((field) => [field, 'Este dato es obligatorio.']),
+        ),
+        ...sent,
+    };
 }

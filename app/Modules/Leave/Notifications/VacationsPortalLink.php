@@ -31,7 +31,7 @@ final class VacationsPortalLink extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Consulte sus vacaciones')->greeting("Hola, {$this->name}")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject('Consulte sus vacaciones')->greeting("Hola, {$this->name}")
             ->line('Su empresa lleva sus vacaciones en Humetría. En su enlace personal puede ver los días que tiene, pedirlos y seguir sus solicitudes.')
             ->action('Ver mis vacaciones', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta.');

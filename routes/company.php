@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Http\Controllers\MemberController;
+use App\Modules\Tenancy\Http\Controllers\Nom035DossierController;
 use App\Modules\Tenancy\Http\Controllers\OnboardingController;
+use App\Modules\Tenancy\Http\Controllers\PlanController;
 use App\Modules\Tenancy\Http\Controllers\RouteController;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterApplicabilityController;
@@ -37,6 +39,8 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     // under NOM-035 in the menu: NOM-035 spans several modules, so Tenancy puts it together from their contracts.
     Route::get('admin/{tenant:slug}/campaigns/centers/{workCenter}/route', [RouteController::class, 'nom035'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.nom035.route');
     Route::get('admin/{tenant:slug}/campaigns/centers/{workCenter}/inspection', [RouteController::class, 'inspection'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.nom035.inspection');
+    // Its printable dossier: the six rows of the inspection with their evidence.
+    Route::get('admin/{tenant:slug}/campaigns/centers/{workCenter}/dossier', Nom035DossierController::class)->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.nom035.dossier');
     // The first time of a company (board V3-Onboarding): two questions per center, and its routes.
     Route::get('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding');
     Route::put('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding.update');
@@ -50,6 +54,9 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     Route::delete('admin/{tenant:slug}/members/invitations/{invitation}', [MemberController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.cancel');
     Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.update');
     Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.destroy');
+
+    // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
+    Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');
 
     require __DIR__.'/organization.php';
     require __DIR__.'/campaigns.php';

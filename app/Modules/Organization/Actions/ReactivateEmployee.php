@@ -26,7 +26,7 @@ final readonly class ReactivateEmployee
     {
         DB::transaction(function () use ($employee): void {
             $this->limits->reserve(CompanyLimits::SEATS, 1, 'seats');
-            $employee->update(['deactivated_at' => null]);
+            $employee->update(['deactivated_at' => null, 'terminated_on' => null, 'deactivation_reason' => null]);
         });
 
         Log::info('employee.reactivated', ['employee_id' => $employee->id]);

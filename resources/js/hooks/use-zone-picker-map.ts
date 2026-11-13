@@ -8,13 +8,17 @@ import {
 } from 'leaflet';
 import type { Circle, LeafletMouseEvent, Map, Marker } from 'leaflet';
 import { useEffect, useRef } from 'react';
-import { edgeOf, radiusTo } from '@/lib/attendance/zone-picker';
+import type { MapView } from '@/hooks/use-address-view';
+import { STREET_ZOOM, edgeOf, radiusTo } from '@/lib/attendance/zone-picker';
 import type { Point } from '@/lib/attendance/zone-picker';
 
 export type ZonePickerProps = {
     center: Point | null;
     radius: number;
-    onCenter: (point: Point) => void;
+    /** Where to look while the zone has no center yet (the address of its work center); the map stays on Mexico without it. */
+    view?: MapView | null;
+    /** `zoom` is how close the map was when the center was touched or dragged; it is not given for a typed or searched one. */
+    onCenter: (point: Point, zoom?: number) => void;
     onRadius: (meters: number) => void;
 };
 
@@ -22,7 +26,6 @@ type Layers = { circle: Circle; pin: Marker; edge: Marker };
 
 /** Mexico whole, until the zone has a center; then the street. */
 const MEXICO: Point = { lat: 23.6, lng: -102.5 };
-const STREET_ZOOM = 17;
 const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 const handle = (className: string) =>
@@ -45,6 +48,15 @@ function openMap(element: HTMLElement, center: Point | null): Map {
         .addTo(map);
 
     return map;
+}
+
+/** Where to look while the zone has no center and how close; nothing to look at, and the street's zoom, without a view. */
+function viewParts(
+    view: MapView | null | undefined,
+): [number | null, number | null, number] {
+    return view === null || view === undefined
+        ? [null, null, STREET_ZOOM]
+        : [view.lat, view.lng, view.zoom];
 }
 
 /** The circle, the pin at its center and the handle on its edge, both dragged; the fields follow the drag. */
@@ -72,7 +84,7 @@ function drawLayers(
         icon: handle('bg-primary ring-2 ring-card shadow-md cursor-ew-resize'),
     }).addTo(map);
 
-    pin.on('drag', () => props.onCenter(pin.getLatLng()));
+    pin.on('drag', () => props.onCenter(pin.getLatLng(), map.getZoom()));
     edge.on('dragstart', () => {
         dragging.edge = true;
     });
@@ -128,6 +140,7 @@ export function useZonePickerMap(props: ZonePickerProps) {
     const { radius } = props;
     const lat = props.center?.lat ?? null;
     const lng = props.center?.lng ?? null;
+    const [viewLat, viewLng, viewZoom] = viewParts(props.view);
 
     useEffect(() => {
         latest.current = props;
@@ -142,7 +155,7 @@ export function useZonePickerMap(props: ZonePickerProps) {
 
         const opened = openMap(element, latest.current.center);
         opened.on('click', (event: LeafletMouseEvent) =>
-            latest.current.onCenter(event.latlng),
+            latest.current.onCenter(event.latlng, opened.getZoom()),
         );
         // The dialog opens with an animation: the map measures itself again once it has its size.
         const observer = new ResizeObserver(() => opened.invalidateSize());
@@ -156,6 +169,18 @@ export function useZonePickerMap(props: ZonePickerProps) {
             layers.current = null;
         };
     }, []);
+
+    // The zone's work center is found: look there, unless the zone already has a center of its own.
+    useEffect(() => {
+        if (
+            map.current !== null &&
+            viewLat !== null &&
+            viewLng !== null &&
+            layers.current === null
+        ) {
+            map.current.setView({ lat: viewLat, lng: viewLng }, viewZoom);
+        }
+    }, [viewLat, viewLng, viewZoom]);
 
     useEffect(() => {
         const opened = map.current;
@@ -182,7 +207,7 @@ export function useZonePickerMap(props: ZonePickerProps) {
             {
                 center,
                 radius,
-                onCenter: (point) => latest.current.onCenter(point),
+                onCenter: (point, zoom) => latest.current.onCenter(point, zoom),
                 onRadius: (meters) => latest.current.onRadius(meters),
             },
             dragging.current,

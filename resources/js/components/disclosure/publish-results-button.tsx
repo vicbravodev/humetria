@@ -1,9 +1,12 @@
+import { Link } from '@inertiajs/react';
 import { Eye } from 'lucide-react';
 import { useState } from 'react';
 import FormDialog from '@/components/humetria/form-dialog';
 import InputError from '@/components/humetria/input-error';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { page } from '@/routes/tenant/disclosure';
 import { publish } from '@/routes/tenant/disclosure/results';
 import type { ResultsRow } from '@/types';
 
@@ -11,7 +14,13 @@ import type { ResultsRow } from '@/types';
  * Publishes the results of an evaluation to the people (num. 7.8; criterio C-54), after saying who will see them. RH may add the
  * measures of the Programa that are for the whole center: nothing of the Programa reaches the people without that choice.
  */
-export default function PublishResultsButton({ row }: { row: ResultsRow }) {
+export default function PublishResultsButton({
+    row,
+    pageActive,
+}: {
+    row: ResultsRow;
+    pageActive: boolean;
+}) {
     const tenantSlug = useTenantSlug();
     const [open, setOpen] = useState(false);
 
@@ -39,6 +48,20 @@ export default function PublishResultsButton({ row }: { row: ResultsRow }) {
                 >
                     {(errors) => (
                         <>
+                            {!pageActive && (
+                                <Alert>
+                                    <AlertDescription>
+                                        Aún no tienen dónde verlos: la página de
+                                        las personas no está activa.{' '}
+                                        <Link
+                                            href={page.url(tenantSlug)}
+                                            className="font-medium underline underline-offset-4"
+                                        >
+                                            Crear el enlace
+                                        </Link>
+                                    </AlertDescription>
+                                </Alert>
+                            )}
                             <label className="flex cursor-pointer items-start gap-3">
                                 <input
                                     type="checkbox"

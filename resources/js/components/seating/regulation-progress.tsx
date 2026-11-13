@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import type { RegulationRecord } from '@/types';
+import { describeDate } from '@/lib/calendar-date';
 
 /** Where the regulation stands: drafted, signed, deposited, distributed, each with its date and the folio. */
 export default function RegulationProgress({
@@ -7,12 +8,14 @@ export default function RegulationProgress({
 }: {
     regulation: RegulationRecord;
 }) {
+    const day = (date: string | null) =>
+        date === null ? null : (describeDate(date) ?? date);
     const steps = [
         { label: 'Borrador', done: true, detail: null },
         {
             label: 'Firmado',
             done: regulation.signedOn !== null,
-            detail: regulation.signedOn,
+            detail: day(regulation.signedOn),
         },
         {
             label: 'Depositado',
@@ -20,12 +23,12 @@ export default function RegulationProgress({
             detail:
                 regulation.depositedOn === null
                     ? null
-                    : `${regulation.depositedOn} · folio ${regulation.depositFolio ?? ''}`,
+                    : `${day(regulation.depositedOn) ?? ''} · folio ${regulation.depositFolio ?? ''}`,
         },
         {
             label: 'Repartido',
             done: regulation.distributedOn !== null,
-            detail: regulation.distributedOn,
+            detail: day(regulation.distributedOn),
         },
     ];
 

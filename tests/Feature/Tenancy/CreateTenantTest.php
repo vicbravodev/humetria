@@ -153,13 +153,13 @@ it('rejects a duplicated, reserved or malformed slug', function (string $slug, s
 })->with([
     'taken' => ['grupo-ejemplo', 'Esa dirección ya la usa otra empresa.'],
     'reserved' => ['settings', 'Esa dirección está reservada. Elige otra.'],
-    'spaces' => ['Grupo Ejemplo', 'El formato del campo dirección no es válido.'],
-    'too short' => ['ab', 'El campo dirección debe tener entre 3 y 50 caracteres.'],
-    '51 characters' => [str_repeat('a', 51), 'El campo dirección debe tener entre 3 y 50 caracteres.'],
-    'leading hyphen' => ['-acme', 'El formato del campo dirección no es válido.'],
-    'trailing hyphen' => ['acme-', 'El formato del campo dirección no es válido.'],
-    'double hyphen' => ['ac--me', 'El formato del campo dirección no es válido.'],
-    'underscore' => ['ac_me', 'El formato del campo dirección no es válido.'],
+    'spaces' => ['Grupo Ejemplo', 'El formato del campo dirección web no es válido.'],
+    'too short' => ['ab', 'El campo dirección web debe tener entre 3 y 50 caracteres.'],
+    '51 characters' => [str_repeat('a', 51), 'El campo dirección web debe tener entre 3 y 50 caracteres.'],
+    'leading hyphen' => ['-acme', 'El formato del campo dirección web no es válido.'],
+    'trailing hyphen' => ['acme-', 'El formato del campo dirección web no es válido.'],
+    'double hyphen' => ['ac--me', 'El formato del campo dirección web no es válido.'],
+    'underscore' => ['ac_me', 'El formato del campo dirección web no es válido.'],
 ]);
 
 it('accepts a slug of exactly 3 and 50 characters', function (string $slug): void {
@@ -180,7 +180,7 @@ it('requires every field', function (string $field, string $error): void {
     ['legal_name', 'El campo razón social es obligatorio.'],
     ['trade_name', 'El campo nombre comercial es obligatorio.'],
     ['rfc', 'El campo RFC es obligatorio.'],
-    ['slug', 'El campo dirección es obligatorio.'],
+    ['slug', 'El campo dirección web es obligatorio.'],
 ]);
 
 it('limits the names', function (string $field, int $max): void {
@@ -215,7 +215,7 @@ it('says that a field must be text', function (string $field, string $name): voi
     ['legal_name', 'razón social'],
     ['trade_name', 'nombre comercial'],
     ['rfc', 'RFC'],
-    ['slug', 'dirección'],
+    ['slug', 'dirección web'],
 ]);
 
 it('logs and audits the creation without the company data', function (): void {
@@ -231,7 +231,7 @@ it('logs and audits the creation without the company data', function (): void {
 
     expect($entry->event)->toBe('tenant.created')
         ->and($entry->subject_id)->toBe($id)
-        ->and($entry->tenant_id)->toBeNull()
+        ->and($entry->tenant_id)->toBe($id)
         ->and($entry->metadata)->toBe([]);
 });
 
@@ -252,3 +252,75 @@ it('writes the same slug as Laravel for the same name', function (string $name, 
     ['  --Hola   Mundo--  ', 'hola-mundo'],
     ['', ''],
 ]);
+
+it('opens the console with the company prefilled from the demo request it comes from', function (): void {
+    $request = App\Modules\Demos\Models\DemoRequest::factory()->create(['company' => 'Empresa Ejemplo', 'name' => 'Ana López', 'email' => 'ana@empresa.mx']);
+
+    $this->actingAs(superadmin())->get(route('companies.index', ['demo' => $request->id]))
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page
+            ->where('prefill', ['demo_request_id' => $request->id, 'company' => 'Empresa Ejemplo', 'contact' => 'Ana López', 'email' => 'ana@empresa.mx']));
+});
+
+it('prefills nothing for a request that does not exist or already became a company', function (): void {
+    $converted = App\Modules\Demos\Models\DemoRequest::factory()->create(['status' => App\Modules\Demos\Enums\DemoStatus::Converted, 'tenant_id' => Tenant::factory()->create()->id]);
+
+    $this->actingAs(superadmin())->get(route('companies.index', ['demo' => 'no-es-uuid']))
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->where('prefill', null));
+    $this->get(route('companies.index', ['demo' => $converted->id]))
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->where('prefill', null));
+    $this->get(route('companies.index'))
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->where('prefill', null));
+});
+
+it('leaves the demo request converted and linked to the company it created', function (): void {
+    $request = App\Modules\Demos\Models\DemoRequest::factory()->create(['status' => App\Modules\Demos\Enums\DemoStatus::Contacted]);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.store'), newCompanyInput(['demo_request_id' => $request->id]))
+        ->assertRedirect(route('companies.index'))
+        ->assertSessionHasNoErrors();
+
+    $tenant = Tenant::query()->sole();
+    expect($request->fresh())
+        ->status->toBe(App\Modules\Demos\Enums\DemoStatus::Converted)
+        ->tenant_id->toBe($tenant->id);
+});
+
+it('does not create a second company from a request that already became one, and says which', function (): void {
+    $first = Tenant::factory()->create(['trade_name' => 'Primera S.A.']);
+    $request = App\Modules\Demos\Models\DemoRequest::factory()->create(['status' => App\Modules\Demos\Enums\DemoStatus::Converted, 'tenant_id' => $first->id]);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.store'), newCompanyInput(['demo_request_id' => $request->id]))
+        ->assertSessionHasErrors(['demo_request_id' => 'Esta solicitud ya se convirtió en Primera S.A.']);
+
+    expect(Tenant::query()->count())->toBe(1)
+        ->and($request->fresh()->tenant_id)->toBe($first->id);
+});
+
+it('does not create a company for a request that no longer exists', function (): void {
+    $this->actingAs(superadmin())
+        ->post(route('companies.store'), newCompanyInput(['demo_request_id' => (string) Str::uuid()]))
+        ->assertSessionHasErrors('demo_request_id');
+
+    expect(Tenant::query()->count())->toBe(0);
+});
+
+it('still creates a company with no demo request', function (): void {
+    $this->actingAs(superadmin())->post(route('companies.store'), newCompanyInput())->assertSessionHasNoErrors();
+
+    expect(Tenant::query()->count())->toBe(1);
+});
+
+it('gives the console row of a company created from a demo the prospect to invite as its owner', function (): void {
+    $request = App\Modules\Demos\Models\DemoRequest::factory()->create(['company' => 'Empresa Ejemplo', 'name' => 'Ana López', 'email' => 'ana@empresa.mx']);
+    $admin = superadmin();
+
+    $this->actingAs($admin)->post(route('companies.store'), newCompanyInput(['demo_request_id' => $request->id]))->assertSessionHasNoErrors();
+    $tenant = Tenant::query()->latest('created_at')->firstOrFail();
+    $plain = Tenant::factory()->create();
+
+    $this->get(route('companies.index'))->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page
+        ->where('tenants.data', fn ($rows): bool => collect($rows)->firstWhere('id', $tenant->id)['demo_contact'] === ['name' => 'Ana López', 'email' => 'ana@empresa.mx']
+            && collect($rows)->firstWhere('id', $plain->id)['demo_contact'] === null));
+});

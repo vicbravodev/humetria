@@ -55,6 +55,12 @@ final class TenancyServiceProvider extends ServiceProvider
         // through Gate::before): it changes nothing, so every change stays behind manage-tenants.
         Gate::define('view-console', fn (User $user): AccessResponse => $user->isSupport() ? AccessResponse::allow() : AccessResponse::denyAsNotFound());
 
+        // The audit trail and the platform's users are the superadmin's alone (Gate::before lets them through): support
+        // is told it may not, since it does see the console around them.
+        Gate::define('view-audit', fn (User $user): AccessResponse => AccessResponse::deny());
+        Gate::define('manage-platform-users', fn (User $user): AccessResponse => AccessResponse::deny());
+        Gate::define('view-platform-overview', fn (User $user): AccessResponse => AccessResponse::deny());
+
         // The invitation link is public. Viewing it has its own budget, so the page shown again after a mistyped
         // password does not spend the attempts.
         RateLimiter::for('invitation-views', fn (Request $request): Limit => Limit::perMinute(60)->by($request->ip()));

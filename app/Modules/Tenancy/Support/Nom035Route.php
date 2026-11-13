@@ -55,9 +55,11 @@ final readonly class Nom035Route
     public function facts(array $workCenterIds, array $current, array $latest, array $toChannel): array
     {
         $latestIds = array_values(array_map(fn (CampaignRecord $campaign): string => $campaign->id, $latest));
-        $policies = $this->disclosure->withPolicy($workCenterIds);
+        $policyInfo = $this->disclosure->policySummaries($workCenterIds);
+        $policies = array_keys($policyInfo);
+        $publishedOn = $this->disclosure->publishedOn($latestIds);
         $cycles = $this->campaigns->cycles($workCenterIds);
-        $shared = $this->disclosure->sharedEvaluations($latestIds);
+        $sharing = $this->disclosure->sharing($latestIds);
         $programs = $this->programs->forEvaluations($latestIds);
         $unreported = $this->results->withoutReportDetails($latestIds);
         $people = $this->headcount->byWorkCenter();
@@ -75,9 +77,14 @@ final readonly class Nom035Route
                 array_any($evaluations, fn (CampaignRecord $campaign): bool => $campaign->launchedOn === null),
                 array_intersect(['II', 'III'], $this->guides->for($people[$id] ?? 0)) === [],
                 $evaluated === null ? 0 : $toChannel[$evaluated->id] ?? 0,
-                $evaluated !== null && in_array($evaluated->id, $shared, true),
+                $evaluated !== null && in_array($evaluated->id, $sharing['shared'], true),
                 $evaluated === null ? null : $programs[$evaluated->id] ?? null,
                 $evaluated !== null && ! in_array($evaluated->id, $unreported, true),
+                $evaluated === null ? null : ['closedOn' => $evaluated->closedOn, ...self::answered($evaluated)],
+                $evaluated !== null && in_array($evaluated->id, $sharing['unseen'], true),
+                $evaluated === null || ! isset($evaluated->invited['nom035.guide-i']) ? null : ['answered' => $evaluated->answered['nom035.guide-i'] ?? 0, 'target' => $evaluated->invited['nom035.guide-i']],
+                $policyInfo[$id] ?? null,
+                $evaluated === null ? null : $publishedOn[$evaluated->id] ?? null,
             );
         }
 

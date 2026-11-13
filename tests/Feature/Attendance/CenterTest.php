@@ -91,6 +91,17 @@ describe('the center', function (): void {
             ->where('zones.data.0', ['id' => $zone->id, 'name' => 'Nave 1', 'radius' => 80, 'latitude' => 19.432712, 'longitude' => -99.133298]));
     });
 
+    it('gives RH the address of the center, written as it is in Mexico, for the map of a new zone to open there; a viewer gets none', function (): void {
+        $plant = WorkCenter::factory()->for($this->tenant)->create(['street' => 'Reforma', 'exterior_number' => '222', 'interior_number' => '4', 'neighborhood' => 'Juárez', 'postal_code' => '06600', 'municipality' => 'Cuauhtémoc', 'state' => 'CMX']);
+        $this->actingAs($this->hr);
+
+        $this->get(attendanceCenterUrl($plant))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('centerAddress', 'Reforma 222 int. 4, col. Juárez, C.P. 06600, Cuauhtémoc, Ciudad de México'));
+
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+        $this->get(attendanceCenterUrl($plant))->assertInertia(fn (AssertableInertia $page) => $page->where('centerAddress', null));
+    });
+
     it('shows a viewer the zones by name and radius only, never where they are', function (): void {
         zoneOf($this->plant);
         $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));

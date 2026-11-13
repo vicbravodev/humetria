@@ -54,6 +54,17 @@ it('lists the centers of the company with where their route stands', function (b
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
+it('does not say the sector twice in the header of a center whose activity already names it', function (): void {
+    $url = signInToPanel();
+    $center = WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create(['name' => 'Tienda Centro', 'main_activity' => 'Comercio al por menor']);
+    SeatingProfile::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'sector' => 'commerce']);
+
+    visit("{$url}/seating/centers/{$center->id}")
+        ->assertSee('Comercio al por menor')
+        ->assertScript('() => (document.querySelector("h1").parentElement.parentElement.innerText.match(/Comercio/g) ?? []).length', 1)
+        ->assertSee('Declarado el');
+});
+
 it('shows a center with its declaration form', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
 
@@ -61,6 +72,21 @@ it('shows a center with its declaration form', function (bool $dark, bool $mobil
         ->assertSee('Planta Querétaro')
         ->assertSee('Sector del centro')
         ->assertSee('Guardar declaración');
+})->with($looks);
+
+it('does not count as met what has no records: the board says «Sin registros»', function (bool $dark, bool $mobile): void {
+    [$url, $center] = seatingCenter();
+    SeatingProfile::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'sector' => 'commerce']);
+    StandingPosition::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id]);
+
+    visitPage('seating/center', "{$url}/seating/centers/{$center->id}", $dark, $mobile)
+        ->assertSee('Sin registros')
+        ->assertDontSee('9 de 13 cumplen');
+    visitPage('seating/inspection', "{$url}/seating/centers/{$center->id}/inspection", $dark, $mobile)
+        ->assertSee('Aún no hay evaluaciones firmadas')
+        // The same word as the board of the center, not «Te falta»: nothing registered is not the same as missing.
+        ->assertSeeIn('[aria-labelledby="unregistered"]', 'Sin registros')
+        ->assertDontSeeIn('[aria-labelledby="missing"]', 'Aún no hay evaluaciones firmadas');
 })->with($looks);
 
 it('declares the sector of a center from the page', function (): void {
@@ -100,6 +126,11 @@ it('shows the result of Figura 1 as its questions are answered', function (): vo
     [$url, $center] = seatingCenter();
 
     visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->type('name', 'Cajera')
+        ->type('tasks', 'Cobra de pie.')
+        ->click('Prolongada')
+        ->type('continuous_minutes', '240')
+        ->type('max_people_at_once', '2')
         ->press('@position-next')
         ->assertSee('Paso 2 de 5')
         ->click('label:has(input[name="can_work_seated"][value="1"])')
@@ -116,6 +147,11 @@ it('keeps the questions of Figura 1 readable, with the figure beside them only w
     [$url, $center] = seatingCenter();
 
     $page = visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->type('name', 'Cajera')
+        ->type('tasks', 'Cobra de pie.')
+        ->click('Prolongada')
+        ->type('continuous_minutes', '240')
+        ->type('max_people_at_once', '2')
         ->press('@position-next')
         ->assertSee('Paso 2 de 5');
 
@@ -136,7 +172,7 @@ it('shows a saved position with its result and its people', function (bool $dark
         ->assertSee('Quitar');
 })->with($looks);
 
-it('shows what a new position still misses instead of saving it', function (): void {
+it('shows what a new position still misses instead of moving on', function (): void {
     [$url, $center] = seatingCenter();
 
     visit("{$url}/seating/centers/{$center->id}/positions/create")
@@ -147,14 +183,10 @@ it('shows what a new position still misses instead of saving it', function (): v
         ->type('max_people_at_once', '2')
         ->press('@position-next')
         ->assertSee('Paso 2 de 5')
+        // «Siguiente» does not move on over the questions of Figura 1 nobody answered: it marks them.
         ->press('@position-next')
-        ->assertSee('Paso 3 de 5')
-        ->press('@position-next')
-        ->assertSee('Paso 4 de 5')
-        ->press('Guardar puesto')
-        // The step of the first field it misses opens again.
         ->assertSee('Paso 2 de 5')
-        ->assertSee('es obligatorio')
+        ->assertSee('Este dato es obligatorio.')
         ->assertNoJavaScriptErrors();
 });
 
@@ -323,6 +355,8 @@ it('shows a signed assessment as final, with its result and the suggestion', fun
 
     visitPage('seating/assessment', "{$url}/seating/assessments/{$signed->id}", $dark, $mobile)
         ->assertSee('7 de 21')
+        // The date is written as a day, never as the year-month-day the server stores.
+        ->assertScript('() => !/Firmada el \\d{4}-/.test(document.body.innerText)', true)
         ->assertSee('Sugerencia de Humetría')
         ->assertDontSee('Firmar evaluación')
         ->assertDontSee('Guardar borrador');
@@ -489,6 +523,12 @@ it('shows the board of a center with its thirteen requirements and its tabs', fu
         ->assertSee('Encuesta');
 })->with($looks);
 
+it('puts the letterhead on the Ley Silla dossier when it is printed', function (): void {
+    [$url, $center] = seatingCenter();
+
+    assertPrintLetterhead(visit("{$url}/seating/centers/{$center->id}/dossier")->assertSee('Expediente de Ley Silla'), $center->name);
+});
+
 it('shows the printable dossier of a center with a section per requirement and the fine note', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
     InternalRegulation::factory()->distributed()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id]);
@@ -556,6 +596,27 @@ it('shows the survey in progress and closes it before its last day', function (b
         ->assertSee('La encuesta está en curso')
         ->assertSee('Cerrar la encuesta ahora');
 })->with($looks);
+
+it('writes the last day of the survey as a date, not as the year-month-day the server sends', function (): void {
+    [$url, $center] = seatingCenter();
+    Campaign::factory()->active('2026-11-25')->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
+
+    visit("{$url}/seating/centers/{$center->id}/survey")
+        ->assertSee('Cierra el 25 de noviembre de 2026')
+        ->assertDontSee('2026-11-25');
+});
+
+it('says why the survey cannot be launched on a center with nobody in it', function (): void {
+    [$url, $center] = seatingCenter();
+
+    visit("{$url}/seating/centers/{$center->id}/survey")
+        ->click('#survey-closes-on')
+        // The last day that can still be picked in the month on screen, or the first of the next one at the end of the month.
+        ->assertScript('() => { const days = [...document.querySelectorAll("[role=gridcell] button:not([disabled])")]; if (days.length > 0) { days.at(-1).click(); return true; } document.querySelector(".rdp-button_next").click(); return new Promise((resolve) => setTimeout(() => { document.querySelector("[role=gridcell] button:not([disabled])").click(); resolve(true); }, 300)); }')
+        ->press('Lanzar la encuesta')
+        ->assertSee('Este centro no tiene personas activas a quienes preguntar')
+        ->assertNoJavaScriptErrors();
+});
 
 it('closes the survey from its page after asking', function (): void {
     [$url, $center] = seatingCenter();
