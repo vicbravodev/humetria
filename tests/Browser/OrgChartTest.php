@@ -112,6 +112,21 @@ it('draws the chart as a canvas: the person at the top with their team, two leve
         ->assertScript(cspViolations(), '[]');
 })->with($desktop);
 
+it('opens readable, whatever the width of the first level: cards at 0.9 or more, with the root clear of the filter bar', function (): void {
+    $people = acmeOrgChart();
+
+    foreach (['Elena', 'Fabián', 'Gisela', 'Hugo', 'Irma', 'Jaime'] as $name) {
+        Employee::factory()->create(['tenant_id' => $people['dir']->tenant_id, 'work_center_id' => $people['dir']->work_center_id, 'area_id' => $people['dir']->area_id, 'name' => $name, 'job_title' => 'Gerente', 'manager_id' => $people['dir']->id]);
+    }
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.9', true)
+        ->assertScript('() => document.querySelector(\'[data-slot="org-node"][aria-label^="Diana Torres,"]\').getBoundingClientRect().top >= document.querySelector(\'[role="search"]\').getBoundingClientRect().bottom', true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('opens a branch with its pill and closes it with the same one', function (): void {
     acmeOrgChart();
 
