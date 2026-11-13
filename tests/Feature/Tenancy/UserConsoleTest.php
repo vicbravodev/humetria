@@ -241,3 +241,12 @@ it('is forbidden while impersonating', function (): void {
     expect(ForbidWhileImpersonating::guards('platform-users.index'))->toBeTrue()
         ->and(ForbidWhileImpersonating::guards('platform-users.two-factor.destroy'))->toBeTrue();
 });
+
+it('answers 404, not a database error, to a user id that is not a number', function (): void {
+    $this->actingAs(superadmin());
+
+    $this->post(route('platform-users.password-reset', 'abc'))->assertNotFound();
+    $this->delete(route('platform-users.two-factor.destroy', 'abc'))->assertNotFound();
+    $this->post(route('platform-users.support.store', 'abc'))->assertNotFound();
+    $this->delete(route('platform-users.support.destroy', 'abc'))->assertNotFound();
+});
