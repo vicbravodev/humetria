@@ -56,3 +56,15 @@ it('does not count published results the people cannot see: no active page and n
 
     expect(app(DisclosureStanding::class)->sharedEvaluations([$published->id, $covered->id]))->toBe([$covered->id]);
 });
+
+it('sets the published results nobody can reach apart from the ones the people can see', function (): void {
+    $published = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $covered = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->offices->id]);
+    $unpublished = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->offices->id]);
+    ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $published->id]);
+    ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $covered->id]);
+    DisseminationRecord::factory()->covering(['e'])->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->offices->id]);
+
+    expect(app(DisclosureStanding::class)->sharing([$published->id, $covered->id, $unpublished->id]))->toBe(['shared' => [$covered->id], 'unseen' => [$published->id]])
+        ->and(app(DisclosureStanding::class)->sharing([]))->toBe(['shared' => [], 'unseen' => []]);
+});

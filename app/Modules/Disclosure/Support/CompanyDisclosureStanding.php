@@ -22,14 +22,21 @@ final readonly class CompanyDisclosureStanding implements DisclosureStanding
 
     public function sharedEvaluations(array $campaignIds): array
     {
+        return $this->sharing($campaignIds)['shared'];
+    }
+
+    public function sharing(array $campaignIds): array
+    {
+        $none = ['shared' => [], 'unseen' => []];
+
         if ($campaignIds === []) {
-            return [];
+            return $none;
         }
 
         $publications = ResultPublication::query()->whereIn('campaign_id', $campaignIds)->whereNull('withdrawn_at')->get(['campaign_id', 'work_center_id']);
 
         if ($publications->isEmpty()) {
-            return [];
+            return $none;
         }
 
         // Published is not enough: the people have to be able to see them, as in any inciso of 5.7 (C-52).
@@ -43,6 +50,11 @@ final readonly class CompanyDisclosureStanding implements DisclosureStanding
             }
         }
 
-        return array_values(array_filter($campaignIds, fn (string $id): bool => in_array($id, $shared, true)));
+        $published = $publications->map(fn (ResultPublication $publication): string => $publication->campaign_id)->all();
+
+        return [
+            'shared' => array_values(array_filter($campaignIds, fn (string $id): bool => in_array($id, $shared, true))),
+            'unseen' => array_values(array_filter($campaignIds, fn (string $id): bool => in_array($id, $published, true) && ! in_array($id, $shared, true))),
+        ];
     }
 }
