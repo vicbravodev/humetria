@@ -225,3 +225,14 @@ it('writes the whole file or none: a failure in the middle leaves nothing behind
 
     expect(GradeSalary::query()->count())->toBe(0)->and(JobGrade::query()->count())->toBe(0);
 });
+
+it('imports the rows under the minimum and points them out by row, as a warning and not as an error', function (): void {
+    importTabulator(tabulatorFile(['Operador,A,524.65,2026-01-01', 'Peón,A,250,2026-01-01', 'Auxiliar,A,100,2026-01-01']))->assertSessionHasNoErrors();
+
+    $flash = session(SessionKey::FLASH_DATA);
+
+    expect(salaryImportFlash())->toBe([])
+        ->and(GradeSalary::query()->count())->toBe(3)
+        ->and($flash['toast']['type'] ?? null)->toBe('warning')
+        ->and($flash['toast']['message'] ?? '')->toContain('Se importó el tabulador: 3 salarios.')->toContain('filas 3 y 4')->toContain('salario mínimo general');
+});
