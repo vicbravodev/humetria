@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { type KeyboardEvent, useState } from 'react';
 import { CommandPaletteFooter } from '@/components/command-palette-footer';
 import { CommandPaletteResults } from '@/components/command-palette-results';
 import { CommandPaletteSearch } from '@/components/command-palette-search';
@@ -18,6 +18,25 @@ import { paletteCommands, peopleCommands } from '@/lib/palette-commands';
 
 const RESULTS = 'command-results';
 
+/** The arrows move through the results and Enter runs the one in view; any other key is the field's. */
+function navigate(
+    event: KeyboardEvent<HTMLInputElement>,
+    at: { active: number; count: number },
+    to: { move: (index: number) => void; run: () => void },
+) {
+    const next = moveActive(event.key, at.active, at.count);
+
+    if (next !== undefined || event.key === 'Enter') {
+        event.preventDefault();
+    }
+
+    if (next !== undefined) {
+        to.move(next);
+    } else if (event.key === 'Enter') {
+        to.run();
+    }
+}
+
 /**
  * ⌘K (pantalla Paleta): start an action, go to a page, switch the theme or fold the sidebar by typing. It opens at
  * once, without animation, because it is reached for many times a day.
@@ -25,7 +44,7 @@ const RESULTS = 'command-results';
 export function CommandPalette() {
     useCommandPaletteShortcut();
     const open = useCommandPaletteOpen();
-    const { auth, impersonator } = usePage().props;
+    const { auth, impersonator, tenant: current } = usePage().props;
     const tenant = useNavTenant();
     const { state, toggleSidebar } = useSidebar();
     const { updateAppearance } = useAppearance();
@@ -39,7 +58,9 @@ export function CommandPalette() {
     const pages = matchCommands(
         paletteCommands({
             isStaff: auth.isStaff,
+            isSuperadmin: auth.isSuperadmin,
             tenant,
+            writing: current?.can,
             sidebarExpanded: state === 'expanded',
             impersonating: impersonator !== null,
             actions: {
@@ -97,23 +118,15 @@ export function CommandPalette() {
                             setQuery(value);
                             setActive(0);
                         },
-                        onKeyDown: (event) => {
-                            const next = moveActive(
-                                event.key,
-                                active,
-                                results.length,
-                            );
-
-                            if (next !== undefined || event.key === 'Enter') {
-                                event.preventDefault();
-                            }
-
-                            if (next !== undefined) {
-                                setActive(next);
-                            } else if (event.key === 'Enter') {
-                                run(active);
-                            }
-                        },
+                        onKeyDown: (event) =>
+                            navigate(
+                                event,
+                                { active, count: results.length },
+                                {
+                                    move: setActive,
+                                    run: () => run(active),
+                                },
+                            ),
                     }}
                 />
                 <CommandPaletteResults
