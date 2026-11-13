@@ -9,52 +9,62 @@ use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Telework\Data\PortalIdentity;
 use App\Modules\Telework\Exceptions\PortalUnavailable;
-use App\Modules\Tenancy\Data\CompanySummary;
+use Illuminate\Http\Request;
 
 /**
  * The portal link of NOM-037 offered to other tools: the same rules as OpenPortal, not a copy of them.
  */
-final class TokenPortalAccess implements PortalAccess
+final readonly class TokenPortalAccess implements PortalAccess
 {
-    /** @var array<string, ?PortalIdentity> */
-    private array $opened = [];
-
-    /** @var array<string, ?CompanySummary> */
-    private array $companies = [];
-
-    public function __construct(private readonly OpenPortal $openPortal, private readonly IssuePortalLink $issue) {}
+    public function __construct(private OpenPortal $openPortal, private IssuePortalLink $issue, private Request $request) {}
 
     /**
-     * Bound as scoped: the middleware and the page of one request open the same link once.
+     * Opens the link, or reuses what the middleware of this request already opened (see `stopped`): a page does not open
+     * its link a second time. Outside that, every call reads the link as it is now.
      */
     public function open(string $token): ?PortalIdentity
     {
-        if (array_key_exists($token, $this->opened)) {
-            return $this->opened[$token];
-        }
+        $kept = $this->request->attributes->get($this->key($token));
 
-        try {
-            $portal = $this->openPortal->handle($token);
-        } catch (PortalUnavailable) {
-            $this->companies[$token] = null;
+        $portal = $kept instanceof OpenedPortal ? $kept : $this->read($token);
 
-            return $this->opened[$token] = null;
-        }
-
-        $this->companies[$token] = $portal->summary;
-
-        return $this->opened[$token] = new PortalIdentity($portal->tenantId, $portal->employeeId, $portal->company, $portal->name);
+        return $portal === null ? null : $this->identity($portal);
     }
 
     public function stopped(string $token, string $module): bool
     {
-        $this->open($token);
+        $portal = $this->read($token);
 
-        return ($this->companies[$token] ?? null)?->stopped($module) ?? false;
+        if ($portal === null) {
+            return false;
+        }
+
+        $this->request->attributes->set($this->key($token), $portal);
+
+        return $portal->summary?->stopped($module) ?? false;
     }
 
     public function token(string $employeeId): string
     {
         return $this->issue->handle($employeeId);
+    }
+
+    private function read(string $token): ?OpenedPortal
+    {
+        try {
+            return $this->openPortal->handle($token);
+        } catch (PortalUnavailable) {
+            return null;
+        }
+    }
+
+    private function identity(OpenedPortal $portal): PortalIdentity
+    {
+        return new PortalIdentity($portal->tenantId, $portal->employeeId, $portal->company, $portal->name);
+    }
+
+    private function key(string $token): string
+    {
+        return 'portal.opened.'.hash('sha256', $token);
     }
 }
