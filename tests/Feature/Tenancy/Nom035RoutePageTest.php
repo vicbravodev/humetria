@@ -109,6 +109,25 @@ it('says with how many answers the evaluation closed, in the route and in the in
     'everyone' => [20, 20],
 ]);
 
+// R2-nom035-01: who has not answered the Guía I stays visible after closing, amber while it is under everyone.
+it('keeps who has not answered the Guía I visible after closing, in amber below everyone', function (int $answered, int $invited, string $state): void {
+    foreach (range(1, $invited) as $index) {
+        ParticipantInstrument::factory()->create([
+            'participant_id' => Participant::factory()->create(['campaign_id' => $this->closed->id])->id,
+            'instrument' => 'nom035.guide-i',
+            ...($index <= $answered ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : []),
+        ]);
+    }
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.2.state', $state)
+        ->where('rows.2.detail', "Guía I: {$answered} de {$invited}"));
+})->with([
+    'a part' => [11, 20, 'partial'],
+    'everyone' => [20, 20, 'done'],
+]);
+
 it('puts first the people who wait to be channeled, only for whoever may see the Guía I', function (TenantRole $role, string $state, string $detail, int $urgencies): void {
     TraumaScreening::factory()->count(2)->create(['campaign_id' => $this->closed->id, 'requires_clinical_assessment' => true]);
     $this->actingAs(memberOf($this->tenant, $role));

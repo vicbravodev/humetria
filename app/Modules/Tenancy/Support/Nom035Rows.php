@@ -98,7 +98,23 @@ final readonly class Nom035Rows
             return ['numeral' => '5.5 y 5.8 c', 'title' => $title, 'detail' => 'Solo lo ve quien puede ver la Guía I', 'state' => 'done', 'stage' => 3, 'href' => null, 'action' => null];
         }
 
-        return $this->row(3, '5.5 y 5.8 c', $title, $facts->toChannel === 0 ? null : self::people($facts->toChannel), 'view-trauma-screenings', $evaluation === null ? null : route('tenant.campaigns.screenings', [$tenantSlug, $channelAt ?? $evaluation]), 'Canalizar');
+        $guide = $facts->guideOne === null || $facts->guideOne['target'] === 0 ? null : "Guía I: {$facts->guideOne['answered']} de {$facts->guideOne['target']}";
+        $detail = match (true) {
+            $facts->toChannel > 0 => self::people($facts->toChannel).($guide === null ? '' : " · {$guide}"),
+            default => $guide,
+        };
+        $row = $this->row(3, '5.5 y 5.8 c', $title, $detail, 'view-trauma-screenings', $evaluation === null ? null : route('tenant.campaigns.screenings', [$tenantSlug, $channelAt ?? $evaluation]), 'Canalizar');
+
+        // Nobody waits to be channeled: with the Guía I answered by everyone it is met; below everyone it stays met but in amber, with who is missing.
+        $below = $facts->toChannel === 0 && $facts->guideOne !== null && $facts->guideOne['answered'] < $facts->guideOne['target'];
+
+        $see = ['action' => $row['href'] === null ? null : 'Ver'];
+
+        return match (true) {
+            $below => [...$row, ...$see, 'state' => 'partial'],
+            $detail !== null && $facts->toChannel === 0 => [...$row, ...$see, 'state' => 'done'],
+            default => $row,
+        };
     }
 
     /**

@@ -80,6 +80,7 @@ final readonly class Nom035Route
                 $evaluated !== null && ! in_array($evaluated->id, $unreported, true),
                 $evaluated === null ? null : ['closedOn' => $evaluated->closedOn, ...self::answered($evaluated)],
                 $evaluated !== null && in_array($evaluated->id, $sharing['unseen'], true),
+                $evaluated === null || ! isset($evaluated->invited['nom035.guide-i']) ? null : ['answered' => $evaluated->answered['nom035.guide-i'] ?? 0, 'target' => $evaluated->invited['nom035.guide-i']],
             );
         }
 
