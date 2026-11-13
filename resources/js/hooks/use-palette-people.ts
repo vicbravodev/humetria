@@ -7,7 +7,7 @@ import { options as peopleOptions } from '@/routes/tenant/org-chart/people';
 const IDLE: SearchState = { status: 'idle', options: [] };
 
 /**
- * The people of the company whose name or number has what was typed in ⌘K: from two letters, after 200 ms of quiet
+ * The people of the company whose name, email, number or mobile has what was typed in ⌘K: from two letters, after 200 ms of quiet
  * typing, cancelling the request a newer text makes stale. `enabled` is false for whoever may not manage the
  * organization: then nothing is asked.
  */

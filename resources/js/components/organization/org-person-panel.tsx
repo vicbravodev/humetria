@@ -101,7 +101,7 @@ export default function OrgPersonPanel({
                             query: { q: node.name },
                         })}
                     >
-                        Ver su ficha de empleado
+                        Ver en Empleados
                     </Link>
                 </Button>
                 {footer}

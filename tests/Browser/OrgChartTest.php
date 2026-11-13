@@ -182,7 +182,7 @@ it('shows the panel of a person: their manager, their team and what comes out of
         ->click('aside[aria-label="Panel de Gerardo Paz"] [data-slot="org-mini-person"]:has-text("Diana Torres")')
         ->assertPresent('aside[aria-label="Panel de Diana Torres"]')
         ->assertSeeIn('aside[aria-label="Panel de Diana Torres"]', 'Nadie: está hasta arriba.')
-        ->assertAttribute('aside[aria-label="Panel de Diana Torres"] a:has-text("Ver su ficha de empleado")', 'href', '/admin/acme/employees?q=Diana+Torres')
+        ->assertAttribute('aside[aria-label="Panel de Diana Torres"] a:has-text("Ver en Empleados")', 'href', '/admin/acme/employees?q=Diana+Torres')
         ->click('[aria-label="Cerrar el panel"]')
         ->assertNotPresent('aside[aria-label="Panel de Diana Torres"]')
         ->assertNoJavaScriptErrors()
