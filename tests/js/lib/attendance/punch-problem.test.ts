@@ -82,6 +82,19 @@ describe('punchProblem', () => {
         expect(labels('qr_required')).toEqual(['dismiss', 'correction']);
     });
 
+    it('tells a person of a center that cannot mark yet to warn RH, never to scan a screen', () => {
+        const problem = punchProblem('center_not_ready');
+
+        expect(problem).toMatchObject({
+            kind: 'zone',
+            tone: 'warning',
+            title: 'Su centro aún no está listo para marcar',
+            text: 'Avise a Recursos Humanos; mientras tanto puede pedir una corrección.',
+        });
+        expect(JSON.stringify(problem)).not.toContain('pantalla');
+        expect(labels('center_not_ready')).toEqual(['dismiss', 'correction']);
+    });
+
     it('sends a phone that is not linked to the link of RH', () => {
         expect(punchProblem('not_verified')).toMatchObject({
             kind: 'device',
