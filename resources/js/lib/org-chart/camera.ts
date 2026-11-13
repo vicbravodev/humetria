@@ -15,7 +15,8 @@ const clamp = (value: number, low: number, high: number): number =>
 
 /**
  * Where the canvas looks to show a box of cards: as large as fits (never past full size nor below the minimum), centered
- * across, and from the top, under the toolbar, as a chart is read.
+ * across, and from the top, under the toolbar, as a chart is read. Content wider than the screen even at the smallest
+ * size starts at the left margin: what does not fit is a pan to the right, and no card is cut off at the left.
  */
 export function viewportFor(
     box: Box,
@@ -31,8 +32,11 @@ export function viewportFor(
         MAX_ZOOM,
     );
 
+    const centered = screen.width / 2 - (box.x + box.width / 2) * zoom;
+    const fits = box.width * zoom <= screen.width - 2 * MARGIN * 2 + 0.5;
+
     return {
-        x: screen.width / 2 - (box.x + box.width / 2) * zoom,
+        x: fits ? centered : MARGIN * 2 - box.x * zoom,
         y: TOOLBAR + MARGIN - box.y * zoom,
         zoom,
     };
@@ -45,13 +49,25 @@ export function viewportFor(
 export function readableViewport(
     all: Box,
     top: Box,
-    screen: { width: number; height: number },
+    screen: { width: number; height: number; root?: Box },
 ): { x: number; y: number; zoom: number } {
     const whole = viewportFor(all, screen);
 
-    return whole.zoom >= READABLE_ZOOM
-        ? whole
-        : viewportFor(top, screen, READABLE_ZOOM);
+    if (whole.zoom >= READABLE_ZOOM) {
+        return whole;
+    }
+
+    const view = viewportFor(top, screen, READABLE_ZOOM);
+    const { root } = screen;
+
+    // Starting at the left must not push the root out of view (a chart far wider than the screen): then the root is centered.
+    return root === undefined ||
+        (root.x + root.width) * view.zoom + view.x <= screen.width - MARGIN * 2
+        ? view
+        : {
+              ...view,
+              x: screen.width / 2 - (root.x + root.width / 2) * view.zoom,
+          };
 }
 
 /** The box that holds some cards (all of them when `ids` is null) where the layout put them; null when none is there. */
@@ -88,4 +104,39 @@ export function boundsOf(
         width: Math.max(...boxes.map((box) => box.right)) - left,
         height: Math.max(...boxes.map((box) => box.bottom)) - top,
     };
+}
+
+/**
+ * Moves a view to the right, just enough, so that no card is sliced by the left edge: the one that straddles it is shown
+ * whole and the ones before it are left out entirely. Only the cards on the rows in view count; the view's zoom and
+ * height do not change.
+ */
+export function clearLeftEdge(
+    view: { x: number; y: number; zoom: number },
+    cards: Box[],
+    screen: { width: number; height: number },
+): { x: number; y: number; zoom: number } {
+    const shown = cards.filter(
+        (card) =>
+            card.y * view.zoom + view.y < screen.height &&
+            (card.y + card.height) * view.zoom + view.y > 0,
+    );
+    let x = view.x;
+
+    // A card pushed in may in turn sit on the edge: a few rounds settle it.
+    for (let round = 0; round < 3; round += 1) {
+        const sliced = shown.filter(
+            (card) =>
+                card.x * view.zoom + x < MARGIN &&
+                (card.x + card.width) * view.zoom + x > MARGIN,
+        );
+
+        if (sliced.length === 0) {
+            break;
+        }
+
+        x = Math.max(...sliced.map((card) => MARGIN - card.x * view.zoom));
+    }
+
+    return { ...view, x };
 }

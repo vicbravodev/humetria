@@ -701,6 +701,32 @@ it('opens on the heads and their first level at a readable size, the company car
         ->assertNoJavaScriptErrors();
 });
 
+it('opens with no card cut off at the left, and the company card in view', function (): void {
+    demoLikeOrgChart();
+    $place = ['tenant_id' => Employee::query()->withoutGlobalScopes()->firstOrFail()->tenant_id];
+
+    // Two more heads with three managers each: the first level is wider than the screen at a readable size.
+    foreach (['Ángeles Girón', 'Iván Soto'] as $name) {
+        $head = Employee::factory()->create([...$place, 'name' => $name, 'job_title' => 'Director', 'manager_id' => null]);
+        Employee::factory()->count(3)->create([...$place, 'job_title' => 'Gerente', 'manager_id' => $head->id]);
+    }
+
+    visit('/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->assertScript(<<<'JS'
+            () => {
+                const canvas = document.querySelector('.react-flow').getBoundingClientRect();
+                const cards = [...document.querySelectorAll('.react-flow__node-person, .react-flow__node-company')].map((node) => node.getBoundingClientRect());
+                const company = document.querySelector('.react-flow__node-company').getBoundingClientRect();
+                const cut = cards.filter((box) => box.top < canvas.bottom && box.bottom > canvas.top && box.left < canvas.left - 1 && box.right > canvas.left + 1);
+
+                return cut.length === 0 && company.left >= canvas.left && company.right <= canvas.right;
+            }
+            JS, true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('fits the chart at a readable size with «Ajustar a la pantalla», from the top', function (): void {
     demoLikeOrgChart();
 
