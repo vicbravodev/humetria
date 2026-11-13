@@ -24,7 +24,7 @@ export default function TenantRowView({
 
     return (
         <TableRow>
-            <TableCell className="whitespace-normal max-md:px-2 md:min-w-60">
+            <TableCell className="whitespace-normal max-md:px-2 md:min-w-48">
                 <div className="flex items-center gap-2.5">
                     <Initials name={tenant.trade_name} kind="company" />
                     <div className="flex min-w-0 flex-col">
@@ -76,7 +76,7 @@ export default function TenantRowView({
             <TableCell className="hidden whitespace-normal md:table-cell">
                 {!mobile && <TenantOwnerCell tenant={tenant} />}
             </TableCell>
-            <TableCell className="hidden text-sm tabular-nums lg:table-cell">
+            <TableCell className="hidden text-sm whitespace-normal tabular-nums lg:table-cell">
                 {tenant.last_access ?? (
                     <span className="text-muted-foreground">Nunca</span>
                 )}

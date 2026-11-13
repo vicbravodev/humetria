@@ -61,8 +61,8 @@ it('keeps the actions of each row in one menu, so the table fits without scrolli
     signInAsSuperadmin();
     TenantInvitation::factory()->for(Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']))->create();
 
-    visit('/admin/companies')
-        ->resize(1280, 800)
+    // Measured once the layout has settled at that width, not mid-transition.
+    resizeTo(visit('/admin/companies')->assertNoJavaScriptErrors(), 1280, 800)
         ->assertScript('() => { const box = document.querySelector(\'[data-slot="table-container"]\'); return box.scrollWidth <= box.clientWidth; }')
         ->assertScript('() => document.querySelectorAll(\'[data-test="tenant-actions"]\').length', 1)
         ->click('[aria-label="Acciones de Grupo Ejemplo"]')
