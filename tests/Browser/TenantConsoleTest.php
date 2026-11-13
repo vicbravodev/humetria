@@ -694,6 +694,26 @@ it('shows the superadmin the audit trail, with an entry opening its context', fu
         ->assertSee('Planta Norte');
 })->with($looks);
 
+it('reads an entry made while impersonating as the superadmin acting as the person', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create();
+    $owner = User::factory()->create(['name' => 'Dueña Acme', 'email' => 'duena@acme.mx']);
+    $staff = User::factory()->create(['name' => 'Soporte Uno', 'email' => 'uno@humetria.mx']);
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'tenant_id' => $tenant->id,
+        'actor_id' => $owner->id,
+        'impersonator_id' => $staff->id,
+        'event' => 'campaign.launched',
+        'metadata' => [],
+        'created_at' => now(),
+    ]);
+
+    visit('/admin/audit')
+        ->assertSee('Soporte Uno como Dueña Acme')
+        ->assertDontSee('Impersonando:');
+});
+
 it('says so when the filters of the audit trail match nothing', function (bool $dark): void {
     signInAsSuperadmin();
 

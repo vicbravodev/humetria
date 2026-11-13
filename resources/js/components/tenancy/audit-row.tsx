@@ -26,15 +26,12 @@ export default function AuditRow({ entry }: { entry: AuditEntryRow }) {
                         <span className="text-muted-foreground">Sistema</span>
                     ) : (
                         <span className="flex flex-col">
-                            {entry.actor.name}
+                            {entry.impersonator === null
+                                ? entry.actor.name
+                                : `${entry.impersonator.name} como ${entry.actor.name}`}
                             <span className="text-caption break-all text-muted-foreground">
                                 {entry.actor.email}
                             </span>
-                        </span>
-                    )}
-                    {entry.impersonator !== null && (
-                        <span className="mt-1 block text-caption text-muted-foreground">
-                            Impersonando: {entry.impersonator.email}
                         </span>
                     )}
                 </TableCell>
