@@ -345,3 +345,12 @@ it('throttles one address to 20 requests per day', function (): void {
 
     expect(DemoRequest::query()->count())->toBe(21);
 });
+
+it('answers an Inertia submit with the 409 that makes Inertia visit the home at its anchor, saving the request and keeping the toast for that visit', function (): void {
+    $response = $this->withHeaders(['X-Inertia' => 'true', 'X-Requested-With' => 'XMLHttpRequest'])->post(route('demo-requests.store'), demoRequest());
+
+    // Not an error: Inertia answers a redirect that carries a #fragment with 409 and X-Inertia-Redirect, and its client then visits that address.
+    $response->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Recibimos tu solicitud · te escribiremos para agendar la demo.']]);
+    $response->assertStatus(409)->assertHeader('X-Inertia-Redirect', route('home').'#agenda-una-demo');
+    expect(DemoRequest::query()->count())->toBe(1);
+});

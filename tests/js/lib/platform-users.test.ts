@@ -69,4 +69,16 @@ describe('actionCopy', () => {
         expect(actionCopy('reset', user()).destructive).toBe(false);
         expect(actionCopy('grant_support', user()).destructive).toBe(false);
     });
+
+    it('warns before giving support to someone who belongs to client companies, and asks for the explicit yes', () => {
+        const member = actionCopy(
+            'grant_support',
+            user({ companies: 'Acme (Owner)' }),
+        );
+
+        expect(member.description).toContain('Acme (Owner)');
+        expect(member.description).toContain('todas las empresas');
+        expect(member.confirm).toBe('Sí, dar soporte a esta persona');
+        expect(actionCopy('grant_support', user()).confirm).toBe('Dar soporte');
+    });
 });

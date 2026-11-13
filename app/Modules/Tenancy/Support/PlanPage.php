@@ -21,7 +21,7 @@ final readonly class PlanPage
     public function __construct(private CompanyPlans $plans, private CompanyLimits $limits, private CompanyModules $modules, private RealUsage $usage) {}
 
     /**
-     * @return array{plan: array{name: string, since: string, until: string}|null, usage: array{centers: array{used: int, limit: int|null}, people: array{used: int, limit: int|null}}, tools: list<array{label: string, active: bool, endsOn: string|null}>, support: array{email: string|null}}
+     * @return array{plan: array{name: string, since: string, until: string}|null, union: bool, usage: array{centers: array{used: int, limit: int|null}|null, people: array{used: int, limit: int|null}}, tools: list<array{label: string, active: bool, endsOn: string|null}>, support: array{email: string|null}}
      */
     public function handle(Tenant $tenant): array
     {
@@ -29,11 +29,13 @@ final readonly class PlanPage
 
         return [
             'plan' => $plan === null ? null : $this->plan($plan),
+            // A union has no work centers and none of the compliance tools: the page shows only its people.
+            'union' => $tenant->isUnion(),
             'usage' => [
-                'centers' => $this->use($tenant->id, CompanyLimits::CENTERS),
+                'centers' => $tenant->isUnion() ? null : $this->use($tenant->id, CompanyLimits::CENTERS),
                 'people' => $this->use($tenant->id, CompanyLimits::SEATS),
             ],
-            'tools' => array_map(fn (ModuleRow $row): array => ['label' => $row->label, 'active' => $row->enabled, 'endsOn' => $row->endsOn], array_values(array_filter($this->modules->list($tenant->id), fn (ModuleRow $row): bool => $row->existsInCode))),
+            'tools' => $tenant->isUnion() ? [] : array_map(fn (ModuleRow $row): array => ['label' => $row->label, 'active' => $row->enabled, 'endsOn' => $row->endsOn], array_values(array_filter($this->modules->list($tenant->id), fn (ModuleRow $row): bool => $row->existsInCode))),
             'support' => ['email' => $this->supportEmail()],
         ];
     }

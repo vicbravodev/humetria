@@ -42,6 +42,8 @@ export type TenantRow = {
     blocked: boolean;
     /** The latest day anyone who belongs to the company signed in; null when nobody has. */
     last_access: string | null;
+    /** The prospect of the demo request it was created from, to prefill the owner's invitation; null when it did not come from one. */
+    demo_contact: { name: string; email: string } | null;
     owner: TenantOwner | null;
     invitation: TenantInvitation | null;
 };
@@ -65,6 +67,8 @@ export type CurrentTenant = TenantSummary &
     Pick<TenantRow, 'status' | 'blocked'> & {
         /** Its people read and export but change nothing: an ended trial or term, or a person's decision. */
         read_only: boolean;
+        /** Why a person suspended or archived it (what its blocked notice says); null for any other state. */
+        restriction_reason: string | null;
         /** Whether the account is a company or a union; fixed when it was created. */
         type: 'company' | 'union';
         /** The modules the company has (attendance, nom035, nom037, seating, complaints…); the others are hidden. */

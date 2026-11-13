@@ -33,7 +33,7 @@ it('shows how much of the plan the people and centers use, quietly while there i
 it('asks for an expansion once the plan is full', function (bool $dark, bool $mobile): void {
     acmeOnAPlan(50, 50, 3, 3);
 
-    visitPage('organization/employees', '/admin/acme/employees', $dark, $mobile)->assertSee('Tu plan cubre 50 personas y ya llegaste al tope. Pide una ampliación a Humetria.');
+    visitPage('organization/employees', '/admin/acme/employees', $dark, $mobile)->assertSee('Tu plan cubre 50 personas y ya llegaste al tope. Pide una ampliación a Humetría.');
     visitPage('tenancy/work-centers', '/admin/acme/work-centers', $dark, $mobile)->assertSee('Tu plan cubre 3 centros de trabajo y ya llegaste al tope.');
 })->with($looks);
 
@@ -47,6 +47,8 @@ it('turns off the buttons that add once the plan is full, and links the mail tha
         ->assertPresent('a[href="mailto:soporte@humetria.mx?subject=Ampliar%20personas%20de%20'.rawurlencode(Tenant::query()->where('slug', 'acme')->sole()->trade_name).'"]');
     visitPage('tenancy/work-centers', '/admin/acme/work-centers')
         ->assertPresent('button[disabled]:has-text("Dar de alta centro")')
+        // A tile that invites to add, and then does nothing, is noise at the limit: only the header's button, off, and the notice.
+        ->assertDontSee('Agrega otro centro')
         ->assertPresent('a[href^="mailto:soporte@humetria.mx?subject=Ampliar%20centros%20de%20"]');
 });
 
@@ -64,7 +66,7 @@ it('names no mail link at the limit when no address is set, only whom to ask', f
     acmeOnAPlan(50, 50, 3, 3);
 
     visitPage('organization/employees', '/admin/acme/employees')
-        ->assertSee('Pide una ampliación a Humetria.')
+        ->assertSee('Pide una ampliación a Humetría.')
         ->assertMissing('a[href^="mailto:"]');
 });
 

@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Models\User;
 use App\Modules\Organization\Contracts\Headcount;
+use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Notifications\InvitationEmail;
@@ -23,11 +24,12 @@ final readonly class SendInvitationEmail
     public function handle(TenantInvitation $invitation, string $tradeName, string $token): void
     {
         $inviter = $invitation->invited_by === null ? null : User::query()->find($invitation->invited_by)?->name;
+        $union = Tenant::query()->whereKey($invitation->tenant_id)->first()?->isUnion() ?? false;
         $workCenters = WorkCenter::query()->withoutGlobalScopes()->where('tenant_id', $invitation->tenant_id)->whereNull('archived_at')->count();
         $people = $this->headcount->ofCompany($invitation->tenant_id);
 
         DB::afterCommit(fn () => Notification::route('mail', $invitation->email)->notify(
-            new InvitationEmail($tradeName, $invitation->email, $token, $invitation->expires_at, $invitation->role, $inviter, $workCenters, $people),
+            new InvitationEmail($tradeName, $invitation->email, $token, $invitation->expires_at, $invitation->role, $inviter, $workCenters, $people, $union),
         ));
     }
 }

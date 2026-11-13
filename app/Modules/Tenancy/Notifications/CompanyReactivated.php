@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Notifications;
 
+use App\Models\User;
 use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
@@ -35,7 +36,7 @@ final class CompanyReactivated extends Notification implements MailBag, ShouldQu
 
         return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => false])
             ->subject("{$name} volvió a funcionar")
-            ->greeting('Hola')
+            ->greeting($notifiable instanceof User ? "Hola, {$notifiable->name}" : 'Hola')
             ->line("{$name} volvió a funcionar: ya puedes entrar y tu gente puede usar Humetría como antes.")
             ->line($this->supportEmail === null
                 ? 'Si algo no se ve como lo dejaste, contesta este correo.'

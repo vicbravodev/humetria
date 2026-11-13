@@ -12,6 +12,9 @@ describe('useLine', () => {
         expect(useLine({ used: 1, limit: null }, noun)).toBe(
             'Sin tope: usas 1 lugar.',
         );
+        expect(useLine({ used: 0, limit: null }, noun)).toBe(
+            'Sin tope: todavía no usas ninguno.',
+        );
     });
 
     it('says how many are left, in the right number', () => {

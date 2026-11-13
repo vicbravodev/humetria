@@ -19,10 +19,13 @@ import { stop } from '@/routes/impersonation';
  */
 export function TenantBlockedDialog({
     tradeName,
+    reason,
     canSwitch,
     impersonating,
 }: {
     tradeName: string;
+    /** Why a person paused it, as they wrote it; null when none was given. */
+    reason: string | null;
     canSwitch: boolean;
     impersonating: boolean;
 }) {
@@ -44,8 +47,10 @@ export function TenantBlockedDialog({
             >
                 <DialogTitle>El acceso a {tradeName} está en pausa</DialogTitle>
                 <DialogDescription>
-                    Puede deberse a un pago pendiente o a que terminó tu periodo
-                    de prueba o de servicio. Para reactivarlo,{' '}
+                    {reason === null
+                        ? 'Su acceso se pausó.'
+                        : `Motivo: ${reason}${/[.!?]$/.test(reason) ? '' : '.'}`}{' '}
+                    Para reactivarlo,{' '}
                     <SupportLink subject={`Reactivar ${tradeName}`}>
                         contacta al administrador de Humetría
                     </SupportLink>

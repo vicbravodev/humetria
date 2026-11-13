@@ -53,6 +53,31 @@ final class AuditPages
     ];
 
     /**
+     * The Spanish name of the keys the detail shows most; one not here is shown as its own name with spaces.
+     *
+     * @var array<string, string>
+     */
+    private const array KEYS = [
+        'user_id' => 'Persona',
+        'reason' => 'Motivo',
+        'previous' => 'Estado anterior',
+        'role' => 'Rol',
+        'module' => 'Herramienta',
+        'until' => 'Hasta',
+        'plan' => 'Plan',
+        'status' => 'Estado',
+        'seats' => 'Lugares',
+        'centers' => 'Centros',
+        'period' => 'Periodo',
+        'kind' => 'Tipo',
+        'changed' => 'Campos cambiados',
+        'fields' => 'Campos cambiados',
+        'enabled' => 'Herramientas activadas',
+        'disabled' => 'Herramientas quitadas',
+        'amount_cents' => 'Monto (centavos)',
+    ];
+
+    /**
      * @return array{q: string, family: string, company: string, from: string, to: string}
      */
     public function filters(string $q, string $family, string $company, string $from, string $to): array
@@ -75,10 +100,17 @@ final class AuditPages
         $page = $this->matching($filters)->latest('created_at')->orderByDesc('id')->paginate(self::PER_PAGE)->withQueryString();
 
         $entries = $page->getCollection();
-        $people = $this->people($entries->pluck('actor_id')->merge($entries->pluck('impersonator_id')));
+        $people = $this->people(
+            $entries->pluck('actor_id')->merge($entries->pluck('impersonator_id'))
+                ->merge($entries->map(fn (AuditEntry $entry): mixed => $this->namedUser($entry)))
+                ->merge($entries->map(fn (AuditEntry $entry): mixed => $entry->metadata['user_id'] ?? null)),
+        );
         $companies = [];
 
-        foreach (Tenant::query()->whereIn('id', $entries->pluck('tenant_id')->filter()->unique()->values())->get(['id', 'trade_name']) as $tenant) {
+        $ids = $entries->map(fn (AuditEntry $entry): ?string => $this->companyId($entry))->filter()->unique()->values();
+        $ids = $ids->merge($entries->map(fn (AuditEntry $entry): mixed => $entry->metadata['tenant_id'] ?? null)->filter(fn (mixed $id): bool => is_string($id) && Str::isUuid($id)))->unique()->values();
+
+        foreach (Tenant::query()->whereIn('id', $ids)->get(['id', 'trade_name']) as $tenant) {
             $companies[$tenant->id] = $tenant->trade_name;
         }
         $timezone = config()->string('app.display_timezone');
@@ -90,12 +122,27 @@ final class AuditPages
             'event' => $entry->event,
             'actor' => $entry->actor_id === null ? null : ($people[$entry->actor_id] ?? null),
             'impersonator' => $entry->impersonator_id === null ? null : ($people[$entry->impersonator_id] ?? null),
-            'company' => $entry->tenant_id === null || ! isset($companies[$entry->tenant_id])
+            'company' => ($id = $this->companyId($entry)) === null || ! isset($companies[$id])
                 ? null
-                : ['id' => $entry->tenant_id, 'name' => $companies[$entry->tenant_id]],
+                : ['id' => $id, 'name' => $companies[$id]],
             'subject' => $entry->subject_type,
-            'context' => $this->context($entry->metadata),
+            'context' => $this->context($entry, $companies, $people),
         ]);
+    }
+
+    private function companyId(AuditEntry $entry): ?string
+    {
+        if ($entry->tenant_id !== null) {
+            return $entry->tenant_id;
+        }
+
+        $named = $entry->metadata['tenant_id'] ?? null;
+
+        if (is_string($named) && Str::isUuid($named)) {
+            return $named;
+        }
+
+        return $entry->subject_type === (new Tenant)->getMorphClass() ? $entry->subject_id : null;
     }
 
     /** The name of a company, for the chip that says the trail is narrowed to it. */
@@ -114,7 +161,12 @@ final class AuditPages
 
         return AuditEntry::query()
             ->when($filters['family'] !== '', fn (Builder $query) => $query->where('event', 'like', $filters['family'].'.%'))
-            ->when($filters['company'] !== '', fn (Builder $query) => $query->where('tenant_id', $filters['company']))
+            ->when($filters['company'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                ->where('tenant_id', $filters['company'])
+                // Entries saved before the company was stored on them: it is in their metadata or is their subject.
+                ->orWhere(fn (Builder $query) => $query->whereNull('tenant_id')->where(fn (Builder $query) => $query
+                    ->whereRaw("metadata->>'tenant_id' = ?", [$filters['company']])
+                    ->orWhere(fn (Builder $query) => $query->where('subject_type', (new Tenant)->getMorphClass())->where('subject_id', $filters['company']))))))
             ->when($filters['from'] !== '', fn (Builder $query) => $query->where('created_at', '>=', CarbonImmutable::parse($filters['from'], $timezone)->startOfDay()))
             ->when($filters['to'] !== '', fn (Builder $query) => $query->where('created_at', '<=', CarbonImmutable::parse($filters['to'], $timezone)->endOfDay()))
             ->when($filters['q'] !== '', fn (Builder $query) => $query->whereIn('actor_id', User::query()
@@ -137,15 +189,55 @@ final class AuditPages
         return $people;
     }
 
+    /** The user an entry is about when its subject is one (who was impersonated, whose password was reset). */
+    private function namedUser(AuditEntry $entry): ?int
+    {
+        return $entry->subject_type === (new User)->getMorphClass() && ctype_digit((string) $entry->subject_id) ? (int) $entry->subject_id : null;
+    }
+
     /**
-     * What an entry stored, one line per key; a value that is not text is shown as JSON.
+     * What an entry stored as the console's detail: Spanish labels for the keys it knows, the company and the people by name
+     * and not by id, and yes or no for a flag.
      *
-     * @param  array<string, mixed>  $metadata
+     * @param  array<string, string>  $companies
+     * @param  array<int, array{name: string, email: string}>  $people
      * @return array<string, string>
      */
-    private function context(array $metadata): array
+    private function context(AuditEntry $entry, array $companies, array $people): array
     {
-        return array_map(fn (mixed $value): string => is_scalar($value) ? (string) $value : (json_encode($value, JSON_UNESCAPED_UNICODE) ?: ''), $metadata);
+        $rows = [];
+        $company = $entry->metadata['tenant_id'] ?? null;
+
+        if (is_string($company) && isset($companies[$company])) {
+            $rows['Empresa'] = $companies[$company];
+        }
+
+        $subject = $this->namedUser($entry);
+
+        if ($subject !== null && isset($people[$subject]) && str_starts_with($entry->event, 'impersonation.')) {
+            $rows['Persona suplantada'] = $this->person($people[$subject]);
+        }
+
+        foreach ($entry->metadata as $key => $value) {
+            if ($key === 'tenant_id') {
+                continue;
+            }
+
+            $rows[self::KEYS[$key] ?? ucfirst(str_replace('_', ' ', $key))] = match (true) {
+                $key === 'user_id' && is_int($value) && isset($people[$value]) => $this->person($people[$value]),
+                is_bool($value) => $value ? 'Sí' : 'No',
+                is_scalar($value) => (string) $value,
+                default => json_encode($value, JSON_UNESCAPED_UNICODE) ?: '',
+            };
+        }
+
+        return $rows;
+    }
+
+    /** @param  array{name: string, email: string}  $person */
+    private function person(array $person): string
+    {
+        return $person['name'].' ('.$person['email'].')';
     }
 
     private function day(string $value): ?CarbonImmutable

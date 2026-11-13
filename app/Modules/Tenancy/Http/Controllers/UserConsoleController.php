@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\RemoveTwoFactor;
 use App\Modules\Tenancy\Actions\SendPasswordReset;
+use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\UserPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,10 +58,15 @@ final class UserConsoleController extends Controller
         return back();
     }
 
-    public function grantSupport(User $user, SetSupportRole $setSupportRole): RedirectResponse
+    public function grantSupport(User $user, SetSupportRole $setSupportRole, Request $request): RedirectResponse
     {
         Gate::authorize('manage-platform-users');
         abort_if($user->isSuperadmin(), 403);
+
+        // Support enters every company as its owner: for someone who already belongs to a client it is a decision to make on purpose.
+        if (! $request->boolean('confirmed_client_member') && TenantMembership::query()->where('user_id', $user->id)->exists()) {
+            return back()->withErrors(['user' => 'Esta persona pertenece a empresas cliente. Como soporte podrá entrar a todas las empresas: confirma que es lo que quieres.']);
+        }
 
         $setSupportRole->grant($user);
 

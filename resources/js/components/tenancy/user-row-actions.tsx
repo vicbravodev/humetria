@@ -51,6 +51,11 @@ export default function UserRowActions({ user }: { user: PlatformUserRow }) {
                     confirmLabel={copy.confirm}
                     destructive={copy.destructive}
                     preserveScroll
+                    transform={() =>
+                        asking === 'grant_support'
+                            ? { confirmed_client_member: '1' }
+                            : {}
+                    }
                     form={FORMS[asking].form({ user: user.id })}
                 />
             )}

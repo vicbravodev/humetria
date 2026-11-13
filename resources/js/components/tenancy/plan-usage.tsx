@@ -6,7 +6,7 @@ export default function PlanUsage({
     centers,
     people,
 }: {
-    centers: PlanUse;
+    centers: PlanUse | null;
     people: PlanUse;
 }) {
     return (
@@ -18,11 +18,13 @@ export default function PlanUsage({
                 Lo que usas
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
-                <PlanMeter
-                    title="Centros de trabajo"
-                    use={centers}
-                    noun={{ one: 'lugar', many: 'lugares' }}
-                />
+                {centers !== null && (
+                    <PlanMeter
+                        title="Centros de trabajo"
+                        use={centers}
+                        noun={{ one: 'lugar', many: 'lugares' }}
+                    />
+                )}
                 <PlanMeter
                     title="Personas"
                     use={people}

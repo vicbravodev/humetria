@@ -70,17 +70,25 @@ it('has zero income when nobody pays', function (): void {
 });
 
 it('counts the companies nobody has entered for 30 days, a company that never was entered included', function (): void {
-    $active = Tenant::factory()->create();
+    $open = fn () => Tenant::factory()->activeUntil(now()->addMonth());
+    $active = $open()->create();
     memberOf($active, TenantRole::Owner)->forceFill(['last_login_at' => now()->subDays(29)])->save();
-    $stale = Tenant::factory()->create();
+    $stale = $open()->create();
     memberOf($stale, TenantRole::Owner)->forceFill(['last_login_at' => now()->subDays(31)])->save();
-    Tenant::factory()->create();
-    $mixed = Tenant::factory()->create();
+    $open()->create();
+    $mixed = $open()->create();
     memberOf($mixed, TenantRole::Owner)->forceFill(['last_login_at' => now()->subDays(90)])->save();
     memberOf($mixed, TenantRole::Hr)->forceFill(['last_login_at' => now()->subDay()])->save();
 
     $this->actingAs(superadmin())->get(route('overview.index'))
         ->assertInertia(fn (Assert $page) => $page->where('inactive', 2));
+});
+
+it('does not count a company that has not started: nobody could have entered it yet', function (): void {
+    Tenant::factory()->create();
+
+    $this->actingAs(superadmin())->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('inactive', 0));
 });
 
 it('does not count an archived company as one nobody enters', function (): void {

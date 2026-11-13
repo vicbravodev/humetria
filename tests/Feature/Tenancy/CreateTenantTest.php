@@ -231,7 +231,7 @@ it('logs and audits the creation without the company data', function (): void {
 
     expect($entry->event)->toBe('tenant.created')
         ->and($entry->subject_id)->toBe($id)
-        ->and($entry->tenant_id)->toBeNull()
+        ->and($entry->tenant_id)->toBe($id)
         ->and($entry->metadata)->toBe([]);
 });
 
@@ -310,4 +310,17 @@ it('still creates a company with no demo request', function (): void {
     $this->actingAs(superadmin())->post(route('companies.store'), newCompanyInput())->assertSessionHasNoErrors();
 
     expect(Tenant::query()->count())->toBe(1);
+});
+
+it('gives the console row of a company created from a demo the prospect to invite as its owner', function (): void {
+    $request = App\Modules\Demos\Models\DemoRequest::factory()->create(['company' => 'Empresa Ejemplo', 'name' => 'Ana López', 'email' => 'ana@empresa.mx']);
+    $admin = superadmin();
+
+    $this->actingAs($admin)->post(route('companies.store'), newCompanyInput(['demo_request_id' => $request->id]))->assertSessionHasNoErrors();
+    $tenant = Tenant::query()->latest('created_at')->firstOrFail();
+    $plain = Tenant::factory()->create();
+
+    $this->get(route('companies.index'))->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page
+        ->where('tenants.data', fn ($rows): bool => collect($rows)->firstWhere('id', $tenant->id)['demo_contact'] === ['name' => 'Ana López', 'email' => 'ana@empresa.mx']
+            && collect($rows)->firstWhere('id', $plain->id)['demo_contact'] === null));
 });

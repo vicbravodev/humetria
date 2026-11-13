@@ -52,6 +52,7 @@ export default function InviteOwnerDialog({
                             <div className="grid gap-4">
                                 <TenantField
                                     name="name"
+                                    defaultValue={tenant.demo_contact?.name}
                                     label="Nombre"
                                     required
                                     maxLength={255}
@@ -61,6 +62,7 @@ export default function InviteOwnerDialog({
                                 <TenantField
                                     type="email"
                                     name="email"
+                                    defaultValue={tenant.demo_contact?.email}
                                     label="Correo electrónico"
                                     required
                                     maxLength={255}

@@ -40,7 +40,7 @@ describe('planUsage', () => {
         expect(
             planUsage({ used: 1, amount: 1, remaining: 0, over: false }, seats),
         ).toEqual({
-            text: 'Tu plan cubre 1 persona y ya llegaste al tope. Pide una ampliación a Humetria.',
+            text: 'Tu plan cubre 1 persona y ya llegaste al tope. Pide una ampliación a Humetría.',
             full: true,
         });
     });
@@ -52,7 +52,7 @@ describe('planUsage', () => {
                 seats,
             ),
         ).toEqual({
-            text: 'Tu plan cubre 50 personas y ya llegaste al tope. Pide una ampliación a Humetria.',
+            text: 'Tu plan cubre 50 personas y ya llegaste al tope. Pide una ampliación a Humetría.',
             full: true,
         });
         expect(
@@ -61,7 +61,7 @@ describe('planUsage', () => {
                 seats,
             ),
         ).toEqual({
-            text: 'Tu plan cubre 50 personas y tienes 53. Pide una ampliación a Humetria.',
+            text: 'Tu plan cubre 50 personas y tienes 53. Pide una ampliación a Humetría.',
             full: true,
         });
     });

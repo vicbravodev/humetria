@@ -92,6 +92,8 @@ final class ResolveTenant
             'status' => $status->value,
             'blocked' => $status->blocksPanel(),
             'read_only' => $status->isReadOnly(),
+            // Why a person suspended or archived it, for the notice a blocked company sees; nothing for any other state.
+            'restriction_reason' => $status->blocksPanel() ? $tenant->restriction_reason : null,
             'trial_days_left' => $tenant->trialDaysLeft(),
             'type' => $tenant->type->value,
             // What the company has, for the menu to hide the rest; the routes of the others answer 404 anyway.

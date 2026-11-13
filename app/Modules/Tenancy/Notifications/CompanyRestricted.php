@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Notifications;
 
+use App\Models\User;
 use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Enums\TenantRestriction;
@@ -48,7 +49,7 @@ final class CompanyRestricted extends Notification implements MailBag, ShouldQue
 
         return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => false])
             ->subject($subject)
-            ->greeting('Hola')
+            ->greeting($notifiable instanceof User ? "Hola, {$notifiable->name}" : 'Hola')
             ->line($what)
             ->line("Motivo: {$this->reason}")
             ->line($this->supportEmail === null

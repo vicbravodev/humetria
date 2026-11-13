@@ -63,6 +63,16 @@ export function actionCopy(action: UserAction, user: PlatformUserRow): Copy {
                 destructive: true,
             };
         case 'grant_support':
+            if (user.companies !== '') {
+                return {
+                    menu: 'Dar rol de soporte',
+                    title: `¿Dar el rol de soporte a ${user.name}?`,
+                    description: `${who} pertenece a empresas cliente (${user.companies}). Como soporte verá la consola y podrá entrar a todas las empresas como su owner, no solo a la suya. Confirma que es lo que quieres. Queda en la bitácora.`,
+                    confirm: 'Sí, dar soporte a esta persona',
+                    destructive: false,
+                };
+            }
+
             return {
                 menu: 'Dar rol de soporte',
                 title: `¿Dar el rol de soporte a ${user.name}?`,

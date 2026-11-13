@@ -17,7 +17,7 @@ export default function WorkCentersGrid({
     workCenters: WorkCenterRow[];
     /** The states the forms offer; null when the person may not change work centers. */
     states: MexicanStateOption[] | null;
-    /** The plan has no room for another center: the tile that adds one is off. */
+    /** The plan has no room for another center: the tile that adds one is not shown (the notice above says what to do). */
     full: boolean;
 }) {
     return (
@@ -36,7 +36,7 @@ export default function WorkCentersGrid({
                     states={states}
                 />
             ))}
-            {view === 'active' && states !== null && (
+            {view === 'active' && states !== null && !full && (
                 <CreateWorkCenterDialog states={states} tile full={full} />
             )}
         </section>

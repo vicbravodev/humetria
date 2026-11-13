@@ -46,7 +46,7 @@ export default function PlanLimitNotice({
                             href={mailto}
                             className="font-medium underline underline-offset-4"
                         >
-                            Escribir a Humetria
+                            Escribir a Humetría
                         </a>
                     </>
                 )}

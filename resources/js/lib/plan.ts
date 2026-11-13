@@ -6,7 +6,9 @@ export function useLine(
     noun: { one: string; many: string },
 ): string {
     if (use.limit === null) {
-        return `Sin tope: usas ${use.used} ${use.used === 1 ? noun.one : noun.many}.`;
+        return use.used === 0
+            ? 'Sin tope: todavía no usas ninguno.'
+            : `Sin tope: usas ${use.used} ${use.used === 1 ? noun.one : noun.many}.`;
     }
 
     const left = use.limit - use.used;

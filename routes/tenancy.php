@@ -24,7 +24,7 @@ Route::get('admin/audit', [AuditConsoleController::class, 'index'])
     ->name('audit.index');
 
 // The platform's people, for the superadmin: help one back in, give or take away support. Never create a superadmin here.
-Route::middleware(['auth', 'verified'])->prefix('admin/platform-users')->name('platform-users.')->group(function (): void {
+Route::middleware(['auth', 'verified'])->prefix('admin/platform-users')->name('platform-users.')->whereNumber('user')->group(function (): void {
     Route::get('/', [UserConsoleController::class, 'index'])->name('index');
     Route::post('{user}/password-reset', [UserConsoleController::class, 'sendReset'])->name('password-reset');
     Route::delete('{user}/two-factor', [UserConsoleController::class, 'removeTwoFactor'])->name('two-factor.destroy');
