@@ -42,6 +42,8 @@ export type TenantRow = {
     blocked: boolean;
     /** The latest day anyone who belongs to the company signed in; null when nobody has. */
     last_access: string | null;
+    /** The prospect of the demo request it was created from, to prefill the owner's invitation; null when it did not come from one. */
+    demo_contact: { name: string; email: string } | null;
     owner: TenantOwner | null;
     invitation: TenantInvitation | null;
 };

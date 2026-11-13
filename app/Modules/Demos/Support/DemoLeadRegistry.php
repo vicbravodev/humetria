@@ -25,6 +25,19 @@ final readonly class DemoLeadRegistry implements DemoLeads
         return $request === null ? null : new DemoLead($request->id, $request->company, $request->name, $request->email, $request->tenant_id);
     }
 
+    public function forCompanies(array $tenantIds): array
+    {
+        $leads = [];
+
+        foreach (DemoRequest::query()->whereIn('tenant_id', $tenantIds)->get() as $request) {
+            if ($request->tenant_id !== null) {
+                $leads[$request->tenant_id] = new DemoLead($request->id, $request->company, $request->name, $request->email, $request->tenant_id);
+            }
+        }
+
+        return $leads;
+    }
+
     public function markConverted(string $id, string $tenantId): bool
     {
         // One conditional UPDATE: of two people converting the same request at once, only one finds it still without a company.

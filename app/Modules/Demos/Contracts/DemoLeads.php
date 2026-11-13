@@ -12,6 +12,14 @@ interface DemoLeads
     public function find(string $id): ?DemoLead;
 
     /**
+     * The request each company was created from, by company id, for the ones that came from one.
+     *
+     * @param  list<string>  $tenantIds
+     * @return array<string, DemoLead>
+     */
+    public function forCompanies(array $tenantIds): array;
+
+    /**
      * Links the request to the company it became. False when it already had one: only the first conversion counts, even
      * when two people try at once.
      */

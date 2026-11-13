@@ -43,7 +43,10 @@ final class TenantConsoleController extends Controller
         $summary = $listTenants->summary($search);
         $tenants = $listTenants->handle($search, $view);
         // One question for the whole page, so the warning before restricting a company costs nothing per row.
-        $usingAttendance = $attendance->among(array_values($tenants->getCollection()->map(fn (Tenant $tenant): string => $tenant->id)->all()));
+        $ids = array_values($tenants->getCollection()->map(fn (Tenant $tenant): string => $tenant->id)->all());
+        $usingAttendance = $attendance->among($ids);
+        // The prospect each company was created for, so inviting its owner opens already filled.
+        $leads = $demoLeads->forCompanies($ids);
 
         return Inertia::render('tenancy/index', [
             // A company about to be created from a demo request opens the dialog already filled; one already converted, or gone, offers nothing.
@@ -52,7 +55,7 @@ final class TenantConsoleController extends Controller
             'filters' => ['q' => $search, 'status' => $view->value],
             'counts' => $summary['counts'],
             'trialsEndingSoon' => $summary['trialsEndingSoon'],
-            'tenants' => $tenants->through(function (Tenant $tenant) use ($usingAttendance): array {
+            'tenants' => $tenants->through(function (Tenant $tenant) use ($usingAttendance, $leads): array {
                 $status = $tenant->status();
 
                 return [
@@ -71,6 +74,7 @@ final class TenantConsoleController extends Controller
                     'active_until' => $tenant->active_until?->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d'),
                     'blocked' => $status->isBlocked(),
                     'last_access' => $this->day($tenant->last_access_at),
+                    'demo_contact' => isset($leads[$tenant->id]) ? ['name' => $leads[$tenant->id]->contactName, 'email' => $leads[$tenant->id]->email] : null,
                     'owner' => $this->owner($tenant),
                     'invitation' => $this->invitation($tenant),
                 ];
