@@ -5,8 +5,9 @@ import WorkCenterFacts from '@/components/tenancy/work-center-facts';
 import WorkCenterRowActions from '@/components/tenancy/work-center-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { evaluationStanding } from '@/lib/work-centers';
+import { evaluationStanding, peopleAction } from '@/lib/work-centers';
 import { index as employees } from '@/routes/tenant/employees';
+import { create as importPeople } from '@/routes/tenant/employees/import';
 import type { MexicanStateOption, WorkCenterRow } from '@/types';
 
 /**
@@ -26,6 +27,7 @@ export default function WorkCenterCard({
         workCenter.evaluation,
         workCenter.employees,
     );
+    const people = peopleAction(workCenter.employees);
 
     return (
         <article className="flex min-w-0 flex-col gap-4 card p-[22px] transition-colors duration-150 ease-out hover:border-input">
@@ -59,15 +61,19 @@ export default function WorkCenterCard({
                         Archivado el {workCenter.archived_on}
                     </Badge>
                 )}
-                {states !== null && workCenter.employees > 0 && (
+                {states !== null && (
                     <Link
-                        href={employees(tenantSlug, {
-                            query: { work_center: workCenter.id },
-                        })}
-                        aria-label={`Ver personas de ${workCenter.name}`}
+                        href={
+                            people.load
+                                ? importPeople(tenantSlug)
+                                : employees(tenantSlug, {
+                                      query: { work_center: workCenter.id },
+                                  })
+                        }
+                        aria-label={`${people.label} de ${workCenter.name}`}
                         className="touch-hit text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     >
-                        Ver personas
+                        {people.label}
                     </Link>
                 )}
             </div>

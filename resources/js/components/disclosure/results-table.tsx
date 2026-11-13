@@ -17,7 +17,14 @@ import { withdraw } from '@/routes/tenant/disclosure/results';
 import type { ResultsRow } from '@/types';
 
 /** The closed evaluations and whether the people can read their results; RH publishes and withdraws them one by one. */
-export default function ResultsTable({ rows }: { rows: ResultsRow[] }) {
+export default function ResultsTable({
+    rows,
+    pageActive,
+}: {
+    rows: ResultsRow[];
+    /** Whether the page of the people is active: what a publication needs to be seen. */
+    pageActive: boolean;
+}) {
     const tenantSlug = useTenantSlug();
 
     return (
@@ -82,7 +89,10 @@ export default function ResultsTable({ rows }: { rows: ResultsRow[] }) {
                                 />
                             ) : (
                                 row.canPublish && (
-                                    <PublishResultsButton row={row} />
+                                    <PublishResultsButton
+                                        row={row}
+                                        pageActive={pageActive}
+                                    />
                                 )
                             )}
                         </TableCell>

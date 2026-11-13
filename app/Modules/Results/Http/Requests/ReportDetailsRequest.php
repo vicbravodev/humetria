@@ -29,8 +29,16 @@ final class ReportDetailsRequest extends FormRequest
             'conclusions' => ['required', 'string', 'max:5000'],
             'recommendations' => ['required', 'string', 'max:5000'],
             'responsible_name' => ['required', 'string', 'max:150'],
-            'responsible_license' => ['nullable', 'string', 'max:20'],
+            'responsible_license' => ['nullable', 'string', 'max:20', 'regex:/^\\d{7,8}$/'],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return ['responsible_license.regex' => 'La cédula profesional son 7 u 8 dígitos.'];
     }
 
     public function details(): ReportDetailsData

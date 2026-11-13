@@ -120,7 +120,7 @@ it('reads a published version', function (bool $dark, bool $mobile): void {
 it('publishes the policy from the end of its questions and goes back to the route of the center', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
-    $center = WorkCenter::factory()->for($tenant)->create();
+    $center = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
     workIn($tenant);
     resolve(App\Modules\Disclosure\Actions\SaveWriting::class)->handle(resolve(App\Modules\Disclosure\Support\Writing\Templates::class)->template(App\Modules\Disclosure\Enums\DocumentKind::Policy) ?? throw new LogicException, App\Modules\Disclosure\Enums\DocumentKind::Policy, [
         'signature' => 'hr', 'responsibles' => ['hr'], 'resources' => ['channel'], 'practices' => ['h'], 'principles' => ['p3'], 'dissemination' => ['page'],
@@ -131,6 +131,9 @@ it('publishes the policy from the end of its questions and goes back to the rout
         ->assertSee('Son responsables de aplicar esta política: Recursos Humanos.')
         ->press('Publicar')
         ->assertSee('Publicar la política')
+        // It came from the route of one center: only that one is chosen, not every center of the company.
+        ->assertSeeIn('[aria-label="Centros elegidos"]', 'Planta Querétaro')
+        ->assertNotChecked('#publish-all-centers')
         ->check('input[name="reviewed"]')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Política publicada: versión 1.')
@@ -399,6 +402,21 @@ it('shows the evaluations RH can publish to the people', function (bool $dark, b
         ->assertSee('Publicar');
 })->with($looks);
 
+it('warns before publishing results that the people have no page to read them on yet', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    [$campaign] = closedEvaluationInAreas($tenant, ['Producción' => 6, 'Ventas' => 6]);
+    $campaign->update(['work_center_id' => $plant->id]);
+
+    visit("{$url}/disclosure/results")
+        ->click('main button:has-text("Publicar")')
+        ->assertSee('Aún no tienen dónde verlos')
+        ->assertSee('Crear el enlace')
+        ->assertNoJavaScriptErrors();
+});
+
 it('publishes results and the people read them on their page, of the whole center', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
@@ -414,6 +432,8 @@ it('publishes results and the people read them on their page, of the whole cente
         ->assertSee('Resultados de la evaluación')
         ->assertSee('contestaron 12 personas')
         ->assertSee('Lo que más atención necesita')
+        // E-20: the results are there, so the footer only names the policy it still waits for.
+        ->assertSee('La empresa publicará aquí más información: la política de prevención.')
         ->click('Ver todas las cifras')
         ->assertSee('Calificación final (12 cuestionarios)')
         ->assertSee('no son un promedio');
@@ -438,6 +458,7 @@ it('shows the people the channel for complaints and the measures the company cho
         ->assertSee('¿Algo no está bien en su trabajo?')
         ->assertSee('Presentar una queja o denuncia')
         ->assertSee('Puede avisar sin dar su nombre.')
+        ->assertDontSee('Nadie recibirá represalias')
         ->click('Lo que hacemos para prevenir')
         ->assertSee('Del Programa de intervención')
         ->assertSee('Revisar las cargas de trabajo');

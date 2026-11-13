@@ -20,6 +20,7 @@ export type * from './disclosure-public';
 export type * from './navigation';
 export type * from './organization';
 export type * from './tenancy';
+export type * from './nom035-dossier';
 export type * from './ui';
 export type * from './results';
 export type * from './seating';

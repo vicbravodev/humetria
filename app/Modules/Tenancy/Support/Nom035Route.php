@@ -78,6 +78,7 @@ final readonly class Nom035Route
                 $evaluated !== null && in_array($evaluated->id, $shared, true),
                 $evaluated === null ? null : $programs[$evaluated->id] ?? null,
                 $evaluated !== null && ! in_array($evaluated->id, $unreported, true),
+                $evaluated === null ? null : ['closedOn' => $evaluated->closedOn, ...self::answered($evaluated)],
             );
         }
 

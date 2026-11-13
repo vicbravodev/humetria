@@ -97,7 +97,7 @@ it('lists each work center with its open evaluation and progress, its last evalu
                         'closesOn' => '14 nov 2026',
                         'closedOn' => null,
                         'launchedOn' => '29 oct 2026',
-                        'progress' => ['completed' => 21, 'target' => 52, 'againstSample' => true],
+                        'progress' => ['completed' => 21, 'target' => 52, 'againstSample' => true, 'screeningPending' => 0],
                     ],
                     'eligible' => false,
                 ],
@@ -116,7 +116,7 @@ it('measures a Guía II evaluation against everyone invited, and a draft not at 
         ->assertInertia(fn (Assert $page) => $page
             ->where('workCenters.data.0.openCampaign.status', 'draft')
             ->where('workCenters.data.0.openCampaign.progress', null)
-            ->where('workCenters.data.1.openCampaign.progress', ['completed' => 7, 'target' => 18, 'againstSample' => false]));
+            ->where('workCenters.data.1.openCampaign.progress', ['completed' => 7, 'target' => 18, 'againstSample' => false, 'screeningPending' => 0]));
 });
 
 it('lists the open Guía I by event apart, as the history lists the closed ones', function (): void {
@@ -405,6 +405,22 @@ it('offers replacements for each gender that has people left outside the sample'
             ['gender' => 'female', 'label' => 'Mujeres', 'available' => 5],
             ['gender' => 'male', 'label' => 'Hombres', 'available' => 2],
         ]));
+});
+
+it('counts the people whose Guía I is still pending apart from the answers of the measuring guide', function (): void {
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'workers' => 20]);
+
+    foreach (range(1, 20) as $index) {
+        personIn($campaign, "Persona {$index}", [
+            'nom035.guide-i' => $index <= 11 ? InstrumentStatus::Completed : InstrumentStatus::Pending,
+            'nom035.guide-ii' => $index <= 10 ? InstrumentStatus::Completed : InstrumentStatus::Pending,
+        ]);
+    }
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('campaign.progress', ['completed' => 10, 'target' => 20, 'againstSample' => false, 'screeningPending' => 9]));
 });
 
 it('says how the sending of the last batch of links goes, while it goes', function (): void {

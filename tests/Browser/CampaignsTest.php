@@ -176,7 +176,11 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->assertSee('Último día para contestar')
         ->assertSee('Así le llega a cada persona')
+        ->assertSeeIn('[aria-label="Así le llega a cada persona"]', 'sí lleva su nombre')
         ->click('Lanzar e invitar a 20 personas')
+        ->assertSee('Se enviarán 20 correos hoy.')
+        ->assertSee('Solo recibe la evaluación quien está en Empleados')
+        ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Evaluación lanzada. Las invitaciones van en camino.')
         ->assertSee('En curso')
         ->assertSee('0 de 20')
@@ -184,6 +188,44 @@ it('launches a draft with the deadline suggested, inviting everyone by email', f
         ->assertNoJavaScriptErrors();
 
     Illuminate\Support\Facades\Notification::assertSentOnDemandTimes(App\Modules\Campaigns\Notifications\SurveyInvitation::class, 20);
+});
+
+it('keeps the evaluation a draft until the launch is confirmed', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Lanzar e invitar a 20 personas')
+        ->assertSee('¿Lanzar la evaluación?')
+        ->click('Cancelar')
+        ->assertNoJavaScriptErrors();
+
+    expect($campaign->refresh()->status->value)->toBe('draft');
+    Illuminate\Support\Facades\Notification::assertNothingSent();
+});
+
+it('holds a second reminder back and says when the last one went out', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 20);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Recordar a 20')
+        ->assertSee('Aún no has enviado ningún recordatorio.')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Enlace reenviado a 20 personas.')
+        ->click('Recordar a 20')
+        ->assertSee('Podrás enviar otro en 12 horas.')
+        ->assertScript("document.querySelector('[role=\"dialog\"] button[type=\"submit\"]').disabled", true)
+        ->assertNoJavaScriptErrors();
 });
 
 it('follows a launched evaluation: answers per guide, the sample and who answered', function (bool $dark, bool $mobile): void {
@@ -343,6 +385,9 @@ it('extends the deadline and closes the evaluation, warning when the sample is s
         ->click('[aria-label="Más acciones"]')
         ->click('[role="menuitem"]:has-text("Cerrar evaluación")')
         ->assertSee('Faltan 53 respuestas para el mínimo de la muestra que pide la norma.')
+        ->assertSee('La norma pide las guías a todas las personas del centro.')
+        ->assertScript("document.querySelector('[role=\"dialog\"] button[type=\"submit\"]').disabled", true)
+        ->click('#acknowledged-shortfall')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Evaluación cerrada. Los enlaces ya no funcionan.')
         ->assertSee('Cerrada')
@@ -518,6 +563,7 @@ it('lists who requires a clinical assessment after their Guía I, reached from t
 
     visitPage('results/screenings', "/admin/acme/campaigns/{$campaign->id}/results", $dark, $mobile, fn ($page) => $page->click('Ver canalización'))
         ->assertSee('Canaliza a quien lo necesite')
+        ->assertSee('Solo la ven quienes administran la empresa y Recursos Humanos.')
         ->assertSee('0 de 1 canalizada')
         ->assertSee('Ana López');
 })->with($looks);
@@ -624,6 +670,9 @@ it('completes the report with what HR writes', function (): void {
         ->assertSee('Informe guardado.')
         ->assertSee('La mayoría queda en riesgo medio.')
         ->assertSee('Dra. Laura Méndez · Cédula profesional 12345678')
+        // The day issued and the line for the signature are only for paper: they take no room on screen.
+        ->assertScript("getComputedStyle(document.querySelector('[data-slot=\"report-signature\"]')).display", 'none')
+        ->assertScript("document.querySelector('[data-slot=\"report-signature\"]').textContent.includes('Fecha de emisión: ')", true)
         ->assertDontSee('Pendiente de capturar')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
@@ -718,6 +767,21 @@ it('keeps the parts of the 7.7 report on one row of its bar, or leaves them out 
     foreach ([800, 1024, 1100, 1280, 1440, 1600] as $width) {
         resizeTo($page, $width)->assertScript($rows, true);
     }
+});
+
+// H-10: the figures count up on screen, but paper must never carry a frame in the middle of the count.
+it('prints the final figures of the report, not a frame of their count', function (): void {
+    $tenant = campaignsCompany();
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/results")
+        // The frames of the count come a minute apart, so it has not moved from 0 when the print starts.
+        ->assertScript('(() => { window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 60000); return true; })()', true)
+        ->click('Informe 7.7')
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial')
+        ->assertScript("[...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.textContent).join()", "0\u{00a0}%,0\u{00a0}%,0\u{00a0}%")
+        ->assertScript("(async () => { window.dispatchEvent(new Event('beforeprint')); await new Promise((resolve) => setTimeout(resolve, 300)); return [...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.textContent).join(); })()", "0\u{00a0}%,100\u{00a0}%,100\u{00a0}%");
 });
 
 // Rediseño v2 (C7): a list with nobody in its view says why, and «Nadie coincide» is kept for a search that found nobody.

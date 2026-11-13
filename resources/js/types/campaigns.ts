@@ -12,6 +12,8 @@ export type CampaignProgress = {
     completed: number;
     target: number;
     againstSample: boolean;
+    /** People whose Guía I is still open, apart from the measuring guide. */
+    screeningPending: number;
 };
 
 export type CampaignSummary = {

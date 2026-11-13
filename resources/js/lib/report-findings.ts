@@ -81,10 +81,19 @@ function areaFinding(areas: AreaResults): Finding | null {
 function strengthFinding(domain: RiskGroup): Finding {
     const high = highRisk(domain.levels);
 
+    // A strength has nobody in Alto or Muy alto; with someone there it is only the lowest risk of the lot.
+    if (high > 0) {
+        return {
+            tone: 'strength',
+            title: `${domain.label} es el dominio con menor riesgo`,
+            detail: `Solo ${percentText(high, total(domain.levels))} en alto o muy alto: es el que menos riesgo concentra.`,
+        };
+    }
+
     return {
         tone: 'strength',
         title: `${domain.label} es la fortaleza`,
-        detail: `${high === 0 ? 'Ningún cuestionario' : `Solo ${percentText(high, total(domain.levels))}`} en alto o muy alto. Es la base para construir el programa.`,
+        detail: 'Ningún cuestionario en alto o muy alto. Es la base para construir el programa.',
     };
 }
 

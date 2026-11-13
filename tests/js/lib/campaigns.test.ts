@@ -38,6 +38,7 @@ const progress = (
     completed,
     target,
     againstSample,
+    screeningPending: 0,
 });
 
 describe('instrumentsText', () => {

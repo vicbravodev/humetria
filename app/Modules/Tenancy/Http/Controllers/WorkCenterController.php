@@ -52,7 +52,7 @@ final class WorkCenterController extends Controller
         $workCenters = $listWorkCenters->handle($showArchived);
         $ids = array_values(array_map(fn (WorkCenter $workCenter): string => $workCenter->id, $workCenters->items()));
         $areas = $this->headcount->areasByWorkCenter($ids);
-        $standings = $this->schedule->forWorkCenters($ids);
+        $standings = $this->schedule->forWorkCenters($ids, withAnswers: true);
 
         return Inertia::render('tenancy/work-centers', [
             'view' => $showArchived ? 'archived' : 'active',
@@ -142,7 +142,7 @@ final class WorkCenterController extends Controller
      */
     private function evaluation(?EvaluationStanding $standing): ?array
     {
-        return $standing === null ? null : ['state' => $standing->state, 'day' => $standing->day];
+        return $standing === null ? null : ['state' => $standing->state, 'day' => $standing->day, 'answered' => $standing->answered, 'target' => $standing->target];
     }
 
     /**

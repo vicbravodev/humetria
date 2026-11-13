@@ -69,7 +69,7 @@ it('tells the owner how the evaluation closed: participation, risk levels, the d
     guideTwoBy($this->campaign, $this->area, 5, 'always', pending: 1);
     TraumaScreening::factory()->count(2)->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true]);
 
-    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]))->assertSessionHasNoErrors();
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]), ['acknowledged_shortfall' => '1'])->assertSessionHasNoErrors();
 
     $mail = closingSummaryTo('olga@autopartes.mx');
     $html = (string) $mail->render();
@@ -108,7 +108,7 @@ it('points to the Programa de intervención only when someone falls in Medio or 
         AnonymousResponse::factory()->create(['campaign_id' => $this->campaign->id, 'area_id' => $this->area->id, 'instrument' => 'nom035.guide-ii', 'answers' => nom035HealthyAnswers('nom035.guide-ii')]);
     }
 
-    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]));
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]), ['acknowledged_shortfall' => '1']);
 
     expect((string) closingSummaryTo('olga@autopartes.mx')->render())->not->toContain('Programa de intervención');
 });
@@ -116,7 +116,7 @@ it('points to the Programa de intervención only when someone falls in Medio or 
 it('shows no risk level below the minimum group, only the participation', function (): void {
     guideTwoBy($this->campaign, $this->area, 4, 'always');
 
-    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]));
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]), ['acknowledged_shortfall' => '1']);
 
     $mail = closingSummaryTo('olga@autopartes.mx');
     $html = (string) $mail->render();
@@ -134,7 +134,7 @@ it('still says who needs a clinical assessment when the risk levels stay hidden 
     guideTwoBy($this->campaign, $this->area, 4, 'always');
     TraumaScreening::factory()->count(2)->create(['campaign_id' => $this->campaign->id, 'requires_clinical_assessment' => true]);
 
-    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]));
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]), ['acknowledged_shortfall' => '1']);
 
     expect((string) closingSummaryTo('olga@autopartes.mx')->render())
         ->toContain('Con menos de 5 cuestionarios no se muestran niveles de riesgo, para cuidar el anonimato.')
@@ -146,7 +146,7 @@ it('closes a Guía I campaign with its participation and who needs a clinical as
     ParticipantInstrument::factory()->count(3)->create(['participant_id' => fn () => Participant::factory()->create(['campaign_id' => $trauma->id])->id, 'instrument' => 'nom035.guide-i', 'status' => InstrumentStatus::Completed, 'completed_at' => now()]);
     TraumaScreening::factory()->create(['campaign_id' => $trauma->id, 'requires_clinical_assessment' => true]);
 
-    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $trauma->id]));
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $trauma->id]), ['acknowledged_shortfall' => '1']);
 
     $mail = closingSummaryTo('olga@autopartes.mx');
 

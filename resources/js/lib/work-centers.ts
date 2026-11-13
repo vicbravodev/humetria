@@ -10,6 +10,16 @@ export function staffText(employees: number): string {
     return countOf(employees, 'persona', 'personas');
 }
 
+/** What a work center's card offers about its people: loading them when it has none, seeing them otherwise. */
+export function peopleAction(employees: number): {
+    label: string;
+    load: boolean;
+} {
+    return employees === 0
+        ? { label: 'Cargar personas', load: true }
+        : { label: 'Ver personas', load: false };
+}
+
 /** The NOM-035 guides that apply, written for display; null when none does (nobody works there yet). */
 export function guidesText(guides: string[]): string | null {
     if (guides.length === 0) {
@@ -67,7 +77,11 @@ export function evaluationStanding(
             variant: 'secondary',
             next: 'En preparación',
         },
-        due: { badge: 'Al día', variant: 'success', next: `Antes del ${day}` },
+        due: {
+            badge: dueBadge(evaluation),
+            variant: 'success',
+            next: `Antes del ${day}`,
+        },
         overdue: {
             badge: 'Evaluación vencida',
             variant: 'destructive',
@@ -76,4 +90,13 @@ export function evaluationStanding(
     };
 
     return standings[evaluation.state];
+}
+
+/** «Al día», and when not everyone answered the evaluation it closed with, how many did (C-57). */
+function dueBadge(evaluation: WorkCenterEvaluationStanding): string {
+    const { answered, target } = evaluation;
+
+    return answered !== null && target !== null && answered < target
+        ? `Al día · contestaron ${answered} de ${target}`
+        : 'Al día';
 }

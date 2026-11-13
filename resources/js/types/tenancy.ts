@@ -171,6 +171,9 @@ export type WorkCenterEvaluationStanding = {
     state: 'draft' | 'running' | 'due' | 'overdue';
     /** The running one's last day, or the day the next one is (or was) due; null for a draft. */
     day: string | null;
+    /** For «al día»: who answered the evaluation it closed with, of how many; null otherwise. */
+    answered: number | null;
+    target: number | null;
 };
 
 export type MexicanStateOption = { value: string; label: string };

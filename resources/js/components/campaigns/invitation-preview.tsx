@@ -49,6 +49,11 @@ export default function InvitationPreview({
                                 : nadie de su empresa puede ver lo que contesta.
                             </p>
                             <p>
+                                La parte sobre acontecimientos traumáticos sí
+                                lleva su nombre, para que la empresa pueda
+                                ofrecerle atención si la necesita.
+                            </p>
+                            <p>
                                 Puede contestar hasta el{' '}
                                 {describeDate(lastDay) ?? '…'}.
                             </p>
