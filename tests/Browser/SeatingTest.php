@@ -112,6 +112,11 @@ it('shows the result of Figura 1 as its questions are answered', function (): vo
     [$url, $center] = seatingCenter();
 
     visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->type('name', 'Cajera')
+        ->type('tasks', 'Cobra de pie.')
+        ->click('Prolongada')
+        ->type('continuous_minutes', '240')
+        ->type('max_people_at_once', '2')
         ->press('@position-next')
         ->assertSee('Paso 2 de 5')
         ->click('label:has(input[name="can_work_seated"][value="1"])')
@@ -128,6 +133,11 @@ it('keeps the questions of Figura 1 readable, with the figure beside them only w
     [$url, $center] = seatingCenter();
 
     $page = visit("{$url}/seating/centers/{$center->id}/positions/create")
+        ->type('name', 'Cajera')
+        ->type('tasks', 'Cobra de pie.')
+        ->click('Prolongada')
+        ->type('continuous_minutes', '240')
+        ->type('max_people_at_once', '2')
         ->press('@position-next')
         ->assertSee('Paso 2 de 5');
 
