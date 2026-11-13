@@ -4,6 +4,7 @@ import ApproveButton from '@/components/leave/approve-button';
 import RejectForm from '@/components/leave/reject-form';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { approvalNote } from '@/lib/leave/queue';
 import { cancel } from '@/routes/tenant/vacations/requests';
 import type { LeaveQueueRequest } from '@/types';
 
@@ -23,15 +24,24 @@ export default function RequestActions({
         return null;
     }
 
+    const note = approvalNote(request);
+
     return (
         <div className="flex flex-wrap gap-2 max-sm:[&>*]:flex-1">
+            {note !== null && (
+                <p className="basis-full text-sm text-muted-foreground">
+                    {note}
+                </p>
+            )}
             {request.canDecide && (
                 <>
-                    <ApproveButton
-                        requestId={request.id}
-                        name={request.name}
-                        block
-                    />
+                    {request.canApprove && (
+                        <ApproveButton
+                            requestId={request.id}
+                            name={request.name}
+                            block
+                        />
+                    )}
                     <Button
                         type="button"
                         variant="outline"

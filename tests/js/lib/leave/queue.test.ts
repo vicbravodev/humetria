@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    approvalNote,
     daysLine,
     emptyQueue,
     orderLine,
@@ -164,5 +165,21 @@ describe('emptyQueue', () => {
         expect(emptyQueue('taken').title).toBe(
             'Aún no hay solicitudes disfrutadas.',
         );
+    });
+});
+
+describe('approvalNote', () => {
+    const note =
+        'No tiene días y su política no permite adelantarlos: recházala o ajusta su saldo.';
+
+    it('says why «Aprobar» is missing when RH could answer but the server would refuse', () => {
+        expect(approvalNote({ canDecide: true, canApprove: false })).toBe(note);
+    });
+
+    it('says nothing when it can be approved or there is nothing to answer', () => {
+        expect(approvalNote({ canDecide: true, canApprove: true })).toBeNull();
+        expect(
+            approvalNote({ canDecide: false, canApprove: false }),
+        ).toBeNull();
     });
 });

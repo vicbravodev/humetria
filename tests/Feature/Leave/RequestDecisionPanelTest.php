@@ -3,9 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Leave\Actions\DecideRequest;
+use App\Modules\Leave\Enums\PolicyScope;
+use App\Modules\Leave\Exceptions\RequestRefused;
 use App\Modules\Leave\Http\Controllers\RequestController;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
+use App\Modules\Leave\Models\LeavePolicy;
+use App\Modules\Leave\Models\LeavePolicyAssignment;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveType;
@@ -104,6 +108,37 @@ describe('the days that would be left', function (): void {
         $props = $this->actingAs($viewer)->get(route('tenant.vacations.requests.index', $this->tenant))->assertOk()->inertiaProps();
         $viewed = array_column($props['requests']['data'], null, 'id');
         expect($viewed[$waiting->id]['coverage'])->toBeNull();
+    });
+});
+
+describe('whether RH can approve it', function (): void {
+    it('offers no approval for a request the server would refuse: no days and a policy that does not allow advancing them', function (): void {
+        decisionPanelPeriod($this->ana, 23);
+        $covered = decisionPanelRequest($this->ana);
+        $none = decisionPanelRequest($this->dan);
+
+        $rows = decisionPanelRows();
+
+        expect($rows[$covered->id]['canApprove'])->toBeTrue()
+            ->and($rows[$none->id]['canApprove'])->toBeFalse()
+            // The rejection is still there for RH to give.
+            ->and($rows[$none->id]['canDecide'])->toBeTrue();
+        expect(fn () => resolve(DecideRequest::class)->handle($none->id, true, Decider::hr($this->hr->id)))->toThrow(RequestRefused::class);
+    });
+
+    it('offers it again when the policy of the person allows advancing days', function (): void {
+        $policy = LeavePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'allows_advance' => true]);
+        LeavePolicyAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'leave_policy_id' => $policy->id, 'scope' => PolicyScope::Default]);
+        $none = decisionPanelRequest($this->dan);
+
+        expect(decisionPanelRows()[$none->id]['canApprove'])->toBeTrue();
+    });
+
+    it('does not hold back a leave, which uses no days', function (): void {
+        $type = LeaveType::factory()->create(['tenant_id' => $this->tenant->id]);
+        $leave = LeaveRequest::factory()->ofType($type)->escalated()->create(['employee_id' => $this->dan->id, 'approver_employee_id' => $this->boss->id]);
+
+        expect(decisionPanelRows()[$leave->id]['canApprove'])->toBeTrue();
     });
 });
 

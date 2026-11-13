@@ -19,7 +19,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 mutates(VacationsController::class, SummaryPages::class);
 
 /** The queries of the overview, whatever the number of people, requests or periods. */
-const LEAVE_SUMMARY_QUERIES = 40;
+const LEAVE_SUMMARY_QUERIES = 44;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));

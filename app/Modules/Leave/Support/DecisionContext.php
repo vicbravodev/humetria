@@ -20,11 +20,11 @@ final readonly class DecisionContext
     /** The strip of days shows at most these, from the first day of the request. */
     public const int STRIP_DAYS = 14;
 
-    public function __construct(private ReportingLines $lines, private Roster $roster) {}
+    public function __construct(private ReportingLines $lines, private Roster $roster, private PolicyResolver $policies) {}
 
     /**
      * @param  list<LeaveRequest>  $requests
-     * @return array<string, array{coverage: array{fits: bool, leftAfter: int}|null, team: array{days: list<array{date: string, away: int}>, names: list<string>}|null}> by request id, only for those that wait
+     * @return array<string, array{coverage: array{fits: bool, leftAfter: int}|null, canApprove: bool, team: array{days: list<array{date: string, away: int}>, names: list<string>}|null}> by request id, only for those that wait
      */
     public function for(array $requests, bool $withCoverage, bool $withTeam = true): array
     {
@@ -35,11 +35,14 @@ final readonly class DecisionContext
         }
 
         $coverage = $withCoverage ? $this->coverage($waiting) : [];
+        $advance = $withCoverage ? $this->allowsAdvance($waiting, $coverage) : [];
         $team = $withTeam ? $this->team($waiting) : [];
         $context = [];
 
         foreach ($waiting as $request) {
-            $context[$request->id] = ['coverage' => $coverage[$request->id] ?? null, 'team' => $team[$request->id] ?? null];
+            // What approving would refuse (no days, and a policy that does not give them in advance) is not offered; a leave uses none.
+            $canApprove = ($coverage[$request->id]['fits'] ?? true) || ($advance[$request->id] ?? false);
+            $context[$request->id] = ['coverage' => $coverage[$request->id] ?? null, 'canApprove' => $canApprove, 'team' => $team[$request->id] ?? null];
         }
 
         return $context;
@@ -61,6 +64,24 @@ final readonly class DecisionContext
         }
 
         return $coverage;
+    }
+
+    /**
+     * @param  list<LeaveRequest>  $waiting
+     * @param  array<string, array{fits: bool, leftAfter: int}>  $coverage
+     * @return array<string, bool> by request id, for the ones the days do not cover: whether the policy of the person gives days in advance
+     */
+    private function allowsAdvance(array $waiting, array $coverage): array
+    {
+        // The policy is read only for those who lack days: whoever fits does not need it.
+        $vacations = array_values(array_filter($waiting, fn (LeaveRequest $request): bool => isset($coverage[$request->id]) && ! $coverage[$request->id]['fits']));
+        if ($vacations === []) {
+            return [];
+        }
+
+        $terms = $this->policies->for(array_values(array_unique(array_map(fn (LeaveRequest $request): string => $request->employee_id, $vacations))));
+
+        return array_column(array_map(fn (LeaveRequest $request): array => ['id' => $request->id, 'advance' => ($terms[$request->employee_id] ?? null)?->allowsAdvance ?? false], $vacations), 'advance', 'id');
     }
 
     /**

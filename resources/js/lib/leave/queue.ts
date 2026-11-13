@@ -129,3 +129,12 @@ export function emptyQueue(tab: LeaveQueueTab): {
 } {
     return EMPTY[tab];
 }
+
+/** Why «Aprobar» is not offered for a request RH may answer: the server would refuse it. */
+export function approvalNote(
+    request: Pick<LeaveQueueRequest, 'canDecide' | 'canApprove'>,
+): string | null {
+    return request.canDecide && !request.canApprove
+        ? 'No tiene días y su política no permite adelantarlos: recházala o ajusta su saldo.'
+        : null;
+}

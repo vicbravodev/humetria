@@ -20,7 +20,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 mutates(RequestController::class, RequestPages::class);
 
 /** The queries of the queue, whatever the number of requests, people or filters (the session and the panel frame included). */
-const LEAVE_REQUESTS_QUERIES = 26;
+const LEAVE_REQUESTS_QUERIES = 30;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));
