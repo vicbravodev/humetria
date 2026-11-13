@@ -16,6 +16,8 @@ use App\Modules\Leave\Models\LeavePolicyRow;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Support\PolicyTerms;
 use App\Modules\Organization\Contracts\Seniority;
+use App\Modules\Organization\Events\EmployeeCreated;
+use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Models\Tenant;
@@ -320,4 +322,44 @@ it('runs as a command and reports what it granted', function (): void {
     hired($this->tenant, '2024-03-15');
 
     $this->artisan('leave:grant-entitlements')->expectsOutput('Periodos otorgados: 1')->assertSuccessful();
+});
+
+it('gives a person who joins with seniority their periods when they are added, without waiting for the night job', function (): void {
+    // Two anniversaries after the company started tracking (1 January 2026) cannot come from 2024-03-15 until March 2026; use an earlier tracking day.
+    LeaveSetting::query()->withoutGlobalScopes()->where('tenant_id', $this->tenant->id)->update(['tracking_since' => '2025-01-01']);
+    workIn($this->tenant);
+    $ana = hired($this->tenant, '2024-03-15');
+
+    event(new EmployeeCreated($this->tenant->id, $ana->id, 'any-center'));
+
+    expect(array_column(periodsOf($ana), 'years'))->toBe([1, 2]);
+
+    resolve(GrantEntitlements::class)->handle();
+
+    expect(array_column(periodsOf($ana), 'years'))->toBe([1, 2])
+        ->and(LeaveEntitlement::query()->withoutGlobalScopes()->where('employee_id', $ana->id)->count())->toBe(2);
+});
+
+it('does not grant on arrival the anniversaries before the company started tracking, nor in a company without Vacaciones', function (): void {
+    workIn($this->tenant);
+    $ana = hired($this->tenant, '2020-03-15');
+    $other = Tenant::factory()->create();
+    workIn($other);
+    $beto = hired($other, '2020-03-15');
+
+    event(new EmployeeCreated($this->tenant->id, $ana->id, 'any-center'));
+    event(new EmployeeCreated($other->id, $beto->id, 'any-center'));
+
+    // Only the anniversary of 15 March 2026 is on or after 1 January 2026; and the other company does not use Vacaciones.
+    expect(array_column(periodsOf($ana), 'years'))->toBe([6])
+        ->and(periodsOf($beto))->toBe([]);
+});
+
+it('gives the periods back to a person who is reactivated', function (): void {
+    workIn($this->tenant);
+    $ana = hired($this->tenant, '2024-03-15');
+
+    event(new EmployeeReactivated($this->tenant->id, $ana->id, 'any-center'));
+
+    expect(array_column(periodsOf($ana), 'years'))->toBe([2]);
 });
