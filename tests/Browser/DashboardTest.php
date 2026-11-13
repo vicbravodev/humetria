@@ -196,6 +196,22 @@ it('folds the menu into a bottom bar on a phone, role-aware like the sidebar', f
         ->assertNoJavaScriptErrors();
 });
 
+it('leaves room between each label of the bottom bar and the edge of its pill, even «Operación»', function (): void {
+    visit(panelCompany())->on()->mobile()
+        ->assertSeeIn('nav[aria-label="Menú principal"]', 'Operación')
+        ->assertScript(<<<'JS'
+            () => [...document.querySelectorAll('nav[aria-label="Menú principal"] a, nav[aria-label="Menú principal"] button')].every((tab) => {
+                const range = document.createRange();
+                const label = [...tab.childNodes].find((node) => node.nodeType === Node.TEXT_NODE);
+                range.selectNodeContents(label);
+                const text = range.getBoundingClientRect();
+                const pill = tab.getBoundingClientRect();
+
+                return text.left - pill.left >= 8 && pill.right - text.right >= 8;
+            })
+            JS, true);
+});
+
 it('groups the sidebar by the families of tools the landing offers', function (): void {
     visit(panelCompany())
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.querySelector("span").textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Ordena tu operación')

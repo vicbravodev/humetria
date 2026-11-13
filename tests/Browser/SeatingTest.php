@@ -54,6 +54,17 @@ it('lists the centers of the company with where their route stands', function (b
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with($looks);
 
+it('does not say the sector twice in the header of a center whose activity already names it', function (): void {
+    $url = signInToPanel();
+    $center = WorkCenter::factory()->for(Tenant::query()->where('slug', 'acme')->firstOrFail())->create(['name' => 'Tienda Centro', 'main_activity' => 'Comercio al por menor']);
+    SeatingProfile::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'sector' => 'commerce']);
+
+    visit("{$url}/seating/centers/{$center->id}")
+        ->assertSee('Comercio al por menor')
+        ->assertScript('() => (document.querySelector("h1").parentElement.parentElement.innerText.match(/Comercio/g) ?? []).length', 1)
+        ->assertSee('Declarado el');
+});
+
 it('shows a center with its declaration form', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
 
