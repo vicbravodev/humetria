@@ -34,7 +34,11 @@ export default function PortalSections({
                         {section.pending !== null && (
                             <span className="rounded-full bg-primary px-2.5 py-0.5 text-sm font-semibold text-primary-foreground">
                                 {section.pending}
-                                <span className="sr-only"> pendientes</span>
+                                <span className="sr-only">
+                                    {section.pending === 1
+                                        ? ' pendiente'
+                                        : ' pendientes'}
+                                </span>
                             </span>
                         )}
                         <ChevronRight
