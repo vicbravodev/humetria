@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import ImportActions from '@/components/organization/import-actions';
 import ImportErrors from '@/components/organization/import-errors';
 import ImportFileField from '@/components/organization/import-file-field';
+import ImportChanges from '@/components/organization/import-changes';
 import ImportStats from '@/components/organization/import-stats';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/employees/import';
@@ -48,6 +49,10 @@ export default function ImportForm({
                             {summary !== undefined && (
                                 <ImportStats summary={summary} />
                             )}
+                            {summary?.status === 'ready' &&
+                                summary.changes !== undefined && (
+                                    <ImportChanges changes={summary.changes} />
+                                )}
                             {summary?.status === 'invalid' && (
                                 <ImportErrors summary={summary} />
                             )}

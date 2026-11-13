@@ -17,6 +17,15 @@ export type EmployeeImportSummary = {
     updated: number;
     /** `row` as the spreadsheet numbers it: the header is row 1. */
     errors: { row: number; messages: string[] }[];
+    /** Who is updated and what changes in them (the first hundred); absent when nobody changes. */
+    changes?: EmployeeImportChange[];
+};
+
+/** What a file changes in one person who already exists: each field with its before and after. */
+export type EmployeeImportChange = {
+    row: number;
+    name: string;
+    changes: { label: string; before: string; after: string }[];
 };
 
 /** The whole company's people at a glance, whatever the filters. */
@@ -182,4 +191,13 @@ export function localToday(now: Date = new Date()): string {
     return new Intl.DateTimeFormat('en-CA', {
         timeZone: 'America/Mexico_City',
     }).format(now);
+}
+
+/** «Celular: 5511111111 → 5522222222», one change of a person. */
+export function changeLine(change: {
+    label: string;
+    before: string;
+    after: string;
+}): string {
+    return `${change.label}: ${change.before} → ${change.after}`;
 }

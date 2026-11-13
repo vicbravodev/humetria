@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    changeLine,
     employeeDetails,
     employeeQuery,
     deactivationReasons,
@@ -215,5 +216,17 @@ describe('deactivationReasons', () => {
             'other',
         ]);
         expect(deactivationReasons[1]?.label).toBe('Rescisión o despido');
+    });
+});
+
+describe('changeLine', () => {
+    it('reads field, before and after', () => {
+        expect(
+            changeLine({
+                label: 'Celular',
+                before: '5511111111',
+                after: '5522222222',
+            }),
+        ).toBe('Celular: 5511111111 → 5522222222');
     });
 });

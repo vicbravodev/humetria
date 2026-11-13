@@ -14,6 +14,7 @@ final readonly class EmployeeImportRow
     /**
      * @param  list<string>  $absent  of job_grade_id, hired_on, staff_group, state and manager_id, and always seniority_on; in a union's file also name, area_id and job_title.
      * @param  int|null  $managerRow  the place in the plan's rows of the new person who is the manager.
+     * @param  list<array{label: string, before: string, after: string}>  $changes  what an update changes, field by field; none for a person who is added.
      */
     public function __construct(
         public EmployeeData $data,
@@ -21,5 +22,6 @@ final readonly class EmployeeImportRow
         public array $absent,
         public ?string $managerId = null,
         public ?int $managerRow = null,
+        public array $changes = [],
     ) {}
 }

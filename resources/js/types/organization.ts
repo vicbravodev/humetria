@@ -3,6 +3,7 @@ import type { Paginated } from '@/types/demos';
 export type {
     EmployeeCounts,
     EmployeeFilters,
+    EmployeeImportChange,
     EmployeeImportSummary,
 } from '@/lib/employees';
 
