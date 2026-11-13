@@ -1,17 +1,9 @@
 import { useState } from 'react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import DepartureFields from '@/components/organization/departure-fields';
 import EmployeeChoiceField from '@/components/organization/employee-choice-field';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { deactivationReasons, localToday } from '@/lib/employees';
+import { localToday } from '@/lib/employees';
 import { countOf } from '@/lib/plural';
 import { serverSource } from '@/lib/server-options';
 import { deactivate } from '@/routes/tenant/employees';
@@ -65,42 +57,14 @@ export default function DeactivateEmployeeDialog({
             }
             preserveScroll
         >
-            <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
-                    <Label htmlFor="terminated-on">Último día de trabajo</Label>
-                    <Input
-                        id="terminated-on"
-                        type="date"
-                        value={terminatedOn}
-                        max={today}
-                        {...(employee.hired_on === null
-                            ? {}
-                            : { min: employee.hired_on })}
-                        onChange={(event) => setTerminatedOn(event.target.value)}
-                    />
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="deactivation-reason">Motivo</Label>
-                    <Select value={reason} onValueChange={setReason}>
-                        <SelectTrigger id="deactivation-reason">
-                            <SelectValue placeholder="Elige un motivo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {deactivationReasons.map((option) => (
-                                <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                >
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <p className="text-sm text-muted-foreground sm:col-span-2">
-                    Los días de vacaciones pendientes se calculan a esta fecha.
-                </p>
-            </div>
+            <DepartureFields
+                date={terminatedOn}
+                onDate={setTerminatedOn}
+                reason={reason}
+                onReason={setReason}
+                max={today}
+                min={employee.hired_on}
+            />
             {managed && (
                 <div className="grid gap-3">
                     <p className="text-sm">
