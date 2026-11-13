@@ -27,6 +27,8 @@ export default function DossierWorkplaces({
                 'Decisión',
                 'Método',
                 'Vigente hasta',
+                'Respuestas desfavorables',
+                'Nota de la Comisión',
             ]}
         >
             {workplaces.map((place, index) => (
@@ -44,6 +46,10 @@ export default function DossierWorkplaces({
                     <TableCell>{place.review?.method ?? '—'}</TableCell>
                     <TableCell>
                         {describeDate(place.review?.validUntil ?? '') ?? '—'}
+                    </TableCell>
+                    <TableCell>{place.review?.unfavorable ?? '—'}</TableCell>
+                    <TableCell className="max-w-64 whitespace-normal">
+                        {place.review?.note ?? '—'}
                     </TableCell>
                 </TableRow>
             ))}
