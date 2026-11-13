@@ -103,8 +103,27 @@ describe('missingInStep', () => {
         ).toEqual([]);
     });
 
+    // R2-compliance-12: «El puesto» is validated before moving on too, not only at the end.
+    it('lists what «El puesto» still lacks before moving on', () => {
+        expect(missingInStep(1, {})).toEqual([
+            'name',
+            'tasks',
+            'bipedestation_type',
+            'continuous_minutes',
+            'max_people_at_once',
+        ]);
+        expect(
+            missingInStep(1, {
+                name: 'Cajera',
+                tasks: ' ',
+                bipedestation_type: 'fixed',
+                continuous_minutes: '0',
+                max_people_at_once: '2',
+            }),
+        ).toEqual(['tasks']);
+    });
+
     it('asks nothing of the other steps', () => {
-        expect(missingInStep(1, {})).toEqual([]);
         expect(missingInStep(3, {})).toEqual([]);
         expect(missingInStep(4, {})).toEqual([]);
     });
