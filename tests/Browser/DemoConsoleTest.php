@@ -79,6 +79,7 @@ it('links the console from the sidebar only for the superadmin', function (): vo
 
     visit('/admin')
         ->click('Solicitudes de demo')
+        ->assertScript(pathBecomes('/admin/demo-requests'), true)
         ->assertPathIs('/admin/demo-requests');
 
     $this->actingAs(User::factory()->create());
@@ -144,6 +145,7 @@ it('offers to open the company a request became', function (): void {
     visitPage('demos/index', '/admin/demo-requests')
         ->assertSee('Ver empresa')
         ->click('Ver empresa')
+        ->assertScript(pathBecomes("/admin/companies/{$tenant->id}"), true)
         ->assertPathIs("/admin/companies/{$tenant->id}");
 });
 

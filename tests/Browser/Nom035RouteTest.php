@@ -69,6 +69,7 @@ it('opens the NOM-035 dossier with only what the center can show', function (): 
     visit("/admin/acme/campaigns/centers/{$office->id}/inspection")
         ->click('Solo lo que tienes')
         ->click('Abrir expediente')
+        ->assertScript(pathBecomes("/admin/acme/campaigns/centers/{$office->id}/dossier"), true)
         ->assertPathIs("/admin/acme/campaigns/centers/{$office->id}/dossier")
         ->assertQueryStringHas('ready', '1')
         ->assertNoJavaScriptErrors();
@@ -99,6 +100,7 @@ it('goes from the centers of NOM-035 to the route of one', function (): void {
 
     visit('/admin/acme/campaigns')
         ->click('Ver ruta de Oficina')
+        ->assertScript(pathBecomes("/admin/acme/campaigns/centers/{$office->id}/route"), true)
         ->assertPathIs("/admin/acme/campaigns/centers/{$office->id}/route")
         ->assertSee('Tu ruta para cumplir con la NOM-035')
         ->assertNoJavaScriptErrors();

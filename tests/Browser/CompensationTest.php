@@ -335,6 +335,7 @@ it('tries the point in between of two scenarios in a new one', function (): void
 
     visit("{$url}/compensation/scenarios/compare?ids[]={$five->id}&ids[]={$six->id}")
         ->click('Probar un punto medio')
+        ->assertScript(pathBecomes("{$url}/compensation/scenarios/create"), true)
         ->assertPathIs("{$url}/compensation/scenarios/create")
         ->assertValue('name', 'Punto medio')
         ->assertValue('unionized_raise', '5.5')
@@ -713,6 +714,7 @@ it('leads from the data of the contract on the start to each of them', function 
 
     visit("{$url}/compensation")
         ->click($link)
+        ->assertScript(pathBecomes("{$url}/{$path}"), true)
         ->assertPathIs("{$url}/{$path}")
         ->assertNoJavaScriptErrors();
 })->with([
@@ -739,6 +741,7 @@ it('saves a new benefit that grows with seniority from its page', function (): v
 
     visit("{$url}/compensation/benefits")
         ->click('Nueva prestación')
+        ->assertScript(pathBecomes("{$url}/compensation/benefits/create"), true)
         ->assertPathIs("{$url}/compensation/benefits/create")
         ->type('[name="name"]', 'Bono de puntualidad')
         ->type('[name="value"]', '10')
@@ -749,6 +752,7 @@ it('saves a new benefit that grows with seniority from its page', function (): v
         ->type('[name="tenure_table[1][value]"]', '12')
         ->click('Nunca')
         ->press('Guardar prestación')
+        ->assertScript(pathBecomes("{$url}/compensation/benefits"), true)
         ->assertPathIs("{$url}/compensation/benefits")
         ->assertSee('Prestación creada.')
         ->assertSee('Bono de puntualidad')

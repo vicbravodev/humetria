@@ -116,6 +116,7 @@ it('does not open the welcome to a superadmin working as the owner', function ()
 
     visitPage('dashboard', '/admin/companies', false, false, fn (AwaitableWebpage $page) => $page
         ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertScript(pathBecomes('/admin/acme'), true)
         ->assertPathIs('/admin/acme')
         ->assertSee('Estás viendo Humetría como Ana Pérez'))
         ->assertDontSee('Te acompañamos en tus primeros pasos')

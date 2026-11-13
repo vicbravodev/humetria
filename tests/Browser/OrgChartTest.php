@@ -215,6 +215,7 @@ it('invites a company where nobody has a manager to assign them', function (bool
         ->assertSee('Ir a Empleados')
         ->assertNotPresent('[data-slot="org-node"]')
         ->click('Ir a Empleados')
+        ->assertScript(pathBecomes('/admin/acme/employees'), true)
         ->assertPathIs('/admin/acme/employees');
 })->with($looks);
 
@@ -349,8 +350,10 @@ it('reaches the org chart and its list from the sidebar', function (): void {
         ->click('Ordena tu operación')
         ->click('[data-sidebar="sidebar"] >> text=Organigrama')
         ->click('[data-sidebar="sidebar"] >> text=Lista')
+        ->assertScript(pathBecomes('/admin/acme/org-chart/quality'), true)
         ->assertPathIs('/admin/acme/org-chart/quality')
         ->click('[data-sidebar="menu-sub"] >> text=Organigrama')
+        ->assertScript(pathBecomes('/admin/acme/org-chart'), true)
         ->assertPathIs('/admin/acme/org-chart')
         ->assertNoJavaScriptErrors();
 });
@@ -361,9 +364,11 @@ it('switches between the chart and the list with the segmented control', functio
     visitPage('organization/org-chart', '/admin/acme/org-chart')
         ->assertAttribute('nav[aria-label="Vista del organigrama"] a[aria-current="page"]', 'href', '/admin/acme/org-chart')
         ->click('nav[aria-label="Vista del organigrama"] >> text=Lista')
+        ->assertScript(pathBecomes('/admin/acme/org-chart/quality'), true)
         ->assertPathIs('/admin/acme/org-chart/quality')
         ->assertSeeIn('nav[aria-label="Vista del organigrama"] [aria-current="page"]', 'Lista')
         ->click('nav[aria-label="Vista del organigrama"] >> text=Organigrama')
+        ->assertScript(pathBecomes('/admin/acme/org-chart'), true)
         ->assertPathIs('/admin/acme/org-chart')
         ->assertNoJavaScriptErrors();
 });
@@ -540,6 +545,7 @@ it('says the reporting line is in order, with the way back to the chart', functi
         ->assertSeeIn('nav[aria-label="Vistas de la lista"] [aria-current="page"]', 'Todas')
         ->assertNoAccessibilityIssues(1)
         ->click('Ver organigrama')
+        ->assertScript(pathBecomes('/admin/acme/org-chart'), true)
         ->assertPathIs('/admin/acme/org-chart')
         ->assertNoJavaScriptErrors();
 })->with($looks);
@@ -622,9 +628,11 @@ it('reaches the team from the start of the portal, and comes back', function ():
 
     visit($portal)
         ->click('Mi equipo')
+        ->assertScript(pathBecomes($portal.'/team'), true)
         ->assertPathIs($portal.'/team')
         ->assertSee('Su jefe directo')
         ->click('Volver a mi portal')
+        ->assertScript(pathBecomes($portal), true)
         ->assertPathIs($portal)
         ->assertNoJavaScriptErrors();
 });

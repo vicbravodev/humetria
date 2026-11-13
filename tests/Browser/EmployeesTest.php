@@ -231,6 +231,7 @@ it('finds a person from the ⌘K palette and opens Empleados narrowed to them', 
         ->assertSeeIn('[role="listbox"] [role="group"]', 'Personas')
         ->assertSee('Ana López')
         ->keys('#command-search', 'Enter')
+        ->assertScript(pathBecomes('/admin/acme/employees'), true)
         ->assertPathIs('/admin/acme/employees')
         ->assertScript('() => new URL(location.href).searchParams.get("q")', 'Ana López')
         ->assertNoJavaScriptErrors();

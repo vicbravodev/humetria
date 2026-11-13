@@ -48,6 +48,7 @@ it('checks a file, then imports it once confirmed', function (): void {
         ->press('Revisar archivo')
         ->assertSee('Listo para importar 2 empleados: 2 nuevos y 0 actualizados.')
         ->press('Importar 2 empleados')
+        ->assertScript(pathBecomes('/admin/acme/employees'), true)
         ->assertPathIs('/admin/acme/employees')
         ->assertSee('Se importaron 2 empleados: 2 nuevos y 0 actualizados.')
         ->assertSee('Beto Díaz')

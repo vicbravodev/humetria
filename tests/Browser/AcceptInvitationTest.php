@@ -81,14 +81,18 @@ it('signs out another account, signs in the invited one and accepts', function (
 
     visit('/admin/invitations/'.$token)
         ->press('Cerrar sesión y continuar')
+        ->assertScript(pathBecomes('/admin/invitations/'.$token), true)
         ->assertPathIs('/admin/invitations/'.$token)
         ->click('Iniciar sesión')
+        ->assertScript(pathBecomes('/admin/login'), true)
         ->assertPathIs('/admin/login')
         ->type('email', 'ana@acme.mx')
         ->type('password', 'password')
         ->press('Iniciar sesión')
+        ->assertScript(pathBecomes('/admin/invitations/'.$token), true)
         ->assertPathIs('/admin/invitations/'.$token)
         ->press('Aceptar invitación')
+        ->assertScript(pathBecomes('/admin/'.$invitation->tenant->slug), true)
         ->assertPathIs('/admin/'.$invitation->tenant->slug)
         ->assertSee('Te damos la bienvenida a Humetría.')
         ->assertNoJavaScriptErrors();
@@ -104,6 +108,7 @@ it('accepts an invitation and lands on the dashboard', function (): void {
         ->type('password', 'secreto-largo-123')
         ->type('password_confirmation', 'secreto-largo-123')
         ->press('Crear cuenta y entrar')
+        ->assertScript(pathBecomes('/admin/'.$invitation->tenant->slug), true)
         ->assertPathIs('/admin/'.$invitation->tenant->slug)
         ->assertSee('Te damos la bienvenida a Humetría.')
         ->assertNoJavaScriptErrors();

@@ -60,6 +60,7 @@ it('shows the Comisión the Ley Silla assessments it has to sign', function (): 
         ->assertSee('Firma 1 evaluación de trabajo de pie · Planta Querétaro')
         ->assertSee('Ley Silla')
         ->click('Revisar y firmar')
+        ->assertScript(pathBecomes("/admin/acme/seating/centers/{$plant->id}/assessments"), true)
         ->assertPathIs("/admin/acme/seating/centers/{$plant->id}/assessments")
         ->assertNoJavaScriptErrors();
 });

@@ -48,6 +48,7 @@ it('opens the company that was chosen from the list', function (): void {
 
     visit('/admin')
         ->click('Beta Foods')
+        ->assertScript(pathBecomes('/admin/beta'), true)
         ->assertPathIs('/admin/beta');
 });
 
@@ -61,6 +62,7 @@ it('switches from one company to another from the sidebar', function (bool $dark
         ->assertSeeIn('[data-test="tenant-switcher"]', 'Acme Industrial')
         ->click('[data-test="tenant-switcher"]')
         ->click('Beta Foods')
+        ->assertScript(pathBecomes('/admin/beta'), true)
         ->assertPathIs('/admin/beta'))
         ->assertSeeIn('[data-test="tenant-switcher"]', 'Beta Foods')
         // The sidebar's Panel now belongs to the company that was chosen.
@@ -188,6 +190,7 @@ it('takes a person with several companies from the blocked one to the list', fun
 
     visit('/admin/acme')
         ->click('Cambiar de empresa')
+        ->assertScript(pathBecomes('/admin'), true)
         ->assertPathIs('/admin');
 });
 
@@ -198,6 +201,7 @@ it('lets an impersonating superadmin close the block modal and use the panel', f
 
     visitPage('dashboard', '/admin/companies', $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertScript(pathBecomes('/admin/acme'), true)
         ->assertPathIs('/admin/acme')
         ->assertSee('El acceso a Acme Industrial está en pausa'))
         // Not a lock for them: it has its close button, and closing it leaves the panel to work in.
@@ -218,6 +222,7 @@ it('offers an impersonating superadmin the way out of the impersonation, not the
         ->assertSee('El acceso a Acme Industrial está en pausa')
         ->assertDontSeeIn('[data-test="tenant-blocked-dialog"]', 'Cerrar sesión')
         ->click('[data-test="tenant-blocked-dialog"] [data-test="stop-impersonation"]')
+        ->assertScript(pathBecomes('/admin/companies'), true)
         ->assertPathIs('/admin/companies')
         ->assertDontSee('Estás viendo Humetría como Ana Pérez')
         ->assertNoJavaScriptErrors();
@@ -232,6 +237,7 @@ it('lets the closed block modal stay closed while moving through the panel', fun
         ->click('@tenant-actions')->click('Entrar como owner')
         ->click('[data-test="tenant-blocked-dialog"] > button')
         ->click('[data-sidebar="menu-button"][data-active="true"]')
+        ->assertScript(pathBecomes('/admin/acme'), true)
         ->assertPathIs('/admin/acme')
         ->assertMissing('[data-test="tenant-blocked-dialog"]');
 });
