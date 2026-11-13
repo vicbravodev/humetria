@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseSubscriptionPreview, priceChange } from '@/lib/billing-preview';
+import {
+    parseSubscriptionPreview,
+    priceChange,
+    saveLabel,
+} from '@/lib/billing-preview';
 import type { Quote, SubscriptionPreview } from '@/types';
 
 const quote = (subtotal: string | null): Quote => ({
@@ -21,6 +25,7 @@ const answer = (overrides: Record<string, unknown> = {}) => ({
     first_period: null,
     eligibility: null,
     scheduled: null,
+    modules: { added: [], removed: [], removedOn: null },
     ...overrides,
 });
 
@@ -54,6 +59,43 @@ describe('parseSubscriptionPreview', () => {
         );
 
         expect(parsed?.scheduled).toEqual({ effective_on: '1 dic 2026' });
+    });
+});
+
+describe('parseSubscriptionPreview, modules and refusals', () => {
+    it('reads the tools a plan adds and takes away', () => {
+        const modules = {
+            added: ['Pulso'],
+            removed: ['Vacaciones', 'Organigramas'],
+            removedOn: '10 dic 2026',
+        };
+
+        expect(parseSubscriptionPreview(answer({ modules }))?.modules).toEqual(
+            modules,
+        );
+    });
+
+    it.each([
+        ['modules missing', answer({ modules: undefined })],
+        ['modules that are not an object', answer({ modules: 'x' })],
+        [
+            'removed that is not a list of text',
+            answer({
+                modules: { added: [], removed: [1], removedOn: null },
+            }),
+        ],
+        [
+            'added that is not a list',
+            answer({
+                modules: { added: 'x', removed: [], removedOn: null },
+            }),
+        ],
+        [
+            'a day that is not text',
+            answer({ modules: { added: [], removed: [], removedOn: 5 } }),
+        ],
+    ])('refuses %s', (_name, value) => {
+        expect(parseSubscriptionPreview(value)).toBeNull();
     });
 
     it.each([
@@ -117,6 +159,7 @@ describe('priceChange', () => {
             first_period: null,
             eligibility: null,
             scheduled: null,
+            modules: { added: [], removed: [], removedOn: null },
         }) satisfies SubscriptionPreview;
 
     it('says from what to what when the price moves', () => {
@@ -129,5 +172,23 @@ describe('priceChange', () => {
         expect(priceChange(preview('$2,490', '$2,490'))).toBeNull();
         expect(priceChange(preview(null, '$3,990'))).toBeNull();
         expect(priceChange(preview('$2,490', null))).toBeNull();
+    });
+});
+
+describe('saveLabel', () => {
+    const none = { added: [], removed: [], removedOn: null };
+
+    it('says nothing special when no tool goes away', () => {
+        expect(saveLabel(none)).toBe('Guardar plan');
+        expect(saveLabel(null)).toBe('Guardar plan');
+    });
+
+    it('counts the tools the plan removes', () => {
+        expect(
+            saveLabel({ ...none, removed: ['A'], removedOn: '1 ene 2027' }),
+        ).toBe('Asignar y quitar 1 herramienta');
+        expect(
+            saveLabel({ ...none, removed: ['A', 'B'], removedOn: 'x' }),
+        ).toBe('Asignar y quitar 2 herramientas');
     });
 });

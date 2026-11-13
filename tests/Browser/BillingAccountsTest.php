@@ -182,6 +182,17 @@ it('shows support the portfolio without the buttons that change it', function ()
         ->assertDontSee('Editar cuenta');
 });
 
+it('names the tools a plan takes away before it is assigned', function (): void {
+    signInAsSuperadmin();
+    [, $account] = paidCompany('consultant');
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->click('Asignar plan')
+        ->click('[name="profile"][value="channel_compliance"]')
+        ->assertSee('Registro de jornada, Vacaciones, Organigramas')
+        ->assertSee('Asignar y quitar 3 herramientas');
+});
+
 it('shows the next amount before saving a plan, and saves it', function (): void {
     signInAsSuperadmin();
     [$tenant, $account] = paidCompany('consultant');
@@ -190,14 +201,14 @@ it('shows the next amount before saving a plan, and saves it', function (): void
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
         ->assertSee('Sin plan asignado')
         ->click('Asignar plan')
-        ->assertSee('Cambiar el plan no cambia el acceso de la empresa')
+        ->assertSee('Las herramientas pasan a ser las del plan.')
         ->click('[name="profile"][value="channel_compliance"]')
         ->fill('seats', '50')
         ->assertSee('Banda de canal hasta 50 personas: $2,490')
         ->fill('seats', '100')
         ->assertSee('Banda de canal hasta 100 personas: $3,990')
         ->assertSee('IVA')
-        ->press('Guardar plan')
+        ->press('Asignar y quitar 3 herramientas')
         ->assertSee('Plan asignado.')
         ->assertSee('Canal Cumplimiento')
         ->assertSee('$3,990');

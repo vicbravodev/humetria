@@ -1,3 +1,4 @@
+import type { ModulesChange } from '@/types/billing-modules';
 import type { TenantRow } from '@/types/tenancy';
 
 export type AccountKind = 'direct' | 'consultant';
@@ -112,6 +113,7 @@ export type SubscriptionPreview = {
     eligibility: DiscountNote | null;
     /** When a reduction in the plan being typed takes effect (the next cut); null when everything applies at once. */
     scheduled: { effective_on: string } | null;
+    modules: ModulesChange;
 };
 
 /** What an account adds up to across its companies. */

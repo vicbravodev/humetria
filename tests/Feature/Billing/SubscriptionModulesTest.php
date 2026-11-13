@@ -96,3 +96,51 @@ it('only names modules the catalog and Tenancy agree on', function (): void {
         expect(array_diff(App\Modules\Billing\Support\Catalog::current()->modules($plan), $known))->toBe([]);
     }
 });
+
+it('previews the tools a plan takes away and the day, before it is saved', function (): void {
+    $this->travelTo('2026-12-10 12:00:00');
+    [$tenant] = paidCompany();
+
+    $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'cumplimiento', 'starts_on' => '2026-12-01']))
+        ->assertOk()
+        ->assertJsonPath('modules.removed', ['Registro de jornada', 'Vacaciones', 'Organigramas'])
+        ->assertJsonPath('modules.added', [])
+        ->assertJsonPath('modules.removedOn', '10 dic 2026');
+
+    // Previewing writes nothing: the company still has everything.
+    expect(companyModulesNow($tenant))->toContain('attendance', 'vacations', 'org_chart');
+});
+
+it('previews the tools a bigger plan adds, and nothing removed', function (): void {
+    $this->travelTo('2026-12-10 12:00:00');
+    [$tenant] = paidCompany();
+    resolve(SetSubscription::class)->handle($tenant->id, planOnDay(Plan::Jornada, '2026-12-01'));
+
+    $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'integral', 'starts_on' => '2026-12-01']))
+        ->assertOk()
+        ->assertJsonPath('modules.added', ['NOM-035', 'NOM-037', 'Ley Silla', 'Buzón de quejas', 'Pulso', 'Clima laboral'])
+        ->assertJsonPath('modules.removed', [])
+        ->assertJsonPath('modules.removedOn', null);
+});
+
+it('previews no module change for the plan the company already has', function (): void {
+    $this->travelTo('2026-12-10 12:00:00');
+    [$tenant] = paidCompany();
+    resolve(SetSubscription::class)->handle($tenant->id, planOnDay(Plan::Cumplimiento, '2026-12-01'));
+
+    $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'cumplimiento', 'starts_on' => '2026-12-01']))
+        ->assertOk()
+        ->assertJsonPath('modules.added', [])
+        ->assertJsonPath('modules.removed', []);
+});
+
+it('previews a reduction on the day it takes effect, not today', function (): void {
+    $this->travelTo('2026-12-10 12:00:00');
+    [$tenant] = paidCompany();
+    resolve(SetSubscription::class)->handle($tenant->id, planOnDay(Plan::Integral, '2026-12-01'));
+
+    $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'jornada', 'starts_on' => '2026-12-01']))
+        ->assertOk()
+        ->assertJsonPath('modules.removed', ['NOM-035', 'NOM-037', 'Ley Silla', 'Buzón de quejas', 'Pulso', 'Clima laboral'])
+        ->assertJsonPath('modules.removedOn', '1 ene 2027');
+});

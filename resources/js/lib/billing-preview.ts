@@ -2,6 +2,7 @@ import type {
     DiscountNote,
     Quote,
     QuoteLine,
+    ModulesChange,
     SubscriptionPreview,
 } from '@/types';
 
@@ -85,6 +86,27 @@ function parseSchedule(value: unknown): { effective_on: string } | null {
         : null;
 }
 
+function textList(value: unknown): string[] | null {
+    return Array.isArray(value) &&
+        value.every((item) => typeof item === 'string')
+        ? value
+        : null;
+}
+
+function parseModules(value: unknown): ModulesChange | null {
+    if (!isRecord(value)) {
+        return null;
+    }
+
+    const added = textList(value['added']);
+    const removed = textList(value['removed']);
+    const removedOn = textOrNull(value['removedOn']);
+
+    return added === null || removed === null || removedOn === undefined
+        ? null
+        : { added, removed, removedOn };
+}
+
 /** A part that may be null: null stays null, and anything else must parse, or it is undefined (not one). */
 export function optional<T>(
     value: unknown,
@@ -106,14 +128,23 @@ export function parseSubscriptionPreview(
     const first = optional(value['first_period'], parseQuote);
     const note = optional(value['eligibility'], parseNote);
     const scheduled = optional(value['scheduled'], parseSchedule);
+    const modules = parseModules(value['modules']);
 
     return quote === null ||
         current === undefined ||
         first === undefined ||
         note === undefined ||
-        scheduled === undefined
+        scheduled === undefined ||
+        modules === null
         ? null
-        : { quote, current, first_period: first, eligibility: note, scheduled };
+        : {
+              quote,
+              current,
+              first_period: first,
+              eligibility: note,
+              scheduled,
+              modules,
+          };
 }
 
 /** "De $2,490 a $3,990": what the company pays now against what the plan being typed would cost; null when it is the same or either needs a quotation. */
@@ -126,4 +157,15 @@ export function priceChange(preview: SubscriptionPreview): string | null {
     }
 
     return `De ${from} a ${to}`;
+}
+
+/** The save button: it names how many tools the plan takes away, so nobody confirms that without having read it. */
+export function saveLabel(modules: ModulesChange | null): string {
+    const removed = modules?.removed.length ?? 0;
+
+    if (removed === 0) {
+        return 'Guardar plan';
+    }
+
+    return `Asignar y quitar ${removed} ${removed === 1 ? 'herramienta' : 'herramientas'}`;
 }

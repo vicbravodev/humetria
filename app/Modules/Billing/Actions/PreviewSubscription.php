@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Billing\Actions;
 
 use App\Modules\Billing\Data\SubscriptionData;
+use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Enums\Profile;
+use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Exceptions\InvalidSubscription;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\Catalog;
@@ -16,17 +18,18 @@ use App\Modules\Billing\Support\ScheduledChange;
 use App\Modules\Billing\Support\ShortDate;
 use App\Modules\Billing\Support\SubscriptionGuard;
 use App\Modules\Billing\Support\SubscriptionQuoter;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use Carbon\CarbonImmutable;
 
 final readonly class PreviewSubscription
 {
-    public function __construct(private Eligibility $eligibility, private SubscriptionQuoter $quoter) {}
+    public function __construct(private Eligibility $eligibility, private SubscriptionQuoter $quoter, private CompanyModules $modules) {}
 
     /**
      * What the plan would cost if it were saved, next to what the company pays now, with nothing written: the next amount shown
      * before it is accepted. The company counts for the Integral discount as it is being priced.
      *
-     * @return array{quote: array<string, mixed>, current: array<string, mixed>|null, first_period: array<string, mixed>|null, eligibility: array{applies: bool, reason: string}|null, scheduled: array{effective_on: string}|null}
+     * @return array{quote: array<string, mixed>, current: array<string, mixed>|null, first_period: array<string, mixed>|null, eligibility: array{applies: bool, reason: string}|null, scheduled: array{effective_on: string}|null, modules: array{added: list<string>, removed: list<string>, removedOn: string|null}}
      *
      * @throws InvalidSubscription
      */
@@ -61,6 +64,30 @@ final readonly class PreviewSubscription
             'eligibility' => $data->profile === Profile::ChannelIntegral ? $this->eligibility->explain($eligible) : null,
             // A reduction (smaller plan, fewer people or centers) is not applied when saved: it waits for the next cut.
             'scheduled' => $split->effectiveOn === null ? null : ['effective_on' => ShortDate::format($split->effectiveOn)],
+            'modules' => $this->modulesChange($tenantId, $data, $split->pendingPlan ?? $split->plan, $split->effectiveOn ?? ($data->startsOn->greaterThan($today) ? $data->startsOn : $today)),
         ];
+    }
+
+    /**
+     * The tools the plan switches on and off, with the same rule SetSubscription applies through syncPlan: the plan's modules, or all
+     * of them while it is a trial. What is taken away goes on `$effectiveOn`; what is added is on at once.
+     *
+     * @return array{added: list<string>, removed: list<string>, removedOn: string|null}
+     */
+    private function modulesChange(string $tenantId, SubscriptionData $data, Plan $plan, CarbonImmutable $effectiveOn): array
+    {
+        $target = $data->status === SubscriptionStatus::Trial ? Catalog::current()->allModules() : Catalog::current()->modules($plan);
+        $added = [];
+        $removed = [];
+
+        foreach ($this->modules->list($tenantId) as $row) {
+            if ($row->enabled && ! in_array($row->key, $target, true)) {
+                $removed[] = $row->label;
+            } elseif (! $row->enabled && in_array($row->key, $target, true)) {
+                $added[] = $row->label;
+            }
+        }
+
+        return ['added' => $added, 'removed' => $removed, 'removedOn' => $removed === [] ? null : ShortDate::format($effectiveOn)];
     }
 }
