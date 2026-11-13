@@ -40,8 +40,8 @@ it('splits the requirements into what is missing, in the order of the route, and
 
     seatingInspection()->assertInertia(fn (Assert $page) => $page->component('seating/inspection')
         ->where('workCenter', ['id' => $this->center->id, 'name' => 'Planta Querétaro'])
-        ->where('applicable', 13)
-        ->where('ready', fn ($ready): bool => collect($ready)->pluck('numeral')->all() === ['R1', 'R5', 'R11'])
+        ->where('applicable', 11)
+        ->where('ready', fn ($ready): bool => collect($ready)->pluck('numeral')->all() === ['R1'])
         ->where('ready.0', fn ($row): bool => $row['title'] === 'Los puestos de pie, con su Figura 1' && $row['action'] === 'Ver puestos' && $row['href'] === route('tenant.seating.center', [$this->tenant, $this->center->id]))
         ->where('missing', fn ($missing): bool => collect($missing)->pluck('numeral')->all() === ['R4', 'R6', 'R2', 'R3', 'R8', 'R9', 'R7', 'R10', 'R12', 'R13'])
         ->where('missing.0', fn ($row): bool => $row['detail'] === '1 puesto sin asiento' && $row['action'] === 'Registrar asientos')

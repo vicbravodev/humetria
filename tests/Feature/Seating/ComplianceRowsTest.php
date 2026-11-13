@@ -367,8 +367,14 @@ it('waits for a Figura 1 placement before judging measures and pauses', function
     StandingPosition::query()->update(['nature_allows' => false, 'nature_reason' => 'Línea de soldadura.', 'placement' => null]);
     expect(row($this, 'r5')->state)->toBe(RowState::Pending)->and(row($this, 'r11')->state)->toBe(RowState::Pending);
 
+    // R2-compliance-02: a result A has its seat at the workstation, so a rest seat and a pause agreement do not apply: not «Cumple».
     StandingPosition::factory()->create($this->where);
-    expect(row($this, 'r5')->state)->toBe(RowState::Met)->and(row($this, 'r11')->state)->toBe(RowState::Met);
+    expect(row($this, 'r5')->state)->toBe(RowState::NotApplicable)->and(row($this, 'r11')->state)->toBe(RowState::NotApplicable);
+    expect(RowState::NotApplicable->label())->toBe('No aplica');
+
+    StandingPosition::factory()->withinCenter()->create($this->where);
+    Seat::query()->where('use', 'rest_area')->delete();
+    expect(row($this, 'r5')->state)->toBe(RowState::Missing)->and(row($this, 'r11')->state)->toBe(RowState::Missing);
 });
 
 it('waits for a seat before judging seats', function (): void {

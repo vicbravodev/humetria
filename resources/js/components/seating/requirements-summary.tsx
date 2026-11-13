@@ -44,6 +44,13 @@ export default function RequirementsSummaryCard({
                     </dd>
                 </div>
             </dl>
+            {summary.notApplicable > 0 && (
+                <p className="text-meta text-muted-foreground">
+                    {summary.notApplicable === 1
+                        ? '1 requisito no aplica y no se cuenta.'
+                        : `${summary.notApplicable} requisitos no aplican y no se cuentan.`}
+                </p>
+            )}
         </div>
     );
 }

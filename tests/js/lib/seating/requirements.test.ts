@@ -38,6 +38,12 @@ describe('requirementCount', () => {
         ).toBeNull();
     });
 
+    it('says nothing of a requirement that does not apply', () => {
+        expect(
+            requirementCount({ ...base, state: 'not_applicable', count: 2 }),
+        ).toBeNull();
+    });
+
     it('says nothing when it is met or there is nothing behind it', () => {
         expect(
             requirementCount({ ...base, state: 'met', count: 0 }),

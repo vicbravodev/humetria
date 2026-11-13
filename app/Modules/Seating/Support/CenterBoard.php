@@ -40,7 +40,7 @@ final readonly class CenterBoard
     public function __construct(private ComplianceRows $rows) {}
 
     /**
-     * @return array{requirements: list<array{key: string, number: string, label: string, tab: string|null, state: string, stateLabel: string, count: int, since: string|null}>, summary: array{met: int, warning: int, missing: int, pending: int}}
+     * @return array{requirements: list<array{key: string, number: string, label: string, tab: string|null, state: string, stateLabel: string, count: int, since: string|null}>, summary: array{met: int, warning: int, missing: int, pending: int, notApplicable: int}}
      */
     public function for(string $workCenterId): array
     {
@@ -58,7 +58,7 @@ final readonly class CenterBoard
                 'count' => $row->count,
                 'since' => $row->since?->toDateString(),
             ], $rows),
-            'summary' => ['met' => $inState(RowState::Met), 'warning' => $inState(RowState::Warning), 'missing' => $inState(RowState::Missing), 'pending' => $inState(RowState::Pending)],
+            'summary' => ['met' => $inState(RowState::Met), 'warning' => $inState(RowState::Warning), 'missing' => $inState(RowState::Missing), 'pending' => $inState(RowState::Pending), 'notApplicable' => $inState(RowState::NotApplicable)],
         ];
     }
 

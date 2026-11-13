@@ -202,3 +202,17 @@ it('keeps only the requirements the center can show when asked for what it has',
         ->where('rows', fn ($rows): bool => collect($rows)->every(fn (array $row): bool => $row['state'] === 'met') && collect($rows)->pluck('key')->doesntContain('r3')));
     $this->actingAs($this->hr)->get($this->url)->assertInertia(fn (Assert $page) => $page->has('rows', 13));
 });
+
+it('says «No aplica» for the rest seat and the pauses where every position has its seat at the workstation, and leaves it out of what can be shown', function (): void {
+    StandingPosition::factory()->create($this->where);
+
+    $this->actingAs($this->hr)->get($this->url)->assertInertia(fn (Assert $page) => $page
+        ->where('rows.4.key', 'r5')
+        ->where('rows.4.state', 'not_applicable')
+        ->where('rows.4.stateLabel', 'No aplica')
+        ->where('rows.4.lines', [['text' => 'No aplica: ningún puesto con resultado B o C', 'date' => null]])
+        ->where('rows.10.state', 'not_applicable'));
+
+    $this->actingAs($this->hr)->get("{$this->url}?ready=1")->assertInertia(fn (Assert $page) => $page
+        ->where('rows', fn ($rows): bool => collect($rows)->doesntContain(fn (array $row): bool => $row['state'] === 'not_applicable')));
+});

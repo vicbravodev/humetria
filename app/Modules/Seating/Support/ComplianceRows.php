@@ -118,7 +118,7 @@ final readonly class ComplianceRows
         $rests = $facts->seats->filter(fn (Seat $seat): bool => $seat->use === SeatUse::RestArea && $seat->condition !== SeatCondition::OutOfService);
         $without = $this->awayFromWorkstation($eligible)->filter(fn (StandingPosition $position): bool => ! $rests->contains(fn (Seat $seat): bool => $seat->position_id === null || $seat->position_id === $position->id));
 
-        return $this->row('r5', $without->count(), nothingToCheck: $this->placed($eligible)->isEmpty());
+        return $this->row('r5', $without->count(), nothingToCheck: $this->placed($eligible)->isEmpty(), notApplicable: $this->awayFromWorkstation($eligible)->isEmpty());
     }
 
     private function r6(ComplianceFacts $facts): ComplianceRow
@@ -184,7 +184,7 @@ final readonly class ComplianceRows
      */
     private function r11(ComplianceFacts $facts, Collection $eligible): ComplianceRow
     {
-        return $this->row('r11', $this->awayFromWorkstation($eligible)->filter(fn (StandingPosition $position): bool => ! in_array($position->id, $facts->agreed, true))->count(), nothingToCheck: $this->placed($eligible)->isEmpty());
+        return $this->row('r11', $this->awayFromWorkstation($eligible)->filter(fn (StandingPosition $position): bool => ! in_array($position->id, $facts->agreed, true))->count(), nothingToCheck: $this->placed($eligible)->isEmpty(), notApplicable: $this->awayFromWorkstation($eligible)->isEmpty());
     }
 
     /**
@@ -249,12 +249,13 @@ final readonly class ComplianceRows
 
     /**
      * A row is missing while `$missing` is above none, with a warning while `$warning` is, and met otherwise; its count is
-     * what is behind its state. With `$nothingToCheck` there is nothing registered to judge it by, so it is pending: never met.
+     * what is behind its state. With `$nothingToCheck` there is nothing registered to judge it by, so it is pending: never met. With `$notApplicable` (positions are placed, none needs the requirement) it does not apply.
      */
-    private function row(string $key, int $missing, int $warning = 0, ?CarbonImmutable $since = null, bool $nothingToCheck = false): ComplianceRow
+    private function row(string $key, int $missing, int $warning = 0, ?CarbonImmutable $since = null, bool $nothingToCheck = false, bool $notApplicable = false): ComplianceRow
     {
         return match (true) {
             $nothingToCheck => new ComplianceRow($key, RowState::Pending),
+            $notApplicable => new ComplianceRow($key, RowState::NotApplicable),
             $missing > 0 => new ComplianceRow($key, RowState::Missing, $missing, $since),
             $warning > 0 => new ComplianceRow($key, RowState::Warning, $warning, $since),
             default => new ComplianceRow($key, RowState::Met),
