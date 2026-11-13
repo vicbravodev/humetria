@@ -473,7 +473,7 @@ return [
         'sections.*.text' => 'texto',
         'sections.*.items' => 'elementos',
         'sections.*.items.*' => 'elemento',
-        'slug' => 'dirección',
+        'slug' => 'dirección web',
         'special_needs' => 'necesidad especial',
         'state' => 'estado',
         'street' => 'calle',

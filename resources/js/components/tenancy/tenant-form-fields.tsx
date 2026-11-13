@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import TenantField from '@/components/tenancy/tenant-field';
 import TenantTypeChoice from '@/components/tenancy/tenant-type-choice';
-import { slugify } from '@/lib/slug';
+import { companyUrl, slugify } from '@/lib/slug';
 import type { TenantRow } from '@/types';
 
 /**
@@ -55,7 +55,7 @@ export default function TenantFormFields({
             />
             <TenantField
                 name="slug"
-                label="Dirección"
+                label="Dirección web"
                 prefix="/admin/"
                 required
                 maxLength={50}
@@ -66,6 +66,9 @@ export default function TenantFormFields({
                 }}
                 error={errors['slug']}
             />
+            <p className="-mt-2 text-sm text-muted-foreground">
+                Así se verá: {companyUrl(window.location.origin, slug)}
+            </p>
             {tenant !== undefined && slug !== tenant.slug && (
                 <p className="text-sm text-muted-foreground">
                     Las direcciones anteriores de esta empresa dejarán de

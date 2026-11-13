@@ -153,13 +153,13 @@ it('rejects a duplicated, reserved or malformed slug', function (string $slug, s
 })->with([
     'taken' => ['grupo-ejemplo', 'Esa dirección ya la usa otra empresa.'],
     'reserved' => ['settings', 'Esa dirección está reservada. Elige otra.'],
-    'spaces' => ['Grupo Ejemplo', 'El formato del campo dirección no es válido.'],
-    'too short' => ['ab', 'El campo dirección debe tener entre 3 y 50 caracteres.'],
-    '51 characters' => [str_repeat('a', 51), 'El campo dirección debe tener entre 3 y 50 caracteres.'],
-    'leading hyphen' => ['-acme', 'El formato del campo dirección no es válido.'],
-    'trailing hyphen' => ['acme-', 'El formato del campo dirección no es válido.'],
-    'double hyphen' => ['ac--me', 'El formato del campo dirección no es válido.'],
-    'underscore' => ['ac_me', 'El formato del campo dirección no es válido.'],
+    'spaces' => ['Grupo Ejemplo', 'El formato del campo dirección web no es válido.'],
+    'too short' => ['ab', 'El campo dirección web debe tener entre 3 y 50 caracteres.'],
+    '51 characters' => [str_repeat('a', 51), 'El campo dirección web debe tener entre 3 y 50 caracteres.'],
+    'leading hyphen' => ['-acme', 'El formato del campo dirección web no es válido.'],
+    'trailing hyphen' => ['acme-', 'El formato del campo dirección web no es válido.'],
+    'double hyphen' => ['ac--me', 'El formato del campo dirección web no es válido.'],
+    'underscore' => ['ac_me', 'El formato del campo dirección web no es válido.'],
 ]);
 
 it('accepts a slug of exactly 3 and 50 characters', function (string $slug): void {
@@ -180,7 +180,7 @@ it('requires every field', function (string $field, string $error): void {
     ['legal_name', 'El campo razón social es obligatorio.'],
     ['trade_name', 'El campo nombre comercial es obligatorio.'],
     ['rfc', 'El campo RFC es obligatorio.'],
-    ['slug', 'El campo dirección es obligatorio.'],
+    ['slug', 'El campo dirección web es obligatorio.'],
 ]);
 
 it('limits the names', function (string $field, int $max): void {
@@ -215,7 +215,7 @@ it('says that a field must be text', function (string $field, string $name): voi
     ['legal_name', 'razón social'],
     ['trade_name', 'nombre comercial'],
     ['rfc', 'RFC'],
-    ['slug', 'dirección'],
+    ['slug', 'dirección web'],
 ]);
 
 it('logs and audits the creation without the company data', function (): void {
