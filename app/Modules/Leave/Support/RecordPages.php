@@ -25,7 +25,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * days. Days and dates only, never an amount. Whoever may only view reads no notes and not which leave it was (criterio
  * C-22).
  *
- * @phpstan-type Period array{id: string, year: int, anniversaryOn: string, enjoyBy: string, prescribesOn: string, granted: int, available: int, mayPrescribe: bool}
+ * @phpstan-type Period array{id: string, year: int, anniversaryOn: string, enjoyBy: string, prescribesOn: string, granted: int, available: int, mayPrescribe: bool, overdue: bool}
  * @phpstan-type Entry array{id: string, kind: string, kindLabel: string, tranche: string, days: int, balance: int, period: int|null, note: string|null, on: string}
  * @phpstan-type Request array{id: string, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, decidedBy: string|null, decidedOn: string|null, note: string|null}
  * @phpstan-type Termination array{id: string, terminatedOn: string, pendingDays: int, proportionalDays: float, settledOn: string|null, canSettle: bool}
@@ -87,6 +87,8 @@ final readonly class RecordPages
             'granted' => ($granted[$period->entitlementId]->statutory_days ?? 0) + ($granted[$period->entitlementId]->extra_days ?? 0),
             'available' => $period->left(),
             'mayPrescribe' => $period->left() > 0 && $today > $period->prescribesOn->toDateString(),
+            // The window to enjoy it closed and it still has days: marked, never taken off (criterio C-11).
+            'overdue' => $period->left() > 0 && $today > $period->enjoyBy->toDateString(),
         ], array_reverse($balances));
     }
 

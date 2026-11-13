@@ -144,7 +144,9 @@ puede es obligarla a fraccionarlo; por eso el aviso es para ella y queda a la vi
 **Qué hacemos.** No existe «pagar» o «vender» días mientras dura la relación. Al dar de baja a una persona, Humetría
 calcula **en días** lo que queda pendiente: los saldos de sus periodos y la parte proporcional del año en curso,
 `días del año en curso × días transcurridos / 365`, con dos decimales y sin pasar del total del año. Los días
-transcurridos se cuentan desde el último aniversario o, si aún no hay ninguno, desde el ingreso.
+transcurridos se cuentan desde el último aniversario o, si aún no hay ninguno, desde el ingreso, **sin contar el día de la
+baja** (del 15 de marzo al 14 de julio son 121 días; al 15 de julio, 122). Sobre esos días la persona también tiene derecho
+al pago de la prima vacacional (LFT art. 80, C-08): la pantalla lo recuerda y el importe lo calcula la nómina.
 
 **Qué dice la ley.** «Las vacaciones no podrán compensarse con una remuneración. Si la relación de trabajo termina
 antes de que se cumpla el año de servicios, el trabajador tendrá derecho a una remuneración proporcionada al tiempo de

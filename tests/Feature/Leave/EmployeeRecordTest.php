@@ -76,10 +76,10 @@ it('shows each period with its window, what is left and whether it may prescribe
     $periods = collect(leaveRecordProps()['periods'])->keyBy('year');
 
     expect($periods->keys()->all())->toBe([2026, 2025, 2024])
-        ->and($periods[2026])->toMatchArray(['id' => $this->period->id, 'granted' => 16, 'available' => 16, 'enjoyBy' => '2026-09-15', 'prescribesOn' => '2027-09-15', 'mayPrescribe' => false])
+        ->and($periods[2026])->toMatchArray(['id' => $this->period->id, 'granted' => 16, 'available' => 16, 'enjoyBy' => '2026-09-15', 'prescribesOn' => '2027-09-15', 'mayPrescribe' => false, 'overdue' => true])
         ->and($periods[2025])->toMatchArray(['id' => $old->id, 'available' => 12, 'mayPrescribe' => true])
         // Nothing left: nothing to prescribe.
-        ->and($periods[2024])->toMatchArray(['available' => 0, 'mayPrescribe' => false]);
+        ->and($periods[2024])->toMatchArray(['available' => 0, 'mayPrescribe' => false, 'overdue' => false]);
 });
 
 it('pages the ledger and the requests with their own page names', function (): void {
@@ -201,4 +201,22 @@ it('says in the record how many days wait for an answer, without taking them off
     LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'leave_type_id' => null, 'status' => 'requested', 'working_days' => 4]);
 
     expect(leaveRecordProps()['balance'])->toMatchArray(['available' => 16, 'waiting' => 4]);
+});
+
+it('marks a period whose window to enjoy it already closed and still has days, and not one that is open or empty', function (): void {
+    $open = LeaveEntitlement::factory()->withGrant()->create([
+        'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 7, 'anniversary_on' => '2026-10-01',
+        'statutory_days' => 14, 'extra_days' => 0, 'enjoy_by' => '2027-04-01', 'prescribes_on' => '2028-04-01',
+    ]);
+    $today = LeaveEntitlement::factory()->withGrant()->create([
+        'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 8, 'anniversary_on' => '2026-05-04',
+        'statutory_days' => 14, 'extra_days' => 0, 'enjoy_by' => '2026-11-04', 'prescribes_on' => '2027-11-04',
+    ]);
+
+    $periods = collect(leaveRecordProps()['periods'])->keyBy('id');
+
+    // The last day of the window still counts; the day after it does not (today is 2026-11-04; the period of the test closed 2026-09-15).
+    expect($periods[$open->id]['overdue'])->toBeFalse()
+        ->and($periods[$today->id]['overdue'])->toBeFalse()
+        ->and($periods[$this->period->id]['overdue'])->toBeTrue();
 });

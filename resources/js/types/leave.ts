@@ -214,6 +214,8 @@ export type LeaveRecordPeriod = {
     available: number;
     /** Past its eighteen months with days still in it: marked, never taken off. */
     mayPrescribe: boolean;
+    /** The window to enjoy it closed (the 6 months after the anniversary) and it still has days. */
+    overdue: boolean;
 };
 
 /** A movement of the ledger of a person. The note only reaches whoever may manage vacations. */

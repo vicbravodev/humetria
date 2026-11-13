@@ -23,7 +23,10 @@ export function milestones(
             title: 'Otorgado',
             detail: `${shortDate(period.anniversaryOn)} · ${countOf(period.granted, 'día', 'días')}`,
         },
-        { title: 'A disfrutar antes del', detail: shortDate(period.enjoyBy) },
+        {
+            title: 'A disfrutar antes del',
+            detail: `${shortDate(period.enjoyBy)}${period.overdue ? ' · Vencido' : ''}`,
+        },
         { title: 'Prescribe el', detail: shortDate(period.prescribesOn) },
     ];
 }
