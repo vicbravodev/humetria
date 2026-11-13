@@ -15,7 +15,7 @@ use App\Modules\Tenancy\Contracts\Companies;
 /**
  * Opens the portal of the person whose link carries `$token`, inside their company. The link works while it is the
  * latest one issued (RH did not revoke it, see `IssuePortalLink`) and a kept app key derives it, the person is still an
- * active employee and the company may be used.
+ * active employee and the company may be used. NOM-037 is not required: each tool checks its own module.
  */
 final readonly class OpenPortal
 {
@@ -37,12 +37,12 @@ final readonly class OpenPortal
         $company = $this->companies->enter($link->tenant_id);
         $person = $this->roster->find($link->employee_id);
 
-        if ($company->stopped('nom037') || $person === null || ! $person->active) {
+        if ($company->blocked || $person === null || ! $person->active) {
             throw new PortalUnavailable;
         }
 
         $teleworker = Teleworker::query()->where('employee_id', $person->id)->where('status', '!=', TeleworkerStatus::Ended)->first(['id']);
 
-        return new OpenedPortal($company->id, $person->id, $teleworker?->id, $company->tradeName, $person->name);
+        return new OpenedPortal($company->id, $person->id, $teleworker?->id, $company->tradeName, $person->name, ! $company->stopped('nom037'));
     }
 }

@@ -7,8 +7,8 @@ export default function PortalUnavailable() {
             {/* The portal link is permanent, so a newer one means this one was replaced. */}
             <LinkUnavailable>
                 Revise que lo haya abierto completo desde su correo. Si su
-                empresa le envió uno nuevo, use el más reciente. Si el problema
-                sigue, comuníquese con el área de Recursos Humanos.
+                empresa le envió uno nuevo, use el más reciente. Pida a Recursos
+                Humanos de su empresa que le reenvíe su enlace.
             </LinkUnavailable>
         </div>
     );

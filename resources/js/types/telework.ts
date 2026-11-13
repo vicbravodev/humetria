@@ -59,6 +59,16 @@ export type PortalVisit = {
     workplace: string;
 };
 
+/** A tool in the home of the portal, as its module offers it to the person. */
+export type PortalSection = {
+    key: string;
+    label: string;
+    description: string;
+    href: string;
+    /** How many things wait for the person in it, when the tool counts them. */
+    pending: number | null;
+};
+
 export type PortalPending = {
     /** Still to answer. */
     checklists: PortalChecklist[];

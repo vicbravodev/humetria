@@ -26,6 +26,10 @@ export default function WorkersShell({
                 {children}
             </main>
             <footer className="px-4 py-5 text-center text-caption text-muted-foreground">
+                <p className="mb-2">
+                    Sus trámites personales (vacaciones, confirmaciones) están
+                    en el enlace personal que llegó a su correo.
+                </p>
                 hecho con{' '}
                 <span className="font-semibold text-foreground">humetría</span>{' '}
                 · no guardamos quién visita esta página

@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import PortalHomeLink from '@/components/portal-home-link';
 import PortalConfirmation from '@/components/seating/portal-confirmation';
 import PortalDeclined from '@/components/seating/portal-declined';
 import PortalIntro from '@/components/seating/portal-intro';
@@ -47,6 +48,7 @@ export default function SeatingPortal({
         <PortalShell company={company}>
             <Head title="Su trabajo de pie" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
+                <PortalHomeLink token={token} />
                 <PortalConfirmation
                     token={token}
                     acknowledgment={acknowledgment}

@@ -11,8 +11,10 @@ use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Support\PortalPending;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistApplicationFactory;
 use Database\Factories\Telework\TeleworkerFactory;
@@ -21,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(IssuePortalLink::class, OpenPortal::class, PortalPending::class, PortalController::class);
@@ -323,3 +326,32 @@ it('lists two checklists asked at the same moment by their id', function (): voi
 
     expect(array_map(fn ($item): string => $item->id, $sent))->toBe(['00000000-0000-4000-8000-000000000000', 'ffffffff-ffff-4fff-bfff-ffffffffffff']);
 });
+
+it('opens the portal home without NOM-037 and sends nothing of the telework tool', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+    portalApplication($this->employee);
+
+    $this->get(route('portal.show', $this->token))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('unavailable', false)
+        ->where('canNotify', false)
+        ->where('pending', ['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []]));
+});
+
+it('answers 404 on every telework page of the portal when the company has no NOM-037', function (string $method, string $route): void {
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+    portalApplication($this->employee);
+    $id = (string) Str::uuid();
+
+    // Parameters a route does not name become its query string, which the 404 does not read.
+    $this->{$method}(route($route, ['token' => $this->token, 'application' => $id, 'evidenceRequest' => $id, 'authorization' => $id, 'document' => $id, 'item' => $id]))->assertNotFound();
+})->with([
+    ['get', 'portal.checklist.show'],
+    ['post', 'portal.checklist.store'],
+    ['post', 'portal.evidence.store'],
+    ['post', 'portal.visits.confirm'],
+    ['get', 'portal.documents.file'],
+    ['post', 'portal.documents.acknowledge'],
+    ['post', 'portal.equipment.respond'],
+    ['get', 'portal.notices.show'],
+    ['post', 'portal.notices.store'],
+]);
