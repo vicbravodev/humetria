@@ -6,7 +6,10 @@ use App\Models\AuditEntry;
 use App\Modules\Attendance\Actions\SendEnrollmentLinks;
 use App\Modules\Attendance\Jobs\SendEnrollmentLink;
 use App\Modules\Attendance\Models\AttendanceDevice;
+use App\Modules\Attendance\Models\AttendancePolicy;
+use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Notifications\EnrollmentInvitation;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -72,8 +75,31 @@ it('queues one link per person of the center without a device, skipping who has 
     expect($queued)->toEqualCanonicalizing([$this->ana->id, $this->carla->id])
         ->and(EnrollmentLink::query()->count())->toBe(0);
     $entry = AuditEntry::query()->where('event', 'attendance.enrollments_sent')->sole();
-    expect($entry)->subject_id->toBeNull()->metadata->toEqual(['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 1, 'linked' => 1, 'with_link' => 0]);
-    Log::shouldHaveReceived('info')->once()->with('attendance.enrollments_sent', ['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 1, 'linked' => 1, 'with_link' => 0]);
+    expect($entry)->subject_id->toBeNull()->metadata->toEqual(['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 1, 'linked' => 1, 'with_link' => 0, 'center_ready' => false]);
+    Log::shouldHaveReceived('info')->once()->with('attendance.enrollments_sent', ['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 1, 'linked' => 1, 'with_link' => 0, 'center_ready' => false]);
+});
+
+it('still sends to a center that cannot mark yet, and says in the trail whether it was ready', function (): void {
+    Queue::fake();
+    $this->actingAs($this->hr);
+    $ready = fn (): array => AuditEntry::query()->where('event', 'attendance.enrollments_sent')->orderBy('created_at')->get()
+        ->map(fn (AuditEntry $entry): mixed => $entry->metadata['center_ready'])->all();
+
+    enrollAll($this->plant->id);
+    Queue::assertPushed(SendEnrollmentLink::class, 2);
+
+    // A zone and, as the policy asks for the QR by default, a screen in use: now it is ready.
+    AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    enrollAll($this->plant->id);
+    KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+    enrollAll($this->plant->id);
+
+    // With the policy not asking for the QR, a zone alone is enough.
+    KioskDevice::query()->delete();
+    AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'require_qr_onsite' => false]);
+    enrollAll($this->plant->id);
+
+    expect($ready())->toBe([false, false, true, true]);
 });
 
 it('says how many it skipped when the only ones left already have a link', function (): void {
@@ -245,8 +271,8 @@ it('leaves alone who already has a link that still opens: the batch queues nobod
     });
     expect($queued)->toEqualCanonicalizing([$this->ana->id, $this->carla->id])
         ->and(EnrollmentLink::query()->whereNull('revoked_at')->pluck('id')->all())->toEqualCanonicalizing([$evaLink->id, $bobLink->id]);
-    Log::shouldHaveReceived('info')->once()->with('attendance.enrollments_sent', ['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 0, 'linked' => 1, 'with_link' => 2]);
-    expect(AuditEntry::query()->where('event', 'attendance.enrollments_sent')->sole()->metadata)->toEqual(['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 0, 'linked' => 1, 'with_link' => 2]);
+    Log::shouldHaveReceived('info')->once()->with('attendance.enrollments_sent', ['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 0, 'linked' => 1, 'with_link' => 2, 'center_ready' => false]);
+    expect(AuditEntry::query()->where('event', 'attendance.enrollments_sent')->sole()->metadata)->toEqual(['work_center_id' => $this->plant->id, 'sent' => 2, 'without_email' => 0, 'linked' => 1, 'with_link' => 2, 'center_ready' => false]);
 });
 
 it('does not replace a waiting link when the worker runs: the person keeps the same token and gets no new email', function (): void {

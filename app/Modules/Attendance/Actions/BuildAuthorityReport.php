@@ -15,6 +15,7 @@ use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\CompanyPolicy;
 use App\Modules\Attendance\Support\CorrectionHistory;
 use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Attendance\Support\HoursCalculator;
@@ -139,6 +140,7 @@ final readonly class BuildAuthorityReport
         // A day of slack each side: a night's end, or the end a void points to, may fall past the weeks.
         $history = CorrectionHistory::of($employeeIds, $weeks[0]->startUtc()->subDay(), $weeks[1]->nextStartUtc()->addDay());
         $schedules = AttendanceSchedule::query()->among('employee_id', $employeeIds)->get()->keyBy('employee_id');
+        $tolerance = $schedules->contains(fn (AttendanceSchedule $schedule): bool => $schedule->starts_by_weekday !== null) ? CompanyPolicy::current()->late_tolerance_minutes : 0;
         $answers = WeeklyConfirmation::query()->among('employee_id', $employeeIds)
             ->whereBetween('week_start', [$weeks[0]->start()->toDateString(), $weeks[1]->start()->toDateString()])
             ->get(['employee_id', 'week_start', 'status', 'digest'])
@@ -158,7 +160,7 @@ final readonly class BuildAuthorityReport
             foreach (self::byWeek($days) as $monday => $days) {
                 $schedule = $schedules->get($id);
                 $hours = array_map(
-                    fn (int $offset): DayHours => WorkedDay::hours($date = CarbonImmutable::parse($monday)->addDays($offset), $days[$date->toDateString()] ?? [], $schedule),
+                    fn (int $offset): DayHours => WorkedDay::hours($date = CarbonImmutable::parse($monday)->addDays($offset), $days[$date->toDateString()] ?? [], $schedule, $tolerance),
                     range(0, 6),
                 );
                 $summary = HoursCalculator::week($hours, $schedule->shift_type ?? ShiftType::Day, CarbonImmutable::parse($monday)->year);
@@ -288,6 +290,7 @@ final readonly class BuildAuthorityReport
             },
             weekDigest: $confirmed ? ($answer->digest ?? '') : '',
             flags: self::flags($marks, $day, $minutes, $minutes - $double, $week),
+            lateMinutes: $day->lateMinutes,
         );
     }
 

@@ -23,19 +23,20 @@ final readonly class SaveSchedules
     /**
      * @param  list<string>  $employeeIds
      * @param  array<int, int>  $minutesByWeekday  minutes agreed by ISO weekday, 1 Monday to 7 Sunday
+     * @param  array<int, int|null>|null  $startsByWeekday  the minute of the day each ISO weekday starts; null for none
      * @return list<RosterEntry> the people saved, in the order given
      *
      * @throws EmployeeNotAvailable when any of them is not of the company
      */
-    public function handle(array $employeeIds, ShiftType $shiftType, WorkMode $workMode, array $minutesByWeekday): array
+    public function handle(array $employeeIds, ShiftType $shiftType, WorkMode $workMode, array $minutesByWeekday, ?array $startsByWeekday = null): array
     {
         $found = $this->roster->findMany($employeeIds);
         $people = array_map(fn (string $id): RosterEntry => $found[$id] ?? throw new EmployeeNotAvailable, $employeeIds);
 
         // ponytail: one save per person, at most 100 of them; a single upsert if batches ever grow.
-        DB::transaction(function () use ($people, $shiftType, $workMode, $minutesByWeekday): void {
+        DB::transaction(function () use ($people, $shiftType, $workMode, $minutesByWeekday, $startsByWeekday): void {
             foreach ($people as $person) {
-                $this->save->handle($person->id, $shiftType, $workMode, $minutesByWeekday);
+                $this->save->handle($person->id, $shiftType, $workMode, $minutesByWeekday, $startsByWeekday);
             }
         });
 

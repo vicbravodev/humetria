@@ -27,6 +27,8 @@ export type WeekDay = {
     overtimeMinutes: number;
     restDay: boolean;
     missingEnd: boolean;
+    /** Minutes late against the schedule's start time and the tolerance: shown, never sanctioned; null with nothing to compare. */
+    lateMinutes?: number | null;
     /** Away that day with approved vacations or a leave (never its type): not a day they missed. Its marks still count. */
     absence?: 'vacation' | 'leave' | null;
 };
@@ -98,6 +100,11 @@ function away(absence: unknown): Pick<WeekDay, 'absence'> {
     return absence === 'vacation' || absence === 'leave' ? { absence } : {};
 }
 
+/** Only a number of minutes is a lateness; anything else is none. */
+function late(minutes: unknown): Pick<WeekDay, 'lateMinutes'> {
+    return typeof minutes === 'number' ? { lateMinutes: minutes } : {};
+}
+
 function day(json: unknown): WeekDay[] {
     return isJson(json) &&
         typeof json['date'] === 'string' &&
@@ -115,6 +122,7 @@ function day(json: unknown): WeekDay[] {
                   restDay: json['restDay'] === true,
                   missingEnd: json['missingEnd'] === true,
                   ...away(json['absence']),
+                  ...late(json['lateMinutes']),
               },
           ]
         : [];

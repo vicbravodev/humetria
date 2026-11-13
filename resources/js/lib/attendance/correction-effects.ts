@@ -1,6 +1,10 @@
 import { markName } from '@/lib/attendance/next-step';
+import { firstName } from '@/lib/attendance/punch-view';
 import { weekTitle } from '@/lib/attendance/week-text';
 import type { CorrectionDetail, CorrectionMark } from '@/types';
+
+// The one way to take a first name (punch-view), for RH's screens of a correction too.
+export { firstName };
 
 /**
  * Deciding a correction with its effect in view (board A3): what approving does, said from what the server found (its
@@ -12,10 +16,6 @@ export type EffectLine = {
     tone: 'done' | 'warn' | 'info' | 'block';
     text: string;
 };
-
-export function firstName(name: string): string {
-    return name.split(' ')[0] ?? name;
-}
 
 /** «09:00» of the server's local «Y-m-d H:i». */
 const clock = (local: string): string => local.split(' ')[1] ?? '';

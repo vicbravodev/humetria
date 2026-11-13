@@ -76,6 +76,27 @@ it('lets RH fix a schedule, with the week\'s total and a note above the year\'s 
         ->minutes_by_weekday->toBe([1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 240, 7 => 0]);
 });
 
+it('lets RH set the time each day starts, optional, and keeps it', function (): void {
+    $url = schedulesPanel();
+
+    visit("{$url}/attendance/schedules")
+        ->click('Fijar horario')
+        ->assertSee('Hora de entrada de cada día (opcional)')
+        ->assertSee('Sin hora de entrada, el día no tiene retardo.')
+        ->fill('#schedule-start-1', '09:00')
+        ->fill('#schedule-start-2', '09:00')
+        ->fill('#schedule-start-5', '08:30')
+        ->click('Guardar horario')
+        ->waitForText('Horario de Bob Díaz guardado.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    $bob = Employee::query()->withoutGlobalScopes()->where('name', 'Bob Díaz')->sole();
+    workIn(Tenant::query()->where('slug', 'acme')->sole());
+    expect(AttendanceSchedule::query()->where('employee_id', $bob->id)->sole()->starts_by_weekday)
+        ->toBe([1 => 540, 2 => 540, 3 => null, 4 => null, 5 => 510, 6 => null, 7 => null]);
+});
+
 it('lets RH choose people and fix the same schedule for all of them, from a template', function (): void {
     $url = schedulesPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();

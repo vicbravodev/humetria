@@ -101,6 +101,30 @@ describe('firstName', () => {
         expect(firstName('Beyoncé')).toBe('Beyoncé');
         expect(firstName('')).toBe('');
     });
+
+    it.each([
+        ['Ing. Carlos Ruiz', 'Carlos'],
+        ['Lic. Ana López', 'Ana'],
+        ['Dr. Luis Soto', 'Luis'],
+        ['Dra. María Pérez', 'María'],
+        ['Mtro. Pedro Gil', 'Pedro'],
+        ['Mtra. Elena Cruz', 'Elena'],
+        ['C.P. Rosa Vega', 'Rosa'],
+        ['lic. ana lópez', 'ana'],
+        ['Ing Carlos Ruiz', 'Carlos'],
+    ])('greets %s as the person, not the title', (name, first) => {
+        expect(firstName(name)).toBe(first);
+    });
+
+    it('keeps a name that is only a title, so the greeting is never empty', () => {
+        expect(firstName('Ing.')).toBe('Ing.');
+        expect(firstName('  Dra. ')).toBe('Dra.');
+    });
+
+    it('does not take a real name for a title', () => {
+        expect(firstName('Dora Luz')).toBe('Dora');
+        expect(firstName('Licona Ruiz')).toBe('Licona');
+    });
 });
 
 describe('doneTitle', () => {

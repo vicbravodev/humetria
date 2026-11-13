@@ -13,6 +13,7 @@ use App\Modules\Attendance\Http\Requests\MarkRequest;
 use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Support\CompanyPolicy;
 use App\Modules\Attendance\Support\MarkPolicyCheck;
 use App\Modules\Attendance\Support\PunchDay;
@@ -122,6 +123,7 @@ final readonly class MarkController
                 $zones,
                 $request->position(),
                 $signed->deviceId,
+                KioskDevice::inUseIn($person->workCenterId),
             );
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {

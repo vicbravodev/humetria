@@ -48,6 +48,7 @@ const withEffect = (
 describe('firstName', () => {
     it('is the first word of the name', () => {
         expect(firstName('Bob Díaz')).toBe('Bob');
+        expect(firstName('Ing. Bob Díaz')).toBe('Bob');
         expect(firstName('Ana')).toBe('Ana');
     });
 });
