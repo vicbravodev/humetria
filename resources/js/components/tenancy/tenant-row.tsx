@@ -5,6 +5,7 @@ import TenantRowActions from '@/components/tenancy/tenant-row-actions';
 import TenantSupportActions from '@/components/tenancy/tenant-support-actions';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { tenantStatusVariant } from '@/lib/tenant-status';
 import { show } from '@/routes/companies';
 import type { TenantRow as Tenant } from '@/types';
@@ -18,6 +19,8 @@ export default function TenantRowView({
     activationMinDate: string;
 }) {
     const { auth } = usePage().props;
+    // On a phone the owner column gives its place to the name cell: the table fits, and the invitation's buttons stay in reach.
+    const mobile = useIsMobile();
 
     return (
         <TableRow>
@@ -34,10 +37,20 @@ export default function TenantRowView({
                         <span className="text-caption text-muted-foreground">
                             {tenant.legal_name}
                         </span>
+                        <span className="text-caption text-muted-foreground tabular-nums md:hidden">
+                            {tenant.rfc}
+                        </span>
                     </div>
                 </div>
+                {mobile && (
+                    <div className="mt-3">
+                        <TenantOwnerCell tenant={tenant} />
+                    </div>
+                )}
             </TableCell>
-            <TableCell className="text-sm tabular-nums">{tenant.rfc}</TableCell>
+            <TableCell className="hidden text-sm tabular-nums md:table-cell">
+                {tenant.rfc}
+            </TableCell>
             <TableCell className="whitespace-normal">
                 <div className="flex flex-col items-start gap-1">
                     <Badge variant={tenantStatusVariant(tenant.status)}>
@@ -55,8 +68,8 @@ export default function TenantRowView({
                     )}
                 </div>
             </TableCell>
-            <TableCell className="whitespace-normal">
-                <TenantOwnerCell tenant={tenant} />
+            <TableCell className="hidden whitespace-normal md:table-cell">
+                {!mobile && <TenantOwnerCell tenant={tenant} />}
             </TableCell>
             <TableCell className="w-px text-right">
                 {auth.isSuperadmin ? (
