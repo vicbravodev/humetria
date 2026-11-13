@@ -56,7 +56,7 @@ final readonly class CenterBoard
                 'state' => $row->state->value,
                 'stateLabel' => $row->state->label(),
                 'count' => $row->count,
-                'since' => $row->since?->toDateString(),
+                'since' => $row->since?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
             ], $rows),
             'summary' => ['met' => $inState(RowState::Met), 'warning' => $inState(RowState::Warning), 'missing' => $inState(RowState::Missing), 'pending' => $inState(RowState::Pending), 'notApplicable' => $inState(RowState::NotApplicable)],
         ];

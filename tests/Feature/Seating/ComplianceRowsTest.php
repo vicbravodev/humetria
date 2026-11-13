@@ -387,18 +387,16 @@ it('labels the pending state «Sin registros»', function (): void {
     expect(RowState::Pending->label())->toBe('Sin registros');
 });
 
-// R2-compliance-C-01: with no position registered there is nobody whose assessment or seat could be judged: never «Cumple».
+// C-01: with no position registered there is nobody whose assessment or seat could be judged: never «Cumple».
 it('does not call R2 and R4 met where there is no position to judge them by', function (): void {
-    PositionAssignment::query()->delete();
-    StandingPosition::query()->delete();
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
 
-    expect(row($this, 'r2')->state)->toBe(RowState::Pending)->and(row($this, 'r4')->state)->toBe(RowState::Pending);
+    expect(collect(resolve(ComplianceRows::class)->for($empty->id))->whereIn('key', ['r2', 'r4'])->pluck('state')->all())->toBe([RowState::Pending, RowState::Pending]);
 });
 
 it('says R2 and R4 do not apply where the center declared nobody stands', function (): void {
-    PositionAssignment::query()->delete();
-    StandingPosition::query()->delete();
-    SeatingProfile::query()->update(['no_standing_positions' => true]);
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
+    SeatingProfile::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $empty->id, 'no_standing_positions' => true]);
 
-    expect(row($this, 'r2')->state)->toBe(RowState::NotApplicable)->and(row($this, 'r4')->state)->toBe(RowState::NotApplicable);
+    expect(collect(resolve(ComplianceRows::class)->for($empty->id))->whereIn('key', ['r2', 'r4'])->pluck('state')->all())->toBe([RowState::NotApplicable, RowState::NotApplicable]);
 });

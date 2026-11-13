@@ -17,7 +17,6 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(CenterBoard::class);
@@ -65,6 +64,18 @@ it('carries the date a requirement has been waiting since, written as a day', fu
         ->where('requirements.1.state', 'warning')
         ->where('requirements.1.count', 1)
         ->where('requirements.1.since', '2026-10-02'));
+});
+
+it('writes the day a requirement has waited since in Mexico City time, not UTC', function (): void {
+    fillCenter($this, 1, 0);
+    $position = StandingPosition::query()->firstOrFail();
+    $employee = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id, 'position_id' => $position->id]);
+    // 22:00 of the 1st in Mexico City is already the 2nd in UTC.
+    RiskAssessment::factory()->signed()->create($this->where + ['employee_id' => $employee->id, 'position_id' => $position->id, 'signed_at' => '2026-10-02 04:00:00', 'reassessment_due' => true]);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr))->get($this->url)->assertInertia(fn (Assert $page) => $page
+        ->where('requirements.1.since', '2026-10-01'));
 });
 
 it('shows each role the tabs it may open, with how many each holds', function (TenantRole $role, array $tabs): void {
