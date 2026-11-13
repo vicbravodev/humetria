@@ -29,10 +29,10 @@ it('keeps every strictest TypeScript flag switched on', function (string $flag, 
 ]);
 
 it('has no TypeScript checker suppressions in the frontend source', function () {
-    $root = realpath(__DIR__.'/../../resources/js');
+    $root = dirname(__DIR__, 2).'/resources/js';
     $offenders = [];
 
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
+    $files = frontendSourceFiles();
 
     foreach ($files as $file) {
         $path = $file->getPathname();

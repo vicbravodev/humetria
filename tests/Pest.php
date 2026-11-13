@@ -385,6 +385,31 @@ function smallTouchTargets(): string
 }
 
 /**
+ * The source files under a directory of resources/js. The lint probes of FrontendArchitectureTest write and delete
+ * `zz-probe-*` files and folders there while other tests run in parallel: they are left out, so a walk never trips on
+ * a folder that vanished halfway.
+ *
+ * @return list<SplFileInfo>
+ */
+function frontendSourceFiles(string $directory = ''): array
+{
+    $root = dirname(__DIR__).'/resources/js'.($directory === '' ? '' : '/'.$directory);
+    $filter = new RecursiveCallbackFilterIterator(
+        new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+        fn (SplFileInfo $file): bool => ! str_starts_with($file->getFilename(), 'zz-probe-'),
+    );
+    $files = [];
+
+    foreach (new RecursiveIteratorIterator($filter) as $file) {
+        if ($file instanceof SplFileInfo) {
+            $files[] = $file;
+        }
+    }
+
+    return $files;
+}
+
+/**
  * A script that resolves once no calendar popover is open: picking a day closes its popover with a short animation,
  * and on a slow runner the click that opens the next date field can land while the first one is still closing.
  */

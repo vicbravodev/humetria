@@ -11,7 +11,7 @@ declare(strict_types=1);
 function filesCopying(string $pattern): array
 {
     $found = [];
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../../resources/js', FilesystemIterator::SKIP_DOTS));
+    $files = frontendSourceFiles();
 
     foreach ($files as $file) {
         if (! str_contains((string) $file, '/components/humetria/')

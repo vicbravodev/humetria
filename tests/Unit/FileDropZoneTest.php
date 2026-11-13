@@ -8,10 +8,10 @@ declare(strict_types=1);
  * zone itself, which keeps the real input inside.
  */
 it('chooses files only through the drop zone', function (): void {
-    $root = realpath(__DIR__.'/../../resources/js').'/';
+    $root = dirname(__DIR__, 2).'/resources/js/';
     $native = [];
 
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)) as $file) {
+    foreach (frontendSourceFiles() as $file) {
         $path = $file instanceof SplFileInfo ? substr($file->getPathname(), strlen($root)) : '';
 
         if (str_ends_with($path, '.tsx') && ! str_starts_with($path, 'components/ui/') && $path !== 'components/humetria/file-drop-zone.tsx'
