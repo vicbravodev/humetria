@@ -152,8 +152,11 @@ it('puts first what is urgent, for whoever may act on it, and never what a compl
 
 it('puts among the urgent the vacation requests that wait for an answer, for whoever manages vacations', function (int $waiting, TenantRole $role, ?string $title): void {
     foreach ($waiting === 0 ? [] : range(1, $waiting) as $ignored) {
-        App\Modules\Leave\Models\LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);
+        App\Modules\Leave\Models\LeaveRequest::factory()->escalated()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);
     }
+
+    // Those that still wait for the manager are not RH's to answer: «Por atender» does not hold them either.
+    App\Modules\Leave\Models\LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);
 
     // Answered requests do not wait.
     App\Modules\Leave\Models\LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);

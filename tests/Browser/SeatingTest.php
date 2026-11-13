@@ -567,6 +567,27 @@ it('shows the survey in progress and closes it before its last day', function (b
         ->assertSee('Cerrar la encuesta ahora');
 })->with($looks);
 
+it('writes the last day of the survey as a date, not as the year-month-day the server sends', function (): void {
+    [$url, $center] = seatingCenter();
+    Campaign::factory()->active('2026-11-25')->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
+
+    visit("{$url}/seating/centers/{$center->id}/survey")
+        ->assertSee('Cierra el 25 de noviembre de 2026')
+        ->assertDontSee('2026-11-25');
+});
+
+it('says why the survey cannot be launched on a center with nobody in it', function (): void {
+    [$url, $center] = seatingCenter();
+
+    visit("{$url}/seating/centers/{$center->id}/survey")
+        ->click('#survey-closes-on')
+        // The last day that can still be picked in the month on screen, or the first of the next one at the end of the month.
+        ->assertScript('() => { const days = [...document.querySelectorAll("[role=gridcell] button:not([disabled])")]; if (days.length > 0) { days.at(-1).click(); return true; } document.querySelector(".rdp-button_next").click(); return new Promise((resolve) => setTimeout(() => { document.querySelector("[role=gridcell] button:not([disabled])").click(); resolve(true); }, 300)); }')
+        ->press('Lanzar la encuesta')
+        ->assertSee('Este centro no tiene personas activas a quienes preguntar')
+        ->assertNoJavaScriptErrors();
+});
+
 it('closes the survey from its page after asking', function (): void {
     [$url, $center] = seatingCenter();
     $survey = Campaign::factory()->active(now()->addDays(10)->toDateString())->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'kind' => CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);

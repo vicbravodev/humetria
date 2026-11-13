@@ -208,6 +208,8 @@ it('offers the console pages in the palette only to the superadmin', function ()
     $this->actingAs(User::factory()->create());
 
     visit('/admin')
+        // The top bar exists only once React mounted the app: the shortcut is listening by then.
+        ->assertVisible('@command-palette')
         ->assertScript(OPEN_PALETTE)
         ->type('#command-search', 'empresas')
         ->assertSee('Sin resultados');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Compensation\Support;
 
+use App\Modules\Compensation\Data\FiscalSnapshot;
 use Carbon\CarbonImmutable;
 use OutOfBoundsException;
 
@@ -11,13 +12,16 @@ use OutOfBoundsException;
  * Whether a daily salary is under the minimum wage in force on the day it starts to count (not today's): the warning
  * of {@see SalaryRules::salaryWarning()}, with the parameters of that date.
  */
-final readonly class MinimumWageCheck
+final class MinimumWageCheck
 {
-    public function __construct(private FiscalParameters $fiscal) {}
+    /** @var array<string, FiscalSnapshot> the parameters already read, by day: a page of salaries shares a few dates */
+    private array $snapshots = [];
+
+    public function __construct(private readonly FiscalParameters $fiscal) {}
 
     public function warning(int $cents, CarbonImmutable $on): ?string
     {
-        $legal = $this->fiscal->at($on);
+        $legal = $this->snapshots[$on->toDateString()] ??= $this->fiscal->at($on);
 
         try {
             return SalaryRules::salaryWarning($cents, $legal->minimumWage(), $legal->minimumWageBorder());

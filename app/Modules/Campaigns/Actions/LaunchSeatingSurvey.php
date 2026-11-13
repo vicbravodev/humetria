@@ -44,7 +44,7 @@ final readonly class LaunchSeatingSurvey
         $people = $workCenter === null || $workCenter->archived ? [] : $this->roster->activeIn($workCenterId);
 
         if ($people === []) {
-            throw ValidationException::withMessages(['work_center_id' => 'Elige un centro de trabajo activo con personas.']);
+            throw ValidationException::withMessages(['work_center_id' => 'Este centro no tiene personas activas a quienes preguntar: agrégalas en Empleados y vuelve a lanzar la encuesta.']);
         }
 
         try {

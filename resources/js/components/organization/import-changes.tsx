@@ -3,6 +3,9 @@ import { changeLine } from '@/lib/employees';
 import { countOf } from '@/lib/plural';
 import type { EmployeeImportChange } from '@/types';
 
+/** Folds open on their own up to this many people: a short review shows what changes without a click. */
+const OPEN_UP_TO = 5;
+
 /** What the file changes in each person who already exists, before it is confirmed; one fold per person. */
 export default function ImportChanges({
     changes,
@@ -27,7 +30,10 @@ export default function ImportChanges({
             <ul className="divide-y divide-border card">
                 {changes.map((person) => (
                     <li key={person.row}>
-                        <details className="group px-5 py-3">
+                        <details
+                            className="group px-5 py-3"
+                            open={changes.length <= OPEN_UP_TO}
+                        >
                             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium">
                                 <span>{person.name}</span>
                                 <span className="flex items-center gap-2 text-sm font-normal text-muted-foreground">

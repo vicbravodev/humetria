@@ -110,7 +110,7 @@ final class PlanEmployeeImport
         foreach ($valid as $line => $row) {
             $manager = $resolved['managers'][$line] ?? null;
             $managerLine = $manager !== null && str_starts_with($manager, 'row:') ? (int) substr($manager, 4) : null;
-            $valid[$line] = new EmployeeImportRow($row->data, $row->existingId, $row->absent, $managerLine === null ? $manager : null, $managerLine === null ? null : ($places[$managerLine] ?? null));
+            $valid[$line] = new EmployeeImportRow($row->data, $row->existingId, $row->absent, $managerLine === null ? $manager : null, $managerLine === null ? null : ($places[$managerLine] ?? null), $row->changes);
         }
 
         foreach ($resolved['errors'] as $line => $message) {

@@ -258,3 +258,13 @@ it('says, for each person who is updated, what changes with its before and after
         ],
     ]])->and($same->refresh()->job_title)->toBe('Operador');
 });
+
+it('still says what changes when the file carries the manager column', function (): void {
+    Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Alma Torres', 'email' => 'alma@acme.mx', 'gender' => 'female', 'job_title' => 'Operador', 'employee_number' => 'A-1']);
+
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['file' => csvFile(['Alma Torres,alma@acme.mx,,Mujer,Planta Querétaro,Producción,Operador Senior,A-1,'], CSV_HEADER.',jefe')])
+        ->assertRedirect();
+
+    expect(importFlash()['changes'][0]['changes'])->toContain(['label' => 'Puesto', 'before' => 'Operador', 'after' => 'Operador Senior']);
+});

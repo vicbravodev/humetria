@@ -7,6 +7,7 @@ namespace App\Modules\Compensation\Actions;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Support\BenefitValue;
 use App\Modules\Compensation\Support\Calculation\Money;
+use App\Modules\Compensation\Support\MinimumWageCheck;
 use App\Modules\Organization\Contracts\CompensationRoster;
 use App\Modules\Organization\Contracts\JobGrades;
 use Carbon\CarbonImmutable;
@@ -17,7 +18,7 @@ final readonly class ListSalaryOverrides
 {
     public const int PER_PAGE = 15;
 
-    public function __construct(private CompensationRoster $roster, private JobGrades $jobGrades) {}
+    public function __construct(private CompensationRoster $roster, private JobGrades $jobGrades, private MinimumWageCheck $minimum) {}
 
     /**
      * A page of the people with an individual salary (the ones whose employee number or notes have what was typed, ignoring
@@ -65,21 +66,22 @@ final readonly class ListSalaryOverrides
             'employee_number' => $number,
             'grade' => $grade,
             'active' => $active,
-            'current' => $current === null ? null : self::salary($current),
-            'salaries' => array_map(fn (SalaryOverride $override): array => ['id' => $override->id, ...self::salary($override)], $overrides),
+            'current' => $current === null ? null : $this->salary($current),
+            'salaries' => array_map(fn (SalaryOverride $override): array => ['id' => $override->id, ...$this->salary($override)], $overrides),
         ];
     }
 
     /**
-     * @return array{daily_salary: string, daily_salary_text: string, effective_from: string, note: ?string}
+     * @return array{daily_salary: string, daily_salary_text: string, effective_from: string, note: ?string, below_minimum: string|null}
      */
-    private static function salary(SalaryOverride $override): array
+    private function salary(SalaryOverride $override): array
     {
         return [
             'daily_salary' => BenefitValue::decimal($override->daily_salary_cents),
             'daily_salary_text' => Money::format($override->daily_salary_cents),
             'effective_from' => $override->effective_from->toDateString(),
             'note' => $override->note,
+            'below_minimum' => $this->minimum->warning($override->daily_salary_cents, CarbonImmutable::parse($override->effective_from->toDateString())),
         ];
     }
 }

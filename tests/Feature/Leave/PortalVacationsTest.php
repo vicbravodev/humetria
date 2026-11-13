@@ -348,6 +348,14 @@ it('opens vacations for a company without NOM-037', function (): void {
     $this->get(route('portal.vacations.show', $this->token))->assertOk();
 });
 
+it('keeps the vacations of a person with requests open, and on their portal home, when the company has no NOM-037', function (): void {
+    leavePortalRequest($this->ana, 'requested', ['working_days' => 3]);
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    $this->get(route('portal.show', $this->token))->assertOk()->assertInertia(fn ($page) => $page->where('sections.0.href', route('portal.vacations.show', $this->token)));
+    $this->get(route('portal.vacations.show', $this->token))->assertOk()->assertInertia(fn ($page) => $page->where('waiting', 3));
+});
+
 it('says how many days wait for an answer without taking them off the days available', function (): void {
     leavePortalRequest($this->ana, 'requested', ['working_days' => 3]);
     leavePortalRequest($this->ana, 'requested', ['working_days' => 2, 'starts_on' => '2026-12-14', 'ends_on' => '2026-12-15']);

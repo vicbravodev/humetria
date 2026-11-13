@@ -398,3 +398,18 @@ it('stays readable with the text at 200 %, has a heading on each screen and warn
         ->assertScript('() => [...document.querySelectorAll("header p")].every((name) => getComputedStyle(name).textOverflow !== "ellipsis" && getComputedStyle(name).whiteSpace !== "nowrap")', true)
         ->assertNoJavaScriptErrors();
 });
+
+// H-11, the cover of a guide: with the text doubled at 375 px nothing leaves the width and the company name never touches «Confidencial».
+it('reflows the cover of a guide with the text at 200 %, with no button out of the width nor the header overlapped', function (): void {
+    invitedPerson(['seating.survey']);
+    Tenant::query()->update(['trade_name' => 'Demo NOM-035']);
+
+    $page = visit('/survey/the-token')->on()->mobile()->click('Comenzar');
+    $page->assertSee('Empezar');
+    $page->script('() => { document.documentElement.style.fontSize = "200%"; return true; }');
+
+    // The header is as wide as the layout; whatever sticks out past it is overflow (innerWidth grows with it on a phone).
+    $page->assertScript('() => { const width = document.querySelector("header").getBoundingClientRect().right; return [...document.querySelectorAll("main button")].every((button) => button.getBoundingClientRect().right <= width); }', true)
+        ->assertScript('() => { const [name, lock] = document.querySelectorAll("header p"); const a = name.getBoundingClientRect(); const b = lock.getBoundingClientRect(); return a.right <= b.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1; }', true)
+        ->assertNoJavaScriptErrors();
+});

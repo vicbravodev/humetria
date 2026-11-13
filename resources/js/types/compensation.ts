@@ -89,6 +89,8 @@ export type SalaryEntry = {
     daily_salary_text: string;
     /** `AAAA-MM-DD`. */
     effective_from: string;
+    /** Why it is under the general minimum wage in force that day; null when it is not. */
+    below_minimum: string | null;
 };
 
 /** A category and level of the tabulator with its salaries, latest vigencia first, and the one in force today. */

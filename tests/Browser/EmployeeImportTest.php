@@ -71,3 +71,16 @@ it('lists the rows to fix and imports nothing', function (bool $dark, bool $mobi
 
     expect(Employee::query()->withoutGlobalScopes()->count())->toBe(0);
 })->with($looks);
+
+it('shows what changes in a person who is updated without having to open anything', function (): void {
+    $center = WorkCenter::query()->withoutGlobalScopes()->where('name', 'Planta Norte')->sole();
+    Employee::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Alma Torres', 'email' => 'alma@acme.mx', 'mobile' => null, 'gender' => 'female', 'job_title' => 'Operador', 'employee_number' => 'A-1', 'hired_on' => null]);
+    $path = csvOnDisk("nombre,correo,celular,genero,centro_de_trabajo,area,puesto,numero_de_empleado,fecha_de_ingreso,jefe\nAlma Torres,alma@acme.mx,,Mujer,Planta Norte,Producción,Operador Senior,A-1,,\n");
+
+    visit('/admin/acme/employees/import')
+        ->attach('file', $path)
+        ->press('Revisar archivo')
+        ->assertSee('Qué cambia en 1 persona')
+        ->assertSee('Puesto: Operador → Operador Senior')
+        ->assertNoJavaScriptErrors();
+});

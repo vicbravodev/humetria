@@ -8,11 +8,11 @@ use App\Modules\Leave\Contracts\PendingRequests;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveRequest;
 
-/** The requests of the current company still waiting for an answer, whoever has to give it: one query. */
+/** The requests RH has to answer (the ones of «Por atender»: escalated, not those still with the manager): one query. */
 final readonly class CompanyPendingRequests implements PendingRequests
 {
     public function waiting(): int
     {
-        return LeaveRequest::query()->where('status', RequestStatus::Requested)->count();
+        return LeaveRequest::query()->where('status', RequestStatus::Requested)->whereNotNull('escalated_at')->count();
     }
 }

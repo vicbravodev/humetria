@@ -67,7 +67,7 @@ export default function GuideIntro({
                 Sus respuestas se guardan en este equipo hasta que las envíe. Si
                 el equipo es compartido, termine en una sola sesión.
             </p>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <Button
                     variant="ghost"
                     size="lg"
@@ -79,7 +79,7 @@ export default function GuideIntro({
                 </Button>
                 <Button
                     size="lg"
-                    className="min-w-40 rounded-[10px] text-[1.0625rem]"
+                    className="max-w-full min-w-40 rounded-[10px] text-[1.0625rem]"
                     onClick={onStart}
                 >
                     Empezar
