@@ -84,6 +84,15 @@ it('writes every section of a block once its questions are answered', function (
         ->and(array_map(fn (Field $field): bool => $field->options !== [], array_merge([], ...array_map(fn ($question): array => $question->fields, $template->questions()))))->not->toContain(false);
 })->with([DocumentKind::ViolenceMeasures, DocumentKind::PreventionMeasures, DocumentKind::ComplaintMechanism, DocumentKind::HealthEffects]);
 
+// C-20: «Nadie recibirá represalias» is a promise the company has not made in the app, and the channel it points to may not be anonymous.
+it('does not promise what the company has not: no retaliation in the text of the complaint block', function (): void {
+    $template = resolve(Templates::class)->template(DocumentKind::ComplaintMechanism) ?? throw new LogicException;
+    $text = resolve(Writer::class)->sections($template, ['channels' => ['channel', 'hr']])[0]['text'];
+
+    expect($text)->toBe('Puede presentar una queja o denuncia por el canal de quejas, también sin dar su nombre y con Recursos Humanos, en persona o por correo.')
+        ->not->toContain('represalias');
+});
+
 it('keeps the answers in the draft of the block and publishes it to the centers, back to the disclosure', function (): void {
     $this->actingAs($this->hr);
 

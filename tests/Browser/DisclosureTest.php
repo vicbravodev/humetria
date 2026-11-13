@@ -120,7 +120,7 @@ it('reads a published version', function (bool $dark, bool $mobile): void {
 it('publishes the policy from the end of its questions and goes back to the route of the center', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
-    $center = WorkCenter::factory()->for($tenant)->create();
+    $center = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
     workIn($tenant);
     resolve(App\Modules\Disclosure\Actions\SaveWriting::class)->handle(resolve(App\Modules\Disclosure\Support\Writing\Templates::class)->template(App\Modules\Disclosure\Enums\DocumentKind::Policy) ?? throw new LogicException, App\Modules\Disclosure\Enums\DocumentKind::Policy, [
         'signature' => 'hr', 'responsibles' => ['hr'], 'resources' => ['channel'], 'practices' => ['h'], 'principles' => ['p3'], 'dissemination' => ['page'],
@@ -131,6 +131,9 @@ it('publishes the policy from the end of its questions and goes back to the rout
         ->assertSee('Son responsables de aplicar esta política: Recursos Humanos.')
         ->press('Publicar')
         ->assertSee('Publicar la política')
+        // It came from the route of one center: only that one is chosen, not every center of the company.
+        ->assertSeeIn('[aria-label="Centros elegidos"]', 'Planta Querétaro')
+        ->assertNotChecked('#publish-all-centers')
         ->check('input[name="reviewed"]')
         ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Política publicada: versión 1.')
@@ -455,6 +458,7 @@ it('shows the people the channel for complaints and the measures the company cho
         ->assertSee('¿Algo no está bien en su trabajo?')
         ->assertSee('Presentar una queja o denuncia')
         ->assertSee('Puede avisar sin dar su nombre.')
+        ->assertDontSee('Nadie recibirá represalias')
         ->click('Lo que hacemos para prevenir')
         ->assertSee('Del Programa de intervención')
         ->assertSee('Revisar las cargas de trabajo');

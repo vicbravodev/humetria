@@ -78,8 +78,8 @@ export default function SharePreview({
                             </p>
                             <p>
                                 {props.channel.anonymous
-                                    ? 'Avise por el canal de quejas, también sin dar su nombre. Nadie recibirá represalias.'
-                                    : 'Avise por el canal de quejas. Nadie recibirá represalias.'}
+                                    ? 'Avise por el canal de quejas, también sin dar su nombre.'
+                                    : 'Avise por el canal de quejas.'}
                             </p>
                         </div>
                     )}

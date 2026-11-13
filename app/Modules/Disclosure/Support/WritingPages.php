@@ -24,8 +24,8 @@ final readonly class WritingPages
     public function __construct(private Writer $writer, private Companies $companies, private WorkCenters $workCenters) {}
 
     /**
-     * @param  array{href: string, label: string, center: string|null}  $back  Where «Guardar y volver» leads, and the center
-     *                                                                         whose route it is.
+     * @param  array{href: string, label: string, center: string|null, centerName: string|null}  $back  Where «Guardar y volver» leads, and the center
+     *                                                                                                  whose route it is.
      * @return array<string, mixed>
      */
     public function props(WrittenTemplate $template, DocumentKind $kind, array $back): array

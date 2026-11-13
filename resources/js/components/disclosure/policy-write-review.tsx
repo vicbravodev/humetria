@@ -4,6 +4,7 @@ import PublishDialog from '@/components/disclosure/publish-dialog';
 import FlowProgress from '@/components/humetria/flow-progress';
 import { Button } from '@/components/ui/button';
 import WriteMissing from '@/components/write-missing';
+import type { Option } from '@/lib/option-search';
 import type { FlowQuestion } from '@/lib/question-flow';
 import type { DisclosureWritingProps } from '@/types';
 
@@ -22,7 +23,7 @@ export default function PolicyWriteReview({
     questions: FlowQuestion[];
     publication: DisclosureWritingProps['publication'];
     /** The center whose route it came from, to go back to it once published. */
-    center: string | null;
+    center: Option | null;
     onGo: (step: number) => void;
 }) {
     const [publishing, setPublishing] = useState(false);
