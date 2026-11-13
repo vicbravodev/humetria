@@ -35,7 +35,9 @@ it('shows the route of a center as the redesign draws it, in both themes and on 
         ->assertSeeIn('[aria-labelledby="before"]', 'Hugo Saiz avisó un accidente el 27 feb')
         ->assertSeeIn('ol[aria-label="Etapas de la NOM-037"] li:first-child', 'Aquí vas')
         ->assertSeeIn('ol[aria-label="Etapas de la NOM-037"] li:first-child', 'Define las reglas del teletrabajo')
-        ->assertSeeIn('ol[aria-label="Etapas de la NOM-037"] li:nth-child(4)', 'Hecho')
+        // R2-compliance-01: Hugo has no training registered, so «equipo y capacitación» is not «Hecho».
+        ->assertSeeIn('ol[aria-label="Etapas de la NOM-037"] li:nth-child(4)', 'Entrega equipo y capacita')
+        ->assertDontSeeIn('ol[aria-label="Etapas de la NOM-037"] li:nth-child(4)', 'Hecho')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
 
