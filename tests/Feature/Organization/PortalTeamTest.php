@@ -14,7 +14,7 @@ mutates(PortalTeamController::class);
 
 // Opening the link (its row, its company and its person: 5), then the person, their manager, their peers (count, page
 // and areas) and their reports (the same three).
-const PORTAL_TEAM_QUERIES = 19;
+const PORTAL_TEAM_QUERIES = 13;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
