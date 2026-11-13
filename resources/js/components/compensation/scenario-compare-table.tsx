@@ -84,7 +84,7 @@ export default function ScenarioCompareTable({
                             totals.first_year_difference,
                         ] as const,
                         [
-                            'Cada año después',
+                            'Al año, al arranque',
                             totals.recurring,
                             totals.recurring_difference,
                         ] as const,

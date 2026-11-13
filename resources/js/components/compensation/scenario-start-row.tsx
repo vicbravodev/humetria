@@ -52,7 +52,7 @@ export default function ScenarioStartRow({
                 </span>
                 <span className="grid @[640px]:justify-items-end">
                     <span className="text-sm text-muted-foreground">
-                        Cada año después
+                        Al año, al arranque
                     </span>
                     <span className="font-semibold tabular-nums">
                         {scenario.recurring_text}

@@ -56,7 +56,9 @@ export default function ScenarioCostAside({
             </div>
             <dl className="grid gap-3 border-y py-4">
                 <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">Cada año después</dt>
+                    <dt className="text-muted-foreground">
+                        Al año, al arranque
+                    </dt>
                     <dd className="font-semibold tabular-nums">
                         {texts.recurring}
                     </dd>

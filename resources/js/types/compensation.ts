@@ -64,6 +64,10 @@ export type BenefitRow = {
     /** The terms in force today; none before the first vigencia. */
     current: { value_text: string; effective_from: string } | null;
     warning: string | null;
+    /** What to know about this benefit: the seniority premium is on top of the law's, which is counted apart. */
+    note: string | null;
+    /** Where the Vacaciones policy and this contract say different things (vacation days and premium). */
+    policy_notice: string | null;
     terms: BenefitTerm[];
 };
 
