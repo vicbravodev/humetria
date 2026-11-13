@@ -38,7 +38,7 @@ it('tells each center where it stands in its route, and that it still has to ans
     teleworkerAt($this->plant);
 
     expect(app(TeleworkRoute::class)->progress([$this->plant->id, $this->offices->id, WorkCenter::factory()->create()->id]))->toEqual([
-        $this->plant->id => new RouteProgress(true, [false, false, false, true, true, false], 'define las reglas'),
+        $this->plant->id => new RouteProgress(true, [false, false, false, false, true, false], 'define las reglas'),
         $this->offices->id => RouteProgress::unanswered(),
     ]);
 });

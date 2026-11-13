@@ -210,7 +210,14 @@ it('computes each 10.3 row', function (string $numeral, Closure $arrange, RowSta
         $training = TrainingFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'held_on' => '2026-02-20']);
         TrainingAttendee::query()->create(['tenant_id' => test()->tenant->id, 'training_id' => $training->id, 'employee_id' => $person->employee_id]);
     }, RowState::Done],
-    '5.9 y 8 done: a new person in their first twelve months' => ['5.9 y 8', fn () => rowPerson(), RowState::Done],
+    // R2-compliance-01: «al corriente» needs a registered training; being inside the first twelve months is not evidence.
+    '5.9 y 8 missing: a new person in their first twelve months with no training registered' => ['5.9 y 8', fn () => rowPerson(), RowState::Missing],
+    '5.9 y 8 partial: one trained, one without a training registered' => ['5.9 y 8', function (): void {
+        $trained = rowPerson(['started_at' => '2025-12-01 12:00:00']);
+        rowPerson(['started_at' => '2025-12-01 12:00:00']);
+        $training = TrainingFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'held_on' => '2026-02-20']);
+        TrainingAttendee::query()->create(['tenant_id' => test()->tenant->id, 'training_id' => $training->id, 'employee_id' => $trained->employee_id]);
+    }, RowState::Partial],
     '5.9 y 8 missing: everyone is overdue' => ['5.9 y 8', function (): void {
         rowPerson(['started_at' => '2025-01-10 12:00:00']);
         TrainingFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->center->id, 'held_on' => '2025-01-05']);
@@ -410,6 +417,8 @@ it('describes each row in words, with its counts, in a center half way through',
 it('describes each row in words in a center with one person up to date', function (): void {
     $ana = rowPerson(['started_at' => '2025-03-20 12:00:00']);
     rowPlace($ana);
+    $training = TrainingFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'held_on' => '2025-03-20']);
+    TrainingAttendee::query()->create(['tenant_id' => $this->tenant->id, 'training_id' => $training->id, 'employee_id' => $ana->employee_id]);
     rowDocument(DocumentKind::Policy, DocumentKind::Policy->coverableItems());
     rowDocument(DocumentKind::RiskInformation);
     foreach (Illuminate\Support\Facades\DB::table('telework_documents')->pluck('id') as $documentId) {
@@ -485,6 +494,12 @@ it('words the rows that have nothing to count yet', function (): void {
         '5.3' => 'done: Aún no hay personas ni integrantes de la Comisión a quienes informar.',
         '5.5.1' => 'partial: La lista publicada no tiene Sección II, la que contestan las personas cada periodo.',
     ]);
+});
+
+it('says that nobody has a training registered instead of calling them up to date', function (): void {
+    rowPerson();
+
+    expect(rowWords()['5.9 y 8'])->toBe('missing: La persona no tiene una capacitación registrada.');
 });
 
 it('says that everyone is up to date with their training', function (): void {
