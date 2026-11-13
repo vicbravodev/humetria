@@ -51,6 +51,7 @@ const LABELS: Record<string, string> = {
     'attendance.report_exported': 'Reporte de asistencia exportado',
     'employee.manager_changed': 'Jefe directo cambiado',
     'employee.deactivated': 'Persona dada de baja',
+    'nom035.dossier_viewed': 'Expediente de NOM-035 consultado',
     'disclosure.poster_viewed': 'Cartel de difusión consultado',
     'disclosure.dossier_viewed': 'Expediente de difusión consultado',
     'disclosure.page_link_viewed': 'Página pública de difusión consultada',

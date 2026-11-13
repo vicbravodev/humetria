@@ -97,7 +97,7 @@ it('lists each work center with its open evaluation and progress, its last evalu
                         'closesOn' => '14 nov 2026',
                         'closedOn' => null,
                         'launchedOn' => '29 oct 2026',
-                        'progress' => ['completed' => 21, 'target' => 52, 'againstSample' => true, 'screeningPending' => 0],
+                        'progress' => ['completed' => 21, 'target' => 52, 'againstSample' => true, 'screeningPending' => 0, 'screeningTarget' => 0],
                     ],
                     'eligible' => false,
                 ],
@@ -116,7 +116,7 @@ it('measures a Guía II evaluation against everyone invited, and a draft not at 
         ->assertInertia(fn (Assert $page) => $page
             ->where('workCenters.data.0.openCampaign.status', 'draft')
             ->where('workCenters.data.0.openCampaign.progress', null)
-            ->where('workCenters.data.1.openCampaign.progress', ['completed' => 7, 'target' => 18, 'againstSample' => false, 'screeningPending' => 0]));
+            ->where('workCenters.data.1.openCampaign.progress', ['completed' => 7, 'target' => 18, 'againstSample' => false, 'screeningPending' => 0, 'screeningTarget' => 0]));
 });
 
 it('lists the open Guía I by event apart, as the history lists the closed ones', function (): void {
@@ -420,7 +420,7 @@ it('counts the people whose Guía I is still pending apart from the answers of t
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('campaign.progress', ['completed' => 10, 'target' => 20, 'againstSample' => false, 'screeningPending' => 9]));
+            ->where('campaign.progress', ['completed' => 10, 'target' => 20, 'againstSample' => false, 'screeningPending' => 9, 'screeningTarget' => 20]));
 });
 
 it('says how the sending of the last batch of links goes, while it goes', function (): void {

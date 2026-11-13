@@ -15,9 +15,11 @@ import { template } from '@/routes/tenant/employees/import';
 export default function EmployeeImport({
     maxRows,
     hasWorkCenters,
+    defaultCenter,
 }: {
     maxRows: number;
     hasWorkCenters: boolean;
+    defaultCenter: { id: string; name: string } | null;
 }) {
     const page = usePage();
     // Always set here: this page only exists inside a company.
@@ -49,6 +51,7 @@ export default function EmployeeImport({
                     <ImportSteps step={importStep(page.flash.import)} />
                 </div>
                 <ImportForm
+                    defaultCenter={defaultCenter}
                     aside={
                         union ? (
                             <UnionImportInstructions maxRows={maxRows} />

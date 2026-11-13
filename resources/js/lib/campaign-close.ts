@@ -23,6 +23,7 @@ export function closeShortfall(progress: CampaignProgress | null): {
 /** The lines the close dialog warns with: who is left, and whose Guía I is open, each on its own (C-57). */
 export function closeWarnings(progress: CampaignProgress | null): string[] {
     const { main, screening, againstSample } = closeShortfall(progress);
+    const screeningTarget = progress?.screeningTarget ?? 0;
     const lines: string[] = [];
 
     if (main > 0) {
@@ -35,7 +36,11 @@ export function closeWarnings(progress: CampaignProgress | null): string[] {
 
     if (screening > 0) {
         lines.push(
-            `${screening === 1 ? '1 persona no ha' : `${screening} personas no han`} contestado la Guía I.`,
+            `${screening === 1 ? '1 persona no ha' : `${screening} personas no han`} contestado la Guía I${
+                screeningTarget === 0
+                    ? ''
+                    : ` (Guía I: ${screeningTarget - screening} de ${screeningTarget})`
+            }.`,
         );
     }
 

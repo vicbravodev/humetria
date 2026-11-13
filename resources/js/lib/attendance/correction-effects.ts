@@ -57,7 +57,10 @@ function weeksText(weeks: readonly string[]): string {
 }
 
 /** What approving the request does, and what to know about it; empty for a request already resolved. */
-export function approveLines(detail: CorrectionDetail): EffectLine[] {
+export function approveLines(
+    detail: CorrectionDetail,
+    canResolve = true,
+): EffectLine[] {
     const { effect } = detail;
 
     if (effect === null) {
@@ -68,11 +71,14 @@ export function approveLines(detail: CorrectionDetail): EffectLine[] {
     const lines: EffectLine[] = [
         whatHappens(detail),
         { tone: 'done', text: weeksText(effect.reopensWeeks) },
-        {
+    ];
+
+    if (canResolve) {
+        lines.push({
             tone: 'done',
             text: 'Queda en la bitácora a tu nombre, con tu nota.',
-        },
-    ];
+        });
+    }
 
     if (!effect.sequenceOk) {
         lines.push({

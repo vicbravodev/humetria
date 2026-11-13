@@ -97,16 +97,19 @@ export function searchNote({
 }
 
 /**
- * The options with, first, one that adds what was typed, unless an option already has that label (ignoring case and
- * accents) or nothing was typed.
+ * The options with, last, one that adds what was typed: not while an option already starts with it (ignoring case and
+ * accents), since then it is still being typed, nor when nothing was typed. The ones that exist always come first, so
+ * Enter never creates a half-written one.
  */
 export function withNewOption(options: Option[], query: string): Option[] {
     const typed = query.trim();
-    const exists = options.some(({ label }) => fold(label) === fold(typed));
+    const started = options.some(({ label }) =>
+        fold(label).startsWith(fold(typed)),
+    );
 
-    return typed === '' || exists
+    return typed === '' || started
         ? options
-        : [{ value: typed, label: typed, isNew: true }, ...options];
+        : [...options, { value: typed, label: typed, isNew: true }];
 }
 
 /** How an option reads in the list. */

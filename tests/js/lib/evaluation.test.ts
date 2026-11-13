@@ -98,6 +98,7 @@ describe('arcCaption', () => {
                 target: 60,
                 againstSample: false,
                 screeningPending: 0,
+                screeningTarget: 0,
             }),
         ).toBe('de 60 contestaron');
         expect(
@@ -106,6 +107,7 @@ describe('arcCaption', () => {
                 target: 53,
                 againstSample: true,
                 screeningPending: 0,
+                screeningTarget: 0,
             }),
         ).toBe('de 53 de la muestra');
     });
@@ -194,6 +196,7 @@ describe('headerFacts and historyItems', () => {
                         target: 30,
                         againstSample: false,
                         screeningPending: 0,
+                        screeningTarget: 0,
                     },
                 }),
             ),

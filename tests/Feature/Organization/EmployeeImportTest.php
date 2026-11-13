@@ -308,3 +308,45 @@ it('warns, without blocking, about a row with a category but no staff group: it 
         ->and(importFlash()['status'])->toBe('ready')
         ->and(importFlash()['warnings'])->toBe([['row' => 3, 'messages' => ['Tiene categoría pero no grupo: sin grupo (sindicalizado o de confianza) no entra en el costo de Compensación.']]]);
 });
+
+describe('the work center a card sends the import from', function (): void {
+    it('is offered as the default center of the page, only when it is one of the company\'s active centers', function (): void {
+        $archived = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Vieja', 'archived_at' => now()]);
+        $foreign = WorkCenter::factory()->create(['name' => 'Planta Ajena']);
+
+        $props = fn (string $center) => $this->actingAs($this->owner)
+            ->get(route('tenant.employees.import.create', [$this->tenant, 'center' => $center]))->assertOk();
+
+        $props($this->plant->id)->assertInertia(fn (Assert $page) => $page->where('defaultCenter', ['id' => $this->plant->id, 'name' => 'Planta Querétaro']));
+        $props($archived->id)->assertInertia(fn (Assert $page) => $page->where('defaultCenter', null));
+        $props($foreign->id)->assertInertia(fn (Assert $page) => $page->where('defaultCenter', null));
+        $props('no-es-un-id')->assertInertia(fn (Assert $page) => $page->where('defaultCenter', null));
+
+        $this->actingAs($this->owner)->get(route('tenant.employees.import.create', $this->tenant))
+            ->assertInertia(fn (Assert $page) => $page->where('defaultCenter', null));
+    });
+
+    it('takes the rows without a center, and only those', function (): void {
+        $other = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Bodega']);
+
+        $this->actingAs($this->owner)
+            ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'center' => $this->plant->id, 'file' => csvFile([
+                'Ana López,ana@acme.mx,,Mujer,,Producción,Operadora,',
+                'Beto Díaz,beto@acme.mx,,Hombre,Bodega,Almacén,Almacenista,',
+            ])])
+            ->assertRedirect(route('tenant.employees.index', $this->tenant));
+
+        expect(Employee::query()->withoutGlobalScopes()->where('name', 'Ana López')->sole()->work_center_id)->toBe($this->plant->id)
+            ->and(Employee::query()->withoutGlobalScopes()->where('name', 'Beto Díaz')->sole()->work_center_id)->toBe($other->id);
+    });
+
+    it('does not take a center of another company: the row stays without one', function (): void {
+        $foreign = WorkCenter::factory()->create(['name' => 'Planta Ajena']);
+
+        $this->actingAs($this->owner)
+            ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'center' => $foreign->id, 'file' => csvFile(['Ana López,ana@acme.mx,,Mujer,,Producción,Operadora,'])]);
+
+        expect(importFlash()['errors'])->toBe([['row' => 2, 'messages' => ['El campo centro de trabajo es obligatorio.']]])
+            ->and(storedEmployees())->toBe([]);
+    });
+});

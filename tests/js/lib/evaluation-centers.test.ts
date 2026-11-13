@@ -42,6 +42,7 @@ const campaign: CampaignSummary = {
         target: 60,
         againstSample: false,
         screeningPending: 0,
+        screeningTarget: 0,
     },
 };
 
@@ -161,6 +162,7 @@ describe('openCampaignLine', () => {
                     target: 60,
                     againstSample: false,
                     screeningPending: 0,
+                    screeningTarget: 0,
                 },
             }),
         ).toBe('Cierra el 10 nov 2026 · completa');

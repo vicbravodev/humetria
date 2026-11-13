@@ -124,6 +124,24 @@ it('marks in its row a salary under the minimum, and counts those on the card of
         ->assertScript('() => document.querySelectorAll("tbody tr").length === 2 && [...document.querySelectorAll("tbody tr")].every((row) => row.textContent.includes("Bajo el salario mínimo."))', true);
 })->with($looks);
 
+it('fits the tabulator with a below-minimum note in a 1440 px window, and at 375 px only the table scrolls', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $grade = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Auxiliar', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 25000, 'effective_from' => '2025-01-01']);
+
+    $overflow = '() => { const frame = document.querySelector("[data-slot=table-container]"); return frame.scrollWidth - frame.clientWidth; }';
+
+    visit("{$url}/compensation/tabulator")
+        ->resize(1440, 900)
+        ->assertSee('Bajo el salario mínimo.')
+        ->assertScript($overflow, 0);
+
+    visit("{$url}/compensation/tabulator")
+        ->resize(375, 800)
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true);
+});
+
 it('captures the salary of a category that has none in its own row (board V4-Comp-Datos)', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();

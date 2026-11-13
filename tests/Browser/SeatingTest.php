@@ -72,7 +72,10 @@ it('does not count as met what has no records: the board says «Sin registros»'
         ->assertSee('Sin registros')
         ->assertDontSee('9 de 13 cumplen');
     visitPage('seating/inspection', "{$url}/seating/centers/{$center->id}/inspection", $dark, $mobile)
-        ->assertSee('Aún no hay evaluaciones firmadas');
+        ->assertSee('Aún no hay evaluaciones firmadas')
+        // The same word as the board of the center, not «Te falta»: nothing registered is not the same as missing.
+        ->assertSeeIn('[aria-labelledby="unregistered"]', 'Sin registros')
+        ->assertDontSeeIn('[aria-labelledby="missing"]', 'Aún no hay evaluaciones firmadas');
 })->with($looks);
 
 it('declares the sector of a center from the page', function (): void {

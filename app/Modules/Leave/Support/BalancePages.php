@@ -33,7 +33,7 @@ final readonly class BalancePages
     public function __construct(private Roster $roster, private Seniority $seniority, private PolicyResolver $policies, private GrantEntitlements $grants) {}
 
     /**
-     * @return array{tab: string, q: string, today: string, owedDays: int, counts: array{all: int, missing: int, statements: int, terminations: int}, people: LengthAwarePaginator<int, Row>}
+     * @return array{tab: string, q: string, today: string, owedDays: int, counts: array{all: int, missing: int, statements: int, terminations: int}, people: LengthAwarePaginator<int, Row>, elsewhere: int}
      */
     public function index(string $tab, string $search): array
     {
@@ -47,13 +47,17 @@ final readonly class BalancePages
 
         $tab = in_array($tab, self::TABS, true) ? $tab : self::opening($counts);
 
+        $people = $this->page(new RosterQuery(employeeIds: $ids[$tab] ?? null, search: $search));
+
         return [
             'tab' => $tab,
             'q' => $search,
             'today' => PeriodWindow::today()->toDateString(),
             'owedDays' => (int) LeaveEntry::query()->whereNotNull('leave_entitlement_id')->sum('days'),
             'counts' => $counts,
-            'people' => $this->page(new RosterQuery(employeeIds: $ids[$tab] ?? null, search: $search)),
+            'people' => $people,
+            // A search that finds nobody in a tab may find them in another: how many, so the screen can offer everybody.
+            'elsewhere' => $people->total() === 0 && $search !== '' && $tab !== 'all' ? count($this->roster->matchingIds(new RosterQuery(search: $search))) : 0,
         ];
     }
 

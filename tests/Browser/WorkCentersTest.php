@@ -209,7 +209,7 @@ it('shows how many people each work center has and which NOM-035 guides apply', 
         ->assertSeeIn('article:has(h2:text-is("Planta Querétaro")) dl', 'I y II')
         ->assertSeeIn('article:has(h2:text-is("Planta Querétaro"))', 'Sin evaluar')
         ->assertSeeIn('article:has(h2:text-is("Bodega Sur"))', 'Sin personal')
-        ->assertSeeIn('article:has(h2:text-is("Bodega Sur")) a[href$="/employees/import"]', 'Cargar personas')
+        ->assertSeeIn('article:has(h2:text-is("Bodega Sur")) a[href*="/employees/import?center="]', 'Cargar personas')
         ->assertSeeIn('article:has(h2:text-is("Planta Querétaro")) a[aria-label^="Ver personas"]', 'Ver personas');
 })->with($looks);
 
@@ -220,5 +220,6 @@ it('takes a center with nobody to the page that loads people', function (): void
     visit("{$url}/work-centers")
         ->click('Cargar personas')
         ->assertPathContains('/employees/import')
+        ->assertSee('Las filas que dejen vacío el centro de trabajo se cargan en Bodega Sur.')
         ->assertNoJavaScriptErrors();
 });
