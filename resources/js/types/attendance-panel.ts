@@ -60,6 +60,8 @@ export type AttendancePolicy = {
     requireQrOnsite: boolean;
     trustedMayUseBrowser: boolean;
     retentionMonths: number;
+    /** Minutes after a start time that still count as on time: the lateness is shown, never sanctioned. */
+    lateToleranceMinutes: number;
 };
 
 export type AttendancePolicyProps = {

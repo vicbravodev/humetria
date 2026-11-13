@@ -11,7 +11,8 @@ use Illuminate\Validation\Rule;
 /**
  * The company's policy: what a mark out of every zone does, the worst accuracy a position may have (10 to 500 m), whether
  * marking on site needs the QR, whether trusted staff may mark from a browser, and how many months the records are kept:
- * at least 12 (criterio 7.1), at most 10 years. A switch left off is a no.
+ * at least 12 (criterio 7.1), at most 10 years, and the minutes of tolerance (0 to 120) before a start counts as late: shown, never
+ * sanctioned. A switch left off is a no.
  */
 final class PolicyRequest extends FormRequest
 {
@@ -32,6 +33,7 @@ final class PolicyRequest extends FormRequest
             'require_qr_onsite' => ['boolean'],
             'trusted_may_use_browser' => ['boolean'],
             'retention_months' => ['required', 'integer', 'between:12,120'],
+            'late_tolerance_minutes' => ['required', 'integer', 'between:0,120'],
         ];
     }
 
@@ -58,5 +60,10 @@ final class PolicyRequest extends FormRequest
     public function retentionMonths(): int
     {
         return $this->integer('retention_months');
+    }
+
+    public function lateToleranceMinutes(): int
+    {
+        return $this->integer('late_tolerance_minutes');
     }
 }
