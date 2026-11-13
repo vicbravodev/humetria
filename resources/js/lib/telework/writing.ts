@@ -34,6 +34,36 @@ export function publishCopy(
     };
 }
 
+/** The question before publishing: it reaches many people and many centers and cannot be taken back, so it says how many. */
+export function publishConfirmation(
+    policy: boolean,
+    publication: WritingPublication,
+): { title: string; description: string } {
+    const what = policy ? 'la política' : 'el documento';
+    const centers =
+        publication.centers === 1
+            ? '1 centro'
+            : `${publication.centers} centros`;
+    const kept = 'Las versiones anteriores se conservan en el expediente.';
+
+    if (publication.audience !== null && publication.audience > 0) {
+        const people =
+            publication.audience === 1
+                ? '1 persona'
+                : `${publication.audience} personas`;
+
+        return {
+            title: `¿Publicar ${what} para ${people} en ${centers}?`,
+            description: `No se puede deshacer: a cada persona le llega la solicitud de confirmación. ${kept}`,
+        };
+    }
+
+    return {
+        title: `¿Publicar ${what} en ${centers}?`,
+        description: `No se puede deshacer: queda vigente en cada centro. ${kept}`,
+    };
+}
+
 /** How far the six supporting documents are (board V2-N037-Docs): how many are ready and about how long the rest take. */
 export function supportingProgress(documents: SupportingDocument[]): {
     ready: number;

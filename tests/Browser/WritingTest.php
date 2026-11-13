@@ -96,6 +96,8 @@ it('publishes the policy from its review for the people of the centers, and read
         ->assertSee('Al publicarla, le llega a las 2 personas de tu centro para que confirmen que la leyeron.')
         ->assertSee('Mismos derechos')
         ->click('Publicar para 2 personas')
+        ->assertSee('¿Publicar la política para 2 personas en 1 centro?')
+        ->press('Publicar ahora')
         ->assertSee('Política de Teletrabajo publicada.')
         ->assertSee('Tu ruta para cumplir con el teletrabajo')
         ->assertNoJavaScriptErrors();
