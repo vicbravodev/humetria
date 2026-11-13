@@ -18,6 +18,7 @@ use App\Modules\Organization\Http\Requests\DeactivateEmployeeRequest;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Telework\Contracts\PortalLinks;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\WorkCenters;
@@ -116,6 +117,21 @@ final class EmployeeController extends Controller
         $reactivateEmployee->handle($this->find($employee, active: false));
 
         return $this->done('Empleado reactivado.');
+    }
+
+    public function portalLink(mixed $tenant, string $employee, PortalLinks $links): RedirectResponse
+    {
+        Gate::authorize('manage-organization');
+        $person = $this->find($employee, active: true);
+
+        if (! $links->sendTo($person->id)) {
+            $message = 'No tiene correo registrado: agrégalo en su ficha para enviarle el enlace.';
+            Inertia::flash('toast', ['type' => 'error', 'message' => $message]);
+
+            return back()->withErrors(['email' => $message]);
+        }
+
+        return $this->done('Le enviamos su enlace por correo.');
     }
 
     // The $tenant parameters receive the company Tenancy resolved from the URL; they are only there to keep the route

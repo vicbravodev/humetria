@@ -57,7 +57,7 @@ it('sends the statement to the people RH ticks, from a bar that appears only the
         ->assertDontSee('Quitar selección')
         ->click('input[type=checkbox][aria-label="Elegir a Ana Solís"], button[aria-label="Elegir a Ana Solís"]')
         ->assertSee('1 seleccionada')
-        ->press('Enviar constancia para acuse')
+        ->press('Enviar enlace a su portal')
         ->assertSee('enlace')
         ->assertNoJavaScriptErrors();
 });

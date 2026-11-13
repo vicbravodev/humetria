@@ -38,7 +38,7 @@ export default function SendLinksBar({
                 }
             >
                 {sending && <Spinner />}
-                Enviar constancia para acuse
+                Enviar enlace a su portal
             </Button>
         </BulkBar>
     );
