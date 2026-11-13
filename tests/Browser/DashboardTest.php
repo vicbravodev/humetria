@@ -212,6 +212,21 @@ it('leaves room between each label of the bottom bar and the edge of its pill, e
             JS, true);
 });
 
+it('shows five centers in «Dónde vas» and sends the rest to the whole list with «Ver todos»', function (): void {
+    $url = panelCompany();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+
+    foreach (range(1, 12) as $index) {
+        WorkCenter::factory()->for($tenant)->create(['name' => sprintf('Centro extra %02d', $index)]);
+    }
+
+    visit($url)->resize(1440, 900)
+        ->assertSee('Dónde vas')
+        ->assertScript('() => Math.max(...[...document.querySelectorAll(\'#routes ~ * [data-norm]\')].map((norm) => norm.querySelectorAll("ul > li").length))', 5)
+        ->assertSeeIn('#routes ~ *', 'Ver todos')
+        ->assertScript('() => document.querySelector(\'#routes ~ * a[href$="/work-centers"]\') !== null', true);
+});
+
 it('groups the sidebar by the families of tools the landing offers', function (): void {
     visit(panelCompany())
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.querySelector("span").textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Ordena tu operación')
