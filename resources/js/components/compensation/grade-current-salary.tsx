@@ -1,4 +1,4 @@
-import { TriangleAlert } from 'lucide-react';
+import BelowMinimumNote from '@/components/compensation/below-minimum-note';
 import { Badge } from '@/components/ui/badge';
 import { describeDate } from '@/lib/calendar-date';
 import type { SalaryEntry } from '@/types';
@@ -22,18 +22,7 @@ export default function GradeCurrentSalary({
                 Desde el {describeDate(current.effective_from)}
             </p>
             {current.below_minimum !== null && (
-                <p className="mt-1 flex items-start gap-1 rounded-md bg-warning px-2 py-1 text-caption text-warning-foreground">
-                    <TriangleAlert
-                        aria-hidden="true"
-                        className="mt-0.5 size-3.5 shrink-0"
-                    />
-                    <span>
-                        <span className="font-medium">
-                            Bajo el salario mínimo.
-                        </span>{' '}
-                        {current.below_minimum}
-                    </span>
-                </p>
+                <BelowMinimumNote reason={current.below_minimum} />
             )}
         </div>
     );

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import type { ViewEdge, ViewNode } from '@/lib/org-chart/chart-view';
-import { applyDrag, toFlow } from '@/lib/org-chart/flow';
+import { applyDrag, openingRequest, toFlow } from '@/lib/org-chart/flow';
 import type { OrgNode } from '@/types';
 
 const person: OrgNode = {
@@ -227,5 +227,50 @@ describe('applyDrag', () => {
         });
 
         expect(marked[0]).toBe(base[0]);
+    });
+});
+
+describe('openingRequest', () => {
+    const head = (id: string, direct_reports = 1): OrgNode => ({
+        ...person,
+        id,
+        direct_reports,
+    });
+    const child = head('kid', 0);
+
+    it('brings the company card into the opening view when several heads hang from it', () => {
+        expect(
+            openingRequest({
+                roots: [head('a'), head('b'), head('loner', 0)],
+                firstLevel: { a: [child] },
+                chain: [],
+                focusChildren: null,
+            }),
+        ).toEqual({
+            ids: null,
+            readable: ['company', 'a', 'kid', 'b', 'loner'],
+        });
+    });
+
+    it('has no company card to bring when there is a single head', () => {
+        expect(
+            openingRequest({
+                roots: [head('a')],
+                firstLevel: {},
+                chain: [],
+                focusChildren: null,
+            }),
+        ).toEqual({ ids: null, readable: ['a'] });
+    });
+
+    it('goes to the way down to the person a search found', () => {
+        expect(
+            openingRequest({
+                roots: [head('a')],
+                firstLevel: {},
+                chain: [head('a'), child],
+                focusChildren: null,
+            }),
+        ).toEqual({ ids: ['a', 'kid'] });
     });
 });

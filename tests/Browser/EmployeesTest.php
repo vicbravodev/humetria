@@ -167,7 +167,10 @@ it('deactivates an employee and reactivates them from the deactivated ones', fun
         ->assertDontSee('Ana López')
         ->click('nav[aria-label="Estado de las personas"] a:has-text("Bajas")')
         ->assertSee('Ana López')
+        ->assertSee('Renuncia')
         ->click('[aria-label="Acciones de Ana López"]')->click('Reactivar')
+        ->assertSee('¿Reactivar a Ana López?')
+        ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Empleado reactivado.')
         ->assertNoJavaScriptErrors();
 });

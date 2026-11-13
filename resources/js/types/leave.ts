@@ -193,6 +193,7 @@ export type LeaveBalanceRow = {
     policy: string;
     /** What they can still ask for; below zero when they were given days in advance. */
     available: number;
+    waiting: number;
     /** The days they were given in advance. */
     advanced: number;
     /** The days given in the periods that still hold days: the whole the bar measures; null when not known. */
@@ -212,6 +213,7 @@ export type LeaveRecordPeriod = {
     available: number;
     /** Past its eighteen months with days still in it: marked, never taken off. */
     mayPrescribe: boolean;
+    overdue: boolean;
 };
 
 /** A movement of the ledger of a person. The note only reaches whoever may manage vacations. */

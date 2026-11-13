@@ -5,7 +5,13 @@ import { countOf } from '@/lib/plural';
  * One choice of a Combobox: what the form sends and what the person reads. `isNew` marks the choice of adding
  * what was typed, in a Combobox that allows it.
  */
-export type Option = { value: string; label: string; isNew?: boolean };
+export type Option = {
+    value: string;
+    label: string;
+    isNew?: boolean;
+    /** A line the form shows once the option is chosen (a person's days, say). */
+    hint?: string;
+};
 
 /** Options with their label already folded, so typing does not fold every label again on each key. */
 export type OptionIndex = { option: Option; text: string }[];

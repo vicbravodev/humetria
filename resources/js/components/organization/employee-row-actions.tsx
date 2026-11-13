@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { Ellipsis, Link2, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { useState } from 'react';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import DeactivateEmployeeDialog from '@/components/organization/deactivate-employee-dialog';
 import EmployeeSheet from '@/components/organization/employee-sheet';
 import { Button } from '@/components/ui/button';
@@ -47,21 +48,7 @@ export default function EmployeeRowActions({
                         <Ellipsis className="size-5" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                    align="end"
-                    className="min-w-44"
-                    // Sent once the menu has closed: a page redrawn mid-animation leaves the menu unable to open again.
-                    onCloseAutoFocus={() => {
-                        if (open === 'reactivate') {
-                            setOpen(null);
-                            router.post(
-                                reactivate.url(ids),
-                                {},
-                                { preserveScroll: true },
-                            );
-                        }
-                    }}
-                >
+                <DropdownMenuContent align="end" className="min-w-44">
                     {employee.deactivated_on === null ? (
                         <>
                             <DropdownMenuItem onSelect={() => setOpen('edit')}>
@@ -109,6 +96,16 @@ export default function EmployeeRowActions({
                 form={update.form(ids)}
                 choices={choices}
                 employee={employee}
+            />
+            <ConfirmDialog
+                {...dialog('reactivate')}
+                title={`¿Reactivar a ${employee.name}?`}
+                description="Vuelve a contar en su centro de trabajo y a recibir encuestas. Su historia se conserva."
+                confirmLabel="Sí, reactivar"
+                dismissLabel="Volver"
+                destructive={false}
+                form={reactivate.form(ids)}
+                preserveScroll
             />
             <DeactivateEmployeeDialog
                 {...dialog('deactivate')}

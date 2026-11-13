@@ -195,6 +195,46 @@ it('keeps the map of a new zone on all of Mexico, with no error, when the addres
         ->assertNoJavaScriptErrors();
 })->with(['not found' => 200, 'search down' => 503]);
 
+it('opens the map of a new zone on the city of the center when its street is not found, not on all of Mexico', function (): void {
+    [$url] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::sequence()->push([])->push([
+        ['display_name' => 'Cuauhtémoc, Ciudad de México', 'lat' => '19.4326', 'lon' => '-99.1332'],
+    ])]);
+
+    visit($url)
+        ->click('Agregar zona')
+        ->assertVisible('[aria-label^="Mapa de la zona"]')
+        ->wait(1)
+        ->assertScript('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/12/"))', true)
+        ->assertScript('() => document.querySelectorAll(\'[role="dialog"] path.leaflet-interactive\').length', 0)
+        ->assertNoJavaScriptErrors();
+});
+
+it('asks RH to confirm a center touched on a map zoomed far out, and not one typed or touched up close', function (): void {
+    [$url, $plant] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response([])]);
+    $blocked = '() => document.querySelector(\'[role="dialog"] button[type="submit"]\').disabled';
+
+    visit($url)
+        ->click('Agregar zona')
+        ->fill('name', 'Patio')
+        ->click('[aria-label^="Mapa de la zona"]')
+        ->assertSee('Pusiste el centro con el mapa muy alejado')
+        ->assertScript($blocked, true)
+        ->click('#zone-far-confirm')
+        ->assertScript($blocked, false)
+        // Typing the coordinates is precise: nothing to confirm.
+        ->fill('latitude', '19.4326')
+        ->assertDontSee('Pusiste el centro con el mapa muy alejado')
+        ->assertScript($blocked, false)
+        ->fill('longitude', '-99.1332')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->waitForText('Zona guardada')
+        ->assertNoJavaScriptErrors();
+
+    expect(AttendanceZone::query()->sole()->work_center_id)->toBe($plant->id);
+});
+
 it('tells RH the search is down and to use the map instead', function (): void {
     [$url] = centerPanel(withZone: false);
     Http::fake(['nominatim.openstreetmap.org/*' => Http::response('', 503)]);

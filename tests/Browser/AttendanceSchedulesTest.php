@@ -97,6 +97,22 @@ it('lets RH set the time each day starts, optional, and keeps it', function (): 
         ->toBe([1 => 540, 2 => 540, 3 => null, 4 => null, 5 => 510, 6 => null, 7 => null]);
 });
 
+it('sets the same start time from Monday to Friday with one field, and shows it in the summary of the schedule', function (): void {
+    $url = schedulesPanel();
+
+    visit("{$url}/attendance/schedules")
+        ->click('Fijar horario')
+        ->fill('#schedule-start-weekdays', '09:00')
+        ->assertValue('#schedule-start-1', '09:00')
+        ->assertValue('#schedule-start-5', '09:00')
+        ->assertValue('#schedule-start-6', '')
+        ->click('Guardar horario')
+        ->waitForText('Horario de Bob Díaz guardado.')
+        ->assertSee('Entrada 09:00')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
 it('lets RH choose people and fix the same schedule for all of them, from a template', function (): void {
     $url = schedulesPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();

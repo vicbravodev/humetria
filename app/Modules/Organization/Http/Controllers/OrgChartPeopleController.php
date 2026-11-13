@@ -41,7 +41,7 @@ final class OrgChartPeopleController extends Controller
     }
 
     /**
-     * The active people whose name or employee number has what was typed, to focus one in the org chart.
+     * The active people whose name, email, employee number or mobile has what was typed, to focus one in the org chart.
      *
      * @return list<array{value: string, label: string}>
      */
@@ -84,7 +84,8 @@ final class OrgChartPeopleController extends Controller
         return array_values(Employee::query()
             ->whereNull('deactivated_at')
             ->when($excluded !== [], fn ($query) => $query->whereKeyNot($excluded))
-            ->matching(['name', 'employee_number'], $search)
+            // The same search as the Empleados list, so ⌘K finds whoever the list finds.
+            ->matching(['name', 'email', 'employee_number'], $search, ['mobile'])
             ->orderBy('name')
             ->orderBy('id')
             ->limit(self::LIMIT)

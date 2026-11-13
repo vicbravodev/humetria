@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Support;
 
 use App\Modules\Leave\Actions\CancelRequest;
-use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveStatement;
@@ -30,7 +29,7 @@ final class PortalVacationsPages
             'periods' => self::periods($employeeId),
             'advanced' => max(0, -(Balances::advanced([$employeeId])[$employeeId] ?? 0)),
             // Days asked and not answered yet: told apart from the balance, which only moves when someone decides.
-            'waiting' => (int) LeaveRequest::query()->where('employee_id', $employeeId)->whereNull('leave_type_id')->where('status', RequestStatus::Requested)->sum('working_days'),
+            'waiting' => Balances::waiting([$employeeId])[$employeeId] ?? 0,
             'requests' => self::requests($employeeId),
             'statements' => self::statements($employeeId),
             'teamPending' => PortalTeamPages::pendingFor($employeeId),

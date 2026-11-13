@@ -206,6 +206,11 @@ export function boardReport(): ScenarioReport {
             missing: ['E-900'],
             missing_more: 0,
             missing_without_number: 0,
+            causes: {
+                without_grade: 1,
+                without_hire_date: 0,
+                without_group: 0,
+            },
         },
         headline: {
             people: 90,

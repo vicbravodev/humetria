@@ -14,6 +14,13 @@ export function balancesQuery(
     };
 }
 
+/** «6 días disponibles · 2 en espera»: what a person can ask for and what already waits for an answer (the server writes the same line in the people it offers). */
+export function balanceHint(available: number, waiting: number): string {
+    const text = countOf(available, 'día disponible', 'días disponibles');
+
+    return waiting > 0 ? `${text} · ${waiting} en espera` : text;
+}
+
 /** What RH reads under the days of a person: those given in advance, or that they have no start date. */
 export function balanceNote(
     row: Pick<LeaveBalanceRow, 'advanced' | 'available' | 'nextAnniversary'>,

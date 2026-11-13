@@ -5,6 +5,7 @@ import ImportActions from '@/components/organization/import-actions';
 import ImportErrors from '@/components/organization/import-errors';
 import ImportFileField from '@/components/organization/import-file-field';
 import ImportChanges from '@/components/organization/import-changes';
+import ImportWarnings from '@/components/organization/import-warnings';
 import ImportStats from '@/components/organization/import-stats';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/employees/import';
@@ -49,6 +50,12 @@ export default function ImportForm({
                             {summary !== undefined && (
                                 <ImportStats summary={summary} />
                             )}
+                            {summary?.status === 'ready' &&
+                                summary.warnings !== undefined && (
+                                    <ImportWarnings
+                                        warnings={summary.warnings}
+                                    />
+                                )}
                             {summary?.status === 'ready' &&
                                 summary.changes !== undefined && (
                                     <ImportChanges changes={summary.changes} />

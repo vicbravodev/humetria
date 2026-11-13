@@ -83,3 +83,31 @@ describe('levels', () => {
         expect(frozen(chart()).levels).toBeNull();
     });
 });
+
+describe('large teams', () => {
+    const big = node('big', { direct_reports: 16, total_reports: 16 });
+    const edge = node('edge', { direct_reports: 15, total_reports: 15 });
+    const chartOf = (...heads: OrgNode[]): ChartState =>
+        initialChart({
+            roots: heads,
+            firstLevel: {},
+            chain: [],
+            focusChildren: null,
+        });
+
+    it('does not open a team of more than 15 under «Mostrar: N niveles»: it waits behind its pill', () => {
+        expect(
+            shown(chartOf(big, node('x', { direct_reports: 1 }))).expanded,
+        ).toEqual(new Set(['x']));
+        expect(shown(chartOf(edge)).expanded).toEqual(new Set(['edge']));
+    });
+
+    it('opens it with «Expandir todo»', () => {
+        const all = reduceChart(chartOf(big), {
+            type: 'levels',
+            levels: Infinity,
+        });
+
+        expect(shown(all).expanded).toEqual(new Set(['big']));
+    });
+});

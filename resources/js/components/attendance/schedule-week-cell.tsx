@@ -5,6 +5,7 @@ import {
     scheduleDays,
     scheduleRibbon,
 } from '@/lib/attendance/schedule';
+import { startLabel } from '@/lib/attendance/schedule-starts';
 import type { WorkSchedule } from '@/types';
 
 /** The week agreed as its ribbon with the days in a row and the rests; or that there is none and what is counted then. */
@@ -32,7 +33,12 @@ export default function ScheduleWeekCell({
                     {scheduleDays(schedule.minutes)}
                 </span>
                 <span className="text-caption text-muted-foreground">
-                    {restLabel(schedule.minutes)}
+                    {[
+                        startLabel(schedule.minutes, schedule.starts),
+                        restLabel(schedule.minutes),
+                    ]
+                        .filter((part) => part !== null)
+                        .join(' · ')}
                 </span>
             </div>
         </div>

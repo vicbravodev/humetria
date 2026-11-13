@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     accuracySentence,
+    gapCauses,
     barPercent,
     comparesAll,
     retroText,
@@ -10,8 +11,14 @@ import {
 import type { ContractStatus } from '@/lib/compensation/start';
 
 const status: ContractStatus = {
-    roster: { people: 91, missing: 1 },
-    tabulator: { grades: 7, without_salary: 0 },
+    roster: {
+        people: 91,
+        missing: 1,
+        without_grade: 1,
+        without_hire_date: 0,
+        without_group: 0,
+    },
+    tabulator: { grades: 7, without_salary: 0, below_minimum: 0 },
     benefits: { active: 12 },
     overrides: { people: 3 },
     risk_premium: { set: false },
@@ -25,7 +32,7 @@ describe('statusItems', () => {
                 key: 'roster',
                 label: 'Padrón',
                 value: '91 personas',
-                note: '1 sin categoría ni nivel',
+                note: '1 sin categoría y nivel',
                 problem: true,
             },
             {
@@ -56,8 +63,14 @@ describe('statusItems', () => {
         const items = statusItems(
             {
                 ...status,
-                roster: { people: 1, missing: 0 },
-                tabulator: { grades: 1, without_salary: 1 },
+                roster: {
+                    people: 1,
+                    missing: 0,
+                    without_grade: 0,
+                    without_hire_date: 0,
+                    without_group: 0,
+                },
+                tabulator: { grades: 1, without_salary: 1, below_minimum: 0 },
                 benefits: { active: 1 },
                 risk_premium: { set: true },
             },
@@ -138,5 +151,58 @@ describe('the list of scenarios', () => {
         expect(todaySentence({ people: 1, cost_text: '$1' }, true)).toBe(
             'Hoy la empresa paga $1 al año en nómina y cargas de 1 agremiado.',
         );
+    });
+});
+
+describe('gapCauses', () => {
+    it('names each cause with its count, in the order the roster asks for them', () => {
+        expect(
+            gapCauses({
+                without_grade: 1,
+                without_hire_date: 2,
+                without_group: 3,
+            }),
+        ).toBe(
+            '1 sin categoría y nivel · 2 sin fecha de ingreso · 3 sin grupo (sindicalizado o de confianza)',
+        );
+    });
+
+    it('leaves out the causes nobody has', () => {
+        expect(
+            gapCauses({
+                without_grade: 0,
+                without_hire_date: 0,
+                without_group: 4,
+            }),
+        ).toBe('4 sin grupo (sindicalizado o de confianza)');
+        expect(
+            gapCauses({
+                without_grade: 0,
+                without_hire_date: 0,
+                without_group: 0,
+            }),
+        ).toBe('');
+    });
+});
+
+describe('statusItems, the tabulator under the minimum', () => {
+    it('says how many categories pay under the minimum wage today, next to the ones without salary', () => {
+        const note = (tabulator: ContractStatus['tabulator']) =>
+            statusItems({ ...status, tabulator }, false, false).find(
+                (item) => item.key === 'tabulator',
+            );
+
+        expect(
+            note({ grades: 7, without_salary: 0, below_minimum: 2 }),
+        ).toMatchObject({
+            note: '2 categorías bajo el salario mínimo',
+            problem: true,
+        });
+        expect(
+            note({ grades: 7, without_salary: 1, below_minimum: 1 }),
+        ).toMatchObject({
+            note: '1 categoría sin salario · 1 categoría bajo el salario mínimo',
+            problem: true,
+        });
     });
 });

@@ -66,7 +66,7 @@ final readonly class ListSalaryOverrides
             'employee_number' => $number,
             'grade' => $grade,
             'active' => $active,
-            'current' => $current === null ? null : $this->salary($current),
+            'current' => $current === null ? null : $this->salary($current, CarbonImmutable::parse($today)),
             'salaries' => array_map(fn (SalaryOverride $override): array => ['id' => $override->id, ...$this->salary($override)], $overrides),
         ];
     }
@@ -74,14 +74,16 @@ final readonly class ListSalaryOverrides
     /**
      * @return array{daily_salary: string, daily_salary_text: string, effective_from: string, note: ?string, below_minimum: string|null}
      */
-    private function salary(SalaryOverride $override): array
+    private function salary(SalaryOverride $override, ?CarbonImmutable $inForceOn = null): array
     {
         return [
             'daily_salary' => BenefitValue::decimal($override->daily_salary_cents),
             'daily_salary_text' => Money::format($override->daily_salary_cents),
             'effective_from' => $override->effective_from->toDateString(),
             'note' => $override->note,
-            'below_minimum' => $this->minimum->warning($override->daily_salary_cents, CarbonImmutable::parse($override->effective_from->toDateString())),
+            'below_minimum' => $inForceOn === null
+                ? $this->minimum->warning($override->daily_salary_cents, CarbonImmutable::parse($override->effective_from->toDateString()))
+                : $this->minimum->inForce($override->daily_salary_cents, CarbonImmutable::parse($override->effective_from->toDateString()), $inForceOn),
         ];
     }
 }

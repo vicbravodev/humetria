@@ -338,6 +338,20 @@ describe('on site', function (): void {
         anaPunches(['q' => null])->assertUnprocessable()->assertJsonPath('reason', 'qr_required');
     });
 
+    it('keeps the phone linked after a refused mark: the next try in the same browser is refused or taken again, never «not linked»', function (): void {
+        $this->zone->delete();
+        $session = punchSession();
+        $try = fn (array $body): TestResponse => punchWith($this->phone, $this->ana->id, ['q' => null, ...$body], $session);
+
+        $try([])->assertUnprocessable()->assertJsonPath('reason', 'center_not_ready');
+        $try([])->assertUnprocessable()->assertJsonPath('reason', 'center_not_ready');
+
+        // And once RH sets the center up, the same browser marks with the same key.
+        AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'latitude' => 19.4326, 'longitude' => -99.1332, 'radius_m' => 500]);
+        $try(['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE])->assertOk();
+        expect(AttendanceDevice::query()->whereNull('revoked_at')->count())->toBe(1);
+    });
+
     it('ignores a revoked or never-seen screen when telling whether the center is ready', function (): void {
         $this->zone->delete();
         KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now(), 'revoked_at' => now()]);

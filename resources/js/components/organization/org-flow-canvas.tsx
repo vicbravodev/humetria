@@ -5,6 +5,7 @@ import {
     MiniMap,
     ReactFlow,
     useReactFlow,
+    useStore,
 } from '@xyflow/react';
 import type { Edge } from '@xyflow/react';
 import type { DragEvent } from 'react';
@@ -13,6 +14,7 @@ import OrgChartCamera from '@/components/organization/org-chart-camera';
 import OrgCompanyNode from '@/components/organization/org-company-node';
 import OrgMoreNode from '@/components/organization/org-more-node';
 import OrgPersonNode from '@/components/organization/org-person-node';
+import { FIT_ZOOM, viewportFor } from '@/lib/org-chart/camera';
 import type { Box } from '@/lib/org-chart/camera';
 import type { CameraRequest, FlowNode } from '@/lib/org-chart/flow';
 import { useAppearance } from '@/hooks/use-appearance';
@@ -72,8 +74,20 @@ export default function OrgFlowCanvas({
         boundsOf: (ids: string[] | null) => Box | null;
     };
 }) {
-    const { screenToFlowPosition } = useReactFlow();
+    const { screenToFlowPosition, setViewport } = useReactFlow();
+    const width = useStore((state) => state.width);
+    const height = useStore((state) => state.height);
     const { resolvedAppearance } = useAppearance();
+    // «Ajustar» shows all of the chart that fits at a readable size, from the top, instead of shrinking it to a speck.
+    const fit = () => {
+        const box = camera.boundsOf(null);
+
+        if (box !== null) {
+            void setViewport(viewportFor(box, { width, height }, FIT_ZOOM), {
+                duration: 250,
+            });
+        }
+    };
     const point = (event: DragEvent) =>
         screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
@@ -120,7 +134,11 @@ export default function OrgFlowCanvas({
                     size={1}
                     color="var(--border)"
                 />
-                <Controls showInteractive={false} position="bottom-left" />
+                <Controls
+                    showInteractive={false}
+                    position="bottom-left"
+                    onFitView={fit}
+                />
                 <MiniMap
                     pannable
                     zoomable

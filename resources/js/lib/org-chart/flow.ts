@@ -1,5 +1,7 @@
 import type { Edge, Node } from '@xyflow/react';
+import type { ChartInit } from '@/lib/org-chart/chart-state';
 import type { DropTone } from '@/lib/org-chart/card-style';
+import { COMPANY_ID } from '@/lib/org-chart/chart-view';
 import type {
     PersonData,
     ViewEdge,
@@ -31,6 +33,33 @@ export type CameraRequest = {
     /** On first opening: the root and its first level, where to look when the whole chart would be too small to read. */
     readable?: string[];
 } | null;
+
+/**
+ * Where the chart opens: the way down to the person a search found; otherwise everybody, and (if all of it would be too
+ * small to read) the heads with their first level and, when several heads hang from it, the company card above them.
+ */
+export function openingRequest({
+    chain,
+    roots,
+    firstLevel,
+}: ChartInit): CameraRequest {
+    if (chain.length > 0) {
+        return { ids: chain.map(({ id }) => id) };
+    }
+
+    const heads = roots.filter((head) => head.direct_reports > 0);
+
+    return {
+        ids: null,
+        readable: [
+            ...(heads.length > 1 ? [COMPANY_ID] : []),
+            ...roots.flatMap(({ id }) => [
+                id,
+                ...(firstLevel[id] ?? []).map((child) => child.id),
+            ]),
+        ],
+    };
+}
 
 export type FlowNode = PersonFlowNode | CompanyFlowNode | MoreFlowNode;
 

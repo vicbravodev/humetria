@@ -11,8 +11,10 @@ use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Exceptions\RequestRefused;
 use App\Modules\Leave\Http\Requests\DecisionRequest;
 use App\Modules\Leave\Http\Requests\RecordLeaveRequest;
+use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\LeaveDefaults;
+use App\Modules\Leave\Support\PeriodBalance;
 use App\Modules\Leave\Support\RequestPages;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -84,15 +86,30 @@ final readonly class RequestController
     /**
      * The active people whose name has what was typed, a few at a time, for the field that picks who a record is for.
      *
-     * @return list<array{value: string, label: string}>
+     * @return list<array{value: string, label: string, hint: string}>
      */
     public function people(Request $request): array
     {
         Gate::authorize('manage-vacations');
         $search = $request->string('q')->trim()->limit(100, '')->toString();
-        $found = $this->roster->page(new RosterQuery(search: $search), self::OPTIONS_LIMIT)->items();
+        $found = array_values(array_filter($this->roster->page(new RosterQuery(search: $search), self::OPTIONS_LIMIT)->items(), fn (RosterEntry $person): bool => $person->active));
+        $ids = array_map(fn (RosterEntry $person): string => $person->id, $found);
+        $left = array_map(fn (array $periods): int => array_sum(array_map(fn (PeriodBalance $period): int => $period->left(), $periods)), Balances::of($ids));
+        $advanced = Balances::advanced($ids);
+        $waiting = Balances::waiting($ids);
 
-        return array_values(array_map(fn (RosterEntry $person): array => ['value' => $person->id, 'label' => $person->name], array_filter($found, fn (RosterEntry $person): bool => $person->active)));
+        return array_map(fn (RosterEntry $person): array => [
+            'value' => $person->id, 'label' => $person->name,
+            'hint' => self::hint(($left[$person->id] ?? 0) + ($advanced[$person->id] ?? 0), $waiting[$person->id] ?? 0),
+        ], $found);
+    }
+
+    /** «6 días disponibles · 2 en espera»: what a person has to ask for and what already waits for an answer. */
+    private static function hint(int $available, int $waiting): string
+    {
+        $text = $available === 1 ? '1 día disponible' : "{$available} días disponibles";
+
+        return $waiting > 0 ? "{$text} · {$waiting} en espera" : $text;
     }
 
     public function approve(DecisionRequest $request, mixed $tenant, string $leaveRequest, DecideRequest $decide): RedirectResponse

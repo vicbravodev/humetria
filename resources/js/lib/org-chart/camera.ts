@@ -2,6 +2,8 @@ export const MIN_ZOOM = 0.4;
 export const MAX_ZOOM = 1;
 /** Below this the cards cannot be read: the chart opens at this size or larger, whatever its width. */
 export const READABLE_ZOOM = 0.9;
+/** «Ajustar» never goes below this: a chart too big for the screen is panned, not shrunk until the names cannot be read. */
+export const FIT_ZOOM = 0.5;
 /** The toolbar floats over the top of the canvas: the content starts under it. */
 const TOOLBAR = 72;
 const MARGIN = 16;

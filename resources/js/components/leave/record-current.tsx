@@ -17,12 +17,14 @@ export default function RecordCurrent({
     person,
     current,
     advanced,
+    waiting,
     statements,
     canManage,
 }: {
     person: LeaveRecordPerson;
     current: LeaveRecordPeriod | undefined;
     advanced: number;
+    waiting: number;
     statements: LeaveRecordStatement[];
     canManage: boolean;
 }) {
@@ -33,6 +35,7 @@ export default function RecordCurrent({
             <RecordHero
                 period={current}
                 advanced={advanced}
+                waiting={waiting}
                 open={openStatement(statements)}
                 canManage={canManage}
                 personId={person.id}

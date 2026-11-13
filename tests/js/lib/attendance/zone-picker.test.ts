@@ -3,7 +3,11 @@ import {
     clampRadius,
     edgeOf,
     findPlaces,
+    CITY_ZOOM,
+    cityOf,
     initialSearch,
+    STREET_ZOOM,
+    tooFarToPlace,
     parseCoordinate,
     radiusTo,
 } from '@/lib/attendance/zone-picker';
@@ -146,5 +150,35 @@ describe('initialSearch', () => {
 
     it('is nothing for a search the server would not make (under 3 letters)', () => {
         expect(initialSearch(null, 'ab')).toBeNull();
+    });
+});
+
+describe('cityOf', () => {
+    it('keeps the municipality and the state, the last two parts of the address, to look at the city when the street is not found', () => {
+        expect(
+            cityOf(
+                'Reforma 222, col. Juárez, C.P. 06600, Cuauhtémoc, Ciudad de México',
+            ),
+        ).toBe('Cuauhtémoc, Ciudad de México');
+    });
+
+    it('is nothing when the address has no city to keep apart from its street', () => {
+        expect(cityOf('Reforma 222, Ciudad de México')).toBeNull();
+        expect(cityOf('Reforma 222')).toBeNull();
+        expect(cityOf(' , , ')).toBeNull();
+    });
+});
+
+describe('the zoom to place a zone at', () => {
+    it('looks at the street for an address and at the city for its fallback', () => {
+        expect(STREET_ZOOM).toBe(17);
+        expect(CITY_ZOOM).toBe(12);
+    });
+
+    it('asks to confirm a center touched on a map zoomed out beyond a neighbourhood', () => {
+        expect(tooFarToPlace(5)).toBe(true);
+        expect(tooFarToPlace(14)).toBe(true);
+        expect(tooFarToPlace(15)).toBe(false);
+        expect(tooFarToPlace(18)).toBe(false);
     });
 });

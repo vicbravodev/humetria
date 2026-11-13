@@ -33,6 +33,7 @@ const period = {
     granted: 25,
     available: 23,
     mayPrescribe: false,
+    overdue: false,
 };
 
 describe('milestones', () => {
@@ -42,6 +43,13 @@ describe('milestones', () => {
             { title: 'A disfrutar antes del', detail: '1 may 2027' },
             { title: 'Prescribe el', detail: '1 may 2028' },
         ]);
+    });
+
+    it('says «Vencido» next to the window that closed with days still in the period', () => {
+        expect(milestones({ ...period, overdue: true })[1]).toEqual({
+            title: 'A disfrutar antes del',
+            detail: '1 may 2027 · Vencido',
+        });
     });
 
     it('says one day in the singular', () => {

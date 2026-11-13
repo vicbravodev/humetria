@@ -9,6 +9,7 @@ use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Http\Requests\EnrollRequest;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Support\CenterReadiness;
 use App\Modules\Attendance\Support\CurrentAgreement;
 use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Organization\Contracts\Roster;
@@ -37,6 +38,8 @@ final readonly class EnrollmentController
             'name' => $person->name,
             'jobTitle' => $person->jobTitle,
             'linkHours' => config()->integer('attendance.enrollment.link_hours'),
+            // Whether the center can already mark: the last step does not promise it when it cannot.
+            'centerReady' => CenterReadiness::of($person->workCenterId),
             'punchUrl' => route('attendance.device.punch.home', $tenant),
             'agreement' => ['version' => $current->version, 'body' => $current->body],
             'optionsUrl' => route('attendance.device.enroll.options', [$tenant, $token]),

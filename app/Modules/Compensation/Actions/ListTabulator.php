@@ -58,7 +58,7 @@ final readonly class ListTabulator
             'id' => $grade->id,
             'category' => $grade->category,
             'level' => $grade->level,
-            'current' => $current === null ? null : $this->salary($current),
+            'current' => $current === null ? null : $this->salary($current, CarbonImmutable::parse($today)),
             'salaries' => array_map(fn (GradeSalary $salary): array => ['id' => $salary->id, ...$this->salary($salary)], $salaries),
             'people' => $people,
         ];
@@ -67,14 +67,16 @@ final readonly class ListTabulator
     /**
      * @return array{daily_salary: string, daily_salary_text: string, effective_from: string, below_minimum: string|null}
      */
-    private function salary(GradeSalary $salary): array
+    private function salary(GradeSalary $salary, ?CarbonImmutable $inForceOn = null): array
     {
         return [
             'daily_salary' => BenefitValue::decimal($salary->daily_salary_cents),
             'daily_salary_text' => Money::format($salary->daily_salary_cents),
             'effective_from' => $salary->effective_from->toDateString(),
             // Persistent, in its row: the toast of saving is gone in seconds.
-            'below_minimum' => $this->minimum->warning($salary->daily_salary_cents, CarbonImmutable::parse($salary->effective_from->toDateString())),
+            'below_minimum' => $inForceOn === null
+                ? $this->minimum->warning($salary->daily_salary_cents, CarbonImmutable::parse($salary->effective_from->toDateString()))
+                : $this->minimum->inForce($salary->daily_salary_cents, CarbonImmutable::parse($salary->effective_from->toDateString()), $inForceOn),
         ];
     }
 }

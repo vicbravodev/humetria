@@ -92,6 +92,12 @@ export type ScenarioReport = {
         missing: string[];
         missing_more: number;
         missing_without_number: number;
+        /** How many people lack each thing; one can lack several. */
+        causes: {
+            without_grade: number;
+            without_hire_date: number;
+            without_group: number;
+        };
     };
     headline: {
         people: number;

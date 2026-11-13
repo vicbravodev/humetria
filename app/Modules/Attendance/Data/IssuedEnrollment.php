@@ -15,5 +15,7 @@ final readonly class IssuedEnrollment
         public string $linkId,
         public ?string $manualUrl,
         public string $personName,
+        /** The name of the person's center when nobody can mark in it yet; null when it can. */
+        public ?string $centerNotReady = null,
     ) {}
 }

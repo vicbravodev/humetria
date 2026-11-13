@@ -35,6 +35,11 @@ export default function PeriodTimeline({
                             {dateSpan(period.prescribesOn, period.prescribesOn)}
                             .
                         </p>
+                        {period.overdue && !period.mayPrescribe && (
+                            <Badge variant="warning" className="w-fit">
+                                Vencido: sigue en el saldo
+                            </Badge>
+                        )}
                         {period.mayPrescribe && (
                             <Badge variant="warning" className="w-fit">
                                 Prescribible: sigue en el saldo

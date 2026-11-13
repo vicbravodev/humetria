@@ -25,7 +25,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * days. Days and dates only, never an amount. Whoever may only view reads no notes and not which leave it was (criterio
  * C-22).
  *
- * @phpstan-type Period array{id: string, year: int, anniversaryOn: string, enjoyBy: string, prescribesOn: string, granted: int, available: int, mayPrescribe: bool}
+ * @phpstan-type Period array{id: string, year: int, anniversaryOn: string, enjoyBy: string, prescribesOn: string, granted: int, available: int, mayPrescribe: bool, overdue: bool}
  * @phpstan-type Entry array{id: string, kind: string, kindLabel: string, tranche: string, days: int, balance: int, period: int|null, note: string|null, on: string}
  * @phpstan-type Request array{id: string, type: string|null, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, decidedBy: string|null, decidedOn: string|null, note: string|null}
  * @phpstan-type Termination array{id: string, terminatedOn: string, pendingDays: int, proportionalDays: float, settledOn: string|null, canSettle: bool}
@@ -37,7 +37,7 @@ final readonly class RecordPages
     public function __construct(private Roster $roster, private Seniority $seniority, private PolicyResolver $policies) {}
 
     /**
-     * @return array{person: array{id: string, name: string, active: bool, jobTitle: string, area: string, policy: string, startedOn: string|null}, canManage: bool, balance: array{available: int, advanced: int}, types: list<array{id: string, name: string}>, periods: list<Period>, entries: LengthAwarePaginator<int, Entry>, requests: LengthAwarePaginator<int, Request>, statements: list<array{id: string, year: int, issuedOn: string, acknowledgedOn: string|null}>, termination: Termination|null}
+     * @return array{person: array{id: string, name: string, active: bool, jobTitle: string, area: string, policy: string, startedOn: string|null}, canManage: bool, balance: array{available: int, advanced: int, waiting: int}, types: list<array{id: string, name: string}>, periods: list<Period>, entries: LengthAwarePaginator<int, Entry>, requests: LengthAwarePaginator<int, Request>, statements: list<array{id: string, year: int, issuedOn: string, acknowledgedOn: string|null}>, termination: Termination|null}
      */
     public function show(RosterEntry $person, bool $canManage): array
     {
@@ -57,7 +57,7 @@ final readonly class RecordPages
                 'policy' => $terms->name, 'startedOn' => ($this->seniority->startDatesFor([$person->id])[$person->id] ?? null)?->toDateString(),
             ],
             'canManage' => $canManage,
-            'balance' => ['available' => array_sum(array_map(fn (PeriodBalance $period): int => $period->left(), $balances)) - $advanced, 'advanced' => $advanced],
+            'balance' => ['available' => array_sum(array_map(fn (PeriodBalance $period): int => $period->left(), $balances)) - $advanced, 'advanced' => $advanced, 'waiting' => Balances::waiting([$person->id])[$person->id] ?? 0],
             'types' => $canManage ? array_values(LeaveType::query()->whereNull('archived_at')->orderBy('name')->orderBy('id')->get(['id', 'name'])->map(fn (LeaveType $type): array => ['id' => $type->id, 'name' => $type->name])->all()) : [],
             'periods' => self::periods($balances),
             'entries' => $this->entries($person->id, $years, $canManage),
@@ -87,6 +87,8 @@ final readonly class RecordPages
             'granted' => ($granted[$period->entitlementId]->statutory_days ?? 0) + ($granted[$period->entitlementId]->extra_days ?? 0),
             'available' => $period->left(),
             'mayPrescribe' => $period->left() > 0 && $today > $period->prescribesOn->toDateString(),
+            // The window to enjoy it closed and it still has days: marked, never taken off (criterio C-11).
+            'overdue' => $period->left() > 0 && $today > $period->enjoyBy->toDateString(),
         ], array_reverse($balances));
     }
 

@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  * What the queue of correction requests sends to the browser: the requests of one state, oldest first, 25 at a time,
  * searched by the person's name, with how many there are of each state. Each row: who (name and job title, from the
  * Roster), the time asked and the mark's time before it (local), the type, the reason, how many days it waits, and RH's
- * note once resolved. Never a position or a device.
+ * note once resolved (the reason and the note only for whoever manages attendance: free text that may be medical). Never a position or a device.
  *
  * One of them is in view (`selectedId`, `detail`): the one asked for by id, of any state, or the first of the page. Its
  * detail is its row plus, while pending, what approving it would do (CorrectionPreview).
@@ -75,7 +75,7 @@ final readonly class CorrectionPages
      * the people whatever the number of requests.
      *
      * @param  list<CorrectionRequest>  $requests
-     * @return array<string, array{id: string, person: array{name: string, jobTitle: string}, type: string, requestedAt: string, previousAt: string|null, reason: string, ageDays: int, status: string, note: string|null}>
+     * @return array<string, array{id: string, person: array{name: string, jobTitle: string}, type: string, requestedAt: string, previousAt: string|null, reason: string|null, ageDays: int, status: string, note: string|null}>
      */
     private function rows(array $requests): array
     {
@@ -84,6 +84,8 @@ final readonly class CorrectionPages
         $marks = AttendanceMark::query()->whereIn('id', $markIds)->get(['id', 'marked_at'])->keyBy('id');
         $zone = config()->string('app.display_timezone');
         $today = CarbonImmutable::now($zone)->startOfDay();
+        // What a person wrote and what RH answered is free text, and may be medical: only whoever manages it reads it.
+        $manage = Gate::allows('manage-attendance');
         $rows = [];
 
         foreach ($requests as $request) {
@@ -94,10 +96,10 @@ final readonly class CorrectionPages
                 'requestedAt' => $request->proposed_at->setTimezone($zone)->format('Y-m-d H:i'),
                 // The mark's time when it was asked: after an approval, the time before the correction.
                 'previousAt' => $request->mark_id === null ? null : $marks->get($request->mark_id)?->marked_at?->setTimezone($zone)->format('Y-m-d H:i'),
-                'reason' => $request->reason,
+                'reason' => $manage ? $request->reason : null,
                 'ageDays' => (int) $request->created_at->setTimezone($zone)->startOfDay()->diffInDays($today),
                 'status' => $request->status->value,
-                'note' => $request->note,
+                'note' => $manage ? $request->note : null,
             ];
         }
 

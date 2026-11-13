@@ -19,6 +19,8 @@ export type EmployeeImportSummary = {
     errors: { row: number; messages: string[] }[];
     /** Who is updated and what changes in them (the first hundred); absent when nobody changes. */
     changes?: EmployeeImportChange[];
+    /** Rows that import but leave something incomplete (the first hundred); absent when there are none. */
+    warnings?: { row: number; messages: string[] }[];
 };
 
 /** What a file changes in one person who already exists: each field with its before and after. */
@@ -86,6 +88,7 @@ export function employeeDetails(employee: {
     job_title: string;
     employee_number: string | null;
     deactivated_on: string | null;
+    deactivation_reason?: string | null;
 }): string {
     return [
         employee.job_title,
@@ -95,8 +98,9 @@ export function employeeDetails(employee: {
         employee.deactivated_on === null
             ? null
             : `Baja el ${employee.deactivated_on}`,
+        employee.deactivation_reason,
     ]
-        .filter((part) => part !== null && part !== '')
+        .filter((part) => part !== null && part !== undefined && part !== '')
         .join(' · ');
 }
 

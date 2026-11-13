@@ -41,7 +41,7 @@ export default function LeaveEmployee({
 }: {
     person: LeaveRecordPerson;
     canManage: boolean;
-    balance: { available: number; advanced: number };
+    balance: { available: number; advanced: number; waiting: number };
     types: LeaveTypeOption[];
     periods: LeaveRecordPeriod[];
     entries: Paginated<LeaveLedgerEntry>;
@@ -92,6 +92,7 @@ export default function LeaveEmployee({
                             person={person}
                             types={types}
                             current={current}
+                            balance={balance}
                             onAdjust={setAdjusting}
                         />
                     )}
@@ -110,6 +111,7 @@ export default function LeaveEmployee({
                     person={person}
                     current={current}
                     advanced={balance.advanced}
+                    waiting={balance.waiting}
                     statements={statements}
                     canManage={canManage}
                 />

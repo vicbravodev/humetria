@@ -55,18 +55,18 @@ export default function OrgChartToolbar({
         <div
             role="search"
             className={cn(
-                'pointer-events-none absolute top-3 left-3 z-10 flex flex-wrap gap-2 print:hidden',
+                'pointer-events-none absolute top-3 left-3 z-10 flex gap-2 print:hidden',
                 reserve ? 'right-[384px]' : 'right-3',
             )}
         >
-            <div className="pointer-events-auto w-full sm:w-[280px]">
+            <div className="pointer-events-auto min-w-0 flex-[1_1_200px] sm:max-w-[280px]">
                 <OrgPersonSearch
                     filters={filters}
                     person={person}
                     editing={editing}
                 />
             </div>
-            <div className="pointer-events-auto w-[210px]">
+            <div className="pointer-events-auto max-w-[210px] min-w-0 flex-[1_1_150px]">
                 <Combobox
                     id="org-chart-work-center"
                     name="work_center"
@@ -85,7 +85,10 @@ export default function OrgChartToolbar({
             </div>
             <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="pointer-events-auto">
+                    <Button
+                        variant="outline"
+                        className="pointer-events-auto shrink-0"
+                    >
                         {depthLabel(depth.levels)}
                         <ChevronDown aria-hidden />
                     </Button>
@@ -108,7 +111,7 @@ export default function OrgChartToolbar({
             </DropdownMenu>
             <Button
                 variant="outline"
-                className="pointer-events-auto"
+                className="pointer-events-auto shrink-0"
                 onClick={() => depth.onChange(everything ? 1 : Infinity)}
             >
                 {everything ? <ChevronsDownUp /> : <ChevronsUpDown />}

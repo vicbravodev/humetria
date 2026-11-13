@@ -19,6 +19,12 @@ final class MinimumWageCheck
 
     public function __construct(private readonly FiscalParameters $fiscal) {}
 
+    /** The salary in force today has to reach today's minimum, whenever it started: the one of its own day only when that is later. */
+    public function inForce(int $cents, CarbonImmutable $from, CarbonImmutable $today): ?string
+    {
+        return $this->warning($cents, $from->greaterThan($today) ? $from : $today);
+    }
+
     public function warning(int $cents, CarbonImmutable $on): ?string
     {
         $legal = $this->snapshots[$on->toDateString()] ??= $this->fiscal->at($on);

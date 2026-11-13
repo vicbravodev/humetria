@@ -80,6 +80,8 @@ it('lets a person ask for days and see the request waiting', function (bool $dar
     $portal = leaveVacationsPortal();
 
     visitPage('leave/portal', $portal['url'], $dark, $mobile)
+        // The button waits for both dates, and says so instead of just being off.
+        ->assertSee('Elija el día en que empieza y el día en que termina para poder enviar la solicitud.')
         // The dates are picked in a calendar, never typed; it opens on the month of the first day it allows.
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-09"] button')
@@ -88,6 +90,7 @@ it('lets a person ask for days and see the request waiting', function (bool $dar
         ->click('[data-state="open"] [data-day="2026-11-20"] button')
         ->assertMissing('[data-slot=\"calendar\"]')
         ->assertSee('Son 9 días laborables.')
+        ->assertDontSee('Elija el día en que empieza y el día en que termina')
         // A reminder that never stops the request.
         ->assertSee('La ley le da derecho a 12 días seguidos de vacaciones. Dividirlos es decisión suya.')
         ->assertDontSee('No tiene días disponibles para estas fechas.')

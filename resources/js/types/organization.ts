@@ -38,6 +38,8 @@ export type EmployeeRow = {
     state: string;
     /** The day they were deactivated, written for display; null while active. */
     deactivated_on: string | null;
+    /** Why the relationship ended, in words; null while active (or when it was not said). */
+    deactivation_reason: string | null;
 };
 
 /** A choice of a list (a work center, an area, a gender): what the form sends and what the person reads. */

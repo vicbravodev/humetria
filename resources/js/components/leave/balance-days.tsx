@@ -14,6 +14,11 @@ export default function BalanceDays({ person }: { person: LeaveBalanceRow }) {
                 <span className="font-medium tabular-nums">
                     {countOf(person.available, 'día', 'días')}
                 </span>
+                {person.waiting > 0 && (
+                    <span className="text-caption text-muted-foreground">
+                        · {person.waiting} en espera
+                    </span>
+                )}
                 {person.available === 0 && (
                     <Badge variant="outline">Sin días</Badge>
                 )}

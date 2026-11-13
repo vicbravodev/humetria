@@ -95,7 +95,7 @@ it('lists a person without a name by their employee number, and without failing 
                 'id' => $person->id, 'name' => 'E-77', 'email' => null, 'mobile' => null,
                 'gender' => '', 'gender_label' => '', 'work_center_id' => '', 'work_center' => '',
                 'area' => '', 'job_title' => '', 'employee_number' => 'E-77',
-                'job_category' => '', 'job_level' => '', 'hired_on' => null, 'staff_group' => '', 'state' => '', 'deactivated_on' => null,
+                'job_category' => '', 'job_level' => '', 'hired_on' => null, 'staff_group' => '', 'state' => '', 'deactivated_on' => null, 'deactivation_reason' => null,
                 'seniority_on' => null, 'manager' => null, 'direct_reports' => 0,
             ]));
 });

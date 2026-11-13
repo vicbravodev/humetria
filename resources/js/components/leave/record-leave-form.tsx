@@ -27,11 +27,12 @@ export default function RecordLeaveForm({
     onOpenChange: (open: boolean) => void;
     types: LeaveTypeOption[];
     /** Who it is for when the page already says (their record); without it the person is looked up by name. */
-    person?: { value: string; label: string };
+    person?: { value: string; label: string; hint?: string };
 }) {
     const tenantSlug = useTenantSlug();
     const [typeId, setTypeId] = useState('');
     const [startsOn, setStartsOn] = useState('');
+    const [hint, setHint] = useState(person?.hint);
 
     return (
         <FormDialog
@@ -56,6 +57,7 @@ export default function RecordLeaveForm({
                                 )}
                                 placeholder="Busca por nombre"
                                 invalid={errors['employee_id'] !== undefined}
+                                onChange={(option) => setHint(option.hint)}
                             />
                         ) : (
                             <>
@@ -68,6 +70,11 @@ export default function RecordLeaveForm({
                                     {person.label}
                                 </p>
                             </>
+                        )}
+                        {hint !== undefined && (
+                            <p className="text-sm text-muted-foreground">
+                                {hint}
+                            </p>
                         )}
                         <InputError message={errors['employee_id']} />
                     </div>
