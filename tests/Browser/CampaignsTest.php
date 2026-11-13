@@ -694,6 +694,23 @@ it('completes the report with what HR writes', function (): void {
         ->assertScript(cspViolations(), '[]');
 });
 
+// Informe 7.7: the error of a field goes as soon as it is edited, not when the answer of the next save arrives.
+it('clears the error of the license of the report as it is edited', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}/report")
+        ->click('Completar informe')
+        ->fill('#report-responsible_name', 'Dra. Laura Méndez')
+        ->fill('#report-responsible_license', '123')
+        ->press('Guardar')
+        ->assertAttribute('#report-responsible_license', 'aria-invalid', 'true')
+        ->fill('#report-responsible_license', '1234567')
+        ->assertAttribute('#report-responsible_license', 'aria-invalid', 'false')
+        ->assertNoJavaScriptErrors();
+});
+
 it('shares the report through a temporary link that opens with no account until it is revoked', function (): void {
     $tenant = campaignsCompany();
     $tenant->update(['trade_name' => 'Acme']);
