@@ -63,7 +63,7 @@ it('says who invited the person, to which company and as what', function (): voi
 it('writes what each role will do', function (TenantRole $role, string $line): void {
     expect((string) invitationEmail($this->tenant, $this->olga, $role)->render())->toContain($line);
 })->with([
-    'owner' => [TenantRole::Owner, 'Administra todo</strong>: administrarás la cuenta, sus miembros y todo lo que RH lleva: NOM-035, NOM-037 y Ley Silla.'],
+    'owner' => [TenantRole::Owner, 'Administra todo</strong>: administrarás la cuenta, sus usuarios y las herramientas que tenga contratadas.'],
     'hr' => [TenantRole::Hr, 'Ayuda con las rutas</strong>: podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.'],
     'viewer' => [TenantRole::Viewer, 'Solo consulta</strong>: podrás ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.'],
 ]);
