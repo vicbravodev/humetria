@@ -463,7 +463,7 @@ it('describes each row in words in a center with documents and a list but nobody
         '5.1' => 'missing: Hay 2 aspirantes, pero ninguna persona en el padrón.',
         '5.1.1' => 'not_applicable: Nadie teletrabaja en este centro todavía.',
         '5.1.2' => 'not_applicable: Nadie teletrabaja en este centro todavía.',
-        '5.2' => 'done: Versión 1. 0 de 2 personas confirmaron que la leyeron.',
+        '5.2' => 'partial: Versión 1. 0 de 2 personas confirmaron que la leyeron.',
         '5.3' => 'missing: Aún no subes la información sobre los riesgos del Teletrabajo.',
         '5.4 y 7' => 'done: Lista publicada (versión 1); no hay lugares por validar.',
         '5.5' => 'not_applicable: Nadie teletrabaja en este centro todavía.',

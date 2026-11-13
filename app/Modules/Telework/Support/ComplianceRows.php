@@ -524,7 +524,10 @@ final readonly class ComplianceRows
                 : trans_choice('{1} :good de :count persona confirmó que la leyó|[2,*] :good de :count personas confirmaron que la leyeron', $ack['expected'], ['good' => $ack['acknowledged']]),
         ];
 
-        return new ComplianceRow('5.2', $label, $lacking === [] ? RowState::Done : RowState::Partial, implode('. ', $parts).'.');
+        // «Leída» is only true with the confirmations: published but unread is partial, whatever the incisos cover.
+        $read = $ack['acknowledged'] >= $ack['expected'];
+
+        return new ComplianceRow('5.2', $label, $lacking === [] && $read ? RowState::Done : RowState::Partial, implode('. ', $parts).'.');
     }
 
     /** @param array<string, array{acknowledged: int, expected: int}> $acks */
