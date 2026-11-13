@@ -23,7 +23,9 @@ export default function AckToolbar({
             </p>
             {offerAll !== null && (
                 <Button variant="ghost" size="sm" onClick={onChooseAll}>
-                    Elegir las {offerAll} pendientes
+                    {offerAll === 1
+                        ? 'Elegir la pendiente'
+                        : `Elegir las ${offerAll} pendientes`}
                 </Button>
             )}
             {count > 0 && (

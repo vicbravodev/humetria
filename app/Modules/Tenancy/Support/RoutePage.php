@@ -78,6 +78,35 @@ final readonly class RoutePage
     }
 
     /**
+     * One printed datum per stage of the route (date, version, counts), for the dossier: a requirement with nothing printed
+     * next to it is a claim without a record. Only what exists; the stage of a row that is missing has none.
+     *
+     * @return array<int, string> by stage number
+     */
+    public function printedFacts(string $tenantSlug, WorkCenterSummary $center, bool $seesScreenings): array
+    {
+        [$facts, $evaluated] = $this->read($tenantSlug, $center, $seesScreenings);
+        $printed = [];
+
+        if ($facts->policyInfo !== null) {
+            $info = $facts->policyInfo;
+            $printed[1] = "Versión {$info['version']} · publicada el {$info['publishedOn']} · {$info['confirmed']} de {$info['expected']} ".($info['expected'] === 1 ? 'persona la leyó' : 'personas la leyeron');
+        }
+
+        if ($evaluated !== null) {
+            // The row's own detail already says how many answered and, in the third, how many answered the Guía I.
+            $facts->until !== null && $printed[2] = "Vigente hasta el {$facts->until} (evaluación cada 2 años)";
+            $seesScreenings && $facts->toChannel === 0 && $printed[3] = 'Nadie espera valoración clínica';
+
+            $facts->sharedOn !== null && $printed[4] = "Resultados publicados el {$facts->sharedOn}";
+            $facts->program === 'done' && $printed[5] = 'Todas las acciones del programa están cerradas';
+            $facts->reported && $printed[6] = 'Informe con conclusiones, recomendaciones y responsable';
+        }
+
+        return $printed;
+    }
+
+    /**
      * @return array{0: Nom035Facts, 1: CampaignRecord|null, 2: list<array{numeral: string, title: string, detail: string|null, state: string, stage: int, href: string|null, action: string|null}>, 3: list<array{norm: string, title: string, detail: string, action: string, href: string}>}
      */
     private function read(string $tenantSlug, WorkCenterSummary $center, bool $seesScreenings): array

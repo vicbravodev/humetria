@@ -28,6 +28,7 @@ export default function Nom035DossierRow({
             {row.detail !== null && (
                 <p className="text-sm text-muted-foreground">{row.detail}</p>
             )}
+            {row.fact !== null && <p className="text-sm">{row.fact}</p>}
             {row.evidence !== null && (
                 <p className="text-sm">
                     Evidencia:{' '}

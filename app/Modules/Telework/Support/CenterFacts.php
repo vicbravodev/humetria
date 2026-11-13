@@ -33,6 +33,7 @@ final readonly class CenterFacts
         public int $equipmentUnconfirmed,
         public int $overdue,
         public int $dueSoon,
+        public int $untrained,
         public int $noticeTotal,
         public int $noticeReviewed,
         public bool $committee,

@@ -23,7 +23,7 @@ use Database\Factories\Telework\TeleworkerFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** Opening the link once (the middleware and the page share it) and what each listed tool reads for its section. */
-const PORTAL_HOME_QUERIES = 25;
+const PORTAL_HOME_QUERIES = 26;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -108,7 +108,7 @@ it('offers the page of the center only while its link is active, and support onl
 
     $sections = portalSections($this->token);
 
-    expect($sections['center']['href'])->toBe(route('workers.show', $link->token()))
+    expect($sections['center']['href'])->toBe(route('workers.center', [$link->token(), $this->ana->work_center_id]))
         ->and($sections['support']['href'])->toBe(route('portal.support.show', $this->token));
 
     $link->forceFill(['disabled_at' => now()])->save();

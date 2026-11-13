@@ -98,6 +98,8 @@ final readonly class RoutePages
      */
     public function inspection(mixed $tenant, WorkCenterSummary $center, array $rows): array
     {
+        // What does not apply is neither shown nor counted: it is not «Cumple» and it is not missing.
+        $rows = array_values(array_filter($rows, fn (ComplianceRow $row): bool => $row->state !== RowState::NotApplicable));
         usort($rows, fn (ComplianceRow $a, ComplianceRow $b): int => RouteStages::rank($a->key) <=> RouteStages::rank($b->key));
         $items = fn (bool $met): array => array_values(array_map(fn (ComplianceRow $row): array => $this->item($tenant, $center, $row), array_filter($rows, fn (ComplianceRow $row): bool => ($row->state === RowState::Met) === $met)));
 
@@ -123,6 +125,7 @@ final readonly class RoutePages
             RowState::Missing => sprintf($row->count === 1 ? $missingOne : $missingMany, $row->count),
             RowState::Warning => sprintf($row->count === 1 ? $warningOne : $warningMany, $row->count),
             RowState::Pending => self::PENDING[$row->key],
+            RowState::NotApplicable => 'Ningún puesto del centro lo requiere',
         };
 
         return [
@@ -134,6 +137,7 @@ final readonly class RoutePages
                 RowState::Warning => 'partial',
                 RowState::Missing => 'missing',
                 RowState::Pending => 'pending',
+                RowState::NotApplicable => 'not_applicable',
             },
             ...$this->fix($tenant, $center, $row->key, $row->state === RowState::Met),
         ];

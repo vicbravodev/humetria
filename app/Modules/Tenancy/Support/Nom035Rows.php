@@ -33,13 +33,31 @@ final readonly class Nom035Rows
         $evaluation = $evaluated?->id;
 
         return [
-            $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', $facts->policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.write', [$tenantSlug, 'policy', 'center' => $workCenterId]), 'Escribir la política'),
+            $this->policy($tenantSlug, $workCenterId, $facts),
             $this->evaluation($tenantSlug, $facts, $evaluation),
             $this->after($evaluation, $this->channeling($tenantSlug, $facts, $evaluation, $channelAt)),
             $this->chapterSeven($facts, $evaluation, $this->sharing($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->program($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->row(6, '7.7', 'Informe de resultados', $facts->reported ? null : 'Le faltan conclusiones, recomendaciones y responsable', 'manage-campaigns', $evaluation === null ? null : route('tenant.campaigns.report', [$tenantSlug, $evaluation]), 'Completar el informe')),
         ];
+    }
+
+    /**
+     * Stage 1: the policy of prevention in force (num. 5.1). Published is not read: until everyone confirmed it, it says how many
+     * did and stays amber, so it is not shown as met without the record that backs it.
+     *
+     * @return Row
+     */
+    private function policy(string $tenantSlug, string $workCenterId, Nom035Facts $facts): array
+    {
+        $row = $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', $facts->policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.write', [$tenantSlug, 'policy', 'center' => $workCenterId]), 'Escribir la política');
+        $info = $facts->policyInfo;
+
+        if (! $facts->policy || $info === null || $info['confirmed'] >= $info['expected']) {
+            return $row;
+        }
+
+        return [...$row, 'state' => 'partial', 'detail' => "Publicada · {$info['confirmed']} de {$info['expected']} la leyeron", 'action' => $row['href'] === null ? null : 'Ver'];
     }
 
     /**
@@ -98,7 +116,23 @@ final readonly class Nom035Rows
             return ['numeral' => '5.5 y 5.8 c', 'title' => $title, 'detail' => 'Solo lo ve quien puede ver la Guía I', 'state' => 'done', 'stage' => 3, 'href' => null, 'action' => null];
         }
 
-        return $this->row(3, '5.5 y 5.8 c', $title, $facts->toChannel === 0 ? null : self::people($facts->toChannel), 'view-trauma-screenings', $evaluation === null ? null : route('tenant.campaigns.screenings', [$tenantSlug, $channelAt ?? $evaluation]), 'Canalizar');
+        $guide = $facts->guideOne === null || $facts->guideOne['target'] === 0 ? null : "Guía I: {$facts->guideOne['answered']} de {$facts->guideOne['target']}";
+        $detail = match (true) {
+            $facts->toChannel > 0 => self::people($facts->toChannel).($guide === null ? '' : " · {$guide}"),
+            default => $guide,
+        };
+        $row = $this->row(3, '5.5 y 5.8 c', $title, $detail, 'view-trauma-screenings', $evaluation === null ? null : route('tenant.campaigns.screenings', [$tenantSlug, $channelAt ?? $evaluation]), 'Canalizar');
+
+        // Nobody waits to be channeled: with the Guía I answered by everyone it is met; below everyone it stays met but in amber, with who is missing.
+        $below = $facts->toChannel === 0 && $facts->guideOne !== null && $facts->guideOne['answered'] < $facts->guideOne['target'];
+
+        $see = ['action' => $row['href'] === null ? null : 'Ver'];
+
+        return match (true) {
+            $below => [...$row, ...$see, 'state' => 'partial'],
+            $detail !== null && $facts->toChannel === 0 => [...$row, ...$see, 'state' => 'done'],
+            default => $row,
+        };
     }
 
     /**

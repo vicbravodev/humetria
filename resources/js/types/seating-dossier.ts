@@ -5,7 +5,7 @@ export type SeatingDossierRow = {
     key: string;
     number: string;
     label: string;
-    state: 'met' | 'warning' | 'missing' | 'pending';
+    state: 'met' | 'warning' | 'missing' | 'pending' | 'not_applicable';
     stateLabel: string;
     lines: DossierLine[];
 };

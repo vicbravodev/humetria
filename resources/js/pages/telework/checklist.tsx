@@ -55,7 +55,9 @@ export default function ChecklistPage({
                     }
                     description={
                         isDraft
-                            ? 'Ajusta las preguntas de este centro. Al publicar, la lista queda como una versión que no se puede cambiar.'
+                            ? canEdit
+                                ? 'Ajusta las preguntas de este centro. Al publicar, la lista queda como una versión que no se puede cambiar.'
+                                : 'Este borrador lo ajusta y publica la Comisión de seguridad e higiene del centro; tú puedes leerlo.'
                             : 'Esta versión está publicada y no se puede cambiar. Inicia un borrador para ajustarla.'
                     }
                     facts={[

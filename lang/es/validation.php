@@ -247,6 +247,7 @@ return [
         'contact_name' => 'nombre del contacto',
         'contact_email' => 'correo del contacto',
         'contact_phone' => 'teléfono del contacto',
+        'marital_status' => 'estado civil',
         'mode' => 'modalidad',
         'next_mode' => 'modalidad del siguiente pulso',
         'day_of_month' => 'día del mes',

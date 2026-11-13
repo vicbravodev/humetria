@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { conditionSource, scoreSummary } from '@/lib/seating/assessment';
+import {
+    conditionSource,
+    scoreSummary,
+    whoAssesses,
+} from '@/lib/seating/assessment';
 
 const keys = [
     'standing_time',
@@ -55,5 +59,18 @@ describe('conditionSource', () => {
             label: 'Sin respuesta de la persona',
             unanswered: false,
         });
+    });
+});
+
+describe('whoAssesses', () => {
+    it('says the Comisión does the assessments the person who may only read cannot start', () => {
+        expect(whoAssesses('none', false)).toBe('La hace la Comisión');
+        expect(whoAssesses('due', false)).toBe('La hace la Comisión');
+    });
+
+    it('says nothing to who may assess, nor where an assessment is already open or signed', () => {
+        expect(whoAssesses('none', true)).toBeNull();
+        expect(whoAssesses('draft', false)).toBeNull();
+        expect(whoAssesses('signed', false)).toBeNull();
     });
 });

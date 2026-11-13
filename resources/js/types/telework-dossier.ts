@@ -39,6 +39,10 @@ export type DossierWorkplace = {
         decision: string;
         method: string;
         validUntil: string | null;
+        /** How many answers of the checklist behind the decision were the unfavorable one; null without a checklist. */
+        unfavorable: number | null;
+        /** What the Comisión wrote when it decided. */
+        note: string;
     } | null;
 };
 

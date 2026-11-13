@@ -43,7 +43,7 @@ export type CenterRequirement = {
     label: string;
     /** The tab where it is put right; none when it lives outside Ley Silla. */
     tab: string | null;
-    state: 'met' | 'warning' | 'missing' | 'pending';
+    state: 'met' | 'warning' | 'missing' | 'pending' | 'not_applicable';
     stateLabel: string;
     count: number;
     /** Since when the oldest thing behind it has been waiting, Y-m-d. */
@@ -56,4 +56,6 @@ export type RequirementsSummary = {
     missing: number;
     /** Nothing registered yet to judge them by: «Sin registros», never counted as met. */
     pending: number;
+    /** No position needs them: «No aplica», left out of the count. */
+    notApplicable: number;
 };

@@ -33,11 +33,13 @@ final readonly class Nom035Dossier
         $this->audit->handle('nom035.dossier_viewed', null, $record);
         Log::info('nom035.dossier_viewed', $record);
 
+        $facts = $this->page->printedFacts($tenantSlug, $center, $seesScreenings);
         $rows = array_map(fn (array $row): array => [
             'numeral' => $row['numeral'],
             'title' => $row['title'],
             'state' => $row['state'],
             'detail' => $row['detail'],
+            'fact' => $facts[$row['stage']] ?? null,
             'evidence' => $this->evidence($tenantSlug, $center, $row),
         ], $this->page->rows($tenantSlug, $center, $seesScreenings));
 

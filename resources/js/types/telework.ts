@@ -115,7 +115,7 @@ export type TeleworkerWorkplace = {
     /** Derived by the server from the latest review; never edited by hand. */
     status: WorkplaceStatusValue;
     statusLabel: string;
-    /** The first day the validation no longer holds, Y-m-d. */
+    /** The last day the validation holds, Y-m-d: «vigente hasta». */
     expiresOn: string | null;
 };
 

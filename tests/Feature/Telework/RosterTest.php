@@ -184,6 +184,12 @@ it('reports the missing data on the form', function (string $field): void {
     expect(joined()->status)->toBe(TeleworkerStatus::Aspirant);
 })->with(['marital_status', 'activities', 'contact_phone', 'street', 'exterior_number', 'neighborhood', 'postal_code', 'municipality', 'state', 'no_equipment_reason']);
 
+it('names the marital status field in Spanish when it is missing', function (): void {
+    rosterReview();
+
+    $this->post(joinUrl(), rosterForm(['marital_status' => '']))->assertSessionHasErrors(['marital_status' => 'El campo estado civil es obligatorio.']);
+});
+
 it('refuses a marital status or state that does not exist', function (string $field, string $value): void {
     rosterReview();
 
@@ -433,7 +439,8 @@ it('shows each workplace with its derived status and expiry, and whether the per
             ->where('teleworker.canJoin', true)
             ->where('teleworker.workplaces.0.status', 'valid_with_plan')
             ->where('teleworker.workplaces.0.statusLabel', 'Validado con plan de acción')
-            ->where('teleworker.workplaces.0.expiresOn', '2027-02-10')
+            // The last day it holds (the same «vigente hasta» of the dossier), not the first day it no longer does.
+            ->where('teleworker.workplaces.0.expiresOn', '2027-02-09')
             ->where('teleworker.workplaces.1.status', 'retired'));
 });
 

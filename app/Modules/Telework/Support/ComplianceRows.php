@@ -123,6 +123,7 @@ final readonly class ComplianceRows
                 $equipment[$id]['unconfirmed'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
                 $trainings[$id]['overdue'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
                 $trainings[$id]['soon'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
+                $trainings[$id]['untrained'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
                 $notices[$id]['total'] ?? 0,
                 $notices[$id]['reviewed'] ?? 0, // @pest-mutate-ignore: IncrementInteger,DecrementInteger
                 isset($committees[$id]),
@@ -371,7 +372,7 @@ final readonly class ComplianceRows
      * Per center: the active people past twelve months since their last training, and those within the month before it.
      *
      * @param  array{active: array<string, list<Teleworker>>, aspirants: array<string, int>}  $people
-     * @return array<string, array{overdue: int, soon: int}>
+     * @return array<string, array{overdue: int, soon: int, untrained: int}>
      */
     private function trainings(array $people): array
     {
@@ -388,14 +389,16 @@ final readonly class ComplianceRows
         foreach ($people['active'] as $center => $list) {
             $overdue = 0;
             $soon = 0;
+            $untrained = 0;
 
             foreach ($list as $person) {
                 $standing = $this->training->standing($schedule[$person->id]['due'], $today);
                 $overdue += $standing === TrainingStanding::Overdue ? 1 : 0;
                 $soon += $standing === TrainingStanding::DueSoon ? 1 : 0;
+                $untrained += $schedule[$person->id]['last'] === null ? 1 : 0;
             }
 
-            $counts[$center] = ['overdue' => $overdue, 'soon' => $soon];
+            $counts[$center] = ['overdue' => $overdue, 'soon' => $soon, 'untrained' => $untrained];
         }
 
         return $counts;
@@ -521,7 +524,10 @@ final readonly class ComplianceRows
                 : trans_choice('{1} :good de :count persona confirmó que la leyó|[2,*] :good de :count personas confirmaron que la leyeron', $ack['expected'], ['good' => $ack['acknowledged']]),
         ];
 
-        return new ComplianceRow('5.2', $label, $lacking === [] ? RowState::Done : RowState::Partial, implode('. ', $parts).'.');
+        // «Leída» is only true with the confirmations: published but unread is partial, whatever the incisos cover.
+        $read = $ack['acknowledged'] >= $ack['expected'];
+
+        return new ComplianceRow('5.2', $label, $lacking === [] && $read ? RowState::Done : RowState::Partial, implode('. ', $parts).'.');
     }
 
     /** @param array<string, array{acknowledged: int, expected: int}> $acks */
@@ -648,6 +654,9 @@ final readonly class ComplianceRows
             $facts->active === 0 => $this->notApplicable('5.9 y 8', $label),
             $facts->overdue >= $facts->active => new ComplianceRow('5.9 y 8', $label, RowState::Missing, trans_choice('{1} :count persona tiene su capacitación vencida (más de 12 meses).|[2,*] Las :count personas tienen su capacitación vencida (más de 12 meses).', $facts->overdue)),
             $facts->overdue > 0 => new ComplianceRow('5.9 y 8', $label, RowState::Partial, trans_choice('{1} :count persona tiene su capacitación vencida (más de 12 meses).|[2,*] :count personas tienen su capacitación vencida (más de 12 meses).', $facts->overdue)),
+            // Inside the first twelve months is not evidence: «al corriente» needs a registered training for each person.
+            $facts->untrained >= $facts->active => new ComplianceRow('5.9 y 8', $label, RowState::Missing, trans_choice('{1} La persona no tiene una capacitación registrada.|[2,*] Ninguna de las :count personas tiene una capacitación registrada.', $facts->active)),
+            $facts->untrained > 0 => new ComplianceRow('5.9 y 8', $label, RowState::Partial, trans_choice('{1} :count persona sin capacitación registrada.|[2,*] :count personas sin capacitación registrada.', $facts->untrained)),
             default => new ComplianceRow('5.9 y 8', $label, RowState::Done, $facts->dueSoon === 0 ? 'Todas las personas están al corriente.' : trans_choice('{1} :count persona debe capacitarse en el próximo mes.|[2,*] :count personas deben capacitarse en el próximo mes.', $facts->dueSoon)),
         };
     }

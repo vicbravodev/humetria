@@ -21,6 +21,7 @@ export default function SeatingAssessment({
     assessment,
     facts,
     conditions,
+    lacking,
     suggestions,
     canSign,
     canEdit,
@@ -36,6 +37,8 @@ export default function SeatingAssessment({
     assessment: AssessmentRecord;
     facts: AssessmentFact[];
     conditions: AssessmentCondition[];
+    /** What else the signature will ask for besides the date and the conditions, in words. */
+    lacking: string[];
     suggestions: MeasureSuggestions | null;
     canSign: boolean;
     canEdit: boolean;
@@ -75,6 +78,7 @@ export default function SeatingAssessment({
                 <AssessmentWorkspace
                     assessment={assessment}
                     conditions={conditions}
+                    lacking={lacking}
                     canEdit={canEdit}
                     canSign={canSign}
                     signError={errors['sign']}

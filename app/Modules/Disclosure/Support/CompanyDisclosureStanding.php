@@ -20,6 +20,30 @@ final readonly class CompanyDisclosureStanding implements DisclosureStanding
         return array_values(array_filter($workCenterIds, fn (string $id): bool => isset($inForce[$id])));
     }
 
+    public function policySummaries(array $workCenterIds): array
+    {
+        $inForce = $this->policies->inForce($workCenterIds);
+        $acknowledgments = $this->delivery->acknowledgments($inForce);
+        $summaries = [];
+
+        foreach ($inForce as $center => $fact) {
+            $summaries[$center] = ['version' => $fact->version, 'publishedOn' => Days::moment($fact->publishedAt), 'confirmed' => $acknowledgments[$center]['confirmed'] ?? 0, 'expected' => $acknowledgments[$center]['active'] ?? 0];
+        }
+
+        return $summaries;
+    }
+
+    public function publishedOn(array $campaignIds): array
+    {
+        $days = [];
+
+        foreach (ResultPublication::query()->whereIn('campaign_id', $campaignIds)->whereNull('withdrawn_at')->get(['campaign_id', 'created_at']) as $publication) {
+            $days[$publication->campaign_id] = Days::moment($publication->created_at);
+        }
+
+        return $days;
+    }
+
     public function sharedEvaluations(array $campaignIds): array
     {
         return $this->sharing($campaignIds)['shared'];

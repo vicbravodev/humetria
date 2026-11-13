@@ -109,6 +109,25 @@ it('says with how many answers the evaluation closed, in the route and in the in
     'everyone' => [20, 20],
 ]);
 
+// R2-nom035-01: who has not answered the Guía I stays visible after closing, amber while it is under everyone.
+it('keeps who has not answered the Guía I visible after closing, in amber below everyone', function (int $answered, int $invited, string $state): void {
+    foreach (range(1, $invited) as $index) {
+        ParticipantInstrument::factory()->create([
+            'participant_id' => Participant::factory()->create(['campaign_id' => $this->closed->id])->id,
+            'instrument' => 'nom035.guide-i',
+            ...($index <= $answered ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : []),
+        ]);
+    }
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.2.state', $state)
+        ->where('rows.2.detail', "Guía I: {$answered} de {$invited}"));
+})->with([
+    'a part' => [11, 20, 'partial'],
+    'everyone' => [20, 20, 'done'],
+]);
+
 it('puts first the people who wait to be channeled, only for whoever may see the Guía I', function (TenantRole $role, string $state, string $detail, int $urgencies): void {
     TraumaScreening::factory()->count(2)->create(['campaign_id' => $this->closed->id, 'requires_clinical_assessment' => true]);
     $this->actingAs(memberOf($this->tenant, $role));
@@ -147,7 +166,9 @@ it('reads the Programa where it stands, and the stages met with the way to see t
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
 
     nom035Route()->assertInertia(fn (Assert $page) => $page
-        ->where('rows.0.state', 'done')
+        // R2-nom035-03: published, but nobody confirmed it: it says so, amber, and is not shown as met.
+        ->where('rows.0.state', 'partial')
+        ->where('rows.0.detail', 'Publicada · 0 de 30 la leyeron')
         ->where('rows.0.action', 'Ver')
         ->where('rows.0.href', route('tenant.disclosure.policy', $this->tenant))
         ->where('rows.3.state', 'done')
@@ -215,7 +236,7 @@ it('reads the page in a fixed number of queries', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
     nom035Route()->assertOk();
 
-    $this->expectsDatabaseQueryCount(25);
+    $this->expectsDatabaseQueryCount(28);
     nom035Route()->assertOk();
 });
 
@@ -250,4 +271,14 @@ it('opens the NOM-035 route from the route of a center, the panel\'s way in', fu
         ->assertRedirect(route('tenant.nom035.route', [$this->tenant, $this->center->id]));
     nom035Route(WorkCenter::factory()->create())->assertNotFound();
     $this->get("/admin/acme/campaigns/centers/{$this->center->id}x/route")->assertNotFound();
+});
+
+it('counts the policy as met once everyone confirmed it', function (): void {
+    $small = WorkCenter::factory()->for($this->tenant)->create();
+    $person = staffOf($this->tenant, $small, 1)->firstOrFail();
+    $link = DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $small->id]);
+    Database\Factories\Disclosure\AcknowledgmentFactory::new()->portal()->create(['tenant_id' => $this->tenant->id, 'document_id' => $link->document_id, 'employee_id' => $person->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route($small)->assertInertia(fn (Assert $page) => $page->where('rows.0.state', 'done')->where('rows.0.detail', null));
 });

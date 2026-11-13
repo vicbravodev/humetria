@@ -9,6 +9,7 @@ const VARIANT = {
     warning: 'warning',
     missing: 'destructive',
     pending: 'secondary',
+    not_applicable: 'outline',
 } as const;
 
 /** One requirement of the center: its number and words, where it stands, what is behind it and the way to put it right. */

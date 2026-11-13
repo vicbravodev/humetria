@@ -1,4 +1,5 @@
-import type { WorkplaceStatusValue } from '@/types';
+import { describeDate } from '@/lib/calendar-date';
+import type { DossierWorkplace, WorkplaceStatusValue } from '@/types';
 
 export type DossierBlockKey =
     | 'roster'
@@ -50,4 +51,35 @@ export function inapplicableText(numeral: string): string {
     return numeral === '5.11'
         ? 'No aplica: nadie ha enviado un aviso de riesgo de trabajo.'
         : 'No aplica: nadie teletrabaja en este centro todavía.';
+}
+
+/** What the Comisión's latest review prints in the dossier, cell by cell; a dash where there is nothing, «Falta» before any review. */
+export function reviewCells(review: DossierWorkplace['review']): {
+    decidedOn: string;
+    decision: string;
+    method: string;
+    validUntil: string;
+    unfavorable: string;
+    note: string;
+} {
+    if (review === null) {
+        return {
+            decidedOn: 'Falta',
+            decision: '—',
+            method: '—',
+            validUntil: '—',
+            unfavorable: '—',
+            note: '—',
+        };
+    }
+
+    return {
+        decidedOn: describeDate(review.decidedOn) ?? '—',
+        decision: review.decision,
+        method: review.method,
+        validUntil: describeDate(review.validUntil ?? '') ?? '—',
+        unfavorable:
+            review.unfavorable === null ? '—' : String(review.unfavorable),
+        note: review.note,
+    };
 }

@@ -19,6 +19,23 @@ interface DisclosureStanding
     public function withPolicy(array $workCenterIds): array;
 
     /**
+     * The policy in force of each of those work centers, as the dossier prints it: its version, the day it was published
+     * (display time zone, «3 nov 2026») and how many of the active people confirmed they read it.
+     *
+     * @param  list<string>  $workCenterIds
+     * @return array<string, array{version: int, publishedOn: string, confirmed: int, expected: int}> by work center id; one without policy is left out
+     */
+    public function policySummaries(array $workCenterIds): array;
+
+    /**
+     * The day each of those evaluations had its results published (display time zone, «3 nov 2026»); one not published is left out.
+     *
+     * @param  list<string>  $campaignIds
+     * @return array<string, string> by campaign id
+     */
+    public function publishedOn(array $campaignIds): array;
+
+    /**
      * Of those evaluations, the ones whose results are published to the people and not withdrawn.
      *
      * @param  list<string>  $campaignIds

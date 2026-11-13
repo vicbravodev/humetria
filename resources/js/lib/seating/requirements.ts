@@ -8,7 +8,12 @@ export function requirementCount(
 ): string | null {
     const { state, count } = requirement;
 
-    if (state === 'met' || state === 'pending' || count === 0) {
+    if (
+        state === 'met' ||
+        state === 'pending' ||
+        state === 'not_applicable' ||
+        count === 0
+    ) {
         return null;
     }
 
