@@ -1,6 +1,6 @@
 import { useReactFlow, useStore } from '@xyflow/react';
 import { useEffect, useRef } from 'react';
-import { viewportFor } from '@/lib/org-chart/camera';
+import { readableViewport, viewportFor } from '@/lib/org-chart/camera';
 import type { Box } from '@/lib/org-chart/camera';
 import type { CameraRequest } from '@/lib/org-chart/flow';
 
@@ -32,10 +32,20 @@ export default function OrgChartCamera({
 
             handled.current = request;
 
+            const top =
+                request.readable === undefined
+                    ? null
+                    : boundsOf(request.readable);
+
             if (box !== null) {
-                void setViewport(viewportFor(box, { width, height }), {
-                    duration: 250,
-                });
+                const screen = { width, height };
+
+                void setViewport(
+                    top === null
+                        ? viewportFor(box, screen)
+                        : readableViewport(box, top, screen),
+                    { duration: 250 },
+                );
             }
         });
 

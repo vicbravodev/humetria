@@ -21,6 +21,7 @@ export function placeText({
 export function orgChartQuery(
     filters: OrgChartFilters,
     focus?: string,
+    editing = false,
 ): Record<string, string> {
     return {
         ...(filters.work_center === null
@@ -28,7 +29,13 @@ export function orgChartQuery(
             : { work_center: filters.work_center.value }),
         ...(filters.area === null ? {} : { area: filters.area.value }),
         ...(focus === undefined ? {} : { focus }),
+        ...(editing ? { edit: '1' } : {}),
     };
+}
+
+/** Whether the address asks for the editing mode (`edit=1`): finding someone reloads the page and must not end it. */
+export function isEditing(url: string): boolean {
+    return new URL(url, 'http://localhost').searchParams.get('edit') === '1';
 }
 
 /** "Vendedor · Ventas", with what is known. */

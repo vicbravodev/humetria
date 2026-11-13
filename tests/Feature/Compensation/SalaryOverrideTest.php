@@ -280,3 +280,15 @@ it('keeps two accounts\' individual salaries apart', function (): void {
     $this->get(route('tenant.compensation.overrides.index', $other))->assertNotFound();
     $this->post(route('tenant.compensation.overrides.store', $other), overrideForm())->assertNotFound();
 });
+
+it('saves an individual salary under the minimum and says so, without blocking', function (): void {
+    overridePerson($this->tenant, $this->grade, 'E-001');
+
+    $this->post(route('tenant.compensation.overrides.store', $this->tenant), overrideForm(['daily_salary' => '250']))->assertSessionHasNoErrors();
+
+    $flash = session(Inertia\Support\SessionKey::FLASH_DATA);
+
+    expect(SalaryOverride::query()->sole()->daily_salary_cents)->toBe(25000)
+        ->and($flash['toast']['type'] ?? null)->toBe('warning')
+        ->and($flash['toast']['message'] ?? '')->toContain('Sueldo individual guardado.')->toContain('salario mínimo general');
+});

@@ -170,3 +170,24 @@ it('is for those who manage the organization, never a viewer', function (): void
 it('answers 404 outside the company', function (): void {
     $this->actingAs(ownerOf(Tenant::factory()->create()))->get(route('tenant.employees.index', $this->tenant))->assertNotFound();
 });
+
+it('finds a person by their words in any order, and by their mobile with or without spaces', function (string $q, array $names): void {
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '5512345678', 'employee_number' => 'N-1']);
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Juan Gómez', 'email' => 'jg@acme.mx', 'mobile' => '5598765432', 'employee_number' => 'N-2']);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', ['tenant' => $this->tenant, 'q' => $q]))
+        ->assertInertia(fn (Assert $page) => $page->where('employees.data', fn ($rows): bool => collect($rows)->pluck('name')->all() === $names));
+})->with([
+    'words in another order' => ['perez juan', ['Juan Pérez']],
+    'every word must match' => ['juan lopez', []],
+    'one word for both' => ['  JUAN ', ['Juan Gómez', 'Juan Pérez']],
+    'accents' => ['Pérez', ['Juan Pérez']],
+    'mobile with spaces' => ['55 1234 5678', ['Juan Pérez']],
+    'mobile without spaces' => ['5512345678', ['Juan Pérez']],
+    'a piece of the mobile, four digits at least' => ['2345', ['Juan Pérez']],
+    'too few digits are not a mobile' => ['123', []],
+    'only spaces filters nothing' => ['   ', ['Juan Gómez', 'Juan Pérez']],
+    'wildcards are literal in a word' => ['ju_n', []],
+    'a very long search does not break' => [str_repeat('juan ', 40), ['Juan Gómez', 'Juan Pérez']],
+]);

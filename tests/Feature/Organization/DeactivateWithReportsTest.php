@@ -8,6 +8,7 @@ use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Http\Requests\DeactivateEmployeeRequest;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
 mutates(DeactivateEmployee::class, DeactivateEmployeeRequest::class);
@@ -28,7 +29,7 @@ beforeEach(function (): void {
 
 function deactivateWith(mixed $test, Employee $employee, array $data = []): Illuminate\Testing\TestResponse
 {
-    return $test->actingAs($test->owner)->post(route('tenant.employees.deactivate', [$test->tenant, $employee->id]), $data);
+    return $test->actingAs($test->owner)->post(route('tenant.employees.deactivate', [$test->tenant, $employee->id]), departure($data));
 }
 
 /** @return array<string, string|null> each person's manager, by the name the test gives them */
@@ -76,7 +77,7 @@ it('deactivates someone without active reports as always, whatever is sent', fun
     expect($this->zoe->refresh()->deactivated_at)->not->toBeNull()
         ->and($this->ana->refresh()->deactivated_at)->not->toBeNull()
         ->and($this->zoe->manager_id)->toBe($this->ana->id)
-        ->and(AuditEntry::query()->count())->toBe(0);
+        ->and(AuditEntry::query()->where('event', 'employee.manager_changed')->count())->toBe(0);
 });
 
 it('lets one of the direct reports of who is at the top take their place', function (): void {
@@ -112,7 +113,7 @@ it('still answers 404 for another company\'s employee and 409 for one who alread
     deactivateWith($this, Employee::factory()->create())->assertNotFound();
     deactivateWith($this, $this->luis)->assertConflict();
     $this->actingAs(memberOf($this->tenant, App\Modules\Tenancy\Enums\TenantRole::Viewer))
-        ->post(route('tenant.employees.deactivate', [$this->tenant, $this->mid->id]), ['reassign_to' => $this->root->id])
+        ->post(route('tenant.employees.deactivate', [$this->tenant, $this->mid->id]), departure(['reassign_to' => $this->root->id]))
         ->assertForbidden();
 
     expect($this->mid->refresh()->deactivated_at)->toBeNull();
@@ -122,4 +123,49 @@ it('refuses to leave reports without a manager when nobody was chosen', function
     expect(fn () => resolve(DeactivateEmployee::class)->handle($this->mid))->toThrow(LogicException::class);
 
     expect($this->mid->refresh()->deactivated_at)->toBeNull();
+});
+
+it('asks for the date and the reason of the departure', function (): void {
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->zoe->id]), [])
+        ->assertSessionHasErrors(['terminated_on' => 'El campo fecha de baja es obligatorio.', 'reason' => 'El campo motivo es obligatorio.']);
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->zoe->id]), ['terminated_on' => today()->toDateString(), 'reason' => 'whim'])
+        ->assertSessionHasErrors('reason');
+
+    expect($this->zoe->refresh()->deactivated_at)->toBeNull();
+});
+
+it('rejects a departure in the future or before the person was hired', function (): void {
+    $this->travelTo('2026-11-12 03:00:00'); // 11 Nov 21:00 in Mexico City
+    $this->zoe->update(['hired_on' => '2026-10-01']);
+
+    // Tomorrow, local: the 12th is already tomorrow in Mexico City.
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->zoe->id]), ['terminated_on' => '2026-11-12', 'reason' => 'resignation'])->assertSessionHasErrors('terminated_on');
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->zoe->id]), ['terminated_on' => '2026-09-30', 'reason' => 'resignation'])->assertSessionHasErrors('terminated_on');
+
+    expect($this->zoe->refresh()->deactivated_at)->toBeNull();
+});
+
+it('keeps the effective date and the reason, announces them, audits them, and reactivating clears them', function (): void {
+    $this->travelTo('2026-11-12 18:00:00');
+    Event::fake([EmployeeDeactivated::class]);
+
+    deactivateWith($this, $this->zoe, ['terminated_on' => '2026-10-22', 'reason' => 'dismissal'])->assertSessionHasNoErrors();
+
+    $zoe = $this->zoe->refresh();
+    $entry = AuditEntry::query()->where('event', 'employee.deactivated')->sole();
+
+    expect($zoe->terminated_on?->toDateString())->toBe('2026-10-22')
+        ->and($zoe->deactivation_reason)->toBe(App\Modules\Organization\Enums\DeactivationReason::Dismissal)
+        ->and($entry->subject_id)->toBe($zoe->id)
+        ->and($entry->metadata)->toEqual(['reason' => 'dismissal', 'terminated_on' => '2026-10-22']);
+    Event::assertDispatched(EmployeeDeactivated::class, fn (EmployeeDeactivated $event): bool => $event->employeeId === $zoe->id && $event->effectiveOn->toDateString() === '2026-10-22');
+
+    resolve(App\Modules\Organization\Actions\ReactivateEmployee::class)->handle($zoe);
+
+    expect($zoe->refresh()->terminated_on)->toBeNull()->and($zoe->deactivation_reason)->toBeNull();
+});
+
+it('does not allow a departure date without a deactivation in the database', function (): void {
+    expect(fn () => DB::table('employees')->where('id', $this->zoe->id)->update(['terminated_on' => '2026-10-22']))->toThrow(Illuminate\Database\QueryException::class)
+        ->and(fn () => DB::table('employees')->where('id', $this->zoe->id)->update(['deactivated_at' => now(), 'deactivation_reason' => 'whim']))->toThrow(Illuminate\Database\QueryException::class);
 });

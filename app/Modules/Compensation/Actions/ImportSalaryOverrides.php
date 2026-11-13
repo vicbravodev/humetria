@@ -10,6 +10,7 @@ use App\Modules\Compensation\Data\ImportOutcome;
 use App\Modules\Compensation\Data\OverrideData;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Support\CsvFile;
+use App\Modules\Compensation\Support\MinimumWageCheck;
 use App\Modules\Compensation\Support\OverridesCsv;
 use App\Modules\Compensation\Support\OverrideTargets;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -19,7 +20,7 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class ImportSalaryOverrides
 {
-    public function __construct(private CurrentTenant $currentTenant, private OverrideTargets $targets, private RecordAudit $audit) {}
+    public function __construct(private CurrentTenant $currentTenant, private OverrideTargets $targets, private RecordAudit $audit, private MinimumWageCheck $minimum) {}
 
     /**
      * Reads the individual salaries' CSV and, only if every row is valid and its person is an active one of the roster who
@@ -65,6 +66,8 @@ final readonly class ImportSalaryOverrides
             $this->audit->handle('compensation.overrides_imported', null, ['overrides' => count($parsed['entries'])]);
         });
 
-        return new ImportOutcome(count($read['rows']));
+        $low = array_keys(array_filter($parsed['entries'], fn (OverrideData $data): bool => $this->minimum->warning($data->dailySalaryCents, $data->effectiveFrom) !== null));
+
+        return new ImportOutcome(count($read['rows']), [], $low);
     }
 }

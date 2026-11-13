@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
  * how many it holds, narrowed by name, work center and area (the tabs count what the filters leave). Whoever may only view
  * reads who asked and when, never the note, the reason of a rejection nor which leave it was (criterio C-22).
  *
- * @phpstan-type Row array{id: string, name: string, manager: string|null, type: string|null, requestedOn: string, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, shortBy: int, periods: list<int>, reason: string|null, recordedByHr: bool, note: string|null, rejectionReason: string|null, canDecide: bool, canCancel: bool, coverage: array{fits: bool, leftAfter: int}|null, team: array{days: list<array{date: string, away: int}>, names: list<string>}|null}
+ * @phpstan-type Row array{id: string, name: string, manager: string|null, type: string|null, requestedOn: string, startsOn: string, endsOn: string, workingDays: int, status: string, statusLabel: string, hadBalance: bool|null, shortBy: int, periods: list<int>, reason: string|null, recordedByHr: bool, note: string|null, rejectionReason: string|null, canDecide: bool, canApprove: bool, canCancel: bool, coverage: array{fits: bool, leftAfter: int}|null, team: array{days: list<array{date: string, away: int}>, names: list<string>}|null}
  */
 final readonly class RequestPages
 {
@@ -145,6 +145,7 @@ final readonly class RequestPages
             'note' => $canManage ? $request->note : null,
             'rejectionReason' => $canManage ? $request->rejection_reason : null,
             'canDecide' => $canManage && $request->status === RequestStatus::Requested,
+            'canApprove' => $context[$request->id]['canApprove'] ?? true,
             'canCancel' => $canManage && in_array($request->status, RequestStatus::live(), true),
             'coverage' => $context[$request->id]['coverage'] ?? null,
             'team' => $context[$request->id]['team'] ?? null,

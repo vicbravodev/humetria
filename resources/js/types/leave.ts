@@ -169,6 +169,8 @@ export type LeaveQueueRequest = {
     note: string | null;
     rejectionReason: string | null;
     canDecide: boolean;
+    /** False when approving would be refused: no days and a policy that does not give them in advance. */
+    canApprove: boolean;
     canCancel: boolean;
     /** Only for RH, for vacations that wait. */
     coverage: LeaveCoverage | null;

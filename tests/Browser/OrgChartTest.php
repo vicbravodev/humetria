@@ -628,3 +628,18 @@ it('turns the pages of the reports without moving the peers', function (): void 
         ->assertSee('Sofía Luna')
         ->assertNoJavaScriptErrors();
 });
+
+it('keeps the editing mode on when a person is searched, and opens readable from the top', function (): void {
+    acmeOrgChart();
+
+    visit('/admin/acme/org-chart')
+        ->click('Editar estructura')
+        ->assertSee('Editando')
+        ->click('#org-chart-person')
+        ->type('[role="combobox"][aria-controls="org-chart-person-options"]', 'ana')
+        ->assertSeeIn('#org-chart-person-options', 'Ana López')
+        ->keys('[role="combobox"][aria-controls="org-chart-person-options"]', 'Enter')
+        ->assertSee('Editando')
+        ->assertScript('() => new URL(location.href).searchParams.get("edit")', '1')
+        ->assertNoJavaScriptErrors();
+});

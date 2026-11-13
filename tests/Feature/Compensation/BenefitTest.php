@@ -8,6 +8,11 @@ use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Models\WorkRiskPremium;
+use App\Modules\Leave\Enums\PolicyScope;
+use App\Modules\Leave\Models\LeavePolicy;
+use App\Modules\Leave\Models\LeavePolicyAssignment;
+use App\Modules\Leave\Models\LeavePolicyRow;
+use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -306,4 +311,42 @@ it('creates a benefit with its seniority table from the page and goes back to th
 
     $this->post(route('tenant.compensation.benefits.store', $this->tenant), benefitForm(['name' => 'Otro', 'tenure_table' => [['from_years' => 'cinco', 'value' => '12']]]))
         ->assertSessionHasErrors('tenure_table');
+});
+
+/** The rows of the catalog by base key, with the fields these notes live in. */
+function baseRows(): array
+{
+    $page = test()->get(route('tenant.compensation.benefits.index', test()->tenant))->assertOk()->inertiaProps();
+
+    return array_column($page['benefits']['data'], null, 'name');
+}
+
+it('says the seniority premium of the contract is on top of the one the law gives, which is counted apart', function (): void {
+    expect(baseRows()['Prima de antigüedad']['note'])->toBe('Adicional a la de ley (los 12 días por año se calculan aparte)')
+        ->and(baseRows()['Aguinaldo']['note'])->toBeNull();
+});
+
+it('warns when the Vacaciones policy gives other days or premium than the contract says', function (): void {
+    workIn($this->tenant);
+    LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
+    $policy = LeavePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'premium_percent' => 30]);
+    LeavePolicyRow::factory()->create(['tenant_id' => $this->tenant->id, 'leave_policy_id' => $policy->id, 'year_from' => 1, 'year_to' => 1, 'days' => 15]);
+    LeavePolicyAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'leave_policy_id' => $policy->id, 'scope' => PolicyScope::Default]);
+    $notice = 'Tu política de Vacaciones da 15 días y 30 % de prima; aquí el contrato dice 12 y 25 %.';
+
+    $rows = baseRows();
+
+    expect($rows['Vacaciones']['policy_notice'])->toBe($notice)
+        ->and($rows['Prima vacacional']['policy_notice'])->toBe($notice)
+        ->and($rows['Aguinaldo']['policy_notice'])->toBeNull();
+});
+
+it('does not warn when the policy and the contract say the same, or the company does not use Vacaciones', function (): void {
+    expect(baseRows()['Vacaciones']['policy_notice'])->toBeNull();
+
+    workIn($this->tenant);
+    LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    // With no policy of its own the company follows the law: 12 days and 25 %, as the contract.
+    expect(baseRows()['Vacaciones']['policy_notice'])->toBeNull();
 });

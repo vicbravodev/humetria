@@ -48,6 +48,12 @@ final readonly class FiscalSnapshot
         return $this->cents('minimum_wage');
     }
 
+    /** The minimum of the Zona Libre de la Frontera Norte. */
+    public function minimumWageBorder(): int
+    {
+        return $this->cents('minimum_wage_border');
+    }
+
     public function sbcCap(): int
     {
         return $this->uma() * self::SBC_CAP_UMAS;

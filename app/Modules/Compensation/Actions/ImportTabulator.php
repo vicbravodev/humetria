@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Compensation\Actions;
 
 use App\Actions\RecordAudit;
+use App\Modules\Compensation\Data\GradeSalaryData;
 use App\Modules\Compensation\Data\ImportOutcome;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Support\CsvFile;
+use App\Modules\Compensation\Support\MinimumWageCheck;
 use App\Modules\Compensation\Support\TabulatorCsv;
 use App\Modules\Organization\Contracts\JobGrades;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -17,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class ImportTabulator
 {
-    public function __construct(private CurrentTenant $currentTenant, private JobGrades $jobGrades, private RecordAudit $audit) {}
+    public function __construct(private CurrentTenant $currentTenant, private JobGrades $jobGrades, private RecordAudit $audit, private MinimumWageCheck $minimum) {}
 
     /**
      * Reads the tabulator's CSV and, only if every row is valid, writes all of it in one transaction: every row or none,
@@ -57,6 +59,10 @@ final readonly class ImportTabulator
             $this->audit->handle('compensation.tabulator_imported', null, $counts);
         });
 
-        return new ImportOutcome(count($read['rows']));
+        // With no problems every row became a salary, in the order of the file: the rows are numbered as the sheet is.
+        $low = array_keys(array_filter($parsed['salaries'], fn (GradeSalaryData $salary): bool => $this->minimum->warning($salary->dailySalaryCents, $salary->effectiveFrom) !== null));
+        $numbers = array_keys($read['rows']);
+
+        return new ImportOutcome(count($read['rows']), [], array_map(fn (int $index): int => $numbers[$index], $low));
     }
 }

@@ -35,7 +35,9 @@ final class TabulatorImportController extends Controller
         $outcome = $import->handle($request->content());
 
         if ($outcome->imported()) {
-            Inertia::flash('toast', ['type' => 'success', 'message' => sprintf('Se importó el tabulador: %d %s.', $outcome->rows, $outcome->rows === 1 ? 'salario' : 'salarios')]);
+            $note = $outcome->lowSalaryNote();
+            $message = sprintf('Se importó el tabulador: %d %s.', $outcome->rows, $outcome->rows === 1 ? 'salario' : 'salarios');
+            Inertia::flash('toast', ['type' => $note === null ? 'success' : 'warning', 'message' => $note === null ? $message : "{$message} {$note}"]);
         } else {
             Inertia::flash('salary_import', $outcome->summary());
         }

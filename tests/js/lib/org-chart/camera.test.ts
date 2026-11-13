@@ -4,6 +4,8 @@ import {
     boundsOf,
     MAX_ZOOM,
     MIN_ZOOM,
+    READABLE_ZOOM,
+    readableViewport,
     viewportFor,
 } from '@/lib/org-chart/camera';
 
@@ -85,5 +87,31 @@ describe('boundsOf', () => {
     it('is nothing when there is nobody to show', () => {
         expect(boundsOf(['z'], nodes, positions)).toBeNull();
         expect(boundsOf(null, [], new Map())).toBeNull();
+    });
+});
+
+describe('readableViewport', () => {
+    const wide = { x: 0, y: 0, width: 6000, height: 800 };
+    const top = { x: 2400, y: 0, width: 1200, height: 300 };
+
+    it('opens on the root and its first level, readable and from the top, when the whole chart would be tiny', () => {
+        const view = readableViewport(wide, top, { width: 1280, height: 700 });
+
+        expect(view.zoom).toBeGreaterThanOrEqual(READABLE_ZOOM);
+        // The first level, in its middle, lands in the middle of the screen and inside it.
+        expect(top.x * view.zoom + view.x).toBeGreaterThanOrEqual(0);
+        expect((top.x + top.width) * view.zoom + view.x).toBeLessThanOrEqual(
+            1280,
+        );
+        // Anchored under the toolbar, not centered down the page.
+        expect(view.y).toBe(72 + 16 - top.y * view.zoom);
+    });
+
+    it('shows the whole chart when it already reads well at that size', () => {
+        const small = { x: 0, y: 0, width: 1000, height: 400 };
+
+        expect(
+            readableViewport(small, top, { width: 1280, height: 700 }),
+        ).toEqual(viewportFor(small, { width: 1280, height: 700 }));
     });
 });

@@ -77,7 +77,7 @@ it('opens on the next pulse and how the engagement moves, never on an empty puls
     $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
     workIn($tenant);
     pulseResultsSurvey($tenant, PulseMode::Tour, 12, 4);
-    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => now()->addDays(4)->toDateString()]);
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => App\Modules\Engagement\Support\SurveyClock::day()->addDays(4)->toDateString()]);
 
     visitPage('engagement/index', "{$url}/pulse", $dark, $mobile)
         ->assertDontSee('Todavía no hay un pulso')
@@ -95,7 +95,7 @@ it('opens on the next pulse and how the engagement moves, never on an empty puls
 it('creates a pulse now from a dialog while one is scheduled', function (): void {
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
-    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => now()->addDays(4)->toDateString()]);
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => App\Modules\Engagement\Support\SurveyClock::day()->addDays(4)->toDateString()]);
 
     visitPage('engagement/index', "{$url}/pulse")
         ->assertSeeIn('nav[aria-label="Ruta"]', 'Escucha a tu gente')
@@ -144,7 +144,7 @@ it('says when the next pulse goes out while there is a single wave', function ()
     $url = signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
     climateResultsSurvey($tenant, 40);
-    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => now()->addDays(4)->toDateString()]);
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => App\Modules\Engagement\Support\SurveyClock::day()->addDays(4)->toDateString()]);
 
     visitPage('engagement/trend', "{$url}/pulse/trend")
         ->assertSeeIn('nav[aria-label="Ruta"]', 'Escucha a tu gente')

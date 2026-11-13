@@ -10,8 +10,10 @@ use App\Modules\Organization\Data\EmployeeImportRow;
 use App\Modules\Organization\Enums\Gender;
 use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
+use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\EmployeeCsv;
+use App\Modules\Organization\Support\ImportChanges;
 use App\Modules\Organization\Support\ImportManagers;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
@@ -45,6 +47,12 @@ final class PlanEmployeeImport
 
     /** @var array<string, int> the spreadsheet row where each email, then each number, first appears */
     private array $seen = [];
+
+    /** @var array<string, Employee> the company's people by id, with their area, to say what an update changes */
+    private array $people = [];
+
+    /** @var array<string, string> work center names by id */
+    private array $centerNames = [];
 
     /** A union's people are identified by the company ID alone: no contact, gender or work center. */
     private bool $union = false;
@@ -119,6 +127,8 @@ final class PlanEmployeeImport
         $this->union = $this->companies->current()->isUnion();
 
         foreach ($this->workCenters->all() as $center) {
+            $this->centerNames[$center->id] = $center->name;
+
             if (! $center->archived) {
                 $this->centers[self::fold($center->name)] = $center->id;
             }
@@ -129,7 +139,8 @@ final class PlanEmployeeImport
             $this->states[self::fold($code)] = $code;
         }
 
-        foreach (Employee::query()->get(['id', 'email', 'employee_number', 'manager_id', 'deactivated_at']) as $employee) {
+        foreach (Employee::query()->addSelect(['area_name' => Area::query()->select('name')->whereColumn('areas.id', 'employees.area_id')])->get(['id', 'email', 'employee_number', 'manager_id', 'deactivated_at', 'name', 'mobile', 'gender', 'work_center_id', 'area_id', 'job_title', 'hired_on', 'staff_group']) as $employee) {
+            $this->people[$employee->id] = $employee;
             $this->existing[$employee->id] = ['number' => $employee->employee_number, 'email' => $employee->email, 'manager' => $employee->manager_id, 'active' => $employee->deactivated_at === null];
 
             if ($employee->email !== null) {
@@ -164,7 +175,8 @@ final class PlanEmployeeImport
         $messages = [...$messages, ...$payScale['messages']];
 
         if ($gender === null) {
-            $messages[] = 'El género debe ser Mujer, Hombre u Otro.';
+            // «M» is Masculino for some and Mujer for others: it is not guessed.
+            $messages[] = Str::of($row['genero'] ?? '')->trim()->lower()->toString() === 'm' ? '«M» puede ser Masculino o Mujer: escribe Hombre o Mujer (o H / F).' : 'El género debe ser Mujer, Hombre u Otro.';
         }
 
         $centerId = $this->centers[self::fold($center)] ?? null;
@@ -182,7 +194,7 @@ final class PlanEmployeeImport
             return [null, $messages];
         }
 
-        return [new EmployeeImportRow(new EmployeeData(
+        $data = new EmployeeData(
             name: self::text($input, 'name'),
             email: $email,
             mobile: is_string($input['mobile'] ?? null) ? $input['mobile'] : null,
@@ -196,7 +208,10 @@ final class PlanEmployeeImport
             hiredOn: $payScale['hiredOn'],
             staffGroup: $payScale['group'],
             state: self::text($payScale['input'], 'state') ?: null,
-        ), $existingId, [...$payScale['absent'], ...(array_key_exists('jefe', $row) ? [] : ['manager_id'])]), []];
+        );
+        $absent = [...$payScale['absent'], ...(array_key_exists('jefe', $row) ? [] : ['manager_id'])];
+
+        return [new EmployeeImportRow($data, $existingId, $absent, changes: $this->changesOf($existingId, $data, $absent)), []];
     }
 
     /**
@@ -219,7 +234,7 @@ final class PlanEmployeeImport
 
         $number = $input['employee_number'];
 
-        return [new EmployeeImportRow(new EmployeeData(
+        $data = new EmployeeData(
             name: $input['name'] ?: null,
             email: null,
             mobile: null,
@@ -233,7 +248,9 @@ final class PlanEmployeeImport
             hiredOn: $payScale['hiredOn'],
             staffGroup: $payScale['group'],
             state: self::text($payScale['input'], 'state') ?: null,
-        ), $this->byNumber[mb_strtolower($number)] ?? null, [
+        );
+        $existingId = $this->byNumber[mb_strtolower($number)] ?? null;
+        $absent = [
             ...$payScale['absent'],
             'manager_id',
             ...array_keys(array_filter([
@@ -241,7 +258,9 @@ final class PlanEmployeeImport
                 'area_id' => ! array_key_exists('area', $row),
                 'job_title' => ! array_key_exists('puesto', $row),
             ])),
-        ]), []];
+        ];
+
+        return [new EmployeeImportRow($data, $existingId, $absent, changes: $this->unionChangesOf($existingId, $data, $absent)), []];
     }
 
     /**
@@ -290,6 +309,31 @@ final class PlanEmployeeImport
                 'state' => ! array_key_exists('estado', $row),
             ]))],
         ];
+    }
+
+    /**
+     * @param  list<string>  $absent
+     * @return list<array{label: string, before: string, after: string}>
+     */
+    private function changesOf(?string $existingId, EmployeeData $data, array $absent): array
+    {
+        $person = $existingId === null ? null : ($this->people[$existingId] ?? null);
+
+        return $person === null ? [] : ImportChanges::between($person, $data, $this->centerNames, $absent);
+    }
+
+    /**
+     * A union's file carries no contact, gender nor work center: those are not compared.
+     *
+     * @param  list<string>  $absent
+     * @return list<array{label: string, before: string, after: string}>
+     */
+    private function unionChangesOf(?string $existingId, EmployeeData $data, array $absent): array
+    {
+        return array_values(array_filter(
+            $this->changesOf($existingId, $data, $absent),
+            fn (array $change): bool => in_array($change['label'], ['Nombre', 'Área', 'Puesto', 'Fecha de ingreso', 'Grupo'], true),
+        ));
     }
 
     /**

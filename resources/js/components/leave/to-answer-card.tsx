@@ -7,6 +7,7 @@ import RejectForm from '@/components/leave/reject-form';
 import { Badge } from '@/components/ui/badge';
 import { dateSpan, workingDaysOf } from '@/lib/leave/format';
 import { coverageLine, reasonLine, startsIn } from '@/lib/leave/overview';
+import { approvalNote } from '@/lib/leave/queue';
 import type { LeaveQueueRequest } from '@/types';
 
 /**
@@ -46,15 +47,22 @@ export default function ToAnswerCard({
                         {coverageLine(request.coverage)}
                     </p>
                 )}
+                {approvalNote(request) !== null && (
+                    <p className="text-meta text-muted-foreground">
+                        {approvalNote(request)}
+                    </p>
+                )}
             </div>
             {request.canDecide && (
                 <div className="flex items-center gap-1 max-sm:justify-between">
-                    <ApproveButton
-                        requestId={request.id}
-                        name={request.name}
-                        primary={primary}
-                        block
-                    />
+                    {request.canApprove && (
+                        <ApproveButton
+                            requestId={request.id}
+                            name={request.name}
+                            primary={primary}
+                            block
+                        />
+                    )}
                     <RowMenu
                         label={`Acciones de ${request.name}`}
                         items={[

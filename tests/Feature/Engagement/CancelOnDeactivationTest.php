@@ -40,7 +40,7 @@ beforeEach(function (): void {
 });
 
 it('cancels the link of someone who is deactivated before answering', function (): void {
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure())->assertRedirect();
 
     expect($this->invitation->fresh()?->cancelled)->toBeTrue();
 });
@@ -48,7 +48,7 @@ it('cancels the link of someone who is deactivated before answering', function (
 it('opens «not available» at the link of someone who left', function (): void {
     $this->get(route('engagement.survey.show', 'the-token'))->assertInertia(fn ($page) => $page->where('unavailable', null));
 
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure())->assertRedirect();
 
     auth()->logout();
     $this->get(route('engagement.survey.show', 'the-token'))->assertInertia(fn ($page) => $page->where('unavailable', 'invalid')->where('sections', []));
@@ -57,7 +57,7 @@ it('opens «not available» at the link of someone who left', function (): void 
 it('keeps what someone already answered: it cannot be taken back', function (): void {
     $this->invitation->update(['answered' => true]);
 
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure())->assertRedirect();
 
     $kept = $this->invitation->fresh();
     expect($kept?->answered)->toBeTrue()->and($kept?->cancelled)->toBeFalse();
@@ -68,7 +68,7 @@ it('leaves closed surveys and other people as they were', function (): void {
     $past = Invitation::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $closed->id, 'employee_id' => $this->employee->id]);
     $colleague = Invitation::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $this->survey->id]);
 
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]));
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure());
 
     expect($past->fresh()?->cancelled)->toBeFalse()->and($colleague->fresh()?->cancelled)->toBeFalse();
 });

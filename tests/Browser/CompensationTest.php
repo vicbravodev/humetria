@@ -327,6 +327,17 @@ it('shows the report of a scenario with its analysis, one notice of accuracy and
         ->assertDontSee('Valor para la persona y costo para la empresa');
 })->with($looks);
 
+it('has the final figures of the report in print without waiting for the count', function (): void {
+    $url = signInToPanel();
+    $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
+
+    $page = visit("{$url}/compensation/scenarios/{$scenario->id}/report")
+        ->assertScript('(() => { window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 60000); return true; })()', true)
+        ->assertSee('Costo del primer año');
+
+    emulatePrint($page)->assertScript("(() => { const figures = [...document.querySelectorAll('dd.tabular-nums')].map((figure) => figure.innerText.trim()); return figures.length >= 3 && figures.every((text) => text !== '' && !/^[$]?0(\\.0)?( %)?$/.test(text)); })()", true);
+});
+
 /** A script that waits a moment for the tooltip and says whether it opened telling `$start`. */
 function tooltipTells(string $start): string
 {

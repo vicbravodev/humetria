@@ -114,6 +114,17 @@ it('shows every role that views climate the commitments, paginated and filtered 
     $this->put(route('tenant.climate.commitments.status', [$this->tenant, $this->survey, $commitment]), ['status' => 'done'])->assertForbidden();
 });
 
+it('answers 403 to someone who only views, whatever they send: not a validation error that hides the permission', function (): void {
+    $this->actingAs($this->hr)->post(route('tenant.climate.commitments.store', [$this->tenant, $this->survey]), commitmentPayload())->assertRedirect();
+    $commitment = Commitment::query()->firstOrFail();
+    $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+
+    $this->post(route('tenant.climate.commitments.store', [$this->tenant, $this->survey]), [])->assertForbidden();
+    $this->put(route('tenant.climate.commitments.update', [$this->tenant, $this->survey, $commitment]), ['heard' => ''])->assertForbidden();
+    $this->put(route('tenant.climate.commitments.status', [$this->tenant, $this->survey, $commitment]), ['status' => 'nonsense'])->assertForbidden();
+    $this->post(route('tenant.pulse.commitments.store', [$this->tenant, $this->survey]), [])->assertForbidden();
+});
+
 it('offers the groups the results show, the company first, and the suggested actions of the priorities', function (): void {
     $this->actingAs($this->hr)->get(commitmentsUrl($this->tenant, $this->survey))
         ->assertInertia(fn (Assert $page) => $page

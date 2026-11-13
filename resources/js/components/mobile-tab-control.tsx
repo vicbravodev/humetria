@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import {
+    BriefcaseBusiness,
     ClipboardCheck,
     House,
     Menu,
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 const ICONS: Record<MobileTab['key'], LucideIcon> = {
     panel: House,
     compliance: ClipboardCheck,
+    operation: BriefcaseBusiness,
     complaints: MessageSquareWarning,
     more: Menu,
 };
@@ -49,6 +51,7 @@ export function MobileTabControl({
 
     switch (tab.key) {
         case 'compliance':
+        case 'operation':
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger className={className}>

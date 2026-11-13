@@ -234,3 +234,19 @@ it('shows where the data of the contract stand on the benefits and the individua
     $this->get(route($route, $this->tenant))
         ->assertInertia(fn (Assert $page) => $page->where('status.roster', ['people' => 0, 'missing' => 0])->has('status.accuracy'));
 })->with(['tenant.compensation.benefits.index', 'tenant.compensation.overrides.index']);
+
+it('saves a salary under the minimum and says so, without blocking', function (): void {
+    $this->post(route('tenant.compensation.tabulator.store', $this->tenant), tabulatorForm(['daily_salary' => '250']))->assertSessionHasNoErrors()->assertRedirect();
+
+    $flash = session(Inertia\Support\SessionKey::FLASH_DATA);
+
+    expect(GradeSalary::query()->sole()->daily_salary_cents)->toBe(25000)
+        ->and($flash['toast']['type'] ?? null)->toBe('warning')
+        ->and($flash['toast']['message'] ?? '')->toContain('Salario guardado.')->toContain('Está por debajo del salario mínimo general ($315.04 diarios');
+});
+
+it('saves a salary at the minimum as always', function (): void {
+    $this->post(route('tenant.compensation.tabulator.store', $this->tenant), tabulatorForm(['daily_salary' => '315.04']))->assertSessionHasNoErrors();
+
+    expect(session(Inertia\Support\SessionKey::FLASH_DATA)['toast'] ?? null)->toBe(['type' => 'success', 'message' => 'Salario guardado.']);
+});

@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Modules\Organization\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Organization\Contracts\ReportingLines;
+use App\Modules\Organization\Enums\DeactivationReason;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use LogicException;
 
 final readonly class DeactivateEmployee
 {
-    public function __construct(private SetManager $setManager, private ReportingLines $lines, private CompanyLimits $limits) {}
+    public function __construct(private SetManager $setManager, private ReportingLines $lines, private CompanyLimits $limits, private RecordAudit $audit) {}
 
     /**
      * The person no longer works here. Nothing is deleted: evaluations that name them keep their history. What other
@@ -24,13 +27,17 @@ final readonly class DeactivateEmployee
      * manager is not touched: reactivated, they are back in their place.
      *
      * @param  string|null  $reassignTo  an active person of the company, already checked by whoever calls.
+     * @param  CarbonImmutable|null  $effectiveOn  the day they left; today, in the company's day, when not said.
      */
-    public function handle(Employee $employee, ?string $reassignTo = null): Employee
+    public function handle(Employee $employee, ?string $reassignTo = null, ?CarbonImmutable $effectiveOn = null, DeactivationReason $reason = DeactivationReason::Other): Employee
     {
-        DB::transaction(function () use ($employee, $reassignTo): void {
+        // A plain date: the company's day, with no hour or zone.
+        $effectiveOn ??= CarbonImmutable::parse(CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString());
+
+        DB::transaction(function () use ($employee, $reassignTo, $effectiveOn, $reason): void {
             $wasActive = $employee->deactivated_at === null;
             $this->reassign($employee, $reassignTo);
-            $employee->update(['deactivated_at' => now()]);
+            $employee->update(['deactivated_at' => now(), 'terminated_on' => $effectiveOn->toDateString(), 'deactivation_reason' => $reason]);
 
             // Their seat is free again for the plan; someone already out has none to give back.
             if ($wasActive) {
@@ -38,7 +45,8 @@ final readonly class DeactivateEmployee
             }
 
             Log::info('employee.deactivated', ['employee_id' => $employee->id]);
-            event(new EmployeeDeactivated($employee->tenant_id, $employee->id));
+            $this->audit->handle('employee.deactivated', $employee, ['reason' => $reason->value, 'terminated_on' => $effectiveOn->toDateString()]);
+            event(new EmployeeDeactivated($employee->tenant_id, $employee->id, $effectiveOn));
         });
 
         return $employee;

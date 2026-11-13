@@ -1,4 +1,5 @@
 import { fold } from '@/lib/commands';
+import { countOf } from '@/lib/plural';
 
 /**
  * One choice of a Combobox: what the form sends and what the person reads. `isNew` marks the choice of adding
@@ -74,7 +75,7 @@ export function searchNote({
     const notes: Record<SearchState['status'], string | null> = {
         loading: 'Buscando…',
         error: 'No se pudo buscar. Intenta de nuevo.',
-        idle: `Escribe al menos ${minLength} letras para buscar.`,
+        idle: `Escribe al menos ${countOf(minLength, 'letra', 'letras')} para buscar.`,
         done: null,
     };
 

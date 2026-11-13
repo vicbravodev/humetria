@@ -79,7 +79,9 @@ it('previews a valid file without storing anything', function (): void {
         ])])
         ->assertRedirect();
 
-    expect(importFlash())->toBe(['status' => 'ready', 'rows' => 2, 'created' => 1, 'updated' => 1, 'errors' => []])
+    // Beto is the one who changes: his row says it (the details of what changes are covered below).
+    expect(array_column(importFlash()['changes'], 'name'))->toBe(['Beto Díaz'])
+        ->and(Illuminate\Support\Arr::except(importFlash(), 'changes'))->toBe(['status' => 'ready', 'rows' => 2, 'created' => 1, 'updated' => 1, 'errors' => []])
         ->and(Employee::query()->withoutGlobalScopes()->count())->toBe(1)
         ->and(Area::query()->withoutGlobalScopes()->count())->toBe(1);
 });
@@ -211,4 +213,48 @@ it('is for those who manage the organization', function (): void {
     $this->actingAs($viewer)->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile(['Ana,ana@acme.mx,,Mujer,Planta Querétaro,X,Y,'])])->assertForbidden();
 
     expect(storedEmployees())->toBe([]);
+});
+
+it('refuses an «M» in the gender column as ambiguous, saying what to write, and imports nothing', function (string $text): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile([
+            'Ana López,ana@acme.mx,,Mujer,Planta Querétaro,Producción,Operadora,',
+            "Beto Díaz,beto@acme.mx,,{$text},Planta Querétaro,Producción,Operadora,",
+        ])])
+        ->assertRedirect();
+
+    expect(importFlash()['errors'])->toBe([['row' => 3, 'messages' => ['«M» puede ser Masculino o Mujer: escribe Hombre o Mujer (o H / F).']]])
+        ->and(storedEmployees())->toBe([]);
+})->with(['M', 'm']);
+
+it('still reads F, H, Mujer and Masculino', function (string $text): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile(["Ana López,ana@acme.mx,,{$text},Planta Querétaro,Producción,Operadora,"])])
+        ->assertSessionHasNoErrors();
+
+    expect(storedEmployees())->toBe(['Ana López']);
+})->with(['F', 'H', 'Mujer', 'Masculino']);
+
+it('says, for each person who is updated, what changes with its before and after, and leaves out the columns the file does not carry', function (): void {
+    $area = Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Producción']);
+    Employee::factory()->create([
+        'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5511111111',
+        'gender' => 'female', 'area_id' => $area->id, 'job_title' => 'Operadora', 'employee_number' => 'A-1', 'hired_on' => '2020-01-01',
+    ]);
+    $same = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Beto Díaz', 'email' => 'beto@acme.mx', 'mobile' => null, 'gender' => 'male', 'area_id' => $area->id, 'job_title' => 'Operador', 'employee_number' => 'B-2']);
+
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['file' => csvFile([
+            'Ana López,ana@acme.mx,5522222222,Mujer,Planta Querétaro,Almacén,Operadora,A-1',
+            'Beto Díaz,beto@acme.mx,,Hombre,planta queretaro,producción,Operador,B-2',
+            'Carla Ruiz,carla@acme.mx,,Mujer,Planta Querétaro,Ventas,Vendedora,C-3',
+        ])])
+        ->assertRedirect();
+
+    expect(importFlash()['changes'])->toBe([[
+        'row' => 2, 'name' => 'Ana López', 'changes' => [
+            ['label' => 'Celular', 'before' => '5511111111', 'after' => '5522222222'],
+            ['label' => 'Área', 'before' => 'Producción', 'after' => 'Almacén'],
+        ],
+    ]])->and($same->refresh()->job_title)->toBe('Operador');
 });

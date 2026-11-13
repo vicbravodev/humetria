@@ -5,6 +5,7 @@ import { CommandPaletteResults } from '@/components/command-palette-results';
 import { CommandPaletteSearch } from '@/components/command-palette-search';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useSidebar } from '@/components/ui/sidebar';
+import { usePalettePeople } from '@/hooks/use-palette-people';
 import { useAppearance } from '@/hooks/use-appearance';
 import {
     setCommandPaletteOpen,
@@ -12,7 +13,7 @@ import {
     useCommandPaletteShortcut,
 } from '@/hooks/use-command-palette';
 import { matchCommands, moveActive } from '@/lib/commands';
-import { paletteCommands } from '@/lib/palette-commands';
+import { paletteCommands, peopleCommands } from '@/lib/palette-commands';
 
 const RESULTS = 'command-results';
 
@@ -28,7 +29,12 @@ export function CommandPalette() {
     const { updateAppearance } = useAppearance();
     const [query, setQuery] = useState('');
     const [active, setActive] = useState(0);
-    const results = matchCommands(
+    const people = usePalettePeople(
+        query,
+        tenant?.slug ?? null,
+        tenant?.can.manage_organization === true,
+    );
+    const pages = matchCommands(
         paletteCommands({
             isStaff: auth.isStaff,
             tenant,
@@ -42,6 +48,15 @@ export function CommandPalette() {
         }),
         query,
     );
+    // The server already matched the people, so they are not filtered again by their label.
+    const results = [
+        ...pages,
+        ...(tenant === null
+            ? []
+            : peopleCommands(people, tenant.slug, (href) =>
+                  router.visit(href),
+              )),
+    ];
 
     const close = () => {
         setCommandPaletteOpen(false);

@@ -38,11 +38,36 @@ final readonly class TrendPage
     {
         $surveys = Survey::query()->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')->limit($limit)->get();
 
-        return array_values(array_reverse(array_map(function (Survey $survey): Wave {
+        $labels = self::labels(array_values(array_reverse($surveys->all())));
+
+        return array_values(array_reverse(array_map(function (Survey $survey) use ($labels): Wave {
             $company = SurveyResults::for($survey)->company();
 
-            return new Wave($survey->id, $survey->kind, self::label($survey->closed_at ?? $survey->updated_at), $survey->items, $company->byKey, $company->recommendation);
+            return new Wave($survey->id, $survey->kind, $labels[$survey->id], $survey->items, $company->byKey, $company->recommendation);
         }, $surveys->all())));
+    }
+
+    /**
+     * The label of each wave by its id: its month, and its order in the month («nov 2026 · Pulso 2») when another closed in
+     * the same one, so the columns of the trend never read the same.
+     *
+     * @param  list<Survey>  $oldestFirst
+     * @return array<string, string>
+     */
+    private static function labels(array $oldestFirst): array
+    {
+        $months = array_map(fn (Survey $survey): string => self::label($survey->closed_at ?? $survey->updated_at), $oldestFirst);
+        $repeats = array_count_values($months);
+        $seen = [];
+        $labels = [];
+
+        foreach ($oldestFirst as $position => $survey) {
+            $month = $months[$position];
+            $seen[$month] = ($seen[$month] ?? 0) + 1;
+            $labels[$survey->id] = $repeats[$month] > 1 ? "{$month} · {$survey->kind->label()} {$seen[$month]}" : $month;
+        }
+
+        return $labels;
     }
 
     /**

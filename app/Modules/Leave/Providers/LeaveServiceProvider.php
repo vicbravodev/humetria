@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Providers;
 
 use App\Modules\Leave\Contracts\Absences;
+use App\Modules\Leave\Contracts\PendingRequests;
+use App\Modules\Leave\Contracts\VacationTerms;
 use App\Modules\Leave\Listeners\CloseOnDeactivation;
+use App\Modules\Leave\Listeners\GrantOnHire;
 use App\Modules\Leave\Listeners\VoidTerminationOnReactivation;
 use App\Modules\Leave\Support\CompanyAbsences;
+use App\Modules\Leave\Support\CompanyPendingRequests;
+use App\Modules\Leave\Support\PolicyVacationTerms;
 use App\Modules\Leave\Support\VacationsPortalSection;
+use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeReactivated;
 use Illuminate\Support\Facades\Event;
@@ -25,11 +31,14 @@ final class LeaveServiceProvider extends ServiceProvider
     {
         $this->app->tag([VacationsPortalSection::class], 'portal.sections');
         $this->app->bind(Absences::class, CompanyAbsences::class);
+        $this->app->bind(VacationTerms::class, PolicyVacationTerms::class);
+        $this->app->bind(PendingRequests::class, CompanyPendingRequests::class);
     }
 
     public function boot(): void
     {
         Event::listen(EmployeeDeactivated::class, CloseOnDeactivation::class);
         Event::listen(EmployeeReactivated::class, VoidTerminationOnReactivation::class);
+        Event::listen([EmployeeCreated::class, EmployeeReactivated::class], GrantOnHire::class);
     }
 }

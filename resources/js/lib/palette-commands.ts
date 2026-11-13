@@ -9,6 +9,7 @@ import {
     Settings,
     Sun,
     Upload,
+    UserRound,
 } from 'lucide-react';
 import type { Appearance } from '@/hooks/use-appearance';
 import { type NavTenant, settingsEntryHref } from '@/lib/app-navigation';
@@ -17,7 +18,9 @@ import { navSections } from '@/lib/nav-sections';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
 import { index as campaigns } from '@/routes/tenant/campaigns';
+import { index as employees } from '@/routes/tenant/employees';
 import { create as importCsv } from '@/routes/tenant/employees/import';
+import type { Option } from '@/lib/option-search';
 
 export type PaletteCommand = Command & {
     group: string;
@@ -125,4 +128,27 @@ export function paletteCommands({
             run: actions.toggleSidebar,
         },
     ];
+}
+
+/**
+ * The people a search found, as commands under «Personas»: each opens Empleados narrowed to their name (there is no
+ * person page yet). The label is «Nombre · Puesto»; the server already matched them, so they are not filtered again.
+ */
+export function peopleCommands(
+    people: Option[],
+    tenantSlug: string,
+    visit: Options['actions']['visit'],
+): PaletteCommand[] {
+    return people.map(({ value, label }) => ({
+        id: `person-${value}`,
+        label,
+        group: 'Personas',
+        icon: UserRound,
+        run: () =>
+            visit(
+                employees(tenantSlug, {
+                    query: { q: label.split(' · ')[0] ?? label },
+                }),
+            ),
+    }));
 }
