@@ -39,6 +39,7 @@ const ARRAY_PROPS = [
     'seating/plan:owners' => 'resumen corto: las personas de la empresa que pueden responder por una medida',
     'seating/plan:withoutAgreement' => 'resumen corto: los puestos de un centro con asiento aparte y sin acuerdo de pausas, pocos',
     'seating/assessment:referrals' => 'resumen corto: las últimas diez canalizaciones de una persona, que tiene pocas',
+    'seating/assessment:lacking' => 'resumen corto: lo que a la firma aún le falta (a lo más seis renglones de la Quinta C)',
     'seating/assessment:facts' => 'catálogo fijo: los once datos del registro de la Quinta C',
     'seating/assessment:conditions' => 'catálogo fijo: las siete condicionantes de la Quinta D con sus tres opciones del DOF',
     'seating/position:types' => 'catálogo fijo: los cuatro tipos de bipedestación',
