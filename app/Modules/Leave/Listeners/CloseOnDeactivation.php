@@ -10,7 +10,6 @@ use App\Modules\Leave\Actions\RouteRequests;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Support\Decider;
-use App\Modules\Leave\Support\PeriodWindow;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Tenancy\Contracts\Companies;
 
@@ -27,10 +26,11 @@ final readonly class CloseOnDeactivation
     public function handle(EmployeeDeactivated $event): void
     {
         $this->companies->enter($event->tenantId);
-        $today = PeriodWindow::today()->toDateString();
+        // What starts after the day they left is not theirs to enjoy, even if that day is already behind us.
+        $cutoff = $event->effectiveOn->toDateString();
 
         $open = LeaveRequest::query()->where('employee_id', $event->employeeId)
-            ->where(fn ($query) => $query->where('status', RequestStatus::Requested)->orWhere(fn ($query) => $query->where('status', RequestStatus::Approved)->where('starts_on', '>', $today)))
+            ->where(fn ($query) => $query->where('status', RequestStatus::Requested)->orWhere(fn ($query) => $query->where('status', RequestStatus::Approved)->where('starts_on', '>', $cutoff)))
             ->orderBy('starts_on')->pluck('id');
 
         foreach ($open as $requestId) {
@@ -40,6 +40,6 @@ final readonly class CloseOnDeactivation
         }
 
         $this->route->reroute($event->employeeId);
-        $this->terminate->handle($event->employeeId);
+        $this->terminate->handle($event->employeeId, $event->effectiveOn);
     }
 }

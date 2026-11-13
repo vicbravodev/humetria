@@ -67,7 +67,7 @@ final class EmployeeController extends Controller
                 'hired_on' => $employee->hired_on?->toDateString(),
                 'staff_group' => $employee->staff_group->value ?? '',
                 'state' => $employee->state ?? '',
-                'deactivated_on' => $employee->deactivated_at?->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'),
+                'deactivated_on' => ($employee->terminated_on ?? $employee->deactivated_at?->setTimezone(config()->string('app.display_timezone')))?->isoFormat('D MMM YYYY'),
                 'seniority_on' => $employee->seniority_on?->toDateString(),
                 'manager' => $employee->manager === null ? null : ['value' => $employee->manager->id, 'label' => $employee->manager->label()],
                 'direct_reports' => $employee->getAttributeValue('direct_reports'),
@@ -105,7 +105,7 @@ final class EmployeeController extends Controller
     public function deactivate(DeactivateEmployeeRequest $request, mixed $tenant, string $employee, DeactivateEmployee $deactivateEmployee): RedirectResponse
     {
         Gate::authorize('manage-organization');
-        $deactivateEmployee->handle($this->find($employee, active: true), $request->reassignTo());
+        $deactivateEmployee->handle($this->find($employee, active: true), $request->reassignTo(), $request->terminatedOn(), $request->reason());
 
         return $this->done('Empleado dado de baja.');
     }

@@ -102,7 +102,7 @@ describe('deactivating and reactivating', function (): void {
         planSeatsFor($this->tenant, 2, 2);
         $first = Employee::query()->withoutGlobalScopes()->where('tenant_id', $this->tenant->id)->orderBy('id')->firstOrFail();
 
-        $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $first->id]))->assertSessionHasNoErrors();
+        $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $first->id]), departure())->assertSessionHasNoErrors();
         expect(planSeatsUsed($this->tenant))->toBe(1);
 
         $this->actingAs($this->owner)->post(route('tenant.employees.store', $this->tenant), planSeatForm($this->plant, 'n@acme.mx'))->assertSessionHasNoErrors();
@@ -132,7 +132,7 @@ describe('deactivating and reactivating', function (): void {
 
         $this->actingAs($this->owner)->get(route('tenant.employees.index', $this->tenant))->assertOk();
         $this->actingAs($this->owner)->post(route('tenant.employees.store', $this->tenant), planSeatForm($this->plant))->assertSessionHasErrors('seats');
-        $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $first->id]))->assertSessionHasNoErrors();
+        $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $first->id]), departure())->assertSessionHasNoErrors();
         $this->actingAs($this->owner)->post(route('tenant.employees.store', $this->tenant), planSeatForm($this->plant))->assertSessionHasErrors('seats');
 
         expect(planSeatsUsed($this->tenant))->toBe(2);

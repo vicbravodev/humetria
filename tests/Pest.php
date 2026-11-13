@@ -102,6 +102,17 @@ function ownerOf(Tenant $tenant): User
 /**
  * Makes `$tenant` the company the code under test works in, as ResolveTenant does for a request inside it.
  */
+/**
+ * What deactivating someone asks for: the day they left (today, in the company's day) and why.
+ *
+ * @param  array<string, mixed>  $with
+ * @return array<string, mixed>
+ */
+function departure(array $with = []): array
+{
+    return ['terminated_on' => Carbon\CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString(), 'reason' => 'resignation', ...$with];
+}
+
 function workIn(Tenant $tenant): void
 {
     resolve(TenantContext::class)->set($tenant);

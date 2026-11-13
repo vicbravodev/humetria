@@ -14,6 +14,7 @@ use App\Modules\Leave\Support\PolicyTerms;
 use App\Modules\Leave\Support\ProportionalDays;
 use App\Modules\Organization\Contracts\Seniority;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -30,7 +31,7 @@ final readonly class RecordTermination
     /**
      * @return LeaveTermination|null null when the company does not use Vacaciones or the person has no start date
      */
-    public function handle(string $employeeId): ?LeaveTermination
+    public function handle(string $employeeId, CarbonImmutable $effectiveOn): ?LeaveTermination
     {
         $setting = LeaveSetting::query()->first();
         $start = $this->seniority->startDatesFor([$employeeId])[$employeeId] ?? null;
@@ -39,7 +40,8 @@ final readonly class RecordTermination
             return null;
         }
 
-        $today = PeriodWindow::today();
+        // The day they left counts, not the day HR typed it: the days owed are those of that date.
+        $today = CarbonImmutable::parse($effectiveOn->toDateString());
         $anniversaries = PeriodWindow::anniversaries($start, $start, $today);
         $years = count($anniversaries);
         $terms = $this->policies->for([$employeeId])[$employeeId] ?? PolicyTerms::statutory($setting->statutory_work_week);

@@ -417,6 +417,7 @@ return [
         'job_category' => 'categoría',
         'job_level' => 'nivel',
         'hired_on' => 'fecha de ingreso',
+        'terminated_on' => 'fecha de baja',
         'seniority_on' => 'antigüedad reconocida',
         'manager_id' => 'jefe directo',
         'reassign_to' => 'nuevo jefe directo',

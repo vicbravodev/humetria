@@ -22,10 +22,12 @@ use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Models\LeaveTermination;
 use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\PeriodBalance;
+use App\Modules\Leave\Support\PeriodWindow;
 use App\Modules\Organization\Actions\DeactivateEmployee;
 use App\Modules\Organization\Actions\ReactivateEmployee;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
@@ -88,6 +90,29 @@ it('counts, in days only, the part of the first year of who leaves before comple
         'tenant_id' => $this->tenant->id, 'employee_id' => $ana->id, 'pending_days' => 0, 'proportional_days' => 5.98, 'settled_at' => null, 'settled_by' => null, 'voided_at' => null,
     ])->and($termination?->terminated_on->toDateString())->toBe('2025-07-02');
     Log::shouldHaveReceived('info')->with('leave.termination_recorded', ['termination_id' => $termination?->id, 'employee_id' => $ana->id, 'pending_days' => 0, 'proportional_days' => 5.98])->once();
+});
+
+it('counts the days to the effective date of the departure, not to the day it was typed', function (): void {
+    $ana = hiredOn('2025-01-01');
+
+    resolve(DeactivateEmployee::class)->handle($ana, effectiveOn: CarbonImmutable::parse('2025-06-11')); // 21 days before "today"
+    $termination = LeaveTermination::query()->where('employee_id', $ana->id)->sole();
+
+    // 12 days × 161 days elapsed / 365, not the 182 of today.
+    expect($termination->terminated_on->toDateString())->toBe('2025-06-11')
+        ->and($termination->proportional_days)->toBe(5.29);
+});
+
+it('does not count as enjoyed a vacation approved after the effective date', function (): void {
+    $ana = hiredOn('2024-01-01');
+    $period = periodWith($ana, 1, '2025-01-01', statutory: 12);
+    $after = LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id, 'approver_employee_id' => null, 'starts_on' => '2025-06-23', 'ends_on' => '2025-06-27', 'working_days' => 5]);
+    LeaveEntry::factory()->of($period)->taken(5)->create(['leave_request_id' => $after->id]);
+
+    resolve(DeactivateEmployee::class)->handle($ana, effectiveOn: CarbonImmutable::parse('2025-06-11'));
+
+    expect($after->refresh()->status)->toBe(App\Modules\Leave\Enums\RequestStatus::Cancelled)
+        ->and(LeaveTermination::query()->where('employee_id', $ana->id)->sole()->pending_days)->toBe(12);
 });
 
 it('adds what was left of earlier periods and counts the year in course from the last anniversary', function (): void {
@@ -196,7 +221,7 @@ it('replaces a termination left open by a new one, never two open for a person',
     $first = terminate($ana);
     $this->travelTo('2025-07-05 18:00:00');
 
-    $second = resolve(RecordTermination::class)->handle($ana->id);
+    $second = resolve(RecordTermination::class)->handle($ana->id, PeriodWindow::today());
 
     expect($first?->refresh()->voided_at?->toDateTimeString())->toBe('2025-07-05 18:00:00')
         ->and($second?->voided_at)->toBeNull()

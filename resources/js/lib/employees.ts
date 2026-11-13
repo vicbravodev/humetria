@@ -166,3 +166,20 @@ export const importStats = (summary: EmployeeImportSummary): ImportStat[] =>
                   alert: true,
               },
           ];
+
+/** The closed list of reasons a work relationship ends, as the server validates them. */
+export const deactivationReasons = [
+    { value: 'resignation', label: 'Renuncia' },
+    { value: 'dismissal', label: 'Rescisión o despido' },
+    { value: 'contract_end', label: 'Término de contrato' },
+    { value: 'mutual_agreement', label: 'Mutuo acuerdo' },
+    { value: 'death', label: 'Fallecimiento' },
+    { value: 'other', label: 'Otro' },
+] as const;
+
+/** Today as people in Mexico live it (`AAAA-MM-DD`): what a departure date may not pass. */
+export function localToday(now: Date = new Date()): string {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Mexico_City',
+    }).format(now);
+}
