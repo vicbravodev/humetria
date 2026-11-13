@@ -259,6 +259,18 @@ it('lists the people of the center with their assessment state, paginated and se
         ->assertInertia(fn (Assert $page) => $page->where('people.total', 1)->where('people.data.0.name', 'Ana Ruiz')->where('people.data.0.state', 'signed'));
 });
 
+// R2-compliance-07: asking people to confirm needs signed assessments to confirm.
+it('says how many assessments of the center are signed, so asking for confirmations is offered only when there are', function (): void {
+    $this->actingAs($this->cora);
+    $url = route('tenant.seating.assessments.index', [$this->tenant, $this->center->id]);
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('signed', 0));
+
+    RiskAssessment::factory()->signed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id, 'work_center_id' => $this->center->id]);
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('signed', 1));
+});
+
 // Rediseño v2: the assessment is entered from the route of its center, so it names the center for its breadcrumbs.
 it('names the center of the assessment', function (): void {
     $draft = RiskAssessment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id]);

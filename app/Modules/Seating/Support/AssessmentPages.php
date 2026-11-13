@@ -54,6 +54,7 @@ final readonly class AssessmentPages
             'people' => $page->through(fn (PositionAssignment $assignment): array => $this->row($assignment, $people, $names, $assessments)),
             'search' => $search,
             'canAssess' => $this->access->canAssess($userId, $center->id),
+            'signed' => RiskAssessment::query()->where('work_center_id', $center->id)->where('status', AssessmentStatus::Signed)->count(),
             'canManage' => Gate::allows('manage-seating'),
         ];
     }
