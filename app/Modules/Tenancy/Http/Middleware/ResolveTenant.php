@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Http\Middleware;
 
+use App\Http\Impersonation;
 use App\Modules\Assistant\Contracts\AiAccess;
 use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Contracts\CompanyModules;
@@ -33,6 +34,7 @@ final class ResolveTenant
         private readonly CompanyRoles $companyRoles,
         private readonly CompanyModules $modules,
         private readonly AiAccess $ai,
+        private readonly Impersonation $impersonation,
     ) {}
 
     /**
@@ -49,10 +51,13 @@ final class ResolveTenant
         $tenant = is_string($slug) ? Tenant::query()->where('slug', $slug)->first() : $slug;
 
         $user = $request->user();
+        // An impersonated owner works in the company the superadmin entered from, and that is the only one that exists for them.
+        $only = $this->impersonation->tenantId();
 
         abort_unless(
             $tenant instanceof Tenant
             && $user !== null
+            && ($only === null || $only === $tenant->id)
             && TenantMembership::query()->where('tenant_id', $tenant->id)->where('user_id', $user->id)->exists(),
             404,
         );
@@ -129,8 +134,8 @@ final class ResolveTenant
             'permissions' => $permissions,
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.
-        Inertia::share('tenants', function () use ($user): array {
-            $companies = $this->listUserTenants->handle($user->id, self::SWITCHER_COMPANIES);
+        Inertia::share('tenants', function () use ($user, $only): array {
+            $companies = $this->listUserTenants->handle($user->id, self::SWITCHER_COMPANIES, $only);
 
             return [
                 'data' => array_values($companies->getCollection()->map(fn (Tenant $company): array => ['slug' => $company->slug, 'trade_name' => $company->trade_name])->all()),
