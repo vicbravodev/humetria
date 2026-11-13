@@ -2,6 +2,7 @@ import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WEEKDAYS, minutesOfTime } from '@/lib/attendance/schedule';
+import { sharedStart } from '@/lib/attendance/schedule-starts';
 
 /**
  * The time each day starts, optional: with one, the person's week says when they mark after the company's tolerance. Left
@@ -21,6 +22,22 @@ export default function ScheduleStartsField({
             <legend className="mb-1 text-sm font-medium">
                 Hora de entrada de cada día (opcional)
             </legend>
+            <div className="flex flex-wrap items-center gap-3">
+                <Label htmlFor="schedule-start-weekdays">
+                    Misma hora de lunes a viernes
+                </Label>
+                <Input
+                    id="schedule-start-weekdays"
+                    type="time"
+                    className="w-32"
+                    value={sharedStart(starts)}
+                    onChange={(event) =>
+                        WEEKDAYS.slice(0, 5).forEach(({ day }) =>
+                            onChange(day, event.target.value),
+                        )
+                    }
+                />
+            </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
                 {WEEKDAYS.map(({ day, name }) => (
                     <div key={day} className="grid gap-1">
