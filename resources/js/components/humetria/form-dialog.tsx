@@ -28,6 +28,7 @@ export default function FormDialog({
     submit,
     tone = 'default',
     wide = false,
+    blocked = false,
     children,
 }: {
     open: boolean;
@@ -39,6 +40,8 @@ export default function FormDialog({
     tone?: 'default' | 'destructive';
     /** For a form that needs room beside its fields (a map): wider from the tablet up. */
     wide?: boolean;
+    /** The main action waits for something the form asks for (a confirmation) before it can be sent. */
+    blocked?: boolean;
     children: (errors: Errors) => ReactNode;
 }) {
     return (
@@ -72,7 +75,7 @@ export default function FormDialog({
                                             ? 'destructive'
                                             : 'default'
                                     }
-                                    disabled={processing}
+                                    disabled={processing || blocked}
                                 >
                                     {processing && <Spinner />}
                                     {submit}
