@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Providers;
 
 use App\Models\User;
+use App\Modules\Demos\Contracts\DemoLeads;
+use App\Modules\Demos\Support\DemoLeadRegistry;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -15,11 +17,19 @@ use Illuminate\Support\ServiceProvider;
 
 final class DemosServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->bind(DemoLeads::class, DemoLeadRegistry::class);
+    }
+
     public function boot(): void
     {
         // Only the superadmin reads demo requests, through Gate::before; everyone else gets a 404 that reveals nothing.
         // Read only: support sees the requests too; the superadmin passes through Gate::before.
         Gate::define('view-demo-requests', fn (User $user): AccessResponse => $user->isSupport() ? AccessResponse::allow() : AccessResponse::denyAsNotFound());
+
+        // Working a request (status, note, creating its company) is the superadmin's alone, through Gate::before.
+        Gate::define('manage-demo-requests', fn (User $user): AccessResponse => AccessResponse::denyAsNotFound());
 
         // The demo form is public: cap each address so nobody can flood the table.
         RateLimiter::for('demo-requests', function (Request $request): array {
