@@ -194,6 +194,7 @@ it('jumps to a page or switches the theme from the ⌘K palette', function (): v
         ->type('#command-search', 'empr')
         ->assertScript('() => document.querySelector(\'[role="option"][aria-selected="true"] [data-slot="command-label"]\')?.textContent', 'Empresas')
         ->keys('#command-search', 'Enter')
+        ->assertScript(pathBecomes('/admin/companies'), true)
         ->assertPathIs('/admin/companies')
         ->assertMissing('#command-search')
         // The same palette opens from the button in the top bar.
@@ -293,6 +294,7 @@ it('moves with the design system motion', function (): void {
         ->assertScript('() => { window.transitions = 0; const start = document.startViewTransition.bind(document); document.startViewTransition = (update) => { window.transitions++; return start(update); }; return true; }')
         ->click('Plataforma')
         ->click('Empresas')
+        ->assertScript(pathBecomes('/admin/companies'), true)
         ->assertPathIs('/admin/companies')
         ->assertScript('() => window.transitions', 1);
 });

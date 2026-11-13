@@ -18,6 +18,7 @@ function visitSecuritySettings(User $user): AwaitableWebpage
         ->assertSee('Confirma tu contraseña para continuar')
         ->fill('password', 'password')
         ->press('@confirm-password-button')
+        ->assertScript(pathBecomes('/admin/settings/security'), true)
         ->assertPathIs('/admin/settings/security'));
 }
 
@@ -77,6 +78,7 @@ it('switches the two-factor challenge between code and recovery code', function 
         ->fill('email', $user->email)
         ->fill('password', 'password')
         ->press('@login-button')
+        ->assertScript(pathBecomes('/admin/two-factor-challenge'), true)
         ->assertPathIs('/admin/two-factor-challenge'))
         ->assertSee('Código de verificación')
         ->assertPresent('input[name="code"]')

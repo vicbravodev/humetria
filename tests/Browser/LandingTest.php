@@ -40,6 +40,7 @@ it('takes the header and hero calls to action to the demo section', function (st
 it('sends a guest who signs in to the login page', function (bool $mobile): void {
     visitPage('landing', '/', mobile: $mobile)
         ->click('@sign-in')
+        ->assertScript(pathBecomes('/admin/login'), true)
         ->assertPathIs('/admin/login');
 })->with(['desktop' => false, 'mobile' => true]);
 

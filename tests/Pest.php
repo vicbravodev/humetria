@@ -410,6 +410,27 @@ function frontendSourceFiles(string $directory = ''): array
 }
 
 /**
+ * A script that resolves once the page's path matches, the way assertPathIs reads it (`*` is a wildcard). A click that
+ * navigates with Inertia changes the URL a moment later, and assertPathIs reads it at once: on a busy runner it read the
+ * old page. Run this before assertPathIs; it waits up to 10 s and the assertion still decides.
+ */
+function pathBecomes(string $path): string
+{
+    $pattern = json_encode('^'.str_replace('\\*', '.*', preg_quote($path, '/')).'$', JSON_THROW_ON_ERROR);
+
+    return <<<JS
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const check = () => {
+                const done = new RegExp({$pattern}).test(location.pathname);
+                done || performance.now() - start > 10000 ? resolve(true) : requestAnimationFrame(check);
+            };
+            check();
+        })
+        JS;
+}
+
+/**
  * A script that resolves once no calendar popover is open: picking a day closes its popover with a short animation,
  * and on a slow runner the click that opens the next date field can land while the first one is still closing.
  */

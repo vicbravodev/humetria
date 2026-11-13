@@ -87,6 +87,7 @@ it('links the console from the sidebar only for the superadmin', function (): vo
         ->click('Plataforma')
         ->assertPresent('[data-sidebar="menu-button"][href$="/admin/companies"]')
         ->click('Empresas')
+        ->assertScript(pathBecomes('/admin/companies'), true)
         ->assertPathIs('/admin/companies');
 
     $panel = signInToPanel();
@@ -533,12 +534,14 @@ it('enters as the owner from the console, shows the banner on every page, and co
 
     visit('/admin/companies')
         ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertScript(pathBecomes('/admin/grupo-ejemplo'), true)
         ->assertPathIs('/admin/grupo-ejemplo')
         ->assertSee('Estás viendo Humetría como Ana Pérez · Salir')
         // Settings has its own layout inside the frame: the banner is there too.
         ->navigate('/admin/settings/appearance')
         ->assertSee('Estás viendo Humetría como Ana Pérez')
         ->click('@stop-impersonation')
+        ->assertScript(pathBecomes('/admin/companies'), true)
         ->assertPathIs('/admin/companies')
         ->assertDontSee('Estás viendo Humetría')
         ->assertNoJavaScriptErrors()

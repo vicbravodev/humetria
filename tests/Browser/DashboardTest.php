@@ -130,6 +130,7 @@ it('starts an action from the ⌘K palette, grouped under its heading', function
         ->assertScript('() => document.querySelector(\'[role="option"][aria-selected="true"] [data-slot="command-label"]\')?.textContent', 'Cargar empleados desde CSV')
         ->assertNoAccessibilityIssues(1)
         ->keys('#command-search', 'Enter')
+        ->assertScript(pathBecomes('/admin/acme/employees/import'), true)
         ->assertPathIs('/admin/acme/employees/import');
 });
 
@@ -188,6 +189,7 @@ it('folds the menu into a bottom bar on a phone, role-aware like the sidebar', f
         ->assertScript('() => [getComputedStyle(document.querySelector(\'nav[aria-label="Menú principal"]\')).viewTransitionName, getComputedStyle(document.querySelector(\'button[aria-label="Abrir a Humi"]\')).viewTransitionName].join(" ")', 'tab-bar humi')
         ->click('Normas')
         ->click('[role="menu"] a[href$="/seating"]')
+        ->assertScript(pathBecomes('/admin/acme/seating'), true)
         ->assertPathIs('/admin/acme/seating')
         // Ley Silla is one of the standards: the chip glides to Normas.
         ->assertScript($chip, 'Normas')
@@ -277,6 +279,7 @@ it('closes the phone\'s whole menu on the way to the page picked in it, sliding 
         // The menu and its veil are layers of their own, so the page fading in never paints over them while they leave.
         ->assertScript("() => [getComputedStyle({$sheet}).viewTransitionName, getComputedStyle(document.querySelector('[data-slot=\"sheet-overlay\"]')).viewTransitionName].join(' ')", 'sidebar sheet-overlay')
         ->click('[data-mobile="true"] >> text=Centros de trabajo')
+        ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers')
         ->assertScript("() => new Promise((resolve) => setTimeout(() => resolve({$sheet} === null), 600))", true)
         ->assertNoJavaScriptErrors();

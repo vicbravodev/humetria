@@ -37,6 +37,7 @@ it('lists the work centers with their address, and the archived ones apart', fun
 
     visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('a[href$="archived=1"]')
+        ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers'))
         ->assertSee('Bodega Vieja')
         ->assertDontSee('Planta Querétaro');
@@ -47,6 +48,7 @@ it('reaches the work centers from the sidebar', function (): void {
 
     visit($url)
         ->click('Centros de trabajo')
+        ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers')
         ->assertSee('Aún no hay centros de trabajo');
 });
@@ -183,6 +185,7 @@ it('points a company without work centers from its panel to them', function (boo
     visitPage('dashboard', $url, $dark, $mobile)
         ->assertSeeIn('[data-slot="empty-state"] h2', 'Empieza por tu primer centro de trabajo')
         ->click('Agregar centro')
+        ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers');
 })->with($looks);
 

@@ -70,6 +70,7 @@ it('renders the two-factor challenge after the password', function (bool $dark, 
         ->fill('email', $user->email)
         ->fill('password', 'password')
         ->press('@login-button')
+        ->assertScript(pathBecomes('/admin/two-factor-challenge'), true)
         ->assertPathIs('/admin/two-factor-challenge'));
 })->with('looks');
 
@@ -99,6 +100,7 @@ it('renders the security settings once the password is confirmed', function (boo
     visitPage('settings/security', '/admin/settings/security', $dark, $mobile, reach: fn (AwaitableWebpage $page): AwaitableWebpage => $page
         ->fill('password', 'password')
         ->press('@confirm-password-button')
+        ->assertScript(pathBecomes('/admin/settings/security'), true)
         ->assertPathIs('/admin/settings/security')
         ->assertSee('Guardar contraseña'));
 })->with('looks');

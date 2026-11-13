@@ -133,6 +133,7 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
         ->click('Cumple la norma')
         ->click('NOM-035')
         ->click('Evaluaciones')
+        ->assertScript(pathBecomes('/admin/acme/campaigns'), true)
         ->assertPathIs('/admin/acme/campaigns')
         ->click('button:has-text("Evaluar")')
         ->assertSee('Planta Norte · 60 personas')
@@ -589,6 +590,7 @@ it('narrows the results to one area, and reaches them from the evaluation', func
 
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->click('Ver resultados')
+        ->assertScript(pathBecomes("/admin/acme/campaigns/{$campaign->id}/results"), true)
         ->assertPathIs("/admin/acme/campaigns/{$campaign->id}/results")
         ->assertSee('Calificación final · Guía II')
         ->assertSee('de 11 cuestionarios')
