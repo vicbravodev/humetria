@@ -55,7 +55,9 @@ final readonly class Nom035Route
     public function facts(array $workCenterIds, array $current, array $latest, array $toChannel): array
     {
         $latestIds = array_values(array_map(fn (CampaignRecord $campaign): string => $campaign->id, $latest));
-        $policies = $this->disclosure->withPolicy($workCenterIds);
+        $policyInfo = $this->disclosure->policySummaries($workCenterIds);
+        $policies = array_keys($policyInfo);
+        $publishedOn = $this->disclosure->publishedOn($latestIds);
         $cycles = $this->campaigns->cycles($workCenterIds);
         $sharing = $this->disclosure->sharing($latestIds);
         $programs = $this->programs->forEvaluations($latestIds);
@@ -81,6 +83,8 @@ final readonly class Nom035Route
                 $evaluated === null ? null : ['closedOn' => $evaluated->closedOn, ...self::answered($evaluated)],
                 $evaluated !== null && in_array($evaluated->id, $sharing['unseen'], true),
                 $evaluated === null || ! isset($evaluated->invited['nom035.guide-i']) ? null : ['answered' => $evaluated->answered['nom035.guide-i'] ?? 0, 'target' => $evaluated->invited['nom035.guide-i']],
+                $policyInfo[$id] ?? null,
+                $evaluated === null ? null : $publishedOn[$evaluated->id] ?? null,
             );
         }
 

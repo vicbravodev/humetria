@@ -33,13 +33,31 @@ final readonly class Nom035Rows
         $evaluation = $evaluated?->id;
 
         return [
-            $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', $facts->policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.write', [$tenantSlug, 'policy', 'center' => $workCenterId]), 'Escribir la política'),
+            $this->policy($tenantSlug, $workCenterId, $facts),
             $this->evaluation($tenantSlug, $facts, $evaluation),
             $this->after($evaluation, $this->channeling($tenantSlug, $facts, $evaluation, $channelAt)),
             $this->chapterSeven($facts, $evaluation, $this->sharing($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->program($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->row(6, '7.7', 'Informe de resultados', $facts->reported ? null : 'Le faltan conclusiones, recomendaciones y responsable', 'manage-campaigns', $evaluation === null ? null : route('tenant.campaigns.report', [$tenantSlug, $evaluation]), 'Completar el informe')),
         ];
+    }
+
+    /**
+     * Stage 1: the policy of prevention in force (num. 5.1). Published is not read: until everyone confirmed it, it says how many
+     * did and stays amber, so it is not shown as met without the record that backs it.
+     *
+     * @return Row
+     */
+    private function policy(string $tenantSlug, string $workCenterId, Nom035Facts $facts): array
+    {
+        $row = $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', $facts->policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.write', [$tenantSlug, 'policy', 'center' => $workCenterId]), 'Escribir la política');
+        $info = $facts->policyInfo;
+
+        if (! $facts->policy || $info === null || $info['confirmed'] >= $info['expected']) {
+            return $row;
+        }
+
+        return [...$row, 'state' => 'partial', 'detail' => "Publicada · {$info['confirmed']} de {$info['expected']} la leyeron", 'action' => $row['href'] === null ? null : 'Ver'];
     }
 
     /**

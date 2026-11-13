@@ -51,6 +51,7 @@ it('prints the six rows of the inspection table, in order, with their state and 
             'title' => 'Política de prevención por escrito',
             'state' => 'missing',
             'detail' => 'Aún no hay una política vigente en este centro',
+            'fact' => null,
             'evidence' => null,
         ])
         ->where('rows.1.state', 'done')
@@ -71,6 +72,22 @@ it('links the printable evidence of each module only for the rows it has', funct
         ->where('rows.0.evidence', ['label' => 'Expediente de difusión', 'href' => $disclosure])
         ->where('rows.3.evidence', ['label' => 'Expediente de difusión', 'href' => $disclosure])
         ->where('rows.5.evidence', ['label' => 'Informe 7.7', 'href' => route('tenant.campaigns.report', [$this->tenant, $this->closed->id])]));
+});
+
+// R2-nom035-02: a row that stands prints the datum of its record, so the paper is not an index of links.
+it('prints one datum per requirement that stands: date, version and counts', function (): void {
+    DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    PageLink::factory()->create(['tenant_id' => $this->tenant->id]);
+    ReportDetails::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Dossier()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.0.fact', fn (string $fact): bool => (bool) preg_match('/^Versión \d+ · publicada el \d{1,2} \w{3} 2026 · 0 de 30 personas la leyeron$/u', $fact))
+        ->where('rows.1.fact', fn (string $fact): bool => str_starts_with($fact, 'Vigente hasta el '))
+        ->where('rows.2.fact', 'Nadie espera valoración clínica')
+        ->where('rows.3.fact', fn (string $fact): bool => str_starts_with($fact, 'Resultados publicados el '))
+        ->where('rows.5.fact', 'Informe con conclusiones, recomendaciones y responsable'));
 });
 
 it('keeps only what the center can show with ?ready=1', function (): void {
@@ -119,7 +136,7 @@ it('carries no answer, no name and no moment of answer', function (): void {
         $props = $page->toArray()['props'];
 
         expect(array_keys($props))->toContain('center', 'issuedOn', 'readyOnly', 'rows')
-            ->and(collect($props['rows'])->every(fn (array $row): bool => array_keys($row) === ['numeral', 'title', 'state', 'detail', 'evidence']))->toBeTrue()
+            ->and(collect($props['rows'])->every(fn (array $row): bool => array_keys($row) === ['numeral', 'title', 'state', 'detail', 'fact', 'evidence']))->toBeTrue()
             ->and(json_encode($props))->not->toContain('answers')->not->toContain('answered_at');
     });
 });

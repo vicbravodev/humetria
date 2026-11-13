@@ -243,4 +243,4 @@ it('reads the panel in the same number of queries however much the company holds
 })->with([1, 3]);
 
 // Measured, then fixed so that a query per center or per evaluation breaks the test. 57: the NOM-037 declarations (A2); +1: the vacation requests that wait.
-const QUERIES_OF_THE_PANEL = 58;
+const QUERIES_OF_THE_PANEL = 61;

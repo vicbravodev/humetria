@@ -53,8 +53,9 @@ export default function PolicyWriteReview({
             </h1>
             <p className="text-[17px] leading-[26px] text-muted-foreground">
                 Léela a la derecha y edita lo que quieras. Al publicarla, le
-                llega a las personas de tus centros para que confirmen que la
-                leyeron, y queda en tu expediente.
+                llega a las personas de{' '}
+                {center === null ? 'tus centros' : center.label} para que
+                confirmen que la leyeron, y queda en tu expediente.
             </p>
             {publication.version !== null && (
                 <p className="text-sm text-muted-foreground">
