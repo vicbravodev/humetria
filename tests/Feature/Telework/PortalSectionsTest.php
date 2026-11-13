@@ -22,6 +22,9 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Telework\TeleworkerFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
+/** Opening the link once (the middleware and the page share it) and what each listed tool reads for its section. */
+const PORTAL_HOME_QUERIES = 25;
+
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     $this->center = WorkCenter::factory()->for($this->tenant)->create();
@@ -141,3 +144,14 @@ it('keeps the order fixed and sends nothing of another person', function (): voi
         expect(json_encode($page->toArray()['props'], JSON_THROW_ON_ERROR))->not->toContain('Bea Paz')->not->toContain($this->token.'x');
     });
 });
+
+it('reads the home with the same queries whatever the people the team has', function (int $people): void {
+    Employee::factory()->count($people)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'manager_id' => $this->ana->id]);
+    LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
+    PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    portalPlan(['vacations', 'seating']);
+
+    $this->expectsDatabaseQueryCount(PORTAL_HOME_QUERIES);
+
+    $this->get(route('portal.show', $this->token))->assertOk();
+})->with([1, 12]);
