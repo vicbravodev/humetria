@@ -1,4 +1,5 @@
 import {
+    Activity,
     Building2,
     ChartNoAxesColumn,
     Inbox,
@@ -25,6 +26,8 @@ const staffNavItems: NavItem[] = [
 const superadminOnlyNavItems: NavItem[] = [
     { title: 'Usuarios', href: users(), icon: UserCog },
     { title: 'Bitácora', href: audit(), icon: ScrollText },
+    // Horizon's own dashboard, outside the panel: a plain address, not an Inertia visit.
+    { title: 'Colas', href: '/horizon', icon: Activity, external: true },
 ];
 
 export function platformNavItems(isSuperadmin: boolean): NavItem[] {

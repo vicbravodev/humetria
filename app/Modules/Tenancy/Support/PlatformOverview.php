@@ -37,11 +37,13 @@ final readonly class PlatformOverview
         ];
     }
 
-    /** Companies still in use (not archived) where nobody who belongs to them has signed in for 30 days, or ever. */
+    /** Companies still in use (not archived, and started) where nobody who belongs to them has signed in for 30 days, or ever. */
     private function inactive(): int
     {
         return Tenant::query()
             ->where(fn ($query) => $query->whereNull('restriction')->orWhere('restriction', '<>', 'archived'))
+            // One that has not started (no trial, no term) was never open to anyone: it is not one nobody enters.
+            ->where(fn ($query) => $query->whereNotNull('restriction')->orWhereNotNull('active_until')->orWhereNotNull('trial_started_at'))
             ->whereNotExists(fn (Builder $members) => $members
                 ->from('tenant_memberships')
                 ->join('users', 'users.id', '=', 'tenant_memberships.user_id')

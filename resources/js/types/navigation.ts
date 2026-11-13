@@ -16,6 +16,8 @@ export type NavItem = {
     title: string;
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
+    /** A page outside the panel (Horizon): it opens as a plain link, not as an Inertia visit. */
+    external?: boolean;
     isActive?: boolean;
     /** Something waiting there, as a count next to the name (NOM-035 · 1 en curso). */
     badge?: number;

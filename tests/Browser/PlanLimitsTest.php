@@ -47,6 +47,8 @@ it('turns off the buttons that add once the plan is full, and links the mail tha
         ->assertPresent('a[href="mailto:soporte@humetria.mx?subject=Ampliar%20personas%20de%20'.rawurlencode(Tenant::query()->where('slug', 'acme')->sole()->trade_name).'"]');
     visitPage('tenancy/work-centers', '/admin/acme/work-centers')
         ->assertPresent('button[disabled]:has-text("Dar de alta centro")')
+        // A tile that invites to add, and then does nothing, is noise at the limit: only the header's button, off, and the notice.
+        ->assertDontSee('Agrega otro centro')
         ->assertPresent('a[href^="mailto:soporte@humetria.mx?subject=Ampliar%20centros%20de%20"]');
 });
 

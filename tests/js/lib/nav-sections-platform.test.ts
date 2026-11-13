@@ -16,11 +16,25 @@ describe('navSections for the platform', () => {
             'Solicitudes de demo',
             'Usuarios',
             'Bitácora',
+            'Colas',
         ]);
         expect(platform(true)).toEqual([
             'Empresas',
             'Cuentas',
             'Solicitudes de demo',
         ]);
+    });
+
+    it('links the queue dashboard as a plain address, since it is not a page of the panel', () => {
+        const queues = navSections({
+            tenant: null,
+            isStaff: true,
+            isSuperadmin: true,
+        })
+            .find((section) => section.key === 'platform')
+            ?.items.find((item) => item.title === 'Colas');
+
+        expect(queues?.href).toBe('/horizon');
+        expect(queues?.external).toBe(true);
     });
 });
