@@ -134,3 +134,31 @@ describe('layoutGraph, stacks', () => {
         expect(where('a').y).toBe(where('b').y);
     });
 });
+
+describe('layoutGraph, a tall column beside a card of the same row', () => {
+    const cards = [
+        card('top'),
+        card('big'),
+        card('small'),
+        ...['1', '2', '3', '4', '5', '6'].map((n) =>
+            card(`big${n}`, 72, 'big'),
+        ),
+        card('child'),
+    ];
+    const links = [
+        edge('top', 'big'),
+        edge('top', 'small'),
+        edge('small', 'child'),
+        ...['1', '2', '3', '4', '5', '6'].map((n) => ({
+            ...edge('big', `big${n}`),
+            stacked: true,
+        })),
+    ];
+    const at = layoutGraph(cards, links);
+    const y = (id: string) => at.get(id)?.y ?? Number.NaN;
+
+    it('keeps the card at the top of its row, right under its manager, instead of halfway down the column', () => {
+        expect(y('child')).toBe(y('small') + 72 + RANK_GAP);
+        expect(y('big1')).toBe(y('big') + 72 + RANK_GAP);
+    });
+});

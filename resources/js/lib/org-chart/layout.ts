@@ -57,14 +57,24 @@ export function layoutGraph(
     layout(graph);
 
     const places = new Map<string, Corner>();
+    // dagre centers every node in its row, and a row is as tall as its tallest member (a column of 19 people is 1,500 px):
+    // a card beside it would hang halfway down. Every card starts at the top of its row instead.
+    const rowTops = new Map<number, number>();
 
-    for (const { id, width, height, stack } of nodes) {
+    for (const id of graph.nodes()) {
+        const placed = graph.node(id);
+        const top = placed.y - placed.height / 2;
+
+        rowTops.set(placed.y, Math.min(rowTops.get(placed.y) ?? top, top));
+    }
+
+    for (const { id, width, stack } of nodes) {
         if (stack === null) {
             const placed = graph.node(id);
 
             places.set(id, {
                 x: placed.x - width / 2,
-                y: placed.y - height / 2,
+                y: rowTops.get(placed.y) ?? placed.y,
             });
         }
     }

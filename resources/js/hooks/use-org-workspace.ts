@@ -8,7 +8,7 @@ import { boundsOf } from '@/lib/org-chart/camera';
 import { ancestorsOf } from '@/lib/org-chart/chart-state';
 import type { ChartInit } from '@/lib/org-chart/chart-state';
 import { chartGraph } from '@/lib/org-chart/chart-view';
-import { applyDrag, toFlow } from '@/lib/org-chart/flow';
+import { applyDrag, openingRequest, toFlow } from '@/lib/org-chart/flow';
 import type { CameraRequest } from '@/lib/org-chart/flow';
 import { orgChartQuery } from '@/lib/org-chart/labels';
 import { layoutGraph } from '@/lib/org-chart/layout';
@@ -43,19 +43,9 @@ export function useOrgWorkspace({
     const editor = useOrgEditor(tree);
     const focusId = init.chain.at(-1)?.id ?? null;
     const [selected, setSelected] = useState<string | null>(focusId);
-    const [camera, setCamera] = useState<CameraRequest>(() => ({
-        // Everybody (the root and its first level, if all of it would be too small to read); or the way down to the
-        // person a search found.
-        ids: init.chain.length === 0 ? null : init.chain.map(({ id }) => id),
-        ...(init.chain.length === 0
-            ? {
-                  readable: init.roots.flatMap(({ id }) => [
-                      id,
-                      ...(init.firstLevel[id] ?? []).map((child) => child.id),
-                  ]),
-              }
-            : {}),
-    }));
+    const [camera, setCamera] = useState<CameraRequest>(() =>
+        openingRequest(init),
+    );
     const graph = useMemo(
         () =>
             chartGraph(tree.state, {

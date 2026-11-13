@@ -658,3 +658,81 @@ it('keeps the editing mode on when a person is searched, and opens readable from
         ->assertScript('() => new URL(location.href).searchParams.get("edit")', '1')
         ->assertNoJavaScriptErrors();
 });
+
+/** A company like the demo: several heads, one with a team of 19 who lead nobody and two managers with their own teams. */
+function demoLikeOrgChart(): void
+{
+    $people = acmeOrgChart();
+    $place = ['tenant_id' => $people['dir']->tenant_id, 'work_center_id' => $people['dir']->work_center_id, 'area_id' => $people['dir']->area_id];
+    $head = fn (string $name): Employee => Employee::factory()->create([...$place, 'name' => $name, 'job_title' => 'Director', 'manager_id' => null]);
+
+    $big = $head('Hugo Vega');
+    foreach (range(1, 19) as $number) {
+        Employee::factory()->create([...$place, 'name' => "Operario {$number}", 'job_title' => 'Operador', 'manager_id' => $big->id]);
+    }
+
+    $raquel = $head('Raquel Burgos');
+    foreach (['Mario', 'Nora', 'Olga', 'Pablo'] as $name) {
+        $manager = Employee::factory()->create([...$place, 'name' => $name, 'job_title' => 'Gerente', 'manager_id' => $raquel->id]);
+        Employee::factory()->count(3)->create([...$place, 'job_title' => 'Operador', 'manager_id' => $manager->id]);
+    }
+}
+
+it('opens on the heads and their first level at a readable size, the company card and the head clear of the filter bar, and a team of 19 behind its pill', function (): void {
+    demoLikeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.5', true)
+        ->assertScript(<<<'JS'
+            () => {
+                const bar = document.querySelector('[role="search"]').getBoundingClientRect().bottom;
+                const company = document.querySelector('.react-flow__node-company').getBoundingClientRect();
+                const head = document.querySelector('[data-slot="org-node"][aria-label^="Raquel Burgos,"]').getBoundingClientRect();
+                const first = document.querySelector('[data-slot="org-node"][aria-label^="Mario,"]').getBoundingClientRect();
+
+                // The first level is right under its head (a row apart), not halfway down the tallest column of its row.
+                return company.top >= bar && head.top >= bar && first.top - head.bottom < 200;
+            }
+        JS, true)
+        ->assertNotPresent(orgCard('Operario 1'))
+        ->assertSee('+19 · 19 en total')
+        ->assertNoJavaScriptErrors();
+});
+
+it('fits the chart at a readable size with «Ajustar a la pantalla», from the top', function (): void {
+    demoLikeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->click('[aria-label="Alejar"]')
+        ->click('[aria-label="Alejar"]')
+        ->click('[aria-label="Alejar"]')
+        ->click('[aria-label="Ajustar a la pantalla"]')
+        ->wait(1)
+        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.5', true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the bar on one line and the panel beside the canvas, not over it, while editing', function (): void {
+    demoLikeOrgChart();
+
+    visitPage('organization/org-chart', '/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->click('Editar estructura')
+        ->wait(1)
+        ->click(orgCard('Raquel Burgos'))
+        ->wait(1)
+        ->assertScript(<<<'JS'
+            () => {
+                const bar = document.querySelector('[role="search"]').getBoundingClientRect();
+                const canvas = document.querySelector('.react-flow').getBoundingClientRect();
+                const panel = document.querySelector('aside[aria-label^="Panel de"]').getBoundingClientRect();
+
+                return bar.height < 60 && bar.right <= canvas.right && panel.left >= canvas.right - 1;
+            }
+        JS, true)
+        ->assertNoJavaScriptErrors();
+});

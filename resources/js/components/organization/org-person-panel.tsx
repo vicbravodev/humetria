@@ -10,6 +10,7 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { placeText } from '@/lib/org-chart/labels';
 import type { panelOf } from '@/lib/org-chart/panel';
 import { countOf } from '@/lib/plural';
+import { cn } from '@/lib/utils';
 import { index as employees } from '@/routes/tenant/employees';
 
 type Panel = NonNullable<ReturnType<typeof panelOf>>;
@@ -22,6 +23,7 @@ export default function OrgPersonPanel({
     panel,
     actions,
     footer,
+    docked = false,
 }: {
     panel: Panel;
     actions: {
@@ -31,6 +33,8 @@ export default function OrgPersonPanel({
     };
     /** «Cambiar jefe», only while editing. */
     footer: ReactNode;
+    /** Beside the canvas instead of over it: while editing, the canvas and its bar stay clear. */
+    docked?: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const { node, manager, reports, status, more } = panel;
@@ -38,7 +42,12 @@ export default function OrgPersonPanel({
     return (
         <aside
             aria-label={`Panel de ${node.name}`}
-            className="absolute inset-y-3 right-3 z-20 flex w-[360px] max-w-[calc(100%-1.5rem)] flex-col gap-5 overflow-y-auto card p-5 shadow-float"
+            className={cn(
+                'flex flex-col gap-5 overflow-y-auto p-5',
+                docked
+                    ? 'w-[320px] shrink-0 border-l bg-card'
+                    : 'absolute inset-y-3 right-3 z-20 w-[360px] max-w-[calc(100%-1.5rem)] card shadow-float',
+            )}
         >
             <header className="flex items-start gap-3">
                 <Initials name={node.name} className="size-12 text-base" />
