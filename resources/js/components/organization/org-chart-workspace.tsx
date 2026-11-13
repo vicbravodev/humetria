@@ -43,6 +43,7 @@ export default function OrgChartWorkspace({
                             filters={filters}
                             person={person}
                             reserve={panel !== null}
+                            editing={editor.editing}
                             depth={{
                                 levels: tree.levels,
                                 onChange: ws.showLevels,

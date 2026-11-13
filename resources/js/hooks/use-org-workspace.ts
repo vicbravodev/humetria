@@ -44,8 +44,17 @@ export function useOrgWorkspace({
     const focusId = init.chain.at(-1)?.id ?? null;
     const [selected, setSelected] = useState<string | null>(focusId);
     const [camera, setCamera] = useState<CameraRequest>(() => ({
-        // Everybody; or the way down to the person a search found.
+        // Everybody (the root and its first level, if all of it would be too small to read); or the way down to the
+        // person a search found.
         ids: init.chain.length === 0 ? null : init.chain.map(({ id }) => id),
+        ...(init.chain.length === 0
+            ? {
+                  readable: init.roots.flatMap(({ id }) => [
+                      id,
+                      ...(init.firstLevel[id] ?? []).map((child) => child.id),
+                  ]),
+              }
+            : {}),
     }));
     const graph = useMemo(
         () =>

@@ -30,6 +30,7 @@ export default function OrgChartToolbar({
     person,
     depth,
     reserve,
+    editing,
 }: {
     filters: OrgChartFilters;
     /** The focused person, to keep them while the filters change. */
@@ -40,10 +41,12 @@ export default function OrgChartToolbar({
     };
     /** Leaves room on the right for the panel of the person selected. */
     reserve: boolean;
+    /** The editing mode is on: it stays on when the page reloads with a filter or a person. */
+    editing: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const visit = (next: OrgChartFilters, focus = person?.id) =>
-        router.get(index.url(tenantSlug), orgChartQuery(next, focus), {
+        router.get(index.url(tenantSlug), orgChartQuery(next, focus, editing), {
             preserveScroll: true,
         });
     const everything = depth.levels === Infinity;
@@ -57,7 +60,11 @@ export default function OrgChartToolbar({
             )}
         >
             <div className="pointer-events-auto w-full sm:w-[280px]">
-                <OrgPersonSearch filters={filters} person={person} />
+                <OrgPersonSearch
+                    filters={filters}
+                    person={person}
+                    editing={editing}
+                />
             </div>
             <div className="pointer-events-auto w-[210px]">
                 <Combobox

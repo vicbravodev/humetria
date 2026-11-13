@@ -26,7 +26,11 @@ export type MoreFlowNode = Node<
     'more'
 >;
 /** Where to take the view: the people to bring into view (everybody when `ids` is null). A new request is a new object. */
-export type CameraRequest = { ids: string[] | null } | null;
+export type CameraRequest = {
+    ids: string[] | null;
+    /** On first opening: the root and its first level, where to look when the whole chart would be too small to read. */
+    readable?: string[];
+} | null;
 
 export type FlowNode = PersonFlowNode | CompanyFlowNode | MoreFlowNode;
 

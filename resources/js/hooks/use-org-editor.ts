@@ -1,9 +1,11 @@
+import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import type { ChartTree } from '@/hooks/use-chart-tree';
 import { useManagerChange } from '@/hooks/use-manager-change';
 import { undoText } from '@/lib/org-chart/canvas-labels';
 import { parentsOf } from '@/lib/org-chart/chart-state';
+import { isEditing } from '@/lib/org-chart/labels';
 import type { OrgNode } from '@/types';
 
 export type OrgEditor = ReturnType<typeof useOrgEditor>;
@@ -50,7 +52,9 @@ function announce(
  * assignment, to whoever they reported to before). Nothing moves on screen until the server accepted the change.
  */
 export function useOrgEditor(tree: ChartTree) {
-    const [editing, setEditing] = useState(false);
+    const { url } = usePage();
+    // An address with `edit=1` opens in the editing mode: finding someone reloads the page and must not end it.
+    const [editing, setEditing] = useState(() => isEditing(url));
     const [message, setMessage] = useState<string | null>(null);
     // Counts every change saved, so whatever lists people outside the chart (the tray) asks again.
     const [version, setVersion] = useState(0);
