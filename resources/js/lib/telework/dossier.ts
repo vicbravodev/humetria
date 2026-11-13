@@ -1,4 +1,4 @@
-import { describeDate } from '@/lib/calendar-date';
+import { shortDate } from '@/lib/calendar-date';
 import type { DossierWorkplace, WorkplaceStatusValue } from '@/types';
 
 export type DossierBlockKey =
@@ -74,10 +74,11 @@ export function reviewCells(review: DossierWorkplace['review']): {
     }
 
     return {
-        decidedOn: describeDate(review.decidedOn) ?? '—',
+        decidedOn: shortDate(review.decidedOn),
         decision: review.decision,
         method: review.method,
-        validUntil: describeDate(review.validUntil ?? '') ?? '—',
+        validUntil:
+            review.validUntil === null ? '—' : shortDate(review.validUntil),
         unfavorable:
             review.unfavorable === null ? '—' : String(review.unfavorable),
         note: review.note,
