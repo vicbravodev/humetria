@@ -48,6 +48,13 @@ it('starts a company with nothing loaded at its three steps (board V4-Comp-Inici
             ->where('negotiation', null));
 });
 
+it('counts the base benefits at the start, without having opened Prestaciones', function (): void {
+    contractOfTen($this->tenant);
+
+    $this->get(route('tenant.compensation.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('status.benefits', ['active' => 11]));
+});
+
 it('shows the data of the contract with what each lacks and the one notice of accuracy (C6)', function (): void {
     contractOfTen($this->tenant);
     Benefit::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
@@ -61,7 +68,8 @@ it('shows the data of the contract with what each lacks and the one notice of ac
             ->where('status', [
                 'roster' => ['people' => 11, 'missing' => 1],
                 'tabulator' => ['grades' => 2, 'without_salary' => 1],
-                'benefits' => ['active' => 2],
+                // The 2 of the company and the 11 the base catalog gives it, which the start now makes sure of.
+                'benefits' => ['active' => 13],
                 'overrides' => ['people' => 1],
                 'risk_premium' => ['set' => false],
                 // The person without a category, the category without a salary and the premium.

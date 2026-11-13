@@ -81,7 +81,7 @@ final readonly class DecisionContext
 
         $terms = $this->policies->for(array_values(array_unique(array_map(fn (LeaveRequest $request): string => $request->employee_id, $vacations))));
 
-        return array_column(array_map(fn (LeaveRequest $request): array => ['id' => $request->id, 'advance' => ($terms[$request->employee_id] ?? null)?->allowsAdvance ?? false], $vacations), 'advance', 'id');
+        return array_column(array_map(fn (LeaveRequest $request): array => ['id' => $request->id, 'advance' => $terms[$request->employee_id]->allowsAdvance ?? false], $vacations), 'advance', 'id');
     }
 
     /**
