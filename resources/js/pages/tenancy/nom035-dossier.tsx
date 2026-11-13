@@ -2,7 +2,7 @@ import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ArrowLeft, ClipboardList } from 'lucide-react';
 import Nom035DossierRow from '@/components/tenancy/nom035-dossier-row';
 import EmptyState from '@/components/humetria/empty-state';
-import PrintLetterhead from '@/components/humetria/print-letterhead';
+import PrintLetterhead from '@/components/print-letterhead';
 import PrintButton from '@/components/humetria/print-button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dossierNote } from '@/lib/nom035/dossier';

@@ -1,5 +1,5 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import PrintLetterhead from '@/components/humetria/print-letterhead';
+import PrintLetterhead from '@/components/print-letterhead';
 import { shortDate } from '@/lib/calendar-date';
 import DossierHeaderBlock from '@/components/telework/dossier-header';
 import DossierSection from '@/components/telework/dossier-section';
