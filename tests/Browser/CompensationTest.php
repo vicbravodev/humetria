@@ -135,7 +135,13 @@ it('fits the tabulator with a below-minimum note in a 1440 px window, and at 375
     visit("{$url}/compensation/tabulator")
         ->resize(1440, 900)
         ->assertSee('Bajo el salario mínimo.')
-        ->assertScript($overflow, 0);
+        ->assertScript($overflow, 0)
+        // The warning is a one-line chip in the cell: the row keeps its height, and the whole reason is in the chip for a screen
+        // reader and in a tooltip for the mouse and the keyboard.
+        ->assertScript('() => { const chip = document.querySelector("tbody [data-slot=below-minimum]"); return chip.getClientRects().length === 1 && chip.closest("tr").getBoundingClientRect().height < 80; }', true)
+        ->assertScript('() => document.querySelector("tbody [data-slot=below-minimum]").textContent.includes("Está por debajo del salario mínimo")', true)
+        ->assertScript('() => new Promise((resolve) => { document.querySelector("tbody [data-slot=below-minimum]").focus(); setTimeout(resolve, 300); }).then(() => true)')
+        ->assertScript('() => document.querySelector("[data-slot=tooltip-content]")?.textContent.includes("Está por debajo del salario mínimo")', true);
 
     visit("{$url}/compensation/tabulator")
         ->resize(375, 800)

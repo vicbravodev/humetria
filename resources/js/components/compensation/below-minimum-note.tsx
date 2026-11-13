@@ -1,17 +1,32 @@
 import { TriangleAlert } from 'lucide-react';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 
-/** Why a salary is under the general minimum wage, in its own row: it stays after the toast of saving is gone. */
+/**
+ * A salary under the general minimum wage, as a one-line chip in its cell (the row keeps its height). The whole reason is
+ * in a tooltip for the mouse and the keyboard, and in the chip itself for a screen reader.
+ */
 export default function BelowMinimumNote({ reason }: { reason: string }) {
     return (
-        <p className="mt-1 flex items-start gap-1 rounded-md bg-warning px-2 py-1 text-caption font-normal text-warning-foreground">
-            <TriangleAlert
-                aria-hidden="true"
-                className="mt-0.5 size-3.5 shrink-0"
-            />
-            <span>
-                <span className="font-medium">Bajo el salario mínimo.</span>{' '}
-                {reason}
-            </span>
-        </p>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <span
+                    tabIndex={0}
+                    data-slot="below-minimum"
+                    className="mt-1 flex w-fit items-center gap-1 rounded-md bg-warning px-2 py-0.5 text-caption font-medium whitespace-nowrap text-warning-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                    <TriangleAlert
+                        aria-hidden="true"
+                        className="size-3.5 shrink-0"
+                    />
+                    Bajo el salario mínimo.
+                    <span className="sr-only"> {reason}</span>
+                </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-72">{reason}</TooltipContent>
+        </Tooltip>
     );
 }
