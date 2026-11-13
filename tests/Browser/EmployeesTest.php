@@ -221,6 +221,8 @@ it('finds a person from the ⌘K palette and opens Empleados narrowed to them', 
     acmeWithEmployees();
 
     visit('/admin/acme/employees')
+        // The top bar exists only once React mounted the app: the shortcut is listening by then.
+        ->assertVisible('@command-palette')
         ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
         ->type('#command-search', 'ló')
         ->assertSeeIn('[role="listbox"] [role="group"]', 'Personas')
@@ -236,6 +238,8 @@ it('offers no people in the ⌘K palette to whoever cannot manage the organizati
     $this->actingAs(memberOf($tenant, TenantRole::Viewer));
 
     visit('/admin/acme')
+        // The top bar exists only once React mounted the app: the shortcut is listening by then.
+        ->assertVisible('@command-palette')
         ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
         ->type('#command-search', 'ló')
         ->assertDontSee('Ana López');
