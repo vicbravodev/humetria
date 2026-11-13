@@ -128,6 +128,8 @@ it('publishes the policy from the end of its questions and goes back to the rout
 
     visit("{$url}/disclosure/write/policy?center={$center->id}")
         ->assertSee('Tu política cubre lo que pide la norma')
+        // The preview names the center it came from, not «todos los centros».
+        ->assertSee('· Planta Querétaro')
         ->assertSee('Son responsables de aplicar esta política: Recursos Humanos.')
         ->press('Publicar')
         ->assertSee('Publicar la política')
