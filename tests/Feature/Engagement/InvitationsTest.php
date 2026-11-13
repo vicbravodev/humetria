@@ -224,13 +224,22 @@ it('writes the invitation and the reminder in «usted», with the minimum of the
     $message = $mail->toMail(new AnonymousNotifiable);
     $html = (string) $message->render();
 
-    expect($message->subject)->toBe($reminder ? 'Le quedan 4 días para dar su opinión' : 'Su opinión sobre el trabajo en Autopartes del Bajío')
+    expect($message->subject)->toBe($reminder ? 'Tiene hasta el jueves 12 de noviembre para dar su opinión' : 'Su opinión sobre el trabajo en Autopartes del Bajío')
         ->and($message->actionText)->toBe('Contestar la encuesta')
         ->and($html)->toContain('El sistema no guarda quién contestó qué y solo muestra resultados de grupos de 5 personas o más')
         ->toContain('12 minutos')
         ->toContain(route('engagement.survey.show', 'tok'))
         ->not->toMatch('/anónim|nadie sabr|eNPS|Net Promoter/iu');
 })->with([false, true]);
+
+it('names the last day instead of counting the days, as the evaluations of NOM-035 do', function (): void {
+    $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes', 'autopartes', false);
+
+    $message = (new SurveyInvitation(true, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-11-12'), App\Modules\Engagement\Enums\SurveyKind::Climate))->toMail(new AnonymousNotifiable);
+
+    expect($message->subject)->not->toContain('Le quedan')
+        ->and((string) $message->render())->toContain('Tiene hasta el jueves 12 de noviembre para dar su opinión')->not->toContain('Le quedan');
+});
 
 it('says today is the last day on the last day', function (): void {
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes', 'autopartes', false);
