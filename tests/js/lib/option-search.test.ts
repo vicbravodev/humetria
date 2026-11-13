@@ -123,10 +123,26 @@ describe('searchNote', () => {
 describe('withNewOption', () => {
     const areas = [option('Producción'), option('Ventas')];
 
-    it('offers to add what was typed when no option has that label', () => {
+    it('offers to add what was typed last, after the options that exist, when none has that label or starts with it', () => {
         expect(withNewOption(areas, '  Almacén ')).toEqual([
-            { value: 'Almacén', label: 'Almacén', isNew: true },
             ...areas,
+            { value: 'Almacén', label: 'Almacén', isNew: true },
+        ]);
+    });
+
+    it('does not offer to add what is the beginning of an option that exists: it is still being typed', () => {
+        expect(withNewOption(areas, 'Produc')).toEqual(areas);
+        expect(withNewOption(areas, 'ventas')).toEqual(areas);
+    });
+
+    it('offers to add what continues past an option that exists', () => {
+        expect(withNewOption(areas, 'Producción Norte')).toEqual([
+            ...areas,
+            {
+                value: 'Producción Norte',
+                label: 'Producción Norte',
+                isNew: true,
+            },
         ]);
     });
 
