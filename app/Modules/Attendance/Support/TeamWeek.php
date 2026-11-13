@@ -44,14 +44,13 @@ final class TeamWeek
         // for hundreds of people; past a few thousand, aggregate the minutes in SQL or chunk the ids.
         $byPerson = EffectiveMarks::byDayOf($employeeIds, $week);
         $schedules = AttendanceSchedule::query()->among('employee_id', $employeeIds)->get()->keyBy('employee_id');
-        $tolerance = $schedules->contains(fn (AttendanceSchedule $schedule): bool => $schedule->starts_by_weekday !== null) ? CompanyPolicy::current()->late_tolerance_minutes : 0;
         $summaries = [];
         $worked = [];
 
         foreach ($employeeIds as $employeeId) {
             $schedule = $schedules->get($employeeId);
             $days = array_map(
-                fn (int $offset) => WorkedDay::hours($date = $week->start()->addDays($offset), $byPerson[$employeeId][$date->toDateString()] ?? [], $schedule, $tolerance),
+                fn (int $offset) => WorkedDay::hours($date = $week->start()->addDays($offset), $byPerson[$employeeId][$date->toDateString()] ?? [], $schedule),
                 range(0, 6),
             );
             $summaries[$employeeId] = HoursCalculator::week($days, $schedule->shift_type ?? ShiftType::Day, $week->start()->year);

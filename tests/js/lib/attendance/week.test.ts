@@ -282,3 +282,16 @@ describe('a day away in the week the server tells', () => {
         expect(told('Maternidad')).toBeNull();
     });
 });
+
+describe('the lateness of a day in the week the server tells', () => {
+    const told = (lateMinutes: unknown) =>
+        weekView({ ...week, days: [{ ...week.days[0], lateMinutes }] })?.days[0]
+            ?.lateMinutes;
+
+    it('keeps minutes, and reads anything else as none', () => {
+        expect(told(20)).toBe(20);
+        expect(told(0)).toBe(0);
+        expect(told(null)).toBeUndefined();
+        expect(told('veinte')).toBeUndefined();
+    });
+});

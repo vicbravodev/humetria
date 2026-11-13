@@ -144,6 +144,8 @@ export type ReportDay = {
     corrections: string[];
     confirmation: 'confirmado' | 'objetada' | 'sin confirmar';
     flags: string[];
+    /** Minutes late against the schedule's start time and the tolerance; null when there is none to compare. Informational. */
+    lateMinutes?: number | null;
 };
 
 /** A person with days in the report's period, each of them. */

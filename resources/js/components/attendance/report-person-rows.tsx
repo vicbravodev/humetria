@@ -4,6 +4,7 @@ import Initials from '@/components/humetria/initials';
 import WeekRibbon from '@/components/humetria/week-ribbon';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { lateCount } from '@/lib/attendance/late';
 import { confirmationBadge } from '@/lib/attendance/report';
 import {
     answerOf,
@@ -22,6 +23,7 @@ export default function ReportPersonRows({ person }: { person: ReportPerson }) {
     const ribbon = personRibbon(person.days);
     const hours = personHours(person.days);
     const answer = confirmationBadge(answerOf(person.days));
+    const late = lateCount(person.days);
 
     return (
         <>
@@ -34,6 +36,7 @@ export default function ReportPersonRows({ person }: { person: ReportPerson }) {
                             <span className="text-caption text-muted-foreground">
                                 {person.jobTitle} · {person.days.length}{' '}
                                 {person.days.length === 1 ? 'día' : 'días'}
+                                {late !== null && ` · ${late}`}
                             </span>
                         </div>
                     </div>

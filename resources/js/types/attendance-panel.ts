@@ -77,11 +77,16 @@ export type ScheduleView = 'all' | 'scheduled' | 'unscheduled';
 /** Minutes agreed by ISO weekday, «1» Monday to «7» Sunday; 0 is a rest day. */
 export type WeekMinutes = Partial<Record<string, number>>;
 
+/** The start time of each weekday as minutes from midnight; a day with none is null. */
+export type StartTimes = Partial<Record<string, number | null>>;
+
 /** A person's agreed weekly schedule (criterio 2.6). */
 export type WorkSchedule = {
     shiftType: 'day' | 'night' | 'mixed';
     workMode: 'onsite' | 'remote';
     minutes: WeekMinutes;
+    /** The minute of the day each weekday starts, when RH set any: a day with none is null. */
+    starts: StartTimes | null;
 };
 
 /** A person on the schedules page, with their schedule or null: held to 8 h a day with no rest day until RH sets one. */
