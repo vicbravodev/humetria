@@ -5,6 +5,7 @@ import { CommandPaletteResults } from '@/components/command-palette-results';
 import { CommandPaletteSearch } from '@/components/command-palette-search';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useNavTenant } from '@/hooks/use-nav-tenant';
 import { usePalettePeople } from '@/hooks/use-palette-people';
 import { useAppearance } from '@/hooks/use-appearance';
 import {
@@ -24,7 +25,8 @@ const RESULTS = 'command-results';
 export function CommandPalette() {
     useCommandPaletteShortcut();
     const open = useCommandPaletteOpen();
-    const { auth, tenant, impersonator } = usePage().props;
+    const { auth, impersonator } = usePage().props;
+    const tenant = useNavTenant();
     const { state, toggleSidebar } = useSidebar();
     const { updateAppearance } = useAppearance();
     const [query, setQuery] = useState('');

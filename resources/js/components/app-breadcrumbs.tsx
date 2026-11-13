@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import { Fragment } from 'react';
+import { useNavTenant } from '@/hooks/use-nav-tenant';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { navTrail } from '@/lib/app-navigation';
 import { navSections } from '@/lib/nav-sections';
@@ -12,13 +13,14 @@ import type { BreadcrumbItem } from '@/types';
  */
 export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
     const { auth, tenant } = usePage().props;
+    const navTenant = useNavTenant();
     const { currentUrl } = useCurrentUrl();
     const trail =
         items.length > 0
             ? items
             : navTrail(
                   navSections({
-                      tenant,
+                      tenant: navTenant,
                       isStaff: auth.isStaff,
                       home: tenant?.trade_name ?? 'Humetría',
                   }),

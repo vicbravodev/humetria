@@ -3,6 +3,7 @@ import { domMax, LazyMotion, MotionConfig } from 'motion/react';
 import GlideChips from '@/components/humetria/glide-chips';
 import { MobileTabControl } from '@/components/mobile-tab-control';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useNavTenant } from '@/hooks/use-nav-tenant';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cspNonce } from '@/lib/csp-nonce';
 import { currentTab, mobileTabs } from '@/lib/mobile-tabs';
@@ -14,7 +15,8 @@ import { currentTab, mobileTabs } from '@/lib/mobile-tabs';
  * glides to the next one, as the landing's sections do.
  */
 export function MobileTabBar() {
-    const { auth, tenant, inCourse } = usePage().props;
+    const { auth, inCourse } = usePage().props;
+    const tenant = useNavTenant();
     const { setOpenMobile } = useSidebar();
     const { isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
     const tabs = mobileTabs(tenant, auth.isStaff, inCourse?.count);

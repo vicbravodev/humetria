@@ -81,7 +81,8 @@ final class ResolveTenant
             'modules' => $this->modules->enabledKeys($tenant->id),
             'role' => $role->value,
             'role_label' => $role->label(),
-            'can' => [
+            // What the role allows; a read-only company has every writing one off, and `permissions` keeps the full set for the menu.
+            'can' => $this->writable($permissions = [
                 'manage_organization' => $user->can('manage-organization'),
                 'manage_members' => $user->can('manage-members'),
                 'manage_campaigns' => $user->can('manage-campaigns'),
@@ -110,7 +111,8 @@ final class ResolveTenant
                 'manage_climate' => $user->can('manage-climate'),
                 'view_pulse' => $user->can('view-pulse'),
                 'manage_pulse' => $user->can('manage-pulse'),
-            ],
+            ], $status->isReadOnly()),
+            'permissions' => $permissions,
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.
         Inertia::share('tenants', function () use ($user): array {
@@ -123,5 +125,27 @@ final class ResolveTenant
         });
 
         return $next($request);
+    }
+
+    /**
+     * A read-only company changes nothing, so the buttons that would change something go away with it: every permission that
+     * writes is off, and the ones that read stay as they are. The server answers 423 to a write anyway.
+     *
+     * @param  array<string, bool>  $can
+     * @return array<string, bool>
+     */
+    private function writable(array $can, bool $readOnly): array
+    {
+        if (! $readOnly) {
+            return $can;
+        }
+
+        foreach ($can as $key => $allowed) {
+            if (str_starts_with($key, 'manage_') || in_array($key, ['assess_seating', 'review_workplaces', 'handle_complaints'], true)) {
+                $can[$key] = false;
+            }
+        }
+
+        return $can;
     }
 }

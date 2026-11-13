@@ -77,6 +77,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Support Email
+    |--------------------------------------------------------------------------
+    |
+    | Where a company writes to Humetria (to expand its plan, to be reactivated). Without it, the notices say whom to
+    | contact but carry no mail link.
+    |
+    */
+
+    'support_email' => env('SUPPORT_EMAIL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

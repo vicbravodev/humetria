@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import SupportLink from '@/components/humetria/support-link';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -44,8 +45,11 @@ export function TenantBlockedDialog({
                 <DialogTitle>El acceso a {tradeName} está en pausa</DialogTitle>
                 <DialogDescription>
                     Puede deberse a un pago pendiente o a que terminó tu periodo
-                    de prueba o de servicio. Para reactivarlo, contacta al
-                    administrador de Humetría.
+                    de prueba o de servicio. Para reactivarlo,{' '}
+                    <SupportLink subject={`Reactivar ${tradeName}`}>
+                        contacta al administrador de Humetría
+                    </SupportLink>
+                    .
                 </DialogDescription>
                 <DialogFooter>
                     {canSwitch && (
