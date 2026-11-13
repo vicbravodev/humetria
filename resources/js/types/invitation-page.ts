@@ -8,6 +8,8 @@ type PendingInvitation = {
     inviter: string | null;
     role: TenantRole;
     role_label: string;
+    /** The account is a union: its invitation speaks of the padrón, not of evaluations. */
+    union: boolean;
     email: string;
     name: string;
 };
@@ -21,6 +23,7 @@ export type InvitationPage = { token: string; passwordRules: string } & (
           inviter: null;
           role: null;
           role_label: null;
+          union: false;
           email: null;
           name: null;
       }

@@ -42,6 +42,7 @@ final class AcceptInvitationController extends Controller
             'inviter' => $invitation?->inviter?->name,
             'role' => $invitation?->role->value,
             'role_label' => $invitation?->role->label(),
+            'union' => $invitation?->tenant?->isUnion() ?? false,
             'email' => $invitation?->email,
             'name' => $invitation?->name,
             'token' => $token,

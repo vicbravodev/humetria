@@ -96,3 +96,15 @@ it('says only that the person was invited when whoever invited them is gone', fu
     expect($mail->subject)->toBe('Te invitaron a Autopartes Demo en Humetría')
         ->and((string) $mail->render())->toContain('Recibes este correo porque te invitaron a Autopartes Demo.');
 });
+
+it('invites the owner of a union without the language of the compliance norms: no work centers, no evaluations', function (): void {
+    $union = Tenant::factory()->union()->create(['trade_name' => 'Sindicato Demo']);
+
+    $html = (string) invitationEmail($union, $this->olga, TenantRole::Owner)->render();
+
+    expect($html)->toContain('padrón')
+        ->and($html)->toContain('Aún sin personas')
+        ->not->toContain('centros de trabajo')
+        ->not->toContain('evaluaciones')
+        ->not->toContain('NOM-035');
+});

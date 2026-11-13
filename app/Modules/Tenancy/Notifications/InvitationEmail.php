@@ -32,6 +32,7 @@ final class InvitationEmail extends Notification implements MailBag, ShouldBeEnc
         private readonly ?string $inviter,
         private readonly int $workCenters,
         private readonly int $people,
+        private readonly bool $union = false,
     ) {}
 
     /**
@@ -58,8 +59,12 @@ final class InvitationEmail extends Notification implements MailBag, ShouldBeEnc
                 'inviter' => $this->inviter,
                 'role' => $this->role->label(),
                 'does' => match ($this->role) {
-                    TenantRole::Owner => 'administrarás la cuenta, sus usuarios y las herramientas que tenga contratadas.',
-                    TenantRole::Hr => 'podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.',
+                    TenantRole::Owner => $this->union
+                        ? 'administrarás la cuenta, sus usuarios y su padrón de personas.'
+                        : 'administrarás la cuenta, sus usuarios y las herramientas que tenga contratadas.',
+                    TenantRole::Hr => $this->union
+                        ? 'podrás administrar el padrón de personas y la compensación.'
+                        : 'podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.',
                     TenantRole::Committee => 'podrás revisar y validar los lugares de trabajo de la NOM-037 (teletrabajo) de sus centros.',
                     TenantRole::Complaints => 'podrás atender, de forma confidencial, las quejas y denuncias que se te asignen en el canal de la empresa.',
                     TenantRole::Viewer => 'podrás ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.',
@@ -73,6 +78,11 @@ final class InvitationEmail extends Notification implements MailBag, ShouldBeEnc
 
     private function size(): string
     {
+        // A union has no work centers: only the people in its padrón.
+        if ($this->union) {
+            return trans_choice('{0} Aún sin personas|{1} :count persona en el padrón|[2,*] :count personas en el padrón', $this->people);
+        }
+
         if ($this->workCenters === 0) {
             return 'Aún sin centros de trabajo';
         }

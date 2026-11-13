@@ -11,6 +11,7 @@ export default function InvitationCard({
         trade_name: string;
         role: TenantRole;
         role_label: string;
+        union: boolean;
     };
 }) {
     const { inviter, trade_name: tradeName } = invitation;
@@ -35,7 +36,7 @@ export default function InvitationCard({
                 <span className="font-semibold">{tradeName}</span>
                 <span className="text-caption text-muted-foreground">
                     como {invitation.role_label} ·{' '}
-                    {roleSummary(invitation.role)}
+                    {roleSummary(invitation.role, invitation.union)}
                 </span>
             </p>
         </div>
