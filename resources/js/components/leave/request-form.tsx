@@ -87,6 +87,12 @@ export default function RequestForm({
                             </p>
                             <InputError message={errors['note']} />
                         </div>
+                        {(startsOn === '' || endsOn === '') && (
+                            <p className="text-sm text-muted-foreground">
+                                Elija el día en que empieza y el día en que
+                                termina para poder enviar la solicitud.
+                            </p>
+                        )}
                         <Button
                             size="lg"
                             // Nothing to send until both dates are chosen: a second tap right after sending finds the form empty.
