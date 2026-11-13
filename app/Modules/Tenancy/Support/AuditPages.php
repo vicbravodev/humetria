@@ -78,7 +78,9 @@ final class AuditPages
         $people = $this->people($entries->pluck('actor_id')->merge($entries->pluck('impersonator_id')));
         $companies = [];
 
-        foreach (Tenant::query()->whereIn('id', $entries->pluck('tenant_id')->filter()->unique()->values())->get(['id', 'trade_name']) as $tenant) {
+        $ids = $entries->map(fn (AuditEntry $entry): ?string => $this->companyId($entry))->filter()->unique()->values();
+
+        foreach (Tenant::query()->whereIn('id', $ids)->get(['id', 'trade_name']) as $tenant) {
             $companies[$tenant->id] = $tenant->trade_name;
         }
         $timezone = config()->string('app.display_timezone');
@@ -90,12 +92,27 @@ final class AuditPages
             'event' => $entry->event,
             'actor' => $entry->actor_id === null ? null : ($people[$entry->actor_id] ?? null),
             'impersonator' => $entry->impersonator_id === null ? null : ($people[$entry->impersonator_id] ?? null),
-            'company' => $entry->tenant_id === null || ! isset($companies[$entry->tenant_id])
+            'company' => ($id = $this->companyId($entry)) === null || ! isset($companies[$id])
                 ? null
-                : ['id' => $entry->tenant_id, 'name' => $companies[$entry->tenant_id]],
+                : ['id' => $id, 'name' => $companies[$id]],
             'subject' => $entry->subject_type,
             'context' => $this->context($entry->metadata),
         ]);
+    }
+
+    private function companyId(AuditEntry $entry): ?string
+    {
+        if ($entry->tenant_id !== null) {
+            return $entry->tenant_id;
+        }
+
+        $named = $entry->metadata['tenant_id'] ?? null;
+
+        if (is_string($named) && Str::isUuid($named)) {
+            return $named;
+        }
+
+        return $entry->subject_type === (new Tenant)->getMorphClass() ? $entry->subject_id : null;
     }
 
     /** The name of a company, for the chip that says the trail is narrowed to it. */
@@ -114,7 +131,12 @@ final class AuditPages
 
         return AuditEntry::query()
             ->when($filters['family'] !== '', fn (Builder $query) => $query->where('event', 'like', $filters['family'].'.%'))
-            ->when($filters['company'] !== '', fn (Builder $query) => $query->where('tenant_id', $filters['company']))
+            ->when($filters['company'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                ->where('tenant_id', $filters['company'])
+                // Entries saved before the company was stored on them: it is in their metadata or is their subject.
+                ->orWhere(fn (Builder $query) => $query->whereNull('tenant_id')->where(fn (Builder $query) => $query
+                    ->whereRaw("metadata->>'tenant_id' = ?", [$filters['company']])
+                    ->orWhere(fn (Builder $query) => $query->where('subject_type', (new Tenant)->getMorphClass())->where('subject_id', $filters['company']))))))
             ->when($filters['from'] !== '', fn (Builder $query) => $query->where('created_at', '>=', CarbonImmutable::parse($filters['from'], $timezone)->startOfDay()))
             ->when($filters['to'] !== '', fn (Builder $query) => $query->where('created_at', '<=', CarbonImmutable::parse($filters['to'], $timezone)->endOfDay()))
             ->when($filters['q'] !== '', fn (Builder $query) => $query->whereIn('actor_id', User::query()
