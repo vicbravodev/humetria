@@ -22,7 +22,7 @@ beforeEach(function (): void {
 /** The policy as the form sends it. */
 function policyInput(array $overrides = []): array
 {
-    return ['out_of_zone' => 'allow_and_flag', 'max_accuracy_m' => '80', 'require_qr_onsite' => '1', 'trusted_may_use_browser' => '0', 'retention_months' => '24', ...$overrides];
+    return ['out_of_zone' => 'allow_and_flag', 'max_accuracy_m' => '80', 'require_qr_onsite' => '1', 'trusted_may_use_browser' => '0', 'retention_months' => '24', 'late_tolerance_minutes' => '15', ...$overrides];
 }
 
 function savePolicy(array $input): Illuminate\Testing\TestResponse
@@ -36,18 +36,18 @@ describe('the page', function (): void {
 
         $this->get(route('tenant.attendance.policy.show', 'acme'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('attendance/policy')
-            ->where('policy', ['outOfZone' => 'block', 'maxAccuracyM' => 100, 'requireQrOnsite' => true, 'trustedMayUseBrowser' => true, 'retentionMonths' => 12])
+            ->where('policy', ['outOfZone' => 'block', 'maxAccuracyM' => 100, 'requireQrOnsite' => true, 'trustedMayUseBrowser' => true, 'retentionMonths' => 12, 'lateToleranceMinutes' => 10])
             ->where('saved', false)
             ->where('canManage', true));
         expect(AttendancePolicy::query()->count())->toBe(0);
     });
 
     it('shows the policy saved, read-only for a viewer', function (): void {
-        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'out_of_zone' => OutOfZoneRule::AllowAndFlag, 'max_accuracy_m' => 50, 'require_qr_onsite' => false, 'trusted_may_use_browser' => false, 'retention_months' => 36]);
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'out_of_zone' => OutOfZoneRule::AllowAndFlag, 'max_accuracy_m' => 50, 'require_qr_onsite' => false, 'trusted_may_use_browser' => false, 'retention_months' => 36, 'late_tolerance_minutes' => 25]);
         $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
 
         $this->get(route('tenant.attendance.policy.show', 'acme'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('policy', ['outOfZone' => 'allow_and_flag', 'maxAccuracyM' => 50, 'requireQrOnsite' => false, 'trustedMayUseBrowser' => false, 'retentionMonths' => 36])
+            ->where('policy', ['outOfZone' => 'allow_and_flag', 'maxAccuracyM' => 50, 'requireQrOnsite' => false, 'trustedMayUseBrowser' => false, 'retentionMonths' => 36, 'lateToleranceMinutes' => 25])
             ->where('saved', true)
             ->where('canManage', false));
     });
@@ -86,6 +86,7 @@ describe('saving it', function (): void {
             ->require_qr_onsite->toBeFalse()
             ->trusted_may_use_browser->toBeFalse()
             ->retention_months->toBe(18)
+            ->late_tolerance_minutes->toBe(15)
             ->and(AuditEntry::query()->where('event', 'attendance.policy_saved')->count())->toBe(2);
     });
 
@@ -106,6 +107,8 @@ describe('saving it', function (): void {
         '500 m' => [['max_accuracy_m' => '500']],
         '12 months' => [['retention_months' => '12']],
         '120 months' => [['retention_months' => '120']],
+        'no tolerance' => [['late_tolerance_minutes' => '0']],
+        '120 minutes of tolerance' => [['late_tolerance_minutes' => '120']],
     ]);
 
     it('is checked in Spanish', function (array $input, string $field, string $message): void {
@@ -118,6 +121,9 @@ describe('saving it', function (): void {
         'accuracy over 500 m' => [['max_accuracy_m' => '501'], 'max_accuracy_m', 'El campo precisión máxima debe estar entre 10 y 500.'],
         'retention of 11 months' => [['retention_months' => '11'], 'retention_months', 'El campo meses de conservación debe estar entre 12 y 120.'],
         'retention not a number' => [['retention_months' => 'doce'], 'retention_months', 'El campo meses de conservación debe ser un número entero.'],
+        'a tolerance over 120' => [['late_tolerance_minutes' => '121'], 'late_tolerance_minutes', 'El campo tolerancia de retardo debe estar entre 0 y 120.'],
+        'a negative tolerance' => [['late_tolerance_minutes' => '-1'], 'late_tolerance_minutes', 'El campo tolerancia de retardo debe estar entre 0 y 120.'],
+        'no tolerance given' => [['late_tolerance_minutes' => ''], 'late_tolerance_minutes', 'El campo tolerancia de retardo es obligatorio.'],
         'an unknown rule' => [['out_of_zone' => 'ignore'], 'out_of_zone', 'Elige «Bloquear» o «Permitir y señalar».'],
         'no rule' => [['out_of_zone' => ''], 'out_of_zone', 'El campo fuera de zona es obligatorio.'],
         'a switch that is not yes or no' => [['require_qr_onsite' => 'tal vez'], 'require_qr_onsite', 'El campo QR en el centro debe ser verdadero o falso.'],

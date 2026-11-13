@@ -42,7 +42,7 @@ final readonly class WritingPages
                 'inciso' => $kind->inciso(),
                 'title' => $template->title(),
                 'caption' => $kind === DocumentKind::Policy ? "NOM-035 · Etapa 1 · {$template->name()}" : "NOM-035 · Difusión · {$template->name()}",
-                'owner' => "{$company} · todos los centros",
+                'owner' => "{$company} · ".($back['centerName'] ?? 'todos los centros'),
                 'company' => $company,
             ],
             'questions' => $this->writer->questions($template),

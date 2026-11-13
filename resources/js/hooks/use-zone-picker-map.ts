@@ -14,6 +14,8 @@ import type { Point } from '@/lib/attendance/zone-picker';
 export type ZonePickerProps = {
     center: Point | null;
     radius: number;
+    /** Where to look while the zone has no center yet (the address of its work center); the map stays on Mexico without it. */
+    view?: Point | null;
     onCenter: (point: Point) => void;
     onRadius: (meters: number) => void;
 };
@@ -128,6 +130,8 @@ export function useZonePickerMap(props: ZonePickerProps) {
     const { radius } = props;
     const lat = props.center?.lat ?? null;
     const lng = props.center?.lng ?? null;
+    const viewLat = props.view?.lat ?? null;
+    const viewLng = props.view?.lng ?? null;
 
     useEffect(() => {
         latest.current = props;
@@ -156,6 +160,18 @@ export function useZonePickerMap(props: ZonePickerProps) {
             layers.current = null;
         };
     }, []);
+
+    // The zone's work center is found: look there, unless the zone already has a center of its own.
+    useEffect(() => {
+        if (
+            map.current !== null &&
+            viewLat !== null &&
+            viewLng !== null &&
+            layers.current === null
+        ) {
+            map.current.setView({ lat: viewLat, lng: viewLng }, STREET_ZOOM);
+        }
+    }, [viewLat, viewLng]);
 
     useEffect(() => {
         const opened = map.current;

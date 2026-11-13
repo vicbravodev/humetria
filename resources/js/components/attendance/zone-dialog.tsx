@@ -5,7 +5,11 @@ import FormField from '@/components/form-field';
 import FormDialog from '@/components/humetria/form-dialog';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { coordinate } from '@/lib/attendance/zone';
-import { clampRadius, parseCoordinate } from '@/lib/attendance/zone-picker';
+import {
+    clampRadius,
+    initialSearch,
+    parseCoordinate,
+} from '@/lib/attendance/zone-picker';
 import type { Point } from '@/lib/attendance/zone-picker';
 import { store, update } from '@/routes/tenant/attendance/zones';
 import type { AttendanceZone } from '@/types';
@@ -39,11 +43,14 @@ export default function ZoneDialog({
     open,
     onOpenChange,
     centerId,
+    centerAddress = null,
     zone,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     centerId: string;
+    /** The center's address: where the map of a zone with no center yet opens. */
+    centerAddress?: string | null;
     zone: AttendanceZone | null;
 }) {
     const tenantSlug = useTenantSlug();
@@ -70,6 +77,7 @@ export default function ZoneDialog({
                 <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
                     <ZoneMapPanel
                         center={drawn(latitude, longitude)}
+                        address={initialSearch(zone, centerAddress)}
                         radius={clampRadius(Number(radius) || 100)}
                         onCenter={place}
                         onRadius={(meters) => setRadius(String(meters))}

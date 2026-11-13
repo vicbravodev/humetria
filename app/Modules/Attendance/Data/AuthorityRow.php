@@ -21,6 +21,7 @@ final readonly class AuthorityRow
      * @param  string  $confirmation  confirmado, objetada or sin confirmar
      * @param  string  $weekDigest  the version of the week the person confirmed; empty unless confirmed
      * @param  list<string>  $flags  what an inspector should notice, in plain Spanish
+     * @param  int|null  $lateMinutes  past the start time and the company's tolerance; null with no start time. Informational: not a flag
      */
     public function __construct(
         public string $employeeId,
@@ -41,5 +42,6 @@ final readonly class AuthorityRow
         public string $confirmation,
         public string $weekDigest,
         public array $flags,
+        public ?int $lateMinutes = null,
     ) {}
 }

@@ -25,4 +25,13 @@ interface DisclosureStanding
      * @return list<string> in the order given
      */
     public function sharedEvaluations(array $campaignIds): array;
+
+    /**
+     * Of those evaluations, the ones whose results are published and not withdrawn, apart by whether the people can reach them
+     * (`shared`) or the company still has to turn on their page or record a physical means (`unseen`).
+     *
+     * @param  list<string>  $campaignIds
+     * @return array{shared: list<string>, unseen: list<string>} each in the order given
+     */
+    public function sharing(array $campaignIds): array;
 }

@@ -19,7 +19,7 @@ beforeEach(function (): void {
 /** @return array<string, mixed> */
 function policyRules(AttendancePolicy $policy): array
 {
-    return $policy->only(['out_of_zone', 'max_accuracy_m', 'require_qr_onsite', 'trusted_may_use_browser', 'retention_months']);
+    return $policy->only(['out_of_zone', 'max_accuracy_m', 'require_qr_onsite', 'trusted_may_use_browser', 'retention_months', 'late_tolerance_minutes']);
 }
 
 it('gives the defaults while RH has not saved a policy: the same the table writes', function (): void {

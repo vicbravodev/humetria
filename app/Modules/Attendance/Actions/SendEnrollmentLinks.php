@@ -7,7 +7,10 @@ namespace App\Modules\Attendance\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
 use App\Modules\Attendance\Jobs\SendEnrollmentLink;
+use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Attendance\Support\CompanyPolicy;
 use App\Modules\Attendance\Support\DevicePages;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -19,14 +22,14 @@ use Illuminate\Support\Facades\Log;
  * Sends their link to link a phone to every active person of a center in use with no active device and no link that still
  * opens: one queued job each, which makes the link in the worker (see SendEnrollmentLink). Who already has a link that opens
  * keeps it (resending is the one-by-one action), and is counted. A person with no email is left for RH to hand theirs over
- * one by one, and counted. The batch goes to the audit trail once, with counts only.
+ * one by one, and counted. The batch goes to the audit trail once, with counts only and whether the center could mark (a zone and, when the policy asks for it, a screen).
  */
 final readonly class SendEnrollmentLinks
 {
     public function __construct(private WorkCenters $workCenters, private Roster $roster, private CurrentTenant $tenant, private RecordAudit $audit) {}
 
     /**
-     * @return array{sent: int, without_email: int, linked: int, with_link: int}
+     * @return array{sent: int, without_email: int, linked: int, with_link: int, center_ready: bool}
      *
      * @throws WorkCenterNotAvailable when the center is not one in use of the company
      */
@@ -52,6 +55,11 @@ final readonly class SendEnrollmentLinks
                 $recipients[] = $person->id;
             }
         }
+
+        // Sending to a center that cannot mark yet is allowed (the links are the same); the trail says it was not ready.
+        $ready = AttendanceZone::query()->where('work_center_id', $center->id)->exists()
+            && (! CompanyPolicy::current()->require_qr_onsite || KioskDevice::inUseIn($center->id) > 0);
+        $counts = [...$counts, 'center_ready' => $ready];
 
         // The trail first: a failed audit insert leaves no job queued.
         $this->audit->handle('attendance.enrollments_sent', null, ['work_center_id' => $center->id, ...$counts]);

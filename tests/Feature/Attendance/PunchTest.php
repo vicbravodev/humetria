@@ -13,6 +13,7 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Support\PunchDay;
 use App\Modules\Attendance\Support\QrToken;
 use App\Modules\Attendance\Support\WebAuthnCeremony;
@@ -325,6 +326,28 @@ describe('on site', function (): void {
         anaPunches(['lat' => null, 'lng' => null, 'accuracy' => null])->assertOk()->assertJsonPath('flag', 'center_without_zones');
 
         expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::Qr)->zone_id->toBeNull()->latitude->toBeNull();
+    });
+
+    it('says the center is not ready when it has no zone and no active screen, and keeps the QR message once a screen is in use', function (): void {
+        $this->zone->delete();
+
+        anaPunches(['q' => null])->assertUnprocessable()->assertJsonPath('reason', 'center_not_ready');
+
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+
+        anaPunches(['q' => null])->assertUnprocessable()->assertJsonPath('reason', 'qr_required');
+    });
+
+    it('ignores a revoked or never-seen screen when telling whether the center is ready', function (): void {
+        $this->zone->delete();
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now(), 'revoked_at' => now()]);
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+
+        anaPunches(['q' => null])->assertUnprocessable()->assertJsonPath('reason', 'center_not_ready');
+    });
+
+    it('keeps the QR message for a center with a zone and no screen', function (): void {
+        anaPunches(['q' => null])->assertUnprocessable()->assertJsonPath('reason', 'qr_required');
     });
 });
 

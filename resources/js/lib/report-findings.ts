@@ -78,6 +78,13 @@ function areaFinding(areas: AreaResults): Finding | null {
     };
 }
 
+/** Caption of the best domain: «Fortaleza» only when nobody is in Alto or Muy alto. */
+export function strengthCaption(domain: RiskGroup): string {
+    return highRisk(domain.levels) > 0
+        ? 'Dominio con menor riesgo'
+        : 'Fortaleza';
+}
+
 function strengthFinding(domain: RiskGroup): Finding {
     const high = highRisk(domain.levels);
 

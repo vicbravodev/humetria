@@ -47,7 +47,8 @@ it('opens the screen of Marcar for a device not known yet: every step, why the p
         ->assertSee('Marcar entrada')
         ->assertSee('Salir a comer')
         ->assertSee('Al marcar, el teléfono le pedirá su ubicación: si usted trabaja en un centro, la usamos para comprobar que está ahí; si no, se descarta. No se guarda en este teléfono ni se sigue entre marcas.')
-        ->assertSee('¿Aún no vincula este teléfono?')
+        ->assertSee('Si este teléfono aún no está vinculado')
+        ->assertSee('Si ya lo vinculó, solo marque.')
         // Whether the center asks for the screen's code is the server's to say when marking: until then it says how.
         ->assertSee('Si su centro tiene una pantalla QR');
 })->with([
@@ -197,13 +198,27 @@ it('shows Bob his own name and steps when he marks on the phone that remembers A
     expect(AttendanceMark::query()->where('employee_id', '!=', $this->ana->id)->sole()->zone_id)->not->toBeNull();
 });
 
+it('says which day the correction asked from Marcar is about', function (): void {
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4336, -99.1332);
+
+    $page->press('button:has-text("Marcar entrada")')
+        ->waitForText('Está fuera de la zona')
+        ->press('Pedir una corrección')
+        ->waitForText('Pedir a Recursos Humanos que agregue su marca')
+        // «Día: jueves 12 de noviembre»: the day of the mark refused, in the company's time.
+        ->assertScript('() => /Día: [a-záéíóúñ]+ \\d{1,2} de [a-záéíóúñ]+/.test(document.body.innerText)', true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', function (): void {
     $page = bobOnAnasPhone();
 
     $page->press('¿No es usted?')
         ->waitForText('Marcar su jornada')
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
-        ->assertSee('¿Aún no vincula este teléfono?')
+        ->assertSee('Si este teléfono aún no está vinculado')
+        ->assertSee('Si ya lo vinculó, solo marque.')
         ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->press('Listo')

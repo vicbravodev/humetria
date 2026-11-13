@@ -31,6 +31,8 @@ it('lets RH change the policy and keeps it', function (): void {
         ->fill('#policy-max_accuracy_m', '60')
         ->click('Pedir el QR a quien marca en el centro')
         ->fill('#policy-retention_months', '24')
+        ->fill('#policy-late_tolerance_minutes', '15')
+        ->assertSee('Solo se muestra: Humetria no descuenta tiempo ni marca faltas.')
         ->click('Guardar política')
         ->waitForText('Política guardada')
         ->assertDontSee('Valores de inicio')
@@ -39,7 +41,7 @@ it('lets RH change the policy and keeps it', function (): void {
     workIn(Tenant::query()->where('slug', 'acme')->sole());
     expect(AttendancePolicy::query()->sole())
         ->out_of_zone->toBe(OutOfZoneRule::AllowAndFlag)->max_accuracy_m->toBe(60)->require_qr_onsite->toBeFalse()
-        ->trusted_may_use_browser->toBeTrue()->retention_months->toBe(24);
+        ->trusted_may_use_browser->toBeTrue()->retention_months->toBe(24)->late_tolerance_minutes->toBe(15);
 });
 
 it('shows how a mark ends up and what changes, before RH saves', function (): void {

@@ -19,8 +19,9 @@ final readonly class SaveSchedule
 
     /**
      * @param  array<int, int>  $minutesByWeekday  minutes agreed by ISO weekday, 1 Monday to 7 Sunday
+     * @param  array<int, int|null>|null  $startsByWeekday  the minute of the day each ISO weekday starts; null for none
      */
-    public function handle(string $employeeId, ShiftType $shiftType, WorkMode $workMode, array $minutesByWeekday): AttendanceSchedule
+    public function handle(string $employeeId, ShiftType $shiftType, WorkMode $workMode, array $minutesByWeekday, ?array $startsByWeekday = null): AttendanceSchedule
     {
         if ($this->roster->find($employeeId) === null) {
             throw new InvalidArgumentException('The person is not in the company.');
@@ -31,6 +32,7 @@ final readonly class SaveSchedule
             'shift_type' => $shiftType,
             'work_mode' => $workMode,
             'minutes_by_weekday' => $minutesByWeekday,
+            'starts_by_weekday' => $startsByWeekday,
         ]);
 
         Log::info('attendance.schedule_saved', ['schedule_id' => $schedule->id, 'employee_id' => $employeeId]);

@@ -77,6 +77,10 @@ final class RouteStages
         foreach ([1, 2, 3] as $stage) {
             $stages[$stage] = $stages[$stage] && ! $unregistered;
         }
+        // Nobody in the padrón and no notice answered either: there was nothing to review, so «cada aviso revisado» is not done.
+        $noticesAnswered = array_any($rows, fn (ComplianceRow $row): bool => $row->numeral === '5.11' && $row->state === RowState::Done);
+        $stages[4] = $stages[4] && ! ($nobody && ! $noticesAnswered);
+
         $left = array_search(false, $stages, true);
         $status = match (true) {
             $left === false => 'todo al día',
