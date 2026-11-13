@@ -8,9 +8,11 @@ import type { LeavePeriod } from '@/types';
 export default function PortalBalance({
     periods,
     advanced,
+    waiting,
 }: {
     periods: LeavePeriod[];
     advanced: number;
+    waiting: number;
 }) {
     const available = periods.reduce(
         (days, period) => days + period.available,
@@ -42,6 +44,8 @@ export default function PortalBalance({
                             )}
                         </strong>
                         . Se usan primero los del periodo más antiguo.
+                        {waiting > 0 &&
+                            ` ${countOf(waiting, 'día', 'días')} en espera de respuesta: todavía no se descuentan.`}
                     </p>
                     <ul className="divide-y card">
                         {periods.map((period) => (
