@@ -622,7 +622,9 @@ it('keeps the name, RFC, status and menu of a row in view on a phone, without sc
         ->assertSee('GEJ0101011A1')
         ->assertSee('Sin iniciar')
         ->assertPresent('[aria-label="Acciones de Grupo Ejemplo"]')
-        ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true);
+        ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
+        // The table does not scroll inside its frame either: the menu is in reach without sliding it.
+        ->assertScript('(() => { const frame = document.querySelector(\'[data-slot="table-container"]\'); return frame.scrollWidth <= frame.clientWidth; })()', true);
 });
 
 it('warns, when replacing the owner, who loses access to the company', function (): void {

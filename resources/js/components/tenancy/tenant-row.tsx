@@ -24,7 +24,7 @@ export default function TenantRowView({
 
     return (
         <TableRow>
-            <TableCell className="min-w-60 whitespace-normal">
+            <TableCell className="whitespace-normal max-md:px-2 md:min-w-60">
                 <div className="flex items-center gap-2.5">
                     <Initials name={tenant.trade_name} kind="company" />
                     <div className="flex min-w-0 flex-col">
@@ -48,7 +48,7 @@ export default function TenantRowView({
                     </div>
                 </div>
                 {mobile && (
-                    <div className="mt-3">
+                    <div className="mt-3 [overflow-wrap:anywhere]">
                         <TenantOwnerCell tenant={tenant} />
                     </div>
                 )}
@@ -56,7 +56,7 @@ export default function TenantRowView({
             <TableCell className="hidden text-sm tabular-nums md:table-cell">
                 {tenant.rfc}
             </TableCell>
-            <TableCell className="whitespace-normal">
+            <TableCell className="whitespace-normal max-md:px-2">
                 <div className="flex flex-col items-start gap-1">
                     <Badge variant={tenantStatusVariant(tenant.status)}>
                         {tenant.status_label}
@@ -76,7 +76,7 @@ export default function TenantRowView({
             <TableCell className="hidden whitespace-normal md:table-cell">
                 {!mobile && <TenantOwnerCell tenant={tenant} />}
             </TableCell>
-            <TableCell className="w-px text-right">
+            <TableCell className="w-px text-right max-md:px-2">
                 {auth.isSuperadmin ? (
                     <TenantRowActions
                         tenant={tenant}
