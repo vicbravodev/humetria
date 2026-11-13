@@ -60,8 +60,9 @@ export default function FormIntro({
                         className="mt-0.5 size-5 shrink-0"
                     />
                     No guardamos su dirección de internet ni su navegador. La
-                    lee solo quien la empresa designó, nunca la persona de la
-                    que se queja.
+                    lee solo quien la empresa designó para atender quejas. Si su
+                    queja es contra Recursos Humanos o contra la dirección, no
+                    llega a ellos.
                 </p>
                 <IntroDetails procedure={procedure} />
             </section>

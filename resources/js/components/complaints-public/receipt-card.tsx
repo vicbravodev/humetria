@@ -1,5 +1,6 @@
 import { Check, KeyRound } from 'lucide-react';
 import CodeRow from '@/components/complaints-public/code-row';
+import ShareReceipt from '@/components/complaints-public/share-receipt';
 import { Button } from '@/components/ui/button';
 import type { Receipt } from '@/lib/complaints/receipt';
 import { show } from '@/routes/complaints/follow-up';
@@ -42,11 +43,13 @@ export default function ReceiptCard({
             <p className="flex items-start gap-3 rounded-lg bg-warning px-4 py-3 text-base text-warning-foreground">
                 <KeyRound aria-hidden className="mt-1 size-4 shrink-0" />
                 <span>
-                    Guarde la referencia y su clave ahora: esta pantalla no se
-                    vuelve a mostrar y la clave no se puede recuperar. Sin ellas
-                    no podemos responderle, porque no sabemos quién es.
+                    Guárdela ahora: no se vuelve a mostrar. Si el dispositivo no
+                    es suyo, cierre esta pantalla al terminar. Recuerde que la
+                    clave no se puede recuperar y sin ella no podemos
+                    responderle, porque no sabemos quién es.
                 </span>
             </p>
+            <ShareReceipt receipt={receipt} />
             <Button variant="outline" className="w-full" asChild>
                 <a href={show.url({ code })}>Ver cómo va</a>
             </Button>
