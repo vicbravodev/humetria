@@ -126,3 +126,22 @@ it('stays open when the company is read-only: the owner still reads their plan',
 
     $this->get(route('tenant.plan', $tenant))->assertOk();
 });
+
+it('shows a union only what applies to it: its people, with no work centers and no tools of the compliance modules', function (): void {
+    $tenant = Tenant::factory()->union()->create(['slug' => 'sindicato']);
+    $this->actingAs(memberOf($tenant, TenantRole::Owner));
+    Subscription::factory()->create(['tenant_id' => $tenant->id, 'plan' => Plan::Cumplimiento, 'seats' => 50, 'centers' => 2, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01']);
+    resolve(CompanyLimits::class)->sync($tenant->id, ['seats' => 50, 'centers' => 2]);
+
+    $this->get(route('tenant.plan', $tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('union', true)
+        ->where('usage.centers', null)
+        ->where('usage.people.limit', 50)
+        ->where('tools', []));
+});
+
+it('tells a company it is not a union', function (): void {
+    $tenant = planned();
+
+    $this->get(route('tenant.plan', $tenant))->assertInertia(fn (Assert $page) => $page->where('union', false));
+});

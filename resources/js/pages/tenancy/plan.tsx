@@ -10,11 +10,13 @@ import type { CompanyPlan, PlanTool, PlanUse } from '@/types';
 /** «Plan y uso» (the owner's): which plan the company has, what it uses of its limits and which tools it has. */
 export default function Plan({
     plan,
+    union,
     usage,
     tools,
 }: {
     plan: CompanyPlan;
-    usage: { centers: PlanUse; people: PlanUse };
+    union: boolean;
+    usage: { centers: PlanUse | null; people: PlanUse };
     tools: PlanTool[];
 }) {
     return (
@@ -42,7 +44,7 @@ export default function Plan({
                     </EmptyState>
                 )}
                 <PlanUsage centers={usage.centers} people={usage.people} />
-                <PlanTools tools={tools} />
+                {!union && <PlanTools tools={tools} />}
                 {plan !== null && (
                     <p className="text-sm text-muted-foreground">
                         Para ampliar tu plan o cambiar de herramientas,{' '}
