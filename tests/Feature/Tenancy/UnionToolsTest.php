@@ -25,6 +25,7 @@ const UNION_ALLOWED_ROUTES = [
     'tenant.employees.*',
     'tenant.areas.*',
     'tenant.members.*',
+    'tenant.plan',
     'tenant.job-grades.*',
     'tenant.compensation.*',
 ];

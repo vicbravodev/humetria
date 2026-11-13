@@ -1,9 +1,9 @@
-import { Factory, House, UserCog, Users } from 'lucide-react';
+import { Factory, House, Layers, UserCog, Users } from 'lucide-react';
 import { dashboard } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
-import { dashboard as tenantDashboard } from '@/routes/tenant';
+import { dashboard as tenantDashboard, plan } from '@/routes/tenant';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
 import { index as workCenters } from '@/routes/tenant/work-centers';
@@ -40,7 +40,10 @@ const companyItems = (tenant: NavTenant): NavItem[] => [
           ]
         : []),
     ...(tenant.can.manage_members
-        ? [{ title: 'Usuarios', href: members(tenant.slug), icon: UserCog }]
+        ? [
+              { title: 'Usuarios', href: members(tenant.slug), icon: UserCog },
+              { title: 'Plan y uso', href: plan(tenant.slug), icon: Layers },
+          ]
         : []),
 ];
 

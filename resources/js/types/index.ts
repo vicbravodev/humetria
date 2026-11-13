@@ -21,6 +21,7 @@ export type * from './disclosure-writing';
 export type * from './disclosure-public';
 export type * from './navigation';
 export type * from './organization';
+export type * from './plan';
 export type * from './platform-users';
 export type * from './tenancy';
 export type * from './nom035-dossier';
