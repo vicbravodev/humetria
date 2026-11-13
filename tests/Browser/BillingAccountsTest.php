@@ -216,7 +216,7 @@ it('names the tools a plan takes away before it is assigned', function (): void 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
         ->click('Asignar plan')
         ->click('[name="profile"][value="channel_compliance"]')
-        ->assertSee('Registro de jornada, Vacaciones, Organigramas')
+        ->assertSee('Asistencia, Vacaciones, Organigrama')
         ->assertSee('Asignar y quitar 3 herramientas');
 });
 

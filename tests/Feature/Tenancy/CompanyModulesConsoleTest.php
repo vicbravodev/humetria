@@ -61,6 +61,23 @@ it('shows the staff the company with each module, whether it has it and where it
     }
 });
 
+it('names every tool in the console as the menu does', function (): void {
+    $tenant = consolePlanned(['nom035']);
+
+    $this->actingAs(superadmin())->get(route('companies.show', $tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('modules', fn ($modules): bool => collect($modules)->pluck('label', 'key')->all() === [
+            'attendance' => 'Asistencia',
+            'vacations' => 'Vacaciones',
+            'org_chart' => 'Organigrama',
+            'nom035' => 'NOM-035',
+            'nom037' => 'NOM-037',
+            'seating' => 'Ley Silla',
+            'complaints' => 'Quejas',
+            'pulse' => 'Pulso',
+            'climate' => 'Clima',
+        ]));
+});
+
 it('grants a module with a reason and an end, and logs and audits it', function (): void {
     Log::spy();
     $this->travelTo('2027-01-10 12:00:00');

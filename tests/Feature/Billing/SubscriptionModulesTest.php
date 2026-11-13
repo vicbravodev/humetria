@@ -103,7 +103,7 @@ it('previews the tools a plan takes away and the day, before it is saved', funct
 
     $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'cumplimiento', 'starts_on' => '2026-12-01']))
         ->assertOk()
-        ->assertJsonPath('modules.removed', ['Registro de jornada', 'Vacaciones', 'Organigramas'])
+        ->assertJsonPath('modules.removed', ['Asistencia', 'Vacaciones', 'Organigrama'])
         ->assertJsonPath('modules.added', [])
         ->assertJsonPath('modules.removedOn', '10 dic 2026');
 
@@ -118,7 +118,7 @@ it('previews the tools a bigger plan adds, and nothing removed', function (): vo
 
     $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'integral', 'starts_on' => '2026-12-01']))
         ->assertOk()
-        ->assertJsonPath('modules.added', ['NOM-035', 'NOM-037', 'Ley Silla', 'Buzón de quejas', 'Pulso', 'Clima laboral'])
+        ->assertJsonPath('modules.added', ['NOM-035', 'NOM-037', 'Ley Silla', 'Quejas', 'Pulso', 'Clima'])
         ->assertJsonPath('modules.removed', [])
         ->assertJsonPath('modules.removedOn', null);
 });
@@ -141,6 +141,6 @@ it('previews a reduction on the day it takes effect, not today', function (): vo
 
     $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'jornada', 'starts_on' => '2026-12-01']))
         ->assertOk()
-        ->assertJsonPath('modules.removed', ['NOM-035', 'NOM-037', 'Ley Silla', 'Buzón de quejas', 'Pulso', 'Clima laboral'])
+        ->assertJsonPath('modules.removed', ['NOM-035', 'NOM-037', 'Ley Silla', 'Quejas', 'Pulso', 'Clima'])
         ->assertJsonPath('modules.removedOn', '1 ene 2027');
 });
