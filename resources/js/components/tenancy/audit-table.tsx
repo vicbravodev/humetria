@@ -11,7 +11,7 @@ import type { AuditEntryRow } from '@/types';
 
 export default function AuditTable({ entries }: { entries: AuditEntryRow[] }) {
     return (
-        <Table>
+        <Table className="max-md:block max-md:[&_tbody]:block max-md:[&_thead]:sr-only">
             <TableCaption className="sr-only">
                 Bitácora, de lo más reciente a lo más antiguo
             </TableCaption>
