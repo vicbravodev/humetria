@@ -1,3 +1,5 @@
+import type { AttendanceZone } from '@/types';
+
 /** A point on the map of a zone, in degrees. */
 export type Point = { lat: number; lng: number };
 
@@ -86,4 +88,14 @@ export async function findPlaces(
             : [];
 
     return Array.isArray(places) ? places.filter(isPlace) : [];
+}
+
+/** The address a new zone's map opens on: the center's own; none once the zone has a center, or when there is no address to search. */
+export function initialSearch(
+    zone: AttendanceZone | null,
+    centerAddress: string | null,
+): string | null {
+    const address = centerAddress?.trim() ?? '';
+
+    return zone?.latitude === undefined && address.length >= 3 ? address : null;
 }

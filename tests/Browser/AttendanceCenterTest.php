@@ -162,6 +162,39 @@ it('lets RH find the place by its address and save the zone there', function ():
     expect(AttendanceZone::query()->sole())->work_center_id->toBe($plant->id)->latitude->toBe(20.588818);
 });
 
+it('opens the map of a new zone on the address of the center, without placing the zone there', function (): void {
+    [$url] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response([
+        ['display_name' => 'Reforma 222, Ciudad de México', 'lat' => '19.4326', 'lon' => '-99.1332'],
+    ])]);
+
+    visit($url)
+        ->click('Agregar zona')
+        ->assertVisible('[aria-label^="Mapa de la zona"]')
+        ->wait(1)
+        // The street of the center, with no circle: the zone is still RH's to place.
+        ->assertScript('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/17/"))', true)
+        ->assertScript('() => document.querySelectorAll(\'[role="dialog"] path.leaflet-interactive\').length', 0)
+        ->assertValue('latitude', '')
+        ->assertDontSee('No pudimos buscar la dirección')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('keeps the map of a new zone on all of Mexico, with no error, when the address of the center is not found or the search is down', function (int $status): void {
+    [$url] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => $status === 200 ? Http::response([]) : Http::response('', $status)]);
+
+    visit($url)
+        ->click('Agregar zona')
+        ->assertVisible('[aria-label^="Mapa de la zona"]')
+        ->wait(1)
+        ->assertScript('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/5/"))', true)
+        ->assertDontSee('No pudimos buscar la dirección')
+        ->assertDontSee('No encontramos esa dirección')
+        ->assertNoJavaScriptErrors();
+})->with(['not found' => 200, 'search down' => 503]);
+
 it('tells RH the search is down and to use the map instead', function (): void {
     [$url] = centerPanel(withZone: false);
     Http::fake(['nominatim.openstreetmap.org/*' => Http::response('', 503)]);

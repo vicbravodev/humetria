@@ -3,6 +3,7 @@ import {
     clampRadius,
     edgeOf,
     findPlaces,
+    initialSearch,
     parseCoordinate,
     radiusTo,
 } from '@/lib/attendance/zone-picker';
@@ -117,5 +118,33 @@ describe('findPlaces', () => {
         await expect(
             findPlaces('/places', 'Planta', new AbortController().signal),
         ).rejects.toThrow('Place search failed');
+    });
+});
+
+describe('initialSearch', () => {
+    const located = {
+        id: 'z',
+        name: 'Nave 1',
+        radius: 80,
+        latitude: 19.4,
+        longitude: -99.1,
+    };
+    const unlocated = { id: 'z', name: 'Nave 1', radius: 80 };
+    const address =
+        'Reforma 222, col. Juárez, C.P. 06600, Cuauhtémoc, Ciudad de México';
+
+    it('is the address of the center for a zone that has no center yet', () => {
+        expect(initialSearch(null, address)).toBe(address);
+        expect(initialSearch(unlocated, address)).toBe(address);
+    });
+
+    it('is nothing for a zone that already has a center, or when the center has no address', () => {
+        expect(initialSearch(located, address)).toBeNull();
+        expect(initialSearch(null, null)).toBeNull();
+        expect(initialSearch(null, '   ')).toBeNull();
+    });
+
+    it('is nothing for a search the server would not make (under 3 letters)', () => {
+        expect(initialSearch(null, 'ab')).toBeNull();
     });
 });

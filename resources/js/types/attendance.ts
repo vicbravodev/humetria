@@ -104,6 +104,8 @@ export type AttendanceZone = {
 
 export type AttendanceCenterProps = {
     center: { id: string; name: string; mainActivity: string };
+    /** Its address in one line, where the map of a new zone opens; null for whoever cannot add zones. */
+    centerAddress: string | null;
     /** Its active people. */
     people: number;
     zones: Paginated<AttendanceZone>;
