@@ -114,3 +114,45 @@ it('opens the newest request and shows another one when chosen from the list', f
         ->assertAttribute('li button[aria-current="true"]', 'aria-current', 'true')
         ->assertNoJavaScriptErrors();
 });
+
+it('shows the tabs with their counts and the follow-up of the request', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->create(['name' => 'Ana López', 'company' => 'Empresa Ejemplo', 'created_at' => now()]);
+    DemoRequest::factory()->create(['name' => 'Rosa Medina', 'company' => 'Otra Empresa', 'status' => App\Modules\Demos\Enums\DemoStatus::Contacted, 'note' => 'Quedó de contestar', 'created_at' => now()->subDay()]);
+
+    visitPage('demos/index', '/admin/demo-requests', $dark, $mobile)
+        ->assertSee('1 solicitud nueva por atender.')
+        ->assertSee('Contactadas')
+        ->assertSee('Seguimiento')
+        ->assertSee('Nota interna')
+        ->assertSee('Crear empresa');
+})->with($looks);
+
+it('says why a tab of requests is empty', function (bool $dark): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->create();
+
+    visitPage('demos/index', '/admin/demo-requests?status=discarded', $dark)
+        ->assertSee('No hay solicitudes en este estado');
+})->with(['light' => false, 'dark' => true]);
+
+it('offers to open the company a request became', function (): void {
+    signInAsSuperadmin();
+    $tenant = App\Modules\Tenancy\Models\Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+    DemoRequest::factory()->create(['status' => App\Modules\Demos\Enums\DemoStatus::Converted, 'tenant_id' => $tenant->id]);
+
+    visitPage('demos/index', '/admin/demo-requests')
+        ->assertSee('Ver empresa')
+        ->click('Ver empresa')
+        ->assertPathIs("/admin/companies/{$tenant->id}");
+});
+
+it('opens the new company dialog filled from the demo request', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $request = DemoRequest::factory()->create(['company' => 'Empresa Ejemplo', 'name' => 'Ana López', 'email' => 'ana@empresa.mx']);
+
+    visitPage('tenancy/index', "/admin/companies?demo={$request->id}", $dark, $mobile)
+        ->assertSee('Viene de la solicitud de Ana López')
+        ->assertValue('input[name="trade_name"]', 'Empresa Ejemplo')
+        ->assertValue('input[name="slug"]', 'empresa-ejemplo');
+})->with($looks);

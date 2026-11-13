@@ -33,7 +33,16 @@ final class StoreTenantRequest extends FormRequest
             'rfc' => TenantRules::rfc(),
             'slug' => TenantRules::slug(),
             'type' => ['nullable', 'string', Rule::enum(TenantType::class)],
+            // The demo request the company comes from, when it does: the dialog carries it from the console of demos.
+            'demo_request_id' => ['nullable', 'string', 'max:36'],
         ];
+    }
+
+    public function demoRequestId(): ?string
+    {
+        $id = $this->string('demo_request_id')->toString();
+
+        return $id === '' ? null : $id;
     }
 
     public function toData(): TenantData

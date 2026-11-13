@@ -11,8 +11,10 @@ import type { DemoRequestRow } from '@/types';
  */
 export default function DemoRequestsInbox({
     requests,
+    canManage,
 }: {
     requests: DemoRequestRow[];
+    canManage: boolean;
 }) {
     const [chosenId, setChosenId] = useState(requests[0]?.id);
     const chosen =
@@ -43,7 +45,11 @@ export default function DemoRequestsInbox({
                 ))}
             </ul>
             {chosen !== undefined && (
-                <DemoRequestDetail ref={detail} request={chosen} />
+                <DemoRequestDetail
+                    ref={detail}
+                    request={chosen}
+                    canManage={canManage}
+                />
             )}
         </div>
     );

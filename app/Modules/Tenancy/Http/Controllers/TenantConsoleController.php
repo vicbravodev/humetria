@@ -6,14 +6,17 @@ namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Contracts\AttendanceUsage;
+use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
+use App\Modules\Tenancy\Actions\CreateTenantFromDemo;
 use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Actions\ReactivateTenant;
 use App\Modules\Tenancy\Actions\RestrictTenant;
 use App\Modules\Tenancy\Actions\UpdateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Enums\TenantView;
+use App\Modules\Tenancy\Exceptions\DemoRequestUnavailable;
 use App\Modules\Tenancy\Http\Requests\ActivateTenantRequest;
 use App\Modules\Tenancy\Http\Requests\ReactivateTenantRequest;
 use App\Modules\Tenancy\Http\Requests\RestrictTenantRequest;
@@ -31,7 +34,7 @@ use Inertia\Response;
 
 final class TenantConsoleController extends Controller
 {
-    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance): Response
+    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads): Response
     {
         Gate::authorize('view-console');
 
@@ -43,6 +46,8 @@ final class TenantConsoleController extends Controller
         $usingAttendance = $attendance->among(array_values($tenants->getCollection()->map(fn (Tenant $tenant): string => $tenant->id)->all()));
 
         return Inertia::render('tenancy/index', [
+            // A company about to be created from a demo request opens the dialog already filled; one already converted, or gone, offers nothing.
+            'prefill' => $this->prefill($demoLeads, $request->string('demo')->toString()),
             'activationMinDate' => now(config()->string('app.display_timezone'))->addDay()->toDateString(),
             'filters' => ['q' => $search, 'status' => $view->value],
             'counts' => $summary['counts'],
@@ -72,9 +77,17 @@ final class TenantConsoleController extends Controller
         ]);
     }
 
-    public function store(StoreTenantRequest $request, CreateTenant $createTenant): RedirectResponse
+    public function store(StoreTenantRequest $request, CreateTenant $createTenant, CreateTenantFromDemo $createFromDemo): RedirectResponse
     {
-        $createTenant->handle($request->toData());
+        $demoRequestId = $request->demoRequestId();
+
+        try {
+            $demoRequestId === null
+                ? $createTenant->handle($request->toData())
+                : $createFromDemo->handle($request->toData(), $demoRequestId);
+        } catch (DemoRequestUnavailable $exception) {
+            return back()->withErrors(['demo_request_id' => $exception->getMessage()]);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa dada de alta.']);
 
@@ -121,6 +134,18 @@ final class TenantConsoleController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa reactivada.']);
 
         return redirect()->route('companies.index');
+    }
+
+    /**
+     * @return array{demo_request_id: string, company: string, contact: string, email: string}|null
+     */
+    private function prefill(DemoLeads $demoLeads, string $demoRequestId): ?array
+    {
+        $lead = $demoRequestId === '' ? null : $demoLeads->find($demoRequestId);
+
+        return $lead === null || $lead->tenantId !== null
+            ? null
+            : ['demo_request_id' => $lead->id, 'company' => $lead->company, 'contact' => $lead->contactName, 'email' => $lead->email];
     }
 
     private function statusDate(Tenant $tenant, TenantStatus $status): ?string

@@ -252,3 +252,62 @@ it('writes the same slug as Laravel for the same name', function (string $name, 
     ['  --Hola   Mundo--  ', 'hola-mundo'],
     ['', ''],
 ]);
+
+it('opens the console with the company prefilled from the demo request it comes from', function (): void {
+    $request = App\Modules\Demos\Models\DemoRequest::factory()->create(['company' => 'Empresa Ejemplo', 'name' => 'Ana López', 'email' => 'ana@empresa.mx']);
+
+    $this->actingAs(superadmin())->get(route('companies.index', ['demo' => $request->id]))
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page
+            ->where('prefill', ['demo_request_id' => $request->id, 'company' => 'Empresa Ejemplo', 'contact' => 'Ana López', 'email' => 'ana@empresa.mx']));
+});
+
+it('prefills nothing for a request that does not exist or already became a company', function (): void {
+    $converted = App\Modules\Demos\Models\DemoRequest::factory()->create(['status' => App\Modules\Demos\Enums\DemoStatus::Converted, 'tenant_id' => Tenant::factory()->create()->id]);
+
+    $this->actingAs(superadmin())->get(route('companies.index', ['demo' => 'no-es-uuid']))
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->where('prefill', null));
+    $this->get(route('companies.index', ['demo' => $converted->id]))
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->where('prefill', null));
+    $this->get(route('companies.index'))
+        ->assertInertia(fn (Inertia\Testing\AssertableInertia $page) => $page->where('prefill', null));
+});
+
+it('leaves the demo request converted and linked to the company it created', function (): void {
+    $request = App\Modules\Demos\Models\DemoRequest::factory()->create(['status' => App\Modules\Demos\Enums\DemoStatus::Contacted]);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.store'), newCompanyInput(['demo_request_id' => $request->id]))
+        ->assertRedirect(route('companies.index'))
+        ->assertSessionHasNoErrors();
+
+    $tenant = Tenant::query()->sole();
+    expect($request->fresh())
+        ->status->toBe(App\Modules\Demos\Enums\DemoStatus::Converted)
+        ->tenant_id->toBe($tenant->id);
+});
+
+it('does not create a second company from a request that already became one, and says which', function (): void {
+    $first = Tenant::factory()->create(['trade_name' => 'Primera S.A.']);
+    $request = App\Modules\Demos\Models\DemoRequest::factory()->create(['status' => App\Modules\Demos\Enums\DemoStatus::Converted, 'tenant_id' => $first->id]);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.store'), newCompanyInput(['demo_request_id' => $request->id]))
+        ->assertSessionHasErrors(['demo_request_id' => 'Esta solicitud ya se convirtió en Primera S.A.']);
+
+    expect(Tenant::query()->count())->toBe(1)
+        ->and($request->fresh()->tenant_id)->toBe($first->id);
+});
+
+it('does not create a company for a request that no longer exists', function (): void {
+    $this->actingAs(superadmin())
+        ->post(route('companies.store'), newCompanyInput(['demo_request_id' => (string) Str::uuid()]))
+        ->assertSessionHasErrors('demo_request_id');
+
+    expect(Tenant::query()->count())->toBe(0);
+});
+
+it('still creates a company with no demo request', function (): void {
+    $this->actingAs(superadmin())->post(route('companies.store'), newCompanyInput())->assertSessionHasNoErrors();
+
+    expect(Tenant::query()->count())->toBe(1);
+});

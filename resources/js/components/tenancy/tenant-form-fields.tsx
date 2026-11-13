@@ -2,7 +2,8 @@ import { useState } from 'react';
 import TenantField from '@/components/tenancy/tenant-field';
 import TenantTypeChoice from '@/components/tenancy/tenant-type-choice';
 import { companyUrl, slugify } from '@/lib/slug';
-import type { TenantRow } from '@/types';
+import { tenantDefaults } from '@/lib/tenant-form';
+import type { TenantPrefill, TenantRow } from '@/types';
 
 /**
  * The fields of a company (and, when creating, its type, which never changes after). When creating, the address follows the trade name until the person types in it;
@@ -11,11 +12,15 @@ import type { TenantRow } from '@/types';
 export default function TenantFormFields({
     errors,
     tenant,
+    prefill,
 }: {
     errors: Partial<Record<string, string>>;
     tenant?: TenantRow;
+    /** A demo request's company: its name fills both names, and the address follows it. */
+    prefill?: TenantPrefill | null | undefined;
 }) {
-    const [slug, setSlug] = useState(tenant?.slug ?? '');
+    const defaults = tenantDefaults(tenant, prefill);
+    const [slug, setSlug] = useState(defaults.slug);
     const [slugTouched, setSlugTouched] = useState(tenant !== undefined);
 
     return (
@@ -28,7 +33,7 @@ export default function TenantFormFields({
                 label="Razón social"
                 required
                 maxLength={200}
-                defaultValue={tenant?.legal_name}
+                defaultValue={defaults.legalName}
                 error={errors['legal_name']}
             />
             <TenantField
@@ -36,7 +41,7 @@ export default function TenantFormFields({
                 label="Nombre comercial"
                 required
                 maxLength={120}
-                defaultValue={tenant?.trade_name}
+                defaultValue={defaults.tradeName}
                 error={errors['trade_name']}
                 onChange={(event) => {
                     if (!slugTouched) {
