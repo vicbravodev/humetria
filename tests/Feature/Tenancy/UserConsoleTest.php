@@ -188,6 +188,27 @@ it('gives and takes away the support role, each recorded', function (): void {
         ->and(AuditEntry::query()->where('event', 'user.support_revoked')->sole()->subject_id)->toBe((string) $target->id);
 });
 
+it('asks for explicit confirmation before giving support to someone who belongs to client companies', function (): void {
+    $this->actingAs(superadmin());
+    $owner = memberOf(Tenant::factory()->create(), TenantRole::Owner);
+
+    $this->post(route('platform-users.support.store', $owner))->assertSessionHasErrors('user');
+    expect($owner->fresh()->isSupport())->toBeFalse()
+        ->and(AuditEntry::query()->where('event', 'user.support_granted')->count())->toBe(0);
+
+    $this->post(route('platform-users.support.store', $owner), ['confirmed_client_member' => '1'])->assertSessionHasNoErrors();
+    expect($owner->fresh()->isSupport())->toBeTrue();
+});
+
+it('needs no extra confirmation for someone who belongs to no company', function (): void {
+    $this->actingAs(superadmin());
+    $target = User::factory()->create();
+
+    $this->post(route('platform-users.support.store', $target))->assertSessionHasNoErrors();
+
+    expect($target->fresh()->isSupport())->toBeTrue();
+});
+
 it('records a support role once, however many times it is given', function (): void {
     $this->actingAs(superadmin());
     $target = User::factory()->create();
