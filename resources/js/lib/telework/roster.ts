@@ -50,7 +50,7 @@ export function rosterHint(
     }
 
     return canJoin
-        ? 'Tiene un lugar validado y vigente: ya puedes pasarla al padrón.'
+        ? 'Tiene un lugar validado y vigente: ya puedes pasar a esta persona al padrón.'
         : 'Necesita al menos un lugar validado y vigente.';
 }
 

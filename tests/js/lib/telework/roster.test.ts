@@ -53,7 +53,7 @@ describe('rosterHint', () => {
 
     it('tells an aspirant whether a workplace in force lets them join', () => {
         expect(rosterHint('aspirant', true, undefined)).toContain(
-            'ya puedes pasarla',
+            'ya puedes pasar a esta persona',
         );
         expect(rosterHint('aspirant', false, undefined)).toContain(
             'al menos un lugar validado y vigente',
