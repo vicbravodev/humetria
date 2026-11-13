@@ -12,12 +12,14 @@ use App\Modules\Tenancy\Exceptions\InvalidModuleChange;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\ModuleStates;
+use App\Modules\Tenancy\Support\OwnerNotices;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final readonly class RevokeModule
 {
-    public function __construct(private RecordAudit $recordAudit, private ModuleStates $states) {}
+    public function __construct(private RecordAudit $recordAudit, private ModuleStates $states, private OwnerNotices $notices) {}
 
     /**
      * Takes a module away from the company by hand, with the reason: a grant is ended, and if its plan (or what it had before one)
@@ -55,5 +57,6 @@ final readonly class RevokeModule
         });
 
         $this->states->forget($tenant->id);
+        $this->notices->toolsChanged($tenant, [], [$module], CarbonImmutable::now());
     }
 }

@@ -6,12 +6,13 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Actions\RecordAudit;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\OwnerNotices;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final readonly class ReactivateTenant
 {
-    public function __construct(private RecordAudit $recordAudit) {}
+    public function __construct(private RecordAudit $recordAudit, private OwnerNotices $notices) {}
 
     /**
      * Lifts the restriction, for a reason. The trial and the term are left as they were, so the company comes back to
@@ -19,7 +20,7 @@ final readonly class ReactivateTenant
      */
     public function handle(Tenant $tenant, string $reason): Tenant
     {
-        return DB::transaction(function () use ($tenant, $reason): Tenant {
+        $tenant = DB::transaction(function () use ($tenant, $reason): Tenant {
             $previous = $tenant->restriction?->value;
 
             $tenant->update(['restriction' => null, 'restriction_reason' => null, 'restricted_at' => null]);
@@ -29,5 +30,9 @@ final readonly class ReactivateTenant
 
             return $tenant;
         });
+
+        $this->notices->reactivated($tenant);
+
+        return $tenant;
     }
 }

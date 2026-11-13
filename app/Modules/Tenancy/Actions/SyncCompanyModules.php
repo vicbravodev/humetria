@@ -7,8 +7,10 @@ namespace App\Modules\Tenancy\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Enums\ModuleSource;
+use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\ModuleStates;
+use App\Modules\Tenancy\Support\OwnerNotices;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +18,7 @@ use InvalidArgumentException;
 
 final readonly class SyncCompanyModules
 {
-    public function __construct(private RecordAudit $recordAudit, private ModuleStates $states) {}
+    public function __construct(private RecordAudit $recordAudit, private ModuleStates $states, private OwnerNotices $notices) {}
 
     /**
      * Gives the company the modules of its plan. What the plan adds is on at once; what it takes away stays on until the day the
@@ -31,7 +33,7 @@ final readonly class SyncCompanyModules
         $modules = $this->modules($keys);
         $end = CarbonImmutable::parse($effectiveOn->toDateString(), config()->string('app.display_timezone'))->startOfDay()->utc();
 
-        DB::transaction(function () use ($tenantId, $modules, $end): void {
+        $changes = DB::transaction(function () use ($tenantId, $modules, $end): array {
             $rows = TenantModule::query()->where('tenant_id', $tenantId)->whereIn('source', [ModuleSource::Plan, ModuleSource::Legacy])->lockForUpdate()->get();
             $basis = $this->basis($rows->all(), $this->states->hasPlan($tenantId));
             $kept = array_map(fn (Module $module): string => $module->value, $modules);
@@ -51,9 +53,16 @@ final readonly class SyncCompanyModules
             $changes = ['tenant_id' => $tenantId, 'enabled' => $kept, 'disabled' => array_map(fn (Module $module): string => $module->value, $lost)];
             Log::info('tenant.modules_synced', $changes);
             $this->recordAudit->handle('tenant.modules_synced', null, $changes);
+
+            $added = array_values(array_filter($modules, fn (Module $module): bool => ! in_array($module->value, $basis, true)));
+
+            return ['added' => $added, 'lost' => $lost];
         });
 
         $this->states->forget($tenantId);
+
+        // One notice for the whole change, whatever number of tools it moves.
+        $this->notices->toolsChanged(Tenant::query()->findOrFail($tenantId), $changes['added'], $changes['lost'], $end);
     }
 
     /**
