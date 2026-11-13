@@ -50,6 +50,9 @@ interface Members
      */
     public function screeningViewers(): array;
 
+    /** How many invitations of the current company are still open: not accepted, not cancelled and not expired. */
+    public function pendingInvitations(): int;
+
     /** A person of the current company by user id; null when they belong to another company or none. */
     public function find(int $userId): ?MemberSummary;
 }

@@ -60,6 +60,7 @@ export default function CreateWorkCenterDialog({
                         </button>
                     ) : (
                         <Button
+                            data-tour="add-work-center"
                             disabled={full}
                             title={full ? FULL_REASON : undefined}
                         >

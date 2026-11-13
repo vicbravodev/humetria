@@ -53,6 +53,7 @@ export default function AttendanceSetup({ setup }: AttendanceSetupProps) {
                     ]}
                 />
                 <section
+                    data-tour="attendance-setup"
                     aria-labelledby="avance"
                     className="flex flex-col gap-3"
                 >

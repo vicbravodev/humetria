@@ -36,6 +36,7 @@ export default function CreateEmployeeSheet({
             trigger={
                 <SheetTrigger asChild>
                     <Button
+                        data-tour="add-employee"
                         disabled={full}
                         title={
                             full

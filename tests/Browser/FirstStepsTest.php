@@ -1,0 +1,239 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\User;
+use App\Modules\FirstSteps\Models\FirstStepsState;
+use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantMembership;
+use Pest\Browser\Api\AwaitableWebpage;
+
+$looks = [
+    'light desktop' => [false, false],
+    'dark desktop' => [true, false],
+    'light mobile' => [false, true],
+    'dark mobile' => [true, true],
+];
+
+const FIRST_STEPS_BUTTON = '[aria-label^="Primeros pasos"]';
+
+beforeEach(function (): void {
+    config(['first_steps.enabled' => true]);
+});
+
+/** The one row of first steps the test's owner has, if any. */
+function firstStepsRow(): ?FirstStepsState
+{
+    return FirstStepsState::query()->withoutGlobalScopes()->first();
+}
+
+it('welcomes a new owner and opens the steps', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+
+    visitPage('dashboard', '/admin/acme', $dark, $mobile)
+        ->assertSee('Te acompañamos en tus primeros pasos')
+        ->click('Empezar')
+        ->assertSee('Primeros pasos')
+        ->assertSee('0 de 5 pasos')
+        ->assertSee('Guíame')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(firstStepsRow()?->welcomed_at)->not->toBeNull();
+})->with($looks);
+
+it('sits on the same line as Humi, above the tab bar and in its own transition layer', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+
+    visitPage('dashboard', '/admin/acme', $dark, $mobile)
+        ->click('Ahora no')
+        ->assertScript('() => { const steps = document.querySelector(\'[aria-label^="Primeros pasos"]\').getBoundingClientRect(); const humi = document.querySelector(\'[aria-label="Abrir a Humi"]\').getBoundingClientRect(); return Math.abs(steps.bottom - humi.bottom) < 1 && steps.right <= humi.left; }', true)
+        ->assertScript('() => { const steps = document.querySelector(\'[aria-label^="Primeros pasos"]\').getBoundingClientRect(); const bar = document.querySelector(\'nav[style*="tab-bar"], [class*="view-transition-name:tab-bar"]\'); return bar === null || bar.getBoundingClientRect().height === 0 || steps.bottom <= bar.getBoundingClientRect().top; }', true)
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[aria-label^="Primeros pasos"]\')).viewTransitionName', 'first-steps')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($looks);
+
+it('leaves only the button after «Ahora no»', function (): void {
+    signInToPanel();
+
+    $page = visitPage('dashboard', '/admin/acme')
+        ->assertSee('Te acompañamos en tus primeros pasos')
+        ->click('Ahora no')
+        ->assertDontSee('Te acompañamos en tus primeros pasos')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-label', 'Primeros pasos: 0 de 5 pasos');
+
+    expect(firstStepsRow()?->welcomed_at)->not->toBeNull();
+
+    $page->navigate('/admin/acme')
+        ->assertDontSee('Te acompañamos en tus primeros pasos')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-label', 'Primeros pasos: 0 de 5 pasos')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('hides the steps and takes them back from the user menu', function (): void {
+    signInToPanel();
+
+    visitPage('dashboard', '/admin/acme')
+        ->click('Empezar')
+        ->click('Ocultar primeros pasos')
+        ->assertSee('Puedes retomarlos desde tu menú de usuario.')
+        ->assertMissing(FIRST_STEPS_BUTTON)
+        ->click('@sidebar-menu-button')
+        ->click('Primeros pasos')
+        ->assertSee('0 de 5 pasos')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(firstStepsRow()?->hidden_at)->toBeNull();
+});
+
+it('does not open the welcome to a superadmin working as the owner', function (): void {
+    $this->actingAs(superadmin());
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+
+    visitPage('dashboard', '/admin/companies', false, false, fn (AwaitableWebpage $page) => $page
+        ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertPathIs('/admin/acme')
+        ->assertSee('Estás viendo Humetría como Ana Pérez'))
+        ->assertDontSee('Te acompañamos en tus primeros pasos')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-label', 'Primeros pasos: 0 de 5 pasos')
+        ->click(FIRST_STEPS_BUTTON)
+        ->assertSee('0 de 5 pasos')
+        ->assertDontSee('Ocultar primeros pasos')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(firstStepsRow())->toBeNull();
+});
+
+it('says it is done once, then the button is gone', function (): void {
+    $owner = User::factory()->create();
+    signInToPanel($owner);
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    finishFirstSteps($tenant);
+    FirstStepsState::factory()->welcomed()->create(['tenant_id' => $tenant->id, 'user_id' => $owner->id]);
+
+    $page = visitPage('dashboard', '/admin/acme')
+        ->assertSee('Listo: Humetria ya está trabajando para ti')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    $page->navigate('/admin/acme')
+        ->assertMissing(FIRST_STEPS_BUTTON)
+        ->assertDontSee('Listo: Humetria ya está trabajando para ti')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('shows nothing to hr', function (): void {
+    signInToPanel(User::factory()->create());
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $hr = memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr);
+    $this->actingAs($hr);
+
+    visitPage('dashboard', '/admin/acme')
+        ->assertDontSee('Te acompañamos en tus primeros pasos')
+        ->assertMissing(FIRST_STEPS_BUTTON)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+/** Loads every step of a company with only the always-there ones (no evaluation tool, Humi off), as the contract test does. */
+function finishFirstSteps(Tenant $tenant): void
+{
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['vacations'], Carbon\CarbonImmutable::now());
+    App\Modules\Assistant\Models\TenantAiSettings::factory()->create(['tenant_id' => $tenant->id, 'enabled' => false]);
+    $center = App\Modules\Tenancy\Models\WorkCenter::factory()->create(['tenant_id' => $tenant->id]);
+    App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
+    memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr);
+}
+
+it('guides the owner to load their people', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+
+    visitPage('dashboard', '/admin/acme', $dark, $mobile)
+        ->click('Empezar')
+        ->click('li:has-text("Carga a tu gente") button')
+        ->assertPathIs('/admin/acme/employees')
+        ->assertSee('Importa tu plantilla')
+        ->assertScript('document.querySelector(\'[data-tour="import-employees"]\')?.classList.contains("driver-active-element") === true', true)
+        ->keys('.driver-popover-next-btn', 'Escape')
+        ->assertDontSee('Importa tu plantilla')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with($looks);
+
+it('shows a centered bubble when the control is not on the page', function (): void {
+    signInToPanel();
+
+    // A remembered tour comes from «Guíame», which only an owner past the welcome can reach.
+    $page = visitPage('dashboard', '/admin/acme')->click('Ahora no');
+    $page->script('sessionStorage.setItem("humetria:first-steps-tour", "acme:team")');
+
+    $page->navigate('/admin/acme')
+        ->assertSee('Invita a tu equipo')
+        ->assertScript('document.querySelector(".driver-active-element")?.id === "driver-dummy-element"', true)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('points the panel card at the button instead of repeating the third step', function (): void {
+    signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['nom035'], Carbon\CarbonImmutable::now());
+    App\Modules\Tenancy\Models\WorkCenter::factory()->create(['tenant_id' => $tenant->id]);
+
+    visitPage('dashboard', '/admin/acme')
+        ->click('Ahora no')
+        ->assertSee('En tus primeros pasos')
+        ->assertSee('Es tu siguiente paso. Síguelo desde el botón Primeros pasos.')
+        ->assertDontSee('abajo a la derecha')
+        ->assertDontSee('Continuar')
+        ->click('Ver mis pasos')
+        ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-expanded', 'true')
+        ->assertSee('Lanza tu primera evaluación NOM-035')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('opens Humi with the example question written', function (): void {
+    signInToPanel();
+
+    $page = visitPage('dashboard', '/admin/acme')
+        ->click('Empezar')
+        ->click('li:has-text("Conoce a Humi") button')
+        ->assertSee('Este es Humi')
+        ->assertScript('document.querySelector(\'[data-tour="humi-launcher"]\')?.classList.contains("driver-active-element") === true', true)
+        ->assertScript('document.querySelector(".driver-popover button[data-humi-question]")?.textContent?.startsWith("¿Qué ") === true', true)
+        ->click('.driver-popover button[data-humi-question]')
+        ->assertDontSee('Este es Humi');
+
+    $page->assertScript('document.querySelector("textarea[aria-label=\'Pregúntale algo a Humi\']")?.value?.startsWith("¿Qué ") === true', true)
+        ->assertDontSee('Humi está respondiendo')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('offers «Anterior» only in a tour with more than one bubble', function (): void {
+    signInToPanel();
+    $shown = 'document.querySelector(".driver-popover-prev-btn") !== null && getComputedStyle(document.querySelector(".driver-popover-prev-btn")).display !== "none"';
+
+    visitPage('dashboard', '/admin/acme')
+        ->click('Empezar')
+        ->click('li:has-text("Conoce a Humi") button')
+        ->assertSee('Este es Humi')
+        ->assertScript($shown, false)
+        ->keys('.driver-popover-close-btn', 'Escape')
+        ->click(FIRST_STEPS_BUTTON)
+        ->click('li:has-text("Carga a tu gente") button')
+        ->assertSee('Importa tu plantilla')
+        ->assertScript($shown, true)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});

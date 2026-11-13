@@ -9,7 +9,7 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 | Pieza                             | Dónde                                                                                                                                                                                                |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Agente (SDK `laravel/ai`)         | `Agents/HumiAssistant.php` + `resources/ai/humi.system.md` (instrucciones versionadas)                                                                                                               |
-| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`                                                                                |
+| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`, `GetFirstSteps`                                                               |
 | Quién es la persona en la empresa | `Data/AssistantScope` (empresa, participante, permisos), armado en el servidor por `Support/AssistantScopeFactory`                                                                                   |
 | Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                                                                        |
 | Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                                                                            |
@@ -25,6 +25,9 @@ Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{
 (p. ej. `Engagement` al resumir comentarios) pregunta primero `available()` (Humi no apagado para la empresa y presupuesto
 del mes sin agotar), manda solo texto pasado por `redact()` y cuenta el uso con `record()` (fila de `ai_usage` sin persona
 ni conversación). Implementación: `Support/TenantAiAccess`.
+`Contracts\HumiActivity` (`hasAsked($userId)`): si la persona ya le escribió a Humi en la empresa actual (Primeros pasos lo usa
+para marcar el paso). Se lee de `ai_usage` y no de las conversaciones, porque la persona puede borrarlas; nunca expone qué
+preguntó. Implementación: `Support/TenantHumiActivity`.
 
 ## Reglas que no se rompen
 

@@ -27,7 +27,7 @@ export default function EmployeesActions({
 
     return (
         <>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild data-tour="import-employees">
                 <Link href={importPage(tenantSlug)}>
                     <Upload />
                     Cargar CSV

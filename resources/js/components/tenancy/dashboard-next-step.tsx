@@ -1,62 +1,36 @@
-import { Link, usePage } from '@inertiajs/react';
-import NextStepCard from '@/components/humetria/next-step-card';
-import { Button } from '@/components/ui/button';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { NORMS } from '@/lib/compliance-routes';
+import { usePage } from '@inertiajs/react';
+import DashboardFirstStep from '@/components/tenancy/dashboard-first-step';
+import DashboardRecommendation from '@/components/tenancy/dashboard-recommendation';
 import { nextStep, unansweredCenters } from '@/lib/dashboard';
-import { onboarding } from '@/routes/tenant/work-centers';
-import { countOf } from '@/lib/plural';
+import { repeatsEvaluationStep } from '@/lib/first-steps/dashboard';
 import type { CenterRoutes } from '@/types';
 
 /**
- * The step the panel recommends: first, for whoever sets the standards up, the two questions of the centers that have not
- * answered «¿Te aplica?» (board V3-Onboarding); then the earliest stage left of any route, and the way to it.
+ * The step the panel recommends; while the first steps still list the same evaluation as pending, it points at their
+ * button instead of repeating it.
  */
-export default function DashboardNextStep({
-    centers,
-    setsUp,
-}: {
+export default function DashboardNextStep(props: {
     centers: CenterRoutes[];
     setsUp: boolean;
 }) {
-    const tenantSlug = useTenantSlug();
-    const modules = usePage().props.tenant?.modules;
-    const step = nextStep(centers, modules);
-    const norm = NORMS.find((each) => each.key === step?.norm);
-    const unanswered = unansweredCenters(centers, modules);
-
-    if (setsUp && unanswered > 0) {
-        return (
-            <NextStepCard
-                title="Dos preguntas por centro y armamos todo"
-                meta={`${countOf(unanswered, 'centro', 'centros')} sin contestar · ≈ 1 min cada uno`}
-                action={
-                    <Button asChild>
-                        <Link href={onboarding(tenantSlug)}>Empezar</Link>
-                    </Button>
-                }
-            >
-                Con esto sabemos qué normas te tocan en cada centro y creamos
-                tus rutas.
-            </NextStepCard>
-        );
-    }
-
-    if (step === null || norm === undefined) {
-        return null;
-    }
-
-    return (
-        <NextStepCard
-            title={step.title}
-            meta={`${norm.title} · etapa ${step.stage} de 6 · ${countOf(step.centers, 'centro', 'centros')}`}
-            action={
-                <Button asChild>
-                    <Link href={norm.href(tenantSlug)}>Continuar</Link>
-                </Button>
-            }
-        >
-            {step.text}
-        </NextStepCard>
+    const { firstSteps, tenant } = usePage().props;
+    const modules = tenant?.modules;
+    const step = nextStep(props.centers, modules);
+    const questions =
+        props.setsUp && unansweredCenters(props.centers, modules) > 0;
+    const evaluation = firstSteps?.steps.find(
+        (each) => each.key === 'evaluation',
     );
+
+    if (
+        evaluation !== undefined &&
+        repeatsEvaluationStep(
+            firstSteps ?? null,
+            questions ? 'questions' : (step?.norm ?? null),
+        )
+    ) {
+        return <DashboardFirstStep evaluation={evaluation} />;
+    }
+
+    return <DashboardRecommendation {...props} />;
 }

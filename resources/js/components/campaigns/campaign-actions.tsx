@@ -25,7 +25,7 @@ export default function CampaignActions({ minGroup }: { minGroup: number }) {
                 </Link>
             </Button>
             <NewEvaluationDialog minGroup={minGroup}>
-                <Button className="max-sm:flex-1">
+                <Button className="max-sm:flex-1" data-tour="new-evaluation">
                     <Plus aria-hidden />
                     Nueva evaluación
                 </Button>

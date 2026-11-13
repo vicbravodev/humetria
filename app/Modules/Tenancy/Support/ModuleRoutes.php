@@ -41,6 +41,7 @@ final class ModuleRoutes
             'tenant.assistant.*',
             'tenant.compensation.*',
             'tenant.employees.*',
+            'tenant.first-steps.*',
             'tenant.job-grades.*',
             'tenant.members.*',
             'tenant.plan',

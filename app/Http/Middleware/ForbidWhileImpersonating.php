@@ -39,6 +39,8 @@ final class ForbidWhileImpersonating
             'billing.*',
             // The platform's own tools (audit trail, users, demos): the owner's role never reaches them.
             'audit.*', 'platform-users.*', 'overview.*',
+            // The owner's own preferences about the guided tour: whoever works as them changes none of it.
+            'tenant.first-steps.*',
         ];
     }
 

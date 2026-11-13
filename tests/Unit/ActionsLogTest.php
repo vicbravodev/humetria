@@ -44,6 +44,7 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Disclosure/Actions/OpenWorkersPage.php' => 'reads the link of the public page; by design nothing is recorded of who opens it (criterio C-55)',
     'app/Modules/Complaints/Actions/OpenFollowUp.php' => 'reads the case a reference and a key open; the actions that change it log (without the case, by design)',
     'app/Modules/Complaints/Actions/OpenChannel.php' => 'reads the channel by its code; each action on a complaint logs what changes',
+    'app/Modules/FirstSteps/Actions/BuildFirstSteps.php' => 'reads the steps of a company; changes nothing',
     // Steps of a logged action: the action that calls them writes the line, with the counts.
     'app/Modules/Complaints/Actions/AssignComplaint.php' => 'at receipt the system assigns with no line (a line with the case would tie it to the hour it came); RouteUnassignedComplaints logs the assignments made by a person',
     'app/Modules/Campaigns/Actions/CloseExpiredCampaigns.php' => 'each close is logged by CloseCampaign',

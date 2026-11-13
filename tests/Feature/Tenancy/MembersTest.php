@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\InviteMember;
+use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Requests\InviteMemberRequest;
@@ -12,13 +13,14 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Notifications\InvitationEmail;
+use App\Modules\Tenancy\Support\CompanyMembers;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(MemberController::class, InviteMember::class, InviteMemberRequest::class);
+mutates(MemberController::class, InviteMember::class, InviteMemberRequest::class, CompanyMembers::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-10-29 18:00 UTC');
@@ -201,4 +203,15 @@ it('names each company role by what it does (rediseño v2, decisión A6)', funct
     expect(array_map(fn (TenantRole $role): string => $role->label(), TenantRole::cases()))->toBe([
         'Administra todo', 'Ayuda con las rutas', 'Solo consulta', 'Comisión de seguridad e higiene', 'Atención de quejas',
     ]);
+});
+
+it('counts the open invitations of the company, not the accepted, cancelled, expired or another company\'s', function (): void {
+    TenantInvitation::factory()->for($this->tenant)->role(TenantRole::Viewer)->create();
+    TenantInvitation::factory()->for($this->tenant)->role(TenantRole::Viewer)->accepted()->create();
+    TenantInvitation::factory()->for($this->tenant)->role(TenantRole::Viewer)->cancelled()->create();
+    TenantInvitation::factory()->for($this->tenant)->role(TenantRole::Viewer)->create(['expires_at' => now()]);
+    TenantInvitation::factory()->create();
+    workIn($this->tenant);
+
+    expect(resolve(Members::class)->pendingInvitations())->toBe(1);
 });

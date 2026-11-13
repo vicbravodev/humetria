@@ -36,7 +36,7 @@ export default function RouteHumiCard({
                 variant="outline"
                 size="sm"
                 className="self-start"
-                onClick={openHumi}
+                onClick={() => openHumi()}
             >
                 Pregúntale a Humi
             </Button>

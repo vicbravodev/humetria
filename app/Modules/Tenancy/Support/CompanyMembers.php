@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Data\MemberSummary;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantInvitation;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -110,6 +111,17 @@ final class CompanyMembers implements Members
         }
 
         return null;
+    }
+
+    public function pendingInvitations(): int
+    {
+        // TenantInvitation has no tenant scope (it is read across companies): the company is filtered here.
+        return TenantInvitation::query()
+            ->where('tenant_id', $this->current->id())
+            ->whereNull('accepted_at')
+            ->whereNull('cancelled_at')
+            ->where('expires_at', '>', now())
+            ->count();
     }
 
     private function tenant(): Tenant
