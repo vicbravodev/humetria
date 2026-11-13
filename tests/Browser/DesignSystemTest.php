@@ -187,6 +187,8 @@ it('jumps to a page or switches the theme from the ⌘K palette', function (): v
     $panel = signInToPanel(superadmin());
 
     visitPage('dashboard', $panel, reach: fn (AwaitableWebpage $page) => $page
+        // The top bar exists only once React mounted the app: the shortcut is listening by then.
+        ->assertVisible('@command-palette')
         ->assertScript(OPEN_PALETTE)
         ->assertVisible('#command-search'))
         ->type('#command-search', 'empr')
