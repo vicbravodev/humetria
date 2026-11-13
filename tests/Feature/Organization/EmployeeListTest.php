@@ -49,7 +49,7 @@ it('lists the active employees by name, with their center and area', function ()
             ->where('employees.data.0', [
                 'id' => $ana->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5512345678',
                 'gender' => 'female', 'gender_label' => 'Mujer', 'work_center_id' => $this->office->id, 'work_center' => 'Oficinas',
-                'area' => 'Ventas', 'job_title' => 'Vendedora', 'employee_number' => 'A-1', 'deactivated_on' => null,
+                'area' => 'Ventas', 'job_title' => 'Vendedora', 'employee_number' => 'A-1', 'deactivated_on' => null, 'deactivation_reason' => null,
                 'job_category' => '', 'job_level' => '', 'hired_on' => null, 'staff_group' => '', 'state' => '',
                 'seniority_on' => null, 'manager' => null, 'direct_reports' => 0,
             ])
@@ -191,3 +191,12 @@ it('finds a person by their words in any order, and by their mobile with or with
     'wildcards are literal in a word' => ['ju_n', []],
     'a very long search does not break' => [str_repeat('juan ', 40), ['Juan Gómez', 'Juan Pérez']],
 ]);
+
+it('says in the list of people who left why, in words', function (): void {
+    Employee::factory()->deactivated()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Luna', 'deactivation_reason' => 'resignation']);
+    Employee::factory()->deactivated()->create(['tenant_id' => $this->tenant->id, 'name' => 'Carla Paz', 'deactivation_reason' => null]);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.employees.index', [$this->tenant, 'status' => 'inactive']))
+        ->assertInertia(fn (Assert $page) => $page->where('employees.data', fn ($rows): bool => collect($rows)->pluck('deactivation_reason', 'name')->all() === ['Beto Luna' => 'Renuncia', 'Carla Paz' => null]));
+});

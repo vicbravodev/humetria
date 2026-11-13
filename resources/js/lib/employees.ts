@@ -88,6 +88,7 @@ export function employeeDetails(employee: {
     job_title: string;
     employee_number: string | null;
     deactivated_on: string | null;
+    deactivation_reason?: string | null;
 }): string {
     return [
         employee.job_title,
@@ -97,6 +98,7 @@ export function employeeDetails(employee: {
         employee.deactivated_on === null
             ? null
             : `Baja el ${employee.deactivated_on}`,
+        employee.deactivation_reason,
     ]
         .filter((part) => part !== null && part !== '')
         .join(' · ');

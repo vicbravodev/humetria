@@ -193,7 +193,6 @@ export type LeaveBalanceRow = {
     policy: string;
     /** What they can still ask for; below zero when they were given days in advance. */
     available: number;
-    /** Working days of vacations they asked for that nobody has answered: they are not off `available` yet. */
     waiting: number;
     /** The days they were given in advance. */
     advanced: number;
@@ -214,7 +213,6 @@ export type LeaveRecordPeriod = {
     available: number;
     /** Past its eighteen months with days still in it: marked, never taken off. */
     mayPrescribe: boolean;
-    /** The window to enjoy it closed (the 6 months after the anniversary) and it still has days. */
     overdue: boolean;
 };
 

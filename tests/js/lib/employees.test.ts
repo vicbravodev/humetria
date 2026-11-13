@@ -90,6 +90,16 @@ describe('employeeDetails', () => {
         ).toBe('Operadora · A-001 · Baja el 3 nov 2026');
     });
 
+    it('says why a deactivated person left', () => {
+        expect(
+            employeeDetails({
+                ...person,
+                deactivated_on: '3 nov 2026',
+                deactivation_reason: 'Renuncia',
+            }),
+        ).toBe('Operadora · A-001 · Baja el 3 nov 2026 · Renuncia');
+    });
+
     it('leaves out what is missing', () => {
         expect(
             employeeDetails({
