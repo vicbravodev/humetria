@@ -160,6 +160,8 @@ it('guides the owner to load their people', function (bool $dark, bool $mobile):
     visitPage('dashboard', '/admin/acme', $dark, $mobile)
         ->click('Empezar')
         ->click('li:has-text("Carga a tu gente") button')
+        // The step navigates with Inertia: wait for the page and its tour before reading the path.
+        ->waitForText('Importa tu plantilla')
         ->assertPathIs('/admin/acme/employees')
         ->assertSee('Importa tu plantilla')
         ->assertScript('document.querySelector(\'[data-tour="import-employees"]\')?.classList.contains("driver-active-element") === true', true)

@@ -326,7 +326,22 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
         // axe reads colors as painted: let fade-ins finish so it judges the settled page, not a frame mid-transition
         // (endless ones, like the OTP caret blink, never finish and are left alone). An animation the page cancels while we wait (the
         // kiosk restarts its countdown) rejects `finished` with an AbortError: that one is over too, so it is not a failure.
-        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => undefined))).then(() => true)');
+        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => undefined))).then(() => true)')
+        // An enter animation can start after that check (an IntersectionObserver fires a frame later, or a slow runner
+        // reaches it late), so the page counts as settled only after ten frames in a row with nothing finite running. A page that
+        // restarts a finite animation on purpose (the kiosk countdown) never goes still, so the wait gives up after 800 ms.
+        ->assertScript(<<<'JS'
+            () => new Promise((resolve) => {
+                let still = 0;
+                const start = performance.now();
+                const frame = () => {
+                    const moving = document.getAnimations().some((animation) => animation.playState === 'running' && animation.effect?.getTiming().iterations !== Infinity);
+                    still = moving ? 0 : still + 1;
+                    still >= 10 || performance.now() - start > 800 ? resolve(true) : requestAnimationFrame(frame);
+                };
+                requestAnimationFrame(frame);
+            })
+            JS);
 
     if ($mobile) {
         $page->assertScript(smallTouchTargets(), '');
