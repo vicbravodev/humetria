@@ -193,6 +193,8 @@ export type LeaveBalanceRow = {
     policy: string;
     /** What they can still ask for; below zero when they were given days in advance. */
     available: number;
+    /** Working days of vacations they asked for that nobody has answered: they are not off `available` yet. */
+    waiting: number;
     /** The days they were given in advance. */
     advanced: number;
     /** The days given in the periods that still hold days: the whole the bar measures; null when not known. */

@@ -19,7 +19,7 @@ use App\Modules\Tenancy\Models\Tenant;
 mutates(EmployeeRecordController::class, RecordPages::class);
 
 /** The queries of the record of a person, whatever the number of entries and requests (the session and the panel frame included). */
-const LEAVE_RECORD_QUERIES = 32;
+const LEAVE_RECORD_QUERIES = 33;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));
@@ -58,7 +58,7 @@ it('shows who the person is, their policy, start date and what they can ask for'
     $props = leaveRecordProps();
 
     expect($props['person'])->toMatchArray(['id' => $this->ana->id, 'name' => 'Ana Solís', 'active' => true, 'policy' => 'Ley', 'startedOn' => '2024-03-15'])
-        ->and($props['balance'])->toBe(['available' => 11, 'advanced' => 2])
+        ->and($props['balance'])->toBe(['available' => 11, 'advanced' => 2, 'waiting' => 0])
         ->and($props['canManage'])->toBeTrue();
 });
 
@@ -196,3 +196,9 @@ it('asks the same queries whatever the number of entries and requests', function
     $this->expectsDatabaseQueryCount(LEAVE_RECORD_QUERIES);
     $this->get(route('tenant.vacations.employees.show', [$this->tenant, $this->ana]))->assertOk();
 })->with(['a few' => [5], 'many more' => [25]]);
+
+it('says in the record how many days wait for an answer, without taking them off what is available', function (): void {
+    LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'leave_type_id' => null, 'status' => 'requested', 'working_days' => 4]);
+
+    expect(leaveRecordProps()['balance'])->toMatchArray(['available' => 16, 'waiting' => 4]);
+});

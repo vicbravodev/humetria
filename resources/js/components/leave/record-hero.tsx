@@ -14,12 +14,15 @@ import type { LeaveRecordPeriod, LeaveRecordStatement } from '@/types';
 export default function RecordHero({
     period,
     advanced,
+    waiting,
     open,
     canManage,
     personId,
 }: {
     period: LeaveRecordPeriod;
     advanced: number;
+    /** Working days of vacations asked for and not answered yet: they are not off the balance. */
+    waiting: number;
     open: LeaveRecordStatement | null;
     canManage: boolean;
     personId: string;
@@ -44,6 +47,7 @@ export default function RecordHero({
                     />
                     <p className="text-meta text-muted-foreground">
                         {period.available} de {period.granted} días disponibles
+                        {waiting > 0 && ` · ${waiting} en espera`}
                     </p>
                 </div>
                 <ol className="flex flex-1 flex-col gap-4 border-l pl-5 md:ml-4">

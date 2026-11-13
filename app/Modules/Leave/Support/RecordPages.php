@@ -37,7 +37,7 @@ final readonly class RecordPages
     public function __construct(private Roster $roster, private Seniority $seniority, private PolicyResolver $policies) {}
 
     /**
-     * @return array{person: array{id: string, name: string, active: bool, jobTitle: string, area: string, policy: string, startedOn: string|null}, canManage: bool, balance: array{available: int, advanced: int}, types: list<array{id: string, name: string}>, periods: list<Period>, entries: LengthAwarePaginator<int, Entry>, requests: LengthAwarePaginator<int, Request>, statements: list<array{id: string, year: int, issuedOn: string, acknowledgedOn: string|null}>, termination: Termination|null}
+     * @return array{person: array{id: string, name: string, active: bool, jobTitle: string, area: string, policy: string, startedOn: string|null}, canManage: bool, balance: array{available: int, advanced: int, waiting: int}, types: list<array{id: string, name: string}>, periods: list<Period>, entries: LengthAwarePaginator<int, Entry>, requests: LengthAwarePaginator<int, Request>, statements: list<array{id: string, year: int, issuedOn: string, acknowledgedOn: string|null}>, termination: Termination|null}
      */
     public function show(RosterEntry $person, bool $canManage): array
     {
@@ -57,7 +57,7 @@ final readonly class RecordPages
                 'policy' => $terms->name, 'startedOn' => ($this->seniority->startDatesFor([$person->id])[$person->id] ?? null)?->toDateString(),
             ],
             'canManage' => $canManage,
-            'balance' => ['available' => array_sum(array_map(fn (PeriodBalance $period): int => $period->left(), $balances)) - $advanced, 'advanced' => $advanced],
+            'balance' => ['available' => array_sum(array_map(fn (PeriodBalance $period): int => $period->left(), $balances)) - $advanced, 'advanced' => $advanced, 'waiting' => Balances::waiting([$person->id])[$person->id] ?? 0],
             'types' => $canManage ? array_values(LeaveType::query()->whereNull('archived_at')->orderBy('name')->orderBy('id')->get(['id', 'name'])->map(fn (LeaveType $type): array => ['id' => $type->id, 'name' => $type->name])->all()) : [],
             'periods' => self::periods($balances),
             'entries' => $this->entries($person->id, $years, $canManage),

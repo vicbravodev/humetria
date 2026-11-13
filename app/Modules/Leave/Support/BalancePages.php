@@ -21,7 +21,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * their next period comes, with a tab for what RH has to chase (no start date, a statement nobody confirmed, a person who
  * left with days to settle). Days only, never an amount. The tabs count the whole company, whatever is searched.
  *
- * @phpstan-type Row array{id: string, name: string, active: bool, policy: string, available: int, advanced: int, granted: int|null, nextAnniversary: string|null}
+ * @phpstan-type Row array{id: string, name: string, active: bool, policy: string, available: int, waiting: int, advanced: int, granted: int|null, nextAnniversary: string|null}
  */
 final readonly class BalancePages
 {
@@ -86,6 +86,7 @@ final readonly class BalancePages
         $terms = $this->policies->for($ids);
         $periods = Balances::of($ids);
         $advanced = Balances::advanced($ids);
+        $waiting = Balances::waiting($ids);
         $starts = $this->seniority->startDatesFor($ids);
         $today = PeriodWindow::today();
 
@@ -95,6 +96,7 @@ final readonly class BalancePages
             'active' => $person->active,
             'policy' => ($terms[$person->id] ?? null)->name ?? 'Ley',
             'available' => array_sum(array_map(fn (PeriodBalance $period): int => $period->left(), $periods[$person->id] ?? [])) + ($advanced[$person->id] ?? 0),
+            'waiting' => $waiting[$person->id] ?? 0,
             'advanced' => -($advanced[$person->id] ?? 0),
             'granted' => self::granted($periods[$person->id] ?? []),
             'nextAnniversary' => isset($starts[$person->id]) ? self::next($starts[$person->id], $today)->toDateString() : null,
