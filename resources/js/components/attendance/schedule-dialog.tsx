@@ -53,6 +53,7 @@ export default function ScheduleDialog({
 
     return (
         <FormDialog
+            wide
             open={open}
             onOpenChange={onOpenChange}
             title={

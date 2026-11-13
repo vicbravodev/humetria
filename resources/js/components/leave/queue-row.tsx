@@ -1,7 +1,7 @@
 import Initials from '@/components/humetria/initials';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { dateSpan, statusTone } from '@/lib/leave/format';
+import { shortSpan, statusTone } from '@/lib/leave/format';
 import { reasonLine } from '@/lib/leave/overview';
 import { sinceLabel } from '@/lib/leave/queue';
 import { cn } from '@/lib/utils';
@@ -60,9 +60,7 @@ export default function QueueRow({
                     </div>
                 </div>
             </TableCell>
-            <TableCell className="whitespace-normal">
-                {dateSpan(request.startsOn, request.endsOn)}
-            </TableCell>
+            <TableCell>{shortSpan(request.startsOn, request.endsOn)}</TableCell>
             <TableCell className="text-right tabular-nums md:w-16">
                 {request.workingDays}
                 <span className="md:sr-only"> días laborables</span>
