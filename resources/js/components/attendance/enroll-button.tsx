@@ -1,7 +1,10 @@
+import { Link, usePage } from '@inertiajs/react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import Notice from '@/components/humetria/notice';
 import { Button } from '@/components/ui/button';
-import { usePage } from '@inertiajs/react';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { centerState, notReadyNote } from '@/lib/attendance/center-state';
+import { center as show } from '@/routes/tenant/attendance';
 import { enroll } from '@/routes/tenant/attendance/devices';
 import type { AttendanceDevicesProps, DevicePerson } from '@/types';
 
@@ -11,7 +14,9 @@ import type { AttendanceDevicesProps, DevicePerson } from '@/types';
  */
 export default function EnrollButton({ person }: { person: DevicePerson }) {
     const tenantSlug = useTenantSlug();
-    const { linkHours } = usePage<AttendanceDevicesProps>().props;
+    const { linkHours, center } = usePage<AttendanceDevicesProps>().props;
+    const notReady =
+        center !== null && !centerState(center, center.requiresQr).ready;
 
     return (
         <ConfirmDialog
@@ -33,6 +38,25 @@ export default function EnrollButton({ person }: { person: DevicePerson }) {
             transform={() => ({ employee_id: person.id })}
             preserveScroll
             destructive={false}
-        />
+        >
+            {center !== null && notReady && (
+                <Notice
+                    action={
+                        <Button asChild variant="outline" size="sm">
+                            <Link
+                                href={show({
+                                    tenant: tenantSlug,
+                                    workCenter: center.id,
+                                })}
+                            >
+                                Configurar el centro
+                            </Link>
+                        </Button>
+                    }
+                >
+                    {notReadyNote(center.name)}
+                </Notice>
+            )}
+        </ConfirmDialog>
     );
 }
