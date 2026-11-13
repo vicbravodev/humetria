@@ -32,7 +32,7 @@ final class FeedbackPublished extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Lo que dijeron en la encuesta y lo que haremos')->greeting("Hola, {$this->name}")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject('Lo que dijeron en la encuesta y lo que haremos')->greeting("Hola, {$this->name}")
             ->line("{$this->company->tradeName} compartió lo que escuchó en la encuesta de clima y lo que hará al respecto: qué dijeron los equipos, quién responde y para cuándo.")
             ->action('Ver lo que haremos', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');

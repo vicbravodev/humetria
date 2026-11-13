@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(ErrorPage::class);
@@ -114,4 +115,23 @@ it('leaves JSON requests and the other statuses as they were', function (): void
 
     $this->getJson('/test/abort/404')->assertNotFound()->assertJsonStructure(['message']);
     $this->get('/test/abort/400')->assertStatus(400)->assertDontSee('data-page', escape: false);
+});
+
+// E-12: whoever opens their own link (portal, page of the people, time clock) is spoken to as «usted», on a page and in a toast.
+it('speaks «usted» on the error page of every page a worker opens with a link', function (string $name): void {
+    Route::middleware('web')->get('/test/worker-gone', fn () => abort(404))->name($name);
+
+    $this->get('/test/worker-gone')
+        ->assertNotFound()
+        ->assertInertia(fn (Assert $page) => $page->component('error')->where('survey', true));
+})->with(['portal.vacations.show', 'workers.show', 'attendance.device.kiosk.show', 'portal.team.show']);
+
+it('answers a throttled send from the portal with a toast in «usted»', function (): void {
+    Route::middleware(['web', 'throttle:1,1'])->post('/test/portal-send', fn () => 'ok')->name('portal.test.send');
+    $headers = ['X-Inertia' => 'true', 'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request())];
+
+    $this->post('/test/portal-send', [], $headers)->assertOk();
+    $this->post('/test/portal-send', [], $headers)
+        ->assertRedirect()
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'error', 'message' => 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.']]);
 });

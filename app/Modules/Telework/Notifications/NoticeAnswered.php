@@ -32,7 +32,7 @@ final class NoticeAnswered extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Su empresa respondió su aviso')->greeting("Hola, {$this->name}")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject('Su empresa respondió su aviso')->greeting("Hola, {$this->name}")
             ->line("{$this->company->tradeName} leyó el aviso de accidente que envió y registró lo que se hizo. Puede verlo en su portal.")
             ->action('Ver mi aviso', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta.');

@@ -27,7 +27,7 @@ final class EnrollmentInvitation extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])
             ->subject('Vincule su teléfono para registrar su jornada')
             ->greeting("Hola, {$this->name}")
             ->line("{$this->company->tradeName} registra la jornada de forma electrónica. Abra este enlace en su teléfono: ahí leerá el acuerdo del registro y creará una llave de acceso con su huella, su rostro o su PIN. No necesita contraseña.")

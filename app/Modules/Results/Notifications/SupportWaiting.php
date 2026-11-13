@@ -33,7 +33,7 @@ final class SupportWaiting extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject("Tiene un mensaje de {$this->company->tradeName}")->greeting("Hola, {$this->name}")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject("Tiene un mensaje de {$this->company->tradeName}")->greeting("Hola, {$this->name}")
             ->line("{$this->company->tradeName} le dejó un mensaje confidencial en su página personal. Solo usted puede leerlo.")
             ->action('Leer el mensaje', $this->url)
             ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');

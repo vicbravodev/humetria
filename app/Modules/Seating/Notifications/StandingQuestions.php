@@ -27,7 +27,7 @@ final class StandingQuestions extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])
             ->subject('2 preguntas sobre su trabajo de pie')
             ->greeting("Hola, {$this->name}")
             ->line('Queremos saber cómo es su calzado y si ha sentido alguna molestia al trabajar de pie. Con eso decidimos qué asiento y qué descansos le corresponden.')

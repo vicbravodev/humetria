@@ -34,7 +34,7 @@ final class RequestToDecide extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject("{$this->requester} pidió {$this->request->what()}")->greeting("Hola, {$this->name}")
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject("{$this->requester} pidió {$this->request->what()}")->greeting("Hola, {$this->name}")
             ->line("{$this->requester} pidió {$this->request->what()} {$this->request->span()}.");
 
         if ($this->request->hadBalance !== null) {
