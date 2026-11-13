@@ -78,6 +78,17 @@ it('names every tool in the console as the menu does', function (): void {
         ]));
 });
 
+it('says a tool kept from before the plan is taken away when the plan starts, with the day', function (): void {
+    $tenant = Tenant::factory()->create();
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035'], CarbonImmutable::parse('2027-02-01', config('app.display_timezone')));
+
+    $this->actingAs(superadmin())->get(route('companies.show', $tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('modules.0.key', 'attendance')
+        ->where('modules.0.source', 'legacy')
+        ->where('modules.0.source_label', 'Se quita al empezar el plan')
+        ->where('modules.0.ends_on', '1 feb 2027'));
+});
+
 it('grants a module with a reason and an end, and logs and audits it', function (): void {
     Log::spy();
     $this->travelTo('2027-01-10 12:00:00');

@@ -20,7 +20,7 @@ enum ModuleSource: string
     {
         return match ($this) {
             self::Plan => 'Plan',
-            self::Legacy => 'Incluido antes del plan',
+            self::Legacy => 'Se quita al empezar el plan',
             self::Grant => 'Concedido a mano',
             self::Revoke => 'Quitado a mano',
         };

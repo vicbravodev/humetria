@@ -43,7 +43,7 @@ it('shows a company that has no plan with everything it has today, as it was bef
     $tenant = Tenant::factory()->create();
 
     visitPage('tenancy/company', "/admin/companies/{$tenant->id}")
-        ->assertSee('Incluido antes del plan')
+        ->assertSee('Se quita al empezar el plan')
         ->assertSee('Ley Silla')
         ->assertSee('Quejas');
 });
