@@ -100,7 +100,7 @@ export function employeeDetails(employee: {
             : `Baja el ${employee.deactivated_on}`,
         employee.deactivation_reason,
     ]
-        .filter((part) => part !== null && part !== '')
+        .filter((part) => part !== null && part !== undefined && part !== '')
         .join(' · ');
 }
 
