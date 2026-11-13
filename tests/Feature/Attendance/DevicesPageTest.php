@@ -253,7 +253,8 @@ describe('the enrollment link', function (): void {
 
         $this->from(devicesUrl())->post(route('tenant.attendance.devices.enroll', 'acme'), ['employee_id' => $this->ana->id])
             ->assertRedirect(devicesUrl())
-            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Enviamos el enlace de alta al correo de Ana López.'])
+            // Planta Norte has no zone yet: the link is sent, and RH is told nobody can mark there, wherever the link was sent from.
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'warning', 'message' => 'Enviamos el enlace de alta al correo de Ana López. Ojo: hoy nadie puede marcar en Planta Norte, le falta una zona o una pantalla QR.'])
             ->assertSessionMissing('inertia.flash_data.enrollmentLink');
 
         $url = null;
@@ -282,6 +283,23 @@ describe('the enrollment link', function (): void {
         Notification::assertNothingSent();
 
         $this->get(devicesUrl())->assertInertia(fn (AssertableInertia $page) => $page->missingFlash('enrollmentLink'));
+    });
+
+    it('says nothing of the center when it can already mark', function (): void {
+        AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
+        $this->actingAs($this->hr);
+
+        $this->from(devicesUrl())->post(route('tenant.attendance.devices.enroll', 'acme'), ['employee_id' => $this->ana->id])
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Enviamos el enlace de alta al correo de Ana López.']);
+    });
+
+    it('also warns, beside the link to hand over, that nobody can mark in the center of a person without email', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->from(devicesUrl())->post(route('tenant.attendance.devices.enroll', 'acme'), ['employee_id' => $this->bob->id])
+            ->assertSessionHas('inertia.flash_data.toast', ['type' => 'warning', 'message' => 'Ojo: hoy nadie puede marcar en Planta Norte, le falta una zona o una pantalla QR.'])
+            ->assertSessionHas('inertia.flash_data.enrollmentLink');
     });
 
     it('answers 404 for a person who left, of another company or unknown, and 422 without one', function (): void {

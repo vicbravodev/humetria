@@ -7,10 +7,8 @@ namespace App\Modules\Attendance\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
 use App\Modules\Attendance\Jobs\SendEnrollmentLink;
-use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
-use App\Modules\Attendance\Models\KioskDevice;
-use App\Modules\Attendance\Support\CompanyPolicy;
+use App\Modules\Attendance\Support\CenterReadiness;
 use App\Modules\Attendance\Support\DevicePages;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -57,9 +55,7 @@ final readonly class SendEnrollmentLinks
         }
 
         // Sending to a center that cannot mark yet is allowed (the links are the same); the trail says it was not ready.
-        $ready = AttendanceZone::query()->where('work_center_id', $center->id)->exists()
-            && (! CompanyPolicy::current()->require_qr_onsite || KioskDevice::inUseIn($center->id) > 0);
-        $counts = [...$counts, 'center_ready' => $ready];
+        $counts = [...$counts, 'center_ready' => CenterReadiness::of($center->id)];
 
         // The trail first: a failed audit insert leaves no job queued.
         $this->audit->handle('attendance.enrollments_sent', null, ['work_center_id' => $center->id, ...$counts]);

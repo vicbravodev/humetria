@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceDevice;
+use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
@@ -59,7 +61,15 @@ it('opens with the agreement in three lines, the full text behind a button, and 
     'dark mobile' => [true, true],
 ]);
 
+/** The center of Ana can mark: a zone and the screen the policy asks for. */
+function readyCenterOfAna(): void
+{
+    AttendanceZone::factory()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->ana->work_center_id]);
+    KioskDevice::factory()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->ana->work_center_id, 'activated_at' => now(), 'last_seen_at' => now()]);
+}
+
 it('links the phone in four steps: the agreement, who the person is, the key, and what follows', function (bool $dark): void {
+    readyCenterOfAna();
     $page = visitPage('attendance/enroll', enrollPath(), $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
 
     $page->press('Acepto y continúo')
@@ -83,6 +93,7 @@ it('links the phone in four steps: the agreement, who the person is, the key, an
         ->waitForText('Listo, su teléfono está vinculado')
         ->assertSee('Paso 4 de 4')
         ->assertSee('Tiene la llave en este teléfono, no en el servidor')
+        ->assertSee('Desde ahora puede marcar su entrada y su salida.')
         ->assertSee('Ir a marcar')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
@@ -96,6 +107,22 @@ it('links the phone in four steps: the agreement, who the person is, the key, an
     // «Ir a marcar» goes to Marcar of the company.
     $page->click('Ir a marcar')->waitForText('Marcar su jornada')->assertScript('() => window.location.pathname', "/a/{$this->tenant->slug}");
 })->with(['light' => [false], 'dark' => [true]]);
+
+it('links the phone of a person whose center cannot mark yet, and does not promise that they can', function (): void {
+    $page = visitPage('attendance/enroll', enrollPath(), mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
+
+    $page->press('Acepto y continúo')
+        ->press('button:has-text("Sí, soy yo")')
+        ->press('Crear llave')
+        ->waitForText('Listo, su teléfono está vinculado')
+        ->assertSee('Todavía no puede marcar: su centro de trabajo aún no está listo')
+        ->assertDontSee('Desde ahora puede marcar')
+        ->assertDontSee('Ir a marcar')
+        ->assertNoJavaScriptErrors()
+        ->assertNoAccessibilityIssues(1);
+
+    expect(AttendanceDevice::query()->count())->toBe(1);
+});
 
 it('links nothing when the person says it is not them, and says what to do', function (): void {
     $page = visitPage('attendance/enroll', enrollPath(), mobile: true);

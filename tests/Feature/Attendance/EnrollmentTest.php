@@ -9,7 +9,9 @@ use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
 use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendancePolicy;
+use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Notifications\DeviceLinked;
 use App\Modules\Attendance\Notifications\EnrollmentInvitation;
 use App\Modules\Attendance\Support\DeviceLabel;
@@ -92,6 +94,15 @@ it('shows the agreement to read and accept, with the person\'s name, and nothing
             ->where('registerUrl', enrollRoute('register', $this->token))
             ->missing('email')
             ->missing('employeeId'));
+});
+
+it('tells the person whether their center can already mark, so the last step does not promise what is not there', function (): void {
+    $this->get(enrollRoute('show', $this->token))->assertInertia(fn (AssertableInertia $page) => $page->where('centerReady', false));
+
+    AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->ana->work_center_id]);
+    KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->ana->work_center_id, 'activated_at' => now(), 'last_seen_at' => now()]);
+
+    $this->get(enrollRoute('show', $this->token))->assertInertia(fn (AssertableInertia $page) => $page->where('centerReady', true));
 });
 
 it('gives the options of a new key of this phone, for the person of the link, never cached', function (): void {

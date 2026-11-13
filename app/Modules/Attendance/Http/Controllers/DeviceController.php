@@ -50,11 +50,18 @@ final readonly class DeviceController
 
         $name = $issued->personName;
 
+        // Wherever the link was sent from, RH hears that nobody can mark in that center yet (the person can still link their phone).
+        $notReady = $issued->centerNotReady === null ? null : "Ojo: hoy nadie puede marcar en {$issued->centerNotReady}, le falta una zona o una pantalla QR.";
+
         if ($issued->manualUrl === null) {
-            Inertia::flash('toast', ['type' => 'success', 'message' => "Enviamos el enlace de alta al correo de {$name}."]);
+            Inertia::flash('toast', ['type' => $notReady === null ? 'success' : 'warning', 'message' => trim("Enviamos el enlace de alta al correo de {$name}. {$notReady}")]);
         } else {
             // Shown this once: never kept, never logged.
             Inertia::flash('enrollmentLink', ['name' => $name, 'url' => $issued->manualUrl]);
+
+            if ($notReady !== null) {
+                Inertia::flash('toast', ['type' => 'warning', 'message' => $notReady]);
+            }
         }
 
         return back();

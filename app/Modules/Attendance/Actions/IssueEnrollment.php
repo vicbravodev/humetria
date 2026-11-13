@@ -9,9 +9,11 @@ use App\Modules\Attendance\Data\IssuedEnrollment;
 use App\Modules\Attendance\Exceptions\EmployeeNotAvailable;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Notifications\EnrollmentInvitation;
+use App\Modules\Attendance\Support\CenterReadiness;
 use App\Modules\Attendance\Support\MaskedEmail;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -28,7 +30,7 @@ use Illuminate\Support\Str;
  */
 final readonly class IssueEnrollment
 {
-    public function __construct(private Roster $roster, private Companies $companies, private RecordAudit $audit) {}
+    public function __construct(private Roster $roster, private Companies $companies, private RecordAudit $audit, private WorkCenters $workCenters) {}
 
     /** @throws EmployeeNotAvailable when the person left or is not the company's */
     public function handle(string $employeeId, int $userId): IssuedEnrollment
@@ -66,16 +68,18 @@ final readonly class IssueEnrollment
         Log::info('attendance.enrollment_issued', ['link_id' => $link->id, 'employee_id' => $employeeId, 'sent_to' => $sentTo]);
 
         $company = $this->companies->current();
+        $center = $this->workCenters->findActive($person->workCenterId);
+        $notReady = $center !== null && ! CenterReadiness::of($center->id) ? $center->name : null;
         $url = rtrim(config()->string('app.url'), '/').route('attendance.device.enroll.show', [$company->slug, $token], absolute: false);
 
         if ($person->email === null) {
             Log::info('attendance.enrollment_not_emailed', ['link_id' => $link->id, 'employee_id' => $employeeId]);
 
-            return new IssuedEnrollment($link->id, $url, $person->name);
+            return new IssuedEnrollment($link->id, $url, $person->name, $notReady);
         }
 
         Notification::route('mail', $person->email)->notify(new EnrollmentInvitation($url, $person->name, $company));
 
-        return new IssuedEnrollment($link->id, null, $person->name);
+        return new IssuedEnrollment($link->id, null, $person->name, $notReady);
     }
 }
