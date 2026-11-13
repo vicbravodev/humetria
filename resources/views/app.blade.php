@@ -42,7 +42,8 @@
         @fonts
 
         @viteReactRefresh
-        @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+        {{-- The frame of the panel is a chunk fetched on demand; listing it here has the browser fetch it with the page's own code, not after it. --}}
+        @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx", ...App\Http\PageFrame::layouts($page['component'] ?? '')])
         <x-inertia::head>
             <title>{{ config('app.name') }}</title>
         </x-inertia::head>

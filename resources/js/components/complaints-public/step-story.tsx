@@ -57,6 +57,7 @@ export default function StoryStep({
                     id="complaint-date"
                     name="occurred_on"
                     value={draft.occurredOn}
+                    prompt="Elija una fecha"
                     onChange={(occurredOn) => onChange({ occurredOn })}
                     max={today}
                 />

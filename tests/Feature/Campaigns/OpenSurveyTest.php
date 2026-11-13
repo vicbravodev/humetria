@@ -71,6 +71,20 @@ it('opens with the company, the deadline and each guide as the person answers it
             ->has('instruments.1.sections.0.items', 9));
 });
 
+it('tells the page the kind of its campaign, and none for a link that does not open', function (): void {
+    surveyParticipant();
+
+    $this->get(route('survey.show', 'the-token'))->assertInertia(fn (Assert $page) => $page->where('kind', 'nom035_evaluation'));
+    $this->get(route('survey.show', 'not-a-token'))->assertInertia(fn (Assert $page) => $page->where('kind', null));
+});
+
+it('tells the thanks page which survey it finished', function (): void {
+    $participant = surveyParticipant(instruments: []);
+    ParticipantInstrument::factory()->completed()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
+
+    $this->get(route('survey.show', 'the-token'))->assertInertia(fn (Assert $page) => $page->where('unavailable', 'done')->where('kind', 'nom035_evaluation'));
+});
+
 it('shows an answered guide as done', function (): void {
     $participant = surveyParticipant(instruments: ['nom035.guide-ii']);
     ParticipantInstrument::factory()->completed()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-i']);

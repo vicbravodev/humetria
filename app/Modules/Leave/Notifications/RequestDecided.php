@@ -36,7 +36,7 @@ final class RequestDecided extends Notification implements MailBag
     public function toMail(object $notifiable): MailMessage
     {
         $answer = $this->approved ? 'aprobada' : 'rechazada';
-        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject("Su solicitud fue {$answer}")->greeting("Hola, {$this->name}")
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject("Su solicitud fue {$answer}")->greeting("Hola, {$this->name}")
             ->line("Su solicitud de {$this->request->what()} {$this->request->span()} fue {$answer}.");
 
         if (! $this->approved && $this->reason !== null) {

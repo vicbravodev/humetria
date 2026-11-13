@@ -169,3 +169,39 @@ it('lets a person cancel a request of theirs, after asking', function (bool $dar
 
     expect($request->refresh()->status->value)->toBe('cancelled');
 })->with($looks);
+
+// E-02: the home of the portal lists the person's tools, and every tool leads back to it.
+it('leads from the home of the portal to vacations and back', function (bool $dark, bool $mobile): void {
+    $portal = leaveVacationsPortal();
+    $home = preg_replace('#/vacations$#', '', $portal['url']) ?? '';
+
+    visitPage('telework/portal', $home, $dark, $mobile)
+        ->assertSee('Hola, Ana Solís')
+        ->assertSee('Mis vacaciones')
+        ->assertDontSee('teletrabajo')
+        ->click('Mis vacaciones')
+        ->assertSee('Sus días')
+        ->click('Volver a mi portal')
+        ->assertSee('Hola, Ana Solís')
+        ->assertSee('Mis vacaciones')
+        ->assertNoJavaScriptErrors();
+})->with($looks);
+
+// E-10 and E-11: days asked for and not answered are told apart, and a second tap right after sending finds nothing to send.
+it('tells the days waiting for an answer and leaves nothing to send twice', function (): void {
+    $portal = leaveVacationsPortal();
+
+    $page = visitPage('leave/portal', $portal['url'])
+        ->assertButtonDisabled('Enviar solicitud')
+        ->click('#leave-starts-on')
+        ->click('[data-state="open"] [data-day="2026-11-09"] button')
+        ->click('#leave-ends-on')
+        ->click('[data-state="open"] [data-day="2026-11-20"] button')
+        ->assertButtonEnabled('Enviar solicitud')
+        ->press('Enviar solicitud')
+        ->assertSee('Enviamos su solicitud.')
+        ->assertSeeIn('section[aria-labelledby="leave-balance"]', '9 días en espera de respuesta')
+        ->assertButtonDisabled('Enviar solicitud');
+
+    $page->assertDontSee('Seleccione')->assertNoJavaScriptErrors();
+});

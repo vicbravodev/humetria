@@ -18,12 +18,14 @@ use App\Modules\Organization\Support\CompanyJobGrades;
 use App\Modules\Organization\Support\CompanyReportingLines;
 use App\Modules\Organization\Support\CompanyRoster;
 use App\Modules\Organization\Support\CompanySeniority;
+use App\Modules\Organization\Support\TeamPortalSection;
 use Illuminate\Support\ServiceProvider;
 
 final class OrganizationServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->tag([TeamPortalSection::class], 'portal.sections');
         $this->app->bind(Areas::class, CompanyAreas::class);
         $this->app->bind(CompensationRoster::class, CompanyCompensationRoster::class);
         $this->app->bind(Headcount::class, CompanyHeadcount::class);

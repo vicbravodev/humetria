@@ -30,6 +30,16 @@ export default defineConfig({
             formVariants: true,
         }),
     ]),
+    build: {
+        rolldownOptions: {
+            output: {
+                // The first response lists the chunks of the page's frame, and its name must not say «mobile»: pages that
+                // carry no phone number assert that word never reaches them (Compensation's report).
+                chunkFileNames: (chunk) =>
+                    `assets/${chunk.name.replaceAll('mobile', 'narrow')}-[hash].js`,
+            },
+        },
+    },
     server: {
         // Outside Docker: Vite's default address, but written to public/hot by name: the CSP
         // (SecurityHeaders) must allow the dev server, and CSP rejects IPv6 literals like [::1].

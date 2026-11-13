@@ -3,6 +3,7 @@ import {
     groupCode,
     normalizeCode,
     parseReceipt,
+    shareText,
 } from '@/lib/complaints/receipt';
 
 describe('parseReceipt', () => {
@@ -43,5 +44,15 @@ describe('groupCode and normalizeCode', () => {
     it('goes back to the plain code however it was typed', () => {
         expect(normalizeCode(' abcd-2345 ')).toBe('ABCD2345');
         expect(normalizeCode(groupCode('ABCD2345'))).toBe('ABCD2345');
+    });
+});
+
+describe('shareText', () => {
+    it('puts the reference and the key in groups of four, and says to keep the key', () => {
+        const text = shareText('ABCD2345', 'KLMN5678PQRS2345');
+
+        expect(text).toContain('ABCD 2345');
+        expect(text).toContain('KLMN 5678 PQRS 2345');
+        expect(text).toContain('Guarde su clave');
     });
 });

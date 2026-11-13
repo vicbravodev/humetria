@@ -31,7 +31,7 @@ final class RisksToConfirm extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject('Conozca el resultado de la evaluación de su trabajo de pie')->greeting("Hola, {$this->name}")
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject('Conozca el resultado de la evaluación de su trabajo de pie')->greeting("Hola, {$this->name}")
             ->line("{$this->company->tradeName} evaluó los riesgos de su trabajo de pie y definió medidas para cuidarle.")
             ->line('Puede ver el resultado y confirmar que se lo explicaron desde su página personal.')
             ->action('Ver y confirmar', $this->url)

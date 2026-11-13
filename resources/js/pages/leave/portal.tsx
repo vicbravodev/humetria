@@ -25,6 +25,7 @@ export default function LeavePortal({
     today,
     periods,
     advanced,
+    waiting,
     teamPending,
     statements,
     requests,
@@ -37,6 +38,8 @@ export default function LeavePortal({
     today: string;
     periods: LeavePeriod[];
     advanced: number;
+    /** Working days asked for and not answered yet. */
+    waiting: number;
     /** How many requests of their team wait for their answer. */
     teamPending: number;
     /** The annual statements they have yet to confirm. */
@@ -66,7 +69,11 @@ export default function LeavePortal({
                 </div>
                 <PortalStatements token={token} statements={statements} />
                 <PortalTeamLink token={token} pending={teamPending} />
-                <PortalBalance periods={periods} advanced={advanced} />
+                <PortalBalance
+                    periods={periods}
+                    advanced={advanced}
+                    waiting={waiting}
+                />
                 <RequestForm token={token} today={today} types={types} />
                 <PortalRequests token={token} requests={requests} />
             </div>

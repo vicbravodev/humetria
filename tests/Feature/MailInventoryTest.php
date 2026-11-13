@@ -80,6 +80,7 @@ function inventory(): array
         'documents to confirm' => [fn () => new DocumentsToConfirm($url, 'Cora', $company, ['Política · versión 1']), true],
         'notice answered' => [fn () => new NoticeAnswered($url, 'Ana', $company), true],
         'portal invitation' => [fn () => new PortalInvitation('tok', 'Ana', $company), true],
+        'portal link' => [fn () => new App\Modules\Telework\Notifications\PortalLinkEmail('tok', 'Ana', $company), true],
         'portal reminder' => [fn () => new PortalReminder($url, 'Ana', $company, new PortalPendingData([], [])), true],
         'telework digest' => [fn () => new TeleworkDigest($company, 'Olga', ['1 lista por revisar.'], $url), true],
         'telework moved' => [fn () => new TeleworkMoved($company, 'Ana', 'A', 'B', $url), true],
@@ -115,3 +116,15 @@ it('keeps a space between the sentence and the link spelled out under the button
 })->with([
     'survey invitation reminder' => [fn () => new SurveyInvitation(SurveyEmail::Reminder, 'tok', 'Ana', inventoryCompany(), null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15)],
 ]);
+
+// E-12: what a person of the company receives speaks of «usted», the spelled-out link included. The Comisión's «documents to
+// confirm» is written in the panel voice (AcknowledgementsTest) and stays out.
+it('speaks to the worker as usted under the button too', function (Closure $make): void {
+    $html = (string) $make()->toMail(new AnonymousNotifiable)->render();
+
+    expect($html)->toContain('copie este enlace en su navegador')->not->toContain('en tu navegador');
+})->with(array_map(fn (array $row): array => [$row[0]], array_intersect_key(inventory(), array_flip([
+    'vacations portal link', 'leave request decided', 'leave request to decide', 'attendance enrollment', 'attendance device linked',
+    'policy to confirm', 'support waiting', 'risks to confirm', 'standing questions', 'portal invitation', 'portal link', 'portal reminder',
+    'notice answered', 'climate feedback published',
+]))));

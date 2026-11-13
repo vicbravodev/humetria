@@ -2,7 +2,10 @@ import type { Paginated } from '@/types/demos';
 
 export type CampaignStatus = 'draft' | 'active' | 'closed';
 
-export type CampaignKind = 'nom035_evaluation' | 'nom035_trauma';
+export type CampaignKind =
+    | 'nom035_evaluation'
+    | 'nom035_trauma'
+    | 'seating_survey';
 
 /** The dialogs a running evaluation's menu opens. */
 export type CampaignDialog = 'invite' | 'replacements' | 'close';

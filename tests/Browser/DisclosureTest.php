@@ -533,3 +533,9 @@ it('reviews the draft of the health effects and publishes it to the centers', fu
         ->assertSee('Publicado: versión 1.')
         ->assertNoJavaScriptErrors();
 });
+
+// E-02: the page of the people points to the personal link for what is personal.
+it('tells the people where their personal procedures are', function (): void {
+    visit(workersPageUrl())
+        ->assertSee('Sus trámites personales (vacaciones, confirmaciones) están en el enlace personal que llegó a su correo.');
+});

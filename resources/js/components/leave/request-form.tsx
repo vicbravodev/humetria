@@ -87,7 +87,13 @@ export default function RequestForm({
                             </p>
                             <InputError message={errors['note']} />
                         </div>
-                        <Button size="lg" disabled={processing}>
+                        <Button
+                            size="lg"
+                            // Nothing to send until both dates are chosen: a second tap right after sending finds the form empty.
+                            disabled={
+                                processing || startsOn === '' || endsOn === ''
+                            }
+                        >
                             {processing && <Spinner />}
                             Enviar solicitud
                         </Button>

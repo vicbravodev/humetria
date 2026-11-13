@@ -334,3 +334,67 @@ it('takes a submission whose session expired back to the survey with the answers
 
     expect(TraumaScreening::query()->withoutGlobalScopes()->count())->toBe(1);
 });
+
+// E-04: the answers wait on the phone; sending without signal says so and sends by itself when it is back, once.
+it('says there is no signal when sending, and sends by itself when it is back', function (): void {
+    invitedPerson(['nom035.guide-ii']);
+
+    $page = visit('/survey/the-token')->on()->mobile()->click('Comenzar')->click('Empezar');
+    // Every request fails as without a network until `__offline` is turned off.
+    $page->script('() => { const send = XMLHttpRequest.prototype.send; window.__offline = true; XMLHttpRequest.prototype.send = function (...args) { if (window.__offline) { setTimeout(() => this.onerror?.(), 0); return; } send.apply(this, args); }; }');
+    answerGuide($page);
+
+    $page->assertSee('Sin conexión:')
+        ->assertSee('se enviará sola cuando vuelva la señal')
+        ->assertSee('Sus respuestas siguen en este teléfono.')
+        ->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Responses\Models\AnonymousResponse::query()->withoutGlobalScopes()->count())->toBe(0);
+
+    $page->script('() => { window.__offline = false; window.dispatchEvent(new Event("online")); }');
+    $page->assertSee('Gracias, terminó')->assertDontSee('Sin conexión:')->assertNoJavaScriptErrors();
+
+    expect(App\Modules\Responses\Models\AnonymousResponse::query()->withoutGlobalScopes()->count())->toBe(1);
+});
+
+// E-07: the same words for everyone after a NOM-035 survey, so the screen never says who needs a clinical assessment.
+it('ends a NOM-035 survey with where to go for attention, the same for everyone', function (): void {
+    invitedPerson(['nom035.guide-ii']);
+
+    $page = visit('/survey/the-token')->on()->mobile()->click('Comenzar')->click('Empezar');
+    answerGuide($page);
+
+    $page->assertSee('Gracias, terminó')
+        ->assertSee('Si algo de lo que contestó le sigue afectando, puede pedir atención a Recursos Humanos o acudir a su clínica del IMSS.')
+        ->assertSee('Si sus respuestas indican que la necesita, Recursos Humanos le buscará.');
+});
+
+// C-03 and C-17: Ley Silla's survey presents itself as what it is.
+it('opens the Ley Silla survey with its own cover, with no NOM-035 and no two months', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Autopartes del Bajío']);
+    $campaign = Campaign::factory()->active(now()->addDays(10)->toDateString())->create(['tenant_id' => $tenant->id, 'kind' => App\Modules\Campaigns\Enums\CampaignKind::SeatingSurvey, 'instruments' => ['seating.survey']]);
+    $participant = Participant::factory()->create(['campaign_id' => $campaign->id, 'token_hash' => Participant::hashToken('the-token')]);
+    ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'seating.survey']);
+
+    visitPage('campaigns/survey', '/survey/the-token', $dark, $mobile)
+        ->assertSee('Encuesta sobre su trabajo de pie')
+        ->assertDontSee('NOM-035')
+        ->assertDontSee('dos últimos meses')
+        ->assertSee('No hay respuestas correctas ni incorrectas.');
+})->with($looks);
+
+// H-11 and H-14: readable with the text doubled, a heading for screen readers, and a word about shared phones.
+it('stays readable with the text at 200 %, has a heading on each screen and warns about a shared device', function (): void {
+    invitedPerson(['nom035.guide-iii']);
+
+    $page = visit('/survey/the-token')->on()->mobile()->click('Comenzar');
+    $page->assertSee('Sus respuestas se guardan en este equipo hasta que las envíe. Si el equipo es compartido, termine en una sola sesión.')
+        ->click('Empezar');
+    $page->script('() => { document.documentElement.style.fontSize = "200%"; return true; }');
+
+    $page->assertScript('() => document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
+        ->assertScript('() => document.querySelectorAll("h1").length', 1)
+        // The company name wraps, it is never cut with an ellipsis.
+        ->assertScript('() => [...document.querySelectorAll("header p")].every((name) => getComputedStyle(name).textOverflow !== "ellipsis" && getComputedStyle(name).whiteSpace !== "nowrap")', true)
+        ->assertNoJavaScriptErrors();
+});

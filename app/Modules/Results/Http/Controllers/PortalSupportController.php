@@ -28,6 +28,7 @@ final class PortalSupportController extends Controller
             ->orderByDesc('referred_on')->orderByDesc('updated_at')->first(['destination', 'referred_on']) ?? abort(404);
 
         return Inertia::render('results/portal-support', [
+            'token' => $token,
             'company' => $person->company,
             'name' => $person->name,
             'on' => ResultsClock::day(CarbonImmutable::parse($referral->referred_on, config()->string('app.display_timezone'))),

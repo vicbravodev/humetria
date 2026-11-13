@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Ellipsis, Pencil, UserCheck, UserMinus } from 'lucide-react';
+import { Ellipsis, Link2, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { useState } from 'react';
 import DeactivateEmployeeDialog from '@/components/organization/deactivate-employee-dialog';
 import EmployeeSheet from '@/components/organization/employee-sheet';
@@ -12,7 +12,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { reactivate, update } from '@/routes/tenant/employees';
+import { portalLink, reactivate, update } from '@/routes/tenant/employees';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
 
 type Action = 'edit' | 'deactivate' | 'reactivate';
@@ -67,6 +67,18 @@ export default function EmployeeRowActions({
                             <DropdownMenuItem onSelect={() => setOpen('edit')}>
                                 <Pencil />
                                 Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onSelect={() =>
+                                    router.post(
+                                        portalLink.url(ids),
+                                        {},
+                                        { preserveScroll: true },
+                                    )
+                                }
+                            >
+                                <Link2 />
+                                Enviar enlace a su portal
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem

@@ -27,7 +27,7 @@ final class PortalInvitation extends Notification implements MailBag
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])
             ->subject('Su espacio de trabajo en casa: una lista de 10 minutos')
             ->greeting("Hola, {$this->name}")
             ->line('Para que pueda trabajar desde casa, necesitamos saber cómo es su espacio: luz, silla, instalación eléctrica. Son unas preguntas y, si usted quiere, unas fotos.')
