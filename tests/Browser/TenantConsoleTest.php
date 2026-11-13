@@ -622,6 +622,18 @@ it('keeps the name, RFC, status and menu of a row in view on a phone, without sc
         ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true);
 });
 
+it('warns, when replacing the owner, who loses access to the company', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Con owner']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+    Tenant::factory()->create(['trade_name' => 'Sin owner']);
+
+    visit('/admin/companies')
+        ->click('[aria-label="Acciones de Con owner"]')->click('Cambiar owner')
+        ->assertSee('Cuando acepte, Ana Pérez dejará de tener acceso a Con owner.')
+        ->assertNoJavaScriptErrors();
+});
+
 it('keeps every letter typed while the last search is still answering', function (): void {
     signInAsSuperadmin();
     Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
