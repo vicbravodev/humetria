@@ -205,3 +205,17 @@ it('draws climate and pulse waves together', function (): void {
 
     $this->actingAs($this->hr)->get(route('tenant.pulse.trend', $this->tenant))->assertInertia(fn (Assert $page) => $page->has('series.0.points', 2));
 });
+
+it('tells apart two waves closed in the same month by their order, never by the day', function (): void {
+    $pulse = ['kind' => SurveyKind::Pulse, 'pulse_mode' => App\Modules\Engagement\Enums\PulseMode::Tour];
+    trendWaveSurvey($this->tenant, '2026-11-05 12:00:00', attributes: $pulse);
+    trendWaveSurvey($this->tenant, '2026-11-20 12:00:00', answers: trendAnswers(2), attributes: $pulse);
+    trendWaveSurvey($this->tenant, '2026-12-02 12:00:00', attributes: $pulse);
+
+    $this->actingAs($this->hr)->get(route('tenant.pulse.trend', $this->tenant))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('waves.0.label', 'nov 2026 · Pulso 1')
+        ->where('waves.1.label', 'nov 2026 · Pulso 2')
+        ->where('waves.2.label', 'dic 2026')
+        ->where('series.0.points.0.label', 'nov 2026 · Pulso 1')
+        ->where('series.0.points.1.label', 'nov 2026 · Pulso 2'));
+});
