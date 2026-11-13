@@ -26,7 +26,7 @@ export default function HumiSettingsFields({
                     defaultChecked={settings.enabled}
                 />
                 <Label htmlFor="humi-enabled">
-                    Humi está activa para esta empresa
+                    Activar Humi para esta empresa
                 </Label>
             </div>
             <div className="grid gap-2">

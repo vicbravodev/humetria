@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Http\Middleware;
 
+use App\Modules\Assistant\Contracts\AiAccess;
 use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
@@ -31,6 +32,7 @@ final class ResolveTenant
         private readonly TenantContext $tenantContext,
         private readonly CompanyRoles $companyRoles,
         private readonly CompanyModules $modules,
+        private readonly AiAccess $ai,
     ) {}
 
     /**
@@ -69,6 +71,16 @@ final class ResolveTenant
 
         $status = $tenant->status();
 
+        // Read once, though `can` and `permissions` both carry it.
+        $humiAllowed = $user->can('use-assistant');
+        $humiOn = null;
+        $assistant = function () use ($humiAllowed, &$humiOn): bool {
+            if (! $humiAllowed) {
+                return false;
+            }
+
+            return $humiOn ??= $this->ai->enabled();
+        };
         Inertia::share('tenant', [
             'slug' => $tenant->slug,
             'trade_name' => $tenant->trade_name,
@@ -98,7 +110,9 @@ final class ResolveTenant
                 'manage_interventions' => $user->can('manage-interventions'),
                 'view_disclosure' => $user->can('view-disclosure'),
                 'manage_disclosure' => $user->can('manage-disclosure'),
-                'use_assistant' => $user->can('use-assistant'),
+                // Not offered where the company turned Humi off: the dock would only say it is unavailable. Asked when the props are
+                // drawn, so a request that draws none (a JSON read) does not pay for it.
+                'use_assistant' => $assistant,
                 'manage_complaint_channel' => $user->can('manage-complaint-channel'),
                 'handle_complaints' => $user->can('handle-complaints'),
                 'view_attendance' => $user->can('view-attendance'),
@@ -131,8 +145,8 @@ final class ResolveTenant
      * A read-only company changes nothing, so the buttons that would change something go away with it: every permission that
      * writes is off, and the ones that read stay as they are. The server answers 423 to a write anyway.
      *
-     * @param  array<string, bool>  $can
-     * @return array<string, bool>
+     * @param  array<string, bool|Closure(): bool>  $can
+     * @return array<string, bool|Closure(): bool>
      */
     private function writable(array $can, bool $readOnly): array
     {

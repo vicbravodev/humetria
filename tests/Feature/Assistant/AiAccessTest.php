@@ -9,6 +9,7 @@ use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\TenantAiSettings;
 use App\Modules\Assistant\Support\TenantAiAccess;
 use App\Modules\Tenancy\Models\Tenant;
+use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(TenantAiAccess::class);
 
@@ -75,4 +76,28 @@ it('records a usage row with no person and no conversation, which counts against
     config(['humi.monthly_token_budget' => 420]);
 
     expect(fn () => resolve(CheckAllowance::class)->handle($this->scope))->toThrow(AssistantUnavailable::class);
+});
+
+it('knows whether Humi is on for the company without looking at its budget', function (): void {
+    AiUsage::factory()->create(['tenant_id' => $this->a->id, 'input_tokens' => 5000, 'output_tokens' => 0]);
+    expect(resolve(AiAccess::class)->enabled())->toBeTrue();
+
+    TenantAiSettings::factory()->create(['tenant_id' => $this->b->id, 'enabled' => false]);
+    expect(resolve(AiAccess::class)->enabled())->toBeTrue();
+
+    TenantAiSettings::factory()->create(['tenant_id' => $this->a->id, 'enabled' => false]);
+    expect(resolve(AiAccess::class)->enabled())->toBeFalse();
+});
+
+it('does not offer Humi in the panel of a company that turned it off, and offers it again when it is on', function (): void {
+    $owner = ownerOf($this->a);
+    $settings = TenantAiSettings::factory()->create(['tenant_id' => $this->a->id, 'enabled' => false]);
+
+    $this->actingAs($owner)->get(route('tenant.dashboard', $this->a))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.can.use_assistant', false)->where('tenant.permissions.use_assistant', false));
+
+    $settings->update(['enabled' => true]);
+
+    $this->actingAs($owner)->get(route('tenant.dashboard', $this->a))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.can.use_assistant', true));
 });
