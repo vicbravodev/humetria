@@ -701,3 +701,27 @@ it('says so when the filters of the audit trail match nothing', function (bool $
         ->assertSee('Nada coincide con estos filtros')
         ->assertSee('Quitar filtros');
 })->with(['light' => false, 'dark' => true]);
+
+it('shows the superadmin the platform users, each with a menu that asks before it acts', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'two_factor_confirmed_at' => now(), 'two_factor_secret' => 's', 'two_factor_recovery_codes' => 'c']);
+
+    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
+        ->assertSee('Usuarios')
+        ->assertSee('Ana Pérez')
+        ->assertSee('ana@acme.mx')
+        ->assertSee('Superadmin')
+        ->click('[aria-label="Acciones de Ana Pérez"]')
+        ->assertSee('Quitar verificación en dos pasos')
+        ->assertSee('Dar rol de soporte')
+        ->click('Quitar verificación en dos pasos')
+        ->assertSee('¿Quitar la verificación en dos pasos de Ana Pérez?')
+        ->assertSee('ana@acme.mx');
+})->with($looks);
+
+it('says so when no user matches the search', function (bool $dark): void {
+    signInAsSuperadmin();
+
+    visitPage('tenancy/users', '/admin/platform-users?q=zzzz', $dark)
+        ->assertSee('Nadie coincide con tu búsqueda');
+})->with(['light' => false, 'dark' => true]);

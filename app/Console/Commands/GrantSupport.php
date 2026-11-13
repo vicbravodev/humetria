@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Actions\RecordAudit;
+use App\Actions\SetSupportRole;
 use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -21,7 +19,7 @@ use Illuminate\Support\Str;
 #[Description('Da el rol de soporte de la plataforma a un usuario existente')]
 final class GrantSupport extends Command
 {
-    public function handle(RecordAudit $recordAudit): int
+    public function handle(SetSupportRole $setSupportRole): int
     {
         $email = Str::lower(trim($this->argument('email')));
         $user = User::query()->where('email', $email)->first();
@@ -38,20 +36,11 @@ final class GrantSupport extends Command
             return self::FAILURE;
         }
 
-        if ($user->isSupport()) {
+        if (! $setSupportRole->grant($user)) {
             $this->info("{$email} ya es soporte.");
 
             return self::SUCCESS;
         }
-
-        DB::transaction(function () use ($user, $recordAudit): void {
-            // The platform role belongs to no company.
-            setPermissionsTeamId(null);
-            $user->assignRole(User::SUPPORT);
-
-            Log::info('user.support_granted', ['user_id' => $user->id]);
-            $recordAudit->handle('user.support_granted', $user);
-        });
 
         $this->info("{$email} ahora es soporte.");
 

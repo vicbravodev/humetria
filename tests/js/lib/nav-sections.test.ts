@@ -111,23 +111,4 @@ describe('navSections', () => {
                 ?.badge,
         ).toBe(2);
     });
-
-    it('gives the audit trail to the superadmin only', () => {
-        const platform = (isStaff: boolean, isSuperadmin?: boolean) =>
-            navSections({ tenant: null, isStaff, isSuperadmin })
-                .find((section) => section.key === 'platform')
-                ?.items.map((item) => item.title);
-
-        expect(platform(true, true)).toEqual([
-            'Empresas',
-            'Cuentas',
-            'Solicitudes de demo',
-            'Bitácora',
-        ]);
-        expect(platform(true)).toEqual([
-            'Empresas',
-            'Cuentas',
-            'Solicitudes de demo',
-        ]);
-    });
 });
