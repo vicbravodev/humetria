@@ -8,6 +8,7 @@ use App\Modules\Billing\Contracts\StorageGuard;
 use App\Modules\Billing\Exceptions\StorageQuotaExceeded;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Models\UsageCounter;
+use App\Support\SupportContact;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -50,7 +51,7 @@ final readonly class LedgerStorageGuard implements StorageGuard
         if ($taken === 0) {
             Log::info('usage.storage_refused', ['tenant_id' => $tenantId, 'bytes' => $bytes, 'quota' => $limit]);
 
-            throw new StorageQuotaExceeded('Tu plan incluye '.$this->size($limit).' de archivos y este no cabe. Puedes seguir leyendo, descargando y borrando los que ya tienes; para subir más, pide una ampliación a Humetria.');
+            throw new StorageQuotaExceeded('Tu plan incluye '.$this->size($limit).' de archivos y este no cabe. Puedes seguir leyendo, descargando y borrando los que ya tienes; para subir más, pide una ampliación a Humetría.'.SupportContact::sentence());
         }
     }
 

@@ -71,7 +71,7 @@ export default function AuditRow({ entry }: { entry: AuditEntryRow }) {
                     >
                         <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-[max-content_1fr]">
                             {entry.company !== null &&
-                                entry.context.Empresa === undefined && (
+                                entry.context['Empresa'] === undefined && (
                                     <div className="contents md:hidden">
                                         <dt className="text-muted-foreground">
                                             Empresa

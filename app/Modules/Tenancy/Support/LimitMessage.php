@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Support;
 
 use App\Modules\Tenancy\Contracts\CompanyLimits;
+use App\Support\SupportContact;
 
 /** What a person is told when the plan stops them: what it covers, how many are left, what to do. */
 final class LimitMessage
@@ -19,8 +20,10 @@ final class LimitMessage
         $covers = 'Tu plan cubre '.self::count($seats, $amount);
 
         $message = $left > 0 && $quantity > $left
-            ? "{$covers} y ".($left === 1 ? 'te queda 1 lugar' : "te quedan {$left} lugares")."; esto agrega {$quantity}. No se agregó a nadie. Pide una ampliación a Humetria."
-            : "{$covers} y ".self::all($seats, $amount).' Pide una ampliación a Humetria para '.($seats ? 'dar de alta a más.' : 'agregar otro.');
+            ? "{$covers} y ".($left === 1 ? 'te queda 1 lugar' : "te quedan {$left} lugares")."; esto agrega {$quantity}. No se agregó a nadie. Pide una ampliación a Humetría."
+            : "{$covers} y ".self::all($seats, $amount).' Pide una ampliación a Humetría para '.($seats ? 'dar de alta a más.' : 'agregar otro.');
+
+        $message .= SupportContact::sentence();
 
         return $step === null ? $message : "{$message} {$step}";
     }

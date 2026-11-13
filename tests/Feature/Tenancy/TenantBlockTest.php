@@ -201,3 +201,17 @@ it('shares the address to write to Humetria, and null while none is configured, 
     'not configured' => [null, null],
     'empty' => ['', null],
 ]);
+
+it('shares the reason a person gave for suspending or archiving the company, so the notice can say it', function (): void {
+    $tenant = Tenant::factory()->suspended('Falta de pago de octubre')->create();
+
+    $this->actingAs(ownerOf($tenant))->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.restriction_reason', 'Falta de pago de octubre'));
+});
+
+it('shares no reason for a company that is not blocked', function (): void {
+    $tenant = Tenant::factory()->readOnly('Auditoría')->create();
+
+    $this->actingAs(ownerOf($tenant))->get(route('tenant.dashboard', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.restriction_reason', null));
+});

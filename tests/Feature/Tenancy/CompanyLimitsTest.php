@@ -67,7 +67,7 @@ it('reserves up to the limit and refuses the next, leaving the count where it wa
 
     $message = refusalOf(fn () => $limits->reserve(CompanyLimits::SEATS, 1, 'seats'));
 
-    expect($message)->toStartWith('Tu plan cubre 3 personas y ya las tienes todas. Pide una ampliación a Humetria')
+    expect($message)->toStartWith('Tu plan cubre 3 personas y ya las tienes todas. Pide una ampliación a Humetría')
         ->and(usedOf($tenant, 'seats'))->toBe(3);
 });
 

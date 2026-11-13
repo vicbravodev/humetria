@@ -33,7 +33,7 @@ it('shows how much of the plan the people and centers use, quietly while there i
 it('asks for an expansion once the plan is full', function (bool $dark, bool $mobile): void {
     acmeOnAPlan(50, 50, 3, 3);
 
-    visitPage('organization/employees', '/admin/acme/employees', $dark, $mobile)->assertSee('Tu plan cubre 50 personas y ya llegaste al tope. Pide una ampliación a Humetria.');
+    visitPage('organization/employees', '/admin/acme/employees', $dark, $mobile)->assertSee('Tu plan cubre 50 personas y ya llegaste al tope. Pide una ampliación a Humetría.');
     visitPage('tenancy/work-centers', '/admin/acme/work-centers', $dark, $mobile)->assertSee('Tu plan cubre 3 centros de trabajo y ya llegaste al tope.');
 })->with($looks);
 
@@ -64,7 +64,7 @@ it('names no mail link at the limit when no address is set, only whom to ask', f
     acmeOnAPlan(50, 50, 3, 3);
 
     visitPage('organization/employees', '/admin/acme/employees')
-        ->assertSee('Pide una ampliación a Humetria.')
+        ->assertSee('Pide una ampliación a Humetría.')
         ->assertMissing('a[href^="mailto:"]');
 });
 

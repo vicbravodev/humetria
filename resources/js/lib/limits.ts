@@ -32,14 +32,14 @@ export function planUsage(
 ): { text: string; full: boolean } {
     if (limit.used > limit.amount) {
         return {
-            text: `Tu plan cubre ${counted(limit.amount, noun)} y tienes ${limit.used}. Pide una ampliación a Humetria.`,
+            text: `Tu plan cubre ${counted(limit.amount, noun)} y tienes ${limit.used}. Pide una ampliación a Humetría.`,
             full: true,
         };
     }
 
     if (limit.remaining === 0) {
         return {
-            text: `Tu plan cubre ${counted(limit.amount, noun)} y ya llegaste al tope. Pide una ampliación a Humetria.`,
+            text: `Tu plan cubre ${counted(limit.amount, noun)} y ya llegaste al tope. Pide una ampliación a Humetría.`,
             full: true,
         };
     }

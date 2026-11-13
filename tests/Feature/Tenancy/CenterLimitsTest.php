@@ -36,7 +36,7 @@ it('creates work centers up to the contracted ones and stops at the next, saying
     expect(centersUsed($this->tenant))->toBe(2);
 
     $this->actingAs($this->owner)->post(route('tenant.work-centers.store', $this->tenant), workCenterForm(['name' => 'Tercera']))
-        ->assertSessionHasErrors(['centers' => 'Tu plan cubre 2 centros de trabajo y ya los tienes todos. Pide una ampliación a Humetria para agregar otro.']);
+        ->assertSessionHasErrors(['centers' => 'Tu plan cubre 2 centros de trabajo y ya los tienes todos. Pide una ampliación a Humetría para agregar otro.']);
 
     expect(WorkCenter::query()->withoutGlobalScopes()->where('tenant_id', $this->tenant->id)->count())->toBe(2)
         ->and(centersUsed($this->tenant))->toBe(2);
@@ -48,7 +48,7 @@ it('tells what one more center costs the plan', function (): void {
     centersFor($tenant, 3, 3);
 
     $this->actingAs(ownerOf($tenant))->post(route('tenant.work-centers.store', $tenant), workCenterForm())
-        ->assertSessionHasErrors(['centers' => 'Tu plan cubre 3 centros de trabajo y ya los tienes todos. Pide una ampliación a Humetria para agregar otro. Con 4 centros de trabajo el importe pasa de $9,900 a $10,049 al mes, sin IVA.']);
+        ->assertSessionHasErrors(['centers' => 'Tu plan cubre 3 centros de trabajo y ya los tienes todos. Pide una ampliación a Humetría para agregar otro. Con 4 centros de trabajo el importe pasa de $9,900 a $10,049 al mes, sin IVA.']);
 });
 
 it('does not limit a company without a plan', function (): void {
