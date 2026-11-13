@@ -86,6 +86,7 @@ final readonly class AssessmentPages
                 'personProvidedHealthData' => $assessment->person_provided_health_data,
                 'version' => $assessment->instrument_version,
             ],
+            'lacking' => $signed ? [] : array_values(array_diff($this->snapshot->missing($assessment, $facts), ['la fecha de verificación'])),
             'facts' => $this->snapshot->facts($facts, $assessment->verified_on, $assessment->other_aspects),
             'conditions' => array_map(fn (ConditionDefinition $condition): array => [
                 'key' => $condition->key,
