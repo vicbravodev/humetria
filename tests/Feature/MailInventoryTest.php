@@ -99,7 +99,7 @@ function inventory(): array
         'demo requested' => [fn () => new DemoRequested('Empresa Ejemplo', 'Ana López', 'id'), false],
         'company restricted' => [fn () => new CompanyRestricted($company, TenantRestriction::Suspended, 'Falta de pago', 'soporte@humetria.mx'), true],
         'company reactivated' => [fn () => new CompanyReactivated($company, 'soporte@humetria.mx'), true],
-        'tools changed' => [fn () => new ToolsChanged($company, ['Ley Silla'], ['Asistencia'], '1 dic 2026', 'soporte@humetria.mx'), true],
+        'tools changed' => [fn () => new ToolsChanged($company, ['Ley Silla'], ['Asistencia'], '1 dic 2026', false, 'soporte@humetria.mx'), true],
         'owner replaced' => [fn () => new OwnerReplaced($company, 'Pedro'), true],
         'invitation' => [fn () => new InvitationEmail('Autopartes Demo', 'ana@x.mx', 'tok', CarbonImmutable::now()->addDays(7), TenantRole::Hr, null, 1, 3), false],
     ];

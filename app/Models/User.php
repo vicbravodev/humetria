@@ -114,7 +114,11 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         // Fortify asks for it while serving the request: where it came from is read now, before the queue.
         $request = request();
-        $origin = resolve(RequestOrigin::class)->describe($request->userAgent() ?? '', $request->ip() ?? '', now());
+        // Not when somebody else signed in asked for it (support sending the link): that device is theirs, not this person's.
+        $asker = $request->user();
+        $origin = $asker !== null && ! $asker->is($this)
+            ? null
+            : resolve(RequestOrigin::class)->describe($request->userAgent() ?? '', $request->ip() ?? '', now());
 
         $this->notify(new ResetPasswordNotification($token, $origin));
     }

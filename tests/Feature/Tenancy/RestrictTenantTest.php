@@ -144,7 +144,7 @@ it('logs and audits each restriction with its reason', function (string $restric
 
     expect($entry->event)->toBe($event)
         ->and($entry->subject_id)->toBe($tenant->id)
-        ->and($entry->tenant_id)->toBeNull()
+        ->and($entry->tenant_id)->toBe($tenant->id)
         ->and($entry->metadata)->toBe(['reason' => 'Falta de pago', 'previous' => null]);
 })->with([
     'read only' => ['read_only', 'tenant.set_read_only'],

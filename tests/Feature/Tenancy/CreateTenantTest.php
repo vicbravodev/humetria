@@ -231,7 +231,7 @@ it('logs and audits the creation without the company data', function (): void {
 
     expect($entry->event)->toBe('tenant.created')
         ->and($entry->subject_id)->toBe($id)
-        ->and($entry->tenant_id)->toBeNull()
+        ->and($entry->tenant_id)->toBe($id)
         ->and($entry->metadata)->toBe([]);
 });
 

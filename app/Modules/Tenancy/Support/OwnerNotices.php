@@ -46,6 +46,7 @@ final readonly class OwnerNotices
             self::labels($added),
             self::labels($removed),
             $removedOn === null ? null : DisplayDate::day($removedOn),
+            $removedOn !== null && $removedOn->setTimezone(config()->string('app.display_timezone'))->toDateString() <= now()->setTimezone(config()->string('app.display_timezone'))->toDateString(),
             $this->support(),
         ));
     }

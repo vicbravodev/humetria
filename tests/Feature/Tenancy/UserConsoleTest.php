@@ -123,6 +123,16 @@ it('sends a password reset link to a user, and records it without the token', fu
     Log::shouldHaveReceived('info')->once()->with('user.password_reset_sent', ['user_id' => $staff->id, 'target_user_id' => $target->id]);
 });
 
+it('does not put the staff member\'s own device in the reset email: the request was not the person\'s', function (): void {
+    Notification::fake();
+    $target = User::factory()->create();
+
+    $this->actingAs(superadmin())->withHeader('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120 Safari/537.36')
+        ->post(route('platform-users.password-reset', $target));
+
+    Notification::assertSentTo($target, ResetPasswordNotification::class, fn (ResetPasswordNotification $notice): bool => $notice->origin === null);
+});
+
 it('says so, and records nothing, when a link went out a moment ago', function (): void {
     Notification::fake();
     $staff = superadmin();

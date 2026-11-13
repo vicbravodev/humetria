@@ -159,7 +159,7 @@ it('tells the owner when the superadmin takes a tool away by hand, from today', 
 
     $this->actingAs(superadmin())->post(route('companies.modules.revoke', $tenant), ['module' => 'attendance', 'reason' => 'Acuerdo'])->assertSessionHasNoErrors();
 
-    Notification::assertSentTo($owner, ToolsChanged::class, fn (ToolsChanged $notice): bool => str_contains(mailOf($notice), 'Asistencia') && str_contains(mailOf($notice), '12 nov 2026') && ! str_contains(mailOf($notice), 'Acuerdo'));
+    Notification::assertSentTo($owner, ToolsChanged::class, fn (ToolsChanged $notice): bool => str_contains(mailOf($notice), 'Asistencia') && str_contains(mailOf($notice), 'desde hoy') && ! str_contains(mailOf($notice), '12 nov 2026') && ! str_contains(mailOf($notice), 'Acuerdo'));
 });
 
 it('tells the owner when the superadmin gives a tool by hand', function (): void {
@@ -186,4 +186,24 @@ it('records that nobody was told of a tool change in a company without an owner'
 
     Notification::assertNothingSent();
     Log::shouldHaveReceived('warning')->with('tenant.owner_not_notified', ['tenant_id' => $tenant->id, 'event' => 'tenant.modules_changed', 'why' => 'no_owner']);
+});
+
+it('says a tool that ends today is unavailable from today, and one that ends later, on its day', function (): void {
+    [$tenant, $owner] = ownedPlanned(['nom035', 'attendance']);
+
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035'], CarbonImmutable::parse('2026-11-12'));
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'attendance'], CarbonImmutable::parse('2026-11-12'));
+    Notification::fake();
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035'], CarbonImmutable::parse('2026-12-01'));
+
+    Notification::assertSentTo($owner, ToolsChanged::class, fn (ToolsChanged $notice): bool => str_contains(mailOf($notice), 'el 1 dic 2026') && ! str_contains(mailOf($notice), 'desde hoy'));
+});
+
+it('greets the owner by name in each notice', function (): void {
+    [$tenant, $owner] = ownedPlanned(['nom035', 'attendance']);
+    $owner->forceFill(['name' => 'Ana López'])->save();
+
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035'], CarbonImmutable::parse('2026-12-01'));
+
+    Notification::assertSentTo($owner, ToolsChanged::class, fn (ToolsChanged $notice): bool => str_contains((string) $notice->toMail($owner)->render(), 'Hola, Ana López:'));
 });
