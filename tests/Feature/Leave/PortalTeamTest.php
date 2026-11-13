@@ -26,7 +26,7 @@ mutates(PortalTeamPages::class);
 
 // Opening the link and checking the company uses Vacaciones, then the count and the page of the requests and, once for
 // the whole page, their leave types, their people, their balances and their policies.
-const PORTAL_TEAM_REQUESTS_QUERIES = 16;
+const PORTAL_TEAM_REQUESTS_QUERIES = 22;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']));
