@@ -512,6 +512,12 @@ it('shows the board of a center with its thirteen requirements and its tabs', fu
         ->assertSee('Encuesta');
 })->with($looks);
 
+it('puts the letterhead on the Ley Silla dossier when it is printed', function (): void {
+    [$url, $center] = seatingCenter();
+
+    assertPrintLetterhead(visit("{$url}/seating/centers/{$center->id}/dossier")->assertSee('Expediente de Ley Silla'), $center->name);
+});
+
 it('shows the printable dossier of a center with a section per requirement and the fine note', function (bool $dark, bool $mobile): void {
     [$url, $center] = seatingCenter();
     InternalRegulation::factory()->distributed()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id]);

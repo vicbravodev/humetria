@@ -1054,6 +1054,12 @@ it('shows the printable dossier of a center with the evidence of each row or Fal
         ->assertScript('() => [...document.querySelectorAll("section")].filter((section) => section.textContent.includes("Cumple")).length > 2', true);
 })->with($looks);
 
+it('puts the letterhead on the NOM-037 dossier when it is printed', function (): void {
+    [$url, $center] = teleworkerCenter();
+
+    assertPrintLetterhead(visit("{$url}/telework/centers/{$center->id}/dossier")->assertSee('Expediente de NOM-037'), 'Planta Querétaro');
+});
+
 it('fits the tables of the dossier in the page, on screen and on paper, with short dates', function (): void {
     [$url, $center, $tenant] = teleworkerCenter();
     SafetyCommittee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);

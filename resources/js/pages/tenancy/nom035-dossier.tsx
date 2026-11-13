@@ -2,6 +2,7 @@ import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { ArrowLeft, ClipboardList } from 'lucide-react';
 import Nom035DossierRow from '@/components/tenancy/nom035-dossier-row';
 import EmptyState from '@/components/humetria/empty-state';
+import PrintLetterhead from '@/components/humetria/print-letterhead';
 import PrintButton from '@/components/humetria/print-button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { dossierNote } from '@/lib/nom035/dossier';
@@ -24,7 +25,7 @@ export default function Nom035Dossier({
     return (
         <>
             <Head title={`Expediente NOM-035 · ${center.name}`} />
-            <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 print:max-w-none print:p-0">
+            <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 px-4 py-6 [page:dossier] md:px-6 md:py-8 print:max-w-none print:p-0">
                 <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
                     <Link
                         href={inspection([tenantSlug, center.id])}
@@ -35,6 +36,7 @@ export default function Nom035Dossier({
                     </Link>
                     <PrintButton />
                 </div>
+                <PrintLetterhead center={center.name} issued={issuedOn} />
                 <header className="flex flex-col gap-1">
                     <p className="text-meta text-muted-foreground">
                         Expediente NOM-035 para la inspección

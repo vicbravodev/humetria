@@ -1,4 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
+import PrintLetterhead from '@/components/humetria/print-letterhead';
+import { shortDate } from '@/lib/calendar-date';
 import DossierHeaderBlock from '@/components/telework/dossier-header';
 import DossierSection from '@/components/telework/dossier-section';
 import DossierToolbar from '@/components/telework/dossier-toolbar';
@@ -51,8 +53,12 @@ export default function Dossier({
     return (
         <>
             <Head title={`Expediente · ${header.workCenter}`} />
-            <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 print:max-w-none print:p-0">
+            <div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 px-4 py-6 [page:dossier] md:px-6 md:py-8 print:max-w-none print:p-0">
                 <DossierToolbar workCenterId={data.workCenterId} />
+                <PrintLetterhead
+                    center={header.workCenter}
+                    issued={shortDate(header.generatedOn)}
+                />
                 <DossierHeaderBlock header={header} />
                 {rows.map((row) => (
                     <DossierSection key={row.numeral} row={row} data={data} />
