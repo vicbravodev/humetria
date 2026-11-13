@@ -14,6 +14,7 @@ export default function Scenario(props: {
     defaults: ScenarioDefaults;
     horizons: number[];
     others: OtherScenario[];
+    vacation_notice: string | null;
 }) {
     const tenantSlug = useTenantSlug();
     const title =

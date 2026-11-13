@@ -350,3 +350,21 @@ it('does not warn when the policy and the contract say the same, or the company 
     // With no policy of its own the company follows the law: 12 days and 25 %, as the contract.
     expect(baseRows()['Vacaciones']['policy_notice'])->toBeNull();
 });
+
+it('carries the notice of a different Vacaciones policy to the scenario, where the cost uses the contract', function (): void {
+    workIn($this->tenant);
+    LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
+    $policy = LeavePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'premium_percent' => 30]);
+    LeavePolicyRow::factory()->create(['tenant_id' => $this->tenant->id, 'leave_policy_id' => $policy->id, 'year_from' => 1, 'year_to' => 1, 'days' => 15]);
+    LeavePolicyAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'leave_policy_id' => $policy->id, 'scope' => PolicyScope::Default]);
+    baseRows();
+
+    $this->get(route('tenant.compensation.scenarios.create', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('vacation_notice', 'Tu política de Vacaciones da 15 días y 30 % de prima; aquí el contrato dice 12 y 25 %. El costo usa el contrato.'));
+});
+
+it('has no vacation notice in the scenario when the policy and the contract agree', function (): void {
+    baseRows();
+
+    $this->get(route('tenant.compensation.scenarios.create', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('vacation_notice', null));
+});

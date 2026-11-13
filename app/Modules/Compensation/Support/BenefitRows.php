@@ -41,7 +41,7 @@ final readonly class BenefitRows
      * Where the Vacaciones policy and the contract of Compensación disagree, in words; null when they say the same or the
      * company does not use Vacaciones. The days are those of the first year; the premium, the percentage.
      */
-    private function vacationNotice(string $today): ?string
+    public function vacationNotice(string $today): ?string
     {
         $policy = $this->vacation->company();
 
