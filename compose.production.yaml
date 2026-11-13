@@ -1,0 +1,125 @@
+# Producción en Dokploy (servicio tipo "Docker Compose"). El de desarrollo es compose.yaml (Sail).
+#
+# - La imagen sale del Dockerfile y la publica GitHub Actions en GHCR (deploy.yml); aquí sólo se descarga
+#   (`pull_policy: always`), así el VPS no gasta CPU en builds.
+# - Postgres NO vive aquí: es un servicio "Database" de Dokploy (backups programados a S3 desde su UI). Se alcanza por
+#   `dokploy-network` con el hostname interno que muestra Dokploy (DB_HOST).
+# - Las variables salen del .env que Dokploy escribe junto a este archivo (pestaña Environment).
+#   Plantilla: .env.production.example.
+# - Dominio (pestaña Domains de Dokploy, TLS automático con Traefik): web -> APP_URL, puerto 8080.
+# - Los archivos (logos, evidencias, base de GeoIP) viven en el volumen humetria-storage; los logs van a stderr en JSON
+#   (pestaña Logs de Dokploy).
+
+# Rotación de los logs de Docker: sin tope, el driver json-file crece hasta llenar el disco.
+x-logging: &logging
+    driver: json-file
+    options:
+        max-size: 20m
+        max-file: '5'
+
+x-app: &app
+    image: '${HUMETRIA_IMAGE:-ghcr.io/vicbravodev/humetria:latest}'
+    pull_policy: ${HUMETRIA_PULL_POLICY:-always}
+    restart: unless-stopped
+    logging: *logging
+    env_file:
+        - .env
+    volumes:
+        - 'humetria-storage:/var/www/html/storage/app'
+    networks:
+        - default
+        - dokploy-network
+
+services:
+    web:
+        <<: *app
+        environment:
+            # Al arrancar: storage:link (logos en el disco public) + config/route/view/event cache + migrate --force.
+            # Sólo este contenedor migra; horizon y scheduler esperan a que esté sano.
+            AUTORUN_ENABLED: 'true'
+        stop_grace_period: 30s
+        depends_on:
+            valkey:
+                condition: service_healthy
+        healthcheck:
+            test: ['CMD', 'curl', '-fsS', 'http://127.0.0.1:8080/up']
+            interval: 15s
+            timeout: 5s
+            retries: 5
+            start_period: 120s
+
+    horizon:
+        <<: *app
+        command: ['php', '/var/www/html/artisan', 'horizon']
+        environment:
+            AUTORUN_ENABLED: 'true'
+            AUTORUN_LARAVEL_MIGRATION: 'false'
+            AUTORUN_LARAVEL_STORAGE_LINK: 'false'
+        # SIGTERM = Horizon termina los jobs en curso antes de salir.
+        stop_signal: SIGTERM
+        stop_grace_period: 120s
+        depends_on:
+            web:
+                condition: service_healthy
+        healthcheck:
+            test: ['CMD', 'healthcheck-horizon']
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    scheduler:
+        <<: *app
+        # Una sola réplica: nunca escalar.
+        command: ['php', '/var/www/html/artisan', 'schedule:work']
+        environment:
+            AUTORUN_ENABLED: 'true'
+            AUTORUN_LARAVEL_MIGRATION: 'false'
+            AUTORUN_LARAVEL_STORAGE_LINK: 'false'
+        stop_signal: SIGTERM
+        stop_grace_period: 60s
+        depends_on:
+            web:
+                condition: service_healthy
+        healthcheck:
+            test: ['CMD', 'healthcheck-schedule']
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+    valkey:
+        image: 'valkey/valkey:9.1-alpine'
+        restart: unless-stopped
+        logging: *logging
+        # Colas (Horizon). `noeviction`: con memoria llena falla la escritura en lugar de tirar jobs encolados en silencio.
+        command:
+            - valkey-server
+            - --appendonly
+            - 'yes'
+            - --requirepass
+            - '${REDIS_PASSWORD:?REDIS_PASSWORD requerido}'
+            - --maxmemory
+            - 512mb
+            - --maxmemory-policy
+            - noeviction
+        environment:
+            REDISCLI_AUTH: '${REDIS_PASSWORD}'
+            VALKEYCLI_AUTH: '${REDIS_PASSWORD}'
+        volumes:
+            - 'humetria-valkey:/data'
+        networks:
+            - default
+        healthcheck:
+            test: ['CMD', 'valkey-cli', 'ping']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+networks:
+    dokploy-network:
+        external: true
+
+volumes:
+    humetria-storage:
+    humetria-valkey:
