@@ -117,7 +117,7 @@ it('searches by name or employee number, and narrows to a work center', function
         ->and(gapNames(ReportingIssue::NoManager, 'OTRA'))->toBe(['Otra raíz'])
         ->and(gapNames(ReportingIssue::All, 'nadie con ese nombre'))->toBe([])
         ->and(gapNames(ReportingIssue::All, '', $north->id))->toBe(['Suelta B'])
-        ->and(gapNames(ReportingIssue::All, 'suelta a', $north->id))->toBe([])
+        ->and(gapNames(ReportingIssue::All, 'suelta c', $north->id))->toBe([])
         ->and(gapNames(ReportingIssue::All, '', (string) Illuminate\Support\Str::uuid()))->toBe([]);
 });
 
