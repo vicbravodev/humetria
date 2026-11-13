@@ -27,7 +27,7 @@ function auditedEvents(): array
 }
 
 it('gives every event the code audits a label a person can read, in Spanish and different from its key', function (): void {
-    preg_match_all("/^\\s+'([a-z_.]+)': '(.+)',$/m", (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/audit.ts'), $found);
+    preg_match_all("/^\\s+'([a-z_.]+)':\\s+'(.+)',$/m", (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/audit.ts'), $found);
     $labels = array_combine($found[1], $found[2]);
     $events = auditedEvents();
 
