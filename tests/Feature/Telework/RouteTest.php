@@ -55,7 +55,8 @@ it('starts the route where the center declared that someone teleworks, with the 
     TeleworkProfileFactory::new()->teleworks()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->offices->id]);
 
     expect(app(TeleworkRoute::class)->progress([$this->offices->id]))->toEqual([
-        $this->offices->id => new RouteProgress(true, [false, false, false, false, true, false], 'define las reglas'),
+        // C-02 (behavior changed on purpose): with nobody in the padrón and no notice, «cada aviso revisado» is not done either.
+        $this->offices->id => new RouteProgress(true, [false, false, false, false, false, false], 'define las reglas'),
     ]);
 });
 
