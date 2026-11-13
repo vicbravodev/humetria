@@ -38,7 +38,7 @@ final readonly class TrendPage
     {
         $surveys = Survey::query()->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->orderByDesc('id')->limit($limit)->get();
 
-        $labels = self::labels(array_reverse($surveys->all()));
+        $labels = self::labels(array_values(array_reverse($surveys->all())));
 
         return array_values(array_reverse(array_map(function (Survey $survey) use ($labels): Wave {
             $company = SurveyResults::for($survey)->company();

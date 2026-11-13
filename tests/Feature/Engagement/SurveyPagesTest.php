@@ -379,3 +379,15 @@ it('has no open commitments to show on a draft without a previous survey, nor on
     $active = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]);
     $this->get(route('tenant.climate.show', [$this->tenant, $active]))->assertInertia(fn (Assert $page) => $page->where('openCommitments', null));
 });
+
+it('shows, in the history of a closed survey, how many answered as «68 de 120», the same count as its results', function (): void {
+    $survey = Survey::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'invited' => 120]);
+    climatePanelInvited($survey, 68, ['answered' => true]);
+    climatePanelInvited($survey, 52);
+
+    $row = $this->actingAs($this->viewer)->get(route('tenant.climate.index', $this->tenant))->assertOk()->inertiaProps()['surveys']['data'][0];
+
+    expect($row['answered'])->toBe(68)->toBeInt()
+        ->and($row['invited'])->toBe(120)
+        ->and($row['rate'])->toBe(57);
+});
