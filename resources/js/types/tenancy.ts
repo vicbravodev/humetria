@@ -19,6 +19,7 @@ export type TenantRow = {
     trade_name: string;
     rfc: string;
     slug: string;
+    type: 'company' | 'union';
     /** The logo its people see on their emails; null shows its name instead. */
     logo_url: string | null;
     status:
@@ -292,6 +293,7 @@ export type CompanyDetail = Pick<
     | 'trade_name'
     | 'rfc'
     | 'slug'
+    | 'type'
     | 'status'
     | 'status_label'
     | 'restriction_reason'

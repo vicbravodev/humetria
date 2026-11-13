@@ -39,6 +39,7 @@ final class CompanyModulesController extends Controller
                 'trade_name' => $tenant->trade_name,
                 'rfc' => $tenant->rfc,
                 'slug' => $tenant->slug,
+                'type' => $tenant->type->value,
                 'status' => $status->value,
                 'status_label' => $status->label(),
                 'restriction_reason' => $tenant->restriction_reason,

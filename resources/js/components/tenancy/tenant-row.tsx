@@ -28,12 +28,17 @@ export default function TenantRowView({
                 <div className="flex items-center gap-2.5">
                     <Initials name={tenant.trade_name} kind="company" />
                     <div className="flex min-w-0 flex-col">
-                        <Link
-                            href={show(tenant.id)}
-                            className="-my-2.5 py-2.5 font-medium underline-offset-4 hover:underline"
-                        >
-                            {tenant.trade_name}
-                        </Link>
+                        <span className="flex flex-wrap items-center gap-2">
+                            <Link
+                                href={show(tenant.id)}
+                                className="-my-2.5 py-2.5 font-medium underline-offset-4 hover:underline"
+                            >
+                                {tenant.trade_name}
+                            </Link>
+                            {tenant.type === 'union' && (
+                                <Badge variant="outline">Sindicato</Badge>
+                            )}
+                        </span>
                         <span className="text-caption text-muted-foreground">
                             {tenant.legal_name}
                         </span>
