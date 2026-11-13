@@ -101,6 +101,7 @@ describe('planDefaults', () => {
             status_label: 'En prueba',
             seats: 120,
             centers: 5,
+            allowed_centers: 5,
             starts_on: '2026-11-01',
             renews_on: '1 dic 2026',
             catalog_version: 'v1',

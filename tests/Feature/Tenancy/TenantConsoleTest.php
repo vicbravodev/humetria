@@ -50,6 +50,7 @@ it('lists each company with its status for the superadmin', function (): void {
                 'trade_name' => 'Grupo Ejemplo',
                 'rfc' => 'GEJ0101011A1',
                 'slug' => 'grupo-ejemplo',
+                'type' => 'company',
                 'logo_url' => null,
                 'status' => 'trial',
                 'status_label' => 'En prueba',

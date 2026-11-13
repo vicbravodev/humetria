@@ -19,6 +19,7 @@ export type TenantRow = {
     trade_name: string;
     rfc: string;
     slug: string;
+    type: 'company' | 'union';
     /** The logo its people see on their emails; null shows its name instead. */
     logo_url: string | null;
     status:
@@ -97,38 +98,43 @@ export type CurrentTenant = TenantSummary &
         trial_days_left: number | null;
         role: TenantRole;
         role_label: string;
-        /** What the person's role allows, so the page hides what the server would refuse. */
-        can: {
-            manage_organization: boolean;
-            manage_members: boolean;
-            manage_campaigns: boolean;
-            view_trauma_screenings: boolean;
-            manage_telework: boolean;
-            review_workplaces: boolean;
-            view_seating: boolean;
-            view_attendance: boolean;
-            manage_attendance: boolean;
-            view_org_chart: boolean;
-            manage_org_chart: boolean;
-            view_vacations: boolean;
-            manage_vacations: boolean;
-            view_climate: boolean;
-            manage_climate: boolean;
-            view_pulse: boolean;
-            manage_pulse: boolean;
-            manage_seating: boolean;
-            assess_seating: boolean;
-            view_compensation: boolean;
-            manage_compensation: boolean;
-            view_interventions: boolean;
-            manage_interventions: boolean;
-            view_disclosure: boolean;
-            manage_disclosure: boolean;
-            use_assistant: boolean;
-            manage_complaint_channel: boolean;
-            handle_complaints: boolean;
-        };
+        /** What the person's role allows, so the page hides what the server would refuse: in a read-only company, nothing that writes. */
+        can: TenantCan;
+        /** What the role allows whatever the company's state: the menu keeps the pages a read-only company still reads. */
+        permissions: TenantCan;
     };
+
+/** The permissions of a person's role in a company. */
+export type TenantCan = {
+    manage_organization: boolean;
+    manage_members: boolean;
+    manage_campaigns: boolean;
+    view_trauma_screenings: boolean;
+    manage_telework: boolean;
+    review_workplaces: boolean;
+    view_seating: boolean;
+    view_attendance: boolean;
+    manage_attendance: boolean;
+    view_org_chart: boolean;
+    manage_org_chart: boolean;
+    view_vacations: boolean;
+    manage_vacations: boolean;
+    view_climate: boolean;
+    manage_climate: boolean;
+    view_pulse: boolean;
+    manage_pulse: boolean;
+    manage_seating: boolean;
+    assess_seating: boolean;
+    view_compensation: boolean;
+    manage_compensation: boolean;
+    view_interventions: boolean;
+    manage_interventions: boolean;
+    view_disclosure: boolean;
+    manage_disclosure: boolean;
+    use_assistant: boolean;
+    manage_complaint_channel: boolean;
+    handle_complaints: boolean;
+};
 
 export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
 
@@ -287,6 +293,7 @@ export type CompanyDetail = Pick<
     | 'trade_name'
     | 'rfc'
     | 'slug'
+    | 'type'
     | 'status'
     | 'status_label'
     | 'restriction_reason'

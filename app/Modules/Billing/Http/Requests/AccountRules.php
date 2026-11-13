@@ -6,6 +6,7 @@ namespace App\Modules\Billing\Http\Requests;
 
 use App\Modules\Billing\Enums\AccountKind;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Support\SatCatalogs;
 use Illuminate\Validation\Rule;
 
 /**
@@ -26,9 +27,9 @@ final class AccountRules
         return [
             'legal_name' => ['required', 'string', 'max:200', self::SINGLE_LINE],
             'rfc' => ['required', 'string', 'regex:/\A[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}\z/u', Rule::unique('billing_accounts', 'rfc')->ignore($ignore)],
-            'tax_regime' => ['nullable', 'string', 'max:120', self::SINGLE_LINE],
+            'tax_regime' => ['nullable', 'string', Rule::in(SatCatalogs::codes(SatCatalogs::TAX_REGIMES))],
             'postal_code' => ['nullable', 'string', 'regex:/\A[0-9]{5}\z/'],
-            'cfdi_use' => ['nullable', 'string', 'max:10', self::SINGLE_LINE],
+            'cfdi_use' => ['nullable', 'string', Rule::in(SatCatalogs::codes(SatCatalogs::CFDI_USES))],
             'contact_name' => ['required', 'string', 'max:120', self::SINGLE_LINE],
             'contact_email' => ['required', 'string', 'email', 'max:255'],
             'contact_phone' => ['nullable', 'string', 'max:30', self::SINGLE_LINE],

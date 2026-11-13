@@ -10,8 +10,10 @@ use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Notifications\OwnerReplaced;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 mutates(AcceptInvitation::class);
 
@@ -132,4 +134,55 @@ it('accepts an existing account whatever the case of its email', function (): vo
     app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => 'ana@acme.mx']), $ana);
 
     expect($tenant->ownerMembership()->sole()->user_id)->toBe($ana->id);
+});
+
+it('tells the previous owner by email that they no longer run the company, once the new one accepts', function (): void {
+    Notification::fake();
+    $previous = User::factory()->create(['name' => 'Pedro Previo']);
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create(['trade_name' => 'Autopartes Demo']);
+    TenantMembership::factory()->for($tenant)->for($previous)->create();
+    $next = User::factory()->create();
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $next->email]), $next);
+
+    Notification::assertSentTo($previous, OwnerReplaced::class, function (OwnerReplaced $notification) use ($previous): bool {
+        $mail = $notification->toMail($previous);
+
+        return $mail->subject === 'Ya no administras Autopartes Demo en Humetría'
+            && str_contains((string) $mail->render(), 'Ya no administras Autopartes Demo en Humetría')
+            && str_contains((string) $mail->render(), 'contesta este correo');
+    });
+    Notification::assertNotSentTo($next, OwnerReplaced::class);
+});
+
+it('tells nobody when the company had no owner', function (): void {
+    Notification::fake();
+    $tenant = Tenant::factory()->create();
+    $next = User::factory()->create();
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $next->email]), $next);
+
+    Notification::assertNothingSent();
+});
+
+it('tells nobody when the owner accepts their own invitation again', function (): void {
+    Notification::fake();
+    $owner = User::factory()->create();
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create();
+    TenantMembership::factory()->for($tenant)->for($owner)->create();
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $owner->email]), $owner);
+
+    Notification::assertNothingSent();
+});
+
+it('tells nobody about an owner change when a non-owner role is accepted', function (): void {
+    Notification::fake();
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create();
+    TenantMembership::factory()->for($tenant)->create();
+    $hr = User::factory()->create();
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $hr->email, 'role' => TenantRole::Hr]), $hr);
+
+    Notification::assertNothingSent();
 });

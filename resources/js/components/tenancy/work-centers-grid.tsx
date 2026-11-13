@@ -11,11 +11,14 @@ export default function WorkCentersGrid({
     view,
     workCenters,
     states,
+    full,
 }: {
     view: WorkCentersView;
     workCenters: WorkCenterRow[];
     /** The states the forms offer; null when the person may not change work centers. */
     states: MexicanStateOption[] | null;
+    /** The plan has no room for another center: the tile that adds one is off. */
+    full: boolean;
 }) {
     return (
         <section
@@ -34,7 +37,7 @@ export default function WorkCentersGrid({
                 />
             ))}
             {view === 'active' && states !== null && (
-                <CreateWorkCenterDialog states={states} tile />
+                <CreateWorkCenterDialog states={states} tile full={full} />
             )}
         </section>
     );

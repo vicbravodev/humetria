@@ -20,6 +20,7 @@ import type {
     Paginated,
     PaymentRow,
     Receivable,
+    SatOption,
     StatementRow,
     TransferRow,
 } from '@/types';
@@ -35,6 +36,8 @@ export default function Account({
     transfers,
     summary,
     today,
+    taxRegimes,
+    cfdiUses,
 }: {
     account: AccountDetail;
     companies: Paginated<AccountCompanyRow>;
@@ -45,6 +48,8 @@ export default function Account({
     transfers: Paginated<TransferRow>;
     summary: AccountSummary;
     today: string;
+    taxRegimes: SatOption[];
+    cfdiUses: SatOption[];
 }) {
     const { auth } = usePage().props;
     setLayoutProps({
@@ -66,7 +71,11 @@ export default function Account({
                 >
                     {auth.isSuperadmin && (
                         <>
-                            <AccountDialog account={account} />
+                            <AccountDialog
+                                account={account}
+                                taxRegimes={taxRegimes}
+                                cfdiUses={cfdiUses}
+                            />
                             <LinkCompanyDialog accountId={account.id} />
                         </>
                     )}

@@ -33,6 +33,13 @@ export default function InviteOwnerDialog({
                 <DialogDescription>
                     Le enviamos un correo con un enlace, válido por 7 días, para
                     que entre a {tenant.trade_name}.
+                    {tenant.owner !== null && (
+                        <>
+                            {' '}
+                            Cuando acepte, {tenant.owner.name} dejará de tener
+                            acceso a {tenant.trade_name}.
+                        </>
+                    )}
                 </DialogDescription>
                 <Form
                     {...store.form(tenant.id)}

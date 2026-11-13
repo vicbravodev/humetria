@@ -5,7 +5,7 @@ import CreateTenantDialog from '@/components/tenancy/create-tenant-dialog';
 import TenantsEmpty from '@/components/tenancy/tenants-empty';
 import TenantsTable from '@/components/tenancy/tenants-table';
 import TenantsToolbar from '@/components/tenancy/tenants-toolbar';
-import { companiesSummary } from '@/lib/tenant-status';
+import { companiesSummary, tenantsFiltered } from '@/lib/tenant-status';
 import type { Paginated, TenantFilters, TenantRow, TenantView } from '@/types';
 
 export default function Tenants({
@@ -22,6 +22,7 @@ export default function Tenants({
     trialsEndingSoon: number;
 }) {
     const { auth } = usePage().props;
+    const filtered = tenantsFiltered(counts, filters);
 
     return (
         <>
@@ -34,11 +35,11 @@ export default function Tenants({
                     {/* Support sees the console and enters companies; only the superadmin changes them. */}
                     {auth.isSuperadmin && <CreateTenantDialog />}
                 </PageHeader>
-                {counts.all > 0 && (
+                {filtered && (
                     <TenantsToolbar filters={filters} counts={counts} />
                 )}
                 {tenants.data.length === 0 ? (
-                    <TenantsEmpty filtered={counts.all > 0} />
+                    <TenantsEmpty filtered={filtered} filters={filters} />
                 ) : (
                     <TenantsTable
                         tenants={tenants.data}

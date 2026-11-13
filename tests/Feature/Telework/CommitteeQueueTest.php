@@ -132,7 +132,7 @@ it('reads the queue in a fixed number of queries', function (): void {
     $this->actingAs($this->ruben);
 
     // 25 for NOM-037, 3 for what waits in Ley Silla (rediseño v2, PR 3), 12 more for the facts of its requirement R2 (people
-    // without assessment, read once for all the centers) and 3 for the checklist that blocks the Comisión (F2).
-    $this->expectsDatabaseQueryCount(43);
+    // without assessment, read once for all the centers) and 3 for the checklist that blocks the Comisión (F2); one less since the company switcher counts its companies only when they do not fit on its first page (F6).
+    $this->expectsDatabaseQueryCount(42);
     $this->get(route('tenant.telework.index', $this->tenant))->assertOk();
 });

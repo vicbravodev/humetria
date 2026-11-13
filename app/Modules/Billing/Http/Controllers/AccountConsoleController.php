@@ -19,6 +19,7 @@ use App\Modules\Billing\Enums\AccountKind;
 use App\Modules\Billing\Http\Requests\StoreAccountRequest;
 use App\Modules\Billing\Http\Requests\UpdateAccountRequest;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Support\SatCatalogs;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -38,6 +39,7 @@ final class AccountConsoleController extends Controller
         $owed = $listAccounts->overdueAmounts(array_values($accounts->getCollection()->map(fn (BillingAccount $account): string => $account->id)->all()));
 
         return Inertia::render('billing/accounts', [
+            ...$this->satCatalogs(),
             'filters' => ['q' => $search, 'kind' => $overdue ? 'overdue' : ($kind->value ?? 'all')],
             'counts' => $listAccounts->counts($search),
             'accounts' => $accounts->through(fn (BillingAccount $account): array => [
@@ -62,6 +64,7 @@ final class AccountConsoleController extends Controller
         Gate::authorize('view-billing');
 
         return Inertia::render('billing/account', [
+            ...$this->satCatalogs(),
             'account' => $this->detail($account),
             // The day a new plan starts unless another is chosen: today, in the time zone the panel shows.
             'today' => now(config()->string('app.display_timezone'))->toDateString(),
@@ -82,6 +85,16 @@ final class AccountConsoleController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cuenta actualizada.']);
 
         return redirect()->route('billing.accounts.show', $account);
+    }
+
+    /**
+     * The fixed SAT catalogs the account form chooses from.
+     *
+     * @return array{taxRegimes: list<array{value: string, label: string}>, cfdiUses: list<array{value: string, label: string}>}
+     */
+    private function satCatalogs(): array
+    {
+        return ['taxRegimes' => SatCatalogs::options(SatCatalogs::TAX_REGIMES), 'cfdiUses' => SatCatalogs::options(SatCatalogs::CFDI_USES)];
     }
 
     /**

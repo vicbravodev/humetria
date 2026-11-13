@@ -7,6 +7,7 @@ import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dial
 import WorkCentersEmpty from '@/components/tenancy/work-centers-empty';
 import WorkCentersGrid from '@/components/tenancy/work-centers-grid';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { atLimit } from '@/lib/limits';
 import { index } from '@/routes/tenant/work-centers';
 import type {
     MexicanStateOption,
@@ -42,10 +43,16 @@ export default function WorkCenters({
                     title="Centros de trabajo"
                     description="Cada centro se evalúa por separado. El número de personas decide qué guías aplican."
                 >
-                    {canManage && <CreateWorkCenterDialog states={states} />}
+                    {canManage && (
+                        <CreateWorkCenterDialog
+                            states={states}
+                            full={atLimit(planLimit)}
+                        />
+                    )}
                 </PageHeader>
                 <PlanLimitNotice
                     limit={planLimit}
+                    what="centros"
                     noun={{
                         singular: 'centro de trabajo',
                         plural: 'centros de trabajo',
@@ -82,6 +89,7 @@ export default function WorkCenters({
                         view={view}
                         workCenters={workCenters.data}
                         states={canManage ? states : null}
+                        full={atLimit(planLimit)}
                     />
                 )}
                 <Pagination

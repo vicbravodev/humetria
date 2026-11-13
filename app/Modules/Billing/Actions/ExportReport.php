@@ -80,7 +80,7 @@ final readonly class ExportReport
             $rows[] = [
                 $account->legal_name, $account->rfc, $account->kind->label(), $brief->tradeName, $brief->rfc,
                 $subscription?->plan->label() ?? 'Sin plan', $subscription?->profile->label() ?? '', $subscription?->status->label() ?? '',
-                (string) ($subscription->seats ?? ''), (string) ($subscription->centers ?? ''),
+                (string) ($subscription->seats ?? ''), (string) ($subscription?->allowedCenters() ?? ''),
                 $subtotal === null ? '' : $this->pesos($subtotal), $subscription?->renews_on->toDateString() ?? '',
             ];
         }

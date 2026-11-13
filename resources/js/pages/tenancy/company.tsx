@@ -50,9 +50,16 @@ export default function Company({
                     caption="Empresa"
                     title={company.trade_name}
                     status={
-                        <Badge variant={tenantStatusVariant(company.status)}>
-                            {company.status_label}
-                        </Badge>
+                        <>
+                            <Badge
+                                variant={tenantStatusVariant(company.status)}
+                            >
+                                {company.status_label}
+                            </Badge>
+                            {company.type === 'union' && (
+                                <Badge variant="outline">Sindicato</Badge>
+                            )}
+                        </>
                     }
                     description={`${company.legal_name} · ${company.rfc}`}
                 />

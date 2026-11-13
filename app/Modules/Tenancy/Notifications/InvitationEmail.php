@@ -58,7 +58,7 @@ final class InvitationEmail extends Notification implements MailBag, ShouldBeEnc
                 'inviter' => $this->inviter,
                 'role' => $this->role->label(),
                 'does' => match ($this->role) {
-                    TenantRole::Owner => 'administrarás la cuenta, sus miembros y todo lo que RH lleva: NOM-035, NOM-037 y Ley Silla.',
+                    TenantRole::Owner => 'administrarás la cuenta, sus usuarios y las herramientas que tenga contratadas.',
                     TenantRole::Hr => 'podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.',
                     TenantRole::Committee => 'podrás revisar y validar los lugares de trabajo de la NOM-037 (teletrabajo) de sus centros.',
                     TenantRole::Complaints => 'podrás atender, de forma confidencial, las quejas y denuncias que se te asignen en el canal de la empresa.',

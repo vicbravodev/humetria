@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Http\Middleware;
 
+use App\Http\Impersonation;
+use App\Modules\Assistant\Contracts\AiAccess;
 use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
@@ -31,6 +33,8 @@ final class ResolveTenant
         private readonly TenantContext $tenantContext,
         private readonly CompanyRoles $companyRoles,
         private readonly CompanyModules $modules,
+        private readonly AiAccess $ai,
+        private readonly Impersonation $impersonation,
     ) {}
 
     /**
@@ -47,10 +51,13 @@ final class ResolveTenant
         $tenant = is_string($slug) ? Tenant::query()->where('slug', $slug)->first() : $slug;
 
         $user = $request->user();
+        // An impersonated owner works in the company the superadmin entered from, and that is the only one that exists for them.
+        $only = $this->impersonation->tenantId();
 
         abort_unless(
             $tenant instanceof Tenant
             && $user !== null
+            && ($only === null || $only === $tenant->id)
             && TenantMembership::query()->where('tenant_id', $tenant->id)->where('user_id', $user->id)->exists(),
             404,
         );
@@ -69,6 +76,16 @@ final class ResolveTenant
 
         $status = $tenant->status();
 
+        // Read once, though `can` and `permissions` both carry it.
+        $humiAllowed = $user->can('use-assistant');
+        $humiOn = null;
+        $assistant = function () use ($humiAllowed, &$humiOn): bool {
+            if (! $humiAllowed) {
+                return false;
+            }
+
+            return $humiOn ??= $this->ai->enabled();
+        };
         Inertia::share('tenant', [
             'slug' => $tenant->slug,
             'trade_name' => $tenant->trade_name,
@@ -81,7 +98,8 @@ final class ResolveTenant
             'modules' => $this->modules->enabledKeys($tenant->id),
             'role' => $role->value,
             'role_label' => $role->label(),
-            'can' => [
+            // What the role allows; a read-only company has every writing one off, and `permissions` keeps the full set for the menu.
+            'can' => $this->writable($permissions = [
                 'manage_organization' => $user->can('manage-organization'),
                 'manage_members' => $user->can('manage-members'),
                 'manage_campaigns' => $user->can('manage-campaigns'),
@@ -97,7 +115,9 @@ final class ResolveTenant
                 'manage_interventions' => $user->can('manage-interventions'),
                 'view_disclosure' => $user->can('view-disclosure'),
                 'manage_disclosure' => $user->can('manage-disclosure'),
-                'use_assistant' => $user->can('use-assistant'),
+                // Not offered where the company turned Humi off: the dock would only say it is unavailable. Asked when the props are
+                // drawn, so a request that draws none (a JSON read) does not pay for it.
+                'use_assistant' => $assistant,
                 'manage_complaint_channel' => $user->can('manage-complaint-channel'),
                 'handle_complaints' => $user->can('handle-complaints'),
                 'view_attendance' => $user->can('view-attendance'),
@@ -110,11 +130,12 @@ final class ResolveTenant
                 'manage_climate' => $user->can('manage-climate'),
                 'view_pulse' => $user->can('view-pulse'),
                 'manage_pulse' => $user->can('manage-pulse'),
-            ],
+            ], $status->isReadOnly()),
+            'permissions' => $permissions,
         ]);
         // For the company switcher: the first few, and how many there are to see them all on their own page.
-        Inertia::share('tenants', function () use ($user): array {
-            $companies = $this->listUserTenants->handle($user->id, self::SWITCHER_COMPANIES);
+        Inertia::share('tenants', function () use ($user, $only): array {
+            $companies = $this->listUserTenants->handle($user->id, self::SWITCHER_COMPANIES, $only);
 
             return [
                 'data' => array_values($companies->getCollection()->map(fn (Tenant $company): array => ['slug' => $company->slug, 'trade_name' => $company->trade_name])->all()),
@@ -123,5 +144,27 @@ final class ResolveTenant
         });
 
         return $next($request);
+    }
+
+    /**
+     * A read-only company changes nothing, so the buttons that would change something go away with it: every permission that
+     * writes is off, and the ones that read stay as they are. The server answers 423 to a write anyway.
+     *
+     * @param  array<string, bool|Closure(): bool>  $can
+     * @return array<string, bool|Closure(): bool>
+     */
+    private function writable(array $can, bool $readOnly): array
+    {
+        if (! $readOnly) {
+            return $can;
+        }
+
+        foreach ($can as $key => $allowed) {
+            if (str_starts_with($key, 'manage_') || in_array($key, ['assess_seating', 'review_workplaces', 'handle_complaints'], true)) {
+                $can[$key] = false;
+            }
+        }
+
+        return $can;
     }
 }

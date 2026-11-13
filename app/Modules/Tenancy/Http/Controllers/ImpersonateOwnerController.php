@@ -25,7 +25,7 @@ final class ImpersonateOwnerController extends Controller
         // Never another member of the staff: that would hand over the console under someone else's name.
         abort_if($owner === null || $owner->isStaff(), 404);
 
-        Context::scope(fn () => $impersonation->start($user, $owner), ['tenant_id' => $tenant->id]);
+        Context::scope(fn () => $impersonation->start($user, $owner, $tenant->id), ['tenant_id' => $tenant->id]);
 
         return redirect()->route('dashboard');
     }

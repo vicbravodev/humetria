@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import Notice from '@/components/humetria/notice';
+import SupportLink from '@/components/humetria/support-link';
 
 /**
  * A company that is read only (its trial ended, its term lapsed or a person decided it) still opens its pages, but nothing
@@ -19,8 +20,11 @@ export function CompanyReadOnlyNotice() {
         >
             <Notice>
                 <strong>Tu empresa está en solo lectura.</strong> Puedes
-                consultar y exportar tu información, pero no hacer cambios.
-                Contacta al administrador de Humetría para reactivarla.
+                consultar y exportar tu información, pero no hacer cambios.{' '}
+                <SupportLink subject={`Reactivar ${tenant.trade_name}`}>
+                    Contacta al administrador de Humetría
+                </SupportLink>{' '}
+                para reactivarla.
             </Notice>
         </div>
     );

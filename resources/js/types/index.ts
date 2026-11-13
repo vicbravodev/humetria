@@ -1,6 +1,7 @@
 export type * from './assistant';
 export type * from './auth';
 export type * from './billing';
+export type * from './billing-parts';
 export type * from './campaigns';
 export type * from './compensation';
 export type * from './compensation-compare';

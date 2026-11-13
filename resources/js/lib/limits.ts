@@ -49,3 +49,24 @@ export function planUsage(
         full: false,
     };
 }
+
+/** Whether the plan has no room left (or the company is over it): the button that adds goes off, and the notice says why. */
+export function atLimit(limit: PlanLimit | null): boolean {
+    return limit !== null && limit.remaining === 0;
+}
+
+/**
+ * The link to ask Humetria for an expansion: its subject names what to expand and for which company. Null when no support
+ * address is configured, so the notice says whom to contact without a link that goes nowhere.
+ */
+export function expansionMailto(
+    email: string | null,
+    what: 'centros' | 'personas',
+    company: string,
+): string | null {
+    if (email === null || email === '') {
+        return null;
+    }
+
+    return `mailto:${email}?subject=${encodeURIComponent(`Ampliar ${what} de ${company}`)}`;
+}

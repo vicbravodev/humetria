@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { store, update } from '@/routes/billing/accounts';
-import type { AccountDetail } from '@/types';
+import type { AccountDetail, SatOption } from '@/types';
 
 /**
  * Creates a payer account, or, given one, corrects its data. Creating opens from its own button; editing is opened by the
@@ -22,8 +22,12 @@ import type { AccountDetail } from '@/types';
  */
 export default function AccountDialog({
     account,
+    taxRegimes,
+    cfdiUses,
 }: {
     account?: AccountDetail;
+    taxRegimes: SatOption[];
+    cfdiUses: SatOption[];
 }) {
     const [open, setOpen] = useState(false);
     const editing = account !== undefined;
@@ -59,6 +63,8 @@ export default function AccountDialog({
                         <>
                             <AccountFormFields
                                 errors={errors}
+                                taxRegimes={taxRegimes}
+                                cfdiUses={cfdiUses}
                                 {...(editing ? { account } : {})}
                             />
                             <DialogFooter className="gap-2">

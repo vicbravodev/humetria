@@ -62,7 +62,7 @@ it('lists the portfolio: every company an account pays with its plan, status, si
     expect($rows[0])->toBe(['Cuenta', 'RFC de la cuenta', 'Tipo', 'Empresa', 'RFC de la empresa', 'Plan', 'Perfil', 'Estado', 'Personas', 'Centros', 'Importe mensual sin IVA', 'Próxima renovación'])
         ->and($rows)->toHaveCount(3);
     $mine = collect($rows)->firstWhere(3, $tenant->trade_name);
-    expect($mine[0])->toBe($account->legal_name)->and($mine[5])->toBe('Cumplimiento')->and($mine[8])->toBe('100')->and($mine[10])->toBe('4900.00');
+    expect($mine[0])->toBe($account->legal_name)->and($mine[5])->toBe('Cumplimiento')->and($mine[8])->toBe('100')->and($mine[9])->toBe('2')->and($mine[10])->toBe('4900.00');
     $bare = collect($rows)->firstWhere(3, $withoutPlan->trade_name);
     expect($bare[5])->toBe('Sin plan')->and($bare[10])->toBe('');
 });

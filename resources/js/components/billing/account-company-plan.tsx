@@ -61,7 +61,7 @@ export default function AccountCompanyPlan({
                         {people} de {subscription.seats} personas
                     </span>
                     <span className="text-caption text-muted-foreground">
-                        {workCenters} de {subscription.centers} centros
+                        {workCenters} de {subscription.allowed_centers} centros
                     </span>
                 </div>
             </TableCell>

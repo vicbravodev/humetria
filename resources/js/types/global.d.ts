@@ -22,6 +22,8 @@ declare module '@inertiajs/core' {
     export interface InertiaConfig {
         sharedPageProps: {
             name: string;
+            /** Where to write to Humetria; null while none is configured. */
+            support: { email: string | null };
             auth: Auth;
             /** The superadmin working as auth.user; null outside an impersonation. */
             impersonator: string | null;
