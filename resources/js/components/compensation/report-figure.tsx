@@ -39,7 +39,13 @@ export default function ReportFigure({
                         : 'text-[26px] leading-8 tracking-[-0.01em]',
                 )}
             >
-                {figureText(figure.unit, shown)}
+                {/* On paper the final figure shows from the start: the count is for the screen only. */}
+                <span className="print:hidden">
+                    {figureText(figure.unit, shown)}
+                </span>
+                <span className="hidden print:inline">
+                    {figureText(figure.unit, figure.value)}
+                </span>
             </dd>
             <dd
                 className={cn(
