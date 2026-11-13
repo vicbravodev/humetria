@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     groupCode,
+    keyNote,
     normalizeCode,
     parseReceipt,
     shareText,
@@ -54,5 +55,13 @@ describe('shareText', () => {
         expect(text).toContain('ABCD 2345');
         expect(text).toContain('KLMN 5678 PQRS 2345');
         expect(text).toContain('Guarde su clave');
+    });
+});
+
+describe('keyNote', () => {
+    it('tells an anonymous person that nobody can answer without the key, and a named one that the company has their contact', () => {
+        expect(keyNote(false)).toContain('no sabemos quién es');
+        expect(keyNote(true)).not.toContain('no sabemos quién es');
+        expect(keyNote(true)).toContain('tiene su contacto');
     });
 });
