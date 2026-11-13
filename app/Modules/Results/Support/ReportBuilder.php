@@ -142,7 +142,10 @@ final readonly class ReportBuilder
             ? "una muestra representativa de {$campaign->sampleSize} de {$workers} personas (III.1), seleccionada al azar y en proporción por género"
             : "las {$workers} personas del centro";
         $answered = $campaign->answered[$guide] ?? 0;
-        $guideOne = in_array('nom035.guide-i', $campaign->instruments, true) ? ', más la Guía de referencia I a todas las personas' : '';
+        $guideOneTarget = $campaign->invited['nom035.guide-i'] ?? 0;
+        $guideOne = in_array('nom035.guide-i', $campaign->instruments, true)
+            ? ', más la Guía de referencia I a todas las personas'.($guideOneTarget === 0 ? '' : ' (Guía I: '.($campaign->answered['nom035.guide-i'] ?? 0)." de {$guideOneTarget})")
+            : '';
         $minimum = config()->integer('results.min_group');
 
         return "Cuestionario de la Guía de referencia {$numeral} de la NOM-035-STPS-2018 (DOF 23/10/2018), aplicado en línea del ".self::period($campaign)."{$guideOne}. Se invitó a {$who}; contestaron {$answered}. "

@@ -127,6 +127,23 @@ it('says in the method how many of those invited answered', function (): void {
         ->assertInertia(fn (Assert $page) => $page->where('report.method', fn (string $method): bool => str_contains($method, 'Se invitó a las 20 personas del centro; contestaron 10.') && ! str_contains($method, 'todos los trabajadores')));
 });
 
+it('says in the method how many people answered the Guía I, as the route and the inspection do', function (): void {
+    $everyone = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'workers' => 20, 'launched_at' => '2026-11-02 16:00:00', 'closed_at' => '2026-11-19 18:00:00']);
+    foreach (range(1, 20) as $index) {
+        $participant = Participant::factory()->create(['campaign_id' => $everyone->id]);
+        ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii', 'status' => InstrumentStatus::Completed, 'completed_at' => now()]);
+        ParticipantInstrument::factory()->create([
+            'participant_id' => $participant->id,
+            'instrument' => 'nom035.guide-i',
+            ...($index <= 8 ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : []),
+        ]);
+    }
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.report', [$this->tenant, $everyone->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('report.method', fn (string $method): bool => str_contains($method, 'más la Guía de referencia I a todas las personas (Guía I: 8 de 20).')));
+});
+
 it('saves what HR fills in, and shows it in the report', function (): void {
     $this->actingAs($this->hr)
         ->put(route('tenant.campaigns.report.update', [$this->tenant, $this->evaluation->id]), reportForm())

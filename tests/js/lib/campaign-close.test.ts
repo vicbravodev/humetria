@@ -5,12 +5,17 @@ describe('closeShortfall', () => {
     const progress = (
         completed: number,
         target: number,
-        extra: { againstSample?: boolean; screeningPending?: number } = {},
+        extra: {
+            againstSample?: boolean;
+            screeningPending?: number;
+            screeningTarget?: number;
+        } = {},
     ) => ({
         completed,
         target,
         againstSample: extra.againstSample ?? false,
         screeningPending: extra.screeningPending ?? 0,
+        screeningTarget: extra.screeningTarget ?? 0,
     });
 
     it('is what is left to answer, against everyone or against the sample', () => {
@@ -46,12 +51,17 @@ describe('closeWarnings', () => {
     const progress = (
         completed: number,
         target: number,
-        extra: { againstSample?: boolean; screeningPending?: number } = {},
+        extra: {
+            againstSample?: boolean;
+            screeningPending?: number;
+            screeningTarget?: number;
+        } = {},
     ) => ({
         completed,
         target,
         againstSample: extra.againstSample ?? false,
         screeningPending: extra.screeningPending ?? 0,
+        screeningTarget: extra.screeningTarget ?? 0,
     });
 
     it('says nothing when everyone answered', () => {
@@ -71,6 +81,16 @@ describe('closeWarnings', () => {
         ).toEqual([
             'Falta 1 persona por contestar.',
             '1 persona no ha contestado la Guía I.',
+        ]);
+    });
+
+    it('says how many answered the Guía I of how many, when the evaluation applies it', () => {
+        expect(
+            closeWarnings(
+                progress(20, 20, { screeningPending: 12, screeningTarget: 20 }),
+            ),
+        ).toEqual([
+            '12 personas no han contestado la Guía I (Guía I: 8 de 20).',
         ]);
     });
 
