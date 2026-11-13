@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { accept, switchAccount } from '@/routes/invitations';
-import type { InvitationPage } from '@/types/tenancy';
+import type { InvitationPage } from '@/types/invitation-page';
 
 type Props = Exclude<InvitationPage, { state: 'new_account' }>;
 

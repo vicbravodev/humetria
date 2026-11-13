@@ -76,6 +76,11 @@ export default function TenantRowView({
             <TableCell className="hidden whitespace-normal md:table-cell">
                 {!mobile && <TenantOwnerCell tenant={tenant} />}
             </TableCell>
+            <TableCell className="hidden text-sm tabular-nums lg:table-cell">
+                {tenant.last_access ?? (
+                    <span className="text-muted-foreground">Nunca</span>
+                )}
+            </TableCell>
             <TableCell className="w-px text-right max-md:px-2">
                 {auth.isSuperadmin ? (
                     <TenantRowActions

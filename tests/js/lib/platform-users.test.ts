@@ -15,6 +15,7 @@ const user = (over: Partial<PlatformUserRow> = {}): PlatformUserRow => ({
     companies: '',
     twoFactor: false,
     verified: true,
+    lastLogin: null,
     ...over,
 });
 

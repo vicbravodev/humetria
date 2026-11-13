@@ -57,6 +57,11 @@ export default function UserRowView({ user }: { user: PlatformUserRow }) {
                     <span className="text-muted-foreground">No</span>
                 )}
             </TableCell>
+            <TableCell className="hidden text-sm tabular-nums lg:table-cell">
+                {user.lastLogin ?? (
+                    <span className="text-muted-foreground">Nunca</span>
+                )}
+            </TableCell>
             <TableCell className="w-px text-right max-md:px-2">
                 <UserRowActions user={user} />
             </TableCell>

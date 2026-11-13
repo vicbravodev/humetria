@@ -70,6 +70,7 @@ final class TenantConsoleController extends Controller
                     'uses_attendance' => in_array($tenant->id, $usingAttendance, true),
                     'active_until' => $tenant->active_until?->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d'),
                     'blocked' => $status->isBlocked(),
+                    'last_access' => $this->day($tenant->last_access_at),
                     'owner' => $this->owner($tenant),
                     'invitation' => $this->invitation($tenant),
                 ];

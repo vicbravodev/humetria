@@ -14,7 +14,7 @@ final class UserPages
     private const int PER_PAGE = 25;
 
     /**
-     * @return LengthAwarePaginator<int, array{id: int, name: string, email: string, platformRole: string|null, companies: string, twoFactor: bool, verified: bool}>
+     * @return LengthAwarePaginator<int, array{id: int, name: string, email: string, platformRole: string|null, companies: string, twoFactor: bool, verified: bool, lastLogin: string|null}>
      */
     public function handle(string $search): LengthAwarePaginator
     {
@@ -37,6 +37,7 @@ final class UserPages
             'companies' => implode(', ', $companies[$user->id] ?? []),
             'twoFactor' => $user->two_factor_confirmed_at !== null,
             'verified' => $user->email_verified_at !== null,
+            'lastLogin' => $user->last_login_at === null ? null : DisplayDate::day($user->last_login_at),
         ]);
     }
 

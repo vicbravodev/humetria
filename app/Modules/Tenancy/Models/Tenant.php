@@ -41,6 +41,7 @@ use Illuminate\Database\Query\Builder;
  * @property bool $has_module_rows Whether tenant_modules has any row of it; without any, it has every module that exists.
  * @property int|null $logo_width
  * @property int|null $logo_height
+ * @property CarbonImmutable|null $last_access_at Only on the console's list: the latest sign-in of anyone who belongs to it.
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
@@ -167,6 +168,7 @@ final class Tenant extends Model
             'active_until' => 'immutable_datetime',
             'restriction' => TenantRestriction::class,
             'restricted_at' => 'immutable_datetime',
+            'last_access_at' => 'immutable_datetime',
             'has_module_rows' => 'boolean',
             'logo_width' => 'integer',
             'logo_height' => 'integer',

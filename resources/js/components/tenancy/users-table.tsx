@@ -25,6 +25,9 @@ export default function UsersTable({ users }: { users: PlatformUserRow[] }) {
                     <TableHead className="hidden md:table-cell">
                         Verificación en dos pasos
                     </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                        Último acceso
+                    </TableHead>
                     <TableHead>
                         <span className="sr-only">Acciones</span>
                     </TableHead>
