@@ -37,7 +37,11 @@ export default function ReportKpi({
                     tone === 'alarm' && 'text-risk-muy-alto-fg',
                 )}
             >
-                {shown}&nbsp;%
+                {/* On paper the final figure shows from the start: the count is for the screen only. */}
+                <span className="print:hidden">{shown}&nbsp;%</span>
+                <span className="hidden print:inline">
+                    {Math.round(share)}&nbsp;%
+                </span>
             </p>
             <div className="h-1.5 overflow-hidden rounded-full bg-border">
                 <div

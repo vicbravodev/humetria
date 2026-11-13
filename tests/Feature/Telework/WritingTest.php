@@ -31,6 +31,12 @@ function saveWriting(array $data, string $kind = 'policy'): Illuminate\Testing\T
     return test()->put(route('tenant.telework.writing.update', [test()->tenant, $kind]), $data);
 }
 
+it('names the center in the preview of the policy when it is written from the route of one', function (): void {
+    $this->actingAs($this->hr)
+        ->get(route('tenant.telework.writing.show', [$this->tenant, 'policy', 'center' => $this->center->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('document.owner', 'Autopartes Demo · Planta Querétaro'));
+});
+
 it('opens the policy on its first question, with what the board marks and the text it makes so far', function (): void {
     $this->actingAs($this->hr)
         ->get(route('tenant.telework.writing.show', [$this->tenant, 'policy']))

@@ -834,3 +834,16 @@ function climateManagerSurvey(Tenant $tenant, array $groups): App\Modules\Engage
 
     return $survey;
 }
+
+/**
+ * Switches the page to the print media, as the browser does for paper or a PDF, without firing `beforeprint`.
+ * Pest's browser plugin has no emulateMedia, so this sends Playwright's own message to the page.
+ */
+function emulatePrint(AwaitableWebpage $page): AwaitableWebpage
+{
+    $inner = (new ReflectionProperty(AwaitableWebpage::class, 'page'))->getValue($page);
+    $guid = (new ReflectionProperty($inner, 'guid'))->getValue($inner);
+    iterator_to_array(Pest\Browser\Playwright\Client::instance()->execute($guid, 'emulateMedia', ['media' => 'print']));
+
+    return $page;
+}

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { keyFindings, pendingText } from '@/lib/report-findings';
+import {
+    keyFindings,
+    pendingText,
+    strengthCaption,
+} from '@/lib/report-findings';
 import type { AreaResults, RiskGroup, RiskResults } from '@/types';
 
 function group(key: string, levels: number[]): RiskGroup {
@@ -140,5 +144,14 @@ describe('keyFindings', () => {
                 detail: 'Ningún cuestionario queda en riesgo alto o muy alto; 2 de 20 (10\u00a0%) quedan en riesgo medio.',
             },
         ]);
+    });
+});
+
+describe('strengthCaption', () => {
+    it('calls it a strength only when nobody is in alto or muy alto', () => {
+        expect(strengthCaption(group('a', [3, 2, 0, 0, 0]))).toBe('Fortaleza');
+        expect(strengthCaption(group('a', [3, 2, 0, 1, 0]))).toBe(
+            'Dominio con menor riesgo',
+        );
     });
 });

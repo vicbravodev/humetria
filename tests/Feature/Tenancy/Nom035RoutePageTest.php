@@ -173,6 +173,18 @@ it('does not read 7.8 as done while the published results are not in front of th
     nom035Route()->assertInertia(fn (Assert $page) => $page->where('rows.3.state', 'done'));
 });
 
+// H-02: published results that nobody can reach say what is missing (the people's page or a physical means), not «Aún no compartes».
+it('says to turn on the page of the people when the results are published but nobody can see them', function (): void {
+    ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.3.state', 'missing')
+        ->where('rows.3.detail', 'Ya publicaste los resultados, pero las personas aún no pueden verlos: activa su página o registra un medio físico')
+        ->where('rows.3.href', route('tenant.disclosure.page', $this->tenant))
+        ->where('rows.3.action', 'Activar la página de las personas'));
+});
+
 it('waits for the evaluation before what follows it, and asks a small center only for the Guía I', function (): void {
     $small = WorkCenter::factory()->for($this->tenant)->create();
     staffOf($this->tenant, $small, 15);

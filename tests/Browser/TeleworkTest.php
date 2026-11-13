@@ -467,6 +467,23 @@ it('lets the Comisión decide a checklist and leaves the inbox empty', function 
     expect(WorkplaceReview::query()->sole()->decision->value)->toBe('not_valid');
 });
 
+// C-06: validating a list with unfavorable answers asks for the observation of the Comisión, and takes it from the same form.
+it('asks the Comisión for an observation to validate a list with unfavorable answers', function (): void {
+    [, $application, $tenant] = reviewAddress();
+
+    visit("/admin/acme/telework/applications/{$application->id}/review")
+        ->press('Registrar decisión')
+        ->assertSee('Escribe una observación: la lista tiene 1 respuesta desfavorable.')
+        ->fill('#decision-notes', 'Lo vimos por video: la luz se corrigió.')
+        ->press('Registrar decisión')
+        ->assertSee('Decisión registrada')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    workIn($tenant);
+    expect(WorkplaceReview::query()->sole()->decision->value)->toBe('valid');
+});
+
 it('tells the Comisión a remote check cannot validate a place whose person has not answered a new list', function (): void {
     [, $application, $tenant] = reviewAddress();
     workIn($tenant);

@@ -36,10 +36,30 @@ final readonly class Nom035Rows
             $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', $facts->policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.write', [$tenantSlug, 'policy', 'center' => $workCenterId]), 'Escribir la política'),
             $this->evaluation($tenantSlug, $facts, $evaluation),
             $this->after($evaluation, $this->channeling($tenantSlug, $facts, $evaluation, $channelAt)),
-            $this->chapterSeven($facts, $evaluation, $this->row(4, '7.8', 'Resultados a disposición de las personas', $facts->shared ? null : 'Aún no compartes los resultados de la última evaluación', 'manage-disclosure', $evaluation === null ? null : route('tenant.disclosure.results.share', [$tenantSlug, $evaluation]), 'Preparar el resumen')),
+            $this->chapterSeven($facts, $evaluation, $this->sharing($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->program($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->row(6, '7.7', 'Informe de resultados', $facts->reported ? null : 'Le faltan conclusiones, recomendaciones y responsable', 'manage-campaigns', $evaluation === null ? null : route('tenant.campaigns.report', [$tenantSlug, $evaluation]), 'Completar el informe')),
         ];
+    }
+
+    /**
+     * 7.8: to publish the summary, or, once published, to turn on the page of the people or record a physical means.
+     *
+     * @return Row
+     */
+    private function sharing(string $tenantSlug, Nom035Facts $facts, ?string $evaluation): array
+    {
+        $unseen = $facts->unseen && ! $facts->shared;
+
+        return $this->row(
+            4,
+            '7.8',
+            'Resultados a disposición de las personas',
+            $facts->shared ? null : ($unseen ? 'Ya publicaste los resultados, pero las personas aún no pueden verlos: activa su página o registra un medio físico' : 'Aún no compartes los resultados de la última evaluación'),
+            'manage-disclosure',
+            $unseen ? route('tenant.disclosure.page', $tenantSlug) : ($evaluation === null ? null : route('tenant.disclosure.results.share', [$tenantSlug, $evaluation])),
+            $unseen ? 'Activar la página de las personas' : 'Preparar el resumen',
+        );
     }
 
     /**
