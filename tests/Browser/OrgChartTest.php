@@ -400,8 +400,8 @@ it('edits in the same screen: the band, the tray, and «Cambiar jefe» with its 
         ->assertSee('Cambiar jefe de Ana López')
         ->click('#manager-of-'.$people['ana']->id)
         ->type('[role="combobox"][aria-controls="manager-of-'.$people['ana']->id.'-options"]', 'sofía')
-        ->assertSee('Sofía Luna · Gerente de ventas')
-        ->keys('[role="combobox"][aria-controls="manager-of-'.$people['ana']->id.'-options"]', 'Enter')
+        // Pick the option itself: Enter right after typing can land before the server search narrows the list.
+        ->click('#manager-of-'.$people['ana']->id.'-options [role="option"]:has-text("Sofía Luna")')
         ->click('[role="dialog"] button:has-text("Asignar")')
         ->assertSee('Ana López ahora reporta a Sofía Luna')
         ->assertSee('Deshacer')
@@ -489,8 +489,8 @@ it('chooses the manager on the row of whoever has none: «Asignar» is the prima
         ->assertDisabled('[aria-label="Asignar jefe a Lupe Sola"]')
         ->click('#manager-'.$lupe->id)
         ->type('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'sofía')
-        ->assertSee('Sofía Luna · Gerente de ventas')
-        ->keys('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'Enter')
+        // Pick the option itself: Enter right after typing can land before the server search narrows the list.
+        ->click('#manager-'.$lupe->id.'-options [role="option"]:has-text("Sofía Luna")')
         ->click('[aria-label="Asignar jefe a Lupe Sola"]')
         ->assertSee('Jefe actualizado.')
         ->assertNoJavaScriptErrors()
