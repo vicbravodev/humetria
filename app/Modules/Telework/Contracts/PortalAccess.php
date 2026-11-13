@@ -19,6 +19,12 @@ interface PortalAccess
     public function open(string $token): ?PortalIdentity;
 
     /**
+     * Whether the company of a valid link has stopped (or never had) the module; false for a link that is not valid.
+     * Answered from the link already opened in this request.
+     */
+    public function stopped(string $token, string $module): bool;
+
+    /**
      * The personal token of an employee of the current company, to build the link to a page of theirs. It is the same one
      * each time (issuing it never breaks the link the person has) and it is never logged.
      */

@@ -43,6 +43,6 @@ final readonly class OpenPortal
 
         $teleworker = Teleworker::query()->where('employee_id', $person->id)->where('status', '!=', TeleworkerStatus::Ended)->first(['id']);
 
-        return new OpenedPortal($company->id, $person->id, $teleworker?->id, $company->tradeName, $person->name, ! $company->stopped('nom037'));
+        return new OpenedPortal($company->id, $person->id, $teleworker?->id, $company->tradeName, $person->name, ! $company->stopped('nom037'), $company);
     }
 }

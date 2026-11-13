@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Modules\Telework\Contracts\PortalAccess;
-use App\Modules\Tenancy\Contracts\Companies;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final readonly class RequirePortalTool
 {
-    public function __construct(private PortalAccess $access, private Companies $companies) {}
+    public function __construct(private PortalAccess $access) {}
 
     /**
      * @param  Closure(Request): Response  $next
@@ -26,8 +25,8 @@ final readonly class RequirePortalTool
     {
         $token = $request->route('token');
 
-        if (is_string($token) && $this->access->open($token) !== null) {
-            abort_if($this->companies->current()->stopped($module), 404);
+        if (is_string($token)) {
+            abort_if($this->access->stopped($token, $module), 404);
         }
 
         return $next($request);

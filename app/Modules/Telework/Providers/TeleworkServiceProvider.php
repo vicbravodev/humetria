@@ -40,7 +40,7 @@ final class TeleworkServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(Committee::class, CommitteeGate::class);
-        $this->app->bind(PortalAccess::class, TokenPortalAccess::class);
+        $this->app->scoped(PortalAccess::class, TokenPortalAccess::class);
         $this->app->bind(PortalLinks::class, EmailedPortalLinks::class);
         $this->app->bind(TeleworkStanding::class, CompanyTeleworkStanding::class);
         $this->app->bind(TeleworkRoute::class, CompanyTeleworkRoute::class);
