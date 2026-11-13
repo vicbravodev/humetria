@@ -2,15 +2,19 @@ import AccountContactFields from '@/components/billing/account-contact-fields';
 import AccountField from '@/components/billing/account-field';
 import AccountFiscalFields from '@/components/billing/account-fiscal-fields';
 import AccountKindChoice from '@/components/billing/account-kind-choice';
-import type { AccountDetail } from '@/types';
+import type { AccountDetail, SatOption } from '@/types';
 
 /** The fields of a payer account; its kind is chosen when creating, and never changes after. */
 export default function AccountFormFields({
     errors,
     account,
+    taxRegimes,
+    cfdiUses,
 }: {
     errors: Partial<Record<string, string>>;
     account?: AccountDetail;
+    taxRegimes: SatOption[];
+    cfdiUses: SatOption[];
 }) {
     return (
         <div className="grid gap-4">
@@ -35,7 +39,12 @@ export default function AccountFormFields({
                 error={errors['rfc']}
             />
             <AccountContactFields errors={errors} account={account} />
-            <AccountFiscalFields errors={errors} account={account} />
+            <AccountFiscalFields
+                errors={errors}
+                account={account}
+                taxRegimes={taxRegimes}
+                cfdiUses={cfdiUses}
+            />
         </div>
     );
 }

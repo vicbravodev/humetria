@@ -7,6 +7,7 @@ namespace App\Modules\Billing\Models;
 use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Enums\Profile;
 use App\Modules\Billing\Enums\SubscriptionStatus;
+use App\Modules\Billing\Support\Catalog;
 use Carbon\CarbonImmutable;
 use Database\Factories\Billing\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -56,6 +57,12 @@ final class Subscription extends Model
         }
 
         return $this->negotiated_valid_until === null || $day->lessThanOrEqualTo($this->negotiated_valid_until) ? $this->negotiated_price_cents : null;
+    }
+
+    /** The centers the company may have: what it contracted, and never fewer than its plan includes (the cap SetSubscription sets). */
+    public function allowedCenters(): int
+    {
+        return max($this->centers, Catalog::current()->includedCenters($this->plan));
     }
 
     /**

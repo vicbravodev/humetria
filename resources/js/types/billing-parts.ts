@@ -4,3 +4,6 @@ export type ModulesChange = {
     removed: string[];
     removedOn: string | null;
 };
+
+/** One entry of a SAT catalog: its code (what is stored) and its label with the name. */
+export type SatOption = { value: string; label: string };

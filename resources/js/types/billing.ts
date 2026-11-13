@@ -1,4 +1,4 @@
-import type { ModulesChange } from '@/types/billing-modules';
+import type { ModulesChange } from '@/types/billing-parts';
 import type { TenantRow } from '@/types/tenancy';
 
 export type AccountKind = 'direct' | 'consultant';
@@ -92,6 +92,8 @@ export type SubscriptionView = {
     status_label: string;
     seats: number;
     centers: number;
+    /** What the company may really have: never fewer than the plan includes. */
+    allowed_centers: number;
     /** The first day, Y-m-d, for the form. */
     starts_on: string;
     /** The next cut, written for display. */

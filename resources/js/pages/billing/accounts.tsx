@@ -12,6 +12,7 @@ import type {
     AccountRow,
     AccountView,
     Paginated,
+    SatOption,
 } from '@/types';
 
 /** Who pays what (pantalla Consola-Empresas): the accounts, direct or a consultant's, with how many companies each pays. */
@@ -19,10 +20,14 @@ export default function Accounts({
     accounts,
     filters,
     counts,
+    taxRegimes,
+    cfdiUses,
 }: {
     accounts: Paginated<AccountRow>;
     filters: AccountFilters;
     counts: Record<AccountView, number>;
+    taxRegimes: SatOption[];
+    cfdiUses: SatOption[];
 }) {
     const { auth } = usePage().props;
 
@@ -37,7 +42,12 @@ export default function Accounts({
                 >
                     <AccountsExports />
                     {/* Support reads who pays what; only the superadmin changes it. */}
-                    {auth.isSuperadmin && <AccountDialog />}
+                    {auth.isSuperadmin && (
+                        <AccountDialog
+                            taxRegimes={taxRegimes}
+                            cfdiUses={cfdiUses}
+                        />
+                    )}
                 </PageHeader>
                 {counts.all > 0 && (
                     <AccountsToolbar filters={filters} counts={counts} />
