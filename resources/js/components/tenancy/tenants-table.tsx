@@ -29,6 +29,9 @@ export default function TenantsTable({
                     <TableHead className="hidden md:table-cell">
                         Dueño
                     </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                        Último acceso
+                    </TableHead>
                     <TableHead>
                         <span className="sr-only">Acciones</span>
                     </TableHead>

@@ -22,6 +22,7 @@ export function AppBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                   navSections({
                       tenant: navTenant,
                       isStaff: auth.isStaff,
+                      isSuperadmin: auth.isSuperadmin,
                       home: tenant?.trade_name ?? 'Humetría',
                   }),
                   currentUrl,

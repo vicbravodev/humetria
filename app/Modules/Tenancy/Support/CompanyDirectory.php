@@ -61,12 +61,22 @@ final readonly class CompanyDirectory implements Companies
 
     private function summary(Tenant $tenant): CompanySummary
     {
+        return self::summaryOf($tenant, $this->modules->restrictedTo($tenant->id));
+    }
+
+    /**
+     * The company as other modules and emails show it, with the modules that limit it when they are known.
+     *
+     * @param  list<string>|null  $modules
+     */
+    public static function summaryOf(Tenant $tenant, ?array $modules = null): CompanySummary
+    {
         $logo = $tenant->logo_path === null ? null : new CompanyLogo(
             Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_path),
             (int) $tenant->logo_width,
             (int) $tenant->logo_height,
         );
 
-        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, $tenant->status()->isBlocked(), $logo, $tenant->type, $tenant->status()->isReadOnly(), $this->modules->restrictedTo($tenant->id));
+        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, $tenant->status()->isBlocked(), $logo, $tenant->type, $tenant->status()->isReadOnly(), $modules);
     }
 }

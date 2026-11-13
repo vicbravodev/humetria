@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\Modules\Billing\Providers;
 
 use App\Models\User;
+use App\Modules\Billing\Contracts\CompanyPlans;
 use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Billing\Contracts\PlanSteps;
+use App\Modules\Billing\Contracts\PlatformRevenue;
 use App\Modules\Billing\Contracts\StorageGuard;
 use App\Modules\Billing\Contracts\UsageMeter;
 use App\Modules\Billing\Listeners\CountSentMail;
+use App\Modules\Billing\Support\ContractedRevenue;
 use App\Modules\Billing\Support\LedgerMailQuota;
 use App\Modules\Billing\Support\LedgerStorageGuard;
 use App\Modules\Billing\Support\LedgerUsageMeter;
+use App\Modules\Billing\Support\SubscriptionPlans;
 use App\Modules\Billing\Support\SubscriptionSteps;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -28,6 +32,8 @@ final class BillingServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(PlanSteps::class, SubscriptionSteps::class);
+        $this->app->bind(CompanyPlans::class, SubscriptionPlans::class);
+        $this->app->bind(PlatformRevenue::class, ContractedRevenue::class);
         $this->app->bind(UsageMeter::class, LedgerUsageMeter::class);
         $this->app->bind(StorageGuard::class, LedgerStorageGuard::class);
         $this->app->bind(MailQuota::class, LedgerMailQuota::class);

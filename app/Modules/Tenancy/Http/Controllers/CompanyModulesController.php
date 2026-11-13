@@ -80,6 +80,7 @@ final class CompanyModulesController extends Controller
                 ['meter' => 'storage_bytes', 'label' => 'Archivos', 'unit' => 'bytes'],
             ]),
             'can_manage' => Gate::allows('manage-tenants'),
+            'can_audit' => Gate::allows('view-audit'),
         ]);
     }
 

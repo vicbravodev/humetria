@@ -35,7 +35,16 @@ describe('navSections', () => {
                 }),
             ),
         ).toEqual([
-            ['Acme', ['Panel', 'Centros de trabajo', 'Empleados', 'Usuarios']],
+            [
+                'Acme',
+                [
+                    'Panel',
+                    'Centros de trabajo',
+                    'Empleados',
+                    'Usuarios',
+                    'Plan y uso',
+                ],
+            ],
             [
                 'Cumple la norma',
                 ['NOM-035', 'NOM-037', 'Ley Silla', 'Asistencia'],
@@ -93,7 +102,7 @@ describe('navSections', () => {
                 }),
             ),
         ).toEqual([
-            ['Humetría', ['Panel', 'Agremiados', 'Usuarios']],
+            ['Humetría', ['Panel', 'Agremiados', 'Usuarios', 'Plan y uso']],
             ['Ordena tu operación', ['Compensación']],
         ]);
     });

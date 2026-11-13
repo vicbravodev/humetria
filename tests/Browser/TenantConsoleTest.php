@@ -672,3 +672,79 @@ it('does not undo a status tab clicked while a search waits to go out', function
         ->assertSee('Ninguna empresa coincide')
         ->assertNoJavaScriptErrors();
 });
+
+it('shows the superadmin the audit trail, with an entry opening its context', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+    $actor = User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'tenant_id' => $tenant->id,
+        'actor_id' => $actor->id,
+        'event' => 'campaign.launched',
+        'metadata' => ['centro' => 'Planta Norte'],
+        'created_at' => now(),
+    ]);
+
+    visitPage('tenancy/audit', '/admin/audit', $dark, $mobile)
+        ->assertSee('Bitácora')
+        ->assertSee('Campaña lanzada')
+        ->assertSee('Ana Pérez')
+        ->click('[aria-label="Detalle: Campaña lanzada"]')
+        ->assertSee('Planta Norte');
+})->with($looks);
+
+it('says so when the filters of the audit trail match nothing', function (bool $dark): void {
+    signInAsSuperadmin();
+
+    visitPage('tenancy/audit', '/admin/audit?family=billing', $dark)
+        ->assertSee('Nada coincide con estos filtros')
+        ->assertSee('Quitar filtros');
+})->with(['light' => false, 'dark' => true]);
+
+it('shows the superadmin the platform users, each with a menu that asks before it acts', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'two_factor_confirmed_at' => now(), 'two_factor_secret' => 's', 'two_factor_recovery_codes' => 'c']);
+
+    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
+        ->assertSee('Usuarios')
+        ->assertSee('Ana Pérez')
+        ->assertSee('ana@acme.mx')
+        ->assertSee('Superadmin')
+        ->click('[aria-label="Acciones de Ana Pérez"]')
+        ->assertSee('Quitar verificación en dos pasos')
+        ->assertSee('Dar rol de soporte')
+        ->click('Quitar verificación en dos pasos')
+        ->assertSee('¿Quitar la verificación en dos pasos de Ana Pérez?')
+        ->assertSee('ana@acme.mx');
+})->with($looks);
+
+it('says so when no user matches the search', function (bool $dark): void {
+    signInAsSuperadmin();
+
+    visitPage('tenancy/users', '/admin/platform-users?q=zzzz', $dark)
+        ->assertSee('Nadie coincide con tu búsqueda');
+})->with(['light' => false, 'dark' => true]);
+
+it('shows the superadmin the platform in four figures, each a way into its list', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->count(2)->create();
+    Tenant::factory()->suspended()->create();
+    App\Modules\Demos\Models\DemoRequest::factory()->create();
+
+    visitPage('tenancy/overview', '/admin/overview', $dark, $mobile)
+        ->assertSee('Resumen')
+        ->assertSee('Ingreso mensual contratado')
+        ->assertSee('Solicitudes de demo')
+        ->assertSee('Sin entrar en 30 días')
+        ->assertSee('Suspendidas')
+        ->assertSee('1 espera respuesta.');
+})->with($looks);
+
+it('shows when each company and each user last came in', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['last_login_at' => '2026-11-10 18:00:00']))->create();
+
+    visitPage('tenancy/index', '/admin/companies')->assertSee('Último acceso')->assertSee('10 nov 2026');
+});

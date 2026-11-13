@@ -59,6 +59,7 @@ it('lists each company with its status for the superadmin', function (): void {
                 'uses_attendance' => false,
                 'active_until' => null,
                 'blocked' => false,
+                'last_access' => null,
                 'owner' => null,
                 'invitation' => null,
             ]]));

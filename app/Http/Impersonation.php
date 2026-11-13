@@ -69,7 +69,7 @@ final readonly class Impersonation
             Log::info('impersonation.started', ['subject_id' => $target->id]);
         }, ['user_id' => $impersonator->id, 'impersonator_id' => $impersonator->id]);
 
-        $this->guard->login($target);
+        $this->switchTo($target);
         $this->session->forget(self::PASSWORD_CONFIRMED_KEY);
         $this->session->put([self::SESSION_KEY => $impersonator->id, self::IMPERSONATED_KEY => $target->id]);
         $tenantId === null ? $this->session->forget(self::TENANT_KEY) : $this->session->put(self::TENANT_KEY, $tenantId);
@@ -100,8 +100,14 @@ final readonly class Impersonation
             return null;
         }
 
-        $this->guard->login($impersonator);
+        $this->switchTo($impersonator);
 
         return $impersonator;
+    }
+
+    /** Signs in as the other side; that is not a person signing in, so what records logins is told to leave it out. */
+    private function switchTo(User $user): void
+    {
+        Context::scope(fn () => $this->guard->login($user), ['impersonation_switch' => true]);
     }
 }

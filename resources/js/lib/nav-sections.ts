@@ -3,13 +3,15 @@ import {
     mainNavItems,
     type NavSection,
 } from '@/lib/app-navigation';
-import { superadminNavItems } from '@/lib/staff-navigation';
+import { platformNavItems } from '@/lib/staff-navigation';
 import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
 import type { NavTenant } from '@/types';
 
 type Options = {
     tenant: NavTenant | null;
     isStaff: boolean;
+    /** The superadmin also sees the platform's users and its audit trail. */
+    isSuperadmin?: boolean | undefined;
     /** Evaluations in course, counted on NOM-035. */
     inCourse?: number;
     /** What the company's own pages are called in the trail: the company's name. */
@@ -24,6 +26,7 @@ type Options = {
 export function navSections({
     tenant,
     isStaff,
+    isSuperadmin = false,
     inCourse = 0,
     home = 'Humetría',
 }: Options): NavSection[] {
@@ -47,7 +50,7 @@ export function navSections({
         {
             key: 'platform',
             label: 'Plataforma',
-            items: isStaff ? superadminNavItems : [],
+            items: isStaff ? platformNavItems(isSuperadmin) : [],
         },
     ];
 

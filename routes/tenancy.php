@@ -3,12 +3,34 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Http\Controllers\AcceptInvitationController;
+use App\Modules\Tenancy\Http\Controllers\AuditConsoleController;
 use App\Modules\Tenancy\Http\Controllers\CompanyModulesController;
 use App\Modules\Tenancy\Http\Controllers\ImpersonateOwnerController;
 use App\Modules\Tenancy\Http\Controllers\InvitationConsoleController;
+use App\Modules\Tenancy\Http\Controllers\PlatformOverviewController;
 use App\Modules\Tenancy\Http\Controllers\TenantConsoleController;
 use App\Modules\Tenancy\Http\Controllers\TenantLogoController;
+use App\Modules\Tenancy\Http\Controllers\UserConsoleController;
 use Illuminate\Support\Facades\Route;
+
+// The platform in a few figures, for the superadmin.
+Route::get('admin/overview', PlatformOverviewController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('overview.index');
+
+// The platform's audit trail: read only, for the superadmin.
+Route::get('admin/audit', [AuditConsoleController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('audit.index');
+
+// The platform's people, for the superadmin: help one back in, give or take away support. Never create a superadmin here.
+Route::middleware(['auth', 'verified'])->prefix('admin/platform-users')->name('platform-users.')->group(function (): void {
+    Route::get('/', [UserConsoleController::class, 'index'])->name('index');
+    Route::post('{user}/password-reset', [UserConsoleController::class, 'sendReset'])->name('password-reset');
+    Route::delete('{user}/two-factor', [UserConsoleController::class, 'removeTwoFactor'])->name('two-factor.destroy');
+    Route::post('{user}/support', [UserConsoleController::class, 'grantSupport'])->name('support.store');
+    Route::delete('{user}/support', [UserConsoleController::class, 'revokeSupport'])->name('support.destroy');
+});
 
 Route::get('admin/companies', [TenantConsoleController::class, 'index'])
     ->middleware(['auth', 'verified'])

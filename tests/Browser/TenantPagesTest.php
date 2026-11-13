@@ -251,3 +251,40 @@ it('shows no read-only notice in a company that works', function (): void {
     visitPage('dashboard', '/admin/activa')
         ->assertScript('() => document.querySelector(\'[data-slot="company-read-only-notice"]\') === null', true);
 });
+
+it('shows the owner the plan, what the company uses and its tools', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
+    App\Modules\Billing\Models\Subscription::factory()->create(['tenant_id' => $tenant->id, 'seats' => 50, 'centers' => 2, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01']);
+    resolve(App\Modules\Tenancy\Contracts\CompanyLimits::class)->sync($tenant->id, ['seats' => 50, 'centers' => 2]);
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'attendance'], Carbon\CarbonImmutable::parse('2026-11-01'));
+
+    visitPage('tenancy/plan', '/admin/acme/plan', $dark, $mobile)
+        ->assertSee('Plan y uso')
+        ->assertSee('Plan Cumplimiento')
+        ->assertSee('se renueva el 1 dic 2026')
+        ->assertSee('Centros de trabajo')
+        ->assertSee('de 50')
+        ->assertSee('NOM-035')
+        ->assertSee('Incluida')
+        ->assertSee('No incluida');
+})->with($looks);
+
+it('says the company has no plan yet', function (bool $dark): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
+
+    visitPage('tenancy/plan', '/admin/acme/plan', $dark)
+        ->assertSee('Tu empresa aún no tiene un plan asignado');
+})->with(['light' => false, 'dark' => true]);
+
+it('links «Plan y uso» from the owner\'s menu only', function (): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
+
+    visit('/admin/acme')->click('Plan y uso')->assertPathIs('/admin/acme/plan');
+
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr));
+
+    visit('/admin/acme')->assertDontSee('Plan y uso');
+});

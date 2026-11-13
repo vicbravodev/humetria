@@ -48,6 +48,7 @@ export function AppSidebar() {
     const sections = navSections({
         tenant,
         isStaff: auth.isStaff,
+        isSuperadmin: auth.isSuperadmin,
         inCourse: inCourse?.count ?? 0,
     });
 
