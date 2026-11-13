@@ -14,19 +14,41 @@ const acme = (role: Role, allowed = true, type?: 'union') => ({
 
 const shape = (tabs: ReturnType<typeof mobileTabs>) =>
     tabs.map((tab) =>
-        tab.key === 'compliance'
+        tab.key === 'compliance' || tab.key === 'operation'
             ? [tab.title, tab.items.map((item) => item.title)]
             : tab.title,
     );
 
 describe('mobileTabs', () => {
-    it('folds the menu of whoever runs the company into Panel, Normas, Quejas and Más (board 40, named after the sidebar families)', () => {
-        expect(shape(mobileTabs(acme('owner'), false))).toEqual([
+    it('folds the menu of whoever runs the company into Panel, Normas, Operación, Quejas and Más (board 40, named after the sidebar families), never more than five', () => {
+        const tabs = mobileTabs(acme('owner'), false);
+
+        expect(shape(tabs)).toEqual([
             'Panel',
             ['Normas', ['NOM-035', 'NOM-037', 'Ley Silla', 'Asistencia']],
+            ['Operación', ['Empleados', 'Vacaciones', 'Asistencia']],
             'Quejas',
             'Más',
         ]);
+        expect(tabs.length).toBeLessThanOrEqual(5);
+    });
+
+    it('leaves Operación out for whoever has none of its tools, and for a union', () => {
+        const noTools = {
+            ...acme('owner'),
+            can: {
+                ...can(true, true),
+                manage_organization: false,
+                view_vacations: false,
+                view_attendance: false,
+            },
+        };
+
+        expect(
+            shape(mobileTabs(noTools, false)).some(
+                (tab) => Array.isArray(tab) && tab[0] === 'Operación',
+            ),
+        ).toBe(false);
     });
 
     it('leaves Quejas out for whoever neither handles complaints nor manages the channel', () => {
@@ -79,6 +101,11 @@ describe('currentTab', () => {
     it('marks Normas on any of its standards and on the pages below them', () => {
         expect(on('/admin/acme/seating')).toBe('compliance');
         expect(on('/admin/acme/attendance/devices')).toBe('compliance');
+    });
+
+    it('marks Operación on its pages and on the ones below them', () => {
+        expect(on('/admin/acme/employees')).toBe('operation');
+        expect(on('/admin/acme/vacations/requests')).toBe('operation');
     });
 
     it('marks Quejas on its cases', () => {
