@@ -58,13 +58,17 @@ final class PlanEmployeeImport
     /** A union's people are identified by the company ID alone: no contact, gender or work center. */
     private bool $union = false;
 
+    /** The center a row without one goes to; the caller has checked it is one of the company's active centers. */
+    private ?string $defaultCenterId = null;
+
     public function __construct(private readonly WorkCenters $workCenters, private readonly Companies $companies) {}
 
     /**
      * @param  list<array<string, string>>  $rows  as EmployeeCsv reads them.
      */
-    public function handle(array $rows): EmployeeImportPlan
+    public function handle(array $rows, ?string $defaultCenterId = null): EmployeeImportPlan
     {
+        $this->defaultCenterId = $defaultCenterId;
         $this->load();
         $valid = [];
         $errors = [];
@@ -184,7 +188,7 @@ final class PlanEmployeeImport
             $messages[] = Str::of($row['genero'] ?? '')->trim()->lower()->toString() === 'm' ? '«M» puede ser Masculino o Mujer: escribe Hombre o Mujer (o H / F).' : 'El género debe ser Mujer, Hombre u Otro.';
         }
 
-        $centerId = $this->centers[self::fold($center)] ?? null;
+        $centerId = $center === '' ? $this->defaultCenterId : ($this->centers[self::fold($center)] ?? null);
 
         if ($centerId === null) {
             $messages[] = $center === '' ? 'El campo centro de trabajo es obligatorio.' : "No hay un centro de trabajo «{$center}».";

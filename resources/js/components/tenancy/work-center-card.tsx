@@ -65,7 +65,9 @@ export default function WorkCenterCard({
                     <Link
                         href={
                             people.load
-                                ? importPeople(tenantSlug)
+                                ? importPeople(tenantSlug, {
+                                      query: { center: workCenter.id },
+                                  })
                                 : employees(tenantSlug, {
                                       query: { work_center: workCenter.id },
                                   })
