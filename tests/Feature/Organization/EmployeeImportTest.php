@@ -6,6 +6,7 @@ use App\Modules\Organization\Actions\ImportEmployees;
 use App\Modules\Organization\Http\Controllers\EmployeeImportController;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Organization\Support\EmployeeCsv;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -267,4 +268,43 @@ it('still says what changes when the file carries the manager column', function 
         ->assertRedirect();
 
     expect(importFlash()['changes'][0]['changes'])->toContain(['label' => 'Puesto', 'before' => 'Operador', 'after' => 'Operador Senior']);
+});
+
+it('shows the pay scale in what changes: category, level, hire date and group, before and after', function (): void {
+    $before = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    Employee::factory()->create([
+        'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => null, 'gender' => 'female', 'job_title' => 'Operadora', 'area_id' => Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Producción'])->id,
+        'employee_number' => 'A-1', 'job_grade_id' => $before->id, 'hired_on' => '2020-01-01', 'staff_group' => 'unionized',
+    ]);
+
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['file' => csvFile(
+            ['Ana López,ana@acme.mx,,Mujer,Planta Querétaro,Producción,Operadora,A-1,Supervisor,B,2021-06-15,Confianza'],
+            CSV_HEADER.',categoria,nivel,fecha_de_ingreso,grupo',
+        )])
+        ->assertRedirect();
+
+    expect(importFlash()['changes'][0]['changes'])->toBe([
+        ['label' => 'Categoría', 'before' => 'Operador', 'after' => 'Supervisor'],
+        ['label' => 'Nivel', 'before' => 'A', 'after' => 'B'],
+        ['label' => 'Fecha de ingreso', 'before' => '2020-01-01', 'after' => '2021-06-15'],
+        ['label' => 'Grupo', 'before' => 'Sindicalizado', 'after' => 'Confianza'],
+    ]);
+});
+
+it('warns, without blocking, about a row with a category but no staff group: it would be left out of the compensation cost', function (): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['file' => csvFile(
+            [
+                'Ana López,ana@acme.mx,,Mujer,Planta Querétaro,Producción,Operadora,A-1,Operador,A,2021-06-15,Confianza',
+                'Beto Díaz,beto@acme.mx,,Hombre,Planta Querétaro,Producción,Operador,B-2,Operador,A,2021-06-15,',
+                'Carla Ruiz,carla@acme.mx,,Mujer,Planta Querétaro,Producción,Vendedora,C-3,,,,',
+            ],
+            CSV_HEADER.',categoria,nivel,fecha_de_ingreso,grupo',
+        )])
+        ->assertRedirect();
+
+    expect(importFlash()['errors'])->toBe([])
+        ->and(importFlash()['status'])->toBe('ready')
+        ->and(importFlash()['warnings'])->toBe([['row' => 3, 'messages' => ['Tiene categoría pero no grupo: sin grupo (sindicalizado o de confianza) no entra en el costo de Compensación.']]]);
 });

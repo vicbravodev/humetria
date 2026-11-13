@@ -137,6 +137,9 @@ final class CompanyCompensationRoster implements CompensationRoster
             missing: $missing,
             missingWithoutNumber: $missingWithoutNumber,
             inactive: Employee::query()->whereNotNull('deactivated_at')->count(),
+            withoutGrade: (clone $incomplete)->whereNull('job_grade_id')->count(),
+            withoutHireDate: (clone $incomplete)->whereNull('hired_on')->count(),
+            withoutGroup: (clone $incomplete)->whereNull('staff_group')->count(),
         );
     }
 

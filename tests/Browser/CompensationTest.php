@@ -662,7 +662,7 @@ it('shows the data of the contract and the scenarios with their cost on the star
     visitPage('compensation/index', "{$url}/compensation", $dark, $mobile)
         ->assertSee('Los datos de tu contrato')
         ->assertSee('El cálculo cubre 1 de 2 personas. Con 2 datos más, el número es exacto.')
-        ->assertSee('1 sin categoría ni nivel')
+        ->assertSee('1 sin categoría y nivel')
         ->assertSee('Tus escenarios')
         ->assertSee('5 % sindicalizados · 3 % confianza · 2 meses de retroactivo')
         ->assertSee('Comparar los 2')

@@ -135,7 +135,8 @@ it('requires the company ID in every row and rejects one repeated in the file wi
 it('previews a union file without writing anything', function (): void {
     importUnion($this, ['E-001,Ana,Operador,A,,,,,'], confirm: false);
 
-    expect(unionFlash())->toBe(['status' => 'ready', 'rows' => 1, 'created' => 1, 'updated' => 0, 'errors' => []])
+    // The row has a category and no group: it imports, with a warning that it will not count in the compensation cost.
+    expect(unionFlash())->toBe(['warnings' => [['row' => 2, 'messages' => ['Tiene categoría pero no grupo: sin grupo (sindicalizado o de confianza) no entra en el costo de Compensación.']]], 'status' => 'ready', 'rows' => 1, 'created' => 1, 'updated' => 0, 'errors' => []])
         ->and(Employee::query()->withoutGlobalScopes()->count())->toBe(0)
         ->and(JobGrade::query()->withoutGlobalScopes()->count())->toBe(0);
 });

@@ -22,7 +22,7 @@ final readonly class ContractStatus
     public function __construct(private CompensationRoster $roster, private JobGrades $jobGrades, private CountBenefits $benefits) {}
 
     /**
-     * @return array{roster: array{people: int, missing: int}, tabulator: array{grades: int, without_salary: int}, benefits: array{active: int}, overrides: array{people: int}, risk_premium: array{set: bool}, accuracy: array{costed: int, total: int, missing: int}}
+     * @return array{roster: array{people: int, missing: int, without_grade: int, without_hire_date: int, without_group: int}, tabulator: array{grades: int, without_salary: int}, benefits: array{active: int}, overrides: array{people: int}, risk_premium: array{set: bool}, accuracy: array{costed: int, total: int, missing: int}}
      */
     public function handle(CarbonImmutable $today): array
     {
@@ -33,7 +33,10 @@ final readonly class ContractStatus
         $missing = $gaps->total - $gaps->costed;
 
         return [
-            'roster' => ['people' => $gaps->total, 'missing' => $missing],
+            'roster' => [
+                'people' => $gaps->total, 'missing' => $missing,
+                'without_grade' => $gaps->withoutGrade, 'without_hire_date' => $gaps->withoutHireDate, 'without_group' => $gaps->withoutGroup,
+            ],
             'tabulator' => ['grades' => $grades, 'without_salary' => max(0, $grades - $paid)],
             'benefits' => ['active' => $this->benefits->handle()['active']],
             'overrides' => ['people' => SalaryOverride::query()->distinct()->count('employee_number')],

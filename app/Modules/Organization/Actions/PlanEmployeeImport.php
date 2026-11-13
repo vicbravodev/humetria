@@ -12,6 +12,7 @@ use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Organization\Support\EmployeeCsv;
 use App\Modules\Organization\Support\ImportChanges;
 use App\Modules\Organization\Support\ImportManagers;
@@ -110,7 +111,7 @@ final class PlanEmployeeImport
         foreach ($valid as $line => $row) {
             $manager = $resolved['managers'][$line] ?? null;
             $managerLine = $manager !== null && str_starts_with($manager, 'row:') ? (int) substr($manager, 4) : null;
-            $valid[$line] = new EmployeeImportRow($row->data, $row->existingId, $row->absent, $managerLine === null ? $manager : null, $managerLine === null ? null : ($places[$managerLine] ?? null), $row->changes);
+            $valid[$line] = new EmployeeImportRow($row->data, $row->existingId, $row->absent, $managerLine === null ? $manager : null, $managerLine === null ? null : ($places[$managerLine] ?? null), $row->changes, $row->warnings);
         }
 
         foreach ($resolved['errors'] as $line => $message) {
@@ -139,7 +140,11 @@ final class PlanEmployeeImport
             $this->states[self::fold($code)] = $code;
         }
 
-        foreach (Employee::query()->addSelect(['area_name' => Area::query()->select('name')->whereColumn('areas.id', 'employees.area_id')])->get(['id', 'email', 'employee_number', 'manager_id', 'deactivated_at', 'name', 'mobile', 'gender', 'work_center_id', 'area_id', 'job_title', 'hired_on', 'staff_group']) as $employee) {
+        foreach (Employee::query()->addSelect([
+            'area_name' => Area::query()->select('name')->whereColumn('areas.id', 'employees.area_id'),
+            'grade_category' => JobGrade::query()->select('category')->whereColumn('job_grades.id', 'employees.job_grade_id'),
+            'grade_level' => JobGrade::query()->select('level')->whereColumn('job_grades.id', 'employees.job_grade_id'),
+        ])->get(['id', 'email', 'employee_number', 'manager_id', 'deactivated_at', 'name', 'mobile', 'gender', 'work_center_id', 'area_id', 'job_title', 'hired_on', 'staff_group', 'job_grade_id']) as $employee) {
             $this->people[$employee->id] = $employee;
             $this->existing[$employee->id] = ['number' => $employee->employee_number, 'email' => $employee->email, 'manager' => $employee->manager_id, 'active' => $employee->deactivated_at === null];
 
@@ -211,7 +216,7 @@ final class PlanEmployeeImport
         );
         $absent = [...$payScale['absent'], ...(array_key_exists('jefe', $row) ? [] : ['manager_id'])];
 
-        return [new EmployeeImportRow($data, $existingId, $absent, changes: $this->changesOf($existingId, $data, $absent)), []];
+        return [new EmployeeImportRow($data, $existingId, $absent, changes: $this->changesOf($existingId, $data, $absent), warnings: $this->warningsOf($existingId, $data, $absent)), []];
     }
 
     /**
@@ -260,7 +265,7 @@ final class PlanEmployeeImport
             ])),
         ];
 
-        return [new EmployeeImportRow($data, $existingId, $absent, changes: $this->unionChangesOf($existingId, $data, $absent)), []];
+        return [new EmployeeImportRow($data, $existingId, $absent, changes: $this->unionChangesOf($existingId, $data, $absent), warnings: $this->warningsOf($existingId, $data, $absent)), []];
     }
 
     /**
@@ -320,6 +325,23 @@ final class PlanEmployeeImport
         $person = $existingId === null ? null : ($this->people[$existingId] ?? null);
 
         return $person === null ? [] : ImportChanges::between($person, $data, $this->centerNames, $absent);
+    }
+
+    /**
+     * A person with a category but no staff group is left out of the compensation cost, without the file being wrong.
+     *
+     * @param  list<string>  $absent
+     * @return list<string>
+     */
+    private function warningsOf(?string $existingId, EmployeeData $data, array $absent): array
+    {
+        if ($data->jobCategory === null || $data->staffGroup !== null) {
+            return [];
+        }
+
+        $keepsGroup = $existingId !== null && in_array('staff_group', $absent, true) && ($this->people[$existingId] ?? null)?->staff_group !== null;
+
+        return $keepsGroup ? [] : ['Tiene categoría pero no grupo: sin grupo (sindicalizado o de confianza) no entra en el costo de Compensación.'];
     }
 
     /**

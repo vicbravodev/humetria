@@ -222,7 +222,7 @@ it('keeps accounts apart', function (): void {
 
     workIn($other);
     expect($theirs->cells(asOf(), [])[0]->count)->toBe(2)
-        ->and($theirs->gaps())->toEqual(new RosterGaps(total: 3, costed: 2, missing: ['E-900'], missingWithoutNumber: 0, inactive: 1));
+        ->and($theirs->gaps())->toEqual(new RosterGaps(total: 3, costed: 2, missing: ['E-900'], missingWithoutNumber: 0, inactive: 1, withoutGrade: 1, withoutHireDate: 1, withoutGroup: 1));
 });
 
 it('serves a union account the same as a company account', function (): void {
@@ -270,4 +270,22 @@ it('lists nobody of another company', function (): void {
     workIn($this->tenant);
 
     expect(iterator_to_array(roster()->numbered(asOf()), false))->toBe([]);
+});
+
+it('counts the people left out by cause: no category and level, no hire date, no staff group', function (): void {
+    costedPerson($this->tenant, $this->grade);
+    costedPerson($this->tenant, $this->grade, ['staff_group' => null]);
+    costedPerson($this->tenant, $this->grade, ['staff_group' => null]);
+    costedPerson($this->tenant, $this->grade, ['hired_on' => null]);
+    Employee::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => null, 'hired_on' => null, 'staff_group' => null]);
+    costedPerson($this->tenant, $this->grade, ['staff_group' => null, 'deactivated_at' => now()]);
+    workIn($this->tenant);
+
+    $gaps = roster()->gaps();
+
+    expect($gaps->total)->toBe(5)
+        ->and($gaps->costed)->toBe(1)
+        ->and($gaps->withoutGrade)->toBe(1)
+        ->and($gaps->withoutHireDate)->toBe(2)
+        ->and($gaps->withoutGroup)->toBe(3);
 });

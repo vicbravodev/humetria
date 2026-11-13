@@ -106,6 +106,7 @@ final readonly class ReportBuilder
             'missing' => $shared ? [] : array_slice($gaps->missing, 0, self::MISSING_SHOWN),
             'missing_more' => $shared ? 0 : max(0, count($gaps->missing) - self::MISSING_SHOWN),
             'missing_without_number' => $shared ? 0 : $gaps->missingWithoutNumber,
+            'causes' => ['without_grade' => $gaps->withoutGrade, 'without_hire_date' => $gaps->withoutHireDate, 'without_group' => $gaps->withoutGroup],
         ];
     }
 

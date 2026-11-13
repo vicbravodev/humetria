@@ -19,6 +19,8 @@ export type EmployeeImportSummary = {
     errors: { row: number; messages: string[] }[];
     /** Who is updated and what changes in them (the first hundred); absent when nobody changes. */
     changes?: EmployeeImportChange[];
+    /** Rows that import but leave something incomplete (the first hundred); absent when there are none. */
+    warnings?: { row: number; messages: string[] }[];
 };
 
 /** What a file changes in one person who already exists: each field with its before and after. */

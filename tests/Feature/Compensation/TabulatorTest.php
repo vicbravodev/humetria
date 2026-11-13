@@ -232,7 +232,7 @@ it('says how many people each category has and where the data of the contract st
 
 it('shows where the data of the contract stand on the benefits and the individual salaries too', function (string $route): void {
     $this->get(route($route, $this->tenant))
-        ->assertInertia(fn (Assert $page) => $page->where('status.roster', ['people' => 0, 'missing' => 0])->has('status.accuracy'));
+        ->assertInertia(fn (Assert $page) => $page->where('status.roster', ['people' => 0, 'missing' => 0, 'without_grade' => 0, 'without_hire_date' => 0, 'without_group' => 0])->has('status.accuracy'));
 })->with(['tenant.compensation.benefits.index', 'tenant.compensation.overrides.index']);
 
 it('saves a salary under the minimum and says so, without blocking', function (): void {

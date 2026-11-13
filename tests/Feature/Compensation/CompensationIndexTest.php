@@ -41,7 +41,7 @@ it('starts a company with nothing loaded at its three steps (board V4-Comp-Inici
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('compensation/index')
-            ->where('status.roster', ['people' => 0, 'missing' => 0])
+            ->where('status.roster', ['people' => 0, 'missing' => 0, 'without_grade' => 0, 'without_hire_date' => 0, 'without_group' => 0])
             ->where('first_time', true)
             ->where('scenarios.total', 0)
             ->where('today', null)
@@ -66,7 +66,7 @@ it('shows the data of the contract with what each lacks and the one notice of ac
         ->assertInertia(fn (Assert $page) => $page
             ->where('first_time', false)
             ->where('status', [
-                'roster' => ['people' => 11, 'missing' => 1],
+                'roster' => ['people' => 11, 'missing' => 1, 'without_grade' => 1, 'without_hire_date' => 1, 'without_group' => 1],
                 'tabulator' => ['grades' => 2, 'without_salary' => 1],
                 // The 2 of the company and the 11 the base catalog gives it, which the start now makes sure of.
                 'benefits' => ['active' => 13],

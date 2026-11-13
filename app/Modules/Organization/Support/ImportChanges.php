@@ -30,6 +30,8 @@ final class ImportChanges
             ['Área', self::text($person->getAttributeValue('area_name')), $data->area, 'area_id'],
             ['Puesto', $person->job_title, $data->jobTitle, 'job_title'],
             ['Número de empleado', $person->employee_number, $data->employeeNumber, null],
+            ['Categoría', self::text($person->getAttributeValue('grade_category')), $data->jobCategory, 'job_grade_id'],
+            ['Nivel', self::text($person->getAttributeValue('grade_level')), $data->jobLevel, 'job_grade_id'],
             ['Fecha de ingreso', $person->hired_on?->toDateString(), $data->hiredOn?->toDateString(), 'hired_on'],
             ['Grupo', $person->staff_group?->label(), $data->staffGroup?->label(), 'staff_group'],
         ];

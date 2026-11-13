@@ -1,8 +1,29 @@
 import { countOf, plural } from '@/lib/plural';
 
+/** How many active people lack each thing the calculator needs; one person can lack several, so they can add up to more than who is left out. */
+export type GapCauses = {
+    without_grade: number;
+    without_hire_date: number;
+    without_group: number;
+};
+
+/** "1 sin categoría y nivel · 3 sin grupo (sindicalizado o de confianza)": the real cause of who is left out of the cost, not one guess. */
+export function gapCauses(causes: GapCauses): string {
+    return [
+        causes.without_grade > 0 &&
+            `${causes.without_grade} sin categoría y nivel`,
+        causes.without_hire_date > 0 &&
+            `${causes.without_hire_date} sin fecha de ingreso`,
+        causes.without_group > 0 &&
+            `${causes.without_group} sin grupo (sindicalizado o de confianza)`,
+    ]
+        .filter((part) => part !== false)
+        .join(' · ');
+}
+
 /** Where the data of the contract stands, as the server counts it (boards V4-Comp-Inicio and V4-Comp-Datos). */
 export type ContractStatus = {
-    roster: { people: number; missing: number };
+    roster: { people: number; missing: number } & GapCauses;
     tabulator: { grades: number; without_salary: number };
     benefits: { active: number };
     overrides: { people: number };
@@ -28,7 +49,7 @@ export type StatusItem = {
 };
 
 function rosterItem(
-    { people, missing }: ContractStatus['roster'],
+    { people, missing, ...causes }: ContractStatus['roster'],
     union: boolean,
 ): StatusItem {
     return {
@@ -39,7 +60,7 @@ function rosterItem(
             union ? 'agremiado' : 'persona',
             union ? 'agremiados' : 'personas',
         ),
-        note: missing === 0 ? 'Al día' : `${missing} sin categoría ni nivel`,
+        note: missing === 0 ? 'Al día' : gapCauses(causes),
         problem: missing > 0,
     };
 }
