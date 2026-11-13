@@ -165,6 +165,22 @@ it('chooses the work center in the new-evaluation assistant, and everyone instea
     expect(Campaign::query()->withoutGlobalScopes()->sole()->population->value)->toBe('all');
 });
 
+// H-04: the launch dialog counts only who has an email and says how many will not get the invitation.
+it('says in the launch dialog how many people will not get the email', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 17);
+    $people->first()->forceFill(['email' => null])->save();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->assertSee('1 persona no tiene correo.')
+        ->click('Lanzar e invitar a 16 personas')
+        ->assertSeeIn('[role="dialog"]', 'Se enviarán 16 correos hoy. 1 persona no lo recibirá por no tener correo: agrégalo en Empleados.')
+        ->assertNoJavaScriptErrors();
+});
+
 it('launches a draft with the deadline suggested, inviting everyone by email', function (): void {
     Illuminate\Support\Facades\Notification::fake();
     $tenant = campaignsCompany();

@@ -17,4 +17,13 @@ describe('launchSummary', () => {
     it('leaves the closing out when the day is not a date', () => {
         expect(launchSummary(3, '')).toBe('Se enviarán 3 correos hoy.');
     });
+
+    it('says how many people will not get it for lack of an email, and how to reach them', () => {
+        expect(launchSummary(16, '2026-11-26', 1)).toBe(
+            'Se enviarán 16 correos hoy. 1 persona no lo recibirá por no tener correo: agrégalo en Empleados. La evaluación cierra el 26 de noviembre de 2026.',
+        );
+        expect(launchSummary(16, '', 3)).toBe(
+            'Se enviarán 16 correos hoy. 3 personas no lo recibirán por no tener correo: agrégalo en Empleados.',
+        );
+    });
 });

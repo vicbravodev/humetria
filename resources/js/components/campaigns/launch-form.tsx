@@ -78,7 +78,11 @@ export default function LaunchForm({
                             </Button>
                         }
                         title="¿Lanzar la evaluación?"
-                        description={launchSummary(contact.reachable, lastDay)}
+                        description={launchSummary(
+                            contact.reachable,
+                            lastDay,
+                            contact.unreachable,
+                        )}
                         confirmLabel="Lanzar e invitar"
                         destructive={false}
                         form={launch.form([tenant.slug, campaign.id])}
