@@ -46,7 +46,7 @@ export default function TabulatorTable({
                                 {grade.category}
                             </TableCell>
                             <TableCell>{grade.level}</TableCell>
-                            <TableCell>
+                            <TableCell className="max-w-72 min-w-48 whitespace-normal">
                                 {grade.current === null ? (
                                     <GradeSalaryInline
                                         grade={grade}
