@@ -73,3 +73,21 @@ it("answers 'not valid' the same for a made-up link, another company's link, a r
     // A real link of another company opens THAT company's page, never ours.
     $this->get(route('portal.seating.show', $foreign))->assertOk()->assertInertia(fn (Assert $page) => $page->where('name', $stranger->name)->where('company', $other->trade_name));
 });
+
+// R2-employee-06: what waits for the person shows on the home of the portal, as the other tools do.
+it('counts on the home of the portal the signed assessment the person has not confirmed', function (): void {
+    $position = App\Modules\Seating\Models\StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->ana->work_center_id]);
+    App\Modules\Seating\Models\PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $position->id]);
+    $identity = new App\Modules\Telework\Data\PortalIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz');
+    $section = fn (): ?App\Modules\Telework\Data\PortalSectionLink => resolve(App\Modules\Seating\Support\SeatingPortalSection::class)->for($identity, $this->token);
+
+    expect($section()?->pending)->toBeNull();
+
+    $assessment = App\Modules\Seating\Models\RiskAssessment::factory()->signed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $position->id, 'work_center_id' => $this->ana->work_center_id]);
+
+    expect($section()?->pending)->toBe(1);
+
+    App\Modules\Seating\Models\RiskAcknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'assessment_id' => $assessment->id]);
+
+    expect($section()?->pending)->toBeNull();
+});
