@@ -10,6 +10,21 @@ const labels = (
     location?: Parameters<typeof punchProblem>[1],
 ) => punchProblem(reason, location)?.actions.map(({ kind }) => kind);
 
+describe('punchProblem of a center that is not ready', () => {
+    it('tells a person of a center that cannot mark yet to warn RH, never to scan a screen', () => {
+        const problem = punchProblem('center_not_ready');
+
+        expect(problem).toMatchObject({
+            kind: 'zone',
+            tone: 'warning',
+            title: 'Su centro aún no está listo para marcar',
+            text: 'Avise a Recursos Humanos; mientras tanto puede pedir una corrección.',
+        });
+        expect(JSON.stringify(problem)).not.toContain('pantalla');
+        expect(labels('center_not_ready')).toEqual(['dismiss', 'correction']);
+    });
+});
+
 describe('punchProblem', () => {
     it('says what happened and what to do, for a mark outside the zone', () => {
         const problem = punchProblem('outside_zone');
@@ -80,19 +95,6 @@ describe('punchProblem', () => {
             title: 'Falta escanear el código',
         });
         expect(labels('qr_required')).toEqual(['dismiss', 'correction']);
-    });
-
-    it('tells a person of a center that cannot mark yet to warn RH, never to scan a screen', () => {
-        const problem = punchProblem('center_not_ready');
-
-        expect(problem).toMatchObject({
-            kind: 'zone',
-            tone: 'warning',
-            title: 'Su centro aún no está listo para marcar',
-            text: 'Avise a Recursos Humanos; mientras tanto puede pedir una corrección.',
-        });
-        expect(JSON.stringify(problem)).not.toContain('pantalla');
-        expect(labels('center_not_ready')).toEqual(['dismiss', 'correction']);
     });
 
     it('sends a phone that is not linked to the link of RH', () => {

@@ -1,8 +1,13 @@
+import { Link } from '@inertiajs/react';
 import { Send } from 'lucide-react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import Notice from '@/components/humetria/notice';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { centerState, notReadyNote } from '@/lib/attendance/center-state';
+import { center as show } from '@/routes/tenant/attendance';
 import { enrollAll } from '@/routes/tenant/attendance/devices';
+import type { AttendanceDevicesProps } from '@/types';
 
 /** Sends their link to every person of the center with no device and no link that still opens; who has no email is left for RH, one by one. */
 export default function EnrollAllButton({
@@ -10,12 +15,13 @@ export default function EnrollAllButton({
     waiting,
     linkHours,
 }: {
-    center: { id: string; name: string };
+    center: NonNullable<AttendanceDevicesProps['center']>;
     /** People of the center with no active device. */
     waiting: number;
     linkHours: number;
 }) {
     const tenantSlug = useTenantSlug();
+    const state = centerState(center, center.requiresQr);
 
     return (
         <ConfirmDialog
@@ -35,6 +41,25 @@ export default function EnrollAllButton({
             transform={() => ({ work_center_id: center.id })}
             preserveScroll
             destructive={false}
-        />
+        >
+            {!state.ready && (
+                <Notice
+                    action={
+                        <Button asChild variant="outline" size="sm">
+                            <Link
+                                href={show({
+                                    tenant: tenantSlug,
+                                    workCenter: center.id,
+                                })}
+                            >
+                                Configurar el centro
+                            </Link>
+                        </Button>
+                    }
+                >
+                    {notReadyNote(center.name)}
+                </Notice>
+            )}
+        </ConfirmDialog>
     );
 }

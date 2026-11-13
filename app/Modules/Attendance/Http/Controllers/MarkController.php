@@ -123,7 +123,7 @@ final readonly class MarkController
                 $zones,
                 $request->position(),
                 $signed->deviceId,
-                KioskDevice::query()->where('work_center_id', $person->workCenterId)->whereNotNull('last_seen_at')->whereNull('revoked_at')->count(),
+                KioskDevice::inUseIn($person->workCenterId),
             );
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {

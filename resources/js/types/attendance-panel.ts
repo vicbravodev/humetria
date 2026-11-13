@@ -35,7 +35,14 @@ export type DevicePerson = {
 export type DeviceStage = { count: number; names: string[] };
 
 export type AttendanceDevicesProps = {
-    center: { id: string; name: string } | null;
+    /** The center asked for, with what it has to mark with: zones, screens in use and whether the policy asks for the QR. */
+    center: {
+        id: string;
+        name: string;
+        zones: number;
+        screens: number;
+        requiresQr: boolean;
+    } | null;
     filters: { q: string; status: DeviceView };
     counts: Record<DeviceView, number>;
     /** Everyone in scope on the road to the phone: no open link, a link sent, with a phone. */
