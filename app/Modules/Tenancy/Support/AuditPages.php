@@ -54,11 +54,55 @@ final class AuditPages
     ];
 
     /**
+     * The Spanish name of the states, plans, kinds and tools the detail stores by their code; one not here is shown as stored.
+     *
+     * @var array<string, string>
+     */
+    public const array VALUES = [
+        'not_started' => 'Sin iniciar',
+        'trial' => 'En prueba',
+        'active' => 'Activa',
+        'trial_ended' => 'Prueba terminada',
+        'expired' => 'Vencida',
+        'read_only' => 'Solo lectura',
+        'suspended' => 'Suspendida',
+        'archived' => 'Archivada',
+        'past_due' => 'Con saldo vencido',
+        'cancel_scheduled' => 'Cancelación programada',
+        'ended' => 'Terminada',
+        'jornada' => 'Jornada',
+        'cumplimiento' => 'Cumplimiento',
+        'integral' => 'Integral',
+        'direct' => 'Directo',
+        'consultant' => 'Consultor',
+        'channel_compliance' => 'Canal Cumplimiento',
+        'channel_integral' => 'Canal Integral',
+        'negotiated' => 'Precio negociado',
+        'recurring' => 'Recurrente',
+        'one_time' => 'Una sola vez',
+        'draft' => 'Borrador',
+        'issued' => 'Emitido',
+        'owner' => 'Dueño',
+        'hr' => 'RH',
+        'viewer' => 'Consulta',
+        'committee' => 'Comisión',
+        'complaints' => 'Quejas',
+        'attendance' => 'Asistencia',
+        'vacations' => 'Vacaciones',
+        'org_chart' => 'Organigrama',
+        'nom035' => 'NOM-035',
+        'nom037' => 'NOM-037',
+        'seating' => 'Ley Silla',
+        'pulse' => 'Pulso',
+        'climate' => 'Clima',
+    ];
+
+    /**
      * The Spanish name of the keys the detail shows most; one not here is shown as its own name with spaces.
      *
      * @var array<string, string>
      */
-    private const array KEYS = [
+    public const array KEYS = [
         'user_id' => 'Persona',
         'reason' => 'Motivo',
         'previous' => 'Estado anterior',
@@ -75,7 +119,158 @@ final class AuditPages
         'fields' => 'Campos cambiados',
         'enabled' => 'Herramientas activadas',
         'disabled' => 'Herramientas quitadas',
-        'amount_cents' => 'Monto (centavos)',
+        'amount_cents' => 'Monto',
+        'work_center_id' => 'Centro de trabajo',
+        'work_center_ids' => 'Centros de trabajo',
+        'work_center_count' => 'Centros de trabajo',
+        'digest' => 'Huella del documento',
+        'corrects_mark_id' => 'Marca que corrige',
+        'employee_id' => 'Persona',
+        'employee_ids' => 'Personas',
+        'delivered_by_rh' => 'Entregado por RH',
+        'sent_to' => 'Enviado a',
+        'mark_id' => 'Marca',
+        'sent' => 'Enviados',
+        'without_email' => 'Sin correo',
+        'linked' => 'Con enlace',
+        'with_link' => 'Con enlace',
+        'center_ready' => 'Centro listo',
+        'from_manager_id' => 'Jefe anterior',
+        'to_manager_id' => 'Jefe nuevo',
+        'terminated_on' => 'Fecha de baja',
+        'version' => 'Versión',
+        'versions' => 'Versiones',
+        'record_id' => 'Registro',
+        'medium' => 'Medio',
+        'campaign_id' => 'Campaña',
+        'expires_on' => 'Vence el',
+        'document_id' => 'Documento',
+        'document_ids' => 'Documentos',
+        'count' => 'Cantidad',
+        'covers' => 'Cubre',
+        'show_measures' => 'Mostrar medidas',
+        'area' => 'Área',
+        'area_id' => 'Área',
+        'monthly_token_budget' => 'Presupuesto mensual de uso',
+        'resolution' => 'Resolución',
+        'from' => 'Desde',
+        'to' => 'Hasta',
+        'written' => 'Redactado',
+        'equipment_id' => 'Equipo',
+        'teleworker_id' => 'Persona en teletrabajo',
+        'ended_by' => 'Terminó',
+        'training_id' => 'Capacitación',
+        'topic_count' => 'Temas',
+        'attendee_count' => 'Asistentes',
+        'notice_id' => 'Aviso',
+        'checklist_id' => 'Lista de verificación',
+        'missing_section_1' => 'Falta en la sección 1',
+        'missing_section_2' => 'Falta en la sección 2',
+        'registered_by' => 'Registró',
+        'workplaces' => 'Lugares de trabajo',
+        'period_months' => 'Periodo (meses)',
+        'previous_period_months' => 'Periodo anterior (meses)',
+        'consent_version' => 'Versión del consentimiento',
+        'member_ids' => 'Integrantes',
+        'review_id' => 'Revisión',
+        'workplace_id' => 'Lugar de trabajo',
+        'application_id' => 'Solicitud',
+        'decision' => 'Decisión',
+        'method' => 'Método',
+        'joined_by' => 'Incorporó',
+        'has_teleworkers' => 'Con personas en teletrabajo',
+        'recorded_by' => 'Registró',
+        'ready_only' => 'Solo los listos',
+        'previous_user_id' => 'Usuario anterior',
+        'member_user_id' => 'Integrante',
+        'active_until' => 'Activa hasta',
+        'cut' => 'Corte',
+        'view' => 'Vista',
+        'waves' => 'Olas',
+        'item' => 'Elemento',
+        'manager_id' => 'Jefe directo',
+        'automatic' => 'Automático',
+        'survey_id' => 'Encuesta',
+        'group' => 'Grupo',
+        'created' => 'Alta nueva',
+        'commitments' => 'Compromisos',
+        'published_by' => 'Publicó',
+        'invited' => 'Invitados',
+        'frequency' => 'Frecuencia',
+        'day_of_month' => 'Día del mes',
+        'open_days' => 'Días abierta',
+        'active' => 'Activo',
+        'next_mode' => 'Modo siguiente',
+        'share_id' => 'Enlace',
+        'minutes' => 'Minutos',
+        'scenario_id' => 'Escenario',
+        'days' => 'Días',
+        'rows' => 'Filas',
+        'grades' => 'Categorías',
+        'overrides' => 'Sueldos excepcionales',
+        'grade_salaries' => 'Sueldos de nivel',
+        'people' => 'Personas',
+        'instruments' => 'Instrumentos',
+        'population' => 'Población',
+        'sample_size' => 'Tamaño de muestra',
+        'workers' => 'Trabajadores',
+        'participants' => 'Participantes',
+        'completed' => 'Completados',
+        'pending' => 'Cambio programado',
+        'acknowledged_shortfall' => 'Faltantes reconocidos',
+        'answered' => 'Contestaron',
+        'target' => 'Meta',
+        'assessment_id' => 'Evaluación',
+        'level' => 'Nivel',
+        'seat_id' => 'Asiento',
+        'use' => 'Uso',
+        'position_id' => 'Puesto',
+        'placement' => 'Ubicación',
+        'referral_id' => 'Canalización',
+        'regulation_id' => 'Reglamento',
+        'report_id' => 'Reporte',
+        'sector' => 'Sector',
+        'no_standing_positions' => 'Sin puestos de pie',
+        'action_id' => 'Acción',
+        'program_id' => 'Programa',
+        'entry_id' => 'Movimiento',
+        'responsible_is_member' => 'El responsable es integrante',
+        'by_system' => 'Por el sistema',
+        'charge_on' => 'Fecha del cargo',
+        'billing_account_id' => 'Cuenta de cobro',
+        'allocated_cents' => 'Monto aplicado',
+        'statements' => 'Estados de cuenta',
+        'adjusts_statement_id' => 'Estado de cuenta ajustado',
+        'total_cents' => 'Total',
+        'report' => 'Reporte',
+        'released_charges' => 'Cargos liberados',
+        'profile' => 'Perfil de precio',
+        'effective_on' => 'Vigente desde',
+        'catalog_version' => 'Versión del catálogo',
+        'negotiated_price_cents' => 'Precio negociado',
+        'meter' => 'Medidor',
+        'quantity' => 'Cantidad',
+        'period_start' => 'Inicio del periodo',
+        'account_id' => 'Cuenta de cobro',
+        'starts_on' => 'Empieza el',
+        'ends_on' => 'Termina el',
+        'profile_before' => 'Perfil antes',
+        'profile_after' => 'Perfil después',
+        'approved' => 'Aprobada',
+        'working_days' => 'Días hábiles',
+        'authorized_by_employee_id' => 'Autorizó (persona)',
+        'authorized_by_user_id' => 'Autorizó (usuario)',
+        'request_id' => 'Solicitud',
+        'by_hr' => 'Por RH',
+        'premium_percent' => 'Prima (%)',
+        'was' => 'Era',
+        'days_returned' => 'Días devueltos',
+        'periods' => 'Periodos',
+        'tranche' => 'Tramo',
+        'scope' => 'Alcance',
+        'policy_id' => 'Política',
+        'staff_group' => 'Grupo de personal',
+        'job_grade_id' => 'Categoría y nivel',
     ];
 
     /**
@@ -224,15 +419,37 @@ final class AuditPages
                 continue;
             }
 
-            $rows[self::KEYS[$key] ?? ucfirst(str_replace('_', ' ', $key))] = match (true) {
-                $key === 'user_id' && is_int($value) && isset($people[$value]) => $this->person($people[$value]),
-                is_bool($value) => $value ? 'Sí' : 'No',
-                is_scalar($value) => (string) $value,
-                default => json_encode($value, JSON_UNESCAPED_UNICODE) ?: '',
-            };
+            $rows[self::KEYS[$key] ?? ucfirst(str_replace('_', ' ', $key))] = $key === 'user_id' && is_int($value) && isset($people[$value])
+                ? $this->person($people[$value])
+                : $this->value($key, $value);
         }
 
         return $rows;
+    }
+
+    /** A stored value as a person reads it: yes or no, a state or a module by its name, a date in local time, cents as pesos. */
+    private function value(string $key, mixed $value): string
+    {
+        return match (true) {
+            $value === null => '—',
+            is_bool($value) => $value ? 'Sí' : 'No',
+            is_array($value) && array_is_list($value) => implode(', ', array_map(fn (mixed $item): string => $this->value($key, $item), $value)),
+            is_array($value) => implode(', ', array_map(fn (mixed $item, int|string $name): string => (self::KEYS[$name] ?? ucfirst(str_replace('_', ' ', (string) $name))).': '.$this->value((string) $name, $item), $value, array_keys($value))),
+            ! is_scalar($value) => '',
+            str_ends_with($key, '_cents') && is_numeric($value) => '$'.number_format((int) $value / 100, 2),
+            is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2}))?$/', $value) === 1 => $this->date($value),
+            is_string($value) => self::VALUES[$value] ?? $value,
+            default => (string) $value,
+        };
+    }
+
+    private function date(string $value): string
+    {
+        $date = str_contains($value, 'T')
+            ? CarbonImmutable::parse($value)->setTimezone(config()->string('app.display_timezone'))
+            : CarbonImmutable::parse($value);
+
+        return str_replace('.', '', $date->isoFormat('D MMM YYYY'));
     }
 
     /** @param  array{name: string, email: string}  $person */

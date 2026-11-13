@@ -206,15 +206,44 @@ it('offers the trail of a company from its page to the superadmin only', functio
 it('writes the detail of an entry with labelled fields, company and people by name and yes or no', function (): void {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme Demo']);
     $ana = User::factory()->create(['name' => 'Ana López', 'email' => 'ana@acme.mx']);
-    auditRow('tenant.suspended', ['metadata' => ['tenant_id' => $tenant->id, 'user_id' => $ana->id, 'reason' => 'Falta de pago', 'created' => true, 'sent' => false]]);
+    auditRow('tenant.suspended', ['metadata' => ['tenant_id' => $tenant->id, 'user_id' => $ana->id, 'reason' => 'Falta de pago', 'created' => true, 'unlabelled_flag' => false]]);
 
     $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
         ->where('entries.data.0.context', [
             'Empresa' => 'Acme Demo',
             'Persona' => 'Ana López (ana@acme.mx)',
             'Motivo' => 'Falta de pago',
-            'Created' => 'Sí',
-            'Sent' => 'No',
+            'Alta nueva' => 'Sí',
+            'Unlabelled flag' => 'No',
+        ]));
+});
+
+it('writes the values of the detail as a person reads them: states, dates in Mexico City, pesos, modules by name and nothing as null', function (): void {
+    auditRow('billing.subscription_set', ['metadata' => [
+        'plan' => 'integral',
+        'profile' => 'direct',
+        'status' => 'active',
+        'previous' => 'read_only',
+        'negotiated_price_cents' => 1234550,
+        'active_until' => '2026-11-27T05:59:59Z',
+        'starts_on' => '2026-11-26',
+        'reason' => null,
+        'enabled' => ['pulse', 'org_chart'],
+        'pending' => ['plan' => 'cumplimiento', 'seats' => 10, 'effective_on' => '2026-12-01'],
+    ]]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', [
+            'Plan' => 'Integral',
+            'Perfil de precio' => 'Directo',
+            'Estado' => 'Activa',
+            'Estado anterior' => 'Solo lectura',
+            'Precio negociado' => '$12,345.50',
+            'Activa hasta' => '26 nov 2026',
+            'Empieza el' => '26 nov 2026',
+            'Motivo' => '—',
+            'Herramientas activadas' => 'Pulso, Organigrama',
+            'Cambio programado' => 'Plan: Cumplimiento, Lugares: 10, Vigente desde: 1 dic 2026',
         ]));
 });
 
