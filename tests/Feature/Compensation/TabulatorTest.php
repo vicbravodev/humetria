@@ -50,7 +50,7 @@ it('lists the tabulator paginated by category and level with server-side search'
             ->where('grades.data.0.category', 'Operador')
             ->where('grades.data.0.level', 'A')
             // The one in force today is the 2026 salary, not the one of next year.
-            ->where('grades.data.0.current', ['daily_salary' => '524.65', 'daily_salary_text' => '$524.65', 'effective_from' => '2026-01-01'])
+            ->where('grades.data.0.current', ['daily_salary' => '524.65', 'daily_salary_text' => '$524.65', 'effective_from' => '2026-01-01', 'below_minimum' => null])
             ->where('grades.data.0.salaries.0.effective_from', '2027-01-01')
             ->where('grades.data.0.salaries.1.effective_from', '2026-01-01')
             ->where('grades.data.0.salaries.2.daily_salary', '500')
@@ -249,4 +249,12 @@ it('saves a salary at the minimum as always', function (): void {
     $this->post(route('tenant.compensation.tabulator.store', $this->tenant), tabulatorForm(['daily_salary' => '315.04']))->assertSessionHasNoErrors();
 
     expect(session(Inertia\Support\SessionKey::FLASH_DATA)['toast'] ?? null)->toBe(['type' => 'success', 'message' => 'Salario guardado.']);
+});
+
+it('marks in its own row a salary under the general minimum, so it stays after the toast is gone', function (): void {
+    $grade = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Auxiliar', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $this->tenant->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 10000, 'effective_from' => '2026-01-01']);
+
+    $this->get(route('tenant.compensation.tabulator.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('grades.data.0.current.below_minimum', fn (string $text) => str_starts_with($text, 'Está por debajo del salario mínimo general')));
 });
