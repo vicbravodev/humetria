@@ -4,25 +4,33 @@ import SurveyDone from '@/components/campaigns/survey/survey-done';
 import SurveyFlow from '@/components/campaigns/survey/survey-flow';
 import SurveyShell from '@/components/campaigns/survey/survey-shell';
 import SurveyUnavailableNotice from '@/components/campaigns/survey/survey-unavailable';
-import { forgetLink, tokenFromPath } from '@/lib/survey';
-import type { SurveyInstrument, SurveyUnavailable } from '@/types';
+import { forgetLink, introCopy, tokenFromPath } from '@/lib/survey';
+import type {
+    CampaignKind,
+    SurveyInstrument,
+    SurveyUnavailable,
+} from '@/types';
 
 export default function Survey({
     token,
     unavailable,
     company,
+    kind,
     closesOn,
     instruments,
 }: {
     token: string | null;
     unavailable: SurveyUnavailable | null;
     company: string | null;
+    /** Which campaign the link belongs to; none when it opens nothing. */
+    kind: CampaignKind | null;
     closesOn: string | null;
     instruments: SurveyInstrument[];
 }) {
     const next = instruments.find(
         (instrument) => instrument.status === 'pending',
     );
+    const copy = introCopy(kind ?? 'nom035_evaluation');
     const usable = unavailable === null && next !== undefined;
 
     // A link that no longer works leaves nothing of it behind on the device.
@@ -37,15 +45,15 @@ export default function Survey({
     if (unavailable === 'done') {
         return (
             <SurveyShell company={company}>
-                <Head title="Evaluación" />
-                <SurveyDone />
+                <Head title={copy.headTitle} />
+                <SurveyDone kind={kind} />
             </SurveyShell>
         );
     }
 
     return (
         <SurveyShell company={company}>
-            <Head title="Evaluación" />
+            <Head title={copy.headTitle} />
             {unavailable !== null ||
             company === null ||
             token === null ||
@@ -62,6 +70,7 @@ export default function Survey({
                     token={token}
                     company={company}
                     closesOn={closesOn}
+                    copy={copy}
                     instruments={instruments}
                     next={next}
                 />

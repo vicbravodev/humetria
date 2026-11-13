@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    captionOf,
     forgetLink,
+    introCopy,
     isComplete,
     payload,
     progressOf,
@@ -276,5 +278,52 @@ describe('forgetLink', () => {
         expect(tokenFromPath('/survey/abc123')).toBe('abc123');
         expect(tokenFromPath('/survey/a%20b')).toBe('a b');
         expect(tokenFromPath('/admin')).toBeNull();
+    });
+});
+
+describe('introCopy', () => {
+    it('keeps the NOM-035 presentation for its campaigns', () => {
+        const copy = introCopy('nom035_evaluation');
+
+        expect(copy.title).toBe('Evaluación de factores de riesgo psicosocial');
+        expect(copy.purpose).toContain('NOM-035-STPS-2018');
+        expect(copy.period).toContain('dos últimos meses');
+        expect(copy.noun).toBe('guía');
+        expect(introCopy('nom035_trauma')).toEqual(copy);
+    });
+
+    it('presents the Ley Silla survey as what it is, without NOM-035 or a two-month window', () => {
+        const copy = introCopy('seating_survey');
+
+        expect(copy.title).toBe('Encuesta sobre su trabajo de pie');
+        expect(JSON.stringify(copy)).not.toContain('NOM-035');
+        expect(copy.period).toBeNull();
+        expect(copy.noun).toBe('encuesta');
+    });
+});
+
+describe('captionOf', () => {
+    const gated = section([5, 6], {
+        key: 'serves_clients',
+        question: '¿Clientes?',
+        instruction: 'Si su respuesta fue…',
+    });
+
+    it('counts the gate in the block, the same total as the progress above', () => {
+        const answers = { serves_clients: 'yes' };
+        const step = steps(guideTwo, answers, 1).find((candidate) =>
+            candidate.keys.includes('5'),
+        );
+
+        expect(captionOf(gated, 5)).toBe('Pregunta 2 de 3');
+        expect(
+            step === undefined
+                ? null
+                : progressOf(guideTwo, answers, step).inSection,
+        ).toBe(3);
+    });
+
+    it('counts a block with no gate by its own questions', () => {
+        expect(captionOf(section([1, 2, 3]), 2)).toBe('Pregunta 2 de 3');
     });
 });

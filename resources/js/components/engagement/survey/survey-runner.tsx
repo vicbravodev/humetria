@@ -1,9 +1,11 @@
 import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import SurveyOffline from '@/components/engagement/survey/survey-offline';
 import SurveyNavigation from '@/components/engagement/survey/survey-navigation';
 import SurveyStep from '@/components/engagement/survey/survey-step';
 import FlowProgress from '@/components/humetria/flow-progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useResendWhenOnline } from '@/hooks/use-resend-when-online';
 import { useEngagementSurvey } from '@/hooks/use-engagement-survey';
 import { submit } from '@/routes/engagement/survey';
 import type { EngagementSurveyProps } from '@/types';
@@ -23,12 +25,19 @@ export default function SurveyRunner({
     const isQuestion = step.kind === 'question';
     const isClosed = isQuestion && step.item.scale !== 'open';
 
-    const send = () =>
+    const offline = useResendWhenOnline(() => send());
+
+    function send(): void {
         router.post(submit.url(token), flow.replies(), {
             onStart: () => setSending(true),
             onFinish: () => setSending(false),
-            onSuccess: flow.forget,
+            onNetworkError: offline.failed,
+            onSuccess: () => {
+                offline.sent();
+                flow.forget();
+            },
         });
+    }
 
     return (
         <section className="flex w-full max-w-[640px] min-w-0 flex-col gap-5">
@@ -40,6 +49,7 @@ export default function SurveyRunner({
                     max={progress.total}
                 />
             )}
+            {offline.waiting && <SurveyOffline />}
             {error !== undefined && (
                 <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
