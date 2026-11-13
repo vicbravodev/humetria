@@ -780,8 +780,22 @@ it('prints the final figures of the report, not a frame of their count', functio
         ->assertScript('(() => { window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 60000); return true; })()', true)
         ->click('Informe 7.7')
         ->assertSee('Diagnóstico de factores de riesgo psicosocial')
-        ->assertScript("[...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.textContent).join()", "0\u{00a0}%,0\u{00a0}%,0\u{00a0}%")
-        ->assertScript("(async () => { window.dispatchEvent(new Event('beforeprint')); await new Promise((resolve) => setTimeout(resolve, 300)); return [...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.textContent).join(); })()", "0\u{00a0}%,100\u{00a0}%,100\u{00a0}%");
+        ->assertScript("[...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.innerText).join()", "0\u{00a0}%,0\u{00a0}%,0\u{00a0}%")
+        ->assertScript("(async () => { window.dispatchEvent(new Event('beforeprint')); await new Promise((resolve) => setTimeout(resolve, 300)); return [...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.innerText).join(); })()", "0\u{00a0}%,100\u{00a0}%,100\u{00a0}%");
+});
+
+// H-10: with the print media on (no `beforeprint`), the final figures are in the page from the start.
+it('has the final figures of the report in print without waiting for the count', function (): void {
+    $tenant = campaignsCompany();
+    $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
+    App\Modules\Responses\Models\AnonymousResponse::factory()->count(5)->create(['campaign_id' => $campaign->id, 'answers' => nom035Answers('nom035.guide-ii', 'always')]);
+
+    $page = visit("/admin/acme/campaigns/{$campaign->id}/results")
+        ->assertScript('(() => { window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 60000); return true; })()', true)
+        ->click('Informe 7.7')
+        ->assertSee('Diagnóstico de factores de riesgo psicosocial');
+
+    emulatePrint($page)->assertScript("[...document.querySelectorAll('p.tabular-nums')].map((figure) => figure.innerText).join()", "0\u{00a0}%,100\u{00a0}%,100\u{00a0}%");
 });
 
 // Rediseño v2 (C7): a list with nobody in its view says why, and «Nadie coincide» is kept for a search that found nobody.
