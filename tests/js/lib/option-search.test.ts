@@ -106,6 +106,12 @@ describe('searchNote', () => {
         );
     });
 
+    it('says «letra» for a single letter', () => {
+        expect(note({ status: 'idle', found: 0, minLength: 1 })).toBe(
+            'Escribe al menos 1 letra para buscar.',
+        );
+    });
+
     it('says it is searching, and when the search failed', () => {
         expect(note({ status: 'loading' })).toBe('Buscando…');
         expect(note({ status: 'error', found: 0 })).toBe(

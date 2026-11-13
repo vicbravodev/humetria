@@ -80,6 +80,9 @@ describe('headsRibbon', () => {
         expect(headsRibbon(3, 2)).toBe(
             '3 personas sin jefe: normalmente hay una. Otras 2 no tienen jefe ni equipo y no se dibujan',
         );
+        expect(headsRibbon(3, 1)).toBe(
+            '3 personas sin jefe: normalmente hay una. Otra persona no tiene jefe ni equipo y no se dibuja',
+        );
         expect(headsRibbon(1, 1)).toBe(
             'Otra persona no tiene jefe ni equipo y no se dibuja',
         );
