@@ -23,3 +23,23 @@ export function policyHighlights(sections: PolicyTextSection[]): string[] {
 
     return items.slice(0, HIGHLIGHTS).map(sentence);
 }
+
+/**
+ * The footer of the page of the people: what the company has yet to publish, by name, and nothing once it is all there (E-20:
+ * it used to promise the results under results already published).
+ */
+export function pendingNotice(
+    hasPolicy: boolean,
+    hasResults: boolean,
+): string | null {
+    const missing = [
+        hasPolicy ? null : 'la política de prevención',
+        hasResults
+            ? null
+            : 'los resultados de la evaluación y las medidas que toma',
+    ].filter((item) => item !== null);
+
+    return missing.length === 0
+        ? null
+        : `La empresa publicará aquí más información: ${missing.join(', ')}.`;
+}
