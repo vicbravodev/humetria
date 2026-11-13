@@ -252,7 +252,7 @@ final class TeleworkerController extends Controller
             'label' => $this->label($workplace, $reviewed),
             'status' => $status->value,
             'statusLabel' => $status->label(),
-            'expiresOn' => $ended ? null : $this->standing->expiresOn($workplace)?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+            'expiresOn' => $ended ? null : $this->standing->validUntil($workplace)?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
         ];
     }
 

@@ -71,6 +71,12 @@ final readonly class WorkplaceStanding
         return $review === null || ! $review->decision->validates() ? null : $this->expiry($review);
     }
 
+    /** The last day a validation holds, as the pages say «vigente hasta»; null unless the latest review validated the workplace. */
+    public function validUntil(Workplace $workplace): ?CarbonImmutable
+    {
+        return $this->expiresOn($workplace)?->subDay();
+    }
+
     /**
      * The latest review of each workplace, in one query per thousand: what a pass over many workplaces needs instead of
      * asking `of()` for each.
