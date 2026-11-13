@@ -135,6 +135,7 @@ const ARRAY_PROPS = [
     'results/report:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'results/shared-report:levels' => 'catálogo fijo: los cinco niveles de riesgo',
     'results/show:levels' => 'catálogo fijo: los cinco niveles de riesgo',
+    'tenancy/audit:families' => 'catálogo fijo de familias de evento',
     'tenancy/company:limits' => 'resumen corto: los dos cupos del plan (personas y centros)',
     'tenancy/company:modules' => 'catálogo fijo: los nueve módulos del catálogo, cada uno con su estado',
     'tenancy/company:other_usage' => 'resumen fijo: correo de campañas y archivos del mes (dos medidores)',

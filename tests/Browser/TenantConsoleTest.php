@@ -672,3 +672,32 @@ it('does not undo a status tab clicked while a search waits to go out', function
         ->assertSee('Ninguna empresa coincide')
         ->assertNoJavaScriptErrors();
 });
+
+it('shows the superadmin the audit trail, with an entry opening its context', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+    $actor = User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx']);
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'tenant_id' => $tenant->id,
+        'actor_id' => $actor->id,
+        'event' => 'campaign.launched',
+        'metadata' => ['centro' => 'Planta Norte'],
+        'created_at' => now(),
+    ]);
+
+    visitPage('tenancy/audit', '/admin/audit', $dark, $mobile)
+        ->assertSee('Bitácora')
+        ->assertSee('Campaña lanzada')
+        ->assertSee('Ana Pérez')
+        ->click('[aria-label="Detalle: Campaña lanzada"]')
+        ->assertSee('Planta Norte');
+})->with($looks);
+
+it('says so when the filters of the audit trail match nothing', function (bool $dark): void {
+    signInAsSuperadmin();
+
+    visitPage('tenancy/audit', '/admin/audit?family=billing', $dark)
+        ->assertSee('Nada coincide con estos filtros')
+        ->assertSee('Quitar filtros');
+})->with(['light' => false, 'dark' => true]);

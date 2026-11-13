@@ -3,12 +3,18 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Http\Controllers\AcceptInvitationController;
+use App\Modules\Tenancy\Http\Controllers\AuditConsoleController;
 use App\Modules\Tenancy\Http\Controllers\CompanyModulesController;
 use App\Modules\Tenancy\Http\Controllers\ImpersonateOwnerController;
 use App\Modules\Tenancy\Http\Controllers\InvitationConsoleController;
 use App\Modules\Tenancy\Http\Controllers\TenantConsoleController;
 use App\Modules\Tenancy\Http\Controllers\TenantLogoController;
 use Illuminate\Support\Facades\Route;
+
+// The platform's audit trail: read only, for the superadmin.
+Route::get('admin/audit', [AuditConsoleController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('audit.index');
 
 Route::get('admin/companies', [TenantConsoleController::class, 'index'])
     ->middleware(['auth', 'verified'])
