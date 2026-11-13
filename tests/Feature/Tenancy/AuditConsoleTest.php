@@ -60,7 +60,7 @@ it('lists the entries newest first, 50 to a page, with who acted and in which co
             ->where('entries.data.0.actor', ['name' => 'Ana López', 'email' => 'ana@acme.mx'])
             ->where('entries.data.0.impersonator', null)
             ->where('entries.data.0.company', ['id' => $tenant->id, 'name' => 'Acme Demo'])
-            ->where('entries.data.0.context', ['work_center' => 'Planta', 'size' => '12'])
+            ->where('entries.data.0.context', ['Work center' => 'Planta', 'Size' => '12'])
             ->where('entries.data.1.event', 'tenant.created')
             ->where('entries.data.1.actor', null)
             ->where('entries.data.1.company', null));
@@ -202,3 +202,28 @@ it('offers the trail of a company from its page to the superadmin only', functio
     'superadmin' => [fn () => superadmin(), true],
     'support' => [fn () => support(), false],
 ]);
+
+it('writes the detail of an entry with labelled fields, company and people by name and yes or no', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Demo']);
+    $ana = User::factory()->create(['name' => 'Ana López', 'email' => 'ana@acme.mx']);
+    auditRow('tenant.suspended', ['metadata' => ['tenant_id' => $tenant->id, 'user_id' => $ana->id, 'reason' => 'Falta de pago', 'created' => true, 'sent' => false]]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', [
+            'Empresa' => 'Acme Demo',
+            'Persona' => 'Ana López (ana@acme.mx)',
+            'Motivo' => 'Falta de pago',
+            'Created' => 'Sí',
+            'Sent' => 'No',
+        ]));
+});
+
+it('says who was impersonated and in which company on an impersonation entry', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Demo']);
+    $owner = User::factory()->create(['name' => 'Dueña Acme', 'email' => 'duena@acme.mx']);
+    $staff = User::factory()->create();
+    auditRow('impersonation.started', ['tenant_id' => $tenant->id, 'actor_id' => $staff->id, 'impersonator_id' => $staff->id, 'subject_type' => $owner->getMorphClass(), 'subject_id' => (string) $owner->id, 'metadata' => ['tenant_id' => $tenant->id]]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', ['Empresa' => 'Acme Demo', 'Persona suplantada' => 'Dueña Acme (duena@acme.mx)']));
+});

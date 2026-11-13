@@ -20,9 +20,6 @@ export default function AuditRow({ entry }: { entry: AuditEntryRow }) {
                     <span className="font-medium">
                         {eventLabel(entry.event)}
                     </span>
-                    <span className="block text-caption text-muted-foreground">
-                        {entry.event}
-                    </span>
                 </TableCell>
                 <TableCell className="whitespace-normal max-md:px-2">
                     {entry.actor === null ? (
@@ -73,14 +70,15 @@ export default function AuditRow({ entry }: { entry: AuditEntryRow }) {
                         className="bg-muted/50 whitespace-normal"
                     >
                         <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-[max-content_1fr]">
-                            {entry.company !== null && (
-                                <div className="contents md:hidden">
-                                    <dt className="text-muted-foreground">
-                                        Empresa
-                                    </dt>
-                                    <dd>{entry.company.name}</dd>
-                                </div>
-                            )}
+                            {entry.company !== null &&
+                                entry.context.Empresa === undefined && (
+                                    <div className="contents md:hidden">
+                                        <dt className="text-muted-foreground">
+                                            Empresa
+                                        </dt>
+                                        <dd>{entry.company.name}</dd>
+                                    </div>
+                                )}
                             {context.map(([key, value]) => (
                                 <div key={key} className="contents">
                                     <dt className="text-muted-foreground">
