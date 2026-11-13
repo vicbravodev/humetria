@@ -53,7 +53,7 @@ it('gives the thirteen requirements with their state, count and date, and a summ
         ->has('requirements', 13)
         ->where('requirements.0', ['key' => 'r1', 'number' => 'R1', 'label' => 'Sector declarado y puestos con su Figura 1', 'tab' => 'positions', 'state' => 'missing', 'stateLabel' => 'Falta', 'count' => 1, 'since' => null])
         ->where('requirements', fn ($rows) => collect($rows)->pluck('key')->all() === array_map(fn (int $number): string => "r{$number}", range(1, 13)))
-        ->where('summary', ['met' => 2, 'warning' => 0, 'missing' => 4, 'pending' => 7, 'notApplicable' => 0]));
+        ->where('summary', ['met' => 0, 'warning' => 0, 'missing' => 4, 'pending' => 9, 'notApplicable' => 0]));
 });
 
 it('carries the date a requirement has been waiting since, written as a day', function (): void {

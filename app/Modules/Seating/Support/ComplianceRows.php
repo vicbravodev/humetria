@@ -87,7 +87,13 @@ final readonly class ComplianceRows
         $unassessed = $facts->assignments->filter(fn (PositionAssignment $assignment): bool => $eligible->contains('id', $assignment->position_id) && ! array_key_exists($assignment->employee_id, $current));
         $due = array_filter($current, fn (RiskAssessment $assessment): bool => $assessment->reassessment_due || ($assessment->signed_at !== null && AssessmentTerm::overdue($assessment->signed_at)));
 
-        return $this->row('r2', $unassessed->unique('employee_id')->count(), count($due), $this->oldest($unassessed->isNotEmpty() ? $unassessed->map(fn (PositionAssignment $assignment): CarbonImmutable => $assignment->starts_on)->all() : array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $due)));
+        return $this->row('r2', $unassessed->unique('employee_id')->count(), count($due), $this->oldest($unassessed->isNotEmpty() ? $unassessed->map(fn (PositionAssignment $assignment): CarbonImmutable => $assignment->starts_on)->all() : array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $due)), nothingToCheck: $facts->positions->isEmpty() && ! $this->declaredNobody($facts), notApplicable: $facts->positions->isEmpty());
+    }
+
+    /** The center declared that nobody works standing: its position-bound requirements do not apply. */
+    private function declaredNobody(ComplianceFacts $facts): bool
+    {
+        return $facts->profile !== null && $facts->profile->no_standing_positions;
     }
 
     private function r3(ComplianceFacts $facts): ComplianceRow
@@ -107,7 +113,7 @@ final readonly class ComplianceRows
         $repair = $facts->seats->filter(fn (Seat $seat): bool => $seat->condition === SeatCondition::NeedsRepair)->pluck('position_id')->all();
         $warn = $eligible->filter(fn (StandingPosition $position): bool => ($usable[$position->id] ?? 0) < $position->max_people_at_once || in_array($position->id, $repair, true));
 
-        return $this->row('r4', $none->count(), $warn->count());
+        return $this->row('r4', $none->count(), $warn->count(), nothingToCheck: $facts->positions->isEmpty() && ! $this->declaredNobody($facts), notApplicable: $facts->positions->isEmpty());
     }
 
     /**

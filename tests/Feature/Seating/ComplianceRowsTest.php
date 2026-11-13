@@ -386,3 +386,19 @@ it('waits for a seat before judging seats', function (): void {
 it('labels the pending state «Sin registros»', function (): void {
     expect(RowState::Pending->label())->toBe('Sin registros');
 });
+
+// R2-compliance-C-01: with no position registered there is nobody whose assessment or seat could be judged: never «Cumple».
+it('does not call R2 and R4 met where there is no position to judge them by', function (): void {
+    PositionAssignment::query()->delete();
+    StandingPosition::query()->delete();
+
+    expect(row($this, 'r2')->state)->toBe(RowState::Pending)->and(row($this, 'r4')->state)->toBe(RowState::Pending);
+});
+
+it('says R2 and R4 do not apply where the center declared nobody stands', function (): void {
+    PositionAssignment::query()->delete();
+    StandingPosition::query()->delete();
+    SeatingProfile::query()->update(['no_standing_positions' => true]);
+
+    expect(row($this, 'r2')->state)->toBe(RowState::NotApplicable)->and(row($this, 'r4')->state)->toBe(RowState::NotApplicable);
+});
