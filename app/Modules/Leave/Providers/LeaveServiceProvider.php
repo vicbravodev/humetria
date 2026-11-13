@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Providers;
 
 use App\Modules\Leave\Contracts\Absences;
+use App\Modules\Leave\Contracts\PendingRequests;
 use App\Modules\Leave\Contracts\VacationTerms;
 use App\Modules\Leave\Listeners\CloseOnDeactivation;
 use App\Modules\Leave\Listeners\GrantOnHire;
 use App\Modules\Leave\Listeners\VoidTerminationOnReactivation;
 use App\Modules\Leave\Support\CompanyAbsences;
+use App\Modules\Leave\Support\CompanyPendingRequests;
 use App\Modules\Leave\Support\PolicyVacationTerms;
 use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeDeactivated;
@@ -28,6 +30,7 @@ final class LeaveServiceProvider extends ServiceProvider
     {
         $this->app->bind(Absences::class, CompanyAbsences::class);
         $this->app->bind(VacationTerms::class, PolicyVacationTerms::class);
+        $this->app->bind(PendingRequests::class, CompanyPendingRequests::class);
     }
 
     public function boot(): void

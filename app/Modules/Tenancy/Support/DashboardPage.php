@@ -8,6 +8,7 @@ use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Complaints\Contracts\ComplaintsToAcknowledge;
 use App\Modules\Complaints\Data\ComplaintToAcknowledge;
+use App\Modules\Leave\Contracts\PendingRequests;
 use App\Modules\Seating\Contracts\SeatingRoute;
 use App\Modules\Telework\Contracts\TeleworkRoute;
 use App\Modules\Telework\Data\UnreviewedAccidents;
@@ -35,12 +36,13 @@ final readonly class DashboardPage
         private SeatingRoute $seating,
         private ComplaintsToAcknowledge $complaints,
         private PanelUrgencies $urgencies,
+        private PendingRequests $requests,
     ) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function props(string $tenantSlug, int $userId, bool $seesScreenings, bool $reviewsNotices, bool $handlesComplaints): array
+    public function props(string $tenantSlug, int $userId, bool $seesScreenings, bool $reviewsNotices, bool $handlesComplaints, bool $managesVacations = false): array
     {
         $page = WorkCenter::query()->whereNull('archived_at')->orderBy('name')->orderBy('id')
             ->paginate(self::CENTERS_PER_PAGE, ['id', 'name'], 'centers')->withQueryString();
@@ -60,6 +62,7 @@ final readonly class DashboardPage
         $urgencies = [
             ...($reviewsNotices ? array_map(fn (UnreviewedAccidents $accidents): array => $this->urgencies->accident($accidents, $names, $tenantSlug), $this->telework->accidents()) : []),
             ...$this->urgencies->screenings($toChannel, [...array_values($latest), ...$launched], $names, $tenantSlug),
+            ...($managesVacations ? $this->urgencies->vacations($this->requests->waiting(), $tenantSlug) : []),
             ...($handlesComplaints ? array_map(fn (ComplaintToAcknowledge $complaint): array => $this->complaint($complaint, $tenantSlug), $this->complaints->soonest($userId, self::URGENCIES)) : []),
         ];
 
