@@ -874,7 +874,6 @@ function emulatePrint(AwaitableWebpage $page): AwaitableWebpage
     return $page;
 }
 
-
 /**
  * What a dossier carries on paper and not on screen: the letterhead with the Humetría logo, the company and the center,
  * and the date it was issued (the sheet's page number comes from the `dossier` named page).
@@ -887,6 +886,6 @@ function assertPrintLetterhead(AwaitableWebpage $page, string $center): void
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'flex')
         ->assertScript('() => document.querySelector(\'[data-slot="print-letterhead"] img\').getBoundingClientRect().width > 0', true)
         ->assertScript('() => /Emitido el \\d{1,2} \\w+ \\d{4}/.test(document.querySelector(\'[data-slot="print-letterhead"]\').innerText)', true)
-        ->assertScript("() => document.querySelector('[data-slot=\"print-letterhead\"]').innerText.includes(".json_encode($center).")", true)
+        ->assertScript("() => document.querySelector('[data-slot=\"print-letterhead\"]').innerText.includes(".json_encode($center).')', true)
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\').parentElement).page', 'dossier');
 }
