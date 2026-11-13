@@ -63,7 +63,8 @@ it('sends the statement to the people RH ticks, from a bar that appears only the
 });
 
 it('says a name that is not in the tab is in everybody, and offers to go there', function (): void {
-    visitPage('leave/balances', leaveBalancesPanel().'?tab=missing&q=Ana')
+    // The full name: «Ana» alone also matches a random Mariana or Juliana the factories create in that tab.
+    visitPage('leave/balances', leaveBalancesPanel().'?tab=missing&q='.rawurlencode('Ana Solís'))
         ->assertSee('No está en esta pestaña')
         ->assertSee('1 persona coincide en Todos')
         ->click('Ver en Todos')
