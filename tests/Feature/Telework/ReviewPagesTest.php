@@ -123,7 +123,7 @@ it('asserts the query count of the inbox', function (): void {
     }
     $this->actingAs($this->cora)->get(inboxUrl())->assertOk();
 
-    $this->expectsDatabaseQueryCount(19);
+    $this->expectsDatabaseQueryCount(18);
     $this->get(inboxUrl())->assertOk();
 });
 
