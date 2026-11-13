@@ -203,3 +203,27 @@ it('shows Empleados in the sidebar to owner and hr, never to a viewer', function
 
     visit('/admin/acme')->click('Empleados')->assertPathIs('/admin/acme/employees');
 });
+
+it('finds a person from the ⌘K palette and opens Empleados narrowed to them', function (): void {
+    acmeWithEmployees();
+
+    visit('/admin/acme/employees')
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
+        ->type('#command-search', 'ló')
+        ->assertSeeIn('[role="listbox"] [role="group"]', 'Personas')
+        ->assertSee('Ana López')
+        ->keys('#command-search', 'Enter')
+        ->assertPathIs('/admin/acme/employees')
+        ->assertScript('() => new URL(location.href).searchParams.get("q")', 'Ana López')
+        ->assertNoJavaScriptErrors();
+});
+
+it('offers no people in the ⌘K palette to whoever cannot manage the organization', function (): void {
+    $tenant = acmeWithEmployees();
+    $this->actingAs(memberOf($tenant, TenantRole::Viewer));
+
+    visit('/admin/acme')
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
+        ->type('#command-search', 'ló')
+        ->assertDontSee('Ana López');
+});
