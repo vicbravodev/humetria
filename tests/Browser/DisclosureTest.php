@@ -432,7 +432,7 @@ it('publishes results and the people read them on their page, of the whole cente
 
     visitPage('disclosure-public/center', $link, false, true)
         ->assertSee('Resultados de la evaluación')
-        ->assertSee('contestaron 12 personas')
+        ->assertSee('contestaron 12 de 12 personas')
         ->assertSee('Lo que más atención necesita')
         // E-20: the results are there, so the footer only names the policy it still waits for.
         ->assertSee('La empresa publicará aquí más información: la política de prevención.')

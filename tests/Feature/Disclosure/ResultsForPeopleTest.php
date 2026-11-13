@@ -134,7 +134,7 @@ it('shows the people the published results of the plant, centered on the whole c
 
     $results = disclosurePlantResults($this);
 
-    expect($results['published'])->toMatchArray(['state' => 'available', 'closedOn' => '10 nov 2026', 'answered' => 13, 'guide' => 'ii'])
+    expect($results['published'])->toMatchArray(['state' => 'available', 'closedOn' => '10 nov 2026', 'answered' => 13, 'target' => 13, 'guide' => 'ii'])
         ->and(array_sum($results['published']['final']))->toBe(13)
         ->and($results['published']['final'])->toHaveCount(5)
         ->and($results['title'])->toBe('Resultados de la identificación y análisis de los factores de riesgo psicosocial')
