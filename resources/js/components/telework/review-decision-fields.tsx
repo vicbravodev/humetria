@@ -13,12 +13,14 @@ const CARD =
 export default function ReviewDecisionFields({
     idPrefix,
     errors,
+    unfavorable = 0,
 }: {
     idPrefix: string;
     errors: Partial<Record<string, string>>;
+    unfavorable?: number;
 }) {
     const [decision, setDecision] = useState<ReviewDecisionValue>('valid');
-    const needs = decisionNeeds(decision);
+    const needs = decisionNeeds(decision, unfavorable);
 
     return (
         <>

@@ -29,6 +29,7 @@ export default function ReviewSide({ review }: { review: ReviewDetail }) {
                         })}
                         idPrefix="decision"
                         submitLabel="Registrar decisión"
+                        unfavorable={review.answers.unfavorable.length}
                     />
                 </section>
             )}
