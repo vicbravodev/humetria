@@ -215,14 +215,19 @@ it('searches by legal name, RFC or contact, without regard to case or accents, a
     BillingAccount::factory()->consultant()->create(['legal_name' => 'Otra S.C.', 'rfc' => 'OTR010101AB1', 'contact_name' => 'José Luis']);
     BillingAccount::factory()->create(['legal_name' => 'Ninguna', 'rfc' => 'NIN010101AB1', 'contact_name' => 'Pedro']);
 
-    $names = fn (string $query) => collect($this->actingAs(superadmin())->get(route('billing.accounts.index', $query))->viewData('page')['props']['accounts']['data'])->pluck('legal_name')->sort()->values()->all();
+    // Laravel 13.40+ encodes a raw string as one value («?q%3DJOSE»): the query goes as an array.
+    $names = function (string $query): array {
+        parse_str($query, $params);
+
+        return collect($this->actingAs(superadmin())->get(route('billing.accounts.index', $params))->viewData('page')['props']['accounts']['data'])->pluck('legal_name')->sort()->values()->all();
+    };
 
     expect($names('q=JOSE'))->toBe(['Otra S.C.', 'Zapatería José S.A.'])
         ->and($names('q=otr010101'))->toBe(['Otra S.C.'])
         ->and($names('q=jose&kind=consultant'))->toBe(['Otra S.C.'])
         ->and($names('q=nada'))->toBe([]);
 
-    $this->get(route('billing.accounts.index', 'q=jose'))->assertInertia(fn (Assert $page) => $page->where('counts', ['all' => 2, 'direct' => 1, 'consultant' => 1, 'overdue' => 0]));
+    $this->get(route('billing.accounts.index', ['q' => 'jose']))->assertInertia(fn (Assert $page) => $page->where('counts', ['all' => 2, 'direct' => 1, 'consultant' => 1, 'overdue' => 0]));
 });
 
 it('pages the accounts 25 at a time', function (): void {
