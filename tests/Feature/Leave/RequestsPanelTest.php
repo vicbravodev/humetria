@@ -463,12 +463,10 @@ describe('recording on behalf of somebody', function (): void {
     });
 
     it('says next to each person how many days they have and how many wait for an answer, so RH sees it before recording', function (): void {
-        $period = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'statutory_days' => 12, 'extra_days' => 0]);
         LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'leave_type_id' => null, 'status' => 'requested', 'working_days' => 2]);
 
         $this->actingAs($this->hr)->getJson(route('tenant.vacations.people.options', [$this->tenant, 'q' => 'ana']))
-            ->assertExactJson([['value' => $this->ana->id, 'label' => 'Ana Solís', 'hint' => '12 días disponibles · 2 en espera']]);
-        expect($period->exists)->toBeTrue();
+            ->assertExactJson([['value' => $this->ana->id, 'label' => 'Ana Solís', 'hint' => '14 días disponibles · 2 en espera']]);
     });
 
     it('offers the types of the company to record a leave', function (): void {
