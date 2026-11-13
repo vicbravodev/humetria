@@ -10,6 +10,7 @@ describe('navSections for the platform', () => {
                 ?.items.map((item) => item.title);
 
         expect(platform(true, true)).toEqual([
+            'Resumen',
             'Empresas',
             'Cuentas',
             'Solicitudes de demo',

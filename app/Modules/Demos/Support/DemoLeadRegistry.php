@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Support;
 
 use App\Actions\RecordAudit;
+use App\Modules\Demos\Actions\ListDemoRequests;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Demos\Data\DemoLead;
 use App\Modules\Demos\Enums\DemoStatus;
@@ -15,7 +16,7 @@ use Illuminate\Support\Str;
 
 final readonly class DemoLeadRegistry implements DemoLeads
 {
-    public function __construct(private RecordAudit $recordAudit) {}
+    public function __construct(private RecordAudit $recordAudit, private ListDemoRequests $list) {}
 
     public function find(string $id): ?DemoLead
     {
@@ -42,5 +43,10 @@ final readonly class DemoLeadRegistry implements DemoLeads
         $this->recordAudit->handle('demo.converted', $request, ['tenant_id' => $tenantId]);
 
         return true;
+    }
+
+    public function countsByStatus(): array
+    {
+        return $this->list->counts();
     }
 }

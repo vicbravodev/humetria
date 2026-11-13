@@ -59,6 +59,7 @@ final class TenancyServiceProvider extends ServiceProvider
         // is told it may not, since it does see the console around them.
         Gate::define('view-audit', fn (User $user): AccessResponse => AccessResponse::deny());
         Gate::define('manage-platform-users', fn (User $user): AccessResponse => AccessResponse::deny());
+        Gate::define('view-platform-overview', fn (User $user): AccessResponse => AccessResponse::deny());
 
         // The invitation link is public. Viewing it has its own budget, so the page shown again after a mistyped
         // password does not spend the attempts.

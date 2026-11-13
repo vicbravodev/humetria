@@ -1,5 +1,6 @@
 import {
     Building2,
+    ChartNoAxesColumn,
     Inbox,
     ScrollText,
     UserCog,
@@ -9,6 +10,7 @@ import { index as audit } from '@/routes/audit';
 import { index as accounts } from '@/routes/billing/accounts';
 import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
+import { index as overview } from '@/routes/overview';
 import { index as users } from '@/routes/platform-users';
 import type { NavItem } from '@/types';
 
@@ -27,6 +29,10 @@ const superadminOnlyNavItems: NavItem[] = [
 
 export function platformNavItems(isSuperadmin: boolean): NavItem[] {
     return isSuperadmin
-        ? [...staffNavItems, ...superadminOnlyNavItems]
+        ? [
+              { title: 'Resumen', href: overview(), icon: ChartNoAxesColumn },
+              ...staffNavItems,
+              ...superadminOnlyNavItems,
+          ]
         : staffNavItems;
 }

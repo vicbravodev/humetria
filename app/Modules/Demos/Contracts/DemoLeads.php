@@ -16,4 +16,11 @@ interface DemoLeads
      * when two people try at once.
      */
     public function markConverted(string $id, string $tenantId): bool;
+
+    /**
+     * How many requests each status holds, and all of them, for the platform's overview.
+     *
+     * @return array<string, int>
+     */
+    public function countsByStatus(): array;
 }

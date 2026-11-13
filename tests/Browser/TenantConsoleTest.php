@@ -725,3 +725,26 @@ it('says so when no user matches the search', function (bool $dark): void {
     visitPage('tenancy/users', '/admin/platform-users?q=zzzz', $dark)
         ->assertSee('Nadie coincide con tu búsqueda');
 })->with(['light' => false, 'dark' => true]);
+
+it('shows the superadmin the platform in four figures, each a way into its list', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    Tenant::factory()->count(2)->create();
+    Tenant::factory()->suspended()->create();
+    App\Modules\Demos\Models\DemoRequest::factory()->create();
+
+    visitPage('tenancy/overview', '/admin/overview', $dark, $mobile)
+        ->assertSee('Resumen')
+        ->assertSee('Ingreso mensual contratado')
+        ->assertSee('Solicitudes de demo')
+        ->assertSee('Sin entrar en 30 días')
+        ->assertSee('Suspendidas')
+        ->assertSee('1 espera respuesta.');
+})->with($looks);
+
+it('shows when each company and each user last came in', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo']);
+    TenantMembership::factory()->for($tenant)->for(User::factory()->create(['last_login_at' => '2026-11-10 18:00:00']))->create();
+
+    visitPage('tenancy/index', '/admin/companies')->assertSee('Último acceso')->assertSee('10 nov 2026');
+});
