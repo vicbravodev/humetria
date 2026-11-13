@@ -41,6 +41,7 @@ final class AuditPages
         'complaint_channel' => 'Canal de quejas',
         'complaint_handler' => 'Responsables de quejas',
         'interventions' => 'Intervenciones',
+        'nom035' => 'NOM-035',
         'disclosure' => 'Difusión',
         'engagement' => 'Clima',
         'seating' => 'Ley Silla',

@@ -18,16 +18,16 @@ function auditedEvents(): array
         preg_match_all('/(?:[aA]udit|recordAudit)->handle\(((?:[^,()]|\([^()]*\))*)/', (string) file_get_contents($file->getPathname()), $calls);
 
         foreach ($calls[1] as $argument) {
-            preg_match_all("/'([a-z_]+\\.[a-z_]+)'/", $argument, $names);
+            preg_match_all("/'([a-z0-9_]+\\.[a-z_]+)'/", $argument, $names);
             $events = [...$events, ...$names[1]];
         }
     }
 
-    return array_values(array_unique(array_filter($events, fn (string $event): bool => array_key_exists(explode('.', $event)[0], AuditPages::FAMILIES))));
+    return array_values(array_unique($events));
 }
 
 it('gives every event the code audits a label a person can read, in Spanish and different from its key', function (): void {
-    preg_match_all("/^\\s+'([a-z_.]+)':\\s+'(.+)',$/m", (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/audit.ts'), $found);
+    preg_match_all("/^\\s+'([a-z0-9_.]+)':\\s+'(.+)',$/m", (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/audit.ts'), $found);
     $labels = array_combine($found[1], $found[2]);
     $events = auditedEvents();
 
@@ -37,4 +37,10 @@ it('gives every event the code audits a label a person can read, in Spanish and 
 
     expect($missing)->toBe([]);
     expect(array_filter($labels, fn (string $label, string $event): bool => $label === $event, ARRAY_FILTER_USE_BOTH))->toBe([]);
+});
+
+it('offers every family of audited events in the console filter', function (): void {
+    $families = array_values(array_unique(array_map(fn (string $event): string => explode('.', $event)[0], auditedEvents())));
+
+    expect(array_values(array_diff($families, array_keys(AuditPages::FAMILIES))))->toBe([]);
 });
