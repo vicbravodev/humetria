@@ -123,6 +123,14 @@ it('adds what was left of earlier periods and counts the year in course from the
     expect(terminate($ana)?->only(['pending_days', 'proportional_days']))->toBe(['pending_days' => 7, 'proportional_days' => 6.98]);
 });
 
+it('does not count the period granted at the last anniversary twice: it is the year completed, the proportional is the year in course', function (): void {
+    $beatriz = hiredOn('2022-01-01');
+    periodWith($beatriz, 3, '2025-01-01', statutory: 16);
+
+    // 16 days of the completed third year are owed whole; the fourth (18) only for the 182 days elapsed: 18 × 182 / 365.
+    expect(terminate($beatriz)?->only(['pending_days', 'proportional_days']))->toBe(['pending_days' => 16, 'proportional_days' => 8.98]);
+});
+
 it('counts the seniority the company recognizes, the days of the person\'s policy and what they were given in advance', function (): void {
     $policy = LeavePolicy::factory()->create(['tenant_id' => $this->tenant->id]);
     LeavePolicyRow::factory()->create(['tenant_id' => $this->tenant->id, 'leave_policy_id' => $policy->id, 'year_from' => 1, 'year_to' => 5, 'days' => 20]);
