@@ -57,3 +57,7 @@ it('takes the minimum in force on the date of the salary, not the one of today',
     expect($check->warning(33000, CarbonImmutable::parse('2026-06-01')))->toBeNull()
         ->and($check->warning(33000, CarbonImmutable::parse('2027-02-01')))->toContain('$360.00 diarios; $500.00 en la zona libre');
 });
+
+it('says nothing of a salary dated before the platform has any minimum wage, and does not fail', function (): void {
+    expect(resolve(MinimumWageCheck::class)->warning(100, CarbonImmutable::parse('2000-01-01')))->toBeNull();
+});

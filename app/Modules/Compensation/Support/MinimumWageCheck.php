@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Compensation\Support;
 
 use Carbon\CarbonImmutable;
+use OutOfBoundsException;
 
 /**
  * Whether a daily salary is under the minimum wage in force on the day it starts to count (not today's): the warning
@@ -18,6 +19,11 @@ final readonly class MinimumWageCheck
     {
         $legal = $this->fiscal->at($on);
 
-        return SalaryRules::salaryWarning($cents, $legal->minimumWage(), $legal->minimumWageBorder());
+        try {
+            return SalaryRules::salaryWarning($cents, $legal->minimumWage(), $legal->minimumWageBorder());
+        } catch (OutOfBoundsException) {
+            // A date the platform has no minimum for (before its first row): nothing to compare with, so nothing is said.
+            return null;
+        }
     }
 }
