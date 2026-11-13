@@ -385,6 +385,24 @@ function smallTouchTargets(): string
 }
 
 /**
+ * A script that resolves once no calendar popover is open: picking a day closes its popover with a short animation,
+ * and on a slow runner the click that opens the next date field can land while the first one is still closing.
+ */
+function calendarClosed(): string
+{
+    return <<<'JS'
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const check = () => {
+                const open = document.querySelector('[data-state="open"] [data-day]') !== null;
+                ! open || performance.now() - start > 3000 ? resolve(! open) : requestAnimationFrame(check);
+            };
+            check();
+        })
+        JS;
+}
+
+/**
  * Resizes the window and waits until React has re-rendered for the new width (the sidebar becomes a sheet below
  * 768 px) and its transitions have settled, so the next assertion measures the layout at that width.
  */

@@ -135,6 +135,7 @@ it('lets RH record vacations for somebody and approve them in the same step', fu
         ->click('[role="option"]:has-text("Ana Solís")')
         ->click('#record-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-02"] button')
+        ->assertScript(calendarClosed(), true)
         ->click('#record-ends-on')
         ->click('[data-state="open"] [data-day="2026-11-03"] button')
         ->type('#record-note', 'Lo pidió por teléfono')
