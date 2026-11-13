@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     boundsOf,
+    clearLeftEdge,
     MAX_ZOOM,
     MIN_ZOOM,
     READABLE_ZOOM,
@@ -32,6 +33,17 @@ describe('viewportFor', () => {
 
         expect(view.zoom).toBeCloseTo((1000 - 64) / 2000, 5);
         expect(view.x).toBeCloseTo(500 - 1000 * view.zoom, 5);
+    });
+
+    it('starts wide content at the left margin when it cannot fit even at the smallest size, so nothing is cut off at the left', () => {
+        const view = viewportFor(
+            { x: 300, y: 0, width: 4000, height: 200 },
+            screen,
+        );
+
+        expect(view.zoom).toBe(MIN_ZOOM);
+        // Its left edge lands at the margin; what does not fit runs off to the right, a pan away.
+        expect(300 * view.zoom + view.x).toBe(32);
     });
 
     it('fits tall content in the height that is left under the toolbar', () => {
@@ -91,6 +103,30 @@ describe('boundsOf', () => {
 });
 
 describe('readableViewport', () => {
+    it('centers on the root when starting at the left would push it out of view', () => {
+        const huge = { x: 0, y: 0, width: 9000, height: 800 };
+        const root = { x: 4400, y: 0, width: 200, height: 80 };
+        const view = readableViewport(huge, huge, {
+            width: 1280,
+            height: 700,
+            root,
+        });
+
+        expect((4400 + 100) * view.zoom + view.x).toBeCloseTo(640, 5);
+    });
+
+    it('starts at the left when the root is in view from there', () => {
+        const wideBox = { x: 0, y: 0, width: 1800, height: 800 };
+        const root = { x: 800, y: 0, width: 200, height: 80 };
+        const view = readableViewport(wideBox, wideBox, {
+            width: 1280,
+            height: 700,
+            root,
+        });
+
+        expect(view.x).toBe(32);
+    });
+
     const wide = { x: 0, y: 0, width: 6000, height: 800 };
     const top = { x: 2400, y: 0, width: 1200, height: 300 };
 
@@ -113,5 +149,33 @@ describe('readableViewport', () => {
         expect(
             readableViewport(small, top, { width: 1280, height: 700 }),
         ).toEqual(viewportFor(small, { width: 1280, height: 700 }));
+    });
+});
+
+describe('clearLeftEdge', () => {
+    const view = { x: -150, y: 88, zoom: 1 };
+    const row = (xs: number[]) =>
+        xs.map((x) => ({ x, y: 0, width: 200, height: 80 }));
+
+    it('shows whole the card that the left edge slices, and leaves the ones before it out', () => {
+        // Cards at screen x -350, -50 (sliced: it runs to 150) and 250.
+        const moved = clearLeftEdge(view, row([-200, 100, 400]), screen);
+
+        // The sliced card (left at 100) now starts at the margin.
+        expect(100 * moved.zoom + moved.x).toBe(16);
+        expect(moved.y).toBe(view.y);
+        expect(moved.zoom).toBe(view.zoom);
+    });
+
+    it('leaves a view alone when no card is sliced', () => {
+        expect(clearLeftEdge(view, row([-500, 200, 500]), screen)).toEqual(
+            view,
+        );
+    });
+
+    it('ignores the cards on rows that are out of view', () => {
+        const below = [{ x: 100, y: 5000, width: 200, height: 80 }];
+
+        expect(clearLeftEdge(view, below, screen)).toEqual(view);
     });
 });

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { centersIntro, nextInCenter } from '@/lib/seating/centers';
+import {
+    centersIntro,
+    namesSectorApart,
+    nextInCenter,
+} from '@/lib/seating/centers';
 import type { SeatingCenterCard } from '@/types';
 
 const card: SeatingCenterCard = {
@@ -56,5 +60,21 @@ describe('nextInCenter', () => {
                 },
             }),
         ).toBe('Nadie trabaja de pie · constancia del 3 oct 2026');
+    });
+});
+
+describe('namesSectorApart', () => {
+    it('names the sector apart unless the activity already says it', () => {
+        expect(namesSectorApart('Manufactura', 'Comercio')).toBe(true);
+        expect(namesSectorApart('Comercio al por menor', 'Comercio')).toBe(
+            false,
+        );
+        expect(namesSectorApart('COMERCIO al por menor', 'Comercio')).toBe(
+            false,
+        );
+    });
+
+    it('shows «Nadie trabaja de pie» when there is no sector', () => {
+        expect(namesSectorApart('Comercio', null)).toBe(true);
     });
 });

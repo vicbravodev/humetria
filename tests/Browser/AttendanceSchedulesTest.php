@@ -44,6 +44,27 @@ it('shows RH each person\'s schedule and who has none', function (bool $dark, bo
     'dark, phone' => [true, true],
 ]);
 
+it('offers «Fijar horario» in the rows as an outline button, and opens a dialog whose time fields are not cut off', function (): void {
+    $url = schedulesPanel();
+
+    visit("{$url}/attendance/schedules")->resize(1440, 900)
+        ->assertSee('Fijar horario')
+        ->assertScript(<<<'JS'
+            () => {
+                const probe = document.createElement('div');
+                probe.style.backgroundColor = 'var(--primary)';
+                document.body.append(probe);
+                const primary = getComputedStyle(probe).backgroundColor;
+                probe.remove();
+                const buttons = [...document.querySelectorAll('tbody button')].filter((button) => button.textContent.trim() === 'Fijar horario');
+                return buttons.length > 0 && buttons.every((button) => getComputedStyle(button).backgroundColor !== primary);
+            }
+            JS, true)
+        ->click('Fijar horario')
+        ->assertSee('Hora de entrada de cada día')
+        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] input[type="time"]\')].filter((input) => input.scrollWidth > input.clientWidth).length', 0);
+});
+
 it('lets RH fix a schedule, with the week\'s total and a note above the year\'s maximum', function (): void {
     $url = schedulesPanel();
 

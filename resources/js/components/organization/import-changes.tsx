@@ -1,5 +1,12 @@
 import { ChevronDown } from 'lucide-react';
-import { changeLine } from '@/lib/employees';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { countOf } from '@/lib/plural';
 import type { EmployeeImportChange } from '@/types';
 
@@ -48,13 +55,39 @@ export default function ImportChanges({
                                     />
                                 </span>
                             </summary>
-                            <ul className="mt-2 grid gap-1 text-sm">
-                                {person.changes.map((change) => (
-                                    <li key={change.label}>
-                                        {changeLine(change)}
-                                    </li>
-                                ))}
-                            </ul>
+                            <Table className="mt-2 text-sm [&_td]:whitespace-normal">
+                                <TableHeader className="bg-muted/60">
+                                    <TableRow>
+                                        <TableHead>Campo</TableHead>
+                                        <TableHead>Antes</TableHead>
+                                        <TableHead>Después</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {person.changes.map((change) => (
+                                        <TableRow key={change.label}>
+                                            <TableCell className="font-medium">
+                                                {change.label}
+                                            </TableCell>
+                                            <TableCell>
+                                                {change.before}
+                                            </TableCell>
+                                            <TableCell>
+                                                {change.after === '—' ? (
+                                                    <span
+                                                        data-erased
+                                                        className="inline-flex rounded-md bg-warning px-2 py-0.5 font-medium text-warning-foreground"
+                                                    >
+                                                        Se borra
+                                                    </span>
+                                                ) : (
+                                                    change.after
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         </details>
                     </li>
                 ))}

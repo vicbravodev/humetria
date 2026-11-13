@@ -400,8 +400,8 @@ it('edits in the same screen: the band, the tray, and «Cambiar jefe» with its 
         ->assertSee('Cambiar jefe de Ana López')
         ->click('#manager-of-'.$people['ana']->id)
         ->type('[role="combobox"][aria-controls="manager-of-'.$people['ana']->id.'-options"]', 'sofía')
-        ->assertSee('Sofía Luna · Gerente de ventas')
-        ->keys('[role="combobox"][aria-controls="manager-of-'.$people['ana']->id.'-options"]', 'Enter')
+        // Pick the option itself: Enter right after typing can land before the server search narrows the list.
+        ->click('#manager-of-'.$people['ana']->id.'-options [role="option"]:has-text("Sofía Luna")')
         ->click('[role="dialog"] button:has-text("Asignar")')
         ->assertSee('Ana López ahora reporta a Sofía Luna')
         ->assertSee('Deshacer')
@@ -489,8 +489,8 @@ it('chooses the manager on the row of whoever has none: «Asignar» is the prima
         ->assertDisabled('[aria-label="Asignar jefe a Lupe Sola"]')
         ->click('#manager-'.$lupe->id)
         ->type('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'sofía')
-        ->assertSee('Sofía Luna · Gerente de ventas')
-        ->keys('[role="combobox"][aria-controls="manager-'.$lupe->id.'-options"]', 'Enter')
+        // Pick the option itself: Enter right after typing can land before the server search narrows the list.
+        ->click('#manager-'.$lupe->id.'-options [role="option"]:has-text("Sofía Luna")')
         ->click('[aria-label="Asignar jefe a Lupe Sola"]')
         ->assertSee('Jefe actualizado.')
         ->assertNoJavaScriptErrors()
@@ -698,6 +698,32 @@ it('opens on the heads and their first level at a readable size, the company car
         JS, true)
         ->assertNotPresent(orgCard('Operario 1'))
         ->assertSee('+19 · 19 en total')
+        ->assertNoJavaScriptErrors();
+});
+
+it('opens with no card cut off at the left, and the company card in view', function (): void {
+    demoLikeOrgChart();
+    $place = ['tenant_id' => Employee::query()->withoutGlobalScopes()->firstOrFail()->tenant_id];
+
+    // Two more heads with three managers each: the first level is wider than the screen at a readable size.
+    foreach (['Ángeles Girón', 'Iván Soto'] as $name) {
+        $head = Employee::factory()->create([...$place, 'name' => $name, 'job_title' => 'Director', 'manager_id' => null]);
+        Employee::factory()->count(3)->create([...$place, 'job_title' => 'Gerente', 'manager_id' => $head->id]);
+    }
+
+    visit('/admin/acme/org-chart')
+        ->resize(1440, 900)
+        ->wait(1)
+        ->assertScript(<<<'JS'
+            () => {
+                const canvas = document.querySelector('.react-flow').getBoundingClientRect();
+                const cards = [...document.querySelectorAll('.react-flow__node-person, .react-flow__node-company')].map((node) => node.getBoundingClientRect());
+                const company = document.querySelector('.react-flow__node-company').getBoundingClientRect();
+                const cut = cards.filter((box) => box.top < canvas.bottom && box.bottom > canvas.top && box.left < canvas.left - 1 && box.right > canvas.left + 1);
+
+                return cut.length === 0 && company.left >= canvas.left && company.right <= canvas.right;
+            }
+            JS, true)
         ->assertNoJavaScriptErrors();
 });
 

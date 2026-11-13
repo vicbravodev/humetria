@@ -220,6 +220,27 @@ it('names the tools a plan takes away before it is assigned', function (): void 
         ->assertSee('Asignar y quitar 3 herramientas');
 });
 
+it('says what a plan takes away in a warning of its own, with an icon, apart from the price', function (): void {
+    signInAsSuperadmin();
+    [, $account] = paidCompany('consultant');
+
+    visit("/admin/billing/accounts/{$account->id}")
+        ->click('Asignar plan')
+        ->click('[name="profile"][value="channel_compliance"]')
+        ->assertSee('Asistencia, Vacaciones, Organigrama')
+        ->assertScript(<<<'JS'
+            () => {
+                const note = document.querySelector('[data-test="plan-modules-removed"]');
+                const probe = Object.assign(document.createElement('div'), {});
+                probe.style.backgroundColor = 'var(--warning)';
+                document.body.append(probe);
+                const warning = getComputedStyle(probe).backgroundColor;
+                probe.remove();
+                return note.querySelector('svg') !== null && getComputedStyle(note).backgroundColor === warning && note.textContent.includes('Se quitan');
+            }
+            JS, true);
+});
+
 it('shows the next amount before saving a plan, and saves it', function (): void {
     signInAsSuperadmin();
     [$tenant, $account] = paidCompany('consultant');

@@ -58,7 +58,7 @@ export default function CloseDialog({
                         La norma pide las guías a todas las personas del centro.
                         {counted}
                     </p>
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-4">
                         <Checkbox
                             id="acknowledged-shortfall"
                             checked={acknowledged}

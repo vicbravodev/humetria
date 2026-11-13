@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ContactStep from '@/components/campaigns/contact-step';
 import DeadlineStep from '@/components/campaigns/deadline-step';
 import InvitationPreview from '@/components/campaigns/invitation-preview';
+import LaunchFigures from '@/components/campaigns/launch-figures';
 import ReviewStep from '@/components/campaigns/review-step';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
@@ -88,6 +89,10 @@ export default function LaunchForm({
                         form={launch.form([tenant.slug, campaign.id])}
                         transform={() => ({ closes_on: lastDay })}
                     >
+                        <LaunchFigures
+                            emails={contact.reachable}
+                            withoutEmail={contact.unreachable}
+                        />
                         <p className="text-sm text-muted-foreground">
                             Solo recibe la evaluación quien está en Empleados:
                             revisa que tu plantilla esté completa.

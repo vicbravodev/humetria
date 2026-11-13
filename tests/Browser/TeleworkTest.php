@@ -1054,6 +1054,30 @@ it('shows the printable dossier of a center with the evidence of each row or Fal
         ->assertScript('() => [...document.querySelectorAll("section")].filter((section) => section.textContent.includes("Cumple")).length > 2', true);
 })->with($looks);
 
+it('puts the letterhead on the NOM-037 dossier when it is printed', function (): void {
+    [$url, $center] = teleworkerCenter();
+
+    assertPrintLetterhead(visit("{$url}/telework/centers/{$center->id}/dossier")->assertSee('Expediente de NOM-037'), 'Planta Querétaro');
+});
+
+it('fits the tables of the dossier in the page, on screen and on paper, with short dates', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    SafetyCommittee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'job_title' => 'Analista']);
+    $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id]);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $person->id])->id]);
+
+    $cutOff = '() => [...document.querySelectorAll(\'[data-slot="table-container"]\')].filter((box) => box.scrollWidth > box.clientWidth + 1).length';
+
+    $page = visit("{$url}/telework/centers/{$center->id}/dossier")->on()->desktop()
+        ->assertSee('Expediente de NOM-037 para la inspección');
+    $page->resize(1440, 900)
+        ->assertScript($cutOff, 0)
+        ->assertScript('() => /\\d{1,2} de [a-z]+ de \\d{4}/.test([...document.querySelectorAll("table td")].map((cell) => cell.textContent).join(" "))', false);
+
+    emulatePrint($page)->resize(794, 1123)->assertScript($cutOff, 0);
+});
+
 it('says that a row does not apply instead of Falta, and prints the medical exams note once', function (): void {
     [$url, $center, $tenant] = teleworkerCenter();
     $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);

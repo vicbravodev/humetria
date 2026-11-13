@@ -181,6 +181,38 @@ it('says in the launch dialog how many people will not get the email', function 
         ->assertNoJavaScriptErrors();
 });
 
+it('highlights the figures of the launch dialog: the emails that go and the people with none', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 18);
+    $people->first()->forceFill(['email' => null])->save();
+    $people->last()->forceFill(['email' => null])->save();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('Lanzar e invitar a 16 personas')
+        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] [data-test="launch-figures"] > div\')].map((box) => box.innerText.replace(/\\s+/g, " ").trim()).join("|")', '16 correos|2 sin correo')
+        // The figures are big, not running text.
+        ->assertScript('() => parseFloat(getComputedStyle(document.querySelector(\'[data-test="launch-figures"] p:first-child\')).fontSize) >= 24', true);
+});
+
+it('keeps the checkbox of the close dialog 16 px away from its text', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, female: 60);
+    Illuminate\Support\Facades\Notification::fake();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id, 'population' => 'sample']);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+    $this->post(route('tenant.campaigns.launch', [$tenant, $campaign->id]), ['closes_on' => now()->addWeek()->toDateString()]);
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->click('[aria-label="Más acciones"]')
+        ->click('[role="menuitem"]:has-text("Cerrar evaluación")')
+        ->assertSee('Entiendo y quiero cerrar así')
+        ->assertScript('() => { const box = document.querySelector(\'#acknowledged-shortfall\').getBoundingClientRect(); const label = document.querySelector(\'label[for="acknowledged-shortfall"]\').getBoundingClientRect(); return Math.round(label.left - box.right); }', 16);
+});
+
 it('launches a draft with the deadline suggested, inviting everyone by email', function (): void {
     Illuminate\Support\Facades\Notification::fake();
     $tenant = campaignsCompany();

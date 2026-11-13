@@ -12,16 +12,16 @@ export default function AuditRow({ entry }: { entry: AuditEntryRow }) {
 
     return (
         <>
-            <TableRow>
-                <TableCell className="text-sm whitespace-normal tabular-nums max-md:px-2">
+            <TableRow className="max-md:grid max-md:grid-cols-[1fr_auto] max-md:items-center max-md:gap-x-3 max-md:gap-y-1 max-md:px-4 max-md:py-3">
+                <TableCell className="text-sm whitespace-normal tabular-nums max-md:col-start-1 max-md:row-start-1 max-md:h-auto max-md:p-0 max-md:text-muted-foreground">
                     {entry.at}
                 </TableCell>
-                <TableCell className="whitespace-normal max-md:px-2">
+                <TableCell className="whitespace-normal max-md:col-span-2 max-md:row-start-2 max-md:h-auto max-md:p-0">
                     <span className="font-medium">
                         {eventLabel(entry.event)}
                     </span>
                 </TableCell>
-                <TableCell className="whitespace-normal max-md:px-2">
+                <TableCell className="whitespace-normal max-md:col-span-2 max-md:row-start-3 max-md:h-auto max-md:p-0">
                     {entry.actor === null ? (
                         <span className="text-muted-foreground">Sistema</span>
                     ) : (
@@ -29,7 +29,7 @@ export default function AuditRow({ entry }: { entry: AuditEntryRow }) {
                             {entry.impersonator === null
                                 ? entry.actor.name
                                 : `${entry.impersonator.name} como ${entry.actor.name}`}
-                            <span className="text-caption break-all text-muted-foreground">
+                            <span className="text-caption break-words text-muted-foreground">
                                 {entry.actor.email}
                             </span>
                         </span>
@@ -42,7 +42,7 @@ export default function AuditRow({ entry }: { entry: AuditEntryRow }) {
                         </span>
                     )}
                 </TableCell>
-                <TableCell className="w-px text-right max-md:px-2">
+                <TableCell className="w-px text-right max-md:col-start-2 max-md:row-start-1 max-md:h-auto max-md:w-auto max-md:p-0">
                     {context.length > 0 && (
                         <Button
                             variant="ghost"
@@ -61,10 +61,10 @@ export default function AuditRow({ entry }: { entry: AuditEntryRow }) {
                 </TableCell>
             </TableRow>
             {open && (
-                <TableRow>
+                <TableRow className="max-md:block">
                     <TableCell
                         colSpan={5}
-                        className="bg-muted/50 whitespace-normal"
+                        className="bg-muted/50 whitespace-normal max-md:block"
                     >
                         <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-[max-content_1fr]">
                             {entry.company !== null &&

@@ -75,6 +75,12 @@ it('opens the NOM-035 dossier with only what the center can show', function (): 
 });
 
 // Launch plan, decision 2: the dossier of NOM-035 with the six rows of the inspection and their evidence.
+it('puts the letterhead on the NOM-035 dossier when it is printed', function (): void {
+    $office = evaluatedOffice();
+
+    assertPrintLetterhead(visit("/admin/acme/campaigns/centers/{$office->id}/dossier")->assertSee('Expediente NOM-035'), 'Oficina');
+});
+
 it('prints the NOM-035 dossier of a center, in both themes and on a phone', function (bool $dark, bool $mobile): void {
     $office = evaluatedOffice();
 

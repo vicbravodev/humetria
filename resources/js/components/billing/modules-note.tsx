@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react';
 import type { ModulesChange } from '@/types';
 
 /** The tools a plan being typed switches off (and from when) and on: said before it is saved. */
@@ -5,13 +6,22 @@ export default function ModulesNote({ modules }: { modules: ModulesChange }) {
     return (
         <>
             {modules.removed.length > 0 && (
-                <p
+                <div
+                    role="status"
                     data-test="plan-modules-removed"
-                    className="rounded-lg bg-accent px-3 py-2 text-sm"
+                    className="flex items-start gap-2.5 rounded-lg bg-warning px-3 py-2.5 text-sm text-warning-foreground"
                 >
-                    Se quitan el {modules.removedOn}:{' '}
-                    {modules.removed.join(', ')}.
-                </p>
+                    <TriangleAlert
+                        aria-hidden
+                        className="mt-0.5 size-4 shrink-0"
+                    />
+                    <p>
+                        <strong className="font-semibold">
+                            Se quitan el {modules.removedOn}:
+                        </strong>{' '}
+                        {modules.removed.join(', ')}.
+                    </p>
+                </div>
             )}
             {modules.added.length > 0 && (
                 <p data-test="plan-modules-added" className="text-sm">

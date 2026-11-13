@@ -23,7 +23,7 @@ use Carbon\CarbonImmutable;
  */
 final readonly class DashboardPage
 {
-    private const int CENTERS_PER_PAGE = 10;
+    private const int CENTERS_PER_PAGE = 5;
 
     private const int URGENCIES = 5;
 

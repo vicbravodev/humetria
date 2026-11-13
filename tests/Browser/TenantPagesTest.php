@@ -245,6 +245,15 @@ it('tells the members of a read-only company why nothing can be changed and whom
         ->assertSeeIn('[data-slot="company-read-only-notice"]', 'Contacta al administrador de Humetría');
 })->with($looks);
 
+it('lines the content of the panel up with the read-only notice above it', function (): void {
+    $tenant = Tenant::factory()->readOnly()->create(['slug' => 'solo-lectura']);
+    $this->actingAs(ownerOf($tenant));
+
+    visit('/admin/solo-lectura')->resize(1440, 900)
+        ->assertSee('Tu empresa está en solo lectura')
+        ->assertScript('() => document.querySelector("h1").getBoundingClientRect().left - document.querySelector(\'[data-slot="company-read-only-notice"] [data-slot="notice"]\').getBoundingClientRect().left', 0);
+});
+
 it('shows no read-only notice in a company that works', function (): void {
     $this->actingAs(ownerOf(Tenant::factory()->create(['slug' => 'activa'])));
 
