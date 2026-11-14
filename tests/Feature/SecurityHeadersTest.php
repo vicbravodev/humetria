@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\SecurityHeaders;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Testing\TestResponse;
@@ -230,4 +231,15 @@ it('keeps an X-Robots-Tag that the route set on purpose', function (): void {
     Route::middleware('web')->get('/test/custom-robots', fn () => response('ok')->header('X-Robots-Tag', 'noindex'));
 
     $this->get('/test/custom-robots')->assertHeader('X-Robots-Tag', 'noindex');
+});
+
+it('sends the landing the same policy when Node renders it: no unsafe-inline, no unsafe-eval, no style-src-attr', function (): void {
+    config(['inertia.ssr.enabled' => true, 'inertia.ssr.ensure_bundle_exists' => false]);
+    Http::fake(['http://127.0.0.1:13714/render' => Http::response(['head' => [], 'body' => '<div>rendered</div>'])]);
+
+    $response = $this->get('/');
+    $policy = (string) $response->headers->get('Content-Security-Policy');
+
+    $response->assertOk()->assertHeader('X-Rendered-By', 'ssr')->assertHeader('Content-Security-Policy', cspFor(nonceOf($response)));
+    expect($policy)->not->toContain('unsafe-inline')->not->toContain('unsafe-eval')->not->toContain('style-src-attr');
 });
