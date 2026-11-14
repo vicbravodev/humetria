@@ -21,3 +21,14 @@ it('does not read document in app.tsx unless it exists', function (): void {
     expect($guard)->not->toBeEmpty()
         ->and(substr_count($guard[1] ?? '', 'document.'))->toBe(count($uses[0]));
 });
+
+it('computes nothing time-dependent at the top level of a landing component', function (): void {
+    // A module-level `new Date()` is evaluated once, when Node starts, and prints the same year until it restarts.
+    $offenders = collect(glob(__DIR__.'/../../resources/js/components/landing/*.tsx'))
+        ->filter(fn (string $file): bool => preg_match('/^(?:const|let|var) .*new Date\(/m', (string) file_get_contents($file)) === 1)
+        ->map(fn (string $file): string => basename($file))
+        ->values()
+        ->all();
+
+    expect($offenders)->toBe([]);
+});

@@ -2,10 +2,9 @@ import { Link } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { WRAP } from '@/components/landing/landing-layout';
 import { ThemeSwitch } from '@/components/theme-switch';
+import { currentYear } from '@/lib/current-year';
 import { cn } from '@/lib/utils';
 import { dashboard, privacyNotice } from '@/routes';
-
-const year = new Date().getFullYear();
 
 const links = [
     { href: '#como-funciona', label: 'Cómo funciona' },
@@ -65,7 +64,7 @@ export default function LandingFooter({
                     <ThemeSwitch />
                 </div>
                 <div className="grid gap-1.5 text-sm text-muted-foreground md:col-span-2 md:flex md:flex-wrap md:justify-between md:gap-4 md:border-t md:pt-5">
-                    <p>Hecho en México · {year} Humetría</p>
+                    <p>Hecho en México · {currentYear()} Humetría</p>
                     <p>Humetría ordena evidencia; no certifica cumplimiento.</p>
                 </div>
             </div>
