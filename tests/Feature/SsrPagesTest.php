@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use App\Http\SsrPages;
 use App\Models\User;
+use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 mutates(SsrPages::class);
 
@@ -74,4 +77,103 @@ it('lists only public GET routes with a name, no parameters and no auth', functi
             ->and($route->parameterNames())->toBe([])
             ->and($route->gatherMiddleware())->not->toContain('auth');
     }
+});
+
+/*
+|--------------------------------------------------------------------------
+| The whole app, through the real Inertia gateway, with a fake Node
+|--------------------------------------------------------------------------
+*/
+
+/** Switches SSR on and puts a fake Node behind the gateway: no bundle, no real server. */
+function fakeNode(): void
+{
+    config(['inertia.ssr.enabled' => true, 'inertia.ssr.ensure_bundle_exists' => false]);
+    Http::fake(['http://127.0.0.1:13714/render' => Http::response(['head' => [], 'body' => '<div></div>'])]);
+}
+
+function nodeRenders(): int
+{
+    return Http::recorded(fn ($request): bool => str_ends_with($request->url(), '/render'))->count();
+}
+
+/** @return list<string> the URI of every GET route, each parameter filled with 'x' (token routes answer "link unavailable" or 404) */
+function everyGetUri(): array
+{
+    $uris = [];
+
+    foreach (Route::getRoutes()->getRoutes() as $route) {
+        if (in_array('GET', $route->methods(), true)) {
+            $uris[] = (string) preg_replace('/\{[^}]+\}/', 'x', $route->uri());
+        }
+    }
+
+    return array_values(array_unique($uris));
+}
+
+it('sends to Node only the pages on the list, for a visitor: every GET route', function (): void {
+    fakeNode();
+    $rendered = [];
+
+    foreach (everyGetUri() as $uri) {
+        app()->forgetScopedInstances();
+        $before = nodeRenders();
+        $this->get('/'.ltrim($uri, '/'));
+
+        if (nodeRenders() > $before) {
+            $rendered[$uri] = nodeRenders() - $before;
+        }
+    }
+
+    expect($rendered)->toBe(['/' => 1, 'privacy-notice' => 1]);
+});
+
+it('sends nothing to Node for anyone signed in, on any GET route', function (): void {
+    fakeNode();
+    $this->actingAs(User::factory()->create());
+
+    foreach (everyGetUri() as $uri) {
+        app()->forgetScopedInstances();
+        $this->get('/'.ltrim($uri, '/'));
+    }
+
+    expect(nodeRenders())->toBe(0);
+});
+
+it('sends nothing to Node for a superadmin working as a company owner', function (): void {
+    fakeNode();
+    $tenant = Tenant::factory()->create();
+    ownerOf($tenant);
+
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant));
+    $this->get('/')->assertOk();
+
+    expect(nodeRenders())->toBe(0);
+});
+
+it('sends nothing to Node for the error page served on an allowed route', function (): void {
+    fakeNode();
+    config(['app.debug' => false]);
+    Route::middleware('web')->get('/test/abort', fn () => abort(500))->name('home');
+
+    $this->get('/test/abort')->assertStatus(500);
+
+    expect(nodeRenders())->toBe(0);
+});
+
+it('is safe by default: a public route added tomorrow is not rendered in Node', function (): void {
+    fakeNode();
+    Route::middleware('web')->get('/test/new-public', fn () => Inertia::render('landing'))->name('new-public');
+
+    $this->get('/test/new-public')->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+
+    expect(nodeRenders())->toBe(0);
+});
+
+it('sends the landing to Node once for a visitor', function (): void {
+    fakeNode();
+
+    $this->get('/')->assertOk();
+
+    expect(nodeRenders())->toBe(1);
 });
