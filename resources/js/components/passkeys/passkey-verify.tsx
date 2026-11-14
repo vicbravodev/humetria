@@ -2,6 +2,10 @@ import type { UrlMethodPair } from '@inertiajs/core';
 import { router } from '@inertiajs/react';
 import { usePasskeyVerify } from '@laravel/passkeys/react';
 import { KeyRound } from 'lucide-react';
+import {
+    index as loginOptions,
+    store as loginStore,
+} from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyLoginController';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -26,17 +30,16 @@ type Props = {
 
 /** The passkey button above a form, and the line that says the form is the other way in. Nothing when unsupported. */
 export default function PasskeyVerify({
-    routes,
+    // The app lives under /admin; the package's own defaults ask for /passkeys/login and 404.
+    routes = { options: loginOptions(), submit: loginStore() },
     copy = LOGIN_COPY,
     primary,
 }: Props = {}) {
     const { verify, isLoading, error, isSupported } = usePasskeyVerify({
-        ...(routes && {
-            routes: {
-                options: routes.options.url,
-                submit: routes.submit.url,
-            },
-        }),
+        routes: {
+            options: routes.options.url,
+            submit: routes.submit.url,
+        },
         onSuccess: (response) => {
             router.visit(response.redirect ?? '/admin');
         },
