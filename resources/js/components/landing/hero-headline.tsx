@@ -1,6 +1,9 @@
 import { enterDelay } from '@/lib/enter-delay';
 import { cn } from '@/lib/utils';
 
+/** A plain space at the end of an inline block collapses and the words run together: only a no-break space holds. */
+const NBSP = '\u00A0';
+
 const WORDS = 'Del celular de tu gente al expediente de la STPS'.split(' ');
 
 /** The promise, word by word: each one rises out of a blur 50 ms after the last, as the page opens (CSS, `enter-word`). */
@@ -20,7 +23,7 @@ export default function HeroHeadline() {
                     )}
                 >
                     {word}
-                    {index < WORDS.length - 1 ? ' ' : null}
+                    {index < WORDS.length - 1 ? NBSP : null}
                 </span>
             ))}
         </h1>

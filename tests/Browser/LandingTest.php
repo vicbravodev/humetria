@@ -673,3 +673,10 @@ it('plays the details of a tool again each time the tool changes', function (): 
         ->assertScript($replayed)
         ->assertNoJavaScriptErrors();
 });
+
+it('keeps a space between the words of the headline, though each one is its own inline block', function (): void {
+    // A plain space at the end of an inline block collapses: only a no-break space keeps the words apart.
+    visit('/')
+        ->assertScript("() => [...document.querySelectorAll('#hero-title span')].slice(0, -1).every((word) => word.textContent.endsWith('\\u00A0'))")
+        ->assertScript("() => document.querySelector('#hero-title').innerText.replace(/\\u00A0/g, ' ').includes('Del celular de tu gente')");
+});
