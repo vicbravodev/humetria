@@ -584,3 +584,54 @@ it('leaves one of each tag of the head after the app starts, as many as the serv
         ->assertScript('() => document.querySelector("meta[property=\"og:url\"]").content === document.head.querySelector("link[rel=canonical]").href', true)
         ->assertScript('() => document.title.endsWith(" - Humetría")', true);
 })->with([['landing', '/'], ['privacy-notice', '/privacy-notice']]);
+
+it('reveals the blocks below the fold as they scroll into view, and never hides what is already in view', function (): void {
+    $count = fn (string $state): string => "document.querySelectorAll('[data-reveal=\"{$state}\"]').length";
+    // Hydrating hides what sits below the fold: wait for it, the effect runs after the first paint.
+    $hidden = "() => new Promise((resolve) => { const wait = () => {$count('pending')} > 0 ? resolve(true) : requestAnimationFrame(wait); wait(); })";
+    $revealAll = <<<JS
+        () => new Promise((resolve) => {
+            document.querySelectorAll('[data-reveal="pending"]').forEach((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+            const wait = () => {$count('pending')} === 0 ? resolve(true) : requestAnimationFrame(wait);
+            wait();
+        })
+        JS;
+
+    visit('/')
+        ->assertScript($hidden)
+        ->assertScript("() => [...document.querySelectorAll('[data-reveal=\"pending\"]')].every((node) => getComputedStyle(node).opacity === '0' || node.classList.contains('reveal-bar'))")
+        // The hero is in view when the page opens: it animates on its own and is never hidden by the scroll reveal.
+        ->assertScript("() => document.querySelector('#inicio [data-reveal=\"pending\"]') === null")
+        ->assertScript($revealAll)
+        ->assertScript("() => {$count('done')} > 0")
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows what scrolls into view with a fade only, no movement, when the visitor asks for reduced motion', function (): void {
+    visit('/', ['reducedMotion' => 'reduce'])
+        ->assertScript("() => new Promise((resolve) => { const wait = () => document.querySelectorAll('[data-reveal=\"pending\"]').length > 0 ? resolve(true) : requestAnimationFrame(wait); wait(); })")
+        ->assertScript("() => [...document.querySelectorAll('[data-reveal=\"pending\"]')].every((node) => getComputedStyle(node).transform === 'none' && getComputedStyle(node).filter === 'none')")
+        ->assertNoJavaScriptErrors();
+});
+
+it('fills the rail beside the steps as they scroll by on a phone', function (): void {
+    $progress = "Number(document.querySelector('#seccion-como-funciona [class*=\"scaleY\"]').style.getPropertyValue('--p'))";
+    // The page is hydrated once the scroll reveal has hidden what is below the fold; then it scrolls to the end of the steps and waits for the fill.
+    $filled = <<<JS
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const hydrated = () => document.querySelector('[data-reveal="pending"]') !== null;
+            const wait = () => {$progress} > 0.3 ? resolve(true) : performance.now() - start > 5000 ? resolve(false) : requestAnimationFrame(wait);
+            const begin = () => {
+                if (!hydrated()) { return requestAnimationFrame(begin); }
+                document.querySelector('#seccion-como-funciona ol').scrollIntoView({ block: 'end', behavior: 'instant' });
+                wait();
+            };
+            begin();
+        })
+        JS;
+
+    visit('/')->on()->mobile()
+        ->assertScript($filled)
+        ->assertNoJavaScriptErrors();
+});

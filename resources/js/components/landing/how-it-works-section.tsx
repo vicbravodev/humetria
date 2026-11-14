@@ -1,4 +1,3 @@
-import { m, useScroll } from 'motion/react';
 import { useRef } from 'react';
 import HowItWorksStep from '@/components/landing/how-it-works-step';
 import InviteVisual from '@/components/landing/invite-visual';
@@ -8,10 +7,10 @@ import {
     TITLE,
     WRAP,
 } from '@/components/landing/landing-layout';
-import { EASE_OUT, ONCE } from '@/components/landing/landing-motion';
 import ResultsVisual from '@/components/landing/results-visual';
 import Reveal from '@/components/landing/reveal';
 import RosterVisual from '@/components/landing/roster-visual';
+import { useScrollFill } from '@/hooks/use-scroll-fill';
 import { cn } from '@/lib/utils';
 
 /**
@@ -20,10 +19,7 @@ import { cn } from '@/lib/utils';
  */
 export default function HowItWorksSection() {
     const steps = useRef<HTMLOListElement>(null);
-    const { scrollYProgress } = useScroll({
-        target: steps,
-        offset: ['start 70%', 'end 75%'],
-    });
+    const fill = useScrollFill(steps);
 
     return (
         <section
@@ -49,26 +45,17 @@ export default function HowItWorksSection() {
                         aria-hidden
                         className="absolute top-2 bottom-2 left-[15px] w-0.5 rounded-full bg-border lg:hidden"
                     >
-                        <m.span
-                            style={{ scaleY: scrollYProgress }}
-                            className="absolute inset-0 origin-top rounded-full bg-primary"
+                        <span
+                            ref={fill}
+                            className="absolute inset-0 origin-top [transform:scaleY(var(--p,0))] rounded-full bg-primary"
                         />
                     </span>
                     <span
                         aria-hidden
-                        className="absolute top-5 right-0 left-5 hidden h-0.5 rounded-full bg-border lg:block"
+                        data-reveal="idle"
+                        className="absolute top-5 right-0 left-5 hidden h-0.5 reveal-bar rounded-full bg-border [--reveal-duration:1200ms] enter-delay-200 lg:block"
                     >
-                        <m.span
-                            initial={{ transform: 'scaleX(0)' }}
-                            whileInView={{ transform: 'scaleX(1)' }}
-                            viewport={ONCE}
-                            transition={{
-                                duration: 1.2,
-                                ease: EASE_OUT,
-                                delay: 0.2,
-                            }}
-                            className="absolute inset-0 origin-left rounded-full bg-primary"
-                        />
+                        <span className="absolute inset-0 rounded-full bg-primary" />
                     </span>
                     <ol
                         ref={steps}

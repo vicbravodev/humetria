@@ -11,10 +11,13 @@ import LandingHero from '@/components/landing/landing-hero';
 import SeoHead from '@/components/landing/seo-head';
 import ToolsSection from '@/components/landing/tools-section';
 import TrustStrip from '@/components/landing/trust-strip';
+import { useScrollReveal } from '@/hooks/use-scroll-reveal';
 import { cspNonce } from '@/lib/csp-nonce';
 import type { Seo } from '@/types';
 
 export default function Landing({ seo }: { seo: Seo }) {
+    useScrollReveal();
+
     return (
         <LazyMotion features={domMax} strict>
             <MotionConfig

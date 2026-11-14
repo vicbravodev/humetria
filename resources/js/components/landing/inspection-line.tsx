@@ -1,6 +1,5 @@
-import { m } from 'motion/react';
 import { Check, CircleAlert } from 'lucide-react';
-import { EASE_OUT, ONCE } from '@/components/landing/landing-motion';
+import { enterDelay } from '@/lib/enter-delay';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -13,14 +12,12 @@ type Props = {
 /** One piece of the file: ready, or what it still lacks, with the tool it comes from. */
 export default function InspectionLine({ text, tool, done, index }: Props) {
     return (
-        <m.li
-            initial={{ opacity: 0, transform: 'translateX(-10px)' }}
-            whileInView={{ opacity: 1, transform: 'translateX(0px)' }}
-            viewport={ONCE}
-            transition={{ duration: 0.4, ease: EASE_OUT, delay: index * 0.08 }}
+        <li
+            data-reveal="idle"
             className={cn(
-                'grid grid-cols-[28px_minmax(0,1fr)] items-start gap-3 border-b px-5 py-3.5 last:border-b-0',
+                'grid grid-cols-[28px_minmax(0,1fr)] items-start gap-3 border-b px-5 py-3.5 reveal-slide-10 last:border-b-0',
                 !done && 'bg-risk-medio-bg/55',
+                enterDelay(index * 0.08),
             )}
         >
             <span
@@ -53,6 +50,6 @@ export default function InspectionLine({ text, tool, done, index }: Props) {
                     {tool}
                 </span>
             </span>
-        </m.li>
+        </li>
     );
 }

@@ -1,6 +1,5 @@
 import { WhenMounted } from '@inertiajs/react';
-import { m, useReducedMotion } from 'motion/react';
-import { EASE_OUT } from '@/components/landing/landing-motion';
+import { useReducedMotion } from 'motion/react';
 import LoopVideoControls from '@/components/landing/loop-video-controls';
 import { useAppearance } from '@/hooks/use-appearance';
 import { useLoopVideo } from '@/hooks/use-loop-video';
@@ -46,12 +45,9 @@ export default function LoopVideo({
     return (
         <figure data-test={test} className="flex w-full flex-col gap-3">
             {/* Only the frame grows in: the button under it keeps its full 44 px touch. */}
-            <m.div
-                initial={{ opacity: 0, transform: 'scale(0.96)' }}
-                whileInView={{ opacity: 1, transform: 'scale(1)' }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.2 }}
-                className="overflow-hidden rounded-2xl border bg-foreground shadow-float dark:bg-card"
+            <div
+                data-reveal="idle"
+                className="overflow-hidden rounded-2xl border bg-foreground shadow-float reveal-scale enter-delay-200 dark:bg-card"
             >
                 {/* The file depends on the theme and on reduced motion, which only the browser knows: the server prints the frame. */}
                 <WhenMounted
@@ -81,7 +77,7 @@ export default function LoopVideo({
                         <source src={`/video/${film}.mp4`} type="video/mp4" />
                     </video>
                 </WhenMounted>
-            </m.div>
+            </div>
             <figcaption className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                 <span>
                     {caption}
