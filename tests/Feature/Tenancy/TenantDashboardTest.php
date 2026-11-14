@@ -173,7 +173,7 @@ it('puts among the urgent the vacation requests that wait for an answer, for who
 ]);
 
 it('leaves the vacation requests out of the panel of a company without the module', function (): void {
-    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom035'], now()->toImmutable());
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom035'], now(config('app.display_timezone'))->toImmutable());
     App\Modules\Leave\Models\LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id]);
 
     $this->actingAs(ownerOf($this->tenant))->get(route('tenant.dashboard', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('urgencies', []));

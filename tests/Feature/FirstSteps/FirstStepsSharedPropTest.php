@@ -64,7 +64,7 @@ it('shares null outside a company', function (): void {
 });
 
 it('shares null and writes completed_at once every step is done', function (): void {
-    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
     TenantAiSettings::factory()->create(['tenant_id' => $this->tenant->id, 'enabled' => false]);
     $center = WorkCenter::factory()->create(['tenant_id' => $this->tenant->id]);
     Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
@@ -120,7 +120,7 @@ it('costs the same queries with one work center and with thirty', function (): v
 });
 
 it('does not write completed_at on a page a superadmin opens as the owner', function (): void {
-    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
     TenantAiSettings::factory()->create(['tenant_id' => $this->tenant->id, 'enabled' => false]);
     $center = WorkCenter::factory()->create(['tenant_id' => $this->tenant->id]);
     Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);

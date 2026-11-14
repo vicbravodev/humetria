@@ -74,7 +74,7 @@ it('takes no argument', function (): void {
 
 it('names the title of the evaluation step after its tool', function (string $module, string $title): void {
     $scope = assistantScopeIn($this->a, TenantRole::Owner);
-    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->a->id, [$module], Carbon\CarbonImmutable::now());
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->a->id, [$module], Carbon\CarbonImmutable::now(config('app.display_timezone')));
 
     $titles = array_column(toolCard(GetFirstSteps::class, $scope)['rows'], 'title');
 
