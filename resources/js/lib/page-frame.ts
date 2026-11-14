@@ -22,6 +22,8 @@ const STANDALONE_NAMES = new Set([
     'attendance/kiosk',
     // A person links their phone from the link RH sent them: no account, their own frame.
     'attendance/enroll',
+    // «Mi jornada» in the person's portal (marking, the week, their phones): their own link, no account, the same frame.
+    'attendance/portal',
     // A person marks from their linked device: no account, their own frame.
     'attendance/punch',
     // A person sees and answers their week from their linked device: no account, the same frame.

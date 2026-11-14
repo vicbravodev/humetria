@@ -27,6 +27,7 @@ final class SurveyInvitation extends Notification implements MailBag
         private readonly ?string $contact,
         private readonly CarbonImmutable $closesOn,
         private readonly SurveyKind $kind,
+        private readonly ?string $portalUrl = null,
     ) {}
 
     /**
@@ -51,6 +52,7 @@ final class SurveyInvitation extends Notification implements MailBag
             ->markdown($this->reminder ? 'mail.engagement.reminder' : 'mail.engagement.invitation', [
                 'name' => $this->name,
                 'company' => $this->company,
+                'portalUrl' => $this->portalUrl,
                 'contact' => $this->contact,
                 'minutes' => $this->kind->minutes(),
                 'minGroup' => config()->integer('results.min_group'),

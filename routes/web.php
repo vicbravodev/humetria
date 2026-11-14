@@ -21,6 +21,7 @@ require __DIR__.'/portal.php';
 require __DIR__.'/seating-portal.php';
 require __DIR__.'/organization-portal.php';
 require __DIR__.'/attendance-device.php';
+require __DIR__.'/attendance-portal.php';
 require __DIR__.'/leave-portal.php';
 require __DIR__.'/engagement-survey.php';
 require __DIR__.'/engagement-portal.php';

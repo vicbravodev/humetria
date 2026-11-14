@@ -1,5 +1,5 @@
 {{-- The same link to whoever has not answered yet, with the last day up front. --}}
-<x-mail::message :company="$company" :confidential="true" preheader="Son unos {{ $minutes }} minutos y puede omitir cualquier pregunta.">
+<x-mail::message :company="$company" :portal-url="$portalUrl ?? null" :confidential="true" preheader="Son unos {{ $minutes }} minutos y puede omitir cualquier pregunta.">
 <x-slot:reason>Le escribimos porque aún no recibimos su opinión. Si ya la envió, ignore este mensaje.@if ($contact) ¿Dudas? Escriba a <a href="mailto:{{ $contact }}">{{ $contact }}</a>.@endif</x-slot:reason>
 <h1>{{ $title }}</h1>
 <p>Hola, {{ $name }}:</p>

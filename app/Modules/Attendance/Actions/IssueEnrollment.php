@@ -48,18 +48,7 @@ final readonly class IssueEnrollment
         $sentTo = $person->email === null ? null : MaskedEmail::of($person->email);
 
         $link = DB::transaction(function () use ($employeeId, $userId, $token, $now, $byRh, $sentTo): EnrollmentLink {
-            // One person's issues one at a time: two at once would both find nothing to revoke, and the second would hit the
-            // one-pending index.
-            DB::select('select pg_advisory_xact_lock(hashtext(?))', ["attendance_enrollment_links:{$employeeId}"]);
-            EnrollmentLink::query()->where('employee_id', $employeeId)->whereNull('used_at')->whereNull('revoked_at')->update(['revoked_at' => $now]);
-
-            $link = EnrollmentLink::query()->create([
-                'tenant_id' => $this->companies->current()->id,
-                'employee_id' => $employeeId,
-                'token_hash' => EnrollmentLink::hashToken($token),
-                'issued_by' => $userId,
-                'expires_at' => $now->addHours(config()->integer('attendance.enrollment.link_hours')),
-            ]);
+            $link = EnrollmentLink::issue($this->companies->current()->id, $employeeId, $token, $userId, $now);
             $this->audit->handle('attendance.enrollment_issued', $link, ['employee_id' => $employeeId, 'delivered_by_rh' => $byRh, 'sent_to' => $sentTo]);
 
             return $link;

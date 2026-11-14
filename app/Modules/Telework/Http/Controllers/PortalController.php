@@ -28,7 +28,7 @@ use Inertia\Response;
 final class PortalController extends Controller
 {
     /** The order of the tools in the home: the telework one first, then each of the others as they are listed. */
-    private const array ORDER = ['vacations', 'team', 'seating', 'policy', 'climate', 'feedback', 'support', 'center'];
+    private const array ORDER = ['attendance', 'survey', 'engagement', 'vacations', 'team', 'seating', 'policy', 'climate', 'feedback', 'support', 'center', 'complaints'];
 
     /**
      * @param  iterable<PortalSection>  $tools  what each module offers, tagged `portal.sections`

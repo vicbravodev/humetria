@@ -14,6 +14,7 @@ use App\Modules\Campaigns\Support\CompanyCampaignRecords;
 use App\Modules\Campaigns\Support\CompanyCenterSurveys;
 use App\Modules\Campaigns\Support\CompanyEvaluationSchedule;
 use App\Modules\Campaigns\Support\CompanyOpenCampaigns;
+use App\Modules\Campaigns\Support\SurveyPortalSection;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -30,6 +31,7 @@ final class CampaignsServiceProvider extends ServiceProvider
         $this->app->bind(CampaignRecords::class, CompanyCampaignRecords::class);
         $this->app->bind(CenterSurveys::class, CompanyCenterSurveys::class);
         $this->app->bind(EvaluationSchedule::class, CompanyEvaluationSchedule::class);
+        $this->app->tag([SurveyPortalSection::class], 'portal.sections');
     }
 
     public function boot(): void
