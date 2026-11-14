@@ -18,6 +18,7 @@ describe('isStandalone', () => {
         'attendance/kiosk',
         'attendance/enroll',
         'attendance/punch',
+        'attendance/portal',
         'attendance/week',
         'compensation/shared-report',
         'error',
