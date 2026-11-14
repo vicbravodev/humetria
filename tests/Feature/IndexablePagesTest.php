@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Route;
 mutates(IndexablePages::class);
 
 it('lists the pages search engines may index', function (): void {
-    expect(IndexablePages::includes('home'))->toBeTrue();
+    expect(IndexablePages::includes('home'))->toBeTrue()
+        ->and(IndexablePages::includes('privacy-notice'))->toBeTrue();
 });
 
 it('does not list a missing name, an unknown name or the login', function (?string $name): void {

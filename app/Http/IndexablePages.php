@@ -11,7 +11,7 @@ namespace App\Http;
 final class IndexablePages
 {
     /** @var list<string> */
-    public const array ROUTES = ['home'];
+    public const array ROUTES = ['home', 'privacy-notice'];
 
     public static function includes(?string $routeName): bool
     {
