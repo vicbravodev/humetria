@@ -29,3 +29,27 @@ it('lists only public GET routes with a name, no parameters and no auth', functi
             ->and($route->gatherMiddleware())->not->toContain('auth');
     }
 });
+
+it('lists in the static sitemap exactly the indexable pages, each with its canonical path', function (): void {
+    $sitemap = simplexml_load_string((string) file_get_contents(public_path('sitemap.xml')));
+    $paths = [];
+
+    foreach ($sitemap->url ?? [] as $url) {
+        $paths[] = parse_url((string) $url->loc, PHP_URL_PATH);
+    }
+
+    $expected = array_map(fn (string $name): string => route($name, [], false), IndexablePages::ROUTES);
+    sort($paths);
+    sort($expected);
+
+    expect($paths)->toBe($expected);
+});
+
+it('points robots.txt at the sitemap and blocks no path, so a crawler can read the noindex', function (): void {
+    $lines = array_map('trim', file(public_path('robots.txt'), FILE_IGNORE_NEW_LINES) ?: []);
+
+    expect($lines)->toContain('User-agent: *')
+        ->toContain('Disallow:')
+        ->toContain('Sitemap: https://humetria.com.mx/sitemap.xml')
+        ->and(array_filter($lines, fn (string $line): bool => preg_match('/^Disallow:\s*\S/', $line) === 1))->toBe([]);
+});
