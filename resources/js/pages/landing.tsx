@@ -1,4 +1,3 @@
-import { Head } from '@inertiajs/react';
 import { domMax, LazyMotion, MotionConfig } from 'motion/react';
 import AudienceSection from '@/components/landing/audience-section';
 import ComplianceSection from '@/components/landing/compliance-section';
@@ -9,23 +8,20 @@ import InspectionSection from '@/components/landing/inspection-section';
 import LandingFooter from '@/components/landing/landing-footer';
 import LandingHeader from '@/components/landing/landing-header';
 import LandingHero from '@/components/landing/landing-hero';
+import SeoHead from '@/components/landing/seo-head';
 import ToolsSection from '@/components/landing/tools-section';
 import TrustStrip from '@/components/landing/trust-strip';
 import { cspNonce } from '@/lib/csp-nonce';
+import type { Seo } from '@/types';
 
-export default function Landing() {
+export default function Landing({ seo }: { seo: Seo }) {
     return (
         <LazyMotion features={domMax} strict>
             <MotionConfig
                 reducedMotion="user"
                 {...(cspNonce === undefined ? {} : { nonce: cspNonce })}
             >
-                <Head title="Herramientas de RH para cumplir con la STPS">
-                    <meta
-                        name="description"
-                        content="Humetría reúne NOM-035, NOM-037, Ley Silla, buzón de quejas, Compensación, registro de jornada, Vacaciones, Organigrama y Clima y pulso: invita a tu gente, recolecta con la confidencialidad que requiere cada herramienta y te entrega el diagnóstico, el plan y la evidencia para la STPS."
-                    />
-                </Head>
+                <SeoHead seo={seo} />
                 <LandingHeader />
                 <main data-smooth-scroll>
                     <LandingHero />

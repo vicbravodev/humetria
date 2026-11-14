@@ -554,3 +554,33 @@ it('marks in the header the section being read, and none over the hero', functio
         ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=header-humi]").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })')
         ->assertAttributeMissing('@header-tools', 'aria-current');
 });
+
+it('leaves one of each tag of the head after the app starts, as many as the server printed', function (string $component, string $url): void {
+    $counts = <<<'JS'
+        () => JSON.stringify(Object.fromEntries([
+            'title',
+            'meta[name=description]',
+            'link[rel=canonical]',
+            'script[type="application/ld+json"]',
+            'meta[property="og:title"]',
+            'meta[property="og:image"]',
+            'meta[name="twitter:card"]',
+            'meta[name="app-revision"]',
+        ].map((selector) => [selector, document.head.querySelectorAll(selector).length])))
+        JS;
+
+    visitPage($component, $url)
+        ->assertScript($counts, json_encode([
+            'title' => 1,
+            'meta[name=description]' => 1,
+            'link[rel=canonical]' => 1,
+            'script[type="application/ld+json"]' => 1,
+            'meta[property="og:title"]' => 1,
+            'meta[property="og:image"]' => 1,
+            'meta[name="twitter:card"]' => 1,
+            'meta[name="app-revision"]' => 1,
+        ], JSON_UNESCAPED_SLASHES))
+        ->assertScript('() => document.head.querySelector("link[rel=canonical]").href', rtrim((string) config('app.url'), '/').parse_url($url, PHP_URL_PATH))
+        ->assertScript('() => document.querySelector("meta[property=\"og:url\"]").content === document.head.querySelector("link[rel=canonical]").href', true)
+        ->assertScript('() => document.title.endsWith(" - Humetría")', true);
+})->with([['landing', '/'], ['privacy-notice', '/privacy-notice']]);

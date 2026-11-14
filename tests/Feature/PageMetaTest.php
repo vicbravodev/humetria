@@ -173,3 +173,19 @@ it('keeps in its source template the command that captures the share image', fun
 
     expect($source)->toContain('npx playwright screenshot --viewport-size=1200,630')->toContain('public/og-v1.png');
 });
+
+it('is routes/web.php, and nothing else, that asks PageSeo for the tags', function (): void {
+    $callers = [];
+
+    foreach (['app', 'routes', 'resources/views'] as $directory) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($directory))) as $file) {
+            if ($file->isFile() && str_contains((string) file_get_contents($file->getPathname()), 'PageSeo::for(')) {
+                $callers[] = str_replace(base_path().'/', '', $file->getPathname());
+            }
+        }
+    }
+
+    $callers = array_values(array_filter($callers, fn (string $path): bool => $path !== 'app/Http/PageSeo.php'));
+
+    expect($callers)->toBe(['routes/web.php']);
+});
