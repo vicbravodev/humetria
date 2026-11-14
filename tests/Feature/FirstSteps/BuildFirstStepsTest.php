@@ -30,7 +30,7 @@ beforeEach(function (): void {
 /** @param list<string> $modules */
 function givePlan(Tenant $tenant, array $modules): void
 {
-    resolve(CompanyModules::class)->syncPlan($tenant->id, $modules, CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, $modules, CarbonImmutable::now(config('app.display_timezone')));
 }
 
 function stepsOf(Tenant $tenant, User $user): FirstStepsData

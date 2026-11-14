@@ -166,7 +166,7 @@ it('shows nothing to hr', function (): void {
 /** Loads every step of a company with only the always-there ones (no evaluation tool, Humi off), as the contract test does. */
 function finishFirstSteps(Tenant $tenant): void
 {
-    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['vacations'], Carbon\CarbonImmutable::now());
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['vacations'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
     App\Modules\Assistant\Models\TenantAiSettings::factory()->create(['tenant_id' => $tenant->id, 'enabled' => false]);
     $center = App\Modules\Tenancy\Models\WorkCenter::factory()->create(['tenant_id' => $tenant->id]);
     App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
@@ -207,7 +207,7 @@ it('shows a centered bubble when the control is not on the page', function (): v
 it('points the panel card at the button instead of repeating the third step', function (): void {
     signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();
-    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['nom035'], Carbon\CarbonImmutable::now());
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['nom035'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
     App\Modules\Tenancy\Models\WorkCenter::factory()->create(['tenant_id' => $tenant->id]);
 
     visitPage('dashboard', '/admin/acme')

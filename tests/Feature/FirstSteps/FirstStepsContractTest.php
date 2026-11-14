@@ -34,7 +34,7 @@ function tourFor(Tenant $tenant, User $user): ?App\Modules\FirstSteps\Data\First
 function finishEverything(Tenant $tenant, User $owner): void
 {
     // A plan with no evaluation tool and Humi off leave work centers, people and team.
-    resolve(CompanyModules::class)->syncPlan($tenant->id, ['vacations'], CarbonImmutable::now());
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
     App\Modules\Assistant\Models\TenantAiSettings::factory()->create(['tenant_id' => $tenant->id, 'enabled' => false]);
     $center = WorkCenter::factory()->create(['tenant_id' => $tenant->id]);
     App\Modules\Organization\Models\Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);

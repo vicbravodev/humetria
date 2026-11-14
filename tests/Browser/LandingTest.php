@@ -201,6 +201,21 @@ it('plays the hero and Humi films again from the start', function (string $film)
         ->assertAttribute("@{$film}-toggle", 'aria-label', 'Pausar video');
 })->with(['hero' => 'hero-video', 'Humi' => 'humi-video']);
 
+it('mutes a film when it scrolls out of view', function (string $film): void {
+    $video = "document.querySelector('[data-test={$film}] video')";
+
+    $page = visitPage('landing', '/');
+    $page->script("() => {$video}.scrollIntoView({ block: 'center' })");
+
+    $page->click("@{$film}-sound")
+        ->assertScript("() => ! {$video}.muted")
+        // The visitor scrolls on to another part of the page: the narration must not follow.
+        ->script('() => window.scrollTo(0, document.body.scrollHeight)');
+
+    $page->assertScript("() => new Promise((resolve) => { const quiet = () => {$video}.muted ? resolve(true) : requestAnimationFrame(quiet); quiet(); })")
+        ->assertAttribute("@{$film}-sound", 'aria-label', 'Activar sonido');
+})->with(['hero' => 'hero-video', 'Humi' => 'humi-video']);
+
 it('keeps the hero film still when the visitor asks for reduced motion', function (): void {
     visit('/', ['reducedMotion' => 'reduce'])
         ->assertScript('() => document.querySelector("[data-test=hero-video] video").autoplay', false)
