@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, WhenMounted } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { WRAP } from '@/components/landing/landing-layout';
 import { ThemeSwitch } from '@/components/theme-switch';
@@ -61,7 +61,17 @@ export default function LandingFooter({
                     </nav>
                 </div>
                 <div className="justify-self-start md:justify-self-end">
-                    <ThemeSwitch />
+                    {/* The theme is the browser's to know (and the switch is a Radix group that prints a style): the server prints its frame. */}
+                    <WhenMounted
+                        fallback={
+                            <span
+                                aria-hidden
+                                className="block h-[42px] w-[126px] rounded-lg border bg-muted"
+                            />
+                        }
+                    >
+                        <ThemeSwitch />
+                    </WhenMounted>
                 </div>
                 <div className="grid gap-1.5 text-sm text-muted-foreground md:col-span-2 md:flex md:flex-wrap md:justify-between md:gap-4 md:border-t md:pt-5">
                     <p>Hecho en México · {currentYear()} Humetría</p>

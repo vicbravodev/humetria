@@ -32,3 +32,25 @@ it('computes nothing time-dependent at the top level of a landing component', fu
 
     expect($offenders)->toBe([]);
 });
+
+it('writes no inline style or motion entrance in a landing component the server renders', function (): void {
+    // `initial`, `animate`, `whileInView` (motion) and `style={{` print a style="" in the HTML Node renders; the CSP has no
+    // style-src-attr, so the browser blocks it, and an `opacity:0` hid the text from whoever did not run the script. The
+    // entrances are CSS (app.css, hooks/use-scroll-reveal.ts). The exceptions mount only in the browser, each with its reason.
+    $exceptions = [
+        // AnimatePresence swaps the result of the filter: it sits inside WhenMounted, whose fallback is the result without motion.
+        'privacy-demo.tsx',
+    ];
+
+    $offenders = collect(glob(__DIR__.'/../../resources/js/components/landing/*.tsx'))
+        ->filter(fn (string $file): bool => preg_match('/\binitial=|\bwhileInView=|\banimate=|\bstyle=\{\{/', (string) file_get_contents($file)) === 1)
+        ->map(fn (string $file): string => basename($file))
+        ->values()
+        ->all();
+
+    expect($offenders)->toBe($exceptions);
+});
+
+it('keeps the motion exceptions inside WhenMounted', function (): void {
+    expect(sourceOf('components/landing/privacy-demo.tsx'))->toContain('<WhenMounted');
+});

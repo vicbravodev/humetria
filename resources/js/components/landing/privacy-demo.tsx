@@ -1,3 +1,4 @@
+import { WhenMounted } from '@inertiajs/react';
 import { AnimatePresence, m } from 'motion/react';
 import { useState } from 'react';
 import PrivacyAreaButton from '@/components/landing/privacy-area-button';
@@ -10,6 +11,7 @@ import { EASE_OUT } from '@/components/landing/landing-motion';
 export default function PrivacyDemo() {
     const [chosen, setChosen] = useState<PrivacyAreaKey>('planta');
     const area = PRIVACY_AREAS.find((candidate) => candidate.key === chosen);
+    const result = area === undefined ? null : <PrivacyResults area={area} />;
 
     return (
         <div
@@ -32,19 +34,20 @@ export default function PrivacyDemo() {
                 </div>
             </div>
             <div aria-live="polite">
-                <AnimatePresence mode="wait" initial={false}>
-                    <m.div
-                        key={chosen}
-                        initial={{ opacity: 0, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, filter: 'blur(4px)' }}
-                        transition={{ duration: 0.18, ease: EASE_OUT }}
-                    >
-                        {area === undefined ? null : (
-                            <PrivacyResults area={area} />
-                        )}
-                    </m.div>
-                </AnimatePresence>
+                {/* The swap is motion, which writes a style the server must not print: Node prints the result as it stands. */}
+                <WhenMounted fallback={result}>
+                    <AnimatePresence mode="wait" initial={false}>
+                        <m.div
+                            key={chosen}
+                            initial={{ opacity: 0, filter: 'blur(4px)' }}
+                            animate={{ opacity: 1, filter: 'blur(0px)' }}
+                            exit={{ opacity: 0, filter: 'blur(4px)' }}
+                            transition={{ duration: 0.18, ease: EASE_OUT }}
+                        >
+                            {result}
+                        </m.div>
+                    </AnimatePresence>
+                </WhenMounted>
             </div>
             <p className="flex justify-between gap-3 border-t px-[18px] py-3 text-caption text-muted-foreground">
                 <span>Datos de ejemplo</span>

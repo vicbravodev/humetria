@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Http;
 /*
  * The landing with a real Node behind it (composer test:ssr): the HTML Node rendered hydrates in the browser without errors
  * and the head keeps one tag of each kind. The app is served in-process by Pest Browser; only the call to Node goes out.
- *
- * Not here yet: «no CSP violations» and «no style attributes». The entrance animations still write `style` in the HTML.
  */
 
 beforeEach(function (): void {
@@ -48,3 +46,17 @@ it('keeps one title, description, canonical and JSON-LD after hydrating', functi
         ->assertScript(headCount('link[rel="canonical"]'), 1)
         ->assertScript(headCount('script[type="application/ld+json"]'), 1);
 });
+
+it('reports no CSP violations on the landing server-rendered by Node', function (bool $dark, bool $mobile): void {
+    $pending = $mobile ? visit('/')->on()->mobile() : visit('/');
+    $pending = $dark ? $pending->inDarkMode() : $pending->inLightMode();
+
+    // The entrances are CSS: nothing in the HTML (or after hydrating) writes a style attribute the CSP would block.
+    $pending->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with([
+    'light desktop' => [false, false],
+    'light mobile' => [false, true],
+    'dark desktop' => [true, false],
+    'dark mobile' => [true, true],
+]);
