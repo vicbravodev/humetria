@@ -3,7 +3,7 @@ import Logo from '@/components/humetria/logo';
 import { WRAP } from '@/components/landing/landing-layout';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
+import { dashboard, privacyNotice } from '@/routes';
 
 const year = new Date().getFullYear();
 
@@ -17,8 +17,15 @@ const links = [
 const linkClass =
     'inline-flex min-h-11 items-center rounded-md text-meta text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
-/** The logo, the sections again, the theme switch and what Humetría does and does not do. */
-export default function LandingFooter() {
+/**
+ * The logo, the sections again, the notice of privacy, the theme switch and what Humetría does and does not do.
+ * `sectionBase` is the page the sections live on, for a page that is not the landing: '' keeps the jumps in this page.
+ */
+export default function LandingFooter({
+    sectionBase = '',
+}: {
+    sectionBase?: string;
+}) {
     return (
         <footer className="border-t pt-10 pb-8">
             <div
@@ -36,12 +43,19 @@ export default function LandingFooter() {
                         {links.map((link) => (
                             <a
                                 key={link.href}
-                                href={link.href}
+                                href={`${sectionBase}${link.href}`}
                                 className={linkClass}
                             >
                                 {link.label}
                             </a>
                         ))}
+                        <a
+                            href={privacyNotice().url}
+                            data-test="footer-privacy"
+                            className={linkClass}
+                        >
+                            Aviso de privacidad
+                        </a>
                         <Link href={dashboard()} className={linkClass}>
                             Iniciar sesión
                         </Link>

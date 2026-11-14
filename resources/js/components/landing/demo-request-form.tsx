@@ -4,6 +4,7 @@ import type { DemoChoice } from '@/components/landing/demo-choice-field';
 import DemoChoiceField from '@/components/landing/demo-choice-field';
 import DemoHoneypot from '@/components/landing/demo-honeypot';
 import DemoMessageField from '@/components/landing/demo-message-field';
+import DemoPrivacyNote from '@/components/landing/demo-privacy-note';
 import DemoTextField from '@/components/landing/demo-text-field';
 import DemoToolsField from '@/components/landing/demo-tools-field';
 import { Button } from '@/components/ui/button';
@@ -116,9 +117,7 @@ export default function DemoRequestForm() {
                         {processing && <Spinner />}
                         Agendar demo
                     </Button>
-                    <p className="text-center text-caption text-muted-foreground">
-                        Usamos tus datos solo para contactarte.
-                    </p>
+                    <DemoPrivacyNote />
                 </>
             )}
         </Form>

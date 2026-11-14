@@ -518,6 +518,29 @@ it('tells the visitor what happens after asking for a demo', function (): void {
     }
 });
 
+it('opens the privacy notice as a new document from the footer and from the demo form', function (string $link, bool $mobile): void {
+    $page = visitPage('landing', '/', mobile: $mobile);
+    $page->script('() => { window.sameDocument = true; }');
+
+    $page->click($link)
+        ->assertScript(pathBecomes('/privacy-notice'), true)
+        ->assertPathIs('/privacy-notice')
+        ->assertScript('() => window.sameDocument', null)
+        ->assertSee('Quién es el responsable');
+})->with([
+    'footer' => '@footer-privacy',
+    'demo form' => '@demo-privacy-link',
+])->with(['desktop' => false, 'mobile' => true]);
+
+it('takes the notice back to the sections of the landing, not to anchors of its own page', function (): void {
+    $page = visitPage('privacy-notice', '/privacy-notice');
+
+    $page->assertScript('() => [...document.querySelectorAll("footer nav a")].map((a) => a.getAttribute("href")).filter((href) => href.includes("#")).every((href) => href.startsWith("/#"))')
+        ->click('footer a[href="/#herramientas"]')
+        ->assertScript(pathBecomes('/'), true)
+        ->assertScript('() => window.location.hash', '#herramientas');
+});
+
 it('jumps at once when the visitor asks for reduced motion', function (): void {
     visit('/', ['reducedMotion' => 'reduce'])
         ->assertScript('() => getComputedStyle(document.documentElement).scrollBehavior', 'auto');
