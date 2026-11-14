@@ -29,6 +29,7 @@ final class SurveyInvitation extends Notification implements MailBag
         private readonly string $workCenter,
         private readonly CarbonImmutable $closesOn,
         private readonly int $minutes,
+        private readonly ?string $portalUrl = null,
     ) {}
 
     /**
@@ -70,6 +71,7 @@ final class SurveyInvitation extends Notification implements MailBag
             ->markdown("mail.campaigns.{$this->email->value}", [
                 'name' => $this->name,
                 'company' => $this->company,
+                'portalUrl' => $this->portalUrl,
                 'contact' => $this->contact,
                 'workCenter' => $this->workCenter,
                 'minutes' => $this->minutes,

@@ -11,6 +11,7 @@ use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Notifications\SurveyInvitation;
 use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Batchable;
@@ -77,6 +78,8 @@ final class SendInvitations implements ShouldQueue
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Invitation $invitation): string => $invitation->employee_id)->all()));
         $contact = $companies->contact();
 
+        $portal = resolve(PortalAccess::class);
+
         foreach ($waiting as $invitation) {
             $person = $people[$invitation->employee_id] ?? null;
 
@@ -97,7 +100,7 @@ final class SendInvitations implements ShouldQueue
             $reminder = $invitation->invited_at !== null;
             $invitation->update(['token_hash' => Invitation::hashToken($token), 'invited_at' => now()]);
             Notification::routes(['mail' => $person->email])->notify(new SurveyInvitation(
-                $reminder, $token, $person->name, $company, $contact, $survey->closes_on, $survey->kind,
+                $reminder, $token, $person->name, $company, $contact, $survey->closes_on, $survey->kind, $portal->url($person->id),
             ));
             $invitation->update(['invitation_status' => InvitationStatus::Sent]);
         }
