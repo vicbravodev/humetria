@@ -1,3 +1,4 @@
+import { WhenMounted } from '@inertiajs/react';
 import { m, useReducedMotion } from 'motion/react';
 import { EASE_OUT } from '@/components/landing/landing-motion';
 import LoopVideoControls from '@/components/landing/loop-video-controls';
@@ -52,22 +53,34 @@ export default function LoopVideo({
                 transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.2 }}
                 className="overflow-hidden rounded-2xl border bg-foreground shadow-float dark:bg-card"
             >
-                <video
-                    key={film}
-                    ref={attach}
-                    autoPlay={!still}
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    poster={`/video/${film}.jpg`}
-                    onPlay={onPlay}
-                    onPause={onPause}
-                    className={cn('block w-full', className)}
+                {/* The file depends on the theme and on reduced motion, which only the browser knows: the server prints the frame. */}
+                <WhenMounted
+                    fallback={
+                        <div
+                            className={cn(
+                                'block aspect-video w-full',
+                                className,
+                            )}
+                        />
+                    }
                 >
-                    <source src={`/video/${film}.webm`} type="video/webm" />
-                    <source src={`/video/${film}.mp4`} type="video/mp4" />
-                </video>
+                    <video
+                        key={film}
+                        ref={attach}
+                        autoPlay={!still}
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        poster={`/video/${film}.jpg`}
+                        onPlay={onPlay}
+                        onPause={onPause}
+                        className={cn('block w-full', className)}
+                    >
+                        <source src={`/video/${film}.webm`} type="video/webm" />
+                        <source src={`/video/${film}.mp4`} type="video/mp4" />
+                    </video>
+                </WhenMounted>
             </m.div>
             <figcaption className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                 <span>

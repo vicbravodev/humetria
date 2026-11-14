@@ -1,3 +1,4 @@
+import { WhenMounted } from '@inertiajs/react';
 import { useReducedMotion } from 'motion/react';
 import { useAppearance } from '@/hooks/use-appearance';
 import { show as showFilm } from '@/routes/films';
@@ -36,29 +37,36 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
             className="overflow-hidden rounded-2xl border border-input bg-muted"
         >
             <div className="relative">
-                <video
-                    key={name}
-                    ref={attach}
-                    autoPlay={!still}
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    poster={`/video/${name}.jpg`}
-                    onTimeUpdate={onTimeUpdate}
-                    onPlay={onPlay}
-                    onPause={onPause}
-                    className="block aspect-video w-full bg-muted object-contain"
+                {/* The file depends on the theme and on reduced motion, which only the browser knows: the server prints the frame. */}
+                <WhenMounted
+                    fallback={
+                        <div className="block aspect-video w-full bg-muted" />
+                    }
                 >
-                    <source
-                        src={showFilm.url({ film: `${name}.webm` })}
-                        type="video/webm"
-                    />
-                    <source
-                        src={showFilm.url({ film: `${name}.mp4` })}
-                        type="video/mp4"
-                    />
-                </video>
+                    <video
+                        key={name}
+                        ref={attach}
+                        autoPlay={!still}
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        poster={`/video/${name}.jpg`}
+                        onTimeUpdate={onTimeUpdate}
+                        onPlay={onPlay}
+                        onPause={onPause}
+                        className="block aspect-video w-full bg-muted object-contain"
+                    >
+                        <source
+                            src={showFilm.url({ film: `${name}.webm` })}
+                            type="video/webm"
+                        />
+                        <source
+                            src={showFilm.url({ film: `${name}.mp4` })}
+                            type="video/mp4"
+                        />
+                    </video>
+                </WhenMounted>
                 <FilmControls
                     playing={playing}
                     onToggle={toggle}
