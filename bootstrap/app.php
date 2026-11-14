@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\ErrorPage;
+use App\Http\Middleware\AnnounceRenderMode;
 use App\Http\Middleware\AssignRequestContext;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EndRevokedImpersonation;
@@ -48,6 +49,8 @@ return Application::configure(basePath: dirname(__DIR__))
             ForbidWhileImpersonating::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
+            // After Inertia: it reads whether Node's render made it into the page.
+            AnnounceRenderMode::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
