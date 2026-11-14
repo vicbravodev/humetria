@@ -161,3 +161,15 @@ it('keeps the plain title in a page without seo', function (): void {
     expect($xpath->query('//head/title')->length)->toBe(1)
         ->and($xpath->query('//head/meta[@name="description"]')->length)->toBe(0);
 });
+it('has a share image of 1200 by 630 and the logo of the organization', function (): void {
+    [$width, $height] = getimagesize(public_path('og-v1.png'));
+
+    expect([$width, $height])->toBe([1200, 630])
+        ->and(file_exists(public_path('app-icon-512.png')))->toBeTrue();
+});
+
+it('keeps in its source template the command that captures the share image', function (): void {
+    $source = (string) file_get_contents(base_path('docs/design-system/og/og-v1.html'));
+
+    expect($source)->toContain('npx playwright screenshot --viewport-size=1200,630')->toContain('public/og-v1.png');
+});

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Imagen para compartir (Open Graph), versión 1</title>
+<!--
+  Fuente de public/og-v1.png (1200x630). El color sale de docs/design-system/tokens.json (tema claro).
+  Si cambia el texto o el diseño, el archivo nuevo lleva otro nombre (og-v2.png) y se actualiza PageSeo::IMAGE:
+  WhatsApp y LinkedIn guardan la vista previa por URL.
+  Captura (desde la raíz del repositorio, con las fuentes de `npm run build` en public/build):
+    npx playwright screenshot --viewport-size=1200,630 --wait-for-timeout=500 \
+      file://$PWD/docs/design-system/og/og-v1.html public/og-v1.png
+-->
+<style>
+  @font-face { font-family: 'Figtree'; font-weight: 400; src: url('../../../public/build/assets/figtree-400-normal-g7Dtegnw.woff2') format('woff2'); }
+  @font-face { font-family: 'Figtree'; font-weight: 600; src: url('../../../public/build/assets/figtree-600-normal-Cv_xCTDl.woff2') format('woff2'); }
+  :root {
+    --background: #FBFDFC;
+    --foreground: #14211F;
+    --primary: #0B7A6F;
+    --muted: #F1F5F4;
+    --muted-foreground: #56635F;
+    --border: #DCE5E2;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px 64px;
+    border-left: 16px solid var(--primary);
+    position: relative;
+  }
+  .logo { height: 56px; width: auto; align-self: flex-start; }
+  h1 { font-size: 84px; line-height: 1.04; font-weight: 600; letter-spacing: -0.02em; max-width: 960px; }
+  h1 em { font-style: normal; color: var(--primary); }
+  .tools { font-size: 30px; color: var(--muted-foreground); margin-top: 28px; }
+  footer { display: flex; justify-content: space-between; align-items: center; border-top: 2px solid var(--border); padding-top: 28px; font-size: 30px; }
+  footer strong { color: var(--primary); font-weight: 600; }
+  footer span { color: var(--muted-foreground); }
+</style>
+</head>
+<body>
+  <img class="logo" src="../../../public/brand/humetria-horizontal-color.svg" alt="Humetría">
+  <main>
+    <h1>Del celular de tu gente al <em>expediente de la STPS</em></h1>
+    <p class="tools">NOM-035, NOM-037, Ley Silla y más herramientas de RH</p>
+  </main>
+  <footer><strong>humetria.com.mx</strong><span>Herramientas de RH para cumplir con la STPS</span></footer>
+</body>
+</html>
