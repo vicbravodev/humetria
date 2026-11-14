@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\SsrPages;
+use App\Listeners\LogSsrRender;
 use App\Listeners\LogSsrRenderFailure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-mutates(LogSsrRenderFailure::class);
+mutates(LogSsrRenderFailure::class, LogSsrRender::class);
 
 beforeEach(function (): void {
     $this->logPath = storage_path('logs/ssr-degradation-test.log');
@@ -53,20 +54,26 @@ function nodeAttempts(): int
     return Cache::get('test:ssr-attempts', 0);
 }
 
-/** @return list<array<string, mixed>> every ssr.render_failed line, decoded */
-function failureLines(): array
+/** @return list<array<string, mixed>> every line of the log with this message, decoded */
+function linesOf(string $message): array
 {
     $lines = [];
 
     foreach (explode("\n", trim(File::exists(test()->logPath) ? File::get(test()->logPath) : '')) as $line) {
         $decoded = $line === '' ? null : json_decode($line, true, flags: JSON_THROW_ON_ERROR);
 
-        if (is_array($decoded) && ($decoded['message'] ?? null) === 'ssr.render_failed') {
+        if (is_array($decoded) && ($decoded['message'] ?? null) === $message) {
             $lines[] = $decoded;
         }
     }
 
     return $lines;
+}
+
+/** @return list<array<string, mixed>> */
+function failureLines(): array
+{
+    return linesOf('ssr.render_failed');
 }
 
 it('serves the landing without the render when Node answers with an error', function (): void {
@@ -193,4 +200,52 @@ it('tries Node again once the circuit breaker has closed, after thirty seconds',
     $this->get('/')->assertOk();
 
     expect(nodeAttempts())->toBe(2);
+});
+
+it('logs every render Node answers, with the status and no duration when the client reports none', function (): void {
+    Http::fake(['http://127.0.0.1:13714/render' => Http::response(['head' => [], 'body' => '<div></div>'])]);
+
+    $this->get('/')->assertOk();
+
+    $lines = linesOf('ssr.rendered');
+
+    expect($lines)->toHaveCount(1)
+        ->and($lines[0])->toHaveKey('context.status', 200)
+        ->toHaveKey('context.duration_ms', null);
+});
+
+it('logs the status of a render that failed, next to its ssr.render_failed line', function (): void {
+    nodeFails();
+
+    $this->get('/')->assertOk();
+
+    expect(linesOf('ssr.rendered'))->toHaveCount(1)
+        ->and(linesOf('ssr.rendered')[0])->toHaveKey('context.status', 500);
+});
+
+it('writes no ssr.rendered line when Node cannot be reached: nothing answered', function (): void {
+    nodeIsDown();
+
+    $this->get('/')->assertOk();
+
+    expect(linesOf('ssr.rendered'))->toBe([]);
+});
+
+it('logs the duration the client measured, in milliseconds', function (): void {
+    $response = new Illuminate\Http\Client\Response(new GuzzleHttp\Psr7\Response(200, [], '{}'));
+    $response->transferStats = new GuzzleHttp\TransferStats(new GuzzleHttp\Psr7\Request('POST', 'http://127.0.0.1:13714/render'), null, 0.0123);
+
+    event(new Illuminate\Http\Client\Events\ResponseReceived(new Illuminate\Http\Client\Request(new GuzzleHttp\Psr7\Request('POST', 'http://127.0.0.1:13714/render')), $response));
+
+    expect(linesOf('ssr.rendered'))->toHaveCount(1)
+        ->and(linesOf('ssr.rendered')[0])->toHaveKey('context.duration_ms', 12.3);
+});
+
+it('ignores the other requests the app makes', function (): void {
+    Http::fake(['https://example.test/*' => Http::response('ok'), 'http://127.0.0.1:13714/health' => Http::response('ok')]);
+
+    Http::get('https://example.test/render');
+    Http::get('http://127.0.0.1:13714/health');
+
+    expect(linesOf('ssr.rendered'))->toBe([]);
 });
