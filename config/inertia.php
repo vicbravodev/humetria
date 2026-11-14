@@ -18,8 +18,15 @@ return [
     */
 
     'ssr' => [
-        'enabled' => true,
-        'url' => 'http://127.0.0.1:13714',
+        // Off unless an environment turns it on: only SsrPages' allow-list is ever rendered in Node (see App\Http\SsrPages).
+        'enabled' => (bool) env('INERTIA_SSR_ENABLED', false),
+        'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),
+        // A render takes ~5 ms: past two seconds Node is stuck, and the page falls back to the browser.
+        'timeout' => (int) env('INERTIA_SSR_TIMEOUT', 2),
+        // The `web` container has no bundle (it lives in the `ssr` image): production sets this to false.
+        'ensure_bundle_exists' => (bool) env('INERTIA_SSR_ENSURE_BUNDLE', true),
+        // A failed render is logged (ssr.render_failed) and the page is served without it; it never throws.
+        'throw_on_error' => false,
         // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
 
     ],
