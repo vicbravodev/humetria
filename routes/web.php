@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 use App\Http\Controllers\StopImpersonationController;
 use App\Http\Controllers\ToolFilmController;
+use App\Http\PageSeo;
 use App\Modules\Tenancy\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-Route::get('/', fn (): Response => Inertia::render('landing'))->name('home');
+// The tags of the head of a public page come from PageSeo, and this file is the only place that calls it.
+Route::get('/', fn (): Response => Inertia::render('landing', ['seo' => PageSeo::for('home')]))->name('home');
 // The notice of privacy: fixed text; the controller of the data (legal name and address) comes from the configuration.
 Route::get('/privacy-notice', function (): Response {
     $legal = static fn (string $key): ?string => is_string($value = config("mail.legal.{$key}")) && trim($value) !== '' ? trim($value) : null;
 
-    return Inertia::render('privacy-notice', ['legalName' => $legal('name'), 'legalAddress' => $legal('address')]);
+    return Inertia::render('privacy-notice', ['legalName' => $legal('name'), 'legalAddress' => $legal('address'), 'seo' => PageSeo::for('privacy-notice')]);
 })->name('privacy-notice');
 Route::get('/media/films/{film}', ToolFilmController::class)->name('films.show');
 
