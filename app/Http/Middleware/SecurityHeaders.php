@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\IndexablePages;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as IlluminateResponse;
@@ -15,7 +16,8 @@ use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Sends a nonce-based Content-Security-Policy and the standard security headers on every response.
+ * Sends a nonce-based Content-Security-Policy, the standard security headers and `X-Robots-Tag: noindex, nofollow`
+ * (except on an indexable page, see IndexablePages) on every response.
  * Registered first in the global stack so it also covers 404s of unknown URLs, binding 404s, CSRF 419s
  * and Inertia 409s. A header the response already carries is kept: a route may override one on purpose.
  */
@@ -65,6 +67,10 @@ final class SecurityHeaders
             $headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
         }
 
+        if (! $this->isIndexable($request, $response)) {
+            $headers['X-Robots-Tag'] = 'noindex, nofollow';
+        }
+
         foreach ($headers as $name => $value) {
             if (! $response->headers->has($name)) {
                 $response->headers->set($name, $value);
@@ -72,6 +78,17 @@ final class SecurityHeaders
         }
 
         return $response;
+    }
+
+    /**
+     * `noindex` is the default: a page is indexable only when its route is in IndexablePages, it answered 200 and the
+     * app runs in production (staging and local never get indexed).
+     */
+    private function isIndexable(Request $request, Response $response): bool
+    {
+        return App::isProduction()
+            && $response->getStatusCode() === 200
+            && IndexablePages::includes($request->route()?->getName());
     }
 
     /**

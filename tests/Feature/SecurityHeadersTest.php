@@ -187,3 +187,47 @@ it('keeps a header that the route set on purpose', function (): void {
         ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
         ->assertHeader('X-Content-Type-Options', 'nosniff');
 });
+
+it('lets search engines index the home page only in production', function (): void {
+    app()->detectEnvironment(fn (): string => 'production');
+
+    $this->get('/')->assertOk()->assertHeaderMissing('X-Robots-Tag');
+});
+
+it('keeps the home page out of search engines outside production', function (string $environment): void {
+    app()->detectEnvironment(fn (): string => $environment);
+
+    $this->get('/')->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+})->with(['testing', 'local', 'staging']);
+
+it('hides everything that is not an indexable page, in production too', function (Closure $request): void {
+    app()->detectEnvironment(fn (): string => 'production');
+
+    $request()->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+})->with([
+    'login' => [fn (): TestResponse => test()->get(route('login'))],
+    'unknown url' => [fn (): TestResponse => test()->get('/no-such-page')],
+    'survey with an invented token' => [fn (): TestResponse => test()->get(route('survey.show', 'invented-token'))],
+    'passkey endpoints (json)' => [fn (): TestResponse => test()->get(route('well-known.passkeys'))],
+]);
+
+it('hides the home page when it answers with a server error', function (): void {
+    app()->detectEnvironment(fn (): string => 'production');
+    config(['app.debug' => false]);
+    Route::middleware('web')->get('/', fn () => throw new RuntimeException('boom'))->name('home');
+
+    $this->get('/')->assertStatus(500)->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+});
+
+it('is safe by default: a public route added later is hidden from search engines', function (): void {
+    app()->detectEnvironment(fn (): string => 'production');
+    Route::middleware('web')->get('/test/new-public', fn (): string => 'ok')->name('test.new-public');
+
+    $this->get('/test/new-public')->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+});
+
+it('keeps an X-Robots-Tag that the route set on purpose', function (): void {
+    Route::middleware('web')->get('/test/custom-robots', fn () => response('ok')->header('X-Robots-Tag', 'noindex'));
+
+    $this->get('/test/custom-robots')->assertHeader('X-Robots-Tag', 'noindex');
+});
