@@ -1,0 +1,8 @@
+{
+    "page": ["component", "props", "sharedProps", "url", "version"],
+    "props": ["auth", "errors", "firstSteps", "impersonator", "inCourse", "name", "sidebarOpen", "support", "tenant", "tenants"],
+    "pageProps": {
+        "landing": [],
+        "privacy-notice": ["legalAddress", "legalName"]
+    }
+}
