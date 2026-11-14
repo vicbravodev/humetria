@@ -2,6 +2,8 @@
 const STANDALONE_NAMES = new Set([
     // The survey has its own frame (SurveyShell).
     'landing',
+    // The notice of privacy is part of the public site: the landing's header and footer, not the panel.
+    'privacy-notice',
     'campaigns/survey',
     // The climate and pulse survey of the person's emailed link: the same frame, no account.
     'engagement/survey',

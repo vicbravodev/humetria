@@ -4,6 +4,7 @@ import { initialPageName, isStandalone } from '@/lib/page-frame';
 describe('isStandalone', () => {
     it.each([
         'landing',
+        'privacy-notice',
         'campaigns/survey',
         'engagement/survey',
         'engagement/portal-feedback',
