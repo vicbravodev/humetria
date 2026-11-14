@@ -1,18 +1,13 @@
-import { m } from 'motion/react';
 import HeroFamilies from '@/components/landing/hero-families';
 import HeroFilm from '@/components/landing/hero-film';
 import HeroHeadline from '@/components/landing/hero-headline';
 import { WRAP } from '@/components/landing/landing-layout';
-import { ENTER } from '@/components/landing/landing-motion';
 import { Button } from '@/components/ui/button';
+import { enterDelay } from '@/lib/enter-delay';
 import { cn } from '@/lib/utils';
 
-/** Fades the parts under the headline in once it has landed. */
-const after = (delay: number) => ({
-    initial: { opacity: 0, transform: 'translateY(12px)' },
-    animate: { opacity: 1, transform: 'translateY(0px)' },
-    transition: { ...ENTER, delay },
-});
+/** Fades the parts under the headline in once it has landed (CSS, `enter-after`): the class that holds each one back. */
+const after = (delay: number) => cn('enter-after', enterDelay(delay));
 
 /** The promise and the film beside it; under both, the nine tools as three families. */
 export default function LandingHero() {
@@ -34,18 +29,22 @@ export default function LandingHero() {
             >
                 <div className="flex flex-col gap-6">
                     <HeroHeadline />
-                    <m.p
-                        {...after(0.55)}
-                        className="max-w-[46ch] text-lg leading-7 text-pretty text-muted-foreground lg:text-xl lg:leading-8"
+                    <p
+                        className={cn(
+                            after(0.55),
+                            'max-w-[46ch] text-lg leading-7 text-pretty text-muted-foreground lg:text-xl lg:leading-8',
+                        )}
                     >
                         Humetría invita a tu gente, recolecta sus respuestas con
                         la confidencialidad que requiere cada herramienta y te
                         entrega lo que pide la autoridad: el diagnóstico, el
                         plan y la evidencia.
-                    </m.p>
-                    <m.div
-                        {...after(0.65)}
-                        className="grid gap-3 min-[520px]:flex min-[520px]:flex-wrap"
+                    </p>
+                    <div
+                        className={cn(
+                            after(0.65),
+                            'grid gap-3 min-[520px]:flex min-[520px]:flex-wrap',
+                        )}
                     >
                         <Button
                             asChild
@@ -64,14 +63,14 @@ export default function LandingHero() {
                         >
                             <a href="#como-funciona">Ver cómo funciona</a>
                         </Button>
-                    </m.div>
+                    </div>
                 </div>
-                <m.div {...after(0.2)}>
+                <div className={after(0.2)}>
                     <HeroFilm />
-                </m.div>
-                <m.div {...after(0.75)} className="lg:col-span-2">
+                </div>
+                <div className={cn(after(0.75), 'lg:col-span-2')}>
                     <HeroFamilies />
-                </m.div>
+                </div>
             </div>
         </section>
     );

@@ -1,7 +1,5 @@
-import { m } from 'motion/react';
 import { Check } from 'lucide-react';
 import LandingHumi from '@/components/landing/landing-humi';
-import { EASE_OUT } from '@/components/landing/landing-motion';
 import ToolFilmPlayer from '@/components/landing/tool-film-player';
 import type { LandingTool } from '@/components/landing/landing-tools';
 
@@ -16,20 +14,9 @@ export default function ToolStage({ tool }: { tool: LandingTool }) {
             className="grid min-w-0 gap-5 rounded-3xl border bg-card p-3.5 shadow-raised sm:p-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6"
         >
             <ToolFilmPlayer key={tool.key} film={tool.film} />
-            <m.div
+            <div
                 key={`${tool.key}-details`}
-                initial={{
-                    opacity: 0,
-                    transform: 'translateY(8px)',
-                    filter: 'blur(2px)',
-                }}
-                animate={{
-                    opacity: 1,
-                    transform: 'translateY(0px)',
-                    filter: 'blur(0px)',
-                }}
-                transition={{ duration: 0.3, ease: EASE_OUT }}
-                className="flex min-w-0 flex-col gap-4"
+                className="flex min-w-0 enter-details flex-col gap-4"
             >
                 <p className="grid gap-1 rounded-xl bg-sidebar p-4">
                     <small className="text-caption text-muted-foreground">
@@ -59,7 +46,7 @@ export default function ToolStage({ tool }: { tool: LandingTool }) {
                     </span>
                     Humi te acompaña en esta herramienta.
                 </p>
-            </m.div>
+            </div>
         </div>
     );
 }

@@ -635,3 +635,41 @@ it('fills the rail beside the steps as they scroll by on a phone', function (): 
         ->assertScript($filled)
         ->assertNoJavaScriptErrors();
 });
+
+it('enters the headline word by word and the parts under it in a staggered fade, with CSS', function (): void {
+    $animation = fn (string $selector): string => "() => JSON.stringify([...document.querySelectorAll({$selector})].map((node) => { const style = getComputedStyle(node); return [style.animationName, style.animationDuration, style.animationDelay, style.animationFillMode]; }))";
+    $words = array_map(fn (int $index): array => ['enter', '0.7s', (0.1 + $index * 0.05).'s', 'both'], range(0, 9));
+    $after = [['enter', '0.6s', '0.55s', 'both'], ['enter', '0.6s', '0.65s', 'both'], ['enter', '0.6s', '0.2s', 'both'], ['enter', '0.6s', '0.75s', 'both']];
+
+    visit('/')
+        ->assertScript($animation("'#hero-title span'"), json_encode($words, JSON_THROW_ON_ERROR))
+        ->assertScript($animation("'#inicio .enter-after'"), json_encode($after, JSON_THROW_ON_ERROR))
+        ->assertNoJavaScriptErrors();
+});
+
+it('enters the hero without moving when the visitor asks for reduced motion', function (): void {
+    visit('/', ['reducedMotion' => 'reduce'])
+        ->assertScript("() => [...document.querySelectorAll('#hero-title span, #inicio .enter-after')].every((node) => getComputedStyle(node).getPropertyValue('--from-transform').trim() === 'none' && getComputedStyle(node).getPropertyValue('--from-filter').trim() !== 'blur(6px)')")
+        ->assertNoJavaScriptErrors();
+});
+
+it('plays the details of a tool again each time the tool changes', function (): void {
+    $details = "document.querySelector('#herramientas [role=tabpanel] .enter-details')";
+    // The key remounts the details with the tool: a new element, whose CSS animation starts over.
+    $replayed = <<<JS
+        () => new Promise((resolve) => {
+            const before = {$details};
+            document.querySelector('[data-test=tool-tab-ley_silla]').click();
+            const wait = () => {
+                const after = {$details};
+                after !== null && after !== before ? resolve(after.getAnimations().some((animation) => animation.animationName === 'enter')) : requestAnimationFrame(wait);
+            };
+            wait();
+        })
+        JS;
+
+    visit('/#herramientas')
+        ->assertScript("() => getComputedStyle({$details}).animationName", 'enter')
+        ->assertScript($replayed)
+        ->assertNoJavaScriptErrors();
+});
