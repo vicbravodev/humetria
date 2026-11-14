@@ -13,6 +13,7 @@ export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
+            ssr: 'resources/js/app.tsx',
             refresh: true,
             fonts: [
                 bunny('Figtree', {
@@ -30,6 +31,8 @@ export default defineConfig({
             formVariants: true,
         }),
     ]),
+    // The `ssr` image carries no node_modules: the bundle brings its dependencies with it.
+    ssr: { noExternal: true },
     build: {
         rolldownOptions: {
             output: {

@@ -14,6 +14,10 @@
         <testsuite name="Browser">
             <directory>tests/Browser</directory>
         </testsuite>
+        <!-- Needs a real Node server and its bundle: composer test:ssr runs it, never `composer test`, the coverage or the mutation. -->
+        <testsuite name="Ssr">
+            <directory>tests/Ssr</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

@@ -1,0 +1,49 @@
+{
+    "component": "landing",
+    "props": {
+        "auth": {
+            "user": null,
+            "isSuperadmin": false,
+            "isStaff": false
+        },
+        "errors": {},
+        "firstSteps": null,
+        "impersonator": null,
+        "inCourse": null,
+        "name": "Humetría",
+        "sidebarOpen": true,
+        "support": {
+            "email": "soporte@humetria.example"
+        },
+        "tenant": null,
+        "tenants": [],
+        "seo": {
+            "title": "Título de prueba",
+            "description": "Descripción de prueba & más.",
+            "canonical": "https://humetria.example/",
+            "image": {
+                "url": "https://humetria.example/og-v1.png",
+                "width": 1200,
+                "height": 630,
+                "alt": "Texto alternativo de prueba"
+            },
+            "locale": "es_MX",
+            "siteName": "Humetría",
+            "jsonLd": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"name\":\"Humetría\"}]}"
+        }
+    },
+    "sharedProps": [
+        "auth",
+        "errors",
+        "firstSteps",
+        "impersonator",
+        "inCourse",
+        "name",
+        "sidebarOpen",
+        "support",
+        "tenant",
+        "tenants"
+    ],
+    "url": "/",
+    "version": "test"
+}

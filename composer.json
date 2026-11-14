@@ -92,7 +92,7 @@
         ],
         "test:coverage": [
             "Composer\\Config::disableProcessTimeout",
-            "pest --parallel --exclude-testsuite=Browser --coverage-clover=coverage.xml",
+            "pest --parallel --exclude-testsuite=Browser --exclude-testsuite=Ssr --coverage-clover=coverage.xml",
             "@php scripts/coverage-min.php coverage.xml 90"
         ],
         "check:fast": [
@@ -106,17 +106,21 @@
             "Composer\\Config::disableProcessTimeout",
             "@php artisan test --testsuite=Browser --parallel --processes=4"
         ],
+        "test:ssr": [
+            "Composer\\Config::disableProcessTimeout",
+            "scripts/ssr/test.sh"
+        ],
         "test:fast": [
             "Composer\\Config::disableProcessTimeout",
-            "pest --parallel --processes=4 --tia --locally"
+            "pest --parallel --processes=4 --tia --locally --exclude-testsuite=Ssr"
         ],
         "mutate": [
             "Composer\\Config::disableProcessTimeout",
-            "pest --mutate --parallel --processes=4 --covered-only --exclude-testsuite=Browser --group=__pest_mutate_only"
+            "pest --mutate --parallel --processes=4 --covered-only --exclude-testsuite=Browser --exclude-testsuite=Ssr --group=__pest_mutate_only"
         ],
         "mutate:retry": [
             "Composer\\Config::disableProcessTimeout",
-            "pest --mutate --parallel --processes=4 --covered-only --exclude-testsuite=Browser --group=__pest_mutate_only --retry"
+            "pest --mutate --parallel --processes=4 --covered-only --exclude-testsuite=Browser --exclude-testsuite=Ssr --group=__pest_mutate_only --retry"
         ],
         "mutate:critical": [
             "Composer\\Config::disableProcessTimeout",
@@ -124,7 +128,7 @@
         ],
         "mutate:full": [
             "Composer\\Config::disableProcessTimeout",
-            "pest --mutate --parallel --processes=4 --exclude-testsuite=Browser --group=__pest_mutate_only --min=95 --ignore-min-score-on-zero-mutations"
+            "pest --mutate --parallel --processes=4 --exclude-testsuite=Browser --exclude-testsuite=Ssr --group=__pest_mutate_only --min=95 --ignore-min-score-on-zero-mutations"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
