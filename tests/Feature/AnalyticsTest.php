@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 use App\Http\Analytics;
 use App\Models\User;
+use App\Modules\Complaints\Models\ComplaintChannel;
+use App\Modules\Complaints\Models\ComplaintHandler;
+use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Support\SessionKey;
 
 mutates(Analytics::class);
@@ -205,4 +212,28 @@ it('flashes the id of a remembered lead to the landing once, and nothing when no
 
     Analytics::flashLead();
     expect(session()->pull(SessionKey::FLASH_DATA, []))->toBe([]);
+});
+
+it('never writes the value of a _ga cookie, sent raw to the complaints page, in any log line', function (): void {
+    $path = storage_path('logs/analytics-'.Str::uuid().'.log');
+    config(['logging.channels.single.path' => $path, 'logging.default' => 'single']);
+    Log::forgetChannel('single');
+    Log::forgetChannel('stack');
+
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    $owner = memberOf($tenant, TenantRole::Owner);
+    $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
+    ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => $owner->id]);
+
+    $cookie = ['HTTP_COOKIE' => '_ga=GA1.1.SENTINEL-CLIENT-ID.1700000000; _ga_ABC123XYZ9=GS2.1.SENTINEL-SESSION'];
+
+    $this->call('GET', '/c/'.$channel->access_code, server: $cookie)->assertOk();
+    $this->call('GET', '/c/NO-SUCH-CODE', server: $cookie)->assertNotFound();
+    $this->call('POST', '/c/'.$channel->access_code, ['body' => ''], server: $cookie);
+
+    $log = File::exists($path) ? File::get($path) : '';
+    File::delete($path);
+
+    expect($log)->not->toContain('SENTINEL')
+        ->and($log)->not->toContain('GA1.1');
 });

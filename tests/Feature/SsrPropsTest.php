@@ -83,3 +83,16 @@ it('sends the path and query of the request as the page url', function (): void 
 
     expect(requestToNode()->data()['url'])->toBe('/?utm_source=newsletter');
 });
+
+it('sends Node nothing of the analytics configuration: no id, no consent, no script', function (): void {
+    config(['services.google_analytics.measurement_id' => 'G-ABC123XYZ9', 'services.google_analytics.consent_default' => 'granted']);
+
+    $this->get('/')->assertOk();
+
+    $sent = json_encode(requestToNode()->data());
+
+    expect($sent)->not->toContain('G-ABC123XYZ9')
+        ->not->toContain('googletagmanager')
+        ->not->toContain('gtag')
+        ->not->toContain('consent');
+});
