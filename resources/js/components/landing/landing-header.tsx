@@ -54,7 +54,12 @@ export default function LandingHeader() {
                         size="sm"
                         className="font-normal"
                     >
-                        <a href={dashboard().url} data-test="sign-in">
+                        <a
+                            data-track="sign_in_click"
+                            data-track-target="header"
+                            href={dashboard().url}
+                            data-test="sign-in"
+                        >
                             Iniciar sesión
                         </a>
                     </Button>
@@ -63,7 +68,12 @@ export default function LandingHeader() {
                         size="sm"
                         className="ml-1 rounded-full px-4"
                     >
-                        <a href="#agenda-una-demo" data-test="header-demo">
+                        <a
+                            data-track="cta_click"
+                            data-track-target="header_demo"
+                            href="#agenda-una-demo"
+                            data-test="header-demo"
+                        >
                             Agenda una demo
                         </a>
                     </Button>

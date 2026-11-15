@@ -13,6 +13,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
 use App\Modules\Billing\Exceptions\MailQuotaExceeded;
 use App\Modules\Billing\Exceptions\StorageQuotaExceeded;
+use App\Support\PostHogExceptions;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -56,6 +57,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         // Survey answers never go back into the session, even from a submission that fails validation (criterio C-22).
         $exceptions->dontFlash(['answers', 'comments']);
+
+        // Before the callbacks below, which stop the chain (return false): a failed query or mail is exactly what must reach
+        // PostHog's error tracking, by class and trace only (App\Support\PostHogExceptions). Laravel only calls it for what it reports.
+        $exceptions->report(PostHogExceptions::report(...));
 
         // A failed query's message embeds its bindings (emails, phones, answers…). Report it without them.
         $exceptions->report(function (QueryException $exception): false {

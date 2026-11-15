@@ -26,6 +26,8 @@ export default function LoopVideoControls({
             <button
                 type="button"
                 data-test={`${test}-restart`}
+                data-track="video_control"
+                data-track-target={`${test}-restart`}
                 aria-label="Ver desde el inicio"
                 onClick={onRestart}
                 className={control}
@@ -35,6 +37,8 @@ export default function LoopVideoControls({
             <button
                 type="button"
                 data-test={`${test}-sound`}
+                data-track="video_control"
+                data-track-target={`${test}-sound`}
                 aria-label={muted ? 'Activar sonido' : 'Silenciar video'}
                 aria-pressed={!muted}
                 onClick={onToggleSound}
@@ -49,6 +53,8 @@ export default function LoopVideoControls({
             <button
                 type="button"
                 data-test={`${test}-toggle`}
+                data-track="video_control"
+                data-track-target={`${test}-toggle`}
                 aria-label={playing ? 'Pausar video' : 'Reproducir video'}
                 onClick={onToggle}
                 className={control}

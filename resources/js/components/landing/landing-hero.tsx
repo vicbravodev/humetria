@@ -50,7 +50,12 @@ export default function LandingHero() {
                             size="lg"
                             className="h-13 px-6 text-base"
                         >
-                            <a href="#agenda-una-demo" data-test="hero-demo">
+                            <a
+                                data-track="cta_click"
+                                data-track-target="hero_demo"
+                                href="#agenda-una-demo"
+                                data-test="hero-demo"
+                            >
                                 Agenda una demo
                             </a>
                         </Button>
@@ -60,7 +65,13 @@ export default function LandingHero() {
                             variant="outline"
                             className="h-13 px-6 text-base"
                         >
-                            <a href="#como-funciona">Ver cómo funciona</a>
+                            <a
+                                data-track="cta_click"
+                                data-track-target="hero_how_it_works"
+                                href="#como-funciona"
+                            >
+                                Ver cómo funciona
+                            </a>
                         </Button>
                     </div>
                 </div>

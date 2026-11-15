@@ -25,6 +25,8 @@ export default function FilmControls({
             <button
                 type="button"
                 data-test="tool-film-toggle"
+                data-track="film_control"
+                data-track-target="toggle"
                 aria-label={playing ? 'Pausar video' : 'Reproducir video'}
                 onClick={onToggle}
                 className={button}
@@ -38,6 +40,8 @@ export default function FilmControls({
             <button
                 type="button"
                 data-test="tool-film-sound"
+                data-track="film_control"
+                data-track-target="sound"
                 aria-label={muted ? 'Activar sonido' : 'Silenciar video'}
                 aria-pressed={!muted}
                 onClick={onToggleSound}
@@ -53,6 +57,8 @@ export default function FilmControls({
                 <button
                     type="button"
                     data-test="tool-film-fullscreen"
+                    data-track="film_control"
+                    data-track-target="fullscreen"
                     aria-label="Ver en pantalla completa"
                     onClick={onFullscreen}
                     className={button}

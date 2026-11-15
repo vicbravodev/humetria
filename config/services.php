@@ -39,13 +39,14 @@ return [
     ],
 
     /*
-    | Google Analytics 4 (gtag.js) on the landing page only. No measurement id, no script, no Google origin in the CSP.
+    | PostHog (US cloud) on the landing page only. No project token, no block in the document, no PostHog origin in the CSP.
     | Consent is `denied` until the owner's lawyer says otherwise (see App\Http\Consent): with it, nothing is measured.
+    | The host is not configurable on purpose: it is one constant of App\Http\Analytics, the one the CSP opens.
     */
 
-    'google_analytics' => [
-        'measurement_id' => env('GOOGLE_ANALYTICS_ID', ''),
-        'consent_default' => env('GOOGLE_ANALYTICS_CONSENT_DEFAULT', 'denied'),
+    'posthog' => [
+        'project_token' => env('POSTHOG_PROJECT_TOKEN', ''),
+        'consent_default' => env('POSTHOG_CONSENT_DEFAULT', 'denied'),
     ],
 
     'slack' => [

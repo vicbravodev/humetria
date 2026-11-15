@@ -84,15 +84,15 @@ it('sends the path and query of the request as the page url', function (): void 
     expect(requestToNode()->data()['url'])->toBe('/?utm_source=newsletter');
 });
 
-it('sends Node nothing of the analytics configuration: no id, no consent, no script', function (): void {
-    config(['services.google_analytics.measurement_id' => 'G-ABC123XYZ9', 'services.google_analytics.consent_default' => 'granted']);
+it('sends Node nothing of the analytics configuration: no token, no consent, no script', function (): void {
+    config(['services.posthog.project_token' => 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG', 'services.posthog.consent_default' => 'granted']);
 
     $this->get('/')->assertOk();
 
     $sent = json_encode(requestToNode()->data());
 
-    expect($sent)->not->toContain('G-ABC123XYZ9')
-        ->not->toContain('googletagmanager')
-        ->not->toContain('gtag')
+    expect($sent)->not->toContain('phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG')
+        ->not->toContain('posthog')
+        ->not->toContain('analytics-config')
         ->not->toContain('consent');
 });

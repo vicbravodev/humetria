@@ -16,6 +16,8 @@ export default function HeroFamilies() {
                         <a
                             href={`#herramienta-${family.tools[0]}`}
                             data-test={`hero-family-${family.key}`}
+                            data-track="family_click"
+                            data-track-target={family.key}
                             onClick={(event) => {
                                 event.preventDefault();
                                 // Like the tool tabs, it rewrites the address instead of navigating: a navigation would let the router reset the scroll.

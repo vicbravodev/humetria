@@ -1,67 +1,265 @@
-import { describe, expect, it, vi } from 'vitest';
-import { trackLead } from '@/lib/analytics';
+import type { CaptureResult } from 'posthog-js';
+import { describe, expect, it } from 'vitest';
+import {
+    posthogOptions,
+    readAnalyticsConfig,
+    sanitizeEvent,
+    type AnalyticsConfig,
+} from '@/lib/analytics';
+import { HOST, TOKEN, documentWith } from '../support/analytics';
 
-const ID = '9d3f6a52-8a7c-4d49-9d0e-5f3a1b2c4d5e';
+const CONFIG: AnalyticsConfig = {
+    token: TOKEN,
+    host: HOST,
+    pageLocation: 'http://localhost/?utm_source=google',
+};
 
-function memoryStorage(initial: Record<string, string> = {}) {
-    const values = new Map(Object.entries(initial));
-
-    return {
-        getItem: (key: string) => values.get(key) ?? null,
-        setItem: (key: string, value: string) => {
-            values.set(key, value);
-        },
-        values,
-    };
+function event(properties: CaptureResult['properties']): CaptureResult {
+    return { uuid: 'u-1', event: '$pageview', properties };
 }
 
-describe('trackLead', () => {
-    it('reports generate_lead once, with no parameters, and remembers the id', () => {
-        const gtag = vi.fn();
-        const storage = memoryStorage();
+describe('readAnalyticsConfig', () => {
+    it('reads the token, the host and the page the server wrote', () => {
+        const text = JSON.stringify({
+            token: TOKEN,
+            host: HOST,
+            page_location: 'http://localhost/?utm_source=google',
+        });
 
-        trackLead({ gtag }, storage, ID);
-
-        expect(gtag).toHaveBeenCalledTimes(1);
-        expect(gtag).toHaveBeenCalledWith('event', 'generate_lead');
-        expect([...storage.values.values()]).toEqual([ID]);
+        expect(readAnalyticsConfig(documentWith(text))).toEqual(CONFIG);
     });
 
-    it('does nothing when Google was never loaded, and remembers nothing', () => {
-        const storage = memoryStorage();
+    it('reads the referrer when the server wrote one', () => {
+        const text = JSON.stringify({
+            token: TOKEN,
+            host: HOST,
+            page_location: 'http://localhost/',
+            page_referrer: 'http://localhost/',
+        });
 
-        trackLead({}, storage, ID);
-
-        expect(storage.values.size).toBe(0);
+        expect(readAnalyticsConfig(documentWith(text))).toEqual({
+            token: TOKEN,
+            host: HOST,
+            pageLocation: 'http://localhost/',
+            pageReferrer: 'http://localhost/',
+        });
     });
 
-    it.each([undefined, ''])('does nothing without an id (%s)', (id) => {
-        const gtag = vi.fn();
-        const storage = memoryStorage();
-
-        trackLead({ gtag }, storage, id);
-
-        expect(gtag).not.toHaveBeenCalled();
-        expect(storage.values.size).toBe(0);
+    it('is null when the page has no block: no token or no consent on the server', () => {
+        expect(readAnalyticsConfig(documentWith(null))).toBeNull();
     });
 
-    it('does not report the same request twice', () => {
-        const gtag = vi.fn();
-        const storage = memoryStorage();
-
-        trackLead({ gtag }, storage, ID);
-        trackLead({ gtag }, storage, ID);
-
-        expect(gtag).toHaveBeenCalledTimes(1);
+    it.each([
+        ['empty text', ''],
+        ['not JSON', '{nope'],
+        ['a number', '7'],
+        ['null', 'null'],
+        ['an array', '[]'],
+        ['no token', '{"host":"h","page_location":"p"}'],
+        ['no host', '{"token":"t","page_location":"p"}'],
+        ['no page', '{"token":"t","host":"h"}'],
+        ['an empty token', '{"token":"","host":"h","page_location":"p"}'],
+        [
+            'a token that is not text',
+            '{"token":1,"host":"h","page_location":"p"}',
+        ],
+        ['an empty host', '{"token":"t","host":"","page_location":"p"}'],
+        ['an empty page', '{"token":"t","host":"h","page_location":""}'],
+    ])('is null for a block that is %s', (_name, text) => {
+        expect(readAnalyticsConfig(documentWith(text))).toBeNull();
     });
 
-    it('reports a different request after another one', () => {
-        const gtag = vi.fn();
-        const storage = memoryStorage();
+    it('is null when the block has no text', () => {
+        const noText = { getElementById: () => ({ textContent: null }) };
 
-        trackLead({ gtag }, storage, ID);
-        trackLead({ gtag }, storage, '11111111-2222-4333-8444-555555555555');
+        expect(readAnalyticsConfig(noText)).toBeNull();
+    });
 
-        expect(gtag).toHaveBeenCalledTimes(2);
+    it('ignores a referrer that is not text', () => {
+        const text = JSON.stringify({
+            token: TOKEN,
+            host: HOST,
+            page_location: 'http://localhost/',
+            page_referrer: 5,
+        });
+
+        expect(readAnalyticsConfig(documentWith(text))).toEqual({
+            token: TOKEN,
+            host: HOST,
+            pageLocation: 'http://localhost/',
+        });
+    });
+});
+
+describe('posthogOptions', () => {
+    it('measures only the page view: no autocapture, no recordings, no surveys, no flags, no person profile', () => {
+        const options = posthogOptions(CONFIG);
+
+        expect(options).toMatchObject({
+            api_host: HOST,
+            autocapture: false,
+            capture_pageview: false,
+            capture_pageleave: false,
+            disable_session_recording: true,
+            disable_surveys: true,
+            advanced_disable_flags: true,
+            person_profiles: 'never',
+            ip: false,
+            persistence: 'localStorage',
+            save_referrer: false,
+            disable_external_dependency_loading: true,
+        });
+    });
+
+    it('cleans every event before it leaves the browser', () => {
+        const options = posthogOptions(CONFIG);
+        const sent = [options.before_send].flat()[0]?.(
+            event({ $current_url: 'http://localhost/?token=SECRET' }),
+        );
+
+        expect(sent?.properties['$current_url']).toBe(CONFIG.pageLocation);
+    });
+});
+
+describe('sanitizeEvent', () => {
+    it('replaces the page the browser knows with the one the server cleaned', () => {
+        const sent = sanitizeEvent(CONFIG)(
+            event({
+                $current_url: 'http://localhost/?token=SECRET&email=a@b.mx',
+                $pathname: '/',
+            }),
+        );
+
+        expect(sent.properties['$current_url']).toBe(CONFIG.pageLocation);
+        expect(sent.properties['$pathname']).toBe('/');
+    });
+
+    it('drops the referrer the browser read, and its domain', () => {
+        const sent = sanitizeEvent(CONFIG)(
+            event({
+                $referrer: 'https://www.google.com/search?q=SECRET',
+                $referring_domain: 'www.google.com',
+            }),
+        );
+
+        expect(sent.properties).not.toHaveProperty('$referrer');
+        expect(sent.properties).not.toHaveProperty('$referring_domain');
+        expect(JSON.stringify(sent)).not.toContain('SECRET');
+    });
+
+    it('sends the referrer the server allowed: a page of this site, as an origin', () => {
+        const sent = sanitizeEvent({
+            ...CONFIG,
+            pageReferrer: 'http://localhost/',
+        })(event({ $referrer: 'http://localhost/survey/TOKEN' }));
+
+        expect(sent.properties['$referrer']).toBe('http://localhost/');
+        expect(JSON.stringify(sent)).not.toContain('TOKEN');
+    });
+
+    it('drops what would build a profile of the person: $set and $set_once', () => {
+        const sent = sanitizeEvent(CONFIG)({
+            ...event({}),
+            $set: { email: 'a@b.mx' },
+            $set_once: { $initial_referrer: 'https://x.example/?q=SECRET' },
+        });
+
+        expect(sent).not.toHaveProperty('$set');
+        expect(sent).not.toHaveProperty('$set_once');
+    });
+
+    it('keeps the identity of the event: its id, its name and its time', () => {
+        const timestamp = new Date('2026-11-15T10:00:00Z');
+        const sent = sanitizeEvent(CONFIG)({
+            uuid: 'u-9',
+            event: 'generate_lead',
+            properties: {},
+            timestamp,
+        });
+
+        expect(sent.uuid).toBe('u-9');
+        expect(sent.event).toBe('generate_lead');
+        expect(sent.timestamp).toBe(timestamp);
+    });
+
+    it('does not invent a time the event did not have', () => {
+        expect(sanitizeEvent(CONFIG)(event({}))).not.toHaveProperty(
+            'timestamp',
+        );
+    });
+});
+
+describe('sanitizeEvent and what an error says', () => {
+    function failure(value: string) {
+        return {
+            uuid: 'u-2',
+            event: '$exception',
+            properties: {
+                $exception_list: [
+                    {
+                        type: 'Error',
+                        value,
+                        stacktrace: {
+                            type: 'raw',
+                            frames: [{ filename: 'app.js', lineno: 3 }],
+                        },
+                    },
+                ],
+            },
+        };
+    }
+
+    function valueOf(result: CaptureResult): unknown {
+        const list: unknown = result.properties['$exception_list'];
+
+        return Array.isArray(list) ? Reflect.get(list[0], 'value') : undefined;
+    }
+
+    it.each([
+        [
+            'an email',
+            'no se pudo enviar a ana@empresa.mx ya',
+            'no se pudo enviar a [email] ya',
+        ],
+        ['a phone number', 'tel 55 1234 5678 fallo', 'tel [number] fallo'],
+        ['a long number without spaces', 'id 5512345678', 'id [number]'],
+        [
+            'nothing personal',
+            'Cannot read properties of undefined',
+            'Cannot read properties of undefined',
+        ],
+    ])('masks %s in the message of an error', (_name, said, expected) => {
+        const result = sanitizeEvent(CONFIG)(failure(said));
+
+        expect(valueOf(result)).toBe(expected);
+    });
+
+    it('cuts a very long message', () => {
+        const result = sanitizeEvent(CONFIG)(failure('x'.repeat(500)));
+
+        expect(String(valueOf(result))).toHaveLength(200);
+    });
+
+    it('keeps the type and the frames of the error', () => {
+        const result = sanitizeEvent(CONFIG)(failure('boom'));
+        const list: unknown = result.properties['$exception_list'];
+
+        expect(list).toEqual([
+            {
+                type: 'Error',
+                value: 'boom',
+                stacktrace: {
+                    type: 'raw',
+                    frames: [{ filename: 'app.js', lineno: 3 }],
+                },
+            },
+        ]);
+    });
+
+    it('leaves an event that is not an error as it was', () => {
+        const result = sanitizeEvent(CONFIG)(event({ section: 'tools' }));
+
+        expect(result.properties['section']).toBe('tools');
+        expect(result.properties['$exception_list']).toBeUndefined();
     });
 });

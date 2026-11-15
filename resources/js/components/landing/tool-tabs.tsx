@@ -40,6 +40,8 @@ export default function ToolTabs({ family, selected, onSelect }: Props) {
                             role="tab"
                             id={`tool-tab-${tool.key}`}
                             data-test={`tool-tab-${tool.key}`}
+                            data-track="tool_selected"
+                            data-track-target={tool.key}
                             aria-selected={current}
                             aria-controls={`tool-panel-${tool.key}`}
                             tabIndex={current ? 0 : -1}
