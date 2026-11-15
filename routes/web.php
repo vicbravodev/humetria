@@ -6,6 +6,7 @@ use App\Http\Analytics;
 use App\Http\Controllers\StopImpersonationController;
 use App\Http\Controllers\ToolFilmController;
 use App\Http\PageSeo;
+use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
 use App\Modules\Tenancy\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -16,7 +17,7 @@ Route::get('/', function (): Response {
     Analytics::flashLead();
 
     return Inertia::render('landing', ['seo' => PageSeo::for('home')]);
-})->name('home');
+})->middleware(RememberDemoAttribution::class)->name('home');
 // The notice of privacy: fixed text; the controller of the data (legal name and address) comes from the configuration.
 Route::get('/privacy-notice', function (): Response {
     $legal = static fn (string $key): ?string => is_string($value = config("mail.legal.{$key}")) && trim($value) !== '' ? trim($value) : null;
