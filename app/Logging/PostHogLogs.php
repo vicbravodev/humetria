@@ -34,7 +34,8 @@ final class PostHogLogs extends AbstractProcessingHandler
     /** Sends what every open channel holds: called when a request, a job or a command ends. */
     public static function flush(): void
     {
-        foreach (Log::getChannels() as $channel) {
+        // Through collect: a log facade swapped for a spy answers null.
+        foreach (collect(Log::getChannels()) as $channel) {
             $monolog = $channel instanceof Logger ? $channel->getLogger() : null;
 
             foreach ($monolog instanceof Monolog ? $monolog->getHandlers() : [] as $handler) {

@@ -29,6 +29,7 @@ use App\Modules\Telework\Actions\RemindUnansweredAccidents;
 use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('engagement:item-stats {survey}', function (string $survey, ItemStatisticsReport $report): int {
@@ -46,6 +47,9 @@ Artisan::command('engagement:item-stats {survey}', function (string $survey, Ite
 
     return 0;
 })->purpose('Print, per question of a survey, how many were shown it, answered and skipped it (for the pilot)');
+
+// PostHog alerts when this line stops arriving: the scheduler (or its container) is down (docs/operations/observability.md).
+Artisan::command('schedule:heartbeat', fn () => Log::info('schedule.heartbeat'))->purpose('Log that the scheduler is alive');
 
 Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $closeExpired): void {
     $this->info('Evaluaciones cerradas: '.$closeExpired->handle());
@@ -188,6 +192,7 @@ Schedule::command('engagement:launch-pulses')->dailyAt('08:00')->timezone(config
 // Ten minutes later, and three days ahead of the run: the date of a heads-up is the day the launch command will find due.
 Schedule::command('engagement:announce-pulses')->dailyAt('08:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
+Schedule::command('schedule:heartbeat')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
 Schedule::command('queue:prune-batches')->daily();
