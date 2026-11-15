@@ -28,11 +28,22 @@ it('runs the Ssr suite with Pest, like Feature and Browser', function (): void {
 it('keeps the Ssr suite out of every script that runs Pest', function (string $script): void {
     $commands = implode("\n", (array) composerScripts()[$script]);
 
-    expect($commands)->toContain('--exclude-testsuite=Ssr');
+    expect($commands)->toMatch('/--exclude-testsuite=(\S+,)?Ssr(\s|$)/');
 })->with(['test:coverage', 'test:fast', 'mutate', 'mutate:retry', 'mutate:full']);
 
+// PHPUnit keeps only the last --exclude-testsuite: repeating the option brings the first suite back into the run.
+it('names every excluded suite in one option', function (string $script): void {
+    $commands = implode("\n", (array) composerScripts()[$script]);
+
+    expect($commands)->toMatch('/--exclude-testsuite=Browser,Ssr(\s|$)/')
+        ->and($commands)->not->toMatch('/--exclude-testsuite=\S+[^\n]*--exclude-testsuite=/');
+})->with(['test:coverage', 'mutate', 'mutate:retry', 'mutate:full']);
+
 it('keeps the Ssr suite out of the weekly mutation run', function (): void {
-    expect((string) file_get_contents(__DIR__.'/../../scripts/mutate-critical.sh'))->toContain('--exclude-testsuite=Ssr');
+    $script = (string) file_get_contents(__DIR__.'/../../scripts/mutate-critical.sh');
+
+    expect($script)->toMatch('/--exclude-testsuite=Browser,Ssr(\s|$)/')
+        ->and($script)->not->toMatch('/--exclude-testsuite=\S+[^\n]*--exclude-testsuite=/');
 });
 
 it('runs the Ssr suite and the Node tests with composer test:ssr', function (): void {
