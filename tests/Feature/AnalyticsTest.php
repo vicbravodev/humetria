@@ -97,3 +97,97 @@ it('tells Google the page without its personal query: only the utm parameters st
     'a value of 100 characters' => ['/?utm_source='.str_repeat('a', 100), 'http://localhost/?utm_source='.str_repeat('a', 100)],
     'the click id of an ad' => ['/?gclid=abc&utm_term=empresa', 'http://localhost/?utm_term=empresa'],
 ]);
+
+function landingHtml(string $uri = '/', ?string $referer = null): string
+{
+    return (string) test()->withHeaders($referer === null ? [] : ['Referer' => $referer])->get($uri)->assertOk()->getContent();
+}
+
+it('writes the gtag loader and its configuration with the nonce of the policy, consent before config', function (): void {
+    measuring();
+
+    $response = $this->get(route('home'));
+    $html = (string) $response->assertOk()->getContent();
+    preg_match("/'nonce-([^']+)'/", (string) $response->headers->get('Content-Security-Policy'), $match);
+    $nonce = $match[1] ?? '';
+
+    expect($html)->toContain('<script async src="https://www.googletagmanager.com/gtag/js?id='.GA_ID.'" nonce="'.$nonce.'"></script>')
+        ->and($html)->toContain('window.dataLayer = window.dataLayer || [];')
+        ->and($html)->toContain('function gtag()')
+        ->and($html)->toContain('"allow_google_signals":false')
+        ->and($html)->toContain('"allow_ad_personalization_signals":false')
+        ->and(preg_match_all('/<script(?![^>]*type="application\/json")[^>]*>/', $html, $scripts))->toBeGreaterThan(2)
+        ->and($scripts[0])->each->toContain('nonce="'.$nonce.'"')
+        ->and(strpos($html, "gtag('consent', 'default'"))->toBeInt()
+        ->and(strpos($html, "gtag('consent', 'default'"))->toBeLessThan(strpos($html, "gtag('config'"))
+        ->and(strpos($html, "gtag('config'"))->toBeInt();
+});
+
+it('keeps advertising signals and advertising storage off in the consent default', function (): void {
+    measuring();
+
+    $html = landingHtml();
+
+    expect($html)->toMatch("/gtag\('consent', 'default', .*\"ad_storage\":\"denied\".*\"ad_user_data\":\"denied\".*\"ad_personalization\":\"denied\"/s")
+        ->and($html)->toMatch("/gtag\('consent', 'default', .*\"analytics_storage\":\"granted\"/s");
+});
+
+it('tells Google the page without its personal query and no referrer unless it is a page of this site', function (): void {
+    measuring();
+
+    $html = landingHtml('/?token=SECRET-TOKEN&utm_source=google&email=a@b.mx', 'https://www.google.com/search?q=SECRET-SEARCH');
+
+    // The page's own Inertia JSON carries its url (it is not Analytics): only what Analytics writes is judged.
+    $analytics = substr($html, (int) strpos($html, 'googletagmanager.com'), (int) strpos($html, '</script>', (int) strpos($html, "gtag('config'")) - (int) strpos($html, 'googletagmanager.com'));
+
+    expect($analytics)->toContain('"page_location":"http:\/\/localhost\/?utm_source=google"')
+        ->and($analytics)->not->toContain('SECRET-TOKEN')
+        ->and($analytics)->not->toContain('SECRET-SEARCH')
+        ->and($analytics)->not->toContain('a@b.mx')
+        ->and($analytics)->not->toContain('page_referrer');
+});
+
+it('sends a referrer from this site as its origin only: a link with a token never reaches Google', function (): void {
+    measuring();
+
+    $html = landingHtml('/', 'http://localhost/encuesta/TOKEN-OF-A-SURVEY?x=1');
+
+    $analytics = substr($html, (int) strpos($html, 'googletagmanager.com'), (int) strpos($html, '</script>', (int) strpos($html, "gtag('config'")) - (int) strpos($html, 'googletagmanager.com'));
+
+    expect($analytics)->toContain('"page_referrer":"http:\/\/localhost\/"')
+        ->and($analytics)->not->toContain('TOKEN-OF-A-SURVEY');
+});
+
+it('has no script, no dataLayer and no Google origin in the policy unless the four conditions hold', function (Closure $setUp, string $uri, bool $signedIn, bool $loads): void {
+    measuring();
+    $setUp();
+    $visit = $signedIn ? $this->actingAs(User::factory()->create()) : $this;
+
+    $response = $visit->get($uri)->assertOk();
+    $html = (string) $response->getContent();
+    $policy = (string) $response->headers->get('Content-Security-Policy');
+
+    expect(str_contains($html, 'googletagmanager.com'))->toBe($loads)
+        ->and(str_contains($html, 'dataLayer'))->toBe($loads)
+        ->and(str_contains($policy, 'googletagmanager.com'))->toBe($loads)
+        ->and(str_contains($policy, 'google-analytics.com'))->toBe($loads);
+})->with([
+    'the landing with an id' => [fn () => null, '/', false, true],
+    'the landing without an id' => [fn () => measuring(''), '/', false, false],
+    'the landing without consent' => [fn () => measuring(consent: 'denied'), '/', false, false],
+    'the landing with a session' => [fn () => null, '/', true, false],
+    'the privacy notice' => [fn () => null, '/privacy-notice', false, false],
+    'the login' => [fn () => null, '/admin/login', false, false],
+]);
+
+it('has no script on a page that takes a token or a code in its address', function (): void {
+    measuring();
+
+    foreach (['/c/NO-SUCH-CODE', '/workers/NO-SUCH-TOKEN', '/survey/NO-SUCH-TOKEN', '/report/NO-SUCH-TOKEN', '/portal/NO-SUCH-TOKEN', '/engagement/NO-SUCH-TOKEN', '/admin/invitations/NO-SUCH-TOKEN'] as $uri) {
+        $response = $this->get($uri);
+
+        expect((string) $response->getContent())->not->toContain('googletagmanager.com')
+            ->and((string) $response->getContent())->not->toContain('dataLayer')
+            ->and((string) $response->headers->get('Content-Security-Policy'))->not->toContain('google');
+    }
+});

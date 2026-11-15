@@ -38,6 +38,10 @@
             }
         </style>
 
+        @if (($analyticsId = App\Http\Analytics::measurementId(request())) !== null)
+            @include('partials.analytics', ['id' => $analyticsId])
+        @endif
+
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">

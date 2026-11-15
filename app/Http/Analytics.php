@@ -30,6 +30,36 @@ final class Analytics
     }
 
     /**
+     * What the gtag configuration object carries, as a JS literal that cannot close the script tag: no advertising
+     * signals, the page without its personal query and, only for a page of this site, the referrer as an origin.
+     */
+    public static function configuration(Request $request): string
+    {
+        $referrer = self::referrer($request);
+
+        return self::literal([
+            'allow_google_signals' => false,
+            'allow_ad_personalization_signals' => false,
+            'page_location' => self::pageLocation($request),
+            ...($referrer === null ? [] : ['page_referrer' => $referrer]),
+        ]);
+    }
+
+    /**
+     * Measured with consent (Consent::analyticsAllowed), but advertising storage and signals stay denied: only
+     * statistics. The contract of Consent Mode is NOT verified against Google's documentation.
+     */
+    public static function consentDefault(): string
+    {
+        return self::literal([
+            'analytics_storage' => 'granted',
+            'ad_storage' => 'denied',
+            'ad_user_data' => 'denied',
+            'ad_personalization' => 'denied',
+        ]);
+    }
+
+    /**
      * `gtag` reads `document.referrer` by itself, and an external one is already origin-only by the browsers' default
      * policy. What it must not read is a page of this site (it can be a link with a token): that one goes as the origin.
      */
@@ -64,6 +94,12 @@ final class Analytics
         }
 
         return $request->getSchemeAndHttpHost().$request->getPathInfo().($campaign === [] ? '' : '?'.http_build_query($campaign));
+    }
+
+    /** @param array<string, mixed> $values */
+    private static function literal(array $values): string
+    {
+        return json_encode($values, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS);
     }
 
     /** @return list<string> */
