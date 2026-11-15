@@ -6,7 +6,7 @@ declare(strict_types=1);
 return [
     'home' => [
         'title' => 'NOM-035, NOM-037 y Ley Silla en un solo lugar',
-        'description' => 'Aplica la NOM-035, la NOM-037 y la Ley Silla desde el celular, y suma quejas, Compensación, jornada, Vacaciones, Organigrama y Clima. Reúne los comprobantes que te pide la STPS.',
+        'description' => 'Aplica NOM-035, NOM-037 y Ley Silla desde el celular, y suma quejas, Compensación, jornada, Vacaciones, Organigrama y Clima. Reúne lo que pide la STPS.',
         'image_alt' => 'Humetría: tu gente contesta desde el celular, tú llegas listo a la STPS',
     ],
     'privacy-notice' => [
