@@ -64,21 +64,21 @@ export default function HowItWorksSection() {
                         <HowItWorksStep
                             index={0}
                             title="Carga a tu gente"
-                            text="Sube a las personas de cada centro de trabajo y Humetría decide qué le toca a cada una."
+                            text="Sube a las personas de cada sucursal, planta u oficina y Humetría define qué cuestionarios le tocan a cada centro."
                         >
                             <RosterVisual />
                         </HowItWorksStep>
                         <HowItWorksStep
                             index={1}
                             title="Humetría invita y recuerda"
-                            text="Cada persona recibe su propio enlace, que sirve una sola vez, y contesta desde el celular con confianza."
+                            text="Cada persona recibe su propio enlace, que sirve una sola vez, y contesta desde su celular sin que nadie vea sus respuestas."
                         >
                             <InviteVisual />
                         </HowItWorksStep>
                         <HowItWorksStep
                             index={2}
                             title="Recibe el diagnóstico"
-                            text="Resultados por grupo, plan de acción y la evidencia lista para presentar ante la STPS."
+                            text="Resultados por grupo, plan de acción y los documentos listos para la STPS."
                         >
                             <ResultsVisual />
                         </HowItWorksStep>

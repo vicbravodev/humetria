@@ -192,10 +192,10 @@ it('tells the visitor to wait when there were too many requests', function (): v
 
 it('presents Humetría as an HR platform with all its tools', function (): void {
     visitPage('landing', '/')
-        ->assertTitleContains('Herramientas de RH')
-        ->assertSeeIn('#hero-title', 'Del celular de tu gente al expediente de la STPS')
+        ->assertTitleContains('NOM-035, NOM-037 y Ley Silla')
+        ->assertSeeIn('#hero-title', 'Tu gente contesta desde el celular. Tú llegas listo a la STPS.')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación", "jornada", "Vacaciones", "Organigrama", "Clima"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
-        ->assertScript('() => [...document.querySelectorAll("[data-test=hero-families] a b")].map((family) => family.textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Ordena tu operación')
+        ->assertScript('() => [...document.querySelectorAll("[data-test=hero-families] a b")].map((family) => family.textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Lleva el día a día')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "Registro de jornada", "Buzón de quejas", "Clima y pulso", "Vacaciones y permisos", "Organigrama", "Compensación"].every((tool) => document.querySelector("[data-test=hero-families]").textContent.includes(tool))')
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
@@ -548,7 +548,7 @@ it('never promises anonymity for identified records', function (): void {
 
 it('states its legal and privacy claims exactly', function (): void {
     visitPage('landing', '/')
-        ->assertSee('Genera el informe del numeral 7.7')
+        ->assertSee('Arma el informe que pide la norma (numeral 7.7)')
         ->assertSee('solo con 5 o más respuestas')
         ->assertSee('con la confidencialidad que requiere cada herramienta')
         ->assertSee('¿Qué herramientas te interesan? (elige al menos una)')

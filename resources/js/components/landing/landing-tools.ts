@@ -49,8 +49,8 @@ export const TOOLS: readonly LandingTool[] = [
             'Elige las guías según el tamaño de cada centro',
             'Calcula y sortea la muestra por género',
             'Invita a cada persona y recuerda a quien falta',
-            'Canaliza la Guía I solo con personas autorizadas',
-            'Genera el informe del numeral 7.7',
+            'La Guía I (eventos traumáticos) solo la ve quien debe verla',
+            'Arma el informe que pide la norma (numeral 7.7)',
         ],
     },
     {
@@ -87,7 +87,7 @@ export const TOOLS: readonly LandingTool[] = [
         points: [
             'Registra qué puestos se hacen de pie',
             'Pregunta al personal, de forma confidencial',
-            'Propone el texto del reglamento interior',
+            'Te sugiere qué escribir en tu reglamento interior',
             'Arma el plan de acción con la evidencia',
         ],
     },
@@ -112,7 +112,7 @@ export const TOOLS: readonly LandingTool[] = [
             'Cada queja llega a quien le toca, nunca a la persona señalada',
             'Se presenta desde el celular y puede ser anónima',
             'Enlace y cartel con código QR para cada centro',
-            'Los avisos por correo nunca llevan el contenido de la queja',
+            'El correo de aviso nunca cuenta de qué trata la queja',
         ],
     },
     {
@@ -128,7 +128,7 @@ export const TOOLS: readonly LandingTool[] = [
         hint: 'Revisión salarial y contractual',
         appliesTo: 'La empresa o el sindicato, cada uno con sus datos aparte',
         points: [
-            'Costea propuestas de aumento con cargas e IMSS',
+            'Calcula cuánto cuesta un aumento, con cargas e IMSS',
             'Compara escenarios y la distancia entre propuestas',
             'Proyecta el primer año y los siguientes',
             'Arma un reporte para compartir en la mesa',
@@ -145,10 +145,10 @@ export const TOOLS: readonly LandingTool[] = [
         },
         name: 'Registro de jornada',
         hint: 'Reloj checador y registro de jornada',
-        appliesTo: 'Toda persona empleadora, desde el 1 de enero de 2027',
+        appliesTo: 'Todo patrón, desde el 1 de enero de 2027',
         points: [
             'Cada persona marca entrada, pausas y salida desde su celular, sin correo ni contraseña',
-            'Valida el lugar con geocerca o con el código QR del centro',
+            'Comprueba que marcó en el centro de trabajo, por ubicación o con código QR',
             'El registro no se puede alterar: las correcciones dejan rastro y cada persona confirma su semana',
             'Avisa los topes de jornada y de horas extra antes de rebasarlos',
             'Arma con un botón el reporte para la autoridad',
@@ -172,7 +172,7 @@ export const TOOLS: readonly LandingTool[] = [
         hint: 'Vacaciones, permisos y saldos',
         appliesTo: 'Toda la plantilla, con la política de cada empresa',
         points: [
-            'Calcula el saldo de cada persona conforme a la LFT o a tu política superior',
+            'Calcula el saldo de cada persona conforme a la Ley Federal del Trabajo o a tu política, si da más',
             'La persona solicita desde su portal y su jefe aprueba',
             'Muestra quién falta y cuándo, para planear la cobertura',
             'Guarda la evidencia que el patrón debe poder mostrar',
@@ -217,9 +217,9 @@ export const TOOLS: readonly LandingTool[] = [
             'Toda la plantilla, con una encuesta de clima y pulsos cortos',
         points: [
             'Encuesta de clima con preguntas probadas: qué impulsa el compromiso y qué atender primero',
-            'Pulsos cortos para saber si las acciones están funcionando',
+            'Preguntas rápidas para ver si las acciones están funcionando',
             'Nadie ve una respuesta individual: los grupos pequeños se ocultan',
-            'Compara una ola con la anterior y un centro con otro',
+            'Compara contra la medición anterior y un centro con otro',
         ],
     },
 ];

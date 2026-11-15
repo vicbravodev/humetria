@@ -35,7 +35,7 @@ const COMPLIANCE: LandingFamily = {
     key: 'compliance',
     name: 'Cumple la norma',
     short: 'Normas',
-    hint: 'Instrumentos oficiales de la STPS',
+    hint: 'Cuestionarios y listas que pide la STPS',
     icon: ShieldCheck,
     tools: ['nom_035', 'nom_037', 'ley_silla', 'attendance'],
 };
@@ -52,9 +52,9 @@ export const FAMILIES: readonly LandingFamily[] = [
     },
     {
         key: 'operations',
-        name: 'Ordena tu operación',
+        name: 'Lleva el día a día',
         short: 'Operación',
-        hint: 'Personas, saldos y costos',
+        hint: 'Personas, vacaciones y sueldos',
         icon: Layers,
         tools: ['leave', 'org_chart', 'compensation'],
     },

@@ -12,11 +12,11 @@ const audiences = [
     {
         icon: Building2,
         title: 'Empresas',
-        text: 'RH de una empresa con uno o varios centros de trabajo. Humetría le asigna a cada uno lo que le toca según su tamaño y su gente.',
+        text: 'RH de una empresa con una o varias sucursales, plantas u oficinas (centros de trabajo). Cada centro recibe solo lo que le toca por su número de trabajadores.',
     },
     {
         icon: Layers,
-        title: 'Grupos',
+        title: 'Grupos de empresas',
         text: 'Un grupo con varias razones sociales, todas en una sola cuenta.',
     },
     {

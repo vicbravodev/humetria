@@ -69,13 +69,12 @@ export default function InspectionSection() {
                         Si mañana llega un inspector, ya sabes qué enseñarle
                     </h2>
                     <p className={LEAD}>
-                        Humetría arma el expediente de cada centro mientras
-                        trabajas y te dice qué falta antes de que alguien lo
-                        pregunte.
+                        Humetría va juntando los documentos de cada centro y
+                        te avisa qué falta antes de que alguien lo pida.
                     </p>
                     <p className="max-w-[52ch] border-l-2 pl-3.5 text-meta text-muted-foreground">
-                        Humetría ordena la evidencia para que esté a la mano. No
-                        certifica el cumplimiento de ninguna norma.
+                        Te ayudamos a reunir tus comprobantes. No sustituimos a
+                        la STPS ni certificamos que cumples con una norma.
                     </p>
                 </Reveal>
                 <div className="overflow-hidden rounded-3xl border bg-card shadow-raised">

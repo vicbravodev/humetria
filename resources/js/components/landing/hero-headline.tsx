@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 /** A plain space at the end of an inline block collapses and the words run together: only a no-break space holds. */
 const NBSP = '\u00A0';
 
-const WORDS = 'Del celular de tu gente al expediente de la STPS'.split(' ');
+const WORDS = 'Tu gente contesta desde el celular. Tú llegas listo a la STPS.'.split(' ');
 
 /** The promise, word by word: each one rises out of a blur 50 ms after the last, as the page opens (CSS, `enter-word`). */
 export default function HeroHeadline() {
@@ -19,7 +19,7 @@ export default function HeroHeadline() {
                     className={cn(
                         'inline-block enter-word',
                         enterDelay(0.1 + index * 0.05),
-                        word === 'STPS' && 'text-primary',
+                        word === 'STPS.' && 'text-primary',
                     )}
                 >
                     {word}
