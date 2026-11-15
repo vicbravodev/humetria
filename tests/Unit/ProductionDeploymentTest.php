@@ -98,3 +98,86 @@ describe('Dockerfile', function (): void {
             ->and($ignored)->toMatch('/^!tests\/Ssr\/fixtures\/landing-expected\.json$/m');
     });
 });
+
+describe('compose.production.yaml', function (): void {
+    it('keeps web, horizon and scheduler on the same image tag, the one HUMETRIA_TAG says', function (): void {
+        foreach (['web', 'horizon', 'scheduler'] as $service) {
+            expect(productionService($service)['image'] ?? null)
+                ->toBe('${HUMETRIA_IMAGE:-ghcr.io/vicbravodev/humetria}:${HUMETRIA_TAG:-latest}');
+        }
+    });
+
+    it('runs the ssr service from its own image, paired by the same tag', function (): void {
+        expect(productionService('ssr')['image'] ?? null)
+            ->toBe('${HUMETRIA_SSR_IMAGE:-ghcr.io/vicbravodev/humetria-ssr}:${HUMETRIA_TAG:-latest}');
+    });
+
+    it('gives ssr no secrets, no ports, no routes, no dependencies and no volumes', function (): void {
+        $ssr = productionService('ssr');
+
+        foreach (['env_file', 'ports', 'expose', 'labels', 'depends_on', 'volumes', 'extra_hosts'] as $key) {
+            expect($ssr)->not->toHaveKey($key);
+        }
+
+        expect($ssr['environment'] ?? [])->toBe(['NODE_ENV' => 'production', 'NODE_OPTIONS' => '--max-old-space-size=256']);
+    });
+
+    it('locks the ssr container down and bounds what it can use', function (): void {
+        expect(productionService('ssr'))->toMatchArray([
+            'restart' => 'unless-stopped',
+            'init' => true,
+            'read_only' => true,
+            'tmpfs' => ['/tmp'],
+            'cap_drop' => ['ALL'],
+            'security_opt' => ['no-new-privileges:true'],
+            'mem_limit' => '384m',
+            'cpus' => '1.0',
+            'pids_limit' => 100,
+        ]);
+    });
+
+    it('lets Docker ask the healthcheck for a real render, every 30 seconds', function (): void {
+        expect(productionService('ssr')['healthcheck'] ?? null)->toBe([
+            'test' => ['CMD', 'node', 'scripts/ssr/healthcheck.mjs'],
+            'interval' => '30s',
+            'timeout' => '5s',
+            'retries' => 3,
+            'start_period' => '20s',
+        ]);
+    });
+
+    it('puts ssr only in an internal network that web shares, never in the ones Traefik or the database use', function (): void {
+        $networks = deploymentYaml('compose.production.yaml')['networks'] ?? [];
+
+        expect($networks['ssr-internal'] ?? null)->toBe(['internal' => true])
+            ->and(productionService('ssr')['networks'] ?? null)->toBe(['ssr-internal' => ['aliases' => ['humetria-ssr']]])
+            ->and(productionService('web')['networks'] ?? null)->toBe(['default', 'dokploy-network', 'ssr-internal'])
+            ->and(productionService('horizon')['networks'] ?? null)->toBe(['default', 'dokploy-network'])
+            ->and(productionService('scheduler')['networks'] ?? null)->toBe(['default', 'dokploy-network']);
+    });
+
+    it('does not make web wait for ssr: a broken Node must not stop the site from starting', function (): void {
+        expect(array_keys((array) (productionService('web')['depends_on'] ?? [])))->toBe(['valkey']);
+    });
+});
+
+describe('.env.production.example', function (): void {
+    it('turns SSR on, pointed at the ssr service and without a bundle in web', function (): void {
+        $production = deploymentFile('.env.production.example');
+
+        expect($production)->toMatch('/^INERTIA_SSR_ENABLED=true$/m')
+            ->toMatch('/^INERTIA_SSR_URL=http:\/\/humetria-ssr:13714$/m')
+            ->toMatch('/^INERTIA_SSR_ENSURE_BUNDLE=false$/m');
+    });
+
+    it('does not set APP_REVISION: an empty one in .env would overwrite the commit the image carries', function (): void {
+        expect(deploymentFile('.env.production.example'))->not->toMatch('/^APP_REVISION=/m');
+    });
+
+    it('describes HUMETRIA_IMAGE as a repository and the tag as HUMETRIA_TAG', function (): void {
+        $production = deploymentFile('.env.production.example');
+
+        expect($production)->toMatch('/^# HUMETRIA_IMAGE=ghcr\.io\/vicbravodev\/humetria$/m')
+            ->toMatch('/^# HUMETRIA_TAG=sha-<commit>$/m');
+    });
+});
