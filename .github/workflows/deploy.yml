@@ -1,6 +1,6 @@
 name: deploy
 
-# Cuando el CI de main pasa: construye las dos imágenes de producción del mismo commit (Dockerfile: `app` y `ssr`), las
+# Cuando el CI de main pasa y el cambio no fue solo documentación: construye las dos imágenes de producción del mismo commit (Dockerfile: `app` y `ssr`), las
 # publica en GHCR y avisa a Dokploy, que descarga `latest` y reinicia compose.production.yaml. Después comprueba desde
 # fuera que el sitio sirve la landing renderizada y que corre ese commit. A mano (workflow_dispatch) redespliega la rama elegida.
 on:
@@ -19,8 +19,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Un cambio que solo trajo documentación se saltó el pipeline (tests.yml, job `changes`) y las imágenes serían las
+  # mismas, porque .dockerignore deja fuera docs: no se despliega. Se pregunta a esa corrida si su job `tests` corrió;
+  # si no se puede leer la respuesta, se despliega.
+  pipeline:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      tests: ${{ steps.jobs.outputs.tests }}
+    steps:
+      - name: ¿Corrieron los tests de este commit?
+        id: jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: echo "tests=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs" --jq '.jobs[] | select(.name == "tests") | .conclusion')" >> "$GITHUB_OUTPUT"
+
   image:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    needs: pipeline
+    # always(): a mano el job `pipeline` no corre, y sin esto GitHub se saltaría también este.
+    if: always() && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && needs.pipeline.outputs.tests != 'skipped'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
