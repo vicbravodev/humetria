@@ -67,4 +67,33 @@ final class DemoRequest extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    /**
+     * The channel this request is credited to, as the console reads it. Null is "no data", which is NOT direct traffic:
+     * many browsers and messaging apps send no referrer at all.
+     */
+    public function arrivedBy(): ?string
+    {
+        return self::channel($this->utm_source, $this->utm_medium, $this->utm_campaign, $this->referrer_host);
+    }
+
+    /** The first known channel, only when it is not the one the request arrived by. */
+    public function firstContact(): ?string
+    {
+        $first = self::channel($this->first_utm_source, $this->first_utm_medium, $this->first_utm_campaign, $this->first_referrer_host);
+
+        return $first === $this->arrivedBy() ? null : $first;
+    }
+
+    /** Source and medium joined by " / ", the campaign after " · "; with no utm at all, the referrer host. */
+    private static function channel(?string $source, ?string $medium, ?string $campaign, ?string $host): ?string
+    {
+        $origin = implode(' / ', array_filter([$source, $medium], fn (?string $part): bool => $part !== null));
+
+        if ($origin === '' && $campaign === null) {
+            return $host;
+        }
+
+        return implode(' · ', array_filter([$origin, $campaign], fn (?string $part): bool => $part !== null && $part !== ''));
+    }
 }
