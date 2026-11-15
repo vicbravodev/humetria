@@ -72,6 +72,9 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
                 'status_label' => 'Nueva',
                 'note' => null,
                 'tenant_id' => null,
+                // Where it came from (piece 8): nobody knew, so "no data", which is not direct traffic.
+                'arrived_by' => null,
+                'first_contact' => null,
             ]]));
 });
 
@@ -181,3 +184,25 @@ it('says the first contact only when it is not the same channel the request arri
     'no first contact' => [['utm_source' => 'google'], null],
     'nothing at all' => [[], null],
 ]);
+
+it('gives the console the channel a request arrived by and, when it differs, its first contact', function (): void {
+    DemoRequest::factory()->fromCampaign('google', 'cpc', 'nom-035')->create([
+        'first_utm_source' => 'newsletter', 'first_utm_medium' => 'email', 'first_utm_campaign' => null,
+    ]);
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-requests.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('demoRequests.data.0.arrived_by', 'google / cpc · nom-035')
+            ->where('demoRequests.data.0.first_contact', 'newsletter / email'));
+});
+
+it('shows no first contact when it is the same channel, and the host when there is no campaign', function (): void {
+    DemoRequest::factory()->referredBy('www.google.com')->create();
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-requests.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('demoRequests.data.0.arrived_by', 'www.google.com')
+            ->where('demoRequests.data.0.first_contact', null));
+});
