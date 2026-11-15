@@ -25,10 +25,41 @@ env:
 
 # The jobs run side by side: the run takes as long as the slowest one, not their sum. Branch protection on main
 # requires only the ci job, which waits for every other job: a job can be added, split or renamed without touching the
-# settings. Mutation testing is not here: mutation.yml runs it every week, and it never blocks a pull request.
+# settings. Every job but changes and ci waits for changes and runs only when the change needs the pipeline
+# (tests/Unit/CiPipelineTest.php pins it). Mutation testing is not here: mutation.yml runs it every week, and it never
+# blocks a pull request.
 jobs:
+  # What this change brought. When it is only documentation nothing reads (scripts/ci-code-changed.sh decides), the jobs
+  # below are skipped and ci passes on its own. When the change cannot be read, everything runs.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.changed.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Two commits: a pull request is checked out as its merge commit and a merge to main is one commit, so the
+          # first parent is what the change landed on.
+          fetch-depth: 2
+
+      - name: Does this change need the pipeline?
+        id: changed
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          paths=''
+          # On main, only when the push is that one commit: a push of several is not read, so everything runs.
+          if [ "$EVENT" = pull_request ] || [ "$(git rev-parse HEAD^1)" = "$BEFORE" ]; then
+            paths=$(git diff --no-renames --name-only HEAD^1 HEAD)
+          fi
+          echo "code=$(printf '%s\n' "$paths" | bash scripts/ci-code-changed.sh)" >> "$GITHUB_OUTPUT"
+
   # Static checks and the frontend: the fast feedback (a style or type error shows up here in a couple of minutes).
   checks:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     services: &postgres
       postgres:
@@ -70,6 +101,8 @@ jobs:
 
   # Unit and Feature, in parallel and with coverage. Pest does not apply --min in parallel, so the script reads the report.
   tests:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     services: *postgres
     steps:
@@ -86,6 +119,8 @@ jobs:
 
   # The browser tests, split in three runs of about a third each.
   browser:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     services: *postgres
     strategy:
@@ -109,6 +144,8 @@ jobs:
   # the `ssr` image, built and run with the restrictions of compose.production.yaml (scripts/ssr/container-test.sh). A broken
   # bundle would otherwise reach main hidden by the fallback to the browser. The `app` image is not built here, only on deploy.
   ssr:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     services: *postgres
     steps:
@@ -127,20 +164,19 @@ jobs:
       - name: ssr image with a real Docker
         run: scripts/ssr/container-test.sh
 
-  # The required check: every job passed.
+  # The required check: every job passed, or the change was only documentation and they were skipped.
   ci:
-    needs: [checks, tests, browser, ssr]
-    # Runs even when a job fails, so this required check never shows as skipped: a failed job fails it.
+    needs: [changes, checks, tests, browser, ssr]
+    # Runs even when a job fails or is skipped, so this required check never shows as skipped: scripts/ci-verdict.sh
+    # reads the result of each job and fails it when one did not pass.
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: Every job passed
         env:
           NEEDS: ${{ toJSON(needs) }}
-        run: |
-          failed=$(printf '%s' "$NEEDS" | jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"')
-          if [ -n "$failed" ]; then
-            echo "Failed jobs:"
-            echo "$failed"
-            exit 1
-          fi
+        run: printf '%s' "$NEEDS" | bash scripts/ci-verdict.sh
