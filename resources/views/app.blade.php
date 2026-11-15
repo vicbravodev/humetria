@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta property="csp-nonce" nonce="{{ Vite::cspNonce() }}">
         {{-- Outside the slot, and without data-inertia: the client does not manage it, so it always tells the revision PHP is running. --}}
         <meta name="app-revision" content="{{ config('app.revision') }}">

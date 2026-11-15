@@ -28,7 +28,7 @@ export default function AppSidebarLayout({
                 {/* The page's width: it fills the frame up to 1440 px and is centered beyond that (design-system.md, Layout). */}
                 <div
                     data-slot="page-body"
-                    className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col pb-24 [view-transition-name:page] md:pb-0"
+                    className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col pb-(--tab-bar-clearance) [view-transition-name:page] md:pb-0"
                 >
                     <CompanyReadOnlyNotice />
                     {children}
