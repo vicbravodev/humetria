@@ -55,7 +55,7 @@ function nodeAttempts(): int
 }
 
 /** @return list<array<string, mixed>> every line of the log with this message, decoded */
-function linesOf(string $message): array
+function ssrLogLines(string $message): array
 {
     $lines = [];
 
@@ -73,7 +73,7 @@ function linesOf(string $message): array
 /** @return list<array<string, mixed>> */
 function failureLines(): array
 {
-    return linesOf('ssr.render_failed');
+    return ssrLogLines('ssr.render_failed');
 }
 
 it('serves the landing without the render when Node answers with an error', function (): void {
@@ -207,7 +207,7 @@ it('logs every render Node answers, with the status and no duration when the cli
 
     $this->get('/')->assertOk();
 
-    $lines = linesOf('ssr.rendered');
+    $lines = ssrLogLines('ssr.rendered');
 
     expect($lines)->toHaveCount(1)
         ->and($lines[0])->toHaveKey('context.status', 200)
@@ -219,8 +219,8 @@ it('logs the status of a render that failed, next to its ssr.render_failed line'
 
     $this->get('/')->assertOk();
 
-    expect(linesOf('ssr.rendered'))->toHaveCount(1)
-        ->and(linesOf('ssr.rendered')[0])->toHaveKey('context.status', 500);
+    expect(ssrLogLines('ssr.rendered'))->toHaveCount(1)
+        ->and(ssrLogLines('ssr.rendered')[0])->toHaveKey('context.status', 500);
 });
 
 it('writes no ssr.rendered line when Node cannot be reached: nothing answered', function (): void {
@@ -228,7 +228,7 @@ it('writes no ssr.rendered line when Node cannot be reached: nothing answered', 
 
     $this->get('/')->assertOk();
 
-    expect(linesOf('ssr.rendered'))->toBe([]);
+    expect(ssrLogLines('ssr.rendered'))->toBe([]);
 });
 
 it('logs the duration the client measured, in milliseconds', function (): void {
@@ -237,8 +237,8 @@ it('logs the duration the client measured, in milliseconds', function (): void {
 
     event(new Illuminate\Http\Client\Events\ResponseReceived(new Illuminate\Http\Client\Request(new GuzzleHttp\Psr7\Request('POST', 'http://127.0.0.1:13714/render')), $response));
 
-    expect(linesOf('ssr.rendered'))->toHaveCount(1)
-        ->and(linesOf('ssr.rendered')[0])->toHaveKey('context.duration_ms', 12.3);
+    expect(ssrLogLines('ssr.rendered'))->toHaveCount(1)
+        ->and(ssrLogLines('ssr.rendered')[0])->toHaveKey('context.duration_ms', 12.3);
 });
 
 it('ignores the other requests the app makes', function (): void {
@@ -247,5 +247,5 @@ it('ignores the other requests the app makes', function (): void {
     Http::get('https://example.test/render');
     Http::get('http://127.0.0.1:13714/health');
 
-    expect(linesOf('ssr.rendered'))->toBe([]);
+    expect(ssrLogLines('ssr.rendered'))->toBe([]);
 });
