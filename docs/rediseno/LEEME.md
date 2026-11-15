@@ -13,10 +13,9 @@ idénticas a las de `docs/design-system/`, que es la fuente.
 | `PROMPT.md` | Las instrucciones: subagentes en secuencia, fases, reglas |
 | `PREGUNTAS-FRONT-BACK.md` | Lo que el back no tiene para el diseño, y viceversa. Se decide antes de construir |
 | `MAPA.md` | Board → pantalla actual → fase |
-| `pantallas/png/` | Cómo debe verse cada pantalla (56 capturas, algunas también en oscuro) |
-| `pantallas/fuente/` | El código de cada pantalla del diseño, para copiar textos y estados. Se ve vivo con `sh ver-prototipos.sh` |
 | `docs/` | Principios, permisos, ciclo de vida, cobertura y errores |
 
 Lienzo del diseño: https://claude.ai/artifact/Mabe2mH9pPgE8FKA2BvY6Q
 
-`pantallas/fuente/support.js` es un visor local simplificado, solo para ver los prototipos. No va a producción.
+Las maquetas (`pantallas/png/` y `pantallas/fuente/`) y `ver-prototipos.sh` se retiraron el 2026-11-15: el rediseño ya está
+construido en la app. Siguen en el historial de git (`git log --all -- docs/rediseno/pantallas`).

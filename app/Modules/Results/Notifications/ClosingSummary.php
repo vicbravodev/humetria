@@ -54,7 +54,7 @@ final class ClosingSummary extends Notification implements MailBag, ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $high = $this->levels === null ? null : ($this->levels[3] ?? 0) + ($this->levels[4] ?? 0);
-        $participation = $this->invited === 0 ? 0 : (int) round(100 * $this->answered / $this->invited);
+        $participation = $this->invited === 0 ? 0 : (int) round(100 * min($this->answered, $this->invited) / $this->invited);
         $domainShare = $this->domain === null || $this->answered === 0 ? null : (int) round(100 * $this->domain['high'] / $this->answered);
 
         return (new MailMessage)

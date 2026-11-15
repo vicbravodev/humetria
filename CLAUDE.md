@@ -209,15 +209,16 @@ layouts/  hooks/  lib/  types/
 
 ## Design system
 
-- La fuente de verdad es `docs/design-system/`; toda pantalla se compara con `capturas/` en claro y oscuro.
-- **El estándar de pantallas es el rediseño de `docs/design-system/pantallas/`** (29 pantallas en `html-claro/`,
-  `html-oscuro/` y `capturas/`; mapa en su `LEEME.md`). Toda pantalla existente se ve así, y **toda pantalla nueva
-  debe quedar igual de pulida**: se parte de la pantalla más parecida del rediseño y se reusan sus piezas (marco con
-  sidebar y migas, encabezado con título, estado y ficha con íconos, tarjetas, tablas con cabecera `muted`, medidor
-  de arco, pestañas con conteo, estados vacíos con siguiente paso). Una pantalla que se vea como un formulario o una
-  tabla sin diseñar no está terminada. Antes de cerrar un trabajo con UI, se revisa en el navegador en claro, oscuro
-  y a 375 px contra la pantalla de referencia.
-- Para las pantallas que cubre, el estándar es además el rediseño v2 de `docs/rediseno/` (mapa en su `MAPA.md`).
+- La fuente de verdad son los tokens y reglas de `docs/design-system/` y, para cómo se ve una pantalla, **la app misma**:
+  las pantallas ya construidas con el rediseño v2 y sus componentes (`components/humetria`, `components/ui`).
+  Toda pantalla nueva **debe quedar igual de pulida**: se parte de la pantalla más parecida de la app y se reusan sus
+  piezas (marco con sidebar y migas, encabezado con título, estado y ficha con íconos, tarjetas, tablas con cabecera
+  `muted`, medidor de arco, pestañas con conteo, estados vacíos con siguiente paso). Una pantalla que se vea como un
+  formulario o una tabla sin diseñar no está terminada. Antes de cerrar un trabajo con UI, se revisa en el navegador
+  en claro, oscuro y a 375 px contra la pantalla de referencia.
+- Las maquetas y capturas del diseño (`docs/design-system/capturas`, `docs/design-system/pantallas`,
+  `docs/rediseno/pantallas`) se retiraron el 2026-11-15 porque la app ya las implementa; siguen en el historial de git
+  (`git log --all -- docs/rediseno/pantallas`).
 - Un solo acento (`primary`); `brand-soft` y `brand-deep` solo dentro del logo.
 - Texto ≥ 4.5:1 y controles y foco ≥ 3:1, con `tests/Unit/DesignSystemTest.php` como protección: un color nuevo
   entra ahí con su par.
