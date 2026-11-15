@@ -9,6 +9,9 @@
 .light,
 :root {
     --radius: 0.625rem; /* 10px */
+    /* The phone's bottom bar floats at --tab-bar-inset from the edge (home indicator included); what sits above it clears the bar's height plus a gap. */
+    --tab-bar-inset: max(0.75rem, env(safe-area-inset-bottom));
+    --tab-bar-clearance: calc(var(--tab-bar-inset) + 5.25rem);
     --background: #fbfdfc;
     --foreground: #14211f;
     --card: #ffffff;
