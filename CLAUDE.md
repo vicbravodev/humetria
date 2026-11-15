@@ -146,11 +146,19 @@ layouts/  hooks/  lib/  types/
   (variables, rollback, señales) lo dice `docs/operations/ssr.md`: se actualiza en el mismo PR que cambie esas piezas.
 - PostHog (nube US, `posthog-js` en su build sin scripts externos) arranca solo en el documento de la landing
   (`App\Http\Analytics`: ruta `home`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
-  `POSTHOG_CONSENT_DEFAULT` queda en `denied` hasta que el abogado del dueño indique otra cosa: mientras tanto no hay bloque
-  `analytics-config` en el documento, ni se descarga PostHog, ni su origen en la CSP, ni `humetria_acq`. Sin autocapture, sin
-  grabación de sesión, sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento local) y sin IP.
+  `POSTHOG_CONSENT_DEFAULT` en `denied` (el valor por omisión) apaga la medición de visitantes: sin bloque `analytics-config`, sin
+  descarga de PostHog, sin su origen en la CSP, sin `humetria_acq`. En producción el dueño lo puso en `granted` (Dokploy).
+  Sin autocapture, sin grabación de sesión, sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento local) y sin IP.
   A PostHog no se le manda nada de la persona: la dirección sin más query que las `utm_*` y, de un referente de este sitio, solo su origen
   (`resources/js/lib/analytics.ts` lo impone en `before_send`).
+- Eventos de la landing: solo los de `docs/operations/ssr.md` §8. Se declaran en el marcado con `data-track="evento"` y
+  `data-track-target="id"` (un solo escucha de clics, `use-landing-measurement`); sus propiedades son identificadores o números
+  (`cleanProperties`), nunca texto libre. Un evento nuevo se agrega al catálogo de ese documento. Se mide la landing; el panel (`/admin`),
+  las encuestas y los portales **no** (hoy; medir el panel es un trabajo aparte con su revisión de privacidad).
+- Errores: el navegador de la landing manda a PostHog `$exception` con el mensaje enmascarado (correos y números) y el servidor manda
+  (`App\Support\PostHogExceptions`, en cola, mejor esfuerzo) solo clase, archivo, línea y traza sin argumentos, nunca el mensaje, la URL
+  ni el usuario. El del servidor solo exige el token (no lleva datos de visitantes); un `report()` nuevo en `bootstrap/app.php`
+  va después del de PostHog, porque los que devuelven `false` cortan la cadena.
 - La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente
   externo, nunca una URL ni identificadores de clic). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
   consentimiento `granted`. Lo que diga el aviso de privacidad sobre cookies debe coincidir con el código

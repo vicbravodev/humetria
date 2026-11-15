@@ -13,7 +13,7 @@ ver en producción está en la última sección, como verificación manual. El d
 5. [Despliegue y rollback](#5-despliegue-y-rollback)
 6. [Qué significa cada señal](#6-qué-significa-cada-señal)
 7. [Qué hacer ante `ssr.render_failed`](#7-qué-hacer-ante-ssrrender_failed)
-8. [Empezar a medir con PostHog](#8-empezar-a-medir-con-posthog)
+8. [Medir con PostHog](#8-medir-con-posthog)
 9. [Verificaciones manuales pendientes](#9-verificaciones-manuales-pendientes)
 
 ## 1. Qué corre en producción
@@ -140,30 +140,66 @@ código 1 para que `restart: unless-stopped` lo levante. Sus líneas (`ssr probe
 3. Si no se resuelve rápido: apaga el SSR (sección 4). La landing sigue sirviéndose.
 4. Para ver cuántos fallos se acumularon: `sail artisan tinker` → `Cache::get('ssr:failed:count')` (en producción, `php artisan tinker` en `web`).
 
-## 8. Empezar a medir con PostHog
+## 8. Medir con PostHog
 
-Hoy no se mide nada y es lo previsto: `POSTHOG_CONSENT_DEFAULT=denied`, de modo que el documento no lleva el bloque `analytics-config`,
-`posthog-js` no se descarga, la CSP no abre el origen de PostHog y no se escribe la cookie `humetria_acq`. La procedencia de una demo
-se guarda solo en la sesión (120 minutos de inactividad); quien llega por un anuncio y pide la demo días después aparece como
-"Sin dato", lo que no significa tráfico directo.
+Con `POSTHOG_PROJECT_TOKEN` (`phc_…`) y `POSTHOG_CONSENT_DEFAULT=granted` la landing mide a quien no ha iniciado sesión; con
+`denied` (el valor por omisión) el documento no lleva el bloque `analytics-config`, `posthog-js` no se descarga, la CSP no abre el
+origen de PostHog y no se escribe la cookie `humetria_acq`. Solo la landing: el panel, las encuestas y los portales no cargan PostHog.
+El servidor reporta sus errores con solo el token (ver "Errores").
 
-Para empezar, y solo cuando el abogado del dueño lo autorice:
+### Eventos de la landing
 
-1. Que el aviso de `/privacy-notice` esté revisado y publicado (sus secciones marcadas "pendiente de revisión legal").
-2. En PostHog (nube US) crea el proyecto y copia el token público `phc_…` (Project settings → Project token). No uses la llave personal.
-3. Con ese token en un entorno de prueba, abre la landing con la consola del navegador: sin violaciones de la CSP y sin peticiones a
-   `us-assets.i.posthog.com` (el build `no-external` no descarga nada fuera de nuestro dominio; la única conexión es `us.i.posthog.com`).
-   Si aparece otro origen, no se suelta la CSP: se corrige la configuración de `posthogOptions` (`resources/js/lib/analytics.ts`).
-4. En PostHog → Activity confirma que llega `$pageview` con `$current_url` sin más query que las `utm_*`, sin `$referrer` de otro sitio
-   y sin propiedades de persona.
-5. En Environment: `POSTHOG_PROJECT_TOKEN=phc_…` y `POSTHOG_CONSENT_DEFAULT=granted`; reinicia `web`.
-6. Verifica en la landing sin sesión: aparece el bloque `analytics-config`, el navegador se conecta solo con `us.i.posthog.com` y no
-   se escribe ninguna cookie de PostHog (usa el almacenamiento local). En `/admin/login` y con sesión iniciada no hay nada de PostHog.
-   Pide una demo de prueba y confirma el evento `generate_lead` (sin propiedades).
-7. `generate_lead` es la conversión principal del embudo landing → solicitud de demo (Q7 del diseño). No se guardan `gclid`, `gbraid` ni `wbraid`.
+Todos sin datos de la persona; sus propiedades son identificadores o números (`cleanProperties`). En el marcado se declaran con
+`data-track="evento"` y `data-track-target="id"`.
+
+| Evento | Propiedad | Cuándo |
+|--------|-----------|--------|
+| `$pageview` | `$current_url` limpia | Al abrir la landing |
+| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works` | Clic en un llamado a la demo o a "cómo funciona" |
+| `nav_click` | `target`: id de la sección | Clic en el menú de la cabecera |
+| `sign_in_click` | `target`: `header` | Clic en "Iniciar sesión" |
+| `family_click`, `family_selected` | `target`: familia | Familia en el héroe, o pestaña de familia |
+| `tool_selected` | `target`: herramienta | Pestaña de una herramienta |
+| `film_control`, `film_chapter`, `video_control` | `target` | Controles de los videos |
+| `privacy_area_selected` | `target`: área | Demo de privacidad |
+| `privacy_notice_click` | `target`: `footer`, `compliance`, `demo_form` | Clic hacia el aviso de privacidad |
+| `section_viewed` | `section`: id | Cada sección vista (40 % visible), una vez |
+| `scroll_depth` | `percent`: 25, 50, 75, 100 | Cada profundidad, una vez |
+| `demo_form_started` | — | Primer foco en el formulario |
+| `demo_form_submitted` | — | Cada envío |
+| `demo_form_error` | `field`: nombre del campo | Un campo que el servidor rechazó |
+| `generate_lead` | — | La solicitud quedó guardada (navegador, una vez por solicitud) |
+| `demo_request_stored` | `profile`, `workforce`, `tools_count`, `utm_*`, `referrer_host` | Lo mismo, dicho por el servidor: no lo frena un bloqueador |
+
+`generate_lead` y `demo_request_stored` cuentan lo mismo; la diferencia entre ambos es lo que bloquean los navegadores. La conversión
+principal del embudo es `demo_request_stored`. No se guardan `gclid`, `gbraid` ni `wbraid`.
+
+### Errores
+
+- **Navegador** (solo la landing): `window.onerror` y las promesas sin atrapar llegan como `$exception` con el mensaje enmascarado
+  (correos y números largos) y a lo sumo 200 caracteres. PostHog → Error tracking.
+- **Servidor**: todo lo que Laravel reporta (también los `QueryException` y fallos de correo, y los jobs fallidos) sale como
+  `$exception` desde `App\Support\PostHogExceptions`, por la cola y a mejor esfuerzo: clase, archivo, línea, traza sin argumentos,
+  `request_id` y nombre de ruta. Nunca el mensaje, la URL ni el usuario. Si PostHog falla queda `posthog.send_failed` en el log y nada más.
+- El orden en `bootstrap/app.php` importa: el reporte a PostHog va antes de los `report()` que devuelven `false`.
+
+### Poner o comprobar la medición
+
+1. Que el aviso de `/privacy-notice` esté revisado y publicado (sus secciones siguen marcadas "pendiente de revisión legal").
+2. En Environment: `POSTHOG_PROJECT_TOKEN=phc_…` (el token público, nunca la llave personal `phx_…`) y `POSTHOG_CONSENT_DEFAULT=granted`;
+   reinicia `web` y `horizon` (la cola envía los errores del servidor).
+3. En la landing sin sesión, con la consola abierta: aparece el bloque `analytics-config`, sin violaciones de la CSP, la única conexión
+   es `us.i.posthog.com` y no se escribe ninguna cookie de PostHog (usa el almacenamiento local). Con sesión o en `/admin/login`, nada.
+4. En PostHog → Activity: llega `$pageview` con `$current_url` sin más query que las `utm_*` y sin `$referrer` de otro sitio. Navega,
+   baja y pide una demo de prueba: deben aparecer `cta_click`, `section_viewed`, `scroll_depth`, `generate_lead` y `demo_request_stored`.
+5. Errores: en el navegador, `setTimeout(() => { throw new Error('prueba') })` en la consola de la landing debe aparecer en Error tracking.
 
 Con `granted`, la medición es la decisión del sitio y no hay banner: el visitante no elige. Si el abogado pide que sí elija, es un
-trabajo nuevo (`App\Http\Consent` es el único lugar donde se leería esa decisión). Para volver atrás: `denied` y reiniciar `web`.
+trabajo nuevo (`App\Http\Consent` es el único lugar donde se leería esa decisión). Para volver atrás: `denied` y reiniciar `web`
+(los errores del servidor siguen saliendo mientras haya token: se apagan dejando `POSTHOG_PROJECT_TOKEN` vacío).
+
+La procedencia de una demo se guarda solo en la sesión (120 minutos de inactividad); quien llega por un anuncio y pide la demo días
+después aparece como "Sin dato", lo que no significa tráfico directo.
 
 ## 9. Verificaciones manuales pendientes
 
