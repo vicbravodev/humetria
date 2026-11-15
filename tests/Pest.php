@@ -219,7 +219,8 @@ function tenantOf(string $tenantId): Tenant
 /** A new user who belongs to `$tenant` with `$role`. */
 function memberOf(Tenant $tenant, TenantRole $role): User
 {
-    $user = User::factory()->create();
+    // A fixed name: a random one («Rosario») contains the first name that a privacy assertion looks for in the same page.
+    $user = User::factory()->create(['name' => 'Miembro '.$role->value]);
     TenantMembership::factory()->for($tenant)->for($user)->role($role)->create();
 
     return $user;
