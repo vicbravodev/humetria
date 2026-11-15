@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { WRAP } from '@/components/landing/landing-layout';
 import LandingThemeMenu from '@/components/landing/landing-theme-menu';
@@ -38,7 +37,7 @@ export default function PrivacyNoticeHeader() {
                         size="sm"
                         className="font-normal"
                     >
-                        <Link href={dashboard()}>Iniciar sesión</Link>
+                        <a href={dashboard().url}>Iniciar sesión</a>
                     </Button>
                     <Button
                         asChild

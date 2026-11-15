@@ -1,4 +1,4 @@
-import { Link, WhenMounted } from '@inertiajs/react';
+import { WhenMounted } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { WRAP } from '@/components/landing/landing-layout';
 import { ThemeSwitch } from '@/components/theme-switch';
@@ -55,9 +55,9 @@ export default function LandingFooter({
                         >
                             Aviso de privacidad
                         </a>
-                        <Link href={dashboard()} className={linkClass}>
+                        <a href={dashboard().url} className={linkClass}>
                             Iniciar sesión
-                        </Link>
+                        </a>
                     </nav>
                 </div>
                 <div className="justify-self-start md:justify-self-end">

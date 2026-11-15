@@ -105,6 +105,15 @@ it('reports nothing when a request is rejected: not by validation and not by the
     $page->assertScript('() => JSON.stringify(window.gtagCalls)', '[]');
 });
 
+it('leaves the landing for the login in a new document, so Google never lives on another page', function (): void {
+    visitPage('landing', '/', reach: function ($page): void {
+        // A page Inertia navigates keeps its window; a plain link loads a document and loses this mark.
+        $page->script('() => { window.dataLayer = ["landing"]; }');
+    })->click('@sign-in')
+        ->assertScript(pathBecomes('/admin/login'), true)
+        ->assertScript('() => window.dataLayer === undefined');
+});
+
 it('shows what to fix next to each field when the form is sent empty', function (bool $mobile): void {
     $page = visitPage('landing', '/', mobile: $mobile, reach: function ($page): void {
         $page->press('@demo-request-submit')->waitForText('El campo nombre es obligatorio.');
