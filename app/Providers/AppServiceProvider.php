@@ -7,15 +7,19 @@ namespace App\Providers;
 use App\Contracts\Geolocation;
 use App\Http\Impersonation;
 use App\Http\SsrPages;
+use App\Logging\PostHogLogs;
 use App\Logging\RedactEveryChannel;
 use App\Models\User;
 use App\Support\DbIpGeolocation;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -51,6 +55,10 @@ final class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        // PostHog Logs leave in one batch when a request or command ends, and after each job of a worker that never ends.
+        $this->app->terminating(PostHogLogs::flush(...));
+        Event::listen([JobProcessed::class, JobExceptionOccurred::class], PostHogLogs::flush(...));
 
         // Spatie's super-admin pattern: null lets every other user fall through to the real ability.
         Gate::before(fn (User $user): ?bool => $user->isSuperadmin() ? true : null);
