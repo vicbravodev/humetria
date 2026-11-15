@@ -10,9 +10,11 @@
             <meta name="robots" content="noindex, nofollow">
         @endif
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        {{-- Inline script: marks <html> as `js` (what hides the unchosen tool panels), and applies the system dark mode preference before the first paint --}}
         <script nonce="{{ Vite::cspNonce() }}">
             (function() {
+                document.documentElement.classList.add('js');
+
                 const appearance = '{{ $appearance ?? "system" }}';
 
                 if (appearance === 'system') {
