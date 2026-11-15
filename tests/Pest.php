@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Models\ConversationParticipant;
@@ -18,6 +19,7 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Models\Conversation;
@@ -55,6 +57,24 @@ pest()->browser()->timeout(15_000);
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
+
+/**
+ * What an audit entry says, as text, for a privacy assertion: the event, the subject and the metadata. Not its UUIDs,
+ * its actor or its dates: they hold digit runs («50000») that a short number looked for in the whole entry meets by chance.
+ *
+ * @param  AuditEntry|iterable<AuditEntry>  $entries
+ */
+function auditContent(AuditEntry|iterable $entries): string
+{
+    $entries = $entries instanceof AuditEntry ? [$entries] : $entries;
+    $content = [];
+
+    foreach ($entries as $entry) {
+        $content[] = Arr::except($entry->toArray(), ['id', 'tenant_id', 'actor_id', 'request_id', 'created_at']);
+    }
+
+    return json_encode($content, JSON_THROW_ON_ERROR);
+}
 
 function superadmin(): User
 {

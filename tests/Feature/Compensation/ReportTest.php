@@ -165,7 +165,7 @@ it('writes the audit entry and the log of a view without a salary or a person', 
     $entry = AuditEntry::query()->where('event', 'compensation.report_viewed')->sole();
 
     expect($entry->metadata)->toBe(['scenario_id' => $this->scenario->id])
-        ->and(json_encode($entry->toArray()))->not->toContain('E-001')->not->toContain('50000');
+        ->and(auditContent($entry))->not->toContain('E-001')->not->toContain('50000');
     Log::shouldHaveReceived('info')->with('compensation.report_viewed', ['scenario_id' => $this->scenario->id])->once();
 });
 

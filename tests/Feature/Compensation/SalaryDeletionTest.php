@@ -48,7 +48,7 @@ it('deletes an individual salary typed with a wrong date and keeps the person\'s
     expect(SalaryOverride::query()->pluck('id')->all())->toBe([$right->id]);
     Log::shouldHaveReceived('info')->with('compensation.override_deleted', ['override_id' => $wrong->id])->once();
     expect(AuditEntry::query()->where('event', 'compensation.override_deleted')->sole()->metadata)->toBe(['overrides' => 1])
-        ->and(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('E-001');
+        ->and(auditContent(AuditEntry::query()->get()))->not->toContain('E-001');
 });
 
 it('answers 404 for the salary of another company and 403 to whoever cannot manage', function (): void {

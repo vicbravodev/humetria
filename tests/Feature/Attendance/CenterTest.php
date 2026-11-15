@@ -187,7 +187,7 @@ describe('a zone', function (): void {
         expect($zone)->work_center_id->toBe($this->plant->id)->name->toBe('Patio de carga')->latitude->toBe(19.4401)->longitude->toBe(-99.2011)->radius_m->toBe(120);
         $entry = AuditEntry::query()->where('event', 'attendance.zone_saved')->sole();
         expect($entry)->subject_id->toBe($zone->id)->metadata->toBe(['work_center_id' => $this->plant->id])
-            ->and(json_encode($entry->toArray()))->not->toContain('19.44')->not->toContain('99.20');
+            ->and(auditContent($entry))->not->toContain('19.44')->not->toContain('99.20');
         Log::shouldHaveReceived('info')->with('attendance.zone_saved', ['zone_id' => $zone->id, 'work_center_id' => $this->plant->id]);
     });
 

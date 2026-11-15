@@ -127,7 +127,7 @@ it('invites a person with a role and emails them the link', function (TenantRole
 
     expect($entry->event)->toBe('tenant_invitation.sent')
         ->and($entry->metadata)->toEqual(['tenant_id' => $this->tenant->id, 'role' => $role->value])
-        ->and(json_encode($entry->toArray()))->not->toContain('ana@acme.mx');
+        ->and(auditContent($entry))->not->toContain('ana@acme.mx');
 })->with([TenantRole::Hr, TenantRole::Viewer]);
 
 it('validates the invitation', function (array $payload, string $field, string $message): void {
