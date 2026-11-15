@@ -110,6 +110,10 @@
             "Composer\\Config::disableProcessTimeout",
             "scripts/ssr/test.sh"
         ],
+        "test:ssr:container": [
+            "Composer\\Config::disableProcessTimeout",
+            "scripts/ssr/container-test.sh"
+        ],
         "test:fast": [
             "Composer\\Config::disableProcessTimeout",
             "pest --parallel --processes=4 --tia --locally --exclude-testsuite=Ssr"
