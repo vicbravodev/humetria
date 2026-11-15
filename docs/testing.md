@@ -56,3 +56,53 @@ Si la corrida semanal falla, el workflow queda en rojo y GitHub avisa al correo 
 El 95% es el score de las clases críticas (97,44% el 1 nov 2026) redondeado hacia abajo: detecta regresiones sin fallar hoy.
 Esa medición tuvo 7432 mutantes probados, ninguno escapó, y 195 "uncovered" (líneas que la cobertura no marca, como el
 `mkdir` de `UpdateGeoIp`): son los que bajan el score. Un mutante que escapa es un test que falta.
+
+# Pruebas que no fallan por azar
+
+Una prueba que falla una vez de cada cien en CI cuesta más que una que falla siempre: nadie sabe si el cambio la rompió.
+`tests/TestCase.php` siembra `mt_srand` con el nombre de cada prueba, así que Faker (`fake()`) da los mismos datos en cada
+corrida del mismo código; pero basta añadir una fila o una línea a un `beforeEach` para que esos datos cambien. Una prueba
+tiene que pasar con **cualquier** dato que Faker pueda dar, no solo con el de hoy.
+
+## Reglas
+
+1. **Datos que se buscan, se fijan.** Si una prueba busca, filtra, ordena o cuenta por un texto (`q=ana`, un nombre, un
+   correo, un teléfono), todo lo que la búsqueda puede leer lleva valor explícito: nombre, correo, móvil y número de empleado.
+   Un correo de Faker contiene «ana» más seguido de lo que parece.
+2. **No se busca un número corto en texto con ids o fechas.** Un UUID v7 y un timestamp tienen «50000» por azar. Para afirmar
+   que algo no se filtró, se busca en lo que la entrada *dice* (`auditContent($entry)` en `tests/Pest.php`: evento, sujeto y
+   metadatos, sin UUID, actor ni fechas) o se usa un valor centinela que no puede salir de un id (`'E-001'`, `'Soldador secreto'`).
+   `tests/Unit/FlakyPatternsTest.php` lo hace cumplir.
+3. **El reloj es el de la app.** `now()`, `travelTo()`, `Carbon::setTestNow()`; nunca `time()`, `date()` ni `strtotime()`, que
+   no se mueven con `travelTo` (`auth.password_confirmed_at` con `time()` hacía redirigir la página de seguridad si el reloj era otro).
+4. **Una fecha fija en la prueba se acompaña de un reloj fijo.** Si el código compara contra «hoy» (vigencias, vencimientos,
+   «la fecha no puede ser futura»), la prueba hace `$this->travelTo('2027-01-10 12:00:00')` antes de crear los datos; una
+   prueba con `expires_at = '2027-02-01'` y el reloj real dejó de dar su resultado el 1 feb 2027.
+5. **Hora de México, no UTC.** De 18:00 a 24:00 en México ya es el día siguiente en UTC. Las pruebas de «hoy», «este mes» o
+   «vencido» se fijan con `config('app.display_timezone')` (ver el commit 323c49c8).
+6. **Orden total.** Una consulta que se compara con `toBe([...])` lleva `orderBy` con desempate (`id`), y las marcas
+   que se crean en el mismo instante no se distinguen por su hora.
+7. **Navegador: se espera lo que se afirma.** Nada de `->wait(n)` antes de medir; `->assertScript(eventually('() => …'), true)`
+   espera la condición (hasta 10 s), `settled()` espera a que terminen las animaciones (un toast, un menú que cierra) y
+   `pathBecomes()` la ruta tras un clic que navega. La excepción son las ventanas de observación de algo que *no* debe pasar.
+8. **Ninguna prueba depende de otra, del orden, del puerto ni de un id.** Cada una crea sus datos con factories.
+
+## Cómo se estresa
+
+Dos variables de entorno, leídas por `tests/TestCase.php`, cambian los datos y el reloj de toda la suite sin tocar un test:
+
+| Variable | Qué hace | Ejemplo |
+|---|---|---|
+| `TEST_SEED` | Se mezcla en la semilla de cada prueba: otros nombres, correos y números de Faker | `TEST_SEED=7` |
+| `TEST_NOW` | Cada prueba arranca con su reloj en ese instante (UTC) y sigue corriendo; las que fijan su hora no cambian | `TEST_NOW='2026-11-14 23:59:59'` |
+
+```bash
+TEST_SEED=7 TEST_NOW='2028-02-29 05:30:00' vendor/bin/pest --parallel --processes=4 --exclude-testsuite=Browser,Ssr --compact
+```
+
+Relojes que valen la pena: 2026-11-15 03:00 UTC (sábado 21:00 en México), 31 dic 23:59:59 UTC, 29 feb de un año bisiesto,
+el 1 de enero 00:00 UTC, domingo y lunes, y uno de años adelante (una fecha fija del 2027 que ya pasó se nota). Un reloj **anterior** a las
+fechas fijas de las pruebas no es un caso real (el tiempo solo avanza) y falla por diseño las pruebas de «fecha futura».
+
+Una prueba o un archivo sospechoso se repite aislado: `for s in $(seq 1 20); do TEST_SEED=$s php artisan test --compact ruta; done`.
+Vitest: `for i in 1 2 3 4 5; do npm run test:js; done`.
