@@ -34,9 +34,17 @@ use Illuminate\Support\Collection;
  * @property string|null $note
  * @property Carbon|null $handled_at
  * @property string|null $tenant_id
+ * @property string|null $utm_source The campaign this request is credited to: the last known channel, else the first.
+ * @property string|null $utm_medium
+ * @property string|null $utm_campaign
+ * @property string|null $referrer_host Only a host, and only an external one: never a URL.
+ * @property string|null $first_utm_source The first known channel.
+ * @property string|null $first_utm_medium
+ * @property string|null $first_utm_campaign
+ * @property string|null $first_referrer_host
  * @property Carbon $created_at
  */
-#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message'])]
+#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_host', 'first_utm_source', 'first_utm_medium', 'first_utm_campaign', 'first_referrer_host'])]
 #[UseFactory(DemoRequestFactory::class)]
 final class DemoRequest extends Model
 {
