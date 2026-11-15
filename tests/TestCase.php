@@ -33,7 +33,7 @@ abstract class TestCase extends BaseTestCase
         // `TEST_NOW='2026-11-14 23:59:59' composer test:coverage`. Tests that fix their own time still win;
         // they only see this clock where they leave it alone. It is not frozen: two marks in a row differ, as in production.
         if (is_string($start = getenv('TEST_NOW')) && $start !== '') {
-            $offset = (new DateTimeImmutable($start, new DateTimeZone('UTC')))->getTimestamp() - time();
+            $offset = (new DateTimeImmutable($start, new DateTimeZone('UTC')))->getTimestamp() - (new DateTimeImmutable('now'))->getTimestamp();
             Carbon::setTestNow(fn (): Carbon => Carbon::instance(new DateTimeImmutable("now {$offset} seconds")));
         }
     }
