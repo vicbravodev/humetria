@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use App\Support\SendPostHogEvent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 /**
@@ -42,11 +44,35 @@ final class Analytics
         }
     }
 
-    public static function projectToken(Request $request): ?string
+    /** The configured project token when it is well-formed, whatever the page: what the server itself reports with. */
+    public static function serverToken(): ?string
     {
         $token = config('services.posthog.project_token');
 
-        if (! is_string($token) || preg_match('/^phc_[A-Za-z0-9]{20,100}\z/', $token) !== 1) {
+        return is_string($token) && preg_match('/^phc_[A-Za-z0-9]{20,100}\z/', $token) === 1 ? $token : null;
+    }
+
+    /**
+     * Reports an event of the server (something the browser cannot be trusted to say: a request that was stored). Same
+     * rules as the browser's: a token and consent. Off the request, never tied to a person, and the properties are
+     * identifiers and counts, never what someone typed.
+     *
+     * @param  array<string, string|int|null>  $properties
+     */
+    public static function capture(Request $request, string $event, array $properties = []): void
+    {
+        if (self::serverToken() === null || ! Consent::analyticsAllowed($request)) {
+            return;
+        }
+
+        SendPostHogEvent::dispatch($event, (string) Str::uuid(), [...$properties, '$process_person_profile' => false, '$lib' => 'humetria-php']);
+    }
+
+    public static function projectToken(Request $request): ?string
+    {
+        $token = self::serverToken();
+
+        if ($token === null) {
             return null;
         }
 
