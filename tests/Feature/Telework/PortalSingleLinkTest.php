@@ -5,11 +5,13 @@ declare(strict_types=1);
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Campaigns\Support\SurveyPortalSection as CampaignsSurveySection;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Support\ComplaintsPortalSection;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Engagement\Support\SurveyPortalSection as EngagementSurveySection;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Actions\IssuePortalLink;
@@ -116,10 +118,10 @@ describe('NOM-035 evaluation', function (): void {
         expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
 
         $participant->forceFill(['token_hash' => Participant::hashToken($participant->surveyToken())])->save();
-        $campaign->update(['closes_on' => now()->subDay()->toDateString()]);
+        $campaign->update(['closes_on' => CampaignClock::today()->subDay()->toDateString()]);
         expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
 
-        $campaign->update(['closes_on' => now()->addDay()->toDateString()]);
+        $campaign->update(['closes_on' => CampaignClock::today()->addDay()->toDateString()]);
         resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
         expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
     });
@@ -176,10 +178,10 @@ describe('climate and pulse survey', function (): void {
         $invitation->forceFill(['token_hash' => Invitation::hashToken($invitation->surveyToken())])->save();
         expect(singleLinkHomeSections($this->token))->toHaveKey('engagement');
 
-        $survey->update(['closes_on' => now()->subDay()->toDateString()]);
+        $survey->update(['closes_on' => SurveyClock::day()->subDay()->toDateString()]);
         expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
 
-        $survey->update(['closes_on' => now()->addDay()->toDateString(), 'status' => 'draft']);
+        $survey->update(['closes_on' => SurveyClock::day()->addDay()->toDateString(), 'status' => 'draft']);
         expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
 
         $survey->update(['status' => 'active']);
