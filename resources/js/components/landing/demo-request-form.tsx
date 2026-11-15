@@ -9,6 +9,7 @@ import DemoTextField from '@/components/landing/demo-text-field';
 import DemoToolsField from '@/components/landing/demo-tools-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { trackLead } from '@/lib/analytics';
 import { firstInvalidField } from '@/lib/first-invalid-field';
 import { httpErrorMessage } from '@/lib/http-error-message';
 import { store } from '@/routes/demo-requests';
@@ -34,6 +35,9 @@ export default function DemoRequestForm() {
             noValidate
             resetOnSuccess
             id="demo-request-form"
+            onSuccess={(page) =>
+                trackLead(window, sessionStorage, page.flash.lead?.id)
+            }
             onError={(errors) => {
                 const fields = document
                     .getElementById('demo-request-form')
