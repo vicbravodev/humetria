@@ -22,13 +22,12 @@ function cspFor(string $nonce, string $devServer = '', string $devSocket = '', b
     // The signed-in panel also paints OpenStreetMap's tiles, the map of a zone (Asistencia): images only, from that one origin.
     $tiles = $map ? ' https://tile.openstreetmap.org' : '';
 
-    // Google Analytics, only on the landing for a visitor without a session and with a measurement id: appended last in each directive.
-    $script = $analytics ? ' https://*.googletagmanager.com' : '';
-    $images = $analytics ? ' https://*.google-analytics.com https://*.googletagmanager.com' : '';
-    $connect = $analytics ? ' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com' : '';
+    // PostHog, only on the landing for a visitor without a session, with a token and consent: one origin, to send events (connect-src).
+    // posthog-js comes in our own bundle (no-external build), so no script or image origin opens.
+    $connect = $analytics ? ' https://us.i.posthog.com' : '';
 
-    return "default-src 'self'; script-src 'self' 'nonce-{$nonce}'{$hot}{$script}; style-src 'self' 'nonce-{$nonce}' {$sonner}{$hot}; "
-        ."img-src 'self' data:{$tiles}{$hot}{$images}; font-src 'self'{$hot}; connect-src 'self'{$hot}{$socket}{$connect}; object-src 'none'; "
+    return "default-src 'self'; script-src 'self' 'nonce-{$nonce}'{$hot}; style-src 'self' 'nonce-{$nonce}' {$sonner}{$hot}; "
+        ."img-src 'self' data:{$tiles}{$hot}; font-src 'self'{$hot}; connect-src 'self'{$hot}{$socket}{$connect}; object-src 'none'; "
         ."base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 }
 
@@ -249,12 +248,12 @@ it('sends the landing the same policy when Node renders it: no unsafe-inline, no
     expect($policy)->not->toContain('unsafe-inline')->not->toContain('unsafe-eval')->not->toContain('style-src-attr');
 });
 
-function measureLandingWith(string $id = 'G-ABC123XYZ9', string $consent = 'granted'): void
+function measureLandingWith(string $token = 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG', string $consent = 'granted'): void
 {
-    config(['services.google_analytics.measurement_id' => $id, 'services.google_analytics.consent_default' => $consent]);
+    config(['services.posthog.project_token' => $token, 'services.posthog.consent_default' => $consent]);
 }
 
-it('opens Google Analytics origins on the landing for a visitor without a session, with an id and consent, and nowhere else', function (): void {
+it('opens the PostHog origin on the landing for a visitor without a session, with a token and consent, and nowhere else', function (): void {
     measureLandingWith();
 
     $response = $this->get(route('home'));
@@ -266,19 +265,19 @@ it('opens Google Analytics origins on the landing for a visitor without a sessio
         ->not->toContain('style-src-attr');
 });
 
-it('keeps the policy of the landing exactly as it was without an id, without consent, with a session or on another page', function (Closure $visit, string $id, string $consent): void {
-    measureLandingWith($id, $consent);
+it('keeps the policy of the landing exactly as it was without a token, without consent, with a session or on another page', function (Closure $visit, string $token, string $consent): void {
+    measureLandingWith($token, $consent);
 
     $response = $visit();
 
     $response->assertHeader('Content-Security-Policy', cspFor(nonceOf($response), map: false));
-    expect((string) $response->headers->get('Content-Security-Policy'))->not->toContain('google');
+    expect((string) $response->headers->get('Content-Security-Policy'))->not->toContain('posthog');
 })->with([
-    'no id' => [fn (): TestResponse => test()->get(route('home')), '', 'granted'],
-    'consent denied' => [fn (): TestResponse => test()->get(route('home')), 'G-ABC123XYZ9', 'denied'],
-    'a malformed id' => [fn (): TestResponse => test()->get(route('home')), 'G-abc', 'granted'],
-    'another page' => [fn (): TestResponse => test()->get(route('privacy-notice')), 'G-ABC123XYZ9', 'granted'],
-    'the login' => [fn (): TestResponse => test()->get(route('login')), 'G-ABC123XYZ9', 'granted'],
+    'no token' => [fn (): TestResponse => test()->get(route('home')), '', 'granted'],
+    'consent denied' => [fn (): TestResponse => test()->get(route('home')), 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG', 'denied'],
+    'a malformed token' => [fn (): TestResponse => test()->get(route('home')), 'phc_abc', 'granted'],
+    'another page' => [fn (): TestResponse => test()->get(route('privacy-notice')), 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG', 'granted'],
+    'the login' => [fn (): TestResponse => test()->get(route('login')), 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG', 'granted'],
 ]);
 
 it('keeps the policy of the landing as it was for someone with a session', function (): void {

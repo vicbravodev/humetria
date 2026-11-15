@@ -16,7 +16,8 @@ use Inertia\Support\SessionKey;
 
 mutates(Analytics::class);
 
-const GA_ID = 'G-ABC123XYZ9';
+const PH_TOKEN = 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG';
+const PH_HOST = 'https://us.i.posthog.com';
 
 /**
  * A request the router has already matched, as the middleware and the views see it.
@@ -33,47 +34,50 @@ function matchedRequest(string $uri = '/', ?User $user = null, array $server = [
     return $request;
 }
 
-function measuring(string $id = GA_ID, string $consent = 'granted'): void
+function measuring(string $token = PH_TOKEN, string $consent = 'granted'): void
 {
-    config(['services.google_analytics.measurement_id' => $id, 'services.google_analytics.consent_default' => $consent]);
+    config(['services.posthog.project_token' => $token, 'services.posthog.consent_default' => $consent]);
 }
 
-it('measures the landing for a visitor without a session when there is an id and consent', function (): void {
+it('measures the landing for a visitor without a session when there is a token and consent', function (): void {
     measuring();
 
-    expect(Analytics::measurementId(matchedRequest()))->toBe(GA_ID);
+    expect(Analytics::projectToken(matchedRequest()))->toBe(PH_TOKEN);
 });
 
-it('measures nothing without an id, without consent, outside the landing or for someone signed in', function (Closure $setUp, string $uri, bool $signedIn): void {
+it('measures nothing without a token, without consent, outside the landing or for someone signed in', function (Closure $setUp, string $uri, bool $signedIn): void {
     measuring();
     $setUp();
 
-    expect(Analytics::measurementId(matchedRequest($uri, $signedIn ? User::factory()->create() : null)))->toBeNull();
+    expect(Analytics::projectToken(matchedRequest($uri, $signedIn ? User::factory()->create() : null)))->toBeNull();
 })->with([
-    'no id' => [fn () => measuring(''), '/', false],
+    'no token' => [fn () => measuring(''), '/', false],
     'consent denied' => [fn () => measuring(consent: 'denied'), '/', false],
     'another page' => [fn () => null, '/privacy-notice', false],
     'the login' => [fn () => null, '/admin/login', false],
     'a session' => [fn () => null, '/', true],
 ]);
 
-it('accepts only a well-formed GA4 id', function (string $id, bool $valid): void {
-    measuring($id);
+it('accepts only a well-formed PostHog project token', function (string $token, bool $valid): void {
+    measuring($token);
 
-    expect(Analytics::measurementId(matchedRequest()))->toBe($valid ? $id : null);
+    expect(Analytics::projectToken(matchedRequest()))->toBe($valid ? $token : null);
 })->with([
-    'ten characters' => ['G-ABC123XYZ9', true],
-    'short' => ['G-A', true],
-    'lowercase' => ['G-abc123', false],
-    'universal analytics' => ['UA-123456-1', false],
-    'only the prefix' => ['G-', false],
-    'a space around' => [' G-ABC123', false],
-    'a trailing newline' => ["G-ABC123\n", false],
-    'markup' => ['G-ABC"></script><script>x', false],
-    'a query' => ['G-ABC123&x=1', false],
+    'a real-looking token' => [PH_TOKEN, true],
+    'twenty characters' => ['phc_'.str_repeat('a', 20), true],
+    'nineteen characters' => ['phc_'.str_repeat('a', 19), false],
+    'a hundred characters' => ['phc_'.str_repeat('a', 100), true],
+    'a hundred and one' => ['phc_'.str_repeat('a', 101), false],
+    'a personal api key' => ['phx_'.str_repeat('a', 43), false],
+    'no prefix' => [str_repeat('a', 43), false],
+    'a space around' => [' '.PH_TOKEN, false],
+    'a trailing newline' => [PH_TOKEN."\n", false],
+    'markup' => ['phc_'.str_repeat('a', 20).'"></script><script>x', false],
+    'a query' => ['phc_'.str_repeat('a', 20).'&x=1', false],
+    'google analytics id' => ['G-ABC123XYZ9', false],
 ]);
 
-it('gives Google only the origin of a referrer from this very site, and nothing it can read by itself', function (?string $referer, ?string $expected): void {
+it('gives PostHog only the origin of a referrer from this very site, and nothing it can read by itself', function (?string $referer, ?string $expected): void {
     config(['app.url' => 'https://humetria.com.mx']);
     $server = $referer === null ? [] : ['HTTP_REFERER' => $referer];
 
@@ -93,7 +97,7 @@ it('gives Google only the origin of a referrer from this very site, and nothing 
     'a script scheme' => ['javascript:alert(1)', null],
 ]);
 
-it('tells Google the page without its personal query: only the utm parameters stay', function (string $uri, string $expected): void {
+it('tells PostHog the page without its personal query: only the utm parameters stay', function (string $uri, string $expected): void {
     expect(Analytics::pageLocation(matchedRequest($uri)))->toBe($expected);
 })->with([
     'plain' => ['/', 'http://localhost/'],
@@ -111,62 +115,56 @@ function landingHtml(string $uri = '/', ?string $referer = null): string
     return (string) test()->withHeaders($referer === null ? [] : ['Referer' => $referer])->get($uri)->assertOk()->getContent();
 }
 
-it('writes the gtag loader and its configuration with the nonce of the policy, consent before config', function (): void {
-    measuring();
+/** What the landing hands the browser: the JSON block of the analytics configuration, decoded. */
+function analyticsConfigIn(string $html): ?array
+{
+    if (preg_match('/<script type="application\/json" id="analytics-config">(.*?)<\/script>/s', $html, $match) !== 1) {
+        return null;
+    }
 
-    $response = $this->get(route('home'));
-    $html = (string) $response->assertOk()->getContent();
-    preg_match("/'nonce-([^']+)'/", (string) $response->headers->get('Content-Security-Policy'), $match);
-    $nonce = $match[1] ?? '';
+    return json_decode($match[1], true, flags: JSON_THROW_ON_ERROR);
+}
 
-    expect($html)->toContain('<script async src="https://www.googletagmanager.com/gtag/js?id='.GA_ID.'" nonce="'.$nonce.'"></script>')
-        ->and($html)->toContain('window.dataLayer = window.dataLayer || [];')
-        ->and($html)->toContain('function gtag()')
-        ->and($html)->toContain('"allow_google_signals":false')
-        ->and($html)->toContain('"allow_ad_personalization_signals":false')
-        ->and(preg_match_all('/<script(?![^>]*type="application\/json")[^>]*>/', $html, $scripts))->toBeGreaterThan(2)
-        ->and($scripts[0])->each->toContain('nonce="'.$nonce.'"')
-        ->and(strpos($html, "gtag('consent', 'default'"))->toBeInt()
-        ->and(strpos($html, "gtag('consent', 'default'"))->toBeLessThan(strpos($html, "gtag('config'"))
-        ->and(strpos($html, "gtag('config'"))->toBeInt();
-});
-
-it('keeps advertising signals and advertising storage off in the consent default', function (): void {
+it('hands the browser the token, the host and the page as a JSON block, and runs no script of its own', function (): void {
     measuring();
 
     $html = landingHtml();
 
-    expect($html)->toMatch("/gtag\('consent', 'default', .*\"ad_storage\":\"denied\".*\"ad_user_data\":\"denied\".*\"ad_personalization\":\"denied\"/s")
-        ->and($html)->toMatch("/gtag\('consent', 'default', .*\"analytics_storage\":\"granted\"/s");
+    expect(analyticsConfigIn($html))->toBe(['token' => PH_TOKEN, 'host' => PH_HOST, 'page_location' => 'http://localhost/'])
+        ->and($html)->not->toContain('googletagmanager')
+        ->and($html)->not->toContain('dataLayer')
+        ->and($html)->not->toContain('us-assets.i.posthog.com');
 });
 
-it('tells Google the page without its personal query and no referrer unless it is a page of this site', function (): void {
+it('tells PostHog the page without its personal query and no referrer unless it is a page of this site', function (): void {
     measuring();
 
     $html = landingHtml('/?token=SECRET-TOKEN&utm_source=google&email=a@b.mx', 'https://www.google.com/search?q=SECRET-SEARCH');
+    $config = analyticsConfigIn($html);
 
-    // The page's own Inertia JSON carries its url (it is not Analytics): only what Analytics writes is judged.
-    $analytics = substr($html, (int) strpos($html, 'googletagmanager.com'), (int) strpos($html, '</script>', (int) strpos($html, "gtag('config'")) - (int) strpos($html, 'googletagmanager.com'));
-
-    expect($analytics)->toContain('"page_location":"http:\/\/localhost\/?utm_source=google"')
-        ->and($analytics)->not->toContain('SECRET-TOKEN')
-        ->and($analytics)->not->toContain('SECRET-SEARCH')
-        ->and($analytics)->not->toContain('a@b.mx')
-        ->and($analytics)->not->toContain('page_referrer');
+    expect($config)->toBe(['token' => PH_TOKEN, 'host' => PH_HOST, 'page_location' => 'http://localhost/?utm_source=google'])
+        ->and(json_encode($config))->not->toContain('SECRET');
 });
 
-it('sends a referrer from this site as its origin only: a link with a token never reaches Google', function (): void {
+it('sends a referrer from this site as its origin only: a link with a token never reaches PostHog', function (): void {
     measuring();
 
-    $html = landingHtml('/', 'http://localhost/encuesta/TOKEN-OF-A-SURVEY?x=1');
+    $config = analyticsConfigIn(landingHtml('/', 'http://localhost/encuesta/TOKEN-OF-A-SURVEY?x=1'));
 
-    $analytics = substr($html, (int) strpos($html, 'googletagmanager.com'), (int) strpos($html, '</script>', (int) strpos($html, "gtag('config'")) - (int) strpos($html, 'googletagmanager.com'));
-
-    expect($analytics)->toContain('"page_referrer":"http:\/\/localhost\/"')
-        ->and($analytics)->not->toContain('TOKEN-OF-A-SURVEY');
+    expect($config['page_referrer'] ?? null)->toBe('http://localhost/')
+        ->and(json_encode($config))->not->toContain('TOKEN-OF-A-SURVEY');
 });
 
-it('has no script, no dataLayer and no Google origin in the policy unless the four conditions hold', function (Closure $setUp, string $uri, bool $signedIn, bool $loads): void {
+it('writes the block safely: a token or a campaign value cannot close the script tag', function (): void {
+    measuring();
+
+    $html = landingHtml('/?utm_source=</script><script>alert(1)</script>');
+
+    expect($html)->not->toContain('<script>alert(1)</script>')
+        ->and(analyticsConfigIn($html)['page_location'] ?? null)->toBe('http://localhost/?utm_source=%3C%2Fscript%3E%3Cscript%3Ealert%281%29%3C%2Fscript%3E');
+});
+
+it('has no block and no PostHog origin in the policy unless the four conditions hold', function (Closure $setUp, string $uri, bool $signedIn, bool $loads): void {
     measuring();
     $setUp();
     $visit = $signedIn ? $this->actingAs(User::factory()->create()) : $this;
@@ -175,28 +173,27 @@ it('has no script, no dataLayer and no Google origin in the policy unless the fo
     $html = (string) $response->getContent();
     $policy = (string) $response->headers->get('Content-Security-Policy');
 
-    expect(str_contains($html, 'googletagmanager.com'))->toBe($loads)
-        ->and(str_contains($html, 'dataLayer'))->toBe($loads)
-        ->and(str_contains($policy, 'googletagmanager.com'))->toBe($loads)
-        ->and(str_contains($policy, 'google-analytics.com'))->toBe($loads);
+    expect(str_contains($html, 'analytics-config'))->toBe($loads)
+        ->and(str_contains($html, 'phc_'))->toBe($loads)
+        ->and(str_contains($policy, PH_HOST))->toBe($loads)
+        ->and(str_contains($policy, 'posthog.com'))->toBe($loads);
 })->with([
-    'the landing with an id' => [fn () => null, '/', false, true],
-    'the landing without an id' => [fn () => measuring(''), '/', false, false],
+    'the landing with a token' => [fn () => null, '/', false, true],
+    'the landing without a token' => [fn () => measuring(''), '/', false, false],
     'the landing without consent' => [fn () => measuring(consent: 'denied'), '/', false, false],
     'the landing with a session' => [fn () => null, '/', true, false],
     'the privacy notice' => [fn () => null, '/privacy-notice', false, false],
     'the login' => [fn () => null, '/admin/login', false, false],
 ]);
 
-it('has no script on a page that takes a token or a code in its address', function (): void {
+it('has no block on a page that takes a token or a code in its address', function (): void {
     measuring();
 
     foreach (['/c/NO-SUCH-CODE', '/workers/NO-SUCH-TOKEN', '/survey/NO-SUCH-TOKEN', '/report/NO-SUCH-TOKEN', '/portal/NO-SUCH-TOKEN', '/engagement/NO-SUCH-TOKEN', '/admin/invitations/NO-SUCH-TOKEN'] as $uri) {
         $response = $this->get($uri);
 
-        expect((string) $response->getContent())->not->toContain('googletagmanager.com')
-            ->and((string) $response->getContent())->not->toContain('dataLayer')
-            ->and((string) $response->headers->get('Content-Security-Policy'))->not->toContain('google');
+        expect((string) $response->getContent())->not->toContain('analytics-config')
+            ->and((string) $response->headers->get('Content-Security-Policy'))->not->toContain('posthog');
     }
 });
 
@@ -214,7 +211,7 @@ it('flashes the id of a remembered lead to the landing once, and nothing when no
     expect(session()->pull(SessionKey::FLASH_DATA, []))->toBe([]);
 });
 
-it('never writes the value of a _ga cookie, sent raw to the complaints page, in any log line', function (): void {
+it('never writes the value of a PostHog cookie, sent raw to the complaints page, in any log line', function (): void {
     $path = storage_path('logs/analytics-'.Str::uuid().'.log');
     config(['logging.channels.single.path' => $path, 'logging.default' => 'single']);
     Log::forgetChannel('single');
@@ -225,7 +222,7 @@ it('never writes the value of a _ga cookie, sent raw to the complaints page, in 
     $channel = ComplaintChannel::factory()->forTenant($tenant->id)->active()->create();
     ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => $owner->id]);
 
-    $cookie = ['HTTP_COOKIE' => '_ga=GA1.1.SENTINEL-CLIENT-ID.1700000000; _ga_ABC123XYZ9=GS2.1.SENTINEL-SESSION'];
+    $cookie = ['HTTP_COOKIE' => 'ph_phc_ABC123_posthog=%7B%22distinct_id%22%3A%22SENTINEL-DISTINCT-ID%22%7D'];
 
     $this->call('GET', '/c/'.$channel->access_code, server: $cookie)->assertOk();
     $this->call('GET', '/c/NO-SUCH-CODE', server: $cookie)->assertNotFound();
@@ -235,5 +232,5 @@ it('never writes the value of a _ga cookie, sent raw to the complaints page, in 
     File::delete($path);
 
     expect($log)->not->toContain('SENTINEL')
-        ->and($log)->not->toContain('GA1.1');
+        ->and($log)->not->toContain('ph_phc_');
 });

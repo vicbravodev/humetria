@@ -51,6 +51,8 @@ export default function LandingFooter({
                         <a
                             href={privacyNotice().url}
                             data-test="footer-privacy"
+                            data-track="privacy_notice_click"
+                            data-track-target="footer"
                             className={linkClass}
                         >
                             Aviso de privacidad

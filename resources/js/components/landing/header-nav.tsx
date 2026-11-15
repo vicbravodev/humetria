@@ -54,6 +54,8 @@ export default function HeaderNav() {
                             <a
                                 href={`#${section.id}`}
                                 data-test={section.test}
+                                data-track="nav_click"
+                                data-track-target={section.id}
                                 aria-current={current ? 'true' : undefined}
                                 onMouseEnter={() => setHovered(section.id)}
                                 onFocus={() => setHovered(section.id)}

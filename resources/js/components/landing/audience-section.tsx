@@ -30,6 +30,7 @@ const audiences = [
 export default function AudienceSection() {
     return (
         <section
+            id="audiencia"
             aria-labelledby="para-quien"
             className={cn('border-y bg-band', SECTION)}
         >

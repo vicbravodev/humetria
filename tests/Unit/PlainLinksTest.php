@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /*
- * Google Analytics lives in the landing's document, written by Blade (App\Http\Analytics). Inertia moves between pages
- * without loading a document, so a <Link> out of the landing would keep Google and its CSP alive on another page (the
+ * PostHog starts from the landing's document, written by Blade (App\Http\Analytics). Inertia moves between pages
+ * without loading a document, so a <Link> out of the landing would keep PostHog and its CSP alive on another page (the
  * login, /admin), and a <Link> into the landing would show it without ever loading it (the visit would not be measured).
  * Static checks over the .tsx files, no tool of their own.
  */

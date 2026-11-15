@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 mutates(Consent::class);
 
 it('denies analytics unless the configured default is granted', function (?string $default, bool $allowed): void {
-    config(['services.google_analytics.consent_default' => $default]);
+    config(['services.posthog.consent_default' => $default]);
 
     expect(Consent::analyticsAllowed(Request::create('/')))->toBe($allowed);
 })->with([
@@ -21,6 +21,6 @@ it('denies analytics unless the configured default is granted', function (?strin
 ]);
 
 it('is denied by default, until the owner\'s lawyer says otherwise', function (): void {
-    expect(config('services.google_analytics.consent_default'))->toBe('denied')
-        ->and(config('services.google_analytics.measurement_id'))->toBe('');
+    expect(config('services.posthog.consent_default'))->toBe('denied')
+        ->and(config('services.posthog.project_token'))->toBe('');
 });

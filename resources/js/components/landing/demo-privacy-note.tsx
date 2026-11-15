@@ -9,6 +9,8 @@ export default function DemoPrivacyNote() {
             <a
                 href={privacyNotice().url}
                 data-test="demo-privacy-link"
+                data-track="privacy_notice_click"
+                data-track-target="demo_form"
                 className="font-medium text-foreground underline underline-offset-4"
             >
                 Consulta el aviso de privacidad

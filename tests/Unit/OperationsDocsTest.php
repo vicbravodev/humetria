@@ -33,7 +33,7 @@ it('documents in the manual every variable the SSR and the analytics read', func
     foreach ([
         'INERTIA_SSR_ENABLED', 'INERTIA_SSR_URL', 'INERTIA_SSR_TIMEOUT', 'INERTIA_SSR_ENSURE_BUNDLE',
         'HUMETRIA_TAG', 'HUMETRIA_IMAGE', 'HUMETRIA_SSR_IMAGE', 'HUMETRIA_PULL_POLICY',
-        'GOOGLE_ANALYTICS_ID', 'GOOGLE_ANALYTICS_CONSENT_DEFAULT', 'DOKPLOY_WEBHOOK_URL',
+        'POSTHOG_PROJECT_TOKEN', 'POSTHOG_CONSENT_DEFAULT', 'DOKPLOY_WEBHOOK_URL',
     ] as $variable) {
         expect(str_contains($manual, $variable))->toBeTrue("The manual does not mention {$variable}");
     }

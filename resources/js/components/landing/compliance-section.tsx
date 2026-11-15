@@ -45,6 +45,8 @@ export default function ComplianceSection() {
                 <Reveal className="lg:order-2">
                     <div
                         data-test="compliance-privacy"
+                        data-track="privacy_notice_click"
+                        data-track-target="compliance"
                         className="flex flex-col gap-5"
                     >
                         <h2

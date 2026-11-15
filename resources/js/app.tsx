@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { startAnalytics } from '@/lib/analytics';
 import { cspNonce } from '@/lib/csp-nonce';
 import { initialPageName } from '@/lib/page-frame';
 import { pageTransition } from '@/lib/page-transition';
@@ -45,3 +46,13 @@ void createInertiaApp({
 
 // Applies the saved theme before the first paint.
 initializeTheme();
+
+// PostHog only where the landing's document asks for it (App\Http\Analytics): a page without the block never downloads it.
+// The build without external scripts keeps the policy of the page to its own origin plus the one that receives the events.
+if (typeof document !== 'undefined') {
+    void startAnalytics(document, async () => {
+        const { default: posthog } = await import('posthog-js/no-external');
+
+        return posthog;
+    });
+}

@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use App\Support\SendPostHogEvent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 /**
- * Whether Google Analytics runs on this request, and what it may be told. One decision, read by two places that must
- * agree: the Blade layout (the script) and SecurityHeaders (the Google origins of the CSP). Only the landing, only
- * for a visitor without a session, only with a well-formed measurement id and only with consent.
+ * Whether PostHog runs on this request, and what it may be told. One decision, read by two places that must
+ * agree: the Blade layout (the JSON block the front reads) and SecurityHeaders (the PostHog origin of the CSP). Only the
+ * landing, only for a visitor without a session, only with a well-formed project token and only with consent.
  */
 final class Analytics
 {
-    /** The campaign parameters of our own links: the only part of the query Google is told. */
+    /** The PostHog ingestion host (US cloud): one constant, the one the CSP opens and the browser is told. */
+    public const string HOST = 'https://us.i.posthog.com';
+
+    /** The campaign parameters of our own links: the only part of the query PostHog is told. */
     private const array CAMPAIGN_PARAMETERS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
 
     /** Where the id of a request just stored waits, flashed, for the next visit to the landing. */
@@ -39,52 +44,62 @@ final class Analytics
         }
     }
 
-    public static function measurementId(Request $request): ?string
+    /** The configured project token when it is well-formed, whatever the page: what the server itself reports with. */
+    public static function serverToken(): ?string
     {
-        $id = config('services.google_analytics.measurement_id');
+        $token = config('services.posthog.project_token');
 
-        if (! is_string($id) || preg_match('/^G-[A-Z0-9]+\z/', $id) !== 1) {
+        return is_string($token) && preg_match('/^phc_[A-Za-z0-9]{20,100}\z/', $token) === 1 ? $token : null;
+    }
+
+    /**
+     * Reports an event of the server (something the browser cannot be trusted to say: a request that was stored). Same
+     * rules as the browser's: a token and consent. Off the request, never tied to a person, and the properties are
+     * identifiers and counts, never what someone typed.
+     *
+     * @param  array<string, string|int|null>  $properties
+     */
+    public static function capture(Request $request, string $event, array $properties = []): void
+    {
+        if (self::serverToken() === null || ! Consent::analyticsAllowed($request)) {
+            return;
+        }
+
+        SendPostHogEvent::dispatch($event, (string) Str::uuid(), [...$properties, '$process_person_profile' => false, '$lib' => 'humetria-php']);
+    }
+
+    public static function projectToken(Request $request): ?string
+    {
+        $token = self::serverToken();
+
+        if ($token === null) {
             return null;
         }
 
         return $request->route()?->getName() === 'home'
             && $request->user() === null
-            && Consent::analyticsAllowed($request) ? $id : null;
+            && Consent::analyticsAllowed($request) ? $token : null;
     }
 
     /**
-     * What the gtag configuration object carries, as a JS literal that cannot close the script tag: no advertising
-     * signals, the page without its personal query and, only for a page of this site, the referrer as an origin.
+     * What the landing's JSON block carries for the browser: the token, the host, the page without its personal query
+     * and, only for a page of this site, the referrer as an origin. A JS-safe literal that cannot close the script tag.
      */
-    public static function configuration(Request $request): string
+    public static function configuration(Request $request, string $token): string
     {
         $referrer = self::referrer($request);
 
         return self::literal([
-            'allow_google_signals' => false,
-            'allow_ad_personalization_signals' => false,
+            'token' => $token,
+            'host' => self::HOST,
             'page_location' => self::pageLocation($request),
             ...($referrer === null ? [] : ['page_referrer' => $referrer]),
         ]);
     }
 
     /**
-     * Measured with consent (Consent::analyticsAllowed), but advertising storage and signals stay denied: only
-     * statistics. The contract of Consent Mode is NOT verified against Google's documentation.
-     */
-    public static function consentDefault(): string
-    {
-        return self::literal([
-            'analytics_storage' => 'granted',
-            'ad_storage' => 'denied',
-            'ad_user_data' => 'denied',
-            'ad_personalization' => 'denied',
-        ]);
-    }
-
-    /**
-     * `gtag` reads `document.referrer` by itself, and an external one is already origin-only by the browsers' default
-     * policy. What it must not read is a page of this site (it can be a link with a token): that one goes as the origin.
+     * The browser reads `document.referrer` by itself, and the front drops it (sanitizeEvent): only this one is sent. A page
+     * of this site can be a link with a token, so it goes as the origin; an external one is not sent at all.
      */
     public static function referrer(Request $request): ?string
     {

@@ -48,6 +48,8 @@ export default function FamilyTabs({ selected, onSelect }: Props) {
                         role="tab"
                         id={`family-tab-${family.key}`}
                         data-test={`family-tab-${family.key}`}
+                        data-track="family_selected"
+                        data-track-target={family.key}
                         aria-selected={current}
                         aria-controls="tool-rail"
                         tabIndex={current ? 0 : -1}

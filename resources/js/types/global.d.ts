@@ -8,14 +8,6 @@ import type { ReportLink } from '@/types/results';
 import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
 import type { FlashToast } from '@/types/ui';
 
-declare global {
-    interface Window {
-        /** Google's tag: written by the landing's document only when there is a measurement id and consent. */
-        gtag?: (...args: unknown[]) => void;
-        dataLayer?: unknown[];
-    }
-}
-
 declare module 'react' {
     interface InputHTMLAttributes<T> {
         passwordrules?: string;
