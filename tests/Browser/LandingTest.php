@@ -405,7 +405,7 @@ it('lists what an inspector would ask for, one line per tool', function (): void
         $page->assertSeeIn('[data-test=inspection]', $item);
     }
 
-    $page->assertSeeIn('[data-test=inspection]', 'No certifica el cumplimiento de ninguna norma.');
+    $page->assertSeeIn('[data-test=inspection]', 'No sustituimos a la STPS ni certificamos que cumples con una norma.');
 });
 
 it('hides a group with fewer than 5 answers when the visitor filters like HR would', function (): void {
@@ -499,9 +499,9 @@ it('keeps the film of the time clock on the QR and passkey flow', function (): v
 it('speaks to consultants, multi-site companies and corporate groups, and to unions after them', function (): void {
     visitPage('landing', '/')
         ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias empresas')
-        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varios centros de trabajo')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias sucursales, plantas u oficinas (centros de trabajo)')
         ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias razones sociales')
-        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'Humetría le asigna a cada uno lo que le toca según su tamaño y su gente.')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'Cada centro recibe solo lo que le toca por su número de trabajadores.')
         ->assertSeeIn('[data-test=unions]', 'sindicato')
         ->assertScript('() => document.querySelectorAll("section[aria-labelledby=para-quien] article").length', 3)
         ->assertDontSeeIn('section[aria-labelledby="para-quien"]', 'la norma');
@@ -699,7 +699,7 @@ it('fills the rail beside the steps as they scroll by on a phone', function (): 
 
 it('enters the headline word by word and the parts under it in a staggered fade, with CSS', function (): void {
     $animation = fn (string $selector): string => "() => JSON.stringify([...document.querySelectorAll({$selector})].map((node) => { const style = getComputedStyle(node); return [style.animationName, style.animationDuration, style.animationDelay, style.animationFillMode]; }))";
-    $words = array_map(fn (int $index): array => ['enter', '0.7s', (0.1 + $index * 0.05).'s', 'both'], range(0, 9));
+    $words = array_map(fn (int $index): array => ['enter', '0.7s', (0.1 + $index * 0.05).'s', 'both'], range(0, 11));
     $after = [['enter', '0.6s', '0.55s', 'both'], ['enter', '0.6s', '0.65s', 'both'], ['enter', '0.6s', '0.2s', 'both'], ['enter', '0.6s', '0.75s', 'both']];
 
     visit('/')
@@ -739,5 +739,5 @@ it('keeps a space between the words of the headline, though each one is its own 
     // A plain space at the end of an inline block collapses: only a no-break space keeps the words apart.
     visit('/')
         ->assertScript("() => [...document.querySelectorAll('#hero-title span')].slice(0, -1).every((word) => word.textContent.endsWith('\\u00A0'))")
-        ->assertScript("() => document.querySelector('#hero-title').innerText.replace(/\\u00A0/g, ' ').includes('Del celular de tu gente')");
+        ->assertScript("() => document.querySelector('#hero-title').innerText.replace(/\\u00A0/g, ' ').includes('Tu gente contesta desde el celular.')");
 });
