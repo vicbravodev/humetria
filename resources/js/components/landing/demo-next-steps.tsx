@@ -1,5 +1,5 @@
-import { m } from 'motion/react';
-import { ENTER, ONCE } from '@/components/landing/landing-motion';
+import { enterDelay } from '@/lib/enter-delay';
+import { cn } from '@/lib/utils';
 
 const steps = [
     'Te escribimos para agendar la llamada, por WhatsApp o por correo.',
@@ -16,16 +16,13 @@ export default function DemoNextSteps() {
             </h3>
             <ol className="flex flex-col">
                 {steps.map((step, index) => (
-                    <m.li
+                    <li
                         key={step}
-                        initial={{ opacity: 0, transform: 'translateX(-8px)' }}
-                        whileInView={{
-                            opacity: 1,
-                            transform: 'translateX(0px)',
-                        }}
-                        viewport={ONCE}
-                        transition={{ ...ENTER, delay: 0.1 + index * 0.08 }}
-                        className="relative grid grid-cols-[36px_minmax(0,1fr)] gap-3.5 pb-[22px] last:pb-0"
+                        data-reveal="idle"
+                        className={cn(
+                            'relative grid grid-cols-[36px_minmax(0,1fr)] gap-3.5 pb-[22px] reveal-slide-8 last:pb-0',
+                            enterDelay(0.1 + index * 0.08),
+                        )}
                     >
                         <span
                             aria-hidden
@@ -40,7 +37,7 @@ export default function DemoNextSteps() {
                             />
                         )}
                         <span className="pt-1.5 leading-snug">{step}</span>
-                    </m.li>
+                    </li>
                 ))}
             </ol>
             <p className="mt-1 max-w-[52ch] border-l-2 pl-3.5 text-meta text-muted-foreground">

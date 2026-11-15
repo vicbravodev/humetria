@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Demos\Http\Controllers;
 
+use App\Http\Analytics;
 use App\Http\Controllers\Controller;
 use App\Modules\Demos\Actions\SubmitDemoRequest;
 use App\Modules\Demos\Http\Requests\StoreDemoRequestRequest;
@@ -19,7 +20,8 @@ final class DemoRequestController extends Controller
             // Answer like a success, so the bot learns nothing.
             Log::info('demo_request.rejected', ['reason' => 'honeypot']);
         } else {
-            $submitDemoRequest->handle($request->toData());
+            // Only now is there a lead: the browser reports the conversion with this id, nothing else (no personal data).
+            Analytics::rememberLead($submitDemoRequest->handle($request->toData())->id);
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Recibimos tu solicitud · te escribiremos para agendar la demo.']);

@@ -14,6 +14,7 @@ final class PageFrame
     /** The exact names of the pages with their own frame (the strings between the brackets of page-frame.ts). */
     public const array STANDALONE_NAMES = [
         'landing',
+        'privacy-notice',
         'campaigns/survey',
         'engagement/survey',
         'engagement/portal-feedback',

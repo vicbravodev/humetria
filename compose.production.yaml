@@ -1,7 +1,12 @@
 # Producción en Dokploy (servicio tipo "Docker Compose"). El de desarrollo es compose.yaml (Sail).
 #
-# - La imagen sale del Dockerfile y la publica GitHub Actions en GHCR (deploy.yml); aquí sólo se descarga
-#   (`pull_policy: always`), así el VPS no gasta CPU en builds.
+# - Las imágenes salen del Dockerfile y las publica GitHub Actions en GHCR (deploy.yml); aquí sólo se descargan
+#   (`pull_policy: always`), así el VPS no gasta CPU en builds. Son dos del mismo commit: `humetria` (web, horizon,
+#   scheduler) y `humetria-ssr` (Node, que renderiza la landing). Las dos van al mismo HUMETRIA_TAG (`latest` por omisión;
+#   `sha-<commit>` para fijar una versión o volver a una anterior).
+# - `ssr` corre sin .env, sin puertos y sin Traefik, en la red interna `ssr-internal` que sólo comparte con `web`: el
+#   servidor de Node de Inertia expone /shutdown sin autenticación y no debe verlo nadie más. Si Node cae, la landing
+#   responde igual (sin el cuerpo renderizado) y `web` no depende de `ssr`. Se enciende con INERTIA_SSR_ENABLED.
 # - Postgres NO vive aquí: es un servicio "Database" de Dokploy (backups programados a S3 desde su UI). Se alcanza por
 #   `dokploy-network` con el hostname interno que muestra Dokploy (DB_HOST).
 # - Las variables salen del .env que Dokploy escribe junto a este archivo (pestaña Environment).
@@ -18,7 +23,7 @@ x-logging: &logging
         max-file: '5'
 
 x-app: &app
-    image: '${HUMETRIA_IMAGE:-ghcr.io/vicbravodev/humetria:latest}'
+    image: '${HUMETRIA_IMAGE:-ghcr.io/vicbravodev/humetria}:${HUMETRIA_TAG:-latest}'
     pull_policy: ${HUMETRIA_PULL_POLICY:-always}
     restart: unless-stopped
     logging: *logging
@@ -33,6 +38,11 @@ x-app: &app
 services:
     web:
         <<: *app
+        # La clave `networks` reemplaza la del ancla, no se suma: va completa.
+        networks:
+            - default
+            - dokploy-network
+            - ssr-internal
         environment:
             # Al arrancar: storage:link (logos en el disco public) + config/route/view/event cache + migrate --force.
             # Sólo este contenedor migra; horizon y scheduler esperan a que esté sano.
@@ -88,6 +98,40 @@ services:
             retries: 3
             start_period: 30s
 
+    # Node renderiza la landing (Inertia SSR). Sin secretos: ni .env, ni base de datos, ni salida a internet.
+    ssr:
+        image: '${HUMETRIA_SSR_IMAGE:-ghcr.io/vicbravodev/humetria-ssr}:${HUMETRIA_TAG:-latest}'
+        pull_policy: ${HUMETRIA_PULL_POLICY:-always}
+        restart: unless-stopped
+        logging: *logging
+        # Node como PID 1 ignora SIGTERM sin manejador.
+        init: true
+        read_only: true
+        tmpfs:
+            - /tmp
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        mem_limit: 384m
+        cpus: '1.0'
+        pids_limit: 100
+        environment:
+            NODE_ENV: production
+            NODE_OPTIONS: --max-old-space-size=256
+        networks:
+            ssr-internal:
+                aliases:
+                    - humetria-ssr
+        # Un render de verdad (el h1 y las nueve herramientas), no sólo el puerto abierto. Docker no reinicia un contenedor
+        # "unhealthy": eso lo hace el vigilante de la imagen (scripts/ssr/supervisor.mjs).
+        healthcheck:
+            test: ['CMD', 'node', 'scripts/ssr/healthcheck.mjs']
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
+
     valkey:
         image: 'valkey/valkey:9.1-alpine'
         restart: unless-stopped
@@ -119,6 +163,9 @@ services:
 networks:
     dokploy-network:
         external: true
+    # Sólo `web` y `ssr`; `internal` = sin salida a internet ni a ningún otro contenedor.
+    ssr-internal:
+        internal: true
 
 volumes:
     humetria-storage:

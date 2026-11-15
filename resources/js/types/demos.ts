@@ -15,6 +15,10 @@ export type DemoRequestRow = {
     note: string | null;
     /** The company it became, once it has. */
     tenant_id: string | null;
+    /** The channel it arrived by; null is "no data", which is NOT direct traffic. */
+    arrived_by: string | null;
+    /** The first known channel, only when it is not the one it arrived by. */
+    first_contact: string | null;
 };
 
 export type DemoStatus = 'new' | 'contacted' | 'converted' | 'discarded';

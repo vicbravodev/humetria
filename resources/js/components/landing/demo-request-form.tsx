@@ -4,10 +4,12 @@ import type { DemoChoice } from '@/components/landing/demo-choice-field';
 import DemoChoiceField from '@/components/landing/demo-choice-field';
 import DemoHoneypot from '@/components/landing/demo-honeypot';
 import DemoMessageField from '@/components/landing/demo-message-field';
+import DemoPrivacyNote from '@/components/landing/demo-privacy-note';
 import DemoTextField from '@/components/landing/demo-text-field';
 import DemoToolsField from '@/components/landing/demo-tools-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { trackLead } from '@/lib/analytics';
 import { firstInvalidField } from '@/lib/first-invalid-field';
 import { httpErrorMessage } from '@/lib/http-error-message';
 import { store } from '@/routes/demo-requests';
@@ -33,6 +35,9 @@ export default function DemoRequestForm() {
             noValidate
             resetOnSuccess
             id="demo-request-form"
+            onSuccess={(page) =>
+                trackLead(window, sessionStorage, page.flash.lead?.id)
+            }
             onError={(errors) => {
                 const fields = document
                     .getElementById('demo-request-form')
@@ -116,9 +121,7 @@ export default function DemoRequestForm() {
                         {processing && <Spinner />}
                         Agendar demo
                     </Button>
-                    <p className="text-center text-caption text-muted-foreground">
-                        Usamos tus datos solo para contactarte.
-                    </p>
+                    <DemoPrivacyNote />
                 </>
             )}
         </Form>

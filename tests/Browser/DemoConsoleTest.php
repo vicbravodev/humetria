@@ -158,3 +158,29 @@ it('opens the new company dialog filled from the demo request', function (bool $
         ->assertValue('input[name="trade_name"]', 'Empresa Ejemplo')
         ->assertValue('input[name="slug"]', 'empresa-ejemplo');
 })->with($looks);
+
+it('says in the detail what channel a request arrived by and, when it differs, its first contact', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->fromCampaign('anuncios', 'pago', 'nom-035')->create([
+        'name' => 'Ana López', 'company' => 'Empresa Ejemplo', 'message' => null,
+        'first_utm_source' => 'boletin', 'first_utm_medium' => 'correo', 'first_utm_campaign' => null,
+    ]);
+
+    visitPage('demos/index', '/admin/demo-requests', $dark, $mobile)
+        ->assertSeeIn('@demo-request-detail', 'Llegó por')
+        ->assertSeeIn('@demo-request-detail', 'anuncios / pago · nom-035')
+        ->assertSeeIn('@demo-request-detail', 'Primer contacto')
+        ->assertSeeIn('@demo-request-detail', 'boletin / correo')
+        ->assertDontSee('Sin dato');
+})->with($looks);
+
+it('says "Sin dato", and that it is not direct traffic, when nobody knows where a request came from', function (): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->create(['name' => 'Ana López', 'company' => 'Empresa Ejemplo']);
+
+    visitPage('demos/index', '/admin/demo-requests')
+        ->assertSeeIn('@demo-request-detail', 'Llegó por')
+        ->assertSeeIn('@demo-request-detail', 'Sin dato')
+        ->assertSeeIn('@demo-request-detail', 'No significa tráfico directo')
+        ->assertDontSee('Primer contacto');
+});

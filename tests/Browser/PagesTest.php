@@ -22,6 +22,13 @@ it('renders the landing page', function (bool $dark, bool $mobile): void {
     visitPage('landing', '/', $dark, $mobile);
 })->with('looks');
 
+it('renders the privacy notice', function (bool $dark, bool $mobile): void {
+    visitPage('privacy-notice', '/privacy-notice', $dark, $mobile)
+        ->assertSee('Aviso de privacidad')
+        ->assertSee('Quién es el responsable')
+        ->assertSee('Cómo ejercer tus derechos');
+})->with('looks');
+
 it('renders the forgot password page', function (bool $dark, bool $mobile): void {
     visitPage('auth/forgot-password', '/admin/forgot-password', $dark, $mobile)
         ->assertSee('¿Olvidaste tu contraseña?')

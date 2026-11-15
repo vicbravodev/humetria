@@ -43,6 +43,9 @@ final class DemoRequestConsoleController extends Controller
                 'status_label' => $demoRequest->status->label(),
                 'note' => $demoRequest->note,
                 'tenant_id' => $demoRequest->tenant_id,
+                // Null is "no data", never direct traffic; the first contact only when it is not the same channel.
+                'arrived_by' => $demoRequest->arrivedBy(),
+                'first_contact' => $demoRequest->firstContact(),
                 // Carbon's Spanish months end in a dot ("oct."); the design system writes "27 oct 2026".
                 'received_at' => str_replace('.', '', $demoRequest->created_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY, HH:mm')),
             ]),

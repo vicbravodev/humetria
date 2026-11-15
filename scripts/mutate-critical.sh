@@ -14,7 +14,7 @@ status=0
 while IFS=$'\t' read -r module classes filter; do
     echo
     echo "=== mutation: $module"
-    vendor/bin/pest --mutate --parallel --processes=4 --exclude-testsuite=Browser --group=__pest_mutate_only \
+    vendor/bin/pest --mutate --parallel --processes=4 --exclude-testsuite=Browser,Ssr --group=__pest_mutate_only \
         --filter="$filter" --class="$classes" "$@" </dev/null || status=1
 done < <(php scripts/mutation-classes.php tests --plan)
 

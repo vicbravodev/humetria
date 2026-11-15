@@ -31,4 +31,23 @@ final class DemoRequestFactory extends Factory
             'message' => null,
         ];
     }
+
+    /** Came from a campaign of ours; the first contact is the same one. */
+    public function fromCampaign(string $source = 'google', string $medium = 'cpc', string $campaign = 'nom-035'): self
+    {
+        return $this->state(fn (): array => [
+            'utm_source' => $source,
+            'utm_medium' => $medium,
+            'utm_campaign' => $campaign,
+            'first_utm_source' => $source,
+            'first_utm_medium' => $medium,
+            'first_utm_campaign' => $campaign,
+        ]);
+    }
+
+    /** Came from another site, known only by its host; the first contact is the same one. */
+    public function referredBy(string $host): self
+    {
+        return $this->state(fn (): array => ['referrer_host' => $host, 'first_referrer_host' => $host]);
+    }
 }

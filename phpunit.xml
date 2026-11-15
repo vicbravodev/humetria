@@ -14,6 +14,10 @@
         <testsuite name="Browser">
             <directory>tests/Browser</directory>
         </testsuite>
+        <!-- Needs a real Node server and its bundle: composer test:ssr runs it, never `composer test`, the coverage or the mutation. -->
+        <testsuite name="Ssr">
+            <directory>tests/Ssr</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -43,6 +47,8 @@
         <!-- Humi's defaults, whatever the local .env sets: the tests never reach a provider. -->
         <env name="HUMI_PROVIDER" value="anthropic" force="true"/>
         <env name="HUMI_MODEL" value="claude-sonnet-5-5" force="true"/>
+        <!-- No test talks to a Node server: the ones about SSR turn it on themselves, with Http::fake(). -->
+        <env name="INERTIA_SSR_ENABLED" value="false" force="true"/>
         <env name="FIRST_STEPS_ENABLED" value="false"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>

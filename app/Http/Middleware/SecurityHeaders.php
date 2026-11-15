@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Analytics;
+use App\Http\IndexablePages;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as IlluminateResponse;
@@ -15,7 +17,8 @@ use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Sends a nonce-based Content-Security-Policy and the standard security headers on every response.
+ * Sends a nonce-based Content-Security-Policy, the standard security headers and `X-Robots-Tag: noindex, nofollow`
+ * (except on an indexable page, see IndexablePages) on every response.
  * Registered first in the global stack so it also covers 404s of unknown URLs, binding 404s, CSRF 419s
  * and Inertia 409s. A header the response already carries is kept: a route may override one on purpose.
  */
@@ -37,6 +40,20 @@ final class SecurityHeaders
      */
     private const string MAP_TILES = 'https://tile.openstreetmap.org';
 
+    /**
+     * The origins Google Analytics (gtag.js) needs, by directive. Only on `GET /` for a visitor without a session, with a
+     * valid measurement id and consent (Analytics::measurementId): without them the policy is exactly the one of any page.
+     * Source: Google's "Content Security Policy" guide for Tag Manager and Google Analytics 4 (the starting list, wildcards
+     * included). NOT verified against a browser with a real id: confirm in DebugView and in the console before turning it on.
+     *
+     * @var array{script: string, img: string, connect: string}
+     */
+    private const array GOOGLE_ANALYTICS_ORIGINS = [
+        'script' => 'https://*.googletagmanager.com',
+        'img' => 'https://*.google-analytics.com https://*.googletagmanager.com',
+        'connect' => 'https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com',
+    ];
+
     private const string HORIZON_FONTS = 'https://fonts.bunny.net';
 
     /**
@@ -50,7 +67,7 @@ final class SecurityHeaders
         $response = $next($request);
 
         $headers = [
-            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request), $this->isHorizon($request)),
+            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request), $this->isHorizon($request), Analytics::measurementId($request) !== null),
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'DENY',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
@@ -65,6 +82,10 @@ final class SecurityHeaders
             $headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
         }
 
+        if (! $this->isIndexable($request, $response)) {
+            $headers['X-Robots-Tag'] = 'noindex, nofollow';
+        }
+
         foreach ($headers as $name => $value) {
             if (! $response->headers->has($name)) {
                 $response->headers->set($name, $value);
@@ -72,6 +93,17 @@ final class SecurityHeaders
         }
 
         return $response;
+    }
+
+    /**
+     * `noindex` is the default: a page is indexable only when its route is in IndexablePages, it answered 200 and the
+     * app runs in production (staging and local never get indexed).
+     */
+    private function isIndexable(Request $request, Response $response): bool
+    {
+        return App::isProduction()
+            && $response->getStatusCode() === 200
+            && IndexablePages::includes($request->route()?->getName());
     }
 
     /**
@@ -102,20 +134,21 @@ final class SecurityHeaders
         return $request->is($path, $path.'/*') && Gate::allows('viewHorizon');
     }
 
-    private function policy(string $nonce, string $devServer, bool $maps, bool $horizon): string
+    private function policy(string $nonce, string $devServer, bool $maps, bool $horizon, bool $analytics): string
     {
         $eval = $horizon ? " 'unsafe-eval'" : '';
         $bunny = $horizon ? ' '.self::HORIZON_FONTS : '';
         $socket = $devServer === '' ? '' : ' '.preg_replace('/^http/', 'ws', $devServer);
         $devServer = $devServer === '' ? '' : ' '.$devServer;
+        $google = fn (string $directive): string => $analytics ? ' '.self::GOOGLE_ANALYTICS_ORIGINS[$directive] : '';
 
         return implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}'{$eval}{$devServer}",
+            "script-src 'self' 'nonce-{$nonce}'{$eval}{$devServer}{$google('script')}",
             "style-src 'self' 'nonce-{$nonce}' ".self::SONNER_STYLES.$bunny.$devServer,
-            "img-src 'self' data:".($maps ? ' '.self::MAP_TILES : '').$devServer,
+            "img-src 'self' data:".($maps ? ' '.self::MAP_TILES : '').$devServer.$google('img'),
             "font-src 'self'{$bunny}{$devServer}",
-            "connect-src 'self'{$devServer}{$socket}",
+            "connect-src 'self'{$devServer}{$socket}{$google('connect')}",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",

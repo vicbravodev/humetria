@@ -354,3 +354,44 @@ it('answers an Inertia submit with the 409 that makes Inertia visit the home at 
     $response->assertStatus(409)->assertHeader('X-Inertia-Redirect', route('home').'#agenda-una-demo');
     expect(DemoRequest::query()->count())->toBe(1);
 });
+
+/** The flash of the landing page as the browser receives it, in the JSON of the page. */
+function landingFlash(): mixed
+{
+    $html = (string) test()->get(route('home'))->assertOk()->getContent();
+    preg_match('/<script data-page="app" type="application\/json">(.*?)<\/script>/s', $html, $match);
+
+    return json_decode($match[1] ?? '{}', true, flags: JSON_THROW_ON_ERROR)['flash'] ?? [];
+}
+
+it('hands the landing the id of the request it just stored, once, so the browser can report the conversion', function (): void {
+    $this->post(route('demo-requests.store'), demoRequest())->assertRedirect();
+
+    $demoRequest = DemoRequest::query()->sole();
+
+    expect(landingFlash())->toHaveKey('lead', ['id' => $demoRequest->id])
+        ->and(Str::isUuid($demoRequest->id, 4))->toBeTrue()
+        ->and(landingFlash())->not->toHaveKey('lead');
+});
+
+it('hands the landing no id for a filled honeypot or a request that failed validation', function (array $overrides): void {
+    $this->post(route('demo-requests.store'), demoRequest($overrides));
+
+    expect(DemoRequest::query()->count())->toBe(0)
+        ->and(landingFlash())->not->toHaveKey('lead');
+})->with([
+    'honeypot' => [['form_extra' => 'https://spam.example']],
+    'invalid email' => [['email' => 'no-es-correo']],
+    'missing name' => [['name' => '']],
+]);
+
+it('puts nothing about the person or the answers in what it hands the landing', function (): void {
+    $this->post(route('demo-requests.store'), demoRequest())->assertRedirect();
+
+    $lead = landingFlash()['lead'] ?? [];
+
+    expect(array_keys($lead))->toBe(['id'])
+        ->and(json_encode($lead))->not->toContain('ana@empresa.mx')
+        ->not->toContain('Empresa Ejemplo')
+        ->not->toContain('Ana');
+});

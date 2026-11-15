@@ -12,11 +12,14 @@ globalThis.__webpack_nonce__ = cspNonce;
 
 const appName = import.meta.env['VITE_APP_NAME'] || 'Humetría';
 
-await preloadFrame(
-    initialPageName(
-        document.querySelector('script[data-page="app"]')?.textContent,
-    ),
-);
+// Node renders this file too (SSR) and has no document: the frame is only preloaded in the browser.
+if (typeof document !== 'undefined') {
+    await preloadFrame(
+        initialPageName(
+            document.querySelector('script[data-page="app"]')?.textContent,
+        ),
+    );
+}
 
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

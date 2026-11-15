@@ -4,13 +4,17 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta property="csp-nonce" nonce="{{ Vite::cspNonce() }}">
+        {{-- Outside the slot, and without data-inertia: the client does not manage it, so it always tells the revision PHP is running. --}}
+        <meta name="app-revision" content="{{ config('app.revision') }}">
         @if (str_starts_with($page['component'] ?? '', 'disclosure-public/'))
             <meta name="robots" content="noindex, nofollow">
         @endif
 
-        {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+        {{-- Inline script: marks <html> as `js` (what hides the unchosen tool panels), and applies the system dark mode preference before the first paint --}}
         <script nonce="{{ Vite::cspNonce() }}">
             (function() {
+                document.documentElement.classList.add('js');
+
                 const appearance = '{{ $appearance ?? "system" }}';
 
                 if (appearance === 'system') {
@@ -34,6 +38,10 @@
             }
         </style>
 
+        @if (($analyticsId = App\Http\Analytics::measurementId(request())) !== null)
+            @include('partials.analytics', ['id' => $analyticsId])
+        @endif
+
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
@@ -45,7 +53,11 @@
         {{-- The frame of the panel is a chunk fetched on demand; listing it here has the browser fetch it with the page's own code, not after it. --}}
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx", ...App\Http\PageFrame::layouts($page['component'] ?? '')])
         <x-inertia::head>
-            <title>{{ config('app.name') }}</title>
+            @if (isset($page['props']['seo']))
+                @include('partials.seo-fallback')
+            @else
+                <title>{{ config('app.name') }}</title>
+            @endif
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">

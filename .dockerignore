@@ -13,10 +13,13 @@ resources/js/actions
 resources/js/routes
 resources/js/wayfinder
 bootstrap/cache/*.php
+bootstrap/ssr
 storage
 coverage
 coverage.xml
 tests
+# Lo único de tests/ que entra: la lista que lee el healthcheck de la imagen ssr.
+!tests/Ssr/fixtures/landing-expected.json
 docs
 video
 Dockerfile

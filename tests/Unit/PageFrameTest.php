@@ -30,6 +30,7 @@ it('lists the pages without the panel frame exactly as the frontend does', funct
 it('says which pages carry their own frame', function (string $component, bool $standalone): void {
     expect(PageFrame::isStandalone($component))->toBe($standalone);
 })->with([
+    ['privacy-notice', true],
     ['campaigns/survey', true],
     ['telework/portal', true],
     ['telework/portal-checklist', true],

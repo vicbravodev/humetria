@@ -20,7 +20,7 @@ export default function ErrorPageAction({ survey }: { survey: boolean }) {
     return (
         <Button asChild>
             {page.props.auth.user === null ? (
-                <Link href={home()}>Ir al inicio</Link>
+                <a href={home().url}>Ir al inicio</a>
             ) : (
                 <Link href={dashboard()}>Volver al panel</Link>
             )}

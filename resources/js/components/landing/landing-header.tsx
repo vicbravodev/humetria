@@ -54,9 +54,9 @@ export default function LandingHeader() {
                         size="sm"
                         className="font-normal"
                     >
-                        <Link href={dashboard()} data-test="sign-in">
+                        <a href={dashboard().url} data-test="sign-in">
                             Iniciar sesión
-                        </Link>
+                        </a>
                     </Button>
                     <Button
                         asChild

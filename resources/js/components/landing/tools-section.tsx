@@ -8,7 +8,7 @@ import {
 } from '@/components/landing/landing-layout';
 import { TOOLS } from '@/components/landing/landing-tools';
 import Reveal from '@/components/landing/reveal';
-import ToolStage from '@/components/landing/tool-stage';
+import ToolPanels from '@/components/landing/tool-panels';
 import ToolTabs from '@/components/landing/tool-tabs';
 import { useHashTab } from '@/hooks/use-hash-tab';
 import { cn } from '@/lib/utils';
@@ -19,7 +19,6 @@ const KEYS = TOOLS.map((tool) => tool.key);
 export default function ToolsSection() {
     const [selected, select] = useHashTab('nom_035', KEYS, 'herramienta-');
     const family = familyOf(selected);
-    const tool = TOOLS.find((candidate) => candidate.key === selected);
 
     return (
         <section
@@ -46,7 +45,7 @@ export default function ToolsSection() {
                     selected={selected}
                     onSelect={select}
                 />
-                {tool !== undefined && <ToolStage tool={tool} />}
+                <ToolPanels selected={selected} />
             </div>
         </section>
     );

@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import {
     CircleAlert,
     Clock,
@@ -43,12 +43,12 @@ export default function ErrorPage({
                 {survey ? (
                     <Logo className="h-[26px]" />
                 ) : (
-                    <Link
-                        href={home()}
+                    <a
+                        href={home().url}
                         className="touch-hit inline-block rounded-md"
                     >
                         <Logo className="h-[26px]" />
-                    </Link>
+                    </a>
                 )}
             </header>
             <main className="flex flex-1 items-center justify-center px-6 pt-6 pb-30">

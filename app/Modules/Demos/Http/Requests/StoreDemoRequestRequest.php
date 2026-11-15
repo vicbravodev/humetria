@@ -8,6 +8,7 @@ use App\Modules\Demos\Data\DemoRequestData;
 use App\Modules\Demos\Enums\DemoProfile;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
+use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -63,6 +64,7 @@ final class StoreDemoRequestRequest extends FormRequest
             workforce: Workforce::from($this->string('workforce')->toString()),
             tools: array_values($this->enums('tools', Tool::class)),
             message: $this->filled('message') ? $this->string('message')->toString() : null,
+            attribution: RememberDemoAttribution::recall($this),
         );
     }
 

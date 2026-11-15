@@ -8,6 +8,14 @@ import type { ReportLink } from '@/types/results';
 import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
 import type { FlashToast } from '@/types/ui';
 
+declare global {
+    interface Window {
+        /** Google's tag: written by the landing's document only when there is a measurement id and consent. */
+        gtag?: (...args: unknown[]) => void;
+        dataLayer?: unknown[];
+    }
+}
+
 declare module 'react' {
     interface InputHTMLAttributes<T> {
         passwordrules?: string;
@@ -40,6 +48,8 @@ declare module '@inertiajs/core' {
         };
         flashDataType: {
             toast?: FlashToast;
+            /** The id of the demo request just stored, once, on the next landing visit: all the browser reports as a conversion. */
+            lead?: { id: string };
             /** What a checked employees CSV would do, or its problems; see the import page. */
             import?: EmployeeImportSummary;
             /** What a checked file of opening balances would load, and why each other row cannot; see the vacations import. */

@@ -58,6 +58,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Revision
+    |--------------------------------------------------------------------------
+    |
+    | The commit the running image was built from; the deployment sets it. The
+    | document prints it in a meta tag so a probe can tell which build answers.
+    |
+    */
+
+    'revision' => env('APP_REVISION') ?: 'unknown',
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

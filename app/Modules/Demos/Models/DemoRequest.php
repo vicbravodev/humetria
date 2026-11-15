@@ -34,9 +34,17 @@ use Illuminate\Support\Collection;
  * @property string|null $note
  * @property Carbon|null $handled_at
  * @property string|null $tenant_id
+ * @property string|null $utm_source The campaign this request is credited to: the last known channel, else the first.
+ * @property string|null $utm_medium
+ * @property string|null $utm_campaign
+ * @property string|null $referrer_host Only a host, and only an external one: never a URL.
+ * @property string|null $first_utm_source The first known channel.
+ * @property string|null $first_utm_medium
+ * @property string|null $first_utm_campaign
+ * @property string|null $first_referrer_host
  * @property Carbon $created_at
  */
-#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message'])]
+#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_host', 'first_utm_source', 'first_utm_medium', 'first_utm_campaign', 'first_referrer_host'])]
 #[UseFactory(DemoRequestFactory::class)]
 final class DemoRequest extends Model
 {
@@ -58,5 +66,34 @@ final class DemoRequest extends Model
             'handled_at' => 'datetime',
             'created_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The channel this request is credited to, as the console reads it. Null is "no data", which is NOT direct traffic:
+     * many browsers and messaging apps send no referrer at all.
+     */
+    public function arrivedBy(): ?string
+    {
+        return self::channel($this->utm_source, $this->utm_medium, $this->utm_campaign, $this->referrer_host);
+    }
+
+    /** The first known channel, only when it is not the one the request arrived by. */
+    public function firstContact(): ?string
+    {
+        $first = self::channel($this->first_utm_source, $this->first_utm_medium, $this->first_utm_campaign, $this->first_referrer_host);
+
+        return $first === $this->arrivedBy() ? null : $first;
+    }
+
+    /** Source and medium joined by " / ", the campaign after " · "; with no utm at all, the referrer host. */
+    private static function channel(?string $source, ?string $medium, ?string $campaign, ?string $host): ?string
+    {
+        $origin = implode(' / ', array_filter([$source, $medium], fn (?string $part): bool => $part !== null));
+
+        if ($origin === '' && $campaign === null) {
+            return $host;
+        }
+
+        return implode(' · ', array_filter([$origin, $campaign], fn (?string $part): bool => $part !== null && $part !== ''));
     }
 }

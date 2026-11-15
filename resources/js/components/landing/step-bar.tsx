@@ -1,9 +1,10 @@
-import { m } from 'motion/react';
-import { EASE_OUT, ONCE } from '@/components/landing/landing-motion';
+import { enterDelay } from '@/lib/enter-delay';
+import { cn } from '@/lib/utils';
 
 /**
- * A thin track that fills to `value` (0 to 1) the first time it scrolls into view. The track watches the view: the
- * fill starts at zero width, and something with no size never counts as seen.
+ * A thin track that fills to `value` (0 to 1) the first time it scrolls into view. The track is what the view watches:
+ * the fill starts at zero width, and something with no size never counts as seen. The fill is an SVG `rect` whose width is
+ * an attribute of presentation (a `style` would be blocked by the CSP) and the entrance scales it from the left.
  */
 export default function StepBar({
     value,
@@ -13,20 +14,21 @@ export default function StepBar({
     delay?: number;
 }) {
     return (
-        <m.span
-            initial="empty"
-            whileInView="filled"
-            viewport={ONCE}
-            className="block h-2 overflow-hidden rounded-full bg-border"
+        <span
+            data-reveal="idle"
+            className={cn(
+                'block h-2 reveal-bar overflow-hidden rounded-full bg-border',
+                enterDelay(delay),
+            )}
         >
-            <m.span
-                variants={{
-                    empty: { transform: 'scaleX(0)' },
-                    filled: { transform: `scaleX(${value})` },
-                }}
-                transition={{ duration: 0.9, ease: EASE_OUT, delay }}
-                className="block h-full origin-left rounded-full bg-primary"
-            />
-        </m.span>
+            <svg aria-hidden className="block size-full">
+                <rect
+                    width={`${value * 100}%`}
+                    height="100%"
+                    rx={4}
+                    className="fill-primary"
+                />
+            </svg>
+        </span>
     );
 }
