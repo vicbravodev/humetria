@@ -1,0 +1,31 @@
+name: synthetic
+
+# The check from outside, every 15 minutes and on demand: does https://humetria.com.mx/ serve the landing rendered by Node
+# (X-Rendered-By: ssr, the h1 and the nine tools in the HTML, the head, no noindex) and do the app and the SSR bundle come from
+# the same commit? Node failing is silent by design (the page falls back to the browser), so this is the alarm: when it
+# fails, GitHub emails it, like the weekly mutation run (mutation.yml). deploy.yml runs the same script after each deploy.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  landing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Only what the script reads: it has no dependencies.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/ssr
+            scripts/synthetic
+            tests/Ssr/fixtures
+
+      # The runner ships Node 20 or newer, and the script needs nothing but fetch.
+      - name: Check the landing
+        run: node scripts/synthetic/check-landing.mjs --url https://humetria.com.mx/

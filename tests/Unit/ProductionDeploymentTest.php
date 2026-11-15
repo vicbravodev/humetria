@@ -181,3 +181,49 @@ describe('.env.production.example', function (): void {
             ->toMatch('/^# HUMETRIA_TAG=sha-<commit>$/m');
     });
 });
+
+describe('workflows', function (): void {
+    it('publishes both images from one commit, each with its own cache, before the webhook', function (): void {
+        $builds = array_values(array_filter(deploySteps(), fn (array $step): bool => str_starts_with((string) ($step['uses'] ?? ''), 'docker/build-push-action')));
+        $sha = '${{ github.event.workflow_run.head_sha || github.sha }}';
+
+        expect($builds)->toHaveCount(2);
+
+        foreach ([['app', ''], ['ssr', '-ssr']] as $position => [$target, $suffix]) {
+            $with = $builds[$position]['with'];
+
+            expect($with['target'])->toBe($target)
+                ->and($with['push'])->toBeTrue()
+                ->and($with['build-args'])->toBe("GIT_SHA={$sha}")
+                ->and($with['tags'])->toContain("ghcr.io/\${{ github.repository }}{$suffix}:latest")
+                ->and($with['tags'])->toContain("ghcr.io/\${{ github.repository }}{$suffix}:sha-{$sha}")
+                ->and($with['cache-from'])->toBe("type=gha,scope={$target}")
+                ->and($with['cache-to'])->toBe("type=gha,mode=max,scope={$target}");
+        }
+
+        $names = array_map(fn (array $step): string => (string) ($step['name'] ?? $step['uses'] ?? ''), deploySteps());
+
+        expect(array_search('Redeploy en Dokploy', $names, true))->toBeGreaterThan(array_search($builds[1]['uses'], $names, true));
+    });
+
+    it('checks the site from outside after the webhook, against the commit just published', function (): void {
+        $steps = deploySteps();
+        $check = end($steps);
+
+        expect($check['run'])->toContain('node scripts/synthetic/check-landing.mjs')
+            ->toContain('--expect-revision ${{ github.event.workflow_run.head_sha || github.sha }}')
+            ->toContain('--wait 600')
+            ->and($check['if'])->toBe("env.DOKPLOY_WEBHOOK_URL != ''");
+    });
+
+    it('checks the live site every 15 minutes, and on demand', function (): void {
+        $workflow = deploymentYaml('.github/workflows/synthetic.yml');
+        $steps = (array) ($workflow['jobs']['landing']['steps'] ?? []);
+        $runs = implode("\n", array_map(fn (array $step): string => (string) ($step['run'] ?? ''), $steps));
+
+        expect($workflow['on']['schedule'] ?? null)->toBe([['cron' => '*/15 * * * *']])
+            ->and($workflow['on'])->toHaveKey('workflow_dispatch')
+            ->and($workflow['permissions'] ?? null)->toBe(['contents' => 'read'])
+            ->and($runs)->toContain('node scripts/synthetic/check-landing.mjs --url https://humetria.com.mx/');
+    });
+});
