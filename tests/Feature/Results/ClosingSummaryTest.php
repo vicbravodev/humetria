@@ -185,3 +185,17 @@ it('sends nothing to a company with no owner', function (): void {
 
     Notification::assertNothingSent();
 });
+
+it('caps participation at 100 %, so the ring always has its image', function (int $answered, int $invited, int $participation): void {
+    $mail = (new ClosingSummary(new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false), 'Planta', $answered, $invited, null, null, false, 0, 'https://humetria.test'))
+        ->toMail(new AnonymousNotifiable);
+
+    expect((string) $mail->render())
+        ->toContain("Participación de {$participation} %.")
+        ->toContain(asset("mail/arc/closed-{$participation}.png"));
+})->with([
+    'more answers than invitations' => [12, 10, 100],
+    'every invitation answered' => [10, 10, 100],
+    'one short' => [9, 10, 90],
+    'nobody invited' => [0, 0, 0],
+]);
