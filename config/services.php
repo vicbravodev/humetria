@@ -38,6 +38,16 @@ return [
         'database' => env('GEOIP_DATABASE', storage_path('app/private/geoip/dbip-city-lite.mmdb')),
     ],
 
+    /*
+    | Google Analytics 4 (gtag.js) on the landing page only. No measurement id, no script, no Google origin in the CSP.
+    | Consent is `denied` until the owner's lawyer says otherwise (see App\Http\Consent): with it, nothing is measured.
+    */
+
+    'google_analytics' => [
+        'measurement_id' => env('GOOGLE_ANALYTICS_ID', ''),
+        'consent_default' => env('GOOGLE_ANALYTICS_CONSENT_DEFAULT', 'denied'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
