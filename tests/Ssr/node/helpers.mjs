@@ -14,8 +14,8 @@ export async function freePort() {
 }
 
 /** Runs a script of scripts/ssr with an environment; resolves with its exit code and what it wrote. */
-export function run(script, env) {
-    const child = spawn(process.execPath, [script], {
+export function run(script, env, args = []) {
+    const child = spawn(process.execPath, [script, ...args], {
         env: { ...process.env, ...env },
     });
     let stderr = '';
