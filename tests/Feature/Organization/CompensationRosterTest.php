@@ -248,7 +248,7 @@ it('serves a union account the same as a company account', function (): void {
 it('lists the people who can be costed and have a company ID, by company ID, in one query', function (): void {
     costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-2']);
     costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-1', 'area_id' => null]);
-    costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-3', 'hired_on' => '2030-01-01']);
+    costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-3', 'hired_on' => '2099-12-31']);
     costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-4', 'deactivated_at' => now()]);
     costedPerson($this->tenant, $this->grade, ['employee_number' => 'E-5', 'job_grade_id' => null]);
     costedPerson($this->tenant, $this->grade, ['employee_number' => null]);
