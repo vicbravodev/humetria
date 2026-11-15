@@ -151,7 +151,7 @@ layouts/  hooks/  lib/  types/
 - La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente
   externo, nunca una URL ni identificadores de clic). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
   consentimiento `granted`. Lo que diga el aviso de privacidad sobre cookies debe coincidir con el código
-  (`tests/Unit/PrivacyNoticeMatchesCodeTest.php`).
+  (`tests/Feature/PrivacyNoticeMatchesCodeTest.php`).
 - Todo enlace que sale de la landing o llega a ella es un `<a href>` normal, no un `<Link>` (solo el logo de la
   cabecera de la landing, que va a la misma página): Google Analytics y su CSP viven en un documento, no en una visita de Inertia.
 
