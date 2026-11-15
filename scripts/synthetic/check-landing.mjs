@@ -1,5 +1,5 @@
 // The check from outside: does the site serve the landing the way the design says? It reads the document like a crawler
-// that runs no JavaScript. Without dependencies: Node 22+ (fetch) is all it needs.
+// that runs no JavaScript. Without dependencies: Node 20 or newer (fetch) is all it needs.
 //
 //   node scripts/synthetic/check-landing.mjs [--url https://humetria.com.mx/] [--expect-revision <commit>] [--wait 600] [--every 15]
 //
