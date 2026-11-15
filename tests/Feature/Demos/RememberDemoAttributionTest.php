@@ -3,10 +3,26 @@
 declare(strict_types=1);
 
 use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
+use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 
 mutates(RememberDemoAttribution::class);
+
+beforeEach(function (): void {
+    $this->logPath = storage_path('logs/demo-attribution-'.Str::uuid().'.log');
+    config(['logging.channels.single.path' => $this->logPath]);
+    Log::forgetChannel('single');
+    Log::forgetChannel('stack');
+});
+
+afterEach(function (): void {
+    File::delete($this->logPath);
+    Carbon::setTestNow();
+});
 
 /** What the session remembers of the first visit with a signal; null when there is none. */
 function rememberedTouch(): mixed
@@ -346,4 +362,172 @@ it('sets the cookie only on the landing', function (): void {
 
     $this->get('/privacy-notice?utm_source=anuncios')->assertCookieMissing('humetria_acq');
     $this->call('HEAD', '/?utm_source=anuncios')->assertCookieMissing('humetria_acq');
+});
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function attributedSubmission(array $overrides = []): array
+{
+    return [
+        'name' => 'Ana Lopez Prueba',
+        'email' => 'ana.prueba@empresa.mx',
+        'whatsapp' => '55 1234 5678',
+        'company' => 'Empresa Ejemplo',
+        'profile' => 'company',
+        'workforce' => '51_100',
+        'tools' => ['nom_035'],
+        'message' => null,
+        'form_extra' => '',
+        ...$overrides,
+    ];
+}
+
+function storedRequest(): DemoRequest
+{
+    return DemoRequest::query()->sole();
+}
+
+it('stores on the request what the session remembered, as the campaign and as the first contact', function (): void {
+    $this->get('/?utm_source=anuncios&utm_medium=pago&utm_campaign=nom-035')->assertOk();
+
+    $this->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    $demoRequest = storedRequest();
+    expect($demoRequest->arrivedBy())->toBe('anuncios / pago · nom-035')
+        ->and($demoRequest->first_utm_source)->toBe('anuncios')
+        ->and($demoRequest->firstContact())->toBeNull();
+});
+
+it('stores the referrer host the session remembered, and nothing else of the visit', function (): void {
+    $this->withHeaders(['Referer' => 'https://www.google.com/search?q=nom-035'])->get('/')->assertOk();
+
+    $this->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBe('www.google.com');
+});
+
+it('stores a request with no previous visit, or a visit with no signal, with no attribution', function (): void {
+    $this->get('/')->assertOk();
+
+    $this->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBeNull()
+        ->and(storedRequest()->firstContact())->toBeNull();
+});
+
+it('credits the last touch of the cookie and keeps its first one as the first contact, with consent granted', function (): void {
+    consentGranted();
+    $cookie = acquisitionCookie(touchOf('boletin', 'correo'), touchOf('anuncios', 'pago', 'nom-035'), now()->subDays(20)->getTimestamp());
+
+    $this->withCookie('humetria_acq', $cookie)->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBe('anuncios / pago · nom-035')
+        ->and(storedRequest()->firstContact())->toBe('boletin / correo');
+});
+
+it('prefers the cookie to the session when both exist', function (): void {
+    consentGranted();
+    $cookie = acquisitionCookie(touchOf('desde-cookie'), touchOf('desde-cookie'), now()->subDay()->getTimestamp());
+
+    $this->withSession(['demo_attribution' => touchOf('desde-sesion')])
+        ->withCookie('humetria_acq', $cookie)
+        ->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBe('desde-cookie');
+});
+
+it('falls back to the session when the cookie says nothing usable', function (string $stored): void {
+    consentGranted();
+
+    $this->withSession(['demo_attribution' => touchOf('desde-sesion')])
+        ->withCookie('humetria_acq', $stored)
+        ->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBe('desde-sesion');
+})->with(fn (): array => [
+    'broken' => ['esto no es json'],
+    'expired' => [acquisitionCookie(touchOf('vencida'), touchOf('vencida'), now()->subDays(91)->getTimestamp())],
+    'empty' => ['[]'],
+]);
+
+it('ignores a cookie it did not encrypt', function (): void {
+    consentGranted();
+
+    $this->withUnencryptedCookie('humetria_acq', acquisitionCookie(touchOf('forjada'), touchOf('forjada'), now()->getTimestamp()))
+        ->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBeNull();
+});
+
+it('does not read the cookie while consent is denied: only the session counts', function (): void {
+    $cookie = acquisitionCookie(touchOf('desde-cookie'), touchOf('desde-cookie'), now()->subDay()->getTimestamp());
+
+    $this->withCookie('humetria_acq', $cookie)->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBeNull();
+});
+
+it('survives a session value that is not what was written, keeping only what is clean', function (mixed $stored, ?string $label): void {
+    $this->withSession(['demo_attribution' => $stored])
+        ->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBe($label);
+})->with([
+    'a string' => ['anuncios', null],
+    'a number' => [42, null],
+    'an empty array' => [[], null],
+    'a source of 101 characters' => [touchOf(str_repeat('a', 101), 'pago'), 'pago'],
+    'a source of 100 characters' => [touchOf(str_repeat('a', 100)), str_repeat('a', 100)],
+    'arrays as values' => [['source' => ['a'], 'medium' => ['b']], null],
+    'a control character' => [touchOf("a\nb", 'pago'), 'pago'],
+    'blank values' => [touchOf('   ', '', '  '), null],
+    'a host with a space' => [touchOf(host: 'Host Con Espacio'), null],
+    'a host in capitals' => [touchOf(host: 'WWW.Google.COM'), 'www.google.com'],
+    'extra keys' => [[...touchOf('anuncios'), 'gclid' => 'CLICK123'], 'anuncios'],
+]);
+
+it('never stores the click ids of Google Ads', function (): void {
+    $this->withSession(['demo_attribution' => [...touchOf('anuncios'), 'gclid' => 'CLICK123', 'gbraid' => 'B', 'wbraid' => 'W']])
+        ->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(json_encode(storedRequest()->getAttributes()))->not->toContain('CLICK123');
+});
+
+it('keeps the attribution for a second try after a submit the form refused', function (): void {
+    $this->get('/?utm_source=anuncios')->assertOk();
+
+    $this->post(route('demo-requests.store'), attributedSubmission(['email' => 'no-es-correo']))->assertSessionHasErrors('email');
+    expect(DemoRequest::query()->count())->toBe(0);
+
+    $this->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->arrivedBy())->toBe('anuncios');
+});
+
+it('stores nothing when a bot fills the trap field, whatever the attribution', function (): void {
+    consentGranted();
+    $cookie = acquisitionCookie(touchOf('anuncios'), touchOf('anuncios'), now()->getTimestamp());
+
+    $this->withCookie('humetria_acq', $cookie)->post(route('demo-requests.store'), attributedSubmission(['form_extra' => 'http://spam.example']))->assertRedirect();
+
+    expect(DemoRequest::query()->count())->toBe(0);
+});
+
+it('writes no value of where the visitor came from in any log line', function (): void {
+    consentGranted();
+
+    $this->withHeaders(['Referer' => 'https://secretreferrer.example/page?token=secret'])
+        ->get('/?utm_source=secretsource&utm_medium=secretmedium&utm_campaign=secretcampaign')->assertOk();
+    $this->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+    $this->post(route('demo-requests.store'), attributedSubmission(['form_extra' => 'bot']))->assertRedirect();
+
+    $log = File::exists($this->logPath) ? File::get($this->logPath) : '';
+
+    expect($log)->toContain('demo_request.submitted');
+
+    foreach (['secretsource', 'secretmedium', 'secretcampaign', 'secretreferrer', 'secret'] as $value) {
+        expect($log)->not->toContain($value);
+    }
 });

@@ -6,6 +6,7 @@ namespace App\Modules\Demos\Http\Middleware;
 
 use App\Http\Consent;
 use App\Http\SiteHost;
+use App\Modules\Demos\Data\DemoAttribution;
 use App\Modules\Demos\Data\DemoTouch;
 use Closure;
 use Illuminate\Http\Request;
@@ -46,10 +47,21 @@ final class RememberDemoAttribution
         return $next($request);
     }
 
-    /** The first visit with a signal, as the session remembers it. */
-    public static function fromSession(Request $request): DemoTouch
+    /**
+     * What a demo request is credited with: the cookie when there is a usable one and consent allows reading it, else the
+     * session's first touch (which is then both the first and the last).
+     */
+    public static function recall(Request $request): DemoAttribution
     {
-        return self::touchFrom($request->session()->get(self::SESSION_KEY));
+        $stored = Consent::analyticsAllowed($request) ? self::fromCookie($request) : null;
+
+        if ($stored !== null) {
+            return new DemoAttribution($stored['first'], $stored['last']);
+        }
+
+        $touch = self::touchFrom($request->session()->get(self::SESSION_KEY));
+
+        return new DemoAttribution($touch, $touch);
     }
 
     private function remember(Request $request): void
@@ -60,7 +72,7 @@ final class RememberDemoAttribution
             return;
         }
 
-        if (self::fromSession($request)->isEmpty()) {
+        if (self::touchFrom($request->session()->get(self::SESSION_KEY))->isEmpty()) {
             $request->session()->put(self::SESSION_KEY, self::toArray($touch));
         }
 
