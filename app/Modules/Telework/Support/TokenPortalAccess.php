@@ -10,6 +10,8 @@ use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Telework\Data\PortalIdentity;
 use App\Modules\Telework\Exceptions\PortalUnavailable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * The portal link of NOM-037 offered to other tools: the same rules as OpenPortal, not a copy of them.
@@ -47,6 +49,18 @@ final readonly class TokenPortalAccess implements PortalAccess
     public function token(string $employeeId): string
     {
         return $this->issue->handle($employeeId);
+    }
+
+    public function url(string $employeeId): ?string
+    {
+        try {
+            return route('portal.show', $this->token($employeeId));
+        } catch (Throwable $exception) {
+            // The class only: a database error's message can carry values.
+            Log::warning('telework.portal_url_unavailable', ['employee_id' => $employeeId, 'exception' => $exception::class]);
+
+            return null;
+        }
     }
 
     private function read(string $token): ?OpenedPortal

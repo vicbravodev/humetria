@@ -16,6 +16,7 @@ use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
@@ -86,6 +87,8 @@ final class SendSurveyInvitations implements ShouldQueue
         $contact = $companies->contact();
         $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
 
+        $portal = resolve(PortalAccess::class);
+
         foreach ($waiting as $participant) {
             $person = $people[$participant->employee_id] ?? null;
             $routes = $person === null ? [] : SurveyInvitation::routes($person);
@@ -113,7 +116,7 @@ final class SendSurveyInvitations implements ShouldQueue
             $token = $participant->surveyToken();
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
             Notification::routes($routes)->notify(new SurveyInvitation(
-                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant),
+                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant), $portal->url($person->id),
             ));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }

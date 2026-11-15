@@ -1,5 +1,9 @@
 import { usePasskeyRegister } from '@laravel/passkeys/react';
 import { useState } from 'react';
+import {
+    index as registerOptions,
+    store as registerStore,
+} from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +39,11 @@ export default function PasskeyRegistration({ onSuccess, onCancel }: Props) {
     });
 
     const { register, isLoading, error, isSupported } = usePasskeyRegister({
+        // The app lives under /admin; the package's own defaults ask for /user/passkeys and 404.
+        routes: {
+            options: registerOptions().url,
+            submit: registerStore().url,
+        },
         onSuccess: () => {
             setName('');
             onSuccess();

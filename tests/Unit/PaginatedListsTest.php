@@ -66,6 +66,7 @@ const ARRAY_PROPS = [
     'leave/portal:types' => 'catálogo corto: los tipos de permiso de la empresa',
     'telework/settings:presets' => 'catálogo fijo: los periodos predefinidos de la Sección II (cuatro)',
     'telework/checklist:questions' => 'las preguntas de una versión de la lista: un instrumento, 122 en la base',
+    'attendance/portal:devices' => 'resumen corto: los teléfonos vinculados de una persona, pocos',
     'telework/portal:sections' => 'resumen corto: las herramientas de una persona (a lo más nueve)',
     'telework/portal-checklist:questions' => 'las preguntas de una sección de la lista: un instrumento',
     'telework/checklist:requirements' => 'catálogo fijo: los requisitos del capítulo 7 y 5.1.1 (catorce)',

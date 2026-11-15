@@ -8,6 +8,7 @@ use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Attendance\Contracts\PlaceSearch;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
+use App\Modules\Attendance\Support\AttendancePortalSection;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -27,6 +28,7 @@ final class AttendanceServiceProvider extends ServiceProvider
     {
         $this->app->bind(AttendanceUsage::class, CompanyAttendanceUsage::class);
         $this->app->bind(PlaceSearch::class, NominatimPlaceSearch::class);
+        $this->app->tag([AttendancePortalSection::class], 'portal.sections');
     }
 
     public function boot(): void

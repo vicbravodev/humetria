@@ -1,5 +1,5 @@
 {{-- The first email of a climate or pulse survey: what it is, what the system does not keep, and how long it takes. --}}
-<x-mail::message :company="$company" :confidential="true" preheader="Unos {{ $minutes }} minutos, desde su celular.">
+<x-mail::message :company="$company" :portal-url="$portalUrl ?? null" :confidential="true" preheader="Unos {{ $minutes }} minutos, desde su celular.">
 <x-slot:reason>Recibe este correo porque {{ $company->tradeName }} lo registró como parte de su equipo.@if ($contact) ¿Dudas? Escriba a <a href="mailto:{{ $contact }}">{{ $contact }}</a>.@endif</x-slot:reason>
 <h1>Dé su opinión sobre el trabajo en {{ $company->tradeName }}</h1>
 <p>Hola, {{ $name }}:</p>

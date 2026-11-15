@@ -128,6 +128,7 @@ final class AuditPages
         'employee_id' => 'Persona',
         'employee_ids' => 'Personas',
         'delivered_by_rh' => 'Entregado por RH',
+        'self_service' => 'La pidió la propia persona',
         'sent_to' => 'Enviado a',
         'mark_id' => 'Marca',
         'sent' => 'Enviados',

@@ -57,7 +57,7 @@ export default function EnrollDone({
                 </section>
                 <p className="text-base text-muted-foreground">
                     El enlace que recibió ya no sirve: si cambia de teléfono,
-                    pida a Recursos Humanos uno nuevo.
+                    entre a «Mi jornada» en su portal y vincule el nuevo.
                 </p>
             </div>
         </PersonFrame>

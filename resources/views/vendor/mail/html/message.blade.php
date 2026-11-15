@@ -7,6 +7,8 @@
     'company' => null,
     // The survey's: "Confidencial" next to the company.
     'confidential' => false,
+    // The one link of the person to everything of theirs (their portal), when the email goes to a person of the company.
+    'portalUrl' => null,
 ])
 <x-mail::layout :preheader="$preheader">
 <x-slot:header>
@@ -41,6 +43,9 @@
 <x-slot:footer>
 @if ($reason)
 <p class="reason">{!! $reason !!}</p>
+@endif
+@if ($portalUrl)
+<p class="reason">Todo lo suyo, en un solo lugar: <a href="{{ $portalUrl }}">Su portal</a>.</p>
 @endif
 <p class="seal">hecho con <strong>humetría</strong></p>
 @if (! $company)

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The link a person opens on their phone to link it (enrollment): good once and for the hours of config/attendance.php
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $tenant_id
  * @property string $employee_id
  * @property string $token_hash
- * @property int $issued_by
+ * @property int|null $issued_by
  * @property CarbonImmutable $expires_at
  * @property CarbonImmutable|null $used_at
  * @property CarbonImmutable|null $revoked_at
@@ -36,6 +37,25 @@ final class EnrollmentLink extends Model
     public static function hashToken(string $token): string
     {
         return hash('sha256', $token);
+    }
+
+    /**
+     * A new link for a person, replacing the one before: one person's issues one at a time (two at once would both find
+     * nothing to revoke, and the second would hit the one-pending index). Null `$issuedBy` is the person themselves.
+     * Call inside a transaction.
+     */
+    public static function issue(string $tenantId, string $employeeId, string $token, ?int $issuedBy, CarbonImmutable $now): self
+    {
+        DB::select('select pg_advisory_xact_lock(hashtext(?))', ["attendance_enrollment_links:{$employeeId}"]);
+        self::query()->where('employee_id', $employeeId)->whereNull('used_at')->whereNull('revoked_at')->update(['revoked_at' => $now]);
+
+        return self::query()->create([
+            'tenant_id' => $tenantId,
+            'employee_id' => $employeeId,
+            'token_hash' => self::hashToken($token),
+            'issued_by' => $issuedBy,
+            'expires_at' => $now->addHours(config()->integer('attendance.enrollment.link_hours')),
+        ]);
     }
 
     /** The current company's link of `$token` while it may still be opened: not used, not replaced and within its hours. */

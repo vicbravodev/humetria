@@ -29,4 +29,11 @@ interface PortalAccess
      * each time (issuing it never breaks the link the person has) and it is never logged.
      */
     public function token(string $employeeId): string;
+
+    /**
+     * The address of the portal of an employee of the current company, for the foot of an email that goes to them. An optional
+     * nicety: when it cannot be issued (a database that is busy) it is null and logged, never thrown, so it never keeps
+     * the email that carries it from being sent.
+     */
+    public function url(string $employeeId): ?string;
 }

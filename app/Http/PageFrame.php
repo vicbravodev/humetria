@@ -26,6 +26,7 @@ final class PageFrame
         'results/shared-report',
         'attendance/kiosk',
         'attendance/enroll',
+        'attendance/portal',
         'attendance/punch',
         'attendance/week',
         'compensation/shared-report',
