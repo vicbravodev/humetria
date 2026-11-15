@@ -32,10 +32,10 @@ export default function HumiSection() {
                         Pregúntale a Humi lo que necesites de tu cuenta
                     </h2>
                     <p className={LEAD}>
-                        Humi vive dentro del panel. Consulta el avance, los
-                        resultados agrupados, tus pendientes y los escenarios de
-                        Compensación, y te lleva a la pantalla donde se
-                        resuelve.
+                        Humi vive dentro del panel. Le preguntas cómo vas, qué
+                        te falta o cuánto costaría un aumento, y te contesta con
+                        tus datos y te lleva a la pantalla donde lo resuelves.
+                        Nunca te muestra respuestas de nadie.
                     </p>
                     <ul className="mt-1 grid gap-3">
                         {facts.map((fact) => (
