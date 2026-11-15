@@ -1,4 +1,8 @@
 import type { CaptureResult, PostHogConfig } from 'posthog-js';
+import {
+    cleanProperties,
+    type EventProperties,
+} from '@/lib/analytics-behavior';
 
 const LEAD_KEY = 'analytics.lead_id';
 const BLOCK_ID = 'analytics-config';
@@ -14,7 +18,8 @@ export type AnalyticsConfig = {
 /** The part of PostHog this app uses; `posthog-js` satisfies it, a test stand-in too. */
 export type AnalyticsEngine = {
     init: (token: string, options: Partial<PostHogConfig>) => unknown;
-    capture: (event: string) => void;
+    capture: (event: string, properties?: EventProperties) => void;
+    captureException: (error: unknown) => void;
 };
 
 type ConfigSource = {
@@ -71,6 +76,39 @@ export function readAnalyticsConfig(
     };
 }
 
+const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/g;
+const NUMBER = /\d[\d\s().-]{6,}\d/g;
+const MAX_MESSAGE = 200;
+
+/** What an error says may quote what the visitor typed: addresses and numbers are masked, and it is cut short. */
+function scrubMessage(text: string): string {
+    return text
+        .replace(EMAIL, '[email]')
+        .replace(NUMBER, '[number]')
+        .slice(0, MAX_MESSAGE);
+}
+
+/** One entry of `$exception_list` with its message scrubbed; its type and frames (where, not what) stay. */
+function scrubException(entry: unknown): unknown {
+    if (typeof entry !== 'object' || entry === null) {
+        return entry;
+    }
+
+    const value: unknown = Reflect.get(entry, 'value');
+
+    return typeof value === 'string'
+        ? { ...entry, value: scrubMessage(value) }
+        : entry;
+}
+
+function scrubExceptions(properties: Record<string, unknown>) {
+    const list = properties['$exception_list'];
+
+    return Array.isArray(list)
+        ? { ...properties, $exception_list: list.map(scrubException) }
+        : properties;
+}
+
 /**
  * What leaves the browser: the page the server cleaned (no personal query), the referrer only if the server allowed it,
  * and nothing that builds a profile of the person ($set, $set_once, $unset).
@@ -83,7 +121,7 @@ export function sanitizeEvent(
         event: result.event,
         properties: {
             ...Object.fromEntries(
-                Object.entries(result.properties).filter(
+                Object.entries(scrubExceptions(result.properties)).filter(
                     ([name]) => !BROWSER_REFERRER.has(name),
                 ),
             ),
@@ -162,4 +200,19 @@ export function trackLead(
 
     active.capture('generate_lead');
     storage.setItem(LEAD_KEY, id);
+}
+
+/** A measured moment of the landing (a click, a section, a scroll). The properties are cleaned: only identifiers and numbers. */
+export function track(event: string, properties: EventProperties = {}): void {
+    active?.capture(event, cleanProperties(properties));
+}
+
+/** An error of the landing, for PostHog's error tracking. Like everything here, nothing before PostHog has started. */
+export function captureError(error: unknown): void {
+    active?.captureException(error);
+}
+
+/** The fields of the demo form the server refused: which one failed (the funnel's friction), never what was typed or said. */
+export function trackFormErrors(errors: Record<string, string>): void {
+    Object.keys(errors).forEach((field) => track('demo_form_error', { field }));
 }

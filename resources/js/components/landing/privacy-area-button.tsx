@@ -16,6 +16,8 @@ export default function PrivacyAreaButton({
             type="button"
             aria-pressed={pressed}
             data-test={`privacy-area-${area.key}`}
+            data-track="privacy_area_selected"
+            data-track-target={area.key}
             onClick={onPress}
             className={cn(
                 'inline-flex min-h-11 items-center gap-2 rounded-xl border px-3.5 text-meta transition-[background-color,border-color,color,transform] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.97] motion-reduce:active:scale-100',

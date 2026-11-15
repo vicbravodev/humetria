@@ -28,6 +28,8 @@ export default function FilmChapters({
                     <button
                         type="button"
                         data-test={`tool-chapter-${index}`}
+                        data-track="film_chapter"
+                        data-track-target={index}
                         aria-current={active === index ? 'true' : undefined}
                         onClick={() => onJump(index)}
                         className={cn(

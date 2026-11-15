@@ -32,5 +32,5 @@ export const LANDING_BLOCK = JSON.stringify({
 });
 
 export function engine() {
-    return { init: vi.fn(), capture: vi.fn() };
+    return { init: vi.fn(), capture: vi.fn(), captureException: vi.fn() };
 }

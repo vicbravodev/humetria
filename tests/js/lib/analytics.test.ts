@@ -188,3 +188,78 @@ describe('sanitizeEvent', () => {
         );
     });
 });
+
+describe('sanitizeEvent and what an error says', () => {
+    function failure(value: string) {
+        return {
+            uuid: 'u-2',
+            event: '$exception',
+            properties: {
+                $exception_list: [
+                    {
+                        type: 'Error',
+                        value,
+                        stacktrace: {
+                            type: 'raw',
+                            frames: [{ filename: 'app.js', lineno: 3 }],
+                        },
+                    },
+                ],
+            },
+        };
+    }
+
+    function valueOf(result: CaptureResult): unknown {
+        const list: unknown = result.properties['$exception_list'];
+
+        return Array.isArray(list) ? Reflect.get(list[0], 'value') : undefined;
+    }
+
+    it.each([
+        [
+            'an email',
+            'no se pudo enviar a ana@empresa.mx ya',
+            'no se pudo enviar a [email] ya',
+        ],
+        ['a phone number', 'tel 55 1234 5678 fallo', 'tel [number] fallo'],
+        ['a long number without spaces', 'id 5512345678', 'id [number]'],
+        [
+            'nothing personal',
+            'Cannot read properties of undefined',
+            'Cannot read properties of undefined',
+        ],
+    ])('masks %s in the message of an error', (_name, said, expected) => {
+        const result = sanitizeEvent(CONFIG)(failure(said));
+
+        expect(valueOf(result)).toBe(expected);
+    });
+
+    it('cuts a very long message', () => {
+        const result = sanitizeEvent(CONFIG)(failure('x'.repeat(500)));
+
+        expect(String(valueOf(result))).toHaveLength(200);
+    });
+
+    it('keeps the type and the frames of the error', () => {
+        const result = sanitizeEvent(CONFIG)(failure('boom'));
+        const list: unknown = result.properties['$exception_list'];
+
+        expect(list).toEqual([
+            {
+                type: 'Error',
+                value: 'boom',
+                stacktrace: {
+                    type: 'raw',
+                    frames: [{ filename: 'app.js', lineno: 3 }],
+                },
+            },
+        ]);
+    });
+
+    it('leaves an event that is not an error as it was', () => {
+        const result = sanitizeEvent(CONFIG)(event({ section: 'tools' }));
+
+        expect(result.properties['section']).toBe('tools');
+        expect(result.properties['$exception_list']).toBeUndefined();
+    });
+});
