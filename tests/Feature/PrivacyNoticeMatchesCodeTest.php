@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Analytics;
 use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
 
 /*
@@ -23,12 +24,23 @@ it('names the attribution cookie and its 90 days', function (): void {
     expect(privacyNoticeText())->toContain(RememberDemoAttribution::COOKIE)->toContain('90 días');
 });
 
-it('says Analytics and the attribution cookie are off today, not that the visitor consents', function (): void {
+it('says PostHog and the attribution cookie are off today, not that the visitor consents', function (): void {
     $text = privacyNoticeText();
 
-    expect(config('services.google_analytics.consent_default'))->toBe('denied')
-        ->and($text)->toContain('Hoy no medimos')->toContain('_ga')
+    expect(config('services.posthog.consent_default'))->toBe('denied')
+        ->and($text)->toContain('Hoy no medimos')->toContain('PostHog')
+        ->and($text)->not->toContain('Google')->not->toContain('_ga')
         ->and($text)->not->toContain('con tu consentimiento');
+});
+
+it('names the one PostHog host the code talks to, and says it sets no cookie and keeps no IP', function (): void {
+    $text = privacyNoticeText();
+    $options = (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/analytics.ts');
+
+    expect($text)->toContain(parse_url(Analytics::HOST, PHP_URL_HOST))
+        ->and($text)->toContain('PostHog no escribe cookies')->toContain('No guardamos tu dirección IP')
+        ->and($options)->toContain("persistence: 'localStorage'")->toContain('ip: false')
+        ->and($options)->toContain('disable_session_recording: true')->toContain('autocapture: false');
 });
 
 it('says the theme preference lasts a year, as the appearance hook writes it', function (): void {

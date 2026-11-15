@@ -83,35 +83,34 @@ it('stores a demo request and confirms it', function (bool $mobile): void {
         ->and($demoRequest->tools->map->value->all())->toBe(['nom_035', 'nom_037']);
 })->with(['desktop' => false, 'mobile' => true]);
 
-it('reports generate_lead once, without a word about the person, when the server stored the request', function (): void {
+it('reports nothing and remembers no lead while PostHog is off: no token, no consent', function (): void {
     $page = visitPage('landing', '/', reach: function ($page): void {
-        // Google is not loaded here (no id, no consent): a stand-in that records what the page would send.
-        $page->script('() => { window.gtagCalls = []; window.gtag = (...args) => window.gtagCalls.push(args); }');
         fillDemoForm($page);
         $page->press('@demo-request-submit')
             ->waitForText('Recibimos tu solicitud · te escribiremos para agendar la demo.');
     });
 
-    $page->assertScript('() => JSON.stringify(window.gtagCalls)', '[["event","generate_lead"]]')
-        ->assertScript('() => window.sessionStorage.getItem("analytics.lead_id")', DemoRequest::query()->sole()->id);
+    expect(DemoRequest::query()->count())->toBe(1);
+
+    $page->assertScript('() => document.getElementById("analytics-config") === null')
+        ->assertScript('() => window.sessionStorage.getItem("analytics.lead_id") === null');
 });
 
 it('reports nothing when a request is rejected: not by validation and not by the honeypot', function (): void {
     $page = visitPage('landing', '/', reach: function ($page): void {
-        $page->script('() => { window.gtagCalls = []; window.gtag = (...args) => window.gtagCalls.push(args); }');
         $page->press('@demo-request-submit')->waitForText('El campo nombre es obligatorio.');
     });
 
-    $page->assertScript('() => JSON.stringify(window.gtagCalls)', '[]');
+    $page->assertScript('() => window.sessionStorage.getItem("analytics.lead_id") === null');
 });
 
-it('leaves the landing for the login in a new document, so Google never lives on another page', function (): void {
+it('leaves the landing for the login in a new document, so PostHog never lives on another page', function (): void {
     visitPage('landing', '/', reach: function ($page): void {
         // A page Inertia navigates keeps its window; a plain link loads a document and loses this mark.
-        $page->script('() => { window.dataLayer = ["landing"]; }');
+        $page->script('() => { window.landingDocument = "landing"; }');
     })->click('@sign-in')
         ->assertScript(pathBecomes('/admin/login'), true)
-        ->assertScript('() => window.dataLayer === undefined');
+        ->assertScript('() => window.landingDocument === undefined');
 });
 
 it('shows what to fix next to each field when the form is sent empty', function (bool $mobile): void {

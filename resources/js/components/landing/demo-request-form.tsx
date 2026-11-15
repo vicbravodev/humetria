@@ -36,7 +36,7 @@ export default function DemoRequestForm() {
             resetOnSuccess
             id="demo-request-form"
             onSuccess={(page) =>
-                trackLead(window, sessionStorage, page.flash.lead?.id)
+                trackLead(sessionStorage, page.flash.lead?.id)
             }
             onError={(errors) => {
                 const fields = document

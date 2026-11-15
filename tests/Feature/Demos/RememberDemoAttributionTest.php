@@ -31,7 +31,7 @@ function rememberedTouch(): mixed
 }
 
 it('asks for no consent by default: the owner has to grant it', function (): void {
-    expect(config('services.google_analytics.consent_default'))->toBe('denied');
+    expect(config('services.posthog.consent_default'))->toBe('denied');
 });
 
 it('remembers in the session the utm of the first visit to the landing that has any', function (): void {
@@ -175,7 +175,7 @@ const NINETY_DAYS = 90 * 86_400;
 /** The owner granted consent: only then the long cookie is written. */
 function consentGranted(): void
 {
-    config(['services.google_analytics.consent_default' => 'granted']);
+    config(['services.posthog.consent_default' => 'granted']);
 }
 
 /** @return array<string, mixed> */

@@ -13,7 +13,7 @@ ver en producción está en la última sección, como verificación manual. El d
 5. [Despliegue y rollback](#5-despliegue-y-rollback)
 6. [Qué significa cada señal](#6-qué-significa-cada-señal)
 7. [Qué hacer ante `ssr.render_failed`](#7-qué-hacer-ante-ssrrender_failed)
-8. [Empezar a medir con Analytics](#8-empezar-a-medir-con-analytics)
+8. [Empezar a medir con PostHog](#8-empezar-a-medir-con-posthog)
 9. [Verificaciones manuales pendientes](#9-verificaciones-manuales-pendientes)
 
 ## 1. Qué corre en producción
@@ -45,8 +45,8 @@ Se ponen en la pestaña Environment del servicio de Dokploy. La plantilla es `.e
 | `HUMETRIA_IMAGE` | omitida | Repositorio de la imagen `app`, sin etiqueta. |
 | `HUMETRIA_SSR_IMAGE` | omitida | Repositorio de la imagen `ssr`, sin etiqueta. |
 | `HUMETRIA_PULL_POLICY` | omitida (`always`) | Política de descarga de las dos imágenes. |
-| `GOOGLE_ANALYTICS_ID` | vacía hasta la sección 8 | ID de medición `G-…` de Google Analytics 4. |
-| `GOOGLE_ANALYTICS_CONSENT_DEFAULT` | `denied` | Mientras sea `denied` no hay medición ni la cookie `humetria_acq`. |
+| `POSTHOG_PROJECT_TOKEN` | vacía hasta la sección 8 | Token público de proyecto de PostHog (`phc_…`), nunca la llave personal (`phx_…`). |
+| `POSTHOG_CONSENT_DEFAULT` | `denied` | Mientras sea `denied` no hay medición ni la cookie `humetria_acq`. |
 
 Ojo con el nombre: el paquete de Inertia lee `INERTIA_SSR_ENSURE_BUNDLE_EXISTS`, pero `config/inertia.php` del proyecto lee
 `INERTIA_SSR_ENSURE_BUNDLE`, y esa es la que vale. Poner la otra no hace nada.
@@ -58,7 +58,7 @@ publica las imágenes pero no redespliega ni comprueba el sitio.
 ## 3. Primer encendido, en orden
 
 1. En Dokploy, con el servicio detenido o antes de fusionar: agrega a Environment `INERTIA_SSR_URL`, `INERTIA_SSR_TIMEOUT`,
-   `INERTIA_SSR_ENSURE_BUNDLE=false`, `GOOGLE_ANALYTICS_CONSENT_DEFAULT=denied` y `GOOGLE_ANALYTICS_ID` vacía.
+   `INERTIA_SSR_ENSURE_BUNDLE=false`, `POSTHOG_CONSENT_DEFAULT=denied` y `POSTHOG_PROJECT_TOKEN` vacía.
 2. Agrega al final `INERTIA_SSR_ENABLED=true`. Se puede dejar para después (en `false`, o sin definir, la landing se pinta en el
    navegador como antes), pero entonces el paso de comprobación de `deploy.yml` fallará hasta que se encienda: espera
    `X-Rendered-By: ssr`. Con `true` desde el primer despliegue no hay ventana: si `ssr` aún no está, `web` sirve sin el render.
@@ -140,24 +140,27 @@ código 1 para que `restart: unless-stopped` lo levante. Sus líneas (`ssr probe
 3. Si no se resuelve rápido: apaga el SSR (sección 4). La landing sigue sirviéndose.
 4. Para ver cuántos fallos se acumularon: `sail artisan tinker` → `Cache::get('ssr:failed:count')` (en producción, `php artisan tinker` en `web`).
 
-## 8. Empezar a medir con Analytics
+## 8. Empezar a medir con PostHog
 
-Hoy no se mide nada y es lo previsto: `GOOGLE_ANALYTICS_CONSENT_DEFAULT=denied`, de modo que no se carga `gtag.js`, la CSP no abre
-orígenes de Google y no se escribe la cookie `humetria_acq`. La procedencia de una demo se guarda solo en la sesión (120 minutos
-de inactividad); quien llega por un anuncio y pide la demo días después aparece como "Sin dato", lo que no significa tráfico directo.
+Hoy no se mide nada y es lo previsto: `POSTHOG_CONSENT_DEFAULT=denied`, de modo que el documento no lleva el bloque `analytics-config`,
+`posthog-js` no se descarga, la CSP no abre el origen de PostHog y no se escribe la cookie `humetria_acq`. La procedencia de una demo
+se guarda solo en la sesión (120 minutos de inactividad); quien llega por un anuncio y pide la demo días después aparece como
+"Sin dato", lo que no significa tráfico directo.
 
 Para empezar, y solo cuando el abogado del dueño lo autorice:
 
 1. Que el aviso de `/privacy-notice` esté revisado y publicado (sus secciones marcadas "pendiente de revisión legal").
-2. En GA4 crea la propiedad y copia el ID `G-…` del flujo web.
-3. Con un ID de prueba, en DebugView, confirma que llega `page_view` y que no llegan identificadores de anuncios (señales de Google y personalización
-   de anuncios están desactivadas en el código).
-4. Confirma que los orígenes de Google de la CSP (`SecurityHeaders::GOOGLE_ANALYTICS_ORIGINS`) bastan: la consola del navegador en la landing,
-   sin violaciones.
-5. En Environment: `GOOGLE_ANALYTICS_ID=G-…` y `GOOGLE_ANALYTICS_CONSENT_DEFAULT=granted`; reinicia `web`.
-6. Verifica en la landing sin sesión: carga `https://www.googletagmanager.com/gtag/js`, aparecen las cookies `_ga` y `_ga_<ID>`, y en
-   `/admin/login` y con sesión iniciada no hay nada de Google. Pide una demo de prueba y confirma el evento `generate_lead` (sin parámetros).
-7. En Google Ads, `generate_lead` es la conversión principal (Q7 del diseño). No se guardan `gclid`, `gbraid` ni `wbraid`.
+2. En PostHog (nube US) crea el proyecto y copia el token público `phc_…` (Project settings → Project token). No uses la llave personal.
+3. Con ese token en un entorno de prueba, abre la landing con la consola del navegador: sin violaciones de la CSP y sin peticiones a
+   `us-assets.i.posthog.com` (el build `no-external` no descarga nada fuera de nuestro dominio; la única conexión es `us.i.posthog.com`).
+   Si aparece otro origen, no se suelta la CSP: se corrige la configuración de `posthogOptions` (`resources/js/lib/analytics.ts`).
+4. En PostHog → Activity confirma que llega `$pageview` con `$current_url` sin más query que las `utm_*`, sin `$referrer` de otro sitio
+   y sin propiedades de persona.
+5. En Environment: `POSTHOG_PROJECT_TOKEN=phc_…` y `POSTHOG_CONSENT_DEFAULT=granted`; reinicia `web`.
+6. Verifica en la landing sin sesión: aparece el bloque `analytics-config`, el navegador se conecta solo con `us.i.posthog.com` y no
+   se escribe ninguna cookie de PostHog (usa el almacenamiento local). En `/admin/login` y con sesión iniciada no hay nada de PostHog.
+   Pide una demo de prueba y confirma el evento `generate_lead` (sin propiedades).
+7. `generate_lead` es la conversión principal del embudo landing → solicitud de demo (Q7 del diseño). No se guardan `gclid`, `gbraid` ni `wbraid`.
 
 Con `granted`, la medición es la decisión del sitio y no hay banner: el visitante no elige. Si el abogado pide que sí elija, es un
 trabajo nuevo (`App\Http\Consent` es el único lugar donde se leería esa decisión). Para volver atrás: `denied` y reiniciar `web`.
@@ -178,7 +181,7 @@ tras cada cambio de `compose.production.yaml`:
 7. **Memoria**: `docker stats` de `ssr`, esperado menos de 200 MB en reposo (el límite es 384).
 8. **Redirección de `www`**: `curl -sI https://www.humetria.com.mx/` da 301 a `https://humetria.com.mx/` conservando ruta y query. Depende de Q12 (`APP_URL`).
    Redirigir `www` invalida las llaves de acceso (passkeys) registradas en ese host: confírmalo antes.
-9. **Logs del proxy**: antes de activar Analytics, revisa que los logs de nginx y de Traefik no guarden la cookie `_ga` ni `humetria_acq`.
+9. **Logs del proxy**: antes de activar PostHog, revisa que los logs de nginx y de Traefik no guarden la cookie `humetria_acq`.
 10. **Vistas previas**: depurador de LinkedIn, el de Meta y WhatsApp con `https://humetria.com.mx/`.
 11. **Sin JavaScript**: `lynx -dump https://humetria.com.mx/` lee el título, la descripción y las nueve herramientas.
 12. **Search Console**: inspecciona la URL, confirma que es indexable y envía `https://humetria.com.mx/sitemap.xml`. Es la única comprobación de que Google
