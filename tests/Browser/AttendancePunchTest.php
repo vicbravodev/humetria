@@ -101,7 +101,7 @@ it('shows each test while the mark is checked, so the person sees it pass', func
         ->assertNoAccessibilityIssues(1);
 
     // Position and fingerprint passed (the browser's reader is instant); the server's check is the one in course.
-    $page->wait(1)->assertScript('() => document.querySelector("[aria-current=step]").textContent', 'Comprobando el código y la zona')
+    $page->assertScript(eventually('() => document.querySelector("[aria-current=step]").textContent === "Comprobando el código y la zona"'), true)
         ->waitForText('Entrada registrada');
 });
 

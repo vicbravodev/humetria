@@ -94,7 +94,7 @@ it('writes the log and the audit entry of an export with the count only', functi
     $entry = AuditEntry::query()->where('event', 'compensation.annex_exported')->sole();
 
     expect($entry->metadata)->toEqual(['scenario_id' => $this->scenario->id, 'people' => 2])
-        ->and(json_encode($entry->toArray()))->not->toContain('E-001')->not->toContain('500.00');
+        ->and(auditContent($entry))->not->toContain('E-001')->not->toContain('500.00');
     Log::shouldHaveReceived('info')->with('compensation.annex_exported', ['scenario_id' => $this->scenario->id, 'people' => 2])->once();
 });
 

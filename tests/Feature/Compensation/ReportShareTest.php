@@ -67,7 +67,7 @@ it('keeps the token out of the log and the audit trail', function (): void {
 
     [, $token] = resolve(CreateReportShare::class)->handle($this->scenario, 1, $this->owner->id);
 
-    expect(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain($token);
+    expect(auditContent(AuditEntry::query()->get()))->not->toContain($token);
     Log::shouldNotHaveReceived('info', fn (string $message, array $context = []): bool => str_contains(json_encode($context) ?: '', $token));
 });
 

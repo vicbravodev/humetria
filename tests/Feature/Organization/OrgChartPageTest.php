@@ -34,10 +34,12 @@ beforeEach(function (): void {
 /** Dir leads Gte, who leads Ana (in Ventas) and Beto. */
 function orgChartLine(): array
 {
-    $dir = Employee::factory()->create([...test()->place, 'name' => 'Dir', 'job_title' => 'Directora']);
-    $gte = Employee::factory()->reportingTo($dir)->create([...test()->place, 'name' => 'Gte']);
-    $ana = Employee::factory()->reportingTo($gte)->create([...test()->place, 'name' => 'Ana', 'job_title' => 'Vendedora', 'area_id' => test()->sales->id]);
-    $beto = Employee::factory()->reportingTo($gte)->create([...test()->place, 'name' => 'Beto']);
+    // Name, email and mobile are fixed: the search matches all three, and a random email with «ana» in it would find
+    // someone else than Ana. Only Ana's own contact has «ana» in it.
+    $dir = Employee::factory()->create([...test()->place, 'name' => 'Dir', 'email' => 'dir@example.test', 'mobile' => '5500000001', 'job_title' => 'Directora']);
+    $gte = Employee::factory()->reportingTo($dir)->create([...test()->place, 'name' => 'Gte', 'email' => 'gte@example.test', 'mobile' => '5500000002']);
+    $ana = Employee::factory()->reportingTo($gte)->create([...test()->place, 'name' => 'Ana', 'email' => 'ana@example.test', 'mobile' => '5500000003', 'job_title' => 'Vendedora', 'area_id' => test()->sales->id]);
+    $beto = Employee::factory()->reportingTo($gte)->create([...test()->place, 'name' => 'Beto', 'email' => 'beto@example.test', 'mobile' => '5500000004']);
 
     return [$dir, $gte, $ana, $beto];
 }

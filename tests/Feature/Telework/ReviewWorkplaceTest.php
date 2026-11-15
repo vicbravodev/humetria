@@ -91,7 +91,7 @@ it('records a decision on a submitted checklist and the workplace takes its stat
 
 it('requires a plan and due date for valid_with_plan and notes for not_valid', function (): void {
     expect(reviewRejected(fn () => decideReview(ReviewDecision::ValidWithPlan)))->toHaveKeys(['action_plan', 'plan_due_on'])
-        ->and(reviewRejected(fn () => decideReview(ReviewDecision::ValidWithPlan, plan: '   ', due: '2030-01-01')))->toHaveKey('action_plan')
+        ->and(reviewRejected(fn () => decideReview(ReviewDecision::ValidWithPlan, plan: '   ', due: '2099-12-31')))->toHaveKey('action_plan')
         ->and(reviewRejected(fn () => decideReview(ReviewDecision::ValidWithPlan, plan: 'Cambiar la silla.')))->toHaveKey('plan_due_on')
         ->and(reviewRejected(fn () => decideReview(ReviewDecision::NotValid)))->toHaveKey('notes')
         ->and(reviewRejected(fn () => decideReview(ReviewDecision::NotValid, '  ')))->toHaveKey('notes')
@@ -108,7 +108,7 @@ it('asks for an observation when validating a list with unfavorable answers, and
     }
 
     expect(reviewRejected(fn () => decideReview(ReviewDecision::Valid)))->toBe(['notes' => 'Escribe una observación: la lista tiene 3 respuestas desfavorables.'])
-        ->and(reviewRejected(fn () => decideReview(ReviewDecision::ValidWithPlan, plan: 'Cambiar la silla.', due: '2030-01-01')))->toHaveKey('notes')
+        ->and(reviewRejected(fn () => decideReview(ReviewDecision::ValidWithPlan, plan: 'Cambiar la silla.', due: '2099-12-31')))->toHaveKey('notes')
         ->and(WorkplaceReview::query()->count())->toBe(0);
 
     expect(decideReview(ReviewDecision::Valid, 'Lo vimos por video: se corrigió.')->decision)->toBe(ReviewDecision::Valid);
@@ -138,7 +138,7 @@ it('accepts a due date of today and rejects yesterday, counted in Mexico City', 
 });
 
 it('keeps the plan only for a validation with a plan', function (): void {
-    $review = decideReview(ReviewDecision::Valid, 'Todo bien.', 'Un plan que no hace falta', '2030-01-01');
+    $review = decideReview(ReviewDecision::Valid, 'Todo bien.', 'Un plan que no hace falta', '2099-12-31');
 
     expect($review->action_plan)->toBeNull()->and($review->plan_due_on)->toBeNull();
 });
@@ -164,7 +164,7 @@ it('refuses a checklist that is not submitted, not of the workplace or already r
 it('logs and audits the review with ids, the decision and the method, never the notes or the plan', function (): void {
     Log::spy();
 
-    $review = decideReview(ReviewDecision::ValidWithPlan, 'Nota privada del lugar', 'Plan privado de cambios', '2030-01-01');
+    $review = decideReview(ReviewDecision::ValidWithPlan, 'Nota privada del lugar', 'Plan privado de cambios', '2099-12-31');
     $expected = [
         'review_id' => $review->id,
         'workplace_id' => $this->workplace->id,
@@ -236,7 +236,7 @@ it('answers a decision the rules refuse with its errors', function (array $form,
     'no decision' => [[], 'decision'],
     'unknown decision' => [['decision' => 'maybe'], 'decision'],
     'no notes for not valid' => [['decision' => 'not_valid'], 'notes'],
-    'no plan' => [['decision' => 'valid_with_plan', 'plan_due_on' => '2030-01-01'], 'action_plan'],
+    'no plan' => [['decision' => 'valid_with_plan', 'plan_due_on' => '2099-12-31'], 'action_plan'],
     'no due date' => [['decision' => 'valid_with_plan', 'action_plan' => 'Cambiar la silla.'], 'plan_due_on'],
     'a due date that is not a date' => [['decision' => 'valid_with_plan', 'action_plan' => 'Plan', 'plan_due_on' => 'soon'], 'plan_due_on'],
 ]);
@@ -271,7 +271,7 @@ it('keeps the remote check of a workplace behind the same gate', function (): vo
 
 it('does not validate by remote check a never-reviewed workplace with no sent list (one being answered or cancelled does not count)', function (ReviewDecision $decision): void {
     $bare = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->workplace->teleworker_id]);
-    $remote = fn () => resolve(ReviewWorkplace::class)->handle($bare, null, $decision, 'Por videollamada.', 'Plan', CarbonImmutable::parse('2030-01-01'), $this->cora->id);
+    $remote = fn () => resolve(ReviewWorkplace::class)->handle($bare, null, $decision, 'Por videollamada.', 'Plan', CarbonImmutable::parse('2099-12-31'), $this->cora->id);
 
     expect(reviewRejected($remote))->toBe(['application' => 'Antes de validar, la persona debe contestar la lista de este lugar.']);
 

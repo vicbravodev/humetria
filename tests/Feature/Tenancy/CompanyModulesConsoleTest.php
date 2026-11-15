@@ -42,6 +42,7 @@ it('lives under /admin/companies', function (): void {
 });
 
 it('shows the staff the company with each module, whether it has it and where it comes from', function (): void {
+    $this->travelTo('2027-01-10 12:00:00'); // the grant ends 2027-02-01: with the real clock past it, it would show as expired
     $tenant = consolePlanned(['nom035', 'pulse']);
     TenantModule::factory()->for($tenant)->create(['module' => 'seating', 'source' => 'grant', 'reason' => 'Piloto', 'expires_at' => '2027-02-01 06:00:00']);
 
@@ -79,6 +80,7 @@ it('names every tool in the console as the menu does', function (): void {
 });
 
 it('says a tool kept from before the plan is taken away when the plan starts, with the day', function (): void {
+    $this->travelTo('2027-01-10 12:00:00'); // the plan starts 2027-02-01: with the real clock past it, nothing is left to take away
     $tenant = Tenant::factory()->create();
     resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035'], CarbonImmutable::parse('2027-02-01', config('app.display_timezone')));
 

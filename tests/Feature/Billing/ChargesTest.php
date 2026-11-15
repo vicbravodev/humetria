@@ -90,6 +90,8 @@ it('adds a recurring charge, like the accompaniment, with the day it ends if it 
 
 it('charges from today when no day is given', function (): void {
     [$tenant] = companyWithPlan();
+    // «Today» is read twice (by the charge and by the assertion): a still clock keeps them from straddling midnight.
+    $this->freezeTime();
 
     $this->actingAs(superadmin())->post(route('billing.charges.store', $tenant->id), chargeInput(['charge_on' => '']))->assertSessionHasNoErrors();
 

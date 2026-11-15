@@ -535,7 +535,7 @@ it('takes a union from its roster to a report shared with someone who has no acc
         ->fill('unionized_raise', '6')
         ->assertSee('sobre lo que hoy paga la empresa')
         ->press('Guardar y ver reporte')
-        ->assertSee('Escenario guardado.')
+        ->waitForText('Escenario guardado.')
         ->assertSee('Propuesta del sindicato')
         ->assertSee('8 de 8 personas costeadas')
         ->click('[data-test="report-detail"]')
@@ -621,7 +621,7 @@ it('makes a scenario from its editor and opens its report', function (): void {
         ->fill('unionized_raise', '5.75')
         ->press('Guardar y ver reporte')
         ->assertPathBeginsWith("{$url}/compensation/scenarios/")
-        ->assertSee('Escenario guardado.')
+        ->waitForText('Escenario guardado.')
         ->assertSee('Reporte de impacto')
         ->assertSee('Revisión 2027')
         ->assertNoJavaScriptErrors();
@@ -637,7 +637,7 @@ it('saves a raise of a fixed amount a month from the editor', function (): void 
         ->click('Monto fijo al mes')
         ->fill('unionized_raise', '608')
         ->press('Guardar y ver reporte')
-        ->assertSee('Escenario guardado.')
+        ->waitForText('Escenario guardado.')
         ->assertNoJavaScriptErrors();
 
     $scenario = Scenario::query()->withoutGlobalScopes()->sole();
@@ -660,7 +660,7 @@ it('adds a benefit to change in the editor, in its own unit, and saves its new v
         ->fill('[name="term_changes[0][value]"]', '1500')
         ->fill('unionized_raise', '0')
         ->press('Guardar y ver reporte')
-        ->assertSee('Escenario guardado.')
+        ->waitForText('Escenario guardado.')
         ->assertNoJavaScriptErrors();
 
     expect(Scenario::query()->withoutGlobalScopes()->sole()->term_changes)->toEqual([['benefit_id' => $benefit->id, 'value' => 150000, 'tenure_table' => null]]);

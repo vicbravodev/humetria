@@ -123,7 +123,7 @@ it('logs and audits the names of the changed fields, never their values', functi
     expect($entry->event)->toBe('tenant.updated')
         ->and($entry->subject_id)->toBe($tenant->id)
         ->and($entry->metadata)->toBe(['changed' => ['rfc', 'slug']])
-        ->and(json_encode($entry->toArray()))->not->toContain('NUE0303033C3');
+        ->and(auditContent($entry))->not->toContain('NUE0303033C3');
 });
 
 it('lists the changed fields in alphabetical order, as a list, without the update time', function (): void {

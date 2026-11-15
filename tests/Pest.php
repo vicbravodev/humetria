@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Models\ConversationParticipant;
@@ -18,6 +19,7 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Models\Conversation;
@@ -55,6 +57,24 @@ pest()->browser()->timeout(15_000);
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
+
+/**
+ * What an audit entry says, as text, for a privacy assertion: the event, the subject and the metadata. Not its UUIDs,
+ * its actor or its dates: they hold digit runs («50000») that a short number looked for in the whole entry meets by chance.
+ *
+ * @param  AuditEntry|iterable<AuditEntry>  $entries
+ */
+function auditContent(AuditEntry|iterable $entries): string
+{
+    $entries = $entries instanceof AuditEntry ? [$entries] : $entries;
+    $content = [];
+
+    foreach ($entries as $entry) {
+        $content[] = Arr::except($entry->toArray(), ['id', 'tenant_id', 'actor_id', 'request_id', 'created_at']);
+    }
+
+    return json_encode($content, JSON_THROW_ON_ERROR);
+}
 
 function superadmin(): User
 {
@@ -199,7 +219,8 @@ function tenantOf(string $tenantId): Tenant
 /** A new user who belongs to `$tenant` with `$role`. */
 function memberOf(Tenant $tenant, TenantRole $role): User
 {
-    $user = User::factory()->create();
+    // A fixed name: a random one («Rosario») contains the first name that a privacy assertion looks for in the same page.
+    $user = User::factory()->create(['name' => 'Miembro '.$role->value]);
     TenantMembership::factory()->for($tenant)->for($user)->role($role)->create();
 
     return $user;
@@ -428,6 +449,35 @@ function pathBecomes(string $path): string
             check();
         })
         JS;
+}
+
+/**
+ * A script that polls a condition (the source of an arrow function) until it holds, up to 10 s, and resolves with its
+ * last answer. Use it as `->assertScript(eventually('() => …'), true)`: the assertion waits for what it asserts, where a
+ * `->wait(1)` before it passes or fails by the speed of the runner. A condition that throws (the node is not there yet) is false.
+ */
+function eventually(string $condition): string
+{
+    $source = json_encode($condition, JSON_THROW_ON_ERROR);
+
+    return <<<JS
+        () => new Promise((resolve) => {
+            const condition = new Function('return (' + {$source} + ')')();
+            const start = performance.now();
+            const check = () => {
+                let holds = false;
+                try { holds = Boolean(condition()); } catch (error) { holds = false; }
+                holds || performance.now() - start > 10000 ? resolve(holds) : requestAnimationFrame(check);
+            };
+            check();
+        })
+        JS;
+}
+
+/** A script that resolves true once nothing finite is animating or in transition (a toast fading in, a menu closing). */
+function settled(): string
+{
+    return eventually('() => document.getAnimations().every((animation) => animation.playState !== "running" || animation.effect?.getComputedTiming().iterations === Infinity)');
 }
 
 /**

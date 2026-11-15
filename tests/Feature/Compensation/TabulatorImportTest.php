@@ -168,7 +168,7 @@ it('writes the log and the audit entry with counts only, never a salary', functi
     $entry = AuditEntry::query()->where('event', 'compensation.tabulator_imported')->sole();
 
     expect($entry->metadata)->toBe(['rows' => 3, 'grades' => 2])
-        ->and(json_encode($entry->toArray()))->not->toContain('524.65')->not->toContain('560.10')->not->toContain('777.77')->not->toContain('Operador');
+        ->and(auditContent($entry))->not->toContain('524.65')->not->toContain('560.10')->not->toContain('777.77')->not->toContain('Operador');
 });
 
 it('writes neither log nor audit when the file is refused', function (): void {

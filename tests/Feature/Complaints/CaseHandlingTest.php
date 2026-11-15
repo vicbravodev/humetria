@@ -128,7 +128,7 @@ it('writes to the person, in an entry only the thread shows, with the text encry
     expect(json_encode((array) DB::table('complaint_entries')->first()))->not->toContain('revisaremos');
     Log::shouldHaveReceived('info')->with('complaints.message_sent', ['complaint_id' => $this->complaint->id])->once();
     expect(AuditEntry::query()->where('event', 'complaint.message_sent')->sole()->metadata)->toBe([])
-        ->and(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('revisaremos');
+        ->and(auditContent(AuditEntry::query()->get()))->not->toContain('revisaremos');
 });
 
 it('keeps an internal note out of what the person reads, and out of the logs', function (): void {
@@ -139,7 +139,7 @@ it('keeps an internal note out of what the person reads, and out of the logs', f
     $entry = ComplaintEntry::query()->sole();
     expect($entry->kind)->toBe('internal_note')->and($entry->body)->toBe(NOTE);
     Log::shouldHaveReceived('info')->with('complaints.note_added', ['complaint_id' => $this->complaint->id])->once();
-    expect(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('jefe de turno');
+    expect(auditContent(AuditEntry::query()->get()))->not->toContain('jefe de turno');
 });
 
 it('numbers the entries of a case in order, one after the other', function (): void {

@@ -93,7 +93,7 @@ it('never puts the note or the scores in a log line or the audit', function (): 
 
     Log::shouldHaveReceived('info')->with('seating.person_input_submitted', ['employee_id' => $this->ana->id, 'work_center_id' => $this->center->id])->once();
     Log::shouldNotHaveReceived('info', fn ($message, $context = []): bool => str_contains(json_encode($context), 'personal') || array_key_exists('footwear', (array) $context) || array_key_exists('discomfort', (array) $context));
-    expect(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('personal')->not->toContain('footwear');
+    expect(auditContent(AuditEntry::query()->get()))->not->toContain('personal')->not->toContain('footwear');
 });
 
 it('refuses in the database a score outside 1 to 3', function (): void {

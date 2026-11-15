@@ -85,7 +85,7 @@ it('never gives the address to anybody: not in the case, not in the inbox, not i
 
     expect(json_encode($case->viewData('page')['props']))->not->toContain('rosa.privada')->not->toContain('reporterEmail')->not->toContain('reporter_email');
     expect(json_encode($inbox->viewData('page')['props']))->not->toContain('rosa.privada');
-    expect(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('rosa.privada');
+    expect(auditContent(AuditEntry::query()->get()))->not->toContain('rosa.privada');
 });
 
 it('tells the person there is news, when a handler writes to them, with a link to follow up and nothing of the case', function (): void {

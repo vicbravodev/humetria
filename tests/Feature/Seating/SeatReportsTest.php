@@ -49,7 +49,7 @@ it('takes the report of a damaged seat from the portal, tied to the center and t
         ->and($report->resolution)->toBeNull()
         ->and(array_keys($report->getAttributes()))->not->toContain('employee_id');
     Log::shouldHaveReceived('info')->with('seating.seat_reported', ['report_id' => $report->id, 'work_center_id' => $this->center->id])->once();
-    expect(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('respaldo');
+    expect(auditContent(AuditEntry::query()->get()))->not->toContain('respaldo');
 });
 
 it('rejects an empty or too long description and a link that is not valid', function (): void {
