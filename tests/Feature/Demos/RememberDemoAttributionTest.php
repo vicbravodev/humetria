@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
+use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 
 mutates(RememberDemoAttribution::class);
 
@@ -150,4 +152,198 @@ it('only runs on the landing, never on another page or one with a token', functi
 
 it('sets no cookie of its own while there is no consent', function (): void {
     $this->get('/?utm_source=anuncios')->assertCookieMissing('humetria_acq');
+});
+
+const NINETY_DAYS = 90 * 86_400;
+
+/** The owner granted consent: only then the long cookie is written. */
+function consentGranted(): void
+{
+    config(['services.google_analytics.consent_default' => 'granted']);
+}
+
+/** @return array<string, mixed> */
+function acquisition(TestResponse $response): array
+{
+    $value = $response->getCookie('humetria_acq');
+    expect($value)->not->toBeNull();
+
+    return (array) json_decode((string) $value->getValue(), true, flags: JSON_THROW_ON_ERROR);
+}
+
+/**
+ * @param  array<string, ?string>  $first
+ * @param  array<string, ?string>  $last
+ */
+function acquisitionCookie(array $first, array $last, int $seenAt): string
+{
+    return json_encode(['first' => $first, 'last' => $last, 'first_seen_at' => $seenAt], JSON_THROW_ON_ERROR);
+}
+
+/** @return array<string, ?string> */
+function touchOf(?string $source = null, ?string $medium = null, ?string $campaign = null, ?string $host = null): array
+{
+    return ['source' => $source, 'medium' => $medium, 'campaign' => $campaign, 'referrer_host' => $host];
+}
+
+it('writes the 90-day cookie with the first and the last touch once consent is granted', function (): void {
+    consentGranted();
+    Carbon::setTestNow('2026-11-14 12:00:00');
+
+    $response = $this->get('/?utm_source=anuncios&utm_medium=pago&utm_campaign=nom-035')->assertOk();
+
+    expect(acquisition($response))->toBe([
+        'first' => touchOf('anuncios', 'pago', 'nom-035'),
+        'last' => touchOf('anuncios', 'pago', 'nom-035'),
+        'first_seen_at' => Carbon::now()->getTimestamp(),
+    ]);
+});
+
+it('writes it encrypted, HttpOnly, Secure, SameSite=Lax and for exactly 90 days', function (): void {
+    consentGranted();
+    Carbon::setTestNow('2026-11-14 12:00:00');
+
+    $response = $this->get('/?utm_source=anuncios');
+    $cookie = $response->getCookie('humetria_acq', false);
+
+    expect($cookie)->not->toBeNull()
+        ->and($cookie->getValue())->not->toContain('anuncios')
+        ->and($cookie->isHttpOnly())->toBeTrue()
+        ->and($cookie->isSecure())->toBeTrue()
+        ->and($cookie->getSameSite())->toBe('lax')
+        ->and($cookie->getPath())->toBe('/')
+        ->and($cookie->getExpiresTime())->toBe(Carbon::now()->getTimestamp() + NINETY_DAYS);
+});
+
+it('still remembers the session when the cookie is written', function (): void {
+    consentGranted();
+
+    $this->get('/?utm_source=anuncios')->assertOk();
+
+    expect(rememberedTouch())->toMatchArray(['source' => 'anuncios']);
+});
+
+it('writes no cookie with consent denied, even for a visit with a signal', function (): void {
+    $this->get('/?utm_source=anuncios&utm_medium=pago')->assertCookieMissing('humetria_acq');
+    $this->withHeaders(['Referer' => 'https://www.google.com/'])->get('/')->assertCookieMissing('humetria_acq');
+});
+
+it('writes no cookie for a visit with no signal, with or without one before', function (): void {
+    consentGranted();
+    Carbon::setTestNow('2026-11-14 12:00:00');
+
+    $this->get('/')->assertCookieMissing('humetria_acq');
+
+    $existing = acquisitionCookie(touchOf('anuncios'), touchOf('anuncios'), Carbon::now()->subDays(3)->getTimestamp());
+    $this->withCookie('humetria_acq', $existing)->get('/')->assertCookieMissing('humetria_acq');
+});
+
+it('keeps the first touch and the day it was first seen, and overwrites the last one only with a signal', function (): void {
+    consentGranted();
+    Carbon::setTestNow('2026-11-14 12:00:00');
+    $seen = Carbon::now()->subDays(10)->getTimestamp();
+    $before = acquisitionCookie(touchOf('anuncios', 'pago', 'nom-035'), touchOf('anuncios', 'pago', 'nom-035'), $seen);
+
+    $response = $this->withCookie('humetria_acq', $before)->withHeaders(['Referer' => 'https://www.bing.com/search?q=x'])->get('/?utm_source=boletin');
+
+    expect(acquisition($response))->toBe([
+        'first' => touchOf('anuncios', 'pago', 'nom-035'),
+        'last' => touchOf('boletin', host: 'www.bing.com'),
+        'first_seen_at' => $seen,
+    ]);
+});
+
+it('treats a cookie that is not what it wrote as no cookie at all', function (string $stored): void {
+    consentGranted();
+    Carbon::setTestNow('2026-11-14 12:00:00');
+
+    $response = $this->withCookie('humetria_acq', $stored)->get('/?utm_source=nuevo');
+
+    expect(acquisition($response))->toBe([
+        'first' => touchOf('nuevo'),
+        'last' => touchOf('nuevo'),
+        'first_seen_at' => Carbon::now()->getTimestamp(),
+    ]);
+})->with(fn (): array => [
+    'not JSON' => ['esto no es json'],
+    'an empty string' => [''],
+    'a JSON string' => ['"first"'],
+    'a JSON number' => ['42'],
+    'an empty list' => ['[]'],
+    'no first_seen_at' => [json_encode(['first' => touchOf('viejo'), 'last' => touchOf('viejo')])],
+    'first_seen_at as text' => [json_encode(['first' => touchOf('viejo'), 'last' => touchOf('viejo'), 'first_seen_at' => 'ayer'])],
+    'first_seen_at as a float' => [json_encode(['first' => touchOf('viejo'), 'last' => touchOf('viejo'), 'first_seen_at' => 1.5])],
+    'first_seen_at in the future' => [acquisitionCookie(touchOf('viejo'), touchOf('viejo'), Carbon::parse('2026-11-14 12:00:01')->getTimestamp())],
+    'first as text' => [json_encode(['first' => 'viejo', 'last' => touchOf('viejo'), 'first_seen_at' => Carbon::parse('2026-11-10')->getTimestamp()])],
+    'an empty first' => [acquisitionCookie(touchOf(), touchOf('viejo'), Carbon::parse('2026-11-10')->getTimestamp())],
+    'a first of arrays' => [json_encode(['first' => ['source' => ['a']], 'last' => touchOf('viejo'), 'first_seen_at' => Carbon::parse('2026-11-10')->getTimestamp()])],
+]);
+
+it('ignores a cookie that was not encrypted by the application', function (): void {
+    consentGranted();
+
+    $response = $this->withUnencryptedCookie('humetria_acq', acquisitionCookie(touchOf('forjada'), touchOf('forjada'), time()))->get('/?utm_source=nuevo');
+
+    expect(acquisition($response)['first'])->toBe(touchOf('nuevo'));
+});
+
+it('writes no cookie when a broken one comes with a visit that has no signal', function (): void {
+    consentGranted();
+
+    $this->withCookie('humetria_acq', 'esto no es json')->get('/')->assertCookieMissing('humetria_acq');
+});
+
+it('keeps a cookie of exactly 90 days and starts again after one second more', function (int $age, string $first): void {
+    consentGranted();
+    Carbon::setTestNow('2026-11-14 12:00:00');
+    $old = acquisitionCookie(touchOf('viejo'), touchOf('viejo'), Carbon::now()->getTimestamp() - $age);
+
+    $response = $this->withCookie('humetria_acq', $old)->get('/?utm_source=nuevo');
+
+    expect(acquisition($response)['first'])->toBe(touchOf($first))
+        ->and(acquisition($response)['last'])->toBe(touchOf('nuevo'));
+})->with([
+    'a day short of expiring' => [NINETY_DAYS - 86_400, 'viejo'],
+    'exactly 90 days' => [NINETY_DAYS, 'viejo'],
+    'one second more' => [NINETY_DAYS + 1, 'nuevo'],
+    'a year' => [365 * 86_400, 'nuevo'],
+]);
+
+it('starts a new first touch, with a new date, when the cookie expired', function (): void {
+    consentGranted();
+    Carbon::setTestNow('2026-11-14 12:00:00');
+    $old = acquisitionCookie(touchOf('viejo'), touchOf('viejo'), Carbon::now()->getTimestamp() - NINETY_DAYS - 1);
+
+    $response = $this->withCookie('humetria_acq', $old)->get('/?utm_source=nuevo');
+
+    expect(acquisition($response)['first_seen_at'])->toBe(Carbon::now()->getTimestamp());
+});
+
+it('cleans every value of the cookie again before writing it back', function (): void {
+    consentGranted();
+    Carbon::setTestNow('2026-11-14 12:00:00');
+    $dirty = acquisitionCookie(
+        touchOf(str_repeat('a', 101), 'correo', "a\nb", 'Host Con Espacio'),
+        touchOf('ok'),
+        Carbon::now()->subDay()->getTimestamp(),
+    );
+
+    $response = $this->withCookie('humetria_acq', $dirty)->get('/?utm_source=nuevo');
+
+    expect(acquisition($response)['first'])->toBe(touchOf(medium: 'correo'));
+});
+
+it('keeps the click ids of Google Ads out of the cookie too', function (): void {
+    consentGranted();
+
+    $response = $this->get('/?utm_source=anuncios&gclid=CLICK123&gbraid=BRAID456&wbraid=WBRAID789');
+
+    expect(json_encode(acquisition($response)))->not->toContain('CLICK123')->not->toContain('BRAID456')->not->toContain('WBRAID789');
+});
+
+it('sets the cookie only on the landing', function (): void {
+    consentGranted();
+
+    $this->get('/privacy-notice?utm_source=anuncios')->assertCookieMissing('humetria_acq');
+    $this->call('HEAD', '/?utm_source=anuncios')->assertCookieMissing('humetria_acq');
 });
