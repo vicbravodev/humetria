@@ -2,6 +2,9 @@ import { Head } from '@inertiajs/react';
 import { cspNonce } from '@/lib/csp-nonce';
 import type { Seo } from '@/types';
 
+// The commit this bundle was built from (the Dockerfile sets VITE_BUILD_REVISION). A local build has none and prints no tag.
+const buildRevision: string = import.meta.env['VITE_BUILD_REVISION'] || '';
+
 /**
  * The tags of the head of a public page, all from `seo`. Each carries the `head-key` that resources/views/partials/seo-fallback.blade.php
  * prints as data-inertia, so when the app starts the client keeps or replaces each tag instead of adding a second one.
@@ -72,6 +75,13 @@ export default function SeoHead({ seo }: { seo: Seo }) {
                 name="twitter:image"
                 content={image.url}
             />
+            {buildRevision === '' ? null : (
+                <meta
+                    head-key="build-revision"
+                    name="build-revision"
+                    content={buildRevision}
+                />
+            )}
             <script
                 head-key="json-ld"
                 type="application/ld+json"
