@@ -8,7 +8,13 @@ void test('what Node renders carries no analytics: no gtag, no dataLayer, no Goo
     const { json } = await render();
     const everything = JSON.stringify(json);
 
-    for (const forbidden of ['gtag', 'dataLayer', 'googletagmanager', 'google-analytics', 'generate_lead']) {
+    for (const forbidden of [
+        'gtag',
+        'dataLayer',
+        'googletagmanager',
+        'google-analytics',
+        'generate_lead',
+    ]) {
         assert.equal(everything.includes(forbidden), false, forbidden);
     }
 });
