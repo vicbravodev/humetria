@@ -6,6 +6,8 @@ namespace App\Support;
 
 use App\Http\Analytics;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -18,14 +20,29 @@ final class PostHogExceptions
 {
     private const int MAX_FRAMES = 50;
 
-    /** Called for every exception Laravel decides to report; without a token it does nothing. */
+    /** How many exceptions of one class reach PostHog a minute: a storm of the same error is one alert, not a bill. */
+    private const int PER_CLASS_PER_MINUTE = 10;
+
+    /**
+     * Called for every exception Laravel decides to report, before it is logged; without a token it does nothing. It
+     * never throws: Laravel runs it without a guard, so a Valkey that is down would otherwise keep the original exception
+     * out of the log.
+     */
     public static function report(Throwable $exception): void
     {
         if (Analytics::serverToken() === null) {
             return;
         }
 
-        SendPostHogEvent::dispatch('$exception', (string) Str::uuid(), self::properties($exception));
+        try {
+            RateLimiter::attempt(
+                'posthog-exception:'.$exception::class,
+                self::PER_CLASS_PER_MINUTE,
+                fn () => SendPostHogEvent::safely('$exception', (string) Str::uuid(), self::properties($exception)),
+            );
+        } catch (Throwable $failure) {
+            Log::warning('posthog.dispatch_failed', ['exception' => class_basename($failure)]);
+        }
     }
 
     /** @return array<string, mixed> */

@@ -65,7 +65,7 @@ final class Analytics
             return;
         }
 
-        SendPostHogEvent::dispatch($event, (string) Str::uuid(), [...$properties, '$process_person_profile' => false, '$lib' => 'humetria-php']);
+        SendPostHogEvent::safely($event, (string) Str::uuid(), [...$properties, '$process_person_profile' => false, '$lib' => 'humetria-php']);
     }
 
     public static function projectToken(Request $request): ?string
