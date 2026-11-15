@@ -13,6 +13,7 @@ final readonly class DemoRequestData
     /**
      * @param  string  $whatsapp  E.164, always a Mexican number: +52 and 10 digits.
      * @param  list<Tool>  $tools  The HR tools the prospect wants to see; at least one.
+     * @param  ?DemoAttribution  $attribution  Where the person came from, when it is known.
      */
     public function __construct(
         public string $name,
@@ -23,5 +24,6 @@ final readonly class DemoRequestData
         public Workforce $workforce,
         public array $tools,
         public ?string $message,
+        public ?DemoAttribution $attribution = null,
     ) {}
 }
