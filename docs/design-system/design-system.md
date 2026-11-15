@@ -93,8 +93,8 @@ El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca deco
 
 ## Patrones
 
-Las pantallas completas están en `pantallas/` (29, en claro y oscuro, con su mapa en `pantallas/LEEME.md`) y son el
-estándar: toda pantalla, existente o nueva, se arma con sus piezas — marco con migas (`AppBreadcrumbs`), `PageHeader`
+Las pantallas completas son las de la app (las maquetas de `pantallas/` se retiraron el 2026-11-15; siguen en el
+historial de git) y son el estándar: toda pantalla, existente o nueva, se arma con sus piezas — marco con migas (`AppBreadcrumbs`), `PageHeader`
 con estado y ficha, `ArcMeter` (el arco de la "h"), `CountTabs`, `Notice`, `Initials`, tablas con cabecera `muted` y
 estados vacíos con el siguiente paso.
 
