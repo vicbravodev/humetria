@@ -33,9 +33,9 @@ export default function HumiSection() {
                     </h2>
                     <p className={LEAD}>
                         Humi vive dentro del panel. Le preguntas cómo vas, qué
-                        te falta o cuánto costaría un aumento, y te contesta
-                        con tus datos y te lleva a la pantalla donde lo
-                        resuelves. Nunca te muestra respuestas de nadie.
+                        te falta o cuánto costaría un aumento, y te contesta con
+                        tus datos y te lleva a la pantalla donde lo resuelves.
+                        Nunca te muestra respuestas de nadie.
                     </p>
                     <ul className="mt-1 grid gap-3">
                         {facts.map((fact) => (

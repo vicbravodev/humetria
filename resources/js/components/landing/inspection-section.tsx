@@ -69,8 +69,8 @@ export default function InspectionSection() {
                         Si mañana llega un inspector, ya sabes qué enseñarle
                     </h2>
                     <p className={LEAD}>
-                        Humetría va juntando los documentos de cada centro y
-                        te avisa qué falta antes de que alguien lo pida.
+                        Humetría va juntando los documentos de cada centro y te
+                        avisa qué falta antes de que alguien lo pida.
                     </p>
                     <p className="max-w-[52ch] border-l-2 pl-3.5 text-meta text-muted-foreground">
                         Te ayudamos a reunir tus comprobantes. No sustituimos a
