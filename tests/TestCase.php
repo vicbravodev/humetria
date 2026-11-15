@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Vite;
 use Laravel\Fortify\Features;
+use Tests\Support\SafeFakerNames;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -28,6 +29,9 @@ abstract class TestCase extends BaseTestCase
         // that trips a privacy assertion fails every time, not one run in fifty.
         // TEST_SEED mixes another seed in, to hunt flaky data: `TEST_SEED=7 composer test:coverage` (see docs/testing.md).
         mt_srand(crc32(static::class.'::'.$this->nameWithDataSet().'::'.(getenv('TEST_SEED') ?: '')));
+
+        // Random people never carry a name that a privacy assertion looks for in the same page (see SafeFakerNames).
+        fake()->addProvider(new SafeFakerNames(fake()));
 
         // TEST_NOW starts each test's clock at that instant, then lets it run, to hunt flaky dates:
         // `TEST_NOW='2026-11-14 23:59:59' composer test:coverage`. Tests that fix their own time still win;

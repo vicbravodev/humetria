@@ -85,7 +85,11 @@ tiene que pasar con **cualquier** dato que Faker pueda dar, no solo con el de ho
 7. **Navegador: se espera lo que se afirma.** Nada de `->wait(n)` antes de medir; `->assertScript(eventually('() => …'), true)`
    espera la condición (hasta 10 s), `settled()` espera a que terminen las animaciones (un toast, un menú que cierra) y
    `pathBecomes()` la ruta tras un clic que navega. La excepción son las ventanas de observación de algo que *no* debe pasar.
-8. **Ninguna prueba depende de otra, del orden, del puerto ni de un id.** Cada una crea sus datos con factories.
+8. **Un nombre que se busca para probar que no se filtró no puede salir de Faker.** `tests/Support/SafeFakerNames.php`
+   hace que `fake()->name()`, `company()`, `userName()` y `safeEmail()` nunca den un nombre con una palabra capitalizada
+   que alguna prueba pase a `not->toContain('Rosa')` o `assertDontSee`: las lee de las propias pruebas, no hay lista que mantener.
+   `memberOf()` da a cada miembro un nombre fijo (`Miembro owner`).
+9. **Ninguna prueba depende de otra, del orden, del puerto ni de un id.** Cada una crea sus datos con factories.
 
 ## Cómo se estresa
 
