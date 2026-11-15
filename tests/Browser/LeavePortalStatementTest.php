@@ -43,7 +43,7 @@ it('shows the statement and lets the person confirm they received it', function 
         ->assertSee('Ana Solís')
         ->assertSee('2 años')
         ->assertSee('14 días')
-        ->assertSee('25% sobre los días de vacaciones')
+        ->assertSee('25 % sobre los días de vacaciones')
         ->assertSee('15 de septiembre de 2026')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')

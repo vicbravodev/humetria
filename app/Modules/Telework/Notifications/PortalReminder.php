@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Telework\Data\PendingChecklist;
 use App\Modules\Telework\Data\PendingDocument;
 use App\Modules\Telework\Data\PendingEquipment;
@@ -18,7 +19,7 @@ use Illuminate\Notifications\Notification;
  * Tells an employee, as "usted", everything waiting in their portal, with their personal link (made as the job runs, so
  * the notification is sent at once and never queued: the plain token must not reach the queue).
  */
-final class PortalReminder extends Notification
+final class PortalReminder extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -39,7 +40,7 @@ final class PortalReminder extends Notification
     {
         // Only something to confirm (a document published, equipment delivered) is «Tiene algo por confirmar» (board V3-Correos).
         $confirm = $this->pending->checklists === [] && $this->pending->photos === [] && $this->pending->visits === [];
-        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject($confirm ? 'Tiene algo por confirmar' : 'Tiene pendientes en su portal')->greeting("Hola, {$this->name}")
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject($confirm ? 'Tiene algo por confirmar' : 'Tiene pendientes en su portal')->greeting("Hola, {$this->name}")
             ->line("{$this->company->tradeName} le dejó pendientes en su portal de teletrabajo:");
 
         $this->list($mail, 'Listas por contestar', array_map(fn (PendingChecklist $item): string => $item->workplace.' · Sección '.($item->section === 1 ? 'I' : 'II'), $this->pending->checklists));
@@ -66,5 +67,10 @@ final class PortalReminder extends Notification
         foreach ($items as $item) {
             $mail->line("- {$item}");
         }
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

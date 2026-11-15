@@ -10,8 +10,10 @@ use App\Modules\Telework\Enums\RowState;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Enums\TrainingStanding;
 use App\Modules\Telework\Models\Checklist;
+use App\Modules\Telework\Models\ChecklistAnswer;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\ChecklistPhoto;
+use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\SafetyCommittee;
@@ -20,6 +22,7 @@ use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Training;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Models\WorkplaceReview;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\MemberSummary;
@@ -142,9 +145,9 @@ final readonly class Dossier
         $places = Workplace::query()->whereNull('retired_at')->whereIn('teleworker_id', array_values($byId->keys()->all()))->orderBy('created_at')->orderBy('id')->get(); // @pest-mutate-ignore: UnwrapArrayValues
         $reviews = $this->standing->latestReviews(array_values($places->map(fn (Workplace $place): string => $place->id)->all())); // @pest-mutate-ignore: UnwrapArrayValues
         $months = $this->settings->periodMonths();
-        $states = $this->workCenters->states();
+        $unfavorable = $this->unfavorable(array_values(array_filter(array_map(fn (WorkplaceReview $review): ?string => $review->application_id, $reviews))));
 
-        return array_values($places->map(function (Workplace $place) use ($byId, $nameOf, $reviews, $months): array { // @pest-mutate-ignore: UnwrapArrayValues
+        return array_values($places->map(function (Workplace $place) use ($byId, $nameOf, $reviews, $months, $unfavorable): array { // @pest-mutate-ignore: UnwrapArrayValues
             $review = $reviews[$place->id] ?? null;
             $status = $this->standing->statusOf($review, fn (): int => $months);
             $person = $byId->get($place->teleworker_id) ?? throw new LogicException("Workplace [{$place->id}] has no active person.");
@@ -158,9 +161,36 @@ final readonly class Dossier
                     'decision' => $review->decision->label(),
                     'method' => $review->method->label(),
                     'validUntil' => $review->decision->validates() ? $this->day($this->standing->expiryAfter($review, $months)->subDay()) : null,
+                    'unfavorable' => $review->application_id === null ? null : $unfavorable[$review->application_id] ?? 0,
+                    'note' => $review->notes,
                 ],
             ];
         })->all());
+    }
+
+    /**
+     * How many answers of each submitted checklist were the unfavorable one: a count, never which answers nor their notes.
+     *
+     * @param  list<string>  $applicationIds
+     * @return array<string, int> by application id
+     */
+    private function unfavorable(array $applicationIds): array
+    {
+        if ($applicationIds === []) {
+            return [];
+        }
+
+        $answers = ChecklistAnswer::query()->whereIn('application_id', $applicationIds)->get(['application_id', 'question_id', 'answer']);
+        $questions = ChecklistQuestion::query()->whereIn('id', $answers->pluck('question_id'))->get(['id', 'favorable'])->keyBy('id');
+        $counts = [];
+
+        foreach ($answers as $answer) {
+            $question = $questions->get($answer->question_id);
+            $given = $answer->answer;
+            $counts[$answer->application_id] = ($counts[$answer->application_id] ?? 0) + ($question !== null && $given !== null && AnswerRules::unfavorable($question->favorable, $given) ? 1 : 0);
+        }
+
+        return $counts;
     }
 
     /**

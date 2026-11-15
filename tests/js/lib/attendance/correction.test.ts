@@ -4,6 +4,7 @@ import {
     clockNow,
     correctionBody,
     correctionReason,
+    correctionDay,
     correctionTarget,
     dayAfter,
     requestStatus,
@@ -122,5 +123,12 @@ describe('weekRequests', () => {
             weekRequests([request, 3, null, [], { ...request, status: 1 }]),
         ).toEqual([request]);
         expect(weekRequests(undefined)).toEqual([]);
+    });
+});
+
+describe('correctionDay', () => {
+    it('names the day the person is asking about, in lowercase after «Día:»', () => {
+        expect(correctionDay('2026-11-12')).toBe('Día: jueves 12 de noviembre');
+        expect(correctionDay('2026-11-08')).toBe('Día: domingo 8 de noviembre');
     });
 });

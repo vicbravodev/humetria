@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Barra superior móvil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+.hm-small{font-size:14px;line-height:20px}.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-muted{color:var(--muted-foreground)}
+.hm-bar{--p:0;--ref:0;position:relative;height:8px;border-radius:9999px;background:var(--track)}
+.hm-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);border-radius:9999px;background:var(--primary)}
+.hm-bar--sinref::after{display:none}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+
+.mt{display:flex;align-items:center;gap:8px;width:375px;height:64px;padding:0 12px 0 8px;flex:none;background:var(--background)}
+.mt-title{flex:1;min-width:0;font-size:18px;line-height:26px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm .mt-ob{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--foreground)}
+</style>
+</helmet>
+<div class="{{themeClass}} mt">
+  <button type="button" class="hm-iconbtn" aria-label="Abrir el menú"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+  <h1 class="mt-title">{{ heading }}</h1>
+  <button type="button" class="mt-ob" aria-label="Buscar"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+  <button type="button" class="mt-ob" aria-label="Cambiar tema"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg></button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"heading":{"editor":"text","default":"Organigrama","section":"Estado"},"$preview":{"width":375,"height":64}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const themeClass = theme === 'oscuro' ? 'hm t-dark' : 'hm t-light';
+    return { theme, themeClass, heading: this.props.heading ?? 'Organigrama' };
+  }
+}
+</script>
+</body>
+</html>

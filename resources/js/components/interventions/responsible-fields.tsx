@@ -15,11 +15,14 @@ export default function ResponsibleFields({
     userId,
     name,
     errors,
+    inherited,
 }: {
     members: ProgramMember[];
     userId: number | null;
     name: string;
     errors: Errors;
+    /** What an empty responsible falls to, told in the fields; none in the Programa's own. */
+    inherited?: string | undefined;
 }) {
     const options = members.map((member) => ({
         value: String(member.id),
@@ -40,7 +43,7 @@ export default function ResponsibleFields({
                     defaultValue={options.find(
                         (option) => option.value === String(userId),
                     )}
-                    placeholder="Elige a la persona"
+                    placeholder={inherited ?? 'Elige a la persona'}
                 />
                 <InputError message={errors['responsible_user_id']} />
             </div>
@@ -51,6 +54,7 @@ export default function ResponsibleFields({
                 <Input
                     id="responsible-name"
                     name="responsible_name"
+                    placeholder={inherited}
                     defaultValue={userId === null ? name : ''}
                     aria-invalid={errors['responsible_name'] !== undefined}
                 />

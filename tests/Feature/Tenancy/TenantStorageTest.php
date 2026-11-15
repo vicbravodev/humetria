@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Modules\Tenancy\Enums\TenantRestriction;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 mutates(Tenant::class);
@@ -51,7 +53,9 @@ it('mass-assigns every editable field', function (): void {
         ...Tenant::factory()->raw(),
         'trial_started_at' => '2026-10-01 12:00:00+00',
         'active_until' => '2027-10-01 12:00:00+00',
-        'deactivated_at' => '2026-11-01 12:00:00+00',
+        'restriction' => 'suspended',
+        'restriction_reason' => 'Falta de pago',
+        'restricted_at' => '2026-11-01 12:00:00+00',
     ];
 
     $tenant = Tenant::query()->create($attributes)->refresh();
@@ -59,5 +63,23 @@ it('mass-assigns every editable field', function (): void {
     expect($tenant->only(['legal_name', 'trade_name', 'rfc', 'slug']))->toBe(Arr::only($attributes, ['legal_name', 'trade_name', 'rfc', 'slug']))
         ->and($tenant->trial_started_at?->toIso8601String())->toBe('2026-10-01T12:00:00+00:00')
         ->and($tenant->active_until?->toIso8601String())->toBe('2027-10-01T12:00:00+00:00')
-        ->and($tenant->deactivated_at?->toIso8601String())->toBe('2026-11-01T12:00:00+00:00');
+        ->and($tenant->restriction)->toBe(TenantRestriction::Suspended)
+        ->and($tenant->restriction_reason)->toBe('Falta de pago')
+        ->and($tenant->restricted_at?->toIso8601String())->toBe('2026-11-01T12:00:00+00:00');
 });
+
+it('rejects a restriction the platform does not know', function (): void {
+    Tenant::factory()->create();
+
+    DB::table('tenants')->update(['restriction' => 'frozen', 'restriction_reason' => 'x', 'restricted_at' => now()]);
+})->throws(QueryException::class, 'tenants_restriction_known');
+
+it('rejects a restriction without its reason or its date, and a reason without a restriction', function (array $columns): void {
+    Tenant::factory()->create($columns);
+})->throws(QueryException::class, 'tenants_restriction_complete')->with([
+    'no reason' => [['restriction' => 'suspended', 'restricted_at' => '2026-11-01 12:00:00+00']],
+    'blank reason' => [['restriction' => 'suspended', 'restriction_reason' => ' ', 'restricted_at' => '2026-11-01 12:00:00+00']],
+    'no date' => [['restriction' => 'archived', 'restriction_reason' => 'Baja']],
+    'reason alone' => [['restriction_reason' => 'Baja']],
+    'date alone' => [['restricted_at' => '2026-11-01 12:00:00+00']],
+]);

@@ -80,7 +80,7 @@ it('answers 404 to a work center of another company', function (string $action, 
 })->with(['archive' => ['archive', false], 'restore' => ['restore', true]]);
 
 it('refuses a suspended company with 423', function (): void {
-    $workCenter = WorkCenter::factory()->for(Tenant::factory()->deactivated())->create();
+    $workCenter = WorkCenter::factory()->for(Tenant::factory()->suspended())->create();
 
     $this->actingAs(ownerOf($workCenter->tenant))
         ->post(route('tenant.work-centers.archive', [$workCenter->tenant, $workCenter->id]))

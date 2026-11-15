@@ -2,6 +2,7 @@ import { ListChecks } from 'lucide-react';
 import RiskLevel from '@/components/humetria/risk-level';
 import SettingRow from '@/components/humetria/setting-row';
 import type { AssessmentRecord, MeasureSuggestions } from '@/types';
+import { describeDate } from '@/lib/calendar-date';
 
 /** The signed result: total, level, when, and the measures Humetría suggests for it, labelled as a suggestion. */
 export default function AssessmentResult({
@@ -15,7 +16,7 @@ export default function AssessmentResult({
         <SettingRow
             icon={ListChecks}
             title="Resultado"
-            description={`Firmada el ${assessment.signedOn ?? ''} con la edición ${assessment.version ?? ''} de las tablas del DOF.`}
+            description={`Firmada el ${assessment.signedOn === null ? '' : (describeDate(assessment.signedOn) ?? assessment.signedOn)} con la edición ${assessment.version ?? ''} de las tablas del DOF.`}
         >
             <div className="flex flex-wrap items-center gap-3">
                 <span className="text-3xl font-semibold tabular-nums">

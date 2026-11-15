@@ -246,6 +246,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
     'the vacations policies' => ['leave/policies', fn () => route('tenant.vacations.policies.index', listsCompany()[0]), ['policies']],
     'the vacations settings' => ['leave/settings', fn () => route('tenant.vacations.settings.show', listsCompany()[0]), ['types', 'holidays']],
     'the vacations calendar' => ['leave/calendar', fn () => route('tenant.vacations.calendar', listsCompany()[0]), ['people']],
+    'the vacations calendar with everybody' => ['leave/calendar', fn () => route('tenant.vacations.calendar', [listsCompany()[0], 'with_absence' => '0']), ['people']],
     'the vacations requests queue' => ['leave/requests', fn () => route('tenant.vacations.requests.index', listsCompany()[0]), ['requests']],
     'the disclosure board' => ['disclosure/index', fn () => route('tenant.disclosure.index', listsCompany()[0]), ['centers']],
     'the policy and its history' => ['disclosure/policy', fn () => route('tenant.disclosure.policy', listsCompany()[0]), ['history']],
@@ -276,7 +277,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.org-chart.index', [$tenant, 'focus' => $boss->id]);
     }, ['roots', 'focus.children']],
-    'org chart data quality' => ['organization/org-chart-quality', fn () => route('tenant.org-chart.quality', [listsCompany()[0], 'issue' => 'without_manager']), ['people']],
+    'org chart data quality' => ['organization/org-chart-quality', fn () => route('tenant.org-chart.quality', [listsCompany()[0], 'issue' => 'no_manager']), ['people']],
     'the managers of a climate survey' => ['engagement/managers', function () {
         [$tenant] = listsCompany();
         workIn($tenant);
@@ -323,6 +324,37 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('companies.index');
     }, ['tenants']],
+    'billing accounts' => ['billing/accounts', function () {
+        App\Modules\Billing\Models\BillingAccount::factory()->create();
+        signInAsSuperadmin();
+
+        return route('billing.accounts.index');
+    }, ['accounts']],
+    'a billing account and the companies it pays' => ['billing/account', function () {
+        $account = App\Modules\Billing\Models\BillingAccount::factory()->create();
+        App\Modules\Billing\Models\AccountCompany::factory()->for($account, 'account')->create();
+        signInAsSuperadmin();
+
+        return route('billing.accounts.show', $account);
+    }, ['companies', 'charges', 'statements', 'payments']],
+    'a company in the console and its months of use of Humi' => ['tenancy/company', function () {
+        $tenant = Tenant::factory()->create();
+        App\Modules\Billing\Models\UsageCounter::factory()->create(['tenant_id' => $tenant->id]);
+        signInAsSuperadmin();
+
+        return route('companies.show', $tenant);
+    }, ['usage_history']],
+    'platform users' => ['tenancy/users', function () {
+        signInAsSuperadmin();
+
+        return route('platform-users.index');
+    }, ['users']],
+    'audit trail' => ['tenancy/audit', function () {
+        App\Models\AuditEntry::query()->forceCreate(['id' => (string) Illuminate\Support\Str::uuid(), 'event' => 'tenant.created', 'metadata' => [], 'created_at' => now()]);
+        signInAsSuperadmin();
+
+        return route('audit.index');
+    }, ['entries']],
     'demo requests' => ['demos/index', function () {
         DemoRequest::factory()->create();
         signInAsSuperadmin();
@@ -330,7 +362,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
         return route('demo-requests.index');
     }, ['demoRequests']],
     'passkeys' => ['settings/security', function () {
-        test()->actingAs(App\Models\User::factory()->create())->withSession(['auth.password_confirmed_at' => time()]);
+        test()->actingAs(App\Models\User::factory()->create())->withSession(['auth.password_confirmed_at' => now()->timestamp]);
 
         return route('security.edit');
     }, ['passkeys']],

@@ -48,7 +48,15 @@ export default function DisclosurePolicyWrite(props: DisclosureWritingProps) {
                             )}
                             questions={props.questions}
                             publication={props.publication}
-                            center={props.back.center}
+                            center={
+                                props.back.center === null ||
+                                props.back.centerName === null
+                                    ? null
+                                    : {
+                                          value: props.back.center,
+                                          label: props.back.centerName,
+                                      }
+                            }
                             onGo={writing.go}
                         />
                     ) : (

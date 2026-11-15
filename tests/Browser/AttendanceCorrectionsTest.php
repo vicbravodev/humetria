@@ -66,7 +66,9 @@ it('shows an empty queue with what will appear in it', function (bool $dark): vo
     visitPage('attendance/corrections', "{$url}/attendance/corrections", $dark)
         ->assertSee('Nada por resolver')
         ->assertSee('Cuando una persona pida corregir una marca')
-        ->assertDontSee('resuelta');
+        ->assertDontSee('resuelta')
+        // With no request to show there is no detail beside it: the empty queue takes the whole width, leaving no hole.
+        ->assertScript('() => { const empty = [...document.querySelectorAll("h2, h3")].find((title) => title.textContent === "Nada por resolver").closest("section").getBoundingClientRect(); const header = document.querySelector("h1").closest("div.mx-auto").getBoundingClientRect(); return empty.width > header.width * 0.8; }', true);
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('lets RH approve a request with its effect in view, adding the mark', function (): void {

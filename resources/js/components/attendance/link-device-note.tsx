@@ -16,13 +16,13 @@ export default function LinkDeviceNote() {
                     id="link-device-title"
                     className="text-xl leading-7 font-semibold"
                 >
-                    ¿Aún no vincula este teléfono?
+                    Si este teléfono aún no está vinculado
                 </h2>
             </div>
             <p className="text-base">
                 Para marcar, su teléfono necesita una llave de acceso. Pida a
                 Recursos Humanos su enlace para vincularlo; le llegará a su
-                correo y sirve una sola vez.
+                correo y sirve una sola vez. Si ya lo vinculó, solo marque.
             </p>
         </section>
     );

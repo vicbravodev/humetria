@@ -6,6 +6,7 @@ use App\Modules\Organization\Actions\ImportEmployees;
 use App\Modules\Organization\Http\Controllers\EmployeeImportController;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Organization\Support\EmployeeCsv;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -79,7 +80,9 @@ it('previews a valid file without storing anything', function (): void {
         ])])
         ->assertRedirect();
 
-    expect(importFlash())->toBe(['status' => 'ready', 'rows' => 2, 'created' => 1, 'updated' => 1, 'errors' => []])
+    // Beto is the one who changes: his row says it (the details of what changes are covered below).
+    expect(array_column(importFlash()['changes'], 'name'))->toBe(['Beto Díaz'])
+        ->and(Illuminate\Support\Arr::except(importFlash(), 'changes'))->toBe(['status' => 'ready', 'rows' => 2, 'created' => 1, 'updated' => 1, 'errors' => []])
         ->and(Employee::query()->withoutGlobalScopes()->count())->toBe(1)
         ->and(Area::query()->withoutGlobalScopes()->count())->toBe(1);
 });
@@ -211,4 +214,139 @@ it('is for those who manage the organization', function (): void {
     $this->actingAs($viewer)->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile(['Ana,ana@acme.mx,,Mujer,Planta Querétaro,X,Y,'])])->assertForbidden();
 
     expect(storedEmployees())->toBe([]);
+});
+
+it('refuses an «M» in the gender column as ambiguous, saying what to write, and imports nothing', function (string $text): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile([
+            'Ana López,ana@acme.mx,,Mujer,Planta Querétaro,Producción,Operadora,',
+            "Beto Díaz,beto@acme.mx,,{$text},Planta Querétaro,Producción,Operadora,",
+        ])])
+        ->assertRedirect();
+
+    expect(importFlash()['errors'])->toBe([['row' => 3, 'messages' => ['«M» puede ser Masculino o Mujer: escribe Hombre o Mujer (o H / F).']]])
+        ->and(storedEmployees())->toBe([]);
+})->with(['M', 'm']);
+
+it('still reads F, H, Mujer and Masculino', function (string $text): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile(["Ana López,ana@acme.mx,,{$text},Planta Querétaro,Producción,Operadora,"])])
+        ->assertSessionHasNoErrors();
+
+    expect(storedEmployees())->toBe(['Ana López']);
+})->with(['F', 'H', 'Mujer', 'Masculino']);
+
+it('says, for each person who is updated, what changes with its before and after, and leaves out the columns the file does not carry', function (): void {
+    $area = Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Producción']);
+    Employee::factory()->create([
+        'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5511111111',
+        'gender' => 'female', 'area_id' => $area->id, 'job_title' => 'Operadora', 'employee_number' => 'A-1', 'hired_on' => '2020-01-01',
+    ]);
+    $same = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Beto Díaz', 'email' => 'beto@acme.mx', 'mobile' => null, 'gender' => 'male', 'area_id' => $area->id, 'job_title' => 'Operador', 'employee_number' => 'B-2']);
+
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['file' => csvFile([
+            'Ana López,ana@acme.mx,5522222222,Mujer,Planta Querétaro,Almacén,Operadora,A-1',
+            'Beto Díaz,beto@acme.mx,,Hombre,planta queretaro,producción,Operador,B-2',
+            'Carla Ruiz,carla@acme.mx,,Mujer,Planta Querétaro,Ventas,Vendedora,C-3',
+        ])])
+        ->assertRedirect();
+
+    expect(importFlash()['changes'])->toBe([[
+        'row' => 2, 'name' => 'Ana López', 'changes' => [
+            ['label' => 'Celular', 'before' => '5511111111', 'after' => '5522222222'],
+            ['label' => 'Área', 'before' => 'Producción', 'after' => 'Almacén'],
+        ],
+    ]])->and($same->refresh()->job_title)->toBe('Operador');
+});
+
+it('still says what changes when the file carries the manager column', function (): void {
+    Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Alma Torres', 'email' => 'alma@acme.mx', 'gender' => 'female', 'job_title' => 'Operador', 'employee_number' => 'A-1']);
+
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['file' => csvFile(['Alma Torres,alma@acme.mx,,Mujer,Planta Querétaro,Producción,Operador Senior,A-1,'], CSV_HEADER.',jefe')])
+        ->assertRedirect();
+
+    expect(importFlash()['changes'][0]['changes'])->toContain(['label' => 'Puesto', 'before' => 'Operador', 'after' => 'Operador Senior']);
+});
+
+it('shows the pay scale in what changes: category, level, hire date and group, before and after', function (): void {
+    $before = JobGrade::factory()->create(['tenant_id' => $this->tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    Employee::factory()->create([
+        'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => null, 'gender' => 'female', 'job_title' => 'Operadora', 'area_id' => Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Producción'])->id,
+        'employee_number' => 'A-1', 'job_grade_id' => $before->id, 'hired_on' => '2020-01-01', 'staff_group' => 'unionized',
+    ]);
+
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['file' => csvFile(
+            ['Ana López,ana@acme.mx,,Mujer,Planta Querétaro,Producción,Operadora,A-1,Supervisor,B,2021-06-15,Confianza'],
+            CSV_HEADER.',categoria,nivel,fecha_de_ingreso,grupo',
+        )])
+        ->assertRedirect();
+
+    expect(importFlash()['changes'][0]['changes'])->toBe([
+        ['label' => 'Categoría', 'before' => 'Operador', 'after' => 'Supervisor'],
+        ['label' => 'Nivel', 'before' => 'A', 'after' => 'B'],
+        ['label' => 'Fecha de ingreso', 'before' => '2020-01-01', 'after' => '2021-06-15'],
+        ['label' => 'Grupo', 'before' => 'Sindicalizado', 'after' => 'Confianza'],
+    ]);
+});
+
+it('warns, without blocking, about a row with a category but no staff group: it would be left out of the compensation cost', function (): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['file' => csvFile(
+            [
+                'Ana López,ana@acme.mx,,Mujer,Planta Querétaro,Producción,Operadora,A-1,Operador,A,2021-06-15,Confianza',
+                'Beto Díaz,beto@acme.mx,,Hombre,Planta Querétaro,Producción,Operador,B-2,Operador,A,2021-06-15,',
+                'Carla Ruiz,carla@acme.mx,,Mujer,Planta Querétaro,Producción,Vendedora,C-3,,,,',
+            ],
+            CSV_HEADER.',categoria,nivel,fecha_de_ingreso,grupo',
+        )])
+        ->assertRedirect();
+
+    expect(importFlash()['errors'])->toBe([])
+        ->and(importFlash()['status'])->toBe('ready')
+        ->and(importFlash()['warnings'])->toBe([['row' => 3, 'messages' => ['Tiene categoría pero no grupo: sin grupo (sindicalizado o de confianza) no entra en el costo de Compensación.']]]);
+});
+
+describe('the work center a card sends the import from', function (): void {
+    it('is offered as the default center of the page, only when it is one of the company\'s active centers', function (): void {
+        $archived = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Vieja', 'archived_at' => now()]);
+        $foreign = WorkCenter::factory()->create(['name' => 'Planta Ajena']);
+
+        $props = fn (string $center) => $this->actingAs($this->owner)
+            ->get(route('tenant.employees.import.create', [$this->tenant, 'center' => $center]))->assertOk();
+
+        $props($this->plant->id)->assertInertia(fn (Assert $page) => $page->where('defaultCenter', ['id' => $this->plant->id, 'name' => 'Planta Querétaro']));
+        $props($archived->id)->assertInertia(fn (Assert $page) => $page->where('defaultCenter', null));
+        $props($foreign->id)->assertInertia(fn (Assert $page) => $page->where('defaultCenter', null));
+        $props('no-es-un-id')->assertInertia(fn (Assert $page) => $page->where('defaultCenter', null));
+
+        $this->actingAs($this->owner)->get(route('tenant.employees.import.create', $this->tenant))
+            ->assertInertia(fn (Assert $page) => $page->where('defaultCenter', null));
+    });
+
+    it('takes the rows without a center, and only those', function (): void {
+        $other = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Bodega']);
+
+        $this->actingAs($this->owner)
+            ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'center' => $this->plant->id, 'file' => csvFile([
+                'Ana López,ana@acme.mx,,Mujer,,Producción,Operadora,',
+                'Beto Díaz,beto@acme.mx,,Hombre,Bodega,Almacén,Almacenista,',
+            ])])
+            ->assertRedirect(route('tenant.employees.index', $this->tenant));
+
+        expect(Employee::query()->withoutGlobalScopes()->where('name', 'Ana López')->sole()->work_center_id)->toBe($this->plant->id)
+            ->and(Employee::query()->withoutGlobalScopes()->where('name', 'Beto Díaz')->sole()->work_center_id)->toBe($other->id);
+    });
+
+    it('does not take a center of another company: the row stays without one', function (): void {
+        $foreign = WorkCenter::factory()->create(['name' => 'Planta Ajena']);
+
+        $this->actingAs($this->owner)
+            ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'center' => $foreign->id, 'file' => csvFile(['Ana López,ana@acme.mx,,Mujer,,Producción,Operadora,'])]);
+
+        expect(importFlash()['errors'])->toBe([['row' => 2, 'messages' => ['El campo centro de trabajo es obligatorio.']]])
+            ->and(storedEmployees())->toBe([]);
+    });
 });

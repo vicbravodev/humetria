@@ -31,6 +31,11 @@ export default function DemoRequestItem({
                 <span className="text-sm text-muted-foreground">
                     {request.company} · {request.workforce} trabajadores
                 </span>
+                {request.status !== 'new' && (
+                    <span className="text-caption text-muted-foreground">
+                        {request.status_label}
+                    </span>
+                )}
             </button>
         </li>
     );

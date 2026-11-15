@@ -86,6 +86,11 @@ it('validates what the form sends', function (array $overrides, string $field): 
     'a due date before the start' => [['starts_on' => '2026-12-16'], 'due_on'],
 ]);
 
+it('calls the due date «fecha límite» in the error, as the screen does', function (): void {
+    $this->actingAs($this->hr)->post(storeActionUrl($this), actionForm(['due_on' => null]))
+        ->assertSessionHasErrors(['due_on' => 'El campo fecha límite es obligatorio.']);
+});
+
 it('edits an action and shows the change', function (): void {
     $this->actingAs($this->hr)->post(storeActionUrl($this), actionForm())->assertSessionHasNoErrors();
     $action = ProgramAction::query()->sole();

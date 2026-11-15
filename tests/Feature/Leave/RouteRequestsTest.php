@@ -85,6 +85,11 @@ function watchedLines(?string $failingTenantId = null): ReportingLines
             return $this->real->directReportIds($employeeId);
         }
 
+        public function peersOf(array $employeeIds): array
+        {
+            return $this->real->peersOf($employeeIds);
+        }
+
         public function subtreeIds(string $employeeId): array
         {
             return $this->real->subtreeIds($employeeId);
@@ -238,7 +243,7 @@ it('routes only in the companies that use vacations and may be used, each on its
     $this->travelTo('2026-11-20 06:40:00');
     $mine = pendingRequest();
     $unused = LeaveRequest::factory()->create(['requested_on' => '2026-11-13']);
-    $blocked = Tenant::factory()->deactivated()->create();
+    $blocked = Tenant::factory()->suspended()->create();
     LeaveSetting::factory()->create(['tenant_id' => $blocked->id]);
     $ofBlocked = LeaveRequest::factory()->create(['tenant_id' => $blocked->id, 'requested_on' => '2026-11-13']);
     $other = Tenant::factory()->create();

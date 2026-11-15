@@ -19,6 +19,7 @@ export type TenantRow = {
     trade_name: string;
     rfc: string;
     slug: string;
+    type: 'company' | 'union';
     /** The logo its people see on their emails; null shows its name instead. */
     logo_url: string | null;
     status:
@@ -27,46 +28,35 @@ export type TenantRow = {
         | 'active'
         | 'trial_ended'
         | 'expired'
-        | 'deactivated';
+        | 'read_only'
+        | 'suspended'
+        | 'archived';
     status_label: string;
     status_date: string | null;
+    /** Why a person restricted it (read only, suspended, archived); null otherwise. */
+    restriction_reason: string | null;
+    /** Whether it records working time with Attendance: restricting it stops that. */
+    uses_attendance: boolean;
     /** Last paid day as Y-m-d in Mexico City time; null when never activated. */
     active_until: string | null;
     blocked: boolean;
+    /** The latest day anyone who belongs to the company signed in; null when nobody has. */
+    last_access: string | null;
+    /** The prospect of the demo request it was created from, to prefill the owner's invitation; null when it did not come from one. */
+    demo_contact: { name: string; email: string } | null;
     owner: TenantOwner | null;
     invitation: TenantInvitation | null;
 };
 
-type PendingInvitation = {
-    trade_name: string;
-    /** What the person joins as, written for display ("Te invitaron como RH de Acme"). */
-    invited_as: string;
-    /** Who sent it; null when no sender was recorded. */
-    inviter: string | null;
-    role: TenantRole;
-    role_label: string;
-    email: string;
-    name: string;
-};
-
-/** What the invitation link page receives: the state says what the person reaching it can do. */
-export type InvitationPage = { token: string; passwordRules: string } & (
-    | {
-          state: 'invalid';
-          trade_name: null;
-          invited_as: null;
-          inviter: null;
-          role: null;
-          role_label: null;
-          email: null;
-          name: null;
-      }
-    | ({ state: 'new_account' } & PendingInvitation)
-    | ({ state: 'sign_in' | 'confirm' | 'other_account' } & PendingInvitation)
-);
-
 /** The views of the console's companies. */
-export type TenantView = 'all' | 'active' | 'trial' | 'expired' | 'deactivated';
+export type TenantView =
+    | 'all'
+    | 'active'
+    | 'trial'
+    | 'expired'
+    | 'read_only'
+    | 'suspended'
+    | 'archived';
 
 export type TenantFilters = { q: string; status: TenantView };
 
@@ -75,49 +65,62 @@ export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
 /** The company a request is working in, shared on every page under /admin/{slug}. */
 export type CurrentTenant = TenantSummary &
     Pick<TenantRow, 'status' | 'blocked'> & {
+        /** Its people read and export but change nothing: an ended trial or term, or a person's decision. */
+        read_only: boolean;
+        /** Why a person suspended or archived it (what its blocked notice says); null for any other state. */
+        restriction_reason: string | null;
         /** Whether the account is a company or a union; fixed when it was created. */
         type: 'company' | 'union';
+        /** The modules the company has (attendance, nom035, nom037, seating, complaints…); the others are hidden. */
+        modules: string[];
         trial_days_left: number | null;
         role: TenantRole;
         role_label: string;
-        /** What the person's role allows, so the page hides what the server would refuse. */
-        can: {
-            manage_organization: boolean;
-            manage_members: boolean;
-            manage_campaigns: boolean;
-            view_trauma_screenings: boolean;
-            manage_telework: boolean;
-            review_workplaces: boolean;
-            view_seating: boolean;
-            view_attendance: boolean;
-            manage_attendance: boolean;
-            view_org_chart: boolean;
-            manage_org_chart: boolean;
-            view_vacations: boolean;
-            manage_vacations: boolean;
-            view_climate: boolean;
-            manage_climate: boolean;
-            view_pulse: boolean;
-            manage_pulse: boolean;
-            manage_seating: boolean;
-            assess_seating: boolean;
-            view_compensation: boolean;
-            manage_compensation: boolean;
-            view_interventions: boolean;
-            manage_interventions: boolean;
-            view_disclosure: boolean;
-            manage_disclosure: boolean;
-            use_assistant: boolean;
-            manage_complaint_channel: boolean;
-            handle_complaints: boolean;
-        };
+        /** What the person's role allows, so the page hides what the server would refuse: in a read-only company, nothing that writes. */
+        can: TenantCan;
+        /** What the role allows whatever the company's state: the menu keeps the pages a read-only company still reads. */
+        permissions: TenantCan;
     };
+
+/** The permissions of a person's role in a company. */
+export type TenantCan = {
+    manage_organization: boolean;
+    manage_members: boolean;
+    manage_campaigns: boolean;
+    view_trauma_screenings: boolean;
+    manage_telework: boolean;
+    review_workplaces: boolean;
+    view_seating: boolean;
+    view_attendance: boolean;
+    manage_attendance: boolean;
+    view_org_chart: boolean;
+    manage_org_chart: boolean;
+    view_vacations: boolean;
+    manage_vacations: boolean;
+    view_climate: boolean;
+    manage_climate: boolean;
+    view_pulse: boolean;
+    manage_pulse: boolean;
+    manage_seating: boolean;
+    assess_seating: boolean;
+    view_compensation: boolean;
+    manage_compensation: boolean;
+    view_interventions: boolean;
+    manage_interventions: boolean;
+    view_disclosure: boolean;
+    manage_disclosure: boolean;
+    use_assistant: boolean;
+    manage_complaint_channel: boolean;
+    handle_complaints: boolean;
+};
 
 export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
 
 /** One row of the list /admin shows a person who belongs to zero or several companies. */
 export type CompanyLink = TenantSummary &
-    Pick<TenantRow, 'status' | 'status_label' | 'blocked'>;
+    Pick<TenantRow, 'status' | 'status_label' | 'blocked'> & {
+        read_only: boolean;
+    };
 
 /** One work center as its company's list shows it. */
 export type WorkCenterRow = {
@@ -152,6 +155,9 @@ export type WorkCenterEvaluationStanding = {
     state: 'draft' | 'running' | 'due' | 'overdue';
     /** The running one's last day, or the day the next one is (or was) due; null for a draft. */
     day: string | null;
+    /** For «al día»: who answered the evaluation it closed with, of how many; null otherwise. */
+    answered: number | null;
+    target: number | null;
 };
 
 export type MexicanStateOption = { value: string; label: string };
@@ -189,3 +195,84 @@ export type RoleMatrix = {
     columns: string[];
     rows: { label: string; cells: string[] }[];
 };
+
+/** Where a module of a company comes from: its plan, what it had before the plan, a person's grant, or a person's revocation. */
+export type ModuleSource = 'plan' | 'legacy' | 'grant' | 'revoke';
+
+/** A module of a company as its console page lists it. */
+/** What a company has used of one limit of its plan, as its own pages show it; null when it has no plan. */
+export type PlanLimit = {
+    used: number;
+    amount: number;
+    remaining: number;
+    over: boolean;
+};
+
+/** What a company has used of one limit of its plan (people or work centers), as the console shows it. */
+export type LimitRow = {
+    resource: 'seats' | 'centers';
+    label: string;
+    used: number;
+    amount: number;
+    remaining: number;
+    /** It already had more than the limit when it was set: it keeps them and cannot add. */
+    over: boolean;
+};
+
+/** Humi's tokens of the current month for a company, in the console. */
+export type UsageSummary = {
+    period_label: string;
+    used: number;
+    /** Held for answers still being written. */
+    reserved: number;
+    /** The plan's quota plus what a person added this month. */
+    quota: number;
+    granted: number;
+    remaining: number;
+};
+
+/** A meter that only measures (campaign email, files): this month's figure against the plan's quota. */
+export type OtherUsage = {
+    meter: string;
+    label: string;
+    unit: string;
+    used: number;
+    quota: number;
+    remaining: number;
+};
+
+/** A month of Humi's use. */
+export type UsageMonth = {
+    period: string;
+    label: string;
+    used: number;
+    /** The quota the month had when last asked; null when nobody asked. */
+    quota: number | null;
+};
+
+export type ModuleRow = {
+    key: string;
+    label: string;
+    enabled: boolean;
+    source: ModuleSource | null;
+    source_label: string | null;
+    reason: string | null;
+    /** The day it stops being on, written for display; null when it does not end. */
+    ends_on: string | null;
+    /** False for the tools the catalog names but nobody has built yet. */
+    exists_in_code: boolean;
+};
+
+/** The company a console page is about. */
+export type CompanyDetail = Pick<
+    TenantRow,
+    | 'id'
+    | 'legal_name'
+    | 'trade_name'
+    | 'rfc'
+    | 'slug'
+    | 'type'
+    | 'status'
+    | 'status_label'
+    | 'restriction_reason'
+>;

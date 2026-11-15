@@ -85,6 +85,15 @@ it('expires exactly at the review date plus the current period', function (): vo
     expect(resolve(WorkplaceStanding::class)->expiresOn($this->workplace)?->toDateString())->toBe('2027-01-15');
 });
 
+it('says it holds until the day before it expires, and until none when nothing validated', function (): void {
+    expect(resolve(WorkplaceStanding::class)->validUntil($this->workplace))->toBeNull();
+
+    setStandingPeriod(12);
+    standingReview(at: '2026-01-15 18:00:00');
+
+    expect(resolve(WorkplaceStanding::class)->validUntil($this->workplace)?->toDateString())->toBe('2027-01-14');
+});
+
 it('applies a changed period at once to a review already made', function (): void {
     setStandingPeriod(12);
     standingReview(at: '2026-01-15 18:00:00');

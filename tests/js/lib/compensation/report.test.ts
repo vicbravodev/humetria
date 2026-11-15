@@ -45,10 +45,10 @@ describe('summaryFigures', () => {
             },
             {
                 key: 'recurring',
-                caption: 'Cada año después',
+                caption: 'Al año, al arranque',
                 value: 877_469,
                 unit: 'pesos',
-                note: 'Lo que la propuesta suma al año',
+                note: 'Los años siguientes cambian: mira la proyección',
             },
             {
                 key: 'payroll',

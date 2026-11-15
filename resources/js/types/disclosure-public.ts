@@ -61,6 +61,8 @@ export type PublicResults = {
               closedOn: string;
               guide: 'ii' | 'iii';
               answered: number;
+              /** Who was asked to answer, so «10» is read against «20». */
+              target: number;
               /** What most needs attention, in words: three domains at most. */
               themes: string[];
               levels: { value: RiskLevelValue; label: string }[];

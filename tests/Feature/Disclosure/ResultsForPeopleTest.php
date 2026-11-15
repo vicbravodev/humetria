@@ -134,7 +134,7 @@ it('shows the people the published results of the plant, centered on the whole c
 
     $results = disclosurePlantResults($this);
 
-    expect($results['published'])->toMatchArray(['state' => 'available', 'closedOn' => '10 nov 2026', 'answered' => 13, 'guide' => 'ii'])
+    expect($results['published'])->toMatchArray(['state' => 'available', 'closedOn' => '10 nov 2026', 'answered' => 13, 'target' => 13, 'guide' => 'ii'])
         ->and(array_sum($results['published']['final']))->toBe(13)
         ->and($results['published']['final'])->toHaveCount(5)
         ->and($results['title'])->toBe('Resultados de la identificación y análisis de los factores de riesgo psicosocial')
@@ -229,6 +229,19 @@ it('titles the results by the guide: the work environment is evaluated only abov
     $token = (string) resolve(IssuePageLink::class)->handle($this->hr->id)->token();
 
     $this->get(route('workers.center', [$token, $big->id]))->assertInertia(fn (Assert $page) => $page->where('results.title', 'Resultados de la identificación y análisis de los factores de riesgo psicosocial y de la evaluación del entorno organizacional'));
+});
+
+it('says whether the page of the people is active, so publishing warns they have nowhere to read the results yet', function (): void {
+    disclosureResultsEvaluation($this);
+    $page = fn () => $this->actingAs($this->hr)->get(route('tenant.disclosure.results', $this->tenant));
+
+    $page()->assertInertia(fn (Assert $page) => $page->where('pageActive', false));
+
+    $link = resolve(IssuePageLink::class)->handle($this->hr->id);
+    $page()->assertInertia(fn (Assert $page) => $page->where('pageActive', true));
+
+    $link->update(['disabled_at' => now()]);
+    $page()->assertInertia(fn (Assert $page) => $page->where('pageActive', false));
 });
 
 it('asks the evaluations closed, a page at a time, and lets only whoever manages publish and withdraw', function (): void {

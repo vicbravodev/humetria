@@ -148,6 +148,29 @@ it('sends the whole survey once and says thanks, with the comment as the person 
         ->and($invitation->fresh()?->answered)->toBeTrue();
 })->with($looks);
 
+// E-04: the answers wait on the phone; sending without signal says so and sends by itself when it is back, once.
+it('says there is no signal when sending, and sends by itself when it is back', function (): void {
+    engagementInvitee();
+
+    $page = visit('/engagement/the-token')->on()->mobile()->click('Siguiente');
+    $page->script(engagementAnswerScript());
+    // Every request fails as without a network until `__offline` is turned off.
+    $page->script('() => { const send = XMLHttpRequest.prototype.send; window.__offline = true; XMLHttpRequest.prototype.send = function (...args) { if (window.__offline) { setTimeout(() => this.onerror?.(), 0); return; } send.apply(this, args); }; }');
+    $page->click('Enviar mis respuestas');
+
+    $page->assertSee('Sin conexión:')
+        ->assertSee('se enviará sola cuando vuelva la señal')
+        ->assertSee('Sus respuestas siguen en este teléfono.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Response::query()->count())->toBe(0);
+
+    $page->script('() => { window.__offline = false; window.dispatchEvent(new Event("online")); }');
+    $page->assertSee('Gracias. Sus respuestas ya se enviaron.')->assertDontSee('Sin conexión:')->assertNoJavaScriptErrors();
+
+    expect(Response::query()->count())->toBe(1);
+});
+
 it('shows the thanks when the used link is opened again', function (bool $dark, bool $mobile): void {
     engagementInvitee();
     Invitation::query()->withoutGlobalScopes()->update(['answered' => true]);

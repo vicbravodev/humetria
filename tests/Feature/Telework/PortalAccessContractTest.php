@@ -3,10 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Telework\Actions\IssuePortalLink;
+use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Telework\Data\PortalIdentity;
 use App\Modules\Telework\Support\TokenPortalAccess;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 
 mutates(TokenPortalAccess::class);
@@ -41,7 +44,7 @@ it('answers null, without saying why, for a made-up token, a replaced link and a
 });
 
 it('answers null for a company that may not be used', function (): void {
-    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
 
     expect(resolve(PortalAccess::class)->open($this->token))->toBeNull();
 });
@@ -52,4 +55,11 @@ it('gives the token of a person so other tools can link to their pages, the same
     expect($access->token($this->employee->id))->toBe($this->token)
         ->and($access->token($this->employee->id))->toBe($this->token)
         ->and($access->open($access->token($this->employee->id))?->employeeId)->toBe($this->employee->id);
+});
+
+it('opens for a company without NOM-037: the link is the person\'s, each tool checks its own module', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(resolve(PortalAccess::class)->open($this->token))->not->toBeNull()
+        ->and(resolve(OpenPortal::class)->handle($this->token)->telework)->toBeFalse();
 });

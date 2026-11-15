@@ -35,7 +35,7 @@ export default function Members({
                     title="Usuarios"
                     description={`Quién entra a Humetría por ${tradeName} y qué puede hacer.`}
                 >
-                    <Button asChild>
+                    <Button asChild data-tour="invite-member">
                         <Link href={create(tenantSlug)}>
                             <UserPlus aria-hidden />
                             Invitar

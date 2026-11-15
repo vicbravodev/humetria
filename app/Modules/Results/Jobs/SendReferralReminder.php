@@ -31,7 +31,7 @@ final class SendReferralReminder implements ShouldQueue, ShouldQueueAfterCommit
         $referral = ScreeningReferral::query()->find($this->referralId, ['id', 'campaign_id', 'employee_id', 'updated_by']);
         $who = $referral === null ? null : array_find($members->screeningViewers(), fn (MemberSummary $member): bool => $member->userId === $referral->updated_by);
 
-        if ($company->blocked || $referral === null || $who === null) {
+        if ($company->stopped('nom035') || $referral === null || $who === null) {
             return;
         }
 

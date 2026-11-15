@@ -150,6 +150,8 @@ const MESSAGES: Record<string, string> = {
     no_location: `Para marcar se necesita su ubicación en este momento. Permita el acceso a la ubicación e intente de nuevo. ${ASK_RH}`,
     qr_required: `Escanee con la cámara el código QR de la pantalla de su centro de trabajo para marcar. ${ASK_RH}`,
     qr_invalid: `El código QR ya venció o no es de su centro de trabajo. Escanee el código que muestra la pantalla ahora. ${ASK_RH}`,
+    center_not_ready:
+        'Su centro aún no está listo para marcar. Avise a Recursos Humanos; mientras tanto puede pedir una corrección.',
     day_already_open: 'Ya marcó su entrada.',
     day_not_open: 'Primero marque su entrada.',
     already_on_break: 'Ya marcó su salida a comer.',

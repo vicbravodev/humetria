@@ -33,28 +33,41 @@ function leaveBalancesPanel(): string
 }
 
 it('shows RH the days of everybody and what is missing to grant them', function (bool $dark, bool $mobile): void {
-    visitPage('leave/balances', leaveBalancesPanel(), $dark, $mobile)
+    visitPage('leave/balances', leaveBalancesPanel().'?tab=all', $dark, $mobile)
         ->assertSee('Saldos')
         ->assertSee('Ana Solís')
         ->assertSee('14 días')
         ->assertSee('Capturar la fecha')
+        ->assertSee('15 mar 2027')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($looks);
 
-it('narrows to who has no start date', function (): void {
+it('opens on what asks for action and moves to everybody', function (): void {
     visitPage('leave/balances', leaveBalancesPanel())
-        ->click('nav[aria-label="Qué revisar de los saldos"] a:has-text("Sin fecha de ingreso")')
         ->assertSee('Caro Luz')
         ->assertDontSee('Ana Solís')
+        ->click('nav[aria-label="Qué revisar de los saldos"] a:has-text("Todos")')
+        ->assertSee('Ana Solís')
         ->assertNoJavaScriptErrors();
 });
 
-it('sends the link of their vacations to the people RH ticks', function (): void {
-    visitPage('leave/balances', leaveBalancesPanel())
+it('sends the statement to the people RH ticks, from a bar that appears only then', function (): void {
+    visitPage('leave/balances', leaveBalancesPanel().'?tab=all')
+        ->assertDontSee('Quitar selección')
         ->click('input[type=checkbox][aria-label="Elegir a Ana Solís"], button[aria-label="Elegir a Ana Solís"]')
-        ->assertSee('1 persona elegida')
-        ->press('Enviar enlace')
+        ->assertSee('1 seleccionada')
+        ->press('Enviar enlace a su portal')
         ->assertSee('enlace')
+        ->assertNoJavaScriptErrors();
+});
+
+it('says a name that is not in the tab is in everybody, and offers to go there', function (): void {
+    // The full name: «Ana» alone also matches a random Mariana or Juliana the factories create in that tab.
+    visitPage('leave/balances', leaveBalancesPanel().'?tab=missing&q='.rawurlencode('Ana Solís'))
+        ->assertSee('No está en esta pestaña')
+        ->assertSee('1 persona coincide en Todos')
+        ->click('Ver en Todos')
+        ->assertSee('Ana Solís')
         ->assertNoJavaScriptErrors();
 });

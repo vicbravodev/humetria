@@ -9,8 +9,24 @@ final readonly class ImportOutcome
 {
     /**
      * @param  list<CsvProblem>  $problems
+     * @param  list<int>  $lowRows  rows imported with a salary under the general minimum: a warning, not an error
      */
-    public function __construct(public int $rows, public array $problems = []) {}
+    public function __construct(public int $rows, public array $problems = [], public array $lowRows = []) {}
+
+    /** What to tell about the rows imported under the minimum wage; null when there are none. */
+    public function lowSalaryNote(): ?string
+    {
+        $rows = $this->lowRows;
+
+        if ($rows === []) {
+            return null;
+        }
+
+        $last = array_pop($rows);
+        $list = $rows === [] ? "fila {$last}" : 'filas '.implode(', ', $rows)." y {$last}";
+
+        return "Revisa la {$list}: ".(count($this->lowRows) === 1 ? 'está' : 'están').' por debajo del salario mínimo general.';
+    }
 
     public function imported(): bool
     {

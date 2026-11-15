@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import GlideChips from '@/components/landing/glide-chips';
+import GlideChips from '@/components/humetria/glide-chips';
 import { useActiveSection } from '@/hooks/use-active-section';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +54,8 @@ export default function HeaderNav() {
                             <a
                                 href={`#${section.id}`}
                                 data-test={section.test}
+                                data-track="nav_click"
+                                data-track-target={section.id}
                                 aria-current={current ? 'true' : undefined}
                                 onMouseEnter={() => setHovered(section.id)}
                                 onFocus={() => setHovered(section.id)}

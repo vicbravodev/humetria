@@ -18,11 +18,12 @@ export default function ClosedFollowUp({
 }) {
     return (
         <div className="flex flex-col gap-6">
-            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)]">
                 <ParticipationCard participation={participation} closed />
                 <CutParticipation
                     cuts={participation.cuts}
                     minGroup={participation.minGroup}
+                    overall={participation.rate}
                 />
             </div>
             {resultsUrl !== null && (

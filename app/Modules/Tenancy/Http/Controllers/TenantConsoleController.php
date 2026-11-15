@@ -5,14 +5,21 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Attendance\Contracts\AttendanceUsage;
+use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
-use App\Modules\Tenancy\Actions\DeactivateTenant;
+use App\Modules\Tenancy\Actions\CreateTenantFromDemo;
 use App\Modules\Tenancy\Actions\ListTenants;
+use App\Modules\Tenancy\Actions\ReactivateTenant;
+use App\Modules\Tenancy\Actions\RestrictTenant;
 use App\Modules\Tenancy\Actions\UpdateTenant;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Enums\TenantView;
+use App\Modules\Tenancy\Exceptions\DemoRequestUnavailable;
 use App\Modules\Tenancy\Http\Requests\ActivateTenantRequest;
+use App\Modules\Tenancy\Http\Requests\ReactivateTenantRequest;
+use App\Modules\Tenancy\Http\Requests\RestrictTenantRequest;
 use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -27,20 +34,28 @@ use Inertia\Response;
 
 final class TenantConsoleController extends Controller
 {
-    public function index(Request $request, ListTenants $listTenants): Response
+    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads): Response
     {
-        Gate::authorize('manage-tenants');
+        Gate::authorize('view-console');
 
         $search = trim($request->string('q')->toString());
         $view = TenantView::tryFrom($request->string('status')->toString()) ?? TenantView::All;
         $summary = $listTenants->summary($search);
+        $tenants = $listTenants->handle($search, $view);
+        // One question for the whole page, so the warning before restricting a company costs nothing per row.
+        $ids = array_values($tenants->getCollection()->map(fn (Tenant $tenant): string => $tenant->id)->all());
+        $usingAttendance = $attendance->among($ids);
+        // The prospect each company was created for, so inviting its owner opens already filled.
+        $leads = $demoLeads->forCompanies($ids);
 
         return Inertia::render('tenancy/index', [
+            // A company about to be created from a demo request opens the dialog already filled; one already converted, or gone, offers nothing.
+            'prefill' => $this->prefill($demoLeads, $request->string('demo')->toString()),
             'activationMinDate' => now(config()->string('app.display_timezone'))->addDay()->toDateString(),
             'filters' => ['q' => $search, 'status' => $view->value],
             'counts' => $summary['counts'],
             'trialsEndingSoon' => $summary['trialsEndingSoon'],
-            'tenants' => $listTenants->handle($search, $view)->through(function (Tenant $tenant): array {
+            'tenants' => $tenants->through(function (Tenant $tenant) use ($usingAttendance, $leads): array {
                 $status = $tenant->status();
 
                 return [
@@ -49,12 +64,17 @@ final class TenantConsoleController extends Controller
                     'trade_name' => $tenant->trade_name,
                     'rfc' => $tenant->rfc,
                     'slug' => $tenant->slug,
+                    'type' => $tenant->type->value,
                     'logo_url' => $tenant->logo_path === null ? null : Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_path),
                     'status' => $status->value,
                     'status_label' => $status->label(),
                     'status_date' => $this->statusDate($tenant, $status),
+                    'restriction_reason' => $tenant->restriction_reason,
+                    'uses_attendance' => in_array($tenant->id, $usingAttendance, true),
                     'active_until' => $tenant->active_until?->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d'),
                     'blocked' => $status->isBlocked(),
+                    'last_access' => $this->day($tenant->last_access_at),
+                    'demo_contact' => isset($leads[$tenant->id]) ? ['name' => $leads[$tenant->id]->contactName, 'email' => $leads[$tenant->id]->email] : null,
                     'owner' => $this->owner($tenant),
                     'invitation' => $this->invitation($tenant),
                 ];
@@ -62,9 +82,17 @@ final class TenantConsoleController extends Controller
         ]);
     }
 
-    public function store(StoreTenantRequest $request, CreateTenant $createTenant): RedirectResponse
+    public function store(StoreTenantRequest $request, CreateTenant $createTenant, CreateTenantFromDemo $createFromDemo): RedirectResponse
     {
-        $createTenant->handle($request->toData());
+        $demoRequestId = $request->demoRequestId();
+
+        try {
+            $demoRequestId === null
+                ? $createTenant->handle($request->toData())
+                : $createFromDemo->handle($request->toData(), $demoRequestId);
+        } catch (DemoRequestUnavailable $exception) {
+            return back()->withErrors(['demo_request_id' => $exception->getMessage()]);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa dada de alta.']);
 
@@ -90,16 +118,39 @@ final class TenantConsoleController extends Controller
         return redirect()->route('companies.index');
     }
 
-    public function deactivate(Tenant $tenant, DeactivateTenant $deactivateTenant): RedirectResponse
+    public function restrict(RestrictTenantRequest $request, Tenant $tenant, RestrictTenant $restrictTenant): RedirectResponse
     {
-        Gate::authorize('manage-tenants');
-        abort_if($tenant->status()->isBlocked(), 409);
+        $restriction = $request->restriction();
+        abort_if($tenant->restriction === $restriction, 409);
 
-        $deactivateTenant->handle($tenant);
+        $restrictTenant->handle($tenant, $restriction, $request->reason());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa desactivada.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => $restriction->confirmation()]);
 
         return redirect()->route('companies.index');
+    }
+
+    public function reactivate(ReactivateTenantRequest $request, Tenant $tenant, ReactivateTenant $reactivateTenant): RedirectResponse
+    {
+        abort_if($tenant->restriction === null, 409);
+
+        $reactivateTenant->handle($tenant, $request->reason());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Empresa reactivada.']);
+
+        return redirect()->route('companies.index');
+    }
+
+    /**
+     * @return array{demo_request_id: string, company: string, contact: string, email: string}|null
+     */
+    private function prefill(DemoLeads $demoLeads, string $demoRequestId): ?array
+    {
+        $lead = $demoRequestId === '' ? null : $demoLeads->find($demoRequestId);
+
+        return $lead === null || $lead->tenantId !== null
+            ? null
+            : ['demo_request_id' => $lead->id, 'company' => $lead->company, 'contact' => $lead->contactName, 'email' => $lead->email];
     }
 
     private function statusDate(Tenant $tenant, TenantStatus $status): ?string
@@ -110,7 +161,9 @@ final class TenantConsoleController extends Controller
             TenantStatus::TrialEnded => 'Prueba terminó el '.$this->day($tenant->trialEndsAt()),
             TenantStatus::Active => 'Activa hasta '.$this->day($tenant->active_until),
             TenantStatus::Expired => 'Venció el '.$this->day($tenant->active_until),
-            TenantStatus::Deactivated => 'Desactivada el '.$this->day($tenant->deactivated_at),
+            TenantStatus::ReadOnly => 'Solo lectura desde el '.$this->day($tenant->restricted_at),
+            TenantStatus::Suspended => 'Suspendida el '.$this->day($tenant->restricted_at),
+            TenantStatus::Archived => 'Archivada el '.$this->day($tenant->restricted_at),
         };
     }
 

@@ -3,7 +3,7 @@ import type { MeasureRow } from '@/types';
 
 /** R7 on the plan: met, missing the measure of some assessments, or with measures past their date. */
 export type MeasuresRule = {
-    state: 'met' | 'warning' | 'missing';
+    state: 'met' | 'warning' | 'missing' | 'pending';
     count: number;
 };
 
@@ -50,6 +50,10 @@ export function ruleLine(rule: MeasuresRule): { met: boolean; text: string } {
             met: false,
             text: `${rule.count} ${plural(rule.count, 'medida pasó su fecha compromiso', 'medidas pasaron su fecha compromiso')}.`,
         };
+    }
+
+    if (rule.state === 'pending') {
+        return { met: false, text: 'aún no hay evaluaciones firmadas.' };
     }
 
     return {

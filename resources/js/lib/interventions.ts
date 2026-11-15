@@ -159,7 +159,13 @@ export function programTools(props: ProgramPageProps): ProgramTools | null {
         evaluations: props.followUpEvaluations ?? [],
         suggestion: props.followUpSuggestion?.date,
         today: props.today,
+        responsible: props.program?.responsible?.name ?? null,
     };
+}
+
+/** What the responsible fields say while empty: whose the action falls to (the server inherits it, num. 8.4 f). */
+export function inheritedResponsible(name: string | null): string | undefined {
+    return name === null ? undefined : `Si lo dejas vacío: ${name}`;
 }
 
 /** «2 de 7 temas con acciones · 2 acciones» (board V2-N035-Plan): the themes with an action not cancelled, and how many. */

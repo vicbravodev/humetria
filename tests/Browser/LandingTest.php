@@ -4,6 +4,25 @@ declare(strict_types=1);
 
 use App\Modules\Demos\Models\DemoRequest;
 
+/** The tools section groups the nine tools in three families, in this order. */
+const LANDING_FAMILIES = [
+    'compliance' => ['nom_035', 'nom_037', 'ley_silla', 'attendance'],
+    'listening' => ['complaints', 'engagement'],
+    'operations' => ['leave', 'org_chart', 'compensation'],
+];
+
+/** The family whose tab shows a tool's tab. */
+function landingFamilyOf(string $tool): string
+{
+    foreach (LANDING_FAMILIES as $family => $tools) {
+        if (in_array($tool, $tools, true)) {
+            return $family;
+        }
+    }
+
+    throw new InvalidArgumentException("No family has the tool {$tool}.");
+}
+
 /*
  * The landing at `/`: its health in every look lives in PagesTest; here, that its calls to action lead where they say.
  */
@@ -21,6 +40,7 @@ it('takes the header and hero calls to action to the demo section', function (st
 it('sends a guest who signs in to the login page', function (bool $mobile): void {
     visitPage('landing', '/', mobile: $mobile)
         ->click('@sign-in')
+        ->assertScript(pathBecomes('/admin/login'), true)
         ->assertPathIs('/admin/login');
 })->with(['desktop' => false, 'mobile' => true]);
 
@@ -62,6 +82,36 @@ it('stores a demo request and confirms it', function (bool $mobile): void {
         ->and($demoRequest->workforce->value)->toBe('51_100')
         ->and($demoRequest->tools->map->value->all())->toBe(['nom_035', 'nom_037']);
 })->with(['desktop' => false, 'mobile' => true]);
+
+it('reports nothing and remembers no lead while PostHog is off: no token, no consent', function (): void {
+    $page = visitPage('landing', '/', reach: function ($page): void {
+        fillDemoForm($page);
+        $page->press('@demo-request-submit')
+            ->waitForText('Recibimos tu solicitud · te escribiremos para agendar la demo.');
+    });
+
+    expect(DemoRequest::query()->count())->toBe(1);
+
+    $page->assertScript('() => document.getElementById("analytics-config") === null')
+        ->assertScript('() => window.sessionStorage.getItem("analytics.lead_id") === null');
+});
+
+it('reports nothing when a request is rejected: not by validation and not by the honeypot', function (): void {
+    $page = visitPage('landing', '/', reach: function ($page): void {
+        $page->press('@demo-request-submit')->waitForText('El campo nombre es obligatorio.');
+    });
+
+    $page->assertScript('() => window.sessionStorage.getItem("analytics.lead_id") === null');
+});
+
+it('leaves the landing for the login in a new document, so PostHog never lives on another page', function (): void {
+    visitPage('landing', '/', reach: function ($page): void {
+        // A page Inertia navigates keeps its window; a plain link loads a document and loses this mark.
+        $page->script('() => { window.landingDocument = "landing"; }');
+    })->click('@sign-in')
+        ->assertScript(pathBecomes('/admin/login'), true)
+        ->assertScript('() => window.landingDocument === undefined');
+});
 
 it('shows what to fix next to each field when the form is sent empty', function (bool $mobile): void {
     $page = visitPage('landing', '/', mobile: $mobile, reach: function ($page): void {
@@ -141,10 +191,11 @@ it('tells the visitor to wait when there were too many requests', function (): v
 
 it('presents Humetría as an HR platform with all its tools', function (): void {
     visitPage('landing', '/')
-        ->assertTitleContains('Herramientas de RH')
-        ->assertSeeIn('#hero-title', 'Del celular de tu gente al expediente de la STPS')
+        ->assertTitleContains('NOM-035, NOM-037 y Ley Silla')
+        ->assertSeeIn('#hero-title', 'Tu gente contesta desde el celular. Tú llegas listo a la STPS.')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación", "jornada", "Vacaciones", "Organigrama", "Clima"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
-        ->assertScript('() => [...document.querySelectorAll("[data-test=hero-tools] li")].map((item) => item.textContent).join(" · ")', 'NOM-035 · NOM-037 · Ley Silla · Buzón de quejas · Compensación · Registro de jornada · Vacaciones y permisos · Organigrama · Clima y pulso')
+        ->assertScript('() => [...document.querySelectorAll("[data-test=hero-families] a b")].map((family) => family.textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Lleva el día a día')
+        ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "Registro de jornada", "Buzón de quejas", "Clima y pulso", "Vacaciones y permisos", "Organigrama", "Compensación"].every((tool) => document.querySelector("[data-test=hero-families]").textContent.includes(tool))')
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
 
@@ -165,6 +216,35 @@ it('plays the hero film muted and in a loop, and lets the visitor pause it', fun
         ->assertScript("() => {$video}.paused")
         ->assertAttribute('@hero-video-toggle', 'aria-label', 'Reproducir video');
 });
+
+it('plays the hero and Humi films again from the start', function (string $film): void {
+    $video = "document.querySelector('[data-test={$film}] video')";
+
+    $page = visitPage('landing', '/');
+    // Halfway through and paused, the way a visitor leaves it.
+    $page->script("() => new Promise((resolve) => { const video = {$video}; video.scrollIntoView(); video.pause(); video.addEventListener('seeked', () => resolve(true), { once: true }); video.currentTime = 12; })");
+
+    $page->assertAttribute("@{$film}-restart", 'aria-label', 'Ver desde el inicio')
+        ->click("@{$film}-restart")
+        ->assertScript("() => {$video}.currentTime < 2")
+        ->assertScript("() => new Promise((resolve) => { const playing = () => ! {$video}.paused ? resolve(true) : requestAnimationFrame(playing); playing(); })")
+        ->assertAttribute("@{$film}-toggle", 'aria-label', 'Pausar video');
+})->with(['hero' => 'hero-video', 'Humi' => 'humi-video']);
+
+it('mutes a film when it scrolls out of view', function (string $film): void {
+    $video = "document.querySelector('[data-test={$film}] video')";
+
+    $page = visitPage('landing', '/');
+    $page->script("() => {$video}.scrollIntoView({ block: 'center' })");
+
+    $page->click("@{$film}-sound")
+        ->assertScript("() => ! {$video}.muted")
+        // The visitor scrolls on to another part of the page: the narration must not follow.
+        ->script('() => window.scrollTo(0, document.body.scrollHeight)');
+
+    $page->assertScript("() => new Promise((resolve) => { const quiet = () => {$video}.muted ? resolve(true) : requestAnimationFrame(quiet); quiet(); })")
+        ->assertAttribute("@{$film}-sound", 'aria-label', 'Activar sonido');
+})->with(['hero' => 'hero-video', 'Humi' => 'humi-video']);
 
 it('keeps the hero film still when the visitor asks for reduced motion', function (): void {
     visit('/', ['reducedMotion' => 'reduce'])
@@ -198,12 +278,16 @@ it('takes the header section links to how it works, confidentiality and Humi', f
     'Humi' => ['@header-humi', '#humi'],
 ]);
 
-it('shows one tool at a time on a large stage, and a tab switches it', function (string $tool, string $hint, string $text): void {
+it('shows one tool at a time on a large stage, and a family and a tab switch it', function (string $tool, string $hint, string $text): void {
     $panel = 'document.querySelector("#herramientas [data-test=tool-panel]")';
+    $family = landingFamilyOf($tool);
 
     visitPage('landing', '/')
         ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-panel]").length', 1)
-        ->assertScript('() => document.querySelectorAll("#herramientas [role=tab]").length', 9)
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test^=family-tab-]").length', 3)
+        ->click("@family-tab-{$family}")
+        ->assertAttribute("@family-tab-{$family}", 'aria-selected', 'true')
+        ->assertScript("() => [...document.querySelectorAll('[data-test=tool-rail] [role=tab]')].length", count(LANDING_FAMILIES[$family]))
         ->click("@tool-tab-{$tool}")
         ->assertAttribute("@tool-tab-{$tool}", 'aria-selected', 'true')
         ->assertScript('() => window.location.hash', "#herramienta-{$tool}")
@@ -222,6 +306,36 @@ it('shows one tool at a time on a large stage, and a tab switches it', function 
     'engagement' => ['engagement', 'Clima laboral y pulso', 'Nadie ve una respuesta individual'],
 ]);
 
+it('keeps the nine tools in the page as tab panels and shows only the chosen one', function (): void {
+    $panels = '[...document.querySelectorAll("#herramientas [role=tabpanel]")]';
+    $page = visitPage('landing', '/');
+
+    $page->assertScript("() => {$panels}.length", 9)
+        ->assertScript("() => {$panels}.filter((panel) => getComputedStyle(panel).display !== 'none').length", 1)
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").id', 'tool-panel-nom_035')
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").getAttribute("aria-labelledby")', 'tool-panel-title-nom_035')
+        ->assertScript('() => document.getElementById("tool-tab-nom_035").getAttribute("aria-controls")', 'tool-panel-nom_035')
+        ->assertScript("() => new Set({$panels}.map((panel) => panel.id)).size", 9)
+        ->assertScript("() => {$panels}.every((panel) => document.getElementById(panel.getAttribute('aria-labelledby')) !== null)")
+        ->assertNoJavaScriptErrors();
+});
+
+it('reveals the panel of each tab and hides the one before', function (string $family, string $tool, string $before): void {
+    $display = fn (string $key): string => "() => getComputedStyle(document.getElementById('tool-panel-{$key}')).display";
+
+    visitPage('landing', '/')
+        ->click("@family-tab-{$family}")
+        ->click("@tool-tab-{$tool}")
+        ->assertScript($display($tool), 'grid')
+        ->assertScript($display($before), 'none')
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").id', "tool-panel-{$tool}")
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-film]").length', 1)
+        ->assertScript("() => document.querySelector('#tool-panel-{$tool} [data-test=tool-film] video') !== null");
+})->with([
+    'NOM-037' => ['compliance', 'nom_037', 'nom_035'],
+    'complaints' => ['listening', 'complaints', 'nom_035'],
+]);
+
 it('opens on the tool the link names', function (): void {
     $page = visitPage('landing', '/');
     $page->script('() => { window.location.hash = "herramienta-engagement"; }');
@@ -235,20 +349,25 @@ it('keeps the selected tool visible in the phone strip when the hash changes', f
     $page->script('() => { window.location.hash = "herramienta-engagement"; }');
 
     $page->assertAttribute('@tool-tab-engagement', 'aria-selected', 'true')
-        ->assertScript('() => { const tab = document.getElementById("tool-tab-engagement").getBoundingClientRect(); const strip = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
+        ->assertScript('() => { const tab = document.getElementById("tool-tab-engagement").getBoundingClientRect(); const strip = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
         ->keys('@tool-tab-engagement', 'Home')
-        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true')
-        ->assertScript('() => { const tab = document.getElementById("tool-tab-nom_035").getBoundingClientRect(); const strip = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
+        ->assertAttribute('@tool-tab-complaints', 'aria-selected', 'true')
+        ->assertScript('() => { const tab = document.getElementById("tool-tab-complaints").getBoundingClientRect(); const strip = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
         ->assertNoJavaScriptErrors();
 });
 
-it('fits every complete tool presentation below the laptop header', function (): void {
+it('fits every complete tool presentation below the laptop header, under its tools', function (): void {
     $page = resizeTo(visitPage('landing', '/'), 1512, 982);
 
-    foreach (['nom_035', 'nom_037', 'ley_silla', 'complaints', 'compensation', 'attendance', 'leave', 'org_chart', 'engagement'] as $tool) {
-        $page->click("@tool-tab-{$tool}");
-        $page->script('() => { document.getElementById("herramientas").scrollIntoView({ behavior: "instant", block: "start" }); }');
-        $page->assertScript('() => { const panel = document.getElementById("tool-panel").getBoundingClientRect(); const tabs = document.querySelector("#herramientas [role=tablist]").getBoundingClientRect(); return panel.top >= 64 && panel.bottom <= window.innerHeight && tabs.top >= 64 && tabs.bottom <= window.innerHeight; }');
+    foreach (LANDING_FAMILIES as $family => $tools) {
+        $page->click("@family-tab-{$family}");
+
+        foreach ($tools as $tool) {
+            $page->click("@tool-tab-{$tool}");
+            // The family's tools just under the 64 px header, the way a visitor scrolls to them: the stage fits below them.
+            $page->script('() => { window.scrollTo({ top: document.querySelector("[data-test=tool-rail]").getBoundingClientRect().top + window.scrollY - 80, behavior: "instant" }); }');
+            $page->assertScript('() => { const panel = document.querySelector("#herramientas [data-test=tool-panel]").getBoundingClientRect(); const rail = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return rail.top >= 64 && rail.bottom <= panel.top && panel.bottom <= window.innerHeight; }');
+        }
     }
 
     $page->assertNoJavaScriptErrors();
@@ -285,7 +404,7 @@ it('lists what an inspector would ask for, one line per tool', function (): void
         $page->assertSeeIn('[data-test=inspection]', $item);
     }
 
-    $page->assertSeeIn('[data-test=inspection]', 'No certifica el cumplimiento de ninguna norma.');
+    $page->assertSeeIn('[data-test=inspection]', 'No sustituimos a la STPS ni certificamos que cumples con una norma.');
 });
 
 it('hides a group with fewer than 5 answers when the visitor filters like HR would', function (): void {
@@ -324,7 +443,8 @@ it('shows each tool as a narrated film with chapters, and a chapter jumps to the
     $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
 
     $page = visitPage('landing', '/');
-    $page->click("@tool-tab-{$tool}")
+    $page->click('@family-tab-'.landingFamilyOf($tool))
+        ->click("@tool-tab-{$tool}")
         ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
         ->assertScript("() => {$video}.hasAttribute('muted')")
         ->assertScript("() => {$video}.poster.endsWith('/video/{$film}-light.jpg')")
@@ -378,17 +498,37 @@ it('keeps the film of the time clock on the QR and passkey flow', function (): v
 it('speaks to consultants, multi-site companies and corporate groups, and to unions after them', function (): void {
     visitPage('landing', '/')
         ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias empresas')
-        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varios centros de trabajo')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias sucursales, plantas u oficinas (centros de trabajo)')
         ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias razones sociales')
-        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'Humetría le asigna a cada uno lo que le toca según su tamaño y su gente.')
+        ->assertSeeIn('section[aria-labelledby="para-quien"]', 'Cada centro recibe solo lo que le toca por su número de trabajadores.')
         ->assertSeeIn('[data-test=unions]', 'sindicato')
         ->assertScript('() => document.querySelectorAll("section[aria-labelledby=para-quien] article").length', 3)
         ->assertDontSeeIn('section[aria-labelledby="para-quien"]', 'la norma');
 });
 
-it('lists the audiences plainly, so only the tools read as cards', function (): void {
+it('shows each audience as a card with its icon', function (): void {
     visitPage('landing', '/')
-        ->assertScript('() => [...document.querySelectorAll("section[aria-labelledby=para-quien] article")].map((article) => getComputedStyle(article).backgroundColor + "|" + getComputedStyle(article).borderBottomWidth + "|" + article.querySelectorAll("span svg").length).join()', 'rgba(0, 0, 0, 0)|0px|0,rgba(0, 0, 0, 0)|0px|0,rgba(0, 0, 0, 0)|0px|0');
+        ->assertScript('() => [...document.querySelectorAll("section[aria-labelledby=para-quien] article")].map((article) => getComputedStyle(article).borderBottomWidth + "|" + article.querySelectorAll("span svg").length).join()', '1px|1,1px|1,1px|1');
+});
+
+it('opens the tools section on the first tool of the family a hero link names', function (string $family, string $tool): void {
+    visitPage('landing', '/')
+        ->click("@hero-family-{$family}")
+        ->assertAttribute("@family-tab-{$family}", 'aria-selected', 'true')
+        ->assertAttribute("@tool-tab-{$tool}", 'aria-selected', 'true')
+        ->assertScript('() => new Promise((resolve) => setTimeout(() => { const box = document.getElementById("herramientas").getBoundingClientRect(); resolve(box.top < window.innerHeight / 2 && box.bottom > 0); }, 1000))');
+})->with([
+    'compliance' => ['compliance', 'nom_035'],
+    'listening' => ['listening', 'complaints'],
+    'operations' => ['operations', 'leave'],
+]);
+
+it('states its four promises right under the hero', function (): void {
+    $page = visitPage('landing', '/');
+
+    foreach (['Enlace de un solo uso', 'RH no ve respuestas individuales', 'Grupos de 5 o más', 'No certifica el cumplimiento.'] as $promise) {
+        $page->assertSeeIn('[data-test=trust]', $promise);
+    }
 });
 
 it('only names NOM-035 next to NOM-037', function (): void {
@@ -407,7 +547,7 @@ it('never promises anonymity for identified records', function (): void {
 
 it('states its legal and privacy claims exactly', function (): void {
     visitPage('landing', '/')
-        ->assertSee('Genera el informe del numeral 7.7')
+        ->assertSee('Arma el informe que pide la norma (numeral 7.7)')
         ->assertSee('solo con 5 o más respuestas')
         ->assertSee('con la confidencialidad que requiere cada herramienta')
         ->assertSee('¿Qué herramientas te interesan? (elige al menos una)')
@@ -438,6 +578,29 @@ it('tells the visitor what happens after asking for a demo', function (): void {
     }
 });
 
+it('opens the privacy notice as a new document from the footer and from the demo form', function (string $link, bool $mobile): void {
+    $page = visitPage('landing', '/', mobile: $mobile);
+    $page->script('() => { window.sameDocument = true; }');
+
+    $page->click($link)
+        ->assertScript(pathBecomes('/privacy-notice'), true)
+        ->assertPathIs('/privacy-notice')
+        ->assertScript('() => window.sameDocument', null)
+        ->assertSee('Quién es el responsable');
+})->with([
+    'footer' => '@footer-privacy',
+    'demo form' => '@demo-privacy-link',
+])->with(['desktop' => false, 'mobile' => true]);
+
+it('takes the notice back to the sections of the landing, not to anchors of its own page', function (): void {
+    $page = visitPage('privacy-notice', '/privacy-notice');
+
+    $page->assertScript('() => [...document.querySelectorAll("footer nav a")].map((a) => a.getAttribute("href")).filter((href) => href.includes("#")).every((href) => href.startsWith("/#"))')
+        ->click('footer a[href="/#herramientas"]')
+        ->assertScript(pathBecomes('/'), true)
+        ->assertScript('() => window.location.hash', '#herramientas');
+});
+
 it('jumps at once when the visitor asks for reduced motion', function (): void {
     visit('/', ['reducedMotion' => 'reduce'])
         ->assertScript('() => getComputedStyle(document.documentElement).scrollBehavior', 'auto');
@@ -450,4 +613,130 @@ it('marks in the header the section being read, and none over the hero', functio
         // The mark follows the scroll a frame later: wait for it.
         ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=header-humi]").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })')
         ->assertAttributeMissing('@header-tools', 'aria-current');
+});
+
+it('leaves one of each tag of the head after the app starts, as many as the server printed', function (string $component, string $url): void {
+    $counts = <<<'JS'
+        () => JSON.stringify(Object.fromEntries([
+            'title',
+            'meta[name=description]',
+            'link[rel=canonical]',
+            'script[type="application/ld+json"]',
+            'meta[property="og:title"]',
+            'meta[property="og:image"]',
+            'meta[name="twitter:card"]',
+            'meta[name="app-revision"]',
+        ].map((selector) => [selector, document.head.querySelectorAll(selector).length])))
+        JS;
+
+    visitPage($component, $url)
+        ->assertScript($counts, json_encode([
+            'title' => 1,
+            'meta[name=description]' => 1,
+            'link[rel=canonical]' => 1,
+            'script[type="application/ld+json"]' => 1,
+            'meta[property="og:title"]' => 1,
+            'meta[property="og:image"]' => 1,
+            'meta[name="twitter:card"]' => 1,
+            'meta[name="app-revision"]' => 1,
+        ], JSON_UNESCAPED_SLASHES))
+        ->assertScript('() => document.head.querySelector("link[rel=canonical]").href', rtrim((string) config('app.url'), '/').parse_url($url, PHP_URL_PATH))
+        ->assertScript('() => document.querySelector("meta[property=\"og:url\"]").content === document.head.querySelector("link[rel=canonical]").href', true)
+        ->assertScript('() => document.title.endsWith(" - Humetría")', true);
+})->with([['landing', '/'], ['privacy-notice', '/privacy-notice']]);
+
+it('reveals the blocks below the fold as they scroll into view, and never hides what is already in view', function (): void {
+    $count = fn (string $state): string => "document.querySelectorAll('[data-reveal=\"{$state}\"]').length";
+    // Hydrating hides what sits below the fold: wait for it, the effect runs after the first paint.
+    $hidden = "() => new Promise((resolve) => { const wait = () => {$count('pending')} > 0 ? resolve(true) : requestAnimationFrame(wait); wait(); })";
+    $revealAll = <<<JS
+        () => new Promise((resolve) => {
+            document.querySelectorAll('[data-reveal="pending"]').forEach((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+            const wait = () => {$count('pending')} === 0 ? resolve(true) : requestAnimationFrame(wait);
+            wait();
+        })
+        JS;
+
+    visit('/')
+        ->assertScript($hidden)
+        ->assertScript("() => [...document.querySelectorAll('[data-reveal=\"pending\"]')].every((node) => getComputedStyle(node).opacity === '0' || node.classList.contains('reveal-bar'))")
+        // The hero is in view when the page opens: it animates on its own and is never hidden by the scroll reveal.
+        ->assertScript("() => document.querySelector('#inicio [data-reveal=\"pending\"]') === null")
+        ->assertScript($revealAll)
+        ->assertScript("() => {$count('done')} > 0")
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows what scrolls into view with a fade only, no movement, when the visitor asks for reduced motion', function (): void {
+    visit('/', ['reducedMotion' => 'reduce'])
+        ->assertScript("() => new Promise((resolve) => { const wait = () => document.querySelectorAll('[data-reveal=\"pending\"]').length > 0 ? resolve(true) : requestAnimationFrame(wait); wait(); })")
+        ->assertScript("() => [...document.querySelectorAll('[data-reveal=\"pending\"]')].every((node) => getComputedStyle(node).transform === 'none' && getComputedStyle(node).filter === 'none')")
+        ->assertNoJavaScriptErrors();
+});
+
+it('fills the rail beside the steps as they scroll by on a phone', function (): void {
+    $progress = "Number(document.querySelector('#seccion-como-funciona [class*=\"scaleY\"]').style.getPropertyValue('--p'))";
+    // The page is hydrated once the scroll reveal has hidden what is below the fold; then it scrolls to the end of the steps and waits for the fill.
+    $filled = <<<JS
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const hydrated = () => document.querySelector('[data-reveal="pending"]') !== null;
+            const wait = () => {$progress} > 0.3 ? resolve(true) : performance.now() - start > 5000 ? resolve(false) : requestAnimationFrame(wait);
+            const begin = () => {
+                if (!hydrated()) { return requestAnimationFrame(begin); }
+                document.querySelector('#seccion-como-funciona ol').scrollIntoView({ block: 'end', behavior: 'instant' });
+                wait();
+            };
+            begin();
+        })
+        JS;
+
+    visit('/')->on()->mobile()
+        ->assertScript($filled)
+        ->assertNoJavaScriptErrors();
+});
+
+it('enters the headline word by word and the parts under it in a staggered fade, with CSS', function (): void {
+    $animation = fn (string $selector): string => "() => JSON.stringify([...document.querySelectorAll({$selector})].map((node) => { const style = getComputedStyle(node); return [style.animationName, style.animationDuration, style.animationDelay, style.animationFillMode]; }))";
+    $words = array_map(fn (int $index): array => ['enter', '0.7s', (0.1 + $index * 0.05).'s', 'both'], range(0, 11));
+    $after = [['enter', '0.6s', '0.55s', 'both'], ['enter', '0.6s', '0.65s', 'both'], ['enter', '0.6s', '0.2s', 'both'], ['enter', '0.6s', '0.75s', 'both']];
+
+    visit('/')
+        ->assertScript($animation("'#hero-title span'"), json_encode($words, JSON_THROW_ON_ERROR))
+        ->assertScript($animation("'#inicio .enter-after'"), json_encode($after, JSON_THROW_ON_ERROR))
+        ->assertNoJavaScriptErrors();
+});
+
+it('enters the hero without moving when the visitor asks for reduced motion', function (): void {
+    visit('/', ['reducedMotion' => 'reduce'])
+        ->assertScript("() => [...document.querySelectorAll('#hero-title span, #inicio .enter-after')].every((node) => getComputedStyle(node).getPropertyValue('--from-transform').trim() === 'none' && getComputedStyle(node).getPropertyValue('--from-filter').trim() !== 'blur(6px)')")
+        ->assertNoJavaScriptErrors();
+});
+
+it('plays the details of a tool again each time the tool changes', function (): void {
+    $details = "document.querySelector('#herramientas [role=tabpanel] .enter-details')";
+    // The key remounts the details with the tool: a new element, whose CSS animation starts over.
+    $replayed = <<<JS
+        () => new Promise((resolve) => {
+            const before = {$details};
+            document.querySelector('[data-test=tool-tab-ley_silla]').click();
+            const wait = () => {
+                const after = {$details};
+                after !== null && after !== before ? resolve(after.getAnimations().some((animation) => animation.animationName === 'enter')) : requestAnimationFrame(wait);
+            };
+            wait();
+        })
+        JS;
+
+    visit('/#herramientas')
+        ->assertScript("() => getComputedStyle({$details}).animationName", 'enter')
+        ->assertScript($replayed)
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps a space between the words of the headline, though each one is its own inline block', function (): void {
+    // A plain space at the end of an inline block collapses: only a no-break space keeps the words apart.
+    visit('/')
+        ->assertScript("() => [...document.querySelectorAll('#hero-title span')].slice(0, -1).every((word) => word.textContent.endsWith('\\u00A0'))")
+        ->assertScript("() => document.querySelector('#hero-title').innerText.replace(/\\u00A0/g, ' ').includes('Tu gente contesta desde el celular.')");
 });

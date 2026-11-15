@@ -1,11 +1,19 @@
 import { Inbox } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
+import { demoEmptyText } from '@/lib/demo-requests';
+import type { DemoView } from '@/types';
 
-export default function DemoRequestsEmpty() {
+export default function DemoRequestsEmpty({ view }: { view: DemoView }) {
     return (
-        <EmptyState icon={Inbox} title="Aún no hay solicitudes">
-            Cuando alguien llene el formulario de la landing, su solicitud
-            aparecerá aquí.
+        <EmptyState
+            icon={Inbox}
+            title={
+                view === 'all'
+                    ? 'Aún no hay solicitudes'
+                    : 'No hay solicitudes en este estado'
+            }
+        >
+            {demoEmptyText(view)}
         </EmptyState>
     );
 }

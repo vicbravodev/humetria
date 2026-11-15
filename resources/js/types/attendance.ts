@@ -104,6 +104,8 @@ export type AttendanceZone = {
 
 export type AttendanceCenterProps = {
     center: { id: string; name: string; mainActivity: string };
+    /** Its address in one line, where the map of a new zone opens; null for whoever cannot add zones. */
+    centerAddress: string | null;
     /** Its active people. */
     people: number;
     zones: Paginated<AttendanceZone>;
@@ -144,6 +146,8 @@ export type ReportDay = {
     corrections: string[];
     confirmation: 'confirmado' | 'objetada' | 'sin confirmar';
     flags: string[];
+    /** Minutes late against the schedule's start time and the tolerance; null when there is none to compare. Informational. */
+    lateMinutes?: number | null;
 };
 
 /** A person with days in the report's period, each of them. */

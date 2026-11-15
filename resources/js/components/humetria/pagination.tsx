@@ -7,7 +7,7 @@ import type { Paginated } from '@/types';
 
 /**
  * The pages of a list: which rows are on screen and the way to the next ones. Pinned to the bottom of the screen
- * while the list scrolls, so turning the page never means scrolling to the end first.
+ * while the list scrolls on a desk (on a phone the bar of the menu floats there, so it follows the list), so turning the page never means scrolling to the end first.
  */
 export default function Pagination({
     page,
@@ -51,7 +51,7 @@ export default function Pagination({
             className={cn(
                 'flex flex-wrap items-center justify-between gap-x-4 gap-y-2',
                 pinned &&
-                    'sticky bottom-0 z-10 -mx-4 -mb-6 border-t bg-background px-4 py-3 md:-mx-10 md:-mb-8 md:px-10 print:static',
+                    '-mx-4 border-t bg-background px-4 py-3 md:sticky md:bottom-0 md:z-10 md:-mx-10 md:-mb-8 md:px-10 print:static',
             )}
         >
             <p className="text-sm text-muted-foreground tabular-nums">

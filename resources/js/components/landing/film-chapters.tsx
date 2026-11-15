@@ -28,6 +28,8 @@ export default function FilmChapters({
                     <button
                         type="button"
                         data-test={`tool-chapter-${index}`}
+                        data-track="film_chapter"
+                        data-track-target={index}
                         aria-current={active === index ? 'true' : undefined}
                         onClick={() => onJump(index)}
                         className={cn(
@@ -42,13 +44,17 @@ export default function FilmChapters({
                         </span>
                         <span>{label}</span>
                         {active === index && (
-                            <span
+                            <svg
                                 aria-hidden
-                                className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-primary-foreground/70 transition-transform duration-300 ease-linear motion-reduce:transition-none"
-                                style={{
-                                    transform: `scaleX(${chapterProgress(timing, index, time)})`,
-                                }}
-                            />
+                                className="absolute inset-x-0 bottom-0 h-0.5 w-full"
+                            >
+                                {/* Its width is an attribute of presentation: a `style` printed by the server is blocked by the CSP. */}
+                                <rect
+                                    width={`${chapterProgress(timing, index, time) * 100}%`}
+                                    height="100%"
+                                    className="fill-primary-foreground/70 transition-[width] duration-300 ease-linear motion-reduce:transition-none"
+                                />
+                            </svg>
                         )}
                     </button>
                 </li>

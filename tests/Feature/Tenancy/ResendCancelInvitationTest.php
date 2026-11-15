@@ -173,7 +173,7 @@ it('logs and audits resend and cancel without the email, the name or the token',
     $metadata = json_encode($entry->metadata, JSON_THROW_ON_ERROR);
 
     expect($entry->event)->toBe($event)
-        ->and($entry->tenant_id)->toBeNull()
+        ->and($entry->tenant_id)->toBe($tenant->id)
         ->and($entry->subject_id)->toBe($invitation->id)
         ->and($entry->metadata)->toBe(['tenant_id' => $tenant->id])
         ->and($metadata)->not->toContain('ana@acme.mx')

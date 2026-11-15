@@ -172,7 +172,7 @@ it('counts an expiry only once: after the last digest it is no longer new', func
 });
 
 it('skips blocked companies and companies without an owner, and reaches the rest', function (): void {
-    $blocked = Tenant::factory()->create(['deactivated_at' => now()]);
+    $blocked = Tenant::factory()->suspended()->create();
     $blockedCenter = WorkCenter::factory()->for($blocked)->create();
     ownerOf($blocked);
     workIn($blocked);
@@ -300,4 +300,10 @@ it('counts in the Comisión email what waits in Ley Silla for their centers', fu
     ])->and(digestLinesFor($this->owner->email))->not->toContain('2 evaluaciones de trabajo de pie por firmar.');
     Notification::assertSentOnDemand(TeleworkDigest::class, fn (TeleworkDigest $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === $cora->email
         && $notification->toMail($notifiable)->subject === 'Tienes 4 pendientes como integrante de la Comisión');
+});
+
+it('writes the Comisión subject in the singular for a single thing', function (): void {
+    $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false);
+
+    expect((new TeleworkDigest($company, 'Cora', ['1 lista por revisar.'], 'https://x.test', 1))->toMail(new AnonymousNotifiable)->subject)->toBe('Tienes 1 pendiente como integrante de la Comisión');
 });

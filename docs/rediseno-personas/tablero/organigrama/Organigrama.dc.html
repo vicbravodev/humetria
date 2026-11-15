@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Organigrama</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border:1px solid var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;border-radius:8px;color:var(--muted-foreground);transition:background-color 150ms,color 150ms}
+.hm .hm-iconbtn:hover{background:var(--secondary);color:var(--foreground)}
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--plain::before{display:none}
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap}
+.hm .hm-tab[aria-selected="true"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-tab--cero{opacity:1;color:var(--muted-foreground)}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+.hm-page{display:flex;flex-direction:column;gap:20px;padding:24px 40px 48px;width:100%;max-width:1176px}
+.hm-head-actions{align-items:center;gap:12px}
+.hm-strip{display:flex;align-items:center;gap:12px;min-height:52px;padding:4px 8px 4px 16px;border-radius:10px;background:var(--card);border:1px solid var(--border);font-size:14px;line-height:20px}
+.hm-strip svg.hm-i{color:var(--primary)}
+.hm-strip p{flex:1;min-width:0}
+.hm-strip--am{background:var(--warning);color:var(--warning-foreground);border-color:var(--warning)}
+.hm-strip--am svg.hm-i{color:var(--warning-foreground)}
+.hm-strip .hm-link{font-size:14px;line-height:20px;padding:0 8px;white-space:nowrap}
+.hm-strip--am .hm-link{color:var(--warning-foreground)}
+.cv{position:relative;height:800px;border:1px solid var(--border);border-radius:12px;background-color:var(--muted);background-image:radial-gradient(var(--border) 1.1px,transparent 1.3px);background-size:24px 24px;overflow:hidden;cursor:grab}
+.cv-bar{position:absolute;left:12px;right:12px;top:12px;display:flex;align-items:center;gap:8px;z-index:3}
+.cv-bar .hm-btn{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.cv-search{display:flex;align-items:center;gap:10px;flex:0 0 280px;min-height:44px;padding:0 14px;background:var(--card);border:1px solid var(--input);border-radius:8px;color:var(--muted-foreground)}
+.cv-search:focus-within{outline:2px solid var(--ring);outline-offset:2px}
+.cv-search input{flex:1;min-width:0;height:42px;border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--foreground)}
+.cv-search input::placeholder{color:var(--muted-foreground);opacity:1}
+.cv-dd{position:absolute;left:12px;top:64px;z-index:4;padding:4px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-float)}
+.hm .cv-dd button{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:8px;font-size:13px;line-height:18px;text-align:left;background:var(--accent)}
+.cv-ctl{position:absolute;left:12px;bottom:12px;z-index:3;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cv-ctl .hm-iconbtn{border-radius:0;color:var(--foreground)}
+.cv-ctl .hm-iconbtn+.hm-iconbtn{border-top:1px solid var(--border)}
+.mm{position:absolute;right:12px;bottom:12px;z-index:3;width:160px;height:100px;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.mm svg{display:block;width:160px;height:100px}
+.mm rect.r{fill:var(--input);opacity:.55}
+.mm rect.p{fill:var(--primary);opacity:1}
+.mm rect.f{fill:none;stroke:var(--primary);stroke-width:12}
+.cv.is-p .mm{right:384px}
+.stage{position:absolute;top:84px;transform-origin:0 0}
+.stage>svg{position:absolute;left:0;top:0;overflow:visible}
+.s-a{left:16px;width:1184px;height:640px;transform:scale(.88)}
+.s-b{top:120px;left:24px;width:1116px;height:440px;transform:scale(.9)}
+.cn{fill:none;stroke:var(--input);stroke-width:1.7}
+.cn.on{stroke:var(--primary);stroke-width:2.6}
+.hm button.nd,.hm .nd{position:absolute;width:216px;height:72px;display:flex;align-items:center;gap:10px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--foreground);text-align:left;transition:border-color 150ms,box-shadow 150ms,opacity 150ms}
+.hm button.nd:hover{border-color:var(--input)}
+.nd-t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.nd-n{font-size:14px;line-height:18px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd-r{display:flex;align-items:center;gap:6px;min-width:0}
+.nd-p{flex:1 1 auto;min-width:0;font-size:12px;line-height:16px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd-c{flex:none;padding:1px 7px;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:12px;line-height:16px;font-weight:500;white-space:nowrap}
+.nd-c.am{background:var(--warning);color:var(--warning-foreground)}
+.hm .nd.root{border-style:dashed;border-color:var(--input)}
+.nd-tile{display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm button.pl{position:absolute;transform:translateX(-50%);display:inline-flex;align-items:center;justify-content:center;gap:4px;height:28px;padding:0 10px;border-radius:9999px;border:1px solid var(--input);background:var(--card);color:var(--foreground);font-size:12px;line-height:16px;font-weight:500;white-space:nowrap}
+.pl::after{content:"";position:absolute;inset:-8px -4px}
+.hm button.pl.am{background:var(--warning);color:var(--warning-foreground);border-color:var(--warning-foreground)}
+.hm button.pl.op{width:32px;height:24px;padding:0}
+.is-p .nd,.is-p .pl,.is-p .cn{opacity:.45}
+.is-p .nd.k,.is-p .pl.k,.is-p .cn.k{opacity:1}
+.hm .is-p .nd.pp{border-color:var(--primary);background:var(--accent)}
+.hm .is-p .nd.ps{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary),var(--shadow-float)}
+.is-p .cn.k.pon{stroke:var(--primary);stroke-width:2.6}
+.nd.dm,.pl.dm,.cn.dm{opacity:.45}
+.hm .nd.bp{border-color:var(--primary);background:var(--accent)}
+.hm .nd.hit{border-color:var(--primary);background:var(--accent);box-shadow:0 0 0 1px var(--primary),var(--shadow-float)}
+.pn{position:absolute;right:12px;top:68px;bottom:12px;z-index:5;width:360px;display:flex;flex-direction:column;gap:14px;padding:16px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-float);cursor:auto;overflow:hidden}
+.pn-head{display:flex;align-items:flex-start;gap:12px}
+.pn-head .hm-avatar{width:48px;height:48px;font-size:16px;line-height:22px}
+.pn-name{font-size:18px;line-height:24px;font-weight:600}
+.pn-sec{display:flex;flex-direction:column;gap:6px}
+.hm button.pn-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:1px solid var(--border);border-radius:10px;background:var(--card);text-align:left;width:100%}
+.pn-row .hm-avatar{width:28px;height:28px;font-size:11px;line-height:14px}
+.pn-row>span:nth-child(2){display:flex;flex-direction:column;flex:1;min-width:0}
+.pn-row .hm-i{color:var(--muted-foreground)}
+.hm .pn-row:hover{border-color:var(--input)}
+.v-empty{position:absolute;left:50%;top:260px;transform:translateX(-50%);width:480px;display:flex;flex-direction:column;align-items:center;gap:12px;padding:32px 28px;border:1px dashed var(--input);border-radius:12px;background:var(--card);text-align:center;cursor:auto}
+.v-empty p{max-width:380px;color:var(--muted-foreground)}
+.v-root{position:absolute;left:50%;margin-left:-108px;top:92px}
+.v-line{position:absolute;left:50%;top:164px;height:96px;border-left:1.7px dashed var(--input)}
+.cv-legend{display:flex;align-items:center;gap:8px;color:var(--muted-foreground);font-size:14px;line-height:20px;margin-top:-8px}
+.hm-tabs{flex:none}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-link{display:inline-flex;align-items:center;min-height:44px;color:var(--primary);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="organigrama.organigrama" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Ordena tu operación › Organigrama" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page">
+      <header class="hm-head">
+        <div class="hm-head-text">
+          <div class="hm-head-title"><h1 class="hm-h1">Organigrama</h1></div>
+          <div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>212 personas activas</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>{{ factNiveles }}</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 11 2 2 4-4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>{{ factJefe }}</span></div>
+        </div>
+        <div class="hm-head-actions">
+          <div class="hm-tabs" role="tablist" aria-label="Vista del organigrama">
+            <button type="button" role="tab" class="hm-tab" aria-selected="true">Organigrama</button>
+            <button type="button" role="tab" class="hm-tab" aria-selected="false">Lista</button>
+          </div>
+          <button type="button" class="hm-btn hm-btn-outline"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Editar estructura</button>
+        </div>
+      </header>
+      <div class="hm-strip" role="note">
+        <svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <p>De aquí salen quién aprueba las vacaciones de cada persona y los resultados de Clima y Pulso por jefe. <a class="hm-link" href="#">Cómo funciona</a></p>
+        <button type="button" class="hm-iconbtn" aria-label="Ocultar este aviso"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+      <sc-if value="{{ conRed }}" hint-placeholder-val="{{ true }}">
+      <div class="hm-strip hm-strip--am" role="note">
+        <svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <p>3 personas sin jefe: normalmente hay una.</p>
+        <a class="hm-link" href="#">Asígnales jefe</a>
+      </div>
+      </sc-if>
+      <div class="{{ cvClass }}" role="region" aria-label="Lienzo del organigrama">
+        <div class="cv-bar">
+          <label class="cv-search"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="search" value="{{ buscado }}" placeholder="Busca a una persona…" aria-label="Busca a una persona"></label>
+          <button type="button" class="hm-btn" aria-haspopup="listbox">Centro de trabajo <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <button type="button" class="hm-btn" aria-haspopup="listbox">Mostrar: 3 niveles <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <button type="button" class="hm-btn"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>Expandir todo</button>
+        </div>
+<sc-if value="{{ esArbolPersona }}" hint-placeholder-val="{{ true }}">
+<div class="{{ stageA }}" role="group" aria-label="Organigrama de Demo NOM-035">
+<svg width="1184" height="640" aria-hidden="true">
+<path class="cn k pon" d="M708 100 V120 Q708 128 700 128 H348 Q340 128 340 136 V156"/>
+<path class="cn" d="M708 100 V120 Q708 128 716 128 H828 Q836 128 836 136 V156"/>
+<path class="cn" d="M708 100 V120 Q708 128 716 128 H1068 Q1076 128 1076 136 V156"/>
+<path class="cn k" d="M340 228 V248 Q340 256 332 256 H116 Q108 256 108 264 V284"/>
+<path class="cn k" d="M340 228 V284"/>
+<path class="cn k pon" d="M340 228 V248 Q340 256 348 256 H564 Q572 256 572 264 V284"/>
+<path class="cn" d="M836 228 V236"/><path class="cn" d="M1076 228 V236"/>
+<path class="cn" d="M108 356 V364"/><path class="cn" d="M340 356 V364"/>
+<path class="cn k" d="M480 356 V576 Q480 584 488 584 H496"/>
+<path class="cn k" d="M480 416 H496"/><path class="cn k" d="M480 500 H496"/>
+</svg>
+<div class="nd root k" style="left:600px;top:28px" aria-label="Demo NOM-035, 212 personas"><span class="nd-tile"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg></span><span class="nd-t"><span class="nd-n">Demo NOM-035</span><span class="nd-p">212 personas</span></span></div>
+<button type="button" class="nd k pp" style="left:232px;top:156px" aria-label="Esther Alaniz Segundo, Almacenista, 3 directos, 78 en total"><span class="hm-avatar" aria-hidden="true">EA</span><span class="nd-t"><span class="nd-n">Esther Alaniz Segundo</span><span class="nd-r"><span class="nd-p">Almacenista</span><span class="nd-c">3 directos</span></span></span></button>
+<button type="button" class="nd " style="left:728px;top:156px" aria-label="Gonzalo Reyes Segundo, Analista, 3 directos, 66 en total"><span class="hm-avatar" aria-hidden="true">GR</span><span class="nd-t"><span class="nd-n">Gonzalo Reyes Segundo</span><span class="nd-r"><span class="nd-p">Analista</span><span class="nd-c">3 directos</span></span></span></button>
+<button type="button" class="nd " style="left:968px;top:156px" aria-label="Yeray Pulido, Operador, 3 directos, 65 en total"><span class="hm-avatar" aria-hidden="true">YP</span><span class="nd-t"><span class="nd-n">Yeray Pulido</span><span class="nd-r"><span class="nd-p">Operador</span><span class="nd-c">3 directos</span></span></span></button>
+<button type="button" class="nd " style="left:0px;top:284px" aria-label="Adriana Rivera Hijo, Supervisor, 4 directos, 30 en total"><span class="hm-avatar" aria-hidden="true">AR</span><span class="nd-t"><span class="nd-n">Adriana Rivera Hijo</span><span class="nd-r"><span class="nd-p">Supervisor</span><span class="nd-c">4 directos</span></span></span></button>
+<button type="button" class="nd " style="left:232px;top:284px" aria-label="Alonso Banda, Analista, 3 directos, 24 en total"><span class="hm-avatar" aria-hidden="true">AB</span><span class="nd-t"><span class="nd-n">Alonso Banda</span><span class="nd-r"><span class="nd-p">Analista</span><span class="nd-c">3 directos</span></span></span></button>
+<button type="button" class="nd k ps" style="left:464px;top:284px" aria-label="Ander Noriega, Analista, 3 directos, 21 en total"><span class="hm-avatar" aria-hidden="true">AN</span><span class="nd-t"><span class="nd-n">Ander Noriega</span><span class="nd-r"><span class="nd-p">Analista</span><span class="nd-c">3 directos</span></span></span></button>
+<button type="button" class="nd k" style="left:496px;top:380px" aria-label="Paula Vega, Analista"><span class="hm-avatar" aria-hidden="true">PV</span><span class="nd-t"><span class="nd-n">Paula Vega</span><span class="nd-r"><span class="nd-p">Analista</span></span></span></button>
+<button type="button" class="nd k" style="left:496px;top:464px" aria-label="Rubén Cano, Auxiliar"><span class="hm-avatar" aria-hidden="true">RC</span><span class="nd-t"><span class="nd-n">Rubén Cano</span><span class="nd-r"><span class="nd-p">Auxiliar</span></span></span></button>
+<button type="button" class="nd k" style="left:496px;top:548px" aria-label="Sofía Ibarra, Auxiliar"><span class="hm-avatar" aria-hidden="true">SI</span><span class="nd-t"><span class="nd-n">Sofía Ibarra</span><span class="nd-r"><span class="nd-p">Auxiliar</span></span></span></button>
+<button type="button" class="pl op k" style="left:340px;top:216px" aria-expanded="true" aria-label="Cerrar la rama de Esther Alaniz Segundo"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+<button type="button" class="pl op k" style="left:572px;top:344px" aria-expanded="true" aria-label="Cerrar la rama de Ander Noriega"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+<button type="button" class="pl " style="left:836px;top:236px" aria-expanded="false" aria-label="Abrir la rama de Gonzalo Reyes Segundo: 3 directos, 66 en total">+3 · 66 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<button type="button" class="pl " style="left:1076px;top:236px" aria-expanded="false" aria-label="Abrir la rama de Yeray Pulido: 3 directos, 65 en total">+3 · 65 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<button type="button" class="pl " style="left:108px;top:364px" aria-expanded="false" aria-label="Abrir la rama de Adriana Rivera Hijo: 4 directos, 30 en total">+4 · 30 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<button type="button" class="pl " style="left:340px;top:364px" aria-expanded="false" aria-label="Abrir la rama de Alonso Banda: 3 directos, 24 en total">+3 · 24 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+</div>
+<sc-if value="{{ esPersona }}" hint-placeholder-val="{{ false }}">
+<div class="mm" role="img" aria-label="Minimapa del organigrama"><svg viewBox="0 0 1200 750" aria-hidden="true">
+<rect class="p" x="600" y="28" width="216" height="72" rx="12"/>
+<rect class="p" x="232" y="156" width="216" height="72" rx="12"/>
+<rect class="r" x="728" y="156" width="216" height="72" rx="12"/>
+<rect class="r" x="968" y="156" width="216" height="72" rx="12"/>
+<rect class="r" x="0" y="284" width="216" height="72" rx="12"/>
+<rect class="r" x="232" y="284" width="216" height="72" rx="12"/>
+<rect class="p" x="464" y="284" width="216" height="72" rx="12"/>
+<rect class="r" x="496" y="380" width="216" height="72" rx="12"/>
+<rect class="r" x="496" y="464" width="216" height="72" rx="12"/>
+<rect class="r" x="496" y="548" width="216" height="72" rx="12"/>
+<rect class="f" x="6" y="6" width="800" height="720"/></svg></div>
+</sc-if>
+<sc-if value="{{ esArbol }}" hint-placeholder-val="{{ true }}">
+<div class="mm" role="img" aria-label="Minimapa del organigrama"><svg viewBox="0 0 1200 750" aria-hidden="true">
+<rect class="p" x="600" y="28" width="216" height="72" rx="12"/>
+<rect class="p" x="232" y="156" width="216" height="72" rx="12"/>
+<rect class="r" x="728" y="156" width="216" height="72" rx="12"/>
+<rect class="r" x="968" y="156" width="216" height="72" rx="12"/>
+<rect class="r" x="0" y="284" width="216" height="72" rx="12"/>
+<rect class="r" x="232" y="284" width="216" height="72" rx="12"/>
+<rect class="p" x="464" y="284" width="216" height="72" rx="12"/>
+<rect class="r" x="496" y="380" width="216" height="72" rx="12"/>
+<rect class="r" x="496" y="464" width="216" height="72" rx="12"/>
+<rect class="r" x="496" y="548" width="216" height="72" rx="12"/>
+<rect class="f" x="6" y="6" width="1190" height="720"/></svg></div>
+</sc-if>
+</sc-if>
+<sc-if value="{{ esBusqueda }}" hint-placeholder-val="{{ false }}">
+<div class="cv-dd"><button type="button"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--primary)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>1 resultado · Dr. Hugo Verduzco, Administración · Sucursal</button></div>
+<div class="stage s-b" role="group" aria-label="Organigrama de Demo NOM-035, resultado de la búsqueda">
+<svg width="1116" height="440" aria-hidden="true">
+<path class="cn dm" d="M558 100 V120 Q558 128 550 128 H116 Q108 128 108 136 V156"/>
+<path class="cn on" d="M558 100 V120 Q558 128 566 128 H604 Q612 128 612 136 V156"/>
+<path class="cn dm" d="M558 100 V120 Q558 128 566 128 H1000 Q1008 128 1008 136 V156"/>
+<path class="cn on" d="M612 228 V248 Q612 256 604 256 H388 Q380 256 380 264 V284"/>
+<path class="cn dm" d="M612 228 V284"/>
+<path class="cn dm" d="M612 228 V248 Q612 256 620 256 H836 Q844 256 844 264 V284"/>
+<path class="cn dm" d="M108 228 V236"/><path class="cn dm" d="M1008 228 V236"/>
+<path class="cn on" d="M380 356 V364"/><path class="cn dm" d="M612 356 V364"/><path class="cn dm" d="M844 356 V364"/>
+</svg>
+<div class="nd root" style="left:450px;top:28px" aria-label="Demo NOM-035, 212 personas"><span class="nd-tile"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg></span><span class="nd-t"><span class="nd-n">Demo NOM-035</span><span class="nd-p">212 personas</span></span></div>
+<button type="button" class="nd dm" style="left:0px;top:156px" aria-label="Esther Alaniz Segundo, Almacenista, 3 directos, 78 en total"><span class="hm-avatar" aria-hidden="true">EA</span><span class="nd-t"><span class="nd-n">Esther Alaniz Segundo</span><span class="nd-r"><span class="nd-p">Almacenista</span><span class="nd-c ">3 directos</span></span></span></button>
+<button type="button" class="nd bp" style="left:504px;top:156px" aria-label="Gonzalo Reyes Segundo, Analista, 3 directos, 66 en total"><span class="hm-avatar" aria-hidden="true">GR</span><span class="nd-t"><span class="nd-n">Gonzalo Reyes Segundo</span><span class="nd-r"><span class="nd-p">Analista</span><span class="nd-c ">3 directos</span></span></span></button>
+<button type="button" class="nd dm" style="left:900px;top:156px" aria-label="Yeray Pulido, Operador, 3 directos, 65 en total"><span class="hm-avatar" aria-hidden="true">YP</span><span class="nd-t"><span class="nd-n">Yeray Pulido</span><span class="nd-r"><span class="nd-p">Operador</span><span class="nd-c ">3 directos</span></span></span></button>
+<button type="button" class="nd hit" style="left:272px;top:284px" aria-label="Dr. Hugo Verduzco, Supervisor, 17 directos, 38 en total, resultado de la búsqueda"><span class="hm-avatar" aria-hidden="true">HV</span><span class="nd-t"><span class="nd-n">Dr. Hugo Verduzco</span><span class="nd-r"><span class="nd-p">Supervisor</span><span class="nd-c am">17 directos</span></span></span></button>
+<button type="button" class="nd dm" style="left:504px;top:284px" aria-label="Francisca Duran, Analista, 2 directos, 14 en total"><span class="hm-avatar" aria-hidden="true">FD</span><span class="nd-t"><span class="nd-n">Francisca Duran</span><span class="nd-r"><span class="nd-p">Analista</span><span class="nd-c ">2 directos</span></span></span></button>
+<button type="button" class="nd dm" style="left:736px;top:284px" aria-label="Gabriel Esquibel, Analista, 1 directo, 11 en total"><span class="hm-avatar" aria-hidden="true">GE</span><span class="nd-t"><span class="nd-n">Gabriel Esquibel</span><span class="nd-r"><span class="nd-p">Analista</span><span class="nd-c ">1 directo</span></span></span></button>
+<button type="button" class="pl op" style="left:612px;top:216px" aria-expanded="true" aria-label="Cerrar la rama de Gonzalo Reyes Segundo"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+<button type="button" class="pl dm" style="left:108px;top:236px" aria-expanded="false" aria-label="Abrir la rama de Esther Alaniz Segundo: 3 directos, 78 en total">+3 · 78 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<button type="button" class="pl dm" style="left:1008px;top:236px" aria-expanded="false" aria-label="Abrir la rama de Yeray Pulido: 3 directos, 65 en total">+3 · 65 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<button type="button" class="pl am" style="left:380px;top:364px" aria-expanded="false" aria-label="Abrir la rama de Dr. Hugo Verduzco: 17 directos, 38 en total">+17 directos · 38 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<button type="button" class="pl dm" style="left:612px;top:364px" aria-expanded="false" aria-label="Abrir la rama de Francisca Duran: 2 directos, 14 en total">+2 · 14 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+<button type="button" class="pl dm" style="left:844px;top:364px" aria-expanded="false" aria-label="Abrir la rama de Gabriel Esquibel: 1 directo, 11 en total">+1 · 11 en total <svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+</div>
+<div class="mm" role="img" aria-label="Minimapa del organigrama"><svg viewBox="0 0 1200 750" aria-hidden="true">
+<rect class="r" x="450" y="28" width="216" height="72" rx="12"/>
+<rect class="r" x="0" y="156" width="216" height="72" rx="12"/>
+<rect class="p" x="504" y="156" width="216" height="72" rx="12"/>
+<rect class="r" x="900" y="156" width="216" height="72" rx="12"/>
+<rect class="p" x="272" y="284" width="216" height="72" rx="12"/>
+<rect class="r" x="504" y="284" width="216" height="72" rx="12"/>
+<rect class="r" x="736" y="284" width="216" height="72" rx="12"/>
+<rect class="f" x="6" y="6" width="1190" height="560"/></svg></div>
+</sc-if>
+<sc-if value="{{ esVacio }}" hint-placeholder-val="{{ false }}">
+<div class="v-root nd root" style="margin-left:-108px"><span class="nd-tile"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg></span><span class="nd-t"><span class="nd-n">Demo NOM-035</span><span class="nd-p">212 personas</span></span></div>
+<div class="v-line" aria-hidden="true"></div>
+<div class="v-empty">
+  <span class="hm-empty-icon"><svg class="hm-i hm-i-24" viewBox="0 0 24 24" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg></span>
+  <h2 class="hm-h3">Todavía nadie tiene jefe directo</h2>
+  <p>Asígnalo al editar a cada persona o súbelo en el CSV de empleados</p>
+  <a class="hm-btn hm-btn-primary" href="#">Ir a Empleados</a>
+</div>
+<div class="mm" role="img" aria-label="Minimapa del organigrama"><svg viewBox="0 0 1200 750" aria-hidden="true">
+<rect class="r" x="492" y="200" width="216" height="72" rx="12"/>
+<rect class="f" x="6" y="6" width="1190" height="720"/></svg></div>
+</sc-if>
+        <div class="cv-ctl" role="group" aria-label="Controles del lienzo">
+          <button type="button" class="hm-iconbtn" title="Acercar" aria-label="Acercar"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+          <button type="button" class="hm-iconbtn" title="Alejar" aria-label="Alejar"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+          <button type="button" class="hm-iconbtn" title="Ajustar a la pantalla" aria-label="Ajustar a la pantalla"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+        </div>
+<sc-if value="{{ esPersona }}" hint-placeholder-val="{{ false }}">
+<aside class="pn" aria-label="Panel de Ander Noriega">
+  <div class="pn-head">
+    <span class="hm-avatar" aria-hidden="true">AN</span>
+    <div style="flex:1;min-width:0"><h2 class="pn-name">Ander Noriega</h2><p class="hm-small hm-muted">Analista · Operaciones · Oficina</p></div>
+    <button type="button" class="hm-iconbtn" aria-label="Cerrar el panel" style="margin:-8px -12px 0 0"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  </div>
+  <div class="pn-sec">
+    <h3 class="hm-caption hm-muted">Su jefe</h3>
+    <button type="button" class="pn-row" aria-label="Ir a su jefa, Esther Alaniz Segundo"><span class="hm-avatar" aria-hidden="true">EA</span><span><span class="hm-small" style="font-weight:600">Esther Alaniz Segundo</span><span class="hm-muted" style="font-size:12px;line-height:16px">Almacenista</span></span><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg></button>
+  </div>
+  <div class="pn-sec">
+    <h3 class="hm-caption hm-muted">Su equipo directo (3)</h3>
+    <button type="button" class="pn-row"><span class="hm-avatar" aria-hidden="true">PV</span><span><span class="hm-small" style="font-weight:600">Paula Vega</span><span class="hm-muted" style="font-size:12px;line-height:16px">Analista</span></span><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+    <button type="button" class="pn-row"><span class="hm-avatar" aria-hidden="true">RC</span><span><span class="hm-small" style="font-weight:600">Rubén Cano</span><span class="hm-muted" style="font-size:12px;line-height:16px">Auxiliar</span></span><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+    <button type="button" class="pn-row"><span class="hm-avatar" aria-hidden="true">SI</span><span><span class="hm-small" style="font-weight:600">Sofía Ibarra</span><span class="hm-muted" style="font-size:12px;line-height:16px">Auxiliar</span></span><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+  </div>
+  <p class="hm-small"><span class="hm-muted">Equipo total: </span><strong style="font-weight:600">21 personas</strong></p>
+  <div class="pn-sec">
+    <h3 class="hm-caption hm-muted">Qué sale de aquí</h3>
+    <p class="hm-small">Recibe las solicitudes de vacaciones de su equipo directo y tiene su propia lectura de Clima cuando su equipo llega al mínimo de respondientes (5).</p>
+  </div>
+  <button type="button" class="hm-btn hm-btn-outline" style="margin-top:auto">Ver su ficha de empleado</button>
+</aside>
+</sc-if>
+      </div>
+      <p class="cv-legend"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>Arrastra para mover · Rueda para acercar · Clic en una persona para ver su equipo</p>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["arbol","persona","busqueda","vacio"],"default":"arbol","section":"Estado"},"$preview":{"width":1440,"height":1230}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const v = this.props.variant ?? 'arbol';
+    return {
+      theme,
+      themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light',
+      esArbol: v === 'arbol',
+      esPersona: v === 'persona',
+      esArbolPersona: v === 'arbol' || v === 'persona',
+      esBusqueda: v === 'busqueda',
+      esVacio: v === 'vacio',
+      conRed: v !== 'vacio',
+      cvClass: v === 'persona' ? 'cv is-p' : 'cv',
+      stageA: v === 'persona' ? 'stage s-a is-p' : 'stage s-a',
+      buscado: v === 'busqueda' ? 'Hugo' : '',
+      factNiveles: v === 'vacio' ? 'Sin niveles todavía' : '4 niveles',
+      factJefe: v === 'vacio' ? '0 con jefe directo' : '209 con jefe directo'
+    };
+  }
+}
+</script>
+</body>
+</html>

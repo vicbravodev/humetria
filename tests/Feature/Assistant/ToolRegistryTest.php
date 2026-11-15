@@ -5,14 +5,17 @@ declare(strict_types=1);
 use App\Modules\Assistant\Support\ToolRegistry;
 use App\Modules\Assistant\Tools\GetCampaignProgress;
 use App\Modules\Assistant\Tools\GetComplianceOverview;
+use App\Modules\Assistant\Tools\GetFirstSteps;
 use App\Modules\Assistant\Tools\GetRiskResults;
 use App\Modules\Assistant\Tools\ListPendingActions;
 use App\Modules\Assistant\Tools\SearchRegulations;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Responses\Models\AnonymousResponse;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Carbon\CarbonImmutable;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request as ToolRequest;
@@ -25,7 +28,7 @@ beforeEach(function (): void {
     $this->scope = assistantScopeIn($this->a);
 });
 
-it('gives the five tools of Humi for a scope', function (): void {
+it('gives the six tools of Humi for a scope', function (): void {
     $tools = resolve(ToolRegistry::class)->for($this->scope);
 
     expect(array_map(fn (Tool $tool): string => $tool::class, $tools))->toBe([
@@ -34,6 +37,7 @@ it('gives the five tools of Humi for a scope', function (): void {
         GetRiskResults::class,
         ListPendingActions::class,
         SearchRegulations::class,
+        GetFirstSteps::class,
     ]);
 });
 
@@ -65,4 +69,29 @@ it('never lets a tool of a company reach the data of another, even asking for it
 
         expect($answer)->not->toContain('Secreta')->not->toContain($campaignB->id)->not->toContain($areaB->id)->not->toContain($this->b->id);
     }
+});
+
+it('does not offer a tool of a module the company does not have, and offers it again when it does', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    $offered = fn (): array => array_map(fn (Tool $tool): string => $tool::class, resolve(ToolRegistry::class)->for($this->scope));
+
+    // Regulations and the first steps are not a company's module: Humi always has them.
+    expect($offered())->toBe([SearchRegulations::class, GetFirstSteps::class]);
+
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance', 'nom037'], CarbonImmutable::now(config('app.display_timezone')));
+
+    // A tool that reads two norms stays while the company has either; the one only of NOM-035 does not come back.
+    expect($offered())->toBe([GetComplianceOverview::class, ListPendingActions::class, SearchRegulations::class, GetFirstSteps::class]);
+});
+
+it('tells only the norms the company has in the compliance overview and the pending actions', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom037'], CarbonImmutable::now(config('app.display_timezone')));
+    $overview = toolCard(GetComplianceOverview::class, $this->scope);
+
+    expect(array_map(fn (array $row): string => (string) $row['key'], $overview['rows']))->toBe(['nom037']);
+
+    $pending = json_encode(toolCard(ListPendingActions::class, $this->scope), JSON_THROW_ON_ERROR);
+
+    expect($pending)->not->toContain('NOM-035');
 });

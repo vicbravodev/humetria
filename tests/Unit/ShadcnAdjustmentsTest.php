@@ -113,7 +113,7 @@ it('opens a dialog with a short scale-in and closes it faster', function (): voi
 
 it('folds the sidebar with its own icons, not the starter kit panel icon', function (): void {
     $offenders = [];
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../../resources/js', FilesystemIterator::SKIP_DOTS));
+    $files = frontendSourceFiles();
 
     foreach ($files as $file) {
         if (str_contains((string) file_get_contents((string) $file), 'PanelLeft')) {
@@ -126,7 +126,7 @@ it('folds the sidebar with its own icons, not the starter kit panel icon', funct
 
 it('writes every multi-line field with the Textarea primitive, styled as Input', function (): void {
     $offenders = [];
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__.'/../../resources/js', FilesystemIterator::SKIP_DOTS));
+    $files = frontendSourceFiles();
 
     foreach ($files as $file) {
         if (! str_contains($file->getPathname(), '/components/ui/') && str_contains((string) file_get_contents((string) $file), '<textarea')) {

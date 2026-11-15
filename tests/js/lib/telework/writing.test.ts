@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    publishConfirmation,
     publishCopy,
     supportingProgress,
     supportingRow,
@@ -32,6 +33,47 @@ describe('publishCopy', () => {
             publishCopy(true, { audience: 0, centers: 1, version: null })
                 .action,
         ).toBe('Publicar');
+    });
+});
+
+describe('publishConfirmation', () => {
+    it('asks with the number of people and of centers before publishing something that cannot be undone', () => {
+        expect(
+            publishConfirmation(true, {
+                audience: 30,
+                centers: 2,
+                version: null,
+            }),
+        ).toEqual({
+            title: '¿Publicar la política para 30 personas en 2 centros?',
+            description:
+                'No se puede deshacer: a cada persona le llega la solicitud de confirmación. Las versiones anteriores se conservan en el expediente.',
+        });
+        expect(
+            publishConfirmation(false, {
+                audience: 1,
+                centers: 1,
+                version: null,
+            }),
+        ).toEqual({
+            title: '¿Publicar el documento para 1 persona en 1 centro?',
+            description:
+                'No se puede deshacer: a cada persona le llega la solicitud de confirmación. Las versiones anteriores se conservan en el expediente.',
+        });
+    });
+
+    it('asks only for the centers when nobody has to confirm it', () => {
+        expect(
+            publishConfirmation(false, {
+                audience: null,
+                centers: 3,
+                version: null,
+            }),
+        ).toEqual({
+            title: '¿Publicar el documento en 3 centros?',
+            description:
+                'No se puede deshacer: queda vigente en cada centro. Las versiones anteriores se conservan en el expediente.',
+        });
     });
 });
 

@@ -6,8 +6,8 @@ import type { PrivacyArea } from '@/components/landing/privacy-areas';
 export default function PrivacyResults({ area }: { area: PrivacyArea }) {
     if (area.categories.length === 0) {
         return (
-            <div className="flex min-h-[224px] flex-col items-center justify-center gap-3 rounded-xl bg-muted p-6 text-center">
-                <span className="flex size-11 items-center justify-center rounded-full bg-card text-primary">
+            <div className="flex min-h-[212px] flex-col items-center justify-center gap-3 p-6 text-center">
+                <span className="flex size-11 items-center justify-center rounded-full bg-accent text-primary">
                     <Lock aria-hidden className="size-5" />
                 </span>
                 <p className="font-medium">
@@ -26,7 +26,7 @@ export default function PrivacyResults({ area }: { area: PrivacyArea }) {
             {area.categories.map((category) => (
                 <li
                     key={category.name}
-                    className="flex items-center justify-between gap-4 border-t py-3.5 first:border-t-0"
+                    className="flex items-center justify-between gap-3 border-t px-[18px] py-[15px] text-meta leading-snug first:border-t-0"
                 >
                     <span>{category.name}</span>
                     <RiskLevel level={category.level} label={category.label} />

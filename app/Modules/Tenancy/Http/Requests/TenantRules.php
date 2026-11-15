@@ -24,6 +24,7 @@ final class TenantRules
     public const array RESERVED_SLUGS = [
         'admin',
         'api',
+        'audit',
         'billing',
         'companies',
         'demo-requests',
@@ -35,7 +36,9 @@ final class TenantRules
         'login',
         'logout',
         'passkeys',
+        'overview',
         'password',
+        'platform-users',
         'register',
         'reset-password',
         'settings',

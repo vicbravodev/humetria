@@ -1,8 +1,9 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { publishCopy } from '@/lib/telework/writing';
+import { publishConfirmation, publishCopy } from '@/lib/telework/writing';
 import type { WritingPublication } from '@/types';
 
 /**
@@ -21,6 +22,7 @@ export default function WritePublish({
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const copy = publishCopy(policy, publication);
+    const confirmation = publishConfirmation(policy, publication);
     const send = () =>
         router.post(
             url,
@@ -47,10 +49,20 @@ export default function WritePublish({
                 </p>
             )}
             <div>
-                <Button size="lg" disabled={processing} onClick={send}>
-                    {processing && <Spinner />}
-                    {copy.action}
-                </Button>
+                <ConfirmDialog
+                    trigger={
+                        <Button size="lg" disabled={processing}>
+                            {processing && <Spinner />}
+                            {copy.action}
+                        </Button>
+                    }
+                    title={confirmation.title}
+                    description={confirmation.description}
+                    confirmLabel="Publicar ahora"
+                    dismissLabel="Volver"
+                    destructive={false}
+                    onConfirm={send}
+                />
             </div>
             {error !== null && (
                 <p role="alert" className="text-sm text-destructive">

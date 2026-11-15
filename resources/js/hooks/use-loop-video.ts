@@ -13,9 +13,28 @@ export function useLoopVideo() {
      * The video's ref. React only sets the `muted` property, and axe's no-autoplay-audio rule reads the attribute: without
      * it axe waits for a narrated film to play and times out, so the attribute is set here as the element mounts.
      */
+    const watcher = useRef<IntersectionObserver | null>(null);
+
+    /** The narration stays with what the visitor is looking at: once less than half the film is on screen it is muted. */
     const attach = useCallback((element: HTMLVideoElement | null): void => {
+        watcher.current?.disconnect();
         video.current = element;
-        element?.setAttribute('muted', '');
+
+        if (element === null) {
+            return;
+        }
+
+        element.setAttribute('muted', '');
+        watcher.current = new IntersectionObserver(
+            ([entry]) => {
+                if (entry?.isIntersecting === false) {
+                    element.muted = true;
+                    setMuted(true);
+                }
+            },
+            { threshold: 0.5 },
+        );
+        watcher.current.observe(element);
     }, []);
 
     const toggle = (): void => {

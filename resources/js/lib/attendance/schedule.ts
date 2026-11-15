@@ -139,6 +139,28 @@ export function hoursText(minutes: number): string {
     return String(Math.round((minutes / 60) * 100) / 100);
 }
 
+/** The time of a field («09:00») as minutes from midnight; none for an empty or odd one. */
+export function minutesOfTime(time: string): number | null {
+    const match = /^(\d{2}):(\d{2})$/.exec(time);
+    const hours = Number(match?.[1]);
+    const minutes = Number(match?.[2]);
+
+    return match === null || hours > 23 || minutes > 59
+        ? null
+        : hours * 60 + minutes;
+}
+
+/** Minutes from midnight as the time a field takes: 540 → «09:00»; empty for none. */
+export function timeOfMinutes(minutes: number | null | undefined): string {
+    if (minutes === null || minutes === undefined) {
+        return '';
+    }
+
+    const pad = (value: number) => String(value).padStart(2, '0');
+
+    return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+}
+
 /** A schedule as `<WeekRibbon>` draws it: a bar per day with the minutes agreed, none of them overtime. */
 export function scheduleRibbon(minutes: WeekMinutes): RibbonDay[] {
     return WEEKDAYS.map(({ day }) => ({

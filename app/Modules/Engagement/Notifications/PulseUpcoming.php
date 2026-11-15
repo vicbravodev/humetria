@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
@@ -16,7 +17,7 @@ use Illuminate\Notifications\Notification;
  * many questions and how many commitments of the last survey are still open, so they review before it is sent. Dates and
  * counts only: no result, no name, no answer.
  */
-final class PulseUpcoming extends Notification implements ShouldQueue
+final class PulseUpcoming extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -52,5 +53,10 @@ final class PulseUpcoming extends Notification implements ShouldQueue
         }
 
         return $mail->line('Todavía puedes cambiar la modalidad, pausarlo o ajustar el día.')->action('Revisar antes de enviar', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

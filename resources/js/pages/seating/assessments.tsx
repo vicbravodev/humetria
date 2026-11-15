@@ -16,12 +16,15 @@ export default function SeatingAssessments({
     people,
     search,
     canAssess,
+    signed,
     canManage,
 }: {
     workCenter: { id: string; name: string };
     people: Paginated<AssessmentPerson>;
     search: string;
     canAssess: boolean;
+    /** Signed assessments of the center: only they can be asked to confirm. */
+    signed: number;
     canManage: boolean;
 }) {
     const tenantSlug = useTenantSlug();
@@ -45,7 +48,13 @@ export default function SeatingAssessments({
                     description="El nivel de riesgo de cada persona que trabaja de pie. Lo firma una persona de la Comisión del centro."
                     facts={[{ icon: Factory, text: workCenter.name }]}
                 >
-                    {canManage && (
+                    {canManage && signed === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                            Cuando la Comisión firme una evaluación, podrás
+                            pedir a cada persona que la confirme.
+                        </p>
+                    )}
+                    {canManage && signed > 0 && (
                         <RequestLinkButton
                             form={batch.form([tenantSlug, workCenter.id])}
                             label="Pedir confirmación a quienes faltan"

@@ -111,8 +111,12 @@ it('follows the survey in progress by counts, with the groups under the minimum 
         ->assertSee('Participación por grupo')
         ->assertSee('Planta Norte')
         ->assertSee('Oficina Sur')
+        ->assertSee('Va 29 %. Todavía faltan 10 personas')
+        ->assertSee('29 %')
+        ->assertSee('Aquí ves cuántas personas contestaron, nunca qué ni quién')
+        ->assertSee('La marca vertical es el total: 29 %.')
         ->assertSee('Recordar a 10')
-        ->assertSee('Cerrar encuesta')
+        ->assertDontSee('Cerrar encuesta')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($looks);
@@ -132,7 +136,8 @@ it('closes the survey after asking', function (): void {
     $survey = climateActiveSurvey();
 
     visitPage('engagement/show', "{$url}/climate/{$survey->id}")
-        ->click('button:has-text("Cerrar encuesta")')
+        ->click('[aria-label="Más acciones de Clima · noviembre 2026"]')
+        ->click('Cerrar encuesta')
         ->assertSee('¿Cerrar la encuesta?')
         ->click('[role=dialog] button:has-text("Cerrar encuesta")')
         ->assertSee('Cerrada')

@@ -20,11 +20,11 @@ export default function SurveyNavigation({
     onNext: () => void;
 }) {
     return (
-        <div className="flex items-center justify-between gap-3 md:pt-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 md:pt-2">
             <Button
                 variant="ghost"
                 size="lg"
-                className="px-3 text-[17px]"
+                className="px-3 text-[1.0625rem]"
                 onClick={onBack}
                 disabled={sending}
             >
@@ -33,7 +33,7 @@ export default function SurveyNavigation({
             </Button>
             <Button
                 size="lg"
-                className="min-w-40 rounded-[10px] text-[17px]"
+                className="min-w-40 rounded-[10px] text-[1.0625rem]"
                 onClick={onNext}
                 disabled={!canAdvance || sending}
             >

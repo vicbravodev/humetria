@@ -181,7 +181,7 @@ it('sends nothing to a blocked company, and tells the others even when one fails
     $otherProgram?->update(['responsible_name' => 'Ana']);
     $row = ProgramItem::query()->where('program_id', $otherProgram?->id)->firstOrFail();
     ProgramAction::factory()->create(['tenant_id' => $other->id, 'program_id' => $otherProgram?->id, 'item_id' => $row->id, 'due_on' => '2026-10-01']);
-    $blocked = Tenant::factory()->create(['slug' => 'gamma', 'deactivated_at' => now()]);
+    $blocked = Tenant::factory()->suspended()->create(['slug' => 'gamma']);
     ownerOf($blocked);
     Program::factory()->create(['tenant_id' => $blocked->id]);
     // The first company breaks while it is read.

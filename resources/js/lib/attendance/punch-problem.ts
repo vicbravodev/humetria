@@ -102,6 +102,13 @@ const PROBLEMS: Record<string, Problem> = {
         text: `Cada código dura 30 segundos y solo sirve en su centro. Escanee el que se ve ahora en la pantalla. ${ASK_RH}`,
         actions: [DISMISS, CORRECTION],
     },
+    center_not_ready: {
+        kind: 'zone',
+        tone: 'warning',
+        title: 'Su centro aún no está listo para marcar',
+        text: 'Avise a Recursos Humanos; mientras tanto puede pedir una corrección.',
+        actions: [DISMISS, CORRECTION],
+    },
     not_verified: {
         kind: 'device',
         tone: 'warning',

@@ -16,11 +16,13 @@ import type { AttendanceZone, Paginated } from '@/types';
 export default function CenterZones({
     zones,
     centerId,
+    centerAddress,
     canManage,
     tolerance,
 }: {
     zones: Paginated<AttendanceZone>;
     centerId: string;
+    centerAddress: string | null;
     canManage: boolean;
     tolerance: number;
 }) {
@@ -89,6 +91,7 @@ export default function CenterZones({
                     open={adding}
                     onOpenChange={setAdding}
                     centerId={centerId}
+                    centerAddress={centerAddress}
                     zone={null}
                 />
             )}

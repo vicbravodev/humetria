@@ -20,7 +20,7 @@ final readonly class DraftProgramOnClose implements ShouldQueue
 
     public function handle(CampaignClosed $event): void
     {
-        if ($this->companies->enter($event->tenantId)->blocked) {
+        if ($this->companies->enter($event->tenantId)->stopped('nom035')) {
             return;
         }
 

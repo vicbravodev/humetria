@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Actions\RecordAudit;
 use App\Models\User;
+use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Data\NewAccountData;
 use App\Modules\Tenancy\Enums\InvitationStatus;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -14,6 +15,7 @@ use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Notifications\OwnerReplaced;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
@@ -106,6 +108,9 @@ final readonly class AcceptInvitation
      * The company has one owner: the new one takes the membership over, so the previous one loses access to it.
      * A member who becomes the owner leaves their former role, keeping a single membership.
      *
+     * The one who stops being owner is told by email, once the acceptance has committed: a rollback must not leave them a
+     * notice of something that did not happen.
+     *
      * @return int|null the previous owner's user id.
      */
     private function makeOwner(Tenant $tenant, User $user): ?int
@@ -115,6 +120,7 @@ final readonly class AcceptInvitation
         if ($previous !== null && $previous->user_id !== $user->id) {
             if ($previous->user !== null) {
                 $this->roles->remove($previous->user, $tenant);
+                $previous->user->notify((new OwnerReplaced(new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, false), $previous->user->name))->afterCommit());
             }
 
             $previous->delete();

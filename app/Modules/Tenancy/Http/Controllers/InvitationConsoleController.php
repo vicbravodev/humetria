@@ -30,7 +30,8 @@ final class InvitationConsoleController extends Controller
 
     public function resend(Tenant $tenant, TenantInvitation $invitation, ResendInvitation $resendInvitation): RedirectResponse
     {
-        Gate::authorize('manage-tenants');
+        // Sending the same invitation again changes nothing about the company, so support does it too; cancelling stays the superadmin's.
+        Gate::authorize('view-console');
 
         try {
             $resendInvitation->handle($invitation, $this->admin());

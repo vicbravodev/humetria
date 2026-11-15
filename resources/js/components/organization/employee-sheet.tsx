@@ -1,5 +1,6 @@
 import { Form } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import AlertError from '@/components/alert-error';
 import EmployeeFormFields from '@/components/organization/employee-form-fields';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,6 +49,14 @@ export default function EmployeeSheet(props: Props) {
                     {({ processing, errors }) => (
                         <>
                             <div className="flex-1 overflow-y-auto px-6 py-5">
+                                {errors['seats'] !== undefined && (
+                                    <div className="mb-5">
+                                        <AlertError
+                                            title="Tu plan no alcanza"
+                                            errors={[errors['seats']]}
+                                        />
+                                    </div>
+                                )}
                                 <EmployeeFormFields
                                     errors={errors}
                                     choices={choices}

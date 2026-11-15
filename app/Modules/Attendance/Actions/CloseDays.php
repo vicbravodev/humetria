@@ -59,7 +59,7 @@ final readonly class CloseDays
 
     private function close(string $tenantId, CarbonImmutable $day): int
     {
-        if ($this->companies->enter($tenantId)->blocked) {
+        if ($this->companies->enter($tenantId)->stopped('attendance')) {
             return 0;
         }
 

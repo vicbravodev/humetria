@@ -12,12 +12,15 @@ export default function AssessmentChecklist({
     answered,
     conditions,
     verifiedOn,
+    lacking,
     error,
 }: {
     assessmentId: string;
     answered: number;
     conditions: number;
     verifiedOn: string | null;
+    /** What else the signature asks for (the server's list), each shown as pending. */
+    lacking: string[];
     error: string | undefined;
 }) {
     const items = [
@@ -34,6 +37,11 @@ export default function AssessmentChecklist({
                     : (describeDate(verifiedOn) ?? verifiedOn),
             done: verifiedOn !== null,
         },
+        ...lacking.map((text) => ({
+            label: `${text.charAt(0).toUpperCase()}${text.slice(1)}`,
+            value: 'Falta',
+            done: false,
+        })),
     ];
 
     return (

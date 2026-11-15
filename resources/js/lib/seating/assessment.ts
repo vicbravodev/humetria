@@ -40,3 +40,13 @@ export function conditionSource(
               unanswered: key === 'discomfort',
           };
 }
+
+/** Who starts an assessment when the person looking cannot: the Comisión, so the empty action says it instead of nothing. */
+export function whoAssesses(
+    state: 'none' | 'draft' | 'due' | 'signed',
+    canAssess: boolean,
+): string | null {
+    return !canAssess && (state === 'none' || state === 'due')
+        ? 'La hace la Comisión'
+        : null;
+}

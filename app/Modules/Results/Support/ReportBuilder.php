@@ -50,6 +50,8 @@ final readonly class ReportBuilder
             'guide' => 'Guía '.self::NUMERALS[$guide],
             'itemCount' => count($this->instruments->definition($guide)->itemNumbers()),
             'period' => self::period($campaign),
+            // The day it is printed, in the display time zone: the report keeps no copy of it.
+            'issuedOn' => ResultsClock::day(now()),
             'participation' => ['invited' => $campaign->invited[$guide] ?? 0, 'answered' => $campaign->answered[$guide] ?? 0],
             'method' => $this->method($campaign, $guide),
             'objective' => $details->objective ?? self::objective($guide),
@@ -102,9 +104,17 @@ final readonly class ReportBuilder
             'activities' => self::text($report['activities']),
             'conclusions' => self::text($report['conclusions']),
             'recommendations' => self::text($report['recommendations']),
-            'responsible_name' => self::text($responsible['name'] ?? null),
+            // Until HR names someone, the one who answers for the Programa.
+            'responsible_name' => self::text($responsible['name'] ?? self::programResponsible($report['intervention'])),
             'responsible_license' => self::text($responsible['license'] ?? null),
         ];
+    }
+
+    private static function programResponsible(mixed $intervention): ?string
+    {
+        $program = is_array($intervention) ? ($intervention['program'] ?? null) : null;
+
+        return $program instanceof ProgramOutline ? $program->responsible : null;
     }
 
     private static function text(mixed $value): string
@@ -129,12 +139,16 @@ final readonly class ReportBuilder
         $numeral = self::NUMERALS[$guide];
         $workers = $campaign->workers ?? 0;
         $who = $campaign->sample
-            ? "una muestra representativa de {$campaign->sampleSize} de {$workers} trabajadores (III.1), seleccionada al azar y en proporción por género"
-            : "todos los trabajadores del centro ({$workers})";
-        $guideOne = in_array('nom035.guide-i', $campaign->instruments, true) ? ', y la Guía de referencia I a todas las personas' : '';
+            ? "una muestra representativa de {$campaign->sampleSize} de {$workers} personas (III.1), seleccionada al azar y en proporción por género"
+            : "las {$workers} personas del centro";
+        $answered = $campaign->answered[$guide] ?? 0;
+        $guideOneTarget = $campaign->invited['nom035.guide-i'] ?? 0;
+        $guideOne = in_array('nom035.guide-i', $campaign->instruments, true)
+            ? ', más la Guía de referencia I a todas las personas'.($guideOneTarget === 0 ? '' : ' (Guía I: '.($campaign->answered['nom035.guide-i'] ?? 0)." de {$guideOneTarget})")
+            : '';
         $minimum = config()->integer('results.min_group');
 
-        return "Cuestionario de la Guía de referencia {$numeral} de la NOM-035-STPS-2018 (DOF 23/10/2018), aplicado en línea del ".self::period($campaign)." a {$who}{$guideOne}. "
+        return "Cuestionario de la Guía de referencia {$numeral} de la NOM-035-STPS-2018 (DOF 23/10/2018), aplicado en línea del ".self::period($campaign)."{$guideOne}. Se invitó a {$who}; contestaron {$answered}. "
             ."Cada cuestionario se calificó por sí solo, por categoría, dominio y calificación final ({$numeral}.3), sin promedios. "
             ."Los resultados de grupos con menos de {$minimum} cuestionarios no se muestran, para proteger el anonimato de las respuestas.";
     }

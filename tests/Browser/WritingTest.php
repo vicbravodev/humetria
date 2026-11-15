@@ -33,7 +33,7 @@ it('writes the policy with questions, as the redesign draws it, in both themes a
         ->assertSee('Pregunta 1 de 8')
         ->assertSee('Faltan unos 12 min')
         ->assertSee('¿En qué horario trabajan y desde cuándo nadie debe recibir mensajes de trabajo?')
-        ->assertSee('Autopartes Demo · todos los centros')
+        ->assertSee('Autopartes Demo · Planta Querétaro')
         ->assertSee('La jornada en teletrabajo es de 9:00 a 18:00, de lunes a viernes.')
         ->assertSee('Texto base de Humetría, listo para editar.')
         ->assertSee('Puedes cambiarlo después')
@@ -96,6 +96,8 @@ it('publishes the policy from its review for the people of the centers, and read
         ->assertSee('Al publicarla, le llega a las 2 personas de tu centro para que confirmen que la leyeron.')
         ->assertSee('Mismos derechos')
         ->click('Publicar para 2 personas')
+        ->assertSee('¿Publicar la política para 2 personas en 1 centro?')
+        ->press('Publicar ahora')
         ->assertSee('Política de Teletrabajo publicada.')
         ->assertSee('Tu ruta para cumplir con el teletrabajo')
         ->assertNoJavaScriptErrors();

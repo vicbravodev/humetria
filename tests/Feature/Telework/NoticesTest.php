@@ -528,7 +528,7 @@ describe('the notices page', function (): void {
 
         $this->expectsDatabaseQueryCount($queries);
         $this->get(route('tenant.telework.notices.index', $this->tenant))->assertOk();
-    })->with(['owner' => ['owner', 18], 'committee' => ['committee', 22]]);
+    })->with(['owner' => ['owner', 18], 'committee' => ['committee', 21]]);
 
     it('offers the Guía I link only to who can launch it, for a traumatic event', function (): void {
         $link = ['workCenter' => $this->center->id, 'employee' => $this->employee->id];

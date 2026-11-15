@@ -34,7 +34,7 @@ final class SendFeedbackPublished implements ShouldQueue, ShouldQueueAfterCommit
         $survey = Survey::query()->find($this->surveyId);
         $company = $companies->current();
 
-        if ($survey === null || $survey->results_published_at === null || $company->blocked) {
+        if ($survey === null || $survey->results_published_at === null || $company->stopped($survey->kind->value)) {
             return;
         }
 

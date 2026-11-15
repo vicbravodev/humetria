@@ -1,25 +1,23 @@
 import { PartyPopper } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
-import PortalNoticesLink from '@/components/telework/portal/portal-notices-link';
-import PortalTeamLink from '@/components/telework/portal/portal-team-link';
+import PortalSections from '@/components/telework/portal/portal-sections';
 import PortalEquipmentSection from '@/components/telework/portal/portal-equipment-section';
 import PortalDocuments from '@/components/telework/portal/portal-documents';
 import PortalChecklistCard from '@/components/telework/portal/portal-checklist-card';
-import PortalPhotoRequestCard from '@/components/telework/portal/portal-photo-request-card';
-import PortalVisitCard from '@/components/telework/portal/portal-visit-card';
+import PortalAsked from '@/components/telework/portal/portal-asked';
 import { nothingPending } from '@/lib/telework/portal';
-import type { PortalPending } from '@/types';
+import type { PortalPending, PortalSection } from '@/types';
 
 /** What the person has to do and what they already sent, in plain words ("usted"). */
 export default function PortalHome({
     name,
     token,
-    canNotify,
+    sections,
     pending,
 }: {
     name: string;
     token: string;
-    canNotify: boolean;
+    sections: PortalSection[];
     pending: PortalPending;
 }) {
     const nothing = nothingPending(pending);
@@ -31,14 +29,16 @@ export default function PortalHome({
                     Hola, {name}
                 </h1>
                 <p className="text-muted-foreground">
-                    Aquí verá lo que su empresa le pide para su teletrabajo.
-                    Este enlace es solo suyo: no lo comparta.
+                    Aquí encuentra lo que su empresa tiene para usted. Este
+                    enlace es solo suyo: no lo comparta.
                 </p>
             </div>
+            <PortalSections sections={sections} />
             {nothing && (
                 <EmptyState icon={PartyPopper} title="Nada pendiente por ahora">
                     Cuando su empresa le pida algo, lo verá aquí y le avisaremos
-                    por correo.
+                    por correo. Si necesita algo antes, pida a Recursos Humanos
+                    de su empresa.
                 </EmptyState>
             )}
             <PortalDocuments documents={pending.documents} token={token} />
@@ -46,29 +46,7 @@ export default function PortalHome({
                 equipment={pending.equipment}
                 token={token}
             />
-            {(pending.photos.length > 0 || pending.visits.length > 0) && (
-                <section aria-labelledby="portal-asked" className="grid gap-3">
-                    <h2 id="portal-asked" className="text-xl font-semibold">
-                        La Comisión le pide
-                    </h2>
-                    <ul className="grid gap-3">
-                        {pending.photos.map((request) => (
-                            <PortalPhotoRequestCard
-                                key={request.id}
-                                request={request}
-                                token={token}
-                            />
-                        ))}
-                        {pending.visits.map((visit) => (
-                            <PortalVisitCard
-                                key={visit.id}
-                                visit={visit}
-                                token={token}
-                            />
-                        ))}
-                    </ul>
-                </section>
-            )}
+            <PortalAsked pending={pending} token={token} />
             {pending.checklists.length > 0 && (
                 <section
                     aria-labelledby="portal-pending"
@@ -89,8 +67,6 @@ export default function PortalHome({
                     </ul>
                 </section>
             )}
-            {canNotify && <PortalNoticesLink token={token} />}
-            <PortalTeamLink token={token} />
             {pending.sent.length > 0 && (
                 <section aria-labelledby="portal-sent" className="grid gap-3">
                     <h2 id="portal-sent" className="text-xl font-semibold">

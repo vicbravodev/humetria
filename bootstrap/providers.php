@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use App\Modules\Assistant\Providers\AssistantServiceProvider;
 use App\Modules\Attendance\Providers\AttendanceServiceProvider;
+use App\Modules\Billing\Providers\BillingServiceProvider;
 use App\Modules\Campaigns\Providers\CampaignsServiceProvider;
 use App\Modules\Compensation\Providers\CompensationServiceProvider;
 use App\Modules\Complaints\Providers\ComplaintsServiceProvider;
 use App\Modules\Demos\Providers\DemosServiceProvider;
 use App\Modules\Disclosure\Providers\DisclosureServiceProvider;
 use App\Modules\Engagement\Providers\EngagementServiceProvider;
+use App\Modules\FirstSteps\Providers\FirstStepsServiceProvider;
 use App\Modules\Instruments\Providers\InstrumentsServiceProvider;
 use App\Modules\Interventions\Providers\InterventionsServiceProvider;
 use App\Modules\Leave\Providers\LeaveServiceProvider;
@@ -29,6 +31,7 @@ return [
     HorizonServiceProvider::class,
     DemosServiceProvider::class,
     TenancyServiceProvider::class,
+    BillingServiceProvider::class,
     OrganizationServiceProvider::class,
     InstrumentsServiceProvider::class,
     CampaignsServiceProvider::class,
@@ -44,4 +47,5 @@ return [
     DisclosureServiceProvider::class,
     EngagementServiceProvider::class,
     AssistantServiceProvider::class,
+    FirstStepsServiceProvider::class,
 ];

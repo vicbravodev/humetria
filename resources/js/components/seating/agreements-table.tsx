@@ -1,3 +1,4 @@
+import { shortDate } from '@/lib/calendar-date';
 import { Timer } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
@@ -71,7 +72,9 @@ export default function AgreementsTable({
                                         {agreement.pausesPerShift} por turno de{' '}
                                         {agreement.minutesEach} min
                                     </TableCell>
-                                    <TableCell>{agreement.agreedOn}</TableCell>
+                                    <TableCell>
+                                        {shortDate(agreement.agreedOn)}
+                                    </TableCell>
                                     <TableCell className="max-w-sm whitespace-normal">
                                         {agreement.howAgreed}
                                         {agreement.evidenceHref !== null && (

@@ -15,6 +15,7 @@ export default function EnrollScreen({
     name,
     jobTitle,
     linkHours,
+    centerReady,
     punchUrl,
     agreement,
     enrollment,
@@ -26,6 +27,7 @@ export default function EnrollScreen({
     name: string;
     jobTitle: string;
     linkHours: number;
+    centerReady: boolean;
     punchUrl: string;
     agreement: { version: number; body: string };
     enrollment: {
@@ -40,7 +42,12 @@ export default function EnrollScreen({
 
     if (done) {
         return (
-            <EnrollDone company={company} device={device} punchUrl={punchUrl} />
+            <EnrollDone
+                company={company}
+                device={device}
+                punchUrl={punchUrl}
+                ready={centerReady}
+            />
         );
     }
 

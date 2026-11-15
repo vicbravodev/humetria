@@ -58,6 +58,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Revision
+    |--------------------------------------------------------------------------
+    |
+    | The commit the running image was built from; the deployment sets it. The
+    | document prints it in a meta tag so a probe can tell which build answers.
+    |
+    */
+
+    'revision' => env('APP_REVISION') ?: 'unknown',
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
@@ -74,6 +86,18 @@ return [
     */
 
     'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'America/Mexico_City'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Support Email
+    |--------------------------------------------------------------------------
+    |
+    | Where a company writes to Humetria (to expand its plan, to be reactivated). Without it, the notices say whom to
+    | contact but carry no mail link.
+    |
+    */
+
+    'support_email' => env('SUPPORT_EMAIL'),
 
     /*
     |--------------------------------------------------------------------------

@@ -4,7 +4,7 @@ import type { CurrentTenant } from '@/types/tenancy';
 
 /** The company a page works in, as far as the navigation cares: where it lives and what the role allows. */
 export type NavTenant = Pick<CurrentTenant, 'slug' | 'role' | 'can'> &
-    Partial<Pick<CurrentTenant, 'type'>>;
+    Partial<Pick<CurrentTenant, 'type' | 'modules'>>;
 
 /** One step of the top bar's trail; without href it is a label (a section, or the page itself). */
 export type BreadcrumbItem = {
@@ -16,6 +16,8 @@ export type NavItem = {
     title: string;
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
+    /** A page outside the panel (Horizon): it opens as a plain link, not as an Inertia visit. */
+    external?: boolean;
     isActive?: boolean;
     /** Something waiting there, as a count next to the name (NOM-035 · 1 en curso). */
     badge?: number;

@@ -12,6 +12,7 @@ use App\Modules\Compensation\Http\Requests\GradeSalaryRequest;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Support\ContractStatus;
 use App\Modules\Compensation\Support\CsvFile;
+use App\Modules\Compensation\Support\MinimumWageCheck;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,10 +45,12 @@ final class TabulatorController extends Controller
 
     // The $tenant parameter receives the company Tenancy resolved from the URL; it is only there to keep the route
     // parameters in order.
-    public function store(GradeSalaryRequest $request, mixed $tenant, SaveGradeSalary $save): RedirectResponse
+    public function store(GradeSalaryRequest $request, mixed $tenant, SaveGradeSalary $save, MinimumWageCheck $minimum): RedirectResponse
     {
-        $save->handle($request->toData());
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Salario guardado.']);
+        $data = $request->toData();
+        $save->handle($data);
+        $warning = $minimum->warning($data->dailySalaryCents, $data->effectiveFrom);
+        Inertia::flash('toast', $warning === null ? ['type' => 'success', 'message' => 'Salario guardado.'] : ['type' => 'warning', 'message' => "Salario guardado. {$warning}"]);
 
         return back();
     }

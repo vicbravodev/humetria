@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { FileText } from 'lucide-react';
+import PortalHomeLink from '@/components/portal-home-link';
 import PersonShell from '@/components/disclosure/person-shell';
 import PolicySections from '@/components/disclosure/policy-sections';
 import PortalConfirm from '@/components/disclosure/portal-confirm';
@@ -16,6 +17,7 @@ export default function PortalPolicy({
         <PersonShell company={company} label="Personal">
             <Head title="La política de prevención" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
+                <PortalHomeLink token={token} />
                 <div className="flex flex-col gap-2">
                     <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
                         La política de prevención, {name}

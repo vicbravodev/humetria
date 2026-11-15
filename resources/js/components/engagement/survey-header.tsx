@@ -1,4 +1,4 @@
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Lock } from 'lucide-react';
 import SurveyHeaderActions from '@/components/engagement/survey-header-actions';
 import ModeBadge from '@/components/engagement/pulse/mode-badge';
 import SurveyStatusBadge from '@/components/engagement/survey-status-badge';
@@ -39,7 +39,15 @@ export default function SurveyHeader({
                           ? 'Revisa tres cosas y lanza. Nadie recibe nada hasta que lo hagas.'
                           : 'Todavía no se lanza: nadie ha recibido nada.',
                   }
-                : { facts: [{ icon: CalendarDays, text: deadline }] })}
+                : {
+                      facts: [
+                          { icon: CalendarDays, text: deadline },
+                          {
+                              icon: Lock,
+                              text: 'Aquí ves cuántas personas contestaron, nunca qué ni quién',
+                          },
+                      ],
+                  })}
         >
             <SurveyHeaderActions
                 survey={survey}

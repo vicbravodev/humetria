@@ -49,14 +49,20 @@ export const DECISIONS: {
     },
 ];
 
-/** What a decision still needs besides the choice itself. */
-export function decisionNeeds(decision: ReviewDecisionValue): {
+/**
+ * What a decision still needs besides the choice itself. Not validating always needs notes, and so does validating a list
+ * with unfavorable answers (the Comisión's observation, C-12).
+ */
+export function decisionNeeds(
+    decision: ReviewDecisionValue,
+    unfavorable = 0,
+): {
     plan: boolean;
     notes: boolean;
 } {
     return {
         plan: decision === 'valid_with_plan',
-        notes: decision === 'not_valid',
+        notes: decision === 'not_valid' || unfavorable > 0,
     };
 }
 

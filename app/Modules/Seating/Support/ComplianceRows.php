@@ -87,14 +87,20 @@ final readonly class ComplianceRows
         $unassessed = $facts->assignments->filter(fn (PositionAssignment $assignment): bool => $eligible->contains('id', $assignment->position_id) && ! array_key_exists($assignment->employee_id, $current));
         $due = array_filter($current, fn (RiskAssessment $assessment): bool => $assessment->reassessment_due || ($assessment->signed_at !== null && AssessmentTerm::overdue($assessment->signed_at)));
 
-        return $this->row('r2', $unassessed->unique('employee_id')->count(), count($due), $this->oldest($unassessed->isNotEmpty() ? $unassessed->map(fn (PositionAssignment $assignment): CarbonImmutable => $assignment->starts_on)->all() : array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $due)));
+        return $this->row('r2', $unassessed->unique('employee_id')->count(), count($due), $this->oldest($unassessed->isNotEmpty() ? $unassessed->map(fn (PositionAssignment $assignment): CarbonImmutable => $assignment->starts_on)->all() : array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $due)), nothingToCheck: $facts->positions->isEmpty() && ! $this->declaredNobody($facts), notApplicable: $facts->positions->isEmpty());
+    }
+
+    /** The center declared that nobody works standing: its position-bound requirements do not apply. */
+    private function declaredNobody(ComplianceFacts $facts): bool
+    {
+        return $facts->profile !== null && $facts->profile->no_standing_positions;
     }
 
     private function r3(ComplianceFacts $facts): ComplianceRow
     {
         $without = $facts->signed->filter(fn (RiskAssessment $assessment): bool => $assessment->recorded_in_document_id === null);
 
-        return $this->row('r3', $without->count(), since: $this->oldest($without->map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at)->all()));
+        return $this->row('r3', $without->count(), since: $this->oldest($without->map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at)->all()), nothingToCheck: $facts->signed->isEmpty());
     }
 
     /**
@@ -107,7 +113,7 @@ final readonly class ComplianceRows
         $repair = $facts->seats->filter(fn (Seat $seat): bool => $seat->condition === SeatCondition::NeedsRepair)->pluck('position_id')->all();
         $warn = $eligible->filter(fn (StandingPosition $position): bool => ($usable[$position->id] ?? 0) < $position->max_people_at_once || in_array($position->id, $repair, true));
 
-        return $this->row('r4', $none->count(), $warn->count());
+        return $this->row('r4', $none->count(), $warn->count(), nothingToCheck: $facts->positions->isEmpty() && ! $this->declaredNobody($facts), notApplicable: $facts->positions->isEmpty());
     }
 
     /**
@@ -118,14 +124,14 @@ final readonly class ComplianceRows
         $rests = $facts->seats->filter(fn (Seat $seat): bool => $seat->use === SeatUse::RestArea && $seat->condition !== SeatCondition::OutOfService);
         $without = $this->awayFromWorkstation($eligible)->filter(fn (StandingPosition $position): bool => ! $rests->contains(fn (Seat $seat): bool => $seat->position_id === null || $seat->position_id === $position->id));
 
-        return $this->row('r5', $without->count());
+        return $this->row('r5', $without->count(), nothingToCheck: $this->placed($eligible)->isEmpty(), notApplicable: $this->awayFromWorkstation($eligible)->isEmpty());
     }
 
     private function r6(ComplianceFacts $facts): ComplianceRow
     {
         $unmarked = $facts->seats->filter(fn (Seat $seat): bool => $seat->condition !== SeatCondition::OutOfService && ! $seat->signposted && ($seat->use === SeatUse::RestArea || $seat->position_id === null));
 
-        return $this->row('r6', $unmarked->count());
+        return $this->row('r6', $unmarked->count(), nothingToCheck: $facts->seats->isEmpty());
     }
 
     /**
@@ -144,6 +150,7 @@ final readonly class ComplianceRows
             count($without),
             $overdue->count(),
             $without !== [] ? $this->oldest(array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $without)) : $this->oldest($overdue->map(fn (PreventiveMeasure $measure): ?CarbonImmutable => $measure->due_on)->all()),
+            nothingToCheck: $facts->signed->isEmpty(),
         );
     }
 
@@ -154,7 +161,7 @@ final readonly class ComplianceRows
     {
         $unconfirmed = array_filter($current, fn (RiskAssessment $assessment): bool => ! in_array($assessment->id, $facts->acknowledged, true));
 
-        return $this->row('r8', count($unconfirmed), since: $this->oldest(array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $unconfirmed)));
+        return $this->row('r8', count($unconfirmed), since: $this->oldest(array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $unconfirmed)), nothingToCheck: $facts->signed->isEmpty());
     }
 
     /**
@@ -164,7 +171,7 @@ final readonly class ComplianceRows
     {
         $unattended = array_filter($current, fn (RiskAssessment $assessment): bool => ($assessment->scores['discomfort'] ?? 0) === 3 && ! in_array($assessment->employee_id, $facts->referred, true));
 
-        return $this->row('r9', count($unattended), since: $this->oldest(array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $unattended)));
+        return $this->row('r9', count($unattended), since: $this->oldest(array_map(fn (RiskAssessment $assessment): ?CarbonImmutable => $assessment->signed_at, $unattended)), nothingToCheck: $facts->signed->isEmpty());
     }
 
     private function r10(ComplianceFacts $facts): ComplianceRow
@@ -183,7 +190,18 @@ final readonly class ComplianceRows
      */
     private function r11(ComplianceFacts $facts, Collection $eligible): ComplianceRow
     {
-        return $this->row('r11', $this->awayFromWorkstation($eligible)->filter(fn (StandingPosition $position): bool => ! in_array($position->id, $facts->agreed, true))->count());
+        return $this->row('r11', $this->awayFromWorkstation($eligible)->filter(fn (StandingPosition $position): bool => ! in_array($position->id, $facts->agreed, true))->count(), nothingToCheck: $this->placed($eligible)->isEmpty(), notApplicable: $this->awayFromWorkstation($eligible)->isEmpty());
+    }
+
+    /**
+     * The positions that already have a result of Figura 1 (A, B or C).
+     *
+     * @param  Collection<int, StandingPosition>  $eligible
+     * @return Collection<int, StandingPosition>
+     */
+    private function placed(Collection $eligible): Collection
+    {
+        return $eligible->filter(fn (StandingPosition $position): bool => $position->placement !== null);
     }
 
     /**
@@ -237,11 +255,13 @@ final readonly class ComplianceRows
 
     /**
      * A row is missing while `$missing` is above none, with a warning while `$warning` is, and met otherwise; its count is
-     * what is behind its state.
+     * what is behind its state. With `$nothingToCheck` there is nothing registered to judge it by, so it is pending: never met. With `$notApplicable` (positions are placed, none needs the requirement) it does not apply.
      */
-    private function row(string $key, int $missing, int $warning = 0, ?CarbonImmutable $since = null): ComplianceRow
+    private function row(string $key, int $missing, int $warning = 0, ?CarbonImmutable $since = null, bool $nothingToCheck = false, bool $notApplicable = false): ComplianceRow
     {
         return match (true) {
+            $nothingToCheck => new ComplianceRow($key, RowState::Pending),
+            $notApplicable => new ComplianceRow($key, RowState::NotApplicable),
             $missing > 0 => new ComplianceRow($key, RowState::Missing, $missing, $since),
             $warning > 0 => new ComplianceRow($key, RowState::Warning, $warning, $since),
             default => new ComplianceRow($key, RowState::Met),

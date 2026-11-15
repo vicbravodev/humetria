@@ -1,19 +1,15 @@
 import { Link } from '@inertiajs/react';
-import { TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { trend } from '@/routes/tenant/pulse';
 
-/** From the home of the pulse to how the company moves from survey to survey. */
+/** From the home of the pulse to how the company moves from survey to survey: the primary action of the home. */
 export default function TrendLink() {
     const tenantSlug = useTenantSlug();
 
     return (
-        <Button variant="outline" asChild>
-            <Link href={trend(tenantSlug)}>
-                <TrendingUp aria-hidden="true" />
-                Ver tendencia
-            </Link>
+        <Button asChild>
+            <Link href={trend(tenantSlug)}>Ver tendencia</Link>
         </Button>
     );
 }

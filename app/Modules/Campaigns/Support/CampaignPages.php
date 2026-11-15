@@ -164,11 +164,22 @@ final readonly class CampaignPages
             'replacementPool' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->population === Population::Sample
                 ? $this->replacementPool($campaign)
                 : null,
+            // The day of the last reminder, and the hours left before another can go out; null while it can.
+            'lastResentOn' => $canManage && $campaign->last_resent_at !== null ? CampaignClock::day($campaign->last_resent_at) : null,
+            'reminderWait' => $canManage && $campaign->status === CampaignStatus::Active ? $this->reminderWait($campaign) : null,
             // How many people «Invitar a quien falte» brings up to date now, and how many of them get a link.
             'missing' => $canManage && $campaign->status === CampaignStatus::Active && $campaign->kind === CampaignKind::Nom035Evaluation
                 ? $this->inviteMissing->count($campaign)
                 : null,
         ];
+    }
+
+    /** The hours left before another reminder can go out, rounded up; null when none is held back. */
+    private function reminderWait(Campaign $campaign): ?int
+    {
+        $next = $campaign->last_resent_at?->addHours(config()->integer('campaigns.resend_cooldown_hours'));
+
+        return $next === null || ! $next->isFuture() ? null : (int) ceil(now()->diffInMinutes($next, absolute: true) / 60);
     }
 
     /**
@@ -195,10 +206,11 @@ final readonly class CampaignPages
 
     /**
      * The guide that measures the campaign (Guía II or III in an evaluation, Guía I otherwise): answered against
-     * the sample when there is one, against everyone invited to it when not.
+     * the sample when there is one, against everyone invited to it when not. `screeningPending` counts the people
+     * whose Guía I is still open, apart from the measuring guide.
      *
      * @param  array<string, array<string, int>>  $tally
-     * @return array{completed: int, target: int, againstSample: bool}|null
+     * @return array{completed: int, target: int, againstSample: bool, screeningPending: int, screeningTarget: int}|null
      */
     public function progress(Campaign $campaign, array $tally): ?array
     {
@@ -215,6 +227,8 @@ final readonly class CampaignPages
             'completed' => $completed,
             'target' => $sampleSize ?? $completed + ($counts[InstrumentStatus::Pending->value] ?? 0),
             'againstSample' => $sampleSize !== null,
+            'screeningPending' => $main === 'nom035.guide-i' ? 0 : ($tally['nom035.guide-i'][InstrumentStatus::Pending->value] ?? 0),
+            'screeningTarget' => $main === 'nom035.guide-i' ? 0 : ($tally['nom035.guide-i'][InstrumentStatus::Pending->value] ?? 0) + ($tally['nom035.guide-i'][InstrumentStatus::Completed->value] ?? 0),
         ];
     }
 

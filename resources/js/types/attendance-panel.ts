@@ -35,7 +35,14 @@ export type DevicePerson = {
 export type DeviceStage = { count: number; names: string[] };
 
 export type AttendanceDevicesProps = {
-    center: { id: string; name: string } | null;
+    /** The center asked for, with what it has to mark with: zones, screens in use and whether the policy asks for the QR. */
+    center: {
+        id: string;
+        name: string;
+        zones: number;
+        screens: number;
+        requiresQr: boolean;
+    } | null;
     filters: { q: string; status: DeviceView };
     counts: Record<DeviceView, number>;
     /** Everyone in scope on the road to the phone: no open link, a link sent, with a phone. */
@@ -53,6 +60,8 @@ export type AttendancePolicy = {
     requireQrOnsite: boolean;
     trustedMayUseBrowser: boolean;
     retentionMonths: number;
+    /** Minutes after a start time that still count as on time: the lateness is shown, never sanctioned. */
+    lateToleranceMinutes: number;
 };
 
 export type AttendancePolicyProps = {
@@ -68,11 +77,16 @@ export type ScheduleView = 'all' | 'scheduled' | 'unscheduled';
 /** Minutes agreed by ISO weekday, «1» Monday to «7» Sunday; 0 is a rest day. */
 export type WeekMinutes = Partial<Record<string, number>>;
 
+/** The start time of each weekday as minutes from midnight; a day with none is null. */
+export type StartTimes = Partial<Record<string, number | null>>;
+
 /** A person's agreed weekly schedule (criterio 2.6). */
 export type WorkSchedule = {
     shiftType: 'day' | 'night' | 'mixed';
     workMode: 'onsite' | 'remote';
     minutes: WeekMinutes;
+    /** The minute of the day each weekday starts, when RH set any: a day with none is null. */
+    starts: StartTimes | null;
 };
 
 /** A person on the schedules page, with their schedule or null: held to 8 h a day with no rest day until RH sets one. */

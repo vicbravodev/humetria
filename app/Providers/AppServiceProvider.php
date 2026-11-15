@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Contracts\Geolocation;
 use App\Http\Impersonation;
+use App\Http\SsrPages;
 use App\Logging\RedactEveryChannel;
 use App\Models\User;
 use App\Support\DbIpGeolocation;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Inertia\Inertia;
+use Inertia\Ssr\SsrState;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -51,6 +54,11 @@ final class AppServiceProvider extends ServiceProvider
 
         // Spatie's super-admin pattern: null lets every other user fall through to the real ability.
         Gate::before(fn (User $user): ?bool => $user->isSuperadmin() ? true : null);
+
+        // Node renders only what SsrPages names, and only for a visitor. Evaluated when the page is about to be sent to
+        // Node, with the page already in SsrState; with a closure registered the package no longer reads
+        // inertia.ssr.enabled, so SsrPages reads it.
+        Inertia::disableSsr(fn (): bool => ! SsrPages::allows(request(), app(SsrState::class)->page));
     }
 
     /**

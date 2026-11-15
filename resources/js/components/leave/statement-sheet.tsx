@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { countOf } from '@/lib/plural';
 import type { StatementSheetData } from '@/types';
 
@@ -7,8 +8,11 @@ import type { StatementSheetData } from '@/types';
  */
 export default function StatementSheet({
     sheet,
+    children,
 }: {
     sheet: StatementSheetData;
+    /** What RH reads of the acknowledgment, inside the document and not on paper. */
+    children?: ReactNode;
 }) {
     return (
         <article className="mx-auto flex w-full max-w-[760px] flex-col gap-7 card p-6 [page:certificate] md:p-12 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
@@ -38,7 +42,7 @@ export default function StatementSheet({
                     siguientes, antes del {sheet.enjoyBy}
                 </dd>
                 <dt className="text-sm text-muted-foreground">Prima</dt>
-                <dd>{sheet.premiumPercent}% sobre los días de vacaciones</dd>
+                <dd>{sheet.premiumPercent} % sobre los días de vacaciones</dd>
                 <dt className="text-sm text-muted-foreground">Emitida el</dt>
                 <dd>{sheet.issuedOn}</dd>
             </dl>
@@ -46,6 +50,11 @@ export default function StatementSheet({
                 Esta constancia la entrega la empresa cada año, como lo pide el
                 artículo 81 de la Ley Federal del Trabajo.
             </p>
+            {children !== undefined && (
+                <div className="rounded-xl bg-muted px-4 py-3 print:hidden">
+                    {children}
+                </div>
+            )}
             <div className="mt-6 grid gap-1 border-t pt-3 sm:w-80">
                 <p className="text-sm text-muted-foreground">
                     {sheet.acknowledgedOn === null

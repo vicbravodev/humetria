@@ -80,6 +80,7 @@ it('keeps the Ley Silla declaration of the center', function (): void {
 
     visit("/admin/acme/work-centers/{$plant->id}/applies?norm=seating")
         ->assertSee('Primero, ¿alguien trabaja de pie?')
+        ->assertSee('¿Alguien hace su trabajo de pie, aunque sea parte de su jornada?')
         ->radio('standing', 'yes')
         ->assertSee('Falta saber a qué se dedica')
         ->radio('sector', 'industrial')

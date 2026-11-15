@@ -341,3 +341,37 @@ describe('asking for days', function (): void {
             ->and($request->refresh()->status->value)->toBe('requested');
     });
 });
+
+it('opens vacations for a company without NOM-037', function (): void {
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    $this->get(route('portal.vacations.show', $this->token))->assertOk();
+});
+
+it('keeps the vacations of a person with requests open, and on their portal home, when the company has no NOM-037', function (): void {
+    leavePortalRequest($this->ana, 'requested', ['working_days' => 3]);
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    $this->get(route('portal.show', $this->token))->assertOk()->assertInertia(fn ($page) => $page->where('sections.0.href', route('portal.vacations.show', $this->token)));
+    $this->get(route('portal.vacations.show', $this->token))->assertOk()->assertInertia(fn ($page) => $page->where('waiting', 3));
+});
+
+it('says how many days wait for an answer without taking them off the days available', function (): void {
+    leavePortalRequest($this->ana, 'requested', ['working_days' => 3]);
+    leavePortalRequest($this->ana, 'requested', ['working_days' => 2, 'starts_on' => '2026-12-14', 'ends_on' => '2026-12-15']);
+    // Not waiting: decided, cancelled, or a leave (which uses no balance).
+    leavePortalRequest($this->ana, 'approved', ['working_days' => 4]);
+    leavePortalRequest($this->ana, 'cancelled', ['working_days' => 6]);
+    leavePortalRequest($this->ana, 'requested', ['working_days' => 5, 'had_balance' => null, 'leave_type_id' => LeaveType::factory()->create(['tenant_id' => $this->tenant->id])->id]);
+    // Someone else's.
+    leavePortalRequest($this->caro, 'requested', ['working_days' => 7]);
+
+    $this->get(route('portal.vacations.show', $this->token))->assertInertia(fn (Assert $page) => $page
+        ->where('waiting', 5)
+        ->where('periods.0.available', 3)
+        ->where('periods.1.available', 14));
+});
+
+it('sends zero waiting days when nothing waits', function (): void {
+    $this->get(route('portal.vacations.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('waiting', 0));
+});

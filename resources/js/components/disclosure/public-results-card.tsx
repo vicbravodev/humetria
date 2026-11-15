@@ -36,8 +36,8 @@ export default function PublicResultsCard({
                     <p className="text-sm text-muted-foreground">
                         Evaluación cerrada el {published.closedOn} ·{' '}
                         {published.answered === 1
-                            ? 'contestó 1 persona'
-                            : `contestaron ${published.answered} personas`}
+                            ? `contestó 1 de ${published.target} personas`
+                            : `contestaron ${published.answered} de ${published.target} personas`}
                     </p>
                     {published.themes.length > 0 && (
                         <div className="flex flex-col gap-1 text-sm">

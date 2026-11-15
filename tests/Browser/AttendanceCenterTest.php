@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
+use Illuminate\Support\Facades\Http;
 
 /** RH's panel with Planta Norte, two people working there and, when asked, its Nave 1 zone. */
 function centerPanel(bool $withZone = true, TenantRole $role = TenantRole::Owner): array
@@ -111,6 +112,136 @@ it('lets RH add a zone where they stand', function (): void {
         ->assertScript(cspViolations(), '[]');
 
     expect(AttendanceZone::query()->sole())->work_center_id->toBe($plant->id)->latitude->toBe(19.4401)->radius_m->toBe(120);
+});
+
+it('lets RH place a zone on the map: the coordinates move the circle, a touch moves the center', function (bool $dark, bool $mobile): void {
+    [$url] = centerPanel(withZone: false);
+    $circle = '() => document.querySelectorAll(\'[role="dialog"] path.leaflet-interactive\').length';
+
+    $page = visitPage('attendance/center', $url, $dark, $mobile)
+        ->click('Agregar zona')
+        ->assertVisible('[aria-label^="Mapa de la zona"]')
+        ->assertScript($circle, 0)
+        ->fill('latitude', '19.4326')
+        ->fill('longitude', '-99.1332')
+        ->assertScript($circle, 1)
+        // From the whole country down to the street of the zone.
+        ->assertScript('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/17/"))', true)
+        ->click('[aria-label^="Mapa de la zona"]')
+        ->assertScript('() => document.querySelector(\'[name="latitude"]\').value !== "19.4326"', true)
+        ->assertScript('() => /^-?\\d+\\.\\d{6}$/.test(document.querySelector(\'[name="longitude"]\').value)', true)
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    $page->assertNoAccessibilityIssues(1);
+})->with([
+    'light, desktop' => [false, false],
+    'dark, phone' => [true, true],
+]);
+
+it('lets RH find the place by its address and save the zone there', function (): void {
+    [$url, $plant] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response([
+        ['display_name' => 'Avenida Industrial 45, Querétaro, México', 'lat' => '20.5888184', 'lon' => '-100.3898881'],
+    ])]);
+
+    visit($url)
+        ->click('Agregar zona')
+        ->fill('name', 'Planta Querétaro')
+        ->fill('[aria-label="Buscar una dirección"]', 'Avenida Industrial 45')
+        ->keys('[aria-label="Buscar una dirección"]', 'Enter')
+        ->waitForText('Avenida Industrial 45, Querétaro, México')
+        ->click('[role="dialog"] li button')
+        ->assertValue('latitude', '20.588818')
+        ->assertValue('longitude', '-100.389888')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->waitForText('Zona guardada')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(AttendanceZone::query()->sole())->work_center_id->toBe($plant->id)->latitude->toBe(20.588818);
+});
+
+it('opens the map of a new zone on the address of the center, without placing the zone there', function (): void {
+    [$url] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response([
+        ['display_name' => 'Reforma 222, Ciudad de México', 'lat' => '19.4326', 'lon' => '-99.1332'],
+    ])]);
+
+    visit($url)
+        ->click('Agregar zona')
+        ->assertVisible('[aria-label^="Mapa de la zona"]')
+        // The street of the center, with no circle: the zone is still RH's to place.
+        ->assertScript(eventually('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/17/"))'), true)
+        ->assertScript('() => document.querySelectorAll(\'[role="dialog"] path.leaflet-interactive\').length', 0)
+        ->assertValue('latitude', '')
+        ->assertDontSee('No pudimos buscar la dirección')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+});
+
+it('keeps the map of a new zone on all of Mexico, with no error, when the address of the center is not found or the search is down', function (int $status): void {
+    [$url] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => $status === 200 ? Http::response([]) : Http::response('', $status)]);
+
+    visit($url)
+        ->click('Agregar zona')
+        ->assertVisible('[aria-label^="Mapa de la zona"]')
+        ->assertScript(eventually('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/5/"))'), true)
+        ->assertDontSee('No pudimos buscar la dirección')
+        ->assertDontSee('No encontramos esa dirección')
+        ->assertNoJavaScriptErrors();
+})->with(['not found' => 200, 'search down' => 503]);
+
+it('opens the map of a new zone on the city of the center when its street is not found, not on all of Mexico', function (): void {
+    [$url] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::sequence()->push([])->push([
+        ['display_name' => 'Cuauhtémoc, Ciudad de México', 'lat' => '19.4326', 'lon' => '-99.1332'],
+    ])]);
+
+    visit($url)
+        ->click('Agregar zona')
+        ->assertVisible('[aria-label^="Mapa de la zona"]')
+        ->assertScript(eventually('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/12/"))'), true)
+        ->assertScript('() => document.querySelectorAll(\'[role="dialog"] path.leaflet-interactive\').length', 0)
+        ->assertNoJavaScriptErrors();
+});
+
+it('asks RH to confirm a center touched on a map zoomed far out, and not one typed or touched up close', function (): void {
+    [$url, $plant] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response([])]);
+    $blocked = '() => document.querySelector(\'[role="dialog"] button[type="submit"]\').disabled';
+
+    visit($url)
+        ->click('Agregar zona')
+        ->fill('name', 'Patio')
+        ->click('[aria-label^="Mapa de la zona"]')
+        ->assertSee('Pusiste el centro con el mapa muy alejado')
+        ->assertScript($blocked, true)
+        ->click('#zone-far-confirm')
+        ->assertScript($blocked, false)
+        // Typing the coordinates is precise: nothing to confirm.
+        ->fill('latitude', '19.4326')
+        ->assertDontSee('Pusiste el centro con el mapa muy alejado')
+        ->assertScript($blocked, false)
+        ->fill('longitude', '-99.1332')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->waitForText('Zona guardada')
+        ->assertNoJavaScriptErrors();
+
+    expect(AttendanceZone::query()->sole()->work_center_id)->toBe($plant->id);
+});
+
+it('tells RH the search is down and to use the map instead', function (): void {
+    [$url] = centerPanel(withZone: false);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response('', 503)]);
+
+    visit($url)
+        ->click('Agregar zona')
+        ->fill('[aria-label="Buscar una dirección"]', 'Avenida Industrial 45')
+        ->click('[aria-label="Buscar dirección"]')
+        ->waitForText('No pudimos buscar la dirección. Toca el mapa o usa tu ubicación.')
+        ->assertNoJavaScriptErrors();
 });
 
 it('tells RH why the browser gave no location, keeping the fields to type', function (): void {

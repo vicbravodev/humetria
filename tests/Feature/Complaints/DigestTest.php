@@ -148,7 +148,7 @@ it('counts neither closed cases nor ended assignments, nor a handler of another 
 
 it('does not write to a company that may not be used', function (): void {
     given($this, [$this->owner]);
-    $this->tenant->forceFill(['deactivated_at' => now()])->save();
+    $this->tenant->forceFill(suspension())->save();
 
     expect(digest())->toBe(0);
 });

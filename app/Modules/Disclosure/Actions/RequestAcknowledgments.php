@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Disclosure\Actions;
 
+use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\DocumentStatus;
 use App\Modules\Disclosure\Jobs\SendPolicyReminder;
@@ -30,7 +31,7 @@ final readonly class RequestAcknowledgments
 {
     private const int CHUNK = 500;
 
-    public function __construct(private CurrentTenant $tenant, private Roster $roster, private PolicyStanding $standing) {}
+    public function __construct(private CurrentTenant $tenant, private Roster $roster, private PolicyStanding $standing, private MailQuota $mail) {}
 
     /**
      * @return int How many new requests were made.
@@ -79,6 +80,9 @@ final readonly class RequestAcknowledgments
                 ], $missing));
                 $made = [...$made, ...$missing];
             }
+
+            // Every request is mailed to whoever has an address: they are held before anything is kept (the upper bound; the night gives back the rest).
+            $this->mail->reserve(count($made));
 
             return $made;
         });

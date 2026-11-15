@@ -11,7 +11,7 @@ export default function SectionProgress({
 }) {
     return (
         <div className="flex flex-col gap-2 md:hidden">
-            <div className="flex items-baseline justify-between gap-4 text-base">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 text-base">
                 <span className="font-medium">
                     {guide} · Sección {progress.section} de {progress.sections}
                 </span>

@@ -110,7 +110,7 @@ it('answers every other unusable address with the same bare 404', function (stri
         'unknown' => 'ZZZZZZZZZZZZZZZZ',
         'malformed' => 'abc',
         'never activated' => ComplaintChannel::factory()->forTenant(Tenant::factory()->create()->id)->create()->access_code,
-        'blocked company' => ComplaintChannel::factory()->forTenant(Tenant::factory()->deactivated()->create()->id)->active()->create()->access_code,
+        'blocked company' => ComplaintChannel::factory()->forTenant(Tenant::factory()->suspended()->create()->id)->active()->create()->access_code,
     };
 
     $response = openChannelPage($this, $code)->assertNotFound();

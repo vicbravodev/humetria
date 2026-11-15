@@ -207,7 +207,7 @@ it('r5: does not count a rest seat out of service, and leaves out the nature tha
     expect(row($this, 'r5')->state)->toBe(RowState::Missing);
 
     StandingPosition::query()->update(['nature_allows' => false, 'nature_reason' => 'Línea de soldadura.', 'placement' => null]);
-    expect(row($this, 'r5')->state)->toBe(RowState::Met);
+    expect(row($this, 'r5')->state)->toBe(RowState::Pending);
 });
 
 it('r6: wants every seat away from the workstation signposted', function (): void {
@@ -345,4 +345,58 @@ it('counts the rows of this center only', function (): void {
     $other = WorkCenter::factory()->for($this->tenant)->create();
 
     expect(collect(resolve(ComplianceRows::class)->for($other->id))->firstWhere('key', 'r1')?->state)->toBe(RowState::Missing);
+});
+
+it('does not call met what has no assessment to look at', function (): void {
+    expect(row($this, 'r2')->state)->toBe(RowState::Missing);
+
+    foreach (['r3', 'r7', 'r8', 'r9'] as $key) {
+        expect(row($this, $key)->state)->toBe(RowState::Pending)->and(row($this, $key)->count)->toBe(0);
+    }
+});
+
+it('keeps them met once an assessment is signed', function (): void {
+    assess($this);
+
+    foreach (['r3', 'r7', 'r8', 'r9'] as $key) {
+        expect(row($this, $key)->state)->toBe(RowState::Met);
+    }
+});
+
+it('waits for a Figura 1 placement before judging measures and pauses', function (): void {
+    StandingPosition::query()->update(['nature_allows' => false, 'nature_reason' => 'Línea de soldadura.', 'placement' => null]);
+    expect(row($this, 'r5')->state)->toBe(RowState::Pending)->and(row($this, 'r11')->state)->toBe(RowState::Pending);
+
+    // R2-compliance-02: a result A has its seat at the workstation, so a rest seat and a pause agreement do not apply: not «Cumple».
+    StandingPosition::factory()->create($this->where);
+    expect(row($this, 'r5')->state)->toBe(RowState::NotApplicable)->and(row($this, 'r11')->state)->toBe(RowState::NotApplicable);
+    expect(RowState::NotApplicable->label())->toBe('No aplica');
+
+    StandingPosition::factory()->withinCenter()->create($this->where);
+    Seat::query()->where('use', 'rest_area')->delete();
+    expect(row($this, 'r5')->state)->toBe(RowState::Missing)->and(row($this, 'r11')->state)->toBe(RowState::Missing);
+});
+
+it('waits for a seat before judging seats', function (): void {
+    Seat::query()->delete();
+
+    expect(row($this, 'r6')->state)->toBe(RowState::Pending);
+});
+
+it('labels the pending state «Sin registros»', function (): void {
+    expect(RowState::Pending->label())->toBe('Sin registros');
+});
+
+// C-01: with no position registered there is nobody whose assessment or seat could be judged: never «Cumple».
+it('does not call R2 and R4 met where there is no position to judge them by', function (): void {
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
+
+    expect(collect(resolve(ComplianceRows::class)->for($empty->id))->whereIn('key', ['r2', 'r4'])->pluck('state')->all())->toBe([RowState::Pending, RowState::Pending]);
+});
+
+it('says R2 and R4 do not apply where the center declared nobody stands', function (): void {
+    $empty = WorkCenter::factory()->for($this->tenant)->create();
+    SeatingProfile::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $empty->id, 'no_standing_positions' => true]);
+
+    expect(collect(resolve(ComplianceRows::class)->for($empty->id))->whereIn('key', ['r2', 'r4'])->pluck('state')->all())->toBe([RowState::NotApplicable, RowState::NotApplicable]);
 });

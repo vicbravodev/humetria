@@ -1,5 +1,6 @@
 import { Form } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import AlertError from '@/components/alert-error';
 import WorkCenterFormFields from '@/components/tenancy/work-center-form-fields';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,6 +43,12 @@ export default function WorkCenterDialog(props: Props) {
                 >
                     {({ processing, errors }) => (
                         <>
+                            {errors['centers'] !== undefined && (
+                                <AlertError
+                                    title="Tu plan no alcanza"
+                                    errors={[errors['centers']]}
+                                />
+                            )}
                             <WorkCenterFormFields
                                 errors={errors}
                                 states={states}

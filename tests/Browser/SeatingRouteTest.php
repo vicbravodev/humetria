@@ -76,6 +76,7 @@ it('opens the Ley Silla dossier with only what the center can show', function ()
     visit("/admin/acme/seating/centers/{$plant->id}/inspection")
         ->click('Solo lo que tienes')
         ->click('Abrir expediente')
+        ->assertScript(pathBecomes("/admin/acme/seating/centers/{$plant->id}/dossier"), true)
         ->assertPathIs("/admin/acme/seating/centers/{$plant->id}/dossier")
         ->assertQueryStringHas('ready', '1')
         ->assertNoJavaScriptErrors();

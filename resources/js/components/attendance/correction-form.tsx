@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import CorrectionReasonField from '@/components/attendance/correction-reason-field';
 import CorrectionTypeField from '@/components/attendance/correction-type-field';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { correctionDay } from '@/lib/attendance/correction';
 import type { CorrectionDraft } from '@/lib/attendance/correction';
 import type { MarkType } from '@/lib/attendance/next-step';
 
@@ -46,6 +47,7 @@ export default function CorrectionForm({
             }}
         >
             <p className="text-base font-semibold">{title}</p>
+            <p className="text-base">{correctionDay(date)}</p>
             {fixedType === null && (
                 <CorrectionTypeField value={type} onChange={setType} />
             )}
@@ -74,22 +76,7 @@ export default function CorrectionForm({
                     Fue después de medianoche, al día siguiente.
                 </Label>
             </div>
-            <div className="flex flex-col gap-2">
-                <Label htmlFor="correction-reason" className="text-base">
-                    ¿Por qué pide la corrección?
-                </Label>
-                <Textarea
-                    id="correction-reason"
-                    name="reason"
-                    required
-                    minLength={10}
-                    maxLength={500}
-                    rows={3}
-                    className="text-base"
-                    value={reason}
-                    onChange={(event) => setReason(event.target.value)}
-                />
-            </div>
+            <CorrectionReasonField value={reason} onChange={setReason} />
             <div className="flex flex-col gap-2">
                 <Button
                     type="submit"

@@ -57,7 +57,7 @@ it('prints the Programa in the incise g, next to the text HR wrote', function ()
     ProgramAction::factory()->create(['tenant_id' => $this->tenant->id, 'program_id' => $program?->id, 'item_id' => $row->id, 'title' => 'Revisar la política', 'due_on' => '2026-12-15']);
     $this->actingAs($this->hr)->put(route('tenant.campaigns.report.update', [$this->tenant, $campaign->id]), [
         'objective' => 'Objetivo.', 'activities' => 'Actividades.', 'conclusions' => 'Conclusiones.', 'recommendations' => 'Texto de las recomendaciones.',
-        'responsible_name' => 'Dra. Laura Méndez', 'responsible_license' => '123',
+        'responsible_name' => 'Dra. Laura Méndez', 'responsible_license' => '1234567',
     ])->assertSessionHasNoErrors();
 
     $this->actingAs($this->hr)->get(route('tenant.campaigns.report', [$this->tenant, $campaign->id]))
@@ -100,4 +100,21 @@ it('carries to a shared link the Programa with no file, no note, no email and no
     $json = $response->getContent();
 
     expect($json)->not->toContain('secret.pdf')->not->toContain('Juan Pérez')->not->toContain($member->email)->not->toContain('evidence_path')->not->toContain('responsible_user_id');
+});
+
+it('starts the form of the report from the responsible of the Programa, until HR names one', function (): void {
+    $campaign = reportedEvaluation($this, nom035Answers('nom035.guide-ii', 'always'));
+    workIn($this->tenant);
+    $program = resolve(CreateProgram::class)->handle($campaign->id, null);
+    $program?->update(['responsible_name' => 'Ing. Carlos Ruiz']);
+    $show = fn () => $this->actingAs($this->hr)->get(route('tenant.campaigns.report', [$this->tenant, $campaign->id]));
+
+    $show()->assertInertia(fn (Assert $page) => $page->where('form.responsible_name', 'Ing. Carlos Ruiz')->where('report.responsible', null));
+
+    $this->actingAs($this->hr)->put(route('tenant.campaigns.report.update', [$this->tenant, $campaign->id]), [
+        'objective' => 'Objetivo.', 'activities' => 'Actividades.', 'conclusions' => 'Conclusiones.', 'recommendations' => 'Recomendaciones.',
+        'responsible_name' => 'Dra. Laura Méndez', 'responsible_license' => '',
+    ]);
+
+    $show()->assertInertia(fn (Assert $page) => $page->where('form.responsible_name', 'Dra. Laura Méndez'));
 });

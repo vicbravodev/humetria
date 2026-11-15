@@ -3,6 +3,7 @@ import FormDialog from '@/components/humetria/form-dialog';
 import InputError from '@/components/humetria/input-error';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { INCISOS } from '@/lib/disclosure';
+import type { Option } from '@/lib/option-search';
 import { publish } from '@/routes/tenant/disclosure/policy';
 
 /**
@@ -22,7 +23,7 @@ export default function PublishDialog({
     documentId: string;
     centersInUse: number;
     /** The center whose route it was written from, to go back to it once published. */
-    center?: string | null;
+    center?: Option | null;
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -34,7 +35,7 @@ export default function PublishDialog({
             description="Se guarda como la siguiente versión y ya no se puede cambiar: es la evidencia de lo que el centro prometió. Las personas la recibirán por correo para confirmar que la leyeron."
             form={publish.form(
                 { tenant: tenantSlug, document: documentId },
-                center === null ? {} : { query: { center } },
+                center === null ? {} : { query: { center: center.value } },
             )}
             submit="Publicar"
         >
@@ -42,6 +43,7 @@ export default function PublishDialog({
                 <>
                     <CenterPicker
                         inUse={centersInUse}
+                        only={center}
                         error={
                             errors['work_center_ids'] ??
                             errors['work_center_ids.0']

@@ -20,7 +20,7 @@ export function greeting(name: string): string {
 
 /** The standard a task belongs to, for its badge. */
 export function taskNorm(task: CommitteeTask): string {
-    return task.kind === 'signatures' || task.kind === 'minutes'
+    return ['signatures', 'minutes', 'unassessed'].includes(task.kind)
         ? 'Ley Silla'
         : 'NOM-037';
 }
@@ -35,6 +35,21 @@ type TaskText = {
 /** What each kind of task asks: NOM-037's lists and notices, Ley Silla's signatures and minutes. */
 const TEXTS: Record<CommitteeTask['kind'], (task: CommitteeTask) => TaskText> =
     {
+        checklist: (task) => ({
+            title: `Publica la lista de verificación · ${task.workCenter}`,
+            text: `El centro ${task.workCenter} no tiene lista de verificación publicada: sin ella no se puede revisar ningún lugar de teletrabajo.`,
+            estimate: '≈ 10 min',
+            action: 'Ir a la lista',
+        }),
+        unassessed: (task) => ({
+            title:
+                task.count === 1
+                    ? `1 persona de pie sin evaluación en ${task.workCenter}`
+                    : `${task.count} personas de pie sin evaluación en ${task.workCenter}`,
+            text: 'Todavía no tienen una evaluación firmada de su puesto de trabajo.',
+            estimate: '≈ 3 min cada una',
+            action: 'Ir a Evaluaciones',
+        }),
         lists: (task) => ({
             title:
                 task.count === 1

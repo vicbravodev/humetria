@@ -36,7 +36,7 @@ export default function PortalLinkPanel({
                         </h2>
                         <p className="text-meta text-muted-foreground">
                             {hasEmail
-                                ? 'Se envió a su correo al registrarla.'
+                                ? 'Se envió a su correo al registrar a esta persona.'
                                 : 'Sin correo'}
                         </p>
                     </div>

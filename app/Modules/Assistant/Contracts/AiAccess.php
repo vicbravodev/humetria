@@ -10,6 +10,9 @@ namespace App\Modules\Assistant\Contracts;
  */
 interface AiAccess
 {
+    /** Humi is not turned off for the current company: the question that decides whether the panel offers it at all. */
+    public function enabled(): bool;
+
     /** Humi is not turned off for the current company and its budget of tokens of the month is not used up. */
     public function available(): bool;
 

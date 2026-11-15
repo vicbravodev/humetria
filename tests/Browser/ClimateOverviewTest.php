@@ -18,7 +18,10 @@ it('invites RH to the first climate survey when there is none', function (bool $
 
     visitPage('engagement/index', "{$url}/climate", $dark, $mobile)
         ->assertSee('Todavía no hay una encuesta de clima')
-        ->assertSee('Crear la primera encuesta de clima')
+        ->assertSee('Revisa las preguntas')
+        ->assertSee('Elige a quién invitar')
+        ->assertSee('Lanza y sigue el avance')
+        ->assertSee('Preparar la primera encuesta')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($looks);
@@ -35,16 +38,34 @@ it('shows the survey in progress and the history of the closed ones', function (
         ->assertSee('En curso')
         ->assertSee('Historial')
         ->assertSee('Clima · 2025')
+        ->assertSee('Del clima anterior')
+        ->assertSee('Todavía no hay compromisos')
+        ->assertSee('Ver avance')
         ->assertDontSee('Pulso anterior')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($looks);
 
+it('leads with the latest result and a new survey when nothing is in progress', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    climateResultsSurvey($tenant, 12);
+
+    visitPage('engagement/index', "{$url}/climate")
+        ->assertSeeIn('nav[aria-label="Ruta"]', 'Escucha a tu gente')
+        ->assertSee('Último resultado')
+        ->assertSee('100 % favorable')
+        ->assertSee('Ver resultados')
+        ->assertSee('Nueva encuesta')
+        ->assertNoJavaScriptErrors();
+});
+
 it('starts a draft and opens it', function (): void {
     $url = signInToPanel();
 
     visitPage('engagement/index', "{$url}/climate")
-        ->click('Crear la primera encuesta de clima')
+        ->click('Preparar la primera encuesta')
         ->assertSee('Borrador')
         ->assertNoJavaScriptErrors();
 });

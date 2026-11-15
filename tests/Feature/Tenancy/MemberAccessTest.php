@@ -223,3 +223,15 @@ it('names no sender when the invitation has none, nor anything on an invalid lin
     $this->get(route('invitations.show', Str::random(64)))
         ->assertInertia(fn (Assert $page) => $page->where('inviter', null)->where('role', null)->where('role_label', null));
 });
+
+it('tells the invitation page whether the account is a union, so it speaks of its padrón and not of evaluations', function (): void {
+    $union = Tenant::factory()->union()->create();
+    $token = Str::random(64);
+    TenantInvitation::factory()->for($union)->role(TenantRole::Owner)->withToken($token)->create();
+
+    $this->get(route('invitations.show', $token))->assertInertia(fn (Assert $page) => $page->where('union', true));
+
+    $company = Str::random(64);
+    TenantInvitation::factory()->role(TenantRole::Hr)->withToken($company)->create();
+    $this->get(route('invitations.show', $company))->assertInertia(fn (Assert $page) => $page->where('union', false));
+});

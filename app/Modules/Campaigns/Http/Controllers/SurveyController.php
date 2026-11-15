@@ -37,6 +37,8 @@ final class SurveyController extends Controller
                 'token' => null,
                 'unavailable' => $unavailable->reason->value,
                 'company' => $unavailable->company,
+                // Only a finished survey says which it was: the thanks differ by kind. A link that opens nothing says nothing.
+                'kind' => $unavailable->kind?->value,
                 'closesOn' => null,
                 'instruments' => [],
             ]);
@@ -61,6 +63,7 @@ final class SurveyController extends Controller
             'token' => $token,
             'unavailable' => null,
             'company' => $survey->company,
+            'kind' => $survey->campaign->kind->value,
             'closesOn' => $survey->campaign->closes_on === null ? null : CampaignClock::day($survey->campaign->closes_on, isDate: true),
             'instruments' => $instruments,
         ]);

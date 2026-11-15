@@ -4,6 +4,7 @@ import {
     evaluationStanding,
     guidesShort,
     guidesText,
+    peopleAction,
     staffText,
 } from '@/lib/work-centers';
 
@@ -33,10 +34,32 @@ describe('guidesShort', () => {
     });
 });
 
+describe('peopleAction', () => {
+    it('offers to load people into a center with nobody, and to see them otherwise', () => {
+        expect(peopleAction(0)).toEqual({
+            label: 'Cargar personas',
+            load: true,
+        });
+        expect(peopleAction(1)).toEqual({ label: 'Ver personas', load: false });
+        expect(peopleAction(48)).toEqual({
+            label: 'Ver personas',
+            load: false,
+        });
+    });
+});
+
 describe('evaluationStanding', () => {
     it('says an evaluation is running and when it closes', () => {
         expect(
-            evaluationStanding({ state: 'running', day: '10 nov 2026' }, 60),
+            evaluationStanding(
+                {
+                    state: 'running',
+                    day: '10 nov 2026',
+                    answered: null,
+                    target: null,
+                },
+                60,
+            ),
         ).toEqual({
             badge: 'Evaluación en curso',
             variant: 'default',
@@ -45,7 +68,12 @@ describe('evaluationStanding', () => {
     });
 
     it('says one is being prepared', () => {
-        expect(evaluationStanding({ state: 'draft', day: null }, 30)).toEqual({
+        expect(
+            evaluationStanding(
+                { state: 'draft', day: null, answered: null, target: null },
+                30,
+            ),
+        ).toEqual({
             badge: 'Evaluación en preparación',
             variant: 'secondary',
             next: 'En preparación',
@@ -54,7 +82,15 @@ describe('evaluationStanding', () => {
 
     it('says the work center is up to date and by when the next one is due', () => {
         expect(
-            evaluationStanding({ state: 'due', day: '29 oct 2028' }, 30),
+            evaluationStanding(
+                {
+                    state: 'due',
+                    day: '29 oct 2028',
+                    answered: null,
+                    target: null,
+                },
+                30,
+            ),
         ).toEqual({
             badge: 'Al día',
             variant: 'success',
@@ -62,9 +98,32 @@ describe('evaluationStanding', () => {
         });
     });
 
+    it('says with how many answers it closed when not everyone answered (C-57)', () => {
+        expect(
+            evaluationStanding(
+                { state: 'due', day: '29 oct 2028', answered: 10, target: 20 },
+                30,
+            ).badge,
+        ).toBe('Al día · contestaron 10 de 20');
+        expect(
+            evaluationStanding(
+                { state: 'due', day: '29 oct 2028', answered: 20, target: 20 },
+                30,
+            ).badge,
+        ).toBe('Al día');
+    });
+
     it('says when the next one was due and is overdue', () => {
         expect(
-            evaluationStanding({ state: 'overdue', day: '2 nov 2026' }, 30),
+            evaluationStanding(
+                {
+                    state: 'overdue',
+                    day: '2 nov 2026',
+                    answered: null,
+                    target: null,
+                },
+                30,
+            ),
         ).toEqual({
             badge: 'Evaluación vencida',
             variant: 'destructive',

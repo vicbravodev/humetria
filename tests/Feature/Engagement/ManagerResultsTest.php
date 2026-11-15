@@ -205,6 +205,25 @@ it('writes a log and an audit entry that say which survey and which manager and 
     Log::shouldHaveReceived('info')->with('engagement.manager_results_viewed', ['survey_id' => $survey->id, 'manager_id' => $this->ana->id])->once();
 });
 
+it('goes to the manager before and after by name, among the shown ones only, never by score', function (): void {
+    $carla = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Carla Paz']);
+    $hidden = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Bruno Oculto']);
+    // Carla scores best, Ana worst: the order is still by name, and Bruno's group of four is not a neighbor.
+    // Diego's one answer joins Bruno's four, so the hidden ones are five and no shown group has to hide with them.
+    $diego = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Diego Uno']);
+    $survey = climateManagerSurvey($this->tenant, [$this->ana->id => [6, 1], $this->beto->id => [6, 3], $carla->id => [6, 5], $hidden->id => [4, 5], $diego->id => [1, 5]]);
+
+    $this->actingAs($this->hr);
+    $this->get(managerUrl($this->tenant, $survey, $this->beto->id))->assertInertia(fn (Assert $page) => $page
+        ->where('neighbors.previous', ['id' => $this->ana->id, 'name' => 'Ana Ruiz'])
+        ->where('neighbors.next', ['id' => $carla->id, 'name' => 'Carla Paz']));
+    $this->get(managerUrl($this->tenant, $survey, $this->ana->id))->assertInertia(fn (Assert $page) => $page
+        ->where('neighbors.previous', null)->where('neighbors.next.id', $this->beto->id));
+    $props = $this->get(managerUrl($this->tenant, $survey, $carla->id))->assertInertia(fn (Assert $page) => $page
+        ->where('neighbors.next', null))->inertiaProps();
+    expect(json_encode($props, JSON_THROW_ON_ERROR))->not->toContain($hidden->id)->not->toContain('Bruno Oculto');
+});
+
 it('reads a bounded number of queries however many managers there are', function (): void {
     $groups = [];
     foreach (range(1, 12) as $i) {

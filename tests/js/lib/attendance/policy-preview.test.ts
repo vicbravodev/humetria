@@ -24,6 +24,7 @@ const saved: AttendancePolicy = {
     requireQrOnsite: true,
     trustedMayUseBrowser: true,
     retentionMonths: 12,
+    lateToleranceMinutes: 10,
 };
 
 describe('markCases', () => {
@@ -145,8 +146,12 @@ describe('policyChanges', () => {
                 requireQrOnsite: false,
                 trustedMayUseBrowser: false,
                 retentionMonths: 24,
+                lateToleranceMinutes: 10,
             }),
         ).toBe(5);
+        expect(
+            policyChanges(saved, { ...saved, lateToleranceMinutes: 0 }),
+        ).toBe(1);
     });
 });
 

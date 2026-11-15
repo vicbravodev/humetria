@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vacaciones · Editar política</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+
+.hm-display{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.01em}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h2{font-size:24px;line-height:32px;font-weight:600}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-body{font-size:16px;line-height:24px}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+```
+
+/* íconos */
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+/* botones: 44 px de alto */
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border-color:var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+/* tarjeta */
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+/* encabezado de página */
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+/* píldora de estado */
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--vencido{background:var(--risk-alto-bg);color:var(--risk-alto-fg)}
+.hm-pill--plain::before{display:none}
+/* KPI */
+.hm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:24px}
+.hm-kpi-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.hm-kpi-card--lead{border-color:var(--primary);grid-column:span 1}
+.hm-kpi-label{display:flex;align-items:center;gap:8px;color:var(--muted-foreground)}
+/* pestañas con conteo */
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap}
+.hm .hm-tab[aria-selected="true"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-tab--cero{opacity:1;color:var(--muted-foreground)}
+/* tabla */
+.hm-tablewrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm-table{width:100%;border-collapse:collapse;font-size:16px;line-height:24px}
+.hm-table th{background:var(--muted);color:var(--muted-foreground);font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;text-align:left;padding:12px 16px;white-space:nowrap}
+.hm-table td{padding:12px 16px;border-top:1px solid var(--border);vertical-align:middle;height:64px}
+.hm-table .hm-num{text-align:right}
+.hm-table tr[aria-selected="true"] td{background:var(--accent)}
+.hm-person{display:flex;align-items:center;gap:12px;min-width:0}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+/* medidor de arco: la "h" del logo */
+.hm-arc{--p:0;position:relative;width:196px;height:141px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px}
+.hm-arc::before{content:"";position:absolute;inset:0;border-radius:98px 98px 0 0;padding:16px 16px 0;
+  background:conic-gradient(from 270deg at 50% 100%,var(--primary) calc(var(--p)*1.8deg),var(--track) 0 180deg,transparent 0);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.hm-arc-value{position:relative;font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-arc-label{position:relative;font-size:14px;line-height:20px;color:var(--muted-foreground);text-align:center;max-width:150px}
+/* barra con referencia */
+.hm-bar{--p:0;--ref:0;position:relative;height:8px;border-radius:9999px;background:var(--track)}
+.hm-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);border-radius:9999px;background:var(--primary)}
+.hm-bar::after{content:"";position:absolute;top:-5px;bottom:-5px;left:calc(var(--ref)*1%);width:2px;border-radius:1px;background:var(--foreground)}
+.hm-bar--sinref::after{display:none}
+.hm-bar--bajo::before{background:var(--risk-alto)}
+.hm-barrow{display:flex;flex-direction:column;gap:8px}
+.hm-barrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+/* columnas desde cero (tendencia) */
+.hm-cols{position:relative;display:flex;align-items:flex-end;gap:16px;height:160px;border-bottom:1px solid var(--input)}
+.hm-col{--v:0;flex:1 1 0;min-width:0;height:calc(var(--v)*1%);background:var(--primary);border-radius:6px 6px 0 0}
+.hm-col--base{background:var(--chart-4)}
+.hm-cols-ref{--ref:0;position:absolute;left:0;right:0;bottom:calc(var(--ref)*1%);border-top:2px dashed var(--foreground)}
+.hm-cols-labels{display:flex;gap:16px}
+.hm-cols-labels>span{flex:1 1 0;text-align:center;font-size:14px;line-height:20px}
+/* celda del mapa por grupo */
+.hm-heat{display:grid;gap:4px}
+.hm-cell{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:6px;font-weight:500;background:var(--muted);color:var(--foreground)}
+.hm-cell--2{background:var(--accent)}
+.hm-cell--3{background:var(--chart-3);color:var(--background)}
+.hm-cell--protegida{background:transparent;border:1px dashed var(--input);color:var(--muted-foreground);gap:6px;font-size:14px}
+/* aviso único */
+.hm-notice{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:10px;background:var(--warning);color:var(--warning-foreground)}
+.hm-notice-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.hm-notice a{font-weight:500;text-decoration:underline;text-underline-offset:3px}
+/* estado vacío */
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+/* barra de acciones masivas */
+.hm-bulk{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border);background:var(--accent)}
+/* menú de fila abierto (solo se dibuja abierto en una fila por board) */
+.hm-menu{display:flex;flex-direction:column;min-width:200px;padding:4px;border-radius:8px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);box-shadow:var(--shadow-float)}
+.hm .hm-menu-item{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;text-align:left}
+
+
+.hm.t-dark{color-scheme:dark}.hm.t-light{color-scheme:light}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.hm-check{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px}
+.hm-check input{width:20px;height:20px;margin:0;accent-color:var(--primary)}
+.fm-box{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--foreground);transition:border-color 150ms}
+.fm-box input,.fm-box select{flex:1 1 0;min-width:0;min-height:42px;border:0;background:transparent;font:inherit;color:inherit;outline:none;padding:0}
+.fm-box input::placeholder{color:var(--muted-foreground)}
+.fm-box:focus-within{outline:2px solid var(--ring);outline-offset:2px}
+.fm-box--error{border-color:var(--destructive)}
+.fm-box .hm-i{color:var(--muted-foreground)}
+.fm-field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fm-label{font-size:14px;line-height:20px;font-weight:500;display:flex;align-items:center;gap:8px}
+.fm-hint{font-size:14px;line-height:20px;color:var(--muted-foreground)}
+.fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px 24px}
+.hm-th-plain{text-transform:none;letter-spacing:0}
+
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.fm-table td{padding:8px 16px}
+.fm-table th{padding:10px 16px}
+.fm-table td{height:60px}
+.fm-err{display:table-cell;color:var(--destructive);font-size:14px;line-height:20px;font-weight:500;padding:0 16px 12px!important;height:auto!important;border-top:0!important}
+.fm-err .hm-i{display:inline-block;vertical-align:-3px;margin-right:6px}
+.fm-save{position:sticky;bottom:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:16px 40px;background:var(--card);border-top:1px solid var(--border);border-radius:0 0 14px 14px}
+.pv{gap:16px}
+.pv-vals,.pv-xs{display:flex;gap:4px}
+.pv-vals>span,.pv-xs>span{flex:1 1 0;min-width:0;text-align:center;font-size:13px;line-height:18px}
+.pv-vals>span{font-weight:500}
+.pv-xs>span{color:var(--muted-foreground);letter-spacing:-.02em}
+.pv-bars{display:flex;align-items:flex-end;gap:4px;height:200px;border-bottom:1px solid var(--input)}
+.pv-slot{position:relative;flex:1 1 0;min-width:0;height:100%;display:flex;align-items:flex-end}
+.pv-slot::after{content:"";position:absolute;left:-2px;right:-2px;bottom:calc(var(--ref)*1% - 2px);height:4px;border-radius:2px;background:var(--foreground);border:1px solid var(--card)}
+.pv-bar{--v:0;display:block;width:100%;height:calc(var(--v)*1%);background:var(--primary);border-radius:4px 4px 0 0}
+.pv-bar--bajo{background:var(--risk-alto)}
+.pv-key{display:inline-block;flex:none}
+.pv-key--bar{width:12px;height:12px;border-radius:3px;background:var(--primary)}
+.pv-key--ref{width:16px;height:4px;border-radius:2px;background:var(--foreground)}
+
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="vacaciones.politicas" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Ordena tu operación › Vacaciones › Políticas › Personal de confianza" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page">
+<header class="hm-head"><div class="hm-head-text"><a class="hm-btn hm-btn-ghost" style="align-self:flex-start;padding:0 8px 0 0;min-height:44px" href="Politicas.dc.html"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Políticas de vacaciones</a><div class="hm-head-title"><h1 class="hm-h1">Personal de confianza</h1><sc-if value="{{ esCambios }}" hint-placeholder-val="{{ true }}">
+<span class="hm-pill hm-pill--atencion">Sin guardar</span>
+</sc-if><sc-if value="{{ esError }}" hint-placeholder-val="{{ true }}">
+<span class="hm-pill hm-pill--vencido">Por debajo de la ley</span>
+</sc-if></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Una política solo puede mejorar la ley</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Aplica a toda la empresa</span></div></div></header>
+<sc-if value="{{ esCambios }}" hint-placeholder-val="{{ true }}">
+<p class="hm-lead">Con estos cambios, Personal de confianza da 14 días el primer año y 30 % de prima: 2 días y 5 pts más que la ley.</p>
+</sc-if><sc-if value="{{ esError }}" hint-placeholder-val="{{ true }}">
+<p class="hm-lead">Un rango queda por debajo de la ley. Corrígelo para poder guardar.</p>
+</sc-if>
+<div class="hm-split">
+<div class="hm-main" style="flex:3 1 520px">
+<section class="hm-card" aria-labelledby="s1" style="gap:20px"><h2 class="hm-h3" id="s1">Lo básico</h2>
+<div class="fm-field"><label class="fm-label" for="nombre">Nombre</label><div class="fm-box"><input id="nombre" type="text" value="Personal de confianza"></div></div>
+<div class="fm-grid">
+<div class="fm-field"><label class="fm-label" for="prima">Prima vacacional (%)</label><div class="fm-box"><input id="prima" type="text" inputmode="numeric" value="30" aria-describedby="prima-h"></div><span class="fm-hint" id="prima-h">Mínimo 25 % (LFT art. 80).</span><sc-if value="{{ esCambios }}" hint-placeholder-val="{{ true }}">
+<span class="hm-pill hm-pill--activo hm-pill--plain">Cambiado</span>
+</sc-if></div>
+<div class="fm-field"><label class="fm-label" for="semana">Semana laboral</label><div class="fm-box"><select id="semana" aria-describedby="semana-h"><option>De lunes a viernes</option><option>De lunes a sábado</option></select><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><span class="fm-hint" id="semana-h">Los días que cuentan como laborables al pedir vacaciones.</span></div>
+</div></section>
+<section class="hm-card" aria-labelledby="s2" style="gap:20px"><h2 class="hm-h3" id="s2">Días extra</h2>
+<div class="fm-grid">
+<div class="fm-field"><label class="fm-label" for="meses">Meses para usar los días extra</label><div class="fm-box"><input id="meses" type="text" inputmode="numeric" value="18" aria-describedby="meses-h"></div><span class="fm-hint" id="meses-h">Vacío: los días extra no vencen.</span></div>
+<div class="fm-field"><label class="fm-label" for="tope">Tope de días extra que pasan al año siguiente</label><div class="fm-box"><input id="tope" type="text" inputmode="numeric" value="5" aria-describedby="tope-h"></div><span class="fm-hint" id="tope-h">Vacío: sin tope.</span><sc-if value="{{ esCambios }}" hint-placeholder-val="{{ true }}">
+<span class="hm-pill hm-pill--activo hm-pill--plain">Cambiado</span>
+</sc-if></div>
+</div>
+<label style="display:flex;align-items:center;gap:8px;min-height:44px"><span class="hm-check"><input type="checkbox" checked></span><span>Permitir adelantar vacaciones <span class="hm-muted">(con autorización de quien aprueba)</span></span></label></section>
+<section class="hm-card" aria-labelledby="s3" style="gap:20px"><div style="display:flex;flex-direction:column;gap:4px"><h2 class="hm-h3" id="s3">Días por antigüedad</h2><p class="hm-small hm-muted">Los años sin renglón siguen la ley.</p></div>
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px"><div class="fm-field" style="flex:1 1 200px"><label class="fm-label" for="fnom">Nombre de estos días</label><div class="fm-box"><input id="fnom" type="text" value="Cumpleaños"></div></div><div class="fm-field"><label class="fm-label" for="fdias">Días cada año</label><div class="fm-box" style="width:112px"><input id="fdias" type="text" inputmode="numeric" value="1"></div></div><button type="button" class="hm-iconbtn" aria-label="Quitar los días fijos Cumpleaños"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+<sc-if value="{{ esCambios }}" hint-placeholder-val="{{ true }}">
+<div class="hm-tablewrap" style="border-radius:8px">
+<table class="hm-table fm-table">
+<caption class="sr">Días en total por rango de años de antigüedad</caption>
+<thead><tr><th scope="col">Del año</th><th scope="col">Al año</th><th scope="col">Días en total</th><th scope="col" class="hm-num">Mínimo legal</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead>
+<tbody>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="1"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="1"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 1</span><input type="text" inputmode="numeric" value="14"></label></td><td class="hm-num"><span class="hm-muted">12</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 1"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="2"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="3"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 2–3</span><input type="text" inputmode="numeric" value="18"></label></td><td class="hm-num"><span class="hm-muted">16</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 2–3"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="4"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="5"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 4–5</span><input type="text" inputmode="numeric" value="22"></label></td><td class="hm-num"><span class="hm-muted">20</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 4–5"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="6"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="10"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 6–10</span><input type="text" inputmode="numeric" value="24"></label></td><td class="hm-num"><span class="hm-muted">22</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 6–10"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="11"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="15"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 11–15</span><input type="text" inputmode="numeric" value="26"></label></td><td class="hm-num"><span class="hm-muted">24</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 11–15"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="16"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="20"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 16–20</span><input type="text" inputmode="numeric" value="28"></label></td><td class="hm-num"><span class="hm-muted">26</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 16–20"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="21"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="25"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 21–25</span><input type="text" inputmode="numeric" value="30"></label></td><td class="hm-num"><span class="hm-muted">28</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 21–25"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="26"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="30"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 26–30</span><input type="text" inputmode="numeric" value="32"></label></td><td class="hm-num"><span class="hm-muted">30</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 26–30"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="31"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="35"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 31–35</span><input type="text" inputmode="numeric" value="34"></label></td><td class="hm-num"><span class="hm-muted">32</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 31–35"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+</tbody>
+</table>
+</div>
+</sc-if>
+<sc-if value="{{ esError }}" hint-placeholder-val="{{ true }}">
+<div class="hm-tablewrap" style="border-radius:8px">
+<table class="hm-table fm-table">
+<caption class="sr">Días en total por rango de años de antigüedad</caption>
+<thead><tr><th scope="col">Del año</th><th scope="col">Al año</th><th scope="col">Días en total</th><th scope="col" class="hm-num">Mínimo legal</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead>
+<tbody>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="1"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="1"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 1</span><input type="text" inputmode="numeric" value="14"></label></td><td class="hm-num"><span class="hm-muted">12</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 1"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="2"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="3"></label></td><td><label class="fm-box fm-box--error" style="width:88px"><span class="sr">Días en total del año 2–3</span><input type="text" inputmode="numeric" value="15" aria-invalid="true" aria-describedby="err23"></label></td><td class="hm-num"><span class="hm-muted">16</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 2–3"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td colspan="5" class="fm-err" id="err23"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span>Escribe 16 o más: es el mínimo legal para ese rango</span></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="4"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="5"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 4–5</span><input type="text" inputmode="numeric" value="22"></label></td><td class="hm-num"><span class="hm-muted">20</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 4–5"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="6"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="10"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 6–10</span><input type="text" inputmode="numeric" value="24"></label></td><td class="hm-num"><span class="hm-muted">22</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 6–10"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="11"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="15"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 11–15</span><input type="text" inputmode="numeric" value="26"></label></td><td class="hm-num"><span class="hm-muted">24</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 11–15"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="16"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="20"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 16–20</span><input type="text" inputmode="numeric" value="28"></label></td><td class="hm-num"><span class="hm-muted">26</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 16–20"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="21"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="25"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 21–25</span><input type="text" inputmode="numeric" value="30"></label></td><td class="hm-num"><span class="hm-muted">28</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 21–25"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="26"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="30"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 26–30</span><input type="text" inputmode="numeric" value="32"></label></td><td class="hm-num"><span class="hm-muted">30</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 26–30"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+<tr><td><label class="fm-box" style="width:72px"><span class="sr">Del año</span><input type="text" inputmode="numeric" value="31"></label></td><td><label class="fm-box" style="width:72px"><span class="sr">Al año</span><input type="text" inputmode="numeric" value="35"></label></td><td><label class="fm-box" style="width:88px"><span class="sr">Días en total del año 31–35</span><input type="text" inputmode="numeric" value="34"></label></td><td class="hm-num"><span class="hm-muted">32</span></td><td class="hm-num"><button type="button" class="hm-iconbtn" aria-label="Quitar el rango de los años 31–35"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></td></tr>
+</tbody>
+</table>
+</div>
+</sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="hm-btn hm-btn-outline"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Agregar rango de años</button><button type="button" class="hm-btn hm-btn-outline"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Agregar días fijos</button></div></section>
+</div>
+<div class="hm-side" style="flex:2 1 340px;position:sticky;top:24px">
+<aside class="hm-card pv" aria-labelledby="pvt">
+<h2 class="hm-h3" id="pvt">Así quedan los días</h2>
+<sc-if value="{{ esCambios }}" hint-placeholder-val="{{ true }}">
+<p class="hm-small hm-muted">Tu política supera el mínimo de la ley en todos los rangos.</p>
+<div role="img" aria-label="Días por rango de años 1, 2 a 3, 4 a 5, 6 a 10, 11 a 15, 16 a 20, 21 a 25, 26 a 30 y 31 a 35: 14, 18, 22, 24, 26, 28, 30, 32, 34. La raya marca el mínimo de la ley." style="display:flex;flex-direction:column;gap:6px"><div class="pv-vals"><span>14</span><span>18</span><span>22</span><span>24</span><span>26</span><span>28</span><span>30</span><span>32</span><span>34</span></div><div class="pv-bars"><div class="pv-slot" style="--ref:33.3"><span class="pv-bar" style="--v:38.9"></span></div><div class="pv-slot" style="--ref:44.4"><span class="pv-bar" style="--v:50.0"></span></div><div class="pv-slot" style="--ref:55.6"><span class="pv-bar" style="--v:61.1"></span></div><div class="pv-slot" style="--ref:61.1"><span class="pv-bar" style="--v:66.7"></span></div><div class="pv-slot" style="--ref:66.7"><span class="pv-bar" style="--v:72.2"></span></div><div class="pv-slot" style="--ref:72.2"><span class="pv-bar" style="--v:77.8"></span></div><div class="pv-slot" style="--ref:77.8"><span class="pv-bar" style="--v:83.3"></span></div><div class="pv-slot" style="--ref:83.3"><span class="pv-bar" style="--v:88.9"></span></div><div class="pv-slot" style="--ref:88.9"><span class="pv-bar" style="--v:94.4"></span></div></div><div class="pv-xs"><span>1</span><span>2–3</span><span>4–5</span><span>6–10</span><span>11–15</span><span>16–20</span><span>21–25</span><span>26–30</span><span>31–35</span></div></div>
+</sc-if>
+<sc-if value="{{ esError }}" hint-placeholder-val="{{ true }}">
+<p class="hm-small" style="color:var(--risk-alto-fg);font-weight:500">Un rango queda por debajo de la ley.</p>
+<div role="img" aria-label="Días por rango de años 1, 2 a 3, 4 a 5, 6 a 10, 11 a 15, 16 a 20, 21 a 25, 26 a 30 y 31 a 35: 14, 15, 22, 24, 26, 28, 30, 32, 34. La raya marca el mínimo de la ley." style="display:flex;flex-direction:column;gap:6px"><div class="pv-vals"><span>14</span><span>15</span><span>22</span><span>24</span><span>26</span><span>28</span><span>30</span><span>32</span><span>34</span></div><div class="pv-bars"><div class="pv-slot" style="--ref:33.3"><span class="pv-bar" style="--v:38.9"></span></div><div class="pv-slot" style="--ref:44.4"><span class="pv-bar pv-bar--bajo" style="--v:41.7"></span></div><div class="pv-slot" style="--ref:55.6"><span class="pv-bar" style="--v:61.1"></span></div><div class="pv-slot" style="--ref:61.1"><span class="pv-bar" style="--v:66.7"></span></div><div class="pv-slot" style="--ref:66.7"><span class="pv-bar" style="--v:72.2"></span></div><div class="pv-slot" style="--ref:72.2"><span class="pv-bar" style="--v:77.8"></span></div><div class="pv-slot" style="--ref:77.8"><span class="pv-bar" style="--v:83.3"></span></div><div class="pv-slot" style="--ref:83.3"><span class="pv-bar" style="--v:88.9"></span></div><div class="pv-slot" style="--ref:88.9"><span class="pv-bar" style="--v:94.4"></span></div></div><div class="pv-xs"><span>1</span><span>2–3</span><span>4–5</span><span>6–10</span><span>11–15</span><span>16–20</span><span>21–25</span><span>26–30</span><span>31–35</span></div></div>
+</sc-if>
+<div class="hm-facts" style="gap:8px 20px"><span class="hm-fact"><span class="pv-key pv-key--bar"></span>Días por año de antigüedad</span><span class="hm-fact"><span class="pv-key pv-key--ref"></span>Mínimo de la ley</span></div>
+<p class="hm-small hm-muted" style="display:flex;gap:8px;align-items:flex-start"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Los periodos ya otorgados conservan los términos con que se otorgaron.</p>
+</aside>
+</div>
+</div>
+    </div>
+<div class="fm-save">
+<div style="display:flex;align-items:center;gap:8px;min-height:44px;font-weight:500"><sc-if value="{{ esCambios }}" hint-placeholder-val="{{ true }}">
+<span class="hm-pill hm-pill--atencion">2 cambios sin guardar</span>
+</sc-if><sc-if value="{{ esError }}" hint-placeholder-val="{{ true }}">
+<span style="display:inline-flex;align-items:center;gap:8px;color:var(--destructive)"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg> Corrige 1 campo para guardar</span>
+</sc-if></div>
+<div class="hm-head-actions"><a class="hm-btn hm-btn-outline" href="Politicas.dc.html">Cancelar</a><sc-if value="{{ esCambios }}" hint-placeholder-val="{{ true }}">
+<button type="button" class="hm-btn hm-btn-primary">Guardar política</button>
+</sc-if><sc-if value="{{ esError }}" hint-placeholder-val="{{ true }}">
+<button type="button" class="hm-btn hm-btn-primary" disabled>Guardar política</button>
+</sc-if></div>
+</div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["cambios","error"],"default":"cambios","section":"Estado"},"$preview":{"width":1440,"height":1850}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const v = this.props.variant ?? 'cambios';
+    return {
+      theme,
+      themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light',
+      esCambios: v !== 'error',
+      esError: v === 'error',
+    };
+  }
+}
+</script>
+</body>
+</html>

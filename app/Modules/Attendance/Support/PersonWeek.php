@@ -38,13 +38,15 @@ final class PersonWeek
         $latest = EffectiveMarks::of($employeeId)->latest('marked_at')->first(['id'])?->id;
         $yesterday = CarbonImmutable::now($timezone)->subDay()->startOfDay();
         $away = AbsentDays::of(resolve(Absences::class), $week, [$employeeId])[$employeeId] ?? [];
+        // The tolerance is read only when the schedule has start times: a week without them costs no query more.
+        $tolerance = $schedule?->starts_by_weekday === null ? 0 : CompanyPolicy::current()->late_tolerance_minutes;
         $days = [];
         $hours = [];
 
         foreach (range(0, 6) as $offset) {
             $date = $week->start()->addDays($offset);
             $marks = $byDay[$date->toDateString()] ?? [];
-            $hours[] = $day = WorkedDay::hours($date, $marks, $schedule);
+            $hours[] = $day = WorkedDay::hours($date, $marks, $schedule, $tolerance, isset($away[$offset]));
             // The day the person is still working (its last mark is their last one, from yesterday on) is not missing its end yet.
             $stillOpen = $marks !== [] && end($marks)->id === $latest && $date->greaterThanOrEqualTo($yesterday);
 
@@ -54,6 +56,7 @@ final class PersonWeek
                 'workedMinutes' => $day->workedMinutes,
                 'scheduledMinutes' => $day->scheduledMinutes,
                 'restDay' => $day->restDay,
+                'lateMinutes' => $day->lateMinutes,
                 'missingEnd' => WorkedDay::missingEnd($marks) && ! $stillOpen,
                 // Approved vacations or a leave: the day is not one they missed. Its marks, if any, still count.
                 'absence' => $away[$offset] ?? null,

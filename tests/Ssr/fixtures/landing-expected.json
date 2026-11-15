@@ -1,0 +1,50 @@
+{
+    "h1": "Tu gente contesta desde el celular. Tú llegas listo a la STPS.",
+    "tools": [
+        {
+            "key": "nom_035",
+            "name": "NOM-035",
+            "hint": "Factores de riesgo psicosocial"
+        },
+        {
+            "key": "nom_037",
+            "name": "NOM-037",
+            "hint": "Teletrabajo"
+        },
+        {
+            "key": "ley_silla",
+            "name": "Ley Silla",
+            "hint": "Asientos y descansos"
+        },
+        {
+            "key": "complaints",
+            "name": "Buzón de quejas",
+            "hint": "Quejas y denuncias"
+        },
+        {
+            "key": "compensation",
+            "name": "Compensación",
+            "hint": "Revisión salarial y contractual"
+        },
+        {
+            "key": "attendance",
+            "name": "Registro de jornada",
+            "hint": "Reloj checador y registro de jornada"
+        },
+        {
+            "key": "leave",
+            "name": "Vacaciones y permisos",
+            "hint": "Vacaciones, permisos y saldos"
+        },
+        {
+            "key": "org_chart",
+            "name": "Organigrama",
+            "hint": "Quién reporta a quién"
+        },
+        {
+            "key": "engagement",
+            "name": "Clima y pulso",
+            "hint": "Clima laboral y pulso"
+        }
+    ]
+}

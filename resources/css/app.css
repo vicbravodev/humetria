@@ -9,6 +9,9 @@
 .light,
 :root {
     --radius: 0.625rem; /* 10px */
+    /* The phone's bottom bar floats at --tab-bar-inset from the edge (home indicator included); what sits above it clears the bar's height plus a gap. */
+    --tab-bar-inset: max(0.75rem, env(safe-area-inset-bottom));
+    --tab-bar-clearance: calc(var(--tab-bar-inset) + 5.25rem);
     --background: #fbfdfc;
     --foreground: #14211f;
     --card: #ffffff;
@@ -33,6 +36,8 @@
     --chart-4: #a08a70;
     --chart-5: #5c5248;
     --sidebar: #f2f6f5;
+    /* The landing's alternate sections: far enough from the page to read as a change of section. */
+    --band: #eaf2ef;
     --sidebar-foreground: #14211f;
     --sidebar-primary: #0b7a6f;
     --sidebar-primary-foreground: #ffffff;
@@ -97,6 +102,7 @@
     --chart-4: #c2ae94;
     --chart-5: #8a7e70;
     --sidebar: #0b1211;
+    --band: #172422;
     --sidebar-foreground: #f1faf8;
     --sidebar-primary: #3ccfbd;
     --sidebar-primary-foreground: #0f1716;
@@ -179,6 +185,7 @@
     --color-chart-4: var(--chart-4);
     --color-chart-5: var(--chart-5);
     --color-sidebar: var(--sidebar);
+    --color-band: var(--band);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
     --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
@@ -247,6 +254,36 @@
 }
 
 /*
+ * A list that scrolls inside a fixed frame (the sidebar's navigation) without a native scrollbar: an edge fades only
+ * while there is more to scroll that way (`data-more-above`/`data-more-below`, set by hooks/use-scroll-edges.ts). Wheel,
+ * touch and keyboard still scroll it.
+ */
+@utility scroll-fade {
+    --fade-top: 0px;
+    --fade-bottom: 0px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black var(--fade-top),
+        black calc(100% - var(--fade-bottom)),
+        transparent
+    );
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    &[data-more-above] {
+        --fade-top: 32px;
+    }
+
+    &[data-more-below] {
+        --fade-bottom: 40px;
+    }
+}
+
+/*
  * Page changes (lib/page-transition.ts): the sidebar stays put and only the panel's content cross-fades,
  * the new page rising 4 px. Fast exit, slightly longer entry.
  */
@@ -260,6 +297,30 @@
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
+    animation: none;
+}
+
+/*
+ * The frame around the content is made of layers of its own: the sidebar (on a phone, its sheet and veil) and the top bar
+ * (app-sidebar.tsx, app-sidebar-layout.tsx), the phone's menu bar, Humi and the first steps button (mobile-tab-bar.tsx, humi-launcher.tsx, first-steps-launcher.tsx). The content's layer is
+ * painted above the page and is not clipped by its frame, so without them a tall or wide page would cover them while it
+ * cross-fades. They show their new, live state at once, so the bar's chip glides in place instead of blending two places.
+ */
+::view-transition-old(sidebar),
+::view-transition-old(sheet-overlay),
+::view-transition-old(top-bar),
+::view-transition-old(tab-bar),
+::view-transition-old(humi),
+::view-transition-old(first-steps) {
+    display: none;
+}
+
+::view-transition-new(sidebar),
+::view-transition-new(sheet-overlay),
+::view-transition-new(top-bar),
+::view-transition-new(tab-bar),
+::view-transition-new(humi),
+::view-transition-new(first-steps) {
     animation: none;
 }
 
@@ -298,6 +359,26 @@ html:has([data-smooth-scroll]) {
         --tw-enter-translate-y: 0 !important;
         --tw-exit-translate-x: 0 !important;
         --tw-exit-translate-y: 0 !important;
+    }
+}
+
+/*
+ * What unfolds in the sidebar (a family of tools, a tool's pages): it grows to its height and back with the strong ease-out,
+ * instead of popping in. With reduced motion it just appears.
+ */
+@utility unfold {
+    overflow: hidden;
+
+    &[data-state='open'] {
+        animation: 200ms var(--ease-out) collapsible-down;
+    }
+
+    &[data-state='closed'] {
+        animation: 150ms var(--ease-out) collapsible-up;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none !important;
     }
 }
 
@@ -564,6 +645,18 @@ html:has([data-smooth-scroll]) {
     margin: 2cm;
 }
 
+/* A dossier prints on A4 with its page number at the foot of each sheet. */
+@page dossier {
+    size: A4;
+    margin: 1.5cm;
+
+    @bottom-right {
+        content: 'Página ' counter(page) ' de ' counter(pages);
+        font-size: 9pt;
+        color: var(--muted-foreground);
+    }
+}
+
 @media print {
     *,
     ::before,
@@ -643,5 +736,197 @@ html:has([data-smooth-scroll]) {
 
     .org-tree [data-slot='org-node'] {
         break-inside: avoid;
+    }
+}
+
+/*
+ * The map of a zone (zone-picker-map.tsx): Leaflet's own controls in the design system's colors, and OpenStreetMap's
+ * light tiles turned dark in the dark theme (there is no dark style of them).
+ */
+.zone-picker-map.leaflet-container {
+    background-color: var(--color-muted);
+    font: inherit;
+}
+
+.zone-picker-map .leaflet-bar {
+    border: 1px solid var(--color-border);
+    box-shadow: none;
+}
+
+.zone-picker-map .leaflet-bar a {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-color: var(--color-border);
+    background-color: var(--color-card);
+    color: var(--color-foreground);
+}
+
+.zone-picker-map .leaflet-bar a:hover {
+    background-color: var(--color-muted);
+}
+
+.zone-picker-map .leaflet-control-attribution {
+    background-color: color-mix(in oklab, var(--color-card) 85%, transparent);
+    color: var(--color-muted-foreground);
+}
+
+.dark .zone-picker-map .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9)
+        saturate(0.6);
+}
+
+/*
+ * Entrances of the landing, in CSS: the HTML Node renders prints no `style` (the CSP has no style-src-attr), and what has
+ * not animated yet is visible, so a reader without JavaScript gets the whole text. Nothing here moves under reduced motion
+ * (the transform and the blur go, the fade stays). Delays are classes (`enter-delay-{ms}`, lib/enter-delay.ts).
+ */
+@source inline("enter-delay-{0..1000..10}");
+
+@utility enter-delay-* {
+    --delay: calc(--value(integer) * 1ms);
+}
+
+/* On load (the hero): plays when the element is first painted, whether it came from the server or from React. */
+@keyframes enter {
+    from {
+        opacity: 0;
+        transform: var(--from-transform, none);
+        filter: var(--from-filter, none);
+    }
+}
+
+@utility enter-word {
+    --from-transform: translateY(0.35em);
+    --from-filter: blur(6px);
+    animation: enter 700ms var(--ease-out) var(--delay, 0s) both;
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+        --from-filter: none;
+    }
+}
+
+@utility enter-after {
+    --from-transform: translateY(12px);
+    animation: enter 600ms var(--ease-out) var(--delay, 0s) both;
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+    }
+}
+
+/* Each time its element mounts (the details of a tool: the key remounts them on every change of tool). */
+@utility enter-details {
+    --from-transform: translateY(8px);
+    --from-filter: blur(2px);
+    animation: enter 300ms var(--ease-out) both;
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+        --from-filter: none;
+    }
+}
+
+/*
+ * On scroll (below the fold): hooks/use-scroll-reveal.ts sets data-reveal to `pending` (hidden at its start) and then to
+ * `done`, which plays the transition once. A kind sets where it starts from and how long it takes; the delay is `--delay`.
+ */
+[data-reveal='pending'] {
+    opacity: var(--from-opacity, 0);
+    transform: var(--from-transform, none);
+    filter: var(--from-filter, none);
+}
+
+[data-reveal='done'] {
+    transition:
+        opacity var(--reveal-duration, 600ms)
+            var(--reveal-ease, var(--ease-out)) var(--delay, 0s),
+        transform var(--reveal-duration, 600ms)
+            var(--reveal-ease, var(--ease-out)) var(--delay, 0s),
+        filter var(--reveal-duration, 600ms) var(--reveal-ease, var(--ease-out))
+            var(--delay, 0s);
+}
+
+@utility reveal-rise {
+    --from-transform: translateY(16px);
+    --from-filter: blur(4px);
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+        --from-filter: none;
+    }
+}
+
+@utility reveal-rise-20 {
+    --from-transform: translateY(20px);
+    --reveal-duration: 700ms;
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+    }
+}
+
+@utility reveal-slide-8 {
+    --from-transform: translateX(-8px);
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+    }
+}
+
+@utility reveal-slide-10 {
+    --from-transform: translateX(-10px);
+    --reveal-duration: 400ms;
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+    }
+}
+
+/* A spring of 0.5 s with a 0.3 bounce, as the closest cubic-bezier (it overshoots a little). */
+@utility reveal-pop {
+    --from-transform: scale(0.6);
+    --reveal-duration: 500ms;
+    --reveal-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+    }
+}
+
+@utility reveal-scale {
+    --from-transform: scale(0.96);
+    --reveal-duration: 900ms;
+
+    @media (prefers-reduced-motion: reduce) {
+        --from-transform: none;
+    }
+}
+
+/*
+ * A bar that fills: the element is the track and the first child the fill, which grows from the left. The track itself stays
+ * (and is what the observer watches: the fill has no width while it waits, and something with no size is never seen).
+ */
+@utility reveal-bar {
+    --from-opacity: 1;
+    --bar-from: scaleX(0);
+
+    & > * {
+        transform-box: fill-box;
+        transform-origin: left;
+    }
+
+    &[data-reveal='pending'] > * {
+        transform: var(--bar-from);
+    }
+
+    &[data-reveal='done'] > * {
+        transition: transform var(--reveal-duration, 900ms) var(--ease-out)
+            var(--delay, 0s);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        --bar-from: none;
     }
 }

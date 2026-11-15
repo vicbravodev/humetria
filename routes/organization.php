@@ -17,6 +17,7 @@ Route::get('admin/{tenant:slug}/employees', [EmployeeController::class, 'index']
 Route::post('admin/{tenant:slug}/employees', [EmployeeController::class, 'store'])->where('tenant', $notReserved)->name('tenant.employees.store');
 Route::put('admin/{tenant:slug}/employees/{employee}', [EmployeeController::class, 'update'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.employees.update');
 Route::post('admin/{tenant:slug}/employees/{employee}/deactivate', [EmployeeController::class, 'deactivate'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.employees.deactivate');
+Route::post('admin/{tenant:slug}/employees/{employee}/portal-link', [EmployeeController::class, 'portalLink'])->where('tenant', $notReserved)->whereUuid('employee')->middleware('throttle:20,1')->name('tenant.employees.portal-link');
 Route::post('admin/{tenant:slug}/employees/{employee}/reactivate', [EmployeeController::class, 'reactivate'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.employees.reactivate');
 Route::get('admin/{tenant:slug}/employees/import', [EmployeeImportController::class, 'create'])->where('tenant', $notReserved)->name('tenant.employees.import.create');
 Route::get('admin/{tenant:slug}/employees/import/template', [EmployeeImportController::class, 'template'])->where('tenant', $notReserved)->name('tenant.employees.import.template');
@@ -26,6 +27,8 @@ Route::get('admin/{tenant:slug}/job-grades/{field}/options', JobGradeOptionsCont
 Route::get('admin/{tenant:slug}/org-chart/people/options', [OrgChartPeopleController::class, 'options'])->where('tenant', $notReserved)->name('tenant.org-chart.people.options');
 Route::get('admin/{tenant:slug}/org-chart', [OrgChartController::class, 'index'])->where('tenant', $notReserved)->name('tenant.org-chart.index');
 Route::get('admin/{tenant:slug}/org-chart/people/search', [OrgChartPeopleController::class, 'search'])->where('tenant', $notReserved)->name('tenant.org-chart.people.search');
+Route::get('admin/{tenant:slug}/org-chart/people/unassigned', [OrgChartPeopleController::class, 'unassigned'])->where('tenant', $notReserved)->name('tenant.org-chart.people.unassigned');
 Route::get('admin/{tenant:slug}/org-chart/people/{employee}/reports', [OrgChartController::class, 'reports'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.org-chart.reports');
 Route::get('admin/{tenant:slug}/org-chart/quality', [OrgChartQualityController::class, 'index'])->where('tenant', $notReserved)->name('tenant.org-chart.quality');
+Route::get('admin/{tenant:slug}/org-chart/quality/export', [OrgChartQualityController::class, 'export'])->where('tenant', $notReserved)->name('tenant.org-chart.quality.export');
 Route::put('admin/{tenant:slug}/org-chart/people/{employee}/manager', [OrgChartQualityController::class, 'update'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.org-chart.manager.update');

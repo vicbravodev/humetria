@@ -54,7 +54,7 @@ export function NavSubmenu({
                         />
                     </SidebarMenuButton>
                 </CollapsibleTrigger>
-                <CollapsibleContent>
+                <CollapsibleContent className="unfold">
                     <SidebarMenuSub>
                         {pages.map((child) => (
                             <SidebarMenuSubItem key={child.title}>

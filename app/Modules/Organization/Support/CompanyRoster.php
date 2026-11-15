@@ -101,7 +101,7 @@ final class CompanyRoster implements Roster
             ->when($query->employeeIds !== null, fn (Builder $employees) => $employees->among('employees.id', $query->employeeIds ?? []))
             ->when($query->activeInWorkCenter !== null, fn (Builder $employees) => $employees->where('work_center_id', $query->activeInWorkCenter)->whereNull('deactivated_at'))
             ->when($query->areaId !== null, fn (Builder $employees) => $employees->where('area_id', $query->areaId))
-            ->matching(['name', 'email', 'employee_number'], $query->search)
+            ->matching(['name', 'email', 'employee_number'], $query->search, ['mobile'])
             ->orderBy('name')
             ->orderBy('id');
     }

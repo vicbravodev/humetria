@@ -1,26 +1,31 @@
 import { Head, usePage } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
 import CountTabs from '@/components/humetria/count-tabs';
+import PlanLimitNotice from '@/components/humetria/plan-limit-notice';
 import PageHeader from '@/components/humetria/page-header';
 import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dialog';
 import WorkCentersEmpty from '@/components/tenancy/work-centers-empty';
 import WorkCentersGrid from '@/components/tenancy/work-centers-grid';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { atLimit } from '@/lib/limits';
 import { index } from '@/routes/tenant/work-centers';
 import type {
     MexicanStateOption,
     Paginated,
+    PlanLimit,
     WorkCenterRow,
     WorkCentersView,
 } from '@/types';
 
 export default function WorkCenters({
     view,
+    plan_limit: planLimit,
     counts,
     workCenters,
     states,
 }: {
     view: WorkCentersView;
+    plan_limit: PlanLimit | null;
     counts: Record<WorkCentersView, number>;
     workCenters: Paginated<WorkCenterRow>;
     states: MexicanStateOption[];
@@ -38,8 +43,21 @@ export default function WorkCenters({
                     title="Centros de trabajo"
                     description="Cada centro se evalúa por separado. El número de personas decide qué guías aplican."
                 >
-                    {canManage && <CreateWorkCenterDialog states={states} />}
+                    {canManage && (
+                        <CreateWorkCenterDialog
+                            states={states}
+                            full={atLimit(planLimit)}
+                        />
+                    )}
                 </PageHeader>
+                <PlanLimitNotice
+                    limit={planLimit}
+                    what="centros"
+                    noun={{
+                        singular: 'centro de trabajo',
+                        plural: 'centros de trabajo',
+                    }}
+                />
                 {/* Only once there is something archived, or while looking at the archive. */}
                 {(counts.archived > 0 || view === 'archived') && (
                     <div>
@@ -71,6 +89,7 @@ export default function WorkCenters({
                         view={view}
                         workCenters={workCenters.data}
                         states={canManage ? states : null}
+                        full={atLimit(planLimit)}
                     />
                 )}
                 <Pagination

@@ -165,12 +165,30 @@ it('never includes answers, notes, photos, notice descriptions, refusal reasons 
     $props = $this->actingAs($this->owner)->get(dossierUrl())->assertOk()->viewData('page')['props'];
     $json = json_encode($props, JSON_THROW_ON_ERROR);
 
-    foreach (['NECESIDAD-ESPECIAL', 'RIESGO-PRIVADO', 'FOTO-PRIVADA', 'MOTIVO-PRIVADO', '203.0.113', 'DESCRIPCION-AVISO', 'NOTA-REVISION', 'NOTA-PRIVADA', 'PLAN-PRIVADO', 'NOTA-ACUSE', 'TEXTO-PREGUNTA'] as $secret) {
+    foreach (['NECESIDAD-ESPECIAL', 'RIESGO-PRIVADO', 'FOTO-PRIVADA', 'MOTIVO-PRIVADO', '203.0.113', 'DESCRIPCION-AVISO', 'NOTA-REVISION', 'PLAN-PRIVADO', 'NOTA-ACUSE', 'TEXTO-PREGUNTA'] as $secret) {
         expect($json)->not->toContain($secret);
     }
 
     expect(dossierKeys($props['dossier'] ?? $props))->not->toContain('answers', 'answer', 'risk_note', 'riskNote', 'special_needs', 'specialNeeds', 'photos_list', 'description', 'refusalReason', 'notes', 'actionPlan', 'ip')
         ->and($props['evidence'])->toMatchArray(['checklists' => 1, 'photos' => 1]);
+});
+
+// R2-compliance-13: the dossier of a workplace says how many answers were unfavorable and what the Comisión wrote when it decided,
+// and still not which answers, their notes, the photos nor the action plan.
+it('prints for each workplace how many answers were unfavorable and the note of the Comisión', function (): void {
+    $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    $ana = dossierPerson();
+    $place = Workplace::query()->where('teleworker_id', $ana->id)->firstOrFail();
+    $application = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id, 'checklist_id' => $checklist->id]);
+    foreach (['yes' => 'no', 'no' => 'no', 'yes ' => 'yes'] as $favorable => $answer) {
+        $question = addQuestion($checklist, ChecklistQuestion::query()->count() + 1, trim($favorable));
+        ChecklistAnswer::query()->create(['tenant_id' => $this->tenant->id, 'application_id' => $application->id, 'question_id' => $question->id, 'answer' => $answer, 'risk_note' => trim($favorable) === 'yes' && $answer === 'no' ? 'RIESGO-PRIVADO' : null]);
+    }
+    App\Modules\Telework\Models\WorkplaceReview::query()->where('workplace_id', $place->id)->update(['application_id' => $application->id, 'notes' => 'Falta iluminación; se acordó revisar en marzo.']);
+
+    $this->actingAs($this->hr)->get(dossierUrl())->assertInertia(fn (Assert $page) => $page
+        ->where('workplaces.0.review.unfavorable', 1)
+        ->where('workplaces.0.review.note', 'Falta iluminación; se acordó revisar en marzo.'));
 });
 
 it('records every view in the audit trail and the log with ids only', function (): void {
@@ -308,8 +326,8 @@ it('sends the evidence of each row in full', function (): void {
             ['name' => 'Beto Soto', 'jobTitle' => 'Analista', 'percentage' => 50, 'startedOn' => '2025-01-10', 'maritalStatus' => 'single', 'contactPhone' => '4421234567', 'homeAddress' => $address],
         ])
         ->where('workplaces', [
-            ['person' => 'Ana Ruiz', 'status' => 'valid', 'statusLabel' => 'Validado', 'review' => ['decidedOn' => $review['decidedOn'], 'decision' => 'Validado', 'method' => $review['method'], 'validUntil' => '2027-02-28']],
-            ['person' => 'Beto Soto', 'status' => 'not_valid', 'statusLabel' => 'No apto', 'review' => ['decidedOn' => $review['decidedOn'], 'decision' => 'No validado', 'method' => $review['method'], 'validUntil' => null]],
+            ['person' => 'Ana Ruiz', 'status' => 'valid', 'statusLabel' => 'Validado', 'review' => ['decidedOn' => $review['decidedOn'], 'decision' => 'Validado', 'method' => $review['method'], 'validUntil' => '2027-02-28', 'unfavorable' => null, 'note' => 'NOTA-PRIVADA']],
+            ['person' => 'Beto Soto', 'status' => 'not_valid', 'statusLabel' => 'No apto', 'review' => ['decidedOn' => $review['decidedOn'], 'decision' => 'No validado', 'method' => $review['method'], 'validUntil' => null, 'unfavorable' => null, 'note' => 'No es seguro.']],
         ])
         ->where('checklist', ['version' => 2, 'publishedOn' => '2026-03-01', 'gaps' => [
             ['section' => 1, 'requirements' => $labels([Requirement::Lighting])],

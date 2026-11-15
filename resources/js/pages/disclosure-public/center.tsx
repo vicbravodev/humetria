@@ -4,6 +4,7 @@ import PublicBlocks from '@/components/disclosure/public-blocks';
 import PublicPolicyCard from '@/components/disclosure/public-policy-card';
 import PublicResultsCard from '@/components/disclosure/public-results-card';
 import WorkersShell from '@/components/disclosure/workers-shell';
+import { pendingNotice } from '@/lib/disclosure-public';
 import { show } from '@/routes/workers';
 import type { PublicCenterProps } from '@/types';
 
@@ -23,8 +24,10 @@ export default function PublicCenter({
     policy,
 }: PublicCenterProps) {
     const complaint = blocks['d'] ?? null;
-    const later =
-        policy === null || results === null || results.published === null;
+    const later = pendingNotice(
+        policy !== null,
+        results !== null && results.published !== null,
+    );
 
     return (
         <WorkersShell
@@ -71,10 +74,9 @@ export default function PublicCenter({
                     measures={measures}
                     channelOpen={channel !== null}
                 />
-                {later && (
+                {later !== null && (
                     <p className="pt-1 text-sm text-muted-foreground">
-                        La empresa publicará aquí más información: los
-                        resultados de la evaluación y las medidas que toma.
+                        {later}
                     </p>
                 )}
             </div>

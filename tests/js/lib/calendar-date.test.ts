@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     describeDate,
+    shortDate,
     fromCalendarDate,
     calendarLimits,
     pickableDays,
@@ -32,6 +33,12 @@ describe('calendar dates', () => {
     it('describes a day in Mexican Spanish', () => {
         expect(describeDate('2026-11-30')).toBe('30 de noviembre de 2026');
         expect(describeDate('nada')).toBeUndefined();
+    });
+
+    it('writes a day short for a table or a line, and leaves anything else as it came', () => {
+        expect(shortDate('2026-11-25')).toBe('25 nov 2026');
+        expect(shortDate('2026-02-30')).toBe('2026-02-30');
+        expect(shortDate('pronto')).toBe('pronto');
     });
 });
 

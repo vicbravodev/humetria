@@ -63,3 +63,8 @@ export function centerFacts(
         count(center.screens, 'pantalla activa', 'pantallas activas'),
     ].join(' · ');
 }
+
+/** What RH reads before sending the links of a center that cannot mark yet (the people can still link their phones). */
+export function notReadyNote(centerName: string): string {
+    return `Hoy nadie puede marcar en ${centerName}: le falta una zona o una pantalla.`;
+}

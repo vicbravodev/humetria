@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Actions\CloseDays;
+use App\Modules\Billing\Actions\ExpireUsageReservations;
+use App\Modules\Billing\Actions\MeasureStorage;
+use App\Modules\Billing\Actions\ReleaseMailHolds;
+use App\Modules\Billing\Actions\RenewSubscriptions;
+use App\Modules\Billing\Actions\SendBillingNotices;
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\RemindNextEvaluations;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
@@ -140,6 +145,38 @@ Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->stri
 // Shortly after local midnight; it closes the day before yesterday, a whole day after it ended. Once is enough: closing a
 // day again gives the same day.
 Schedule::command('attendance:close-days')->dailyAt('00:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// A restore, a manual fix or a bug can leave a counter of people or centers off: recount every night, after the day is closed.
+Schedule::command('humetria:reconcile-limits')->dailyAt('03:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('billing:expire-usage-reservations', function (ExpireUsageReservations $expire): void {
+    $this->info('Reservas vencidas: '.$expire->handle());
+})->purpose('Give back the holds of calls nobody settled or released in time, without counting them as used');
+
+// A call that died mid-answer leaves its hold on the quota: give it back every ten minutes.
+Schedule::command('billing:expire-usage-reservations')->everyTenMinutes()->onOneServer()->withoutOverlapping();
+Artisan::command('billing:measure-storage', function (MeasureStorage $measure): void {
+    $this->info('Empresas medidas: '.$measure->handle());
+})->purpose('Measure the files each company keeps (everything under its prefix on the module disks) and set the month\'s figure');
+
+// After the day is closed and the limits recounted: sum the real size of the files of every company.
+Schedule::command('billing:measure-storage')->dailyAt('03:45')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('billing:renew', function (RenewSubscriptions $renew): void {
+    $summary = $renew->handle();
+    $this->info("Borradores: {$summary->drafted}; ya hechos: {$summary->alreadyDrafted}; planes terminados: {$summary->ended}; omitidas: ".count($summary->skipped));
+})->purpose('At the cut, end the cancellations scheduled for it and draft the month of every company that pays, for a person to review and issue');
+
+// The cut is the first of the month, Mexico City. Running it again changes nothing, so a retry or a late start is safe.
+Schedule::command('billing:renew')->monthlyOn(1, '02:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('billing:notify', function (SendBillingNotices $notices): void {
+    $this->info('Avisos: '.$notices->handle());
+})->purpose('Email each account the next amount and the loss of the channel discount before the cut, and a balance past due; once each');
+
+Schedule::command('billing:notify')->dailyAt('09:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('billing:release-mail-holds', function (ReleaseMailHolds $release): void {
+    $this->info('Correos liberados: '.$release->handle());
+})->purpose('Give back the campaign mail a bulk send held and nobody used');
+
+// After the day's mail has gone out: what a send held and no mail took (people without an address) goes back to the quota.
+Schedule::command('billing:release-mail-holds')->dailyAt('03:50')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // After local midnight, so the anniversary of the day is granted on its day; a run again grants nothing twice and a day
 // it did not run is made up the next one.
 Schedule::command('leave:grant-entitlements')->dailyAt('00:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();

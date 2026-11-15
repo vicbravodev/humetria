@@ -32,7 +32,7 @@ it('has no days left once the trial ends', function (): void {
 it('has no trial days left unless it is in trial', function (): void {
     expect(Tenant::factory()->make()->trialDaysLeft())->toBeNull()
         ->and(Tenant::factory()->inTrial(now()->subDay())->activeUntil(now()->addMonth())->make()->trialDaysLeft())->toBeNull()
-        ->and(Tenant::factory()->inTrial(now()->subDay())->deactivated()->make()->trialDaysLeft())->toBeNull();
+        ->and(Tenant::factory()->inTrial(now()->subDay())->suspended()->make()->trialDaysLeft())->toBeNull();
 });
 
 it('shares the days left with the company panel', function (): void {

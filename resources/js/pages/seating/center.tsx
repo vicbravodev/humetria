@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
 import { dossier } from '@/routes/tenant/seating';
+import { namesSectorApart } from '@/lib/seating/centers';
 import { seatingCrumbs } from '@/lib/seating/crumbs';
 import type {
     CenterRequirement,
@@ -59,12 +60,19 @@ export default function SeatingCenter({
                         ...(profile === null
                             ? []
                             : [
-                                  {
-                                      icon: Factory,
-                                      text:
-                                          profile.sectorLabel ??
-                                          'Nadie trabaja de pie',
-                                  },
+                                  ...(namesSectorApart(
+                                      workCenter.activity,
+                                      profile.sectorLabel,
+                                  )
+                                      ? [
+                                            {
+                                                icon: Factory,
+                                                text:
+                                                    profile.sectorLabel ??
+                                                    'Nadie trabaja de pie',
+                                            },
+                                        ]
+                                      : []),
                                   {
                                       icon: CalendarCheck,
                                       text: `Declarado el ${describeDate(profile.declaredOn) ?? profile.declaredOn}`,

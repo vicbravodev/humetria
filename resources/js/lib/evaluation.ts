@@ -278,3 +278,17 @@ export function historyItems(campaign: CampaignDetail): HistoryItem[] {
 export function pendingTotal(areas: AreaParticipation[] | null): number {
     return (areas ?? []).reduce((sum, area) => sum + area.pending, 0);
 }
+
+/** What the reminder dialog says of the last reminder: the day, and the hours left when another is held back (C-57 follow-up). */
+export function reminderNote(
+    hours: number | null,
+    lastOn: string | null,
+): string {
+    if (lastOn === null) {
+        return 'Aún no has enviado ningún recordatorio.';
+    }
+
+    return hours === null
+        ? `Último recordatorio: ${lastOn}.`
+        : `Último recordatorio: ${lastOn}. Podrás enviar otro en ${countOf(hours, 'hora', 'horas')}.`;
+}

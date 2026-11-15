@@ -18,6 +18,9 @@ use App\Modules\Organization\Http\Requests\DeactivateEmployeeRequest;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Telework\Contracts\PortalLinks;
+use App\Modules\Tenancy\Contracts\CompanyLimits;
+use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +35,7 @@ use Inertia\Response;
  */
 final class EmployeeController extends Controller
 {
-    public function __construct(private readonly WorkCenters $workCenters) {}
+    public function __construct(private readonly WorkCenters $workCenters, private readonly CompanyLimits $limits, private readonly CurrentTenant $currentTenant) {}
 
     public function index(Request $request, ListEmployees $listEmployees, CountEmployees $countEmployees): Response
     {
@@ -45,6 +48,8 @@ final class EmployeeController extends Controller
         return Inertia::render('organization/employees', [
             // Of the whole company: the filters narrow the list, never the tabs or the sentence above it.
             'counts' => $countEmployees->handle(),
+            // What the plan covers and how much of it the company uses; null for a company without a plan.
+            'plan_limit' => $this->limits->limit($this->currentTenant->id(), CompanyLimits::SEATS)?->toArray(),
             'employees' => $listEmployees->handle($filters)->through(fn (Employee $employee): array => [
                 'id' => $employee->id,
                 // A person a union loaded may have no name: the company's employee number identifies them.
@@ -63,7 +68,8 @@ final class EmployeeController extends Controller
                 'hired_on' => $employee->hired_on?->toDateString(),
                 'staff_group' => $employee->staff_group->value ?? '',
                 'state' => $employee->state ?? '',
-                'deactivated_on' => $employee->deactivated_at?->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'),
+                'deactivated_on' => ($employee->terminated_on ?? $employee->deactivated_at?->setTimezone(config()->string('app.display_timezone')))?->isoFormat('D MMM YYYY'),
+                'deactivation_reason' => $employee->deactivation_reason?->label(),
                 'seniority_on' => $employee->seniority_on?->toDateString(),
                 'manager' => $employee->manager === null ? null : ['value' => $employee->manager->id, 'label' => $employee->manager->label()],
                 'direct_reports' => $employee->getAttributeValue('direct_reports'),
@@ -101,7 +107,7 @@ final class EmployeeController extends Controller
     public function deactivate(DeactivateEmployeeRequest $request, mixed $tenant, string $employee, DeactivateEmployee $deactivateEmployee): RedirectResponse
     {
         Gate::authorize('manage-organization');
-        $deactivateEmployee->handle($this->find($employee, active: true), $request->reassignTo());
+        $deactivateEmployee->handle($this->find($employee, active: true), $request->reassignTo(), $request->terminatedOn(), $request->reason());
 
         return $this->done('Empleado dado de baja.');
     }
@@ -112,6 +118,21 @@ final class EmployeeController extends Controller
         $reactivateEmployee->handle($this->find($employee, active: false));
 
         return $this->done('Empleado reactivado.');
+    }
+
+    public function portalLink(mixed $tenant, string $employee, PortalLinks $links): RedirectResponse
+    {
+        Gate::authorize('manage-organization');
+        $person = $this->find($employee, active: true);
+
+        if (! $links->sendTo($person->id)) {
+            $message = 'No tiene correo registrado: agrégalo en su ficha para enviarle el enlace.';
+            Inertia::flash('toast', ['type' => 'error', 'message' => $message]);
+
+            return back()->withErrors(['email' => $message]);
+        }
+
+        return $this->done('Le enviamos su enlace por correo.');
     }
 
     // The $tenant parameters receive the company Tenancy resolved from the URL; they are only there to keep the route

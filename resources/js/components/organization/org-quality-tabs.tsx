@@ -1,34 +1,35 @@
 import CountTabs from '@/components/humetria/count-tabs';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { qualityTabs } from '@/lib/org-chart/quality';
+import type { QualityFilters } from '@/lib/org-chart/quality';
 import { quality } from '@/routes/tenant/org-chart';
 import type { ReportingIssue } from '@/types';
 
-/** The gaps of the reporting line with how many people each holds, and what the open one means. */
+/**
+ * The views of the list with how many people each holds, what asks for action first; a view with nobody waits under
+ * «Otros filtros». The search and the work center go along when changing view.
+ */
 export default function OrgQualityTabs({
     issues,
     current,
+    filters,
 }: {
     issues: ReportingIssue[];
     current: ReportingIssue['value'];
+    filters: QualityFilters;
 }) {
     const tenantSlug = useTenantSlug();
 
     return (
-        <div className="flex flex-col gap-3">
-            <CountTabs
-                label="Problemas de la línea de reporte"
-                tabs={issues.map((issue) => ({
-                    label: issue.label,
-                    count: issue.count,
-                    active: issue.value === current,
-                    href: quality.url(tenantSlug, {
-                        query: { issue: issue.value },
-                    }),
-                }))}
-            />
-            <p className="text-meta text-muted-foreground">
-                {issues.find((issue) => issue.value === current)?.hint}
-            </p>
-        </div>
+        <CountTabs
+            label="Vistas de la lista"
+            byAction
+            tabs={qualityTabs(issues, current, filters).map(
+                ({ query, ...tab }) => ({
+                    ...tab,
+                    href: quality.url(tenantSlug, { query }),
+                }),
+            )}
+        />
     );
 }

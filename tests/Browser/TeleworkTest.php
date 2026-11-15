@@ -467,6 +467,23 @@ it('lets the Comisión decide a checklist and leaves the inbox empty', function 
     expect(WorkplaceReview::query()->sole()->decision->value)->toBe('not_valid');
 });
 
+// C-06: validating a list with unfavorable answers asks for the observation of the Comisión, and takes it from the same form.
+it('asks the Comisión for an observation to validate a list with unfavorable answers', function (): void {
+    [, $application, $tenant] = reviewAddress();
+
+    visit("/admin/acme/telework/applications/{$application->id}/review")
+        ->press('Registrar decisión')
+        ->assertSee('Escribe una observación: la lista tiene 1 respuesta desfavorable.')
+        ->fill('#decision-notes', 'Lo vimos por video: la luz se corrigió.')
+        ->press('Registrar decisión')
+        ->assertSee('Decisión registrada')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    workIn($tenant);
+    expect(WorkplaceReview::query()->sole()->decision->value)->toBe('valid');
+});
+
 it('tells the Comisión a remote check cannot validate a place whose person has not answered a new list', function (): void {
     [, $application, $tenant] = reviewAddress();
     workIn($tenant);
@@ -561,6 +578,8 @@ it('moves an aspirant into the roster and then ends their telework', function ()
         ->keys('[role="combobox"][aria-controls="roster-marital-options"]', 'Enter')
         ->fill('#roster-activities', 'Atención de clientes.')
         ->fill('#roster-phone', '4421234567')
+        // The home starts from the validated workplace; here it is another one.
+        ->click('#roster-home-same')
         ->fill('#workplace-new-street', 'Calle Reforma')
         ->fill('#workplace-new-exterior_number', '12')
         ->fill('#workplace-new-neighborhood', 'Centro')
@@ -583,6 +602,24 @@ it('moves an aspirant into the roster and then ends their telework', function ()
         ->assertSee('Prueba.')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('takes the home from the validated workplace when the person says it is the same', function (): void {
+    [$url, , $teleworker] = validatedAspirant();
+
+    visit("{$url}/telework/teleworkers/{$teleworker->id}")
+        ->press('Pasar al padrón')
+        ->assertSee('Es el mismo que su lugar de trabajo')
+        ->assertMissing('#workplace-new-street')
+        ->click('#roster-marital')
+        ->type('[role="combobox"][aria-controls="roster-marital-options"]', 'solt')
+        ->keys('[role="combobox"][aria-controls="roster-marital-options"]', 'Enter')
+        ->fill('#roster-activities', 'Atención de clientes.')
+        ->fill('#roster-phone', '4421234567')
+        ->fill('#roster-no_equipment_reason', 'Usa su propio equipo.')
+        ->press('Guardar y pasar al padrón')
+        ->assertSee('En el padrón de teletrabajo')
+        ->assertNoJavaScriptErrors();
 });
 
 it('shows an ended period as history, without the actions that no longer work', function (): void {
@@ -1016,6 +1053,30 @@ it('shows the printable dossier of a center with the evidence of each row or Fal
         ->assertScript('() => document.querySelector(\'section[aria-label="Numeral 5.1.2"]\').textContent.includes("Ana Ruiz")', true)
         ->assertScript('() => [...document.querySelectorAll("section")].filter((section) => section.textContent.includes("Cumple")).length > 2', true);
 })->with($looks);
+
+it('puts the letterhead on the NOM-037 dossier when it is printed', function (): void {
+    [$url, $center] = teleworkerCenter();
+
+    assertPrintLetterhead(visit("{$url}/telework/centers/{$center->id}/dossier")->assertSee('Expediente de NOM-037'), 'Planta Querétaro');
+});
+
+it('fits the tables of the dossier in the page, on screen and on paper, with short dates', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    SafetyCommittee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'job_title' => 'Analista']);
+    $person = TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id]);
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $person->id])->id]);
+
+    $cutOff = '() => [...document.querySelectorAll(\'[data-slot="table-container"]\')].filter((box) => box.scrollWidth > box.clientWidth + 1).length';
+
+    $page = visit("{$url}/telework/centers/{$center->id}/dossier")->on()->desktop()
+        ->assertSee('Expediente de NOM-037 para la inspección');
+    $page->resize(1440, 900)
+        ->assertScript($cutOff, 0)
+        ->assertScript('() => /\\d{1,2} de [a-z]+ de \\d{4}/.test([...document.querySelectorAll("table td")].map((cell) => cell.textContent).join(" "))', false);
+
+    emulatePrint($page)->resize(794, 1123)->assertScript($cutOff, 0);
+});
 
 it('says that a row does not apply instead of Falta, and prints the medical exams note once', function (): void {
     [$url, $center, $tenant] = teleworkerCenter();

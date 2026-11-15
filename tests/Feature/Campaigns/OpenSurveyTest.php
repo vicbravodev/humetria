@@ -71,6 +71,20 @@ it('opens with the company, the deadline and each guide as the person answers it
             ->has('instruments.1.sections.0.items', 9));
 });
 
+it('tells the page the kind of its campaign, and none for a link that does not open', function (): void {
+    surveyParticipant();
+
+    $this->get(route('survey.show', 'the-token'))->assertInertia(fn (Assert $page) => $page->where('kind', 'nom035_evaluation'));
+    $this->get(route('survey.show', 'not-a-token'))->assertInertia(fn (Assert $page) => $page->where('kind', null));
+});
+
+it('tells the thanks page which survey it finished', function (): void {
+    $participant = surveyParticipant(instruments: []);
+    ParticipantInstrument::factory()->completed()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
+
+    $this->get(route('survey.show', 'the-token'))->assertInertia(fn (Assert $page) => $page->where('unavailable', 'done')->where('kind', 'nom035_evaluation'));
+});
+
 it('shows an answered guide as done', function (): void {
     $participant = surveyParticipant(instruments: ['nom035.guide-ii']);
     ParticipantInstrument::factory()->completed()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-i']);
@@ -126,7 +140,7 @@ it('says there is nothing left once every guide is answered', function (): void 
 
 it('says the evaluation is not available while the company is suspended', function (): void {
     $participant = surveyParticipant();
-    Tenant::query()->whereKey($participant->tenant_id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($participant->tenant_id)->update(suspension());
 
     $this->get(route('survey.show', 'the-token'))->assertInertia(fn (Assert $page) => $page->where('unavailable', 'suspended'));
 });

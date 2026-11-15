@@ -30,6 +30,10 @@ return [
 
     'monthly_token_budget' => (int) env('HUMI_MONTHLY_TOKEN_BUDGET', 2_000_000),
 
+    /* Tokens held on the company's quota before a message goes to the provider: what the agent may use in one (MaxTokens × MaxSteps = 1,500 × 6).
+       The real count settles it afterwards; this only has to be enough that two messages cannot both spend the last of the quota. */
+    'reservation_tokens' => (int) env('HUMI_RESERVATION_TOKENS', 9_000),
+
     'rate_per_minute' => (int) env('HUMI_RATE_PER_MINUTE', 10),
 
     'rate_per_day' => (int) env('HUMI_RATE_PER_DAY', 200),

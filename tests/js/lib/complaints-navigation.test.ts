@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import {
-    activeChild,
-    complianceNavItems,
-    mainNavItems,
-} from '@/lib/app-navigation';
+import { activeChild, mainNavItems } from '@/lib/app-navigation';
+import { listeningNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
 import type { CurrentTenant } from '@/types';
 
@@ -46,7 +43,7 @@ const tenant = (
 
 describe('the complaints in the navigation', () => {
     it('offers whoever handles and manages them the cases first, then the channel and who handles it', () => {
-        const quejas = complianceNavItems(tenant('owner', true, true)).find(
+        const quejas = listeningNavItems(tenant('owner', true, true)).find(
             (item) => item.title === 'Quejas',
         );
 
@@ -61,7 +58,7 @@ describe('the complaints in the navigation', () => {
     });
 
     it('starts a manager who handles none at the channel', () => {
-        const quejas = complianceNavItems(tenant('owner', false, true)).find(
+        const quejas = listeningNavItems(tenant('owner', false, true)).find(
             (item) => item.title === 'Quejas',
         );
 
@@ -75,9 +72,9 @@ describe('the complaints in the navigation', () => {
     });
 
     it('offers the cases alone to a handler who does not manage the channel', () => {
-        const quejas = complianceNavItems(
-            tenant('committee', true, false),
-        ).find((item) => item.title === 'Quejas');
+        const quejas = listeningNavItems(tenant('committee', true, false)).find(
+            (item) => item.title === 'Quejas',
+        );
 
         expect(quejas?.children?.map((child) => child.title)).toEqual([
             'Casos',
@@ -86,7 +83,7 @@ describe('the complaints in the navigation', () => {
 
     it('offers nothing to a role that neither handles nor manages them', () => {
         expect(
-            complianceNavItems(tenant('viewer', false, false)).some(
+            listeningNavItems(tenant('viewer', false, false)).some(
                 (item) => item.title === 'Quejas',
             ),
         ).toBe(false);
@@ -106,19 +103,19 @@ describe('the complaints in the navigation', () => {
             ['Casos', '/admin/acme/complaints'],
             ['Cómo se atiende', '/admin/acme/complaints/procedure'],
         ]);
-        expect(complianceNavItems(handler)).toEqual([]);
+        expect(listeningNavItems(handler)).toEqual([]);
     });
 
     it('leaves an outside handler who cannot handle with nothing at all', () => {
         const handler = tenant('complaints', false, false);
 
         expect(mainNavItems(handler, false)).toEqual([]);
-        expect(complianceNavItems(handler)).toEqual([]);
+        expect(listeningNavItems(handler)).toEqual([]);
     });
 
     it('lights Canal on the poster and the evidence of the channel, and Casos on a case', () => {
         const children =
-            complianceNavItems(tenant('owner', true, true)).find(
+            listeningNavItems(tenant('owner', true, true)).find(
                 (item) => item.title === 'Quejas',
             )?.children ?? [];
         const lit = (path: string) => activeChild(children, path)?.title;

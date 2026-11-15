@@ -172,7 +172,7 @@ it('refuses answers after the last day, after closing, from a wrong link or whil
     'past the last day' => [fn () => Carbon::setTestNow('2026-11-15 06:00:00'), 'the-token'],
     'closed' => [fn (Participant $participant) => Campaign::query()->withoutGlobalScopes()->whereKey($participant->campaign_id)->update(['status' => 'closed', 'closed_at' => now()]), 'the-token'],
     'a wrong link' => [fn () => null, 'another-token'],
-    'suspended' => [fn (Participant $participant) => Tenant::query()->whereKey($participant->tenant_id)->update(['deactivated_at' => now()]), 'the-token'],
+    'suspended' => [fn (Participant $participant) => Tenant::query()->whereKey($participant->tenant_id)->update(suspension()), 'the-token'],
 ]);
 
 it('never writes an answer, nor the id of an anonymous response, to the log', function (): void {

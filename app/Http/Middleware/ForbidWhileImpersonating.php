@@ -35,6 +35,12 @@ final class ForbidWhileImpersonating
             'two-factor.recovery-codes', 'two-factor.regenerate-recovery-codes', 'two-factor.secret-key',
             'passkey.store', 'passkey.registration-options', 'passkey.destroy',
             'tenant.complaints.index', 'tenant.complaints.cases.*', 'tenant.complaints.procedure',
+            // What is paid and by whom is the staff's, never the owner's: nothing of billing is reached while acting as one.
+            'billing.*',
+            // The platform's own tools (audit trail, users, demos): the owner's role never reaches them.
+            'audit.*', 'platform-users.*', 'overview.*',
+            // The owner's own preferences about the guided tour: whoever works as them changes none of it.
+            'tenant.first-steps.*',
         ];
     }
 

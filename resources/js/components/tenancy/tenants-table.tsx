@@ -24,9 +24,14 @@ export default function TenantsTable({
             <TableHeader>
                 <TableRow>
                     <TableHead>Empresa</TableHead>
-                    <TableHead>RFC</TableHead>
+                    <TableHead className="hidden md:table-cell">RFC</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Dueño</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                        Dueño
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                        Último acceso
+                    </TableHead>
                     <TableHead>
                         <span className="sr-only">Acciones</span>
                     </TableHead>

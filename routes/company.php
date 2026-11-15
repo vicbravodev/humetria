@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Http\Controllers\MemberController;
+use App\Modules\Tenancy\Http\Controllers\Nom035DossierController;
 use App\Modules\Tenancy\Http\Controllers\OnboardingController;
+use App\Modules\Tenancy\Http\Controllers\PlanController;
 use App\Modules\Tenancy\Http\Controllers\RouteController;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterApplicabilityController;
@@ -11,6 +13,7 @@ use App\Modules\Tenancy\Http\Controllers\WorkCenterController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterOptionsController;
 use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
 use App\Modules\Tenancy\Http\Middleware\LimitRestrictedRoles;
+use App\Modules\Tenancy\Http\Middleware\LimitToEnabledModules;
 use App\Modules\Tenancy\Http\Middleware\LimitUnionToCompensation;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use App\Modules\Tenancy\Http\Requests\TenantRules;
@@ -20,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 // A reserved word can never be a company, so it never matches: /admin/register stays a plain 404 for guests too.
 $notReserved = '(?!(?:'.implode('|', array_map(preg_quote(...), TenantRules::RESERVED_SLUGS)).')$)[^/]+';
 
-Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class, LimitUnionToCompensation::class])->group(function () use ($notReserved): void {
+Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class, LimitUnionToCompensation::class, LimitToEnabledModules::class])->group(function () use ($notReserved): void {
     Route::get('admin/{tenant:slug}', TenantDashboardController::class)->where('tenant', $notReserved)->name('tenant.dashboard');
 
     Route::get('admin/{tenant:slug}/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.work-centers.options');
@@ -36,6 +39,8 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     // under NOM-035 in the menu: NOM-035 spans several modules, so Tenancy puts it together from their contracts.
     Route::get('admin/{tenant:slug}/campaigns/centers/{workCenter}/route', [RouteController::class, 'nom035'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.nom035.route');
     Route::get('admin/{tenant:slug}/campaigns/centers/{workCenter}/inspection', [RouteController::class, 'inspection'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.nom035.inspection');
+    // Its printable dossier: the six rows of the inspection with their evidence.
+    Route::get('admin/{tenant:slug}/campaigns/centers/{workCenter}/dossier', Nom035DossierController::class)->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.nom035.dossier');
     // The first time of a company (board V3-Onboarding): two questions per center, and its routes.
     Route::get('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'show'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding');
     Route::put('admin/{tenant:slug}/work-centers/onboarding', [OnboardingController::class, 'update'])->where('tenant', $notReserved)->name('tenant.work-centers.onboarding.update');
@@ -50,6 +55,9 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.update');
     Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.destroy');
 
+    // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
+    Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');
+
     require __DIR__.'/organization.php';
     require __DIR__.'/campaigns.php';
     require __DIR__.'/telework.php';
@@ -62,5 +70,6 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     require __DIR__.'/results.php';
     require __DIR__.'/interventions.php';
     require __DIR__.'/disclosure.php';
+    require __DIR__.'/first_steps.php';
     require __DIR__.'/assistant.php';
 });

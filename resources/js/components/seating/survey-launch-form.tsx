@@ -35,6 +35,8 @@ export default function SurveyLaunchForm({
                         />
                         <InputError message={errors['closes_on']} />
                     </div>
+                    {/* Why the survey cannot go out (a center with nobody to ask, one already open) is said here, not lost. */}
+                    <InputError message={errors['work_center_id']} />
                     <Button className="w-fit" disabled={processing}>
                         {processing ? <Spinner /> : <Send aria-hidden />}
                         Lanzar la encuesta

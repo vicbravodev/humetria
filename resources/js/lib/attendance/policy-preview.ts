@@ -107,9 +107,10 @@ const SETTINGS = [
     'requireQrOnsite',
     'trustedMayUseBrowser',
     'retentionMonths',
+    'lateToleranceMinutes',
 ] as const;
 
-/** How many of the five settings differ from the saved ones. */
+/** How many of the settings differ from the saved ones. */
 export function policyChanges(
     saved: AttendancePolicy,
     draft: AttendancePolicy,

@@ -26,10 +26,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property ShiftType $shift_type
  * @property WorkMode $work_mode
  * @property array<int, int> $minutes_by_weekday
+ * @property array<int, int|null>|null $starts_by_weekday minutes from local midnight at which each ISO weekday starts; null where RH set none
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'employee_id', 'shift_type', 'work_mode', 'minutes_by_weekday'])]
+#[Fillable(['tenant_id', 'employee_id', 'shift_type', 'work_mode', 'minutes_by_weekday', 'starts_by_weekday'])]
 #[UseFactory(AttendanceScheduleFactory::class)]
 final class AttendanceSchedule extends Model
 {
@@ -41,6 +42,6 @@ final class AttendanceSchedule extends Model
      */
     protected function casts(): array
     {
-        return ['shift_type' => ShiftType::class, 'work_mode' => WorkMode::class, 'minutes_by_weekday' => 'array'];
+        return ['shift_type' => ShiftType::class, 'work_mode' => WorkMode::class, 'minutes_by_weekday' => 'array', 'starts_by_weekday' => 'array'];
     }
 }

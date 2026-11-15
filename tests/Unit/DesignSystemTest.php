@@ -38,8 +38,8 @@ function contrastRatio(string $hexA, string $hexB): float
 
 dataset('themes', [':root', '.dark']);
 
-it('defines the same 52 color tokens in light and dark', function (): void {
-    expect(array_keys(themeTokens(':root')))->toHaveCount(52)
+it('defines the same 53 color tokens in light and dark', function (): void {
+    expect(array_keys(themeTokens(':root')))->toHaveCount(53)
         ->toEqualCanonicalizing(array_keys(themeTokens('.dark')));
 });
 
@@ -56,6 +56,7 @@ it('keeps text at 4.5:1 or more', function (string $theme, string $text, string 
     ['risk-nulo-fg', 'risk-nulo-bg'], ['risk-bajo-fg', 'risk-bajo-bg'], ['risk-medio-fg', 'risk-medio-bg'],
     ['risk-alto-fg', 'risk-alto-bg'], ['risk-muy-alto-fg', 'risk-muy-alto-bg'],
     ['warning-foreground', 'warning'], ['muted-foreground', 'sidebar'],
+    ['foreground', 'band'], ['muted-foreground', 'band'], ['primary', 'band'],
 ]);
 
 it('keeps control borders, focus and data marks at 3:1 or more', function (string $theme, string $mark, string $surface): void {
@@ -69,6 +70,12 @@ it('keeps control borders, focus and data marks at 3:1 or more', function (strin
     // A meter's fill stands out from its empty track (ArcMeter, bars).
     ['primary', 'track'],
 ]);
+
+// The landing alternates its sections between the page and a band: the change has to read at a glance in both themes.
+it('sets the landing bands apart from the page', function (string $theme): void {
+    $tokens = themeTokens($theme);
+    expect(contrastRatio($tokens['band'], $tokens['background']))->toBeGreaterThanOrEqual(1.1);
+})->with('themes');
 
 it('measures contrast like WCAG', function (): void {
     expect(round(contrastRatio('#0B7A6F', '#FFFFFF'), 2))->toBe(5.21)

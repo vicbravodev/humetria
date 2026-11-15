@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Disclosure\Support;
 
+use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Instruments\Data\RiskLevel;
@@ -117,6 +118,7 @@ final readonly class WorkersPages
                     'levels' => array_map(fn (RiskLevel $level): array => ['value' => $level->value, 'label' => $level->label()], RiskLevel::cases()),
                     'guide' => in_array('nom035.guide-iii', $fact->shown->instruments, true) ? 'iii' : 'ii',
                     'answered' => $breakdown->answered,
+                    'target' => max($breakdown->answered, self::target($fact->shown)),
                     'themes' => ResultThemes::of($breakdown),
                     'final' => $breakdown->final,
                     'categories' => array_map(fn (RiskGroup $group): array => ['key' => $group->key, 'label' => $group->label, 'levels' => $group->levels], $breakdown->categories),
@@ -128,6 +130,14 @@ final readonly class WorkersPages
             'title' => $fact->guide === 'iii' ? 'Resultados de la identificación y análisis de los factores de riesgo psicosocial y de la evaluación del entorno organizacional' : 'Resultados de la identificación y análisis de los factores de riesgo psicosocial',
             'published' => $published,
         ];
+    }
+
+    /** Who was asked to answer the guide that measures the evaluation: its sample when a Guía III took one, everyone invited otherwise. */
+    private static function target(CampaignRecord $campaign): int
+    {
+        $main = array_last($campaign->instruments) ?? '';
+
+        return ($main === 'nom035.guide-iii' ? $campaign->sampleSize : null) ?? $campaign->invited[$main] ?? 0;
     }
 
     /**

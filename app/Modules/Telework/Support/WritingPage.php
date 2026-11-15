@@ -32,6 +32,7 @@ final readonly class WritingPage
     public function props(WrittenTemplate $template, DocumentKind $kind, array $back): array
     {
         $draft = DocumentDraft::query()->where('kind', $kind)->first();
+        $center = $back['center'] === null ? null : $this->workCenters->findActive($back['center']);
         $answers = $draft === null ? $this->writer->defaults($template) : [...$this->writer->defaults($template), ...$draft->answers];
 
         return [
@@ -40,7 +41,7 @@ final readonly class WritingPage
                 'numeral' => $kind->numeral(),
                 'title' => $template->title(),
                 'caption' => $kind === DocumentKind::Policy ? "NOM-037 · Etapa 1 · {$template->name()}" : "NOM-037 · Documentos de apoyo · {$template->name()}",
-                'owner' => "{$this->companies->current()->tradeName} · todos los centros",
+                'owner' => "{$this->companies->current()->tradeName} · ".($center->name ?? 'todos los centros'),
             ],
             'questions' => $this->writer->questions($template),
             'answers' => $answers,

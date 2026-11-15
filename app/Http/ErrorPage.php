@@ -22,6 +22,9 @@ final class ErrorPage
     private const array SHOWN = [403, 404, 419, 429, 500, 503];
 
     /** What a throttled response says about trying again, kept on the page that replaces it. */
+    /** The pages whoever is not in the panel opens with their own link, spoken to as «usted». */
+    public const array WORKER_ROUTES = ['survey.*', 'engagement.survey.*', 'complaints.public.*', 'complaints.follow-up.*', 'portal.*', 'attendance.device.*', 'workers.*'];
+
     private const array KEPT_HEADERS = ['Retry-After', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'];
 
     public function __construct(private HandleInertiaRequests $inertia) {}
@@ -43,7 +46,7 @@ final class ErrorPage
             Inertia::share($this->inertia->share($request));
         }
 
-        $page = Inertia::render('error', ['status' => $status, 'survey' => $request->routeIs('survey.*', 'engagement.survey.*', 'complaints.public.*', 'complaints.follow-up.*')])
+        $page = Inertia::render('error', ['status' => $status, 'survey' => $request->routeIs(...self::WORKER_ROUTES)])
             ->toResponse($request)
             ->setStatusCode($status);
 

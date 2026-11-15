@@ -5,6 +5,7 @@ import {
     companiesQuery,
     companiesSummary,
     ownerAction,
+    tenantsFiltered,
     tenantStatusVariant,
     trialLabel,
 } from '@/lib/tenant-status';
@@ -19,7 +20,9 @@ const variants: [
     ['not_started', 'outline'],
     ['trial_ended', 'destructive'],
     ['expired', 'destructive'],
-    ['deactivated', 'destructive'],
+    ['read_only', 'secondary'],
+    ['suspended', 'destructive'],
+    ['archived', 'outline'],
 ];
 
 describe('tenantStatusVariant', () => {
@@ -27,6 +30,12 @@ describe('tenantStatusVariant', () => {
         expect(tenantStatusVariant(status)).toBe(variant);
     });
 });
+
+const restricted: TenantRow['status'][] = [
+    'read_only',
+    'suspended',
+    'archived',
+];
 
 const activations: {
     status: TenantRow['status'];
@@ -64,12 +73,12 @@ const activations: {
         title: 'Reactivar empresa',
         submit: 'Reactivar',
     },
-    {
-        status: 'deactivated',
+    ...restricted.map((status) => ({
+        status,
         action: 'Reactivar',
         title: 'Reactivar empresa',
         submit: 'Reactivar',
-    },
+    })),
 ];
 
 describe('activationCopy', () => {
@@ -120,5 +129,31 @@ describe('companiesQuery', () => {
             q: 'acme',
             status: 'trial',
         });
+    });
+});
+
+describe('tenantsFiltered', () => {
+    it('is true when a search matches nothing, even with no company counted', () => {
+        expect(tenantsFiltered({ all: 0 }, { q: 'zzz', status: 'all' })).toBe(
+            true,
+        );
+    });
+
+    it('is true when a view matches nothing', () => {
+        expect(tenantsFiltered({ all: 0 }, { q: '', status: 'trial' })).toBe(
+            true,
+        );
+    });
+
+    it('is true when there are companies, whatever the filters', () => {
+        expect(tenantsFiltered({ all: 3 }, { q: '', status: 'all' })).toBe(
+            true,
+        );
+    });
+
+    it('is false for a console that has no companies and no filters', () => {
+        expect(tenantsFiltered({ all: 0 }, { q: '', status: 'all' })).toBe(
+            false,
+        );
     });
 });

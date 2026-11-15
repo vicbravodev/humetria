@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
  * Tells a Comisión member, as "tú", their company published documents they have to confirm they read, and sends them to the panel.
  * Employees get `PortalReminder` instead.
  */
-final class DocumentsToConfirm extends Notification
+final class DocumentsToConfirm extends Notification implements MailBag
 {
     /**
      * @param  list<string>  $documents
@@ -43,5 +44,10 @@ final class DocumentsToConfirm extends Notification
         }
 
         return $mail->action('Ir a los documentos', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

@@ -1,5 +1,13 @@
 import { Link } from '@inertiajs/react';
 import type { InertiaLinkProps } from '@inertiajs/react';
+import { ChevronDown } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { splitByAction } from '@/lib/count-tabs';
 import { cn } from '@/lib/utils';
 
 export type CountTab = {
@@ -8,6 +16,8 @@ export type CountTab = {
     count?: number | undefined;
     href: NonNullable<InertiaLinkProps['href']>;
     active: boolean;
+    /** With `byAction`: this view is what waits for someone, so it goes first. */
+    needsAction?: boolean | undefined;
 };
 
 /**
@@ -17,17 +27,24 @@ export type CountTab = {
 export default function CountTabs({
     label,
     tabs,
+    byAction = false,
 }: {
     /** What the views split, for screen readers: "Estado de las personas". */
     label: string;
     tabs: CountTab[];
+    /** What asks for action goes first and a view with none is not drawn as a tab but under «Otros filtros». */
+    byAction?: boolean;
 }) {
+    const { shown, hidden } = byAction
+        ? splitByAction(tabs)
+        : { shown: tabs, hidden: [] };
+
     return (
         <nav
             aria-label={label}
             className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-[10px] border bg-muted p-[3px]"
         >
-            {tabs.map((tab) => (
+            {shown.map((tab) => (
                 <Link
                     key={tab.label}
                     href={tab.href}
@@ -53,6 +70,23 @@ export default function CountTabs({
                     )}
                 </Link>
             ))}
+            {hidden.length > 0 && (
+                <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger className="relative inline-flex h-[38px] shrink-0 items-center gap-1 rounded-lg px-3.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-[3px] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                        Otros filtros
+                        <ChevronDown aria-hidden className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {hidden.map((tab) => (
+                            <DropdownMenuItem key={tab.label} asChild>
+                                <Link href={tab.href} preserveScroll>
+                                    {tab.label}
+                                </Link>
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
         </nav>
     );
 }

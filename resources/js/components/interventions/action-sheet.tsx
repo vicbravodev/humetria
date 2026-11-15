@@ -41,6 +41,7 @@ export default function ActionSheet({
         catalog: ActionCatalog;
         areas: AreaOption[];
         members: ProgramMember[];
+        responsible: string | null;
     };
 }) {
     return (

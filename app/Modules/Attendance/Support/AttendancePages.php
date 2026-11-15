@@ -156,6 +156,8 @@ final readonly class AttendancePages
 
         return [
             'center' => ['id' => $center->id, 'name' => $center->name, 'mainActivity' => $center->mainActivity],
+            // Where the map of a new zone opens; only whoever may add one needs it.
+            'centerAddress' => $manage ? $this->workCenters->profile($center->id)?->address : null,
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
             'requiresQr' => $policy->require_qr_onsite,
             'tolerance' => $policy->max_accuracy_m,

@@ -7,6 +7,7 @@ namespace App\Modules\Compensation\Actions;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Support\BenefitValue;
 use App\Modules\Compensation\Support\Calculation\Money;
+use App\Modules\Compensation\Support\MinimumWageCheck;
 use App\Modules\Organization\Contracts\CompensationRoster;
 use App\Modules\Organization\Contracts\JobGrades;
 use App\Modules\Organization\Data\JobGradeData;
@@ -17,7 +18,7 @@ final readonly class ListTabulator
 {
     public const int PER_PAGE = 15;
 
-    public function __construct(private JobGrades $jobGrades, private CompensationRoster $roster) {}
+    public function __construct(private JobGrades $jobGrades, private CompensationRoster $roster, private MinimumWageCheck $minimum) {}
 
     /**
      * A page of the company's categories and levels (the ones that match what was typed, ignoring case and accents), each
@@ -57,21 +58,25 @@ final readonly class ListTabulator
             'id' => $grade->id,
             'category' => $grade->category,
             'level' => $grade->level,
-            'current' => $current === null ? null : self::salary($current),
-            'salaries' => array_map(fn (GradeSalary $salary): array => ['id' => $salary->id, ...self::salary($salary)], $salaries),
+            'current' => $current === null ? null : $this->salary($current, CarbonImmutable::parse($today)),
+            'salaries' => array_map(fn (GradeSalary $salary): array => ['id' => $salary->id, ...$this->salary($salary)], $salaries),
             'people' => $people,
         ];
     }
 
     /**
-     * @return array{daily_salary: string, daily_salary_text: string, effective_from: string}
+     * @return array{daily_salary: string, daily_salary_text: string, effective_from: string, below_minimum: string|null}
      */
-    private static function salary(GradeSalary $salary): array
+    private function salary(GradeSalary $salary, ?CarbonImmutable $inForceOn = null): array
     {
         return [
             'daily_salary' => BenefitValue::decimal($salary->daily_salary_cents),
             'daily_salary_text' => Money::format($salary->daily_salary_cents),
             'effective_from' => $salary->effective_from->toDateString(),
+            // Persistent, in its row: the toast of saving is gone in seconds.
+            'below_minimum' => $inForceOn === null
+                ? $this->minimum->warning($salary->daily_salary_cents, CarbonImmutable::parse($salary->effective_from->toDateString()))
+                : $this->minimum->inForce($salary->daily_salary_cents, CarbonImmutable::parse($salary->effective_from->toDateString()), $inForceOn),
         ];
     }
 }

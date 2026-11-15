@@ -57,7 +57,8 @@ it('opens with the people costed of the total and lists the missing by company I
             ->component('compensation/report')
             ->where('scenario.name', 'Revisión 2027')->where('scenario.horizon_years', 4)
             ->where('coverage.total', 11)->where('coverage.costed', 9)
-            ->where('coverage.missing', ['E-900'])->where('coverage.missing_without_number', 1));
+            ->where('coverage.missing', ['E-900'])->where('coverage.missing_without_number', 1)
+            ->where('coverage.causes', ['without_grade' => 1, 'without_hire_date' => 2, 'without_group' => 1]));
 });
 
 it('shows the cost of the first year with its retroactivity and the recurring cost', function (): void {
@@ -164,7 +165,7 @@ it('writes the audit entry and the log of a view without a salary or a person', 
     $entry = AuditEntry::query()->where('event', 'compensation.report_viewed')->sole();
 
     expect($entry->metadata)->toBe(['scenario_id' => $this->scenario->id])
-        ->and(json_encode($entry->toArray()))->not->toContain('E-001')->not->toContain('50000');
+        ->and(auditContent($entry))->not->toContain('E-001')->not->toContain('50000');
     Log::shouldHaveReceived('info')->with('compensation.report_viewed', ['scenario_id' => $this->scenario->id])->once();
 });
 

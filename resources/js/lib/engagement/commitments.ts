@@ -35,6 +35,25 @@ export function nextStatuses(status: CommitmentStatus): CommitmentStatus[] {
     return ORDER.filter((candidate) => candidate !== status);
 }
 
+/** The next state of the cycle, the one button of a card: in progress after open, done after in progress. */
+export function primaryStep(status: CommitmentStatus): CommitmentStatus | null {
+    switch (status) {
+        case 'open':
+            return 'in_progress';
+        case 'in_progress':
+            return 'done';
+        default:
+            return null;
+    }
+}
+
+/** Every other state a commitment can move to, under the menu of its card. */
+export function menuSteps(status: CommitmentStatus): CommitmentStatus[] {
+    return nextStatuses(status).filter(
+        (candidate) => candidate !== primaryStep(status),
+    );
+}
+
 /** What a group is as one value of a choice field: the company alone, anything else with its type. */
 export function groupChoice(group: {
     type: CommitmentRow['group_type'];

@@ -25,6 +25,6 @@ it('answers the same 404 for an unknown or a suspended company', function (Closu
     $this->get('a/'.$slug().'/probe')->assertNotFound();
 })->with([
     'unknown' => [fn (): string => 'no-existe'],
-    'deactivated' => [fn (): string => Tenant::factory()->deactivated()->create()->slug],
+    'deactivated' => [fn (): string => Tenant::factory()->suspended()->create()->slug],
     'expired' => [fn (): string => Tenant::factory()->activeUntil(now()->subDay())->create()->slug],
 ]);

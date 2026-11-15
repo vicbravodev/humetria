@@ -84,6 +84,15 @@ it('lists the actions of the Programa with what is overdue', function (bool $dar
         ->assertSee('Campaña de sensibilización');
 })->with($looks);
 
+it('keeps the options of an action inside a phone screen, without scrolling the table', function (): void {
+    [$url, $campaign] = programEvaluation();
+    programWithActions($campaign);
+
+    visit("{$url}/campaigns/{$campaign}/program?tab=actions")->on()->mobile()
+        ->assertSee('Revisar la política')
+        ->assertScript("(() => { const rect = document.querySelector('[aria-label=\"Opciones de Revisar la política\"]').getBoundingClientRect(); return rect.left >= 0 && rect.right <= window.innerWidth; })()", true);
+});
+
 it('shows the follow-up evaluation of each row', function (): void {
     [$url, $campaign] = programEvaluation();
     programWithActions($campaign);
@@ -110,6 +119,17 @@ it('adds an action to a row from its side panel', function (): void {
         ->assertSee('Acción registrada.');
 
     expect(ProgramAction::query()->count())->toBe(1);
+});
+
+it('tells in the responsible fields who an action falls to when they are left empty', function (): void {
+    [$url, $campaign] = programEvaluation();
+    resolve(CreateProgram::class)->handle($campaign, null)?->update(['responsible_name' => 'Ing. Carlos Ruiz']);
+
+    visit("{$url}/campaigns/{$campaign}/program")
+        ->click('[aria-label="Acciones de Calificación final"]')
+        ->click('Agregar acción')
+        ->assertSee('Si lo dejas vacío: Ing. Carlos Ruiz')
+        ->assertNoJavaScriptErrors();
 });
 
 it('records a step of an action from its menu and keeps it in the history', function (): void {

@@ -16,4 +16,16 @@ return [
 
     'invitations_per_minute' => (int) env('CAMPAIGN_INVITATIONS_PER_MINUTE', 60),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Reminders
+    |--------------------------------------------------------------------------
+    |
+    | The hours that must pass between two reminders to the people with a guide pending, per evaluation: a second one a few
+    | minutes later only annoys them.
+    |
+    */
+
+    'resend_cooldown_hours' => (int) env('CAMPAIGN_RESEND_COOLDOWN_HOURS', 12),
+
 ];

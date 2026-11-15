@@ -41,6 +41,7 @@ final readonly class PurgeComplaints
             try {
                 // Each in its own company, as the system: the audit entry has no actor.
                 Context::scope(function () use ($tenantId, &$purged): void {
+                    // Deliberately no `stopped('complaints')` here: data does not outlive its retention because a company lost the module or is restricted.
                     $this->companies->enter($tenantId);
                     $purged += $this->purgeCompany();
                 }, ['user_id' => null]);

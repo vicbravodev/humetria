@@ -59,6 +59,22 @@ final readonly class PanelUrgencies
         return array_values($listed);
     }
 
+    /**
+     * The vacation requests that wait for an answer, as one line with its action: RH answers when the manager could not.
+     *
+     * @return list<array{norm: string, title: string, detail: string, action: string, href: string}>
+     */
+    public function vacations(int $waiting, string $tenantSlug): array
+    {
+        return $waiting === 0 ? [] : [[
+            'norm' => 'Vacaciones',
+            'title' => $waiting === 1 ? '1 solicitud de vacaciones espera respuesta' : "{$waiting} solicitudes de vacaciones esperan respuesta",
+            'detail' => 'RH responde cuando el jefe no pudo o no lo hizo a tiempo',
+            'action' => 'Responder',
+            'href' => route('tenant.vacations.requests.index', ['tenant' => $tenantSlug], false),
+        ]];
+    }
+
     /** A Y-m-d day as the design system writes it: "27 feb 2026". */
     private static function day(string $date): string
     {

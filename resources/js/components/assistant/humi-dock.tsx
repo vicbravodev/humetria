@@ -16,6 +16,7 @@ import {
 import { useHumiOpenRequest } from '@/hooks/use-humi-open-request';
 import { useHumiShortcut } from '@/hooks/use-humi-shortcut';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { draftAfterOpen } from '@/lib/assistant/open-humi';
 import { pageContextOf } from '@/lib/assistant/page-context';
 
 // The panel (and the AI SDK it brings) is fetched the first time Humi opens, not with every page.
@@ -31,7 +32,11 @@ export default function HumiDock() {
     const tenant = props.tenant;
     const wide = useMediaQuery('(min-width: 1280px)');
     const [open, setOpen] = useState(false);
-    const openNow = useCallback(() => setOpen(true), []);
+    const [draft, setDraft] = useState<string | null>(null);
+    const openNow = useCallback((written: string | null) => {
+        setDraft((current) => draftAfterOpen(current, written));
+        setOpen(true);
+    }, []);
     const [closedOnce, setClosedOnce] = useState(false);
     const [leaving, setLeaving] = useState(false);
 
@@ -46,6 +51,7 @@ export default function HumiDock() {
 
     const close = () => {
         setOpen(false);
+        setDraft(null);
         setClosedOnce(true);
     };
     // The docked panel slides out first and is removed when that motion ends (its own, not its children's).
@@ -62,6 +68,7 @@ export default function HumiDock() {
                 slug={tenant.slug}
                 page={pageContextOf(url)}
                 fullPage={false}
+                initialText={draft}
                 onClose={onClose}
             />
         </Suspense>
@@ -72,7 +79,7 @@ export default function HumiDock() {
             {!open && (
                 <HumiLauncher
                     takeFocus={closedOnce}
-                    onOpen={() => setOpen(true)}
+                    onOpen={() => openNow(null)}
                 />
             )}
             {open && wide && (

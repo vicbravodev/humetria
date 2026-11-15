@@ -19,14 +19,17 @@ import { options } from '@/routes/tenant/work-centers';
 export default function CenterPicker({
     inUse,
     error,
+    only = null,
 }: {
     /** How many centers are in use, to say what «todos» means. */
     inUse: number;
     error: string | undefined;
+    /** The center the text was written from: the only one chosen at first, instead of every one in use. */
+    only?: Option | null;
 }) {
     const tenantSlug = useTenantSlug();
-    const [all, setAll] = useState(true);
-    const [chosen, setChosen] = useState<Option[]>([]);
+    const [all, setAll] = useState(only === null);
+    const [chosen, setChosen] = useState<Option[]>(only === null ? [] : [only]);
 
     return (
         <fieldset className="grid gap-3">

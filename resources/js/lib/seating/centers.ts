@@ -26,3 +26,14 @@ export function nextInCenter(card: SeatingCenterCard): string {
         card.route.status.charAt(0).toUpperCase() + card.route.status.slice(1)
     );
 }
+
+/** Whether the header of a center names its declared sector apart: not when its activity already says it ("Comercio al por menor"). */
+export function namesSectorApart(
+    activity: string,
+    sector: string | null,
+): boolean {
+    return (
+        sector === null ||
+        !activity.toLowerCase().includes(sector.toLowerCase())
+    );
+}

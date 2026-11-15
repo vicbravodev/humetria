@@ -2,7 +2,10 @@ import type { Paginated } from '@/types/demos';
 
 export type CampaignStatus = 'draft' | 'active' | 'closed';
 
-export type CampaignKind = 'nom035_evaluation' | 'nom035_trauma';
+export type CampaignKind =
+    | 'nom035_evaluation'
+    | 'nom035_trauma'
+    | 'seating_survey';
 
 /** The dialogs a running evaluation's menu opens. */
 export type CampaignDialog = 'invite' | 'replacements' | 'close';
@@ -12,6 +15,10 @@ export type CampaignProgress = {
     completed: number;
     target: number;
     againstSample: boolean;
+    /** People whose Guía I is still open, apart from the measuring guide. */
+    screeningPending: number;
+    /** People given the Guía I in an evaluation that also applies it; 0 when it does not. */
+    screeningTarget: number;
 };
 
 export type CampaignSummary = {

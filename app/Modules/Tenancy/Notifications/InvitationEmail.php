@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use Carbon\CarbonImmutable;
@@ -18,7 +19,7 @@ use Illuminate\Support\Str;
  * The email that carries the one-time link to join a company with a role. The plain token lives only here and in the link
  * (and in the queued job, encrypted, so neither Redis nor the Horizon dashboard shows it).
  */
-final class InvitationEmail extends Notification implements ShouldBeEncrypted, ShouldQueue
+final class InvitationEmail extends Notification implements MailBag, ShouldBeEncrypted, ShouldQueue
 {
     use Queueable;
 
@@ -31,6 +32,7 @@ final class InvitationEmail extends Notification implements ShouldBeEncrypted, S
         private readonly ?string $inviter,
         private readonly int $workCenters,
         private readonly int $people,
+        private readonly bool $union = false,
     ) {}
 
     /**
@@ -57,8 +59,12 @@ final class InvitationEmail extends Notification implements ShouldBeEncrypted, S
                 'inviter' => $this->inviter,
                 'role' => $this->role->label(),
                 'does' => match ($this->role) {
-                    TenantRole::Owner => 'administrarás la cuenta, sus miembros y todo lo que RH lleva: NOM-035, NOM-037 y Ley Silla.',
-                    TenantRole::Hr => 'podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.',
+                    TenantRole::Owner => $this->union
+                        ? 'administrarás la cuenta, sus usuarios y su padrón de personas.'
+                        : 'administrarás la cuenta, sus usuarios y las herramientas que tenga contratadas.',
+                    TenantRole::Hr => $this->union
+                        ? 'podrás administrar el padrón de personas y la compensación.'
+                        : 'podrás dar de alta centros de trabajo y empleados, lanzar evaluaciones y ver sus resultados.',
                     TenantRole::Committee => 'podrás revisar y validar los lugares de trabajo de la NOM-037 (teletrabajo) de sus centros.',
                     TenantRole::Complaints => 'podrás atender, de forma confidencial, las quejas y denuncias que se te asignen en el canal de la empresa.',
                     TenantRole::Viewer => 'podrás ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.',
@@ -72,11 +78,21 @@ final class InvitationEmail extends Notification implements ShouldBeEncrypted, S
 
     private function size(): string
     {
+        // A union has no work centers: only the people in its padrón.
+        if ($this->union) {
+            return trans_choice('{0} Aún sin personas|{1} :count persona en el padrón|[2,*] :count personas en el padrón', $this->people);
+        }
+
         if ($this->workCenters === 0) {
             return 'Aún sin centros de trabajo';
         }
 
         return trans_choice('{1} :count centro de trabajo|[2,*] :count centros de trabajo', $this->workCenters)
             .' · '.trans_choice('{0} sin personas|{1} :count persona|[2,*] :count personas', $this->people);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::ESSENTIAL;
     }
 }

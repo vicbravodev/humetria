@@ -1,27 +1,47 @@
 import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
+import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
+import { toUrl } from '@/lib/utils';
 import type { NavItem, NavTenant } from '@/types';
 
 export type MobileTab =
     | { key: 'panel' | 'complaints'; title: string; item: NavItem }
-    | { key: 'compliance'; title: string; items: NavItem[] }
+    | { key: 'compliance' | 'operation'; title: string; items: NavItem[] }
     | { key: 'more'; title: string };
 
+/** Empleados, Vacaciones and Asistencia: what a company's day-to-day runs on, for whoever has their tools. A union has none of them here. */
+function operationItems(
+    tenant: NavTenant | null,
+    main: NavItem[],
+    compliance: NavItem[],
+): NavItem[] {
+    if (tenant === null || tenant.type === 'union') {
+        return [];
+    }
+
+    return [
+        main.find(({ title }) => title === 'Empleados'),
+        operationsNavItems(tenant).find(({ title }) => title === 'Vacaciones'),
+        compliance.find(({ title }) => title === 'Asistencia'),
+    ].filter((item) => item !== undefined);
+}
+
 /**
- * The phone's bottom bar (board 40, V4-Menu-Roles): Panel, Cumplimiento (the standards the role sees), Quejas and Más,
+ * The phone's bottom bar (board 40, V4-Menu-Roles): Panel, Normas (the sidebar's "Cumple la norma"), Quejas and Más,
  * which opens the whole menu. Each tab appears only when the sidebar of that role has it, so it is role-aware the same way.
  */
 export function mobileTabs(
     tenant: NavTenant | null,
-    isSuperadmin: boolean,
+    isStaff: boolean,
     inCourse = 0,
 ): MobileTab[] {
-    const main = mainNavItems(tenant, isSuperadmin);
+    const main = mainNavItems(tenant, isStaff);
     const compliance = complianceNavItems(tenant, inCourse);
     const panel = main.find((item) => item.title === 'Panel');
     const complaints =
-        compliance.find((item) => item.title === 'Quejas') ??
+        listeningNavItems(tenant).find((item) => item.title === 'Quejas') ??
         (tenant?.role === 'complaints' ? main[0] : undefined);
-    const standards = compliance.filter((item) => item.title !== 'Quejas');
+
+    const operation = operationItems(tenant, main, compliance);
 
     const tabs: MobileTab[] = [];
 
@@ -29,12 +49,16 @@ export function mobileTabs(
         tabs.push({ key: 'panel', title: 'Panel', item: panel });
     }
 
-    if (standards.length > 0) {
+    if (compliance.length > 0) {
         tabs.push({
             key: 'compliance',
-            title: 'Cumplimiento',
-            items: standards,
+            title: 'Normas',
+            items: compliance,
         });
+    }
+
+    if (operation.length > 0) {
+        tabs.push({ key: 'operation', title: 'Operación', items: operation });
     }
 
     if (complaints !== undefined) {
@@ -42,4 +66,35 @@ export function mobileTabs(
     }
 
     return [...tabs, { key: 'more', title: 'Más' }];
+}
+
+/**
+ * The tab of the page the person is on, so the bar always shows where they are: Panel on the panel itself, Normas on any of
+ * its standards (or a page below one), Quejas on its cases, and Más on anything else the whole menu holds.
+ */
+export function currentTab(
+    tabs: MobileTab[],
+    isCurrentUrl: (url: string) => boolean,
+    isCurrentOrParentUrl: (url: string) => boolean,
+): MobileTab['key'] {
+    const within = (item: NavItem): boolean =>
+        isCurrentOrParentUrl(toUrl(item.href)) ||
+        (item.children ?? []).some((child) =>
+            isCurrentOrParentUrl(toUrl(child.href)),
+        );
+    const current = tabs.find((tab) => {
+        switch (tab.key) {
+            case 'panel':
+                return isCurrentUrl(toUrl(tab.item.href));
+            case 'complaints':
+                return within(tab.item);
+            case 'compliance':
+            case 'operation':
+                return tab.items.some(within);
+            default:
+                return false;
+        }
+    });
+
+    return current?.key ?? 'more';
 }

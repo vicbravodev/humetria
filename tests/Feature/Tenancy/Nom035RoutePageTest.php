@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Models\ResultPublication;
 use App\Modules\Interventions\Models\Program;
 use App\Modules\Responses\Models\TraumaScreening;
@@ -58,7 +62,7 @@ it('shows the six stages of the center, each with what it asks in plain words an
         ->where('rows.1', [
             'numeral' => '7.1 y 7.9',
             'title' => 'Evaluación de los factores de riesgo, vigente',
-            'detail' => null,
+            'detail' => 'Cerrada el 2 nov 2026: contestaron 0 de 0',
             'state' => 'done',
             'stage' => 2,
             'href' => route('tenant.campaigns.results', [$this->tenant, $this->closed->id]),
@@ -82,6 +86,47 @@ it('shows the six stages of the center, each with what it asks in plain words an
         ->where('urgencies', [])
         ->where('inspectionHref', route('tenant.nom035.inspection', [$this->tenant, $this->center->id])));
 });
+
+it('says with how many answers the evaluation closed, in the route and in the inspection', function (int $answered, int $invited): void {
+    foreach (range(1, $invited) as $index) {
+        ParticipantInstrument::factory()->create([
+            'participant_id' => Participant::factory()->create(['campaign_id' => $this->closed->id])->id,
+            'instrument' => 'nom035.guide-ii',
+            ...($index <= $answered ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : []),
+        ]);
+    }
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+    $detail = "Cerrada el 2 nov 2026: contestaron {$answered} de {$invited}";
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.1.state', 'done')
+        ->where('rows.1.detail', $detail));
+    $this->get(route('tenant.nom035.inspection', [$this->tenant, $this->center->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('ready', fn ($rows): bool => collect($rows)->firstWhere('numeral', '7.1 y 7.9')['detail'] === $detail));
+})->with([
+    'half of them' => [10, 20],
+    'everyone' => [20, 20],
+]);
+
+// R2-nom035-01: who has not answered the Guía I stays visible after closing, amber while it is under everyone.
+it('keeps who has not answered the Guía I visible after closing, in amber below everyone', function (int $answered, int $invited, string $state): void {
+    foreach (range(1, $invited) as $index) {
+        ParticipantInstrument::factory()->create([
+            'participant_id' => Participant::factory()->create(['campaign_id' => $this->closed->id])->id,
+            'instrument' => 'nom035.guide-i',
+            ...($index <= $answered ? ['status' => InstrumentStatus::Completed, 'completed_at' => now()] : []),
+        ]);
+    }
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.2.state', $state)
+        ->where('rows.2.detail', "Guía I: {$answered} de {$invited}"));
+})->with([
+    'a part' => [11, 20, 'partial'],
+    'everyone' => [20, 20, 'done'],
+]);
 
 it('puts first the people who wait to be channeled, only for whoever may see the Guía I', function (TenantRole $role, string $state, string $detail, int $urgencies): void {
     TraumaScreening::factory()->count(2)->create(['campaign_id' => $this->closed->id, 'requires_clinical_assessment' => true]);
@@ -115,12 +160,15 @@ it('says how many people wait and opens the list where they are channeled', func
 it('reads the Programa where it stands, and the stages met with the way to see them', function (): void {
     DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    PageLink::factory()->create(['tenant_id' => $this->tenant->id]);
     ReportDetails::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
     Program::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
 
     nom035Route()->assertInertia(fn (Assert $page) => $page
-        ->where('rows.0.state', 'done')
+        // R2-nom035-03: published, but nobody confirmed it: it says so, amber, and is not shown as met.
+        ->where('rows.0.state', 'partial')
+        ->where('rows.0.detail', 'Publicada · 0 de 30 la leyeron')
         ->where('rows.0.action', 'Ver')
         ->where('rows.0.href', route('tenant.disclosure.policy', $this->tenant))
         ->where('rows.3.state', 'done')
@@ -134,6 +182,28 @@ it('reads the Programa where it stands, and the stages met with the way to see t
             'action' => 'Armar el programa',
         ])
         ->where('rows.5.state', 'done'));
+});
+
+it('does not read 7.8 as done while the published results are not in front of the people (C-52)', function (): void {
+    ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page->where('rows.3.state', 'missing'));
+
+    PageLink::factory()->create(['tenant_id' => $this->tenant->id]);
+    nom035Route()->assertInertia(fn (Assert $page) => $page->where('rows.3.state', 'done'));
+});
+
+// H-02: published results that nobody can reach say what is missing (the people's page or a physical means), not «Aún no compartes».
+it('says to turn on the page of the people when the results are published but nobody can see them', function (): void {
+    ResultPublication::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.3.state', 'missing')
+        ->where('rows.3.detail', 'Ya publicaste los resultados, pero las personas aún no pueden verlos: activa su página o registra un medio físico')
+        ->where('rows.3.href', route('tenant.disclosure.page', $this->tenant))
+        ->where('rows.3.action', 'Activar la página de las personas'));
 });
 
 it('waits for the evaluation before what follows it, and asks a small center only for the Guía I', function (): void {
@@ -166,7 +236,7 @@ it('reads the page in a fixed number of queries', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
     nom035Route()->assertOk();
 
-    $this->expectsDatabaseQueryCount(25);
+    $this->expectsDatabaseQueryCount(28);
     nom035Route()->assertOk();
 });
 
@@ -182,7 +252,7 @@ it('splits what an inspector would ask for into what the center can show and wha
             ->where('ready', fn ($rows): bool => collect($rows)->pluck('numeral')->all() === ['7.1 y 7.9', '5.5 y 5.8 c'])
             ->where('missing', fn ($rows): bool => collect($rows)->pluck('numeral')->all() === ['5.1', '7.8', '7.7'])
             ->missing('missing.0.stage')
-            ->where('dossierHref', route('tenant.disclosure.dossier', [$this->tenant, $this->center->id])));
+            ->where('dossierHref', route('tenant.nom035.dossier', [$this->tenant, $this->center->id])));
 });
 
 it('gives the viewer the inspection without the dossier, and answers 404 for a center of another company', function (): void {
@@ -201,4 +271,14 @@ it('opens the NOM-035 route from the route of a center, the panel\'s way in', fu
         ->assertRedirect(route('tenant.nom035.route', [$this->tenant, $this->center->id]));
     nom035Route(WorkCenter::factory()->create())->assertNotFound();
     $this->get("/admin/acme/campaigns/centers/{$this->center->id}x/route")->assertNotFound();
+});
+
+it('counts the policy as met once everyone confirmed it', function (): void {
+    $small = WorkCenter::factory()->for($this->tenant)->create();
+    $person = staffOf($this->tenant, $small, 1)->firstOrFail();
+    $link = DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $small->id]);
+    Database\Factories\Disclosure\AcknowledgmentFactory::new()->portal()->create(['tenant_id' => $this->tenant->id, 'document_id' => $link->document_id, 'employee_id' => $person->id]);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Route($small)->assertInertia(fn (Assert $page) => $page->where('rows.0.state', 'done')->where('rows.0.detail', null));
 });

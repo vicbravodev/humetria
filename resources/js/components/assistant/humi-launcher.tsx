@@ -31,10 +31,11 @@ export default function HumiLauncher({
                 <button
                     ref={button}
                     type="button"
+                    data-tour="humi-launcher"
                     onClick={onOpen}
                     aria-label="Abrir a Humi"
                     aria-keyshortcuts="Control+J Meta+J"
-                    className="humi-pop fixed right-4 bottom-20 z-40 flex size-12 items-center justify-center rounded-full border bg-card shadow-float transition-transform duration-150 ease-out hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none md:bottom-4 print:hidden"
+                    className="humi-pop fixed right-4 bottom-(--tab-bar-clearance) z-40 flex size-12 items-center justify-center rounded-full border bg-card shadow-float transition-transform duration-150 ease-out [view-transition-name:humi] hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none md:bottom-4 print:hidden"
                 >
                     <HumiAvatar size={40} />
                 </button>

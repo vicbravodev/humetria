@@ -1,4 +1,5 @@
 import { Archive, Crosshair, QrCode } from 'lucide-react';
+import PolicyLateTolerance from '@/components/attendance/policy-late-tolerance';
 import PolicyOutOfZone from '@/components/attendance/policy-out-of-zone';
 import PolicyPrecision from '@/components/attendance/policy-precision';
 import PolicySwitch from '@/components/attendance/policy-switch';
@@ -6,7 +7,7 @@ import FormField from '@/components/form-field';
 import SettingRow from '@/components/humetria/setting-row';
 import type { AttendancePolicy } from '@/types';
 
-/** The four settings of the policy, each with its icon: what they hold is `draft`, what changes goes to `onChange`. */
+/** The settings of the policy, each with its icon: what they hold is `draft`, what changes goes to `onChange`. */
 export default function PolicyFields({
     draft,
     onChange,
@@ -82,6 +83,13 @@ export default function PolicyFields({
                     />
                 </div>
             </SettingRow>
+            <PolicyLateTolerance
+                value={draft.lateToleranceMinutes}
+                onChange={(lateToleranceMinutes) =>
+                    onChange({ lateToleranceMinutes })
+                }
+                error={errors['late_tolerance_minutes']}
+            />
         </>
     );
 }

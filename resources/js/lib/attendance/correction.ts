@@ -1,5 +1,6 @@
 import { isMarkType, markName } from '@/lib/attendance/next-step';
 import type { MarkType } from '@/lib/attendance/next-step';
+import { dayTitle } from '@/lib/attendance/week-text';
 
 /** What a person asks RH to correct: a mark of theirs (`markId`) or one they forgot, the time on their clock and why. */
 export type CorrectionDraft = {
@@ -21,6 +22,11 @@ export function dayAfter(date: string): string {
     return new Date(Date.UTC(year, month - 1, day + 1))
         .toISOString()
         .slice(0, 10);
+}
+
+/** «Día: jueves 12 de noviembre»: the day a correction is about, said as the person reads it. */
+export function correctionDay(date: string): string {
+    return `Día: ${dayTitle(date).toLowerCase()}`;
 }
 
 /** The body the server takes: the local time as «Y-m-d H:i», and the week to give back when there is one. */

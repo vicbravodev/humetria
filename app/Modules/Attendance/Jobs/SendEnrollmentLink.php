@@ -41,7 +41,7 @@ final class SendEnrollmentLink implements ShouldBeUniqueUntilProcessing, ShouldQ
         $company = $companies->enter($this->tenantId);
         $person = $roster->find($this->employeeId);
 
-        if ($company->blocked || $person === null || ! $person->active || $person->email === null) {
+        if ($company->stopped('attendance') || $person === null || ! $person->active || $person->email === null) {
             return;
         }
 

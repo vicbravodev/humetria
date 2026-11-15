@@ -54,4 +54,7 @@ interface CampaignRecords
      * @return array<string, ComplianceCycle> by work center id, in the order given
      */
     public function cycles(array $workCenterIds): array;
+
+    /** Whether the current company has launched any campaign, of any kind: one in course or already closed. */
+    public function anyLaunched(): bool;
 }

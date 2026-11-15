@@ -2,6 +2,8 @@
 const STANDALONE_NAMES = new Set([
     // The survey has its own frame (SurveyShell).
     'landing',
+    // The notice of privacy is part of the public site: the landing's header and footer, not the panel.
+    'privacy-notice',
     'campaigns/survey',
     // The climate and pulse survey of the person's emailed link: the same frame, no account.
     'engagement/survey',
@@ -22,6 +24,8 @@ const STANDALONE_NAMES = new Set([
     'attendance/kiosk',
     // A person links their phone from the link RH sent them: no account, their own frame.
     'attendance/enroll',
+    // «Mi jornada» in the person's portal (marking, the week, their phones): their own link, no account, the same frame.
+    'attendance/portal',
     // A person marks from their linked device: no account, their own frame.
     'attendance/punch',
     // A person sees and answers their week from their linked device: no account, the same frame.
@@ -56,4 +60,20 @@ export function isStandalone(name: string): boolean {
         STANDALONE_NAMES.has(name) ||
         STANDALONE_PREFIXES.some((prefix) => name.startsWith(prefix))
     );
+}
+
+/** The component name the server rendered the first page with, parsed from Inertia's embedded page; '' if absent. */
+export function initialPageName(raw: string | null | undefined): string {
+    if (!raw) {
+        return '';
+    }
+
+    const page: unknown = JSON.parse(raw);
+
+    return typeof page === 'object' &&
+        page !== null &&
+        'component' in page &&
+        typeof page.component === 'string'
+        ? page.component
+        : '';
 }

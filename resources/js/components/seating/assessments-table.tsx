@@ -13,6 +13,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import type { AssessmentPerson, Paginated } from '@/types';
+import { describeDate } from '@/lib/calendar-date';
 
 /** The people of a center who work standing with their assessment: its state, its level and the next step. */
 export default function AssessmentsTable({
@@ -77,7 +78,8 @@ export default function AssessmentsTable({
                                 </Badge>
                                 {person.signedOn !== null && (
                                     <span className="ml-2 text-caption text-muted-foreground">
-                                        {person.signedOn}
+                                        {describeDate(person.signedOn) ??
+                                            person.signedOn}
                                     </span>
                                 )}
                             </TableCell>

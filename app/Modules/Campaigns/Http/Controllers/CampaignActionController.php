@@ -17,6 +17,7 @@ use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Enums\Standing;
+use App\Modules\Campaigns\Exceptions\ReminderTooSoon;
 use App\Modules\Campaigns\Http\Requests\DeadlineRequest;
 use App\Modules\Campaigns\Http\Requests\ReplacementsRequest;
 use App\Modules\Campaigns\Models\Participant;
@@ -24,6 +25,8 @@ use App\Modules\Campaigns\Support\CampaignPeople;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 /**
@@ -65,7 +68,12 @@ final class CampaignActionController extends Controller
         $filter = CampaignController::peopleFilter($request, $active);
         $standing = $filter->standing === Standing::Failed ? Standing::Failed : Standing::Pending;
         $pending = new PeopleFilter($standing, $request->has('guide') ? $filter->guide : null, $filter->areaId, $filter->search);
-        $sent = $resendInvitations->handle($active, $people->employeeIds($active, $pending));
+        try {
+            // The retry of failed links is not a reminder, so the wait does not hold it back.
+            $sent = $resendInvitations->handle($active, $people->employeeIds($active, $pending), reminder: $standing === Standing::Pending);
+        } catch (ReminderTooSoon $tooSoon) {
+            throw ValidationException::withMessages(['resend' => 'Ya enviaste un recordatorio hoy. Podrás enviar otro en '.($tooSoon->hoursLeft === 1 ? '1 hora' : "{$tooSoon->hoursLeft} horas").'.']);
+        }
 
         return $this->done($sent, 'No hay a quién reenviar: nadie con correo tiene guías pendientes.', 'Enlace reenviado a 1 persona.', "Enlace reenviado a {$sent} personas.");
     }
@@ -122,11 +130,14 @@ final class CampaignActionController extends Controller
         return back();
     }
 
-    public function close(mixed $tenant, string $campaign, CloseCampaign $closeCampaign): RedirectResponse
+    public function close(Request $request, mixed $tenant, string $campaign, CloseCampaign $closeCampaign): RedirectResponse
     {
         Gate::authorize('manage-campaigns');
         $active = CampaignController::find($campaign, CampaignStatus::Active);
-        $closeCampaign->handle($active);
+        $shortfall = $closeCampaign->shortfall($active);
+        $left = $shortfall['main'] > 0 || $shortfall['screening'] > 0;
+        $request->validate(['acknowledged_shortfall' => [Rule::when($left, 'accepted', 'nullable')]], ['acknowledged_shortfall.accepted' => 'Confirma que quieres cerrar con personas sin contestar.']);
+        $closeCampaign->handle($active, acknowledgedShortfall: $left);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Evaluación cerrada. Los enlaces ya no funcionan.']);
 
         return redirect()->route('tenant.campaigns.show', [$tenant, $active->id]);

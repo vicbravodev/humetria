@@ -44,6 +44,16 @@ final class ActionRequest extends FormRequest
         ];
     }
 
+    /**
+     * The screen calls it «fecha límite» (the word of the column and the form), so the error does too.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return ['due_on' => 'fecha límite'];
+    }
+
     public function toData(?string $id, ?string $itemId): ActionData
     {
         return new ActionData(

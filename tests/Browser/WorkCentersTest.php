@@ -37,6 +37,7 @@ it('lists the work centers with their address, and the archived ones apart', fun
 
     visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('a[href$="archived=1"]')
+        ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers'))
         ->assertSee('Bodega Vieja')
         ->assertDontSee('Planta Querétaro');
@@ -47,6 +48,7 @@ it('reaches the work centers from the sidebar', function (): void {
 
     visit($url)
         ->click('Centros de trabajo')
+        ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers')
         ->assertSee('Aún no hay centros de trabajo');
 });
@@ -183,6 +185,7 @@ it('points a company without work centers from its panel to them', function (boo
     visitPage('dashboard', $url, $dark, $mobile)
         ->assertSeeIn('[data-slot="empty-state"] h2', 'Empieza por tu primer centro de trabajo')
         ->click('Agregar centro')
+        ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers');
 })->with($looks);
 
@@ -208,5 +211,18 @@ it('shows how many people each work center has and which NOM-035 guides apply', 
         ->assertSeeIn('article:has(h2:text-is("Planta Querétaro")) dl', '16')
         ->assertSeeIn('article:has(h2:text-is("Planta Querétaro")) dl', 'I y II')
         ->assertSeeIn('article:has(h2:text-is("Planta Querétaro"))', 'Sin evaluar')
-        ->assertSeeIn('article:has(h2:text-is("Bodega Sur"))', 'Sin personal');
+        ->assertSeeIn('article:has(h2:text-is("Bodega Sur"))', 'Sin personal')
+        ->assertSeeIn('article:has(h2:text-is("Bodega Sur")) a[href*="/employees/import?center="]', 'Cargar personas')
+        ->assertSeeIn('article:has(h2:text-is("Planta Querétaro")) a[aria-label^="Ver personas"]', 'Ver personas');
 })->with($looks);
+
+it('takes a center with nobody to the page that loads people', function (): void {
+    $url = signInToPanel();
+    WorkCenter::factory()->for(acme())->create(['name' => 'Bodega Sur']);
+
+    visit("{$url}/work-centers")
+        ->click('Cargar personas')
+        ->assertPathContains('/employees/import')
+        ->assertSee('Las filas que dejen vacío el centro de trabajo se cargan en Bodega Sur.')
+        ->assertNoJavaScriptErrors();
+});

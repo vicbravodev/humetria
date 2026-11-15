@@ -11,6 +11,7 @@ use App\Modules\Engagement\Enums\ItemBlock;
 use App\Modules\Engagement\Enums\ItemScale;
 use App\Modules\Engagement\Enums\Priority;
 use App\Modules\Engagement\Enums\TenureBand;
+use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Engagement\Support\Thresholds;
 use App\Modules\Organization\Contracts\Areas;
@@ -38,8 +39,9 @@ final readonly class ResultsPresenter
     {
         $survey = $results->survey();
         $base = [
-            'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value],
+            'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value, 'closedOn' => $survey->closed_at?->setTimezone(config()->string('app.display_timezone'))->toDateString()],
             'available' => $results->available(),
+            'commitments' => $results->available() ? Commitment::query()->where('survey_id', $survey->id)->count() : 0,
             'cut' => $cut?->value,
             'cuts' => array_map(fn (CutAttribute $attribute): array => ['value' => $attribute->value, 'label' => self::cutLabel($attribute)], CutAttribute::cases()),
         ];
@@ -129,6 +131,21 @@ final readonly class ResultsPresenter
         ];
     }
 
+    /**
+     * The figure of a theme on the map by group: its score or, when it has none of its own (two questions reported one
+     * by one, or a survey that asked only some), the simple average of its questions; none when any of them is hidden.
+     */
+    private static function mapScore(DriverResult $driver): ?int
+    {
+        if ($driver->favorable !== null) {
+            return $driver->favorable;
+        }
+
+        $favorable = array_map(fn (ItemResult $item): ?int => $item->favorable, $driver->items);
+
+        return $favorable === [] || in_array(null, $favorable, true) ? null : (int) round(array_sum($favorable) / count($favorable));
+    }
+
     public static function cutLabel(CutAttribute $cut): string
     {
         return match ($cut) {
@@ -178,7 +195,11 @@ final readonly class ResultsPresenter
                 'key' => $driver->driver->value,
                 'label' => $driver->driver->label(),
                 'descriptive' => $driver->descriptive,
+                // A survey that asked only some of its questions (a pulse asks the anchor) has no score for the theme,
+                // which is not a hidden one: it is read question by question, each under its own minimum.
+                'partial' => count($driver->items) < count(ItemBank::ofDriver($driver->driver)),
                 'favorable' => $driver->favorable,
+                'score' => self::mapScore($driver),
                 'delta' => $earlier === null ? null : $this->delta($this->score($driver), $this->score($earlier), $same),
                 'items' => array_map($this->item(...), $driver->items),
             ];
@@ -256,6 +277,7 @@ final readonly class ResultsPresenter
                 'label' => $driver->driver->label(),
                 'descriptive' => $driver->descriptive,
                 'favorable' => $driver->favorable,
+                'score' => self::mapScore($driver),
                 'vsCompany' => $driver->favorable === null || $overall->favorable === null ? null : $driver->favorable - $overall->favorable,
             ], $group->drivers, $company->drivers),
             ...$this->highlights($group->highlights),

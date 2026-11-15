@@ -9,6 +9,7 @@ use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\DeviceController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
+use App\Modules\Attendance\Http\Controllers\PlaceController;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
 use App\Modules\Attendance\Http\Controllers\ReportController;
 use App\Modules\Attendance\Http\Controllers\ScheduleController;
@@ -27,6 +28,8 @@ Route::get('admin/{tenant:slug}/attendance/setup', [AttendanceController::class,
 Route::get('admin/{tenant:slug}/attendance/centers/{workCenter}', [AttendanceController::class, 'center'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.attendance.center');
 Route::post('admin/{tenant:slug}/attendance/centers/{workCenter}/zones', [ZoneController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.attendance.zones.store');
 Route::put('admin/{tenant:slug}/attendance/centers/{workCenter}/zones/{zone}', [ZoneController::class, 'update'])->where('tenant', $notReserved)->whereUuid(['workCenter', 'zone'])->name('tenant.attendance.zones.update');
+// The places that match an address, to drop a zone there from the map; a few a minute, as Nominatim asks.
+Route::get('admin/{tenant:slug}/attendance/places', PlaceController::class)->where('tenant', $notReserved)->middleware('throttle:20,1')->name('tenant.attendance.places');
 
 // The QR screens of a center: issued with a link shown once, revoked (the row stays, with when).
 Route::post('admin/{tenant:slug}/attendance/kiosks', [KioskController::class, 'store'])->where('tenant', $notReserved)->name('tenant.attendance.kiosks.store');

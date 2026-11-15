@@ -81,9 +81,11 @@ export default function CorrectionListItem({
                         {markName(correction.type)} ·{' '}
                         {shortMoment(correction.requestedAt)}
                     </span>
-                    <span className="line-clamp-2 text-sm text-muted-foreground">
-                        {correction.reason}
-                    </span>
+                    {correction.reason !== null && (
+                        <span className="line-clamp-2 text-sm text-muted-foreground">
+                            {correction.reason}
+                        </span>
+                    )}
                 </span>
             </Link>
         </li>

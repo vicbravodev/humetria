@@ -1,6 +1,7 @@
 import { Form, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { whoAssesses } from '@/lib/seating/assessment';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { show, store } from '@/routes/tenant/seating/assessments';
 import type { AssessmentPerson } from '@/types';
@@ -24,7 +25,15 @@ export default function AssessmentRowAction({
     }[person.state];
 
     if (person.state === 'draft' || !canAssess) {
-        return person.assessmentId === null ? null : (
+        const hint = whoAssesses(person.state, canAssess);
+
+        return person.assessmentId === null ? (
+            hint === null ? null : (
+                <span className="text-sm whitespace-nowrap text-muted-foreground">
+                    {hint}
+                </span>
+            )
+        ) : (
             <Button variant="outline" size="sm" asChild>
                 <Link href={show([tenantSlug, person.assessmentId])}>
                     {label}

@@ -105,6 +105,38 @@ describe('taskText', () => {
     });
 });
 
+describe('taskText of what blocks the Comisión', () => {
+    it('says that the center has no checklist published, and who is left without assessment', () => {
+        const checklist: CommitteeTask = {
+            ...notices,
+            kind: 'checklist',
+            href: '/c',
+        };
+
+        expect(taskText(checklist)).toEqual({
+            title: 'Publica la lista de verificación · Planta Querétaro',
+            text: 'El centro Planta Querétaro no tiene lista de verificación publicada: sin ella no se puede revisar ningún lugar de teletrabajo.',
+            estimate: '≈ 10 min',
+            action: 'Ir a la lista',
+        });
+        expect(taskNorm(checklist)).toBe('NOM-037');
+
+        const unassessed: CommitteeTask = {
+            ...notices,
+            kind: 'unassessed',
+            count: 3,
+        };
+
+        expect(taskText(unassessed).title).toBe(
+            '3 personas de pie sin evaluación en Planta Querétaro',
+        );
+        expect(taskText({ ...unassessed, count: 1 }).title).toBe(
+            '1 persona de pie sin evaluación en Planta Querétaro',
+        );
+        expect(taskNorm(unassessed)).toBe('Ley Silla');
+    });
+});
+
 describe('pendingLine', () => {
     it('counts what waits', () => {
         expect(pendingLine([lists, notices])).toBe(

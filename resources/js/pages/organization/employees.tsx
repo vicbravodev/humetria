@@ -1,14 +1,13 @@
-import { Head, Link } from '@inertiajs/react';
-import { Upload } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import PlanLimitNotice from '@/components/humetria/plan-limit-notice';
 import Pagination from '@/components/humetria/pagination';
-import CreateEmployeeSheet from '@/components/organization/create-employee-sheet';
+import EmployeesActions from '@/components/organization/employees-actions';
 import EmployeesEmpty from '@/components/organization/employees-empty';
 import EmployeesNotice from '@/components/organization/employees-notice';
 import EmployeesTable from '@/components/organization/employees-table';
 import EmployeesToolbar from '@/components/organization/employees-toolbar';
 import UnionEmployeesTable from '@/components/organization/union-employees-table';
 import PageHeader from '@/components/humetria/page-header';
-import { Button } from '@/components/ui/button';
 import { useIsUnion } from '@/hooks/use-is-union';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import {
@@ -17,7 +16,6 @@ import {
     unionHeadcountText,
 } from '@/lib/employees';
 import { options as areaOptions } from '@/routes/tenant/areas';
-import { create as importPage } from '@/routes/tenant/employees/import';
 import { options as jobGradeOptions } from '@/routes/tenant/job-grades';
 import { options as managerOptions } from '@/routes/tenant/org-chart/people';
 import { options as workCenterOptions } from '@/routes/tenant/work-centers';
@@ -27,11 +25,13 @@ import type {
     EmployeeFilters,
     EmployeeRow,
     Paginated,
+    PlanLimit,
 } from '@/types';
 
 export default function Employees({
     employees,
     counts,
+    plan_limit: planLimit,
     filters,
     genders,
     staff_groups,
@@ -39,6 +39,7 @@ export default function Employees({
 }: {
     employees: Paginated<EmployeeRow>;
     counts: EmployeeCounts;
+    plan_limit: PlanLimit | null;
     filters: EmployeeFilters;
     genders: ChoiceOption[];
     staff_groups: ChoiceOption[];
@@ -79,14 +80,13 @@ export default function Employees({
                             : headcountText(counts)
                     }
                 >
-                    <Button variant="outline" asChild>
-                        <Link href={importPage(tenantSlug)}>
-                            <Upload />
-                            Cargar CSV
-                        </Link>
-                    </Button>
-                    <CreateEmployeeSheet choices={choices} />
+                    <EmployeesActions choices={choices} limit={planLimit} />
                 </PageHeader>
+                <PlanLimitNotice
+                    limit={planLimit}
+                    what="personas"
+                    noun={{ singular: 'persona', plural: 'personas' }}
+                />
                 {!union && counts.without_email > 0 && (
                     <EmployeesNotice
                         filters={filters}

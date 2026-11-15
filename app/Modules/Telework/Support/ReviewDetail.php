@@ -41,7 +41,7 @@ final readonly class ReviewDetail
             ->where(fn ($reviews) => $reviews->whereNull('application_id')->orWhere('application_id', '!=', $application->id))
             ->orderByDesc('decided_at')->orderByDesc('id')->first();
         $status = $this->standing->of($workplace);
-        $expires = $this->standing->expiresOn($workplace);
+        $expires = $this->standing->validUntil($workplace);
 
         return [
             'application' => [

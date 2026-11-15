@@ -6,6 +6,8 @@ namespace App\Modules\Disclosure\Support;
 
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Data\CampaignRecord;
+use App\Modules\Disclosure\Enums\PageLinkStatus;
+use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Models\ResultPublication;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\RiskBreakdown;
@@ -22,7 +24,7 @@ final readonly class ResultsPages
     public function __construct(private CampaignRecords $campaigns, private RiskResults $results, private WorkCenters $workCenters) {}
 
     /**
-     * @return array{evaluations: LengthAwarePaginator<int, array{id: string, workCenter: string, closedOn: string|null, guide: string, state: string, publishedOn: string|null, canPublish: bool}>}
+     * @return array{pageActive: bool, evaluations: LengthAwarePaginator<int, array{id: string, workCenter: string, closedOn: string|null, guide: string, state: string, publishedOn: string|null, canPublish: bool}>}
      */
     public function show(): array
     {
@@ -39,7 +41,7 @@ final readonly class ResultsPages
             $published[$publication->campaign_id] = Days::moment($publication->published_at);
         }
 
-        return ['evaluations' => $page->withQueryString()->through(fn (CampaignRecord $record): array => [
+        return ['pageActive' => PageLink::query()->first()?->status() === PageLinkStatus::Active, 'evaluations' => $page->withQueryString()->through(fn (CampaignRecord $record): array => [
             'id' => $record->id,
             'workCenter' => $names[$record->workCenterId] ?? '',
             'closedOn' => $record->closedOn,

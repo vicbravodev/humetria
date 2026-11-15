@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\AssistantScopeFactory;
+use App\Modules\Billing\Enums\Plan;
+use App\Modules\Billing\Enums\Profile;
+use App\Modules\Billing\Models\AccountCompany;
+use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Subscription;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -13,6 +19,7 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Models\Conversation;
@@ -34,7 +41,11 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature', 'Browser');
+    ->in('Feature', 'Browser', 'Ssr');
+
+// Each CI runner drives four browsers at once: an action that waits for a button or a page gets 15 s instead of Pest's 5 s,
+// which a busy runner ran out of now and then (a click, a calendar day). It waits longer, it asserts nothing less.
+pest()->browser()->timeout(15_000);
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +58,24 @@ pest()->extend(TestCase::class)
 |
 */
 
+/**
+ * What an audit entry says, as text, for a privacy assertion: the event, the subject and the metadata. Not its UUIDs,
+ * its actor or its dates: they hold digit runs («50000») that a short number looked for in the whole entry meets by chance.
+ *
+ * @param  AuditEntry|iterable<AuditEntry>  $entries
+ */
+function auditContent(AuditEntry|iterable $entries): string
+{
+    $entries = $entries instanceof AuditEntry ? [$entries] : $entries;
+    $content = [];
+
+    foreach ($entries as $entry) {
+        $content[] = Arr::except($entry->toArray(), ['id', 'tenant_id', 'actor_id', 'request_id', 'created_at']);
+    }
+
+    return json_encode($content, JSON_THROW_ON_ERROR);
+}
+
 function superadmin(): User
 {
     $user = User::factory()->create();
@@ -55,6 +84,26 @@ function superadmin(): User
     $user->assignRole(User::SUPERADMIN);
 
     return $user;
+}
+
+function support(): User
+{
+    $user = User::factory()->create();
+    // The platform role belongs to no company: assigned outside any team.
+    setPermissionsTeamId(null);
+    $user->assignRole(User::SUPPORT);
+
+    return $user;
+}
+
+/**
+ * The columns that suspend a company, for tests that write them straight to the table.
+ *
+ * @return array<string, mixed>
+ */
+function suspension(): array
+{
+    return ['restriction' => 'suspended', 'restriction_reason' => 'Suspendida', 'restricted_at' => now()];
 }
 
 function signInAsSuperadmin(): void
@@ -73,6 +122,17 @@ function ownerOf(Tenant $tenant): User
 /**
  * Makes `$tenant` the company the code under test works in, as ResolveTenant does for a request inside it.
  */
+/**
+ * What deactivating someone asks for: the day they left (today, in the company's day) and why.
+ *
+ * @param  array<string, mixed>  $with
+ * @return array<string, mixed>
+ */
+function departure(array $with = []): array
+{
+    return ['terminated_on' => Carbon\CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString(), 'reason' => 'resignation', ...$with];
+}
+
 function workIn(Tenant $tenant): void
 {
     resolve(TenantContext::class)->set($tenant);
@@ -159,7 +219,8 @@ function tenantOf(string $tenantId): Tenant
 /** A new user who belongs to `$tenant` with `$role`. */
 function memberOf(Tenant $tenant, TenantRole $role): User
 {
-    $user = User::factory()->create();
+    // A fixed name: a random one («Rosario») contains the first name that a privacy assertion looks for in the same page.
+    $user = User::factory()->create(['name' => 'Miembro '.$role->value]);
     TenantMembership::factory()->for($tenant)->for($user)->role($role)->create();
 
     return $user;
@@ -286,7 +347,22 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
         // axe reads colors as painted: let fade-ins finish so it judges the settled page, not a frame mid-transition
         // (endless ones, like the OTP caret blink, never finish and are left alone). An animation the page cancels while we wait (the
         // kiosk restarts its countdown) rejects `finished` with an AbortError: that one is over too, so it is not a failure.
-        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => undefined))).then(() => true)');
+        ->assertScript('() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => undefined))).then(() => true)')
+        // An enter animation can start after that check (an IntersectionObserver fires a frame later, or a slow runner
+        // reaches it late), so the page counts as settled only after ten frames in a row with nothing finite running. A page that
+        // restarts a finite animation on purpose (the kiosk countdown) never goes still, so the wait gives up after 800 ms.
+        ->assertScript(<<<'JS'
+            () => new Promise((resolve) => {
+                let still = 0;
+                const start = performance.now();
+                const frame = () => {
+                    const moving = document.getAnimations().some((animation) => animation.playState === 'running' && animation.effect?.getTiming().iterations !== Infinity);
+                    still = moving ? 0 : still + 1;
+                    still >= 10 || performance.now() - start > 800 ? resolve(true) : requestAnimationFrame(frame);
+                };
+                requestAnimationFrame(frame);
+            })
+            JS);
 
     if ($mobile) {
         $page->assertScript(smallTouchTargets(), '');
@@ -326,6 +402,99 @@ function smallTouchTargets(): string
                 return reach(element) < 43.5;
             }).map((element) => `${element.getAttribute('aria-label') ?? element.textContent.trim().slice(0, 40)} (${Math.round(reach(element))} px)`).join(' | ');
         }
+        JS;
+}
+
+/**
+ * The source files under a directory of resources/js. The lint probes of FrontendArchitectureTest write and delete
+ * `zz-probe-*` files and folders there while other tests run in parallel: they are left out, so a walk never trips on
+ * a folder that vanished halfway.
+ *
+ * @return list<SplFileInfo>
+ */
+function frontendSourceFiles(string $directory = ''): array
+{
+    $root = dirname(__DIR__).'/resources/js'.($directory === '' ? '' : '/'.$directory);
+    $filter = new RecursiveCallbackFilterIterator(
+        new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+        fn (SplFileInfo $file): bool => ! str_starts_with($file->getFilename(), 'zz-probe-'),
+    );
+    $files = [];
+
+    foreach (new RecursiveIteratorIterator($filter) as $file) {
+        if ($file instanceof SplFileInfo) {
+            $files[] = $file;
+        }
+    }
+
+    return $files;
+}
+
+/**
+ * A script that resolves once the page's path matches, the way assertPathIs reads it (`*` is a wildcard). A click that
+ * navigates with Inertia changes the URL a moment later, and assertPathIs reads it at once: on a busy runner it read the
+ * old page. Run this before assertPathIs; it waits up to 10 s and the assertion still decides.
+ */
+function pathBecomes(string $path): string
+{
+    $pattern = json_encode('^'.str_replace('\\*', '.*', preg_quote($path, '/')).'$', JSON_THROW_ON_ERROR);
+
+    return <<<JS
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const check = () => {
+                const done = new RegExp({$pattern}).test(location.pathname);
+                done || performance.now() - start > 10000 ? resolve(true) : requestAnimationFrame(check);
+            };
+            check();
+        })
+        JS;
+}
+
+/**
+ * A script that polls a condition (the source of an arrow function) until it holds, up to 10 s, and resolves with its
+ * last answer. Use it as `->assertScript(eventually('() => …'), true)`: the assertion waits for what it asserts, where a
+ * `->wait(1)` before it passes or fails by the speed of the runner. A condition that throws (the node is not there yet) is false.
+ */
+function eventually(string $condition): string
+{
+    $source = json_encode($condition, JSON_THROW_ON_ERROR);
+
+    return <<<JS
+        () => new Promise((resolve) => {
+            const condition = new Function('return (' + {$source} + ')')();
+            const start = performance.now();
+            const check = () => {
+                let holds = false;
+                try { holds = Boolean(condition()); } catch (error) { holds = false; }
+                holds || performance.now() - start > 10000 ? resolve(holds) : requestAnimationFrame(check);
+            };
+            check();
+        })
+        JS;
+}
+
+/** A script that resolves true once nothing finite is animating or in transition (a toast fading in, a menu closing). */
+function settled(): string
+{
+    return eventually('() => document.getAnimations().every((animation) => animation.playState !== "running" || animation.effect?.getComputedTiming().iterations === Infinity)');
+}
+
+/**
+ * A script that resolves once no calendar popover is open: picking a day closes its popover with a short animation,
+ * and on a slow runner the click that opens the next date field can land while the first one is still closing.
+ */
+function calendarClosed(): string
+{
+    return <<<'JS'
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const check = () => {
+                const open = document.querySelector('[data-state="open"] [data-day]') !== null;
+                ! open || performance.now() - start > 3000 ? resolve(! open) : requestAnimationFrame(check);
+            };
+            check();
+        })
         JS;
 }
 
@@ -616,6 +785,82 @@ function enrollmentUrl(string $employeeId, ?int $userId = null): string
 }
 
 /**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function subscriptionInput(array $overrides = []): array
+{
+    return [
+        'plan' => 'cumplimiento',
+        'profile' => 'direct',
+        'seats' => 100,
+        'centers' => 2,
+        'status' => 'active',
+        'starts_on' => '2026-12-01',
+        'negotiated_price' => '',
+        'negotiated_valid_until' => '',
+        ...$overrides,
+    ];
+}
+
+/**
+ * A company paid by a new account of that kind ('direct' or 'consultant').
+ *
+ * @return array{0: Tenant, 1: BillingAccount}
+ */
+function paidCompany(string $kind = 'direct'): array
+{
+    $account = $kind === 'consultant' ? BillingAccount::factory()->consultant()->create() : BillingAccount::factory()->create();
+    $tenant = Tenant::factory()->create();
+    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
+
+    return [$tenant, $account];
+}
+
+/**
+ * A company that the account pays, with a plan.
+ *
+ * @param  array<string, mixed>  $attributes  of the Subscription; defaults to a paying channel Cumplimiento of 100 people and 2 centers
+ */
+function planFor(BillingAccount $account, array $attributes = [], ?Tenant $tenant = null): Tenant
+{
+    $tenant ??= Tenant::factory()->create();
+    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
+    Subscription::factory()->create(['tenant_id' => $tenant->id, 'plan' => Plan::Cumplimiento, 'profile' => Profile::ChannelCompliance, 'seats' => 100, 'centers' => 2, ...$attributes]);
+
+    return $tenant;
+}
+
+/**
+ * Puts the company on a plan whose campaign email quota for the month is exactly `$quota` (the floor, with nothing per seat).
+ */
+function withMailQuota(Tenant $tenant, int $quota): void
+{
+    config(['billing.versions.v1.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v1.plans.cumplimiento.quotas.email_per_seat' => 0]);
+    [, $account] = paidCompany();
+    planFor($account, [], $tenant);
+}
+
+function statementMonth(): Carbon\CarbonImmutable
+{
+    return Carbon\CarbonImmutable::parse('2026-12-01');
+}
+
+/**
+ * A direct company with a plan from a month before; 100 people and 2 centers of Cumplimiento unless said otherwise.
+ *
+ * @param  array<string, mixed>  $plan
+ * @return array{0: Tenant, 1: Subscription}
+ */
+function statementCompany(array $plan = []): array
+{
+    [$tenant] = paidCompany();
+    $subscription = Subscription::factory()->create(['tenant_id' => $tenant->id, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01', ...$plan]);
+
+    return [$tenant, $subscription];
+}
+
+/**
  * Fails when the props of a page hold something one person of a climate or pulse survey wrote or gave: the id of a stored
  * response or comment, the text of a comment, a map named `answers`, or a map from a question key to a number (a
  * question's key may appear as a value, in a list of results, never as a key with its answer).
@@ -728,4 +973,33 @@ function climateManagerSurvey(Tenant $tenant, array $groups): App\Modules\Engage
     }
 
     return $survey;
+}
+
+/**
+ * Switches the page to the print media, as the browser does for paper or a PDF, without firing `beforeprint`.
+ * Pest's browser plugin has no emulateMedia, so this sends Playwright's own message to the page.
+ */
+function emulatePrint(AwaitableWebpage $page): AwaitableWebpage
+{
+    $inner = (new ReflectionProperty(AwaitableWebpage::class, 'page'))->getValue($page);
+    $guid = (new ReflectionProperty($inner, 'guid'))->getValue($inner);
+    iterator_to_array(Pest\Browser\Playwright\Client::instance()->execute($guid, 'emulateMedia', ['media' => 'print']));
+
+    return $page;
+}
+
+/**
+ * What a dossier carries on paper and not on screen: the letterhead with the Humetría logo, the company and the center,
+ * and the date it was issued (the sheet's page number comes from the `dossier` named page).
+ */
+function assertPrintLetterhead(AwaitableWebpage $page, string $center): void
+{
+    $page->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'none');
+
+    emulatePrint($page)
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'flex')
+        ->assertScript('() => document.querySelector(\'[data-slot="print-letterhead"] img\').getBoundingClientRect().width > 0', true)
+        ->assertScript('() => /Emitido el \\d{1,2} \\w+ \\d{4}/.test(document.querySelector(\'[data-slot="print-letterhead"]\').innerText)', true)
+        ->assertScript("() => document.querySelector('[data-slot=\"print-letterhead\"]').innerText.includes(".json_encode($center).')', true)
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\').parentElement).page', 'dossier');
 }

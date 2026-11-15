@@ -85,7 +85,7 @@ final readonly class FamilyViolenceTemplate implements WrittenTemplate
         ]);
 
         return [
-            new Section('contact', 'A quién acudir', $contact === null ? null : "Si una persona en teletrabajo vive violencia en su casa, puede acudir {$contact}, que la atiende de forma expedita, discreta y con perspectiva de género, sin revictimizarla."),
+            new Section('contact', 'A quién acudir', $contact === null ? null : "Si una persona en teletrabajo vive violencia en su casa, puede acudir {$contact}, que atiende a quien acude de forma expedita, discreta y con perspectiva de género, sin revictimizar."),
             new Section('outside', 'A dónde se canaliza', $places === null ? null : "La empresa le orienta y le acompaña para acudir a {$places}."),
             new Section('adjustments', 'Ajustes que ofrece la empresa', $adjustments === null ? null : "Mientras lo necesite, la persona puede {$adjustments}."),
             new Section('privacy', 'Confidencialidad', $privacy),

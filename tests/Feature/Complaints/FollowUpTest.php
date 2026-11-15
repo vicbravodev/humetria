@@ -134,7 +134,7 @@ it('opens with a paused channel but not with an unknown code or a blocked compan
     $this->channel->forceFill(['paused_at' => now()])->save();
     followUp($this, '')->assertOk();
 
-    $blocked = Tenant::factory()->deactivated()->create();
+    $blocked = Tenant::factory()->suspended()->create();
     $channel = ComplaintChannel::factory()->forTenant($blocked->id)->active()->create();
     followUp($this, '', [], $channel->access_code)->assertNotFound();
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notification;
  * only, never a name or a note. The Comisión's says in its subject how many things wait, and opens its queue (rediseño
  * v2, boards V3-Correos and V2-Comision).
  */
-final class TeleworkDigest extends Notification implements ShouldQueue
+final class TeleworkDigest extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -42,7 +43,7 @@ final class TeleworkDigest extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $subject = $this->pending === null ? 'Resumen de teletrabajo' : "Tienes {$this->pending} pendientes como integrante de la Comisión";
+        $subject = $this->pending === null ? 'Resumen de teletrabajo' : trans_choice('{1} Tienes :count pendiente como integrante de la Comisión|[2,*] Tienes :count pendientes como integrante de la Comisión', $this->pending);
         $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject($subject)->greeting($this->name === null ? 'Hola' : "Hola, {$this->name}")
             ->line("Esto espera tu atención en {$this->company->tradeName}:");
 
@@ -51,5 +52,10 @@ final class TeleworkDigest extends Notification implements ShouldQueue
         }
 
         return $mail->action($this->pending === null ? 'Abrir Humetría' : 'Ver mis pendientes', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

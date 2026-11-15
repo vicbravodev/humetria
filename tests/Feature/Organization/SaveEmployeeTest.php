@@ -152,12 +152,12 @@ it('deactivates and reactivates an employee, never deleting them', function (): 
     Log::spy();
 
     $this->actingAs($this->owner)
-        ->post(route('tenant.employees.deactivate', [$this->tenant, $employee->id]))
+        ->post(route('tenant.employees.deactivate', [$this->tenant, $employee->id]), departure())
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Empleado dado de baja.']]);
 
     expect(storedEmployee()->deactivated_at?->equalTo(now()))->toBeTrue();
 
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $employee->id]))->assertConflict();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $employee->id]), departure())->assertConflict();
     $this->actingAs($this->owner)
         ->post(route('tenant.employees.reactivate', [$this->tenant, $employee->id]))
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Empleado reactivado.']]);
@@ -179,7 +179,7 @@ it('answers 404 to an employee of another company', function (): void {
     $foreign = Employee::factory()->create(['name' => 'Ajeno']);
 
     $this->actingAs($this->owner)->put(route('tenant.employees.update', [$this->tenant, $foreign->id]), employeeForm($this->plant))->assertNotFound();
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $foreign->id]))->assertNotFound();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $foreign->id]), departure())->assertNotFound();
 
     expect(Employee::query()->withoutGlobalScopes()->findOrFail($foreign->id)->only(['name', 'deactivated_at']))->toBe(['name' => 'Ajeno', 'deactivated_at' => null]);
 });
@@ -194,7 +194,7 @@ it('lets hr change employees and refuses a viewer', function (): void {
 
     $this->actingAs($viewer)->post(route('tenant.employees.store', $this->tenant), employeeForm($this->plant, ['email' => 'otro@acme.mx', 'employee_number' => '']))->assertForbidden();
     $this->actingAs($viewer)->put(route('tenant.employees.update', [$this->tenant, $employee->id]), employeeForm($this->plant))->assertForbidden();
-    $this->actingAs($viewer)->post(route('tenant.employees.deactivate', [$this->tenant, $employee->id]))->assertForbidden();
+    $this->actingAs($viewer)->post(route('tenant.employees.deactivate', [$this->tenant, $employee->id]), departure())->assertForbidden();
 
     expect(Employee::query()->withoutGlobalScopes()->count())->toBe(1)
         ->and(storedEmployee()->deactivated_at)->toBeNull();

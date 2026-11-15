@@ -51,7 +51,7 @@ export default function RowLine({
                     <Badge variant="warning">Falta el análisis</Badge>
                 )}
             </TableCell>
-            <TableCell className="text-right">
+            <TableCell className="sticky right-0 bg-card text-right">
                 {tools !== null && (
                     <RowMenu row={row} campaignId={campaignId} tools={tools} />
                 )}

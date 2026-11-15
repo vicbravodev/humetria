@@ -48,7 +48,7 @@ function eventsEmployeeForm(Employee $employee, array $changes = []): array
 }
 
 it('announces that a person was deactivated, and reactivated', function (): void {
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure())->assertRedirect();
 
     Event::assertDispatched(EmployeeDeactivated::class, fn (EmployeeDeactivated $event): bool => $event->tenantId === $this->tenant->id && $event->employeeId === $this->employee->id);
     Event::assertNotDispatched(EmployeeReactivated::class);

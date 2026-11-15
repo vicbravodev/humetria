@@ -7,6 +7,7 @@ namespace App\Modules\Organization\Models;
 use App\Concerns\BelongsToCurrentTenant;
 use App\Concerns\MatchesManyIds;
 use App\Concerns\SearchesText;
+use App\Modules\Organization\Enums\DeactivationReason;
 use App\Modules\Organization\Enums\Gender;
 use App\Modules\Organization\Enums\StaffGroup;
 use Carbon\CarbonImmutable;
@@ -40,10 +41,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $manager_id
  * @property CarbonImmutable|null $seniority_on
  * @property CarbonImmutable|null $deactivated_at
+ * @property CarbonImmutable|null $terminated_on
+ * @property DeactivationReason|null $deactivation_reason
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'work_center_id', 'area_id', 'name', 'email', 'mobile', 'gender', 'job_title', 'employee_number', 'job_grade_id', 'hired_on', 'staff_group', 'state', 'manager_id', 'seniority_on', 'deactivated_at'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'work_center_id', 'area_id', 'name', 'email', 'mobile', 'gender', 'job_title', 'employee_number', 'job_grade_id', 'hired_on', 'staff_group', 'state', 'manager_id', 'seniority_on', 'deactivated_at', 'terminated_on', 'deactivation_reason'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(EmployeeFactory::class)]
 final class Employee extends Model
 {
@@ -95,6 +98,8 @@ final class Employee extends Model
             'hired_on' => 'immutable_date',
             'seniority_on' => 'immutable_date',
             'deactivated_at' => 'immutable_datetime',
+            'terminated_on' => 'immutable_date',
+            'deactivation_reason' => DeactivationReason::class,
         ];
     }
 }

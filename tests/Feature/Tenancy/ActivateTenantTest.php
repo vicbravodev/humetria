@@ -104,7 +104,7 @@ it('accepts tomorrow', function (): void {
     expect($tenant->refresh()->active_until?->toIso8601String())->toBe('2026-10-29T05:59:59+00:00');
 });
 
-it('reactivates a deactivated, expired or finished-trial company', function (Closure $company): void {
+it('reactivates a suspended, expired or finished-trial company', function (Closure $company): void {
     $tenant = $company()->create();
 
     expect($tenant->status()->isBlocked())->toBeTrue();
@@ -116,9 +116,9 @@ it('reactivates a deactivated, expired or finished-trial company', function (Clo
     $tenant->refresh();
 
     expect($tenant->status())->toBe(TenantStatus::Active)
-        ->and($tenant->deactivated_at)->toBeNull();
+        ->and($tenant->restriction)->toBeNull();
 })->with([
-    'deactivated' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-12-01', 'UTC'))->deactivated()],
+    'suspended' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-12-01', 'UTC'))->suspended()],
     'expired' => [fn () => Tenant::factory()->activeUntil(CarbonImmutable::parse('2026-09-30', 'UTC'))],
     'trial ended' => [fn () => Tenant::factory()->inTrial(CarbonImmutable::parse('2026-10-01 18:00', 'UTC'))],
 ]);

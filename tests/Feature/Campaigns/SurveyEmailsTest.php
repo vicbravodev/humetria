@@ -162,7 +162,9 @@ it('leaves out whom to write to when the company has no owner yet', function ():
         ->not->toContain('¿Dudas?');
 });
 
-it('reminds who already got a link, with the days left counting today', function (string $today, string $title, string $subject): void {
+// H-13 and E-13: the panel counts the days left after today and the email counted today, so the two said different numbers for the
+// same closing; the email names the day instead.
+it('reminds who already got a link, naming the last day instead of counting days', function (string $today, string $title, string $subject): void {
     $campaign = sentEvaluation($this->tenant, $this->plant, $this->hr, 20);
     Carbon::setTestNow($today);
 
@@ -183,8 +185,8 @@ it('reminds who already got a link, with the days left counting today', function
         ->toContain('Si ya envió una de las guías, no tiene que contestarla otra vez.')
         ->toContain('Le escribimos porque su evaluación sigue pendiente. Si ya la contestó, ignore este mensaje.');
 })->with([
-    'four days' => ['2026-11-17 17:00:00', 'Le quedan 4 días para contestar', 'Le quedan 4 días para contestar su evaluación'],
-    'the day before' => ['2026-11-19 17:00:00', 'Le quedan 2 días para contestar', 'Le quedan 2 días para contestar su evaluación'],
+    'four days' => ['2026-11-17 17:00:00', 'Tiene hasta el viernes 20 de noviembre para contestar', 'Tiene hasta el viernes 20 de noviembre para contestar su evaluación'],
+    'the day before' => ['2026-11-19 17:00:00', 'Tiene hasta el viernes 20 de noviembre para contestar', 'Tiene hasta el viernes 20 de noviembre para contestar su evaluación'],
     'the last day' => ['2026-11-20 17:00:00', 'Hoy es su último día para contestar', 'Hoy es su último día para contestar su evaluación'],
 ]);
 

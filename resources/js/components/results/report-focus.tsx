@@ -3,6 +3,7 @@ import FocusCard from '@/components/results/focus-card';
 import ReportCallout from '@/components/results/report-callout';
 import ReportSection from '@/components/results/report-section';
 import { focusDomains } from '@/lib/report';
+import { strengthCaption } from '@/lib/report-findings';
 import { highRisk, percentText, rankBySeverity } from '@/lib/results';
 import type { NomReport, RiskLevelInfo } from '@/types';
 
@@ -65,7 +66,7 @@ export default function ReportFocus({
                 {strength !== undefined && !focus.includes(strength) && (
                     <ReportCallout
                         icon={ShieldCheck}
-                        caption="Fortaleza"
+                        caption={strengthCaption(strength)}
                         tone="strength"
                     >
                         <b className="font-semibold">{strength.label}</b> · solo{' '}

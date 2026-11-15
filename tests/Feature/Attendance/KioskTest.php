@@ -211,7 +211,7 @@ describe('the screen', function (): void {
 
     it('answers 404 under a suspended company', function (): void {
         $token = kioskToken();
-        $this->tenant->update(['deactivated_at' => now()]);
+        $this->tenant->update(suspension());
 
         $this->withCredentials()->withCookie('attendance_kiosk', $token)->getJson(route('attendance.device.kiosk.qr', $this->tenant->slug))->assertNotFound();
     });

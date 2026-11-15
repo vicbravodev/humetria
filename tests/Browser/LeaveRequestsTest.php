@@ -45,7 +45,7 @@ it('shows RH what reached them first and lets them see the rest by tab', functio
     visitPage('leave/requests', $queue['url'], $dark, $mobile)
         ->assertSee('Solicitudes')
         ->assertSee('Ana Solís')
-        ->assertSee('Su jefe no respondió en 3 días hábiles')
+        ->assertSee('Su jefe (Beto Ruiz) no respondió en 3 días hábiles')
         ->assertDontSee('Caro Luz')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
@@ -55,12 +55,19 @@ it('shows RH what reached them first and lets them see the rest by tab', functio
         ->assertNoJavaScriptErrors();
 })->with($looks);
 
+it('writes the days of a request short, on one line, so the row of the queue stays low', function (): void {
+    $queue = leaveRequestsPanel();
+
+    resizeTo(visit($queue['url'])->assertSee('Ana Solís'), 1440, 900)
+        ->assertScript('() => { const cell = document.querySelector("tbody tr td:nth-child(2)"); const range = document.createRange(); range.selectNodeContents(cell); return range.getClientRects().length === 1 && !/ de /.test(cell.textContent); }', true);
+});
+
 it('says so when a tab has nothing', function (): void {
     $url = signInToPanel();
     workIn(Tenant::query()->where('slug', 'acme')->firstOrFail());
 
     visitPage('leave/requests', "{$url}/vacations/requests")
-        ->assertSee('Nada por atender.')
+        ->assertSee('No hay solicitudes por atender.')
         ->assertNoJavaScriptErrors();
 });
 
@@ -69,7 +76,8 @@ it('searches the queue by name', function (): void {
 
     visitPage('leave/requests', "{$queue['url']}?tab=waiting")
         ->type('input[type=search]', 'zzz')
-        ->assertSee('Ninguna solicitud espera a un jefe.')
+        ->assertSee('Ninguna solicitud coincide')
+        ->assertSee('Quitar filtros')
         ->assertDontSee('Caro Luz');
 });
 
@@ -79,14 +87,16 @@ it('lets RH read a request and approve it', function (bool $dark, bool $mobile):
     LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $queue['tenant']->id, 'employee_id' => $ana->employee_id, 'years_of_service' => 1, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14]);
 
     visitPage('leave/requests', $queue['url'], $dark, $mobile)
-        ->click('button[aria-label="Ver la solicitud de Ana Solís"]')
-        ->assertSee('Le tocaba a')
-        ->assertSee('Su jefe no respondió en 3 días hábiles')
+        ->click('tbody button[aria-pressed]:has-text("Ana Solís")')
+        ->assertSee('Su jefe (Beto Ruiz) no respondió en 3 días hábiles')
+        ->assertSee('Sí le alcanza · le quedarían 5 días')
+        ->assertSee('Su equipo esos días')
+        ->assertSee('Nadie más de su equipo está fuera')
         ->assertNoJavaScriptErrors()
         ->press('Aprobar')
         ->click('[role=dialog] button:has-text("Sí, aprobar")')
         ->assertSee('Solicitud aprobada.')
-        ->assertSee('Nada por atender.')
+        ->assertSee('No hay solicitudes por atender.')
         ->assertNoJavaScriptErrors();
 })->with($looks);
 
@@ -94,12 +104,11 @@ it('lets RH reject a request with the reason the person will read', function ():
     $queue = leaveRequestsPanel();
 
     visitPage('leave/requests', $queue['url'])
-        ->click('button[aria-label="Ver la solicitud de Ana Solís"]')
         ->press('Rechazar')
         ->type('textarea[name=reason]', 'Cierre de mes')
         ->click('[role=dialog] button[type=submit]')
         ->assertSee('Solicitud rechazada.')
-        ->assertSee('Nada por atender.');
+        ->assertSee('No hay solicitudes por atender.');
 
     expect(LeaveRequest::query()->where('rejection_reason', 'Cierre de mes')->count())->toBe(1);
 });
@@ -107,7 +116,6 @@ it('lets RH reject a request with the reason the person will read', function ():
 it('lets RH correct a request by cancelling it', function (): void {
     $queue = leaveRequestsPanel();
     visitPage('leave/requests', "{$queue['url']}?tab=waiting")
-        ->click('button[aria-label^="Ver la solicitud de"]')
         ->press('Cancelar solicitud')
         ->click('[role=dialog] button:has-text("Sí, cancelar solicitud")')
         ->assertSee('La solicitud quedó cancelada.');
@@ -127,6 +135,7 @@ it('lets RH record vacations for somebody and approve them in the same step', fu
         ->click('[role="option"]:has-text("Ana Solís")')
         ->click('#record-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-02"] button')
+        ->assertScript(calendarClosed(), true)
         ->click('#record-ends-on')
         ->click('[data-state="open"] [data-day="2026-11-03"] button')
         ->type('#record-note', 'Lo pidió por teléfono')
@@ -153,7 +162,6 @@ it('does not offer a viewer to record, answer or correct', function (): void {
     visitPage('leave/requests', $queue['url'])
         ->assertSee('Ana Solís')
         ->assertDontSee('Registrar a nombre de alguien')
-        ->click('button[aria-label="Ver la solicitud de Ana Solís"]')
         ->assertDontSee('Cancelar solicitud')
         ->assertDontSee('Aprobar');
 });

@@ -64,6 +64,10 @@ export type BenefitRow = {
     /** The terms in force today; none before the first vigencia. */
     current: { value_text: string; effective_from: string } | null;
     warning: string | null;
+    /** What to know about this benefit: the seniority premium is on top of the law's, which is counted apart. */
+    note: string | null;
+    /** Where the Vacaciones policy and this contract say different things (vacation days and premium). */
+    policy_notice: string | null;
     terms: BenefitTerm[];
 };
 
@@ -85,6 +89,8 @@ export type SalaryEntry = {
     daily_salary_text: string;
     /** `AAAA-MM-DD`. */
     effective_from: string;
+    /** Why it is under the general minimum wage in force that day; null when it is not. */
+    below_minimum: string | null;
 };
 
 /** A category and level of the tabulator with its salaries, latest vigencia first, and the one in force today. */

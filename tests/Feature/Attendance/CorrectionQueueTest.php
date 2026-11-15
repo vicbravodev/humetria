@@ -150,6 +150,29 @@ describe('the queue', function (): void {
         $this->get(queueUrl())->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('canResolve', false)->where('requests.total', 1));
     });
 
+    it('hides from a viewer the reason a person wrote and the note of who resolved it: free text that may be medical', function (): void {
+        $pending = queued($this->ana, null, MarkType::Start, '2026-11-10 09:00');
+        $pending->update(['reason' => 'Fui a una cita con el cardiólogo']);
+        $resolved = queued($this->ana, null, MarkType::End, '2026-11-10 18:00');
+        $resolved->update(['status' => CorrectionStatus::Rejected, 'note' => 'Me avisó que estuvo en urgencias', 'resolved_at' => now(), 'resolved_by' => $this->hr->id]);
+
+        $props = fn (string $status): array => $this->get(queueUrl(['status' => $status]))->assertOk()->inertiaProps();
+
+        $this->actingAs($this->hr);
+        expect($props('pending')['requests']['data'][0])->toMatchArray(['reason' => 'Fui a una cita con el cardiólogo'])
+            ->and($props('rejected')['requests']['data'][0])->toMatchArray(['note' => 'Me avisó que estuvo en urgencias']);
+
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+        $pendingProps = $props('pending');
+        $approvedProps = $props('rejected');
+
+        expect($pendingProps['requests']['data'][0]['reason'])->toBeNull()
+            ->and($pendingProps['detail']['reason'])->toBeNull()
+            ->and($approvedProps['requests']['data'][0]['note'])->toBeNull()
+            ->and($approvedProps['detail']['note'])->toBeNull()
+            ->and(json_encode([$pendingProps, $approvedProps]))->not->toContain('cardiólogo')->not->toContain('urgencias');
+    });
+
     it('never lists the requests of another company', function (): void {
         $globex = Tenant::factory()->create();
         CorrectionRequest::factory()->create(['tenant_id' => $globex->id]);

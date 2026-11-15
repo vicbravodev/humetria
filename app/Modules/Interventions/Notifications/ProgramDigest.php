@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Interventions\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notification;
  * (their own actions): counts in lines that appear only when they are not zero, in the panel voice ("tú"). Counts only, never
  * a title, a name or a text HR wrote: free text may carry data of a person.
  */
-final class ProgramDigest extends Notification implements ShouldQueue
+final class ProgramDigest extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -49,5 +50,10 @@ final class ProgramDigest extends Notification implements ShouldQueue
         }
 
         return $mail->action('Abrir Humetría', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

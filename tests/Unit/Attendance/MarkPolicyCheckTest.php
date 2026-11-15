@@ -41,11 +41,11 @@ function northOf(float $meters, float $accuracy = 10.0): Position
  *
  * @param  ?list<AttendanceZone>  $zones  null for the plant's one zone
  */
-function decideMark(?AttendanceSchedule $schedule = null, ?AttendancePolicy $policy = null, bool $trusted = false, ?bool $qrValid = true, ?array $zones = null, ?Position $position = new Position(19.0 + 10 / MPC_METERS_PER_DEGREE, -99.0, 10.0)): MarkContext
+function decideMark(?AttendanceSchedule $schedule = null, ?AttendancePolicy $policy = null, bool $trusted = false, ?bool $qrValid = true, ?array $zones = null, ?Position $position = new Position(19.0 + 10 / MPC_METERS_PER_DEGREE, -99.0, 10.0), int $screens = 1): MarkContext
 {
     $plant = [(new AttendanceZone)->forceFill(['id' => 'zone-a', 'latitude' => 19.0, 'longitude' => -99.0, 'radius_m' => 50])];
 
-    return MarkPolicyCheck::decide($schedule, $policy ?? markPolicy(), $trusted, $qrValid, $zones ?? $plant, $position, 'device-1');
+    return MarkPolicyCheck::decide($schedule, $policy ?? markPolicy(), $trusted, $qrValid, $zones ?? $plant, $position, 'device-1', $screens);
 }
 
 /**
@@ -160,10 +160,24 @@ describe('on site', function (): void {
             expect(decideMark(zones: [], position: northOf(10, 900))->method)->toBe(MarkMethod::Qr);
         });
 
+        it('says the center is not ready, not «scan the screen», when it has no zone and no active screen either', function (): void {
+            expect(markRejection(fn () => decideMark(zones: [], qrValid: null, screens: 0)))->toBe('center_not_ready')
+                ->and(markRejection(fn () => decideMark(zones: [], qrValid: null, screens: 0, policy: markPolicy(requireQr: false))))->toBe('center_not_ready');
+        });
+
+        it('still asks for the QR when there is a screen, even with no zone', function (): void {
+            expect(markRejection(fn () => decideMark(zones: [], qrValid: null, screens: 1)))->toBe('qr_required');
+        });
+
         it('still needs the QR, even when the policy does not require it, as nothing else proves where', function (): void {
             expect(markRejection(fn () => decideMark(zones: [], qrValid: null, policy: markPolicy(requireQr: false))))->toBe('qr_required');
         });
     });
+});
+
+it('keeps asking for the QR of a center with a zone and no screen when the policy requires it, and for a bad code first', function (): void {
+    expect(markRejection(fn () => decideMark(qrValid: null, screens: 0)))->toBe('qr_required')
+        ->and(markRejection(fn () => decideMark(zones: [], qrValid: false, screens: 0)))->toBe('qr_invalid');
 });
 
 describe('remote', function (): void {

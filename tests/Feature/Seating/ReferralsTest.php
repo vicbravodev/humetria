@@ -65,7 +65,7 @@ it('keeps the note out of the log and the audit trail', function (): void {
     $referral = MedicalReferral::query()->sole();
     $record = ['referral_id' => $referral->id, 'work_center_id' => $this->center->id];
     expect(AuditEntry::query()->where('event', 'seating.referral_recorded')->sole()->metadata)->toEqual($record)
-        ->and(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('Lumbalgia');
+        ->and(auditContent(AuditEntry::query()->get()))->not->toContain('Lumbalgia');
     Log::shouldHaveReceived('info')->with('seating.referral_recorded', $record)->once();
     Log::shouldNotHaveReceived('info', fn ($message, $context = []): bool => str_contains(json_encode($context), 'Lumbalgia'));
 });

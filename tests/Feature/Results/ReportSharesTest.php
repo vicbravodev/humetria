@@ -155,7 +155,7 @@ it('stops opening when the link expires, is revoked, is unknown or its company i
         $token = str_repeat('b', 64);
     },
     'blocked company' => function (string &$token, Tenant $tenant): void {
-        $tenant->update(['deactivated_at' => now()]);
+        $tenant->update(suspension());
     },
 ]);
 

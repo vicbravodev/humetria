@@ -70,6 +70,15 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
         ->waitForText('Su respuesta');
 }
 
+it('tells Ana how late she marked her start, when her schedule has a start time, and nothing on the other days', function (): void {
+    // Monday starts at 08:00 and she marked at 09:00: an hour late, past the default tolerance of 10 minutes.
+    AttendanceSchedule::query()->update(['starts_by_weekday' => [1 => 480, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]]);
+
+    anaSeesHerWeek()->assertSee('Retardo de 1 h')
+        ->assertDontSee('Retardo de 2 h')
+        ->assertNoJavaScriptErrors();
+});
+
 it('shows Ana her week with its hours and notices, and confirms it with her fingerprint', function (bool $dark): void {
     $page = anaSeesHerWeek($dark);
 

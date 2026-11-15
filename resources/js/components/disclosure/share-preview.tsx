@@ -54,6 +54,13 @@ export default function SharePreview({
                             <p>{themes}</p>
                         </div>
                     )}
+                    <p className="text-sm font-medium text-primary">
+                        Ver todas las cifras
+                        <span className="block font-normal text-muted-foreground">
+                            Cuántos cuestionarios quedan en cada nivel de
+                            riesgo, de todo el centro.
+                        </span>
+                    </p>
                     {withMeasures && props.measures.length > 0 && (
                         <div className="flex flex-col gap-1.5">
                             <p className="font-semibold">
@@ -71,8 +78,8 @@ export default function SharePreview({
                             </p>
                             <p>
                                 {props.channel.anonymous
-                                    ? 'Avise por el canal de quejas, también sin dar su nombre. Nadie recibirá represalias.'
-                                    : 'Avise por el canal de quejas. Nadie recibirá represalias.'}
+                                    ? 'Avise por el canal de quejas, también sin dar su nombre.'
+                                    : 'Avise por el canal de quejas.'}
                             </p>
                         </div>
                     )}

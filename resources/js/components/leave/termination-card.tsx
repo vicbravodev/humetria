@@ -70,6 +70,11 @@ export default function TerminationCard({
                     </dd>
                 </div>
             </dl>
+            <p className="text-meta text-muted-foreground">
+                Sobre estos días corresponde también la prima vacacional (25 %
+                como mínimo, LFT art. 80). Humetría solo cuenta días: el importe
+                lo calcula la nómina.
+            </p>
             {termination.canSettle && (
                 <div className="flex justify-end">
                     <ConfirmDialog

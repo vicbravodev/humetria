@@ -33,11 +33,13 @@ it('is active over a finished trial', function (): void {
     expect($tenant->status())->toBe(TenantStatus::Active);
 });
 
-it('is deactivated even with a future active_until', function (): void {
-    $tenant = Tenant::factory()->activeUntil(now()->addMonth())->deactivated()->make();
-
-    expect($tenant->status())->toBe(TenantStatus::Deactivated);
-});
+it('follows its restriction over any date', function (Closure $company, TenantStatus $status): void {
+    expect($company()->status())->toBe($status);
+})->with([
+    'read only' => [fn () => Tenant::factory()->activeUntil(now()->addMonth())->readOnly()->make(), TenantStatus::ReadOnly],
+    'suspended' => [fn () => Tenant::factory()->activeUntil(now()->addMonth())->suspended()->make(), TenantStatus::Suspended],
+    'archived' => [fn () => Tenant::factory()->inTrial(now())->archived()->make(), TenantStatus::Archived],
+]);
 
 it('ends the trial 14 days after it starts', function (): void {
     $startedAt = now()->subDays(3);
@@ -46,14 +48,19 @@ it('ends the trial 14 days after it starts', function (): void {
         ->and(Tenant::factory()->make()->trialEndsAt())->toBeNull();
 });
 
-it('labels each status and says which ones block', function (TenantStatus $status, string $label, bool $blocked): void {
+it('labels each status and says what it leaves of the panel and of the portals, devices and jobs', function (TenantStatus $status, string $label, bool $operates, bool $readOnly, bool $panelBlocked): void {
     expect($status->label())->toBe($label)
-        ->and($status->isBlocked())->toBe($blocked);
+        ->and($status->isBlocked())->toBe(! $operates)
+        ->and($status->isReadOnly())->toBe($readOnly)
+        ->and($status->blocksPanel())->toBe($panelBlocked);
 })->with([
-    'not started' => [TenantStatus::NotStarted, 'Sin iniciar', false],
-    'trial' => [TenantStatus::Trial, 'En prueba', false],
-    'active' => [TenantStatus::Active, 'Activa', false],
-    'trial ended' => [TenantStatus::TrialEnded, 'Prueba terminada', true],
-    'expired' => [TenantStatus::Expired, 'Vencida', true],
-    'deactivated' => [TenantStatus::Deactivated, 'Desactivada', true],
+    'not started' => [TenantStatus::NotStarted, 'Sin iniciar', true, false, false],
+    'trial' => [TenantStatus::Trial, 'En prueba', true, false, false],
+    'active' => [TenantStatus::Active, 'Activa', true, false, false],
+    // An ended trial and a lapsed term only stop operating: people still read and export. Only a person blocks the panel.
+    'trial ended' => [TenantStatus::TrialEnded, 'Prueba terminada', false, true, false],
+    'expired' => [TenantStatus::Expired, 'Vencida', false, true, false],
+    'read only' => [TenantStatus::ReadOnly, 'Solo lectura', false, true, false],
+    'suspended' => [TenantStatus::Suspended, 'Suspendida', false, false, true],
+    'archived' => [TenantStatus::Archived, 'Archivada', false, false, true],
 ]);

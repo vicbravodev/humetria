@@ -91,6 +91,15 @@ function joinedOn(string $on, ?App\Modules\Organization\Models\Employee $person 
     return TeleworkerFactory::new()->active()->create(['tenant_id' => test()->tenant->id, 'employee_id' => ($person ?? test()->ana)->id, 'started_at' => $on]);
 }
 
+// R2-compliance-13: registering from a page filtered by a center comes back to that same filter.
+it('comes back to the center the page was filtered by after registering a training', function (): void {
+    $this->post(trainingUrl(), [...trainingForm(), 'filter_center' => $this->center->id])->assertSessionHasNoErrors()->assertRedirect(route('tenant.telework.trainings.index', [$this->tenant, 'center' => $this->center->id]));
+});
+
+it('ignores a filter that is not a center of the company when it comes back', function (): void {
+    $this->post(trainingUrl(), [...trainingForm(), 'filter_center' => 'no-es-un-centro'])->assertRedirect(route('tenant.telework.trainings.index', $this->tenant));
+});
+
 it('registers a training with its 8.1 topics and attendees from the roster of the center', function (): void {
     Log::spy();
 

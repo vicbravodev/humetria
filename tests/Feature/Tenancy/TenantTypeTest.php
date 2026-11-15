@@ -157,3 +157,21 @@ it('lists only the roles a union can hand out', function (): void {
         ->get(route('tenant.members.index', $union))
         ->assertInertia(fn (Assert $page) => $page->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas']]));
 });
+
+it('says in the console whether each account is a company or a union', function (): void {
+    Tenant::factory()->create(['trade_name' => 'Una empresa']);
+    Tenant::factory()->create(['trade_name' => 'Un sindicato', 'type' => TenantType::Union]);
+
+    $this->actingAs(superadmin())->get(route('companies.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('tenants.data', fn ($rows): bool => collect($rows)->pluck('type', 'trade_name')->all() === ['Un sindicato' => 'union', 'Una empresa' => 'company']
+                || collect($rows)->pluck('type', 'trade_name')->all() === ['Una empresa' => 'company', 'Un sindicato' => 'union']));
+});
+
+it('says on the page of a company whether it is a company or a union', function (): void {
+    $union = Tenant::factory()->create(['type' => TenantType::Union]);
+    $company = Tenant::factory()->create();
+
+    $this->actingAs(superadmin())->get(route('companies.show', $union))->assertInertia(fn (Assert $page) => $page->where('company.type', 'union'));
+    $this->get(route('companies.show', $company))->assertInertia(fn (Assert $page) => $page->where('company.type', 'company'));
+});

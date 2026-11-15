@@ -1,9 +1,8 @@
-import { Link, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { router } from '@inertiajs/react';
 import Combobox from '@/components/humetria/combobox';
-import { Button } from '@/components/ui/button';
+import CountTabs from '@/components/humetria/count-tabs';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { calendarQuery, monthLabel } from '@/lib/leave/calendar';
+import { calendarQuery } from '@/lib/leave/calendar';
 import { serverSource } from '@/lib/server-options';
 import { options as areaOptions } from '@/routes/tenant/areas';
 import { calendar } from '@/routes/tenant/vacations';
@@ -13,94 +12,75 @@ import type { LeaveCalendarFilters } from '@/types';
 const ALL_CENTERS = { value: '', label: 'Todos los centros' };
 const ALL_AREAS = { value: '', label: 'Todas las áreas' };
 
-/** The month in view with a step to each side, and the work center and area that narrow who is shown. */
+/** What narrows who is shown: those with an absence or everybody, and the work center and the area. */
 export default function CalendarFilters({
     month,
-    prevMonth,
-    nextMonth,
     filters,
+    showAll,
+    counts,
 }: {
     month: string;
-    prevMonth: string;
-    nextMonth: string;
     filters: LeaveCalendarFilters;
+    showAll: boolean;
+    counts: { absent: number; everyone: number };
 }) {
     const tenantSlug = useTenantSlug();
-    const href = (target: string) =>
-        calendar.url(tenantSlug, { query: calendarQuery(target, filters) });
+    const href = (everybody: boolean) =>
+        calendar.url(tenantSlug, {
+            query: calendarQuery(month, filters, everybody),
+        });
     const narrow = (next: Partial<LeaveCalendarFilters>) =>
         router.get(
             calendar.url(tenantSlug),
-            calendarQuery(month, { ...filters, ...next }),
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
+            calendarQuery(month, { ...filters, ...next }, showAll),
+            { preserveState: true, preserveScroll: true, replace: true },
         );
 
     return (
-        <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" asChild>
-                    <Link
-                        href={href(prevMonth)}
-                        aria-label="Mes anterior"
-                        preserveScroll
-                    >
-                        <ChevronLeft aria-hidden />
-                    </Link>
-                </Button>
-                <h2
-                    className="min-w-44 text-center text-lg font-semibold first-letter:uppercase"
-                    aria-live="polite"
-                >
-                    {monthLabel(month)}
-                </h2>
-                <Button variant="outline" size="icon" asChild>
-                    <Link
-                        href={href(nextMonth)}
-                        aria-label="Mes siguiente"
-                        preserveScroll
-                    >
-                        <ChevronRight aria-hidden />
-                    </Link>
-                </Button>
+        <div role="search" className="flex flex-wrap items-center gap-3">
+            <CountTabs
+                label="A quién mostrar"
+                tabs={[
+                    {
+                        label: 'Con ausencias',
+                        count: counts.absent,
+                        active: !showAll,
+                        href: href(false),
+                    },
+                    {
+                        label: `Las ${counts.everyone}`,
+                        active: showAll,
+                        href: href(true),
+                    },
+                ]}
+            />
+            <div className="w-full sm:w-56">
+                <Combobox
+                    id="calendar-work-center"
+                    name="work_center"
+                    source={serverSource(workCenterOptions.url(tenantSlug), [
+                        ALL_CENTERS,
+                    ])}
+                    defaultValue={filters.center ?? ALL_CENTERS}
+                    placeholder="Centro de trabajo"
+                    onChange={(option) =>
+                        narrow({ center: option.value === '' ? null : option })
+                    }
+                />
             </div>
-            <div role="search" className="grid w-full gap-3 sm:flex sm:w-auto">
-                <div className="sm:w-56">
-                    <Combobox
-                        id="calendar-work-center"
-                        name="work_center"
-                        source={serverSource(
-                            workCenterOptions.url(tenantSlug),
-                            [ALL_CENTERS],
-                        )}
-                        defaultValue={filters.center ?? ALL_CENTERS}
-                        placeholder="Centro de trabajo"
-                        onChange={(option) =>
-                            narrow({
-                                center: option.value === '' ? null : option,
-                            })
-                        }
-                    />
-                </div>
-                <div className="sm:w-48">
-                    <Combobox
-                        id="calendar-area"
-                        name="area"
-                        source={serverSource(areaOptions.url(tenantSlug), [
-                            ALL_AREAS,
-                        ])}
-                        defaultValue={filters.area ?? ALL_AREAS}
-                        placeholder="Área"
-                        onChange={(option) =>
-                            narrow({
-                                area: option.value === '' ? null : option,
-                            })
-                        }
-                    />
-                </div>
+            <div className="w-full sm:w-48">
+                <Combobox
+                    id="calendar-area"
+                    name="area"
+                    source={serverSource(areaOptions.url(tenantSlug), [
+                        ALL_AREAS,
+                    ])}
+                    defaultValue={filters.area ?? ALL_AREAS}
+                    placeholder="Área"
+                    onChange={(option) =>
+                        narrow({ area: option.value === '' ? null : option })
+                    }
+                />
             </div>
         </div>
     );

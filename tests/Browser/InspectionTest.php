@@ -33,6 +33,7 @@ it('opens the dossier with only what the center can show', function (): void {
     visit("/admin/acme/telework/centers/{$plant->id}/inspection")
         ->click('Solo lo que tienes')
         ->click('Abrir expediente')
+        ->assertScript(pathBecomes("/admin/acme/telework/centers/{$plant->id}/dossier"), true)
         ->assertPathIs("/admin/acme/telework/centers/{$plant->id}/dossier")
         ->assertQueryStringHas('ready', '1')
         ->assertNoJavaScriptErrors();

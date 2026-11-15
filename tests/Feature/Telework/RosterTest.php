@@ -184,6 +184,12 @@ it('reports the missing data on the form', function (string $field): void {
     expect(joined()->status)->toBe(TeleworkerStatus::Aspirant);
 })->with(['marital_status', 'activities', 'contact_phone', 'street', 'exterior_number', 'neighborhood', 'postal_code', 'municipality', 'state', 'no_equipment_reason']);
 
+it('names the marital status field in Spanish when it is missing', function (): void {
+    rosterReview();
+
+    $this->post(joinUrl(), rosterForm(['marital_status' => '']))->assertSessionHasErrors(['marital_status' => 'El campo estado civil es obligatorio.']);
+});
+
 it('refuses a marital status or state that does not exist', function (string $field, string $value): void {
     rosterReview();
 
@@ -433,7 +439,8 @@ it('shows each workplace with its derived status and expiry, and whether the per
             ->where('teleworker.canJoin', true)
             ->where('teleworker.workplaces.0.status', 'valid_with_plan')
             ->where('teleworker.workplaces.0.statusLabel', 'Validado con plan de acción')
-            ->where('teleworker.workplaces.0.expiresOn', '2027-02-10')
+            // The last day it holds (the same «vigente hasta» of the dossier), not the first day it no longer does.
+            ->where('teleworker.workplaces.0.expiresOn', '2027-02-09')
             ->where('teleworker.workplaces.1.status', 'retired'));
 });
 
@@ -454,6 +461,37 @@ it('labels a cancelled checklist as cancelled, not as pending', function (): voi
 
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]))
         ->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.label', 'Cancelada'));
+});
+
+// F2 (C-21): the home of the person starts from the first workplace validated; the two data stay apart.
+it('offers the address of the first validated workplace as the home, and none while no place is validated', function (): void {
+    $url = route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]);
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('teleworker.homeDefault', null));
+
+    rosterReview();
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('teleworker.homeDefault', [
+        'street' => $this->workplace->street,
+        'exterior_number' => $this->workplace->exterior_number,
+        'interior_number' => $this->workplace->interior_number,
+        'neighborhood' => $this->workplace->neighborhood,
+        'postal_code' => $this->workplace->postal_code,
+        'municipality' => $this->workplace->municipality,
+        'state' => $this->workplace->state,
+    ]));
+});
+
+// F2 (C-07): the page of the person says what the portal says once the Comisión decided the list.
+it('labels a checklist the Comisión already decided as reviewed, not as in review', function (): void {
+    $application = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+    $url = route('tenant.telework.teleworkers.show', [$this->tenant, $this->teleworker->id]);
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.label', 'En revisión de la Comisión'));
+
+    WorkplaceReviewFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'application_id' => $application->id]);
+
+    $this->get($url)->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.label', 'Revisada por la Comisión'));
 });
 
 it('puts no individual answers in the props of the page', function (): void {

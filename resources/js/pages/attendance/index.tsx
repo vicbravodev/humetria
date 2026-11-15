@@ -49,9 +49,12 @@ export default function AttendanceIndex(props: AttendanceOverviewProps) {
                     <OverviewEmpty hasCenters={centers.total > 0} />
                 ) : (
                     <>
-                        <SetupBanner setup={props.setup} />
+                        {/* The puesta en marcha and what needs RH share the column beside the week: no hole under either. */}
                         <div className="grid items-start gap-6 min-[1240px]:grid-cols-[minmax(0,1fr)_340px]">
-                            <AttentionList {...props} />
+                            <div className="flex min-w-0 flex-col gap-6">
+                                <SetupBanner setup={props.setup} />
+                                <AttentionList {...props} />
+                            </div>
                             <WeekPanel {...props} />
                         </div>
                         <PeopleWeeks {...props} />

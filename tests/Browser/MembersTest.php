@@ -163,5 +163,6 @@ it('shows Usuarios in the sidebar only to the owner', function (): void {
 
     visit('/admin/acme')
         ->click('Usuarios')
+        ->assertScript(pathBecomes('/admin/acme/members'), true)
         ->assertPathIs('/admin/acme/members');
 });

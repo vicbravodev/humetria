@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Support;
 
 use App\Modules\Attendance\Models\AttendanceDevice;
+use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
+use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
@@ -45,7 +47,14 @@ final readonly class DevicePages
         $links = $this->linksOf($scope->people);
 
         return [
-            'center' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],
+            // What it has to mark with: RH sees before inviting that nobody can mark in it yet (the same reading as the center cards).
+            'center' => $center === null ? null : [
+                'id' => $center->id,
+                'name' => $center->name,
+                'zones' => AttendanceZone::query()->where('work_center_id', $center->id)->count(),
+                'screens' => KioskDevice::inUseIn($center->id),
+                'requiresQr' => CompanyPolicy::current()->require_qr_onsite,
+            ],
             'filters' => ['q' => $search, 'status' => $view],
             'counts' => [
                 'all' => count($states),

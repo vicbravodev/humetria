@@ -33,7 +33,7 @@ final class SendSupportNotice implements ShouldQueue, ShouldQueueAfterCommit
         $referral = ScreeningReferral::query()->find($this->referralId, ['id', 'employee_id', 'told']);
         $person = $referral === null ? null : $roster->find($referral->employee_id);
 
-        if ($company->blocked || $referral?->told !== HowTold::Portal || $person === null || ! $person->active || $person->email === null) {
+        if ($company->stopped('nom035') || $referral?->told !== HowTold::Portal || $person === null || ! $person->active || $person->email === null) {
             return;
         }
 

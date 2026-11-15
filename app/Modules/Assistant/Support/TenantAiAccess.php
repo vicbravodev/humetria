@@ -13,6 +13,13 @@ final readonly class TenantAiAccess implements AiAccess
 {
     public function __construct(private MonthlyUsage $usage, private PersonalDataRedactor $redactor, private CurrentTenant $tenant) {}
 
+    public function enabled(): bool
+    {
+        $settings = TenantAiSettings::query()->first();
+
+        return $settings === null || $settings->enabled;
+    }
+
     public function available(): bool
     {
         $settings = TenantAiSettings::query()->first();

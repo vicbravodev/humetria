@@ -13,6 +13,7 @@ import type { AttendanceCenterProps } from '@/types';
 /** A center of the registro (pantalla Eval-Activa: header with its facts, then its parts): its zones and its QR screens. */
 export default function AttendanceCenter({
     center,
+    centerAddress,
     people,
     zones,
     kiosks,
@@ -70,6 +71,7 @@ export default function AttendanceCenter({
                 <CenterZones
                     zones={zones}
                     centerId={center.id}
+                    centerAddress={centerAddress}
                     canManage={canManage}
                     tolerance={tolerance}
                 />

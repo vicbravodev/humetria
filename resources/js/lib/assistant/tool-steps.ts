@@ -4,6 +4,7 @@ const WHAT: Record<string, string> = {
     GetRiskResults: 'los resultados de riesgo',
     ListPendingActions: 'los pendientes',
     SearchRegulations: 'la normativa',
+    GetFirstSteps: 'tus primeros pasos',
 };
 
 /** What Humi is looking at, in a line over the answer: «Consultando…» while it runs, «Consulté…» once it is done. */

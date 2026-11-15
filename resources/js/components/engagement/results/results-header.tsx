@@ -1,32 +1,39 @@
 import { Link } from '@inertiajs/react';
-import { ClipboardCheck, Download, ListChecks } from 'lucide-react';
+import { CalendarCheck, Download, Lock, Users } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
+import RowMenu from '@/components/humetria/row-menu';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { EngagementResults } from '@/types';
-import {
-    useEngagementName,
-    useEngagementRoutes,
-} from '@/hooks/use-engagement-routes';
+import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { closedText, participationText } from '@/lib/engagement/results';
+import type { EngagementResults, PageFact } from '@/types';
 
-/** The top of the results (pantallas: Eval-Cerrada): the survey with its state, what the figures are and the way to each question. */
+/**
+ * The top of the results (pantalla Clima · Resultados): the survey with its state, a fact sheet (when it closed, how
+ * many answered, the minimum of a group), «Exportar CSV» under «Más» and, as the next step of the cycle, writing the
+ * commitments or seeing them.
+ */
 export default function ResultsHeader({
-    tenantSlug,
-    survey,
-    available,
-    cut,
+    results,
 }: {
-    tenantSlug: string;
-    survey: EngagementResults['survey'];
-    available: boolean;
-    cut: EngagementResults['cut'];
+    results: EngagementResults;
 }) {
+    const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
-    const name = useEngagementName();
+    const { survey, participation, cut } = results;
+    const at: [string, string] = [tenantSlug, survey.id];
+    const closed = closedText(survey.closedOn);
+    const facts: PageFact[] = [
+        ...(closed === null ? [] : [{ icon: CalendarCheck, text: closed }]),
+        ...(participation === null
+            ? []
+            : [{ icon: Users, text: participationText(participation) }]),
+        { icon: Lock, text: 'Grupos de 5 o más' },
+    ];
 
     return (
         <PageHeader
-            caption={`Resultados de ${name.toLowerCase()}`}
             title={survey.name}
             status={
                 <Badge
@@ -37,38 +44,31 @@ export default function ResultsHeader({
                     {survey.status === 'closed' ? 'Cerrada' : 'En curso'}
                 </Badge>
             }
-            facts={[
-                {
-                    icon: ClipboardCheck,
-                    text: 'Solo se muestran grupos de al menos 5 respuestas',
-                },
-            ]}
+            facts={facts}
         >
-            {available && (
+            {results.available && (
                 <>
-                    <Button asChild variant="outline">
-                        <a
-                            href={routes.export.url(
-                                [tenantSlug, survey.id],
-                                cut === null ? {} : { query: { cut } },
-                            )}
-                            download
-                        >
-                            <Download aria-hidden />
-                            {cut === null
-                                ? 'Exportar CSV'
-                                : 'Exportar este corte'}
-                        </a>
-                    </Button>
-                    <Button asChild variant="outline">
-                        <Link
-                            href={routes.results.items.url([
-                                tenantSlug,
-                                survey.id,
-                            ])}
-                        >
-                            <ListChecks aria-hidden />
-                            Ver por pregunta
+                    <RowMenu
+                        label={`Más acciones de ${survey.name}`}
+                        items={[
+                            {
+                                label:
+                                    cut === null
+                                        ? 'Exportar CSV'
+                                        : 'Exportar este corte',
+                                icon: Download,
+                                href: routes.export.url(
+                                    at,
+                                    cut === null ? {} : { query: { cut } },
+                                ),
+                            },
+                        ]}
+                    />
+                    <Button asChild>
+                        <Link href={routes.commitments.index.url(at)}>
+                            {results.commitments === 0
+                                ? 'Escribir compromisos'
+                                : 'Ver compromisos'}
                         </Link>
                     </Button>
                 </>

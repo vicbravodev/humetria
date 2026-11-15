@@ -50,7 +50,7 @@ final class SendPolicyReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
         $company = $companies->enter($this->tenantId);
         $person = $roster->find($this->employeeId);
 
-        if ($company->blocked || $person === null || ! $person->active || $person->email === null) {
+        if ($company->stopped('nom035') || $person === null || ! $person->active || $person->email === null) {
             return;
         }
 

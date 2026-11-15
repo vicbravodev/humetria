@@ -1,7 +1,7 @@
 import DossierMissing from '@/components/telework/dossier-missing';
 import DossierTable from '@/components/telework/dossier-table';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { describeDate } from '@/lib/calendar-date';
+import { shortDate } from '@/lib/calendar-date';
 import type { DossierEquipment } from '@/types';
 
 /** 5.7: per person, the items received, refused and waiting for the person's answer (never the reason for a refusal). */
@@ -35,7 +35,9 @@ export default function DossierEquipmentBlock({
                     <TableCell>{item.refused}</TableCell>
                     <TableCell>{item.pending}</TableCell>
                     <TableCell>
-                        {describeDate(item.lastDeliveredOn ?? '') ??
+                        {(item.lastDeliveredOn === null
+                            ? undefined
+                            : shortDate(item.lastDeliveredOn)) ??
                             (item.justified
                                 ? 'Sin equipo, justificado'
                                 : 'Falta')}

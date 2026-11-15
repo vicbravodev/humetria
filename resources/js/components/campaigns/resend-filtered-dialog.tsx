@@ -1,9 +1,10 @@
 import type { ReactElement } from 'react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
+import { useReminderWait } from '@/hooks/use-reminder-wait';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { peopleQuery } from '@/lib/campaigns';
-import { remindable } from '@/lib/evaluation';
+import { remindable, reminderNote } from '@/lib/evaluation';
 import { countOf } from '@/lib/plural';
 import { resend } from '@/routes/tenant/campaigns';
 import type { PeopleFilters } from '@/types';
@@ -26,6 +27,9 @@ export default function ResendFilteredDialog({
 }) {
     const tenantSlug = useTenantSlug();
     const people = countOf(count, 'persona', 'personas');
+    const wait = useReminderWait();
+    // Only a reminder to pending people waits: the retry of failed links goes whenever.
+    const held = filters.status === 'pending' && wait.hours !== null;
 
     if (!remindable(filters.status, count)) {
         return null;
@@ -45,6 +49,13 @@ export default function ResendFilteredDialog({
             form={resend.form([tenantSlug, campaignId])}
             transform={() => peopleQuery(filters)}
             preserveScroll
-        />
+            disabled={held}
+        >
+            {filters.status === 'pending' && (
+                <p className="text-sm text-muted-foreground">
+                    {reminderNote(wait.hours, wait.lastOn)}
+                </p>
+            )}
+        </ConfirmDialog>
     );
 }

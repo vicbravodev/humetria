@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { policyHighlights } from '@/lib/disclosure-public';
+import { pendingNotice, policyHighlights } from '@/lib/disclosure-public';
 import type { PolicyTextSection } from '@/types';
 
 const section = (overrides: Partial<PolicyTextSection>): PolicyTextSection => ({
@@ -38,5 +38,23 @@ describe('policyHighlights', () => {
             [],
         );
         expect(policyHighlights([])).toEqual([]);
+    });
+});
+
+describe('pendingNotice', () => {
+    it('says nothing when the policy and the results are both published', () => {
+        expect(pendingNotice(true, true)).toBeNull();
+    });
+
+    it('names only what is still missing', () => {
+        expect(pendingNotice(true, false)).toBe(
+            'La empresa publicará aquí más información: los resultados de la evaluación y las medidas que toma.',
+        );
+        expect(pendingNotice(false, true)).toBe(
+            'La empresa publicará aquí más información: la política de prevención.',
+        );
+        expect(pendingNotice(false, false)).toBe(
+            'La empresa publicará aquí más información: la política de prevención, los resultados de la evaluación y las medidas que toma.',
+        );
     });
 });

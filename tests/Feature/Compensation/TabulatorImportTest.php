@@ -157,6 +157,7 @@ it('refuses a file that is not a CSV', function (): void {
     importTabulator(UploadedFile::fake()->create('tabulador.pdf', 10, 'application/pdf'))->assertSessionHasErrors('file');
 });
 
+// The needles carry the decimal point: a bare run of digits can show up inside a random id (a UUID), which made this test flaky.
 it('writes the log and the audit entry with counts only, never a salary', function (): void {
     Log::spy();
 
@@ -167,7 +168,7 @@ it('writes the log and the audit entry with counts only, never a salary', functi
     $entry = AuditEntry::query()->where('event', 'compensation.tabulator_imported')->sole();
 
     expect($entry->metadata)->toBe(['rows' => 3, 'grades' => 2])
-        ->and(json_encode($entry->toArray()))->not->toContain('524')->not->toContain('777')->not->toContain('52465')->not->toContain('Operador');
+        ->and(auditContent($entry))->not->toContain('524.65')->not->toContain('560.10')->not->toContain('777.77')->not->toContain('Operador');
 });
 
 it('writes neither log nor audit when the file is refused', function (): void {
@@ -223,4 +224,15 @@ it('writes the whole file or none: a failure in the middle leaves nothing behind
     expect(fn () => importTabulator(tabulatorFile(['Operador,A,500,2026-01-01', 'Técnico,B,700,2026-01-01'])))->toThrow(Illuminate\Database\QueryException::class);
 
     expect(GradeSalary::query()->count())->toBe(0)->and(JobGrade::query()->count())->toBe(0);
+});
+
+it('imports the rows under the minimum and points them out by row, as a warning and not as an error', function (): void {
+    importTabulator(tabulatorFile(['Operador,A,524.65,2026-01-01', 'Peón,A,250,2026-01-01', 'Auxiliar,A,100,2026-01-01']))->assertSessionHasNoErrors();
+
+    $flash = session(SessionKey::FLASH_DATA);
+
+    expect(salaryImportFlash())->toBe([])
+        ->and(GradeSalary::query()->count())->toBe(3)
+        ->and($flash['toast']['type'] ?? null)->toBe('warning')
+        ->and($flash['toast']['message'] ?? '')->toContain('Se importó el tabulador: 3 salarios.')->toContain('filas 3 y 4')->toContain('salario mínimo general');
 });

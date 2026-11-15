@@ -15,11 +15,11 @@ enum Gender: string
     case Male = 'male';
     case Other = 'other';
 
-    /** The gender as a spreadsheet may write it ("Mujer", "hombre", "M", "Otro"…); null when it is none of them. */
+    /** The gender as a spreadsheet may write it ("Mujer", "hombre", "F", "Otro"…); null when it is none of them. «M» is ambiguous (Masculino or Mujer) and is not read. */
     public static function fromSpanish(string $text): ?self
     {
         return match (Str::of($text)->ascii()->lower()->trim()->toString()) {
-            'mujer', 'm', 'f', 'femenino' => self::Female,
+            'mujer', 'f', 'femenino' => self::Female,
             'hombre', 'h', 'masculino' => self::Male,
             'otro', 'o', 'otro / prefiero no decir', 'prefiero no decir' => self::Other,
             default => null,

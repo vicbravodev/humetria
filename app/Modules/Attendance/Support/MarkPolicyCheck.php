@@ -22,7 +22,8 @@ use App\Modules\Attendance\Models\AttendanceZone;
  * - Trusted staff, when the policy lets them use the browser, with no QR: `TrustedBrowser`, no position kept. With a QR
  *   (they are at the center) the on-site rules give stronger evidence.
  * - On site, in this order: a QR that does not verify is `qr_invalid`; no QR where it is required (or where the center has
- *   no zones, as then nothing else proves where) is `qr_required`; a center without zones marks with the QR alone. With
+ *   no zones, as then nothing else proves where) is `qr_required`, except a center with neither a zone nor an active screen: nothing
+ *   can mark there yet, so `center_not_ready` (RH must set it up; the person is not told to scan a screen that does not exist); a center without zones marks with the QR alone. With
  *   zones: no location is `no_location` (unless the policy allows out of zone and the QR is valid: `Qr`, no zone); under
  *   `Block` a reading less accurate than the policy's maximum is `accuracy_too_low` (checked first: an inaccurate reading
  *   cannot tell inside from out) and one outside every zone is `outside_zone`; under `AllowAndFlag` either is taken with
@@ -34,10 +35,11 @@ final class MarkPolicyCheck
      * @param  ?bool  $qrValid  null when no QR was scanned
      * @param  array<array-key, AttendanceZone>  $zones  the zones of the person's current work center
      * @param  ?Position  $position  null when the device gave no location
+     * @param  int  $screens  the center's QR screens in use
      *
      * @throws MarkRejected
      */
-    public static function decide(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, ?bool $qrValid, array $zones, ?Position $position, string $deviceId): MarkContext
+    public static function decide(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, ?bool $qrValid, array $zones, ?Position $position, string $deviceId, int $screens): MarkContext
     {
         if ($schedule?->work_mode === WorkMode::Remote) {
             return new MarkContext(MarkMethod::Remote, null, null, null, null, null, $deviceId);
@@ -49,6 +51,10 @@ final class MarkPolicyCheck
 
         if ($qrValid === false) {
             throw new MarkRejected('qr_invalid');
+        }
+
+        if ($qrValid === null && $zones === [] && $screens === 0) {
+            throw new MarkRejected('center_not_ready');
         }
 
         if ($qrValid === null && ($policy->require_qr_onsite || $zones === [])) {

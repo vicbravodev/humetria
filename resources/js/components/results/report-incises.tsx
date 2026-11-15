@@ -1,6 +1,7 @@
 import ReportIncise from '@/components/results/report-incise';
 import ReportProgram from '@/components/results/report-program';
 import ReportSection from '@/components/results/report-section';
+import ReportSignature from '@/components/results/report-signature';
 import ReportWritten from '@/components/results/report-written';
 import type { NomReport } from '@/types';
 
@@ -93,6 +94,10 @@ export default function ReportIncises({ report }: { report: NomReport }) {
                     />
                 </ReportIncise>
             </div>
+            <ReportSignature
+                issuedOn={report.issuedOn}
+                responsible={responsible?.name ?? null}
+            />
         </ReportSection>
     );
 }

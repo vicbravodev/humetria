@@ -48,7 +48,7 @@ final class WritingController extends Controller
      * Where «Guardar y volver» leads: the NOM-035 route of the center it came from; else the policy, or the disclosure for a
      * block of 5.7.
      *
-     * @return array{href: string, label: string, center: string|null}
+     * @return array{href: string, label: string, center: string|null, centerName: string|null}
      */
     private function back(Request $request, mixed $tenant, DocumentKind $kind): array
     {
@@ -56,9 +56,9 @@ final class WritingController extends Controller
         $from = Str::isUuid($center) ? $this->workCenters->findActive($center) : null;
 
         return match (true) {
-            $from !== null => ['href' => route('tenant.nom035.route', [$tenant, $from->id]), 'label' => 'Guardar y volver a la ruta', 'center' => $from->id],
-            $kind === DocumentKind::Policy => ['href' => route('tenant.disclosure.policy', $tenant), 'label' => 'Guardar y volver', 'center' => null],
-            default => ['href' => route('tenant.disclosure.index', $tenant), 'label' => 'Guardar y volver', 'center' => null],
+            $from !== null => ['href' => route('tenant.nom035.route', [$tenant, $from->id]), 'label' => 'Guardar y volver a la ruta', 'center' => $from->id, 'centerName' => $from->name],
+            $kind === DocumentKind::Policy => ['href' => route('tenant.disclosure.policy', $tenant), 'label' => 'Guardar y volver', 'center' => null, 'centerName' => null],
+            default => ['href' => route('tenant.disclosure.index', $tenant), 'label' => 'Guardar y volver', 'center' => null, 'centerName' => null],
         };
     }
 

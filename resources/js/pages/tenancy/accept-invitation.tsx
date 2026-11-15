@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import AcceptInvitationForm from '@/components/tenancy/accept-invitation-form';
 import InvitationCard from '@/components/tenancy/invitation-card';
 import InvitationNotice from '@/components/tenancy/invitation-notice';
-import type { InvitationPage } from '@/types/tenancy';
+import type { InvitationPage } from '@/types/invitation-page';
 
 export default function AcceptInvitation(props: InvitationPage) {
     return (

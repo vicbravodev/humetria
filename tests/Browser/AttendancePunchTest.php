@@ -47,7 +47,8 @@ it('opens the screen of Marcar for a device not known yet: every step, why the p
         ->assertSee('Marcar entrada')
         ->assertSee('Salir a comer')
         ->assertSee('Al marcar, el teléfono le pedirá su ubicación: si usted trabaja en un centro, la usamos para comprobar que está ahí; si no, se descarta. No se guarda en este teléfono ni se sigue entre marcas.')
-        ->assertSee('¿Aún no vincula este teléfono?')
+        ->assertSee('Si este teléfono aún no está vinculado')
+        ->assertSee('Si ya lo vinculó, solo marque.')
         // Whether the center asks for the screen's code is the server's to say when marking: until then it says how.
         ->assertSee('Si su centro tiene una pantalla QR');
 })->with([
@@ -61,7 +62,7 @@ it('marks the entry inside the zone with the QR, and shows the day and the next 
     $page = phoneAtThePunchScreen($dark);
     standingAt($page, 19.4327, -99.1332);
 
-    $page->press('Marcar entrada')
+    $page->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->assertSee('Evidencia fuerte: QR y ubicación')
         ->assertSee('Su día')
@@ -91,7 +92,7 @@ it('shows each test while the mark is checked, so the person sees it pass', func
     // The server answers slowly, as on a bad connection.
     $page->script('() => { const real = window.fetch; window.fetch = (url, init) => String(url).endsWith("/punch") ? new Promise((resolve) => setTimeout(() => resolve(real(url, init)), 2500)) : real(url, init); }');
 
-    $page->press('Marcar entrada')
+    $page->press('button:has-text("Marcar entrada")')
         ->waitForText('Comprobando el código y la zona')
         ->assertSee('Verificando')
         ->assertSee('Leyendo su ubicación')
@@ -100,7 +101,7 @@ it('shows each test while the mark is checked, so the person sees it pass', func
         ->assertNoAccessibilityIssues(1);
 
     // Position and fingerprint passed (the browser's reader is instant); the server's check is the one in course.
-    $page->wait(1)->assertScript('() => document.querySelector("[aria-current=step]").textContent', 'Comprobando el código y la zona')
+    $page->assertScript(eventually('() => document.querySelector("[aria-current=step]").textContent === "Comprobando el código y la zona"'), true)
         ->waitForText('Entrada registrada');
 });
 
@@ -108,7 +109,7 @@ it('blocks the mark outside the zone and says what happened and what to do', fun
     $page = phoneAtThePunchScreen();
     standingAt($page, 19.4336, -99.1332);
 
-    $page->press('Marcar entrada')
+    $page->press('button:has-text("Marcar entrada")')
         ->waitForText('Está fuera de la zona')
         ->assertSee('Acérquese a su centro de trabajo')
         ->assertSee('pida a Recursos Humanos una corrección')
@@ -130,7 +131,7 @@ it('blocks the mark outside the zone and says what happened and what to do', fun
 it('asks for the location when the person does not allow it', function (): void {
     $page = phoneAtThePunchScreen();
 
-    $page->press('Marcar entrada')
+    $page->press('button:has-text("Marcar entrada")')
         ->waitForText('No tenemos su ubicación')
         ->assertSee('Permita la ubicación para este sitio')
         ->assertDontSee('Puede marcar sin ubicación')
@@ -159,7 +160,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText('Marcar entrada')
-        ->press('Marcar entrada')
+        ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->press('Listo')
         ->waitForText('Está trabajando')
@@ -178,12 +179,12 @@ it('shows Bob his own name and steps when he marks on the phone that remembers A
     $page = bobOnAnasPhone();
 
     // Bob taps the step offered to Ana: rejected, the screen now speaks to him and offers every step.
-    $page->press('Salir a comer')
+    $page->press('button:has-text("Salir a comer")')
         ->waitForText('Primero marque su entrada.')
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Bob")', true)
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
         ->assertSee('Marcar entrada')
-        ->press('Marcar entrada')
+        ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
         ->press('Listo')
@@ -197,14 +198,28 @@ it('shows Bob his own name and steps when he marks on the phone that remembers A
     expect(AttendanceMark::query()->where('employee_id', '!=', $this->ana->id)->sole()->zone_id)->not->toBeNull();
 });
 
+it('says which day the correction asked from Marcar is about', function (): void {
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4336, -99.1332);
+
+    $page->press('button:has-text("Marcar entrada")')
+        ->waitForText('Está fuera de la zona')
+        ->press('Pedir una corrección')
+        ->waitForText('Pedir a Recursos Humanos que agregue su marca')
+        // «Día: jueves 12 de noviembre»: the day of the mark refused, in the company's time.
+        ->assertScript('() => /Día: [a-záéíóúñ]+ \\d{1,2} de [a-záéíóúñ]+/.test(document.body.innerText)', true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', function (): void {
     $page = bobOnAnasPhone();
 
     $page->press('¿No es usted?')
         ->waitForText('Marcar su jornada')
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
-        ->assertSee('¿Aún no vincula este teléfono?')
-        ->press('Marcar entrada')
+        ->assertSee('Si este teléfono aún no está vinculado')
+        ->assertSee('Si ya lo vinculó, solo marque.')
+        ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->press('Listo')
         ->waitForText('Está trabajando')

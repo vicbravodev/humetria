@@ -13,6 +13,7 @@ export default function HumiComposer({
     onSend,
     onStop,
     onWriting,
+    initialText = '',
 }: {
     streaming: boolean;
     /** Why the person cannot write now; null while they can. */
@@ -21,8 +22,10 @@ export default function HumiComposer({
     onStop: () => void;
     /** The box gains or loses focus: Humi listens while the person is in it. */
     onWriting: (writing: boolean) => void;
+    /** What the box starts with: a question left written, never sent. */
+    initialText?: string;
 }) {
-    const [text, setText] = useState('');
+    const [text, setText] = useState(initialText);
     const closed = closedText !== null;
 
     function send() {

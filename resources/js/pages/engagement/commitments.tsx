@@ -1,26 +1,26 @@
-import { Head, Link, setLayoutProps } from '@inertiajs/react';
-import { BarChart3, Hourglass } from 'lucide-react';
-import PublishFeedbackButton from '@/components/engagement/commitments/publish-feedback-button';
+import { Head, setLayoutProps } from '@inertiajs/react';
+import { Hourglass, Target } from 'lucide-react';
 import CommitmentsBoard from '@/components/engagement/commitments/commitments-board';
+import PublishFeedbackButton from '@/components/engagement/commitments/publish-feedback-button';
 import LoopActionCard from '@/components/engagement/results/loop-action-card';
+import ResultsNav from '@/components/engagement/results/results-nav';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import {
+    useEngagementTrail,
+    useSurveyCrumb,
+} from '@/hooks/use-engagement-routes';
+import { countOf } from '@/lib/plural';
 import type { EngagementCommitments } from '@/types';
-import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 
+/** «Nos dijeron / Haremos» of a closed survey (pantalla Clima · Compromisos): the cycle closes here and in the portal. */
 export default function Commitments(props: EngagementCommitments) {
-    const tenantSlug = useTenantSlug();
-    const routes = useEngagementRoutes();
-    const { survey, available } = props;
+    const { survey, available, counts } = props;
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Clima' },
-            { title: survey.name },
-            { title: 'Compromisos' },
-        ],
+        breadcrumbs: useEngagementTrail(useSurveyCrumb(survey), {
+            title: 'Compromisos',
+        }),
     });
 
     return (
@@ -28,8 +28,8 @@ export default function Commitments(props: EngagementCommitments) {
             <Head title={`Compromisos · ${survey.name}`} />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Nos dijeron / Haremos"
-                    title={survey.name}
+                    caption={survey.name}
+                    title="Nos dijeron / Haremos"
                     status={
                         props.published ? (
                             <Badge variant="success">
@@ -39,27 +39,29 @@ export default function Commitments(props: EngagementCommitments) {
                             <Badge variant="secondary">Sin publicar</Badge>
                         )
                     }
-                    description="Lo que la empresa hará con lo que dijo su gente: quién responde y para cuándo. Un grupo tiene a lo más 3."
+                    facts={[
+                        {
+                            icon: Target,
+                            text: `${countOf(counts.all, 'compromiso', 'compromisos')} · un grupo tiene a lo más 3`,
+                        },
+                    ]}
                 >
-                    {available && (
-                        <Button asChild variant="outline">
-                            <Link
-                                href={routes.results([tenantSlug, survey.id])}
-                            >
-                                <BarChart3 aria-hidden />
-                                Ver resultados
-                            </Link>
-                        </Button>
-                    )}
                     {available &&
                         props.canManage &&
                         !props.published &&
-                        props.counts.all > props.counts.dropped && (
+                        counts.all > counts.dropped && (
                             <PublishFeedbackButton surveyId={survey.id} />
                         )}
                 </PageHeader>
                 {available ? (
                     <>
+                        <ResultsNav
+                            surveyId={survey.id}
+                            active="commitments"
+                            commitments={
+                                counts.all > 0 ? counts.all : undefined
+                            }
+                        />
                         {props.loopAction !== null && (
                             <LoopActionCard loopAction={props.loopAction} />
                         )}

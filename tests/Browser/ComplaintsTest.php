@@ -665,3 +665,28 @@ it('asks for a real address on the last step and lets it stay empty', function (
         ->assertSee('Recibimos su queja')
         ->assertNoJavaScriptErrors();
 });
+
+// C-15, E-18 and E-19: the promise is exact, the key is told to be kept now, and it can be handed to the phone's own share sheet.
+it('promises only what the routing does, and tells the person to keep the receipt now', function (): void {
+    config(['complaints.ticket.min_seconds' => 0]);
+    $channel = openChannelWithHandler();
+
+    $page = visit("/c/{$channel->access_code}")->on()->mobile()
+        ->assertSee('La lee solo quien la empresa designó para atender quejas. Si su queja es contra Recursos Humanos o contra la dirección, no llega a ellos.')
+        ->assertDontSee('nunca la persona de la que se queja')
+        ->click('Presentar una queja')
+        ->click('Denuncia de violencia laboral')
+        ->press('Continuar')
+        ->click('Mi jefa o jefe inmediato')
+        ->press('Continuar')
+        ->press('Continuar')
+        ->fill('#complaint-description', 'Mi jefe me grita todos los días frente a mis compañeros y me amenaza.')
+        ->press('Continuar');
+    // The browser of the test has a share sheet: the button shows, and nothing is written on the device.
+    $page->script('() => { navigator.share = () => Promise.resolve(); return true; }');
+    $page->press('Enviar queja')
+        ->assertSee('Guárdela ahora: no se vuelve a mostrar. Si el dispositivo no es suyo, cierre esta pantalla al terminar.')
+        // Only the page's own theme may sit on the device: nothing of the complaint, and above all not the key.
+        ->assertScript('() => Object.entries({ ...window.localStorage, ...window.sessionStorage }).filter(([key]) => key !== "appearance").length', 0)
+        ->assertNoJavaScriptErrors();
+});

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Engagement\Http\Requests;
 
 use App\Modules\Engagement\Enums\CommitmentStatus;
+use App\Modules\Engagement\Enums\SurveyKind;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,7 +13,10 @@ final class CommitmentStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $kind = $this->route('kind');
+
+        // The route binds the kind to its enum.
+        return $kind instanceof SurveyKind && $this->user()?->can($kind->managePermission()) === true;
     }
 
     /**

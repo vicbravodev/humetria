@@ -27,7 +27,8 @@ mutates(ProgramMeasureFeed::class, ComplaintChannelFeed::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-20 18:00:00');
-    $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
+    // Fixed names: the privacy assertions look for «Laura» and «Pedro», which a random company name can contain.
+    $this->tenant = Tenant::factory()->create(['slug' => 'acme', 'legal_name' => 'Acme S.A. de C.V.', 'trade_name' => 'Acme']);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
     $this->plant = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Planta Norte']);
     staffOf($this->tenant, $this->plant, 20);

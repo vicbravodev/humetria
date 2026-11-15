@@ -12,7 +12,11 @@ export type EngagementDriver = {
     label: string;
     /** A driver of two questions: reported question by question, with no score of its own. */
     descriptive: boolean;
+    /** The survey asked only some of its questions (a pulse asks the anchor): read question by question too. */
+    partial: boolean;
     favorable: number | null;
+    /** Its figure on the map by group: the score or the simple average of its questions; null when one is hidden. */
+    score: number | null;
     delta: Delta | null;
     items: EngagementItem[];
 };
@@ -48,6 +52,8 @@ export type EngagementGroupDriver = {
     label: string;
     descriptive: boolean;
     favorable: number | null;
+    /** Its figure on the map: the score or the simple average of its questions; null when one is hidden. */
+    score: number | null;
     vsCompany: number | null;
 };
 
@@ -75,8 +81,16 @@ export type EngagementParticipation = {
 };
 
 export type EngagementResults = {
-    survey: { id: string; name: string; status: 'draft' | 'active' | 'closed' };
+    survey: {
+        id: string;
+        name: string;
+        status: 'draft' | 'active' | 'closed';
+        /** The day it closed, in the calendar of the company; null while open. */
+        closedOn: string | null;
+    };
     available: boolean;
+    /** How many commitments the survey has, to offer to write them or to see them. */
+    commitments: number;
     cut: EngagementCut['value'] | null;
     cuts: EngagementCut[];
     participation: EngagementParticipation | null;
@@ -118,7 +132,7 @@ export type EngagementItemSection = {
 };
 
 export type EngagementItems = {
-    survey: EngagementResults['survey'];
+    survey: Pick<EngagementResults['survey'], 'id' | 'name' | 'status'>;
     available: boolean;
     sections: EngagementItemSection[];
 };

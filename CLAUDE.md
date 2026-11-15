@@ -36,6 +36,10 @@ y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden
 del "crea el PR", no tras cada turno. Mientras se trabaja basta lo acotado (abajo): los tests de la tarea, Pint y PHPStan.
 El check obligatorio de `main` es el job `ci`, que espera a los jobs `checks` (auditoría, Pint, PHPStan, frontend),
 `tests` (Unit/Feature con cobertura) y `browser` (3 shards), todos en paralelo (`.github/workflows/tests.yml`).
+Un cambio que solo trae documentación que nadie lee (lo que hay bajo `docs/` y los `.md` de la raíz) se salta esos jobs y
+el deploy, y `ci` pasa solo: lo decide `scripts/ci-code-changed.sh`. Un documento que un test o la app leen es código
+(`docs/normas`, `docs/operations`, `CLAUDE.md`…) y va en la lista de ese script; `tests/Unit/CiCodeChangedTest.php` falla
+hasta que esté ahí, y `tests/Unit/CiPipelineTest.php` exige que todo job nuevo de `tests.yml` espere al job `changes`.
 
 **Mutación: semanal, fuera de los PR.** No corre en los PR ni bloquea el merge, y no forma parte de "terminado".
 `.github/workflows/mutation.yml` la corre cada domingo por la noche (y a mano, `workflow_dispatch`) con
@@ -136,6 +140,35 @@ layouts/  hooks/  lib/  types/
 - Aflojar la CSP (un origen, `'unsafe-inline'`, un hash) exige explicar el motivo en el PR.
 - Una ruta nueva de la cuenta personal (perfil, contraseña, 2FA, passkeys) va en `ForbidWhileImpersonating::protectedRoutes()`;
   un test lo exige.
+- Toda respuesta lleva `X-Robots-Tag: noindex, nofollow`, salvo una de las rutas de `App\Http\IndexablePages`
+  (hoy `home` y `privacy-notice`) que responde 200 en producción. Para que una página sea indexable se agrega ahí, con su
+  test en `tests/Feature/IndexablePagesTest.php`; staging y local nunca se indexan.
+- Solo las páginas de `App\Http\SsrPages` (ruta y componente, hoy la landing y el aviso) pasan por Node, y solo para
+  visitantes sin sesión, con `INERTIA_SSR_ENABLED` encendido y el cortacircuitos cerrado. Una ruta nueva no activa SSR por omisión.
+  Si Node falla la página responde 200 sin cuerpo renderizado (React la pinta), deja un `ssr.render_failed` (una línea por tipo
+  y minuto, sin props) y `X-Rendered-By` dice `csr`; nunca se responde 5xx por Node. Quién opera el servicio `ssr`
+  (variables, rollback, señales) lo dice `docs/operations/ssr.md`: se actualiza en el mismo PR que cambie esas piezas.
+- PostHog (nube US, `posthog-js` en su build sin scripts externos) arranca solo en el documento de la landing
+  (`App\Http\Analytics`: ruta `home`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
+  `POSTHOG_CONSENT_DEFAULT` en `denied` (el valor por omisión) apaga la medición de visitantes: sin bloque `analytics-config`, sin
+  descarga de PostHog, sin su origen en la CSP, sin `humetria_acq`. En producción el dueño lo puso en `granted` (Dokploy).
+  Sin autocapture, sin grabación de sesión, sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento local) y sin IP.
+  A PostHog no se le manda nada de la persona: la dirección sin más query que las `utm_*` y, de un referente de este sitio, solo su origen
+  (`resources/js/lib/analytics.ts` lo impone en `before_send`).
+- Eventos de la landing: solo los de `docs/operations/ssr.md` §8. Se declaran en el marcado con `data-track="evento"` y
+  `data-track-target="id"` (un solo escucha de clics, `use-landing-measurement`); sus propiedades son identificadores o números
+  (`cleanProperties`), nunca texto libre. Un evento nuevo se agrega al catálogo de ese documento. Se mide la landing; el panel (`/admin`),
+  las encuestas y los portales **no** (hoy; medir el panel es un trabajo aparte con su revisión de privacidad).
+- Errores: el navegador de la landing manda a PostHog `$exception` con el mensaje enmascarado (correos y números) y el servidor manda
+  (`App\Support\PostHogExceptions`, en cola, mejor esfuerzo) solo clase, archivo, línea y traza sin argumentos, nunca el mensaje, la URL
+  ni el usuario. El del servidor solo exige el token (no lleva datos de visitantes); un `report()` nuevo en `bootstrap/app.php`
+  va después del de PostHog, porque los que devuelven `false` cortan la cadena.
+- La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente
+  externo, nunca una URL ni identificadores de clic). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
+  consentimiento `granted`. Lo que diga el aviso de privacidad sobre cookies debe coincidir con el código
+  (`tests/Feature/PrivacyNoticeMatchesCodeTest.php`).
+- Todo enlace que sale de la landing o llega a ella es un `<a href>` normal, no un `<Link>` (solo el logo de la
+  cabecera de la landing, que va a la misma página): PostHog y su CSP viven en un documento, no en una visita de Inertia.
 
 ## Privacidad (invariante)
 
@@ -176,15 +209,16 @@ layouts/  hooks/  lib/  types/
 
 ## Design system
 
-- La fuente de verdad es `docs/design-system/`; toda pantalla se compara con `capturas/` en claro y oscuro.
-- **El estándar de pantallas es el rediseño de `docs/design-system/pantallas/`** (29 pantallas en `html-claro/`,
-  `html-oscuro/` y `capturas/`; mapa en su `LEEME.md`). Toda pantalla existente se ve así, y **toda pantalla nueva
-  debe quedar igual de pulida**: se parte de la pantalla más parecida del rediseño y se reusan sus piezas (marco con
-  sidebar y migas, encabezado con título, estado y ficha con íconos, tarjetas, tablas con cabecera `muted`, medidor
-  de arco, pestañas con conteo, estados vacíos con siguiente paso). Una pantalla que se vea como un formulario o una
-  tabla sin diseñar no está terminada. Antes de cerrar un trabajo con UI, se revisa en el navegador en claro, oscuro
-  y a 375 px contra la pantalla de referencia.
-- Para las pantallas que cubre, el estándar es además el rediseño v2 de `docs/rediseno/` (mapa en su `MAPA.md`).
+- La fuente de verdad son los tokens y reglas de `docs/design-system/` y, para cómo se ve una pantalla, **la app misma**:
+  las pantallas ya construidas con el rediseño v2 y sus componentes (`components/humetria`, `components/ui`).
+  Toda pantalla nueva **debe quedar igual de pulida**: se parte de la pantalla más parecida de la app y se reusan sus
+  piezas (marco con sidebar y migas, encabezado con título, estado y ficha con íconos, tarjetas, tablas con cabecera
+  `muted`, medidor de arco, pestañas con conteo, estados vacíos con siguiente paso). Una pantalla que se vea como un
+  formulario o una tabla sin diseñar no está terminada. Antes de cerrar un trabajo con UI, se revisa en el navegador
+  en claro, oscuro y a 375 px contra la pantalla de referencia.
+- Las maquetas y capturas del diseño (`docs/design-system/capturas`, `docs/design-system/pantallas`,
+  `docs/rediseno/pantallas`) se retiraron el 2026-11-15 porque la app ya las implementa; siguen en el historial de git
+  (`git log --all -- docs/rediseno/pantallas`).
 - Un solo acento (`primary`); `brand-soft` y `brand-deep` solo dentro del logo.
 - Texto ≥ 4.5:1 y controles y foco ≥ 3:1, con `tests/Unit/DesignSystemTest.php` como protección: un color nuevo
   entra ahí con su par.

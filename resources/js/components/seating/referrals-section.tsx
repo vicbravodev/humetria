@@ -1,3 +1,4 @@
+import { shortDate } from '@/lib/calendar-date';
 import { Stethoscope } from 'lucide-react';
 import SettingRow from '@/components/humetria/setting-row';
 import ReferralForm from '@/components/seating/referral-form';
@@ -31,7 +32,7 @@ export default function ReferralsSection({
                                     ? 'Se canalizó a atención médica'
                                     : 'Evaluada, sin canalización'}
                                 <span className="ml-2 text-caption font-normal text-muted-foreground">
-                                    {referral.referredOn}
+                                    {shortDate(referral.referredOn)}
                                 </span>
                             </p>
                             {referral.note !== null && (

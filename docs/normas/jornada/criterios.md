@@ -73,6 +73,13 @@ de descanso con goce de salario íntegro») y art. 71 (prima dominical de «un v
 **2.6 Distribución del horario por acuerdo** · Norma · art. 58, segundo párrafo: la jornada «podrá ser distribuida de
 común acuerdo». El horario de cada persona es un dato propio, no uno por empresa.
 
+*Hora de entrada y retardo* · Interpretación · la LFT no fija una tolerancia de retardo ni obliga a registrar la hora de
+entrada. Humetría deja que RH escriba, si quiere, la hora de entrada de cada día del horario y que la empresa fije una
+**tolerancia** (por omisión 10 minutos, de 0 a 120). El retardo es la diferencia entre esa hora y la **primera marca de
+entrada** del día, cuando pasa de la tolerancia (con la tolerancia exacta no hay retardo). **Solo se muestra**: no
+descuenta minutos, no genera faltas y no cambia lo trabajado ni lo programado. Un día de descanso, con una ausencia
+aprobada, sin marca o sin hora de entrada no tiene retardo. La tolerancia es de la empresa porque la ley no la fija.
+
 **2.7 Sin merma salarial** · Norma · transitorio séptimo: la reducción no baja sueldos, salarios ni prestaciones. Para
 el costo en vivo de horas extra, la base del cálculo no cambia por la reducción.
 

@@ -3,6 +3,7 @@ import DayCorrection from '@/components/attendance/day-correction';
 import WeekMark from '@/components/attendance/week-mark';
 import EvidenceDots from '@/components/attendance/evidence-dots';
 import { Badge } from '@/components/ui/badge';
+import { lateLabel } from '@/lib/attendance/late';
 import type { CorrectionDraft } from '@/lib/attendance/correction';
 import type { WeekDay as Day, WeekMark as Mark } from '@/lib/attendance/week';
 import {
@@ -32,6 +33,7 @@ export default function WeekDay({
     const [asking, setAsking] = useState<Mark | 'missing' | null>(null);
     const evidence = dayEvidence(day.marks);
     const away = absenceLabel(day.absence);
+    const late = lateLabel(day.lateMinutes);
     const scheduled = day.restDay
         ? 'Descanso'
         : `de ${duration(day.scheduledMinutes)}`;
@@ -57,6 +59,7 @@ export default function WeekDay({
                 </p>
             )}
             {away !== null && <Badge variant="secondary">{away}</Badge>}
+            {late !== null && <Badge variant="warning">{late}</Badge>}
             {day.marks.length === 0 ? (
                 away === null && (
                     <p className="text-base text-muted-foreground">

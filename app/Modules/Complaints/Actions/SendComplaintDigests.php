@@ -47,7 +47,7 @@ final readonly class SendComplaintDigests
                 Context::scope(function () use ($tenantId, &$sent): void {
                     $company = $this->companies->enter($tenantId);
 
-                    if (! $company->blocked) {
+                    if (! $company->stopped('complaints')) {
                         $sent += $this->sweep($company);
                     }
                 }, ['user_id' => null]);

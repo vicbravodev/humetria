@@ -12,9 +12,8 @@ use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Exceptions\RequestRefused;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveRequest;
-use App\Modules\Leave\Support\Allocation;
 use App\Modules\Leave\Support\AllocationLine;
-use App\Modules\Leave\Support\Allocator;
+use App\Modules\Leave\Support\Approval;
 use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\EmployeeLock;
@@ -91,7 +90,7 @@ final readonly class DecideRequest
     private function charge(LeaveRequest $request, Decider $by): int
     {
         $periods = Balances::of([$request->employee_id])[$request->employee_id] ?? [];
-        $allocation = $periods === [] ? new Allocation([], $request->working_days) : Allocator::allocate($periods, $request->working_days);
+        $allocation = Approval::assess($periods, $request->working_days)->allocation;
 
         if (! $allocation->covered() && ! ($this->policies->for([$request->employee_id])[$request->employee_id]->allowsAdvance ?? false)) {
             throw new RequestRefused('insufficient_balance');

@@ -62,7 +62,7 @@ final readonly class SendTeleworkDigests
                 Context::scope(function () use ($tenantId, &$sent): void {
                     $company = $this->companies->enter($tenantId);
 
-                    if (! $company->blocked) {
+                    if (! $company->stopped('nom037')) {
                         $counts = $this->digest($company);
                         $sent['owner'] += $counts['owner'];
                         $sent['committee'] += $counts['committee'];

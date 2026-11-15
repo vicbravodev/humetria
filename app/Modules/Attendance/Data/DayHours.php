@@ -14,5 +14,7 @@ final readonly class DayHours
         public int $workedMinutes,
         public int $scheduledMinutes,
         public bool $restDay,
+        /** Minutes past the start time and its tolerance; 0 when on time, null when there is nothing to compare (informational only). */
+        public ?int $lateMinutes = null,
     ) {}
 }

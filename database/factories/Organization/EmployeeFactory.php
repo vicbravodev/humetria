@@ -47,6 +47,6 @@ final class EmployeeFactory extends Factory
 
     public function deactivated(): self
     {
-        return $this->state(['deactivated_at' => now()]);
+        return $this->state(['deactivated_at' => now(), 'terminated_on' => now()->toDateString()]);
     }
 }

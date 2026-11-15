@@ -55,7 +55,7 @@ final class SendPortalReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
     {
         $company = $companies->enter($this->tenantId);
 
-        if ($company->blocked) {
+        if ($company->stopped('nom037')) {
             return;
         }
 

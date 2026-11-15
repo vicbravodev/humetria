@@ -16,8 +16,9 @@ mutates(OrgChartController::class, OrgChartPeopleController::class);
 // 8 of every page of the panel (company, membership, roles, shared props) and 14 of the org chart: the counts, the
 // indicators (2), the roots (3), the chain (2) and the reports of the focus (3), each with the work centers, the
 // name of the filter, and who is away today of the roots and of the chain (1 each; the focus here leads nobody, and an
-// empty batch asks nothing).
-const ORG_CHART_PAGE_QUERIES = 22;
+// empty batch asks nothing), plus 3 for the first level of the roots (the work centers, the people and who is away) and 1 for the people with no place in the chart.
+// Changed by the product decision «la carga inicial trae el primer nivel de cada raíz»: 22 before it.
+const ORG_CHART_PAGE_QUERIES = 26;
 // 5 of every request of the panel, the person, their reports (3) and who of them is away today.
 const ORG_CHART_REPORTS_QUERIES = 10;
 
@@ -33,10 +34,12 @@ beforeEach(function (): void {
 /** Dir leads Gte, who leads Ana (in Ventas) and Beto. */
 function orgChartLine(): array
 {
-    $dir = Employee::factory()->create([...test()->place, 'name' => 'Dir', 'job_title' => 'Directora']);
-    $gte = Employee::factory()->reportingTo($dir)->create([...test()->place, 'name' => 'Gte']);
-    $ana = Employee::factory()->reportingTo($gte)->create([...test()->place, 'name' => 'Ana', 'job_title' => 'Vendedora', 'area_id' => test()->sales->id]);
-    $beto = Employee::factory()->reportingTo($gte)->create([...test()->place, 'name' => 'Beto']);
+    // Name, email and mobile are fixed: the search matches all three, and a random email with «ana» in it would find
+    // someone else than Ana. Only Ana's own contact has «ana» in it.
+    $dir = Employee::factory()->create([...test()->place, 'name' => 'Dir', 'email' => 'dir@example.test', 'mobile' => '5500000001', 'job_title' => 'Directora']);
+    $gte = Employee::factory()->reportingTo($dir)->create([...test()->place, 'name' => 'Gte', 'email' => 'gte@example.test', 'mobile' => '5500000002']);
+    $ana = Employee::factory()->reportingTo($gte)->create([...test()->place, 'name' => 'Ana', 'email' => 'ana@example.test', 'mobile' => '5500000003', 'job_title' => 'Vendedora', 'area_id' => test()->sales->id]);
+    $beto = Employee::factory()->reportingTo($gte)->create([...test()->place, 'name' => 'Beto', 'email' => 'beto@example.test', 'mobile' => '5500000004']);
 
     return [$dir, $gte, $ana, $beto];
 }

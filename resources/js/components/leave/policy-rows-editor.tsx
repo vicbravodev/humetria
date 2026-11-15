@@ -1,25 +1,25 @@
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import PolicyRowFields from '@/components/leave/policy-row-fields';
 import { Button } from '@/components/ui/button';
-import { blankRow, draftsOf } from '@/lib/leave/policy';
+import { blankRow } from '@/lib/leave/policy';
 import type { PolicyRowDraft } from '@/lib/leave/policy';
-import type { LeavePolicyRowData } from '@/types';
 
 /**
  * The rows of a policy: the days for each range of years of service and, if the company gives them, days that come every
  * year. Beside every range, the minimum of the law for its last year; a row can only improve it.
  */
 export default function PolicyRowsEditor({
-    initial,
+    rows,
+    setRows,
     floors,
     errors,
 }: {
-    initial: LeavePolicyRowData[];
+    rows: PolicyRowDraft[];
+    setRows: Dispatch<SetStateAction<PolicyRowDraft[]>>;
     floors: number[];
     errors: Partial<Record<string, string>>;
 }) {
-    const [rows, setRows] = useState(() => draftsOf(initial));
     const add = (kind: PolicyRowDraft['kind']) =>
         setRows((current) => [
             ...current,
@@ -37,7 +37,7 @@ export default function PolicyRowsEditor({
         );
 
     return (
-        <section aria-labelledby="policy-rows" className="grid gap-4">
+        <section aria-labelledby="policy-rows" className="grid gap-4 card p-5">
             <div>
                 <h2
                     id="policy-rows"

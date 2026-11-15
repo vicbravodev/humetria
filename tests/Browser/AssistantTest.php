@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Models\TenantAiSettings;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -153,15 +154,26 @@ it('slides the docked panel out when it closes instead of removing it at once, t
         ->assertNoJavaScriptErrors();
 });
 
-it('says why Humi cannot answer when it is off for the company, and keeps the person from writing', function (): void {
+it('says why Humi cannot answer when the budget of the month is used, and keeps the person from writing', function (): void {
     $panel = humiPanelCompany();
-    TenantAiSettings::factory()->create(['tenant_id' => Tenant::query()->where('slug', 'acme')->sole()->id, 'enabled' => false]);
+    $tenantId = Tenant::query()->where('slug', 'acme')->sole()->id;
+    TenantAiSettings::factory()->create(['tenant_id' => $tenantId, 'monthly_token_budget' => 10]);
+    AiUsage::factory()->create(['tenant_id' => $tenantId, 'input_tokens' => 10, 'output_tokens' => 0]);
 
     visitPage('dashboard', $panel)
         ->click('[aria-label="Abrir a Humi"]')
         ->click('¿Qué me falta para estar al día?')
-        ->assertSee('Humi no está disponible para tu empresa. Pídele a tu administrador que la active.')
+        ->assertSee('Tu empresa agotó el uso de Humi de este mes.')
         ->assertScript('() => document.querySelector(\'textarea\').placeholder', 'Humi no está disponible');
+});
+
+it('does not offer Humi at all when it is off for the company', function (): void {
+    $panel = humiPanelCompany();
+    TenantAiSettings::factory()->create(['tenant_id' => Tenant::query()->where('slug', 'acme')->sole()->id, 'enabled' => false]);
+
+    visitPage('dashboard', $panel)
+        ->assertMissing('[aria-label="Abrir a Humi"]')
+        ->assertMissing('aside[aria-label="Humi"]');
 });
 
 it('lets the superadmin turn Humi off for a company and set its budget from the console', function (): void {
@@ -172,7 +184,7 @@ it('lets the superadmin turn Humi off for a company and set its budget from the 
         ->click('@tenant-actions')->click('Asistente Humi')
         ->assertSee('Humi en Grupo Ejemplo')
         ->assertSee('Este mes usó 0 tokens.')
-        ->click('Humi está activa para esta empresa')
+        ->click('Activar Humi para esta empresa')
         ->type('monthly_token_budget', '5000')
         ->press('Guardar')
         ->assertSee('Humi actualizada para la empresa.')

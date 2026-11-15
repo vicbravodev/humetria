@@ -72,7 +72,7 @@ it('closes an evaluation: the links stop and the audit trail records how many an
     Participant::query()->withoutGlobalScopes()->limit(1)->update(['token_hash' => Participant::hashToken('a-link')]);
 
     $this->actingAs($this->hr)
-        ->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]))
+        ->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]), ['acknowledged_shortfall' => '1'])
         ->assertRedirect(route('tenant.campaigns.show', [$this->tenant, $this->campaign->id]));
 
     $entry = AuditEntry::query()->where('event', 'campaign.closed')->sole();
@@ -81,9 +81,42 @@ it('closes an evaluation: the links stop and the audit trail records how many an
         ->and($this->campaign->closed_at?->toIso8601String())->toBe('2026-11-10T17:00:00+00:00')
         ->and($entry->subject_id)->toBe($this->campaign->id)
         ->and($entry->actor_id)->toBe($this->hr->id)
-        ->and($entry->metadata)->toEqual(['completed' => ['nom035.guide-ii' => 3], 'pending' => ['nom035.guide-ii' => 2], 'automatic' => false]);
+        ->and($entry->metadata)->toEqual(['completed' => ['nom035.guide-ii' => 3], 'pending' => ['nom035.guide-ii' => 2], 'automatic' => false, 'acknowledged_shortfall' => true, 'answered' => 3, 'target' => 5]);
 
     $this->get(route('survey.show', 'a-link'))->assertInertia(fn ($page) => $page->where('unavailable', 'closed'));
+});
+
+it('refuses to close with people left unless it was acknowledged', function (): void {
+    answeredGuides($this->campaign, 3, 2);
+    $url = route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]);
+
+    $this->actingAs($this->hr)->post($url)->assertSessionHasErrors(['acknowledged_shortfall' => 'Confirma que quieres cerrar con personas sin contestar.']);
+    expect($this->campaign->refresh()->status)->toBe(CampaignStatus::Active)
+        ->and(AuditEntry::query()->where('event', 'campaign.closed')->count())->toBe(0);
+
+    $this->actingAs($this->hr)->post($url, ['acknowledged_shortfall' => '1'])->assertSessionHasNoErrors();
+    expect($this->campaign->refresh()->status)->toBe(CampaignStatus::Closed);
+});
+
+it('refuses to close with Guía I pending even when the measuring guide is complete', function (): void {
+    answeredGuides($this->campaign, 2, 0);
+    ParticipantInstrument::factory()->create([
+        'participant_id' => Participant::query()->withoutGlobalScopes()->where('campaign_id', $this->campaign->id)->firstOrFail()->id,
+        'instrument' => 'nom035.guide-i',
+    ]);
+
+    $this->actingAs($this->hr)
+        ->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]))
+        ->assertSessionHasErrors('acknowledged_shortfall');
+});
+
+it('closes without acknowledging when everyone answered', function (): void {
+    answeredGuides($this->campaign, 3, 0);
+
+    $this->actingAs($this->hr)->post(route('tenant.campaigns.close', [$this->tenant, $this->campaign->id]))->assertSessionHasNoErrors();
+
+    expect($this->campaign->refresh()->status)->toBe(CampaignStatus::Closed)
+        ->and(AuditEntry::query()->where('event', 'campaign.closed')->sole()->metadata)->not->toHaveKey('acknowledged_shortfall');
 });
 
 it('closes, extends and acts only on an active evaluation, for those who manage campaigns', function (string $route): void {
@@ -111,6 +144,19 @@ it('closes the evaluations of every company whose last day ended in Mexico City'
         ->and(AuditEntry::query()->where('event', 'campaign.closed')->where('subject_id', $this->campaign->id)->sole()->only(['tenant_id', 'actor_id', 'metadata']))
         ->toEqual(['tenant_id' => $this->tenant->id, 'actor_id' => null, 'metadata' => ['completed' => ['nom035.guide-ii' => 1], 'pending' => [], 'automatic' => true]]);
 });
+
+it('closes the evaluations of a restricted company too: the record of a link that already stopped working does not wait for a reactivation', function (Closure $restrict): void {
+    $restrict($this->tenant);
+    $this->campaign->update(['closes_on' => '2026-11-09']);
+
+    expect(resolve(CloseExpiredCampaigns::class)->handle())->toBe(1)
+        ->and($this->campaign->refresh()->status)->toBe(CampaignStatus::Closed);
+})->with([
+    'read only' => [fn (Tenant $tenant) => $tenant->forceFill(['restriction' => 'read_only', 'restriction_reason' => 'Prueba', 'restricted_at' => now()])->save()],
+    'suspended' => [fn (Tenant $tenant) => $tenant->forceFill(suspension())->save()],
+    'archived' => [fn (Tenant $tenant) => $tenant->forceFill(['restriction' => 'archived', 'restriction_reason' => 'Prueba', 'restricted_at' => now()])->save()],
+    'expired' => [fn (Tenant $tenant) => $tenant->forceFill(['active_until' => now()->subDay()])->save()],
+]);
 
 it('runs the closing of expired evaluations every hour', function (): void {
     $events = collect(resolve(Schedule::class)->events())->filter(fn ($event): bool => str_contains((string) $event->command, 'campaigns:close-expired'));

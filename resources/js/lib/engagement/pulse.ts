@@ -1,4 +1,5 @@
 import { describeDate } from '@/lib/calendar-date';
+import { countOf } from '@/lib/plural';
 import type { PulseSchedule } from '@/types';
 
 /** What each mode of the pulse looks at besides its fixed questions, in a sentence. */
@@ -15,13 +16,44 @@ export function modeHint(mode: string): string {
     }
 }
 
-/** "El siguiente pulso sale el 15 de diciembre · Recorrido · 10 preguntas", or that it is paused. */
-export function scheduleText(schedule: PulseSchedule): string {
-    if (!schedule.active) {
-        return 'En pausa: no sale solo hasta que lo reanudes.';
+/** The pill of the home: "Mensual · día 15", or that the schedule is paused. */
+export function scheduleBadge(schedule: PulseSchedule): string {
+    return schedule.active
+        ? `${schedule.frequencyLabel} · día ${schedule.dayOfMonth}`
+        : 'En pausa';
+}
+
+/** "Sale hoy", "Sale mañana", "Sale en 4 días". */
+export function leavesIn(days: number): string {
+    if (days === 0) {
+        return 'Sale hoy';
     }
 
-    const day = describeDate(schedule.nextRunOn) ?? schedule.nextRunOn;
+    return days === 1
+        ? 'Sale mañana'
+        : `Sale en ${countOf(days, 'día', 'días')}`;
+}
 
-    return `El siguiente pulso sale el ${day} · ${schedule.upcoming.modeLabel} · ${schedule.upcoming.items} preguntas`;
+/** "Sale el 15 de diciembre de 2026", or that it is paused. */
+export function nextRunTitle(schedule: PulseSchedule): string {
+    return schedule.active
+        ? `Sale el ${describeDate(schedule.nextRunOn) ?? schedule.nextRunOn}`
+        : 'En pausa';
+}
+
+/** "Mensual, el día 15 de cada mes.": the rhythm of the schedule, or how a paused one behaves. */
+export function cadenceText(schedule: PulseSchedule): string {
+    if (!schedule.active) {
+        return 'No sale solo hasta que lo reanudes.';
+    }
+
+    const every =
+        schedule.frequency === 'quarterly' ? 'cada tres meses' : 'de cada mes';
+
+    return `${schedule.frequencyLabel}, el día ${schedule.dayOfMonth} ${every}.`;
+}
+
+/** "Recorrido · 10 preguntas": what the next pulse looks at and how long it is. */
+export function upcomingText(schedule: PulseSchedule): string {
+    return `${schedule.upcoming.modeLabel} · ${countOf(schedule.upcoming.items, 'pregunta', 'preguntas')}`;
 }

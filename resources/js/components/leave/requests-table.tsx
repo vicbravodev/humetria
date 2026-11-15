@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import StackedTable from '@/components/humetria/stacked-table';
 import QueueRow from '@/components/leave/queue-row';
-import RequestPanel from '@/components/leave/request-panel';
 import {
     TableBody,
     TableCaption,
@@ -11,31 +9,28 @@ import {
 } from '@/components/ui/table';
 import type { LeaveQueueRequest } from '@/types';
 
-/** The requests of a tab: each row opens its panel, where RH reads the detail and answers or corrects it. */
+/** The requests of a tab, a row each; the row that is selected shows its decision panel. */
 export default function RequestsTable({
     requests,
+    selectedId,
+    onSelect,
 }: {
     requests: LeaveQueueRequest[];
+    selectedId: string | undefined;
+    onSelect: (id: string) => void;
 }) {
-    const [openId, setOpenId] = useState<string | null>(null);
-    // A request that left this tab (it was answered) closes its panel.
-    const open = requests.find((request) => request.id === openId);
-
     return (
-        <>
+        <div className="overflow-hidden card p-0">
             <StackedTable>
                 <TableCaption className="sr-only">
                     Solicitudes de vacaciones y permisos
                 </TableCaption>
                 <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-muted hover:bg-muted">
                         <TableHead>Persona</TableHead>
                         <TableHead>Fechas</TableHead>
-                        <TableHead>Días</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead className="w-0">
-                            <span className="sr-only">Detalle</span>
-                        </TableHead>
+                        <TableHead className="text-right">Días</TableHead>
+                        <TableHead>Espera desde</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -43,12 +38,12 @@ export default function RequestsTable({
                         <QueueRow
                             key={request.id}
                             request={request}
-                            onOpen={() => setOpenId(request.id)}
+                            selected={request.id === selectedId}
+                            onSelect={() => onSelect(request.id)}
                         />
                     ))}
                 </TableBody>
             </StackedTable>
-            <RequestPanel request={open} onClose={() => setOpenId(null)} />
-        </>
+        </div>
     );
 }

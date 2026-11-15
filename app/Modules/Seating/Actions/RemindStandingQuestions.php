@@ -37,7 +37,7 @@ final readonly class RemindStandingQuestions
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, $zone, $today, &$queued): void {
-                    if ($this->companies->enter($tenantId)->blocked) {
+                    if ($this->companies->enter($tenantId)->stopped('seating')) {
                         return;
                     }
 

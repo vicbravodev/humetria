@@ -55,6 +55,10 @@ describe('ruleLine', () => {
         expect(ruleLine({ state: 'missing', count: 3 }).text).toBe(
             '3 evaluaciones de nivel medio o alto no tienen medida.',
         );
+        expect(ruleLine({ state: 'pending', count: 0 })).toEqual({
+            met: false,
+            text: 'aún no hay evaluaciones firmadas.',
+        });
         expect(ruleLine({ state: 'warning', count: 2 })).toEqual({
             met: false,
             text: '2 medidas pasaron su fecha compromiso.',

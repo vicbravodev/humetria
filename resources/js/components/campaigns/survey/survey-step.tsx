@@ -1,6 +1,7 @@
 import GateStep from '@/components/campaigns/survey/gate-step';
 import SurveyQuestion from '@/components/campaigns/survey/survey-question';
 import { focusOnMount } from '@/lib/focus';
+import { captionOf } from '@/lib/survey';
 import type { Answers, Step } from '@/lib/survey';
 import type { SurveyInstrument } from '@/types';
 
@@ -37,7 +38,7 @@ export default function SurveyStep({
             <div
                 ref={focusOnMount}
                 tabIndex={-1}
-                className="flex flex-col gap-1 rounded-xl bg-accent px-4 py-3.5 text-[17px] leading-[26px] text-accent-foreground focus:outline-none md:mb-2 md:px-[18px] md:py-4 md:text-lg md:leading-7"
+                className="flex flex-col gap-1 rounded-xl bg-accent px-4 py-3.5 text-[1.0625rem] leading-[1.625rem] text-accent-foreground focus:outline-none md:mb-2 md:px-[18px] md:py-4 md:text-lg md:leading-7"
             >
                 {section.title !== null && (
                     <p className="font-semibold">{section.title}</p>
@@ -48,7 +49,7 @@ export default function SurveyStep({
                 <SurveyQuestion
                     key={item.number}
                     name={`item-${item.number}`}
-                    caption={`Pregunta ${section.items.indexOf(item) + 1} de ${section.items.length}`}
+                    caption={captionOf(section, item.number)}
                     text={item.text}
                     options={instrument.options}
                     value={answers[String(item.number)]}

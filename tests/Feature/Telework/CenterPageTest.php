@@ -104,7 +104,7 @@ it('lists the 17 rows of table 10.3 with their state, detail and where to fix th
         // Rediseño v2 (decisión A3): the policy is written with questions, from the route of its center.
         ->where('rows.3.href', route('tenant.telework.writing.show', [$this->tenant, 'policy', 'center' => $this->center->id]))
         ->where('rows.16.numeral', '5.14')
-        ->where('progress', ['done' => 7, 'applicable' => 16]));
+        ->where('progress', ['done' => 6, 'applicable' => 16]));
 });
 
 it('counts the progress as done rows over the rows that apply', function (): void {
@@ -239,7 +239,7 @@ it('lists the centers the user may see, with their progress, counts and pending 
     $this->actingAs($this->hr)->get(route('tenant.telework.index', $this->tenant))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('telework/index')
         ->has('centers.data', 2)
-        ->where('centers.data.0', fn ($center) => $center['name'] === 'Planta Norte' && $center['teleworkers'] === 1 && $center['aspirants'] === 1 && $center['pendingReviews'] === 1 && $center['done'] === 6 && $center['applicable'] === 16 && $center['activity'] === 'Manufactura')
+        ->where('centers.data.0', fn ($center) => $center['name'] === 'Planta Norte' && $center['teleworkers'] === 1 && $center['aspirants'] === 1 && $center['pendingReviews'] === 1 && $center['done'] === 5 && $center['applicable'] === 16 && $center['activity'] === 'Manufactura')
         ->where('centers.data.1', fn ($center) => $center['name'] === 'Planta Sur' && $center['teleworkers'] === 0 && $center['applicable'] === 10));
 });
 
@@ -429,7 +429,7 @@ it('counts in the list two people, two aspirants and two lists to review in a ce
     }
 
     $this->actingAs($this->owner)->get(route('tenant.telework.index', $this->tenant))->assertInertia(fn (Assert $page) => $page
-        ->where('centers.data.0', ['id' => $this->center->id, 'name' => 'Planta Norte', 'activity' => 'Manufactura', 'teleworkers' => 2, 'aspirants' => 2, 'pendingReviews' => 2, 'done' => 6, 'applicable' => 16, 'route' => ['applies' => true, 'done' => [false, true, false, true, true, false], 'status' => 'define las reglas', 'answered' => true], 'accident' => null])
+        ->where('centers.data.0', ['id' => $this->center->id, 'name' => 'Planta Norte', 'activity' => 'Manufactura', 'teleworkers' => 2, 'aspirants' => 2, 'pendingReviews' => 2, 'done' => 5, 'applicable' => 16, 'route' => ['applies' => true, 'done' => [false, true, false, false, true, false], 'status' => 'define las reglas', 'answered' => true], 'accident' => null])
         ->where('centers.data.1', ['id' => $this->other->id, 'name' => 'Planta Sur', 'activity' => $this->other->main_activity, 'teleworkers' => 0, 'aspirants' => 0, 'pendingReviews' => 0, 'done' => 0, 'applicable' => 10, 'route' => ['applies' => false, 'done' => [], 'status' => 'Falta contestar', 'answered' => false], 'accident' => null]));
 });
 

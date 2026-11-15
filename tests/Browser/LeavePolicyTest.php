@@ -34,6 +34,10 @@ it('opens a policy with its rows and the minimum of the law beside each', functi
     visitPage('leave/policy', leavePolicyBrowserSetup(), $dark, $mobile)
         ->assertSee('Corporativo')
         ->assertSee('Mínimo legal: 20 días')
+        ->assertSee('Lo básico')
+        ->assertSee('Días extra')
+        ->assertSee('Así quedan los días')
+        ->assertSee('Sin cambios por guardar')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($looks);
@@ -41,8 +45,10 @@ it('opens a policy with its rows and the minimum of the law beside each', functi
 it('sends a row under the law back with its error under the field', function (): void {
     visitPage('leave/policy', leavePolicyBrowserSetup())
         ->fill('#row-0-days', '19')
+        ->assertSee('Hay cambios sin guardar')
         ->press('Guardar política')
         ->assertSee('No puede ser menor a los 20 días que marca la ley.')
+        ->assertSee('Corrige 1 campo para guardar')
         ->assertNoJavaScriptErrors();
 });
 
@@ -50,5 +56,13 @@ it('adds a row of days that come every year', function (): void {
     visitPage('leave/policy', leavePolicyBrowserSetup())
         ->press('Agregar días fijos')
         ->assertSee('Nombre de estos días')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows the days the policy gives as they are typed, against the law', function (): void {
+    visitPage('leave/policy', leavePolicyBrowserSetup())
+        ->assertScript('document.querySelectorAll("[aria-label=\"Vista previa de los días\"] [data-slot=column-reference]").length', 6)
+        ->fill('#row-0-days', '30')
+        ->assertScript('Array.from(document.querySelectorAll("[aria-label=\"Vista previa de los días\"] [role=img]")).some((bar) => bar.getAttribute("aria-label") === "Año 1: 30 días; la ley da 12")', true)
         ->assertNoJavaScriptErrors();
 });

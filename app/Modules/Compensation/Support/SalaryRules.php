@@ -42,6 +42,14 @@ final class SalaryRules
     }
 
     /**
+     * A salary under the general minimum is not refused (a part-time day is paid less): it is pointed out. Null at or above it.
+     */
+    public static function salaryWarning(int $cents, int $minimumCents, int $borderCents): ?string
+    {
+        return $cents >= $minimumCents ? null : 'Está por debajo del salario mínimo general ('.Money::format($minimumCents).' diarios; '.Money::format($borderCents).' en la zona libre de la frontera norte). Revísalo si la jornada es completa.';
+    }
+
+    /**
      * What is wrong with a category and a level, by field.
      *
      * @return array<string, string>

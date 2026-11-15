@@ -14,6 +14,7 @@ export default function Enroll({
     name,
     jobTitle,
     linkHours,
+    centerReady,
     punchUrl,
     agreement,
     optionsUrl,
@@ -23,6 +24,8 @@ export default function Enroll({
     name: string;
     jobTitle: string;
     linkHours: number;
+    /** Whether their center can already mark (a zone and, if the policy asks, a screen). */
+    centerReady: boolean;
     punchUrl: string;
     agreement: { version: number; body: string };
     optionsUrl: string;
@@ -47,6 +50,7 @@ export default function Enroll({
                 name={name}
                 jobTitle={jobTitle}
                 linkHours={linkHours}
+                centerReady={centerReady}
                 punchUrl={punchUrl}
                 agreement={agreement}
                 enrollment={enrollment}

@@ -70,7 +70,7 @@ export default function ScheduleRow({
             {canManage && (
                 <TableCell className="text-right">
                     <Button
-                        variant={none ? 'default' : 'outline'}
+                        variant="outline"
                         size="sm"
                         onClick={() => setEditing(true)}
                     >

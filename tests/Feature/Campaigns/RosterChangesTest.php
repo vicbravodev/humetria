@@ -35,7 +35,7 @@ function statusesOf(Participant $participant): array
 }
 
 it('cancels the guides a person had pending when they are deactivated, keeping what they answered', function (): void {
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure())->assertRedirect();
 
     expect(statusesOf($this->participant))->toBe(['nom035.guide-i' => 'completed', 'nom035.guide-ii' => 'cancelled'])
         ->and(ParticipantInstrument::query()->withoutGlobalScopes()->where('status', InstrumentStatus::Cancelled)->sole()->cancelled_at?->toIso8601String())->toBe('2026-11-05T15:00:00+00:00');
@@ -56,7 +56,7 @@ it('deactivates a person and cancels their guides together, or neither', functio
 it('leaves closed evaluations as they ended', function (): void {
     $this->campaign->update(['status' => 'closed', 'closed_at' => now()]);
 
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]));
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure());
 
     expect(statusesOf($this->participant))->toBe(['nom035.guide-i' => 'completed', 'nom035.guide-ii' => 'pending']);
 });

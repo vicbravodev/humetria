@@ -6,6 +6,8 @@ use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
+use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\PeriodBalance;
 use App\Modules\Organization\Models\Employee;
@@ -38,7 +40,7 @@ it('sums the ledger of a period by tranche', function (): void {
     LeaveEntry::factory()->of($period)->taken(5)->create();
 
     expect(Balances::of([$this->ana->id]))->toEqual([$this->ana->id => [
-        new PeriodBalance($period->id, CarbonImmutable::parse('2026-03-15'), CarbonImmutable::parse('2026-09-15'), CarbonImmutable::parse('2027-09-15'), 7, 3),
+        new PeriodBalance($period->id, CarbonImmutable::parse('2026-03-15'), CarbonImmutable::parse('2026-09-15'), CarbonImmutable::parse('2027-09-15'), 7, 3, 15),
     ]])->and(Balances::available($this->ana->id))->toBe(10);
 });
 
@@ -138,4 +140,18 @@ it('reads the balances of fifty people with the queries of five', function (): v
     };
 
     expect($count(50))->toBe($count(5))->toBe(2);
+});
+
+it('adds up the days of the vacations still waiting for an answer, by person, apart from the balance', function (): void {
+    $beto = Employee::factory()->create(['tenant_id' => $this->tenant->id]);
+    $other = fn (Employee $person, array $attributes) => LeaveRequest::factory()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id, 'leave_type_id' => null, ...$attributes]);
+    $other($this->ana, ['status' => 'requested', 'working_days' => 3]);
+    $other($this->ana, ['status' => 'requested', 'working_days' => 2]);
+    LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'leave_type_id' => null, 'working_days' => 4]);
+    LeaveRequest::factory()->cancelled()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'leave_type_id' => null, 'working_days' => 6]);
+    $other($this->ana, ['status' => 'requested', 'working_days' => 5, 'had_balance' => null, 'leave_type_id' => LeaveType::factory()->create(['tenant_id' => $this->tenant->id])->id]);
+    $other($beto, ['status' => 'requested', 'working_days' => 7]);
+
+    expect(Balances::waiting([$this->ana->id, $beto->id]))->toBe([$this->ana->id => 5, $beto->id => 7])
+        ->and(Balances::waiting([]))->toBe([]);
 });

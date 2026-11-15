@@ -21,6 +21,7 @@ final class CompanyPolicy
             'require_qr_onsite' => true,
             'trusted_may_use_browser' => true,
             'retention_months' => 12,
+            'late_tolerance_minutes' => 10,
         ]);
     }
 }

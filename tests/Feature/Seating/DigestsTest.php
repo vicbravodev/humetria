@@ -93,7 +93,7 @@ it('sends nothing when there is nothing to say', function (): void {
 
 it('sends nothing for a company that may not be used and never mixes companies', function (): void {
     SeatReportFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id, 'created_at' => now()->subDays(20)]);
-    $blocked = Tenant::factory()->deactivated()->create();
+    $blocked = Tenant::factory()->suspended()->create();
     $blockedOwner = ownerOf($blocked);
     $center = WorkCenter::factory()->for($blocked)->create();
     StandingPositionFactory::new()->create(['tenant_id' => $blocked->id, 'work_center_id' => $center->id]);

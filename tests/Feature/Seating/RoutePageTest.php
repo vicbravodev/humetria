@@ -48,7 +48,7 @@ it('shows the stages of the center with each requirement in its stage, in plain 
         ->where('people', 2)
         ->where('positions', 1)
         ->where('route.applies', true)
-        ->where('route.done', [true, false, false, true, false, false])
+        ->where('route.done', [true, false, false, false, false, false])
         ->has('rows', 13)
         ->where('rows', fn ($rows): bool => collect($rows)->pluck('stage', 'numeral')->all() === [
             'R1' => 1, 'R2' => 3, 'R3' => 3, 'R4' => 2, 'R5' => 2, 'R6' => 2, 'R7' => 4, 'R8' => 3, 'R9' => 3, 'R10' => 5, 'R11' => 4, 'R12' => 6, 'R13' => 6,

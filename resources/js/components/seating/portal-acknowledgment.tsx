@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/portal/seating/acknowledgments';
 import type { PortalAcknowledgment as Pending } from '@/types';
+import { describeDate } from '@/lib/calendar-date';
 
 /** The result of the person's assessment and the button to confirm they were informed of it (Quinta H). */
 export default function PortalAcknowledgment({
@@ -27,7 +28,8 @@ export default function PortalAcknowledgment({
                     </h2>
                     <p className="text-muted-foreground">
                         La Comisión de Seguridad e Higiene la evaluó
-                        {pending.signedOn !== null && ` el ${pending.signedOn}`}
+                        {pending.signedOn !== null &&
+                            ` el ${describeDate(pending.signedOn) ?? pending.signedOn}`}
                         . Este es su nivel de riesgo:
                     </p>
                     {pending.level !== null && pending.levelLabel !== null && (

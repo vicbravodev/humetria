@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Disclosure\Actions\PublishResults;
+use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\RiskBreakdown;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -48,6 +50,12 @@ function policyPublishedOn(object $test, string $at): void
     DocumentCenter::factory()->create(['tenant_id' => $test->tenant->id, 'document_id' => $policy->id, 'work_center_id' => $test->plant->id]);
 }
 
+/** The page of the people is active: what puts a published block in front of them (C-52). */
+function pageIsActive(object $test): PageLink
+{
+    return PageLink::factory()->create(['tenant_id' => $test->tenant->id]);
+}
+
 it('does not apply to a center of up to 15 people, and says why', function (): void {
     staffOf($this->tenant, $this->plant, 15);
 
@@ -68,9 +76,38 @@ it('is missing while the closed evaluation is not published to the people', func
     expect(resultsRow($this, 'D7')['state']['value'])->toBe('missing')->and(resultsRow($this, 'D7')['detail'])->toBe('La evaluación cerrada el 10 nov 2026 no se ha publicado a las personas.');
 });
 
+it('is missing while the published results are not in front of the people (C-52)', function (): void {
+    staffOf($this->tenant, $this->plant, 20);
+    resolve(PublishResults::class)->handle(evaluationOfPlant($this)->id, $this->hr->id);
+
+    expect(resultsRow($this, 'D7')['state']['value'])->toBe('missing')
+        ->and(resultsRow($this, 'D7')['detail'])->toBe('Están publicados, pero no están a la vista: activa la página de las personas o registra un medio físico.');
+});
+
+it('is missing again once the page of the people is revoked', function (): void {
+    staffOf($this->tenant, $this->plant, 20);
+    resolve(PublishResults::class)->handle(evaluationOfPlant($this)->id, $this->hr->id);
+    $link = pageIsActive($this);
+
+    expect(resultsRow($this, 'D7')['state']['value'])->toBe('met');
+
+    $link->update(['disabled_at' => now()]);
+
+    expect(resultsRow($this, 'D7')['state']['value'])->toBe('missing');
+});
+
+it('is met when a physical means of the center covers the results', function (): void {
+    staffOf($this->tenant, $this->plant, 20);
+    resolve(PublishResults::class)->handle(evaluationOfPlant($this)->id, $this->hr->id);
+    DisseminationRecord::factory()->covering(['e'])->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+
+    expect(resultsRow($this, 'D7')['state']['value'])->toBe('met');
+});
+
 it('is met once the latest closed evaluation is published and can be shown', function (): void {
     staffOf($this->tenant, $this->plant, 20);
     resolve(PublishResults::class)->handle(evaluationOfPlant($this)->id, $this->hr->id);
+    pageIsActive($this);
 
     expect(resultsRow($this, 'D7'))->toMatchArray(['detail' => null])->and(resultsRow($this, 'D7')['state']['value'])->toBe('met');
 });
@@ -78,6 +115,7 @@ it('is met once the latest closed evaluation is published and can be shown', fun
 it('warns when it is published but with too few questionnaires to show figures', function (): void {
     staffOf($this->tenant, $this->plant, 20);
     resolve(PublishResults::class)->handle(evaluationOfPlant($this, per: 4)->id, $this->hr->id);
+    pageIsActive($this);
 
     expect(resultsRow($this, 'D7')['state']['value'])->toBe('notice')->and(resultsRow($this, 'D7')['detail'])->toBe('Publicada, pero con muy pocas respuestas: las cifras no se muestran para proteger la confidencialidad.');
 });

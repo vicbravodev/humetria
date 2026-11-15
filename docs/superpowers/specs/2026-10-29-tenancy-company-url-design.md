@@ -24,7 +24,9 @@ superadmin crea superadmins.
 2. **Selector de empresa** arriba del sidebar con el nombre comercial de la empresa actual.
 3. **El superadmin entra a una empresa impersonando literalmente al owner**: se vuelve esa persona y ve lo mismo que
    ella, incluida (cuando exista) la lista de canalización de Guía I. Siendo él mismo, sin impersonar, no entra a
-   `/admin/{slug}`.
+   `/admin/{slug}`. **Solo en esa empresa** (cambia con el rediseño de lanzamiento, F6): si el owner lo es también de
+   otras, durante la impersonación solo existe la empresa desde la que se entró: las demás dan 404, el selector solo
+   lista esa y /admin lleva directo a ella. La empresa sale de la fila de la consola, nunca del request.
 4. **Al impersonar puede hacer todo** lo que puede el owner. Sus acciones quedan registradas como las de un usuario
    normal (actor = el owner) **y además** queda el rastro de que fue una impersonación: en los logs y en la bitácora.
 5. **Bajo la empresa** vive el Panel (`/admin/{slug}`). Configuración (`/admin/settings/…`), Empresas y Demos se quedan

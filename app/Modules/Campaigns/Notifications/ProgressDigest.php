@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * The owner's Monday email about an open evaluation: answered against the target, the areas that lack the most and a
  * way to remind whoever is missing. Counts only.
  */
-final class ProgressDigest extends Notification implements ShouldQueue
+final class ProgressDigest extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -63,5 +64,10 @@ final class ProgressDigest extends Notification implements ShouldQueue
                 'areas' => $this->areas,
                 'remind' => $this->toRemind > 0,
             ]);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

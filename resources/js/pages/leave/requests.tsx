@@ -1,13 +1,16 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { Inbox, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import RecordLeaveForm from '@/components/leave/record-leave-form';
-import RequestsTable from '@/components/leave/requests-table';
+import RequestsEmpty from '@/components/leave/requests-empty';
 import RequestsToolbar from '@/components/leave/requests-toolbar';
+import RequestsWorkspace from '@/components/leave/requests-workspace';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { orderLine } from '@/lib/leave/queue';
+import { leaveTrail } from '@/lib/leave/trail';
 import type {
     LeaveQueueFilters,
     LeaveQueueRequest,
@@ -16,18 +19,10 @@ import type {
     Paginated,
 } from '@/types';
 
-const EMPTY: Record<LeaveQueueTab, string> = {
-    attend: 'Nada por atender. Las solicitudes que su jefe no responda a tiempo llegarán aquí.',
-    waiting: 'Ninguna solicitud espera a un jefe.',
-    approved: 'Aún no hay solicitudes aprobadas.',
-    rejected: 'Aún no hay solicitudes rechazadas.',
-    cancelled: 'Aún no hay solicitudes canceladas.',
-    taken: 'Aún no hay solicitudes disfrutadas.',
-};
-
 /**
  * RH's queue of vacation and leave requests: first what reached them (nobody above the person, or a manager who did not
- * answer in time), then what waits for the manager and what was answered, paged by the server.
+ * answer in time), then what waits for the manager and what was answered. Each row opens its decision panel beside the
+ * list, so RH reads the context and answers without leaving; the server pages it.
  */
 export default function LeaveRequests({
     tab,
@@ -46,23 +41,29 @@ export default function LeaveRequests({
 }) {
     const [recording, setRecording] = useState(false);
 
-    setLayoutProps({
-        breadcrumbs: [{ title: 'Vacaciones' }, { title: 'Solicitudes' }],
-    });
+    setLayoutProps({ breadcrumbs: leaveTrail('Solicitudes') });
 
     return (
         <>
             <Head title="Solicitudes de vacaciones" />
             <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Vacaciones"
                     title="Solicitudes"
+                    status={
+                        counts.attend > 0 ? (
+                            <Badge variant="warning">
+                                {counts.attend} por atender
+                            </Badge>
+                        ) : undefined
+                    }
                     description="Lo que llegó a RH, lo que espera a un jefe y lo que ya se respondió."
                 >
                     {canManage && (
                         <Button
                             type="button"
+                            variant="outline"
                             onClick={() => setRecording(true)}
+                            className="max-sm:h-11 max-sm:w-full"
                         >
                             <Plus aria-hidden />
                             Registrar a nombre de alguien
@@ -81,11 +82,18 @@ export default function LeaveRequests({
                     counts={counts}
                 />
                 {requests.data.length === 0 ? (
-                    <EmptyState icon={Inbox} title="Sin solicitudes aquí">
-                        {EMPTY[tab]}
-                    </EmptyState>
+                    <RequestsEmpty
+                        tab={tab}
+                        filters={filters}
+                        waiting={counts.waiting}
+                    />
                 ) : (
-                    <RequestsTable requests={requests.data} />
+                    <>
+                        <p className="text-meta text-muted-foreground">
+                            {orderLine(tab)}
+                        </p>
+                        <RequestsWorkspace requests={requests.data} />
+                    </>
                 )}
                 <Pagination page={requests} label="Páginas de solicitudes" />
             </div>

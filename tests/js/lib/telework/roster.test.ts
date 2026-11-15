@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     END_REASONS,
     expiryText,
+    homeEntries,
     MARITAL_STATUSES,
     rosterHint,
 } from '@/lib/telework/roster';
@@ -52,10 +53,40 @@ describe('rosterHint', () => {
 
     it('tells an aspirant whether a workplace in force lets them join', () => {
         expect(rosterHint('aspirant', true, undefined)).toContain(
-            'ya puedes pasarla',
+            'ya puedes pasar a esta persona',
         );
         expect(rosterHint('aspirant', false, undefined)).toContain(
             'al menos un lugar validado y vigente',
         );
+    });
+});
+
+describe('homeEntries', () => {
+    const home = {
+        street: 'Calle Reforma',
+        exterior_number: '12',
+        interior_number: null,
+        neighborhood: 'Centro',
+        postal_code: '76000',
+        municipality: 'Querétaro',
+        state: 'QUE',
+    };
+
+    it('sends the address of the workplace field by field', () => {
+        expect(homeEntries(home)).toEqual([
+            ['street', 'Calle Reforma'],
+            ['exterior_number', '12'],
+            ['neighborhood', 'Centro'],
+            ['postal_code', '76000'],
+            ['municipality', 'Querétaro'],
+            ['state', 'QUE'],
+        ]);
+    });
+
+    it('keeps the interior number when there is one', () => {
+        expect(homeEntries({ ...home, interior_number: '3' })).toContainEqual([
+            'interior_number',
+            '3',
+        ]);
     });
 });

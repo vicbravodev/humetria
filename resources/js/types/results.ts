@@ -222,6 +222,8 @@ export type NomReport = {
     /** How many items the guide has: 46 for the Guía II, 72 for the III. */
     itemCount: number;
     period: string;
+    /** The day it is printed, "19 nov 2026". */
+    issuedOn: string;
     participation: Participation;
     method: string;
     objective: string;

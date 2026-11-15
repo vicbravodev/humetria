@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Results\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * Reminds whoever channeled a person, as «tú», to ask how they are 30 days later (board V4-N035-Canalizacion). No name, no
  * destination and no note: an email can leave the company, so who it is about is read in Humetría.
  */
-final class ReferralFollowUp extends Notification implements ShouldQueue
+final class ReferralFollowUp extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -37,5 +38,10 @@ final class ReferralFollowUp extends Notification implements ShouldQueue
             ->line('Te pediste recordar que preguntaras cómo sigue una persona que canalizaste. Si ya la atendieron, regístralo.')
             ->line('Por confidencialidad, este correo no dice de quién se trata.')
             ->action('Ver la canalización', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

@@ -1,7 +1,7 @@
 import DossierMissing from '@/components/telework/dossier-missing';
 import DossierTable from '@/components/telework/dossier-table';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { describeDate } from '@/lib/calendar-date';
+import { shortDate } from '@/lib/calendar-date';
 import { maritalText } from '@/lib/telework/center';
 import type { DossierPerson } from '@/types';
 
@@ -33,7 +33,9 @@ export default function DossierRoster({ people }: { people: DossierPerson[] }) {
                     <TableCell>{person.jobTitle}</TableCell>
                     <TableCell>{person.percentage}&nbsp;%</TableCell>
                     <TableCell>
-                        {describeDate(person.startedOn ?? '') ?? '—'}
+                        {person.startedOn === null
+                            ? '—'
+                            : shortDate(person.startedOn)}
                     </TableCell>
                     {personal && (
                         <>

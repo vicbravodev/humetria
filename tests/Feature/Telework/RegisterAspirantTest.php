@@ -232,7 +232,7 @@ it('sends nothing when the person left before the job runs', function (): void {
 });
 
 it('sends nothing when the company may not be used by the time the job runs', function (): void {
-    Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
 
     app()->call((new SendPortalInvitation($this->tenant->id, $this->employee->id))->handle(...));
 
@@ -472,6 +472,7 @@ it('sends the teleworker page in full: the person, their equipment, their notice
             'today' => '2026-03-01',
             'startedOn' => '2026-01-10',
             'noEquipmentReason' => null,
+            'homeDefault' => null,
             'endReason' => null,
             'endedOn' => null,
             'endNote' => null,

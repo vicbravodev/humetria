@@ -225,3 +225,9 @@ it('allows as const', function (): void {
 
     expect($result['passed'])->toBeTrue($result['output']);
 });
+
+it('loads the app frame on demand', function (string $layout): void {
+    $app = (string) file_get_contents(__DIR__.'/../../resources/js/app.tsx');
+
+    expect($app)->not->toContain("from '@/layouts/{$layout}");
+})->with(['app', 'auth', 'settings']);

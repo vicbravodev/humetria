@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { useState } from 'react';
-import ReportField from '@/components/results/report-field';
+import ReportFields from '@/components/results/report-details-fields';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -50,48 +50,12 @@ export default function ReportDetailsDialog({
                     onSuccess={() => setOpen(false)}
                     className="grid gap-6"
                 >
-                    {({ processing, errors }) => (
+                    {({ processing, errors, clearErrors }) => (
                         <>
-                            <ReportField
-                                name="objective"
-                                label="Objetivo"
-                                value={form.objective}
-                                error={errors['objective']}
-                                multiline
-                            />
-                            <ReportField
-                                name="activities"
-                                label="Principales actividades realizadas en el centro"
-                                value={form.activities}
-                                error={errors['activities']}
-                                multiline
-                            />
-                            <ReportField
-                                name="conclusions"
-                                label="Conclusiones"
-                                value={form.conclusions}
-                                error={errors['conclusions']}
-                                multiline
-                            />
-                            <ReportField
-                                name="recommendations"
-                                label="Recomendaciones y acciones de intervención"
-                                value={form.recommendations}
-                                error={errors['recommendations']}
-                                multiline
-                            />
-                            <ReportField
-                                name="responsible_name"
-                                label="Responsable de la evaluación"
-                                value={form.responsible_name}
-                                error={errors['responsible_name']}
-                                hint="Nombre completo."
-                            />
-                            <ReportField
-                                name="responsible_license"
-                                label="Cédula profesional (opcional)"
-                                value={form.responsible_license}
-                                error={errors['responsible_license']}
+                            <ReportFields
+                                form={form}
+                                errors={processing ? {} : errors}
+                                clearErrors={clearErrors}
                             />
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>

@@ -27,7 +27,7 @@ it('tells a person without companies to contact the administrator, and lets them
 it('lists the companies of a person with several, the blocked one with its status', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
     // C2 of the rediseño v2: one card with a row per company, as the panel lists its centers.
@@ -36,7 +36,7 @@ it('lists the companies of a person with several, the blocked one with its statu
         ->assertSeeIn('[aria-labelledby="companies"] li:first-child', 'Acme Industrial')
         ->assertSeeIn('[aria-labelledby="companies"] li:first-child', 'Sin iniciar')
         ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Beta Foods')
-        ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Desactivada')
+        ->assertSeeIn('[aria-labelledby="companies"] li:last-child', 'Suspendida')
         ->assertScript('() => Array.from(document.querySelectorAll(\'[aria-labelledby="companies"] li\')).filter((row) => row.scrollWidth > row.clientWidth).length', 0);
 })->with($looks);
 
@@ -48,6 +48,7 @@ it('opens the company that was chosen from the list', function (): void {
 
     visit('/admin')
         ->click('Beta Foods')
+        ->assertScript(pathBecomes('/admin/beta'), true)
         ->assertPathIs('/admin/beta');
 });
 
@@ -61,6 +62,7 @@ it('switches from one company to another from the sidebar', function (bool $dark
         ->assertSeeIn('[data-test="tenant-switcher"]', 'Acme Industrial')
         ->click('[data-test="tenant-switcher"]')
         ->click('Beta Foods')
+        ->assertScript(pathBecomes('/admin/beta'), true)
         ->assertPathIs('/admin/beta'))
         ->assertSeeIn('[data-test="tenant-switcher"]', 'Beta Foods')
         // The sidebar's Panel now belongs to the company that was chosen.
@@ -142,7 +144,7 @@ it('folds the plain-text switcher without losing the name or overflowing', funct
 
 it('tells a person with one suspended company so, with no way to switch', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     $this->actingAs($user);
 
     visitPage('tenancy/blocked', '/admin/acme', $dark, $mobile)
@@ -156,7 +158,7 @@ it('tells a person with one suspended company so, with no way to switch', functi
 
 it('offers a person with several companies to move to another', function (bool $dark, bool $mobile): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
@@ -168,7 +170,7 @@ it('offers a person with several companies to move to another', function (bool $
 
 it('does not let Escape close the blocked modal', function (): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     $this->actingAs($user);
 
     visit('/admin/acme')
@@ -182,22 +184,24 @@ it('does not let Escape close the blocked modal', function (): void {
 
 it('takes a person with several companies from the blocked one to the list', function (): void {
     $user = User::factory()->create();
-    TenantMembership::factory()->for(Tenant::factory()->deactivated()->create(['slug' => 'acme']))->for($user)->create();
+    TenantMembership::factory()->for(Tenant::factory()->suspended()->create(['slug' => 'acme']))->for($user)->create();
     TenantMembership::factory()->for(Tenant::factory()->create(['slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
     visit('/admin/acme')
         ->click('Cambiar de empresa')
+        ->assertScript(pathBecomes('/admin'), true)
         ->assertPathIs('/admin');
 });
 
 it('lets an impersonating superadmin close the block modal and use the panel', function (bool $dark, bool $mobile): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visitPage('dashboard', '/admin/companies', $dark, $mobile, fn (AwaitableWebpage $page) => $page
         ->click('@tenant-actions')->click('Entrar como owner')
+        ->assertScript(pathBecomes('/admin/acme'), true)
         ->assertPathIs('/admin/acme')
         ->assertSee('El acceso a Acme Industrial está en pausa'))
         // Not a lock for them: it has its close button, and closing it leaves the panel to work in.
@@ -210,7 +214,7 @@ it('lets an impersonating superadmin close the block modal and use the panel', f
 
 it('offers an impersonating superadmin the way out of the impersonation, not the owner\'s sign-out', function (): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visit('/admin/companies')
@@ -218,6 +222,7 @@ it('offers an impersonating superadmin the way out of the impersonation, not the
         ->assertSee('El acceso a Acme Industrial está en pausa')
         ->assertDontSeeIn('[data-test="tenant-blocked-dialog"]', 'Cerrar sesión')
         ->click('[data-test="tenant-blocked-dialog"] [data-test="stop-impersonation"]')
+        ->assertScript(pathBecomes('/admin/companies'), true)
         ->assertPathIs('/admin/companies')
         ->assertDontSee('Estás viendo Humetría como Ana Pérez')
         ->assertNoJavaScriptErrors();
@@ -225,13 +230,76 @@ it('offers an impersonating superadmin the way out of the impersonation, not the
 
 it('lets the closed block modal stay closed while moving through the panel', function (): void {
     $this->actingAs(superadmin());
-    $tenant = Tenant::factory()->activeUntil(now()->subDay())->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $tenant = Tenant::factory()->suspended()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create())->create();
 
     visit('/admin/companies')
         ->click('@tenant-actions')->click('Entrar como owner')
         ->click('[data-test="tenant-blocked-dialog"] > button')
         ->click('[data-sidebar="menu-button"][data-active="true"]')
+        ->assertScript(pathBecomes('/admin/acme'), true)
         ->assertPathIs('/admin/acme')
         ->assertMissing('[data-test="tenant-blocked-dialog"]');
+});
+
+it('tells the members of a read-only company why nothing can be changed and whom to ask, in the frame of every page', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->readOnly()->create(['slug' => 'solo-lectura']);
+    $this->actingAs(ownerOf($tenant));
+
+    visitPage('dashboard', '/admin/solo-lectura', $dark, $mobile)
+        ->assertSeeIn('[data-slot="company-read-only-notice"]', 'Tu empresa está en solo lectura')
+        ->assertSeeIn('[data-slot="company-read-only-notice"]', 'Contacta al administrador de Humetría');
+})->with($looks);
+
+it('lines the content of the panel up with the read-only notice above it', function (): void {
+    $tenant = Tenant::factory()->readOnly()->create(['slug' => 'solo-lectura']);
+    $this->actingAs(ownerOf($tenant));
+
+    visit('/admin/solo-lectura')->resize(1440, 900)
+        ->assertSee('Tu empresa está en solo lectura')
+        ->assertScript('() => document.querySelector("h1").getBoundingClientRect().left - document.querySelector(\'[data-slot="company-read-only-notice"] [data-slot="notice"]\').getBoundingClientRect().left', 0);
+});
+
+it('shows no read-only notice in a company that works', function (): void {
+    $this->actingAs(ownerOf(Tenant::factory()->create(['slug' => 'activa'])));
+
+    visitPage('dashboard', '/admin/activa')
+        ->assertScript('() => document.querySelector(\'[data-slot="company-read-only-notice"]\') === null', true);
+});
+
+it('shows the owner the plan, what the company uses and its tools', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
+    App\Modules\Billing\Models\Subscription::factory()->create(['tenant_id' => $tenant->id, 'seats' => 50, 'centers' => 2, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01']);
+    resolve(App\Modules\Tenancy\Contracts\CompanyLimits::class)->sync($tenant->id, ['seats' => 50, 'centers' => 2]);
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'attendance'], Carbon\CarbonImmutable::parse('2026-11-01'));
+
+    visitPage('tenancy/plan', '/admin/acme/plan', $dark, $mobile)
+        ->assertSee('Plan y uso')
+        ->assertSee('Plan Cumplimiento')
+        ->assertSee('se renueva el 1 dic 2026')
+        ->assertSee('Centros de trabajo')
+        ->assertSee('de 50')
+        ->assertSee('NOM-035')
+        ->assertSee('Incluida')
+        ->assertSee('No incluida');
+})->with($looks);
+
+it('says the company has no plan yet', function (bool $dark): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
+
+    visitPage('tenancy/plan', '/admin/acme/plan', $dark)
+        ->assertSee('Tu empresa aún no tiene un plan asignado');
+})->with(['light' => false, 'dark' => true]);
+
+it('links «Plan y uso» from the owner\'s menu only', function (): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
+
+    visit('/admin/acme')->click('Plan y uso')->assertPathIs('/admin/acme/plan');
+
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr));
+
+    visit('/admin/acme')->assertDontSee('Plan y uso');
 });

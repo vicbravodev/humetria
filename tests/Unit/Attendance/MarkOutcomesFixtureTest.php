@@ -39,7 +39,7 @@ it('marks every case of the table as the policy page says', function (array $pol
         $position = new Position(19.0 + $meters / MOF_METERS_PER_DEGREE, -99.0, $accuracy);
 
         try {
-            $outcome = MarkPolicyCheck::decide(null, $check, $trusted, $qrValid, [$zone], $position, 'device-1')->method->evidence()->value;
+            $outcome = MarkPolicyCheck::decide(null, $check, $trusted, $qrValid, [$zone], $position, 'device-1', 1)->method->evidence()->value;
         } catch (MarkRejected) {
             $outcome = 'rejected';
         }

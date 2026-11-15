@@ -16,6 +16,11 @@ final readonly class Nom035Facts
     /**
      * @param  'in_course'|'up_to_date'|'overdue'|'never'  $standing
      * @param  array{answered: int, target: int, daysLeft: int}|null  $running
+     * @param  array{closedOn: string|null, answered: int, target: int}|null  $closed  the latest evaluation closed within the cycle and who answered it (C-57)
+     * @param  array{answered: int, target: int}|null  $guideOne  who answered the Guía I of the latest evaluation, kept visible after it closes (it applies to everyone); null when it was not applied
+     * @param  array{version: int, publishedOn: string, confirmed: int, expected: int}|null  $policyInfo  the policy in force of the center: its version, day and confirmations
+     * @param  string|null  $sharedOn  the day the results of the latest evaluation were published
+     * @param  bool  $unseen  the results are published but the people cannot reach them yet: no active page and no physical means (C-52)
      */
     public function __construct(
         public bool $policy,
@@ -28,5 +33,10 @@ final readonly class Nom035Facts
         public bool $shared,
         public ?string $program,
         public bool $reported,
+        public ?array $closed = null,
+        public bool $unseen = false,
+        public ?array $guideOne = null,
+        public ?array $policyInfo = null,
+        public ?string $sharedOn = null,
     ) {}
 }

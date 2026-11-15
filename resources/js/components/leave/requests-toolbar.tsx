@@ -14,9 +14,9 @@ const TABS: { tab: LeaveQueueTab; label: string }[] = [
     { tab: 'attend', label: 'Por atender' },
     { tab: 'waiting', label: 'En espera del jefe' },
     { tab: 'approved', label: 'Aprobadas' },
+    { tab: 'taken', label: 'Disfrutadas' },
     { tab: 'rejected', label: 'Rechazadas' },
     { tab: 'cancelled', label: 'Canceladas' },
-    { tab: 'taken', label: 'Disfrutadas' },
 ];
 const ALL_CENTERS = { value: '', label: 'Todos los centros' };
 const ALL_AREAS = { value: '', label: 'Todas las áreas' };
@@ -36,9 +36,11 @@ export default function RequestsToolbar({
         <div className="flex flex-col gap-4">
             <CountTabs
                 label="Estado de las solicitudes"
+                byAction
                 tabs={TABS.map(({ tab, label }) => ({
                     label,
                     count: counts[tab],
+                    needsAction: tab === 'attend',
                     active: filters.tab === tab,
                     href: index.url(tenantSlug, {
                         query: queueQuery({ ...filters, tab }),

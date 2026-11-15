@@ -1,7 +1,8 @@
 import Pagination from '@/components/humetria/pagination';
 import AssignmentGradeAdd from '@/components/leave/assignment-grade-add';
-import AssignmentRow from '@/components/leave/assignment-row';
-import AssignmentSelect from '@/components/leave/assignment-select';
+import AssignmentLine from '@/components/leave/assignment-line';
+import { Badge } from '@/components/ui/badge';
+import { assignmentSentences, nameClash } from '@/lib/leave/compare';
 import type {
     LeaveAssignments,
     LeaveGradeAssignment,
@@ -9,9 +10,16 @@ import type {
     Paginated,
 } from '@/types';
 
+const TARGETS: Record<keyof LeaveAssignments, Record<string, string>> = {
+    default: { scope: 'default' },
+    unionized: { scope: 'staff_group', staff_group: 'unionized' },
+    trusted: { scope: 'staff_group', staff_group: 'trusted' },
+};
+
 /**
- * Whom each policy goes to: the company, each staff group and the job grades that have one of their own. The most specific
- * wins: grade, then group, then the company, then the law.
+ * «A quién le toca cada una», as sentences: the company, each staff group and the job grades with a policy of their own. The
+ * most specific wins: grade, then group, then the company, then the law. A group that follows the law and is named like a
+ * policy gets a warning, because the policy was probably meant for it.
  */
 export default function AssignmentTable({
     assignments,
@@ -24,19 +32,7 @@ export default function AssignmentTable({
     grades: Paginated<LeaveGradeAssignment>;
     canManage: boolean;
 }) {
-    const fixed = [
-        ['Toda la empresa', { scope: 'default' }, assignments.default],
-        [
-            'Sindicalizados',
-            { scope: 'staff_group', staff_group: 'unionized' },
-            assignments.unionized,
-        ],
-        [
-            'Personal de confianza',
-            { scope: 'staff_group', staff_group: 'trusted' },
-            assignments.trusted,
-        ],
-    ] as const;
+    const clash = nameClash(assignments, options);
 
     return (
         <section
@@ -56,30 +52,35 @@ export default function AssignmentTable({
                 </p>
             </div>
             <ul className="divide-y">
-                {fixed.map(([label, target, value]) => (
-                    <AssignmentRow key={label} label={label}>
-                        <AssignmentSelect
-                            label={`Política de ${label.toLowerCase()}`}
-                            target={target}
-                            value={value}
-                            options={options}
-                            disabled={!canManage}
-                        />
-                    </AssignmentRow>
+                {assignmentSentences(assignments, options).map((line) => (
+                    <AssignmentLine
+                        key={line.key}
+                        text={line.text}
+                        label={line.label}
+                        target={TARGETS[line.key]}
+                        value={assignments[line.key]}
+                        options={options}
+                        canManage={canManage}
+                        note={
+                            clash === line.label ? (
+                                <Badge variant="warning">
+                                    Revisa: el grupo se llama igual que una
+                                    política
+                                </Badge>
+                            ) : undefined
+                        }
+                    />
                 ))}
                 {grades.data.map((grade) => (
-                    <AssignmentRow key={grade.id} label={grade.label}>
-                        <AssignmentSelect
-                            label={`Política de ${grade.label}`}
-                            target={{
-                                scope: 'job_grade',
-                                job_grade_id: grade.id,
-                            }}
-                            value={grade.policyId}
-                            options={options}
-                            disabled={!canManage}
-                        />
-                    </AssignmentRow>
+                    <AssignmentLine
+                        key={grade.id}
+                        text={`${grade.label} sigue ${options.find((option) => option.value === grade.policyId)?.label ?? 'la Ley (sin política)'}`}
+                        label={grade.label}
+                        target={{ scope: 'job_grade', job_grade_id: grade.id }}
+                        value={grade.policyId}
+                        options={options}
+                        canManage={canManage}
+                    />
                 ))}
             </ul>
             <Pagination

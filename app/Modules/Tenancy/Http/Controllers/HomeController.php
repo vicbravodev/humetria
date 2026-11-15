@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -18,13 +19,13 @@ use Inertia\Response;
 /** Where /admin leads: the console for the superadmin, the company's panel for a person with one, a list otherwise. */
 final class HomeController extends Controller
 {
-    public function __invoke(#[CurrentUser] User $user, ListUserTenants $listUserTenants, CompanyRoles $roles): RedirectResponse|Response
+    public function __invoke(#[CurrentUser] User $user, ListUserTenants $listUserTenants, CompanyRoles $roles, Impersonation $impersonation): RedirectResponse|Response
     {
-        if ($user->isSuperadmin()) {
+        if ($user->isStaff()) {
             return redirect()->route('companies.index');
         }
 
-        $companies = $listUserTenants->handle($user->id);
+        $companies = $listUserTenants->handle($user->id, only: $impersonation->tenantId());
 
         if ($companies->total() === 1) {
             $company = $companies->getCollection()->sole();
@@ -39,7 +40,8 @@ final class HomeController extends Controller
                 'trade_name' => $company->trade_name,
                 'status' => $company->status()->value,
                 'status_label' => $company->status()->label(),
-                'blocked' => $company->status()->isBlocked(),
+                'blocked' => $company->status()->blocksPanel(),
+                'read_only' => $company->status()->isReadOnly(),
             ]),
         ]);
     }

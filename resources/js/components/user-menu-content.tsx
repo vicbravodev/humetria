@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { ListChecks, LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -9,7 +9,9 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { settingsEntryHref } from '@/lib/app-navigation';
+import { openFirstSteps } from '@/lib/first-steps/open';
 import { logout } from '@/routes';
+import { show } from '@/routes/tenant/first-steps';
 import type { User } from '@/types';
 
 type Props = {
@@ -18,11 +20,29 @@ type Props = {
 
 export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
-    const { impersonator } = usePage().props;
+    const { impersonator, firstSteps, tenant } = usePage().props;
 
     const handleLogout = () => {
         cleanup();
         router.flushAll();
+    };
+
+    const showFirstSteps = () => {
+        if (
+            firstSteps?.hidden === true &&
+            tenant !== null &&
+            impersonator === null
+        ) {
+            router.post(
+                show.url(tenant.slug),
+                {},
+                { onSuccess: openFirstSteps },
+            );
+
+            return;
+        }
+
+        openFirstSteps();
     };
 
     return (
@@ -34,6 +54,15 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+                {firstSteps !== null && (
+                    <DropdownMenuItem
+                        className="cursor-pointer"
+                        onSelect={showFirstSteps}
+                    >
+                        <ListChecks className="mr-2" />
+                        Primeros pasos
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"

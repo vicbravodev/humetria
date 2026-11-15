@@ -16,6 +16,7 @@ use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
@@ -72,7 +73,7 @@ final class SendSurveyInvitations implements ShouldQueue
         $company = $companies->current();
 
         // A blocked company sends nothing; who was waiting is marked failed, so a resend reaches them once it is back.
-        if ($company->blocked) {
+        if ($company->stopped('nom035')) {
             $this->failed(null);
 
             return;
@@ -85,6 +86,8 @@ final class SendSurveyInvitations implements ShouldQueue
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Participant $participant): string => $participant->employee_id)->all()));
         $contact = $companies->contact();
         $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
+
+        $portal = resolve(PortalAccess::class);
 
         foreach ($waiting as $participant) {
             $person = $people[$participant->employee_id] ?? null;
@@ -113,7 +116,7 @@ final class SendSurveyInvitations implements ShouldQueue
             $token = $participant->surveyToken();
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
             Notification::routes($routes)->notify(new SurveyInvitation(
-                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant),
+                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant), $portal->url($person->id),
             ));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }

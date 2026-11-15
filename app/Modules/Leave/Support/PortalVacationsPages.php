@@ -28,6 +28,8 @@ final class PortalVacationsPages
             'today' => PeriodWindow::today()->toDateString(),
             'periods' => self::periods($employeeId),
             'advanced' => max(0, -(Balances::advanced([$employeeId])[$employeeId] ?? 0)),
+            // Days asked and not answered yet: told apart from the balance, which only moves when someone decides.
+            'waiting' => Balances::waiting([$employeeId])[$employeeId] ?? 0,
             'requests' => self::requests($employeeId),
             'statements' => self::statements($employeeId),
             'teamPending' => PortalTeamPages::pendingFor($employeeId),

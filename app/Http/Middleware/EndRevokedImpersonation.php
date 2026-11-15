@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Checked on every request that carries the impersonation mark: once the superadmin behind it is
- * gone or no longer a superadmin, or the mark is not the signed-in user's, the session ends right
+ * gone or no longer on the staff, or the mark is not the signed-in user's, the session ends right
  * there, not when someone presses "Salir".
  */
 final class EndRevokedImpersonation
@@ -35,7 +35,7 @@ final class EndRevokedImpersonation
         // Null too when the mark is not this user's: a guest, or someone who signed in over a leftover mark.
         $impersonatorId = $this->impersonation->impersonatorId();
 
-        if ($impersonatorId !== null && User::query()->find($impersonatorId)?->isSuperadmin() === true) {
+        if ($impersonatorId !== null && User::query()->find($impersonatorId)?->isStaff() === true) {
             return $next($request);
         }
 

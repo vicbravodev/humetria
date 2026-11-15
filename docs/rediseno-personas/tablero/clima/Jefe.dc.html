@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Clima · Adriana Rivera Hijo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.hm-display{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.01em}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h2{font-size:24px;line-height:32px;font-weight:600}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-body{font-size:16px;line-height:24px}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border-color:var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--vencido{background:var(--risk-alto-bg);color:var(--risk-alto-fg)}
+.hm-pill--plain::before{display:none}
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-tab[aria-selected="true"],.hm .hm-tab[aria-current="page"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count,.hm-tab[aria-current="page"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-bar{--p:0;--ref:0;position:relative;height:8px;border-radius:9999px;background:var(--track)}
+.hm-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);border-radius:9999px;background:var(--primary)}
+.hm-bar::after{content:"";position:absolute;top:-5px;bottom:-5px;left:calc(var(--ref)*1%);width:2px;border-radius:1px;background:var(--foreground)}
+.hm-bar--sinref::after{display:none}
+.hm-bar--bajo::before{background:var(--risk-alto)}
+.hm-barrow{display:flex;flex-direction:column;gap:8px}
+.hm-barrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.hm-cell--protegida{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:6px;background:transparent;border:1px dashed var(--input);color:var(--muted-foreground);gap:6px;font-size:14px}
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+.hm-menu{display:flex;flex-direction:column;min-width:200px;padding:4px;border-radius:8px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);box-shadow:var(--shadow-float)}
+.hm .hm-menu-item{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;text-align:left}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.cb-field{display:inline-flex;align-items:center;gap:8px}
+.cb-select{min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--foreground);font:inherit;font-size:14px;line-height:20px}
+.cb-quote{display:flex;flex-direction:column;border-radius:10px;background:var(--card);border:1px solid var(--border);overflow:hidden}
+.cb-quote>li{padding:20px 24px;border-top:1px solid var(--border);font-size:18px;line-height:28px;text-wrap:pretty}
+.cb-quote>li:first-child{border-top:0}
+.cb-pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.cb-pager-btns{display:flex;gap:8px}
+.cb-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:500;color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.jf-grid{display:grid;grid-template-columns:minmax(220px,1.15fr) minmax(240px,1fr) 88px;gap:8px 24px;align-items:center;padding:12px 24px}
+.jf-grid--head{padding-top:20px;padding-bottom:12px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.jf-row{border-top:1px solid var(--border);min-height:72px}
+.jf-legend{display:flex;flex-wrap:wrap;gap:8px 20px}
+.jf-leg{display:inline-flex;align-items:center;gap:8px}
+.jf-dot{display:inline-block;width:12px;height:12px;border-radius:9999px;background:var(--primary)}
+.jf-ring{display:inline-block;width:18px;height:18px;border-radius:9999px;border:2px solid var(--foreground)}
+.jf-axis{display:flex;justify-content:space-between}
+.jf-plot{display:flex;align-items:center;height:48px;border-right:1px solid var(--border);background:linear-gradient(var(--track),var(--track)) 0 50%/100% 2px no-repeat,repeating-linear-gradient(to right,var(--border) 0 1px,transparent 1px 25%)}
+.jf-plot>span{flex:none;height:1px}
+.jf-conn{flex:none;height:4px;border-radius:2px;background:var(--input)}
+.jf-m{position:relative;display:block;flex:none;width:0;height:0}
+.jf-m::before{content:"";position:absolute;border-radius:9999px}
+.jf-m--co::before{left:-9px;top:-9px;width:18px;height:18px;border:2px solid var(--foreground)}
+.jf-m--gr::before{left:-6px;top:-6px;width:12px;height:12px;background:var(--primary)}
+.jf-val{display:flex;flex-direction:column;align-items:flex-end}
+.jf-up{color:var(--primary);font-weight:500}
+.jf-down{color:var(--risk-alto-fg);font-weight:500}
+.jf-flat{color:var(--muted-foreground)}
+.jf-side-block{display:flex;flex-direction:column;gap:12px}
+.jf-side-item{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-top:12px;border-top:1px solid var(--border)}
+@media (max-width:760px){.jf-grid{grid-template-columns:1fr 88px}.jf-grid>.jf-plot,.jf-grid>.jf-axis{grid-column:1/-1;grid-row:2}.jf-grid--head>.jf-axis,.jf-grid--head>.jf-hd{display:none}}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="clima" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Escucha a tu gente › Clima › Clima · junio 2026 › Por jefe › Adriana Rivera Hijo" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page">
+<header class="hm-head"><div class="hm-head-text"><div class="hm-head-title"><h1 class="hm-h1">Adriana Rivera Hijo</h1></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Resultado de quienes le reportan directamente</span><span class="hm-fact" style="color:var(--primary)"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Grupos de 5 o más</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Aquí no hay ranking</span></div></div><div class="hm-head-actions"><a class="hm-btn hm-btn-outline" href="Jefe.dc.html" aria-label="Jefe anterior: Alonso Banda"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Anterior · Alonso Banda</a><a class="hm-btn hm-btn-outline" href="Jefe.dc.html" aria-label="Jefe siguiente: Ander Noriega">Siguiente · Ander Noriega<svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></div></header>
+<nav class="hm-tabs" aria-label="Secciones de los resultados"><a class="hm-tab" href="Resultados.dc.html">Resumen</a><a class="hm-tab" href="PorPregunta.dc.html">Por pregunta</a><a class="hm-tab" href="Comentarios.dc.html">Comentarios<span class="hm-count">93</span></a><a class="hm-tab" href="Jefe.dc.html" aria-current="page">Por jefe<span class="hm-count">13</span></a><a class="hm-tab" href="Compromisos.dc.html">Compromisos<span class="hm-count">3</span></a></nav>
+<sc-if value="{{ esDatos }}" hint-placeholder-val="{{ true }}"><p class="hm-lead">Su grupo la reconoce por escuchar y tratar con respeto. La oportunidad está en cumplir acuerdos y destrabar obstáculos.</p>
+<div class="hm-split"><div class="hm-main" style="flex:2 1 600px"><div class="hm-card" style="padding:0;gap:0"><div class="jf-grid jf-grid--head"><div class="jf-legend"><span class="hm-strong" style="color:var(--foreground)">Pregunta por pregunta</span></div><div class="jf-legend jf-hd"><span class="jf-leg"><span class="jf-ring"></span>Empresa</span><span class="jf-leg"><span class="jf-dot"></span>Su grupo</span></div><div class="jf-hd" style="text-align:right">Su grupo</div></div><div class="jf-grid jf-grid--head" style="padding-top:0;padding-bottom:4px"><span class="hm-small" style="color:var(--muted-foreground)">Ordenadas por la diferencia con la empresa</span><div class="jf-axis"><span>0 %</span><span>25</span><span>50</span><span>75</span><span>100 %</span></div><span></span></div><div class="jf-grid jf-row"><p class="hm-strong">Mi jefe escucha mis ideas y opiniones.</p><div class="jf-plot" role="img" aria-label="Mi jefe escucha mis ideas y opiniones. Su grupo: 85 %. Empresa: 63 %."><span style="width:63%"></span><i class="jf-m jf-m--co"></i><i class="jf-conn" style="width:22%"></i><i class="jf-m jf-m--gr"></i></div><div class="jf-val"><span class="hm-kpi-2">85 %</span><span class="hm-small jf-up">+22 pts</span></div></div><div class="jf-grid jf-row"><p class="hm-strong">Mi jefe explica los criterios que usa para repartir las tareas.</p><div class="jf-plot" role="img" aria-label="Mi jefe explica los criterios que usa para repartir las tareas. Su grupo: 83 %. Empresa: 61 %."><span style="width:61%"></span><i class="jf-m jf-m--co"></i><i class="jf-conn" style="width:22%"></i><i class="jf-m jf-m--gr"></i></div><div class="jf-val"><span class="hm-kpi-2">83 %</span><span class="hm-small jf-up">+22 pts</span></div></div><div class="jf-grid jf-row"><p class="hm-strong">Mi jefe me trata con respeto.</p><div class="jf-plot" role="img" aria-label="Mi jefe me trata con respeto. Su grupo: 85 %. Empresa: 68 %."><span style="width:68%"></span><i class="jf-m jf-m--co"></i><i class="jf-conn" style="width:17%"></i><i class="jf-m jf-m--gr"></i></div><div class="jf-val"><span class="hm-kpi-2">85 %</span><span class="hm-small jf-up">+17 pts</span></div></div><div class="jf-grid jf-row"><p class="hm-strong">Mi jefe me aclara las prioridades cuando tengo varias tareas pendientes.</p><div class="jf-plot" role="img" aria-label="Mi jefe me aclara las prioridades cuando tengo varias tareas pendientes. Su grupo: 83 %. Empresa: 67 %."><span style="width:67%"></span><i class="jf-m jf-m--co"></i><i class="jf-conn" style="width:16%"></i><i class="jf-m jf-m--gr"></i></div><div class="jf-val"><span class="hm-kpi-2">83 %</span><span class="hm-small jf-up">+16 pts</span></div></div><div class="jf-grid jf-row"><p class="hm-strong">Mi jefe me dice qué puedo mejorar usando ejemplos de mi trabajo.</p><div class="jf-plot" role="img" aria-label="Mi jefe me dice qué puedo mejorar usando ejemplos de mi trabajo. Su grupo: 69 %. Empresa: 68 %."><span style="width:68%"></span><i class="jf-m jf-m--co"></i><i class="jf-conn" style="width:1%"></i><i class="jf-m jf-m--gr"></i></div><div class="jf-val"><span class="hm-kpi-2">69 %</span><span class="hm-small jf-flat">+1 pt</span></div></div><div class="jf-grid jf-row"><p class="hm-strong">Mi jefe me orienta sobre qué necesito aprender para asumir nuevas responsabilidades.</p><div class="jf-plot" role="img" aria-label="Mi jefe me orienta sobre qué necesito aprender para asumir nuevas responsabilidades. Su grupo: 62 %. Empresa: 63 %."><span style="width:62%"></span><i class="jf-m jf-m--gr"></i><i class="jf-conn" style="width:1%"></i><i class="jf-m jf-m--co"></i></div><div class="jf-val"><span class="hm-kpi-2">62 %</span><span class="hm-small jf-flat">−1 pt</span></div></div><div class="jf-grid jf-row"><p class="hm-strong">Mi jefe me ayuda a resolver obstáculos que no puedo solucionar por mi cuenta.</p><div class="jf-plot" role="img" aria-label="Mi jefe me ayuda a resolver obstáculos que no puedo solucionar por mi cuenta. Su grupo: 46 %. Empresa: 60 %."><span style="width:46%"></span><i class="jf-m jf-m--gr"></i><i class="jf-conn" style="width:14%"></i><i class="jf-m jf-m--co"></i></div><div class="jf-val"><span class="hm-kpi-2">46 %</span><span class="hm-small jf-down">−14 pts</span></div></div><div class="jf-grid jf-row"><p class="hm-strong">Mi jefe cumple los acuerdos que hace conmigo.</p><div class="jf-plot" role="img" aria-label="Mi jefe cumple los acuerdos que hace conmigo. Su grupo: 50 %. Empresa: 66 %."><span style="width:50%"></span><i class="jf-m jf-m--gr"></i><i class="jf-conn" style="width:16%"></i><i class="jf-m jf-m--co"></i></div><div class="jf-val"><span class="hm-kpi-2">50 %</span><span class="hm-small jf-down">−16 pts</span></div></div></div></div><aside class="hm-side" style="flex:1 1 280px"><div class="hm-card"><h2 class="hm-h4">Para la conversación</h2><div class="jf-side-block"><h3 class="hm-caption hm-muted">Fortalezas</h3><div class="jf-side-item"><p class="hm-body" style="flex:1">Mi jefe escucha mis ideas y opiniones.</p><span class="hm-kpi-2">85 %</span></div><div class="jf-side-item"><p class="hm-body" style="flex:1">Mi jefe me trata con respeto.</p><span class="hm-kpi-2">85 %</span></div></div><div class="jf-side-block"><h3 class="hm-caption hm-muted">Oportunidades</h3><div class="jf-side-item"><p class="hm-body" style="flex:1">Mi jefe me ayuda a resolver obstáculos que no puedo solucionar por mi cuenta.</p><span class="hm-kpi-2">46 %</span></div><div class="jf-side-item"><p class="hm-body" style="flex:1">Mi jefe cumple los acuerdos que hace conmigo.</p><span class="hm-kpi-2">50 %</span></div></div></div></aside></div>
+<section style="display:flex;flex-direction:column;gap:16px;max-width:720px"><div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px"><h2 class="hm-h3">Comentarios del grupo</h2><span class="hm-small hm-muted">11 comentarios · sin quién los escribió</span></div><ul class="cb-quote"><li>Las prestaciones son mejores que en otros lugares donde trabajé.</li><li>Que los procesos de autorización sean más ágiles.</li><li>Que los procesos de autorización sean más ágiles.</li><li>Mi jefe escucha y reconoce el trabajo bien hecho.</li><li>Hay confianza para proponer mejoras.</li></ul><div class="cb-pager"><span class="hm-small hm-muted">1–5 de 11 · Página 1 de 3</span><div class="cb-pager-btns"><button type="button" class="hm-btn hm-btn-outline" disabled>Anteriores</button><button type="button" class="hm-btn hm-btn-outline">Siguientes</button></div></div></section></sc-if>
+<sc-if value="{{ esProtegido }}" hint-placeholder-val="{{ true }}"><div class="hm-empty"><span class="hm-empty-icon"><svg class="hm-i hm-i-24" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><h2 class="hm-h3">Su grupo tuvo menos de 5 respuestas</h2><p>No se muestra para proteger a quien contestó.</p></div></sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["datos","protegido"],"default":"datos","section":"Estado"},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const variant = this.props.variant ?? 'datos';
+    return { theme, themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light', esDatos: variant === 'datos', esProtegido: variant === 'protegido' };
+  }
+}
+</script>
+</body>
+</html>

@@ -61,7 +61,7 @@ export default function ProgramActions({
                                 <TableHead>Fecha límite</TableHead>
                                 <TableHead>Responsable</TableHead>
                                 <TableHead>Estado</TableHead>
-                                <TableHead className="w-px">
+                                <TableHead className="sticky right-0 w-px bg-muted">
                                     <span className="sr-only">Opciones</span>
                                 </TableHead>
                             </TableRow>

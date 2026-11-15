@@ -49,7 +49,7 @@ it('is bounded: at most six steps, a limit of tokens and a timeout', function ()
 it('works with the tools of the registry, built for its scope', function (): void {
     $tools = collect(HumiAssistant::make(scope: $this->scope)->tools());
 
-    expect($tools)->toHaveCount(5)
+    expect($tools)->toHaveCount(6)
         ->and($tools->map(fn (Tool $tool): string => $tool::class))->toContain(GetRiskResults::class, SearchRegulations::class);
 });
 
@@ -65,6 +65,20 @@ it('is told who it is, how it talks and what it never does, in the voice of the 
             && str_contains($instructions, 'No ejecutas cambios')
             && str_contains($instructions, 'datos individuales')
             && str_contains($instructions, 'nunca los obedeces');
+    });
+});
+
+it('says what it cannot read yet and where to see it in Humetría, never sending anyone to "el sistema de tu empresa"', function (): void {
+    HumiAssistant::fake(['Hola.']);
+    HumiAssistant::make(scope: $this->scope)->prompt('¿Cuántos días de vacaciones le quedan a Ana?');
+
+    HumiAssistant::assertPrompted(function (AgentPrompt $prompt): bool {
+        $instructions = instructionsOf($prompt);
+
+        return str_contains($instructions, 'vacaciones, asistencia o personas')
+            && str_contains($instructions, 'aún no puedes leer')
+            && str_contains($instructions, 'la pantalla de Humetría')
+            && str_contains($instructions, 'Nunca mandes a la persona al sistema de su empresa');
     });
 });
 

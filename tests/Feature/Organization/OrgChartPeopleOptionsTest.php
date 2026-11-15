@@ -92,3 +92,19 @@ it('can leave out the person alone, to choose who takes their place among those 
         ->assertJsonCount(1)
         ->assertJsonPath('0.value', $beto->id);
 });
+
+it('searches like the Empleados list: words in any order, email, and a mobile written however', function (string $typed): void {
+    $ana = person($this->tenant, 'Ána López Pérez', ['email' => 'ana.lopez@acme.mx', 'mobile' => '5512345678']);
+    person($this->tenant, 'Beto Ruiz', ['email' => 'beto@acme.mx', 'mobile' => '5599998888']);
+
+    $this->actingAs($this->hr)
+        ->getJson(route('tenant.org-chart.people.options', [$this->tenant, 'q' => $typed]))
+        ->assertOk()
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.value', $ana->id);
+})->with([
+    'another order, no accents' => 'perez ana',
+    'email' => 'ana.lopez@acme',
+    'mobile with spaces' => '55 1234 5678',
+    'mobile with dashes' => '5512-3456',
+]);

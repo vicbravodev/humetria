@@ -38,10 +38,10 @@ it('splits the rows into what is missing, urgent first and then in the order of 
     inspectionOf()->assertInertia(fn (Assert $page) => $page->component('telework/inspection')
         ->where('workCenter', ['id' => $this->center->id, 'name' => 'Planta Querétaro'])
         ->where('applicable', 17)
-        ->where('ready', fn ($ready): bool => collect($ready)->pluck('numeral')->all() === ['5.1', '5.7', '5.9 y 8'])
+        ->where('ready', fn ($ready): bool => collect($ready)->pluck('numeral')->all() === ['5.1', '5.7'])
         ->where('ready.0', fn ($row): bool => $row['title'] === 'Lista de personas en teletrabajo' && $row['href'] === route('tenant.telework.center', [$this->tenant, $this->center->id]))
         ->where('missing.0', fn ($row): bool => $row['numeral'] === '5.11' && $row['title'] === 'Accidentes avisados, con seguimiento' && $row['action'] === 'Ver los avisos')
-        ->where('missing', fn ($missing): bool => collect($missing)->pluck('numeral')->all() === ['5.11', '5.2', '5.3', '5.6', '5.8', '5.10', '5.13', '5.14', '5.1.2', '5.1.1', '5.4 y 7', '5.5', '5.5.1', '5.12'])
+        ->where('missing', fn ($missing): bool => collect($missing)->pluck('numeral')->all() === ['5.11', '5.2', '5.3', '5.6', '5.8', '5.10', '5.13', '5.14', '5.1.2', '5.1.1', '5.4 y 7', '5.5', '5.5.1', '5.12', '5.9 y 8'])
         ->where('dossierHref', route('tenant.telework.dossier', [$this->tenant, $this->center->id])));
 });
 

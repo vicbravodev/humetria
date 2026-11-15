@@ -66,7 +66,7 @@ export default function ProgramRows({
                             <TableHead>Nivel más alto</TableHead>
                             <TableHead>Acciones</TableHead>
                             <TableHead>Análisis</TableHead>
-                            <TableHead className="w-px">
+                            <TableHead className="sticky right-0 w-px bg-muted">
                                 <span className="sr-only">Opciones</span>
                             </TableHead>
                         </TableRow>

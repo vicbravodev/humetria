@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { missingMark } from '@/lib/inspection-mark';
 import { cn } from '@/lib/utils';
 import type { InspectionItem as Item } from '@/types';
 
@@ -13,6 +14,7 @@ export default function InspectionItem({
     primary: boolean;
 }) {
     const ready = item.state === 'done';
+    const mark = missingMark(item.state);
 
     return (
         <li className="grid grid-cols-[28px_minmax(0,1fr)] items-center gap-x-3.5 gap-y-2.5 border-t px-5 py-4 @[560px]:grid-cols-[28px_minmax(0,1fr)_auto]">
@@ -23,8 +25,11 @@ export default function InspectionItem({
             ) : (
                 <span
                     role="img"
-                    aria-label="Falta"
-                    className="size-7 rounded-full border-[1.5px] border-dashed border-risk-alto"
+                    aria-label={mark.label}
+                    className={cn(
+                        'size-7 rounded-full border-[1.5px] border-dashed',
+                        mark.className,
+                    )}
                 />
             )}
             <div className="min-w-0">

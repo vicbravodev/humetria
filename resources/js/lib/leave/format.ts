@@ -1,4 +1,5 @@
 import { fromCalendarDate } from '@/lib/calendar-date';
+import { dateRange } from '@/lib/evaluation';
 import { countOf, plural } from '@/lib/plural';
 import type { LeaveRequestStatus, TeamLeaveRequest } from '@/types';
 
@@ -8,6 +9,11 @@ const dayAndMonth = new Intl.DateTimeFormat('es-MX', {
     month: 'long',
 });
 const whole = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' });
+const compact = new Intl.DateTimeFormat('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+});
 
 /** "9 al 20 de noviembre de 2026": two days (Y-m-d) saying the month and the year once when they share them. */
 export function dateSpan(startsOn: string, endsOn: string): string {
@@ -86,4 +92,25 @@ export function balanceLine(
     return request.periods.length === 0
         ? `No tiene días disponibles (${missing}). ${advance}`
         : `Solo tiene días del periodo ${periods}: ${missing}. ${advance}`;
+}
+
+/** "1 mar 2027": a day (Y-m-d) short, with its year. */
+export function shortDate(day: string): string {
+    const date = fromCalendarDate(day);
+
+    return date === undefined
+        ? ''
+        : compact.format(date).replaceAll('.', '').replace(/ de /g, ' ');
+}
+
+/** "23 al 27 nov 2026": two days (Y-m-d) short, the month and the year said once when they are shared; for a narrow cell. */
+export function shortSpan(startsOn: string, endsOn: string): string {
+    const first = shortDate(startsOn);
+    const last = shortDate(endsOn);
+
+    if (first === '' || last === '') {
+        return '';
+    }
+
+    return startsOn === endsOn ? first : dateRange(first, last);
 }

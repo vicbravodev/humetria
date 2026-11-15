@@ -33,13 +33,51 @@ final readonly class Nom035Rows
         $evaluation = $evaluated?->id;
 
         return [
-            $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', $facts->policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.write', [$tenantSlug, 'policy', 'center' => $workCenterId]), 'Escribir la política'),
+            $this->policy($tenantSlug, $workCenterId, $facts),
             $this->evaluation($tenantSlug, $facts, $evaluation),
             $this->after($evaluation, $this->channeling($tenantSlug, $facts, $evaluation, $channelAt)),
-            $this->chapterSeven($facts, $evaluation, $this->row(4, '7.8', 'Resultados a disposición de las personas', $facts->shared ? null : 'Aún no compartes los resultados de la última evaluación', 'manage-disclosure', $evaluation === null ? null : route('tenant.disclosure.results.share', [$tenantSlug, $evaluation]), 'Preparar el resumen')),
+            $this->chapterSeven($facts, $evaluation, $this->sharing($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->program($tenantSlug, $facts, $evaluation)),
             $this->chapterSeven($facts, $evaluation, $this->row(6, '7.7', 'Informe de resultados', $facts->reported ? null : 'Le faltan conclusiones, recomendaciones y responsable', 'manage-campaigns', $evaluation === null ? null : route('tenant.campaigns.report', [$tenantSlug, $evaluation]), 'Completar el informe')),
         ];
+    }
+
+    /**
+     * Stage 1: the policy of prevention in force (num. 5.1). Published is not read: until everyone confirmed it, it says how many
+     * did and stays amber, so it is not shown as met without the record that backs it.
+     *
+     * @return Row
+     */
+    private function policy(string $tenantSlug, string $workCenterId, Nom035Facts $facts): array
+    {
+        $row = $this->row(1, '5.1', 'Política de prevención por escrito', $facts->policy ? null : 'Aún no hay una política vigente en este centro', 'manage-disclosure', $facts->policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.write', [$tenantSlug, 'policy', 'center' => $workCenterId]), 'Escribir la política');
+        $info = $facts->policyInfo;
+
+        if (! $facts->policy || $info === null || $info['confirmed'] >= $info['expected']) {
+            return $row;
+        }
+
+        return [...$row, 'state' => 'partial', 'detail' => "Publicada · {$info['confirmed']} de {$info['expected']} la leyeron", 'action' => $row['href'] === null ? null : 'Ver'];
+    }
+
+    /**
+     * 7.8: to publish the summary, or, once published, to turn on the page of the people or record a physical means.
+     *
+     * @return Row
+     */
+    private function sharing(string $tenantSlug, Nom035Facts $facts, ?string $evaluation): array
+    {
+        $unseen = $facts->unseen && ! $facts->shared;
+
+        return $this->row(
+            4,
+            '7.8',
+            'Resultados a disposición de las personas',
+            $facts->shared ? null : ($unseen ? 'Ya publicaste los resultados, pero las personas aún no pueden verlos: activa su página o registra un medio físico' : 'Aún no compartes los resultados de la última evaluación'),
+            'manage-disclosure',
+            $unseen ? route('tenant.disclosure.page', $tenantSlug) : ($evaluation === null ? null : route('tenant.disclosure.results.share', [$tenantSlug, $evaluation])),
+            $unseen ? 'Activar la página de las personas' : 'Preparar el resumen',
+        );
     }
 
     /**
@@ -78,7 +116,23 @@ final readonly class Nom035Rows
             return ['numeral' => '5.5 y 5.8 c', 'title' => $title, 'detail' => 'Solo lo ve quien puede ver la Guía I', 'state' => 'done', 'stage' => 3, 'href' => null, 'action' => null];
         }
 
-        return $this->row(3, '5.5 y 5.8 c', $title, $facts->toChannel === 0 ? null : self::people($facts->toChannel), 'view-trauma-screenings', $evaluation === null ? null : route('tenant.campaigns.screenings', [$tenantSlug, $channelAt ?? $evaluation]), 'Canalizar');
+        $guide = $facts->guideOne === null || $facts->guideOne['target'] === 0 ? null : "Guía I: {$facts->guideOne['answered']} de {$facts->guideOne['target']}";
+        $detail = match (true) {
+            $facts->toChannel > 0 => self::people($facts->toChannel).($guide === null ? '' : " · {$guide}"),
+            default => $guide,
+        };
+        $row = $this->row(3, '5.5 y 5.8 c', $title, $detail, 'view-trauma-screenings', $evaluation === null ? null : route('tenant.campaigns.screenings', [$tenantSlug, $channelAt ?? $evaluation]), 'Canalizar');
+
+        // Nobody waits to be channeled: with the Guía I answered by everyone it is met; below everyone it stays met but in amber, with who is missing.
+        $below = $facts->toChannel === 0 && $facts->guideOne !== null && $facts->guideOne['answered'] < $facts->guideOne['target'];
+
+        $see = ['action' => $row['href'] === null ? null : 'Ver'];
+
+        return match (true) {
+            $below => [...$row, ...$see, 'state' => 'partial'],
+            $detail !== null && $facts->toChannel === 0 => [...$row, ...$see, 'state' => 'done'],
+            default => $row,
+        };
     }
 
     /**
@@ -91,7 +145,10 @@ final readonly class Nom035Rows
         $title = 'Evaluación de los factores de riesgo, vigente';
 
         if ($facts->standing === 'up_to_date' && $evaluation !== null) {
-            return $this->row(2, '7.1 y 7.9', $title, null, 'manage-campaigns', route('tenant.campaigns.results', [$tenantSlug, $evaluation]), 'Ver resultados');
+            // Met, but never without saying with how many answers it closed (C-57).
+            $row = $this->row(2, '7.1 y 7.9', $title, null, 'manage-campaigns', route('tenant.campaigns.results', [$tenantSlug, $evaluation]), 'Ver resultados');
+
+            return $facts->closed === null ? $row : [...$row, 'detail' => "Cerrada el {$facts->closed['closedOn']}: contestaron {$facts->closed['answered']} de {$facts->closed['target']}"];
         }
 
         $detail = match (true) {

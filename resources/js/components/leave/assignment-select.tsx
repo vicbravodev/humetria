@@ -23,6 +23,7 @@ export default function AssignmentSelect({
     value,
     options,
     disabled,
+    onChosen = () => undefined,
 }: {
     /** What it is for, said to screen readers. */
     label: string;
@@ -32,6 +33,8 @@ export default function AssignmentSelect({
     value: string | null;
     options: LeavePolicyOption[];
     disabled: boolean;
+    /** Runs once the choice is sent, to close what held the select. */
+    onChosen?: () => void;
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -43,14 +46,14 @@ export default function AssignmentSelect({
                 router.put(
                     update.url(tenantSlug),
                     { ...target, policy_id: next === LAW ? '' : next },
-                    { preserveScroll: true },
+                    { preserveScroll: true, onSuccess: onChosen },
                 )
             }
         >
             <SelectTrigger aria-label={label} className="w-full sm:w-64">
                 <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="item-aligned">
                 <SelectItem value={LAW}>Ley (sin política)</SelectItem>
                 {options.map((option) => (
                     <SelectItem key={option.value} value={option.value}>

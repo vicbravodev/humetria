@@ -221,6 +221,7 @@ describe('programTools', () => {
             evaluations: [{ id: 'e1', label: 'Cerrada el 1 nov 2028' }],
             suggestion: '2028-11-19',
             today: '2026-11-20',
+            responsible: null,
         });
     });
 

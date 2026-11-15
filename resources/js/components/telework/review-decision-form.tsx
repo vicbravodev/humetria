@@ -11,12 +11,14 @@ export default function ReviewDecisionForm({
     idPrefix,
     submitLabel,
     extra,
+    unfavorable = 0,
     onSuccess = () => undefined,
 }: {
     action: string;
     idPrefix: string;
     submitLabel: string;
     extra?: ReactNode;
+    unfavorable?: number;
     onSuccess?: () => void;
 }) {
     return (
@@ -31,7 +33,11 @@ export default function ReviewDecisionForm({
             {({ processing, errors }) => (
                 <>
                     {extra}
-                    <ReviewDecisionFields idPrefix={idPrefix} errors={errors} />
+                    <ReviewDecisionFields
+                        idPrefix={idPrefix}
+                        errors={errors}
+                        unfavorable={unfavorable}
+                    />
                     {/* What refuses the decision as a whole: the list was already decided, the place is retired, or the person has not answered a list to validate on. */}
                     <InputError
                         message={errors['application'] ?? errors['workplace']}

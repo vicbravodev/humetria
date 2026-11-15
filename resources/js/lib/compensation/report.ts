@@ -76,10 +76,10 @@ export function summaryFigures(
         },
         {
             key: 'recurring',
-            caption: 'Cada año después',
+            caption: 'Al año, al arranque',
             value: pesos(headline.recurring_cents),
             unit: 'pesos',
-            note: 'Lo que la propuesta suma al año',
+            note: 'Los años siguientes cambian: mira la proyección',
         },
         {
             key: 'payroll',

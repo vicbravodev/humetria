@@ -16,7 +16,7 @@ export default function DossierTable({
     children: ReactNode;
 }) {
     return (
-        <Table className="text-meta">
+        <Table className="text-meta [&_td]:align-top [&_td]:whitespace-normal [&_th]:whitespace-normal">
             <TableHeader className="bg-muted/60">
                 <TableRow>
                     {columns.map((column) => (

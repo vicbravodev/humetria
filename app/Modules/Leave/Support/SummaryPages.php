@@ -8,8 +8,10 @@ use App\Modules\Leave\Actions\GrantEntitlements;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
+use App\Modules\Leave\Models\LeavePolicy;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveStatement;
+use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Organization\Contracts\Roster;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,10 +28,16 @@ final readonly class SummaryPages
     /** The views of the detail, the first is the default. */
     public const array VIEWS = ['out', 'windows', 'prescribable'];
 
-    public function __construct(private Roster $roster, private GrantEntitlements $grants) {}
+    public function __construct(private Roster $roster, private GrantEntitlements $grants, private RequestPages $requests, private Headcount $headcount) {}
+
+    /** The overview shows this many of the requests that wait for RH; the rest are one click away. */
+    public const int TO_ANSWER = 4;
+
+    /** The days of the strip that looks ahead, today included. */
+    public const int AHEAD_DAYS = 14;
 
     /**
-     * @return array{view: string, summary: array{outToday: int, outThisWeek: int, pending: int, escalated: int, windowsClosing: int, prescribableDays: int, liabilityDays: int, missingStartDate: int, statementsUnacknowledged: int}, counts: array{out: int, windows: int, prescribable: int}, people: LengthAwarePaginator<int, array{id: string, name: string, label: string, days: int, startsOn: string, endsOn: string}>}
+     * @return array{view: string, summary: array{outToday: int, outThisWeek: int, pending: int, escalated: int, windowsClosing: int, prescribableDays: int, liabilityDays: int, people: int, periods: int, missingStartDate: int, statementsUnacknowledged: int}, firstTime: bool, toAnswer: list<array<string, mixed>>, next14: list<array{date: string, away: int}>, counts: array{out: int, windows: int, prescribable: int}, people: LengthAwarePaginator<int, array{id: string, name: string, label: string, days: int, startsOn: string, endsOn: string}>}
      */
     public function index(string $requested): array
     {
@@ -40,6 +48,9 @@ final readonly class SummaryPages
 
         return [
             'view' => $view,
+            'firstTime' => ! LeavePolicy::query()->exists() && ! LeaveEntitlement::query()->exists(),
+            'toAnswer' => $this->requests->escalated(self::TO_ANSWER),
+            'next14' => self::ahead($today),
             'summary' => [
                 'outToday' => $outToday,
                 'outThisWeek' => self::outBetween($today->startOfWeek(), $today->endOfWeek())->distinct()->count('employee_id'),
@@ -49,6 +60,8 @@ final readonly class SummaryPages
                 // They stay in the balance: opposing the prescription is the company's decision (criterio C-11).
                 'prescribableDays' => (int) LeaveEntry::query()->whereIn('leave_entitlement_id', LeaveEntitlement::query()->where('prescribes_on', '<', $today->toDateString())->select('id'))->sum('days'),
                 'liabilityDays' => (int) LeaveEntry::query()->whereNotNull('leave_entitlement_id')->sum('days'),
+                'people' => array_sum($this->headcount->byWorkCenter()),
+                'periods' => self::withDays()->count(),
                 'missingStartDate' => count($this->grants->missingStartDate()),
                 'statementsUnacknowledged' => LeaveStatement::query()->whereNull('acknowledged_at')->count(),
             ],
@@ -59,6 +72,25 @@ final readonly class SummaryPages
                 default => $this->periods(self::prescribablePeriods($today)->orderBy('prescribes_on'), windows: false),
             },
         ];
+    }
+
+    /**
+     * How many people are out each of the next days, today first: a count and no names.
+     *
+     * @return list<array{date: string, away: int}>
+     */
+    private static function ahead(CarbonImmutable $today): array
+    {
+        $stretches = self::outBetween($today, $today->addDays(self::AHEAD_DAYS - 1))->get(['employee_id', 'starts_on', 'ends_on']);
+        $days = [];
+
+        foreach (range(0, self::AHEAD_DAYS - 1) as $offset) {
+            $day = $today->addDays($offset);
+            $away = $stretches->filter(fn (LeaveRequest $stretch): bool => $stretch->starts_on <= $day && $stretch->ends_on >= $day)->pluck('employee_id')->unique()->count();
+            $days[] = ['date' => $day->toDateString(), 'away' => $away];
+        }
+
+        return $days;
     }
 
     /**

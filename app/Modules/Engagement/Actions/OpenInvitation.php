@@ -42,7 +42,7 @@ final readonly class OpenInvitation
             $invitation = Invitation::query()->lockForUpdate()->findOrFail($invitation->id);
         }
 
-        if ($company->blocked) {
+        if ($company->stopped($survey->kind->value)) {
             throw new SurveyUnavailable(SurveyUnavailableReason::Suspended, $company->tradeName);
         }
 

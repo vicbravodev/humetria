@@ -4,6 +4,7 @@ import PublishDialog from '@/components/disclosure/publish-dialog';
 import FlowProgress from '@/components/humetria/flow-progress';
 import { Button } from '@/components/ui/button';
 import WriteMissing from '@/components/write-missing';
+import type { Option } from '@/lib/option-search';
 import type { FlowQuestion } from '@/lib/question-flow';
 import type { DisclosureWritingProps } from '@/types';
 
@@ -22,7 +23,7 @@ export default function PolicyWriteReview({
     questions: FlowQuestion[];
     publication: DisclosureWritingProps['publication'];
     /** The center whose route it came from, to go back to it once published. */
-    center: string | null;
+    center: Option | null;
     onGo: (step: number) => void;
 }) {
     const [publishing, setPublishing] = useState(false);
@@ -52,8 +53,9 @@ export default function PolicyWriteReview({
             </h1>
             <p className="text-[17px] leading-[26px] text-muted-foreground">
                 Léela a la derecha y edita lo que quieras. Al publicarla, le
-                llega a las personas de tus centros para que confirmen que la
-                leyeron, y queda en tu expediente.
+                llega a las personas de{' '}
+                {center === null ? 'tus centros' : center.label} para que
+                confirmen que la leyeron, y queda en tu expediente.
             </p>
             {publication.version !== null && (
                 <p className="text-sm text-muted-foreground">

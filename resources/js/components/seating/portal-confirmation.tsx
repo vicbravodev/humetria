@@ -1,3 +1,4 @@
+import { describeDate } from '@/lib/calendar-date';
 import { CircleCheck } from 'lucide-react';
 import PortalAcknowledgment from '@/components/seating/portal-acknowledgment';
 import type { PortalAcknowledgment as Pending } from '@/types';
@@ -20,8 +21,9 @@ export default function PortalConfirmation({
             {acknowledgedOn !== null && (
                 <p className="flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-base text-accent-foreground">
                     <CircleCheck aria-hidden className="size-5 shrink-0" />
-                    Usted confirmó el {acknowledgedOn} que le informaron del
-                    resultado de su evaluación.
+                    Usted confirmó el{' '}
+                    {describeDate(acknowledgedOn) ?? acknowledgedOn} que le
+                    informaron del resultado de su evaluación.
                 </p>
             )}
         </>

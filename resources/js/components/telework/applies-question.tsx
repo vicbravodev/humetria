@@ -70,6 +70,11 @@ export default function AppliesQuestion({
                         completos desde casa. Si alguien va 3 días a la oficina
                         y 2 a casa, todavía no aplica.
                     </p>
+                    <p className="mt-2 text-muted-foreground">
+                        «Siguiente» sigue apagado mientras la respuesta sea «No
+                        lo sé»: elige «Sí, más del 40 %» o «No, es de vez en
+                        cuando» para continuar.
+                    </p>
                 </div>
             )}
             <div>

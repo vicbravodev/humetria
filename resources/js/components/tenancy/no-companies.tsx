@@ -1,6 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import { Building2 } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
+import SupportLink from '@/components/humetria/support-link';
 import { Button } from '@/components/ui/button';
 import { logout } from '@/routes';
 
@@ -22,8 +23,11 @@ export default function NoCompanies() {
                 </Button>
             }
         >
-            Aún no tienes acceso a ninguna empresa. Contacta al administrador de
-            Humetría.
+            Aún no tienes acceso a ninguna empresa.{' '}
+            <SupportLink subject="Quiero acceso a mi empresa">
+                Contacta al administrador de Humetría
+            </SupportLink>
+            .
         </EmptyState>
     );
 }

@@ -69,7 +69,7 @@ describe('the list', function (): void {
             ->where('people.per_page', 25)
             ->where('people.data.0', [
                 'id' => $this->ana->id, 'name' => 'Ana López', 'jobTitle' => 'Operadora', 'center' => 'Planta Norte',
-                'schedule' => ['shiftType' => 'day', 'workMode' => 'onsite', 'minutes' => ['1' => 480, '2' => 480, '3' => 480, '4' => 480, '5' => 480, '6' => 0, '7' => 0]],
+                'schedule' => ['shiftType' => 'day', 'workMode' => 'onsite', 'minutes' => ['1' => 480, '2' => 480, '3' => 480, '4' => 480, '5' => 480, '6' => 0, '7' => 0], 'starts' => null],
             ])
             ->where('people.data.1', ['id' => $this->bob->id, 'name' => 'Bob Díaz', 'jobTitle' => 'Almacenista', 'center' => 'Planta Norte', 'schedule' => null])
             ->where('people.data.2.schedule.shiftType', 'night')
@@ -134,6 +134,26 @@ describe('saving a schedule', function (): void {
             ->work_mode->toBe(WorkMode::Remote)
             ->minutes_by_weekday->toBe([1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 300, 7 => 0]);
     });
+
+    it('saves the optional start time of each day, and nothing when none is given', function (): void {
+        $this->actingAs($this->hr);
+
+        saveSchedule($this->bob->id, scheduleInput())->assertSessionHasNoErrors();
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->sole()->starts_by_weekday)->toBeNull();
+
+        saveSchedule($this->bob->id, scheduleInput(['starts' => ['1' => '540', '2' => '540', '3' => '', '4' => '0', '5' => '1439', '6' => '', '7' => '']]))->assertSessionHasNoErrors();
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->sole()->starts_by_weekday)->toBe([1 => 540, 2 => 540, 3 => null, 4 => 0, 5 => 1439, 6 => null, 7 => null]);
+
+        saveSchedule($this->bob->id, scheduleInput(['starts' => ['1' => '', '2' => '']]))->assertSessionHasNoErrors();
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->sole()->starts_by_weekday)->toBeNull();
+    });
+
+    it('rejects a start time that is not a minute of the day', function (string $value): void {
+        $this->actingAs($this->hr);
+
+        saveSchedule($this->bob->id, scheduleInput(['starts' => ['1' => $value]]))->assertSessionHasErrors(['starts.1' => 'La hora de entrada debe ser entre las 00:00 y las 23:59.']);
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->exists())->toBeFalse();
+    })->with(['1440', '-1', '9.5', 'nueve']);
 
     it('takes the exact limits of a day: rest at 0, 12 hours at 720', function (): void {
         $this->actingAs($this->hr);
@@ -245,6 +265,14 @@ describe('saving the same schedule for several people', function (): void {
         'the same person twice' => [['bob', 'bob'], 'employee_ids.0', 'El campo persona tiene un valor duplicado.'],
         'something that is not an id' => [['bob'], 'employee_ids.0', 'El campo persona debe ser un UUID válido.'],
     ]);
+
+    it('gives each of them the start times too', function (): void {
+        $this->actingAs($this->hr);
+
+        saveSchedules([$this->ana->id, $this->bob->id], scheduleInput(['starts' => ['1' => '480']]))->assertSessionHasNoErrors();
+
+        expect(AttendanceSchedule::query()->whereIn('employee_id', [$this->ana->id, $this->bob->id])->pluck('starts_by_weekday')->all())->toBe([[1 => 480, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null], [1 => 480, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]]);
+    });
 
     it('is checked like a single schedule', function (): void {
         $this->actingAs($this->hr);

@@ -21,7 +21,9 @@ export default function CorrectionAsk({
                 </span>
                 <span className="font-medium">{dayTitle(date)}</span>
             </div>
-            <p className="text-lg text-pretty">“{detail.reason}”</p>
+            {detail.reason !== null && (
+                <p className="text-lg text-pretty">“{detail.reason}”</p>
+            )}
             <p className="text-sm text-muted-foreground">
                 Lo dijo {detail.person.name} ·{' '}
                 {detail.previousAt === null

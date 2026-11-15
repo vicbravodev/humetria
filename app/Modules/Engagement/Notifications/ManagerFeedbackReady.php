@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * Tells a manager, in usted, that the feedback of their team is ready in their portal. The link is all it carries: no
  * figure, no name of anyone and nothing a person wrote.
  */
-final class ManagerFeedbackReady extends Notification implements ShouldQueue
+final class ManagerFeedbackReady extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -41,5 +42,10 @@ final class ManagerFeedbackReady extends Notification implements ShouldQueue
             ->subject('Ya puede ver la retroalimentación de su equipo')
             ->action('Ver la retroalimentación', $this->url)
             ->markdown('mail.engagement.feedback-ready', ['company' => $this->company, 'name' => $this->name, 'survey' => $this->survey]);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

@@ -63,9 +63,9 @@ export function TenantSwitcher() {
                 ))}
                 {tenants.total > tenants.data.length && (
                     <DropdownMenuItem asChild>
-                        <Link className="w-full cursor-pointer" href={home()}>
+                        <a className="w-full cursor-pointer" href={home().url}>
                             Ver las {tenants.total} empresas
-                        </Link>
+                        </a>
                     </DropdownMenuItem>
                 )}
             </DropdownMenuContent>

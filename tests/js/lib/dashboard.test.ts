@@ -158,3 +158,25 @@ describe('nextStep', () => {
         expect(nextStep([])).toBeNull();
     });
 });
+
+describe('standards the company does not have', () => {
+    const modules = ['nom035', 'seating'];
+    const centers = [center('Planta', { nom037: at(1), seating: at(3) })];
+
+    it('are not listed in the routes', () => {
+        expect(
+            normsInUse(centers, modules).map(({ norm }) => norm.key),
+        ).toEqual(['nom035', 'seating']);
+    });
+
+    it('are not asked about, nor recommended as the next step', () => {
+        expect(
+            unansweredCenters(
+                [center('Planta', { nom037: unanswered })],
+                modules,
+            ),
+        ).toBe(0);
+        expect(nextStep(centers, ['nom035', 'seating'])?.norm).toBe('seating');
+        expect(nextStep(centers, ['nom035'])).toBeNull();
+    });
+});

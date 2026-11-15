@@ -46,9 +46,9 @@ export default function SeatingCertificate(props: Props) {
                     declaredOn={props.declaredOn}
                     declaredBy={props.declaredBy}
                 >
-                    Se declaró que en este centro de trabajo nadie trabaja de
-                    pie la mayor parte de su jornada. Por eso no tiene puestos
-                    que requieran los asientos que pide el artículo 132,
+                    Se declaró que en este centro de trabajo nadie hace su
+                    trabajo de pie durante su jornada laboral. Por eso no tiene
+                    puestos que requieran los asientos que pide el artículo 132,
                     fracción V, de la Ley Federal del Trabajo mientras eso no
                     cambie.
                 </CertificateSheet>

@@ -14,7 +14,8 @@ interface EvaluationSchedule
 {
     /**
      * @param  list<string>  $workCenterIds
+     * @param  bool  $withAnswers  also say with how many answers each due one closed (C-57): one more query
      * @return array<string, EvaluationStanding> by work center id; one never evaluated is left out.
      */
-    public function forWorkCenters(array $workCenterIds): array;
+    public function forWorkCenters(array $workCenterIds, bool $withAnswers = false): array;
 }

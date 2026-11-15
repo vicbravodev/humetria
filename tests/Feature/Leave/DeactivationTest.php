@@ -110,9 +110,9 @@ it('goes up past the manager who left when their team still hangs from them, and
 
     // Deactivated without moving their teams: the line still names them.
     $this->boss->update(['deactivated_at' => now()]);
-    event(new EmployeeDeactivated($this->tenant->id, $this->boss->id));
+    event(new EmployeeDeactivated($this->tenant->id, $this->boss->id, now()->toImmutable()));
     $this->director->update(['deactivated_at' => now()]);
-    event(new EmployeeDeactivated($this->tenant->id, $this->director->id));
+    event(new EmployeeDeactivated($this->tenant->id, $this->director->id, now()->toImmutable()));
 
     expect($ofBoss->refresh()->status)->toBe(RequestStatus::Cancelled)
         ->and($ofAna->refresh()->only(['status', 'approver_employee_id', 'escalation_reason']))->toBe(['status' => RequestStatus::Requested, 'approver_employee_id' => null, 'escalation_reason' => EscalationReason::NoManager])
@@ -138,7 +138,7 @@ it('works in the company of the event, whatever company was current', function (
     $this->ana->update(['deactivated_at' => now()]);
     workIn(Tenant::factory()->create());
 
-    event(new EmployeeDeactivated($this->tenant->id, $this->ana->id));
+    event(new EmployeeDeactivated($this->tenant->id, $this->ana->id, now()->toImmutable()));
 
     expect(LeaveRequest::query()->withoutGlobalScopes()->whereKey($request->id)->sole()->status)->toBe(RequestStatus::Cancelled);
 });

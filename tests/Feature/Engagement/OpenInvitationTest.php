@@ -92,7 +92,7 @@ it('says why a link does not open, and shows no question', function (string $rea
     'cancelled' => ['invalid', fn () => engagementLink(['cancelled' => true])],
     'suspended' => ['suspended', function () {
         $token = engagementLink();
-        test()->tenant->update(['deactivated_at' => now()]);
+        test()->tenant->update(['restriction' => 'suspended', 'restriction_reason' => 'Prueba', 'restricted_at' => now()]);
 
         return $token;
     }],

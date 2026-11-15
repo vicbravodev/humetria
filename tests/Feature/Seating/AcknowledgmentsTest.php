@@ -80,7 +80,7 @@ it('sends nothing when the person already confirmed, has no email, left, or the 
         'confirmed' => RiskAcknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'assessment_id' => $assessment->id]),
         'no email' => $this->ana->forceFill(['email' => null])->save(),
         'left' => $this->ana->forceFill(['deactivated_at' => now()])->save(),
-        'blocked' => Tenant::query()->whereKey($this->tenant->id)->update(['deactivated_at' => now()]),
+        'blocked' => Tenant::query()->whereKey($this->tenant->id)->update(suspension()),
     };
 
     app()->call([new SendRisksToConfirm($this->tenant->id, $this->ana->id), 'handle']);
@@ -178,4 +178,25 @@ it('refuses in the database a second confirmation of the same assessment', funct
 
     expect(fn () => DB::transaction(fn () => RiskAcknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'assessment_id' => $assessment->id])))
         ->toThrow(QueryException::class, 'risk_acknowledgments_assessment_unique');
+});
+
+it('holds the mail of the whole center before queueing: what does not fit queues nothing and says how many are missing', function (): void {
+    Queue::fake();
+    signedFor($this->ana->id);
+    withMailQuota($this->tenant, 0);
+
+    expect(fn () => resolve(RequestAcknowledgmentsForCenter::class)->handle($this->center->id))
+        ->toThrow(App\Modules\Billing\Exceptions\MailQuotaExceeded::class, 'faltan 1');
+
+    Queue::assertNothingPushed();
+});
+
+it('queues the mail of the center when it fits the quota exactly', function (): void {
+    Queue::fake();
+    signedFor($this->ana->id);
+    withMailQuota($this->tenant, 1);
+
+    expect(resolve(RequestAcknowledgmentsForCenter::class)->handle($this->center->id))->toBe(['queued' => 1, 'withoutEmail' => 0]);
+
+    Queue::assertPushed(SendRisksToConfirm::class, 1);
 });

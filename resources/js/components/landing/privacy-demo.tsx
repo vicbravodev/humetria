@@ -1,3 +1,4 @@
+import { WhenMounted } from '@inertiajs/react';
 import { AnimatePresence, m } from 'motion/react';
 import { useState } from 'react';
 import PrivacyAreaButton from '@/components/landing/privacy-area-button';
@@ -10,14 +11,15 @@ import { EASE_OUT } from '@/components/landing/landing-motion';
 export default function PrivacyDemo() {
     const [chosen, setChosen] = useState<PrivacyAreaKey>('planta');
     const area = PRIVACY_AREAS.find((candidate) => candidate.key === chosen);
+    const result = area === undefined ? null : <PrivacyResults area={area} />;
 
     return (
         <div
             data-test="privacy-demo"
-            className="card rounded-2xl shadow-raised"
+            className="overflow-hidden rounded-3xl border bg-card shadow-raised"
         >
-            <div className="flex flex-col gap-3 rounded-t-2xl border-b bg-accent p-5">
-                <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col gap-3 bg-accent p-[18px] pb-4">
+                <p className="text-meta text-muted-foreground">
                     Pruébalo: filtra los resultados de Planta Querétaro
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -31,23 +33,25 @@ export default function PrivacyDemo() {
                     ))}
                 </div>
             </div>
-            <div className="min-h-[264px] p-5" aria-live="polite">
-                <AnimatePresence mode="wait" initial={false}>
-                    <m.div
-                        key={chosen}
-                        initial={{ opacity: 0, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, filter: 'blur(4px)' }}
-                        transition={{ duration: 0.18, ease: EASE_OUT }}
-                    >
-                        {area === undefined ? null : (
-                            <PrivacyResults area={area} />
-                        )}
-                    </m.div>
-                </AnimatePresence>
+            <div aria-live="polite">
+                {/* The swap is motion, which writes a style the server must not print: Node prints the result as it stands. */}
+                <WhenMounted fallback={result}>
+                    <AnimatePresence mode="wait" initial={false}>
+                        <m.div
+                            key={chosen}
+                            initial={{ opacity: 0, filter: 'blur(4px)' }}
+                            animate={{ opacity: 1, filter: 'blur(0px)' }}
+                            exit={{ opacity: 0, filter: 'blur(4px)' }}
+                            transition={{ duration: 0.18, ease: EASE_OUT }}
+                        >
+                            {result}
+                        </m.div>
+                    </AnimatePresence>
+                </WhenMounted>
             </div>
-            <p className="border-t px-5 py-3 text-caption text-muted-foreground">
-                Datos de ejemplo
+            <p className="flex justify-between gap-3 border-t px-[18px] py-3 text-caption text-muted-foreground">
+                <span>Datos de ejemplo</span>
+                <span className="tabular-nums">{area?.answers} respuestas</span>
             </p>
         </div>
     );

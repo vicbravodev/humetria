@@ -6,6 +6,7 @@ import {
     Lock,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import type { IntroCopy } from '@/lib/survey';
 
 /**
  * What the norm asks to say before the questionnaire (II.2 a, III.2 a): the objective, that it is confidential and
@@ -15,10 +16,12 @@ import type { ReactNode } from 'react';
 export default function SurveyIntro({
     company,
     closesOn,
+    copy,
     children,
 }: {
     company: string;
     closesOn: string | null;
+    copy: IntroCopy;
     children?: ReactNode;
 }) {
     const points = [
@@ -26,16 +29,22 @@ export default function SurveyIntro({
             icon: CircleCheck,
             text: 'No hay respuestas correctas ni incorrectas.',
         },
-        {
-            icon: CalendarRange,
-            text: (
-                <>
-                    Considere las condiciones de su trabajo de los{' '}
-                    <strong className="font-semibold">dos últimos meses</strong>
-                    .
-                </>
-            ),
-        },
+        ...(copy.period === null
+            ? []
+            : [
+                  {
+                      icon: CalendarRange,
+                      text: (
+                          <>
+                              Considere las condiciones de su trabajo de{' '}
+                              <strong className="font-semibold">
+                                  {copy.period}
+                              </strong>
+                              .
+                          </>
+                      ),
+                  },
+              ]),
         {
             icon: ListChecks,
             text: 'Conteste todas las preguntas, con calma y con sinceridad: su opinión es lo más importante.',
@@ -53,13 +62,11 @@ export default function SurveyIntro({
     return (
         <section className="flex w-full max-w-2xl flex-col gap-[22px]">
             <div className="flex flex-col gap-2.5">
-                <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                    Evaluación de factores de riesgo psicosocial
+                <h1 className="text-[1.625rem] leading-[2.125rem] font-semibold tracking-[-0.01em]">
+                    {copy.title}
                 </h1>
                 <p>
-                    {company} aplica esta evaluación para identificar y prevenir
-                    los factores de riesgo psicosocial en el trabajo, como lo
-                    pide la NOM-035-STPS-2018.
+                    {company} {copy.purpose}
                 </p>
             </div>
             <div className="flex items-start gap-3 rounded-xl bg-accent p-4 text-accent-foreground">
@@ -67,7 +74,7 @@ export default function SurveyIntro({
                     aria-hidden="true"
                     className="mt-1 size-5 shrink-0 text-primary"
                 />
-                <p className="text-[17px] leading-[26px]">
+                <p className="text-[1.0625rem] leading-[1.625rem]">
                     Sus respuestas son confidenciales y se usan solo para
                     mejorar el ambiente de trabajo.
                 </p>

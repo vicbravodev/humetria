@@ -85,7 +85,7 @@ describe('the reminder', function (): void {
 
     it('reminds nobody in a blocked company, and runs from the command', function (): void {
         WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'submitted_at' => '2026-02-20 10:00:00']);
-        $this->tenant->update(['deactivated_at' => now()]);
+        $this->tenant->update(suspension());
 
         $this->artisan('telework:remind-accidents')->assertSuccessful();
 

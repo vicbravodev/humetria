@@ -6,8 +6,8 @@ namespace App\Modules\Engagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Engagement\Enums\SummaryStatus;
-use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\ManagerSurvey;
 use App\Modules\Engagement\Support\Results\ManagerFeedback;
 use App\Modules\Engagement\Support\Results\ManagerFeedbackData;
 use App\Modules\Telework\Contracts\PortalAccess;
@@ -27,7 +27,7 @@ final class PortalFeedbackController extends Controller
         $identity = $access->open($token);
         abort_if($identity === null, 404);
 
-        $survey = $this->latestAboutManagers();
+        $survey = ManagerSurvey::latest();
         $feedback = $survey === null ? null : ManagerFeedback::for($survey, $identity->employeeId);
 
         return Inertia::render('engagement/portal-feedback', [
@@ -36,13 +36,6 @@ final class PortalFeedbackController extends Controller
             'survey' => $survey === null || $feedback === null ? null : ['name' => $survey->name],
             'feedback' => $feedback === null ? null : $this->props($feedback),
         ]);
-    }
-
-    /** The last closed survey, of any kind, that asked about the manager: a pulse that did not ask never replaces it. */
-    private function latestAboutManagers(): ?Survey
-    {
-        return Survey::query()->where('status', SurveyStatus::Closed)->latest('closed_at')->lazy()
-            ->first(fn (Survey $survey): bool => array_filter($survey->items, fn (string $ref): bool => str_starts_with($ref, 'manager.')) !== []);
     }
 
     /**

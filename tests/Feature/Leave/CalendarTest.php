@@ -96,19 +96,19 @@ it('draws an absence of the people on the page cut to the month', function (): v
     leaveCalendarRequest($this->ana, 'approved', '2026-10-28', '2026-11-03');
     leaveCalendarRequest($this->ana, 'taken', '2026-11-30', '2026-12-04');
 
-    $ana = collect(leaveCalendarProps()['people']['data'])->firstWhere('name', 'Ana Solís');
+    $ana = collect(leaveCalendarProps(['with_absence' => '0'])['people']['data'])->firstWhere('name', 'Ana Solís');
 
     expect($ana['absences'])->toBe([
         ['from' => '2026-11-01', 'to' => '2026-11-03', 'kind' => 'vacation', 'pending' => false],
         ['from' => '2026-11-30', 'to' => '2026-11-30', 'kind' => 'vacation', 'pending' => false],
-    ])->and(collect(leaveCalendarProps()['people']['data'])->firstWhere('name', 'Beto Ruiz')['absences'])->toBe([]);
+    ])->and(collect(leaveCalendarProps(['with_absence' => '0'])['people']['data'])->firstWhere('name', 'Beto Ruiz')['absences'])->toBe([]);
 });
 
 it('does not draw what was cancelled, nor a month it does not touch', function (): void {
     leaveCalendarRequest($this->ana, 'cancelled', '2026-11-09', '2026-11-10');
     leaveCalendarRequest($this->ana, 'approved', '2026-12-01', '2026-12-04');
 
-    expect(collect(leaveCalendarProps()['people']['data'])->firstWhere('name', 'Ana Solís')['absences'])->toBe([]);
+    expect(collect(leaveCalendarProps(['with_absence' => '0'])['people']['data'])->firstWhere('name', 'Ana Solís')['absences'])->toBe([]);
 });
 
 it('counts how many are out each day of the month', function (): void {
@@ -125,7 +125,7 @@ it('counts the days out of everybody the filters leave, not only of the page', f
         leaveCalendarRequest(leaveCalendarPerson("Persona {$number}"), 'approved', '2026-11-10', '2026-11-10');
     }
 
-    $props = leaveCalendarProps();
+    $props = leaveCalendarProps(['with_absence' => '0']);
 
     expect($props['people']['total'])->toBe(32)->and($props['people']['data'])->toHaveCount(25)->and($props['out'][9])->toBe(30);
 });

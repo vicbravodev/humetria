@@ -114,7 +114,7 @@ it('answers the same 404, naming no company, when the link is unknown, expired, 
         $test->token = str_repeat('b', 64);
     },
     'blocked company' => function ($test): void {
-        $test->tenant->update(['deactivated_at' => now()]);
+        $test->tenant->update(suspension());
     },
     'scenario gone' => function ($test): void {
         DB::table('compensation_report_shares')->delete();

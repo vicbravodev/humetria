@@ -1,4 +1,12 @@
+import { useCallback } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import {
+    Briefcase,
+    Ear,
+    type LucideIcon,
+    ServerCog,
+    ShieldCheck,
+} from 'lucide-react';
 import Logo from '@/components/humetria/logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -11,24 +19,45 @@ import {
     SidebarHeader,
     SidebarMenu,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
-import {
-    complianceNavItems,
-    mainNavItems,
-    superadminNavItems,
-} from '@/lib/app-navigation';
-import { toolNavItems } from '@/lib/tool-navigation';
+import { useNavTenant } from '@/hooks/use-nav-tenant';
+import { useCloseMenuOnVisit } from '@/hooks/use-close-menu-on-visit';
+import { useScrollEdges } from '@/hooks/use-scroll-edges';
+import type { NavSectionKey } from '@/lib/app-navigation';
+import { navSections } from '@/lib/nav-sections';
 import { dashboard } from '@/routes';
 import { dashboard as tenantDashboard } from '@/routes/tenant';
 
+/** The icon of each family of tools, beside its name. */
+const familyIcons: Partial<Record<NavSectionKey, LucideIcon>> = {
+    compliance: ShieldCheck,
+    listening: Ear,
+    operations: Briefcase,
+    platform: ServerCog,
+};
+
 export function AppSidebar() {
-    const { auth, tenant, inCourse } = usePage().props;
-    const mainItems = mainNavItems(tenant, auth.isSuperadmin);
-    const complianceItems = complianceNavItems(tenant, inCourse?.count);
-    const toolItems = toolNavItems(tenant);
+    const { auth, inCourse } = usePage().props;
+    const tenant = useNavTenant();
+    const nav = useScrollEdges<HTMLDivElement>();
+    const { setOpenMobile } = useSidebar();
+    useCloseMenuOnVisit(
+        useCallback(() => setOpenMobile(false), [setOpenMobile]),
+    );
+    const sections = navSections({
+        tenant,
+        isStaff: auth.isStaff,
+        isSuperadmin: auth.isSuperadmin,
+        inCourse: inCourse?.count ?? 0,
+    });
 
     return (
-        <Sidebar variant="inset" collapsible="icon">
+        <Sidebar
+            variant="inset"
+            collapsible="icon"
+            className="[view-transition-name:sidebar]"
+        >
             <SidebarHeader className="px-3 pt-4 pb-4">
                 <Link
                     href={
@@ -42,7 +71,7 @@ export function AppSidebar() {
                     <span className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
                         <Logo className="h-7" />
                         {/* Humetría staff outside any company: the platform console (pantalla Consola-Empresas). */}
-                        {auth.isSuperadmin && tenant === null && (
+                        {auth.isStaff && tenant === null && (
                             <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-caption font-medium text-warning-foreground">
                                 Consola
                             </span>
@@ -59,16 +88,27 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="gap-4 px-1">
-                {mainItems.length > 0 && <NavMain items={mainItems} />}
-                {complianceItems.length > 0 && (
-                    <NavMain label="Cumplimiento" items={complianceItems} />
-                )}
-                {toolItems.length > 0 && (
-                    <NavMain label="Herramientas" items={toolItems} />
-                )}
-                {auth.isSuperadmin && (
-                    <NavMain label="Plataforma" items={superadminNavItems} />
+            {/* No scrollbar: the list fades where it continues. On a short screen the rows tighten so it fits more often. */}
+            <SidebarContent
+                ref={nav}
+                className="scroll-fade gap-4 px-1 [@media(min-width:768px)_and_(max-height:900px)]:gap-2 [@media(min-width:768px)_and_(max-height:900px)]:[&_[data-sidebar=menu-button]]:h-9"
+            >
+                {/* The company's own pages go without a heading; each family of tools under its name. */}
+                {sections.map((section) =>
+                    section.key === 'main' ? (
+                        <NavMain key={section.label} items={section.items} />
+                    ) : (
+                        <NavMain
+                            key={section.label}
+                            label={section.label}
+                            icon={
+                                section.key === undefined
+                                    ? undefined
+                                    : familyIcons[section.key]
+                            }
+                            items={section.items}
+                        />
+                    ),
                 )}
             </SidebarContent>
 

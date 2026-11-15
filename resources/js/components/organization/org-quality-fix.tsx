@@ -12,9 +12,9 @@ import { options } from '@/routes/tenant/org-chart/people';
 import type { QualityPerson } from '@/types';
 
 /**
- * The manager of a person, fixed on their row: searched on the server among the active people, without the person
- * and whoever reports to them; whoever reports to someone who left may also be left with nobody above. There is
- * nothing to save until one is chosen.
+ * The manager of a person, chosen on their row: searched on the server among the active people, without the person
+ * and whoever reports to them; whoever has a manager may also be left with nobody above. «Asignar» is the primary
+ * button only once something was chosen: until then there is nothing to save.
  */
 export default function OrgQualityFix({ person }: { person: QualityPerson }) {
     const tenantSlug = useTenantSlug();
@@ -49,8 +49,9 @@ export default function OrgQualityFix({ person }: { person: QualityPerson }) {
                                               },
                                           ],
                                 )}
+                                defaultValue={person.manager ?? undefined}
                                 onChange={() => setChosen(true)}
-                                placeholder="Elige a su jefe directo"
+                                placeholder="Elige a su jefe…"
                                 invalid={errors['manager_id'] !== undefined}
                                 describedBy={
                                     errors['manager_id'] === undefined
@@ -61,12 +62,12 @@ export default function OrgQualityFix({ person }: { person: QualityPerson }) {
                         </div>
                         <Button
                             type="submit"
-                            variant="outline"
+                            variant={chosen ? 'default' : 'outline'}
                             disabled={processing || !chosen}
-                            aria-label={`Guardar el jefe directo de ${person.name}`}
+                            aria-label={`Asignar jefe a ${person.name}`}
                         >
                             {processing && <Spinner />}
-                            Guardar
+                            Asignar
                         </Button>
                     </div>
                     <InputError

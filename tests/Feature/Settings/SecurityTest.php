@@ -22,7 +22,7 @@ test('security page is displayed', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->withSession(['auth.password_confirmed_at' => time()])
+        ->withSession(['auth.password_confirmed_at' => now()->timestamp])
         ->get(route('security.edit'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/security')
@@ -57,7 +57,7 @@ test('security page renders without two factor when feature is disabled', functi
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->withSession(['auth.password_confirmed_at' => time()])
+        ->withSession(['auth.password_confirmed_at' => now()->timestamp])
         ->get(route('security.edit'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -121,7 +121,7 @@ test('security page lists the passkeys 10 at a time, newest first', function () 
     }
 
     $this->actingAs($user)
-        ->withSession(['auth.password_confirmed_at' => time()])
+        ->withSession(['auth.password_confirmed_at' => now()->timestamp])
         ->get(route('security.edit', ['passkeys' => 2]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('passkeys.total', 11)

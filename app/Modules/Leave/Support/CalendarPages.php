@@ -43,19 +43,23 @@ final readonly class CalendarPages
     }
 
     /**
-     * @return array{month: string, prevMonth: string, nextMonth: string, today: string, out: list<int>, holidays: list<string>, filters: array{center: array{value: string, label: string}|null, area: array{value: string, label: string}|null}, canManage: bool, people: LengthAwarePaginator<int, array{id: string, name: string, absences: list<Stretch>}>}
+     * @return array{month: string, showAll: bool, counts: array{absent: int, everyone: int}, prevMonth: string, nextMonth: string, today: string, out: list<int>, holidays: list<string>, filters: array{center: array{value: string, label: string}|null, area: array{value: string, label: string}|null}, canManage: bool, people: LengthAwarePaginator<int, array{id: string, name: string, absences: list<Stretch>}>}
      */
-    public function index(CarbonImmutable $first, ?string $centerId, ?string $areaId, bool $canManage): array
+    public function index(CarbonImmutable $first, ?string $centerId, ?string $areaId, bool $canManage, bool $onlyAbsent = true): array
     {
         $last = $first->endOfMonth()->startOfDay();
         $query = new RosterQuery(activeInWorkCenter: $centerId, areaId: $areaId);
-        $away = $this->absences->between($first, $last, $this->roster->matchingIds($query));
-        $page = $this->roster->page($query, self::PER_PAGE);
-        $ids = array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items()));
-        $stretches = [...array_map(fn (AbsenceData $absence): array => ['employeeId' => $absence->employeeId, 'from' => $absence->from, 'to' => $absence->to, 'kind' => $absence->kind, 'pending' => false], $away), ...($canManage ? self::pending($first, $last, $ids) : [])];
+        $everyone = $this->roster->matchingIds($query);
+        $away = $this->absences->between($first, $last, $everyone);
+        $pending = $canManage ? self::pending($first, $last, $everyone) : [];
+        $stretches = [...array_map(fn (AbsenceData $absence): array => ['employeeId' => $absence->employeeId, 'from' => $absence->from, 'to' => $absence->to, 'kind' => $absence->kind, 'pending' => false], $away), ...$pending];
+        $absent = array_values(array_unique(array_map(fn (array $stretch): string => $stretch['employeeId'], $stretches)));
+        $page = $this->roster->page($onlyAbsent ? new RosterQuery(employeeIds: $absent) : $query, self::PER_PAGE);
 
         return [
             'month' => $first->format('Y-m'),
+            'showAll' => ! $onlyAbsent,
+            'counts' => ['absent' => count($absent), 'everyone' => count($everyone)],
             'prevMonth' => $first->subMonthNoOverflow()->format('Y-m'),
             'nextMonth' => $first->addMonthNoOverflow()->format('Y-m'),
             'today' => PeriodWindow::today()->toDateString(),

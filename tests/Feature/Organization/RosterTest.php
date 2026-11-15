@@ -214,3 +214,14 @@ it('looks people up by their employee number, whatever its case, deactivated one
     workIn(Tenant::factory()->create());
     expect(resolve(Roster::class)->idsByEmployeeNumber(['A-001']))->toBe([]);
 });
+
+it('searches the roster by words in any order and by mobile', function (): void {
+    $juan = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '5512345678']);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Gómez', 'email' => 'jg@acme.mx', 'mobile' => '5598765432']);
+    workIn($this->tenant);
+    $ids = fn (string $search): array => resolve(Roster::class)->matchingIds(new RosterQuery(search: $search));
+
+    expect($ids('perez juan'))->toBe([$juan->id])
+        ->and($ids('55 1234 5678'))->toBe([$juan->id])
+        ->and($ids('juan lopez'))->toBe([]);
+});

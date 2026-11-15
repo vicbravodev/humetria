@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 /**
  * An agreed weekly schedule as RH's form sends it (criterio 2.6), for the requests that take one: their kind of shift, where
  * they work and the minutes of each ISO weekday, 1 Monday to 7 Sunday, all seven and no other: 0 is a rest day, 720 (12 h,
- * art. 68) the most. Rule::in, not Rule::enum: the enum rule ignores the custom messages of lang/es/validation.php.
+ * art. 68) the most; and, optionally, the minute of the day each weekday starts. Rule::in, not Rule::enum: the enum rule ignores the custom messages of lang/es/validation.php.
  */
 trait ScheduleInput
 {
@@ -27,6 +27,9 @@ trait ScheduleInput
             'work_mode' => ['required', Rule::in(array_column(WorkMode::cases(), 'value'))],
             'minutes' => ['required', 'array:'.implode(',', $weekdays), 'required_array_keys:'.implode(',', $weekdays)],
             'minutes.*' => ['required', 'integer', 'between:0,720'],
+            // The optional start time of each weekday, in minutes from midnight; a blank one is a day with none.
+            'starts' => ['nullable', 'array:'.implode(',', $weekdays)],
+            'starts.*' => ['nullable', 'integer', 'between:0,1439'],
         ];
     }
 
@@ -38,6 +41,19 @@ trait ScheduleInput
     public function workMode(): WorkMode
     {
         return $this->enum('work_mode', WorkMode::class) ?? WorkMode::Onsite;
+    }
+
+    /**
+     * @return array<int, int|null>|null the start time of each ISO weekday, or null when RH set none at all
+     */
+    public function startsByWeekday(): ?array
+    {
+        $starts = [];
+        foreach (range(1, 7) as $weekday) {
+            $starts[$weekday] = $this->filled("starts.{$weekday}") ? $this->integer("starts.{$weekday}") : null;
+        }
+
+        return array_filter($starts, fn (?int $start): bool => $start !== null) === [] ? null : $starts;
     }
 
     /**

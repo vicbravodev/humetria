@@ -57,6 +57,7 @@ export default function WeekPanel({
                     </span>
                 </p>
                 <WeekPanelBar
+                    inline
                     label={`${duration(ordinaryMinutes)} ordinarias y ${duration(overtimeMinutes)} extra`}
                     parts={[
                         {

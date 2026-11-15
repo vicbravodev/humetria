@@ -19,6 +19,13 @@ const SUMMARIES = [
     'Hecho: tu expediente está completo',
 ];
 
+/** No accident was ever noticed (5.11 does not apply): there is no notice to have reviewed. */
+function noNotices(rows: RouteRow[]): boolean {
+    return rows.some(
+        (row) => row.numeral === '5.11' && row.state === 'not_applicable',
+    );
+}
+
 /** The six stages of the route of a center (board V2-Ruta-N037): done, the one it is in, or ahead, each with its rows. */
 export function routeStages(
     route: RouteProgress,
@@ -27,7 +34,10 @@ export function routeStages(
     return stagesOf(
         STAGES.nom037.map((stage, index) => ({
             ...stage,
-            summary: SUMMARIES[index] ?? '',
+            summary:
+                index === 4 && noNotices(rows)
+                    ? 'Hecho: ningún aviso de accidente por atender'
+                    : (SUMMARIES[index] ?? ''),
         })),
         route,
         rows,

@@ -25,10 +25,24 @@ it('enters a company by id, so its data is what the code reads', function (): vo
 
 it('reports a company that may not be used as blocked', function (): void {
     $tenant = Tenant::factory()->create();
-    $tenant->update(['deactivated_at' => now()]);
+    $tenant->update(['restriction' => 'suspended', 'restriction_reason' => 'Falta de pago', 'restricted_at' => now()]);
 
     expect(resolve(Companies::class)->enter($tenant->id)->blocked)->toBe($tenant->status()->isBlocked())->toBeTrue();
 });
+
+it('tells a company that only stopped operating (read only) apart from one that is blocked', function (Closure $company, bool $blocked, bool $readOnly): void {
+    $summary = resolve(Companies::class)->enter($company()->create()->id);
+
+    expect($summary->blocked)->toBe($blocked)
+        ->and($summary->readOnly)->toBe($readOnly);
+})->with([
+    'active' => [fn () => Tenant::factory()->activeUntil(now()->addMonth()), false, false],
+    'expired' => [fn () => Tenant::factory()->activeUntil(now()->subDay()), true, true],
+    'trial ended' => [fn () => Tenant::factory()->inTrial(now()->subDays(15)), true, true],
+    'read only' => [fn () => Tenant::factory()->readOnly(), true, true],
+    'suspended' => [fn () => Tenant::factory()->suspended(), true, false],
+    'archived' => [fn () => Tenant::factory()->archived(), true, false],
+]);
 
 it('rejects an id that is no company', function (string $id): void {
     resolve(Companies::class)->enter($id);
@@ -43,12 +57,17 @@ it('enters a company by its slug, and gives nothing for a slug that is no compan
         ->and(resolve(CurrentTenant::class)->id())->toBe($tenant->id);
 });
 
-it('enters no company by the slug of one that may not be used', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+it('enters no company by the slug of one that may not be used', function (Closure $company): void {
+    $tenant = $company()->create();
 
     expect(resolve(Companies::class)->enterBySlug($tenant->slug))->toBeNull()
         ->and(fn () => resolve(CurrentTenant::class)->id())->toThrow(App\Modules\Tenancy\Exceptions\NoCurrentTenant::class);
-});
+})->with([
+    'suspended' => [fn () => Tenant::factory()->suspended()],
+    'archived' => [fn () => Tenant::factory()->archived()],
+    'read only' => [fn () => Tenant::factory()->readOnly()],
+    'expired' => [fn () => Tenant::factory()->activeUntil(now()->subDay())],
+]);
 
 it('describes the company the code works in now', function (): void {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);

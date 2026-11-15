@@ -69,17 +69,24 @@ export function stageLine(route: RouteProgress): string {
     return `Etapa ${current + 1} de ${route.done.length} · ${route.status}`;
 }
 
+/** The standards the company has: all of them when the page did not share its modules. */
+const normsOf = (modules: string[] | undefined): Norm[] =>
+    NORMS.filter((norm) => modules === undefined || modules.includes(norm.key));
+
 /**
  * Every standard, each with every center of the page (rediseño v2, decisión A2): where it applies, where the center still
  * has to answer «¿Te aplica?», and where it does not apply, with its certificate in place of the route. None without centers.
  */
-export function normsInUse(centers: CenterRoutes[]): {
+export function normsInUse(
+    centers: CenterRoutes[],
+    modules?: string[],
+): {
     norm: Norm;
     rows: { id: string; name: string; route: RouteProgress }[];
 }[] {
     return centers.length === 0
         ? []
-        : NORMS.map((norm) => ({
+        : normsOf(modules).map((norm) => ({
               norm,
               rows: centers.map((center) => ({
                   id: center.id,
@@ -90,9 +97,12 @@ export function normsInUse(centers: CenterRoutes[]): {
 }
 
 /** How many centers of the page still have to answer «¿Te aplica?» for some standard (board V3-Onboarding). */
-export function unansweredCenters(centers: CenterRoutes[]): number {
+export function unansweredCenters(
+    centers: CenterRoutes[],
+    modules?: string[],
+): number {
     return centers.filter((center) =>
-        NORMS.some((norm) => !center[norm.key].answered),
+        normsOf(modules).some((norm) => !center[norm.key].answered),
     ).length;
 }
 
@@ -110,10 +120,13 @@ export type NextStep = {
  * "Siguiente paso recomendado": the earliest stage any center has left, of any route; on a tie, the first standard in
  * the menu's order. Null when every route that applies is done.
  */
-export function nextStep(centers: CenterRoutes[]): NextStep | null {
+export function nextStep(
+    centers: CenterRoutes[],
+    modules?: string[],
+): NextStep | null {
     let best: NextStep | null = null;
 
-    for (const norm of NORMS) {
+    for (const norm of normsOf(modules)) {
         const stages = centers
             .map((center) => center[norm.key])
             .filter((route) => route.applies)

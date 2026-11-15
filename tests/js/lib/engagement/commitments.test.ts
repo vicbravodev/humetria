@@ -1,9 +1,29 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     groupChoice,
+    menuSteps,
     nextStatuses,
+    primaryStep,
     statusVariant,
 } from '@/lib/engagement/commitments';
+
+describe('primaryStep', () => {
+    it('offers the next state of the cycle as the one button of a card', () => {
+        expect(primaryStep('open')).toBe('in_progress');
+        expect(primaryStep('in_progress')).toBe('done');
+        expect(primaryStep('done')).toBeNull();
+        expect(primaryStep('dropped')).toBeNull();
+    });
+});
+
+describe('menuSteps', () => {
+    it('leaves every other state to the menu of the card', () => {
+        expect(menuSteps('open')).toEqual(['done', 'dropped']);
+        expect(menuSteps('in_progress')).toEqual(['open', 'dropped']);
+        expect(menuSteps('done')).toEqual(['open', 'in_progress', 'dropped']);
+        expect(menuSteps('dropped')).toEqual(['open', 'in_progress', 'done']);
+    });
+});
 
 describe('statusVariant', () => {
     it('shows an overdue commitment as a problem, whatever it was', () => {

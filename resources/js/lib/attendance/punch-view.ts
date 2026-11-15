@@ -17,9 +17,17 @@ export type DayStatus = {
     text: string;
 };
 
-/** The first word of the name: «Ana López» is greeted as «Ana». */
+/** A title or degree some people write before their name: «Ing.», «Lic.», «Dr.», «Dra.», «Mtro.», «Mtra.», «C.P.». */
+const TITLE = /^(ing|lic|dr|dra|mtro|mtra|c\.p)\.?$/i;
+
+/**
+ * The first word of the name that is not a title: «Ana López» is greeted as «Ana», «Ing. Carlos Ruiz» as «Carlos». A name
+ * that is only a title stays as it is: the greeting is never empty.
+ */
 export function firstName(name: string): string {
-    return name.trim().split(/\s+/)[0] ?? '';
+    const words = name.trim().split(/\s+/);
+
+    return words.find((word) => !TITLE.test(word)) ?? words[0] ?? '';
 }
 
 /**

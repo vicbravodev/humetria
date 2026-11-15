@@ -13,8 +13,10 @@ describe('favorableText', () => {
         expect(favorableText(0)).toBe('0 %');
     });
 
-    it('says there is not enough to show instead of a number when it is hidden', () => {
-        expect(favorableText(null)).toBe('Sin respuestas suficientes');
+    it('says it is under the minimum, never how many are missing, when it is hidden', () => {
+        expect(favorableText(null)).toBe(
+            'Menos de 5 respuestas: no se muestra',
+        );
     });
 });
 

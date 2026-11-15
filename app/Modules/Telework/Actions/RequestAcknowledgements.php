@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Actions;
 
+use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Telework\Enums\DocumentKind;
@@ -27,7 +28,7 @@ final readonly class RequestAcknowledgements
 {
     private const int CHUNK = 500;
 
-    public function __construct(private CurrentTenant $tenant, private AckAudience $audience, private Roster $roster) {}
+    public function __construct(private CurrentTenant $tenant, private AckAudience $audience, private Roster $roster, private MailQuota $mail) {}
 
     /**
      * @param  list<string>  $documentIds
@@ -77,6 +78,9 @@ final readonly class RequestAcknowledgements
                 $employees = [...$employees, ...$this->insertMissing($document, 'employee_id', $ids->employeeIds)];
                 $users = [...$users, ...$this->insertMissing($document, 'user_id', $ids->userIds)];
             }
+
+            // Held before anything is kept, one mail for each person asked (the upper bound; the night gives back the rest).
+            $this->mail->reserve(count(array_unique($employees)) + count(array_unique($users)));
 
             // The people are only counted and chunked: their keys are never read.
             return [array_values(array_unique($employees)), array_values(array_unique($users))]; // @pest-mutate-ignore: UnwrapArrayValues

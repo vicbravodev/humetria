@@ -63,7 +63,7 @@ it('gives each center its people and where it stands in its route, and the peopl
             ->where('summary', ['people' => 2, 'centers' => 1])
             ->where('canManage', true)
             ->where('centers.data', fn ($centers): bool => collect($centers)->firstWhere('id', $this->north->id)['people'] === 2
-                && collect($centers)->firstWhere('id', $this->north->id)['route'] === ['applies' => true, 'done' => [true, false, false, true, false, false], 'status' => 'pon asientos donde hacen falta', 'answered' => true]
+                && collect($centers)->firstWhere('id', $this->north->id)['route'] === ['applies' => true, 'done' => [true, false, false, false, false, false], 'status' => 'pon asientos donde hacen falta', 'answered' => true]
                 && collect($centers)->firstWhere('id', $this->south->id)['people'] === 0
                 && collect($centers)->firstWhere('id', $this->south->id)['route']['answered'] === false));
 });

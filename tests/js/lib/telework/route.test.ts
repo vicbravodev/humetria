@@ -62,6 +62,22 @@ describe('routeStages', () => {
         );
     });
 
+    it('does not say every notice was reviewed when there are no notices', () => {
+        const done = {
+            applies: true,
+            done: [true, true, true, true, true, false],
+            status: '',
+            answered: true,
+        };
+        const summary = (state: RouteRow['state']) =>
+            routeStages(done, [row('5.11', 5, state)])[4]?.summary;
+
+        expect(summary('not_applicable')).toBe(
+            'Hecho: ningún aviso de accidente por atender',
+        );
+        expect(summary('done')).toBe('Hecho: cada aviso revisado');
+    });
+
     it('puts each row in its stage', () => {
         expect(stages[0]?.rows.map((each) => each.numeral)).toEqual([
             '5.2',

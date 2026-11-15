@@ -25,10 +25,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $require_qr_onsite
  * @property bool $trusted_may_use_browser
  * @property int $retention_months
+ * @property int $late_tolerance_minutes minutes after the start time of a schedule that still count as on time (informational)
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'out_of_zone', 'max_accuracy_m', 'require_qr_onsite', 'trusted_may_use_browser', 'retention_months'])]
+#[Fillable(['tenant_id', 'out_of_zone', 'max_accuracy_m', 'require_qr_onsite', 'trusted_may_use_browser', 'retention_months', 'late_tolerance_minutes'])]
 #[UseFactory(AttendancePolicyFactory::class)]
 final class AttendancePolicy extends Model
 {
@@ -40,6 +41,6 @@ final class AttendancePolicy extends Model
      */
     protected function casts(): array
     {
-        return ['out_of_zone' => OutOfZoneRule::class, 'max_accuracy_m' => 'integer', 'require_qr_onsite' => 'boolean', 'trusted_may_use_browser' => 'boolean', 'retention_months' => 'integer'];
+        return ['out_of_zone' => OutOfZoneRule::class, 'max_accuracy_m' => 'integer', 'require_qr_onsite' => 'boolean', 'trusted_may_use_browser' => 'boolean', 'retention_months' => 'integer', 'late_tolerance_minutes' => 'integer'];
     }
 }

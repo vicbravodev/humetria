@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { cascade, growDelay, niceCeiling, percentOf } from '@/lib/chart';
+import {
+    cascade,
+    growDelay,
+    niceCeiling,
+    percentLabel,
+    percentOf,
+    pointsDelta,
+} from '@/lib/chart';
 
 describe('percentOf', () => {
     it('is the share of the largest, with one decimal', () => {
@@ -70,5 +77,30 @@ describe('growDelay', () => {
         expect(growDelay(0)).toBe('[animation-delay:0ms]');
         expect(growDelay(2)).toBe('[animation-delay:140ms]');
         expect(growDelay(40)).toBe(growDelay(11));
+    });
+});
+
+describe('percentLabel', () => {
+    it('writes a whole percent with a space before the sign', () => {
+        expect(percentLabel(18, 60)).toBe('30 %');
+        expect(percentLabel(1, 3)).toBe('33 %');
+        expect(percentLabel(0, 60)).toBe('0 %');
+        expect(percentLabel(60, 60)).toBe('100 %');
+    });
+
+    it('is 0 % without a total', () => {
+        expect(percentLabel(5, 0)).toBe('0 %');
+    });
+});
+
+describe('pointsDelta', () => {
+    it('signs a rise with plus and a fall with the typographic minus', () => {
+        expect(pointsDelta(78, 62)).toBe('+16 pts');
+        expect(pointsDelta(35, 62)).toBe('−27 pts');
+    });
+
+    it('says no change for the same value, rounded to whole points', () => {
+        expect(pointsDelta(62, 62)).toBe('0 pts');
+        expect(pointsDelta(62.4, 62)).toBe('0 pts');
     });
 });

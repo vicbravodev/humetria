@@ -10,6 +10,7 @@ use App\Modules\Assistant\Data\ToolCard;
 use App\Modules\Assistant\Support\ComplianceReaders;
 use App\Modules\Assistant\Support\PanelLinks;
 use App\Modules\Assistant\Support\ScopeGuard;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Ai\Contracts\Tool;
@@ -21,6 +22,7 @@ final readonly class GetComplianceOverview implements Tool
     public function __construct(
         private AssistantScope $scope,
         private ComplianceReaders $readers,
+        private CompanyModules $modules,
         private PanelLinks $links,
         private ScopeGuard $guard,
     ) {}
@@ -37,7 +39,11 @@ final readonly class GetComplianceOverview implements Tool
         return (new ToolCard(
             'status_list',
             'Estado de cumplimiento',
-            array_map(fn (ComplianceReader $reader): array => $reader->status()->toArray(), $this->readers->all()),
+            // A norm is a module of the company: one it does not have is not told.
+            array_values(array_map(
+                fn (ComplianceReader $reader): array => $reader->status()->toArray(),
+                array_filter($this->readers->all(), fn (ComplianceReader $reader): bool => ($module = $this->readers->moduleOf($reader)) === null || $this->modules->enabled($this->scope->tenantId, $module)),
+            )),
             $this->links->dashboard(),
         ))->toJson();
     }

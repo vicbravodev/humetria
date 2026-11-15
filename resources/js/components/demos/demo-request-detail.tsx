@@ -1,6 +1,8 @@
 import { Mail, MessageCircle } from 'lucide-react';
 import type { Ref } from 'react';
 import Initials from '@/components/humetria/initials';
+import DemoRequestChannels from '@/components/demos/demo-request-channels';
+import DemoRequestHandling from '@/components/demos/demo-request-handling';
 import { Button } from '@/components/ui/button';
 import { toolsText } from '@/lib/demo-requests';
 import { whatsappUrl } from '@/lib/whatsapp-url';
@@ -10,10 +12,12 @@ import type { DemoRequestRow } from '@/types';
 export default function DemoRequestDetail({
     ref,
     request,
+    canManage,
 }: {
     /** Takes the focus when a request is chosen on a phone. */
     ref?: Ref<HTMLElement>;
     request: DemoRequestRow;
+    canManage: boolean;
 }) {
     const facts = [
         { term: 'Empresa', value: request.company },
@@ -76,6 +80,7 @@ export default function DemoRequestDetail({
                         {request.whatsapp}
                     </dd>
                 </div>
+                <DemoRequestChannels request={request} />
                 {facts.map((fact) => (
                     <div key={fact.term} className="flex flex-col gap-0.5">
                         <dt className="text-caption text-muted-foreground">
@@ -95,6 +100,7 @@ export default function DemoRequestDetail({
                     )}
                 </p>
             </div>
+            <DemoRequestHandling request={request} canManage={canManage} />
         </article>
     );
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Leave\Support\RequestSummary;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  * Tells a person, as "usted", that their request was approved or rejected, with the reason of a rejection and the link of
  * their own portal. It never says which leave it was (criterio C-22) and never an amount.
  */
-final class RequestDecided extends Notification
+final class RequestDecided extends Notification implements MailBag
 {
     public function __construct(
         private readonly string $url,
@@ -35,7 +36,7 @@ final class RequestDecided extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $answer = $this->approved ? 'aprobada' : 'rechazada';
-        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company])->subject("Su solicitud fue {$answer}")->greeting("Hola, {$this->name}")
+        $mail = (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])->subject("Su solicitud fue {$answer}")->greeting("Hola, {$this->name}")
             ->line("Su solicitud de {$this->request->what()} {$this->request->span()} fue {$answer}.");
 
         if (! $this->approved && $this->reason !== null) {
@@ -43,5 +44,10 @@ final class RequestDecided extends Notification
         }
 
         return $mail->action('Ver mis vacaciones', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::ESSENTIAL;
     }
 }

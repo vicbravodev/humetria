@@ -49,6 +49,7 @@ describe('mainNavItems', () => {
             '/admin/acme/work-centers',
             '/admin/acme/employees',
             '/admin/acme/members',
+            '/admin/acme/plan',
         ]);
     });
 
@@ -58,6 +59,7 @@ describe('mainNavItems', () => {
             'Centros de trabajo',
             'Empleados',
             'Usuarios',
+            'Plan y uso',
         ]);
         expect(titles(acme(true, false))).toEqual([
             'Panel',
@@ -78,6 +80,7 @@ describe('mainNavItems', () => {
             '/admin/acme/work-centers',
             '/admin/acme/employees',
             '/admin/acme/members',
+            '/admin/acme/plan',
         ]);
     });
 });

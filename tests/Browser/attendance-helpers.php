@@ -77,12 +77,17 @@ function standingAt(AwaitableWebpage $page, float $latitude, float $longitude, f
 
 /*
  * Pest Browser reads a text with a comma as a CSS selector: «Sí, soy yo» is pressed with an explicit one.
+ *
+ * The first press after opening a page goes by an explicit selector too: with a plain text, Pest first counts the
+ * elements with that id or name, a lookup that does not wait nor retry, so a document still being replaced makes it
+ * throw «Execution context was destroyed» (seen on the slower CI runners). An explicit selector goes straight to
+ * Playwright's click, which waits for the button and retries across the navigation.
  */
 
 /** The person's way through the link of their phone, from the agreement to the key, until it says the phone is linked. */
 function linkThePhone(AwaitableWebpage $page): AwaitableWebpage
 {
-    return $page->press('Acepto y continúo')
+    return $page->press('button:has-text("Acepto y continúo")')
         ->press('button:has-text("Sí, soy yo")')
         ->press('Crear llave')
         ->waitForText('Listo, su teléfono está vinculado');

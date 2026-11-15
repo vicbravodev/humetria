@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, IdCard, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { IntroCopy } from '@/lib/survey';
 import { cn } from '@/lib/utils';
 import type { SurveyInstrument } from '@/types';
 
@@ -8,10 +9,12 @@ import type { SurveyInstrument } from '@/types';
  */
 export default function GuideIntro({
     instrument,
+    noun,
     onBack,
     onStart,
 }: {
     instrument: SurveyInstrument;
+    noun: IntroCopy['noun'];
     onBack: () => void;
     onStart: () => void;
 }) {
@@ -22,12 +25,12 @@ export default function GuideIntro({
             <p className="text-base font-medium text-muted-foreground">
                 {instrument.shortTitle}
             </p>
-            <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
+            <h1 className="text-[1.625rem] leading-[2.125rem] font-semibold tracking-[-0.01em]">
                 {instrument.title}
             </h1>
             <div
                 className={cn(
-                    'flex items-start gap-3 rounded-xl p-4 text-[17px] leading-[26px]',
+                    'flex items-start gap-3 rounded-xl p-4 text-[1.0625rem] leading-[1.625rem]',
                     instrument.identified
                         ? 'bg-warning text-warning-foreground'
                         : 'bg-accent text-accent-foreground',
@@ -42,7 +45,7 @@ export default function GuideIntro({
                 />
                 {instrument.identified ? (
                     <p>
-                        Esta guía{' '}
+                        Esta {noun}{' '}
                         <strong className="font-semibold">
                             sí lleva su nombre
                         </strong>
@@ -52,7 +55,7 @@ export default function GuideIntro({
                     </p>
                 ) : (
                     <p>
-                        Esta guía es{' '}
+                        Esta {noun} es{' '}
                         <strong className="font-semibold">anónima</strong>: sus
                         respuestas no llevan su nombre y nadie de su empresa
                         puede ver lo que contesta. Los resultados se presentan
@@ -60,11 +63,15 @@ export default function GuideIntro({
                     </p>
                 )}
             </div>
-            <div className="flex items-center justify-between gap-3">
+            <p className="text-base text-muted-foreground">
+                Sus respuestas se guardan en este equipo hasta que las envíe. Si
+                el equipo es compartido, termine en una sola sesión.
+            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <Button
                     variant="ghost"
                     size="lg"
-                    className="px-3 text-[17px]"
+                    className="px-3 text-[1.0625rem]"
                     onClick={onBack}
                 >
                     <ArrowLeft aria-hidden="true" />
@@ -72,7 +79,7 @@ export default function GuideIntro({
                 </Button>
                 <Button
                     size="lg"
-                    className="min-w-40 rounded-[10px] text-[17px]"
+                    className="max-w-full min-w-40 rounded-[10px] text-[1.0625rem]"
                     onClick={onStart}
                 >
                     Empezar

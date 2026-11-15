@@ -78,3 +78,27 @@ it('saves no schedule for a person of another company', function (): void {
     expect(fn () => resolve(SaveSchedule::class)->handle($other->id, ShiftType::Day, WorkMode::Onsite, [1 => 480]))->toThrow(InvalidArgumentException::class)
         ->and(AttendanceSchedule::query()->withoutGlobalScopes()->count())->toBe(0);
 });
+
+it('saves the start times of a schedule, null when RH sets none', function (): void {
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    $week = [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0];
+
+    $none = resolve(SaveSchedule::class)->handle($ana->id, ShiftType::Day, WorkMode::Onsite, $week);
+    expect($none->fresh()->starts_by_weekday)->toBeNull();
+
+    resolve(SaveSchedule::class)->handle($ana->id, ShiftType::Day, WorkMode::Onsite, $week, [1 => 540, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]);
+
+    expect(AttendanceSchedule::query()->sole()->starts_by_weekday)->toBe([1 => 540, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]);
+});
+
+it('starts a company\'s late tolerance at 10 minutes, saves another and keeps it between 0 and 120', function (): void {
+    expect(AttendancePolicy::query()->create(['tenant_id' => $this->tenant->id])->fresh()->late_tolerance_minutes)->toBe(10);
+
+    resolve(SavePolicy::class)->handle(OutOfZoneRule::Block, 100, true, true, 12, 0);
+    expect(AttendancePolicy::query()->sole()->late_tolerance_minutes)->toBe(0);
+    resolve(SavePolicy::class)->handle(OutOfZoneRule::Block, 100, true, true, 12, 120);
+    expect(AttendancePolicy::query()->sole()->late_tolerance_minutes)->toBe(120)
+        ->and(AuditEntry::query()->where('event', 'attendance.policy_saved')->get()->map(fn (AuditEntry $entry): mixed => $entry->metadata['late_tolerance_minutes'])->sort()->values()->all())->toBe([0, 120]);
+
+    expect(fn () => resolve(SavePolicy::class)->handle(OutOfZoneRule::Block, 100, true, true, 12, 121))->toThrow(QueryException::class, 'attendance_policies_late_tolerance_range');
+});

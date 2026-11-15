@@ -42,12 +42,6 @@ export default function ActiveCampaignActions({
     const [dialog, setDialog] = useState<CampaignDialog | null>(null);
     const toggle = (name: CampaignDialog) => (open: boolean) =>
         setDialog(open ? name : null);
-    const progress = campaign.progress;
-    const shortBy =
-        progress !== null && progress.againstSample
-            ? Math.max(progress.target - progress.completed, 0)
-            : 0;
-
     return (
         <>
             <CampaignMoreMenu
@@ -84,7 +78,7 @@ export default function ActiveCampaignActions({
             />
             <CloseDialog
                 campaignId={campaign.id}
-                shortBy={shortBy}
+                progress={campaign.progress}
                 open={dialog === 'close'}
                 onOpenChange={toggle('close')}
             />

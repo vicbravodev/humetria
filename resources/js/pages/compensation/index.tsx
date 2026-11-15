@@ -31,7 +31,7 @@ export default function CompensationIndex(props: {
                 <CompensationHeader
                     eyebrow="Herramientas"
                     title="Compensación"
-                    lead="Costea una propuesta de revisión del contrato: cuánto cuesta el primer año, cuánto cada año después y con qué supuestos."
+                    lead="Costea una propuesta de revisión del contrato: cuánto cuesta el primer año, cuánto suma al año al arrancar y con qué supuestos."
                 >
                     {!props.first_time && <NewScenarioButton />}
                 </CompensationHeader>

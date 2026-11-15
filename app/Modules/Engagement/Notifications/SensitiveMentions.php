@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * Tells who manages the complaints channel that the comments of a survey had mentions of possible harassment or
  * violence: that there were, never how many, from whom or what they said.
  */
-final class SensitiveMentions extends Notification implements ShouldQueue
+final class SensitiveMentions extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -37,5 +38,10 @@ final class SensitiveMentions extends Notification implements ShouldQueue
             ->subject('Hubo menciones de posible acoso o violencia en los comentarios')
             ->action('Abrir el canal de quejas', $this->url)
             ->markdown('mail.engagement.sensitive-mentions', ['company' => $this->company, 'survey' => $this->survey]);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::ESSENTIAL;
     }
 }

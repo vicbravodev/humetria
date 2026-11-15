@@ -72,9 +72,8 @@ export default function FollowUpForm({
                 Ver mi queja
             </Button>
             <p className="text-sm text-muted-foreground">
-                Si perdió la clave no podemos recuperarla, porque no sabemos
-                quién es. Puede presentar la queja de nuevo y mencionar la
-                referencia anterior.
+                Si perdió la clave no podemos recuperarla. Puede presentar la
+                queja de nuevo y mencionar la referencia anterior.
             </p>
         </form>
     );

@@ -25,9 +25,11 @@ const PROGRAM_SECRET_TEXT = 'Juan Pérez Zapata';
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.intervention_files'));
     Notification::fake();
-    $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
+    // Fixed names: a random surname from faker could be the very word the test looks for in the emails.
+    $this->tenant = Tenant::factory()->create(['slug' => 'acme', 'trade_name' => 'Acme']);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
-    ownerOf($this->tenant);
+    $this->hr->update(['name' => 'Rosa Medina']);
+    ownerOf($this->tenant)->update(['name' => 'Luis Ortega']);
     [$this->campaign, $this->areas] = closedEvaluationInAreas($this->tenant, ['Producción' => 7]);
     workIn($this->tenant);
 });

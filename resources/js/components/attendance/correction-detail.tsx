@@ -64,7 +64,7 @@ export default function CorrectionDetail({
                         <h3 className="text-base font-semibold">
                             Si la apruebas
                         </h3>
-                        <EffectList lines={approveLines(detail)} />
+                        <EffectList lines={approveLines(detail, canResolve)} />
                     </section>
                     <section className="flex flex-col gap-3">
                         <h3 className="text-base font-semibold">

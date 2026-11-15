@@ -23,6 +23,7 @@ final class ImportEmployeesRequest extends FormRequest
         return [
             'file' => ['required', 'file', 'extensions:csv,txt', 'mimes:csv,txt', 'max:1024'],
             'confirm' => ['nullable', 'boolean'],
+            'center' => ['nullable', 'string', 'max:36'],
         ];
     }
 
@@ -32,6 +33,14 @@ final class ImportEmployeesRequest extends FormRequest
         $file = $this->file('file');
 
         return $file instanceof UploadedFile ? ($file->get() ?: '') : '';
+    }
+
+    /** The center the rows without one go to, as the page sent it; the controller checks it belongs to the company. */
+    public function center(): ?string
+    {
+        $center = $this->input('center');
+
+        return is_string($center) && $center !== '' ? $center : null;
     }
 
     public function confirmed(): bool

@@ -203,7 +203,7 @@ it('writes the signature to the audit trail and the log with ids and level only'
 
     $record = ['assessment_id' => $this->draft->id, 'work_center_id' => $this->center->id, 'level' => 'medium'];
     expect(AuditEntry::query()->where('event', 'seating.assessment_signed')->sole()->metadata)->toEqual($record)
-        ->and(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('Ana Ruiz')->not->toContain('"scores"')->not->toContain('Ninguno');
+        ->and(auditContent(AuditEntry::query()->get()))->not->toContain('Ana Ruiz')->not->toContain('"scores"')->not->toContain('Ninguno');
     Log::shouldHaveReceived('info')->with('seating.assessment_signed', $record)->once();
 });
 

@@ -745,6 +745,20 @@ política (…)» (Tablas 4 y 7).
 
 ---
 
+### C-57. Participación y vigencia de la evaluación · Norma + Humetría
+
+**Qué hacemos.** Una evaluación cerrada cuenta para la periodicidad del 7.9 (vigente dos años) con la participación que
+tuvo. La norma pide las guías a todas las personas del centro (C-04, C-08) o a la muestra (C-25), pero no fija un mínimo
+de respuestas; por eso no bloqueamos el cierre: lo advertimos, exigimos confirmarlo («Entiendo y quiero cerrar así»), lo
+dejamos en la bitácora (`acknowledged_shortfall`) y mostramos «contestaron X de Y» en todo lugar donde diga que la
+evaluación está vigente (ruta, inspección, tarjeta del centro y método del informe 7.7). Las Guías I pendientes de quien
+sí contestó la Guía II o III se avisan aparte: no se mezclan con la muestra.
+
+**Qué dice la norma.** 7.9: la evaluación se repite al menos cada dos años; II.2 c) y III.2 c): se aplica a todos los
+trabajadores o a la muestra. No existe un umbral de participación.
+
+---
+
 ## Cómo se prueba
 
 Cada criterio que la plataforma aplica tiene pruebas automáticas que fallan si deja de cumplirse. Las de calificación
@@ -797,6 +811,7 @@ están escritas a partir del anexo, no del código: son una segunda transcripci�
 | C-54 | `tests/Feature/Disclosure/ResultsForPeopleTest.php` (4 contra 5, solo `areaId = null`, publicar y retirar), `BoardResultsTest.php` (D7), `PrivacyTest.php` |
 | C-55 | `tests/Feature/Disclosure/PageLinkTest.php`, `PageLinkPageTest.php`, `WorkersPageTest.php` (el mismo 404 por toda causa, sin sesión ni cookies, encabezados, límites), `PrivacyTest.php`, `tests/Browser/DisclosureTest.php` |
 | C-56 | `tests/Feature/Disclosure/BoardResultsTest.php` (D9) |
+| C-57 | `tests/Feature/Campaigns/CloseCampaignTest.php` (cerrar con faltantes exige confirmar), `CampaignPagesTest.php` (Guía I pendiente), `tests/Feature/Tenancy/Nom035RoutePageTest.php` y `tests/Feature/Results/ReportTest.php` («contestaron X de Y») |
 
 C-20 (sin ficha de la Guía V) se cumple por ausencia.
 
@@ -837,3 +852,4 @@ un centro certificado puede publicar el texto de 5.7 d y listo.
 | 1.5 | 2026-11-03 | Nueva sección H, canal de quejas y denuncias: C-40 a C-49 (mecanismo, la Comisión como receptora, el escrito 6.5, categorías, acceso por asignación, enrutamiento por conflicto, anonimato técnico, estadísticas con mínimo, retención y purga, plazos); «mecanismo de quejas (8.1 b)» sale de lo que no se cubre. |
 | 1.6 | 2026-11-03 | Nueva sección I, política de prevención y difusión: C-50 a C-56 (política por escrito con versiones inmutables; la Guía IV como plantilla; qué es difundir y con qué medios; acuse de lectura; resultados para las personas; la página permanente y su enlace; revisar la política con riesgo Medio o más). 5.1, 5.7 y la consulta de resultados (7.8) salen de lo que no se cubre. |
 | 1.7 | 2026-11-05 | C-28: la canalización registra a dónde (lista cerrada, con «No quiso atenderse»), cómo se le dijo (en persona o aviso en su portal), una nota corta sin detalle clínico y un recordatorio a 30 días (rediseño v2, decisión A7). |
+| 1.8 | 2026-11-12 | Nuevo C-57, participación y vigencia: el cierre con faltantes se confirma y se audita, y «vigente» siempre dice con cuántas respuestas (plan de lanzamiento F1, decisión 1). |

@@ -91,7 +91,7 @@ it('does it for every company, each in its own, and logs how many', function ():
 it('leaves alone a company that may not be used and the ones already flagged', function (): void {
     $person = holder();
     $flagged = signedAt($person->id, '2025-01-01 12:00:00', ['reassessment_due' => true]);
-    $blocked = Tenant::factory()->deactivated()->create();
+    $blocked = Tenant::factory()->suspended()->create();
     $inBlocked = RiskAssessmentFactory::new()->signed()->create(['tenant_id' => $blocked->id, 'signed_at' => '2025-01-01 12:00:00']);
     workIn($this->tenant);
 

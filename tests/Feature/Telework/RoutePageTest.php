@@ -41,7 +41,7 @@ it('shows the stages of the center with each row of table 10.3 in its stage, and
         ->where('workCenter', ['id' => $this->center->id, 'name' => 'Planta Querétaro'])
         ->where('teleworkers', 1)
         ->where('route.applies', true)
-        ->where('route.done', [false, false, false, true, false, false])
+        ->where('route.done', [false, false, false, false, false, false])
         ->has('rows', 17)
         ->where('rows', fn ($rows): bool => collect($rows)->pluck('stage', 'numeral')->all() === [
             '5.1' => 2, '5.1.1' => 3, '5.1.2' => 2, '5.2' => 1, '5.3' => 1, '5.4 y 7' => 3, '5.5' => 3, '5.5.1' => 3, '5.6' => 1,

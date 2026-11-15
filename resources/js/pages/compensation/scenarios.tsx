@@ -56,7 +56,7 @@ export default function Scenarios({
 
 Scenarios.layout = {
     breadcrumbs: [
-        { title: 'Herramientas' },
+        { title: 'Ordena tu operación' },
         { title: 'Compensación' },
         { title: 'Escenarios' },
     ],

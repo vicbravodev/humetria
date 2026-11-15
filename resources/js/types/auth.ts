@@ -12,6 +12,8 @@ export type User = {
 export type Auth = {
     user: User;
     isSuperadmin: boolean;
+    /** Superadmin or support: the console and impersonation are theirs; only the superadmin changes a company. */
+    isStaff: boolean;
 };
 
 export type Passkey = {

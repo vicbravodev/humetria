@@ -1,7 +1,6 @@
 import { CalendarClock, UserRound } from 'lucide-react';
 import CommitmentStatusActions from '@/components/engagement/commitments/commitment-status-actions';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { describeDate } from '@/lib/calendar-date';
 import { statusVariant } from '@/lib/engagement/commitments';
 import type { CommitmentRow } from '@/types';
@@ -39,7 +38,7 @@ export default function CommitmentCard({
                     {commitment.overdue ? 'Vencido' : commitment.status_label}
                 </Badge>
             </div>
-            <dl className="grid gap-4 md:grid-cols-2">
+            <dl className="grid gap-4">
                 <div>
                     <dt className="text-meta text-muted-foreground">
                         Nos dijeron
@@ -62,19 +61,11 @@ export default function CommitmentCard({
                 </li>
             </ul>
             {canManage && (
-                <div className="flex flex-wrap items-center gap-1 border-t pt-3">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(commitment)}
-                    >
-                        Editar
-                    </Button>
-                    <CommitmentStatusActions
-                        surveyId={surveyId}
-                        commitment={commitment}
-                    />
-                </div>
+                <CommitmentStatusActions
+                    surveyId={surveyId}
+                    commitment={commitment}
+                    onEdit={() => onEdit(commitment)}
+                />
             )}
         </li>
     );

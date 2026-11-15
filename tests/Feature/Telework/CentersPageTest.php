@@ -52,7 +52,7 @@ it('tells each center where it stands in its route and the accident that waits t
         ->where('centers.data.0.name', 'Oficinas Monterrey')
         ->where('centers.data.0.route', ['applies' => false, 'done' => [], 'status' => 'Nadie teletrabaja más del 40 % · constancia del 3 oct 2026', 'answered' => true])
         ->where('centers.data.1.route.applies', true)
-        ->where('centers.data.1.route.done', [false, false, false, true, false, false])
+        ->where('centers.data.1.route.done', [false, false, false, false, false, false])
         ->where('centers.data.1.accident', 'Hugo Saiz')
         ->where('centers.data.0.accident', null));
 });

@@ -42,7 +42,7 @@ function periodNow(): Teleworker
 
 function deactivate(): void
 {
-    test()->actingAs(test()->owner)->post(route('tenant.employees.deactivate', [test()->tenant, test()->employee->id]))->assertRedirect();
+    test()->actingAs(test()->owner)->post(route('tenant.employees.deactivate', [test()->tenant, test()->employee->id]), departure())->assertRedirect();
 }
 
 function moveToWarehouse(): void
@@ -103,7 +103,7 @@ it('does nothing when the person has no open period, whether never in telework o
     Notification::assertNothingSent();
 
     $other = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
-    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $other->id]))->assertRedirect();
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $other->id]), departure())->assertRedirect();
     Notification::assertNothingSent();
 });
 

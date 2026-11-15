@@ -33,7 +33,7 @@ it('deletes a salary of the tabulator that was typed with a wrong date, and the 
     expect(GradeSalary::query()->pluck('id')->all())->toBe([$right->id]);
     Log::shouldHaveReceived('info')->with('compensation.grade_salary_deleted', ['job_grade_id' => $this->grade->id, 'grade_salary_id' => $wrong->id])->once();
     expect(AuditEntry::query()->where('event', 'compensation.grade_salary_deleted')->sole()->metadata)->toBe(['grade_salaries' => 1])
-        ->and(json_encode(AuditEntry::query()->get()->map(fn (AuditEntry $entry): array => [$entry->event, $entry->metadata])->all()))->not->toContain('99000')->not->toContain('990');
+        ->and(auditContent(AuditEntry::query()->get()))->not->toContain('99000')->not->toContain('990');
     $this->get(route('tenant.compensation.tabulator.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page->where('grades.data.0.current.daily_salary', '500')->has('grades.data.0.salaries', 1));
 });
@@ -48,7 +48,7 @@ it('deletes an individual salary typed with a wrong date and keeps the person\'s
     expect(SalaryOverride::query()->pluck('id')->all())->toBe([$right->id]);
     Log::shouldHaveReceived('info')->with('compensation.override_deleted', ['override_id' => $wrong->id])->once();
     expect(AuditEntry::query()->where('event', 'compensation.override_deleted')->sole()->metadata)->toBe(['overrides' => 1])
-        ->and(json_encode(AuditEntry::query()->get()->toArray()))->not->toContain('E-001');
+        ->and(auditContent(AuditEntry::query()->get()))->not->toContain('E-001');
 });
 
 it('answers 404 for the salary of another company and 403 to whoever cannot manage', function (): void {

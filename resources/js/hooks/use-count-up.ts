@@ -9,10 +9,21 @@ function reducedMotion(): boolean {
     );
 }
 
-/** A figure of the report counting up to its value once, as it opens (1.2 s, easing out); at once with reduced motion. */
+/**
+ * A figure of the report counting up to its value once, as it opens (1.2 s, easing out); at once with reduced motion, and at
+ * once when the report goes to print: paper never carries a frame of the count.
+ */
 export function useCountUp(target: number): number {
     const [value, setValue] = useState(0);
-    const still = reducedMotion();
+    const [printing, setPrinting] = useState(false);
+    const still = reducedMotion() || printing;
+
+    useEffect(() => {
+        const stop = (): void => setPrinting(true);
+        window.addEventListener('beforeprint', stop);
+
+        return () => window.removeEventListener('beforeprint', stop);
+    }, []);
 
     useEffect(() => {
         if (still) {

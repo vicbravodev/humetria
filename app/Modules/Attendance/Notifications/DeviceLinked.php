@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Notifications;
 
 use App\Modules\Attendance\Support\DeviceLabel;
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
@@ -17,7 +18,7 @@ use Illuminate\Notifications\Notification;
  * one that was not them. From their company and in «usted». Queued: it carries no secret, and a mail server that fails
  * must not fail the linking.
  */
-final class DeviceLinked extends Notification implements ShouldQueue
+final class DeviceLinked extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -35,7 +36,7 @@ final class DeviceLinked extends Notification implements ShouldQueue
     {
         $when = $this->at->setTimezone(config()->string('app.display_timezone'))->isoFormat('D [de] MMMM [de] YYYY [a las] H:mm');
 
-        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company])
+        return (new MailMessage)->markdown('notifications::email', ['company' => $this->company, 'formal' => true])
             ->subject('Se vinculó un dispositivo a su registro de jornada')
             ->greeting("Hola, {$this->name}")
             // Only plain characters of the label reach the markdown line: never a link.
@@ -43,5 +44,10 @@ final class DeviceLinked extends Notification implements ShouldQueue
             // The person's own page of the time record (Marcar), where they mark with the linked device.
             ->action('Abrir mi registro', rtrim(config()->string('app.url'), '/')."/a/{$this->company->slug}")
             ->line('Si no fue usted, avise a Recursos Humanos.');
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::ESSENTIAL;
     }
 }

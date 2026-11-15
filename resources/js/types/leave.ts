@@ -94,11 +94,27 @@ export type LeaveSummary = {
     /** Days still in the balance past their eighteen months: the company decides whether to oppose the prescription. */
     prescribableDays: number;
     liabilityDays: number;
+    /** Active people of the company. */
+    people: number;
+    /** Periods that still hold days. */
+    periods: number;
     missingStartDate: number;
     statementsUnacknowledged: number;
 };
 
 export type LeaveSummaryView = 'out' | 'windows' | 'prescribable';
+
+/** Whether the days cover a request and how many would be left (negative: how many are missing); RH only. */
+export type LeaveCoverage = { fits: boolean; leftAfter: number };
+
+/** The teammates of the same manager away on the days of a request: a count per day and their names, never why. */
+export type LeaveTeam = {
+    days: { date: string; away: number }[];
+    names: string[];
+};
+
+/** How many people are out on a day (Y-m-d), without names. */
+export type LeaveAheadDay = { date: string; away: number };
 
 /** A row of the detail under the summary: who is out, or whose period is about to close or past its eighteen months. */
 export type LeaveSummaryRow = {
@@ -135,6 +151,8 @@ export type LeaveQueueRequest = {
     manager: string | null;
     /** The name of the leave for whoever manages vacations, "Permiso" for a viewer; null for vacations. */
     type: string | null;
+    /** Y-m-d: the day it was asked, since when it waits. */
+    requestedOn: string;
     startsOn: string;
     endsOn: string;
     workingDays: number;
@@ -151,7 +169,13 @@ export type LeaveQueueRequest = {
     note: string | null;
     rejectionReason: string | null;
     canDecide: boolean;
+    /** False when approving would be refused: no days and a policy that does not give them in advance. */
+    canApprove: boolean;
     canCancel: boolean;
+    /** Only for RH, for vacations that wait. */
+    coverage: LeaveCoverage | null;
+    /** Only for what waits. */
+    team: LeaveTeam | null;
 };
 
 export type LeaveBalanceTab = 'all' | 'missing' | 'statements' | 'terminations';
@@ -169,8 +193,11 @@ export type LeaveBalanceRow = {
     policy: string;
     /** What they can still ask for; below zero when they were given days in advance. */
     available: number;
+    waiting: number;
     /** The days they were given in advance. */
     advanced: number;
+    /** The days given in the periods that still hold days: the whole the bar measures; null when not known. */
+    granted: number | null;
     /** Y-m-d: when their next period starts; null while they have no start date. */
     nextAnniversary: string | null;
 };
@@ -186,6 +213,7 @@ export type LeaveRecordPeriod = {
     available: number;
     /** Past its eighteen months with days still in it: marked, never taken off. */
     mayPrescribe: boolean;
+    overdue: boolean;
 };
 
 /** A movement of the ledger of a person. The note only reaches whoever may manage vacations. */
@@ -196,6 +224,8 @@ export type LeaveLedgerEntry = {
     tranche: 'statutory' | 'extra';
     /** With its sign: below zero leaves the balance. */
     days: number;
+    /** The days the person could ask for right after this movement. */
+    balance: number;
     /** The year of the period it moved; null for days given in advance. */
     period: number | null;
     note: string | null;

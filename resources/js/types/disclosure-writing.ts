@@ -27,5 +27,10 @@ export type DisclosureWritingProps = {
         version: { number: number; publishedOn: string } | null;
     };
     /** Where «Guardar y volver» leads, and the center whose route it is. */
-    back: { href: string; label: string; center: string | null };
+    back: {
+        href: string;
+        label: string;
+        center: string | null;
+        centerName: string | null;
+    };
 };

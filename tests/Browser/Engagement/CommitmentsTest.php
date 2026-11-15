@@ -33,7 +33,10 @@ it('shows RH the commitments of a closed survey and the ideas for the themes to 
         ->assertSee('Toda la empresa')
         ->assertSee('Cumplido')
         ->assertSee('Ideas para empezar')
-        ->assertSee('Reconocimiento');
+        ->assertSee('Reconocimiento')
+        ->assertSee('2 compromisos · un grupo tiene a lo más 3')
+        ->assertSee('Marcar en marcha')
+        ->assertDontSee('Descartar');
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],
@@ -61,4 +64,16 @@ it('tells RH the commitments wait for the survey to close while it is open', fun
     visitPage('engagement/commitments', "{$url}/climate/{$survey->id}/commitments")
         ->assertSee('Los compromisos se registran al cerrar la encuesta')
         ->assertDontSee('Nuevo compromiso');
+});
+
+it('moves a commitment to its next state with the one button of its card, and the rest from its menu', function (): void {
+    [$url, $survey] = commitmentsPanel();
+
+    visitPage('engagement/commitments', "{$url}/climate/{$survey}/commitments")
+        ->click('Marcar en marcha')
+        ->assertSee('Marcar cumplido')
+        ->click('button[aria-label="Más acciones de «Reconocer por escrito cada logro del mes.»"]')
+        ->assertSee('Reabrir')
+        ->assertSee('Descartar')
+        ->assertNoJavaScriptErrors();
 });

@@ -54,6 +54,11 @@ export default function TrainingDialog({
                 >
                     {({ processing, errors }) => (
                         <>
+                            <input
+                                type="hidden"
+                                name="filter_center"
+                                value={filters.center?.value ?? ''}
+                            />
                             <TrainingFields
                                 center={center}
                                 onCenter={setCenter}

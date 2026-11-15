@@ -9,8 +9,9 @@ export default function ConfidentialBanner() {
                 <strong className="font-semibold">
                     Información confidencial.
                 </strong>{' '}
-                Solo la ven quienes administran todo en tu empresa. No guardamos
-                respuestas ni diagnósticos, solo a dónde se canalizó y cuándo.
+                Solo la ven quienes administran la empresa y Recursos Humanos.
+                No guardamos respuestas ni diagnósticos, solo a dónde se
+                canalizó y cuándo.
             </p>
             <p className="text-caption text-muted-foreground">
                 Tu consulta quedó registrada

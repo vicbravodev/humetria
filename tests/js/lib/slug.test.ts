@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { slugify } from '@/lib/slug';
+import { companyUrl, slugify } from '@/lib/slug';
 
 describe('slugify', () => {
     it.each([
@@ -18,5 +18,22 @@ describe('slugify', () => {
 
         expect(slugify('a'.repeat(80))).toBe('a'.repeat(50));
         expect(slugify(text)).toBe('a'.repeat(49));
+    });
+});
+
+describe('companyUrl', () => {
+    it('shows where the company will live, from the origin of the app and its slug', () => {
+        expect(companyUrl('https://humetria.mx', 'grupo-ejemplo')).toBe(
+            'humetria.mx/admin/grupo-ejemplo',
+        );
+        expect(companyUrl('http://localhost', 'acme')).toBe(
+            'localhost/admin/acme',
+        );
+    });
+
+    it('leaves a placeholder while no slug is typed yet', () => {
+        expect(companyUrl('https://humetria.mx', '')).toBe(
+            'humetria.mx/admin/…',
+        );
     });
 });

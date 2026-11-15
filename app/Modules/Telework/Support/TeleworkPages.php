@@ -9,6 +9,7 @@ use App\Modules\Seating\Contracts\CommitteeWork;
 use App\Modules\Seating\Data\CommitteeTask;
 use App\Modules\Telework\Contracts\TeleworkRoute;
 use App\Modules\Telework\Data\UnreviewedAccidents;
+use App\Modules\Telework\Enums\ChecklistStatus;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\RowState;
 use App\Modules\Telework\Enums\TeleworkerStatus;
@@ -153,7 +154,9 @@ final readonly class TeleworkPages
             $centerOf[$person->id] = $person->work_center_id;
         }
         $reviewers = $this->members->reviewers();
-        $seating = $this->seating->waiting(array_map(fn (WorkCenterSummary $center): string => $center->id, $centers));
+        $centerIds = array_map(fn (WorkCenterSummary $center): string => $center->id, $centers);
+        $seating = $this->seating->waiting($centerIds);
+        $unpublished = $this->withoutChecklist($centerIds);
         $tasks = [];
         $seats = [];
 
@@ -161,6 +164,7 @@ final readonly class TeleworkPages
             $people = $waiting[$center->id] ?? [];
             $count = array_sum(array_map(fn (string $id): int => ($centerOf[$id] ?? null) === $center->id ? $notices[$id] : 0, array_keys($notices)));
             array_push($tasks, ...array_filter([
+                in_array($center->id, $unpublished, true) ? ['kind' => 'checklist', 'workCenter' => $center->name, 'count' => 1, 'people' => [], 'href' => route('tenant.telework.checklist.show', [$tenant, $center->id])] : null,
                 $people === [] ? null : ['kind' => 'lists', 'workCenter' => $center->name, 'count' => count($people), 'people' => $people, 'href' => route('tenant.telework.reviews.index', [$tenant, $center->id])],
                 $count === 0 ? null : ['kind' => 'notices', 'workCenter' => $center->name, 'count' => $count, 'people' => [], 'href' => route('tenant.telework.notices.index', [$tenant, 'center' => $center->id])],
             ]));
@@ -175,6 +179,22 @@ final readonly class TeleworkPages
         }
 
         return ['name' => $name, 'tasks' => $tasks, 'centers' => $seats];
+    }
+
+    /**
+     * The centers where NOM-037 applies (someone teleworks or is about to, or the center declared it) and the Comisión has
+     * not published the checklist: no place can be reviewed until it does (row 5.4 y 7 of table 10.3).
+     *
+     * @param  list<string>  $ids
+     * @return list<string>
+     */
+    private function withoutChecklist(array $ids): array
+    {
+        $published = Checklist::query()->whereIn('work_center_id', $ids)->where('status', ChecklistStatus::Published)->pluck('work_center_id')->all();
+        $declared = TeleworkProfile::query()->whereIn('work_center_id', $ids)->where('has_teleworkers', true)->pluck('work_center_id')->all();
+        $people = Teleworker::query()->whereIn('work_center_id', $ids)->whereIn('status', [TeleworkerStatus::Active, TeleworkerStatus::Aspirant])->pluck('work_center_id')->all();
+
+        return array_values(array_filter($ids, fn (string $id): bool => ! in_array($id, $published, true) && (in_array($id, $declared, true) || in_array($id, $people, true))));
     }
 
     /**

@@ -1,3 +1,5 @@
+import type { Paginated } from '@/types/demos';
+
 export type ClimateSurveyStatus = 'draft' | 'active' | 'closed';
 
 /** What a pulse looks at this time (Seguimiento, Recorrido or Jefe). */
@@ -11,6 +13,8 @@ export type PulseSchedule = {
     openDays: number;
     active: boolean;
     nextRunOn: string;
+    /** Days from today, in the time of the company, to the next run. */
+    daysUntil: number;
     /** The mode RH chose for the next pulse only; null when the calendar decides. */
     nextMode: string | null;
     upcoming: { mode: string; modeLabel: string; items: number };
@@ -35,6 +39,8 @@ export type ClimateSurveyCard = {
 export type ClimateSurveyHistoryRow = {
     id: string;
     name: string;
+    /** What a pulse looked at («Recorrido»); nothing for climate. */
+    mode: string | null;
     closedOn: string | null;
     invited: number | null;
     answered: number;
@@ -97,6 +103,32 @@ export type TrendPoint = {
     value: number;
     direction: TrendDirection;
 };
+
+/** The latest closed climate: its indices under the minimums of its results and its commitments by state. */
+export type ClimateLatest = {
+    id: string;
+    name: string;
+    index: number | null;
+    recommendation: number | null;
+    commitments: { open: number; in_progress: number; done: number };
+};
+
+/** The props of the home of Clima or Pulso. */
+export type EngagementHome = {
+    current: ClimateSurveyCard | null;
+    surveys: Paginated<ClimateSurveyHistoryRow>;
+    canManage: boolean;
+    modes: PulseModeOption[] | null;
+    schedule: PulseSchedule | null;
+    frequencies: PulseModeOption[] | null;
+    /** The latest closed climate, to close the cycle on the home of Clima; null on Pulso. */
+    latest: ClimateLatest | null;
+    /** The engagement index of the latest waves (Pulso only). */
+    howWeAre: TrendPoint[] | null;
+};
+
+/** A closed survey on the axis of the trend: its month, never its day. */
+export type TrendWave = { surveyId: string; label: string };
 
 /** A figure of the company across its closed surveys. */
 export type TrendSeries = {

@@ -107,9 +107,13 @@ export function useAppearance(): UseAppearanceReturn {
         () => 'system',
     );
 
-    const resolvedAppearance: ResolvedAppearance = isDarkMode(appearance)
-        ? 'dark'
-        : 'light';
+    // The server cannot know the theme the browser resolves (`system` reads matchMedia): it renders `light`, and React
+    // swaps in the real one right after hydrating, instead of hydrating markup that differs from the HTML.
+    const resolvedAppearance: ResolvedAppearance = useSyncExternalStore(
+        subscribe,
+        () => (isDarkMode(currentAppearance) ? 'dark' : 'light'),
+        () => 'light',
+    );
 
     const updateAppearance = (mode: Appearance): void => {
         currentAppearance = mode;

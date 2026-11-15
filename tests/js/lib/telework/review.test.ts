@@ -49,6 +49,15 @@ describe('decisionNeeds', () => {
         expect(decisionNeeds('valid')).toEqual({ plan: false, notes: false });
     });
 
+    it('asks for notes when validating a list that has unfavorable answers', () => {
+        expect(decisionNeeds('valid', 2)).toEqual({ plan: false, notes: true });
+        expect(decisionNeeds('valid_with_plan', 1)).toEqual({
+            plan: true,
+            notes: true,
+        });
+        expect(decisionNeeds('valid', 0).notes).toBe(false);
+    });
+
     it('offers the three decisions, each with its hint', () => {
         expect(DECISIONS.map((decision) => decision.value)).toEqual([
             'valid',

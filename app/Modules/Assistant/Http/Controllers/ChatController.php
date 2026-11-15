@@ -15,6 +15,7 @@ use App\Modules\Assistant\Http\Requests\ChatRequest;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\AssistantScopeFactory;
 use App\Modules\Assistant\Support\Conversations;
+use App\Modules\Assistant\Support\HumiTokens;
 use App\Modules\Assistant\Support\PageContextResolver;
 use App\Modules\Assistant\Support\PersonalDataRedactor;
 use App\Modules\Assistant\Support\StopSwitch;
@@ -23,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Laravel\Ai\Responses\StreamedAgentResponse;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Throwable;
 
 /**
  * A message to Humi, answered as a stream. The browser sends the last message and, if it continues one, the id of the
@@ -39,6 +41,7 @@ final readonly class ChatController
         private PersonalDataRedactor $redactor,
         private RecordUsage $recordUsage,
         private StopSwitch $stop,
+        private HumiTokens $tokens,
     ) {}
 
     public function store(ChatRequest $request): SymfonyResponse
@@ -52,6 +55,8 @@ final readonly class ChatController
             }
 
             $this->allowance->handle($scope);
+            // The quota of the plan: held before the provider is called, so two messages cannot both spend its last tokens.
+            $key = $this->tokens->reserve($scope);
         } catch (ConversationNotFound) {
             abort(404);
         } catch (AssistantUnavailable $refused) {
@@ -63,11 +68,19 @@ final readonly class ChatController
         ignore_user_abort(true);
         $startedAt = hrtime(true);
 
-        $stream = HumiAssistant::make(scope: $scope, page: $this->pages->resolve($request->input('pageContext')))
-            ->continueOrStart($conversationId, as: ConversationParticipant::query()->findOrFail($scope->participantId))
-            ->stream($this->redactor->redact($request->messageText()))
-            ->usingVercelDataProtocol()
-            ->then(fn (StreamedAgentResponse $answer) => $this->finish($scope, $answer, $startedAt));
+        try {
+            $stream = HumiAssistant::make(scope: $scope, page: $this->pages->resolve($request->input('pageContext')))
+                ->continueOrStart($conversationId, as: ConversationParticipant::query()->findOrFail($scope->participantId))
+                ->stream($this->redactor->redact($request->messageText()))
+                ->usingVercelDataProtocol()
+                ->then(fn (StreamedAgentResponse $answer) => $this->finish($scope, $key, $answer, $startedAt))
+                // An answer that fails midway gives its hold back: the quota is for what was used.
+                ->catch(fn (Throwable $failure) => $this->tokens->release($scope, $key));
+        } catch (Throwable $failure) {
+            $this->tokens->release($scope, $key);
+
+            throw $failure;
+        }
 
         $response = $stream->toResponse($request);
         // A proxy must not hold the answer back until it ends.
@@ -83,8 +96,11 @@ final readonly class ChatController
         return response()->noContent();
     }
 
-    private function finish(AssistantScope $scope, StreamedAgentResponse $answer, int $startedAt): void
+    private function finish(AssistantScope $scope, string $key, StreamedAgentResponse $answer, int $startedAt): void
     {
+        // What the provider really counted, even above the estimate held.
+        $this->tokens->settle($scope, $key, $answer->usage->inputTokens + $answer->usage->outputTokens);
+
         $tools = [];
 
         foreach ($answer->toolCalls as $call) {

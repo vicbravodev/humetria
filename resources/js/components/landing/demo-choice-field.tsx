@@ -1,5 +1,5 @@
 import InputError from '@/components/humetria/input-error';
-import { cn } from '@/lib/utils';
+import DemoPill from '@/components/landing/demo-pill';
 
 export type DemoChoice = {
     value: string;
@@ -11,7 +11,6 @@ type Props = {
     legend: string;
     options: readonly DemoChoice[];
     error?: string | undefined;
-    className?: string;
 };
 
 export default function DemoChoiceField({
@@ -19,7 +18,6 @@ export default function DemoChoiceField({
     legend,
     options,
     error,
-    className,
 }: Props) {
     const legendId = `demo-${name}-legend`;
     const errorId = `demo-${name}-error`;
@@ -34,23 +32,21 @@ export default function DemoChoiceField({
             data-test={`${name}-group`}
             className="grid gap-2"
         >
-            <legend id={legendId} className="mb-2 text-sm font-medium">
+            <legend
+                id={legendId}
+                className="mb-2.5 text-meta leading-snug font-medium"
+            >
                 {legend}
             </legend>
-            <div className={cn('grid gap-2', className)}>
+            <div className="flex flex-wrap gap-2">
                 {options.map((option) => (
-                    <label
+                    <DemoPill
                         key={option.value}
-                        className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-input bg-card px-3 py-2 text-base transition-[color,box-shadow] has-checked:border-primary has-checked:font-medium has-checked:ring-1 has-checked:ring-primary"
-                    >
-                        <input
-                            type="radio"
-                            name={name}
-                            value={option.value}
-                            className="size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                        />
-                        {option.label}
-                    </label>
+                        type="radio"
+                        name={name}
+                        value={option.value}
+                        label={option.label}
+                    />
                 ))}
             </div>
             <InputError id={errorId} message={error} />

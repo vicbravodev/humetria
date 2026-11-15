@@ -21,6 +21,9 @@ export default function SeatingInspection({
     dossierHref: string | null;
 }) {
     const tenantSlug = useTenantSlug();
+    // What has nothing registered is «Sin registros», the word of the board of the center, and not «Te falta».
+    const lacking = missing.filter((item) => item.state !== 'pending');
+    const unregistered = missing.filter((item) => item.state === 'pending');
     setLayoutProps({
         breadcrumbs: seatingCrumbs(tenantSlug, workCenter, {
             title: 'Inspección',
@@ -46,11 +49,11 @@ export default function SeatingInspection({
                         <InspectionList
                             id="missing"
                             title="Te falta"
-                            count={missing.length}
+                            count={lacking.length}
                             applicable={applicable}
-                            empty="No te falta nada: puedes mostrar cada renglón."
+                            empty="No te falta nada por resolver."
                         >
-                            {missing.map((item, index) => (
+                            {lacking.map((item, index) => (
                                 <InspectionItem
                                     key={item.numeral}
                                     item={item}
@@ -58,6 +61,23 @@ export default function SeatingInspection({
                                 />
                             ))}
                         </InspectionList>
+                        {unregistered.length > 0 && (
+                            <InspectionList
+                                id="unregistered"
+                                title="Sin registros"
+                                count={unregistered.length}
+                                applicable={applicable}
+                                empty=""
+                            >
+                                {unregistered.map((item) => (
+                                    <InspectionItem
+                                        key={item.numeral}
+                                        item={item}
+                                        primary={false}
+                                    />
+                                ))}
+                            </InspectionList>
+                        )}
                         <InspectionList
                             id="ready"
                             title="Lo puedes mostrar"

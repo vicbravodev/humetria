@@ -36,11 +36,50 @@ final readonly class EmployeeImportPlan
     }
 
     /**
-     * @return array{status: string, rows: int, created: int, updated: int, errors: list<array{row: int, messages: list<string>}>}
+     * @return list<array{row: int, name: string, changes: list<array{label: string, before: string, after: string}>}>
+     */
+    private function changes(): array
+    {
+        $changes = [];
+
+        foreach ($this->rows as $index => $row) {
+            if ($row->changes !== []) {
+                $changes[] = ['row' => $index + 2, 'name' => $row->data->name ?? $row->data->employeeNumber ?? '', 'changes' => $row->changes];
+            }
+        }
+
+        return array_slice($changes, 0, 100);
+    }
+
+    /**
+     * @return list<array{row: int, messages: list<string>}>
+     */
+    private function warnings(): array
+    {
+        $warnings = [];
+
+        foreach ($this->rows as $index => $row) {
+            if ($row->warnings !== []) {
+                $warnings[] = ['row' => $index + 2, 'messages' => $row->warnings];
+            }
+        }
+
+        return array_slice($warnings, 0, 100);
+    }
+
+    /**
+     * @return array{warnings?: list<array{row: int, messages: list<string>}>, changes?: list<array{row: int, name: string, changes: list<array{label: string, before: string, after: string}>}>, status: string, rows: int, created: int, updated: int, errors: list<array{row: int, messages: list<string>}>}
      */
     public function summary(): array
     {
+        // Who is updated and what changes in them (the first hundred, as with the errors); no key when nobody changes.
+        $changes = $this->isValid() ? $this->changes() : [];
+
+        $warnings = $this->isValid() ? $this->warnings() : [];
+
         return [
+            ...($changes === [] ? [] : ['changes' => $changes]),
+            ...($warnings === [] ? [] : ['warnings' => $warnings]),
             'status' => $this->isValid() ? 'ready' : 'invalid',
             'rows' => $this->total,
             'created' => $this->isValid() ? $this->created() : 0,

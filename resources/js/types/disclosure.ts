@@ -251,7 +251,11 @@ export type ResultsRow = {
     canPublish: boolean;
 };
 
-export type ResultsProps = { evaluations: Paginated<ResultsRow> };
+export type ResultsProps = {
+    /** Whether the page of the people is active: without it, published results have nowhere to be read (C-52). */
+    pageActive: boolean;
+    evaluations: Paginated<ResultsRow>;
+};
 
 /** «Comparte los resultados con tu equipo» (board V2-N035-Compartir): what each person of the center will read. */
 export type ShareResultsProps = {

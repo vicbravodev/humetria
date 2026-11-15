@@ -87,7 +87,11 @@ final class TrainingController extends Controller
         $register->handle($request->string('work_center_id')->toString(), $request->heldOn(), $request->modality(), $request->topics(), $request->employeeIds(), $request->evidenceFile(), $request->user()->id);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Capacitación registrada.']);
 
-        return redirect()->route('tenant.telework.trainings.index', $tenant);
+        // The page was filtered by a center: back to it, as long as the id is one of the company's centers.
+        $filter = $request->string('filter_center')->toString();
+        $center = Str::isUuid($filter) && array_any($this->workCenters->all(), fn (WorkCenterSummary $center): bool => $center->id === $filter) ? ['center' => $filter] : [];
+
+        return redirect()->route('tenant.telework.trainings.index', ['tenant' => $tenant, ...$center]);
     }
 
     public function evidence(mixed $tenant, string $training, FileStore $files): StreamedResponse

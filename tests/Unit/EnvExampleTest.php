@@ -41,3 +41,10 @@ it('lists in .env.example every variable the app config reads', function (): voi
 it('omits only variables the config still reads', function (): void {
     expect(array_diff(array_keys(ENV_EXAMPLE_OMISSIONS), envKeysReadIn(dirname(__DIR__, 2).'/config/*.php')))->toBe([]);
 });
+
+it('points the production mail footer at the privacy notice and asks for the legal name', function (): void {
+    $production = (string) file_get_contents(dirname(__DIR__, 2).'/.env.production.example');
+
+    expect($production)->toContain('MAIL_PRIVACY_URL=https://<dominio>/privacy-notice')
+        ->and($production)->toMatch('/^MAIL_LEGAL_NAME=/m');
+});

@@ -47,6 +47,12 @@ final class KioskDevice extends Model
         return self::query()->where('token_hash', self::hashToken($secret))->whereNotNull('activated_at')->whereNull('revoked_at')->first();
     }
 
+    /** How many screens of a center are in use: opened at least once and not revoked. */
+    public static function inUseIn(string $workCenterId): int
+    {
+        return self::query()->where('work_center_id', $workCenterId)->whereNotNull('last_seen_at')->whereNull('revoked_at')->count();
+    }
+
     /**
      * @return array<string, string>
      */

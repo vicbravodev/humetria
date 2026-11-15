@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import HeaderNav from '@/components/landing/header-nav';
+import { WRAP } from '@/components/landing/landing-layout';
 import LandingThemeMenu from '@/components/landing/landing-theme-menu';
 import { Button } from '@/components/ui/button';
 import { useScrolled } from '@/hooks/use-scrolled';
@@ -24,7 +25,12 @@ export default function LandingHeader() {
                     : 'border-transparent bg-background',
             )}
         >
-            <div className="mx-auto grid h-16 max-w-[1240px] grid-cols-[1fr_auto] items-center gap-3 px-4 sm:px-6 md:grid-cols-[1fr_auto_1fr]">
+            <div
+                className={cn(
+                    WRAP,
+                    'grid h-16 grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-[1fr_auto_1fr]',
+                )}
+            >
                 <Link
                     href={home()}
                     className="flex min-h-11 items-center justify-self-start rounded-md"
@@ -48,16 +54,26 @@ export default function LandingHeader() {
                         size="sm"
                         className="font-normal"
                     >
-                        <Link href={dashboard()} data-test="sign-in">
+                        <a
+                            data-track="sign_in_click"
+                            data-track-target="header"
+                            href={dashboard().url}
+                            data-test="sign-in"
+                        >
                             Iniciar sesión
-                        </Link>
+                        </a>
                     </Button>
                     <Button
                         asChild
                         size="sm"
                         className="ml-1 rounded-full px-4"
                     >
-                        <a href="#agenda-una-demo" data-test="header-demo">
+                        <a
+                            data-track="cta_click"
+                            data-track-target="header_demo"
+                            href="#agenda-una-demo"
+                            data-test="header-demo"
+                        >
                             Agenda una demo
                         </a>
                     </Button>

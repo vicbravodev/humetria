@@ -5,7 +5,7 @@ import type { LeaveCalendarPerson } from '@/types';
 
 const KEYS = [
     { label: 'Vacaciones', tone: 'bg-primary' },
-    { label: 'Permiso', tone: 'bg-muted-foreground' },
+    { label: 'Permiso', tone: 'bg-chart-4' },
 ];
 
 /**
@@ -37,7 +37,7 @@ export default function CalendarGrid({
                 tabIndex={0}
                 className="overflow-x-auto card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
-                <div style={{ minWidth: 176 + days.length * 32 }}>
+                <div style={{ minWidth: 220 + days.length * 22 }}>
                     <CalendarHead days={days} today={today} out={out} />
                     <ul>
                         {people.map((person) => (
@@ -65,7 +65,7 @@ export default function CalendarGrid({
                     <span className="flex items-center gap-1.5">
                         <i
                             aria-hidden
-                            className="size-2.5 rounded-[3px] border border-dashed border-muted-foreground"
+                            className="size-2.5 rounded-[3px] border border-dashed border-input"
                         />
                         Por responder
                     </span>

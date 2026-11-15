@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notification;
  * passed without anyone recording what was done. Who, where and when it happened, never what the person wrote: that is
  * read in Humetría.
  */
-final class AccidentReported extends Notification implements ShouldQueue
+final class AccidentReported extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -52,5 +53,10 @@ final class AccidentReported extends Notification implements ShouldQueue
         }
 
         return $mail->action('Revisar aviso', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::ESSENTIAL;
     }
 }

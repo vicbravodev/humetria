@@ -15,7 +15,7 @@ use Carbon\CarbonImmutable;
 /** What the editor of a scenario needs to draw it: the scenario as the form types it, the assumptions, the states, the defaults of a new one and the other scenarios it is weighed against. */
 final readonly class ScenarioEditor
 {
-    public function __construct(private WorkCenters $workCenters, private OtherScenarios $others) {}
+    public function __construct(private WorkCenters $workCenters, private OtherScenarios $others, private BenefitRows $rows) {}
 
     /**
      * @return array<string, mixed>
@@ -40,6 +40,8 @@ final readonly class ScenarioEditor
             'defaults' => ['effective_on' => $today->addYear()->startOfYear()->toDateString(), 'horizon_years' => 3, ...self::prefill($prefill)],
             'horizons' => [3, 4, 5],
             'others' => $this->others->except($scenario),
+            // The cost counts the contract of Prestaciones, never the Vacaciones policy (decision 36): the screen says so when they differ.
+            'vacation_notice' => ($notice = $this->rows->vacationNotice($today->toDateString())) === null ? null : "{$notice} El costo usa el contrato.",
         ];
     }
 

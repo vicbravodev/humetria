@@ -14,6 +14,7 @@ use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Actions\RetireWorkplace;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
+use App\Modules\Telework\Enums\WorkplaceStatus;
 use App\Modules\Telework\Http\Requests\RegisterAspirantRequest;
 use App\Modules\Telework\Http\Requests\WorkplaceRequest;
 use App\Modules\Telework\Models\Checklist;
@@ -21,6 +22,7 @@ use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Models\WorkplaceReview;
 use App\Modules\Telework\Support\WorkplaceAddress;
 use App\Modules\Telework\Support\WorkplaceStanding;
 use App\Modules\Tenancy\Contracts\WorkCenters;
@@ -146,6 +148,9 @@ final class TeleworkerController extends Controller
         $teleworker->load('workplaces.applications');
         $person = $this->roster->find($teleworker->employee_id) ?? throw new LogicException("Teleworker [{$teleworker->id}] has no employee.");
         $zone = config()->string('app.display_timezone');
+        // The lists the Comisión already decided, read once for all the workplaces: the person's page and the portal say the same.
+        $reviewed = WorkplaceReview::query()->whereIn('workplace_id', $teleworker->workplaces->modelKeys())->whereNotNull('application_id')->get(['application_id'])->map(fn (WorkplaceReview $review): ?string => $review->application_id)->values()->all();
+        $workplaces = $teleworker->workplaces->map(fn (Workplace $workplace): array => $this->workplace($workplace, $teleworker->status === TeleworkerStatus::Ended, $reviewed))->all();
 
         return [
             'id' => $teleworker->id,
@@ -163,7 +168,8 @@ final class TeleworkerController extends Controller
             'endNote' => $teleworker->end_note,
             'equipment' => $this->equipment($teleworker, $zone),
             'notices' => $this->notices($teleworker, $zone),
-            'workplaces' => $teleworker->workplaces->map(fn (Workplace $workplace): array => $this->workplace($workplace, $teleworker->status === TeleworkerStatus::Ended))->all(),
+            'workplaces' => $workplaces,
+            'homeDefault' => $this->homeDefault($teleworker, $workplaces),
         ];
     }
 
@@ -210,30 +216,59 @@ final class TeleworkerController extends Controller
     }
 
     /**
+     * The address of the first workplace validated, to offer it as the person's home when they join the roster (the
+     * data stay two: a person may not live where they telework).
+     *
+     * @param  array<int, array<string, mixed>>  $workplaces  as `workplace()` gave them
+     * @return array{street: string, exterior_number: string, interior_number: string|null, neighborhood: string, postal_code: string, municipality: string, state: string}|null
+     */
+    private function homeDefault(Teleworker $teleworker, array $workplaces): ?array
+    {
+        $valid = array_column(array_filter($workplaces, fn (array $row): bool => in_array($row['status'], [WorkplaceStatus::Valid->value, WorkplaceStatus::ValidWithPlan->value], true)), 'id');
+        $place = $teleworker->workplaces->first(fn (Workplace $workplace): bool => in_array($workplace->id, $valid, true));
+
+        return $place === null ? null : [
+            'street' => $place->street,
+            'exterior_number' => $place->exterior_number,
+            'interior_number' => $place->interior_number,
+            'neighborhood' => $place->neighborhood,
+            'postal_code' => $place->postal_code,
+            'municipality' => $place->municipality,
+            'state' => $place->state,
+        ];
+    }
+
+    /**
+     * @param  array<int, string|null>  $reviewed  the ids of the lists the Comisión decided
      * @return array<string, mixed>
      */
-    private function workplace(Workplace $workplace, bool $ended): array
+    private function workplace(Workplace $workplace, bool $ended, array $reviewed): array
     {
         $status = $this->standing->of($workplace);
 
         return [
             'id' => $workplace->id,
             'address' => $this->address->line($workplace),
-            'label' => $this->label($workplace),
+            'label' => $this->label($workplace, $reviewed),
             'status' => $status->value,
             'statusLabel' => $status->label(),
-            'expiresOn' => $ended ? null : $this->standing->expiresOn($workplace)?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
+            'expiresOn' => $ended ? null : $this->standing->validUntil($workplace)?->setTimezone(config()->string('app.display_timezone'))->toDateString(),
         ];
     }
 
-    /** What RH sees of the workplace's first checklist; the Comisión's decision comes with its own screen. */
-    private function label(Workplace $workplace): string
+    /**
+     * What RH sees of the workplace's first checklist; the Comisión's decision comes with its own screen.
+     *
+     * @param  array<int, string|null>  $reviewed
+     */
+    private function label(Workplace $workplace, array $reviewed): string
     {
         $one = $workplace->applications->where('section', Section::One);
 
         return match (true) {
             $one->isNotEmpty() && $one->every(fn ($application): bool => $application->cancelled_at !== null) => 'Cancelada',
             $one->contains(fn ($application): bool => $application->submitted_at === null && $application->cancelled_at === null) => 'Pendiente de contestar',
+            $one->isNotEmpty() && $one->whereNull('cancelled_at')->every(fn ($application): bool => in_array($application->id, $reviewed, true)) => 'Revisada por la Comisión',
             $one->isNotEmpty() => 'En revisión de la Comisión',
             default => 'Sin lista',
         };

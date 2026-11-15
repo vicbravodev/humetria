@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { isStandalone } from '@/lib/page-frame';
+import { initialPageName, isStandalone } from '@/lib/page-frame';
 
 describe('isStandalone', () => {
     it.each([
         'landing',
+        'privacy-notice',
         'campaigns/survey',
         'engagement/survey',
         'engagement/portal-feedback',
@@ -18,6 +19,7 @@ describe('isStandalone', () => {
         'attendance/kiosk',
         'attendance/enroll',
         'attendance/punch',
+        'attendance/portal',
         'attendance/week',
         'compensation/shared-report',
         'error',
@@ -47,4 +49,19 @@ describe('isStandalone', () => {
     ])('keeps %s inside the panel', (name) => {
         expect(isStandalone(name)).toBe(false);
     });
+});
+
+describe('initialPageName', () => {
+    it('reads the component of the embedded page', () => {
+        expect(
+            initialPageName('{"component":"campaigns/survey","props":{}}'),
+        ).toBe('campaigns/survey');
+    });
+
+    it.each([undefined, null, '', '[]', 'null', '{"component":3}', '{}'])(
+        'gives an empty name for %j',
+        (raw) => {
+            expect(initialPageName(raw)).toBe('');
+        },
+    );
 });

@@ -207,6 +207,7 @@ final readonly class ReportPages
             'corrections' => $row->corrections,
             'confirmation' => $row->confirmation,
             'flags' => $row->flags,
+            'lateMinutes' => $row->lateMinutes,
         ];
     }
 }

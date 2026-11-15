@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Complaints\Notifications;
 
+use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * Tells the other handlers that the list of who handles the company's complaints changed. The company can always remove a
  * handler; the notice is what keeps that visible. It says who and what, never anything about a case.
  */
-final class HandlersChanged extends Notification implements ShouldQueue
+final class HandlersChanged extends Notification implements MailBag, ShouldQueue
 {
     use Queueable;
 
@@ -45,5 +46,10 @@ final class HandlersChanged extends Notification implements ShouldQueue
             ->line("En {$this->company->tradeName}, {$change} las quejas y denuncias del canal.")
             ->line('Recibes este aviso porque también las atiendes. Si no esperabas el cambio, avísale a quien administra la cuenta.')
             ->action('Ver quién atiende', $this->url);
+    }
+
+    public function mailBag(): string
+    {
+        return MailBag::CAMPAIGN;
     }
 }

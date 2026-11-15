@@ -1,5 +1,7 @@
 import ScheduleDaysField from '@/components/attendance/schedule-days-field';
 import SchedulePreview from '@/components/attendance/schedule-preview';
+import SchedulePeopleInputs from '@/components/attendance/schedule-people-inputs';
+import ScheduleStartsField from '@/components/attendance/schedule-starts-field';
 import ScheduleTemplates from '@/components/attendance/schedule-templates';
 import ChoiceField from '@/components/humetria/choice-field';
 import InputError from '@/components/humetria/input-error';
@@ -51,6 +53,7 @@ export default function ScheduleDialog({
 
     return (
         <FormDialog
+            wide
             open={open}
             onOpenChange={onOpenChange}
             title={
@@ -76,15 +79,7 @@ export default function ScheduleDialog({
         >
             {(errors) => (
                 <div className="grid gap-5">
-                    {people.length > 1 &&
-                        people.map((person) => (
-                            <input
-                                key={person.id}
-                                type="hidden"
-                                name="employee_ids[]"
-                                value={person.id}
-                            />
-                        ))}
+                    <SchedulePeopleInputs people={people} />
                     <ScheduleTemplates
                         templates={scheduleTemplates(weeklyMaximum)}
                         onPick={draft.apply}
@@ -114,6 +109,11 @@ export default function ScheduleDialog({
                         total={draft.total}
                         shift={draft.shift}
                         weeklyMaximum={weeklyMaximum}
+                        errors={errors}
+                    />
+                    <ScheduleStartsField
+                        starts={draft.starts}
+                        onChange={draft.setStart}
                         errors={errors}
                     />
                     <SchedulePreview

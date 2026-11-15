@@ -133,11 +133,12 @@ return [
     |--------------------------------------------------------------------------
     |
     | Humetría's own emails close with its legal address and a link to the
-    | privacy notice. Each is left out while it is empty.
+    | privacy notice; the notice itself names the legal name and address. Each is left out while it is empty.
     |
     */
 
     'legal' => [
+        'name' => env('MAIL_LEGAL_NAME'),
         'address' => env('MAIL_LEGAL_ADDRESS'),
         'privacy_url' => env('MAIL_PRIVACY_URL'),
     ],

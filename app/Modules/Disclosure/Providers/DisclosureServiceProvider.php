@@ -8,7 +8,9 @@ use App\Modules\Disclosure\Contracts\DisclosureStanding;
 use App\Modules\Disclosure\Events\PolicyPublished;
 use App\Modules\Disclosure\Listeners\RequestOnPublication;
 use App\Modules\Disclosure\Listeners\RequestPolicyFromNewStaff;
+use App\Modules\Disclosure\Support\CenterPortalSection;
 use App\Modules\Disclosure\Support\CompanyDisclosureStanding;
+use App\Modules\Disclosure\Support\PolicyPortalSection;
 use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
@@ -27,6 +29,7 @@ final class DisclosureServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->tag([PolicyPortalSection::class, CenterPortalSection::class], 'portal.sections');
         $this->app->bind(DisclosureStanding::class, CompanyDisclosureStanding::class);
     }
 

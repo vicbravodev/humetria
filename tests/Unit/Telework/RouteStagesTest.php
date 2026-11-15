@@ -77,3 +77,25 @@ it('tells the earliest stage left when several are', function (): void {
     expect(RouteStages::from(tableRows(['5.11' => RowState::Missing, '5.7' => RowState::Missing])))
         ->toEqual(new RouteProgress(true, [true, true, true, false, false, false], 'entrega equipo y capacita'));
 });
+
+it('does not take the place, equipment and training as done while the padrón has only aspirants', function (): void {
+    $aspirants = ['5.1' => RowState::Missing, '5.1.1' => RowState::NotApplicable, '5.5' => RowState::NotApplicable, '5.7' => RowState::NotApplicable, '5.9 y 8' => RowState::NotApplicable];
+
+    expect(RouteStages::from(tableRows($aspirants), true)->done)->toBe([true, false, false, false, true, false]);
+});
+
+it('does not take the stages as done for a person without a validated place', function (): void {
+    expect(RouteStages::from(tableRows(['5.1' => RowState::Done, '5.1.1' => RowState::Missing]), true)->done)->toBe([true, true, false, true, true, false]);
+});
+
+it('takes the people stages as done with a person in the padrón, a validated place, equipment and training', function (): void {
+    expect(RouteStages::from(tableRows(), true)->done)->toBe([true, true, true, true, true, true]);
+});
+
+// C-02: with nobody in the padrón and no notice, «cada aviso revisado» is not done: there was nothing to review.
+it('does not take the notices stage as done while nobody is in the padrón and there is no notice', function (): void {
+    $nobody = ['5.1' => RowState::NotApplicable, '5.11' => RowState::NotApplicable];
+
+    expect(RouteStages::from(tableRows($nobody), true)->done)->toBe([true, false, false, false, false, false])
+        ->and(RouteStages::from(tableRows([...$nobody, '5.11' => RowState::Done]), true)->done[4])->toBeTrue();
+});

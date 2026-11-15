@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\ErrorPage;
+use App\Http\Middleware\AnnounceRenderMode;
 use App\Http\Middleware\AssignRequestContext;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EndRevokedImpersonation;
@@ -10,12 +11,14 @@ use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
+use App\Modules\Billing\Exceptions\MailQuotaExceeded;
+use App\Modules\Billing\Exceptions\StorageQuotaExceeded;
+use App\Support\PostHogExceptions;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
-use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -47,12 +50,17 @@ return Application::configure(basePath: dirname(__DIR__))
             ForbidWhileImpersonating::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
+            // After Inertia: it reads whether Node's render made it into the page.
+            AnnounceRenderMode::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Survey answers never go back into the session, even from a submission that fails validation (criterio C-22).
         $exceptions->dontFlash(['answers', 'comments']);
+
+        // Before the callbacks below, which stop the chain (return false): a failed query or mail is exactly what must reach
+        // PostHog's error tracking, by class and trace only (App\Support\PostHogExceptions). Laravel only calls it for what it reports.
+        $exceptions->report(PostHogExceptions::report(...));
 
         // A failed query's message embeds its bindings (emails, phones, answers…). Report it without them.
         $exceptions->report(function (QueryException $exception): false {
@@ -75,6 +83,18 @@ return Application::configure(basePath: dirname(__DIR__))
             return false;
         });
 
+        // A file or a bulk send that does not fit in what the plan includes: a form is sent back to its page with the reason as a toast (any form,
+        // whatever its fields are called); a client that asks for JSON gets a 422 with the same words.
+        $exceptions->render(function (StorageQuotaExceeded|MailQuotaExceeded $exception, Request $request): RedirectResponse|Response {
+            if ($request->expectsJson() && ! $request->hasHeader(Header::INERTIA)) {
+                return response()->json(['message' => $exception->getMessage()], 422);
+            }
+
+            Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
+
+            return back();
+        });
+
         // Inertia would show the bare 429 of a submit in a modal: send it back with a toast. A visit (GET) gets
         // errors/429 instead: sent back, a page over its own limit would redirect to itself forever.
         $exceptions->render(function (ThrottleRequestsException $exception, Request $request): ?RedirectResponse {
@@ -82,8 +102,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            // The survey speaks "usted" to the person answering it; the panel, "tú".
-            Inertia::flash('toast', ['type' => 'error', 'message' => $request->routeIs('survey.*', 'engagement.survey.*')
+            // What a person opens with their own link speaks "usted"; the panel, "tú".
+            Inertia::flash('toast', ['type' => 'error', 'message' => $request->routeIs(...ErrorPage::WORKER_ROUTES)
                 ? 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.'
                 : 'Demasiados intentos. Espera un minuto y vuelve a intentarlo.']);
 

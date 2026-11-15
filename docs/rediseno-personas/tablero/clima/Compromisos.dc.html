@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Clima · Compromisos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.hm-display{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.01em}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h2{font-size:24px;line-height:32px;font-weight:600}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-body{font-size:16px;line-height:24px}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border-color:var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--vencido{background:var(--risk-alto-bg);color:var(--risk-alto-fg)}
+.hm-pill--plain::before{display:none}
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-tab[aria-selected="true"],.hm .hm-tab[aria-current="page"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count,.hm-tab[aria-current="page"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-bar{--p:0;--ref:0;position:relative;height:8px;border-radius:9999px;background:var(--track)}
+.hm-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);border-radius:9999px;background:var(--primary)}
+.hm-bar::after{content:"";position:absolute;top:-5px;bottom:-5px;left:calc(var(--ref)*1%);width:2px;border-radius:1px;background:var(--foreground)}
+.hm-bar--sinref::after{display:none}
+.hm-bar--bajo::before{background:var(--risk-alto)}
+.hm-barrow{display:flex;flex-direction:column;gap:8px}
+.hm-barrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.hm-cell--protegida{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:6px;background:transparent;border:1px dashed var(--input);color:var(--muted-foreground);gap:6px;font-size:14px}
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+.hm-menu{display:flex;flex-direction:column;min-width:200px;padding:4px;border-radius:8px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);box-shadow:var(--shadow-float)}
+.hm .hm-menu-item{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;text-align:left}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.cb-field{display:inline-flex;align-items:center;gap:8px}
+.cb-select{min-height:44px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--card);color:var(--foreground);font:inherit;font-size:14px;line-height:20px}
+.cb-quote{display:flex;flex-direction:column;border-radius:10px;background:var(--card);border:1px solid var(--border);overflow:hidden}
+.cb-quote>li{padding:20px 24px;border-top:1px solid var(--border);font-size:18px;line-height:28px;text-wrap:pretty}
+.cb-quote>li:first-child{border-top:0}
+.cb-pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.cb-pager-btns{display:flex;gap:8px}
+.cb-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:500;color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.co-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:24px;align-items:start}
+.co-col{display:flex;flex-direction:column;gap:12px;padding:12px;background:var(--muted);border:1px solid var(--border);border-radius:10px;min-width:0}
+.co-col-head{display:flex;align-items:center;gap:8px;padding:4px 4px 0}
+.co-card{display:flex;flex-direction:column;gap:16px;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.co-block{display:flex;flex-direction:column;gap:4px}
+.co-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.co-who{display:inline-flex;align-items:center;gap:8px}
+.co-actions{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.co-more>summary{list-style:none;cursor:pointer}
+.co-more>summary::-webkit-details-marker{display:none}
+.co-more[open]{flex:1 1 100%}
+.co-more[open]>summary{margin-left:auto}
+.co-more .hm-menu{margin-top:4px}
+.co-foot{display:flex;justify-content:flex-end}
+.co-ideas{background:var(--card);border:1px solid var(--border);border-radius:10px}
+.co-ideas>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:0 24px;cursor:pointer;list-style:none}
+.co-ideas>summary::-webkit-details-marker{display:none}
+.co-ideas[open]>summary .hm-i{transform:rotate(180deg)}
+.co-ideas-body{display:flex;flex-direction:column;gap:24px;padding:8px 24px 24px;border-top:1px solid var(--border)}
+.co-topic{display:flex;flex-direction:column;gap:4px;padding-top:16px}
+.co-idea{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 16px;min-height:56px;border-top:1px solid var(--border)}
+.co-idea:first-of-type{border-top:0}
+.co-idea p{flex:1 1 360px;min-width:0}
+.co-disabled-note{max-width:240px;text-align:right}
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="clima" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="Escucha a tu gente › Clima › Clima · junio 2026 › Compromisos" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page">
+<sc-if value="{{ esDatos }}" hint-placeholder-val="{{ true }}"><header class="hm-head"><div class="hm-head-text"><div class="hm-head-title"><h1 class="hm-h1">Nos dijeron / Haremos</h1><span class="hm-pill hm-pill--activo">Publicado en el portal</span></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>Clima · junio 2026</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>3 compromisos · un grupo tiene a lo más 3</span></div></div><div class="hm-head-actions"><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><button type="button" class="hm-btn hm-btn-primary" disabled aria-describedby="limite"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Nuevo compromiso</button><p id="limite" class="hm-small hm-muted co-disabled-note">Toda la empresa ya tiene 3</p></div></div></header></sc-if><sc-if value="{{ esSinPublicar }}" hint-placeholder-val="{{ true }}"><header class="hm-head"><div class="hm-head-text"><div class="hm-head-title"><h1 class="hm-h1">Nos dijeron / Haremos</h1><span class="hm-pill">Sin publicar</span></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>Clima · junio 2026</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>3 compromisos · un grupo tiene a lo más 3</span></div></div><div class="hm-head-actions"><div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:flex-end;gap:8px"><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><button type="button" class="hm-btn hm-btn-outline" disabled aria-describedby="limite2"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Nuevo compromiso</button><p id="limite2" class="hm-small hm-muted co-disabled-note">Toda la empresa ya tiene 3</p></div><a class="hm-btn hm-btn-primary" href="#publicar">Publicar en el portal</a></div></div></header></sc-if><sc-if value="{{ esVacio }}" hint-placeholder-val="{{ true }}"><header class="hm-head"><div class="hm-head-text"><div class="hm-head-title"><h1 class="hm-h1">Nos dijeron / Haremos</h1><span class="hm-pill">Sin publicar</span></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>Clima · junio 2026</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>0 compromisos · un grupo tiene a lo más 3</span></div></div><div class="hm-head-actions"></div></header></sc-if>
+<nav class="hm-tabs" aria-label="Secciones de los resultados"><a class="hm-tab" href="Resultados.dc.html">Resumen</a><a class="hm-tab" href="PorPregunta.dc.html">Por pregunta</a><a class="hm-tab" href="Comentarios.dc.html">Comentarios<span class="hm-count">93</span></a><a class="hm-tab" href="Jefe.dc.html">Por jefe<span class="hm-count">13</span></a><a class="hm-tab" href="Compromisos.dc.html" aria-current="page">Compromisos<span class="hm-count">{{ cuenta }}</span></a></nav>
+<sc-if value="{{ hayCompromisos }}" hint-placeholder-val="{{ true }}"><p class="hm-lead">Hay 3 compromisos: 1 por hacer, 1 en marcha y 1 cumplido. El próximo vence en 25 días.</p><p class="hm-body hm-muted" style="max-width:760px;margin-top:-16px">Lo que la empresa hará con lo que dijo su gente: quién responde y para cuándo.</p><div class="co-board"><section class="co-col" aria-label="Por hacer"><div class="co-col-head"><h2 class="hm-h4">Por hacer</h2><span class="hm-count">1</span></div><article class="co-card"><p class="hm-small hm-muted">Toda la empresa · Comunicación y cambios</p><div class="co-block"><p class="hm-caption hm-muted">Nos dijeron</p><p class="hm-strong">“Que los cambios se enteran por pasillo.”</p></div><div class="co-block"><p class="hm-caption hm-muted">Haremos</p><p class="hm-body">Boletín quincenal y junta mensual con la dirección.</p></div><div class="co-meta"><span class="co-who"><span class="hm-avatar" aria-hidden="true">RS</span><span class="hm-small"><span class="hm-strong" style="display:block">Rodrigo Salas</span></span></span><span class="hm-fact hm-small hm-muted"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>6 de diciembre de 2026</span><span class="hm-pill hm-pill--atencion">Vence en 25 días</span></div><div class="co-actions"><button type="button" class="hm-btn hm-btn-outline">Marcar en marcha</button><details class="co-more"><summary class="hm-iconbtn" aria-label="Más acciones de Comunicación y cambios"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></summary><div class="hm-menu"><button type="button" class="hm-menu-item">Editar</button><button type="button" class="hm-menu-item">Descartar</button></div></details></div></article></section><section class="co-col" aria-label="En marcha"><div class="co-col-head"><h2 class="hm-h4">En marcha</h2><span class="hm-count">1</span></div><article class="co-card"><p class="hm-small hm-muted">Toda la empresa · Reconocimiento</p><div class="co-block"><p class="hm-caption hm-muted">Nos dijeron</p><p class="hm-strong">“Que el trabajo bien hecho no se reconoce.”</p></div><div class="co-block"><p class="hm-caption hm-muted">Haremos</p><p class="hm-body">Programa mensual de reconocimiento por área, con anuncio de la dirección.</p></div><div class="co-meta"><span class="co-who"><span class="hm-avatar" aria-hidden="true">AD</span><span class="hm-small"><span class="hm-strong" style="display:block">Ana Dueña</span></span></span><span class="hm-fact hm-small hm-muted"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>21 de diciembre de 2026</span></div><div class="co-actions"><button type="button" class="hm-btn hm-btn-outline">Marcar cumplido</button><details class="co-more"><summary class="hm-iconbtn" aria-label="Más acciones de Reconocimiento"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></summary><div class="hm-menu"><button type="button" class="hm-menu-item">Editar</button><button type="button" class="hm-menu-item">Reabrir</button><button type="button" class="hm-menu-item">Descartar</button></div></details></div></article></section><section class="co-col" aria-label="Cumplido"><div class="co-col-head"><h2 class="hm-h4">Cumplido</h2><span class="hm-count">1</span></div><article class="co-card"><p class="hm-small hm-muted">Toda la empresa · Crecimiento</p><div class="co-block"><p class="hm-caption hm-muted">Nos dijeron</p><p class="hm-strong">“Que no se ve cómo crecer dentro de la empresa.”</p></div><div class="co-block"><p class="hm-caption hm-muted">Haremos</p><p class="hm-body">Mapa de carreras y 2 cursos por persona al año.</p></div><div class="co-meta"><span class="co-who"><span class="hm-avatar" aria-hidden="true">AD</span><span class="hm-small"><span class="hm-strong" style="display:block">Ana Dueña</span></span></span><span class="hm-fact hm-small hm-muted"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>9 de febrero de 2027</span></div><div class="co-actions"><span></span><details class="co-more"><summary class="hm-iconbtn" aria-label="Más acciones de Crecimiento"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></summary><div class="hm-menu"><button type="button" class="hm-menu-item">Editar</button><button type="button" class="hm-menu-item">Reabrir</button><button type="button" class="hm-menu-item">Descartar</button></div></details></div></article></section></div><div class="co-foot"><a class="cb-link hm-small" href="#descartados">Descartado 0</a></div><details class="co-ideas"><summary><span class="hm-h4">Ideas para empezar</span><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="co-ideas-body"><p class="hm-small hm-muted" style="padding-top:16px">Para los temas donde actuar primero. Elige lo que sí puedas cumplir y escríbelo como compromiso con responsable y fecha.</p><section class="co-topic"><h3 class="hm-strong">Reconocimiento <span class="hm-small hm-muted" style="font-weight:400">· Prioridad alta</span></h3><div class="co-idea"><p class="hm-body">Publica los criterios con los que se reconoce un buen trabajo</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Pide a cada jefe decir qué se hizo bien, con un ejemplo, al cerrar un resultado</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section><section class="co-topic"><h3 class="hm-strong">Trabajo en equipo <span class="hm-small hm-muted" style="font-weight:400">· Prioridad media</span></h3><div class="co-idea"><p class="hm-body">Acuerda reglas de trato y de coordinación en cada equipo</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Fija una reunión breve semanal para coordinar tareas</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section><section class="co-topic"><h3 class="hm-strong">Voz y trato justo <span class="hm-small hm-muted" style="font-weight:400">· Prioridad media</span></h3><div class="co-idea"><p class="hm-body">Abre un canal para proponer mejoras y responde cada propuesta en 15 días</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Explica cómo se aplican las reglas y revisa los casos donde se percibe trato desigual</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section><section class="co-topic"><h3 class="hm-strong">Autonomía <span class="hm-small hm-muted" style="font-weight:400">· Prioridad media</span></h3><div class="co-idea"><p class="hm-body">Define con cada equipo qué decisiones puede tomar sin pedir permiso</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Quita una aprobación que no agrega valor</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section><section class="co-topic"><h3 class="hm-strong">Claridad y alineación <span class="hm-small hm-muted" style="font-weight:400">· Prioridad media</span></h3><div class="co-idea"><p class="hm-body">Presenta las 3 metas del año en una junta por área y deja que cada equipo escriba cómo aporta</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Revisa prioridades con tu equipo al inicio de cada mes</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section></div></details></sc-if>
+<sc-if value="{{ esVacio }}" hint-placeholder-val="{{ true }}"><div class="hm-empty"><span class="hm-empty-icon"><svg class="hm-i hm-i-24" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span><h2 class="hm-h3">Todavía no hay compromisos</h2><p>Empieza por Reconocimiento, tu prioridad alta.</p><a class="hm-btn hm-btn-primary" href="#nuevo">Escribir el primero</a></div><details class="co-ideas" open><summary><span class="hm-h4">Ideas para empezar</span><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="co-ideas-body"><p class="hm-small hm-muted" style="padding-top:16px">Para los temas donde actuar primero. Elige lo que sí puedas cumplir y escríbelo como compromiso con responsable y fecha.</p><section class="co-topic"><h3 class="hm-strong">Reconocimiento <span class="hm-small hm-muted" style="font-weight:400">· Prioridad alta</span></h3><div class="co-idea"><p class="hm-body">Publica los criterios con los que se reconoce un buen trabajo</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Pide a cada jefe decir qué se hizo bien, con un ejemplo, al cerrar un resultado</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section><section class="co-topic"><h3 class="hm-strong">Trabajo en equipo <span class="hm-small hm-muted" style="font-weight:400">· Prioridad media</span></h3><div class="co-idea"><p class="hm-body">Acuerda reglas de trato y de coordinación en cada equipo</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Fija una reunión breve semanal para coordinar tareas</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section><section class="co-topic"><h3 class="hm-strong">Voz y trato justo <span class="hm-small hm-muted" style="font-weight:400">· Prioridad media</span></h3><div class="co-idea"><p class="hm-body">Abre un canal para proponer mejoras y responde cada propuesta en 15 días</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Explica cómo se aplican las reglas y revisa los casos donde se percibe trato desigual</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section><section class="co-topic"><h3 class="hm-strong">Autonomía <span class="hm-small hm-muted" style="font-weight:400">· Prioridad media</span></h3><div class="co-idea"><p class="hm-body">Define con cada equipo qué decisiones puede tomar sin pedir permiso</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Quita una aprobación que no agrega valor</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section><section class="co-topic"><h3 class="hm-strong">Claridad y alineación <span class="hm-small hm-muted" style="font-weight:400">· Prioridad media</span></h3><div class="co-idea"><p class="hm-body">Presenta las 3 metas del año en una junta por área y deja que cada equipo escriba cómo aporta</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div><div class="co-idea"><p class="hm-body">Revisa prioridades con tu equipo al inicio de cada mes</p><button type="button" class="hm-btn hm-btn-ghost">Escribir como compromiso</button></div></section></div></details></sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["datos","vacio","sin-publicar"],"default":"datos","section":"Estado"},"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const variant = this.props.variant ?? 'datos';
+    return {
+      theme, themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light',
+      esDatos: variant === 'datos', esSinPublicar: variant === 'sin-publicar', esVacio: variant === 'vacio',
+      hayCompromisos: variant !== 'vacio', cuenta: variant === 'vacio' ? '0' : '3'
+    };
+  }
+}
+</script>
+</body>
+</html>

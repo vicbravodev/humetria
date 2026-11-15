@@ -9,6 +9,7 @@ use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
@@ -97,6 +98,20 @@ it('gives one row per person-day with local times, the breaks and the hours as Â
         weekDigest: '',
         flags: [],
     )]);
+});
+
+it('tells the lateness of each day against the start time and the company\'s tolerance, apart from the flags', function (): void {
+    AttendanceSchedule::query()->update(['starts_by_weekday' => [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => null, 7 => null]]);
+    AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'late_tolerance_minutes' => 5]);
+    reportDay($this->ana, '2027-01-05 09:20', '2027-01-05 17:20');
+    reportDay($this->ana, '2027-01-06 09:05', '2027-01-06 17:05');
+    reportDay($this->ana, '2027-01-07 09:06', '2027-01-07 17:06');
+
+    expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+        fn ($row) => $row->localDate->toBe('2027-01-05')->lateMinutes->toBe(20)->flags->toBe([]),
+        fn ($row) => $row->lateMinutes->toBe(0),
+        fn ($row) => $row->lateMinutes->toBe(6),
+    );
 });
 
 it('puts a day on the local date of its start, even when its UTC date is the next one', function (): void {

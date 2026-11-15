@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Clima · Inicio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+.t-light{
+  --background:#FBFDFC;--foreground:#14211F;--card:#FFFFFF;--card-foreground:#14211F;
+  --popover:#FFFFFF;--popover-foreground:#14211F;--primary:#0B7A6F;--primary-foreground:#FFFFFF;
+  --secondary:#EDF3F1;--secondary-foreground:#14211F;--muted:#F1F5F4;--muted-foreground:#56635F;
+  --accent:#E5F1EE;--accent-foreground:#14211F;--destructive:#B0463C;--on-destructive:#FFFFFF;
+  --border:#DCE5E2;--input:#7E8C88;--ring:#0B7A6F;
+  --chart-1:#0B7A6F;--chart-2:#3F9A8F;--chart-3:#1D5C55;--chart-4:#A08A70;--chart-5:#5C5248;
+  --sidebar:#F5F8F7;--sidebar-foreground:#14211F;--sidebar-primary:#0B7A6F;--sidebar-primary-foreground:#FFFFFF;
+  --sidebar-accent:#E5F1EE;--sidebar-accent-foreground:#14211F;--sidebar-border:#DCE5E2;--sidebar-ring:#0B7A6F;
+  --brand-soft:#7FD3C6;--brand-deep:#064A43;
+  --risk-nulo:#5A9C91;--risk-nulo-bg:#E9F4F1;--risk-nulo-fg:#0A5A52;
+  --risk-bajo:#2B7F74;--risk-bajo-bg:#DCEFEA;--risk-bajo-fg:#0A6A60;
+  --risk-medio:#A47F2C;--risk-medio-bg:#F6EEDC;--risk-medio-fg:#7A5714;
+  --risk-alto:#BC6A48;--risk-alto-bg:#F8E7DF;--risk-alto-fg:#9A4527;
+  --risk-muy-alto:#9A3B26;--risk-muy-alto-bg:#F3D8CF;--risk-muy-alto-fg:#8A2E1C;
+  --track:#E3EAE7;--warning:#F6EEDC;--warning-foreground:#7A5714; /* repo */
+  --shadow-float:0 8px 24px rgba(20,33,31,.08);
+}
+.t-dark{
+  --background:#0F1716;--foreground:#F1FAF8;--card:#141E1C;--card-foreground:#F1FAF8;
+  --popover:#18241F;--popover-foreground:#F1FAF8;--primary:#3CCFBD;--primary-foreground:#0F1716;
+  --secondary:#1E2B28;--secondary-foreground:#F1FAF8;--muted:#1A2523;--muted-foreground:#9DAEAA;
+  --accent:#213330;--accent-foreground:#F1FAF8;--destructive:#EC8F84;--on-destructive:#0F1716;
+  --border:#26332F;--input:#62756F;--ring:#3CCFBD;
+  --chart-1:#3CCFBD;--chart-2:#2A9C8E;--chart-3:#9EDDD2;--chart-4:#C2AE94;--chart-5:#8A7E70;
+  --sidebar:#121B1A;--sidebar-foreground:#F1FAF8;--sidebar-primary:#3CCFBD;--sidebar-primary-foreground:#0F1716;
+  --sidebar-accent:#213330;--sidebar-accent-foreground:#F1FAF8;--sidebar-border:#26332F;--sidebar-ring:#3CCFBD;
+  --brand-soft:#1E8C7F;--brand-deep:#B8F5EC;
+  --risk-nulo:#6FB5A9;--risk-nulo-bg:#16302B;--risk-nulo-fg:#A6E6DA;
+  --risk-bajo:#3CBFAE;--risk-bajo-bg:#123A34;--risk-bajo-fg:#6FDCCB;
+  --risk-medio:#D2AE62;--risk-medio-bg:#33291A;--risk-medio-fg:#E9C886;
+  --risk-alto:#E08A66;--risk-alto-bg:#3B241C;--risk-alto-fg:#F2A686;
+  --risk-muy-alto:#F07A62;--risk-muy-alto-bg:#4A1F18;--risk-muy-alto-fg:#F7A08C;
+  --track:#24312E;--warning:#33291A;--warning-foreground:#E9C886; /* repo */
+  --shadow-float:0 8px 24px rgba(0,0,0,.32);
+}
+.hm{font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:24px;font-weight:400;
+  color:var(--foreground);background:var(--background);font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;box-sizing:border-box}
+.hm *,.hm *::before,.hm *::after{box-sizing:border-box}
+.hm h1,.hm h2,.hm h3,.hm h4,.hm p,.hm ul,.hm ol{margin:0;padding:0}
+.hm ul,.hm ol{list-style:none}
+.hm a{color:inherit;text-decoration:none}
+.hm button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hm button.hm-btn{padding:0 16px}
+.hm :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.hm-display{font-size:36px;line-height:44px;font-weight:600;letter-spacing:-.01em}
+.hm-h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.01em}
+.hm-h2{font-size:24px;line-height:32px;font-weight:600}
+.hm-h3{font-size:20px;line-height:28px;font-weight:600}
+.hm-h4{font-size:18px;line-height:26px;font-weight:500}
+.hm-body{font-size:16px;line-height:24px}
+.hm-strong{font-size:16px;line-height:24px;font-weight:500}
+.hm-small{font-size:14px;line-height:20px}
+.hm-caption{font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.hm-kpi{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-kpi-2{font-size:24px;line-height:32px;font-weight:600;letter-spacing:-.01em}
+.hm-muted{color:var(--muted-foreground)}
+.hm-page{display:flex;flex-direction:column;gap:32px;padding:24px 40px 64px;width:100%;max-width:1176px}
+.hm-split{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.hm-split>.hm-main{flex:2 1 520px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hm-split>.hm-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:24px}
+/* íconos */
+.hm-i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.hm-i-16{width:16px;height:16px}.hm-i-24{width:24px;height:24px}
+/* botones: 44 px de alto */
+.hm-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;transition:background-color 150ms,color 150ms}
+.hm .hm-btn-primary{background:var(--primary);color:var(--primary-foreground)}
+.hm .hm-btn-outline{background:var(--card);color:var(--foreground);border:1px solid var(--input)}
+.hm .hm-btn-ghost{color:var(--primary)}
+.hm .hm-btn[disabled]{background:var(--muted);color:var(--muted-foreground);border-color:var(--border);cursor:not-allowed}
+.hm .hm-iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;color:var(--muted-foreground)}
+/* tarjeta */
+.hm-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+/* encabezado de página */
+.hm-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hm-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 480px}
+.hm-head-title{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.hm-head-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hm-facts{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted-foreground);font-size:14px;line-height:20px}
+.hm-fact{display:inline-flex;align-items:center;gap:6px}
+.hm-lead{font-size:20px;line-height:28px;font-weight:600;max-width:760px;text-wrap:pretty}
+/* píldora de estado */
+.hm-pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-pill::before{content:"";width:6px;height:6px;border-radius:9999px;background:currentColor}
+.hm-pill--activo{background:var(--accent);color:var(--primary)}
+.hm-pill--atencion{background:var(--warning);color:var(--warning-foreground)}
+.hm-pill--vencido{background:var(--risk-alto-bg);color:var(--risk-alto-fg)}
+.hm-pill--plain::before{display:none}
+/* KPI */
+.hm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:24px}
+.hm-kpi-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.hm-kpi-card--lead{border-color:var(--primary);grid-column:span 1}
+.hm-kpi-label{display:flex;align-items:center;gap:8px;color:var(--muted-foreground)}
+/* pestañas con conteo */
+.hm-tabs{display:flex;gap:4px;padding:4px;background:var(--muted);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm .hm-tab{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);white-space:nowrap}
+.hm .hm-tab[aria-selected="true"]{background:var(--card);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.hm-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 6px;border-radius:9999px;font-size:13px;line-height:18px;font-weight:500;background:var(--secondary);color:var(--secondary-foreground)}
+.hm-tab[aria-selected="true"] .hm-count{background:var(--accent);color:var(--primary)}
+.hm-tab--cero{opacity:1;color:var(--muted-foreground)}
+/* tabla */
+.hm-tablewrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.hm-table{width:100%;border-collapse:collapse;font-size:16px;line-height:24px}
+.hm-table th{background:var(--muted);color:var(--muted-foreground);font-size:13px;line-height:18px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;text-align:left;padding:12px 16px;white-space:nowrap}
+.hm-table td{padding:12px 16px;border-top:1px solid var(--border);vertical-align:middle;height:64px}
+.hm-table .hm-num{text-align:right}
+.hm-table tr[aria-selected="true"] td{background:var(--accent)}
+.hm-person{display:flex;align-items:center;gap:12px;min-width:0}
+.hm-avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:9999px;background:var(--secondary);color:var(--secondary-foreground);font-size:13px;line-height:18px;font-weight:600}
+/* medidor de arco: la "h" del logo */
+.hm-arc{--p:0;position:relative;width:196px;height:141px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px}
+.hm-arc::before{content:"";position:absolute;inset:0;border-radius:98px 98px 0 0;padding:16px 16px 0;
+  background:conic-gradient(from 270deg at 50% 100%,var(--primary) calc(var(--p)*1.8deg),var(--track) 0 180deg,transparent 0);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.hm-arc-value{position:relative;font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em}
+.hm-arc-label{position:relative;font-size:14px;line-height:20px;color:var(--muted-foreground);text-align:center;max-width:150px}
+/* barra con referencia */
+.hm-bar{--p:0;--ref:0;position:relative;height:8px;border-radius:9999px;background:var(--track)}
+.hm-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:calc(var(--p)*1%);border-radius:9999px;background:var(--primary)}
+.hm-bar::after{content:"";position:absolute;top:-5px;bottom:-5px;left:calc(var(--ref)*1%);width:2px;border-radius:1px;background:var(--foreground)}
+.hm-bar--sinref::after{display:none}
+.hm-bar--bajo::before{background:var(--risk-alto)}
+.hm-barrow{display:flex;flex-direction:column;gap:8px}
+.hm-barrow-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+/* columnas desde cero (tendencia) */
+.hm-cols{position:relative;display:flex;align-items:flex-end;gap:16px;height:160px;border-bottom:1px solid var(--input)}
+.hm-col{--v:0;flex:1 1 0;min-width:0;height:calc(var(--v)*1%);background:var(--primary);border-radius:6px 6px 0 0}
+.hm-col--base{background:var(--chart-4)}
+.hm-cols-ref{--ref:0;position:absolute;left:0;right:0;bottom:calc(var(--ref)*1%);border-top:2px dashed var(--foreground)}
+.hm-cols-labels{display:flex;gap:16px}
+.hm-cols-labels>span{flex:1 1 0;text-align:center;font-size:14px;line-height:20px}
+/* celda del mapa por grupo */
+.hm-heat{display:grid;gap:4px}
+.hm-cell{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:6px;font-weight:500;background:var(--muted);color:var(--foreground)}
+.hm-cell--2{background:var(--accent)}
+.hm-cell--3{background:var(--chart-3);color:var(--background)}
+.hm-cell--protegida{background:transparent;border:1px dashed var(--input);color:var(--muted-foreground);gap:6px;font-size:14px}
+/* aviso único */
+.hm-notice{display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:10px;background:var(--warning);color:var(--warning-foreground)}
+.hm-notice-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.hm-notice a{font-weight:500;text-decoration:underline;text-underline-offset:3px}
+/* estado vacío */
+.hm-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 24px;border:1px dashed var(--input);border-radius:10px;text-align:center}
+.hm-empty-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--accent);color:var(--primary)}
+.hm-empty p{max-width:480px;color:var(--muted-foreground)}
+/* barra de acciones masivas */
+.hm-bulk{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border);background:var(--accent)}
+/* menú de fila abierto (solo se dibuja abierto en una fila por board) */
+.hm-menu{display:flex;flex-direction:column;min-width:200px;padding:4px;border-radius:8px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);box-shadow:var(--shadow-float)}
+.hm .hm-menu-item{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:6px;text-align:left}
+
+.hm-page{padding-left:40px;padding-right:40px}
+.cl-sec{display:flex;flex-direction:column;gap:16px}
+.cl-sec-head{display:flex;flex-direction:column;gap:4px}
+.cl-row{display:flex;flex-wrap:wrap;gap:24px;align-items:stretch}
+.cl-row>.cl-a{flex:1 1 300px;min-width:0}
+.cl-row>.cl-b{flex:2 1 520px;min-width:0}
+.cl-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:24px}
+.cl-center{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.cl-topics{display:flex;flex-direction:column}
+.cl-topic{display:flex;flex-wrap:wrap;gap:8px 24px;padding:16px 0;border-top:1px solid var(--border)}
+.cl-topic:first-child{border-top:0;padding-top:0}
+.cl-topic-head{flex:0 0 200px;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.cl-topic-bars{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.cl-more{border-top:1px solid var(--border)}
+.cl-more summary{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;font-weight:500;color:var(--primary);list-style:none}
+.cl-more summary::-webkit-details-marker{display:none}
+.cl-more[open] summary{border-bottom:1px solid var(--border)}
+.cl-ruler{position:relative;display:flex;align-items:center;height:24px;background:linear-gradient(var(--track),var(--track)) center/100% 4px no-repeat}
+.cl-ruler::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--foreground)}
+.cl-dot{width:16px;height:16px;border-radius:9999px;background:var(--primary);border:2px solid var(--card);outline:1px solid var(--primary);margin-left:calc(36.5% - 8px);flex:none}
+.cl-scale{display:grid;grid-template-columns:1fr auto 1fr;font-size:14px;line-height:20px;color:var(--muted-foreground)}
+.cl-scale span:last-child{text-align:right}
+.cl-tramos{display:flex;gap:2px;height:16px}
+.cl-tramos span:first-child{border-radius:8px 0 0 8px}
+.cl-tramos span:last-child{border-radius:0 8px 8px 0}
+.cl-legend{display:flex;flex-wrap:wrap;gap:12px 24px}
+.cl-legend>div{display:flex;align-items:flex-start;gap:8px;flex:1 1 180px;min-width:0}
+.cl-sw{width:12px;height:12px;border-radius:3px;flex:none;margin-top:6px}
+.cl-heat{width:100%;min-width:720px;border-collapse:separate;border-spacing:4px}
+.cl-heat th{font-size:14px;line-height:20px;font-weight:500;color:var(--muted-foreground);padding:8px 4px;vertical-align:bottom;text-align:center}
+.cl-heat th[scope="row"]{text-align:left;color:var(--foreground);padding:0 12px;width:22%}
+.cl-heat th.cl-prot{color:var(--muted-foreground)}
+.cl-heat td{padding:0}
+.cl-heatnote{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;justify-content:space-between}
+.cl-keys{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:14px;line-height:20px;color:var(--muted-foreground)}
+.cl-keys span{display:inline-flex;align-items:center;gap:6px}
+.cl-keys i{width:16px;height:16px;border-radius:4px;display:inline-block;border:1px solid var(--border)}
+.cl-hero{display:flex;flex-wrap:wrap;align-items:center;gap:24px 32px;justify-content:space-between}
+.cl-hero-text{flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.cl-btns{display:flex;flex-wrap:wrap;gap:8px}
+.cl-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px;width:100%;text-align:left}
+.cl-step{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.cl-stepn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:var(--accent);color:var(--primary);font-weight:600;font-size:14px}
+.cl-mini{display:flex;flex-wrap:wrap;gap:8px 24px}
+.cl-mini>div{display:flex;flex-direction:column}
+.cl-ok{display:flex;align-items:center;gap:12px;padding:16px;border-radius:10px;background:var(--accent);color:var(--foreground)}
+.cl-ok svg{color:var(--primary)}
+.cl-note{display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;color:var(--muted-foreground)}
+.hm-table td.hm-tdl{padding:0}
+.hm-tdl a{display:flex;align-items:center;min-height:64px;padding:12px 16px}
+.hm-tdl a.r{justify-content:flex-end}
+.cl-sticky{display:flex;padding:12px 16px;border-top:1px solid var(--border);background:var(--background)}
+.cl-sticky .hm-btn{flex:1}
+.hm .cl-gh{display:flex;align-items:center;justify-content:space-between;min-height:56px;padding:0 16px;font-weight:500;cursor:pointer;list-style:none}
+.cl-gh::-webkit-details-marker{display:none}
+.cl-gd{border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden}
+.cl-gd[open] .cl-gh{border-bottom:1px solid var(--border)}
+.cl-gr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px}
+.cl-gr .hm-cell{min-width:72px;min-height:44px}
+.cl-gprot{display:flex;align-items:center;gap:8px;min-height:56px;padding:0 16px;border:1px dashed var(--input);border-radius:10px;color:var(--muted-foreground)}
+.cl-pad{padding:0 16px}
+
+</style>
+</helmet>
+<div class="{{themeClass}}" style="display:flex;flex-wrap:wrap;min-height:100vh;background:var(--sidebar)">
+  <dc-import name="Sidebar" active="clima" theme="{{theme}}" hint-size="264px,900px"></dc-import>
+  <main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;margin:8px 8px 8px 0;background:var(--background);border:1px solid var(--border);border-radius:14px">
+    <dc-import name="Topbar" crumbs="{{crumbs}}" theme="{{theme}}" hint-size="100%,64px"></dc-import>
+    <div class="hm-page">
+<sc-if value="{{ esActiva }}" hint-placeholder-val="{{ true }}">
+<header class="hm-head"><div class="hm-head-text"><div class="hm-head-title"><h1 class="hm-h1">Clima</h1></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Respuestas anónimas · resultados por grupos de 5 o más</span></div></div><div class="hm-head-actions"></div></header><h2 class="hm-lead">Ya contestó casi la mitad. Quedan 14 días para el cierre.</h2><div class="hm-card"><div class="cl-hero"><div class="cl-hero-text"><div class="hm-head-title"><h2 class="hm-h2">Clima · noviembre 2026</h2><span class="hm-pill hm-pill--activo">En curso</span></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>Cierra el 24 de noviembre de 2026 · quedan 14 días</span></div><div class="cl-btns"><a class="hm-btn hm-btn-primary" href="Avance.dc.html">Ver avance</a><a class="hm-btn hm-btn-outline" href="Avance.dc.html">Recordar a 118</a></div></div><div class="hm-arc" style="--p:44" role="img" aria-label="44 % de participación: 94 de 212 contestaron"><span class="hm-arc-value">44 %</span><span class="hm-arc-label">94 de 212 contestaron</span></div></div></div><div class="cl-two"><div class="hm-card"><h3 class="hm-h4">Del clima anterior</h3><p class="hm-small hm-muted">Clima · junio 2026</p><div class="cl-mini" style="gap:8px 32px"><div><span class="hm-kpi-2">62 %</span><span class="hm-small hm-muted">favorable</span></div><div><span class="hm-kpi-2">−27</span><span class="hm-small hm-muted">recomendación</span></div></div><div><a class="hm-btn hm-btn-outline" href="Resultados.dc.html">Ver resultados</a></div></div><div class="hm-card"><h3 class="hm-h4">Compromisos</h3><div style="display:flex;align-items:baseline;gap:8px"><span class="hm-kpi-2">3</span><span class="hm-small hm-muted">en total</span></div><div class="cl-mini"><div><span class="hm-strong">1</span><span class="hm-small hm-muted">por hacer</span></div><div><span class="hm-strong">1</span><span class="hm-small hm-muted">en marcha</span></div><div><span class="hm-strong">1</span><span class="hm-small hm-muted">cumplido</span></div></div><div><a class="hm-btn hm-btn-outline" href="Compromisos.dc.html">Ver compromisos</a></div></div></div><section class="cl-sec"><div class="cl-sec-head"><h2 class="hm-h3">Historial</h2><p class="hm-small hm-muted">Encuestas cerradas, la más reciente arriba.</p></div><div class="hm-tablewrap"><table class="hm-table"><caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Encuestas cerradas</caption><thead><tr><th scope="col">Encuesta</th><th scope="col">Cerró</th><th scope="col" class="hm-num">Contestaron</th><th scope="col" class="hm-num">Compromiso</th><th scope="col"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Abrir</span></th></tr></thead><tbody><tr><td class="hm-tdl"><a href="Resultados.dc.html"><span class="hm-strong">Clima · junio 2026</span></a></td><td class="hm-tdl"><a href="Resultados.dc.html">22 de junio de 2026</a></td><td class="hm-tdl"><a class="r" href="Resultados.dc.html">168 de 212 · 79 %</a></td><td class="hm-tdl"><a class="r" href="Resultados.dc.html">62 % favorable</a></td><td class="hm-tdl"><a class="r" href="Resultados.dc.html" aria-label="Ver resultados de Clima · junio 2026"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></td></tr></tbody></table></div></section>
+</sc-if>
+<sc-if value="{{ esPrimeraVez }}" hint-placeholder-val="{{ false }}">
+<header class="hm-head"><div class="hm-head-text"><div class="hm-head-title"><h1 class="hm-h1">Clima</h1></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Respuestas anónimas · resultados por grupos de 5 o más</span></div></div><div class="hm-head-actions"></div></header><h2 class="hm-lead">Todavía no has medido el clima. Prepara la primera encuesta en tres pasos.</h2><div class="hm-empty"><span class="hm-empty-icon"><svg class="hm-i hm-i-24" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg></span><h2 class="hm-h3">Todavía no hay encuestas de clima</h2><p>Las respuestas son anónimas y los resultados se muestran por grupos de 5 o más.</p><div class="cl-steps"><div class="cl-step"><span class="cl-stepn">1</span><span class="hm-strong">Revisa las preguntas</span><span class="hm-small hm-muted">Conoce qué se va a preguntar antes de enviar.</span></div><div class="cl-step"><span class="cl-stepn">2</span><span class="hm-strong">Elige a quién invitar</span><span class="hm-small hm-muted">Decide quién recibe la invitación.</span></div><div class="cl-step"><span class="cl-stepn">3</span><span class="hm-strong">Lanza y sigue el avance</span><span class="hm-small hm-muted">Ves cuántas personas contestaron, nunca quién.</span></div></div><a class="hm-btn hm-btn-primary" href="#">Preparar la primera encuesta</a></div>
+</sc-if>
+<sc-if value="{{ esSinActiva }}" hint-placeholder-val="{{ false }}">
+<header class="hm-head"><div class="hm-head-text"><div class="hm-head-title"><h1 class="hm-h1">Clima</h1></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Respuestas anónimas · resultados por grupos de 5 o más</span></div></div><div class="hm-head-actions"></div></header><h2 class="hm-lead">Tu última encuesta cerró con 62 % de respuestas favorables al compromiso.</h2><div class="hm-card"><div class="cl-hero"><div class="cl-hero-text"><div class="hm-head-title"><h2 class="hm-h2">Clima · junio 2026</h2><span class="hm-pill hm-pill--plain">Cerrada</span></div><div class="hm-facts"><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>Cerró el 22 de junio de 2026</span><span class="hm-fact"><svg class="hm-i hm-i-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>168 de 212 contestaron · 79 %</span></div><div class="cl-btns"><a class="hm-btn hm-btn-primary" href="#">Nueva encuesta</a><a class="hm-btn hm-btn-outline" href="Resultados.dc.html">Ver resultados</a></div></div><div class="hm-arc" style="--p:62" role="img" aria-label="62 % de respuestas favorables al compromiso"><span class="hm-arc-value">62 %</span><span class="hm-arc-label">respuestas favorables al compromiso</span></div></div></div><div class="cl-two"><div class="hm-card"><h3 class="hm-h4">Recomendación</h3><p class="hm-small hm-muted">Clima · junio 2026</p><div style="display:flex;flex-direction:column"><span class="hm-kpi-2">−27</span><span class="hm-small hm-muted">46 % no lo recomendarían · 19 % sí</span></div><div><a class="hm-btn hm-btn-outline" href="Resultados.dc.html">Ver resultados</a></div></div><div class="hm-card"><h3 class="hm-h4">Compromisos</h3><div style="display:flex;align-items:baseline;gap:8px"><span class="hm-kpi-2">3</span><span class="hm-small hm-muted">en total</span></div><div class="cl-mini"><div><span class="hm-strong">1</span><span class="hm-small hm-muted">por hacer</span></div><div><span class="hm-strong">1</span><span class="hm-small hm-muted">en marcha</span></div><div><span class="hm-strong">1</span><span class="hm-small hm-muted">cumplido</span></div></div><div><a class="hm-btn hm-btn-outline" href="Compromisos.dc.html">Ver compromisos</a></div></div></div><section class="cl-sec"><div class="cl-sec-head"><h2 class="hm-h3">Historial</h2><p class="hm-small hm-muted">Encuestas cerradas, la más reciente arriba.</p></div><div class="hm-tablewrap"><table class="hm-table"><caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Encuestas cerradas</caption><thead><tr><th scope="col">Encuesta</th><th scope="col">Cerró</th><th scope="col" class="hm-num">Contestaron</th><th scope="col" class="hm-num">Compromiso</th><th scope="col"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Abrir</span></th></tr></thead><tbody><tr><td class="hm-tdl"><a href="Resultados.dc.html"><span class="hm-strong">Clima · junio 2026</span></a></td><td class="hm-tdl"><a href="Resultados.dc.html">22 de junio de 2026</a></td><td class="hm-tdl"><a class="r" href="Resultados.dc.html">168 de 212 · 79 %</a></td><td class="hm-tdl"><a class="r" href="Resultados.dc.html">62 % favorable</a></td><td class="hm-tdl"><a class="r" href="Resultados.dc.html" aria-label="Ver resultados de Clima · junio 2026"><svg class="hm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></td></tr></tbody></table></div></section>
+</sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Tema"},"variant":{"editor":"enum","options":["activa", "primera-vez", "sin-activa"],"default":"activa","section":"Estado"},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? 'claro';
+    const variant = this.props.variant ?? 'activa';
+    return { theme, themeClass: theme === 'oscuro' ? 'hm t-dark' : 'hm t-light', crumbs: 'Escucha a tu gente › Clima', esActiva:variant==='activa',esPrimeraVez:variant==='primera-vez',esSinActiva:variant==='sin-activa' };
+  }
+}
+</script>
+</body>
+</html>

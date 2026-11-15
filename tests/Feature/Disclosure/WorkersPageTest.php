@@ -134,7 +134,7 @@ it('is the same neutral 404 for every reason the link or the center does not ope
         return [route('workers.show', $test->token), 'link'];
     }],
     'a blocked company' => [function ($test) {
-        Tenant::query()->whereKey($test->tenant->id)->update(['deactivated_at' => now()]);
+        Tenant::query()->whereKey($test->tenant->id)->update(suspension());
 
         return [route('workers.show', $test->token), 'company'];
     }],

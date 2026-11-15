@@ -71,3 +71,10 @@ it('is up to date when every requirement is met, and tells the earliest stage le
         ->and(RouteStages::from(seatingRows(['r10' => [RowState::Missing, 1], 'r4' => [RowState::Missing, 1]]), false, true, null))
         ->toEqual(new RouteProgress(true, [true, false, true, true, false, true], 'pon asientos donde hacen falta'));
 });
+
+it('does not take a stage as done while its requirements have nothing registered', function (): void {
+    $progress = RouteStages::from(seatingRows(['r7' => [RowState::Pending], 'r11' => [RowState::Pending]]), false, true, null);
+
+    expect($progress->done)->toBe([true, true, true, false, true, true])
+        ->and($progress->status)->toBe('acuerda pausas y medidas');
+});

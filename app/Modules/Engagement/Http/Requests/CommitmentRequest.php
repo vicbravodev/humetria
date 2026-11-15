@@ -7,6 +7,7 @@ namespace App\Modules\Engagement\Http\Requests;
 use App\Modules\Engagement\Data\CommitmentData;
 use App\Modules\Engagement\Enums\CommitmentGroup;
 use App\Modules\Engagement\Enums\Driver;
+use App\Modules\Engagement\Enums\SurveyKind;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -16,7 +17,11 @@ final class CommitmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $kind = $this->route('kind');
+
+        // Before the rules: whoever may not write is told so, not what their empty form lacks.
+        // The route binds the kind to its enum.
+        return $kind instanceof SurveyKind && $this->user()?->can($kind->managePermission()) === true;
     }
 
     /**

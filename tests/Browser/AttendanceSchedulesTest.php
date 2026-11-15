@@ -44,6 +44,27 @@ it('shows RH each person\'s schedule and who has none', function (bool $dark, bo
     'dark, phone' => [true, true],
 ]);
 
+it('offers «Fijar horario» in the rows as an outline button, and opens a dialog whose time fields are not cut off', function (): void {
+    $url = schedulesPanel();
+
+    visit("{$url}/attendance/schedules")->resize(1440, 900)
+        ->assertSee('Fijar horario')
+        ->assertScript(<<<'JS'
+            () => {
+                const probe = document.createElement('div');
+                probe.style.backgroundColor = 'var(--primary)';
+                document.body.append(probe);
+                const primary = getComputedStyle(probe).backgroundColor;
+                probe.remove();
+                const buttons = [...document.querySelectorAll('tbody button')].filter((button) => button.textContent.trim() === 'Fijar horario');
+                return buttons.length > 0 && buttons.every((button) => getComputedStyle(button).backgroundColor !== primary);
+            }
+            JS, true)
+        ->click('Fijar horario')
+        ->assertSee('Hora de entrada de cada día')
+        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] input[type="time"]\')].filter((input) => input.scrollWidth > input.clientWidth).length', 0);
+});
+
 it('lets RH fix a schedule, with the week\'s total and a note above the year\'s maximum', function (): void {
     $url = schedulesPanel();
 
@@ -74,6 +95,43 @@ it('lets RH fix a schedule, with the week\'s total and a note above the year\'s 
     expect(AttendanceSchedule::query()->where('employee_id', $bob->id)->sole())
         ->shift_type->toBe(ShiftType::Night)->work_mode->toBe(WorkMode::Remote)
         ->minutes_by_weekday->toBe([1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 240, 7 => 0]);
+});
+
+it('lets RH set the time each day starts, optional, and keeps it', function (): void {
+    $url = schedulesPanel();
+
+    visit("{$url}/attendance/schedules")
+        ->click('Fijar horario')
+        ->assertSee('Hora de entrada de cada día (opcional)')
+        ->assertSee('Sin hora de entrada, el día no tiene retardo.')
+        ->fill('#schedule-start-1', '09:00')
+        ->fill('#schedule-start-2', '09:00')
+        ->fill('#schedule-start-5', '08:30')
+        ->click('Guardar horario')
+        ->waitForText('Horario de Bob Díaz guardado.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    $bob = Employee::query()->withoutGlobalScopes()->where('name', 'Bob Díaz')->sole();
+    workIn(Tenant::query()->where('slug', 'acme')->sole());
+    expect(AttendanceSchedule::query()->where('employee_id', $bob->id)->sole()->starts_by_weekday)
+        ->toBe([1 => 540, 2 => 540, 3 => null, 4 => null, 5 => 510, 6 => null, 7 => null]);
+});
+
+it('sets the same start time from Monday to Friday with one field, and shows it in the summary of the schedule', function (): void {
+    $url = schedulesPanel();
+
+    visit("{$url}/attendance/schedules")
+        ->click('Fijar horario')
+        ->fill('#schedule-start-weekdays', '09:00')
+        ->assertValue('#schedule-start-1', '09:00')
+        ->assertValue('#schedule-start-5', '09:00')
+        ->assertValue('#schedule-start-6', '')
+        ->click('Guardar horario')
+        ->waitForText('Horario de Bob Díaz guardado.')
+        ->assertSee('Entrada 09:00')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
 });
 
 it('lets RH choose people and fix the same schedule for all of them, from a template', function (): void {

@@ -108,6 +108,11 @@ final readonly class CompanyCampaignRecords implements CampaignRecords
         return $cycles;
     }
 
+    public function anyLaunched(): bool
+    {
+        return Campaign::query()->whereIn('status', [CampaignStatus::Active, CampaignStatus::Closed])->exists();
+    }
+
     private static function cycle(?Campaign $running, ?Campaign $last): ComplianceCycle
     {
         if ($running?->launched_at !== null && $running->closes_on !== null) {

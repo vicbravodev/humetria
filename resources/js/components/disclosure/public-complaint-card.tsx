@@ -21,7 +21,7 @@ export default function PublicComplaintCard({
             </h2>
             <p className="text-sm">
                 {channel.anonymousAllowed
-                    ? 'Puede avisar sin dar su nombre. Nadie recibirá represalias por hacerlo.'
+                    ? 'Puede avisar sin dar su nombre.'
                     : 'El canal le pide que se identifique, y su aviso se atiende con confidencialidad.'}
             </p>
             {block !== null &&

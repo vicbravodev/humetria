@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Exceptions;
 
+use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\SurveyUnavailableReason;
 use RuntimeException;
 
 final class SurveyUnavailable extends RuntimeException
 {
-    public function __construct(public readonly SurveyUnavailableReason $reason, public readonly ?string $company = null)
+    public function __construct(public readonly SurveyUnavailableReason $reason, public readonly ?string $company = null, public readonly ?CampaignKind $kind = null)
     {
         parent::__construct("Survey unavailable: {$reason->value}.");
     }

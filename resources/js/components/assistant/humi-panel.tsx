@@ -30,6 +30,7 @@ export default function HumiPanel({
     fullPage,
     onClose,
     openId = null,
+    initialText = null,
 }: {
     slug: string;
     page: PageContext;
@@ -37,6 +38,8 @@ export default function HumiPanel({
     onClose: (() => void) | null;
     /** A conversation of the history to open with what was kept of it. */
     openId?: string | null;
+    /** A question to leave written in the box, for the person to send. */
+    initialText?: string | null;
 }) {
     const chat = useHumiChat(slug, page, openId);
     const { failure, dismiss } = chat;
@@ -70,6 +73,8 @@ export default function HumiPanel({
                 onPick={chat.send}
             />
             <HumiComposer
+                key={initialText ?? ''}
+                initialText={initialText ?? ''}
                 streaming={streaming}
                 closedText={closedTextOf(failure?.reason)}
                 onSend={chat.send}

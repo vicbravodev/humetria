@@ -16,6 +16,20 @@ export default function BenefitValue({ benefit }: { benefit: BenefitRow }) {
             <p className="text-caption text-muted-foreground">
                 Desde el {describeDate(benefit.current.effective_from)}
             </p>
+            {benefit.note !== null && (
+                <p className="mt-1 text-caption whitespace-normal text-muted-foreground">
+                    {benefit.note}
+                </p>
+            )}
+            {benefit.policy_notice !== null && (
+                <p className="mt-1 flex items-start gap-1.5 text-caption whitespace-normal text-warning-foreground">
+                    <TriangleAlert
+                        aria-hidden
+                        className="mt-0.5 size-3.5 shrink-0"
+                    />
+                    {benefit.policy_notice}
+                </p>
+            )}
             {benefit.warning !== null && (
                 <p className="mt-1 flex items-start gap-1.5 text-caption whitespace-normal text-warning-foreground">
                     <TriangleAlert

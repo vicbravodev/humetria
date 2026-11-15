@@ -30,6 +30,7 @@ export default function ScenarioEditor({
     defaults,
     horizons,
     others,
+    vacation_notice: vacationNotice,
 }: {
     scenario: ScenarioDetail | null;
     assumptions: AssumptionField[];
@@ -37,6 +38,7 @@ export default function ScenarioEditor({
     defaults: ScenarioDefaults;
     horizons: number[];
     others: OtherScenario[];
+    vacation_notice: string | null;
 }) {
     const tenantSlug = useTenantSlug();
     const [draft, setDraft] = useState<RaiseDraft>(() =>
@@ -101,6 +103,7 @@ export default function ScenarioEditor({
                                 preview={live.result}
                                 loading={live.loading}
                                 others={others}
+                                vacationNotice={vacationNotice}
                                 processing={processing}
                             />
                         </div>

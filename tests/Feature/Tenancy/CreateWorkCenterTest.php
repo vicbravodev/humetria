@@ -170,7 +170,7 @@ it('answers 404 to a member of another company and stores nothing', function ():
 });
 
 it('refuses a suspended company with 423 and stores nothing', function (): void {
-    $tenant = Tenant::factory()->deactivated()->create();
+    $tenant = Tenant::factory()->suspended()->create();
 
     $this->actingAs(ownerOf($tenant))
         ->post(route('tenant.work-centers.store', $tenant), workCenterForm())

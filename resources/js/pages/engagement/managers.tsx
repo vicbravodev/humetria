@@ -1,5 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { Hourglass, Users } from 'lucide-react';
+import ResultsNav from '@/components/engagement/results/results-nav';
 import ManagerTable from '@/components/engagement/results/manager-table';
 import EmptyState from '@/components/humetria/empty-state';
 import Notice from '@/components/humetria/notice';
@@ -7,7 +8,12 @@ import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { ManagerResults, ManagerRow, Paginated } from '@/types';
-import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
+import { resultsCaption } from '@/lib/engagement/panel';
+import {
+    useEngagementKind,
+    useEngagementTrail,
+    useSurveyCrumb,
+} from '@/hooks/use-engagement-routes';
 
 /** The managers whose group of people is shown, by name (pantallas: Empleados, Eval-Cerrada). Never a ranking. */
 export default function Managers({
@@ -17,16 +23,10 @@ export default function Managers({
     hasHidden,
 }: ManagerResults & { managers: Paginated<ManagerRow> }) {
     const tenantSlug = useTenantSlug();
-    const routes = useEngagementRoutes();
     setLayoutProps({
-        breadcrumbs: [
-            { title: 'Clima' },
-            {
-                title: survey.name,
-                href: routes.results.url([tenantSlug, survey.id]),
-            },
-            { title: 'Por jefe' },
-        ],
+        breadcrumbs: useEngagementTrail(useSurveyCrumb(survey), {
+            title: 'Por jefe',
+        }),
     });
 
     return (
@@ -34,10 +34,13 @@ export default function Managers({
             <Head title={`Por jefe · ${survey.name}`} />
             <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    caption="Resultados de clima"
+                    caption={resultsCaption(useEngagementKind())}
                     title="Retroalimentación por jefe"
                     description="Cada jefe ve solo lo que contestó su grupo, sin las respuestas de nadie. Aquí no hay ranking: la lista va por nombre."
                 />
+                {available && (
+                    <ResultsNav surveyId={survey.id} active="managers" />
+                )}
                 {hasHidden && (
                     <Notice>
                         <strong>Algunos jefes no aparecen.</strong> Su grupo

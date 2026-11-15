@@ -1,5 +1,5 @@
 {{-- Guía I after a severe traumatic event (criterio C-05): short, and clear that it carries the person's name (C-07). --}}
-<x-mail::message :company="$company" :confidential="true" preheader="Preguntas de sí o no. La empresa puede ofrecerle atención si la necesita.">
+<x-mail::message :company="$company" :portal-url="$portalUrl ?? null" :confidential="true" preheader="Preguntas de sí o no. La empresa puede ofrecerle atención si la necesita.">
 <h1>Una evaluación breve después de lo ocurrido</h1>
 <p>Hola, {{ $name }}:</p>
 <p>Por lo que sucedió en {{ $workCenter }}, la NOM-035 pide que conteste la Guía I. Empieza con 6 preguntas de sí o no y toma unos {{ $minutes }} minutos.</p>
