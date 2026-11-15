@@ -11,7 +11,7 @@ use Illuminate\Testing\TestResponse;
 
 mutates(SecurityHeaders::class);
 
-function cspFor(string $nonce, string $devServer = '', string $devSocket = '', bool $map = false): string
+function cspFor(string $nonce, string $devServer = '', string $devSocket = '', bool $map = false, bool $analytics = false): string
 {
     $hot = $devServer === '' ? '' : " {$devServer}";
     $socket = $devSocket === '' ? '' : " {$devSocket}";
@@ -22,8 +22,13 @@ function cspFor(string $nonce, string $devServer = '', string $devSocket = '', b
     // The signed-in panel also paints OpenStreetMap's tiles, the map of a zone (Asistencia): images only, from that one origin.
     $tiles = $map ? ' https://tile.openstreetmap.org' : '';
 
-    return "default-src 'self'; script-src 'self' 'nonce-{$nonce}'{$hot}; style-src 'self' 'nonce-{$nonce}' {$sonner}{$hot}; "
-        ."img-src 'self' data:{$tiles}{$hot}; font-src 'self'{$hot}; connect-src 'self'{$hot}{$socket}; object-src 'none'; "
+    // Google Analytics, only on the landing for a visitor without a session and with a measurement id: appended last in each directive.
+    $script = $analytics ? ' https://*.googletagmanager.com' : '';
+    $images = $analytics ? ' https://*.google-analytics.com https://*.googletagmanager.com' : '';
+    $connect = $analytics ? ' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com' : '';
+
+    return "default-src 'self'; script-src 'self' 'nonce-{$nonce}'{$hot}{$script}; style-src 'self' 'nonce-{$nonce}' {$sonner}{$hot}; "
+        ."img-src 'self' data:{$tiles}{$hot}{$images}; font-src 'self'{$hot}; connect-src 'self'{$hot}{$socket}{$connect}; object-src 'none'; "
         ."base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 }
 
@@ -242,4 +247,50 @@ it('sends the landing the same policy when Node renders it: no unsafe-inline, no
 
     $response->assertOk()->assertHeader('X-Rendered-By', 'ssr')->assertHeader('Content-Security-Policy', cspFor(nonceOf($response)));
     expect($policy)->not->toContain('unsafe-inline')->not->toContain('unsafe-eval')->not->toContain('style-src-attr');
+});
+
+function measureLandingWith(string $id = 'G-ABC123XYZ9', string $consent = 'granted'): void
+{
+    config(['services.google_analytics.measurement_id' => $id, 'services.google_analytics.consent_default' => $consent]);
+}
+
+it('opens Google Analytics origins on the landing for a visitor without a session, with an id and consent, and nowhere else', function (): void {
+    measureLandingWith();
+
+    $response = $this->get(route('home'));
+
+    $response->assertOk()->assertHeader('Content-Security-Policy', cspFor(nonceOf($response), analytics: true));
+    expect((string) $response->headers->get('Content-Security-Policy'))
+        ->not->toContain('unsafe-inline')
+        ->not->toContain('unsafe-eval')
+        ->not->toContain('style-src-attr');
+});
+
+it('keeps the policy of the landing exactly as it was without an id, without consent, with a session or on another page', function (Closure $visit, string $id, string $consent): void {
+    measureLandingWith($id, $consent);
+
+    $response = $visit();
+
+    $response->assertHeader('Content-Security-Policy', cspFor(nonceOf($response), map: false));
+    expect((string) $response->headers->get('Content-Security-Policy'))->not->toContain('google');
+})->with([
+    'no id' => [fn (): TestResponse => test()->get(route('home')), '', 'granted'],
+    'consent denied' => [fn (): TestResponse => test()->get(route('home')), 'G-ABC123XYZ9', 'denied'],
+    'a malformed id' => [fn (): TestResponse => test()->get(route('home')), 'G-abc', 'granted'],
+    'another page' => [fn (): TestResponse => test()->get(route('privacy-notice')), 'G-ABC123XYZ9', 'granted'],
+    'the login' => [fn (): TestResponse => test()->get(route('login')), 'G-ABC123XYZ9', 'granted'],
+]);
+
+it('keeps the policy of the landing as it was for someone with a session', function (): void {
+    measureLandingWith();
+
+    $response = $this->actingAs(User::factory()->create())->get(route('home'));
+
+    $response->assertHeader('Content-Security-Policy', cspFor(nonceOf($response)));
+});
+
+it('sends the policy of the landing of today when nothing is configured', function (): void {
+    $response = $this->get(route('home'));
+
+    $response->assertOk()->assertHeader('Content-Security-Policy', cspFor(nonceOf($response)));
 });
