@@ -226,4 +226,13 @@ describe('workflows', function (): void {
             ->and($workflow['permissions'] ?? null)->toBe(['contents' => 'read'])
             ->and($runs)->toContain('node scripts/synthetic/check-landing.mjs --url https://humetria.com.mx/');
     });
+
+    it('has a job ssr in tests.yml that the required ci check waits for', function (): void {
+        $workflow = deploymentYaml('.github/workflows/tests.yml');
+        $runs = implode("\n", array_map(fn (array $step): string => (string) ($step['run'] ?? ''), (array) ($workflow['jobs']['ssr']['steps'] ?? [])));
+
+        expect($workflow['jobs']['ci']['needs'])->toContain('ssr')
+            ->and($runs)->toContain('composer test:ssr')
+            ->toContain('scripts/ssr/container-test.sh');
+    });
 });

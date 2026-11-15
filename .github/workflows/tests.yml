@@ -105,9 +105,31 @@ jobs:
       - name: Browser tests (shard ${{ matrix.shard }}/3)
         run: composer test:browser -- --shard=${{ matrix.shard }}/3
 
+  # The tests that need a real Node and a real Docker: the SSR bundle served by Node under the browser (composer test:ssr) and
+  # the `ssr` image, built and run with the restrictions of compose.production.yaml (scripts/ssr/container-test.sh). A broken
+  # bundle would otherwise reach main hidden by the fallback to the browser. The `app` image is not built here, only on deploy.
+  ssr:
+    runs-on: ubuntu-latest
+    services: *postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: SSR bundle with a real Node
+        run: composer test:ssr
+
+      - name: ssr image with a real Docker
+        run: scripts/ssr/container-test.sh
+
   # The required check: every job passed.
   ci:
-    needs: [checks, tests, browser]
+    needs: [checks, tests, browser, ssr]
     # Runs even when a job fails, so this required check never shows as skipped: a failed job fails it.
     if: always()
     runs-on: ubuntu-latest
