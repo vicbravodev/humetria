@@ -298,7 +298,7 @@ it('treats a cookie that is not what it wrote as no cookie at all', function (st
 it('ignores a cookie that was not encrypted by the application', function (): void {
     consentGranted();
 
-    $response = $this->withUnencryptedCookie('humetria_acq', acquisitionCookie(touchOf('forjada'), touchOf('forjada'), time()))->get('/?utm_source=nuevo');
+    $response = $this->withUnencryptedCookie('humetria_acq', acquisitionCookie(touchOf('forjada'), touchOf('forjada'), now()->timestamp))->get('/?utm_source=nuevo');
 
     expect(acquisition($response)['first'])->toBe(touchOf('nuevo'));
 });

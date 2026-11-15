@@ -362,7 +362,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
         return route('demo-requests.index');
     }, ['demoRequests']],
     'passkeys' => ['settings/security', function () {
-        test()->actingAs(App\Models\User::factory()->create())->withSession(['auth.password_confirmed_at' => time()]);
+        test()->actingAs(App\Models\User::factory()->create())->withSession(['auth.password_confirmed_at' => now()->timestamp]);
 
         return route('security.edit');
     }, ['passkeys']],

@@ -301,7 +301,7 @@ it('does not carry the superadmin password confirmation over to the owner', func
     ownerOf($tenant);
 
     $this->actingAs($superadmin)
-        ->withSession(['auth.password_confirmed_at' => time()])
+        ->withSession(['auth.password_confirmed_at' => now()->timestamp])
         ->post(route('companies.impersonate', $tenant));
 
     // Those routes now answer 404 while impersonating (ImpersonationSettingsTest); the mark itself must be gone.
@@ -310,7 +310,7 @@ it('does not carry the superadmin password confirmation over to the owner', func
 
 it('does not carry the owner password confirmation back to the superadmin', function (): void {
     enterAsOwner();
-    session()->put('auth.password_confirmed_at', time());
+    session()->put('auth.password_confirmed_at', now()->timestamp);
 
     $this->post(route('impersonation.stop'));
 
