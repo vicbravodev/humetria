@@ -136,6 +136,24 @@ layouts/  hooks/  lib/  types/
 - Aflojar la CSP (un origen, `'unsafe-inline'`, un hash) exige explicar el motivo en el PR.
 - Una ruta nueva de la cuenta personal (perfil, contraseña, 2FA, passkeys) va en `ForbidWhileImpersonating::protectedRoutes()`;
   un test lo exige.
+- Toda respuesta lleva `X-Robots-Tag: noindex, nofollow`, salvo una de las rutas de `App\Http\IndexablePages`
+  (hoy `home` y `privacy-notice`) que responde 200 en producción. Para que una página sea indexable se agrega ahí, con su
+  test en `tests/Feature/IndexablePagesTest.php`; staging y local nunca se indexan.
+- Solo las páginas de `App\Http\SsrPages` (ruta y componente, hoy la landing y el aviso) pasan por Node, y solo para
+  visitantes sin sesión, con `INERTIA_SSR_ENABLED` encendido y el cortacircuitos cerrado. Una ruta nueva no activa SSR por omisión.
+  Si Node falla la página responde 200 sin cuerpo renderizado (React la pinta), deja un `ssr.render_failed` (una línea por tipo
+  y minuto, sin props) y `X-Rendered-By` dice `csr`; nunca se responde 5xx por Node. Quién opera el servicio `ssr`
+  (variables, rollback, señales) lo dice `docs/operations/ssr.md`: se actualiza en el mismo PR que cambie esas piezas.
+- Google Analytics carga solo en el documento de la landing (`App\Http\Analytics`: ruta `home`, sin sesión, ID `G-…` válido)
+  y solo si `App\Http\Consent` lo permite. `GOOGLE_ANALYTICS_CONSENT_DEFAULT` queda en `denied` hasta que el abogado del
+  dueño indique otra cosa: mientras tanto no hay `gtag.js`, ni orígenes de Google en la CSP, ni cookie `_ga` ni `humetria_acq`.
+  A Google no se le manda nada de la persona: la dirección sin más query que las `utm_*` y, de un referente de este sitio, solo su origen.
+- La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente
+  externo, nunca una URL ni identificadores de clic). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
+  consentimiento `granted`. Lo que diga el aviso de privacidad sobre cookies debe coincidir con el código
+  (`tests/Unit/PrivacyNoticeMatchesCodeTest.php`).
+- Todo enlace que sale de la landing o llega a ella es un `<a href>` normal, no un `<Link>` (solo el logo de la
+  cabecera de la landing, que va a la misma página): Google Analytics y su CSP viven en un documento, no en una visita de Inertia.
 
 ## Privacidad (invariante)
 
