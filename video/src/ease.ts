@@ -29,31 +29,6 @@ export const enter = (
     return fx(t, opts);
 };
 
-/** Salida estándar: lo inverso de `enter`, con ease-in-out. */
-export const exit = (
-    frame: number,
-    start: number,
-    opts: { dur?: number; y?: number; x?: number; scale?: number; blur?: number } = {},
-): CSSProperties => {
-    const t = 1 - tween(frame, start, opts.dur ?? 14, easeInOut);
-    return fx(t, opts);
-};
-
-/** Combina entrada y salida (multiplica la visibilidad). */
-export const life = (
-    frame: number,
-    inAt: number,
-    outAt: number,
-    opts: { dur?: number; outDur?: number; y?: number; x?: number; scale?: number; blur?: number } = {},
-): CSSProperties => {
-    const a = tween(frame, inAt, opts.dur ?? 18);
-    const b = 1 - tween(frame, outAt, opts.outDur ?? 14, easeInOut);
-    if (frame < outAt) {
-        return fx(a, opts);
-    }
-    return fx(b, { ...opts, y: -(opts.y ?? 0), x: -(opts.x ?? 0) });
-};
-
 const fx = (
     t: number,
     opts: { y?: number; x?: number; scale?: number; blur?: number },

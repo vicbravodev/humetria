@@ -1,1 +1,0 @@
-RH abre el organigrama, que se dibuja a partir de quién reporta a quién, importa la línea de reporte desde el archivo de personal, da de baja a un jefe y reasigna a su equipo, y el jefe ve en su portal solo a quienes le reportan y aprueba sus solicitudes.

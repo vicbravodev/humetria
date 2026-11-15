@@ -25,7 +25,7 @@ export type Palette = {
     logo: string;
 };
 
-// Oscuro: tokens de ../theme. Claro: los de resources/css/app.css (:root), los mismos que usa video/hyperframes/render.sh.
+// Oscuro: tokens de ../theme. Claro: los de resources/css/app.css (:root), los mismos del design system.
 export const palettes: Record<ThemeName, Palette> = {
     dark: { ...dark, warn: '#D2AE62', warnBg: '#33291A', warnFg: '#E9C886', scrim: 'rgba(15,23,22,.82)', logo: 'brand/humetria-horizontal-color-oscuro.svg' },
     light: {
