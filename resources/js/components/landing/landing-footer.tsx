@@ -77,7 +77,10 @@ export default function LandingFooter({
                 </div>
                 <div className="grid gap-1.5 text-sm text-muted-foreground md:col-span-2 md:flex md:flex-wrap md:justify-between md:gap-4 md:border-t md:pt-5">
                     <p>Hecho en México · {currentYear()} Humetría</p>
-                    <p>Humetría ordena evidencia; no certifica cumplimiento.</p>
+                    <p>
+                        Te ayudamos a reunir tus comprobantes; no certificamos
+                        cumplimiento.
+                    </p>
                 </div>
             </div>
         </footer>

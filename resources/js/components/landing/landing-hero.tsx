@@ -37,8 +37,7 @@ export default function LandingHero() {
                     >
                         Humetría invita a tu gente, recolecta sus respuestas con
                         la confidencialidad que requiere cada herramienta y te
-                        entrega lo que pide la autoridad: el diagnóstico, el
-                        plan y la evidencia.
+                        deja listos los reportes que te pide la STPS.
                     </p>
                     <div
                         className={cn(

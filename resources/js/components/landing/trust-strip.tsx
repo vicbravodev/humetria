@@ -19,7 +19,7 @@ const promises = [
     },
     {
         icon: FileText,
-        title: 'Ordena evidencia',
+        title: 'Reúne tus comprobantes',
         text: 'No certifica el cumplimiento.',
     },
 ];

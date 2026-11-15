@@ -27,7 +27,7 @@ export default function DemoSection() {
                     </h2>
                     <p className={LEAD}>
                         Cuéntanos qué herramientas te interesan y te mostramos
-                        Humetría con tu caso. La prueba gratis se acuerda en la
+                        Humetría con tu caso. La prueba gratis la vemos en la
                         misma llamada, para que empieces con tu gente sin perder
                         tiempo.
                     </p>

@@ -36,6 +36,10 @@ y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden
 del "crea el PR", no tras cada turno. Mientras se trabaja basta lo acotado (abajo): los tests de la tarea, Pint y PHPStan.
 El check obligatorio de `main` es el job `ci`, que espera a los jobs `checks` (auditoría, Pint, PHPStan, frontend),
 `tests` (Unit/Feature con cobertura) y `browser` (3 shards), todos en paralelo (`.github/workflows/tests.yml`).
+Un cambio que solo trae documentación que nadie lee (lo que hay bajo `docs/` y los `.md` de la raíz) se salta esos jobs y
+el deploy, y `ci` pasa solo: lo decide `scripts/ci-code-changed.sh`. Un documento que un test o la app leen es código
+(`docs/normas`, `docs/operations`, `CLAUDE.md`…) y va en la lista de ese script; `tests/Unit/CiCodeChangedTest.php` falla
+hasta que esté ahí, y `tests/Unit/CiPipelineTest.php` exige que todo job nuevo de `tests.yml` espere al job `changes`.
 
 **Mutación: semanal, fuera de los PR.** No corre en los PR ni bloquea el merge, y no forma parte de "terminado".
 `.github/workflows/mutation.yml` la corre cada domingo por la noche (y a mano, `workflow_dispatch`) con
