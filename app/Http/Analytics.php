@@ -88,19 +88,9 @@ final class Analytics
      */
     public static function referrer(Request $request): ?string
     {
-        $parts = parse_url((string) $request->headers->get('referer'));
+        $referer = (string) $request->headers->get('referer');
 
-        if (! is_array($parts) || ! in_array($parts['scheme'] ?? '', ['http', 'https'], true) || ! isset($parts['host'])) {
-            return null;
-        }
-
-        $host = strtolower($parts['host']);
-
-        if (! in_array(self::bare($host), self::ownHosts($request), true)) {
-            return null;
-        }
-
-        return $parts['scheme'].'://'.$host.(isset($parts['port']) ? ':'.$parts['port'] : '').'/';
+        return SiteHost::owns($request, $referer) ? SiteHost::originOf($referer) : null;
     }
 
     /** The landing's address without any query but its campaign parameters. */
@@ -123,21 +113,5 @@ final class Analytics
     private static function literal(array $values): string
     {
         return json_encode($values, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS);
-    }
-
-    /** @return list<string> */
-    private static function ownHosts(Request $request): array
-    {
-        $configured = parse_url(config()->string('app.url'), PHP_URL_HOST);
-
-        return array_values(array_filter([
-            self::bare($request->getHost()),
-            is_string($configured) ? self::bare(strtolower($configured)) : null,
-        ]));
-    }
-
-    private static function bare(string $host): string
-    {
-        return str_starts_with($host, 'www.') ? substr($host, 4) : $host;
     }
 }
