@@ -171,9 +171,8 @@ it('opens the map of a new zone on the address of the center, without placing th
     visit($url)
         ->click('Agregar zona')
         ->assertVisible('[aria-label^="Mapa de la zona"]')
-        ->wait(1)
         // The street of the center, with no circle: the zone is still RH's to place.
-        ->assertScript('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/17/"))', true)
+        ->assertScript(eventually('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/17/"))'), true)
         ->assertScript('() => document.querySelectorAll(\'[role="dialog"] path.leaflet-interactive\').length', 0)
         ->assertValue('latitude', '')
         ->assertDontSee('No pudimos buscar la dirección')
@@ -188,8 +187,7 @@ it('keeps the map of a new zone on all of Mexico, with no error, when the addres
     visit($url)
         ->click('Agregar zona')
         ->assertVisible('[aria-label^="Mapa de la zona"]')
-        ->wait(1)
-        ->assertScript('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/5/"))', true)
+        ->assertScript(eventually('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/5/"))'), true)
         ->assertDontSee('No pudimos buscar la dirección')
         ->assertDontSee('No encontramos esa dirección')
         ->assertNoJavaScriptErrors();
@@ -204,8 +202,7 @@ it('opens the map of a new zone on the city of the center when its street is not
     visit($url)
         ->click('Agregar zona')
         ->assertVisible('[aria-label^="Mapa de la zona"]')
-        ->wait(1)
-        ->assertScript('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/12/"))', true)
+        ->assertScript(eventually('() => Array.from(document.querySelectorAll(\'[role="dialog"] img.leaflet-tile\')).some((tile) => tile.src.includes("/12/"))'), true)
         ->assertScript('() => document.querySelectorAll(\'[role="dialog"] path.leaflet-interactive\').length', 0)
         ->assertNoJavaScriptErrors();
 });

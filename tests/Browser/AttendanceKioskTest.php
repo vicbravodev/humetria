@@ -42,9 +42,10 @@ it('counts the seconds until the code turns', function (): void {
 
     $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Cambia en');
     $first = $page->script($seconds);
-    $page->wait(2.2);
 
-    expect($first)->toBeGreaterThan(15)->and($page->script($seconds))->toBeLessThan($first - 1);
+    // The countdown ticks on: it must read at least a second less than at first, whenever the runner gets there.
+    expect($first)->toBeGreaterThan(15)
+        ->and($page->script(eventually("() => ({$seconds})() < ".($first - 1))))->toBeTrue();
 });
 
 it('says when it lost the connection, shows no code at all, and keeps retrying', function (): void {

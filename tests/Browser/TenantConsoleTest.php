@@ -650,9 +650,10 @@ it('keeps every letter typed while the last search is still answering', function
     // Every request waits 400 ms to leave, so the first search is still answering while more is typed.
     $page->script(SLOW_REQUESTS);
     $page->type('input[type="search"]', 'Gru');
+    // The first search is on its way (it waits 400 ms to leave) by the time the rest is typed: that is the case under test.
     $page->wait(0.5);
     $page->keys('input[type="search"]', ['p', 'o', ' ', 'E']);
-    $page->wait(2);
+    $page->assertScript(eventually('() => new URLSearchParams(location.search).get("q") === "Grupo E"'), true);
 
     $page->assertQueryStringHas('q', 'Grupo E')
         ->assertValue('input[type="search"]', 'Grupo E')
@@ -667,6 +668,7 @@ it('does not undo a status tab clicked while a search waits to go out', function
     $page->script(SLOW_REQUESTS);
     $page->type('input[type="search"]', 'Gru');
     $page->click('a[href*="status=suspended"]');
+    // Observation window: the search that never went out must not come back later. A negative has nothing to wait for.
     $page->wait(2);
 
     // The box says what the list is narrowed by: the search that never went out is dropped.

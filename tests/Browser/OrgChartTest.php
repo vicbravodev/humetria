@@ -121,8 +121,7 @@ it('opens readable, whatever the width of the first level: cards at 0.9 or more,
 
     visitPage('organization/org-chart', '/admin/acme/org-chart')
         ->resize(1440, 900)
-        ->wait(1)
-        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.9', true)
+        ->assertScript(eventually('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.9'), true)
         ->assertScript('() => document.querySelector(\'[data-slot="org-node"][aria-label^="Diana Torres,"]\').getBoundingClientRect().top >= document.querySelector(\'[role="search"]\').getBoundingClientRect().bottom', true)
         ->assertNoJavaScriptErrors();
 });
@@ -150,7 +149,7 @@ it('opens the levels asked for, and everything at once', function (): void {
         ->click('[role="menuitemradio"]:has-text("3 niveles")')
         ->assertPresent(orgCard('Ana López'))
         // The menu is still closing, and a click on its button now would close it again.
-        ->wait(0.4)
+        ->assertScript(settled(), true)
         ->click('button:has-text("Mostrar: 3 niveles")')
         ->click('[role="menuitemradio"]:has-text("1 nivel")')
         ->assertNotPresent(orgCard('Gerardo Paz'))
@@ -456,7 +455,7 @@ it('drags a card onto a new manager, and refuses to make a loop: it says why, ca
     orgDragCard($page, orgCard('Diana Torres'), orgCard('Ana López'))
         ->assertSeeIn('[data-slot="org-edit-message"]', 'No se puede: Ana López reporta a Diana Torres.')
         // The toast of the first move is still fading in: axe reads colors as painted.
-        ->wait(1)
+        ->assertScript(settled(), true)
         ->assertNoAccessibilityIssues(1)
         ->assertNoJavaScriptErrors();
 
@@ -691,8 +690,7 @@ it('opens on the heads and their first level at a readable size, the company car
 
     visitPage('organization/org-chart', '/admin/acme/org-chart')
         ->resize(1440, 900)
-        ->wait(1)
-        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.5', true)
+        ->assertScript(eventually('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.5'), true)
         ->assertScript(<<<'JS'
             () => {
                 const bar = document.querySelector('[role="search"]').getBoundingClientRect().bottom;
@@ -721,8 +719,7 @@ it('opens with no card cut off at the left, and the company card in view', funct
 
     visit('/admin/acme/org-chart')
         ->resize(1440, 900)
-        ->wait(1)
-        ->assertScript(<<<'JS'
+        ->assertScript(eventually(<<<'JS'
             () => {
                 const canvas = document.querySelector('.react-flow').getBoundingClientRect();
                 const cards = [...document.querySelectorAll('.react-flow__node-person, .react-flow__node-company')].map((node) => node.getBoundingClientRect());
@@ -731,7 +728,7 @@ it('opens with no card cut off at the left, and the company card in view', funct
 
                 return cut.length === 0 && company.left >= canvas.left && company.right <= canvas.right;
             }
-            JS, true)
+            JS), true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -740,13 +737,12 @@ it('fits the chart at a readable size with «Ajustar a la pantalla», from the t
 
     visitPage('organization/org-chart', '/admin/acme/org-chart')
         ->resize(1440, 900)
-        ->wait(1)
+        ->assertScript(settled(), true)
         ->click('[aria-label="Alejar"]')
         ->click('[aria-label="Alejar"]')
         ->click('[aria-label="Alejar"]')
         ->click('[aria-label="Ajustar a la pantalla"]')
-        ->wait(1)
-        ->assertScript('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.5', true)
+        ->assertScript(eventually('() => Number(new DOMMatrix(getComputedStyle(document.querySelector(".react-flow__viewport")).transform).a) >= 0.5'), true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -756,10 +752,9 @@ it('keeps the bar on one line and the panel beside the canvas, not over it, whil
     visitPage('organization/org-chart', '/admin/acme/org-chart')
         ->resize(1440, 900)
         ->click('Editar estructura')
-        ->wait(1)
+        ->assertScript(settled(), true)
         ->click(orgCard('Raquel Burgos'))
-        ->wait(1)
-        ->assertScript(<<<'JS'
+        ->assertScript(eventually(<<<'JS'
             () => {
                 const bar = document.querySelector('[role="search"]').getBoundingClientRect();
                 const canvas = document.querySelector('.react-flow').getBoundingClientRect();
@@ -767,6 +762,6 @@ it('keeps the bar on one line and the panel beside the canvas, not over it, whil
 
                 return bar.height < 60 && bar.right <= canvas.right && panel.left >= canvas.right - 1;
             }
-        JS, true)
+        JS), true)
         ->assertNoJavaScriptErrors();
 });

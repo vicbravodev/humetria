@@ -451,6 +451,35 @@ function pathBecomes(string $path): string
 }
 
 /**
+ * A script that polls a condition (the source of an arrow function) until it holds, up to 10 s, and resolves with its
+ * last answer. Use it as `->assertScript(eventually('() => …'), true)`: the assertion waits for what it asserts, where a
+ * `->wait(1)` before it passes or fails by the speed of the runner. A condition that throws (the node is not there yet) is false.
+ */
+function eventually(string $condition): string
+{
+    $source = json_encode($condition, JSON_THROW_ON_ERROR);
+
+    return <<<JS
+        () => new Promise((resolve) => {
+            const condition = new Function('return (' + {$source} + ')')();
+            const start = performance.now();
+            const check = () => {
+                let holds = false;
+                try { holds = Boolean(condition()); } catch (error) { holds = false; }
+                holds || performance.now() - start > 10000 ? resolve(holds) : requestAnimationFrame(check);
+            };
+            check();
+        })
+        JS;
+}
+
+/** A script that resolves true once nothing finite is animating or in transition (a toast fading in, a menu closing). */
+function settled(): string
+{
+    return eventually('() => document.getAnimations().every((animation) => animation.playState !== "running" || animation.effect?.getComputedTiming().iterations === Infinity)');
+}
+
+/**
  * A script that resolves once no calendar popover is open: picking a day closes its popover with a short animation,
  * and on a slow runner the click that opens the next date field can land while the first one is still closing.
  */
