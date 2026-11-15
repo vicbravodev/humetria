@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Notification;
 
 final class SubmitDemoRequest
 {
-    public function handle(DemoRequestData $data): void
+    public function handle(DemoRequestData $data): DemoRequest
     {
         $demoRequest = DemoRequest::query()->create([
             'name' => $data->name,
@@ -37,5 +37,7 @@ final class SubmitDemoRequest
 
         // Whoever runs the platform finds out when it happens, not when they next open the console.
         Notification::send(User::role(User::SUPERADMIN)->get(), new DemoRequested($data->company, $data->name, $demoRequest->id));
+
+        return $demoRequest;
     }
 }

@@ -40,6 +40,8 @@ declare module '@inertiajs/core' {
         };
         flashDataType: {
             toast?: FlashToast;
+            /** The id of the demo request just stored, once, on the next landing visit: all the browser reports as a conversion. */
+            lead?: { id: string };
             /** What a checked employees CSV would do, or its problems; see the import page. */
             import?: EmployeeImportSummary;
             /** What a checked file of opening balances would load, and why each other row cannot; see the vacations import. */

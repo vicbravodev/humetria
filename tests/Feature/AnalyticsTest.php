@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Analytics;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Support\SessionKey;
 
 mutates(Analytics::class);
 
@@ -190,4 +191,18 @@ it('has no script on a page that takes a token or a code in its address', functi
             ->and((string) $response->getContent())->not->toContain('dataLayer')
             ->and((string) $response->headers->get('Content-Security-Policy'))->not->toContain('google');
     }
+});
+
+it('flashes the id of a remembered lead to the landing once, and nothing when none was remembered', function (): void {
+    $this->startSession();
+
+    Analytics::flashLead();
+    expect(session()->pull(SessionKey::FLASH_DATA, []))->toBe([]);
+
+    Analytics::rememberLead('9d3f6a52-8a7c-4d49-9d0e-5f3a1b2c4d5e');
+    Analytics::flashLead();
+    expect(session()->pull(SessionKey::FLASH_DATA, []))->toBe(['lead' => ['id' => '9d3f6a52-8a7c-4d49-9d0e-5f3a1b2c4d5e']]);
+
+    Analytics::flashLead();
+    expect(session()->pull(SessionKey::FLASH_DATA, []))->toBe([]);
 });

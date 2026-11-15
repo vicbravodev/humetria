@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 /**
  * Whether Google Analytics runs on this request, and what it may be told. One decision, read by two places that must
@@ -15,6 +16,28 @@ final class Analytics
 {
     /** The campaign parameters of our own links: the only part of the query Google is told. */
     private const array CAMPAIGN_PARAMETERS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+
+    /** Where the id of a request just stored waits, flashed, for the next visit to the landing. */
+    private const string LEAD_KEY = 'analytics.lead_id';
+
+    /**
+     * A demo request was stored: the next landing visit (the one Inertia makes after the submit) learns its id, once.
+     * Apart from Inertia's own flash on purpose: the submit's response keeps carrying only its toast.
+     */
+    public static function rememberLead(string $id): void
+    {
+        session()->flash(self::LEAD_KEY, $id);
+    }
+
+    /** Hands the landing, as flash, the id of the request stored just before, if any. */
+    public static function flashLead(): void
+    {
+        $id = session()->pull(self::LEAD_KEY);
+
+        if (is_string($id)) {
+            Inertia::flash('lead', ['id' => $id]);
+        }
+    }
 
     public static function measurementId(Request $request): ?string
     {

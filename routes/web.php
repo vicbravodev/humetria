@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Analytics;
 use App\Http\Controllers\StopImpersonationController;
 use App\Http\Controllers\ToolFilmController;
 use App\Http\PageSeo;
@@ -11,7 +12,11 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 // The tags of the head of a public page come from PageSeo, and this file is the only place that calls it.
-Route::get('/', fn (): Response => Inertia::render('landing', ['seo' => PageSeo::for('home')]))->name('home');
+Route::get('/', function (): Response {
+    Analytics::flashLead();
+
+    return Inertia::render('landing', ['seo' => PageSeo::for('home')]);
+})->name('home');
 // The notice of privacy: fixed text; the controller of the data (legal name and address) comes from the configuration.
 Route::get('/privacy-notice', function (): Response {
     $legal = static fn (string $key): ?string => is_string($value = config("mail.legal.{$key}")) && trim($value) !== '' ? trim($value) : null;
