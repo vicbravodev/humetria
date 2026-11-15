@@ -276,6 +276,36 @@ it('shows one tool at a time on a large stage, and a family and a tab switch it'
     'engagement' => ['engagement', 'Clima laboral y pulso', 'Nadie ve una respuesta individual'],
 ]);
 
+it('keeps the nine tools in the page as tab panels and shows only the chosen one', function (): void {
+    $panels = '[...document.querySelectorAll("#herramientas [role=tabpanel]")]';
+    $page = visitPage('landing', '/');
+
+    $page->assertScript("() => {$panels}.length", 9)
+        ->assertScript("() => {$panels}.filter((panel) => getComputedStyle(panel).display !== 'none').length", 1)
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").id', 'tool-panel-nom_035')
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").getAttribute("aria-labelledby")', 'tool-panel-title-nom_035')
+        ->assertScript('() => document.getElementById("tool-tab-nom_035").getAttribute("aria-controls")', 'tool-panel-nom_035')
+        ->assertScript("() => new Set({$panels}.map((panel) => panel.id)).size", 9)
+        ->assertScript("() => {$panels}.every((panel) => document.getElementById(panel.getAttribute('aria-labelledby')) !== null)")
+        ->assertNoJavaScriptErrors();
+});
+
+it('reveals the panel of each tab and hides the one before', function (string $family, string $tool, string $before): void {
+    $display = fn (string $key): string => "() => getComputedStyle(document.getElementById('tool-panel-{$key}')).display";
+
+    visitPage('landing', '/')
+        ->click("@family-tab-{$family}")
+        ->click("@tool-tab-{$tool}")
+        ->assertScript($display($tool), 'grid')
+        ->assertScript($display($before), 'none')
+        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").id', "tool-panel-{$tool}")
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-film]").length', 1)
+        ->assertScript("() => document.querySelector('#tool-panel-{$tool} [data-test=tool-film] video') !== null");
+})->with([
+    'NOM-037' => ['compliance', 'nom_037', 'nom_035'],
+    'complaints' => ['listening', 'complaints', 'nom_035'],
+]);
+
 it('opens on the tool the link names', function (): void {
     $page = visitPage('landing', '/');
     $page->script('() => { window.location.hash = "herramienta-engagement"; }');
@@ -306,7 +336,7 @@ it('fits every complete tool presentation below the laptop header, under its too
             $page->click("@tool-tab-{$tool}");
             // The family's tools just under the 64 px header, the way a visitor scrolls to them: the stage fits below them.
             $page->script('() => { window.scrollTo({ top: document.querySelector("[data-test=tool-rail]").getBoundingClientRect().top + window.scrollY - 80, behavior: "instant" }); }');
-            $page->assertScript('() => { const panel = document.getElementById("tool-panel").getBoundingClientRect(); const rail = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return rail.top >= 64 && rail.bottom <= panel.top && panel.bottom <= window.innerHeight; }');
+            $page->assertScript('() => { const panel = document.querySelector("#herramientas [data-test=tool-panel]").getBoundingClientRect(); const rail = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return rail.top >= 64 && rail.bottom <= panel.top && panel.bottom <= window.innerHeight; }');
         }
     }
 

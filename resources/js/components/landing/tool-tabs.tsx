@@ -41,7 +41,7 @@ export default function ToolTabs({ family, selected, onSelect }: Props) {
                             id={`tool-tab-${tool.key}`}
                             data-test={`tool-tab-${tool.key}`}
                             aria-selected={current}
-                            aria-controls="tool-panel"
+                            aria-controls={`tool-panel-${tool.key}`}
                             tabIndex={current ? 0 : -1}
                             onClick={() => onSelect(tool.key)}
                             onKeyDown={(event) => move(event, index)}

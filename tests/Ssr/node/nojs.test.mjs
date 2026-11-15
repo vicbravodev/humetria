@@ -56,3 +56,27 @@ void test('without JavaScript the headline and the main text are visible and the
         }
     });
 });
+
+// The eight tool panels that are not chosen hide only when <html> has `js` (set by the inline script): without it the nine tools stack.
+void test('without JavaScript the nine tool panels are visible, stacked, each with its name', async () => {
+    await withContext({ javaScriptEnabled: false }, async (context) => {
+        const page = await context.newPage();
+        await page.goto(baseUrl);
+
+        const panels = await page.evaluate(() =>
+            [...document.querySelectorAll('[role=tabpanel]')].map((panel) => ({
+                display: getComputedStyle(panel).display,
+                height: panel.getBoundingClientRect().height,
+                title: panel.querySelector('h3')?.textContent ?? '',
+            })),
+        );
+
+        assert.equal(panels.length, 9);
+        assert.ok(panels.every(({ display }) => display !== 'none'));
+        assert.ok(panels.every(({ height }) => height > 0));
+        assert.deepEqual(
+            panels.map(({ title }) => title),
+            toolNames,
+        );
+    });
+});
