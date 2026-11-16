@@ -22,7 +22,7 @@ use Database\Factories\Telework\TeleworkerFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** Opening the link once (the middleware and the page share it) and what each listed tool reads for its section. */
-const PORTAL_HOME_QUERIES = 21;
+const PORTAL_HOME_QUERIES = 17;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -72,40 +72,30 @@ it('puts the telework tool first, with the pending items of the person, at their
 });
 
 it('drops the section of a tool the company no longer has', function (): void {
-    Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
-    portalPlan(['nom035']);
+    portalPlan(['attendance']);
 
-    expect(array_keys(portalSections($this->token)))->toBe(['policy']);
+    expect(array_keys(portalSections($this->token)))->toBe(['attendance']);
 
     portalPlan(['seating']);
 
     expect(portalSections($this->token))->toBe([]);
 });
 
-it('tells the person the policy that waits for them', function (): void {
+it('leaves the policy and the page of the center out of the start by link: they are in the person\'s start, in their session', function (): void {
     Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    PageLink::factory()->create(['tenant_id' => $this->tenant->id]);
 
-    $sections = portalSections($this->token);
-
-    expect($sections['policy']['href'])->toBe(route('portal.policy.show', $this->token))
-        ->and($sections['policy']['pending'])->toBe(1);
+    expect(portalSections($this->token))->not->toHaveKeys(['policy', 'center']);
 });
 
-it('offers the page of the center only while its link is active, and support only to who was told through the portal', function (): void {
-    expect(portalSections($this->token))->not->toHaveKeys(['center', 'support']);
+it('offers support only to who was told through the portal', function (): void {
+    expect(portalSections($this->token))->not->toHaveKey('support');
 
-    $link = PageLink::factory()->create(['tenant_id' => $this->tenant->id]);
     $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $this->ana->id, 'requires_clinical_assessment' => true]);
     ScreeningReferral::factory()->create(['campaign_id' => $campaign->id, 'told' => HowTold::Portal]);
 
-    $sections = portalSections($this->token);
-
-    expect($sections['center']['href'])->toBe(route('workers.center', [$link->token(), $this->ana->work_center_id]))
-        ->and($sections['support']['href'])->toBe(route('portal.support.show', $this->token));
-
-    $link->forceFill(['disabled_at' => now()])->save();
-    expect(portalSections($this->token))->not->toHaveKey('center');
+    expect(portalSections($this->token)['support']['href'])->toBe(route('portal.support.show', $this->token));
 });
 
 it('offers the climate page once the company published what it will do', function (): void {
@@ -132,7 +122,7 @@ it('keeps the order fixed and sends nothing of another person', function (): voi
     $bea = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Bea Paz']);
     Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $bea->id]);
 
-    expect(array_keys(portalSections($this->token)))->toBe(['attendance', 'center']);
+    expect(array_keys(portalSections($this->token)))->toBe(['attendance']);
     $this->get(route('portal.show', $this->token))->assertInertia(function (Assert $page): void {
         expect(json_encode($page->toArray()['props'], JSON_THROW_ON_ERROR))->not->toContain('Bea Paz')->not->toContain($this->token.'x');
     });

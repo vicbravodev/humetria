@@ -9,7 +9,6 @@ use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Notifications\PolicyToConfirm;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -37,7 +36,7 @@ function remindAna(): void
     resolve(SendPolicyReminder::class, ['tenantId' => test()->tenant->id, 'employeeId' => test()->ana->id])->handle(...array_map(resolve(...), [
         App\Modules\Tenancy\Contracts\Companies::class,
         App\Modules\Organization\Contracts\Roster::class,
-        PortalAccess::class,
+        App\Modules\WorkerAccess\Contracts\WorkerLinks::class,
         App\Modules\Disclosure\Support\PolicyStanding::class,
     ]));
 }
@@ -51,7 +50,7 @@ it('queues once per person, after the commit, with only ids in the job', functio
         ->and(get_object_vars($job))->not->toHaveKey('token');
 });
 
-it('mails the person their personal link to the policy waiting for them, as «usted»', function (): void {
+it('mails the person the address of the policy waiting for them (no credential), as «usted»', function (): void {
     Notification::fake();
     Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $this->policy->id, 'employee_id' => $this->ana->id]);
 
@@ -59,11 +58,11 @@ it('mails the person their personal link to the policy waiting for them, as «us
 
     Notification::assertSentOnDemand(PolicyToConfirm::class, function (PolicyToConfirm $notification, array $channels, object $notifiable): bool {
         $mail = $notification->toMail($notifiable);
-        $token = resolve(PortalAccess::class)->token($this->ana->id);
 
         return $notifiable->routes['mail'] === 'ana@acme.test'
             && $channels === ['mail']
-            && $mail->actionUrl === route('portal.policy.show', $token)
+            && $mail->actionUrl === route('portal.policy.show', $this->tenant->slug)
+            && ! str_contains((string) $mail->render(), 'el anterior deja de funcionar')
             // Board V4-Correos-2: what it is, that it takes 3 minutes, one button.
             && $mail->subject === 'La política de su centro de trabajo'
             && $mail->greeting === 'Hola, Ana Ruiz'
@@ -128,5 +127,5 @@ it('never writes the link or the email in the log', function (): void {
 
     remindAna();
 
-    Log::shouldNotHaveReceived('info', fn (string $message, array $context = []): bool => str_contains(json_encode($context) ?: '', 'ana@acme.test') || str_contains(json_encode($context) ?: '', resolve(PortalAccess::class)->token($this->ana->id)));
+    Log::shouldNotHaveReceived('info', fn (string $message, array $context = []): bool => str_contains(json_encode($context) ?: '', 'ana@acme.test') || str_contains(json_encode($context) ?: '', route('portal.policy.show', $this->tenant->slug)));
 });

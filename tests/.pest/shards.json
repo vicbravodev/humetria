@@ -271,7 +271,7 @@
         "Tests\\Feature\\Disclosure\\BoardDeliveryTest": 1.2452,
         "Tests\\Feature\\Disclosure\\BoardResultsTest": 2.8342,
         "Tests\\Feature\\Disclosure\\BoardTest": 2.0847,
-        "Tests\\Feature\\Disclosure\\CenterPortalSectionTest": 0.0663,
+        "Tests\\Feature\\Disclosure\\CenterWorkerSectionTest": 0.0663,
         "Tests\\Feature\\Disclosure\\ContentWritingTest": 0.619,
         "Tests\\Feature\\Disclosure\\ContentsTest": 2.8258,
         "Tests\\Feature\\Disclosure\\DigestsTest": 0.8775,

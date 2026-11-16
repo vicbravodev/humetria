@@ -7,8 +7,8 @@ use App\Modules\Disclosure\Http\Controllers\PortalPolicyController;
 use App\Modules\Disclosure\Models\Acknowledgment;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Support\PolicyWorkerSection;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(Acknowledge::class, PortalPolicyController::class);
+mutates(Acknowledge::class, PortalPolicyController::class, PolicyWorkerSection::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'legal_name' => 'Acme Manufacturas S.A. de C.V.']);
@@ -24,7 +24,7 @@ beforeEach(function (): void {
     $this->plant = WorkCenter::factory()->for($this->tenant)->create();
     $this->ana = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana Ruiz', 'email' => 'ana@acme.test']);
     workIn($this->tenant);
-    $this->token = resolve(PortalAccess::class)->token($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
 });
 
 /** A published policy that reached the plant, asked of Ana. */
@@ -37,9 +37,9 @@ function policyAskedOfAna(int $version = 1): Document
     return $policy;
 }
 
-it('lives at /portal/{token}/policy, next to the rest of the personal page, throttled like it', function (): void {
-    expect(route('portal.policy.show', 'abc', absolute: false))->toBe('/portal/abc/policy')
-        ->and(route('portal.policy.acknowledge', 'abc', absolute: false))->toBe('/portal/abc/policy/acknowledge')
+it('lives at /me/{slug}/policy, in the person\'s pages, throttled like the rest of them', function (): void {
+    expect(route('portal.policy.show', 'acme', absolute: false))->toBe('/me/acme/policy')
+        ->and(route('portal.policy.acknowledge', 'acme', absolute: false))->toBe('/me/acme/policy/acknowledge')
         ->and(Route::getRoutes()->getByName('portal.policy.show')?->gatherMiddleware())->toContain('throttle:portal-views')
         ->and(Route::getRoutes()->getByName('portal.policy.acknowledge')?->gatherMiddleware())->toContain('throttle:portal-actions')
         ->and(RateLimiter::limiter('portal-views'))->not->toBeNull()
@@ -49,7 +49,7 @@ it('lives at /portal/{token}/policy, next to the rest of the personal page, thro
 it('shows the person the policy in force in their center, with the company name in place, pending their confirmation', function (): void {
     policyAskedOfAna();
 
-    $this->get(route('portal.policy.show', $this->token))->assertOk()
+    $this->get(route('portal.policy.show', $this->slug))->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('disclosure/portal-policy')
             ->where('company', 'Acme')
@@ -61,11 +61,12 @@ it('shows the person the policy in force in their center, with the company name 
 
 it('says when the person confirmed it', function (): void {
     $this->travelTo('2026-11-20 18:00:00');
+    enteredAs($this->ana->id);
     $policy = policyAskedOfAna();
 
-    $this->post(route('portal.policy.acknowledge', $this->token), ['document' => $policy->id])->assertRedirect(route('portal.policy.show', $this->token));
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id])->assertRedirect(route('portal.policy.show', $this->slug));
 
-    $this->get(route('portal.policy.show', $this->token))
+    $this->get(route('portal.policy.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->where('acknowledgment.state', 'confirmed')->where('acknowledgment.on', '20 nov 2026'));
 });
 
@@ -73,65 +74,67 @@ it('shows the version in force, not an older one the person was also asked', fun
     policyAskedOfAna(1);
     $second = policyAskedOfAna(2);
 
-    $this->get(route('portal.policy.show', $this->token))
+    $this->get(route('portal.policy.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->where('policy.version', 2)->where('acknowledgment.documentId', $second->id));
 });
 
 it('shows nothing to confirm when the center has no policy, or when the person was not asked', function (): void {
-    $this->get(route('portal.policy.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('policy', null)->where('acknowledgment', null));
+    $this->get(route('portal.policy.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('policy', null)->where('acknowledgment', null));
 
     $policy = Document::factory()->published()->policy()->create(['tenant_id' => $this->tenant->id]);
     DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $policy->id, 'work_center_id' => $this->plant->id]);
 
-    $this->get(route('portal.policy.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('policy.version', 1)->where('acknowledgment', null));
+    $this->get(route('portal.policy.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('policy.version', 1)->where('acknowledgment', null));
 });
 
 it('hands the page only what is the person\'s own and the company\'s', function (): void {
     policyAskedOfAna();
     $other = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Beto Peña', 'email' => 'beto@acme.test']);
 
-    $props = $this->get(route('portal.policy.show', $this->token))->viewData('page')['props'];
+    $props = $this->get(route('portal.policy.show', $this->slug))->viewData('page')['props'];
     unset($props['errors']);
     $json = json_encode($props);
 
-    expect($props)->toHaveKeys(['token', 'company', 'name', 'policy', 'acknowledgment'])
-        ->and($props['token'])->toBe($this->token)
+    expect($props)->toHaveKeys(['slug', 'company', 'name', 'policy', 'acknowledgment'])->not->toHaveKey('token')
+        ->and($props['slug'])->toBe($this->tenant->slug)
         ->and($json)->not->toContain($other->id)->not->toContain('Beto')->not->toContain('beto@acme.test')->not->toContain($this->hr->email);
 });
 
-it('is a 404 that says nothing for a link that is not valid, from another company, replaced, of a person who left or of a blocked company', function (Closure $break): void {
-    policyAskedOfAna();
-    $token = $break($this);
+it('sends a visitor to enter, ends the page for a person who left, and confirms nothing for either', function (): void {
+    $policy = policyAskedOfAna();
+    session()->flush();
 
-    $this->get(route('portal.policy.show', $token))->assertNotFound();
-    $this->post(route('portal.policy.acknowledge', $token), ['document' => Document::query()->firstOrFail()->id])->assertNotFound();
+    $this->get(route('portal.policy.show', $this->slug))->assertRedirect(route('worker.home', $this->slug));
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id])->assertRedirect(route('worker.home', $this->slug));
+
+    $slug = asPerson($this->ana->id);
+    $this->ana->update(['deactivated_at' => now()]);
+
+    $this->get(route('portal.policy.show', $slug))->assertRedirect(route('worker.home', $slug));
+    $this->post(route('portal.policy.acknowledge', $slug), ['document' => $policy->id])->assertRedirect(route('worker.home', $slug));
     expect(Acknowledgment::query()->whereNotNull('acknowledged_at')->count())->toBe(0);
-})->with([
-    'made up' => [fn () => str_repeat('a', 43)],
-    'replaced' => [function ($test) {
-        $old = $test->token;
-        resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($test->ana->id, revoke: true);
+});
 
-        return $old;
-    }],
-    'of a person who left' => [function ($test) {
-        $test->ana->update(['deactivated_at' => now()]);
+it('opens nothing of another company with this session, and answers 404 for a blocked company', function (): void {
+    $policy = policyAskedOfAna();
+    $other = Tenant::factory()->create();
 
-        return $test->token;
-    }],
-    'of a blocked company' => [function ($test) {
-        Tenant::query()->whereKey($test->tenant->id)->update(suspension());
+    $this->get(route('portal.policy.show', $other->slug))->assertRedirect(route('worker.home', $other->slug));
+    $this->post(route('portal.policy.acknowledge', $other->slug), ['document' => $policy->id])->assertRedirect(route('worker.home', $other->slug));
 
-        return $test->token;
-    }],
-]);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
+    $this->get(route('portal.policy.show', $this->slug))->assertNotFound();
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id])->assertNotFound();
+    expect(Acknowledgment::query()->whereNotNull('acknowledged_at')->count())->toBe(0);
+});
 
 it('confirms once, the version in force, and records the channel and the day without an address', function (): void {
     $this->travelTo('2026-11-20 18:00:00');
+    enteredAs($this->ana->id);
     Log::spy();
     $policy = policyAskedOfAna();
 
-    $this->post(route('portal.policy.acknowledge', $this->token), ['document' => $policy->id])->assertSessionHasNoErrors();
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id])->assertSessionHasNoErrors();
 
     $ack = Acknowledgment::query()->sole();
     expect($ack->channel)->toBe('portal')
@@ -143,11 +146,12 @@ it('confirms once, the version in force, and records the channel and the day wit
 
 it('refuses a second confirmation and changes nothing', function (): void {
     $policy = policyAskedOfAna();
-    $this->post(route('portal.policy.acknowledge', $this->token), ['document' => $policy->id]);
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id]);
     $first = Acknowledgment::query()->sole()->acknowledged_at;
     $this->travelTo(now()->addDay());
+    enteredAs($this->ana->id);
 
-    $this->post(route('portal.policy.acknowledge', $this->token), ['document' => $policy->id])->assertSessionHasErrors('document');
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id])->assertSessionHasErrors('document');
 
     expect(Acknowledgment::query()->sole()->acknowledged_at)->toEqual($first);
 });
@@ -156,7 +160,7 @@ it('refuses a version that is no longer in force and changes nothing', function 
     $old = policyAskedOfAna(1);
     policyAskedOfAna(2);
 
-    $this->post(route('portal.policy.acknowledge', $this->token), ['document' => $old->id])->assertSessionHasErrors('document');
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $old->id])->assertSessionHasErrors('document');
 
     expect(Acknowledgment::query()->whereNotNull('acknowledged_at')->count())->toBe(0);
 });
@@ -167,11 +171,11 @@ it('does not find a request that was not made, a document of another company or 
     $foreign = Document::factory()->published()->policy()->create(['tenant_id' => Tenant::factory()->create()->id]);
 
     foreach ([$unasked->id, $foreign->id, '0194c1de-0000-7000-8000-000000000000'] as $id) {
-        $this->post(route('portal.policy.acknowledge', $this->token), ['document' => $id])->assertNotFound();
+        $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $id])->assertNotFound();
     }
 
-    $this->post(route('portal.policy.acknowledge', $this->token), ['document' => 'x'])->assertSessionHasErrors('document');
-    $this->post(route('portal.policy.acknowledge', $this->token))->assertSessionHasErrors('document');
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => 'x'])->assertSessionHasErrors('document');
+    $this->post(route('portal.policy.acknowledge', $this->slug))->assertSessionHasErrors('document');
     expect(Acknowledgment::query()->count())->toBe(0);
 });
 
@@ -180,8 +184,26 @@ it('does not let a person confirm for another', function (): void {
     $beto = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $policy->id, 'employee_id' => $beto->id]);
 
-    $this->post(route('portal.policy.acknowledge', $this->token), ['document' => $policy->id]);
+    $this->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id]);
 
     expect(Acknowledgment::query()->where('employee_id', $beto->id)->sole()->acknowledged_at)->toBeNull()
         ->and(Acknowledgment::query()->where('employee_id', $this->ana->id)->sole()->acknowledged_at)->not->toBeNull();
+});
+
+it('tells the person, in their start, how many policies wait for their confirmation, at their page with no credential', function (): void {
+    $ana = new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz');
+    $section = fn (): ?App\Modules\WorkerAccess\Data\WorkerSectionLink => resolve(PolicyWorkerSection::class)->for($ana);
+
+    expect($section())->toBeNull();
+
+    policyAskedOfAna();
+    $link = $section();
+
+    expect($link?->key)->toBe('policy')
+        ->and($link?->label)->toBe('Política por confirmar')
+        ->and($link?->href)->toBe(route('portal.policy.show', $this->tenant->slug))
+        ->and($link?->pending)->toBe(1);
+
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+    expect($section())->toBeNull();
 });

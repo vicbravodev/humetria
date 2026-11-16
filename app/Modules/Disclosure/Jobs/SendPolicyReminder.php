@@ -8,8 +8,8 @@ use App\Modules\Disclosure\Models\Acknowledgment;
 use App\Modules\Disclosure\Notifications\PolicyToConfirm;
 use App\Modules\Disclosure\Support\PolicyStanding;
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
@@ -17,8 +17,8 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Tells a person the policy in force in their center is waiting for their confirmation, with their personal link derived
- * here (the same one every email carries). Only ids travel in the job. Nothing is sent when they already confirmed it, were never
+ * Tells a person the policy in force in their center is waiting for their confirmation, with the address of their policy
+ * page (no credential: they enter first). Only ids travel in the job. Nothing is sent when they already confirmed it, were never
  * asked, have no email, left, or the company may not be used; a person has at most one waiting (the lock is released when
  * it starts, so a request that arrives while it runs queues the next).
  */
@@ -51,7 +51,7 @@ final class SendPolicyReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
         return "{$this->tenantId}:{$this->employeeId}";
     }
 
-    public function handle(Companies $companies, Roster $roster, PortalAccess $access, PolicyStanding $standing): void
+    public function handle(Companies $companies, Roster $roster, WorkerLinks $links, PolicyStanding $standing): void
     {
         $company = $companies->enter($this->tenantId);
         $person = $roster->find($this->employeeId);
@@ -67,6 +67,6 @@ final class SendPolicyReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
             return;
         }
 
-        Notification::route('mail', $person->email)->notify(new PolicyToConfirm(route('portal.policy.show', $access->token($person->id)), $person->name, $company));
+        Notification::route('mail', $person->email)->notify(new PolicyToConfirm($links->to('portal.policy.show'), $person->name, $company));
     }
 }

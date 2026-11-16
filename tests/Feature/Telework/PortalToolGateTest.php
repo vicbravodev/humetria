@@ -33,7 +33,6 @@ it('answers 404 on the page by link of a tool the company does not have, and kee
     $this->get(route($route, $this->token))->assertNotFound();
     $this->get(route('portal.show', $this->token))->assertOk();
 })->with([
-    'Política NOM-035' => ['portal.policy.show', 'nom035'],
     'Apoyo NOM-035' => ['portal.support.show', 'nom035'],
 ]);
 
@@ -48,7 +47,7 @@ it('answers 404 on a page of the person in their session when the company of the
 
     $this->get(route($route, $slug))->assertNotFound();
     $this->get(route('worker.home', $slug))->assertOk();
-})->with(['portal.telework.show', 'portal.notices.show', 'portal.team.show', 'portal.vacations.show', 'portal.seating.show']);
+})->with(['portal.telework.show', 'portal.notices.show', 'portal.team.show', 'portal.vacations.show', 'portal.seating.show', 'portal.policy.show']);
 
 it('lets a link that is not valid through to the page, which answers it its own way', function (): void {
     onlyAttendance();
