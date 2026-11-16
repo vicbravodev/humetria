@@ -261,6 +261,26 @@ it('stops the sixth submission of an hour from one address, and nobody else\'s',
     expect(Complaint::query()->count())->toBe(6);
 });
 
+// Audit C6: one address must not be able to use more than a small share of the channel's daily capacity.
+it('stops the eleventh submission of a day from one address, though no hour went over, and nobody else\'s', function (): void {
+    $send = function (string $address) {
+        $ticket = resolve(TicketSigner::class)->issue($this->channel->access_code);
+        Carbon::setTestNow(now()->addSeconds(10));
+
+        return $this->withServerVariables(['REMOTE_ADDR' => $address])->postJson('/c/'.$this->channel->access_code, complaintForm($this, ['ticket' => $ticket]));
+    };
+
+    foreach (range(1, 10) as $number) {
+        $send('198.51.100.1')->assertCreated();
+        Carbon::setTestNow(now()->addMinutes($number % 5 === 0 ? 61 : 10));
+    }
+
+    $send('198.51.100.1')->assertStatus(429);
+    $send('198.51.100.2')->assertCreated();
+
+    expect(Complaint::query()->count())->toBe(11);
+});
+
 it('takes no more than the daily cap of the channel, and tells who manages it once', function (): void {
     Notification::fake();
     config(['complaints.rate_limits.daily_cap' => 2]);

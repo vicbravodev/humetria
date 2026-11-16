@@ -45,6 +45,10 @@ final class ComplaintsServiceProvider extends ServiceProvider
         // Keyed by a hash of the address, never the address; a whole office behind one address must still be able to use it.
         RateLimiter::for('complaints-view', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.views_per_hour'))->by(AddressKey::for($request)));
         RateLimiter::for('complaints-follow-up', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.follow_ups_per_hour'))->by(AddressKey::for($request)));
-        RateLimiter::for('complaints-submit', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.submissions_per_hour'))->by(AddressKey::for($request)));
+        // The daily limit keeps one address to a small share of the channel's daily cap (audit C6).
+        RateLimiter::for('complaints-submit', fn (Request $request): array => [
+            Limit::perHour(config()->integer('complaints.rate_limits.submissions_per_hour'))->by(AddressKey::for($request)),
+            Limit::perDay(config()->integer('complaints.rate_limits.submissions_per_day'))->by('day:'.AddressKey::for($request)),
+        ]);
     }
 }
