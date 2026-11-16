@@ -6,6 +6,7 @@ namespace App\Modules\Complaints\Support;
 
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
+use App\Modules\Tenancy\Contracts\Members;
 use Illuminate\Support\Str;
 
 /**
@@ -15,14 +16,20 @@ use Illuminate\Support\Str;
  */
 final readonly class CaseAccess
 {
+    public function __construct(private Members $members) {}
+
     public function find(int $userId, string $complaintId): ?Complaint
     {
         if (! Str::isUuid($complaintId)) {
             return null;
         }
 
-        return Complaint::query()
+        $case = Complaint::query()
             ->whereIn('id', ComplaintAssignment::query()->where('user_id', $userId)->whereNull('ended_on')->select('complaint_id'))
             ->find($complaintId);
+        $role = $this->members->find($userId)?->role->value;
+
+        // Nobody handles a case against their own role (criterio C-45), also when the role came after the assignment.
+        return $case === null || $role === null || $role === $case->respondent_kind->excludedRole() ? null : $case;
     }
 }
