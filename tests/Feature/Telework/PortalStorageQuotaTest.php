@@ -76,3 +76,32 @@ it('gives back the quota of a file a rollback deletes, in the four modules', fun
     'interventions' => [InterventionFiles::class, 'fake-intervention_files'],
     'disclosure' => [DisclosureFiles::class, 'fake-disclosure_files'],
 ]);
+
+it('refuses an oversized photo on the field itself, before anything is stored', function (): void {
+    $big = UploadedFile::fake()->create('grande.png', config()->integer('telework.max_photo_kb') + 1);
+    $request = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
+
+    $this->post(route('portal.evidence.store', [$this->token, $request->id]), ['photo_general_0' => $big])->assertSessionHasErrors('photo_general_0');
+
+    $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->centerId]);
+    $application = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'checklist_id' => $checklist->id]);
+    $this->post(route('portal.checklist.store', [$this->token, $application->id]), ['answers' => ['x' => 'no'], 'photo_general_0' => $big])->assertSessionHasErrors('photo_general_0');
+
+    expect(($this->used)())->toBe(0)->and(Storage::disk('fake-telework_files')->allFiles())->toBe([]);
+});
+
+it('caps the photos of a whole checklist, not only each group', function (): void {
+    config(['telework.max_photos_per_checklist' => 3]);
+    $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->centerId]);
+    $application = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'checklist_id' => $checklist->id]);
+    $question = (string) Str::uuid();
+    $files = [];
+    foreach (range(0, 1) as $n) {
+        $files["photo_general_{$n}"] = ($this->png)("g{$n}.png");
+        $files["photo_{$question}_{$n}"] = ($this->png)("q{$n}.png");
+    }
+
+    $this->post(route('portal.checklist.store', [$this->token, $application->id]), ['answers' => ['x' => 'no'], ...$files])->assertSessionHasErrors('photos');
+
+    expect(($this->used)())->toBe(0)->and(Storage::disk('fake-telework_files')->allFiles())->toBe([]);
+});
