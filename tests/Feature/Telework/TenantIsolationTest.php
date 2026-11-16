@@ -199,7 +199,6 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
         ],
         Teleworker::class => [
             ['GET', $panel('teleworkers.show', $b[Teleworker::class]->id)],
-            ['POST', $panel('teleworkers.link', $b[Teleworker::class]->id)],
             ['POST', $panel('teleworkers.workplaces.store', $b[Teleworker::class]->id), $address],
             ['POST', $panel('teleworkers.equipment.store', $b[Teleworker::class]->id), ['kind' => 'chair', 'description' => 'Silla', 'delivered_on' => now(config()->string('app.display_timezone'))->toDateString()]],
             ['POST', $panel('teleworkers.join', $b[Teleworker::class]->id), ['marital_status' => 'single', 'activities' => 'Captura', 'contact_phone' => '4421234567', ...$address]],

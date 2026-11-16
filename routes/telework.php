@@ -70,7 +70,6 @@ Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers/create
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers/employees', [TeleworkerController::class, 'employees'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.employees');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers', [TeleworkerController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.store');
 Route::get('admin/{tenant:slug}/telework/teleworkers/{teleworker}', [TeleworkerController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.show');
-Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/portal-link', [TeleworkerController::class, 'link'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.link');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', [TeleworkerController::class, 'addWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.workplaces.store');
 // The equipment delivered to a person: registered by RH, answered by the person in their portal. No edit and no delete: a
 // registration is evidence (C-22, C-29); a mistaken one stays and the person refuses it with the reason.

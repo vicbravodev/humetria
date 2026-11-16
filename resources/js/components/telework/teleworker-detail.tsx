@@ -1,4 +1,3 @@
-import { usePage } from '@inertiajs/react';
 import { Briefcase, Home, Percent } from 'lucide-react';
 import IconTile from '@/components/humetria/icon-tile';
 import AddWorkplaceDialog from '@/components/telework/add-workplace-dialog';
@@ -17,7 +16,7 @@ const STATUS: Record<TeleworkerSummary['status'], string> = {
     ended: 'Terminó',
 };
 
-/** A person who will telework: their workplaces with where each checklist stands, and their portal link (pantalla: Eval-Cerrada). */
+/** A person who will telework: their workplaces with where each checklist stands, and the way to their access (pantalla: Eval-Cerrada). */
 export default function TeleworkerDetail({
     teleworker,
     states,
@@ -25,7 +24,6 @@ export default function TeleworkerDetail({
     teleworker: TeleworkerSummary;
     states: Record<string, string>;
 }) {
-    const newLink = usePage().flash.portalLink;
     const ended = teleworker.status === 'ended';
 
     return (
@@ -44,9 +42,8 @@ export default function TeleworkerDetail({
             <RosterPanel teleworker={teleworker} states={states} />
             {!ended && (
                 <PortalLinkPanel
-                    teleworkerId={teleworker.id}
+                    name={teleworker.name}
                     hasEmail={teleworker.hasEmail}
-                    newLink={newLink}
                 />
             )}
             <EquipmentSection teleworker={teleworker} />

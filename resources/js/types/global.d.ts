@@ -55,8 +55,6 @@ declare module '@inertiajs/core' {
             salary_import?: SalaryImportSummary;
             /** A link to a report just opened, shown once: only its hash is kept. */
             reportLink?: ReportLink;
-            /** A person's new portal link, shown once: only its hash is kept and the previous one stops working. */
-            portalLink?: string;
             /** The link of a QR screen just issued, shown once: only its hash is kept, and it opens once. */
             kioskLink?: string;
             /** A person's link to enter and create their key, shown once to RH only when the person has no email; it works once, 48 h. */

@@ -318,12 +318,12 @@ it('shows a teleworker with their workplaces and no email', function (bool $dark
     visitPage('telework/teleworker', "{$url}/telework/teleworkers/{$teleworker->id}", $dark, $mobile)
         ->assertSee('Ana Ruiz')
         ->assertSee('Sin correo')
-        ->assertSee('Generar enlace para copiar')
+        ->assertSee('Ver su acceso')
         ->assertSee('Calle Hidalgo 45')
         ->assertSee('Pendiente de contestar');
 })->with($looks);
 
-it('registers a person from the page and hands over a new link once', function (): void {
+it('registers a person from the page and sends RH to «Accesos» for their link', function (): void {
     [$url, $center, $tenant] = teleworkerCenter();
     EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'email' => null]);
 
@@ -344,11 +344,10 @@ it('registers a person from the page and hands over a new link once', function (
         ->press('Registrar persona')
         ->assertSee('Persona registrada')
         ->assertSee('Calle Hidalgo 45, Centro, Querétaro, Querétaro')
-        ->press('Generar enlace para copiar')
-        ->assertSee('El enlace anterior de esta persona dejará de funcionar')
-        ->press('Generar enlace')
-        ->assertSee('Enlace nuevo')
-        ->assertScript('() => document.querySelector("#portal-link").value.includes("/portal/")', true)
+        ->click('Ver su acceso')
+        ->assertPathIs("{$url}/access")
+        ->assertQueryStringHas('q', 'Ana Ruiz')
+        ->assertSee('Ana Ruiz')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
@@ -644,7 +643,7 @@ it('shows an ended period as history, without the actions that no longer work', 
         ->assertSee('Regresó a la oficina.')
         ->assertDontSee('Vence el')
         ->assertDontSee('Agregar lugar')
-        ->assertDontSee('Enlace a su portal');
+        ->assertDontSee('Acceso a su portal');
 });
 
 it('shows the NOM-037 documents with what each version covers and leaves out', function (bool $dark, bool $mobile): void {

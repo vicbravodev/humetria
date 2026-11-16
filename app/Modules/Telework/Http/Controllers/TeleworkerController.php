@@ -9,7 +9,6 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Telework\Actions\AddWorkplace;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\RegisterAspirant;
 use App\Modules\Telework\Actions\RetireWorkplace;
 use App\Modules\Telework\Enums\Section;
@@ -92,18 +91,6 @@ final class TeleworkerController extends Controller
         abort_if($center === null, 404); // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveFunctionCall
 
         return $this->page($center->id, $center->name, $period);
-    }
-
-    /** A new link, shown once: only its hash is kept, and the one the person had stops working. */
-    public function link(mixed $tenant, string $teleworker, IssuePortalLink $issue): RedirectResponse
-    {
-        Gate::authorize('manage-telework');
-        $period = $this->teleworker($teleworker);
-        abort_if($period->status === TeleworkerStatus::Ended, 404);
-
-        Inertia::flash('portalLink', route('portal.show', $issue->handle($period->employee_id, revoke: true)));
-
-        return redirect()->route('tenant.telework.teleworkers.show', [$tenant, $period->id]);
     }
 
     public function addWorkplace(WorkplaceRequest $request, mixed $tenant, string $teleworker, AddWorkplace $add): RedirectResponse

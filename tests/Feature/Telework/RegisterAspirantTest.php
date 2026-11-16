@@ -313,35 +313,15 @@ it('shows a teleworker with their workplaces and the missing email', function ()
             ->missing('teleworker.link'));
 });
 
-it('issues a new link to copy and invalidates the previous', function (): void {
-    $this->employee->forceFill(['email' => null])->save();
-    $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
-    $teleworker = aspirant();
-    expect(PortalLink::query()->count())->toBe(0);
-
-    $response = $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $teleworker->id]));
-
-    $response->assertRedirect(route('tenant.telework.teleworkers.show', [$this->tenant, $teleworker->id]));
-    $flash = session('inertia.flash_data')['portalLink'] ?? null;
-    expect($flash)->toBeString()->toStartWith(url('/portal/'));
-    $token = basename($flash);
-    expect(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token));
-
-    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $teleworker->id]));
-    $newer = basename(session('inertia.flash_data')['portalLink']);
-
-    auth()->logout();
-    expect($newer)->not->toBe($token);
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', true));
-    $this->get(route('portal.show', $newer))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
+it('no longer issues a portal link from the teleworker: RH invites the person in «Accesos»', function (): void {
+    expect(Illuminate\Support\Facades\Route::has('tenant.telework.teleworkers.link'))->toBeFalse();
 });
 
-it('does not hand a link to anyone but RH and the owner', function (TenantRole $role): void {
+it('does not show a teleworker nor register one to anyone but RH and the owner', function (TenantRole $role): void {
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
     $teleworker = aspirant();
     $this->actingAs(memberOf($this->tenant, $role));
 
-    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $teleworker->id]))->assertForbidden();
     $this->post(registerUrl(), aspirantForm())->assertForbidden();
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $teleworker->id]))->assertForbidden();
     $this->get(route('tenant.telework.teleworkers.create', [$this->tenant, $this->center->id]))->assertForbidden();
@@ -355,7 +335,6 @@ it('answers 404, not 403, for a teleworker or work center of another company', f
     $foreignCenter = WorkCenter::factory()->for($other)->create();
 
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $foreign->id]))->assertNotFound();
-    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $foreign->id]))->assertNotFound();
     $this->post(route('tenant.telework.teleworkers.workplaces.store', [$this->tenant, $foreign->id]), homeOffice())->assertNotFound();
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, 'not-a-uuid']))->assertNotFound();
     $this->post(registerUrl($foreignCenter), aspirantForm())->assertNotFound();
