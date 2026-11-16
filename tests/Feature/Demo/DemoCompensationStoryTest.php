@@ -15,6 +15,7 @@ use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 use App\Modules\Compensation\Support\ReportBuilder;
 use App\Modules\Compensation\Support\ScenarioInputBuilder;
 use App\Modules\Demos\Contracts\DemoWorkspace;
+use App\Modules\Leave\Models\LeavePolicy;
 use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
@@ -63,6 +64,8 @@ it('tells the compensation story: a tabulator, a collective contract above the l
     expect($base->keys()->sort()->values()->all())->toBe(collect(BaseBenefit::cases())->map->value->sort()->values()->all())
         ->and($current($base['christmas_bonus'])->value)->toBeGreaterThan(1500)
         ->and($current($base['vacation_premium'])->value)->toBeGreaterThan(2500)
+        // the same prima vacacional Vacaciones pays everyone today (a percent is stored in hundredths here, whole there)
+        ->and($current($base['vacation_premium'])->value)->toBe(LeavePolicy::query()->sole()->premium_percent * 100)
         ->and($current($base['food_vouchers'])->value)->toBeGreaterThan(0)
         ->and($current($base['savings_fund'])->value)->toBeGreaterThan(0)
         ->and(ContractTerm::query()->where('benefit_id', $base['christmas_bonus']->id)->count())->toBe(2);
@@ -84,6 +87,9 @@ it('tells the compensation story: a tabulator, a collective contract above the l
             ->and($cost->beforeCents)->toBeGreaterThan(0)
             ->and($cost->afterCents)->toBeGreaterThan($cost->beforeCents);
     }
+    // the union asks for 50 % of prima vacacional; the company keeps the 30 % in force
+    $premiums = $scenarios->map(fn (Scenario $scenario): ?int => collect($scenario->term_changes)->firstWhere('benefit_id', $base['vacation_premium']->id)['value'] ?? null)->all();
+    expect($premiums)->toBe([5000, null]);
     expect($union->beforeCents)->toBe($company->beforeCents)
         ->and($union->afterCents)->toBeGreaterThan($company->afterCents);
     // the company's proposal raises both groups; the union's, only its own

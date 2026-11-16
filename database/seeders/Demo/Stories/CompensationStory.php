@@ -33,9 +33,10 @@ use Illuminate\Support\Facades\Log;
 /**
  * Compensación at Alba del Bajío. Two months ago HR opened the contract calculator, captured the tabulator (a daily salary
  * per job grade), the IMSS work risk premium of a metal-parts plant and the collective contract in force, above the law:
- * 30 days of aguinaldo, 50 % of vacation premium, vales, savings fund, an attendance bonus and a transport aid of its own for
- * the unionized staff. With the revision due at the start of next month, two proposals are on the table: the union's (9 % to
- * its people, more vales and transport) and the company's counter-offer (6 % and 4.5 % to trusted staff, a little more vales).
+ * 30 days of aguinaldo, 30 % of vacation premium (the one Vacaciones pays), vales, savings fund, an attendance bonus and
+ * a transport aid of its own for the unionized staff. With the revision due at the start of next month, two proposals are on
+ * the table: the union's (9 % to its people, 50 % of vacation premium, more vales and transport) and the company's
+ * counter-offer (6 % and 4.5 % to trusted staff, a little more vales).
  * The module costs both against the contract in force; nothing here sets a computed number.
  *
  * Opening the calculator does not go through an action: the base benefits come from BaseCatalog, which the module keeps in
@@ -55,7 +56,7 @@ final readonly class CompensationStory implements DemoStory
 
     /** The collective contract in force, by base benefit: its value in hundredths (see BenefitKind). */
     private const array CONTRACT = [
-        'christmas_bonus' => 3_000, 'vacation_premium' => 5_000, 'food_vouchers' => 120_000, 'savings_fund' => 1_300, 'attendance_bonus' => 1_000,
+        'christmas_bonus' => 3_000, 'vacation_premium' => 3_000, 'food_vouchers' => 120_000, 'savings_fund' => 1_300, 'attendance_bonus' => 1_000,
     ];
 
     /** A metal-parts plant's IMSS work risk premium, times 10^7: 2.5984 %. */
@@ -93,7 +94,8 @@ final readonly class CompensationStory implements DemoStory
 
         DemoClock::at('-'.(self::OPENED_DAYS_AGO - 3).' days', function () use ($benefits, $revision): void {
             $this->propose('Revisión '.$revision->year.': propuesta del sindicato', $revision, 900, 0, [
-                new TermChange($benefits['food_vouchers'], 150_000, null), new TermChange($benefits[self::TRANSPORT], 80_000, null),
+                new TermChange($benefits['vacation_premium'], 5_000, null), new TermChange($benefits['food_vouchers'], 150_000, null),
+                new TermChange($benefits[self::TRANSPORT], 80_000, null),
             ]);
         });
         DemoClock::at('-'.(self::OPENED_DAYS_AGO - 10).' days', function () use ($benefits, $revision): void {
