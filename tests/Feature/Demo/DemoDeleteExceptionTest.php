@@ -42,7 +42,7 @@ function attendanceAgreement(string $tenantId): string
  *
  * @param  list<string>  $bindings
  */
-function refused(string $sql, array $bindings = []): ?string
+function refusedByTrigger(string $sql, array $bindings = []): ?string
 {
     try {
         DB::transaction(fn (): int => DB::affectingStatement($sql, $bindings));
@@ -103,7 +103,7 @@ it('still refuses to delete a row of a real company while a demo company exists'
     // Another company is the demo: the exception must ask about the row's own company, not whether any demo exists.
     TenantFactory::new()->createOne(['is_demo' => true]);
 
-    expect(refused("delete from {$table} where id = ?", [$id]))->toContain($message)
+    expect(refusedByTrigger("delete from {$table} where id = ?", [$id]))->toContain($message)
         ->and(DB::table($table)->where('id', $id)->exists())->toBeTrue();
 })->with(insertOnlyTables());
 
@@ -111,17 +111,17 @@ it('deletes a row of the demo company, and still refuses to update it', function
     becomeDemo(DB::table($table)->where('id', $id)->value('tenant_id'));
 
     if ($set !== null) {
-        expect(refused("update {$table} set {$set} where id = ?", [$id]))->toContain($message);
+        expect(refusedByTrigger("update {$table} set {$set} where id = ?", [$id]))->toContain($message);
     }
 
-    expect(refused("delete from {$table} where id = ?", [$id]))->toBeNull()
+    expect(refusedByTrigger("delete from {$table} where id = ?", [$id]))->toBeNull()
         ->and(DB::table($table)->where('id', $id)->exists())->toBeFalse();
 })->with(insertOnlyTables());
 
 it('still refuses to empty the table, with only demo rows in it', function (string $table, string $id, string $message): void {
     becomeDemo(DB::table($table)->where('id', $id)->value('tenant_id'));
 
-    expect(refused("truncate {$table} cascade"))->toContain($message)
+    expect(refusedByTrigger("truncate {$table} cascade"))->toContain($message)
         ->and(DB::table($table)->where('id', $id)->exists())->toBeTrue();
 })->with(array_filter(insertOnlyTables(), fn (array $case): bool => $case[4]));
 
@@ -131,7 +131,7 @@ it('leaves the audit trail insert-only for the demo too', function (): void {
     $id = Str::uuid()->toString();
     DB::table('audit_entries')->insert(['id' => $id, 'tenant_id' => $tenant->id, 'event' => 'demo.test', 'created_at' => now()]);
 
-    expect(refused('delete from audit_entries where id = ?', [$id]))->toContain('append-only');
+    expect(refusedByTrigger('delete from audit_entries where id = ?', [$id]))->toContain('append-only');
 });
 
 it('puts every original rule back when rolled back', function (): void {
@@ -141,10 +141,10 @@ it('puts every original rule back when rolled back', function (): void {
 
     $migration->down();
 
-    expect(refused('delete from attendance_marks where id = ?', [$id]))->toContain('attendance_marks is append-only')
+    expect(refusedByTrigger('delete from attendance_marks where id = ?', [$id]))->toContain('attendance_marks is append-only')
         ->and(DB::scalar("select prosrc from pg_proc where proname = 'disclosure_published_is_final'"))->toContain("TG_TABLE_NAME = 'disclosure_document_centers' OR OLD.status = 'published'");
 
     $migration->up();
 
-    expect(refused('delete from attendance_marks where id = ?', [$id]))->toBeNull();
+    expect(refusedByTrigger('delete from attendance_marks where id = ?', [$id]))->toBeNull();
 });
