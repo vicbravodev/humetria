@@ -198,6 +198,9 @@ function enteringTo(string $employeeId, string $text): Closure
     $slug = Tenant::query()->findOrFail($person->tenant_id)->slug;
     $token = Str::random(40);
     App\Modules\WorkerAccess\Models\WorkerAccessLink::factory()->withToken($token)->requested()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id]);
+    // The session cookie lasts until the browser closes: one dated by a test clock set in the past (travelTo) comes already
+    // expired to the browser, which runs on the real clock, and every request would start a new session.
+    config(['session.expire_on_close' => true]);
 
     return fn (AwaitableWebpage|PendingAwaitablePage|On $page): AwaitableWebpage => $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
 }
