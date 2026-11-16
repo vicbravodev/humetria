@@ -50,7 +50,12 @@ export function createRemoteSearch({
     const ask = async (key: string, query: string) => {
         const current = new AbortController();
         controller = current;
-        report({ status: 'loading', options: shown });
+        // What is still on screen is narrowed to what was typed, so Enter never picks what no longer matches.
+        report({
+            status: 'loading',
+            options: filterOptions(indexOptions(shown), query, pageSize)
+                .options,
+        });
 
         try {
             const options = await load(query, current.signal);

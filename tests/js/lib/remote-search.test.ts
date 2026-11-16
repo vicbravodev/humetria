@@ -244,3 +244,30 @@ describe('createRemoteSearch with a short list', () => {
         expect(load).toHaveBeenCalledTimes(2);
     });
 });
+
+describe('createRemoteSearch while loading', () => {
+    it('narrows the results still on screen to what was typed', async () => {
+        const load = vi.fn(async (query: string) =>
+            query === ''
+                ? Array.from({ length: 20 }, (_, i) => option(`Centro ${i}`))
+                : [option('Planta')],
+        );
+        const search = createRemoteSearch({
+            load,
+            delay: 300,
+            minLength: 0,
+            onChange: (state: SearchState) => states.push(state),
+        });
+
+        search.search('');
+        await vi.advanceTimersByTimeAsync(300);
+        search.search('planta');
+        await vi.advanceTimersByTimeAsync(300);
+
+        expect(states.find(({ status }) => status === 'loading')).toBeDefined();
+        expect(
+            states.filter(({ status }) => status === 'loading').at(-1)?.options,
+        ).toEqual([]);
+        expect(last()).toEqual({ status: 'done', options: [option('Planta')] });
+    });
+});
