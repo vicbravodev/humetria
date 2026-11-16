@@ -114,7 +114,8 @@ final readonly class OrganizationStory implements DemoStory
             hiredOn: $today->subDays($person->tenureDays),
             // The rank and file are under the collective contract; everyone else is trusted staff (Compensación costs both).
             staffGroup: $person->category === 'Operativo' ? StaffGroup::Unionized : StaffGroup::Trusted,
-            state: null,
+            // Where they work: the payroll tax of Compensación is the state's (the calculator reads the person's).
+            state: ($person->centerKey === 'monterrey' ? MexicanState::NuevoLeon : MexicanState::Queretaro)->value,
             managerId: $person->reportsTo === null ? null : DemoRoster::employeeId($person->reportsTo),
             id: DemoRoster::employeeId($person->key),
         );

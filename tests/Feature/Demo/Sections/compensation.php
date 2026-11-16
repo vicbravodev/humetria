@@ -20,6 +20,7 @@ use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoPerson;
@@ -39,6 +40,11 @@ return [
         foreach (Employee::query()->get() as $employee) {
             expect($employee->staff_group)->toBe($people[$employee->id]->category === 'Operativo' ? StaffGroup::Unionized : StaffGroup::Trusted);
         }
+
+        // taxes each person's payroll in the state where they work: Monterrey in Nuevo León, everyone else in Querétaro
+        $centers = WorkCenter::query()->pluck('name', 'id');
+        expect(Employee::query()->get()->groupBy(fn (Employee $employee): string => $centers[$employee->work_center_id])->map(fn ($group): array => $group->pluck('state')->unique()->values()->all())->sortKeys()->all())
+            ->toBe([DemoRoster::CENTERS['distribution'] => ['QUE'], DemoRoster::CENTERS['offices'] => ['QUE'], DemoRoster::CENTERS['plant'] => ['QUE'], DemoRoster::CENTERS['monterrey'] => ['NLE']]);
 
         // pays every job grade of the roster by the tabulator, above the minimum wage and higher the higher the grade
         $grades = JobGrade::query()->get()->keyBy('id');
