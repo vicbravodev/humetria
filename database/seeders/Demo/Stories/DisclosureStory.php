@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Demo\Stories;
 
+use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Disclosure\Actions\Acknowledge;
 use App\Modules\Disclosure\Actions\IssuePageLink;
@@ -160,7 +161,7 @@ final readonly class DisclosureStory implements DemoStory
         $plant = $context->center('plant');
         $published = 0;
 
-        foreach (Campaign::query()->whereNotNull('closed_at')->orderBy('closed_at')->get() as $campaign) {
+        foreach (Campaign::query()->where('kind', CampaignKind::Nom035Evaluation)->whereNotNull('closed_at')->orderBy('closed_at')->get() as $campaign) {
             if ($campaign->instruments === ['nom035.guide-i']) {
                 continue;
             }

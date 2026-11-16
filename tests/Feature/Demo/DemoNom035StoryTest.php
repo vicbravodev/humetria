@@ -121,7 +121,7 @@ it('keeps answers keyless', function (): void {
     $completed = ParticipantInstrument::query()->whereIn('instrument', ['nom035.guide-ii', 'nom035.guide-iii'])->where('status', InstrumentStatus::Completed)->count();
 
     expect($completed)->toBeGreaterThan(100)
-        ->and(AnonymousResponse::query()->whereIn('instrument', ['nom035.guide-ii', 'nom035.guide-iii'])->count())->toBe($completed);
+        ->and(AnonymousResponse::query()->where('instrument', '!=', 'seating.survey')->count())->toBe($completed);
 });
 
 it('leaves an open campaign at about 60% with pending invitations reserved for the door', function (): void {
