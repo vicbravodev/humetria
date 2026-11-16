@@ -89,6 +89,17 @@ it('shows the step a preparation is on and holds the buttons meanwhile', functio
         ->assertButtonDisabled('Preparar demo');
 })->with(['light' => false, 'dark' => true]);
 
+it('does not let anyone into a demo while a reset is rebuilding it', function (bool $dark): void {
+    signInAsSuperadmin();
+    preparedDemo();
+    (DemoRun::start('reset') ?? throw new LogicException('Not started.'))->reach('Asistencia');
+
+    visitPage('demos/room', '/admin/demo', $dark)
+        ->assertSee('Preparando: Asistencia.')
+        ->assertButtonDisabled('Entrar como dueño')
+        ->assertButtonDisabled('Entrar como RH');
+})->with(['light' => false, 'dark' => true]);
+
 it('brings the door up to date when the preparation it was waiting on ends', function (): void {
     signInAsSuperadmin();
     // The audience's workers are the demo's employees: none until the preparation makes them.

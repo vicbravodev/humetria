@@ -5,9 +5,16 @@ import { impersonate } from '@/routes/companies';
 
 /**
  * «Entrar como dueño» or «como RH»: the demo company is not on the companies list, so the room enters it itself. HR is
- * offered only here: a real company never lets the staff enter as its HR.
+ * offered only here: a real company never lets the staff enter as its HR. While a run rebuilds the company nobody enters:
+ * it is half made.
  */
-export default function RoomEnter({ companyId }: { companyId: string }) {
+export default function RoomEnter({
+    companyId,
+    running,
+}: {
+    companyId: string;
+    running: boolean;
+}) {
     return (
         <section
             aria-labelledby="room-enter"
@@ -27,6 +34,7 @@ export default function RoomEnter({ companyId }: { companyId: string }) {
                         href={impersonate(companyId)}
                         data={{ as: 'owner' }}
                         as="button"
+                        disabled={running}
                         onClick={() => router.flushAll()}
                     >
                         <LogIn aria-hidden />
@@ -38,6 +46,7 @@ export default function RoomEnter({ companyId }: { companyId: string }) {
                         href={impersonate(companyId)}
                         data={{ as: 'hr' }}
                         as="button"
+                        disabled={running}
                         onClick={() => router.flushAll()}
                     >
                         <LogIn aria-hidden />

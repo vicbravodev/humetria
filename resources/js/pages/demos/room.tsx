@@ -43,7 +43,7 @@ export default function Room({
                     <RoomEmpty running={running} />
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">
-                        <RoomEnter companyId={company.id} />
+                        <RoomEnter companyId={company.id} running={running} />
                         <RoomDoor door={door} />
                         {complaints !== null && (
                             <RoomComplaints link={complaints} />
