@@ -3,6 +3,36 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+
+test('an email that differs from another account only by case is refused', function () {
+    User::factory()->create(['email' => 'bob@acme.mx']);
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('profile.update'), ['name' => 'X', 'email' => 'Bob@acme.mx'])
+        ->assertSessionHasErrors('email');
+
+    expect($user->fresh()->email)->toBe($user->email);
+});
+
+test('emails are stored in lowercase', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->patch(route('profile.update'), ['name' => 'X', 'email' => 'Ana@Acme.MX'])
+        ->assertSessionHasNoErrors();
+
+    expect($user->fresh()->email)->toBe('ana@acme.mx');
+});
+
+test('the database refuses two emails that differ only by case', function () {
+    User::factory()->create(['email' => 'bob@acme.mx']);
+
+    expect(fn () => DB::table('users')->insert(['name' => 'X', 'email' => 'BOB@acme.mx', 'password' => 'x']))
+        ->toThrow(QueryException::class);
+});
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
