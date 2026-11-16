@@ -5,7 +5,6 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import RecentProofDialog from '@/components/worker-access/recent-proof-dialog';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { startAnalytics, type AnalyticsEngine } from '@/lib/analytics';
-import { ignoreBenignNotices } from '@/lib/benign-notices';
 import { cspNonce } from '@/lib/csp-nonce';
 import {
     reportError,
@@ -24,9 +23,6 @@ const appName = import.meta.env['VITE_APP_NAME'] || 'Humetría';
 
 // Node renders this file too (SSR) and has no document: the frame is only preloaded in the browser.
 if (typeof document !== 'undefined') {
-    // Before anything that reports errors, so a notice that is not one never reaches them.
-    ignoreBenignNotices(window);
-
     const initialPage = document.querySelector(
         'script[data-page="app"]',
     )?.textContent;
