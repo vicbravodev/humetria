@@ -34,4 +34,15 @@ it('hands out, from the prepared demo, 40 active people of the demo company, eac
     expect($people)->toHaveCount(40)
         ->and(array_filter($people, fn ($person): bool => $person->active))->toHaveCount(40)
         ->and(array_unique($portals))->toHaveCount(40);
+
+    // What a visitor finds on arriving: a survey to answer and the policy to confirm, in the home of the portal (a sample).
+    foreach (array_values($portals) as $i => $portal) {
+        if ($i % 8 !== 0) {
+            continue;
+        }
+
+        $sections = collect($this->get($portal)->assertOk()->viewData('page')['props']['sections'])->keyBy('key');
+        expect($sections->only(['survey', 'engagement'])->sum('pending'))->toBeGreaterThan(0, "door person #{$i} has no survey pending")
+            ->and($sections->get('policy')['pending'] ?? 0)->toBeGreaterThan(0, "door person #{$i} has no policy to confirm");
+    }
 });
