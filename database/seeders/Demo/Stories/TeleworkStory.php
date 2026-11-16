@@ -264,7 +264,7 @@ final readonly class TeleworkStory implements DemoStory
         }
 
         $this->on($d + 12, $n, fn () => $this->join->handle($teleworker, new RosterData(
-            MaritalStatus::cases()[$n % 3], self::ACTIVITIES[$person->position], "{$person->position} a distancia, con computadora y teléfono de la empresa.", sprintf('442 555 %04d', 1100 + $n * 7), $home, null,
+            MaritalStatus::cases()[$n % 3], self::ACTIVITIES[$person->position], "{$person->position} a distancia, con computadora y teléfono de la empresa.", sprintf('55 0000 %04d', $n), $home, null,
         ), $hr));
         $this->on($d + 13, $n, fn () => $this->acknowledge->handle($this->openPortal->handle($this->portal->token($id)), $risk->id, null));
 

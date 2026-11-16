@@ -38,9 +38,6 @@ final class EngagementStory implements DemoStory
     /** How each topic leans against the wave's mood: staffing and pay low (the night shift's overtime), the team high. */
     private const array LEANING = ['resources' => -0.2, 'reward' => -0.15, 'communication' => -0.05, 'team' => 0.1, 'manager' => 0.05];
 
-    /** The smallest group of answers results show (results.min_group). */
-    private const int MIN_GROUP = 5;
-
     /** The coarse groups results are cut by, one at a time. */
     private const array CUTS = ['work_center_id', 'area_id', 'tenure_band', 'manager_group_id'];
 
@@ -122,7 +119,7 @@ final class EngagementStory implements DemoStory
 
             foreach (self::CUTS as $cut) {
                 foreach ($this->groups($eligible, $cut) as $members) {
-                    if (count($members) < self::MIN_GROUP) {
+                    if (count($members) < config()->integer('results.min_group')) {
                         $eligible = array_values(array_filter($eligible, fn (Invitation $invitation): bool => ! in_array($invitation, $members, true)));
                     }
                 }
@@ -144,10 +141,10 @@ final class EngagementStory implements DemoStory
 
             foreach (self::CUTS as $cut) {
                 foreach ($this->groups($eligible, $cut) as $members) {
-                    $short = self::MIN_GROUP - count(array_filter($members, fn (Invitation $invitation): bool => isset($chosen[$invitation->id])));
+                    $short = config()->integer('results.min_group') - count(array_filter($members, fn (Invitation $invitation): bool => isset($chosen[$invitation->id])));
 
                     foreach ($members as $invitation) {
-                        if ($short > 0 && $short < self::MIN_GROUP && ! isset($chosen[$invitation->id])) {
+                        if ($short > 0 && $short < config()->integer('results.min_group') && ! isset($chosen[$invitation->id])) {
                             $chosen[$invitation->id] = true;
                             $short--;
                         }

@@ -83,7 +83,7 @@ permite **una sola** empresa demo. Solo la acción que prepara la demo la encien
 | Sucursal Monterrey | 15 | I | el mayor con solo Guía I |
 | Oficinas Querétaro | 30 | I, II | hogar de Ley Silla y teletrabajo |
 | Centro de distribución | 51 | I, III | el menor con Guía III |
-| Planta Querétaro | 84 | I, III (muestra) | donde ocurre el problema |
+| Planta Querétaro | 84 | I, III (censo) | donde ocurre el problema |
 
 El hilo: hace ~6 meses una primera evaluación NOM-035 cerró y mostró riesgo alto en **producción, turno 2 de la planta**
 (rotación y horas extra). RH lanzó un programa de intervención (acciones hechas, en curso, una vencida, una por empezar),

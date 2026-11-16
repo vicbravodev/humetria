@@ -69,7 +69,7 @@ final readonly class ComplaintsStory implements DemoStory
         ['received' => 20, 'center' => 'distribution', 'category' => ComplaintCategory::Other, 'against' => RespondentKind::Unknown, 'fate' => 'review',
             'text' => 'En el área de carga los montacargas pasan muy cerca de los andenes donde trabajamos a pie y no hay señalamiento. Me preocupa la seguridad del área.'],
         ['received' => 14, 'center' => 'plant', 'category' => ComplaintCategory::Mistreatment, 'against' => RespondentKind::DirectSupervisor, 'fate' => 'follow-up',
-            'text' => 'El trato de un supervisor del turno nocturno hacia el equipo es malo: levanta la voz y nos exhibe frente a los demás cuando la línea se retrasa.'],
+            'text' => 'El trato de la supervisión del turno nocturno hacia el equipo es malo: levanta la voz y nos exhibe frente a los demás cuando la línea se retrasa.'],
         ['received' => 3, 'center' => 'plant', 'category' => ComplaintCategory::WorkloadOrHours, 'against' => RespondentKind::Unknown, 'fate' => 'acknowledged',
             'text' => 'Este mes otra vez hubo horas extra no pagadas en el turno nocturno. Quisiera saber cómo se están registrando.'],
         ['received' => 1, 'center' => 'monterrey', 'category' => ComplaintCategory::LackOfRecognition, 'against' => RespondentKind::Unknown, 'fate' => 'new',
