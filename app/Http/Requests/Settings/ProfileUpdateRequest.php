@@ -31,6 +31,13 @@ final class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->profileRules($this->user()?->id);
+        $user = $this->user();
+        // A new address is a new way to sign in and to receive invitations: only the account's own password changes it.
+        $changesEmail = $user === null || $this->string('email')->value() !== $user->email;
+
+        return [
+            ...$this->profileRules($user?->id),
+            'current_password' => $changesEmail ? ['required', 'string', 'current_password'] : ['nullable'],
+        ];
     }
 }

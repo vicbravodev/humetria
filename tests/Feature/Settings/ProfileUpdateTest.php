@@ -21,7 +21,7 @@ test('emails are stored in lowercase', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->patch(route('profile.update'), ['name' => 'X', 'email' => 'Ana@Acme.MX'])
+        ->patch(route('profile.update'), ['name' => 'X', 'email' => 'Ana@Acme.MX', 'current_password' => 'password'])
         ->assertSessionHasNoErrors();
 
     expect($user->fresh()->email)->toBe('ana@acme.mx');
@@ -52,6 +52,7 @@ test('profile information can be updated', function () {
         ->patch(route('profile.update'), [
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'current_password' => 'password',
         ]);
 
     $response
