@@ -163,3 +163,86 @@ test('what asks for a recent proof takes the person\'s session first', function 
         expect(array_search(RequireWorkerSession::class, $middleware, true))->toBeInt()->toBeLessThan(array_search(App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof::class, $middleware, true));
     }
 });
+
+/**
+ * The addresses that carry a credential, each with its reason. A credential in an address leaks through history, logs,
+ * shared screens and forwarded emails: the person who works never has one that serves more than once (goal 1 of the
+ * WorkerAccess design). Their pages read the session; the ones here are single-use, signed, or not the person's.
+ *
+ * @return array<string, string>
+ */
+function credentialAddresses(): array
+{
+    return [
+        // The person's, single use.
+        'worker.link.show' => 'el enlace de entrada: un solo uso, vence en 48 h (RH) o 30 min (la persona); mostrarlo no lo gasta',
+        'worker.link.open' => 'gasta el mismo enlace de entrada al abrir la sesión: de dos a la vez solo uno gana',
+        'worker.not-me.show' => '«No fui yo»: {credential} es el id de la llave; la credencial es la firma de la app (signed, 30 días) y solo revoca',
+        'worker.not-me.confirm' => '«No fui yo»: la misma dirección firmada; revoca una vez',
+        // Not the person's: a screen, an anonymous survey, a company's channel, a report shared for a while.
+        'attendance.device.kiosk.activate' => 'la pantalla del QR de un centro (no una persona) cambia el enlace por una cookie y el enlace muere',
+        'survey.show' => 'encuesta anónima NOM-035: el enlace es de un solo uso y no identifica a nadie ante RH',
+        'survey.submit' => 'la misma encuesta: envía una guía, una vez',
+        'engagement.survey.show' => 'encuesta anónima de clima o pulso, de un solo uso',
+        'engagement.survey.submit' => 'la misma encuesta: se envía una vez',
+        'complaints.public.show' => 'el código del canal de denuncias es de la empresa, no de una persona',
+        'complaints.public.centers' => 'el mismo código de la empresa',
+        'complaints.public.store' => 'el mismo código de la empresa',
+        'complaints.follow-up.show' => 'el mismo código de la empresa; la referencia y la clave del caso van en el cuerpo',
+        'complaints.follow-up.open' => 'el mismo código de la empresa',
+        'complaints.follow-up.messages.store' => 'el mismo código de la empresa',
+        'complaints.follow-up.withdraw' => 'el mismo código de la empresa',
+        'workers.show' => 'la página de trabajadores de la empresa: un enlace de toda la empresa, rotable, sin nada de nadie',
+        'workers.center' => 'la misma página, por centro',
+        'report.shared' => 'un reporte de RH compartido por 48 h como máximo, revocable',
+        'compensation.report.shared' => 'un escenario de compensación compartido por 7 días como máximo, revocable',
+        'password.reset' => 'restablecer la contraseña de una cuenta del panel: el token de Fortify es de un solo uso y vence',
+        'invitations.show' => 'la invitación de un miembro del panel: un solo uso',
+        'invitations.accept' => 'la misma invitación: se acepta una vez',
+        'films.show' => 'no es credencial: el nombre de un video de la landing',
+    ];
+}
+
+/** The parameter names that can only be a credential, whatever their shape. */
+const CREDENTIAL_PARAMETER = '/token|code|secret|key|credential|signature|hash|link/i';
+
+/**
+ * The routes reachable without an account of the panel whose address carries a credential: a parameter named like one, or
+ * any other than the company's slug that is not a record's UUID or a date (a record the session authorizes is not a
+ * credential).
+ *
+ * @return list<string>
+ */
+function addressesWithCredentials(): array
+{
+    return collect(appRoutes())
+        ->filter(fn (LaravelRoute $route): bool => in_array($route->getName(), publicRouteNames(), true) || in_array(RequireWorkerSession::class, Route::gatherRouteMiddleware($route), true))
+        ->filter(fn (LaravelRoute $route): bool => collect($route->parameterNames())->contains(fn (string $name): bool => $name !== 'tenant'
+            && (preg_match(CREDENTIAL_PARAMETER, $name) === 1 || ! in_array($route->wheres[$name] ?? null, ['[\da-fA-F]{8}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{4}-[\da-fA-F]{12}', '\d{4}-\d{2}-\d{2}'], true))))
+        ->map(fn (LaravelRoute $route): string => (string) $route->getName())
+        ->values()
+        ->all();
+}
+
+test('no address of the person who works carries a credential that serves more than once', function () {
+    expect(array_values(array_diff(addressesWithCredentials(), array_keys(credentialAddresses()))))->toBe([])
+        ->and(array_values(array_diff(array_keys(credentialAddresses()), addressesWithCredentials())))->toBe([]);
+
+    // Under the person's addresses only the single-use ones: the entrance link, «No fui yo» (signed) and the screen of a center.
+    $personal = collect(appRoutes())
+        ->filter(fn (LaravelRoute $route): bool => array_key_exists((string) $route->getName(), credentialAddresses()) && Str::startsWith($route->uri(), ['me/', 'a/', 'portal']))
+        ->map(fn (LaravelRoute $route): string => (string) $route->getName())->sort()->values()->all();
+    expect($personal)->toBe(['attendance.device.kiosk.activate', 'worker.link.open', 'worker.link.show', 'worker.not-me.confirm', 'worker.not-me.show'])
+        ->and((Route::getRoutes()->getByName('worker.not-me.show') ?? throw new LogicException)->gatherMiddleware())->toContain('signed:relative')
+        ->and((Route::getRoutes()->getByName('worker.not-me.confirm') ?? throw new LogicException)->gatherMiddleware())->toContain('signed:relative');
+});
+
+test('a page of the person that took a token in its address would be caught', function (string $uri) {
+    Route::get($uri, fn (): string => '')->middleware([App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant::class, RequireWorkerSession::class])->name('portal.sample.show');
+    Route::getRoutes()->refreshNameLookups();
+
+    expect(addressesWithCredentials())->toContain('portal.sample.show');
+})->with([
+    'a token' => 'me/{tenant:slug}/sample/{token}',
+    'anything that is not a record' => 'me/{tenant:slug}/sample/{person}',
+]);
