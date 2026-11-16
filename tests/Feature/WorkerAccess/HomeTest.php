@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Contracts\WorkerSection;
 use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use App\Modules\WorkerAccess\Data\WorkerSectionLink;
 use App\Modules\WorkerAccess\Enums\EntryVia;
 use App\Modules\WorkerAccess\Support\WorkerSections;
+use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -18,6 +20,8 @@ beforeEach(function (): void {
     workIn($this->tenant);
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana López']);
     $this->beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Ruiz']);
+    // A company whose tools offer nothing of their own here (no NOM-037, no registro de jornada): only the tools of each test.
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
 });
 
 /** A section that answers `$answer` for the person it is asked about, tagged as every module tags theirs. */
@@ -107,7 +111,7 @@ it('reads the start with the same queries whatever the tools offer', function (i
 })->with([1, 5]);
 
 /**
- * The company of the slug (two reads), the session (the person's state, the person and their area), the person's keys, and
- * the telework section (the company, whether they telework, their documents to confirm).
+ * The company of the slug, the session (the person's state, the person and their area) and the person's keys; then the
+ * company again (its row and its tools) for each tool that asks whether it has the module: Telework and Marcar.
  */
-const WORKER_HOME_QUERIES = 10;
+const WORKER_HOME_QUERIES = 12;

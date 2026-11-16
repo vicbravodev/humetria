@@ -372,7 +372,7 @@ it('lists what is pending in the portal, newest versions only, and shows it gone
     $this->post(route('portal.documents.acknowledge', [$slug, $latest->id]))->assertRedirect(route('portal.telework.show', $slug));
 
     $this->get(route('portal.telework.show', $slug))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
-    $this->get(route('worker.home', $slug))->assertInertia(fn (Assert $page) => $page->where('sections', [])->etc());
+    $this->get(route('worker.home', $slug))->assertInertia(fn (Assert $page) => $page->where('sections', fn ($sections): bool => ! collect($sections)->contains('key', 'telework'))->etc());
     expect($risk->id)->not->toBe($latest->id);
 });
 

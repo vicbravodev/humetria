@@ -11,6 +11,7 @@ use App\Modules\Attendance\Listeners\ReopenOnCorrection;
 use App\Modules\Attendance\Support\AttendancePortalSection;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
+use App\Modules\Attendance\Support\PunchWorkerSection;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -28,7 +29,10 @@ final class AttendanceServiceProvider extends ServiceProvider
     {
         $this->app->bind(AttendanceUsage::class, CompanyAttendanceUsage::class);
         $this->app->bind(PlaceSearch::class, NominatimPlaceSearch::class);
+        // «Mi jornada» in the start by portal link (until that start goes, step 9 of the WorkerAccess design); «Marcar» in the
+        // person's start.
         $this->app->tag([AttendancePortalSection::class], 'portal.sections');
+        $this->app->tag([PunchWorkerSection::class], 'worker.sections');
     }
 
     public function boot(): void
