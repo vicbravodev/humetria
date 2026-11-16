@@ -206,9 +206,8 @@ it('sends each list of records as a paginator', function (string $component, Clo
     'my team in the portal' => ['organization/portal-team', function () {
         [$tenant] = listsCompany();
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
-        workIn($tenant);
 
-        return route('portal.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+        return route('portal.team.show', asPerson($employee->id));
     }, ['peers', 'reports']],
     'my vacations in the portal' => ['leave/portal', function () {
         [$tenant] = listsCompany();

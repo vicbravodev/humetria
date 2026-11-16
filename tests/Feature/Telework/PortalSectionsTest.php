@@ -23,7 +23,7 @@ use Database\Factories\Telework\TeleworkerFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** Opening the link once (the middleware and the page share it) and what each listed tool reads for its section. */
-const PORTAL_HOME_QUERIES = 31;
+const PORTAL_HOME_QUERIES = 29;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -49,8 +49,8 @@ function portalPlan(array $modules): void
     resolve(CompanyModules::class)->syncPlan(test()->tenant->id, $modules, CarbonImmutable::now(config('app.display_timezone')));
 }
 
-it('has only «Mi jornada» and «Mi equipo» for a person with nothing in any other tool', function (): void {
-    expect(array_keys(portalSections($this->token)))->toBe(['attendance', 'team']);
+it('has only «Mi jornada» for a person with nothing in any other tool («Mi equipo» is in the person\'s start, in their session)', function (): void {
+    expect(array_keys(portalSections($this->token)))->toBe(['attendance']);
 });
 
 it('lists vacations and Ley Silla for a person who is not a teleworker, and not the telework tool', function (): void {
@@ -138,7 +138,7 @@ it('keeps the order fixed and sends nothing of another person', function (): voi
     $bea = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Bea Paz']);
     Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $bea->id]);
 
-    expect(array_keys(portalSections($this->token)))->toBe(['attendance', 'vacations', 'team', 'seating', 'center']);
+    expect(array_keys(portalSections($this->token)))->toBe(['attendance', 'vacations', 'seating', 'center']);
     $this->get(route('portal.show', $this->token))->assertInertia(function (Assert $page): void {
         expect(json_encode($page->toArray()['props'], JSON_THROW_ON_ERROR))->not->toContain('Bea Paz')->not->toContain($this->token.'x');
     });
