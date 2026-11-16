@@ -217,6 +217,8 @@ return [
         // A manager whose results show: the first group of the survey that the minimum lets through, with answers about them.
         $manager = fn (Survey $survey): ?string => collect(array_keys(SurveyResults::for($survey)->managerGroups()->visible))
             ->first(fn (string $id): bool => ManagerFeedback::for($survey, $id) !== null);
+        // Chosen by what tells the records apart on every run (their ids are random): the person's employee number.
+        $byPerson = fn (string $table) => Employee::query()->select('employee_number')->whereColumn('employees.id', "{$table}.employee_id");
         $teleworkPolicy = TeleworkDocument::query()->where('kind', TeleworkDocumentKind::Policy)->sole()->id;
         // One record of each kind, the richest where it matters: the offices (NOM-035, Ley Silla and NOM-037 in one center),
         // the plant's closed evaluation, the climate survey and its first manager shown, the director (everyone reports to
@@ -226,15 +228,15 @@ return [
             'campaign' => [Campaign::query()->where('work_center_id', $plant->id)->where('kind', CampaignKind::Nom035Evaluation)->where('status', CampaignStatus::Closed)->sole()->id],
             'survey' => [$climate->id],
             'manager' => [(string) $manager($climate)],
-            'scenario' => [Scenario::query()->orderBy('created_at')->firstOrFail()->id],
-            'complaint' => [Complaint::query()->orderBy('received_on')->firstOrFail()->id],
+            'scenario' => [Scenario::query()->orderBy('created_at')->orderBy('name')->firstOrFail()->id],
+            'complaint' => [Complaint::query()->orderBy('received_on')->orderBy('category')->firstOrFail()->id],
             'employee' => [DemoRoster::employeeId(DemoRoster::OWNER)],
-            'assessment' => [RiskAssessment::query()->where('status', AssessmentStatus::Signed)->orderBy('id')->firstOrFail()->id],
-            'position' => [StandingPosition::query()->orderBy('id')->firstOrFail()->id],
-            'application' => [ChecklistApplication::query()->whereNotNull('submitted_at')->orderBy('id')->firstOrFail()->id],
-            'teleworker' => [Teleworker::query()->where('status', TeleworkerStatus::Active)->orderBy('id')->firstOrFail()->id],
+            'assessment' => [RiskAssessment::query()->where('status', AssessmentStatus::Signed)->orderBy($byPerson('risk_assessments'))->orderBy('created_at')->firstOrFail()->id],
+            'position' => [StandingPosition::query()->orderBy('name')->firstOrFail()->id],
+            'application' => [ChecklistApplication::query()->whereNotNull('submitted_at')->orderBy('submitted_at')->orderBy('section')->firstOrFail()->id],
+            'teleworker' => [Teleworker::query()->where('status', TeleworkerStatus::Active)->orderBy($byPerson('teleworkers'))->firstOrFail()->id],
             'policy' => [LeavePolicy::query()->sole()->id],
-            'statement' => [LeaveStatement::query()->orderBy('id')->firstOrFail()->id],
+            'statement' => [LeaveStatement::query()->orderBy($byPerson('leave_statements'))->orderBy('issued_at')->firstOrFail()->id],
             'norm' => ['nom035', 'nom037', 'seating'],
             'field' => ['category', 'level'],
         ];
