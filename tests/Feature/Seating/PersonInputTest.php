@@ -6,7 +6,6 @@ use App\Models\AuditEntry;
 use App\Modules\Seating\Actions\SubmitPersonInput;
 use App\Modules\Seating\Events\PersonInputSubmitted;
 use App\Modules\Seating\Models\PersonInput;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
@@ -23,7 +22,7 @@ beforeEach(function (): void {
     $this->center = WorkCenter::factory()->for($this->tenant)->create();
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => 'Ana Ruiz']);
     workIn($this->tenant);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
 });
 
 /**
@@ -31,13 +30,13 @@ beforeEach(function (): void {
  */
 function sendInput(array $overrides = []): Illuminate\Testing\TestResponse
 {
-    return test()->post(route('portal.seating.inputs.store', test()->token), ['footwear' => 2, 'discomfort' => 3, 'note' => 'Me duele la espalda al final del día.', 'accepted' => '1', ...$overrides]);
+    return test()->post(route('portal.seating.inputs.store', test()->slug), ['footwear' => 2, 'discomfort' => 3, 'note' => 'Me duele la espalda al final del día.', 'accepted' => '1', ...$overrides]);
 }
 
 it('stores footwear and discomfort only after the privacy notice is accepted', function (): void {
     Event::fake([PersonInputSubmitted::class]);
 
-    sendInput()->assertRedirect(route('portal.seating.show', $this->token))->assertSessionHasNoErrors();
+    sendInput()->assertRedirect(route('portal.seating.show', $this->slug))->assertSessionHasNoErrors();
 
     $input = PersonInput::query()->sole();
     expect($input->employee_id)->toBe($this->ana->id)
@@ -73,15 +72,17 @@ it('rejects what the DOF tables do not allow', function (array $bad, string $fie
 it('keeps every answer: a new one is a new row and the earlier ones stay', function (): void {
     sendInput(['footwear' => 1, 'discomfort' => 1, 'note' => null])->assertSessionHasNoErrors();
     $this->travelTo('2026-04-01 18:00:00');
+    // A month later the person enters again.
+    asPerson($this->ana->id);
     sendInput(['footwear' => 3, 'discomfort' => 2])->assertSessionHasNoErrors();
 
     expect(PersonInput::query()->orderBy('submitted_at')->pluck('footwear')->all())->toBe([1, 3]);
 });
 
-it('answers 404 for a link that is not valid and stores nothing', function (): void {
+it('sends whoever has no session to enter and stores nothing', function (): void {
     $this->post(route('portal.seating.inputs.store', 'nope'), ['footwear' => 1, 'discomfort' => 1, 'accepted' => '1'])->assertNotFound();
-    resolve(IssuePortalLink::class)->handle($this->ana->id, revoke: true);
-    sendInput()->assertNotFound();
+    session()->flush();
+    sendInput()->assertRedirect(route('worker.home', $this->slug));
 
     expect(PersonInput::query()->count())->toBe(0);
 });

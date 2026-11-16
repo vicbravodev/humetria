@@ -9,10 +9,10 @@ import { describeDate } from '@/lib/calendar-date';
 
 /** The result of the person's assessment and the button to confirm they were informed of it (Quinta H). */
 export default function PortalAcknowledgment({
-    token,
+    slug,
     pending,
 }: {
-    token: string;
+    slug: string;
     pending: Pending;
 }) {
     return (
@@ -54,7 +54,7 @@ export default function PortalAcknowledgment({
                     ))}
                 </ul>
             )}
-            <Form {...store.form({ token })} options={{ preserveScroll: true }}>
+            <Form {...store.form(slug)} options={{ preserveScroll: true }}>
                 {({ processing }) => (
                     <Button size="lg" disabled={processing}>
                         {processing && <Spinner />}

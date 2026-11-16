@@ -15,7 +15,6 @@ use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Models\ResultPublication;
 use App\Modules\Disclosure\Support\AckProgress;
 use App\Modules\Disclosure\Support\PolicyStanding;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
@@ -70,11 +69,11 @@ return [
         // nobody confirms before they joined: whoever came after the policy confirms from their link days after their hire
         expect($confirmed->every(fn (Acknowledgment $ack): bool => $ack->acknowledged_at?->greaterThan($today->subDays($byId[$ack->employee_id]->tenureDays)) === true))->toBeTrue();
 
-        // a visitor of the door confirms the policy from their own portal
+        // a visitor of the door, in with the key they created there (a recent proof), confirms the policy from their own portal
         $visitor = $door->keys()->first();
-        $token = resolve(PortalAccess::class)->token($visitor);
-        $this->get(route('portal.policy.show', $token))->assertOk();
-        $this->post(route('portal.policy.acknowledge', $token), ['document' => $policy->id])->assertRedirect(route('portal.policy.show', $token));
+        $slug = asPerson($visitor);
+        $this->get(route('portal.policy.show', $slug))->assertOk();
+        $this->post(route('portal.policy.acknowledge', $slug), ['document' => $policy->id])->assertRedirect(route('portal.policy.show', $slug));
         expect(Acknowledgment::query()->where('document_id', $policy->id)->where('employee_id', $visitor)->sole()->channel)->toBe('portal');
 
         // publishes the results of every closed evaluation that has them (not the Guía I alone), the plant's with its measures

@@ -38,7 +38,7 @@ function text(value: object, name: string): string | null {
 
 /**
  * A URL as an error report may tell it: the path of a script (where the code is), otherwise only the origin. A page's
- * path is never sent: the survey and the portals carry a one-use token in it.
+ * path is never sent: the surveys and the entrance link carry a one-use token in it.
  */
 export function scrubUrl(url: string): string {
     try {

@@ -1,5 +1,5 @@
 import { WifiOff } from 'lucide-react';
-import ToneTile from '@/components/attendance/tone-tile';
+import ToneTile from '@/components/humetria/tone-tile';
 import { Button } from '@/components/ui/button';
 import { clockNow } from '@/lib/attendance/correction';
 

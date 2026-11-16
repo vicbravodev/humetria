@@ -13,10 +13,10 @@ import type { PortalEquipment } from '@/types';
 /** An item the company says it delivered: the person confirms they received it, or refuses it with the reason. */
 export default function PortalEquipmentCard({
     item,
-    token,
+    slug,
 }: {
     item: PortalEquipment;
-    token: string;
+    slug: string;
 }) {
     const form = useForm({ reason: '', equipment: '' });
     const [refusing, setRefusing] = useState(false);
@@ -25,7 +25,7 @@ export default function PortalEquipmentCard({
             received,
             reason: received ? '' : data.reason,
         }));
-        form.post(respond.url({ token, item: item.id }));
+        form.post(respond.url({ tenant: slug, item: item.id }));
     };
 
     return (

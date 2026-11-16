@@ -83,7 +83,7 @@ describe('the queue', function (): void {
             ->where('requests.data.1.requestedAt', '2026-11-10 23:50')
             ->where('requests.data.1.previousAt', null));
 
-        expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('accuracy')->not->toContain('distance')->not->toContain('device_id');
+        expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('accuracy')->not->toContain('distance')->not->toContain('credential_id');
     });
 
     it('shows the requests of a state, its RH note with them', function (): void {
@@ -334,7 +334,7 @@ describe('the request in view', function (): void {
 
         $content = openRequest()->getContent();
 
-        expect($content)->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('accuracy')->not->toContain('distance')->not->toContain('device_id');
+        expect($content)->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('accuracy')->not->toContain('distance')->not->toContain('credential_id');
     });
 
     it('reads the request in view in the same queries whatever the people and requests of the page', function (): void {

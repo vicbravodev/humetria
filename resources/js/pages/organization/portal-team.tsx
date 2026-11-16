@@ -1,9 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { Head } from '@inertiajs/react';
 import PortalShell from '@/components/organization/portal-shell';
 import PortalTeamList from '@/components/organization/portal-team-list';
 import PortalTeamManager from '@/components/organization/portal-team-manager';
-import { show } from '@/routes/portal';
+import WorkerHomeLink from '@/components/worker-home-link';
 import type {
     Paginated,
     PortalTeamManager as Manager,
@@ -15,13 +14,13 @@ import type {
  * to them. Names, job titles and areas only.
  */
 export default function PortalTeam({
-    token,
+    slug,
     company,
     manager,
     peers,
     reports,
 }: {
-    token: string;
+    slug: string;
     company: string;
     name: string;
     manager: Manager | null;
@@ -32,13 +31,7 @@ export default function PortalTeam({
         <PortalShell company={company}>
             <Head title="Mi equipo" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
-                <Link
-                    href={show.url({ token })}
-                    className="touch-hit flex w-fit items-center gap-1.5 text-base font-medium text-primary"
-                >
-                    <ArrowLeft aria-hidden className="size-4" />
-                    Volver a mi portal
-                </Link>
+                <WorkerHomeLink slug={slug} />
                 <div className="flex flex-col gap-2">
                     <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
                         Mi equipo

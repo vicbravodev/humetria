@@ -132,6 +132,8 @@ final class ResolveTenant
                 'manage_climate' => $user->can('manage-climate'),
                 'view_pulse' => $user->can('view-pulse'),
                 'manage_pulse' => $user->can('manage-pulse'),
+                'view_worker_access' => $user->can('view-worker-access'),
+                'manage_worker_access' => $user->can('manage-worker-access'),
             ], $status->isReadOnly()),
             'permissions' => $permissions,
         ]);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Http\Controllers;
 
-use App\Modules\Leave\Actions\SendPortalLinks;
+use App\Modules\Leave\Actions\InviteToPortal;
 use App\Modules\Leave\Http\Requests\SendLinksRequest;
 use App\Modules\Leave\Support\BalancePages;
 use App\Modules\Leave\Support\LeaveDefaults;
@@ -30,7 +30,7 @@ final readonly class BalanceController
         ]);
     }
 
-    public function links(SendLinksRequest $request, SendPortalLinks $send): RedirectResponse
+    public function links(SendLinksRequest $request, InviteToPortal $send): RedirectResponse
     {
         $sent = $send->handle($request->employeeIds(), $request->userId());
         Inertia::flash('toast', ['type' => 'success', 'message' => $sent === 1 ? 'Se envió 1 enlace.' : "Se enviaron {$sent} enlaces."]);

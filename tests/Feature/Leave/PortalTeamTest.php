@@ -16,17 +16,19 @@ use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\PortalTeamPages;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(PortalTeamPages::class);
 
-// Opening the link and checking the company uses Vacaciones, then the count and the page of the requests and, once for
+// The company of the address and twice its row (whether it has Vacaciones), the session (the person's state, the person and
+// their area), checking the company uses Vacaciones, then the count and the page of the requests and, once for
 // the whole page, their leave types, their people, their balances and their policies.
-const PORTAL_TEAM_REQUESTS_QUERIES = 16;
+const PORTAL_TEAM_REQUESTS_QUERIES = 17;
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']));
@@ -44,7 +46,7 @@ beforeEach(function (): void {
     $older = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 1, 'anniversary_on' => '2025-03-15', 'statutory_days' => 12]);
     LeaveEntry::factory()->of($older)->taken(9)->create();
     LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 2, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14]);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->boss->id);
+    $this->slug = asPerson($this->boss->id);
 });
 
 /**
@@ -68,10 +70,10 @@ function leaveTeamStatus(LeaveRequest $request): string
     return LeaveRequest::query()->withoutGlobalScopes()->findOrFail($request->id)->status->value;
 }
 
-it('lives under the personal link of the manager, throttled as the rest of the portal', function (): void {
-    expect(route('portal.vacations.team.show', 'abc', absolute: false))->toBe('/portal/abc/vacations/team')
-        ->and(route('portal.vacations.team.approve', ['abc', 'r1'], absolute: false))->toBe('/portal/abc/vacations/team/r1/approve')
-        ->and(route('portal.vacations.team.reject', ['abc', 'r1'], absolute: false))->toBe('/portal/abc/vacations/team/r1/reject')
+it('lives in the pages of the manager, throttled as the rest of the portal', function (): void {
+    expect(route('portal.vacations.team.show', 'acme', absolute: false))->toBe('/me/acme/vacations/team')
+        ->and(route('portal.vacations.team.approve', ['acme', 'r1'], absolute: false))->toBe('/me/acme/vacations/team/r1/approve')
+        ->and(route('portal.vacations.team.reject', ['acme', 'r1'], absolute: false))->toBe('/me/acme/vacations/team/r1/reject')
         ->and(Route::getRoutes()->getByName('portal.vacations.team.show')?->gatherMiddleware())->toContain('throttle:portal-views')
         ->and(Route::getRoutes()->getByName('portal.vacations.team.approve')?->gatherMiddleware())->toContain('throttle:portal-actions')
         ->and(Route::getRoutes()->getByName('portal.vacations.team.reject')?->gatherMiddleware())->toContain('throttle:portal-actions');
@@ -86,11 +88,11 @@ it('shows a manager only the requests that wait for them, the oldest first, with
     LeaveRequest::factory()->rejected()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'approver_employee_id' => $this->boss->id, 'starts_on' => '2026-06-01', 'ends_on' => '2026-06-02']);
     leaveTeamRequest($this->caro, ['approver_employee_id' => null, 'starts_on' => '2027-01-11', 'ends_on' => '2027-01-12']);
 
-    $this->get(route('portal.vacations.team.show', $this->token))
+    $this->get(route('portal.vacations.team.show', $this->slug))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('leave/portal-team')
-            ->where('token', $this->token)
+            ->where('slug', $this->tenant->slug)
             ->where('company', 'Acme')
             ->where('name', 'Beto Ruiz')
             ->where('requests.total', 2)
@@ -105,7 +107,7 @@ it('adds up the tranches of a period and says how many days are missing', functi
     LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->caro->id, 'years_of_service' => 1, 'anniversary_on' => '2026-02-01', 'statutory_days' => 2, 'extra_days' => 3]);
     leaveTeamRequest($this->caro);
 
-    $this->get(route('portal.vacations.team.show', $this->token))
+    $this->get(route('portal.vacations.team.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page
             ->where('requests.data.0.periods', [['year' => 2026, 'days' => 5]])
             ->where('requests.data.0.shortBy', 4)
@@ -119,7 +121,7 @@ it('offers to approve vacations without the days only when the policy of the per
 
     leaveTeamRequest($this->caro, ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-12', 'working_days' => 4, 'had_balance' => false]);
 
-    $this->get(route('portal.vacations.team.show', $this->token))
+    $this->get(route('portal.vacations.team.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page
             ->where('requests.data.0.periods', [])
             ->where('requests.data.0.shortBy', 4)
@@ -130,7 +132,7 @@ it('offers to approve vacations without the days only when the policy of the per
 it('shows whoever has nothing to answer an empty list', function (): void {
     leaveTeamRequest($this->ana);
 
-    $this->get(route('portal.vacations.team.show', resolve(IssuePortalLink::class)->handle($this->ana->id)))
+    $this->get(route('portal.vacations.team.show', asPerson($this->ana->id)))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('name', 'Ana Solís')->where('requests.total', 0)->where('requests.data', []));
 });
@@ -140,7 +142,7 @@ it('turns the pages of the requests', function (): void {
         leaveTeamRequest($this->ana, ['requested_on' => sprintf('2026-10-%02d', $day), 'starts_on' => sprintf('2027-%02d-01', $day), 'ends_on' => sprintf('2027-%02d-02', $day)]);
     }
 
-    $this->get(route('portal.vacations.team.show', [$this->token, 'page' => 2]))
+    $this->get(route('portal.vacations.team.show', [$this->slug, 'page' => 2]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('requests.total', 12)
             ->where('requests.current_page', 2)
@@ -157,7 +159,7 @@ it('reads the page with the same queries whatever the number of requests', funct
 
     $this->expectsDatabaseQueryCount(PORTAL_TEAM_REQUESTS_QUERIES);
 
-    $this->get(route('portal.vacations.team.show', $this->token))->assertOk();
+    $this->get(route('portal.vacations.team.show', $this->slug))->assertOk();
 })->with([3, 9]);
 
 it('sends nothing of who did not ask, and nobody\'s id', function (): void {
@@ -165,17 +167,37 @@ it('sends nothing of who did not ask, and nobody\'s id', function (): void {
     leaveTeamRequest($this->ana);
     leaveTeamRequest($this->dan, ['note' => 'Nota de Dan']);
 
-    $sent = (string) json_encode($this->get(route('portal.vacations.team.show', $this->token))->assertOk()->inertiaProps(), JSON_UNESCAPED_UNICODE);
+    $sent = (string) json_encode($this->get(route('portal.vacations.team.show', $this->slug))->assertOk()->inertiaProps(), JSON_UNESCAPED_UNICODE);
 
     expect($sent)->toContain('Ana Solís')
         ->not->toContain('Caro Luz', 'Dan Gil', 'Nota de Dan', $this->ana->id, $this->caro->id, $this->boss->id, 'premium', 'amount', 'salary');
 });
 
+it('approves or rejects only after a recent proof that it is the person who leads', function (EntryVia $via, int $minutes): void {
+    $approve = leaveTeamRequest($this->ana);
+    $reject = leaveTeamRequest($this->caro);
+    enteredAs($this->boss->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.vacations.team.show', $this->slug);
+
+    $this->from($page)->post(route('portal.vacations.team.approve', [$this->slug, $approve->id]))->assertRedirect($page)->assertInertiaFlash('proofRequired');
+    $this->from($page)->post(route('portal.vacations.team.reject', [$this->slug, $reject->id]), ['reason' => 'Cierre de mes'])->assertRedirect($page);
+    expect(LeaveRequest::query()->where('status', 'requested')->count())->toBe(2);
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.vacations.team.approve', [$this->slug, $approve->id]))->assertSessionHasNoErrors();
+    $this->from($page)->post(route('portal.vacations.team.reject', [$this->slug, $reject->id]), ['reason' => 'Cierre de mes'])->assertSessionHasNoErrors();
+    expect($approve->refresh()->status->value)->toBe('approved')->and($reject->refresh()->status->value)->toBe('rejected');
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
+
 it('approves: the request changes and the days are charged to the ledger, the oldest period first', function (): void {
     $request = leaveTeamRequest($this->ana);
 
-    $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))
-        ->assertRedirect(route('portal.vacations.team.show', $this->token))
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))
+        ->assertRedirect(route('portal.vacations.team.show', $this->slug))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Solicitud aprobada.']);
 
     $request->refresh();
@@ -188,8 +210,8 @@ it('approves: the request changes and the days are charged to the ledger, the ol
 it('rejects with the reason, which the person will read', function (): void {
     $request = leaveTeamRequest($this->ana);
 
-    $this->post(route('portal.vacations.team.reject', [$this->token, $request->id]), ['reason' => 'Cierre de mes: tome otra semana.'])
-        ->assertRedirect(route('portal.vacations.team.show', $this->token))
+    $this->post(route('portal.vacations.team.reject', [$this->slug, $request->id]), ['reason' => 'Cierre de mes: tome otra semana.'])
+        ->assertRedirect(route('portal.vacations.team.show', $this->slug))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Solicitud rechazada.']);
 
     $request->refresh();
@@ -202,9 +224,9 @@ it('rejects with the reason, which the person will read', function (): void {
 it('asks in Spanish for the reason of a rejection', function (array $data, string $message): void {
     $request = leaveTeamRequest($this->ana);
 
-    $this->from(route('portal.vacations.team.show', $this->token))
-        ->post(route('portal.vacations.team.reject', [$this->token, $request->id]), $data)
-        ->assertRedirect(route('portal.vacations.team.show', $this->token))
+    $this->from(route('portal.vacations.team.show', $this->slug))
+        ->post(route('portal.vacations.team.reject', [$this->slug, $request->id]), $data)
+        ->assertRedirect(route('portal.vacations.team.show', $this->slug))
         ->assertSessionHasErrors(['reason' => $message]);
 
     expect(leaveTeamStatus($request))->toBe('requested');
@@ -224,8 +246,8 @@ it("answers 'not found' to a request that is not theirs to answer, and changes n
         'of another company' => LeaveRequest::factory()->create(['tenant_id' => $other->id]),
     };
 
-    $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))->assertNotFound();
-    $this->post(route('portal.vacations.team.reject', [$this->token, $request->id]), ['reason' => 'Cierre de mes'])->assertNotFound();
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))->assertNotFound();
+    $this->post(route('portal.vacations.team.reject', [$this->slug, $request->id]), ['reason' => 'Cierre de mes'])->assertNotFound();
 
     expect(leaveTeamStatus($request))->toBe('requested')
         ->and(LeaveEntry::query()->withoutGlobalScopes()->where('leave_request_id', $request->id)->count())->toBe(0);
@@ -233,11 +255,12 @@ it("answers 'not found' to a request that is not theirs to answer, and changes n
 
 it('lets nobody answer their own request, nor one named by something that is not an id', function (): void {
     $request = leaveTeamRequest($this->ana);
-    $anas = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $anas = asPerson($this->ana->id);
 
     $this->post(route('portal.vacations.team.approve', [$anas, $request->id]))->assertNotFound();
-    $this->post(route('portal.vacations.team.approve', [$this->token, 'not-an-id']))->assertNotFound();
-    $this->post(route('portal.vacations.team.reject', [$this->token, 'not-an-id']), ['reason' => 'Cierre de mes'])->assertNotFound();
+    asPerson($this->boss->id);
+    $this->post(route('portal.vacations.team.approve', [$this->slug, 'not-an-id']))->assertNotFound();
+    $this->post(route('portal.vacations.team.reject', [$this->slug, 'not-an-id']), ['reason' => 'Cierre de mes'])->assertNotFound();
 
     expect(leaveTeamStatus($request))->toBe('requested');
 });
@@ -246,25 +269,25 @@ it('gives a request to its new manager: the one before can no longer answer it',
     $request = leaveTeamRequest($this->ana);
     $request->update(['approver_employee_id' => $this->dora->id]);
 
-    $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))->assertNotFound();
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))->assertNotFound();
     expect(leaveTeamStatus($request))->toBe('requested');
 
-    $this->post(route('portal.vacations.team.approve', [resolve(IssuePortalLink::class)->handle($this->dora->id), $request->id]))->assertRedirect();
+    $this->post(route('portal.vacations.team.approve', [asPerson($this->dora->id), $request->id]))->assertRedirect();
     expect(leaveTeamStatus($request))->toBe('approved');
 });
 
 it('still lets the manager answer what reached RH because they took too long, once', function (): void {
     $request = LeaveRequest::factory()->escalated()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'approver_employee_id' => $this->boss->id]);
 
-    $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Solicitud aprobada.']);
 
     // A second answer, of any kind, changes nothing and charges nothing.
-    $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))
-        ->assertRedirect(route('portal.vacations.team.show', $this->token))
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))
+        ->assertRedirect(route('portal.vacations.team.show', $this->slug))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esta solicitud ya fue respondida.']);
-    $this->post(route('portal.vacations.team.reject', [$this->token, $request->id]), ['reason' => 'Cierre de mes'])
-        ->assertRedirect(route('portal.vacations.team.show', $this->token))
+    $this->post(route('portal.vacations.team.reject', [$this->slug, $request->id]), ['reason' => 'Cierre de mes'])
+        ->assertRedirect(route('portal.vacations.team.show', $this->slug))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esta solicitud ya fue respondida.']);
 
     expect(leaveTeamStatus($request))->toBe('approved')
@@ -275,8 +298,8 @@ it('says a request RH answered first was already answered', function (): void {
     $request = LeaveRequest::factory()->escalated()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'approver_employee_id' => $this->boss->id]);
     resolve(DecideRequest::class)->handle($request->id, false, Decider::hr(User::factory()->create()->id), 'Cierre de mes');
 
-    $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))
-        ->assertRedirect(route('portal.vacations.team.show', $this->token))
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))
+        ->assertRedirect(route('portal.vacations.team.show', $this->slug))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'Esta solicitud ya fue respondida.']);
 
     expect(leaveTeamStatus($request))->toBe('rejected')
@@ -286,25 +309,30 @@ it('says a request RH answered first was already answered', function (): void {
 it('refuses, in words, to approve vacations without the days when the policy gives none in advance', function (): void {
     $request = leaveTeamRequest($this->caro, ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-12', 'working_days' => 4, 'had_balance' => false]);
 
-    $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))
-        ->assertRedirect(route('portal.vacations.team.show', $this->token))
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))
+        ->assertRedirect(route('portal.vacations.team.show', $this->slug))
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'No tiene días disponibles y su política no permite adelantar vacaciones.']);
 
     expect(leaveTeamStatus($request))->toBe('requested')
         ->and(LeaveEntry::query()->where('leave_request_id', $request->id)->count())->toBe(0);
 });
 
-it("answers 'not found' to a link that is not valid, and in a company that does not use Vacaciones", function (): void {
+it('lets nothing through without the session, nor with the session of another company, and answers 404 in a company that does not use Vacaciones', function (): void {
     $request = leaveTeamRequest($this->ana);
+    $other = Tenant::factory()->create();
+    LeaveSetting::factory()->create(['tenant_id' => $other->id]);
 
-    $this->get(route('portal.vacations.team.show', 'made-up'))->assertNotFound();
-    $this->post(route('portal.vacations.team.approve', ['made-up', $request->id]))->assertNotFound();
-    $this->post(route('portal.vacations.team.reject', ['made-up', $request->id]), ['reason' => 'Cierre de mes'])->assertNotFound();
+    $this->get(route('portal.vacations.team.show', $other->slug))->assertRedirect(route('worker.home', $other->slug));
+    $this->post(route('portal.vacations.team.approve', [$other->slug, $request->id]))->assertRedirect(route('worker.home', $other->slug));
+    session()->flush();
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))->assertRedirect(route('worker.home', $this->slug));
+    $this->post(route('portal.vacations.team.reject', [$this->slug, $request->id]), ['reason' => 'Cierre de mes'])->assertRedirect(route('worker.home', $this->slug));
+    asPerson($this->boss->id);
 
     LeaveSetting::query()->delete();
 
-    $this->get(route('portal.vacations.team.show', $this->token))->assertNotFound();
-    $this->post(route('portal.vacations.team.approve', [$this->token, $request->id]))->assertNotFound();
+    $this->get(route('portal.vacations.team.show', $this->slug))->assertNotFound();
+    $this->post(route('portal.vacations.team.approve', [$this->slug, $request->id]))->assertNotFound();
 
     expect(leaveTeamStatus($request))->toBe('requested');
 });
@@ -314,6 +342,6 @@ it('tells the person, in «Mis vacaciones», how many requests wait for their an
     leaveTeamRequest($this->caro);
     leaveTeamRequest($this->dan);
 
-    $this->get(route('portal.vacations.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('teamPending', 2));
-    $this->get(route('portal.vacations.show', resolve(IssuePortalLink::class)->handle($this->ana->id)))->assertInertia(fn (Assert $page) => $page->where('teamPending', 0));
+    $this->get(route('portal.vacations.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('teamPending', 2));
+    $this->get(route('portal.vacations.show', asPerson($this->ana->id)))->assertInertia(fn (Assert $page) => $page->where('teamPending', 0));
 });

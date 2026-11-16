@@ -1,7 +1,7 @@
 # Identidad única de la persona trabajadora
 
 *   **Author:** Victor Jesus Bravo de la Peña
-*   **Status:** Proposed
+*   **Status:** Implemented (pendiente de PR)
 *   **Date:** 2026-11-14
 
 --------------------------------------------------------------------------------
@@ -747,5 +747,224 @@ Transversal a este grupo:
 *   **Mutación**: no corre en el PR. Las clases con reglas declaran `mutates()` y entran solas a la corrida semanal: `WorkerSessionStore`, `OpenAccessLink`, `RequestAccessLink`, `RegisterKey`, `ReissueAccess`, `DisownKey`, `RequireRecentProof`, `ProofCodes`, `WebAuthnCeremony`.
 
 --------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+
+## Desviaciones
+
+Anotadas al construir el grupo 3 (enlaces, sesión, entrada, registro de llave y «No fui yo»).
+
+- **Nombres de log** `worker_access.*` (`worker_access.entered`, `.left`, `.link_requested`, `.link_used`,
+  `.key_registered`, `.not_me`…) en lugar de `worker.*`: el módulo ya registraba así sus llaves y la regla es `modulo.accion`.
+- **Archivo de rutas** `routes/worker-access.php`, no `routes/worker.php`.
+- **Sin acciones que toquen la sesión** (`EnterWithKey`, `LeaveSession`): las acciones no dependen de HTTP. Entrar y salir
+  los hacen los controladores con `Support/WorkerSessionStore`; `OpenAccessLink` solo gasta el enlace.
+- **`auth:worker` aún no está en las rutas.** El guard existe y responde; los controladores preguntan a la sesión. El
+  middleware y el regreso al destino guardado (`bootstrap/app.php`) llegan con el grupo 6 y 8.
+- **Varias coincidencias de correo** no pueden ocurrir hoy (`employees` tiene correo único por empresa); la regla de
+  «exactamente una» se conserva en `RequestAccessLink`.
+- **«No fui yo» avisa a `Companies::contact()`** (el dueño), como dice la tabla del grupo 3, no a cada miembro owner/hr.
+  La dirección firmada vale 30 días. Si RH ya había revocado la llave, igual cierra sesiones y enlaces y deja el motivo
+  `not_me` con la fecha de la primera revocación. Después la persona todavía puede pedir un enlace `requested` (que no crea
+  llaves); para una llave nueva necesita a RH.
+- **La página del enlace no recibe el token**: recibe `opens` y «Continuar» envía a su propia dirección.
+- **El marco de la persona** queda en `components/person-frame.tsx` (no en `components/humetria/`, que no puede importar
+  el logo); `components/attendance/person-frame.tsx` es su envoltura con «Registro de jornada».
+- **`RedactSensitiveData`** no ganó llaves: ningún log nuevo lleva token, código, reto ni llave pública.
+
+Anotadas al construir el grupo 4 («Accesos» y fin del alta de asistencia).
+
+- **Rutas del panel** en `routes/worker-access-panel.php` con nombres `tenant.worker-access.*` (no `tenant.access.*`);
+  están en `ModuleRoutes::always()` (toda empresa, con o sin herramientas) y en `ComplianceRoutes` (un sindicato, 404).
+- **Menos clases**: no hay `InviteWorker`, `RevokeKey`, `InviteRequest` ni el evento `WorkerAccessRevoked` (nadie lo
+  escucha). Se reusan `IssueAccessLink`, `RevokeCredential`, `AccessPersonRequest` e `InviteCenterRequest`.
+  `InvitationOutcome` no ganó `has_key`/`has_open_link`: invitar a una persona siempre emite; el lote por centro cuenta
+  `with_key` y `with_link`.
+- **Revocar una llave** desde el panel solo la detiene (`revoked_by_hr`, deja de verificar); no mueve `valid_after`. El
+  teléfono perdido es «Reemitir acceso», que también cierra sesiones; el diálogo de revocar lo dice.
+- **Estados**: con llave, invitada (un enlace `issued` que aún abre) y sin invitar (incluye un enlace vencido y solo
+  llaves revocadas). Sin la tarjeta «Avance del alta»: las pestañas con conteo dicen lo mismo.
+- **Lote por centro**: a quien no tiene correo solo se le cuenta; RH crea su enlace desde su renglón y lo ve una vez.
+- **Bitácora del enlace mostrado**: es `worker_access.link_issued` con `delivered_by_rh: true` y el actor.
+- **«Mi jornada» del portal por token** ya no emite enlaces para crear llave (alternativa A y decisión 3): lista las
+  llaves, pide a quien no tiene el enlace de RH y lleva a quien tiene una a `/me/{slug}` para agregar otra con sesión.
+  Marcar sin llave dice lo mismo, con un enlace a `/me/{slug}`.
+- **Se borraron sin uso**: `WorkerCredentials::revoke` (era temporal para «Dispositivos»), `CenterReadiness` (el aviso
+  «hoy nadie puede marcar» sale de Accesos), `DeviceLabel`, `MaskedEmail` y `Attendance\Exceptions\InvalidCredential`.
+  `CompanyAttendanceUsage` ya no cuenta `worker_credentials`: una llave es de toda empresa, no de Asistencia.
+- **Piezas compartidas**: `list-toolbar` y `center-filter` pasan a `components/` (raíz), porque `components/humetria` no
+  importa otras piezas de humetria; `one-time-link` a `components/humetria`; `panelListQuery` a `lib/panel-list.ts`.
+- **Los tres botones del enlace del portal** (empleados, teletrabajadores, saldos de vacaciones) siguen igual hasta los
+  grupos 6 y 8.
+
+Anotadas al construir el grupo 5 (inicio, `WorkerSection` y Telework como sección).
+
+- **`RequireWorkerSession` en lugar de `auth:worker`.** `Authenticate` llama a `Auth::shouldUse('worker')`: la persona se
+  volvía el usuario de la petición (las props compartidas del panel y el contexto de los logs la leían como usuario, y
+  `GenericUser` rompía `isSuperadmin()`), y además corría antes de `ResolveWorkerTenant` por la prioridad de middleware. El
+  middleware propio de WorkerAccess va después de `ResolveWorkerTenant`, nunca cambia el usuario y, sin sesión, lleva a la
+  entrada de esa empresa (JSON: 401). `RouteSecurityTest` lo cuenta como autenticación y exige que toda ruta con él viva bajo
+  `me/{tenant}/` con `ResolveWorkerTenant` antes. El guard `worker` sigue registrado; no se usa en rutas.
+- **El destino pretendido** vive en su propia llave de sesión (`worker_destination`, `Support/WorkerDestination`), no en
+  `url.intended`, para que un inicio de sesión del panel nunca caiga en una página de la persona ni al revés. Solo se guarda
+  un `GET` de `/me/{slug}/...` de la misma empresa y en este sitio, y se vuelve a revisar al usarlo (otra empresa, otro sitio,
+  `/admin`, `..` y un slug que solo empieza igual se ignoran). Lo consumen: entrar con llave, abrir un enlace `requested` y
+  registrar la llave tras un enlace `issued` (que sigue yendo primero a registrar la llave).
+- **`WorkerSession` se lee una vez por petición** (`Support/RequestWorkerSession`, memo en los atributos de la petición;
+  `WorkerSessionStore::start()`/`end()` lo olvidan): el middleware y la página no pagan dos lecturas.
+- **Una sección que falla** se reporta (`report()`) y se omite; el inicio no se cae.
+- **Interludio (pasos 5 a 9).** El inicio por enlace `portal/{token}` (`portal.show`, `Telework\PortalController::show`)
+  sigue vivo mientras Leave, Seating, Disclosure, Organization, Engagement y Results abren sus páginas con el token: lista
+  sus `PortalSection` (etiqueta `portal.sections`) y, para Telework, la `WorkerSection` de Telework, que lleva a
+  `/me/{slug}/telework` sin credencial (la persona entra primero). Ya no muestra los pendientes de teletrabajo ni recibe
+  `token`, `canNotify` ni `pending`. El inicio nuevo `/me/{slug}` lista solo las `WorkerSection` registradas: Telework y
+  Marcar. En el paso 6 cada módulo cambia su `PortalSection` por una `WorkerSection`; el inicio por enlace se borra en el 9.
+- **Telework.** Sus 9 rutas de contenido pasan a `/me/{slug}/telework/...` con los mismos nombres `portal.*`, más
+  `portal.telework.show` (página `telework/portal-section`: lo que antes mostraba el inicio sobre teletrabajo, con la tarjeta
+  de «Sus avisos por escrito» para quien tiene periodo abierto). La sección se ofrece con NOM-037 a quien teletrabaja y, a
+  cualquier otra persona, mientras tenga un documento por confirmar (antes los veía en el inicio del portal). La página la
+  abre cualquier persona con sesión (sin nada pendiente, «Nada pendiente»); los avisos siguen siendo 404 sin periodo abierto.
+  Las páginas reciben `slug` en lugar de `token`. `Support/SessionPortal` arma el `OpenedPortal` desde `WorkerIdentity`, así
+  las acciones (`SubmitChecklist`, `Acknowledge`…) no cambian. `OpenPortal`, `IssuePortalLink` y `PortalLink` quedan para el
+  inicio por enlace y los otros módulos hasta el paso 9.
+- **`RequirePortalTool`** pregunta a `Companies::current()` en las páginas de la persona y va antes de la sesión (una
+  empresa sin la herramienta da 404 sin pedir entrar). En las rutas que aún llevan `{token}` sigue preguntando al enlace
+  (`PortalAccess`) hasta que cada módulo se mude en el paso 6: la dependencia de Telework se va con la última.
+- **Limitadores** `portal-views` y `portal-actions` siguen en `TeleworkServiceProvider` (los usan todavía las rutas con
+  token): sin token cuentan por sesión del navegador (`portal-session:` + hash del id), nunca una cubeta para todos. Se mudan
+  a WorkerAccess cuando no quede token (paso 9).
+- **El correo «Su empresa respondió su aviso»** (`SendNoticeAnswer`) ya usa `WorkerLinks::to('portal.notices.show')`: su
+  ruta dejó de tener token, así que no podía esperar al paso 8.
+- **Attendance.** «Marcar» (`PunchWorkerSection`, clave `attendance`) lleva a `/a/{slug}` solo si la empresa tiene la
+  herramienta. «Mi jornada» por token (`AttendancePortalSection`, `portal.attendance.show`) sigue en el inicio por enlace
+  hasta el paso 9: es lo mínimo coherente mientras ese inicio exista, y ya no crea llaves (grupo 4). Se borra con él.
+- **`components/portal-home-link.tsx`** sigue llevando a `portal.show`: lo usan las páginas por token de los otros módulos
+  (paso 6).
+
+Paso 6-1 (Organization, lo que quedaba de Telework, Leave y Seating, con sus correos del grupo 8).
+
+- **Rutas**: `portal.team.show` en `/me/{slug}/team`; las 9 de vacaciones bajo `/me/{slug}/vacations/...`; las 4 de Ley Silla
+  bajo `/me/{slug}/seating/...`. Mismos nombres `portal.*`, `ResolveWorkerTenant`, `RequirePortalTool`, `RequireWorkerSession`
+  y los limitadores `portal-views`/`portal-actions` (por sesión del navegador). Las páginas reciben `slug`, no `token`; el
+  regreso al inicio es `components/worker-home-link.tsx` (`portal-home-link.tsx` queda para Disclosure, Engagement y Results).
+- **Secciones**: `TeamWorkerSection`, `VacationsWorkerSection` y `SeatingWorkerSection` (etiqueta `worker.sections`) reemplazan
+  a sus `PortalSection`; el inicio por enlace (`portal/{token}`) ya no muestra Mi equipo, Mis vacaciones ni Mi puesto de pie.
+- **Correos en el mismo commit que sus rutas** (Leave y Seating): en cuanto la ruta deja de tener `{token}`,
+  `route('portal.x', $token)` arma `/me/{token}/...`; esperar al grupo 8 dejaba correos rotos.
+- **Correos sin credencial**: la invitación del aspirante a teletrabajo (`SendPortalInvitation`), su recordatorio
+  (`SendPortalReminder`), las dos de Ley Silla y las tres de vacaciones (`RequestNotifier`) usan `WorkerLinks::to()`. En las
+  de Telework y Ley Silla se quitó «Si su empresa le envía uno nuevo, el anterior deja de funcionar»; queda «Este enlace es
+  solo suyo: no lo comparta», como en `NoticeAnswered`.
+- **Botones del panel**: el de la fila de Empleados y el de la ficha del teletrabajador son «Ver su acceso», un enlace a
+  «Accesos» buscando a la persona por nombre (allí se invita, se reemite o se muestra el enlace a quien no tiene correo); no
+  llaman a `WorkerInvitations`, porque el enlace de quien no tiene correo solo se muestra en «Accesos». Se borraron la ruta
+  `tenant.employees.portal-link`, `tenant.telework.teleworkers.link`, el flash `portalLink`, `Telework\Contracts\PortalLinks`,
+  `Support\EmailedPortalLinks` y `Notifications\PortalLinkEmail`. El de Saldos de vacaciones sigue siendo un envío en lote:
+  `SendPortalLinks` (mismo nombre y mismo log `leave.portal_links_sent`) llama a `WorkerInvitations::send` solo para quien
+  tiene correo; `VacationsPortalLink` se borró.
+- **Ley Silla**: `AcknowledgeRisks`, `ReportSeat` y `SubmitPersonInput` reciben `WorkerIdentity` (solo usaban `employeeId`);
+  ya no dependen de `Telework\Data\PortalIdentity`.
+- **Consultas del inicio**: `Companies::current()` lee la empresa y sus herramientas (2 consultas) cada vez que una sección
+  pregunta si la empresa tiene la herramienta; el inicio pasó de 12 a 19 consultas (Mi equipo +2, Mis vacaciones +3, Mi
+  puesto de pie +2). Constante, sin N+1; si pesa, memorizar `current()` por petición en `CompanyDirectory`.
+- **Rutas delicadas para el grupo 7** (aún sin `worker.proof`): `portal.seating.acknowledgments.store`,
+  `portal.vacations.requests.store`, `portal.vacations.statements.acknowledge` (y `.statements.show` si «estado de cuenta»
+  incluye leerlo: la tabla del grupo 7 solo pone el acuse),
+  `portal.vacations.team.approve` y `.team.reject`; de Telework, `portal.documents.acknowledge`, `portal.equipment.respond` y
+  `portal.visits.confirm`.
+
+Paso 6-2 (Disclosure, Engagement y Results, con sus correos del grupo 8).
+
+- **Rutas**: `portal.policy.show` y `.acknowledge` en `/me/{slug}/policy`; `portal.climate.show` y `portal.feedback.show` en
+  `/me/{slug}/climate` y `/me/{slug}/feedback`; `portal.support.show` en `/me/{slug}/support`. Mismos nombres, limitadores y
+  gates: política y apoyo siguen con `RequirePortalTool:nom035`; clima y retroalimentación siguen sin gate de ruta (como
+  antes: la página responde 404 si no hay nada publicado y la sección revisa la herramienta). Las páginas reciben `slug`;
+  «Nos dijeron / Haremos» ya no arma su propio regreso a `portal.show`: usa `worker-home-link`. Se borró
+  `components/portal-home-link.tsx` (ya nadie lo usaba).
+- **Secciones**: `PolicyWorkerSection`, `CenterWorkerSection`, `ClimateWorkerSection`, `FeedbackWorkerSection`,
+  `Engagement\SurveyWorkerSection` y `SupportWorkerSection`. Además, fuera de los tres módulos, `Campaigns\SurveyWorkerSection`
+  («Su evaluación NOM-035») y `ComplaintsWorkerSection` («Quejas y denuncias»): no llevaban token y eran las únicas
+  `PortalSection` que quedaban fuera de Attendance; ahora solo `AttendancePortalSection` usa el contrato viejo y el inicio por
+  enlace solo muestra «Mi jornada» (hasta el paso 9). Las encuestas, el canal y sus enlaces no cambiaron.
+- **Correos sin credencial**: `SendPolicyReminder`, `SendFeedbackPublished` (una sola dirección para todos, armada una vez),
+  `NotifyManagers` y `SendSupportNotice` usan `WorkerLinks::to()`. En `PolicyToConfirm`, `FeedbackPublished` y
+  `SupportWaiting` se quitó «Si su empresa le envía uno nuevo, el anterior deja de funcionar».
+- **Pendiente para el paso 9**: la invitación a clima y pulso (`Engagement\Jobs\SendInvitations`) y la de la evaluación
+  (`Campaigns\Jobs\SendSurveyInvitations`) aún ponen al pie `PortalAccess::url()`, el inicio viejo con token. No es una página
+  de estos módulos; cambia con el borrado del inicio viejo.
+- **Consultas del inicio**: de 19 a 32 (Política +2, Centro +2, Clima +2, Retroalimentación +2, Apoyo +2, y una consulta por
+  cada lista de pendientes —evaluación, clima o pulso, canal— que solo lee la empresa si hay algo). Constante. El inicio por
+  enlace bajó de 21 a 8.
+- **Rutas delicadas para el grupo 7** (aún sin `worker.proof`): `portal.policy.acknowledge` y `portal.support.show`. Ni
+  `portal.policy.show`, ni `portal.climate.show` ni `portal.feedback.show` entran en la tabla del grupo 7.
+
+Paso 7 (prueba reciente y las rutas delicadas).
+
+- **Rutas** `worker.proof.show` (`GET /me/{slug}/proof`), `.options`, `.store` (`POST /me/{slug}/proof`, la firma),
+  `.code.send` (`POST .../proof/code`) y `.code.check` (`POST .../proof/code/check`), con `ResolveWorkerTenant`,
+  `RequireWorkerSession` y el limitador `worker-proof` (60 por minuto por dirección y 20 por sesión). No son públicas.
+- **Menos clases**: sin `ProveWithKey`; la firma la verifica `ProofController` como `EntryController` (las acciones no tocan la
+  sesión) y exige que la llave sea de la persona de la sesión (otra persona, otra empresa, revocada, reto de otro contexto o
+  alterada: la misma respuesta 422). `SendProofCode` y `ProveWithCode` son acciones; `Support/ProofSteps` dice el modo
+  (`key`, `code` o `none`) y arma las direcciones; `WorkerSessionStore::prove()` fija `proof_at`.
+- **El código** (`Support/ProofCodes`): en caché un HMAC (con la llave de la app) del código y del id de la sesión, por persona;
+  10 minutos, 5 intentos contados antes de comparar (el sexto se rechaza aunque sea correcto), sirve una vez, uno nuevo anula el
+  anterior y nunca es igual. Envíos: 3 por persona y 3 por sesión cada 10 minutos (`proof.code_sends`). Se rechaza (403) a
+  quien tiene una llave activa y a quien no tiene correo, al pedir y al escribir. El correo `ProofCode` sale con `notifyNow`
+  y, como todo correo, lleva un botón («Ir a mi portal»).
+- **Un envío sin prueba** regresa a la página de donde salió (`WorkerDestination::back`, mismas reglas: si no es una página
+  `/me/{slug}/...` de esa empresa, al inicio) con el flash `proofRequired` (el paso). En lugar de tocar los nueve
+  formularios con `use-recent-proof`, un solo `components/worker-access/recent-proof-dialog.tsx`, montado en `app.tsx`,
+  recuerda el último envío de Inertia (`router.on('before')`), abre el paso ante el flash y, ya probada, lo reenvía con los
+  mismos datos. Inertia v3 conserva el estado de la página en el regreso de un envío; los `onSuccess` del formulario original no
+  corren en el reenvío (la página recarga sus props). JSON: 403 con `proofRequired: true`.
+- **Una página sin prueba** guarda su destino en la misma llave que la entrada (`worker_destination`): entrar y probar nunca
+  ocurren a la vez, y entrar con llave ya es una prueba.
+- **Una lectura por petición**: `RequestWorkerSession` ahora memoriza la `OpenSession` (atributo `worker_access.session`), así
+  `RequireRecentProof` no lee la sesión otra vez.
+- **Logs** `worker_access.proof_given` (`via`: `key` con `key_id`, o `code`), `worker_access.proof_refused` y
+  `worker_access.proof_code_sent`, no `worker.proof_passed`/`_failed`. Sin bitácora ni evento.
+- **Rutas delicadas**, las de la tabla del grupo 7 y nada más (las fija `RecentProofTest`). Leer el estado de cuenta de
+  vacaciones (`portal.vacations.statements.show`) y la política (`portal.policy.show`) no pide prueba: son lo propio de la
+  persona, como su saldo; solo confirmarlos. `RouteSecurityTest` exige `RequireWorkerSession` antes de `worker.proof`.
+- **Navegador**: `tests/Browser/WorkerProofTest.php` y los helpers `provedWithCode()` y `enteringProvedTo()` de `tests/Pest.php`;
+  Ley Silla, la política y el mensaje de apoyo recorren el paso por código; vacaciones y teletrabajo prueban antes de enviar.
+
+Paso 9 (borrado del portal por enlace y la prueba que prohíbe credenciales en direcciones).
+
+- **Invitaciones a encuestas**: el pie de la evaluación (`SendSurveyInvitations`) y de clima y pulso (`SendInvitations`) lleva
+  `WorkerLinks::home()` (`/me/{slug}`), la misma para todos y sin credencial; el enlace de la encuesta (`/survey/{token}`,
+  `/engagement/{token}`) sigue siendo su credencial de un solo uso. Sus pruebas viven ahora en `InvitationsTest` y
+  `SendSurveyInvitationsTest`; `PortalLinkInEmailsTest` se borró.
+- **Se borró** el inicio por enlace (`portal.show`, `Telework\PortalController::show`, `pages/telework/portal.tsx`,
+  `portal-start`, `portal-sections`, `portal-unavailable`, el tipo `PortalSection`), «Mi jornada» por enlace
+  (`portal.attendance.show`, `routes/attendance-portal.php`, `Attendance\PortalController`, `AttendancePortalSection`,
+  `pages/attendance/portal.tsx`, `portal-devices`, `portal-link-card`), y los contratos y piezas del token: `PortalAccess`,
+  `PortalSection`, `PortalSectionLink`, `PortalIdentity`, `PortalUnavailable`, `TokenPortalAccess`, `OpenPortal`,
+  `IssuePortalLink`, `PortalLink` y su factory. La lista de llaves de la persona ya está en `/me/{slug}/key`.
+  `OpenedPortal` queda (lo arma `SessionPortal` para las acciones de Telework, que no cambiaron de firma); las pruebas que lo
+  armaban con el token usan `teleworkPortalOf()` (`tests/Pest.php`).
+- **`routes/portal.php` pasa a `routes/telework-portal.php`**: solo quedan las páginas de teletrabajo de la persona, como los
+  demás `*-portal.php`.
+- **La tabla** `portal_links` se borra con `2027_01_23_100000_drop_portal_links_table` (sin migrar filas; `down()` la crea como
+  estaba: hash, `version` con su `check`, una por persona). Sus columnas e índices viejos (`previous_token_hash`…) ya no
+  existían; las migraciones antiguas quedan como historia.
+- **`RequirePortalTool`** solo pregunta a `Companies::current()`; los limitadores `portal-views` y `portal-actions` se mudaron a
+  `WorkerAccessServiceProvider` y cuentan solo por sesión del navegador (más el tope por dirección).
+- **La prueba de Goal 1** está en `RouteSecurityTest`: toda ruta sin cuenta del panel (la lista pública o con
+  `RequireWorkerSession`) cuyo parámetro se llame como credencial (`token`, `code`, `credential`, `key`…) o no sea el slug, un
+  UUID o una fecha debe estar en `credentialAddresses()` con su razón; bajo `me/`, `a/` o `portal` solo se permiten
+  `worker.link.show`, `worker.link.open`, `worker.not-me.*` (firmadas: la prueba exige `signed:relative`) y
+  `attendance.device.kiosk.activate` (la pantalla de un centro, no una persona). Se probó que falla con una ruta
+  `me/{slug}/sample/{token}` registrada en la prueba. También quedan permitidas, por no ser de la persona: las encuestas, el
+  canal de denuncias, la página de trabajadores, los reportes compartidos, el restablecer contraseña y la invitación de un
+  miembro del panel.
+- **Textos**: la página de trabajadores, la política pública y el mensaje de apoyo ya no mandan a «el enlace personal que le
+  llegó» ni piden «no comparta su enlace» (`tests/Unit/WorkerLinkCopyTest.php`).
+- **Leave** conserva `SendPortalLinks`/«Enviar enlace a su portal»: ya invita con `WorkerInvitations` (un enlace de un solo uso);
+  se renombró a `InviteToPortal` con el log `leave.portal_invitations_sent`.
+- **Deuda**: el inicio `/me/{slug}` hace 32 consultas (constante): `Companies::current()` relee la empresa y sus herramientas en
+  cada sección. Memorizarlo por petición en `CompanyDirectory` no es un cambio pequeño (jobs y acciones esperan leer el estado
+  «como está ahora», y las pruebas cambian la empresa a mitad de una petición); queda para su propio trabajo.
 
 *Drafted with EGM*

@@ -98,7 +98,7 @@ con el mínimo de 5.
 
 **Datos vivos:** un pulso de clima abierto (~60 % contestado) con **invitaciones pendientes reservadas** para el
 público, una campaña NOM-035 abierta igual, el canal de denuncias activo, un centro con checador de pantalla activado y
-un teléfono por vincular. Lo que el público conteste en vivo se suma a lo sembrado y mueve el avance.
+nadie con llave: quien marca en vivo crea la suya al entrar por la puerta. Lo que el público conteste en vivo se suma a lo sembrado y mueve el avance.
 
 **Personas:** nombres, puestos y correos escritos a mano y deterministas (sin Faker). El reinicio reproduce exactamente la
 misma historia, corrida a la fecha de hoy.
@@ -112,7 +112,7 @@ progreso visible en la consola y un candado: nunca dos a la vez (una corrida de 
 su job, si llega tarde, no hace nada). Los jobs (`PrepareDemo`, `ResetDemo`) van en su propia cola `demo` de la conexión
 `redis-long` (supervisor `supervisor-demo` de Horizon), cuyo `retry_after` supera su límite de 10 minutos; no relanzan
 su error: la señal es `demo.run_failed`. `reset()` conserva la fila de la empresa, borra todo lo demás de la demo
-(incluido lo que el público haya creado en vivo: quejas, dispositivos vinculados, respuestas) y vuelve a preparar. Un
+(incluido lo que el público haya creado en vivo: quejas, llaves de acceso, respuestas) y vuelve a preparar. Un
 test comprueba que, tras borrar, no queda ninguna fila con el `tenant_id` de la demo en ninguna tabla de negocio, salvo
 la bitácora.
 
@@ -137,10 +137,12 @@ trabajadores libres quedan) y lo que se comparte en vivo:
 
 `GET demo/{code}`: pública, con throttle. Solo responde mientras haya una sesión abierta desde la consola y solo entrega
 trabajadores de la empresa demo. Al escanear, asigna al visitante un **trabajador demo libre** del grupo reservado
-para el público (un cookie firmado recuerda cuál, para que si recarga conserve el suyo) y lo redirige a su **portal
-personal** (`portal/{token}`), la entrada única que ya existe: desde ahí contesta la encuesta, ve resultados, entra al
-canal de quejas y vincula su teléfono para marcar. Cada trabajador se entrega **una sola vez hasta el siguiente
-reinicio** (no hay «liberar abandonados»: su enlace del portal no rota y llegaría a un segundo visitante); sin
+para el público (un cookie firmado recuerda cuál, para que si recarga conserve el suyo) y lo redirige a un **enlace de un
+solo uso** de WorkerAccess (`me/{slug}/link/{token}`, del tipo que emite RH, a nombre de la jefa de RH de la demo; uno
+nuevo en cada escaneo). El enlace abre la sesión de la persona y le pide crear su **llave de acceso**: con ella da la
+prueba reciente que piden las acciones delicadas (confirmar la política, el puesto de pie), y marca asistencia. Desde su
+portal (`me/{slug}`) contesta la encuesta, ve resultados y entra al canal de quejas. Cada trabajador se entrega **una sola
+vez hasta el siguiente reinicio** (no hay «liberar abandonados»: su sesión y su llave llegarían a un segundo visitante); sin
 trabajadores libres, muestra «sala llena» y la sala sugiere reiniciar. La puerta registra la asignación sin ligarla a
 ninguna respuesta. El canal de denuncias de la demo acepta 60 envíos por hora y 120 al día por dirección (un salón
 comparte la Wi-Fi); el tope diario del canal (200) no cambia.
@@ -158,7 +160,7 @@ Unit/Feature: preparar es idempotente; los números cuadran entre módulos; los 
 reales y `demo.mail_blocked` logueado; la demo no aparece en facturación, métricas ni conteos; reinicio sin filas
 huérfanas; la puerta (sesión cerrada, vencida, sin trabajadores libres, otra empresa, throttle); anonimato en las props de
 cada página nueva; autorización de la sala (solo superadmin, 404 antes de validar). Browser: prueba de humo de la sala
-(`visitPage()`), y un flujo largo de la puerta al portal en celular. Cobertura ≥ 90 %.
+(`visitPage()`), y un flujo largo de la puerta a crear la llave en celular. Cobertura ≥ 90 %.
 
 ## Decisiones suyas (ya respondidas)
 
@@ -171,7 +173,8 @@ cada página nueva; autorización de la sala (solo superadmin, 404 antes de vali
 
 - **Reiniciar conserva la empresa y reconstruye su contenido.** La fila de la empresa (y con ella su slug, el código del canal
   de denuncias y el QR del checador) no cambia. Los trabajadores se recrean con **ids deterministas** (derivados de una
-  clave estable por persona), de modo que su enlace del portal sigue siendo el mismo tras cada reinicio.
+  clave estable por persona), salvo los 40 de la puerta, que reciben ids nuevos en cada preparación para que lo que se
+  llevó un público anterior (enlace, sesión, llave) deje de servir.
 - **Bitácora (`audit_entries`) es de solo inserción:** preparar con las acciones reales escribe filas que no se pueden
   borrar. La regla de «no queda ninguna fila» del reinicio **exceptúa la bitácora**; el constructor puede evitar que
   preparar la escriba si es fácil. Crecen unas pocas filas por reinicio y no se muestran fuera de la consola.

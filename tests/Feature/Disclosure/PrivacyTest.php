@@ -16,7 +16,6 @@ use App\Modules\Disclosure\Actions\StartContentDraft;
 use App\Modules\Disclosure\Actions\StartPolicyDraft;
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -42,9 +41,8 @@ it('writes nothing of a person, a credential or a text the company wrote in the 
     $block = resolve(StartContentDraft::class)->handle(DocumentKind::ViolenceMeasures, $hr->id);
     resolve(SaveDraft::class)->handle($block->id, [['key' => 'body', 'text' => 'FRASE-SECRETA-DEL-BLOQUE', 'items' => []]]);
     resolve(PublishContent::class)->handle($block->id, null, $hr->id);
-    $personal = resolve(PortalAccess::class)->token($ana->id);
     $page = (string) resolve(IssuePageLink::class)->handle($hr->id)->token();
-    $this->post(route('portal.policy.acknowledge', $personal), ['document' => $policy->id]);
+    $this->post(route('portal.policy.acknowledge', asPerson($ana->id)), ['document' => $policy->id]);
     resolve(RecordManualAcknowledgments::class)->handle($policy->id, [$ana->id], '2026-11-20', 'NOTA-PRIVADA-DE-LA-HOJA', $hr->id);
     resolve(RecordDissemination::class)->handle($plant->id, 'poster', ['a'], '2026-11-20', 'NOTA-DEL-CARTEL', $hr->id);
     resolve(ChangePageLinkExpiry::class)->handle($hr->id, '2027-06-01');
@@ -60,7 +58,7 @@ it('writes nothing of a person, a credential or a text the company wrote in the 
 
     expect($logged)->not->toBeEmpty()
         ->and(AuditEntry::query()->where('event', 'like', 'disclosure.%')->count())->toBeGreaterThan(5);
-    foreach ([$page, $personal, $rotated, 'ana.privada@acme.test', 'Ana Nombre Privado', 'FRASE-SECRETA-DE-LA-POLITICA', 'FRASE-SECRETA-DEL-BLOQUE', 'NOTA-PRIVADA-DE-LA-HOJA', 'NOTA-DEL-CARTEL', 'Planta Secreta Norte', 'Área Privada'] as $secret) {
+    foreach ([$page, $rotated, 'ana.privada@acme.test', 'Ana Nombre Privado', 'FRASE-SECRETA-DE-LA-POLITICA', 'FRASE-SECRETA-DEL-BLOQUE', 'NOTA-PRIVADA-DE-LA-HOJA', 'NOTA-DEL-CARTEL', 'Planta Secreta Norte', 'Área Privada'] as $secret) {
         expect($everything)->not->toContain($secret);
     }
 });

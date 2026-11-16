@@ -6,33 +6,31 @@ namespace App\Modules\Organization\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
+use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * «Mi equipo» in a person's portal, under the same link as the rest: their manager, whoever reports to the same
- * person and whoever reports to them. Name, job title and area only: no contact data and nobody's id. A link that is
- * not valid is a 404 that says nothing about whether it ever existed.
+ * «Mi equipo» in the person's pages, for the person of the session: their manager, whoever reports to the same person and
+ * whoever reports to them. Name, job title and area only: no contact data and nobody's id.
  */
 final class PortalTeamController extends Controller
 {
     public const int PER_PAGE = 10;
 
-    public function show(string $token, PortalAccess $access): Response
+    public function show(string $tenant, WorkerSession $session): Response
     {
-        $identity = $access->open($token);
-        abort_if($identity === null, 404);
+        $identity = $session->current() ?? abort(404);
 
         $person = Employee::query()->findOrFail($identity->employeeId, ['id', 'manager_id']);
         $manager = $person->manager_id === null ? null : Employee::query()->whereNull('deactivated_at')->find($person->manager_id, ['id', 'name', 'employee_number', 'job_title']);
 
         return Inertia::render('organization/portal-team', [
-            'token' => $token,
-            'company' => $identity->company,
-            'name' => $identity->name,
+            'slug' => $tenant,
+            'company' => $identity->companyName,
+            'name' => $identity->personName,
             // A manager who left is not named: the person reads they have none and tells Recursos Humanos.
             'manager' => $manager === null ? null : ['name' => $manager->name ?? $manager->employee_number ?? '', 'job_title' => $manager->job_title ?? ''],
             // With no manager nobody is beside the person: comparing with NULL matches no one.

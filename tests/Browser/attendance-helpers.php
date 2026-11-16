@@ -84,11 +84,18 @@ function standingAt(AwaitableWebpage $page, float $latitude, float $longitude, f
  * Playwright's click, which waits for the button and retries across the navigation.
  */
 
-/** The person's way through the link of their phone, from the agreement to the key, until it says the phone is linked. */
-function linkThePhone(AwaitableWebpage $page): AwaitableWebpage
+/**
+ * The person's way from RH's link to a key on this phone, until their start greets them. The agreement of the registro is
+ * then accepted for them with that key, as Marcar asks before the first mark.
+ */
+function linkThePhone(AwaitableWebpage $page, string $employeeId): AwaitableWebpage
 {
-    return $page->press('button:has-text("Acepto y continúo")')
-        ->press('button:has-text("Sí, soy yo")')
-        ->press('Crear llave')
-        ->waitForText('Listo, su teléfono está vinculado');
+    $page->press('button:has-text("Continuar")')
+        ->waitForText('cree su llave de acceso')
+        ->press('button:has-text("Crear llave")')
+        ->waitForText('Hola,');
+    $key = App\Modules\WorkerAccess\Models\WorkerCredential::query()->withoutGlobalScopes()->where('employee_id', $employeeId)->latest('registered_at')->firstOrFail();
+    agreementAccepted($employeeId, $key->id);
+
+    return $page;
 }

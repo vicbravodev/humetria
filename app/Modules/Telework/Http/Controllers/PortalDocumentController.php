@@ -6,12 +6,10 @@ namespace App\Modules\Telework\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Telework\Actions\Acknowledge;
-use App\Modules\Telework\Actions\OpenPortal;
-use App\Modules\Telework\Exceptions\PortalUnavailable;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Support\FileStore;
-use App\Modules\Telework\Support\OpenedPortal;
+use App\Modules\Telework\Support\SessionPortal;
 use App\Modules\Telework\Support\WritingPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,20 +19,19 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The documents a person was asked to confirm, from their portal: read the PDF, or the page of a text written with
- * questions, and confirm it. Only a document that was asked of that person exists for them; a link that opens nothing does
- * not exist either.
+ * questions, and confirm it. Only a document that was asked of that person exists for them.
  */
 final class PortalDocumentController extends Controller
 {
-    public function file(string $token, string $document, OpenPortal $openPortal, FileStore $files, WritingPage $page): StreamedResponse|Response
+    public function file(string $tenant, string $document, SessionPortal $portals, FileStore $files, WritingPage $page): StreamedResponse|Response
     {
-        $portal = $this->portal($token, $openPortal);
+        $portal = $portals->current() ?? abort(404);
         $asked = Acknowledgement::query()->where('employee_id', $portal->employeeId)->where('document_id', $document)->exists();
         $found = $asked ? TeleworkDocument::query()->find($document) : null;
         abort_if($found === null, 404);
 
         if ($found->path === null) {
-            return Inertia::render('telework/portal-document', ['token' => $token, 'document' => $page->document($found)]);
+            return Inertia::render('telework/portal-document', ['slug' => $tenant, 'document' => $page->document($found)]);
         }
 
         $response = $files->stream($found->path);
@@ -43,19 +40,10 @@ final class PortalDocumentController extends Controller
         return $response;
     }
 
-    public function acknowledge(string $token, string $document, Request $request, OpenPortal $openPortal, Acknowledge $acknowledge): RedirectResponse
+    public function acknowledge(string $tenant, string $document, Request $request, SessionPortal $portals, Acknowledge $acknowledge): RedirectResponse
     {
-        $acknowledge->handle($this->portal($token, $openPortal), $document, $request->ip());
+        $acknowledge->handle($portals->current() ?? abort(404), $document, $request->ip());
 
-        return to_route('portal.show', $token);
-    }
-
-    private function portal(string $token, OpenPortal $openPortal): OpenedPortal
-    {
-        try {
-            return $openPortal->handle($token);
-        } catch (PortalUnavailable) {
-            abort(404);
-        }
+        return to_route('portal.telework.show', $tenant);
     }
 }

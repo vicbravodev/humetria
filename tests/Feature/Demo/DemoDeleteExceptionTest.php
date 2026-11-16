@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Modules\Engagement\Models\Survey;
-use Database\Factories\Attendance\AttendanceDeviceFactory;
 use Database\Factories\Attendance\AttendanceMarkFactory;
 use Database\Factories\Billing\UsageEventFactory;
 use Database\Factories\Disclosure\AcknowledgmentFactory;
@@ -18,6 +17,7 @@ use Database\Factories\Responses\AnonymousResponseFactory;
 use Database\Factories\Responses\TraumaScreeningFactory;
 use Database\Factories\Seating\RiskAssessmentFactory;
 use Database\Factories\Tenancy\TenantFactory;
+use Database\Factories\WorkerAccess\WorkerCredentialFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -83,9 +83,9 @@ function insertOnlyTables(): array
         'attendance_marks' => ['attendance_marks', fn (): string => AttendanceMarkFactory::new()->createOne()->id, 'attendance_marks is append-only', 'id = id', true],
         'attendance_agreements' => ['attendance_agreements', fn (): string => attendanceAgreement(TenantFactory::new()->createOne()->id), 'attendance_agreements is append-only', 'id = id', true],
         'attendance_agreement_acceptances' => ['attendance_agreement_acceptances', function (): string {
-            $device = AttendanceDeviceFactory::new()->createOne();
+            $key = WorkerCredentialFactory::new()->createOne();
             $id = Str::uuid()->toString();
-            DB::table('attendance_agreement_acceptances')->insert(['id' => $id, 'tenant_id' => $device->tenant_id, 'agreement_id' => attendanceAgreement($device->tenant_id), 'employee_id' => $device->employee_id, 'device_id' => $device->id, 'accepted_at' => now()]);
+            DB::table('attendance_agreement_acceptances')->insert(['id' => $id, 'tenant_id' => $key->tenant_id, 'agreement_id' => attendanceAgreement($key->tenant_id), 'employee_id' => $key->employee_id, 'credential_id' => $key->id, 'accepted_at' => now()]);
 
             return $id;
         }, 'attendance_agreement_acceptances is append-only', 'id = id', true],

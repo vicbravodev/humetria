@@ -41,7 +41,7 @@ beforeEach(function (): void {
 function openChannelPage(object $test, ?string $code = null): Illuminate\Testing\TestResponse
 {
     return $test->withServerVariables(['REMOTE_ADDR' => MARKER_IP])
-        ->withHeaders(['User-Agent' => MARKER_AGENT, 'Referer' => 'https://empresa.example/portal/token-secreto'])
+        ->withHeaders(['User-Agent' => MARKER_AGENT, 'Referer' => 'https://empresa.example/survey/token-secreto'])
         ->get('/c/'.($code ?? $test->channel->access_code));
 }
 

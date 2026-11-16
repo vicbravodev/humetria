@@ -10,6 +10,8 @@ use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
+use App\Modules\WorkerAccess\Data\CredentialCounts;
 use Carbon\CarbonImmutable;
 
 /**
@@ -28,7 +30,7 @@ final readonly class SetupProgress
 
     private const int LISTED = 5;
 
-    public function __construct(private Roster $roster) {}
+    public function __construct(private Roster $roster, private WorkerCredentials $credentials) {}
 
     /**
      * @param  array<string, string>  $names  the centers in use, by id, by name
@@ -42,7 +44,7 @@ final readonly class SetupProgress
         $screens = $this->activeScreens();
         $people = array_merge([], ...array_values($byCenter));
         $scheduled = array_flip(AttendanceSchedule::query()->among('employee_id', $people)->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
-        $linked = array_keys(DevicePages::states($people), 'linked', true);
+        $linked = array_filter($this->credentials->countsByEmployee($people), fn (CredentialCounts $keys): bool => $keys->active > 0);
 
         $pending = [];
         $findings = [];

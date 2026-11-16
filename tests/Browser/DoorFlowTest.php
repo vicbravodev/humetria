@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\Demos\Actions\CloseDoor;
 use App\Modules\Demos\Actions\OpenDoor;
 use App\Modules\Organization\Models\Employee;
@@ -25,13 +26,16 @@ function openDemoDoor(): string
     // The pool finds its people in the company by their employee number (their ids are new on every prepare).
     $first = array_values(array_filter(DemoRoster::people(), fn (DemoPerson $person): bool => $person->reservedForDoor))[0];
     Employee::factory()->create(['tenant_id' => $demo->id, 'name' => 'Ana Solís', 'employee_number' => $first->employeeNumber]);
+    // The demo's head of HR issues the links the door hands out.
+    User::factory()->create(['email' => DemoRoster::person(DemoRoster::HR)->email]);
 
     return (string) parse_url(resolve(OpenDoor::class)->handle()['url'], PHP_URL_PATH);
 }
 
-it('takes a visitor from the QR to the portal of their own demo worker, on the phone', function (): void {
-    visitPage('telework/portal', openDemoDoor(), mobile: true)
-        ->assertSee('Ana Solís')
+it('takes a visitor from the QR into their own demo worker, on the phone, to create their key', function (): void {
+    visitPage('worker-access/link', openDemoDoor(), mobile: true)
+        ->press('Continuar')
+        ->waitForText('Ana Solís, cree su llave de acceso')
         ->assertNoJavaScriptErrors();
 });
 

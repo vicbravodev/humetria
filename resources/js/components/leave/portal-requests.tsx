@@ -4,10 +4,10 @@ import type { Paginated, PortalLeaveRequest } from '@/types';
 
 /** What the person has asked for, the newest dates first, a few at a time. */
 export default function PortalRequests({
-    token,
+    slug,
     requests,
 }: {
-    token: string;
+    slug: string;
     requests: Paginated<PortalLeaveRequest>;
 }) {
     return (
@@ -25,7 +25,7 @@ export default function PortalRequests({
                     {requests.data.map((request) => (
                         <RequestRow
                             key={request.id}
-                            token={token}
+                            slug={slug}
                             request={request}
                         />
                     ))}

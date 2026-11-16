@@ -26,8 +26,8 @@ export default function RoomNotes() {
                     misma red.
                 </li>
                 <li>
-                    Marcar asistencia en vivo necesita un teléfono de verdad:
-                    cada quien lo vincula desde «Mi jornada» en su portal.
+                    Marcar asistencia y confirmar en vivo necesita un teléfono
+                    de verdad: cada quien crea su llave al entrar por la puerta.
                 </li>
                 <li>
                     Cada enlace de encuesta sembrado sirve una sola vez por

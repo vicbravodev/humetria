@@ -76,7 +76,7 @@ export type PortalCommitment = {
 };
 
 export type PortalClimate = {
-    token: string;
+    slug: string;
     company: string;
     name: string;
     survey: { name: string };

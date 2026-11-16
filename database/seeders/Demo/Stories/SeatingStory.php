@@ -36,7 +36,8 @@ use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Telework\Actions\RegisterCommittee;
-use App\Modules\Telework\Contracts\PortalAccess;
+use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoContext;
@@ -44,7 +45,6 @@ use Database\Seeders\Demo\DemoPerson;
 use Database\Seeders\Demo\DemoRoster;
 use Database\Seeders\Demo\DemoStory;
 use Illuminate\Support\Facades\Log;
-use LogicException;
 
 /**
  * Ley Silla at the offices. The Comisión de seguridad e higiene of the offices was constituted over a year ago, with the head
@@ -128,7 +128,7 @@ final readonly class SeatingStory implements DemoStory
         private SignAssessment $sign,
         private ProposeMeasure $propose,
         private SaveMeasure $saveMeasure,
-        private PortalAccess $portal,
+        private Companies $companies,
         private AcknowledgeRisks $acknowledge,
         private CenterSurveys $surveys,
         private SubmitSurvey $submit,
@@ -183,6 +183,14 @@ final readonly class SeatingStory implements DemoStory
         return $positions;
     }
 
+    /** The person as their session knows them, confirming from their portal. */
+    private function person(string $id, DemoPerson $person): WorkerIdentity
+    {
+        $company = $this->companies->current();
+
+        return new WorkerIdentity($company->id, $id, $company->tradeName, $person->name);
+    }
+
     /**
      * The Comisión assesses a person: the position's conditions and the person's own, the facts of Quinta C, and signs; the
      * last person of the filing runs is still a draft. The measures of a Medio or Alto assessment follow, and the person
@@ -217,7 +225,7 @@ final readonly class SeatingStory implements DemoStory
         }
 
         if (! $person->reservedForDoor) {
-            DemoClock::at(($day + 2 + $i).' days', fn () => $this->acknowledge->handle($this->portal->open($this->portal->token($id)) ?? throw new LogicException('The portal of a demo person does not open.')), 18 * 60 + 30);
+            DemoClock::at(($day + 2 + $i).' days', fn () => $this->acknowledge->handle($this->person($id, $person)), 18 * 60 + 30);
         }
 
         return true;

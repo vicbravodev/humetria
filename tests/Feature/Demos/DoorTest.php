@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\Demos\Actions\AdmitVisitor;
 use App\Modules\Demos\Actions\CloseDoor;
 use App\Modules\Demos\Actions\OpenDoor;
@@ -10,8 +11,12 @@ use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Models\DoorAssignment;
 use App\Modules\Demos\Models\DoorSession;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Enums\LinkKind;
+use App\Modules\WorkerAccess\Models\WorkerAccessLink;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
+use Database\Seeders\Demo\DemoRoster;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -33,6 +38,8 @@ const DOOR_COOKIE = 'demo_door';
 function demoDoorFixture(object $test, int $people = 3, array $extra = []): array
 {
     $test->demo = Tenant::factory()->demo()->create(['slug' => 'alba']);
+    // The demo's head of HR issues the links the door hands out.
+    User::factory()->create(['email' => DemoRoster::person(DemoRoster::HR)->email]);
     $ids = Employee::factory()->count($people)->create(['tenant_id' => $test->demo->id])->pluck('id')->all();
     usePool([...$extra, ...$ids]);
 
@@ -59,11 +66,21 @@ function openDoorPath(int $minutes = 120): string
     return (string) parse_url(resolve(OpenDoor::class)->handle($minutes)['url'], PHP_URL_PATH);
 }
 
-function portalOf(Tenant $tenant, string $employeeId): string
+/**
+ * The door let the visitor in as that person: it answered with a new one-time link of the demo (WorkerAccess, the kind RH
+ * issues, which lets them create their key) that only that person's session opens with.
+ */
+function assertEntersAs(TestResponse $response, Tenant $tenant, string $employeeId): TestResponse
 {
+    $location = (string) $response->assertRedirect()->headers->get('Location');
     workIn($tenant);
+    $link = WorkerAccessLink::findPending(basename($location));
 
-    return (string) resolve(PortalAccess::class)->url($employeeId);
+    expect($location)->toStartWith(url("/me/{$tenant->slug}/link/"))
+        ->and($link?->employee_id)->toBe($employeeId)
+        ->and($link?->kind)->toBe(LinkKind::Issued);
+
+    return $response;
 }
 
 function scan(object $test, string $path, string $address = '203.0.113.7'): TestResponse
@@ -76,11 +93,11 @@ function assertNeutralDoor(TestResponse $response, string $state): void
     $response->assertOk()->assertInertia(fn (Assert $page) => $page->component('demos/door')->where('state', $state)->etc());
 }
 
-it('sends a visitor to the portal of a free demo worker, with a signed cookie that remembers it', function (): void {
+it('lets a visitor in as a free demo worker, with a signed cookie that remembers it', function (): void {
     [$first] = demoDoorFixture($this);
     $path = openDoorPath();
 
-    $response = scan($this, $path)->assertRedirect(portalOf($this->demo, $first));
+    $response = assertEntersAs(scan($this, $path), $this->demo, $first);
 
     $assignment = DoorAssignment::query()->sole();
     $cookie = $response->getCookie(DOOR_COOKIE, false);
@@ -92,6 +109,21 @@ it('sends a visitor to the portal of a free demo worker, with a signed cookie th
         ->and($response->getCookie(DOOR_COOKIE)?->getValue())->toBe($assignment->id);
 });
 
+it('hands out a link that opens the worker\'s own session once, to create their key', function (): void {
+    [$first] = demoDoorFixture($this);
+    $token = basename((string) scan($this, openDoorPath())->headers->get('Location'));
+
+    $this->post(route('worker.link.open', ['alba', $token]))->assertRedirect(route('worker.key.show', 'alba'));
+
+    $session = resolve(WorkerSessionStore::class)->open();
+    // Entering with a link is no recent proof: before something delicate the visitor proves it is them with the key they
+    // create now (the demo's mail never leaves, so a code by email never arrives).
+    expect($session?->identity->employeeId)->toBe($first)
+        ->and($session?->via)->toBe(EntryVia::IssuedLink)
+        ->and($session?->proofAt)->toBeNull();
+    $this->post(route('worker.link.open', ['alba', $token]))->assertRedirect(route('worker.link.show', ['alba', $token]));
+});
+
 it('gives a returning visitor the same worker, and never a second one', function (): void {
     [$first] = demoDoorFixture($this);
     $path = openDoorPath();
@@ -99,7 +131,7 @@ it('gives a returning visitor the same worker, and never a second one', function
 
     foreach (range(1, 3) as $ignored) {
         $this->withCookie(DOOR_COOKIE, (string) $assignment);
-        scan($this, $path)->assertRedirect(portalOf($this->demo, $first));
+        assertEntersAs(scan($this, $path), $this->demo, $first);
     }
 
     expect(DoorAssignment::query()->count())->toBe(1);
@@ -109,8 +141,8 @@ it('gives the next visitor the next free worker', function (): void {
     [$first, $second] = demoDoorFixture($this);
     $path = openDoorPath();
 
-    scan($this, $path)->assertRedirect(portalOf($this->demo, $first));
-    scan($this, $path)->assertRedirect(portalOf($this->demo, $second));
+    assertEntersAs(scan($this, $path), $this->demo, $first);
+    assertEntersAs(scan($this, $path), $this->demo, $second);
 });
 
 it('says the room is full when no worker is free', function (): void {
@@ -133,9 +165,9 @@ it('says the room is full when no worker is free', function (): void {
 
 it('keeps a worker handed out in an earlier session taken, so whoever answered is never handed out again', function (): void {
     [$first, $second] = demoDoorFixture($this, 2);
-    scan($this, openDoorPath())->assertRedirect(portalOf($this->demo, $first));
+    assertEntersAs(scan($this, openDoorPath()), $this->demo, $first);
 
-    scan($this, openDoorPath())->assertRedirect(portalOf($this->demo, $second));
+    assertEntersAs(scan($this, openDoorPath()), $this->demo, $second);
 });
 
 it('refuses a closed, expired, replaced or unknown code with the same page', function (): void {
@@ -184,7 +216,7 @@ it('only ever hands out workers of the demo company', function (): void {
     assertNeutralDoor(scan($this, '/demo/'.$code), 'closed');
 
     $path = openDoorPath();
-    scan($this, $path)->assertRedirect(portalOf($this->demo, $first));
+    assertEntersAs(scan($this, $path), $this->demo, $first);
     assertNeutralDoor(scan($this, $path), 'full');
 
     expect(DoorAssignment::query()->withoutGlobalScopes()->pluck('employee_id')->all())->toBe([$first]);
@@ -229,7 +261,7 @@ it('says the room is full in a new session once every worker was handed out', fu
     expect(DoorAssignment::query()->count())->toBe(2);
 });
 
-it('tells no cache to keep the redirect that carries the portal', function (): void {
+it('tells no cache to keep the redirect that carries the one-time link', function (): void {
     demoDoorFixture($this);
 
     expect(scan($this, openDoorPath())->assertRedirect()->headers->get('Cache-Control'))->toContain('no-store');
@@ -299,17 +331,16 @@ it('links no visitor to any answer', function (): void {
     $anonymous = fn (): array => [DB::table('anonymous_responses')->count(), DB::table('engagement_responses')->count()];
     $before = $anonymous();
 
-    $portal = portalOf($this->demo, $first);
-    scan($this, openDoorPath());
-    $token = basename($portal);
-    // The door's own lines (the portal logs its link being issued, as it does for every person, without the token).
+    $token = basename((string) scan($this, openDoorPath())->headers->get('Location'));
+    // The door's own lines (WorkerAccess logs its link being created, as it does for every person, without the token).
     $doorLines = array_values(array_filter($logged, fn (string $line): bool => str_starts_with($line, 'demo.door')));
 
     expect(Schema::getColumnListing('demo_door_assignments'))->toEqualCanonicalizing(['id', 'tenant_id', 'session_id', 'employee_id', 'claimed_at'])
         ->and(Schema::getColumnListing('demo_door_sessions'))->toEqualCanonicalizing(['id', 'tenant_id', 'code_hash', 'expires_at', 'closed_at', 'created_at', 'updated_at'])
         ->and($anonymous())->toBe($before)
         ->and($doorLines)->toHaveCount(2)
-        ->and(implode("\n", $doorLines))->not->toContain($token)->not->toContain($first)
+        ->and(implode("\n", $logged))->not->toContain($token)
+        ->and(implode("\n", $doorLines))->not->toContain($first)
         ->and($doorLines[1])->toContain(DoorAssignment::query()->sole()->id);
 });
 
@@ -319,10 +350,10 @@ it('treats a tampered cookie as a first visit, and never as someone else\'s work
     $theirs = scan($this, $path)->getCookie(DOOR_COOKIE)?->getValue();
 
     $this->withUnencryptedCookie(DOOR_COOKIE, (string) $theirs);
-    scan($this, $path)->assertRedirect(portalOf($this->demo, $second));
+    assertEntersAs(scan($this, $path), $this->demo, $second);
 
     $this->withUnencryptedCookie(DOOR_COOKIE, 'garbage');
-    scan($this, $path)->assertRedirect(portalOf($this->demo, $third));
+    assertEntersAs(scan($this, $path), $this->demo, $third);
 });
 
 it('ignores a cookie of an earlier session', function (): void {
@@ -330,7 +361,7 @@ it('ignores a cookie of an earlier session', function (): void {
     $old = scan($this, openDoorPath())->getCookie(DOOR_COOKIE)?->getValue();
 
     $this->withCookie(DOOR_COOKIE, (string) $old);
-    scan($this, openDoorPath())->assertRedirect(portalOf($this->demo, $second));
+    assertEntersAs(scan($this, openDoorPath()), $this->demo, $second);
 });
 
 it('leaks nothing in the headers of the door', function (): void {
@@ -348,5 +379,5 @@ it('leaks nothing in the headers of the door', function (): void {
         expect($headers)->not->toContain($code);
     }
 
-    expect($redirect->headers->get('Location'))->toStartWith(url('/portal/'));
+    expect($redirect->headers->get('Location'))->toStartWith(url('/me/alba/link/'));
 });

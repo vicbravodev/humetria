@@ -12,10 +12,10 @@ import type { TeamLeaveRequest } from '@/types';
  * answers. «Aprobar» is not offered for vacations the person has no days for when their policy gives none in advance.
  */
 export default function DecisionCard({
-    token,
+    slug,
     request,
 }: {
-    token: string;
+    slug: string;
     request: TeamLeaveRequest;
 }) {
     const [rejecting, setRejecting] = useState(false);
@@ -53,7 +53,10 @@ export default function DecisionCard({
                         confirmLabel="Sí, aprobar"
                         dismissLabel="Volver"
                         destructive={false}
-                        form={approve.form({ token, request: request.id })}
+                        form={approve.form({
+                            tenant: slug,
+                            request: request.id,
+                        })}
                         preserveScroll
                     />
                 )}
@@ -67,7 +70,7 @@ export default function DecisionCard({
                 </Button>
             </div>
             <RejectDialog
-                token={token}
+                slug={slug}
                 request={request}
                 open={rejecting}
                 onOpenChange={setRejecting}

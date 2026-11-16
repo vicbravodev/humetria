@@ -12,7 +12,7 @@ use App\Modules\Seating\Http\Requests\SeatReportRequest;
 use App\Modules\Seating\Models\SeatReport;
 use App\Modules\Seating\Support\CenterAccess;
 use App\Modules\Seating\Support\SeatReportPages;
-use App\Modules\Telework\Contracts\PortalAccess;
+use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -20,20 +20,19 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The reports of damaged seats: a person sends one from their portal; RH and the Comisión of the center see them open; RH
+ * The reports of damaged seats: a person sends one from their pages; RH and the Comisión of the center see them open; RH
  * resolves them. A report is never deleted (criterio C-17).
  */
 final class SeatReportController extends Controller
 {
-    public function store(string $token, SeatReportRequest $request, PortalAccess $access, ReportSeat $report): RedirectResponse
+    public function store(string $tenant, SeatReportRequest $request, WorkerSession $session, ReportSeat $report): RedirectResponse
     {
-        $person = $access->open($token);
-        abort_if($person === null, 404);
+        $person = $session->current() ?? abort(404);
 
         $report->handle($person, $request->description());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Gracias. Avisamos a la empresa y a la Comisión.']);
 
-        return to_route('portal.seating.show', $token);
+        return to_route('portal.seating.show', $tenant);
     }
 
     public function index(Request $request, mixed $tenant, string $workCenter, CenterAccess $access, SeatReportPages $pages): Response

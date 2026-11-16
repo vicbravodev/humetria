@@ -68,4 +68,12 @@ interface Roster
      * @return array<string, string> employee id by number, as it was asked
      */
     public function idsByEmployeeNumber(array $numbers): array;
+
+    /**
+     * The ids of the active people whose email is `$email` (kept in lower case; asked trimmed, whatever its case). None for an
+     * empty one.
+     *
+     * @return list<string>
+     */
+    public function idsByEmail(string $email): array;
 }

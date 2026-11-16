@@ -15,14 +15,14 @@ import type { NoticeKindValue } from '@/types';
 
 /** The form of one written notice; the person is whoever owns the link, so the name is shown and not typed. */
 export default function PortalNoticeDialog({
-    token,
+    slug,
     kind,
     title,
     name,
     today,
     states,
 }: {
-    token: string;
+    slug: string;
     kind: NoticeKindValue;
     title: string;
     name: string;
@@ -45,7 +45,7 @@ export default function PortalNoticeDialog({
                     dirección IP desde la que lo envía.
                 </DialogDescription>
                 <Form
-                    {...store.form({ token })}
+                    {...store.form({ tenant: slug })}
                     noValidate
                     onSuccess={() => setOpen(false)}
                     className="grid gap-5"

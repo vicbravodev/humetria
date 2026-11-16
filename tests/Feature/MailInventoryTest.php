@@ -85,17 +85,18 @@ function inventory(): array
         'accident reported' => [fn () => new AccidentReported($company, 'Hugo', 'Planta', '25 feb', $url), true],
         'documents to confirm' => [fn () => new DocumentsToConfirm($url, 'Cora', $company, ['Política · versión 1']), true],
         'notice answered' => [fn () => new NoticeAnswered($url, 'Ana', $company), true],
-        'portal invitation' => [fn () => new PortalInvitation('tok', 'Ana', $company), true],
-        'portal link' => [fn () => new App\Modules\Telework\Notifications\PortalLinkEmail('tok', 'Ana', $company), true],
+        'portal invitation' => [fn () => new PortalInvitation($url, 'Ana', $company), true],
         'portal reminder' => [fn () => new PortalReminder($url, 'Ana', $company, new PortalPendingData([], [])), true],
         'telework digest' => [fn () => new TeleworkDigest($company, 'Olga', ['1 lista por revisar.'], $url), true],
         'telework moved' => [fn () => new TeleworkMoved($company, 'Ana', 'A', 'B', $url), true],
-        'attendance enrollment' => [fn () => new App\Modules\Attendance\Notifications\EnrollmentInvitation($url, 'Ana', $company), true],
-        'attendance device linked' => [fn () => new App\Modules\Attendance\Notifications\DeviceLinked('iPhone', CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'), 'Ana', $company), true],
+        'worker access link requested' => [fn () => new App\Modules\WorkerAccess\Notifications\AccessLinkRequested($url, 'Ana', $company), true],
+        'worker access key registered' => [fn () => new App\Modules\WorkerAccess\Notifications\KeyRegistered('iPhone', CarbonImmutable::parse('2026-11-16 15:00:00', 'UTC'), 'Ana', $company, $url), true],
+        'worker access invitation' => [fn () => new App\Modules\WorkerAccess\Notifications\WorkerInvitation($url, 'Ana', $company), true],
+        'worker access key disowned' => [fn () => new App\Modules\WorkerAccess\Notifications\KeyDisowned('Ana', 'iPhone', $company), true],
+        'worker access proof code' => [fn () => new App\Modules\WorkerAccess\Notifications\ProofCode('123456', 'Ana', $company), true],
         'leave request to decide' => [fn () => new App\Modules\Leave\Notifications\RequestToDecide($url, $company, 'Beto', 'Ana', new App\Modules\Leave\Support\RequestSummary(true, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, true)), true],
         'leave request escalated' => [fn () => new App\Modules\Leave\Notifications\RequestEscalated($url, $company, 'Ana', App\Modules\Leave\Enums\EscalationReason::Timeout, new App\Modules\Leave\Support\RequestSummary(false, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, null)), true],
         'leave request decided' => [fn () => new App\Modules\Leave\Notifications\RequestDecided($url, $company, 'Ana', new App\Modules\Leave\Support\RequestSummary(true, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, true), false, 'Cierre de mes'), true],
-        'vacations portal link' => [fn () => new App\Modules\Leave\Notifications\VacationsPortalLink($url, $company, 'Ana'), true],
         'demo requested' => [fn () => new DemoRequested('Empresa Ejemplo', 'Ana López', 'id'), false],
         'company restricted' => [fn () => new CompanyRestricted($company, TenantRestriction::Suspended, 'Falta de pago', 'soporte@humetria.mx'), true],
         'company reactivated' => [fn () => new CompanyReactivated($company, 'soporte@humetria.mx'), true],
@@ -135,7 +136,7 @@ it('speaks to the worker as usted under the button too', function (Closure $make
 
     expect($html)->toContain('copie este enlace en su navegador')->not->toContain('en tu navegador');
 })->with(array_map(fn (array $row): array => [$row[0]], array_intersect_key(inventory(), array_flip([
-    'vacations portal link', 'leave request decided', 'leave request to decide', 'attendance enrollment', 'attendance device linked',
+    'vacations portal link', 'leave request decided', 'leave request to decide',
     'policy to confirm', 'support waiting', 'risks to confirm', 'standing questions', 'portal invitation', 'portal link', 'portal reminder',
-    'notice answered', 'climate feedback published',
+    'notice answered', 'climate feedback published', 'worker access link requested', 'worker access key registered', 'worker access invitation', 'worker access proof code',
 ]))));

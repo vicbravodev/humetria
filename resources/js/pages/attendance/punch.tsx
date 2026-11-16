@@ -7,7 +7,8 @@ import type { Signer } from '@/lib/attendance/punch';
 /**
  * A person marks their working day from their linked device (no account), screen by screen (board P2): before marking, each
  * test as it passes, the mark taken, or what went wrong and what to do (board P3). When nobody is known in this browser,
- * every step is offered. A mark refused can be asked of RH from here.
+ * every step is offered. A mark refused can be asked of RH from here, and the agreement, when it was not accepted, is
+ * accepted here.
  */
 export default function Punch({
     company,
@@ -17,8 +18,11 @@ export default function Punch({
     punchUrl,
     forgetUrl,
     weekUrl,
+    enterUrl,
     correctionOptionsUrl,
     correctionUrl,
+    agreementOptionsUrl,
+    agreementUrl,
     timezone,
 }: {
     company: string;
@@ -28,8 +32,12 @@ export default function Punch({
     punchUrl: string;
     forgetUrl: string;
     weekUrl: string;
+    /** Where a person without a key here adds one, from a session: their entrance. */
+    enterUrl: string;
     correctionOptionsUrl: string;
     correctionUrl: string;
+    agreementOptionsUrl: string;
+    agreementUrl: string;
     timezone: string;
 }) {
     const punch = usePunch({
@@ -49,8 +57,11 @@ export default function Punch({
                 punch={punch}
                 scanned={qr !== null}
                 weekUrl={weekUrl}
+                enterUrl={enterUrl}
                 correctionOptionsUrl={correctionOptionsUrl}
                 correctionUrl={correctionUrl}
+                agreementOptionsUrl={agreementOptionsUrl}
+                agreementUrl={agreementUrl}
                 timezone={timezone}
                 now={now}
             />

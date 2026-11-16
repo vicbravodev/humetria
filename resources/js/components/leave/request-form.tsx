@@ -19,11 +19,11 @@ import type { LeaveTypeOption } from '@/types';
  * whether they have them. It never sends by itself, and having no days does not stop the request.
  */
 export default function RequestForm({
-    token,
+    slug,
     today,
     types,
 }: {
-    token: string;
+    slug: string;
     today: string;
     types: LeaveTypeOption[];
 }) {
@@ -32,7 +32,7 @@ export default function RequestForm({
     const [endsOn, setEndsOn] = useState('');
     const query = previewQuery(startsOn, endsOn, typeId);
     const answer = useLeavePreview(
-        query === null ? null : preview.url({ token }, { query }),
+        query === null ? null : preview.url(slug, { query }),
     );
     const clear = () => {
         setTypeId('');
@@ -46,7 +46,7 @@ export default function RequestForm({
                 Pedir días
             </h2>
             <Form
-                {...store.form({ token })}
+                {...store.form(slug)}
                 options={{ preserveScroll: true }}
                 resetOnSuccess
                 onSuccess={clear}

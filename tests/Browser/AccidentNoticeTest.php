@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -29,9 +28,8 @@ function accidentCompany(array $notice = []): array
 // Board V3-Aviso: once RH records what was done, the person reads it in their portal.
 it('shows the person in their portal what was done about their accident', function (bool $dark, bool $mobile): void {
     [$tenant, , $employeeId] = accidentCompany(['reviewed_by' => memberOf(Tenant::factory()->create(), TenantRole::Hr)->id, 'reviewed_at' => '2026-03-02 12:00:00', 'review_actions' => ['medical_care', 'leave'], 'review_note' => 'Se acordó no cargar más de 10 kg.']);
-    $token = resolve(IssuePortalLink::class)->handle($employeeId);
 
-    visitPage('telework/portal-notices', "/portal/{$token}/notices", $dark, $mobile)
+    visitPage('telework/portal-notices', '/me/acme/telework/notices', $dark, $mobile, enteringTo($employeeId, 'Sus avisos por escrito'))
         ->assertSee('Se canalizó a atención médica')
         ->assertSee('Se le dio un permiso para recuperarse')
         ->assertSee('Se acordó no cargar más de 10 kg.');

@@ -8,10 +8,10 @@ import PortalCard from '@/components/telework/portal/portal-card';
 /** A visit to authorize: the person confirms in writing, here, that the Comisión may go to their workplace. */
 export default function PortalVisitCard({
     visit,
-    token,
+    slug,
 }: {
     visit: PortalVisit;
-    token: string;
+    slug: string;
 }) {
     const form = useForm({});
 
@@ -31,7 +31,7 @@ export default function PortalVisitCard({
                 onClick={() =>
                     form.post(
                         PortalEvidenceController.confirmVisit.url({
-                            token,
+                            tenant: slug,
                             authorization: visit.id,
                         }),
                     )

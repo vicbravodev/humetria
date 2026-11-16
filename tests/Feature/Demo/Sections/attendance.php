@@ -10,13 +10,11 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AgreementAcceptance;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
-use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\EffectiveMarks;
@@ -25,6 +23,8 @@ use App\Modules\Attendance\Support\WorkedDay;
 use App\Modules\Leave\Support\StatutoryHolidays;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerAccessLink;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoPerson;
@@ -203,9 +203,9 @@ return [
             ->and((clone $offices)->whereNotIn('method', [MarkMethod::Qr, MarkMethod::QrAndGeofence])->exists())->toBeFalse()
             ->and((clone $offices)->where('marked_at', '<', $kiosk->activated_at)->exists())->toBeFalse();
 
-        // no enrolled devices and no passkeys: whoever marks live links their own phone
-        expect(AttendanceDevice::query()->withoutGlobalScopes()->count())->toBe(0)
-            ->and(EnrollmentLink::query()->withoutGlobalScopes()->count())->toBe(0)
+        // no keys, no access links and no passkeys: whoever marks live enters and creates their own key
+        expect(WorkerCredential::query()->withoutGlobalScopes()->count())->toBe(0)
+            ->and(WorkerAccessLink::query()->withoutGlobalScopes()->count())->toBe(0)
             ->and(AgreementAcceptance::query()->withoutGlobalScopes()->count())->toBe(0)
             ->and(DB::table('passkeys')->count())->toBe(0);
 
@@ -234,6 +234,8 @@ return [
         $person = array_values(array_filter(DemoRoster::people(), fn (DemoPerson $person): bool => $person->centerKey === 'monterrey' && ! $person->reservedForDoor))[1];
         $employeeId = DemoRoster::employeeId($person->key);
         $bulk = AttendanceMark::query()->where('employee_id', $employeeId)->where('method', MarkMethod::Geofence)->firstOrFail();
+        // RecordMark takes the acceptance of the agreement first (criterio 5.1), with a key the demo never gives anyone.
+        agreementAccepted($employeeId);
         $recorded = resolve(RecordMark::class)->handle($employeeId, MarkType::Start, new MarkContext(
             MarkMethod::Geofence, $bulk->zone_id, (float) $bulk->latitude, (float) $bulk->longitude, $bulk->accuracy_m, $bulk->distance_m, null,
         ))->fresh() ?? throw new RuntimeException('No mark.');

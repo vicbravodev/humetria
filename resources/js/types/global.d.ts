@@ -8,6 +8,7 @@ import type { EmployeeImportSummary } from '@/types/organization';
 import type { ReportLink } from '@/types/results';
 import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
 import type { FlashToast } from '@/types/ui';
+import type { ProofStep } from '@/types/worker-access';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -58,16 +59,16 @@ declare module '@inertiajs/core' {
             salary_import?: SalaryImportSummary;
             /** A link to a report just opened, shown once: only its hash is kept. */
             reportLink?: ReportLink;
-            /** A person's new portal link, shown once: only its hash is kept and the previous one stops working. */
-            portalLink?: string;
             /** The link of a QR screen just issued, shown once: only its hash is kept, and it opens once. */
             kioskLink?: string;
             /** The demo room's door, just opened: its address and QR, shown once (only its hash is kept). */
             doorLink?: DemoShareLink;
             /** The demo's time-clock screen link, just issued from the demo room, with its QR: shown once. */
             demoKioskLink?: DemoShareLink;
-            /** A person's link to link their phone, shown once to RH only when the person has no email; it works once, 48 h. */
-            enrollmentLink?: { name: string; url: string };
+            /** A person's link to enter and create their key, shown once to RH only when the person has no email; it works once, 48 h. */
+            accessLink?: { name: string; url: string };
+            /** A delicate form of the person was not taken: they prove it is them (this step) and it is sent again. */
+            proofRequired?: ProofStep;
         };
     }
 }

@@ -112,6 +112,8 @@ export type TenantCan = {
     use_assistant: boolean;
     manage_complaint_channel: boolean;
     handle_complaints: boolean;
+    view_worker_access: boolean;
+    manage_worker_access: boolean;
 };
 
 export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';

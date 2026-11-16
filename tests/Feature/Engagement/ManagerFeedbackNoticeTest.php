@@ -7,7 +7,6 @@ use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Listeners\NotifyManagers;
 use App\Modules\Engagement\Notifications\ManagerFeedbackReady;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -46,7 +45,7 @@ function noticeRecipients(): array
     return $addresses;
 }
 
-it('tells, with the link of their portal, only the managers whose group is shown and who can be reached', function (): void {
+it('tells, with the address of their feedback page (no credential), only the managers whose group is shown and who can be reached', function (): void {
     $ana = noticeBoss($this->tenant, 'Ana', 'ana@example.com');
     $beto = noticeBoss($this->tenant, 'Beto', null);
     $carla = noticeBoss($this->tenant, 'Carla', 'carla@example.com');
@@ -56,10 +55,10 @@ it('tells, with the link of their portal, only the managers whose group is shown
     closeAnnouncement($survey->id);
 
     expect(noticeRecipients())->toBe(['ana@example.com']);
-    Notification::assertSentOnDemand(ManagerFeedbackReady::class, function (ManagerFeedbackReady $notification, array $channels, AnonymousNotifiable $notifiable) use ($ana): bool {
+    Notification::assertSentOnDemand(ManagerFeedbackReady::class, function (ManagerFeedbackReady $notification, array $channels, AnonymousNotifiable $notifiable): bool {
         $mail = $notification->toMail($notifiable);
 
-        return $mail->actionUrl === route('portal.feedback.show', resolve(PortalAccess::class)->token($ana->id));
+        return $mail->actionUrl === route('portal.feedback.show', $this->tenant->slug);
     });
 });
 
@@ -87,7 +86,7 @@ it('tells nobody while the survey is not closed', function (): void {
 
 it('writes to the manager in usted, with no figure, no name of anyone and no comment', function (): void {
     $company = new CompanySummary($this->tenant->id, 'Acme', $this->tenant->slug, false);
-    $mail = (new ManagerFeedbackReady($company, 'Marta', 'Clima · noviembre 2026', 'https://humetria.test/portal/x/feedback'))->toMail(new AnonymousNotifiable);
+    $mail = (new ManagerFeedbackReady($company, 'Marta', 'Clima · noviembre 2026', 'https://humetria.test/me/acme/feedback'))->toMail(new AnonymousNotifiable);
     $html = (string) $mail->render();
 
     expect($mail->subject)->toBe('Ya puede ver la retroalimentación de su equipo')

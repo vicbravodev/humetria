@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { sendWeek, weekMessage, weekView } from '@/lib/attendance/week';
 import type { WeekView } from '@/lib/attendance/week';
-import type { SignedKey } from '@/lib/attendance/webauthn';
+import type { SignedKey } from '@/lib/webauthn';
 
 const key: SignedKey = {
     rawId: new Uint8Array([9]).buffer,

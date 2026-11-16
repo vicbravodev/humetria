@@ -1,4 +1,4 @@
-import ListToolbar from '@/components/attendance/list-toolbar';
+import ListToolbar from '@/components/list-toolbar';
 import SchedulesTable from '@/components/attendance/schedules-table';
 import ScheduleSelectionBar from '@/components/attendance/schedule-selection-bar';
 import Notice from '@/components/humetria/notice';

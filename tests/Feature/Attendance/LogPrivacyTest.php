@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
-use App\Modules\Attendance\Notifications\EnrollmentInvitation;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Notifications\WorkerInvitation;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -47,7 +47,7 @@ function privacySigned(SoftAuthenticator $phone, string $userHandle, string $ses
     return test()->withCredentials()->withCookie($cookie, $session)->postJson($url, ['credential' => $phone->get($options, $userHandle), ...$body]);
 }
 
-it('logs no position, credential, screen code, enrollment or kiosk token along a whole marking flow, rejections included', function (): void {
+it('logs no position, credential, screen code, access link or kiosk token along a whole marking flow, rejections included', function (): void {
     // Monday 2 November 2026, 08:00 in Mexico City.
     $this->travelTo(CarbonImmutable::parse('2026-11-02 14:00:00', 'UTC'));
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);
@@ -59,17 +59,17 @@ it('logs no position, credential, screen code, enrollment or kiosk token along a
     $cookie = config()->string('session.cookie');
     $phone = new SoftAuthenticator;
 
-    // RH puts a screen at the plant and sends Ana her link.
+    // RH puts a screen at the plant and invites Ana.
     $this->actingAs($hr)->post(route('tenant.attendance.kiosks.store', 'acme'), ['work_center_id' => $plant->id])->assertRedirect();
     $kioskLink = (string) session('inertia.flash_data.kioskLink');
-    $this->from(route('tenant.attendance.devices.index', 'acme'))->post(route('tenant.attendance.devices.enroll', 'acme'), ['employee_id' => $ana->id])->assertRedirect();
-    $enrollUrl = '';
-    Notification::assertSentOnDemand(EnrollmentInvitation::class, function (EnrollmentInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$enrollUrl): bool {
-        $enrollUrl = (string) $notification->toMail($notifiable)->actionUrl;
+    $this->from(route('tenant.worker-access.index', 'acme'))->post(route('tenant.worker-access.invite', 'acme'), ['employee_id' => $ana->id])->assertRedirect();
+    $accessUrl = '';
+    Notification::assertSentOnDemand(WorkerInvitation::class, function (WorkerInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$accessUrl): bool {
+        $accessUrl = (string) $notification->toMail($notifiable)->actionUrl;
 
         return true;
     });
-    $enrollToken = basename($enrollUrl);
+    $accessToken = basename($accessUrl);
     auth()->logout();
 
     // The screen opens its link and shows its code.
@@ -77,15 +77,15 @@ it('logs no position, credential, screen code, enrollment or kiosk token along a
     $kioskSecret = (string) $activated->getCookie('attendance_kiosk')?->getValue();
     $qr = (string) $this->withCredentials()->withCookie('attendance_kiosk', $kioskSecret)->getJson(route('attendance.device.kiosk.qr', 'acme'))->assertOk()->json('token');
 
-    // Ana links her phone.
-    $options = $this->postJson(route('attendance.device.enroll.options', ['acme', $enrollToken]))->assertOk()->json();
-    $this->postJson(route('attendance.device.enroll.register', ['acme', $enrollToken]), [
-        'agreement_accepted' => true, 'agreement_version' => 1, 'device_label' => 'iPhone', 'credential' => $phone->create($options),
-    ])->assertOk();
-    $device = AttendanceDevice::query()->sole();
+    // Ana opens her link and creates her key on her phone.
+    $this->post(route('worker.link.open', ['acme', $accessToken]))->assertRedirect(route('worker.key.show', 'acme'));
+    $options = $this->postJson(route('worker.key.options', 'acme'))->assertOk()->json();
+    $this->postJson(route('worker.key.store', 'acme'), ['label' => 'iPhone', 'credential' => $phone->create($options)])->assertOk();
+    $device = WorkerCredential::query()->sole();
 
-    // She marks her start at the door and her end in the afternoon.
+    // She accepts the agreement and marks her start at the door and her end in the afternoon.
     $session = $this->get(route('attendance.device.punch.show', ['acme', 'q' => $qr]))->assertOk()->getCookie($cookie)?->getValue() ?? '';
+    privacySigned($phone, $ana->id, $session, 'attendance.device.agreement.options', route('attendance.device.agreement.accept', 'acme'), ['agreement_version' => 1])->assertOk();
     $position = ['lat' => 19.4327, 'lng' => -99.1332, 'accuracy' => 12];
     // First she is turned away: outside every zone (about 111 m north), then with a code that is not the screen's.
     $badQr = str_repeat('f', 64);
@@ -114,13 +114,13 @@ it('logs no position, credential, screen code, enrollment or kiosk token along a
 
     $log = File::get($this->logPath);
     expect(substr_count($log, '"attendance.mark_rejected"'))->toBe(2);
-    foreach (['attendance.kiosk_issued', 'attendance.enrollment_issued', 'attendance.kiosk_activated', 'attendance.device_enrolled', 'attendance.mark_recorded', 'attendance.week_confirmed', 'attendance.correction_requested', 'attendance.correction_resolved', 'attendance.report_exported'] as $event) {
+    foreach (['attendance.kiosk_issued', 'worker_access.link_issued', 'attendance.kiosk_activated', 'worker_access.key_registered', 'attendance.agreement_accepted', 'attendance.mark_recorded', 'attendance.week_confirmed', 'attendance.correction_requested', 'attendance.correction_resolved', 'attendance.report_exported'] as $event) {
         expect($log)->toContain("\"{$event}\"");
     }
     expect($log)
         ->not->toContain('19.43')->not->toContain('-99.13')
         ->not->toContain($device->credential_id)->not->toContain($device->public_key)
         ->not->toContain($qr)->not->toContain($qrLater)->not->toContain($badQr)
-        ->not->toContain($enrollToken)
+        ->not->toContain($accessToken)
         ->not->toContain(basename($kioskLink))->not->toContain($kioskSecret);
 });

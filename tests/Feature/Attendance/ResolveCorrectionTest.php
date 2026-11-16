@@ -11,7 +11,6 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Exceptions\CorrectionRejected;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
@@ -22,6 +21,7 @@ use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -124,10 +124,10 @@ describe('approving', function (): void {
     });
 
     it('reopens a confirmed week, for a correction and for a mark added', function (?string $which): void {
-        $device = AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+        $device = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
         $week = WeeklyConfirmation::factory()->create([
             'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02', 'status' => WeekStatus::Confirmed,
-            'confirmed_at' => now(), 'device_id' => $device->id, 'digest' => WeekDigest::of($this->ana->id, WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'))),
+            'confirmed_at' => now(), 'credential_id' => $device->id, 'digest' => WeekDigest::of($this->ana->id, WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'))),
         ]);
         $request = $which === 'start'
             ? anaRequest($this->start, MarkType::Start, '2026-11-02 09:00')

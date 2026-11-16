@@ -20,7 +20,6 @@ use App\Modules\Seating\Models\SeatingDocument;
 use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Seating\Models\SeatReport;
 use App\Modules\Seating\Models\StandingPosition;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -212,21 +211,26 @@ it('shows what a new seat still misses instead of registering it', function (): 
         ->assertNoJavaScriptErrors();
 });
 
-/** @return array{string, App\Modules\Organization\Models\Employee} The address of the person's Ley Silla page and the person. */
+/**
+ * The address of the person's Ley Silla page, the person, and the steps that take her there through the entrance (she opens
+ * it without a session, enters with a link she asked for and lands back on it).
+ *
+ * @return array{string, App\Modules\Organization\Models\Employee, Closure}
+ */
 function seatingPortal(): array
 {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Ruiz']);
     workIn($tenant);
 
-    return [route('portal.seating.show', resolve(IssuePortalLink::class)->handle($ana->id), absolute: false), $ana];
+    return [route('portal.seating.show', $tenant->slug, absolute: false), $ana, enteringTo($ana->id, 'trabajo de pie')];
 }
 
 // Board LS-Portal: first who sees the answers and that answering is voluntary; then the two questions, one at a time.
 it('shows the person their own Ley Silla page with the voluntary notice', function (bool $dark, bool $mobile): void {
-    [$url] = seatingPortal();
+    [$url, , $enter] = seatingPortal();
 
-    visitPage('seating/portal', $url, $dark, $mobile)
+    visitPage('seating/portal', $url, $dark, $mobile, $enter)
         ->assertSee('Ley Silla · 2 preguntas')
         ->assertSee('Su trabajo de pie, Ana Ruiz')
         ->assertSee('Contestar es voluntario')
@@ -237,9 +241,9 @@ it('shows the person their own Ley Silla page with the voluntary notice', functi
 })->with($looks);
 
 it('asks the two questions one at a time, never moving on alone, and sends them', function (bool $dark, bool $mobile): void {
-    [$url] = seatingPortal();
+    [$url, , $enter] = seatingPortal();
 
-    visitPage('seating/portal', $url, $dark, $mobile)
+    visitPage('seating/portal', $url, $dark, $mobile, $enter)
         ->click('@portal-accept')
         ->assertSee('Pregunta 1 de 2')
         ->assertSee('¿Cómo es el calzado que usa para trabajar?')
@@ -256,9 +260,9 @@ it('asks the two questions one at a time, never moving on alone, and sends them'
 
 // Board V3-Estados, «Portal sin conexión»: what the person answered stays on the phone and goes out when the connection is back.
 it('keeps the answers when the connection drops and sends them when it is back', function (bool $dark, bool $mobile): void {
-    [$url, $ana] = seatingPortal();
+    [$url, $ana, $enter] = seatingPortal();
 
-    $page = visitPage('seating/portal', $url, $dark, $mobile)
+    $page = visitPage('seating/portal', $url, $dark, $mobile, $enter)
         ->click('@portal-accept')
         ->click('input[name="footwear"][value="1"]')
         ->press('Siguiente')
@@ -284,13 +288,14 @@ it('tells the person when they already answered', function (): void {
     [$url, $ana] = seatingPortal();
     PersonInput::factory()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
 
-    visitPage('seating/portal', $url)->assertSee('Gracias, quedó enviado')->assertSee('Nos contestó el');
+    // Having answered, she lands on the thanks, not on the intro that names her standing work.
+    visitPage('seating/portal', $url, reach: enteringTo($ana->id, 'Gracias, quedó enviado'))->assertSee('Gracias, quedó enviado')->assertSee('Nos contestó el');
 });
 
 it('lets the person decline without consequence, and change their mind', function (): void {
-    [$url] = seatingPortal();
+    [$url, , $enter] = seatingPortal();
 
-    visit($url)
+    $enter(visit($url))
         ->click('Prefiero no contestar')
         ->assertSee('su evaluación se hace sin estos datos')
         ->assertDontSee('Pregunta 1 de 2')
@@ -385,20 +390,23 @@ it('lists the seat reports of a center, open and resolved', function (bool $dark
 })->with($looks);
 
 it('shows the person the result of their assessment to confirm, and the seat report form', function (bool $dark, bool $mobile): void {
-    [$url, $ana] = seatingPortal();
+    [$url, $ana, $enter] = seatingPortal();
     RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
 
-    visitPage('seating/portal', $url, $dark, $mobile)
+    visitPage('seating/portal', $url, $dark, $mobile, $enter)
         ->assertSee('Evaluamos su trabajo de pie')
         ->assertSee('Confirmo que me informaron')
         ->assertSee('Avisar del asiento dañado');
 })->with($looks);
 
 it('confirms from the portal and says so', function (): void {
-    [$url, $ana] = seatingPortal();
+    [$url, $ana, $enter] = seatingPortal();
     RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
 
-    visit($url)->press('Confirmo que me informaron')->assertSee('Usted confirmó el')->assertNoJavaScriptErrors();
+    Illuminate\Support\Facades\Notification::fake();
+
+    // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
+    provedWithCode($enter(visit($url))->press('Confirmo que me informaron'), 'Usted confirmó el')->assertNoJavaScriptErrors();
 });
 
 it('shows the referrals of a person on their assessment, with the form to add one', function (bool $dark, bool $mobile): void {
@@ -565,12 +573,16 @@ it('walks the critical path: the Comisión assesses, the person confirms and rep
         ->assertSee('14 de 21')
         ->assertNoJavaScriptErrors();
 
-    $portal = route('portal.seating.show', resolve(IssuePortalLink::class)->handle($ana->id), absolute: false);
+    $portal = route('portal.seating.show', Tenant::query()->findOrFail($ana->tenant_id)->slug, absolute: false);
+    $enter = enteringTo($ana->id, 'Evaluamos su trabajo de pie');
 
-    visit($portal)->on()->mobile()
+    Illuminate\Support\Facades\Notification::fake();
+    $confirming = $enter(visit($portal)->on()->mobile())
         ->assertSee('Evaluamos su trabajo de pie')
-        ->press('Confirmo que me informaron')
-        ->assertSee('Usted confirmó el')
+        ->press('Confirmo que me informaron');
+
+    // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
+    provedWithCode($confirming, 'Usted confirmó el')
         ->type('description', 'El respaldo de la silla de la caja 2 está flojo.')
         ->press('Avisar del asiento dañado')
         ->assertNoJavaScriptErrors();

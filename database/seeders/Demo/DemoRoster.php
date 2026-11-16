@@ -13,8 +13,8 @@ use Ramsey\Uuid\Uuid;
 /**
  * The 180 people of Manufacturas Alba del Bajío, written by hand and the same on every run (no Faker: production does not
  * have it). The heads have their own names; the rest take theirs from fixed lists by their place in the roster. Each
- * person's id is derived from their key, so their portal link survives a reset; the door's people are the exception: theirs
- * are drawn anew on every prepare (drawDoorIds), so a link an earlier audience kept dies with the reset.
+ * person's id is derived from their key, so what names them survives a reset; the door's people are the exception: theirs
+ * are drawn anew on every prepare (drawDoorIds), so a link, session or key an earlier audience kept dies with the reset.
  */
 final class DemoRoster
 {
@@ -35,7 +35,7 @@ final class DemoRoster
     /** How many rank-and-file people of each center keep their invitations pending for the door: 40 in all. */
     private const array DOOR = ['monterrey' => 3, 'offices' => 7, 'distribution' => 11, 'plant' => 19];
 
-    /** Fixed: changing it changes every id, and every portal link with them. */
+    /** Fixed: changing it changes every id. */
     private const string ID_NAMESPACE = '3f0d8a52-5c1e-4b7a-9a43-6f2e1d0c9b88';
 
     /**

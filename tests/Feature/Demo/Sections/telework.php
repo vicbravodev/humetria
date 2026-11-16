@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Telework\Contracts\Committee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Telework\Enums\ChecklistStatus;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Enums\EquipmentStatus;
@@ -147,17 +146,18 @@ return [
         // the portal works: the aspirant opens the list that waits for them, a person in the roster confirms the item that
         // waits, and a visitor of the door confirms the policy
         $pending = $first->whereNull('submitted_at')->sole();
-        $token = resolve(PortalAccess::class)->token($teleworkers->firstWhere('id', $workplaceOf[$pending->workplace_id])?->employee_id ?? '');
-        $this->get(route('portal.show', $token))->assertOk();
-        $this->get(route('portal.checklist.show', [$token, $pending->id]))->assertOk();
+        $slug = asPerson($teleworkers->firstWhere('id', $workplaceOf[$pending->workplace_id])?->employee_id ?? '');
+        $this->get(route('portal.telework.show', $slug))->assertOk();
+        $this->get(route('portal.checklist.show', [$slug, $pending->id]))->assertOk();
         $item = $equipment->firstWhere('status', EquipmentStatus::Pending);
-        $token = resolve(PortalAccess::class)->token($teleworkers->firstWhere('id', $item?->teleworker_id)?->employee_id ?? '');
-        $this->post(route('portal.equipment.respond', [$token, $item?->id]), ['received' => true])->assertRedirect();
+        $slug = asPerson($teleworkers->firstWhere('id', $item?->teleworker_id)?->employee_id ?? '');
+        $this->post(route('portal.equipment.respond', [$slug, $item?->id]), ['received' => true])->assertRedirect();
         expect($item?->refresh()->status)->toBe(EquipmentStatus::Received);
+        // in with the key they created at the door, which is a recent proof
         $visitor = $door->keys()->first();
-        $token = resolve(PortalAccess::class)->token($visitor);
-        $this->get(route('portal.show', $token))->assertOk();
-        $this->post(route('portal.documents.acknowledge', [$token, $policy->id]))->assertRedirect();
+        $slug = asPerson($visitor);
+        $this->get(route('portal.telework.show', $slug))->assertOk();
+        $this->post(route('portal.documents.acknowledge', [$slug, $policy->id]))->assertRedirect();
         expect(Acknowledgement::query()->where('document_id', $policy->id)->where('employee_id', $visitor)->sole()->acknowledged_at)->not->toBeNull();
 
         // no risk note, home address or phone reaches the logs or the audit

@@ -1,20 +1,20 @@
 import { Head } from '@inertiajs/react';
 import { Lock } from 'lucide-react';
-import PortalHomeLink from '@/components/portal-home-link';
 import Initials from '@/components/humetria/initials';
+import WorkerHomeLink from '@/components/worker-home-link';
 
 /**
  * The message a person reads in their portal when their company channeled them through it (board V4-N035-Canalizacion,
  * «Aviso en su portal»), as «usted». Nothing of what they answered.
  */
 export default function PortalSupport({
-    token,
+    slug,
     company,
     name,
     on,
     message,
 }: {
-    token: string;
+    slug: string;
     company: string;
     name: string;
     /** "4 nov 2026". */
@@ -38,7 +38,7 @@ export default function PortalSupport({
                         Confidencial
                     </span>
                 </header>
-                <PortalHomeLink token={token} />
+                <WorkerHomeLink slug={slug} />
                 <section
                     aria-labelledby="support-title"
                     className="flex flex-col gap-4"
@@ -54,8 +54,7 @@ export default function PortalSupport({
                         {message}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                        Solo usted ve este mensaje. Su página es personal: no
-                        comparta su enlace.
+                        Solo usted ve este mensaje, en su portal.
                     </p>
                 </section>
                 <p className="mt-auto text-center text-caption text-muted-foreground">

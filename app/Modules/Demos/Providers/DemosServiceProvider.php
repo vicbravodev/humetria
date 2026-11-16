@@ -6,6 +6,7 @@ namespace App\Modules\Demos\Providers;
 
 use App\Models\User;
 use App\Modules\Demos\Contracts\DemoDoorPool;
+use App\Modules\Demos\Contracts\DemoEntrance;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Demos\Contracts\DemoShowcase;
 use App\Modules\Demos\Contracts\DemoWorkspace;
@@ -15,6 +16,7 @@ use App\Modules\Demos\Support\DoorKeeper;
 use Database\Seeders\Demo\DemoShowcaseLinks;
 use Database\Seeders\Demo\DemoWorkspaceRunner;
 use Database\Seeders\Demo\RosterDoorPool;
+use Database\Seeders\Demo\WorkerAccessEntrance;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -31,6 +33,7 @@ final class DemosServiceProvider extends ServiceProvider
         // The story lives outside the modules (database/seeders/Demo, autoloaded in production too): it drives every module's actions.
         $this->app->bind(DemoWorkspace::class, DemoWorkspaceRunner::class);
         $this->app->bind(DemoDoorPool::class, RosterDoorPool::class);
+        $this->app->bind(DemoEntrance::class, WorkerAccessEntrance::class);
         $this->app->bind(DemoShowcase::class, DemoShowcaseLinks::class);
         $this->app->bind(DoorControl::class, DoorKeeper::class);
     }

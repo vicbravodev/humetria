@@ -7,7 +7,6 @@ namespace Database\Seeders\Demo\Stories;
 use App\Modules\Attendance\Actions\ActivateKioskDevice;
 use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Attendance\Actions\IssueKioskDevice;
-use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Actions\RequestCorrection;
 use App\Modules\Attendance\Actions\SavePolicy;
 use App\Modules\Attendance\Actions\SaveSchedules;
@@ -38,13 +37,13 @@ use LogicException;
  * that would end today was not worked yet, and nobody has marked today. The night shift («Producción turno 2») has worked
  * overtime all along, within the norm since HR acted on the NOM-035 evaluation; nobody marks on a holiday; everyone else works their schedule. The
  * Oficinas center marks with the QR of its kiosk, activated a month ago. Last week waits for each person's confirmation and
- * three people asked HR to correct a mark. Nobody has a linked phone, a passkey or an enrollment link: whoever marks live
- * links a real one, and the passkey is what proves who marks.
+ * three people asked HR to correct a mark. Nobody has a key (WorkerAccess) nor accepted the agreement: whoever marks live
+ * enters as a person, creates a real key and accepts the agreement first (criterio 5.1), and the key is what proves who marks.
  *
  * The months are history, not marking: like the spec's other volumes they are inserted in bulk through the module's model
  * (RecordMark is one row a mark, five queries each, minutes for ~25k marks). Each row is what RecordMark writes, every
- * person's sequence is checked with MarkType::allowedAfter first, and the three people who ask for corrections mark their
- * last two weeks through RecordMark itself.
+ * person's sequence is checked with MarkType::allowedAfter first. Nobody marks through RecordMark itself: it takes the
+ * acceptance of the agreement, signed with a key nobody in the demo has.
  */
 final readonly class AttendanceStory implements DemoStory
 {
@@ -110,7 +109,6 @@ final readonly class AttendanceStory implements DemoStory
         private SaveSchedules $schedules,
         private IssueKioskDevice $issueKiosk,
         private ActivateKioskDevice $activateKiosk,
-        private RecordMark $mark,
         private RequestCorrection $correction,
         private CloseDays $closeDays,
     ) {}
@@ -172,8 +170,7 @@ final readonly class AttendanceStory implements DemoStory
     }
 
     /**
-     * Everyone's days up to yesterday: in bulk, except the last two weeks of the people who ask for corrections, which go
-     * through RecordMark at their own hour.
+     * Everyone's days up to yesterday, in bulk; the first of the people who ask for corrections forgot their last end.
      *
      * @param  array<string, AttendanceZone>  $zones
      */
@@ -181,9 +178,7 @@ final readonly class AttendanceStory implements DemoStory
     {
         $centers = array_map(fn (string $key): string => $context->center($key), array_combine(array_keys(DemoRoster::CENTERS), array_keys(DemoRoster::CENTERS)));
         $live = array_map(fn (DemoPerson $person): string => $person->key, $this->askers());
-        $lastMonday = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay()->subWeek()->startOfWeek();
         $rows = [];
-        $recorded = [];
 
         foreach (DemoRoster::people() as $n => $person) {
             $last = null;
@@ -199,12 +194,7 @@ final readonly class AttendanceStory implements DemoStory
                     }
 
                     $last = $type;
-
-                    if (in_array($person->key, $live, true) && $date->greaterThanOrEqualTo($lastMonday)) {
-                        $recorded[] = [$person, $type, $daysAgo, $minute, $how];
-                    } else {
-                        $rows[] = $this->row($how, $context->tenantId, $person, $centers[$person->centerKey], $type, $date->addMinutes($minute));
-                    }
+                    $rows[] = $this->row($how, $context->tenantId, $person, $centers[$person->centerKey], $type, $date->addMinutes($minute));
                 }
             }
         }
@@ -215,11 +205,7 @@ final readonly class AttendanceStory implements DemoStory
             }
         });
 
-        foreach ($recorded as [$person, $type, $daysAgo, $minute, $how]) {
-            DemoClock::at("-{$daysAgo} days", fn (): AttendanceMark => $this->mark->handle(DemoRoster::employeeId($person->key), $type, $how), $minute);
-        }
-
-        Log::info('demo.attendance_seeded', ['bulk_marks' => count($rows), 'recorded_marks' => count($recorded)]);
+        Log::info('demo.attendance_seeded', ['bulk_marks' => count($rows)]);
     }
 
     /**
@@ -299,7 +285,7 @@ final readonly class AttendanceStory implements DemoStory
             'longitude' => $context->longitude,
             'accuracy_m' => $context->accuracy,
             'distance_m' => $context->distance,
-            'device_id' => $context->deviceId,
+            'credential_id' => $context->credentialId,
             'created_at' => $time,
         ];
     }

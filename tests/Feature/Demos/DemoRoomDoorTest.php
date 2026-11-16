@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Contracts\DoorControl;
 use App\Modules\Demos\Support\DoorKeeper;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\TenantContext;
+use Database\Seeders\Demo\DemoRoster;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -24,6 +26,8 @@ it('drives the real door, never a stand-in', function (): void {
 it('opens the door from the room, lets a visitor in with its code, and closes it again', function (): void {
     $demo = Tenant::factory()->demo()->create(['slug' => 'alba']);
     $ids = Employee::factory()->count(3)->create(['tenant_id' => $demo->id])->pluck('id')->all();
+    // The demo's head of HR issues the links the door hands out.
+    User::factory()->create(['email' => DemoRoster::person(DemoRoster::HR)->email]);
     app()->instance(DemoDoorPool::class, new readonly class($ids) implements DemoDoorPool
     {
         /** @param  list<string>  $ids */
@@ -44,7 +48,7 @@ it('opens the door from the room, lets a visitor in with its code, and closes it
         ->assertInertia(fn (Assert $page) => $page->where('door.open', true)->where('door.total', 3)->where('door.free', 3)->where('door.claimed', 0));
 
     auth()->logout();
-    $this->get($path)->assertRedirect()->assertRedirectContains('/portal');
+    $this->get($path)->assertRedirect()->assertRedirectContains('/me/alba/link/');
 
     $this->actingAs($admin)->get(route('demo-room.show'))
         ->assertInertia(fn (Assert $page) => $page->where('door.open', true)->where('door.free', 2)->where('door.claimed', 1));

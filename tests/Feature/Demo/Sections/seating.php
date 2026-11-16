@@ -26,7 +26,6 @@ use App\Modules\Seating\Models\Seat;
 use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Telework\Contracts\Committee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
@@ -123,9 +122,10 @@ return [
         // a visitor of the door with a standing position confirms it live
         $visitor = $signed->first(fn (RiskAssessment $assessment): bool => $people[$assessment->employee_id]->reservedForDoor);
         expect($visitor)->not->toBeNull();
-        $token = resolve(PortalAccess::class)->token((string) $visitor?->employee_id);
-        $this->get(route('portal.seating.show', $token))->assertOk();
-        $this->post(route('portal.seating.acknowledgments.store', $token))->assertRedirect(route('portal.seating.show', $token));
+        // in with the key they created at the door, which is a recent proof
+        $slug = asPerson((string) $visitor?->employee_id);
+        $this->get(route('portal.seating.show', $slug))->assertOk();
+        $this->post(route('portal.seating.acknowledgments.store', $slug))->assertRedirect(route('portal.seating.show', $slug));
         expect(RiskAcknowledgment::query()->where('assessment_id', $visitor?->id)->exists())->toBeTrue();
 
         // the confidential survey went to the 30 people of the offices, everyone but the door answered, and it closed

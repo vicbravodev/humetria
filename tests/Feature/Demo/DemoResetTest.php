@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Modules\Demos\Contracts\DemoEntrance;
 use App\Modules\Demos\Contracts\DemoWorkspace;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Database\Factories\Attendance\AttendanceMarkFactory;
 use Database\Seeders\Demo\DemoPerson;
 use Database\Seeders\Demo\DemoRoster;
@@ -17,8 +18,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 /*
  * Resetting wipes the demo company and preparing tells its story again, on the same company: whatever the console printed
- * or shared (the slug, the complaint QR, each person's portal link) still works afterwards. The door's 40 people are the
- * exception: they get new ids on every prepare, so a link an earlier audience kept stops working with the reset.
+ * or shared (the slug, the complaint QR, each person's address `/me/{slug}`) still works afterwards. The door's 40 people
+ * are the exception: they get new ids on every prepare, so whatever an earlier audience kept (a link of the door, a session
+ * it opened) stops working with the reset.
  */
 
 /** @return array<string, int> rows of the demo in each table with a tenant_id (the audit trail aside: it is kept) */
@@ -66,7 +68,7 @@ function demoKeepsakes(): array
         'tenant' => [$tenant->id, $tenant->slug, $tenant->rfc],
         'members' => DB::table('users')->whereIn('email', [DemoRoster::person(DemoRoster::OWNER)->email, DemoRoster::person(DemoRoster::HR)->email])->orderBy('id')->pluck('id')->all(),
         'employees' => DB::table('employees')->where('tenant_id', $tenant->id)->whereIn('employee_number', $numbers)->orderBy('id')->pluck('id')->all(),
-        'portal links' => array_map(fn (DemoPerson $person): string => resolve(PortalAccess::class)->token(DemoRoster::employeeId($person->key)), array_slice($kept, 20, 3)),
+        'personal address' => resolve(WorkerLinks::class)->home(),
         'complaint code' => DB::table('complaint_channels')->where('tenant_id', $tenant->id)->value('access_code'),
         'kiosk' => DB::table('attendance_kiosk_devices')->where('tenant_id', $tenant->id)->count(),
     ];
@@ -108,23 +110,27 @@ it('prepares the same story over itself on the same company, resets it to nothin
         ->and(DB::table('usage_events')->where('meter', 'email_campaign')->exists())->toBeFalse()
         ->and(demoFiles($tenantId))->not->toBe([]);
 
-    // A link of the door handed out to this audience, and one of somebody else.
+    // What the door handed out to this audience: a link nobody opened yet, and a session a visitor opened with another.
     $doorKeys = array_values(array_map(fn (DemoPerson $person): string => $person->key, array_filter(DemoRoster::people(), fn (DemoPerson $person): bool => $person->reservedForDoor)));
     $doorIds = array_map(DemoRoster::employeeId(...), $doorKeys);
-    $doorLink = route('portal.show', resolve(PortalAccess::class)->token($doorIds[0]));
-    $keptLink = route('portal.show', resolve(PortalAccess::class)->token(DemoRoster::employeeId(DemoRoster::HR)));
+    $slug = DB::table('tenants')->where('id', $tenantId)->value('slug');
+    $doorLink = resolve(DemoEntrance::class)->for($doorIds[0]);
+    $this->post(resolve(DemoEntrance::class)->for($doorIds[1]))->assertRedirect(route('worker.key.show', $slug));
+    $this->get(route('worker.home', $slug))->assertOk()->assertInertia(fn (Assert $page) => $page->component('worker-access/home'));
 
     // Preparing a demo that exists resets it first: the same company and story, never a second one nor a policy version 2.
     $workspace->prepare();
 
-    // The next audience's door people are new: the link kept from this session finds nobody, everyone else's still works.
+    // The next audience's door people are new: what this audience kept finds nobody.
     $newDoorIds = array_map(DemoRoster::employeeId(...), $doorKeys);
     expect(array_intersect($newDoorIds, $doorIds))->toBe([])
         ->and(DB::table('employees')->whereIn('id', $newDoorIds)->count())->toBe(40)
         ->and(DB::table('employees')->whereIn('id', $doorIds)->exists())->toBeFalse();
-    // The portal answers an unknown link with its «no disponible» page, the same as any other dead link: no name, no data.
-    $this->get($doorLink)->assertOk()->assertInertia(fn (Assert $page) => $page->where('unavailable', true)->where('name', null)->where('sections', []));
-    $this->get($keptLink)->assertOk()->assertInertia(fn (Assert $page) => $page->where('unavailable', false)->where('name', DemoRoster::person(DemoRoster::HR)->name));
+    // The link answers with the one page of a link that does not work, whatever the cause, and opens no session; the session
+    // the visitor kept is over, and the start asks to enter.
+    $this->get($doorLink)->assertOk()->assertInertia(fn (Assert $page) => $page->component('worker-access/link')->where('opens', false));
+    $this->post($doorLink)->assertRedirect($doorLink);
+    $this->get(route('worker.home', $slug))->assertOk()->assertInertia(fn (Assert $page) => $page->component('worker-access/enter'));
     resolve(Companies::class)->enter($tenantId);
 
     expect(demoKeepsakes())->toBe($before)

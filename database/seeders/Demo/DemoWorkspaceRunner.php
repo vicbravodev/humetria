@@ -30,8 +30,8 @@ use LogicException;
 /**
  * Tells the demo's story, one module at a time and in this order: each story stands on what the ones before it built.
  * Preparing again wipes the company first and tells the same story on it: its row, slug and members' accounts stay, and
- * the people get the same ids, so the links and QR codes the console shared still work. The door's people get new ones: a
- * portal link an earlier audience kept stops working.
+ * the people get the same ids, so the links and QR codes the console shared still work. The door's people get new ones:
+ * the link, session or key an earlier audience kept stops working.
  */
 final readonly class DemoWorkspaceRunner implements DemoWorkspace
 {

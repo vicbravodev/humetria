@@ -21,7 +21,6 @@ use App\Modules\Telework\Actions\RequestEvidence;
 use App\Modules\Telework\Actions\RespondEquipment;
 use App\Modules\Telework\Actions\ReviewWorkplace;
 use App\Modules\Telework\Actions\SubmitChecklist;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Telework\Data\AddressData;
 use App\Modules\Telework\Data\RosterData;
 use App\Modules\Telework\Enums\ChecklistStatus;
@@ -118,7 +117,6 @@ final readonly class TeleworkStory implements DemoStory
         private RecordManualAcknowledgements $manualAcks,
         private Acknowledge $acknowledge,
         private RegisterAspirant $register,
-        private PortalAccess $portal,
         private OpenPortal $openPortal,
         private SubmitChecklist $submit,
         private ReviewWorkplace $review,
@@ -214,7 +212,7 @@ final readonly class TeleworkStory implements DemoStory
             if ($person->tenureDays > self::PUBLISHED_DAYS_AGO - 5) {
                 $paper[] = $id;
             } else {
-                DemoClock::at('-'.($person->tenureDays - 3).' days', fn () => $this->acknowledge->handle($this->openPortal->handle($this->portal->token($id)), $policy->id, null));
+                DemoClock::at('-'.($person->tenureDays - 3).' days', fn () => $this->acknowledge->handle($this->openPortal->handle($id), $policy->id, null));
             }
         }
 
@@ -260,13 +258,13 @@ final readonly class TeleworkStory implements DemoStory
         $this->on($d + 8, $n, fn (): EquipmentItem => $this->equipment->handle($teleworker, EquipmentKind::Computer, 'Laptop de 14 pulgadas con base y teclado', CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay(), $hr));
 
         foreach (EquipmentItem::query()->where('teleworker_id', $teleworker->id)->get() as $item) {
-            $this->on($d + 10, $n, fn () => $this->respond->handle($this->openPortal->handle($this->portal->token($id)), $item->id, true, null, null));
+            $this->on($d + 10, $n, fn () => $this->respond->handle($this->openPortal->handle($id), $item->id, true, null, null));
         }
 
         $this->on($d + 12, $n, fn () => $this->join->handle($teleworker, new RosterData(
             MaritalStatus::cases()[$n % 3], self::ACTIVITIES[$person->position], "{$person->position} a distancia, con computadora y teléfono de la empresa.", sprintf('55 0000 %04d', $n), $home, null,
         ), $hr));
-        $this->on($d + 13, $n, fn () => $this->acknowledge->handle($this->openPortal->handle($this->portal->token($id)), $risk->id, null));
+        $this->on($d + 13, $n, fn () => $this->acknowledge->handle($this->openPortal->handle($id), $risk->id, null));
 
         if ($n === count(self::PATHS) - 1) {
             // The last to join gets a second item a few days ago, still waiting for their confirmation.
@@ -307,7 +305,7 @@ final readonly class TeleworkStory implements DemoStory
         }
 
         $notes = $flagged === null ? [] : [$flagged => 'La luz de la ventana da directo a la pantalla por la tarde y no hay cortina.'];
-        $this->submit->handle($this->openPortal->handle($this->portal->token($employeeId)), $application->id, true, $answers, $notes, null, []);
+        $this->submit->handle($this->openPortal->handle($employeeId), $application->id, true, $answers, $notes, null, []);
 
         return $application;
     }

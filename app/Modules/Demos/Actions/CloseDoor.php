@@ -9,7 +9,7 @@ use App\Modules\Demos\Models\DoorSession;
 use App\Modules\Demos\Support\DemoDoor;
 use Illuminate\Support\Facades\Log;
 
-/** Closes the door of the demo: its code stops letting anyone in. The people already in keep their portals. */
+/** Closes the door of the demo: its code stops letting anyone in. The people already in keep their sessions. */
 final readonly class CloseDoor
 {
     public function __construct(private DemoDoor $door, private RecordAudit $audit) {}

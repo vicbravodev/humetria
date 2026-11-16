@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Jobs;
 
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Notifications\NoticeAnswered;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Foundation\Queue\Queueable;
@@ -31,14 +31,14 @@ final class SendNoticeAnswer implements ShouldQueue, ShouldQueueAfterCommit
 
     public function __construct(public readonly string $tenantId, public readonly string $teleworkerId) {}
 
-    public function handle(Companies $companies, Roster $roster, IssuePortalLink $issue): void
+    public function handle(Companies $companies, Roster $roster, WorkerLinks $links): void
     {
         $company = $companies->enter($this->tenantId);
         $teleworker = Teleworker::query()->find($this->teleworkerId, ['id', 'employee_id']);
         $person = $company->stopped('nom037') || $teleworker === null ? null : $roster->find($teleworker->employee_id);
 
         if ($person !== null && $person->active && $person->email !== null) {
-            Notification::route('mail', $person->email)->notify(new NoticeAnswered(route('portal.notices.show', $issue->handle($person->id)), $person->name, $company));
+            Notification::route('mail', $person->email)->notify(new NoticeAnswered($links->to('portal.notices.show'), $person->name, $company));
         }
     }
 }

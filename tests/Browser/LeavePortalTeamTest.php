@@ -7,7 +7,6 @@ use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 
 // Light and dark, on a desktop and on a phone.
@@ -22,7 +21,7 @@ $looks = [
  * Beto, who leads Ana (14 days of her 2026 period) and Caro (no days), with three requests waiting for him: Ana's
  * vacations, Caro's paternity leave and Caro's vacations without the days.
  *
- * @return array{url: string, ana: LeaveRequest, leave: LeaveRequest, short: LeaveRequest}
+ * @return array{url: string, boss: string, ana: LeaveRequest, leave: LeaveRequest, short: LeaveRequest}
  */
 function leaveTeamPortal(): array
 {
@@ -38,7 +37,9 @@ function leaveTeamPortal(): array
     workIn($tenant);
 
     return [
-        'url' => '/portal/'.resolve(IssuePortalLink::class)->handle($boss->id).'/vacations',
+        // Beto's vacations in his pages: he enters first (enteringTo) and lands back where he was going.
+        'url' => '/me/acme/vacations',
+        'boss' => $boss->id,
         'ana' => LeaveRequest::factory()->create([...$waiting, 'employee_id' => $ana->id, 'requested_on' => '2026-10-28', 'note' => 'Viaje familiar']),
         'leave' => LeaveRequest::factory()->ofType($type)->create([...$waiting, 'employee_id' => $caro->id, 'requested_on' => '2026-10-29', 'starts_on' => '2026-12-01', 'ends_on' => '2026-12-07', 'working_days' => 5]),
         'short' => LeaveRequest::factory()->create([...$waiting, 'employee_id' => $caro->id, 'requested_on' => '2026-10-30', 'starts_on' => '2027-01-11', 'ends_on' => '2027-01-14', 'working_days' => 4, 'had_balance' => false]),
@@ -49,7 +50,7 @@ function leaveTeamPortal(): array
 it('shows a manager the requests that wait for them, each with where its days would come from', function (bool $dark, bool $mobile): void {
     $team = leaveTeamPortal();
 
-    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile)
+    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile, enteringTo($team['boss'], 'Solicitudes de mi equipo'))
         ->assertSee('Solicitudes de mi equipo')
         ->assertNotPresent('[data-sidebar="sidebar"]')
         ->assertSeeIn('li:has-text("Viaje familiar")', 'Ana Solís')
@@ -70,7 +71,7 @@ it('shows a manager the requests that wait for them, each with where its days wo
 it('lets a manager approve one request and reject another with its reason', function (bool $dark, bool $mobile): void {
     $team = leaveTeamPortal();
 
-    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile)
+    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile, enteringProvedTo($team['boss'], 'Solicitudes de mi equipo'))
         ->click('li:has-text("Viaje familiar") button:has-text("Aprobar")')
         ->assertSee('¿Aprobar la solicitud de Ana Solís?')
         ->click('[role=dialog] button[type=submit]')
@@ -98,7 +99,7 @@ it('lets a manager approve one request and reject another with its reason', func
 it('takes a manager from «Mis vacaciones» to the requests that wait for them', function (): void {
     $team = leaveTeamPortal();
 
-    visitPage('leave/portal', $team['url'])
+    visitPage('leave/portal', $team['url'], reach: enteringTo($team['boss'], 'Mis vacaciones'))
         ->assertSee('3 solicitudes esperan su respuesta.')
         ->click('Solicitudes de su equipo')
         ->assertPathEndsWith('/vacations/team')
@@ -112,7 +113,7 @@ it('tells whoever has nothing to answer that nothing waits', function (bool $dar
     $team = leaveTeamPortal();
     LeaveRequest::query()->update(['approver_employee_id' => null]);
 
-    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile)
+    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile, enteringTo($team['boss'], 'Solicitudes de mi equipo'))
         ->assertSee('No tiene solicitudes por responder.')
         ->assertNotPresent('button:has-text("Rechazar")');
 })->with($looks);

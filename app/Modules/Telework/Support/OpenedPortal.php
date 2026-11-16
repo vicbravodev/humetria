@@ -7,8 +7,8 @@ namespace App\Modules\Telework\Support;
 use App\Modules\Tenancy\Data\CompanySummary;
 
 /**
- * A portal link that works: whose it is, in which company, and their open telework period if they have one. `$telework` says whether the company has NOM-037: the link is the person's,
- * and the pages of this tool answer 404 without it.
+ * The telework portal of a person (SessionPortal): who they are, in which company, and their open telework period if they
+ * have one. `$telework` says whether the company has NOM-037: the pages of this tool answer 404 without it.
  */
 final readonly class OpenedPortal
 {

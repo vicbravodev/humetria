@@ -6,13 +6,12 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\RequestCorrection;
 use App\Modules\Attendance\Exceptions\CorrectionRejected;
-use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Http\Requests\AskCorrectionRequest;
 use App\Modules\Attendance\Support\PersonWeek;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
@@ -29,16 +28,16 @@ final readonly class CorrectionRequestController
 {
     public function __construct(private Roster $roster, private CurrentTenant $tenant) {}
 
-    public function options(Request $request, WebAuthnCeremony $ceremony): JsonResponse
+    public function options(Request $request, WorkerSignatures $signatures): JsonResponse
     {
-        return response()->json($ceremony->assertionOptions(self::context($request)))->header('Cache-Control', 'no-store, private');
+        return response()->json($signatures->options(self::context($request)))->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(AskCorrectionRequest $request, WebAuthnCeremony $ceremony, RequestCorrection $ask, string $tenant): JsonResponse
+    public function store(AskCorrectionRequest $request, WorkerSignatures $signatures, RequestCorrection $ask, string $tenant): JsonResponse
     {
-        try {
-            $signed = $ceremony->verifyAssertion(self::context($request), $request->credential());
-        } catch (InvalidCredential) {
+        $signed = $signatures->verify(self::context($request), $request->credential());
+
+        if ($signed === null) {
             // Ids only: never the credential, the address or the body.
             Log::warning('attendance.correction_unverified', ['tenant_id' => $this->tenant->id(), 'request_id' => Context::get('request_id')]);
             abort(404);
@@ -48,7 +47,7 @@ final readonly class CorrectionRequestController
         $proposedAt = $request->proposedAt();
 
         try {
-            $ask->handle($person->id, $request->markId(), $request->type(), $proposedAt, $request->reason(), $signed->deviceId);
+            $ask->handle($person->id, $request->markId(), $request->type(), $proposedAt, $request->reason(), $signed->credentialId);
         } catch (CorrectionRejected $rejected) {
             abort_if($rejected->reason === 'mark_not_found', 404);
 

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Actions;
 
 use App\Modules\Demos\Contracts\DemoDoorPool;
+use App\Modules\Demos\Contracts\DemoEntrance;
 use App\Modules\Demos\Models\DoorAssignment;
 use App\Modules\Demos\Models\DoorSession;
 use App\Modules\Demos\Support\AdmissionResult;
 use App\Modules\Demos\Support\DemoDoor;
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Telework\Contracts\PortalAccess;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
  */
 final readonly class AdmitVisitor
 {
-    public function __construct(private DemoDoor $door, private DemoDoorPool $pool, private Roster $roster, private PortalAccess $portals) {}
+    public function __construct(private DemoDoor $door, private DemoDoorPool $pool, private Roster $roster, private DemoEntrance $entrance) {}
 
     /**
      * @param  string|null  $assignmentId  the visitor's cookie, already checked by its signature: null when absent or forged.
@@ -47,9 +47,10 @@ final readonly class AdmitVisitor
                 : null;
 
             if ($returning !== null) {
-                $url = $this->portals->url($returning->employee_id);
-
-                return $url === null ? AdmissionResult::closed() : AdmissionResult::admitted($returning->id, $returning->employee_id, $url, $session->expires_at);
+                // A new link each time: the one before was spent opening their session, or stops opening now.
+                return $this->roster->find($returning->employee_id)?->active === true
+                    ? AdmissionResult::admitted($returning->id, $returning->employee_id, $this->entrance->for($returning->employee_id), $session->expires_at)
+                    : AdmissionResult::closed();
             }
 
             return $this->claim($session);
@@ -64,13 +65,11 @@ final readonly class AdmitVisitor
         $people = $this->roster->findMany($free);
 
         foreach ($free as $id) {
-            $url = ($people[$id] ?? null)?->active === true ? $this->portals->url($id) : null;
-
-            if ($url !== null) {
+            if (($people[$id] ?? null)?->active === true) {
                 $assignment = DoorAssignment::query()->create(['tenant_id' => $session->tenant_id, 'session_id' => $session->id, 'employee_id' => $id, 'claimed_at' => now()]);
                 Log::info('demo.door_admitted', ['assignment_id' => $assignment->id]);
 
-                return AdmissionResult::admitted($assignment->id, $id, $url, $session->expires_at);
+                return AdmissionResult::admitted($assignment->id, $id, $this->entrance->for($id), $session->expires_at);
             }
         }
 

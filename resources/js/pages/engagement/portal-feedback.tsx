@@ -1,4 +1,3 @@
-import PortalHomeLink from '@/components/portal-home-link';
 import { Head } from '@inertiajs/react';
 import { ClipboardCheck, Users } from 'lucide-react';
 import HighlightsCard from '@/components/engagement/results/highlights-card';
@@ -7,6 +6,7 @@ import SummaryThemes from '@/components/engagement/results/summary-themes';
 import FeedbackEmpty from '@/components/engagement/portal/feedback-empty';
 import PortalShell from '@/components/engagement/portal/portal-shell';
 import PageHeader from '@/components/humetria/page-header';
+import WorkerHomeLink from '@/components/worker-home-link';
 import type { ManagerFeedback } from '@/types';
 
 /**
@@ -14,12 +14,12 @@ import type { ManagerFeedback } from '@/types';
  * summary of the comments. Group figures only: never an answer or a comment, and not how many people there are.
  */
 export default function PortalFeedback({
-    token,
+    slug,
     company,
     survey,
     feedback,
 }: {
-    token: string;
+    slug: string;
     company: string;
     survey: { name: string } | null;
     feedback: ManagerFeedback | null;
@@ -28,7 +28,7 @@ export default function PortalFeedback({
         <PortalShell company={company}>
             <Head title="Retroalimentación de su equipo" />
             <div className="flex w-full max-w-3xl flex-col gap-6">
-                <PortalHomeLink token={token} />
+                <WorkerHomeLink slug={slug} />
                 {survey === null || feedback === null ? (
                     <FeedbackEmpty />
                 ) : (

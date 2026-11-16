@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\PublishChecklist;
 use App\Modules\Telework\Actions\RegisterCommittee;
 use App\Modules\Telework\Actions\RequestAcknowledgements;
@@ -40,7 +39,6 @@ use Database\Factories\Telework\WorkerNoticeFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Database\Factories\Telework\WorkplaceReviewFactory;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 $looks = [
     'light desktop' => [false, false],
@@ -223,8 +221,13 @@ it('tells a stale editor that the version was published meanwhile', function ():
         ->assertNoJavaScriptErrors();
 });
 
-/** @return string The address of the portal of a person with one checklist to answer and one sent. */
-function portalAddress(): string
+/**
+ * A person with one checklist to answer and one sent: the address of their telework section (or of `$page` under it) and the
+ * steps that take them there through the entrance, once the page shows `$text` (`$proved`: and with a recent proof, by code).
+ *
+ * @return array{string, Closure}
+ */
+function portalAddress(string $page = '', string $text = 'Su teletrabajo', bool $proved = false): array
 {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Ruiz']);
@@ -234,12 +237,15 @@ function portalAddress(): string
     ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id, 'street' => 'Calle Juárez'])->id]);
     workIn($tenant);
 
-    return '/portal/'.resolve(IssuePortalLink::class)->handle($employee->id);
+    return ["/me/{$tenant->slug}/telework{$page}", $proved ? enteringProvedTo($employee->id, $text) : enteringTo($employee->id, $text)];
 }
 
-it('shows the person their portal with what is pending and what was sent', function (bool $dark, bool $mobile): void {
-    visitPage('telework/portal', portalAddress(), $dark, $mobile)
-        ->assertSee('Hola, Ana Ruiz')
+it('shows the person their telework section with what is pending and what was sent', function (bool $dark, bool $mobile): void {
+    [$address, $enter] = portalAddress();
+
+    visitPage('telework/portal-section', $address, $dark, $mobile, $enter)
+        ->assertSee('Su teletrabajo')
+        ->assertSee('Sus avisos por escrito')
         ->assertSee('Por contestar')
         ->assertSee('Pendiente de contestar')
         ->assertSee('Ya enviado')
@@ -247,14 +253,15 @@ it('shows the person their portal with what is pending and what was sent', funct
 })->with($looks);
 
 it('shows the person what the Comisión asked for and lets them authorize a visit', function (bool $dark, bool $mobile): void {
-    $address = portalAddress();
+    // Authorizing the visit takes a recent proof: she proves it is her with a code after entering.
+    [$address, $enter] = portalAddress(proved: true);
     $tenant = Tenant::query()->where('trade_name', 'Acme')->firstOrFail();
     workIn($tenant);
     $workplace = Workplace::query()->firstOrFail();
     EvidenceRequestFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id, 'note' => 'Una foto de la silla.']);
     VisitAuthorizationFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id]);
 
-    visitPage('telework/portal', $address, $dark, $mobile)
+    visitPage('telework/portal-section', $address, $dark, $mobile, $enter)
         ->assertSee('La Comisión le pide')
         ->assertSee('Una foto de la silla.')
         ->assertSee('Enviar fotos')
@@ -263,11 +270,6 @@ it('shows the person what the Comisión asked for and lets them authorize a visi
         ->assertDontSee('Autorizo la visita');
 
     expect(VisitAuthorization::query()->sole()->confirmed_at)->not->toBeNull();
-})->with($looks);
-
-it('tells a link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {
-    visitPage('telework/portal', '/portal/not-a-link', $dark, $mobile)
-        ->assertSee('Este enlace ya no está disponible');
 })->with($looks);
 
 /** @return array{string, WorkCenter, Tenant} The panel of RH in acme, and a center of it (with a published list unless said otherwise). */
@@ -312,12 +314,12 @@ it('shows a teleworker with their workplaces and no email', function (bool $dark
     visitPage('telework/teleworker', "{$url}/telework/teleworkers/{$teleworker->id}", $dark, $mobile)
         ->assertSee('Ana Ruiz')
         ->assertSee('Sin correo')
-        ->assertSee('Generar enlace para copiar')
+        ->assertSee('Ver su acceso')
         ->assertSee('Calle Hidalgo 45')
         ->assertSee('Pendiente de contestar');
 })->with($looks);
 
-it('registers a person from the page and hands over a new link once', function (): void {
+it('registers a person from the page and sends RH to «Accesos» for their link', function (): void {
     [$url, $center, $tenant] = teleworkerCenter();
     EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz', 'email' => null]);
 
@@ -338,16 +340,15 @@ it('registers a person from the page and hands over a new link once', function (
         ->press('Registrar persona')
         ->assertSee('Persona registrada')
         ->assertSee('Calle Hidalgo 45, Centro, Querétaro, Querétaro')
-        ->press('Generar enlace para copiar')
-        ->assertSee('El enlace anterior de esta persona dejará de funcionar')
-        ->press('Generar enlace')
-        ->assertSee('Enlace nuevo')
-        ->assertScript('() => document.querySelector("#portal-link").value.includes("/portal/")', true)
+        ->click('Ver su acceso')
+        ->assertPathIs("{$url}/access")
+        ->assertQueryStringHas('q', 'Ana Ruiz')
+        ->assertSee('Ana Ruiz')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
 
-/** @return array{string, Tenant, ChecklistQuestion, ChecklistQuestion} The address of a Section I checklist with two questions, a flagged answer and a health one. */
+/** @return array{string, Tenant, ChecklistQuestion, ChecklistQuestion, Closure} The address of a Section I checklist with two questions, a flagged answer and a health one, and the steps that enter to it. */
 function checklistAddress(): array
 {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -360,13 +361,13 @@ function checklistAddress(): array
     $application = ChecklistApplicationFactory::new()->create(['tenant_id' => $tenant->id, 'workplace_id' => $workplace->id, 'checklist_id' => $checklist->id]);
     workIn($tenant);
 
-    return ['/portal/'.resolve(IssuePortalLink::class)->handle($employee->id).'/checklists/'.$application->id, $tenant, $light, $health];
+    return ["/me/{$tenant->slug}/telework/checklists/{$application->id}", $tenant, $light, $health, enteringTo($employee->id, 'Enviar mi lista')];
 }
 
 it('shows the person the checklist with its instructions, the notice and the consent', function (bool $dark, bool $mobile): void {
-    [$address] = checklistAddress();
+    [$address, , , , $enter] = checklistAddress();
 
-    visitPage('telework/portal-checklist', $address, $dark, $mobile)
+    visitPage('telework/portal-checklist', $address, $dark, $mobile, $enter)
         ->assertSee('Lista de verificación de su lugar de trabajo')
         ->assertSee('Consentimiento')
         ->assertSee('Pregunta 1')
@@ -374,16 +375,20 @@ it('shows the person the checklist with its instructions, the notice and the con
         ->assertSee('Enviar mi lista');
 })->with($looks);
 
-it('tells a checklist link that opens nothing apart from nothing else', function (bool $dark, bool $mobile): void {
-    visitPage('telework/portal-checklist', '/portal/not-a-link/checklists/'.Str::uuid(), $dark, $mobile)
-        ->assertSee('Este enlace ya no está disponible');
+it('sends a visitor of a checklist to enter first, naming nobody', function (bool $dark, bool $mobile): void {
+    [$address] = checklistAddress();
+
+    visitPage('worker-access/enter', $address, $dark, $mobile)
+        ->assertSee('Entre a su portal')
+        ->assertDontSee('Ana Ruiz');
 })->with($looks);
 
 it('lets the person answer on their phone with a flagged answer, pick a photo and send it once', function (): void {
-    [$address, $tenant, $light, $health] = checklistAddress();
+    [$address, $tenant, $light, $health, $enter] = checklistAddress();
+    $page = visit($address)->on()->mobile();
+    $enter($page);
 
-    visit($address)->on()->mobile()
-        ->click('Acepto')
+    $page->click('Acepto')
         ->assertSee('Pregunta 2')
         ->click("input[name=\"answer-{$light->id}\"][value=\"no\"]")
         ->assertSee('Describa el riesgo que encontró')
@@ -634,7 +639,7 @@ it('shows an ended period as history, without the actions that no longer work', 
         ->assertSee('Regresó a la oficina.')
         ->assertDontSee('Vence el')
         ->assertDontSee('Agregar lugar')
-        ->assertDontSee('Enlace a su portal');
+        ->assertDontSee('Acceso a su portal');
 });
 
 it('shows the NOM-037 documents with what each version covers and leaves out', function (bool $dark, bool $mobile): void {
@@ -788,9 +793,9 @@ it('lets the person read and confirm a document from their portal', function (bo
     $document = TeleworkDocument::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'kind' => DocumentKind::Policy]);
     workIn($tenant);
     resolve(RequestAcknowledgements::class)->handle([$document->id]);
-    $address = '/portal/'.resolve(IssuePortalLink::class)->handle($employee->id);
 
-    visitPage('telework/portal', $address, $dark, $mobile)
+    // Confirming a document takes a recent proof: she proves it is her with a code after entering.
+    visitPage('telework/portal-section', "/me/{$tenant->slug}/telework", $dark, $mobile, enteringProvedTo($employee->id, 'Su teletrabajo'))
         ->assertSee('Documentos por confirmar')
         ->assertSee('Política de Teletrabajo · versión 1')
         ->assertSee('Ver el documento')
@@ -801,11 +806,11 @@ it('lets the person read and confirm a document from their portal', function (bo
 })->with($looks);
 
 it('shows the person the equipment waiting for their answer', function (bool $dark, bool $mobile): void {
-    $address = portalAddress();
+    [$address, $enter] = portalAddress();
     $tenant = Tenant::query()->where('trade_name', 'Acme')->firstOrFail();
     EquipmentItemFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => App\Modules\Telework\Models\Teleworker::query()->withoutGlobalScopes()->firstOrFail()->id, 'description' => 'Silla con soporte lumbar']);
 
-    visitPage('telework/portal', $address, $dark, $mobile)
+    visitPage('telework/portal-section', $address, $dark, $mobile, $enter)
         ->assertSee('Equipo por confirmar')
         ->assertSee('Silla con soporte lumbar')
         ->assertSee('Lo recibí')
@@ -834,10 +839,11 @@ it('lets RH register equipment and the person confirm one item and refuse anothe
 
     EquipmentItemFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id, 'description' => 'Monitor de 24 pulgadas', 'kind' => 'computer']);
     workIn($tenant);
-    $portal = '/portal/'.resolve(IssuePortalLink::class)->handle($teleworker->employee_id);
+    $page = visit("/me/{$tenant->slug}/telework");
+    // Answering for the equipment takes a recent proof: the person proves it is them with a code after entering.
+    enteringProvedTo($teleworker->employee_id, 'Su teletrabajo')($page);
 
-    visit($portal)
-        ->assertSee('Equipo por confirmar')
+    $page->assertSee('Equipo por confirmar')
         ->assertSee('Monitor de 24 pulgadas')
         ->click('Lo recibí')
         ->assertDontSee('Monitor de 24 pulgadas')
@@ -915,7 +921,9 @@ it('registers a training from the page', function (): void {
 });
 
 it('shows the person their three written notices', function (bool $dark, bool $mobile): void {
-    visitPage('telework/portal-notices', portalAddress().'/notices', $dark, $mobile)
+    [$address, $enter] = portalAddress('/notices', 'Sus avisos por escrito');
+
+    visitPage('telework/portal-notices', $address, $dark, $mobile, $enter)
         ->assertSee('Sus avisos por escrito')
         ->assertSee('Alteración de condiciones o fuerza mayor')
         ->assertSee('Cambio de domicilio')
@@ -923,10 +931,11 @@ it('shows the person their three written notices', function (bool $dark, bool $m
 })->with($looks);
 
 it('lets the person write a work risk notice, and shows it received', function (): void {
-    $address = portalAddress().'/notices';
+    [$address, $enter] = portalAddress('/notices', 'Sus avisos por escrito');
+    $page = visit($address);
+    $enter($page);
 
-    visit($address)
-        ->click('ul > li:nth-child(3) button')
+    $page->click('ul > li:nth-child(3) button')
         ->press('[role="dialog"] button[type="submit"]')
         ->assertSee('descripción es obligatorio')
         ->fill('#work_risk-description', 'Me caí al levantarme de la silla.')

@@ -70,7 +70,6 @@ Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers/create
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers/employees', [TeleworkerController::class, 'employees'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.employees');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/teleworkers', [TeleworkerController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.store');
 Route::get('admin/{tenant:slug}/telework/teleworkers/{teleworker}', [TeleworkerController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.show');
-Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/portal-link', [TeleworkerController::class, 'link'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.link');
 Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/workplaces', [TeleworkerController::class, 'addWorkplace'])->where('tenant', $notReserved)->name('tenant.telework.teleworkers.workplaces.store');
 // The equipment delivered to a person: registered by RH, answered by the person in their portal. No edit and no delete: a
 // registration is evidence (C-22, C-29); a mistaken one stays and the person refuses it with the reason.
@@ -85,7 +84,7 @@ Route::post('admin/{tenant:slug}/telework/teleworkers/{teleworker}/end', [Roster
 Route::post('admin/{tenant:slug}/telework/applications/{application}/review', [ReviewController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.reviews.store');
 Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/remote-check', [ReviewController::class, 'remoteCheck'])->where('tenant', $notReserved)->name('tenant.telework.workplaces.remote-check.store');
 
-// More evidence about a workplace and in-person visits. The person answers from their portal (routes/portal.php).
+// More evidence about a workplace and in-person visits. The person answers from their portal (routes/telework-portal.php).
 Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/evidence-requests', [EvidenceController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.evidence.store');
 Route::post('admin/{tenant:slug}/telework/workplaces/{workplace}/visit-authorizations', [VisitController::class, 'requestAuthorization'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.store');
 Route::post('admin/{tenant:slug}/telework/visit-authorizations/{authorization}/document', [VisitController::class, 'document'])->where('tenant', $notReserved)->name('tenant.telework.visit-authorizations.document.store');

@@ -6,13 +6,13 @@ use App\Modules\Engagement\Enums\SummaryStatus;
 use App\Modules\Engagement\Http\Controllers\PortalFeedbackController;
 use App\Modules\Engagement\Models\Comment;
 use App\Modules\Engagement\Models\CommentSummary;
+use App\Modules\Engagement\Support\FeedbackWorkerSection;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PortalFeedbackController::class);
+mutates(PortalFeedbackController::class, FeedbackWorkerSection::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -21,19 +21,20 @@ beforeEach(function (): void {
     $this->beto = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Paz']);
 });
 
+/** The feedback page of `$person`, who enters first: the session says whose group it is. */
 function feedbackLink(Employee $person): string
 {
-    return route('portal.feedback.show', (string) resolve(IssuePortalLink::class)->handle($person->id));
+    return route('portal.feedback.show', asPerson($person->id));
 }
 
-/** What the page says, without the token of the link, which differs by person, nor what every page shares. */
+/** What the page says, without what every page shares. */
 function feedbackProps(Illuminate\Testing\TestResponse $response): array
 {
     return Illuminate\Support\Arr::only($response->viewData('page')['props'], ['company', 'survey', 'feedback']);
 }
 
-it('lives at /portal/{token}/feedback, throttled like the rest of the portal, with no way to ask for or redo a summary', function (): void {
-    expect(route('portal.feedback.show', 'abc', absolute: false))->toBe('/portal/abc/feedback')
+it('lives at /me/{slug}/feedback, in the person\'s pages, throttled like the rest of them, with no way to ask for or redo a summary', function (): void {
+    expect(route('portal.feedback.show', 'acme', absolute: false))->toBe('/me/acme/feedback')
         ->and(Route::getRoutes()->getByName('portal.feedback.show')?->gatherMiddleware())->toContain('throttle:portal-views');
 
     $names = array_filter(array_map(fn (Illuminate\Routing\Route $route): ?string => $route->getName(), Route::getRoutes()->getRoutes()), fn (?string $name): bool => $name !== null && str_starts_with($name, 'portal.feedback'));
@@ -94,15 +95,19 @@ it('gives the very same screen to a manager whose group is hidden, to one with n
         ->and($hidden['survey'])->toBeNull();
 });
 
-it('reads the group from the link and never from the request', function (): void {
+it('reads the group from the session and never from the request', function (): void {
     climateManagerSurvey($this->tenant, [$this->ana->id => [6, 5], $this->beto->id => [6, 1]]);
 
     $this->get(feedbackLink($this->beto).'?manager='.$this->ana->id.'&survey=x')
         ->assertInertia(fn (Assert $page) => $page->where('feedback.items.0.favorable', 0)->where('feedback.items.0.vsCompany', -50));
 });
 
-it('does not open for a link that is not valid, and says nothing about why', function (): void {
-    $this->get(route('portal.feedback.show', 'not-a-token'))->assertNotFound();
+it('sends a visitor to enter, and opens nothing of another company with this session', function (): void {
+    $this->get(route('portal.feedback.show', $this->tenant->slug))->assertRedirect(route('worker.home', $this->tenant->slug));
+
+    asPerson($this->ana->id);
+    $other = Tenant::factory()->create();
+    $this->get(route('portal.feedback.show', $other->slug))->assertRedirect(route('worker.home', $other->slug));
 });
 
 it('does not open for a manager who left', function (): void {
@@ -110,7 +115,7 @@ it('does not open for a manager who left', function (): void {
     $link = feedbackLink($this->ana);
     $this->ana->update(['deactivated_at' => now()]);
 
-    $this->get($link)->assertNotFound();
+    $this->get($link)->assertRedirect(route('worker.home', $this->tenant->slug));
 });
 
 it('keeps showing the scores when the summary failed, the AI is off or it was withheld, and never any text', function (SummaryStatus $status): void {
@@ -146,4 +151,20 @@ it('does not show a survey of another company', function (): void {
     workIn($this->tenant);
 
     $this->get(feedbackLink($this->ana))->assertInertia(fn (Assert $page) => $page->where('feedback', null));
+});
+
+it('offers the feedback in the person\'s start only to a manager whose group is shown, at their page with no credential', function (): void {
+    $section = fn (Employee $person) => resolve(FeedbackWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $person->id, 'Acme', $person->name));
+
+    expect($section($this->ana))->toBeNull();
+
+    climateManagerSurvey($this->tenant, [$this->ana->id => [6, 5]]);
+
+    expect($section($this->ana)?->key)->toBe('feedback')
+        ->and($section($this->ana)?->label)->toBe('Retroalimentación de mi equipo')
+        ->and($section($this->ana)?->href)->toBe(route('portal.feedback.show', $this->tenant->slug))
+        ->and($section($this->beto))->toBeNull();
+
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['nom035'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+    expect($section($this->ana))->toBeNull();
 });

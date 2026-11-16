@@ -6,18 +6,17 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\ConfirmWeek;
 use App\Modules\Attendance\Actions\DisputeWeek;
-use App\Modules\Attendance\Data\VerifiedAssertion;
-use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Exceptions\WeekRejected;
 use App\Modules\Attendance\Http\Requests\ConfirmRequest;
 use App\Modules\Attendance\Http\Requests\DisputeRequest;
 use App\Modules\Attendance\Http\Requests\WeekRequest;
 use App\Modules\Attendance\Support\PersonWeek;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
+use App\Modules\WorkerAccess\Data\SignedBy;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,27 +54,27 @@ final readonly class WeekController
         ]);
     }
 
-    public function options(Request $request, WebAuthnCeremony $ceremony): JsonResponse
+    public function options(Request $request, WorkerSignatures $signatures): JsonResponse
     {
-        return response()->json($ceremony->assertionOptions(self::context($request)))->header('Cache-Control', 'no-store, private');
+        return response()->json($signatures->options(self::context($request)))->header('Cache-Control', 'no-store, private');
     }
 
-    public function read(WeekRequest $request, WebAuthnCeremony $ceremony, string $tenant): JsonResponse
+    public function read(WeekRequest $request, WorkerSignatures $signatures, string $tenant): JsonResponse
     {
-        $signed = $this->verified($request, $ceremony, $request->credential());
+        $signed = $this->verified($request, $signatures, $request->credential());
         $start = $request->start();
 
         // None asked for: the last week that is over, the one to answer.
         return $this->week($signed, $start === null ? WeekPeriod::containing(CarbonImmutable::now()->subWeek()) : WeekPeriod::ofDate($start), $tenant);
     }
 
-    public function confirm(ConfirmRequest $request, WebAuthnCeremony $ceremony, ConfirmWeek $confirm, string $tenant, string $start): JsonResponse
+    public function confirm(ConfirmRequest $request, WorkerSignatures $signatures, ConfirmWeek $confirm, string $tenant, string $start): JsonResponse
     {
         $week = self::period($start);
-        $signed = $this->verified($request, $ceremony, $request->credential());
+        $signed = $this->verified($request, $signatures, $request->credential());
 
         try {
-            $confirm->handle($signed->employeeId, $week->start(), $signed->deviceId, $request->digest());
+            $confirm->handle($signed->employeeId, $week->start(), $signed->credentialId, $request->digest());
         } catch (WeekRejected $rejected) {
             return $this->rejected($rejected, $signed, $week, $tenant);
         }
@@ -83,13 +82,13 @@ final readonly class WeekController
         return $this->week($signed, $week, $tenant);
     }
 
-    public function dispute(DisputeRequest $request, WebAuthnCeremony $ceremony, DisputeWeek $dispute, string $tenant, string $start): JsonResponse
+    public function dispute(DisputeRequest $request, WorkerSignatures $signatures, DisputeWeek $dispute, string $tenant, string $start): JsonResponse
     {
         $week = self::period($start);
-        $signed = $this->verified($request, $ceremony, $request->credential());
+        $signed = $this->verified($request, $signatures, $request->credential());
 
         try {
-            $dispute->handle($signed->employeeId, $week->start(), $request->reason(), $signed->deviceId, $request->digest());
+            $dispute->handle($signed->employeeId, $week->start(), $request->reason(), $signed->credentialId, $request->digest());
         } catch (WeekRejected $rejected) {
             return $this->rejected($rejected, $signed, $week, $tenant);
         }
@@ -100,24 +99,26 @@ final readonly class WeekController
     /**
      * @param  array<mixed>  $credential
      */
-    private function verified(Request $request, WebAuthnCeremony $ceremony, array $credential): VerifiedAssertion
+    private function verified(Request $request, WorkerSignatures $signatures, array $credential): SignedBy
     {
-        try {
-            return $ceremony->verifyAssertion(self::context($request), $credential);
-        } catch (InvalidCredential) {
+        $signed = $signatures->verify(self::context($request), $credential);
+
+        if ($signed === null) {
             // Ids only: never the credential, the address or the body.
             Log::warning('attendance.week_unverified', ['tenant_id' => $this->tenant->id(), 'request_id' => Context::get('request_id')]);
             abort(404);
         }
+
+        return $signed;
     }
 
-    private function week(VerifiedAssertion $signed, WeekPeriod $week, string $tenant): JsonResponse
+    private function week(SignedBy $signed, WeekPeriod $week, string $tenant): JsonResponse
     {
         return response()->json($this->view($signed, $week, $tenant))->header('Cache-Control', 'no-store, private');
     }
 
     /** Why the answer was refused; a week that changed since it was read goes back as it is now, to be read again. */
-    private function rejected(WeekRejected $rejected, VerifiedAssertion $signed, WeekPeriod $week, string $tenant): JsonResponse
+    private function rejected(WeekRejected $rejected, SignedBy $signed, WeekPeriod $week, string $tenant): JsonResponse
     {
         $body = ['reason' => $rejected->reason, ...($rejected->reason === 'week_changed' ? ['week' => $this->view($signed, $week, $tenant)] : [])];
 
@@ -127,7 +128,7 @@ final readonly class WeekController
     /**
      * @return array<string, mixed>
      */
-    private function view(VerifiedAssertion $signed, WeekPeriod $week, string $tenant): array
+    private function view(SignedBy $signed, WeekPeriod $week, string $tenant): array
     {
         $person = $this->roster->find($signed->employeeId) ?? abort(404);
 

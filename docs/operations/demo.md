@@ -26,8 +26,8 @@ Se maneja desde la **sala de demostración**, `/admin/demo` («Sala de demostrac
   - el pulso abierto cierra a los ~9 días y la evaluación NOM-035 abierta a los ~18;
   - la asistencia de «la semana pasada» deja de serlo a la semana.
 - [ ] Reiniciar también **rellena la puerta** y la **cierra**: hay que abrirla otra vez. Cada trabajador de la puerta se
-  entrega una sola vez hasta el siguiente reinicio, y recibe ids nuevos en cada preparación: el enlace del portal que se
-  llevó un público anterior deja de servir (ver §3).
+  entrega una sola vez hasta el siguiente reinicio, y recibe ids nuevos en cada preparación: el enlace, la sesión y la
+  llave que se llevó un público anterior dejan de servir (ver §3).
 - [ ] **Revisar el buzón de denuncias.** El QR del canal no cambia entre reinicios: alguien de un público anterior puede
   seguir mandando denuncias a la demo.
 - [ ] Esperar a que la sala diga **Preparada**. Mientras corre muestra **Preparando** y el paso en que va; se puede
@@ -43,17 +43,23 @@ Se maneja desde la **sala de demostración**, `/admin/demo` («Sala de demostrac
    la sesión anterior y su QR deja de servir: si se pierde el QR, cerrar y abrir la sala. «Cerrar sala» la cierra antes
    de las 2 h.
 3. Cada persona del público escanea y recibe **un trabajador demo propio** (hay 40 reservados, repartidos en los 4
-   centros) y entra a su portal personal. Una cookie le devuelve el mismo trabajador si recarga. Cada trabajador se
+   centros). La puerta le da un enlace de un solo uso (WorkerAccess, el que RH emite, a nombre de la jefa de RH de la
+   demo): pulsa «Continuar», se le pide **crear su llave de acceso** en su teléfono (huella, rostro o PIN) y entra a su
+   portal personal (`/me/{slug}`). Una cookie le devuelve el mismo trabajador si vuelve a escanear (con un enlace nuevo:
+   el anterior ya se gastó o deja de servir). Cada trabajador se
    entrega **una sola vez hasta el siguiente reinicio**: no hay «liberar». Sin trabajadores libres la puerta dice
    «La sala está llena»: reiniciar. La sala muestra cuántos quedan libres.
-4. Qué hace el público desde su portal:
+4. Qué hace el público desde su portal. Lo delicado (confirmar la política, el puesto de pie o un documento de
+   teletrabajo, el mensaje de apoyo) pide una prueba reciente: la da **con la llave que creó** al entrar. Quien no creó
+   llave no puede: el código por correo nunca llega, porque el correo de la demo no sale.
    - contestar el **pulso** abierto o la **evaluación NOM-035** abierta (el avance sube en vivo);
    - **confirmar la política** publicada (sus acuses están pendientes a propósito);
    - poner una **denuncia** en el canal de la demo (QR en la sala). El canal de la demo acepta 60 envíos por hora y 120
      al día por dirección (un salón comparte la Wi-Fi); el tope del canal, 200 al día, sigue (lo que pase de ahí se
      recibe y se retiene al día siguiente);
-   - **marcar asistencia en vivo**: la demo no trae passkeys sembradas. Cada quien vincula su teléfono desde
-     «Mi jornada» y marca frente a la pantalla del checador de Oficinas Querétaro. El enlace de esa pantalla se emite en
+   - **marcar asistencia en vivo**: la demo no trae llaves ni aceptaciones del acuerdo sembradas. Cada quien marca con la
+     llave que creó al entrar, acepta el acuerdo la primera vez y marca frente a la pantalla del checador de Oficinas
+     Querétaro. El enlace de esa pantalla se emite en
      la sala, se muestra una vez y deja el checador sin activar hasta que se abre en la tableta o el proyector. Una vez
      que la pantalla muestra su código no se emite otro: para otro enlace, reiniciar.
 5. **Seguimiento de una denuncia:** las claves de las denuncias sembradas no se guardan; para enseñar el seguimiento,
@@ -101,8 +107,8 @@ solo con ids.
   bloqueados para todas, la demo incluida. `audit_entries` no se toca: crece un poco con cada reinicio.
 - **La marca `is_demo`** se pone al crear la empresa y no cambia: un trigger rechaza cambiarla en cualquier sentido, así
   que ninguna empresa real puede volverse la demo (y quedar borrable) ni la demo dejar de serlo.
-- **`APP_KEY`.** Sellan con ella el código del canal de denuncias de la demo (su QR), los enlaces del portal y de las
-  encuestas. Al rotarla la sala muestra un QR nuevo que solo sirve tras reiniciar, y los textos cifrados viejos solo se
+- **`APP_KEY`.** Sellan con ella el código del canal de denuncias de la demo (su QR) y los enlaces de las encuestas.
+  Los enlaces que reparte la puerta no dependen de ella: se guardan solo como hash y valen una vez. Al rotarla la sala muestra un QR nuevo que solo sirve tras reiniciar, y los textos cifrados viejos solo se
   leen si la llave anterior está en `APP_PREVIOUS_KEYS`. Si alguien pulsa «rotar código» en el canal de la demo, el QR de
   la sala deja de servir hasta el siguiente reinicio.
 - **La puerta `demo/{code}`** es pública: el código se guarda solo como hash y se muestra una vez, tiene throttle

@@ -10,8 +10,8 @@ use App\Modules\Demos\Models\DoorAssignment;
 use App\Modules\Demos\Models\DoorSession;
 use App\Modules\Demos\Support\DemoDoor;
 
-/** The door as the console room shows it. A person handed out stays taken until the demo is reset: their portal link
- * never changes, so handing them to someone else would put two strangers on one personal portal. */
+/** The door as the console room shows it. A person handed out stays taken until the demo is reset: their session and the
+ * key the visitor created stay theirs, so handing them to someone else would put two strangers on one personal portal. */
 final readonly class ReadDoorState
 {
     public function __construct(private DemoDoor $door, private DemoDoorPool $pool) {}

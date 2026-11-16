@@ -8,7 +8,6 @@ use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\File;
@@ -27,7 +26,7 @@ afterEach(function (): void {
     File::delete($this->logPath);
 });
 
-it('logs no note, reason, leave type name or portal token along a whole flow: ask with a note, reject with a reason, adjust with a note', function (): void {
+it('logs no note, reason nor leave type name along a whole flow: ask with a note, reject with a reason, adjust with a note', function (): void {
     // Wednesday 4 November 2026, noon in Mexico City.
     $this->travelTo('2026-11-04 18:00:00');
     $tenant = Tenant::factory()->create(['slug' => 'acme']);
@@ -37,12 +36,12 @@ it('logs no note, reason, leave type name or portal token along a whole flow: as
     $ana = Employee::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Solís', 'hired_on' => '2024-03-15']);
     $period = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'years_of_service' => 2, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14]);
     $type = LeaveType::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Licencia por tratamiento oncológico']);
-    $token = resolve(IssuePortalLink::class)->handle($ana->id);
+    $slug = asPerson($ana->id);
 
     // Ana asks for days and for a leave, each with a note of her own.
-    $this->post(route('portal.vacations.requests.store', $token), ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10', 'note' => 'Cita con mi psiquiatra'])->assertSessionHasNoErrors();
-    $this->post(route('portal.vacations.requests.store', $token), ['starts_on' => '2026-11-16', 'ends_on' => '2026-11-17', 'leave_type_id' => $type->id, 'note' => 'Quimioterapia de mi madre'])->assertSessionHasNoErrors();
-    $this->get(route('portal.vacations.preview', [$token, 'starts_on' => '2026-11-23', 'ends_on' => '2026-11-24', 'leave_type_id' => $type->id]))->assertOk();
+    $this->post(route('portal.vacations.requests.store', $slug), ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10', 'note' => 'Cita con mi psiquiatra'])->assertSessionHasNoErrors();
+    $this->post(route('portal.vacations.requests.store', $slug), ['starts_on' => '2026-11-16', 'ends_on' => '2026-11-17', 'leave_type_id' => $type->id, 'note' => 'Quimioterapia de mi madre'])->assertSessionHasNoErrors();
+    $this->get(route('portal.vacations.preview', [$slug, 'starts_on' => '2026-11-23', 'ends_on' => '2026-11-24', 'leave_type_id' => $type->id]))->assertOk();
 
     // RH rejects one with its reason, and adjusts the period with a note.
     $this->actingAs($hr)->post(route('tenant.vacations.requests.reject', [$tenant, LeaveRequest::query()->whereNull('leave_type_id')->sole()->id]), ['reason' => 'Cierre de mes: nómina y auditoría'])->assertSessionHasNoErrors();
@@ -54,7 +53,7 @@ it('logs no note, reason, leave type name or portal token along a whole flow: as
     expect($log)->toContain('"leave.request_created"')->toContain('"leave.request_rejected"')->toContain('"leave.request_cancelled"')
         ->and($audit)->not->toBe('[]');
 
-    foreach (['Cita con mi psiquiatra', 'Quimioterapia de mi madre', 'Cierre de mes', 'nómina y auditoría', 'Compensación por guardia', 'oncológico', $token] as $secret) {
+    foreach (['Cita con mi psiquiatra', 'Quimioterapia de mi madre', 'Cierre de mes', 'nómina y auditoría', 'Compensación por guardia', 'oncológico'] as $secret) {
         expect($log)->not->toContain($secret)
             ->and($audit)->not->toContain($secret);
     }

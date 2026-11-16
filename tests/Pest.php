@@ -28,6 +28,8 @@ use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Models\ConversationMessage;
 use Laravel\Ai\Tools\Request as ToolRequest;
 use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\On;
+use Pest\Browser\Api\PendingAwaitablePage;
 use Tests\TestCase;
 
 /*
@@ -193,6 +195,114 @@ function departure(array $with = []): array
 function workIn(Tenant $tenant): void
 {
     resolve(TenantContext::class)->set($tenant);
+}
+
+/**
+ * `$employeeId` accepted their company's current agreement on the registro de jornada (criterio 5.1) with `$credentialId`
+ * (a new key of theirs when none): without it, they cannot mark. Works in the company of the person.
+ */
+function agreementAccepted(string $employeeId, ?string $credentialId = null): void
+{
+    $person = App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId);
+    workIn(Tenant::query()->findOrFail($person->tenant_id));
+    $credentialId ??= App\Modules\WorkerAccess\Models\WorkerCredential::factory()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $employeeId])->id;
+
+    resolve(App\Modules\Attendance\Actions\AcceptAgreement::class)->handle($employeeId, $credentialId, resolve(App\Modules\Attendance\Support\CurrentAgreement::class)->get()->version);
+}
+
+/**
+ * Opens a session of `$employeeId` in their company on this test's browser, as entering does (with their key unless told
+ * otherwise; a key needs its id). Works in the company of the person.
+ */
+function enteredAs(string $employeeId, App\Modules\WorkerAccess\Enums\EntryVia $via = App\Modules\WorkerAccess\Enums\EntryVia::Key, ?string $credentialId = null): void
+{
+    $person = App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId);
+    workIn(Tenant::query()->findOrFail($person->tenant_id));
+
+    resolve(App\Modules\WorkerAccess\Support\WorkerSessionStore::class)->start($employeeId, $via, $credentialId);
+}
+
+/**
+ * Enters as `$employeeId` (enteredAs) and gives the slug of their company, for the person's pages: `route('portal.…', asPerson($id))`.
+ */
+function asPerson(string $employeeId): string
+{
+    enteredAs($employeeId);
+
+    return Tenant::query()->findOrFail(App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId)->tenant_id)->slug;
+}
+
+/** The telework portal of an employee of the current company, as their session opens it (Telework\Support\SessionPortal). */
+function teleworkPortalOf(string $employeeId): App\Modules\Telework\Support\OpenedPortal
+{
+    $person = App\Modules\Organization\Models\Employee::query()->findOrFail($employeeId);
+    $company = resolve(App\Modules\Tenancy\Contracts\Companies::class)->current();
+
+    return resolve(App\Modules\Telework\Support\SessionPortal::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($company->id, $person->id, $company->tradeName, $person->name));
+}
+
+/**
+ * In the browser: the steps of a person (`$employeeId`) who opened a page of theirs without a session and was sent to enter.
+ * They open a one-time link they asked for (made here), press «Continuar» and land on that page, which shows `$text`.
+ * Use as the `$reach` of visitPage() with the person's page as its address, or on a page just opened with visit() (pending:
+ * it opens on the first step); go on with the page it returns.
+ *
+ * @return Closure(AwaitableWebpage|PendingAwaitablePage|On): AwaitableWebpage
+ */
+function enteringTo(string $employeeId, string $text): Closure
+{
+    $person = App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId);
+    $slug = Tenant::query()->findOrFail($person->tenant_id)->slug;
+    $token = Str::random(40);
+    App\Modules\WorkerAccess\Models\WorkerAccessLink::factory()->withToken($token)->requested()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id]);
+    // The session cookie lasts until the browser closes: one dated by a test clock set in the past (travelTo) comes already
+    // expired to the browser, which runs on the real clock, and every request would start a new session.
+    config(['session.expire_on_close' => true]);
+
+    return fn (AwaitableWebpage|PendingAwaitablePage|On $page): AwaitableWebpage => $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
+}
+
+/**
+ * In the browser: a person without a key, on the step to prove it is them (the page or the dialog of a delicate form; the
+ * mail must be faked), asks for the code, writes the one emailed to them and goes on to what they asked for, which shows
+ * `$text`.
+ */
+function provedWithCode(AwaitableWebpage $page, string $text): mixed
+{
+    $page->press('Enviarme un código')->waitForText('Le enviamos un código');
+    $code = null;
+    Illuminate\Support\Facades\Notification::assertSentOnDemand(App\Modules\WorkerAccess\Notifications\ProofCode::class, function (App\Modules\WorkerAccess\Notifications\ProofCode $notice) use (&$code): bool {
+        $code = $notice->code;
+
+        return true;
+    });
+
+    return $page->type('input[autocomplete="one-time-code"]', $code ?? throw new LogicException('No code was sent.'))->press('Confirmar código')->waitForText($text);
+}
+
+/**
+ * In the browser: enteringTo(), and then, as a person without a key does before something delicate, the screen to prove it is
+ * them with a code by email (the mail is faked if it was not), and back on the page, which shows `$text`. Its delicate forms
+ * then go straight through: the proof holds while the test's clock stands still.
+ *
+ * @return Closure(AwaitableWebpage|PendingAwaitablePage|On): AwaitableWebpage
+ */
+function enteringProvedTo(string $employeeId, string $text): Closure
+{
+    $enter = enteringTo($employeeId, $text);
+    $slug = Tenant::query()->findOrFail(App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId)->tenant_id)->slug;
+
+    return function (AwaitableWebpage|PendingAwaitablePage|On $pending) use ($enter, $slug, $text): AwaitableWebpage {
+        if (! Illuminate\Support\Facades\Notification::getFacadeRoot() instanceof Illuminate\Support\Testing\Fakes\NotificationFake) {
+            Illuminate\Support\Facades\Notification::fake();
+        }
+
+        $page = $enter($pending);
+        $there = $page->url();
+        provedWithCode($page->navigate("/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Hola,');
+
+        return $page->navigate($there)->waitForText($text);
+    };
 }
 
 /**
@@ -821,25 +931,23 @@ require_once __DIR__.'/Unit/Compensation/ScenarioHelpers.php';
 require_once __DIR__.'/Browser/attendance-helpers.php';
 
 /**
- * Issues an enrollment link of `$employeeId` as RH does, and gives the URL the person got: the one emailed to them (the
+ * Issues `$employeeId` the link RH sends to enter and create their key, and gives its path: the one emailed to them (the
  * mail must be faked), or the one RH hands over when they have no email.
  */
-function enrollmentUrl(string $employeeId, ?int $userId = null): string
+function accessLinkPath(string $employeeId, ?int $userId = null): string
 {
-    $issued = resolve(App\Modules\Attendance\Actions\IssueEnrollment::class)->handle($employeeId, $userId ?? User::factory()->create()->id);
+    $outcome = resolve(App\Modules\WorkerAccess\Contracts\WorkerInvitations::class)->send($employeeId, $userId ?? User::factory()->create()->id);
+    $url = $outcome->url;
 
-    if ($issued->manualUrl !== null) {
-        return $issued->manualUrl;
+    if ($url === null) {
+        Illuminate\Support\Facades\Notification::assertSentOnDemand(App\Modules\WorkerAccess\Notifications\WorkerInvitation::class, function (App\Modules\WorkerAccess\Notifications\WorkerInvitation $notification, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable) use (&$url): bool {
+            $url = (string) $notification->toMail($notifiable)->actionUrl;
+
+            return true;
+        });
     }
 
-    $url = null;
-    Illuminate\Support\Facades\Notification::assertSentOnDemand(App\Modules\Attendance\Notifications\EnrollmentInvitation::class, function (App\Modules\Attendance\Notifications\EnrollmentInvitation $notification, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable) use (&$url): bool {
-        $url = $notification->toMail($notifiable)->actionUrl;
-
-        return true;
-    });
-
-    return is_string($url) ? $url : throw new LogicException('No enrollment email.');
+    return is_string($url) ? (string) parse_url($url, PHP_URL_PATH) : throw new LogicException('No access link.');
 }
 
 /**

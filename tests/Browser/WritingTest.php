@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\DocumentDraft;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\TeleworkProfile;
@@ -130,11 +129,10 @@ it('lets the person read a written document from their portal before confirming 
     ]]);
     workIn($plant->tenant);
     AcknowledgementFactory::new()->create(['tenant_id' => $plant->tenant_id, 'document_id' => $document->id, 'employee_id' => $employee->id]);
-    $token = resolve(IssuePortalLink::class)->handle($employee->id);
 
-    visitPage('telework/portal-document', "/portal/{$token}/documents/{$document->id}/file", $dark, $mobile)
+    visitPage('telework/portal-document', "/me/{$plant->tenant->slug}/telework/documents/{$document->id}/file", $dark, $mobile, enteringTo($employee->id, 'Horario y desconexión'))
         ->assertSee('Autopartes Demo')
-        ->assertSee('Volver a su portal')
+        ->assertSee('Volver a su teletrabajo')
         ->assertSee('La jornada en teletrabajo es de 9:00 a 18:00.');
 })->with(['light' => false, 'dark' => true])->with(['desktop' => false, 'phone' => true]);
 

@@ -123,6 +123,11 @@ it('keeps the audit entry of a download cut off halfway', function (): void {
         {
             return $this->roster->idsByEmployeeNumber($numbers);
         }
+
+        public function idsByEmail(string $email): array
+        {
+            return $this->roster->idsByEmail($email);
+        }
     });
 
     expect(fn () => $this->get(route('tenant.attendance.report.export', ['acme', ...$this->period]))->streamedContent())->toThrow(RuntimeException::class, 'The roster went away.');

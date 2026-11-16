@@ -14,28 +14,28 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The annual statement of a period (LFT art. 81) in the portal of the person it is about, who confirms they received it.
+ * The annual statement of a period (LFT art. 81) in the pages of the person it is about, who confirms they received it.
  * Somebody else's statement does not exist.
  */
 final class PortalStatementController extends Controller
 {
-    public function show(string $token, string $statement, PortalVisitor $visitor, StatementSheet $sheet): Response
+    public function show(string $tenant, string $statement, PortalVisitor $visitor, StatementSheet $sheet): Response
     {
-        $person = $visitor->open($token);
+        $person = $visitor->current();
         $own = LeaveStatement::query()->where('employee_id', $person->employeeId)->findOrFail($statement);
 
         return Inertia::render('leave/portal-statement', [
-            'token' => $token,
-            'company' => $person->company,
+            'slug' => $tenant,
+            'company' => $person->companyName,
             'statement' => ['id' => $own->id],
             'sheet' => $sheet->for($own),
         ]);
     }
 
-    public function acknowledge(string $token, string $statement, PortalVisitor $visitor, AcknowledgeStatement $acknowledge): RedirectResponse
+    public function acknowledge(string $tenant, string $statement, PortalVisitor $visitor, AcknowledgeStatement $acknowledge): RedirectResponse
     {
-        $acknowledge->handle($visitor->open($token)->employeeId, $statement);
+        $acknowledge->handle($visitor->current()->employeeId, $statement);
 
-        return to_route('portal.vacations.statements.show', [$token, $statement]);
+        return to_route('portal.vacations.statements.show', [$tenant, $statement]);
     }
 }

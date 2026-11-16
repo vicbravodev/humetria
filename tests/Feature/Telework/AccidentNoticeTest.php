@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Telework\Actions\CloseNotice;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\RequestPlaceReview;
 use App\Modules\Telework\Actions\ReviewNotice;
 use App\Modules\Telework\Enums\NoticeKind;
@@ -113,7 +112,7 @@ describe('what was done', function (): void {
 });
 
 describe('the person learns it', function (): void {
-    it('emails the person, in usted, that their notice was answered, with their portal link and nothing of the answer', function (): void {
+    it('emails the person, in usted, that their notice was answered, with the address of their notices (no credential in it) and nothing of the answer', function (): void {
         Notification::fake();
         $this->actingAs($this->hr);
 
@@ -125,7 +124,7 @@ describe('the person learns it', function (): void {
 
             return $notifiable->routes['mail'] === 'hugo@example.com'
                 && $mail->subject === 'Su empresa respondió su aviso'
-                && $mail->actionUrl === route('portal.notices.show', resolve(IssuePortalLink::class)->handle($this->employee->id))
+                && $mail->actionUrl === url("/me/{$this->tenant->slug}/telework/notices")
                 && ! str_contains($text, 'faja') && ! str_contains($text, 'médica');
         });
     });
@@ -148,7 +147,7 @@ describe('the person learns it', function (): void {
         answerAccident(['actions' => ['medical_care', 'leave'], 'note' => 'Se acordó no cargar más de 10 kg.']);
         $old = WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'submitted_at' => '2026-01-10 10:00:00', 'reviewed_by' => $this->hr->id, 'reviewed_at' => '2026-01-11 10:00:00', 'review_note' => 'Nota-interna']);
 
-        $response = $this->get(route('portal.notices.show', resolve(IssuePortalLink::class)->handle($this->employee->id)));
+        $response = $this->get(route('portal.notices.show', asPerson($this->employee->id)));
 
         $response->assertInertia(fn (Assert $page) => $page
             ->where('notices.data.0.answer', ['actions' => ['Se canalizó a atención médica', 'Se le dio un permiso para recuperarse'], 'note' => 'Se acordó no cargar más de 10 kg.', 'answeredOn' => '2026-03-01'])

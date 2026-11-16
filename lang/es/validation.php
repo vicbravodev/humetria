@@ -343,6 +343,7 @@ return [
         'agreement_accepted' => 'aceptación del acuerdo',
         'agreement_version' => 'versión del acuerdo',
         'device_label' => 'nombre del dispositivo',
+        'label' => 'nombre del dispositivo',
         'credential' => 'llave de acceso',
         'lat' => 'latitud',
         'lng' => 'longitud',

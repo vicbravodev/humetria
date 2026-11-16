@@ -28,6 +28,7 @@ beforeEach(function (): void {
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     $this->hr = User::factory()->create();
     workIn($this->tenant);
+    agreementAccepted($this->ana->id);
     $this->start = resolve(RecordMark::class)->handle($this->ana->id, MarkType::Start, new MarkContext(MarkMethod::QrAndGeofence, null, 19.432608, -99.133209, 10.0, 20.0, null));
 });
 

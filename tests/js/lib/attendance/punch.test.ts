@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { punch, punchDay } from '@/lib/attendance/punch';
 import type { PunchRequest } from '@/lib/attendance/punch';
-import type { SignedKey } from '@/lib/attendance/webauthn';
+import type { SignedKey } from '@/lib/webauthn';
 
 const options = { challenge: 'AQID', rpId: 'localhost' };
 
@@ -266,6 +266,31 @@ describe('punch, telling who signed', () => {
             kind: 'failed',
             reason: 'day_not_open',
             person: null,
+        });
+    });
+});
+
+describe('punch, when the agreement was not accepted', () => {
+    it('gives the agreement to accept when the person has not accepted the current one', async () => {
+        await expect(
+            punch(request, {
+                fetcher: serverAnswering({
+                    markStatus: 422,
+                    markBody: {
+                        reason: 'agreement_not_accepted',
+                        name: 'Ana López',
+                        next: ['start'],
+                        agreement: { version: 2, body: 'Texto' },
+                    },
+                }),
+                getKey: signs,
+                xsrf: null,
+            }),
+        ).resolves.toStrictEqual({
+            kind: 'failed',
+            reason: 'agreement_not_accepted',
+            person: { name: 'Ana López', next: ['start'] },
+            agreement: { version: 2, body: 'Texto' },
         });
     });
 });

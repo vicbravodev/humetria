@@ -6,23 +6,24 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Enums\MarkMethod;
-use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Attendance\Support\AgreementStatus;
 use App\Modules\Attendance\Support\CompanyPolicy;
+use App\Modules\Attendance\Support\CurrentAgreement;
 use App\Modules\Attendance\Support\MarkPolicyCheck;
 use App\Modules\Attendance\Support\PunchDay;
 use App\Modules\Attendance\Support\QrToken;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
+use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -36,7 +37,8 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
  * A person marks from their linked device, with no account (criterios 3.3, 4.2 to 4.4). The order of the checks:
  * the company only from the slug (ResolveDeviceTenant); the body validated; the signature verified against a challenge
  * given to this browser's session, which alone names the person (their key's user handle), never the body; the person's
- * current work center then decides which code and which zones count; the policy decides how the mark is taken
+ * current work center then decides which code and which zones count; a person who has not accepted the current
+ * agreement is refused first, with its text (criterio 5.1); the policy decides how the mark is taken
  * (MarkPolicyCheck); RecordMark stamps the server's time and keeps the sequence. A signature that does not verify, of a
  * revoked device, of a person who left or of another company gets the same 404. Logs carry ids and reasons only: never a
  * position, the code or the key.
@@ -50,7 +52,7 @@ final readonly class MarkController
 {
     private const string SESSION_KEY = 'attendance.person';
 
-    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant) {}
+    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials) {}
 
     /**
      * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
@@ -72,8 +74,12 @@ final readonly class MarkController
             'punchUrl' => route('attendance.device.punch.store', $tenant),
             'forgetUrl' => route('attendance.device.punch.forget', $tenant),
             'weekUrl' => route('attendance.device.week.show', $tenant),
+            // Where a person without a key here adds one from a session; the first one comes only from RH's link.
+            'enterUrl' => route('worker.home', $tenant),
             'correctionOptionsUrl' => route('attendance.device.correction.options', $tenant),
             'correctionUrl' => route('attendance.device.correction.store', $tenant),
+            'agreementOptionsUrl' => route('attendance.device.agreement.options', $tenant),
+            'agreementUrl' => route('attendance.device.agreement.accept', $tenant),
             // A mark refused is asked of RH at the time of the company's clock, whatever the phone's zone.
             'timezone' => config()->string('app.display_timezone'),
         ]);
@@ -92,16 +98,16 @@ final readonly class MarkController
         return back();
     }
 
-    public function options(Request $request, WebAuthnCeremony $ceremony): JsonResponse
+    public function options(Request $request, WorkerSignatures $signatures): JsonResponse
     {
-        return response()->json($ceremony->assertionOptions($request->session()->getId()))->header('Cache-Control', 'no-store, private');
+        return response()->json($signatures->options($request->session()->getId()))->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(MarkRequest $request, WebAuthnCeremony $ceremony, RecordMark $record): JsonResponse
+    public function store(MarkRequest $request, WorkerSignatures $signatures, RecordMark $record, AgreementStatus $agreements, CurrentAgreement $agreement): JsonResponse
     {
-        try {
-            $signed = $ceremony->verifyAssertion($request->session()->getId(), $request->credential());
-        } catch (InvalidCredential) {
+        $signed = $signatures->verify($request->session()->getId(), $request->credential());
+
+        if ($signed === null) {
             // Ids only: never the credential, the address or the body.
             Log::warning('attendance.mark_unverified', ['tenant_id' => $this->tenant->id(), 'request_id' => Context::get('request_id')]);
             abort(404);
@@ -115,6 +121,11 @@ final readonly class MarkController
         $zones = AttendanceZone::query()->where('work_center_id', $person->workCenterId)->get()->all();
 
         try {
+            // The agreement first: a person who has not accepted it is not sent to fix the code or the position for nothing.
+            if (! $agreements->accepted($person->id)) {
+                throw new MarkRejected('agreement_not_accepted');
+            }
+
             $context = MarkPolicyCheck::decide(
                 $this->schedule($person->id),
                 CompanyPolicy::current(),
@@ -122,15 +133,23 @@ final readonly class MarkController
                 $qr === null ? null : QrToken::verify($qr, $this->tenant->id(), $person->workCenterId, CarbonImmutable::now()),
                 $zones,
                 $request->position(),
-                $signed->deviceId,
+                $signed->credentialId,
                 KioskDevice::inUseIn($person->workCenterId),
             );
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {
-            Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'device_id' => $signed->deviceId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
+            Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'key_id' => $signed->credentialId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
 
             // Who signed and what they may do: never the steps of whoever marked before on this browser.
-            return response()->json(['reason' => $rejected->reason, 'name' => $person->name, 'next' => PunchDay::of($person->id)['next']], 422);
+            $current = $rejected->reason === 'agreement_not_accepted' ? $agreement->get() : null;
+
+            return response()->json([
+                'reason' => $rejected->reason,
+                'name' => $person->name,
+                'next' => PunchDay::of($person->id)['next'],
+                // What to read and accept, for the screen to show it.
+                ...($current === null ? [] : ['agreement' => ['version' => $current->version, 'body' => $current->body]]),
+            ], 422);
         }
 
         $onsite = in_array($context->method, [MarkMethod::QrAndGeofence, MarkMethod::Qr, MarkMethod::Geofence], true);
@@ -163,7 +182,7 @@ final readonly class MarkController
             : null;
         $person = is_string($id) ? $this->roster->find($id) : null;
 
-        if ($person === null || ! $person->active || ! AttendanceDevice::query()->where('employee_id', $person->id)->whereNull('revoked_at')->exists()) {
+        if ($person === null || ! $person->active || ($this->credentials->countsByEmployee([$person->id])[$person->id]->active ?? 0) === 0) {
             $request->session()->forget(self::SESSION_KEY);
 
             return null;

@@ -2,9 +2,11 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import AppErrorBoundary from '@/components/app-error-boundary';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import RecentProofDialog from '@/components/worker-access/recent-proof-dialog';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { startAnalytics, type AnalyticsEngine } from '@/lib/analytics';
 import { cspNonce } from '@/lib/csp-nonce';
+import { deferResizeObserver } from '@/lib/defer-resize-observer';
 import {
     reportError,
     setErrorContext,
@@ -22,6 +24,9 @@ const appName = import.meta.env['VITE_APP_NAME'] || 'Humetría';
 
 // Node renders this file too (SSR) and has no document: the frame is only preloaded in the browser.
 if (typeof document !== 'undefined') {
+    // Before anything creates an observer: a callback that resizes what it observes is not a crash.
+    deferResizeObserver(window);
+
     const initialPage = document.querySelector(
         'script[data-page="app"]',
     )?.textContent;
@@ -47,6 +52,7 @@ void createInertiaApp({
             <TooltipProvider delayDuration={0}>
                 <AppErrorBoundary>{app}</AppErrorBoundary>
                 <Toaster />
+                <RecentProofDialog />
             </TooltipProvider>
         );
     },

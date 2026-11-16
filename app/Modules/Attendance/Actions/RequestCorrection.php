@@ -41,7 +41,7 @@ final readonly class RequestCorrection
     /**
      * @throws CorrectionRejected
      */
-    public function handle(string $employeeId, ?string $markId, MarkType $type, CarbonImmutable $proposedAt, string $reason, ?string $deviceId = null): CorrectionRequest
+    public function handle(string $employeeId, ?string $markId, MarkType $type, CarbonImmutable $proposedAt, string $reason, ?string $credentialId = null): CorrectionRequest
     {
         $reason = trim($reason);
         $person = $this->roster->find($employeeId);
@@ -62,7 +62,7 @@ final readonly class RequestCorrection
             throw new CorrectionRejected('too_old');
         }
 
-        $request = DB::transaction(function () use ($person, $markId, $type, $proposedAt, $reason, $deviceId): CorrectionRequest {
+        $request = DB::transaction(function () use ($person, $markId, $type, $proposedAt, $reason, $credentialId): CorrectionRequest {
             // Two requests at once must not both pass the counts.
             DB::select('select pg_advisory_xact_lock(hashtext(?))', ["attendance_corrections:{$person->id}"]);
             $this->ensureCanAsk($person->id, $markId, $type);
@@ -74,7 +74,7 @@ final readonly class RequestCorrection
                 'type' => $type,
                 'proposed_at' => $proposedAt->utc(),
                 'reason' => $reason,
-                'device_id' => $deviceId,
+                'credential_id' => $credentialId,
             ]);
         });
 

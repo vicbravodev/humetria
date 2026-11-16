@@ -15,31 +15,29 @@ use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAcknowledgment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Support\PrivacyNotice;
-use App\Modules\Telework\Contracts\PortalAccess;
-use App\Modules\Telework\Data\PortalIdentity;
+use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 use LogicException;
 
 /**
- * The Ley Silla page of a person's portal, under the same link as the rest. A link that is not valid is a 404 that says
- * nothing about whether it ever existed. The person sees only their own answer.
+ * The Ley Silla page of the person of the session, in their pages. The person sees only their own answer.
  */
 final class PortalController extends Controller
 {
-    public function show(string $token, PortalAccess $access, SeatingAssessment $assessment): Response
+    public function show(string $tenant, WorkerSession $session, SeatingAssessment $assessment): Response
     {
-        $person = $this->person($token, $access);
+        $person = $session->current() ?? abort(404);
         $last = PersonInput::query()->where('employee_id', $person->employeeId)->latest('submitted_at')->first(['submitted_at']);
         $zone = config()->string('app.display_timezone');
         $current = RiskAssessment::query()->where('employee_id', $person->employeeId)->where('status', AssessmentStatus::Signed)->latest('signed_at')->first();
         $confirmed = $current === null ? null : RiskAcknowledgment::query()->where('assessment_id', $current->id)->first();
 
         return Inertia::render('seating/portal', [
-            'token' => $token,
-            'company' => $person->company,
-            'name' => $person->name,
+            'slug' => $tenant,
+            'company' => $person->companyName,
+            'name' => $person->personName,
             'notice' => PrivacyNotice::text(),
             'footwear' => $this->condition($assessment, 'footwear'),
             'discomfort' => $this->condition($assessment, 'discomfort'),
@@ -56,13 +54,13 @@ final class PortalController extends Controller
         ]);
     }
 
-    public function store(string $token, PersonInputRequest $request, PortalAccess $access, SubmitPersonInput $submit): RedirectResponse
+    public function store(string $tenant, PersonInputRequest $request, WorkerSession $session, SubmitPersonInput $submit): RedirectResponse
     {
-        $person = $this->person($token, $access);
+        $person = $session->current() ?? abort(404);
         $submit->handle($person, $request->integer('footwear'), $request->integer('discomfort'), $request->note());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Gracias. Recibimos sus respuestas.']);
 
-        return to_route('portal.seating.show', $token);
+        return to_route('portal.seating.show', $tenant);
     }
 
     /**
@@ -77,14 +75,6 @@ final class PortalController extends Controller
             ->orderBy('created_at')->get(['kind'])->map(fn (PreventiveMeasure $measure): string => $measure->kind->label());
 
         return array_values($kinds->unique()->all());
-    }
-
-    private function person(string $token, PortalAccess $access): PortalIdentity
-    {
-        $person = $access->open($token);
-        abort_if($person === null, 404);
-
-        return $person;
     }
 
     /**

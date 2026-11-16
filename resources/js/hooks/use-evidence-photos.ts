@@ -4,7 +4,7 @@ import PortalEvidenceController from '@/actions/App/Modules/Telework/Http/Contro
 import { GENERAL, photoFields } from '@/lib/telework/answers';
 
 /** The photos a person picks for one request of the Comisión, and their single send. */
-export function useEvidencePhotos(token: string, requestId: string) {
+export function useEvidencePhotos(slug: string, requestId: string) {
     const [photos, setPhotos] = useState<File[]>([]);
     const form = useForm({});
     const errors: Partial<Record<string, string>> = form.errors;
@@ -18,7 +18,7 @@ export function useEvidencePhotos(token: string, requestId: string) {
             form.transform(() => photoFields({ [GENERAL]: photos }));
             form.post(
                 PortalEvidenceController.photos.url({
-                    token,
+                    tenant: slug,
                     evidenceRequest: requestId,
                 }),
                 { forceFormData: true },
