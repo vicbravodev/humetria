@@ -40,8 +40,9 @@ function leaveVacationsPortal(bool $periods = true): array
 
     workIn($tenant);
 
-    // Ana opens her vacations without a session: she enters with a link she asked for and lands back on them.
-    return ['ana' => $ana, 'boss' => $boss, 'url' => '/me/acme/vacations', 'enter' => enteringTo($ana->id, 'Mis vacaciones')];
+    // Ana opens her vacations without a session: she enters with a link she asked for and lands back on them, and proves it
+    // is her with a code (asking for days takes a recent proof).
+    return ['ana' => $ana, 'boss' => $boss, 'url' => '/me/acme/vacations', 'enter' => enteringProvedTo($ana->id, 'Mis vacaciones')];
 }
 
 // Boards LS-Portal and N037-Portal: one column, the person's own frame.

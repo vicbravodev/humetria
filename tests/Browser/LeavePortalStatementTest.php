@@ -38,7 +38,7 @@ function leaveStatementPortal(): array
 it('shows the statement and lets the person confirm they received it', function (bool $dark, bool $mobile): void {
     $portal = leaveStatementPortal();
 
-    visitPage('leave/portal-statement', $portal['url'], $dark, $mobile, enteringTo($portal['ana'], 'Constancia de vacaciones'))
+    visitPage('leave/portal-statement', $portal['url'], $dark, $mobile, enteringProvedTo($portal['ana'], 'Constancia de vacaciones'))
         ->assertSee('Constancia de vacaciones')
         ->assertSee('Ana Solís')
         ->assertSee('2 años')

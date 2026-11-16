@@ -209,6 +209,31 @@ function provedWithCode(AwaitableWebpage $page, string $text): mixed
 }
 
 /**
+ * In the browser: enteringTo(), and then, as a person without a key does before something delicate, the screen to prove it is
+ * them with a code by email (the mail is faked if it was not), and back on the page, which shows `$text`. Its delicate forms
+ * then go straight through: the proof holds while the test's clock stands still.
+ *
+ * @return Closure(AwaitableWebpage): mixed
+ */
+function enteringProvedTo(string $employeeId, string $text): Closure
+{
+    $enter = enteringTo($employeeId, $text);
+    $slug = Tenant::query()->findOrFail(App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId)->tenant_id)->slug;
+
+    return function (AwaitableWebpage $page) use ($enter, $slug, $text): mixed {
+        if (! Illuminate\Support\Facades\Notification::getFacadeRoot() instanceof Illuminate\Support\Testing\Fakes\NotificationFake) {
+            Illuminate\Support\Facades\Notification::fake();
+        }
+
+        $enter($page);
+        $there = $page->url();
+        provedWithCode($page->navigate("/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Hola,');
+
+        return $page->navigate($there)->waitForText($text);
+    };
+}
+
+/**
  * The scope Humi works in for a new person of `$tenant` with `$role`, as the server builds it for a request there.
  */
 function assistantScopeIn(Tenant $tenant, TenantRole $role = TenantRole::Hr): AssistantScope

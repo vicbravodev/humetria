@@ -17,6 +17,8 @@ use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\PortalTeamPages;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -170,6 +172,26 @@ it('sends nothing of who did not ask, and nobody\'s id', function (): void {
     expect($sent)->toContain('Ana Solís')
         ->not->toContain('Caro Luz', 'Dan Gil', 'Nota de Dan', $this->ana->id, $this->caro->id, $this->boss->id, 'premium', 'amount', 'salary');
 });
+
+it('approves or rejects only after a recent proof that it is the person who leads', function (EntryVia $via, int $minutes): void {
+    $approve = leaveTeamRequest($this->ana);
+    $reject = leaveTeamRequest($this->caro);
+    enteredAs($this->boss->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.vacations.team.show', $this->slug);
+
+    $this->from($page)->post(route('portal.vacations.team.approve', [$this->slug, $approve->id]))->assertRedirect($page)->assertInertiaFlash('proofRequired');
+    $this->from($page)->post(route('portal.vacations.team.reject', [$this->slug, $reject->id]), ['reason' => 'Cierre de mes'])->assertRedirect($page);
+    expect(LeaveRequest::query()->where('status', 'requested')->count())->toBe(2);
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.vacations.team.approve', [$this->slug, $approve->id]))->assertSessionHasNoErrors();
+    $this->from($page)->post(route('portal.vacations.team.reject', [$this->slug, $reject->id]), ['reason' => 'Cierre de mes'])->assertSessionHasNoErrors();
+    expect($approve->refresh()->status->value)->toBe('approved')->and($reject->refresh()->status->value)->toBe('rejected');
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
 
 it('approves: the request changes and the days are charged to the ledger, the oldest period first', function (): void {
     $request = leaveTeamRequest($this->ana);

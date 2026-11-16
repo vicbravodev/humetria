@@ -71,7 +71,7 @@ it('shows a manager the requests that wait for them, each with where its days wo
 it('lets a manager approve one request and reject another with its reason', function (bool $dark, bool $mobile): void {
     $team = leaveTeamPortal();
 
-    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile, enteringTo($team['boss'], 'Solicitudes de mi equipo'))
+    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile, enteringProvedTo($team['boss'], 'Solicitudes de mi equipo'))
         ->click('li:has-text("Viaje familiar") button:has-text("Aprobar")')
         ->assertSee('¿Aprobar la solicitud de Ana Solís?')
         ->click('[role=dialog] button[type=submit]')

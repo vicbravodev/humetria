@@ -8,6 +8,8 @@ use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Support\StatementSheet;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -45,6 +47,23 @@ it('shows the sheet: seniority, days, when to enjoy them and the premium as a pe
                 'issuedOn' => '15 de marzo de 2026', 'acknowledgedOn' => null,
             ]));
 });
+
+it('takes the confirmation of the statement only after a recent proof that it is the person, and shows it without one', function (EntryVia $via, int $minutes): void {
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.vacations.statements.show', [$this->slug, $this->statement->id]);
+
+    $this->get($page)->assertOk();
+    $this->from($page)->post(route('portal.vacations.statements.acknowledge', [$this->slug, $this->statement->id]))->assertRedirect($page)->assertInertiaFlash('proofRequired');
+    expect($this->statement->refresh()->acknowledged_at)->toBeNull();
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.vacations.statements.acknowledge', [$this->slug, $this->statement->id]))->assertRedirect($page)->assertSessionHasNoErrors();
+    expect($this->statement->refresh()->acknowledged_at)->not->toBeNull();
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
 
 it('turns the sheet into a received one once the person confirms, only once', function (): void {
     $this->post(route('portal.vacations.statements.acknowledge', [$this->slug, $this->statement->id]))

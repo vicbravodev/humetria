@@ -13,6 +13,8 @@ use App\Modules\Leave\Support\PortalVisitor;
 use App\Modules\Leave\Support\VacationsWorkerSection;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -34,6 +36,24 @@ beforeEach(function (): void {
     $this->newer = leavePortalPeriod($this->ana, 2, '2026-03-15', 14);
     $this->slug = asPerson($this->ana->id);
 });
+
+it('takes a request for days only after a recent proof that it is the person', function (EntryVia $via, int $minutes): void {
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.vacations.show', $this->slug);
+    $dates = ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10'];
+
+    $this->from($page)->post(route('portal.vacations.requests.store', $this->slug), $dates)->assertRedirect($page)->assertInertiaFlash('proofRequired.mode', 'code');
+    expect(LeaveRequest::query()->count())->toBe(0);
+    Notification::assertNothingSent();
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.vacations.requests.store', $this->slug), $dates)->assertRedirect($page)->assertSessionHasNoErrors();
+    expect(LeaveRequest::query()->count())->toBe(1);
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
 
 function leavePortalPeriod(Employee $person, int $years, string $anniversary, int $statutory, int $extra = 0): LeaveEntitlement
 {
