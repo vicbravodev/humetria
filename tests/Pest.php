@@ -44,9 +44,12 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature', 'Browser', 'Ssr');
 
-// Preparing the demo publishes the NOM-037 documents as PDFs: on a fake disk, so no test leaves files on the real one.
+// Preparing the demo publishes the NOM-037 documents as PDFs, and any module may store its files: every module's disk is
+// fake, so no test leaves files on a real one.
 pest()->beforeEach(function (): void {
-    Storage::fake(config()->string('filesystems.telework_files'));
+    foreach (config()->array('billing.storage_disks') as $key) {
+        Storage::fake(config()->string("filesystems.{$key}"));
+    }
 })->in('Feature/Demo');
 
 // Each CI runner drives four browsers at once: an action that waits for a button or a page gets 15 s instead of Pest's 5 s,

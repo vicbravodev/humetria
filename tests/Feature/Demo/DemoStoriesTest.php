@@ -6,6 +6,7 @@ use App\Modules\Demos\Contracts\DemoWorkspace;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 
 /*
  * Preparing the demo takes most of a minute inside a test's transaction, so every story is checked on one prepared company:
@@ -33,5 +34,15 @@ it('tells the whole story on one prepared demo company', function (): void {
         foreach (require __DIR__."/Sections/{$story}.php" as $name => $group) {
             section("{$story}: {$name}", fn () => $group($logged));
         }
+    }
+});
+
+it('keeps every file a module writes for the demo on a fake disk', function (): void {
+    $disks = config()->array('billing.storage_disks');
+
+    expect($disks)->toEqualCanonicalizing(['telework_files', 'seating_files', 'intervention_files', 'disclosure_files']);
+
+    foreach ($disks as $key) {
+        expect(Storage::disk(config()->string("filesystems.{$key}"))->path(''))->toContain('framework/testing/disks');
     }
 });
