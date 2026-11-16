@@ -9,7 +9,6 @@ use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Models\LeaveTermination;
-use App\Modules\Leave\Notifications\VacationsPortalLink;
 use App\Modules\Leave\Support\BalancePages;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -123,7 +122,7 @@ it('shows the balances to a viewer but sends the links only owner and hr', funct
     $this->actingAs($user)->post(route('tenant.vacations.balances.links', $this->tenant), ['employees' => [$this->ana->id]])
         ->assertStatus($allowed ? 302 : 403);
 
-    $allowed ? Notification::assertSentOnDemandTimes(VacationsPortalLink::class, 1) : Notification::assertNothingSent();
+    $allowed ? Notification::assertSentOnDemandTimes(App\Modules\WorkerAccess\Notifications\WorkerInvitation::class, 1) : Notification::assertNothingSent();
 })->with([
     'owner' => [TenantRole::Owner, true],
     'hr' => [TenantRole::Hr, true],
@@ -142,7 +141,7 @@ it('sends the link only to people of this company', function (): void {
     $this->actingAs($this->hr)->post(route('tenant.vacations.balances.links', $this->tenant), ['employees' => [$stranger->id, $this->ana->id]])
         ->assertRedirect();
 
-    Notification::assertSentOnDemandTimes(VacationsPortalLink::class, 1);
+    Notification::assertSentOnDemandTimes(App\Modules\WorkerAccess\Notifications\WorkerInvitation::class, 1);
     $this->actingAs($this->hr)->post(route('tenant.vacations.balances.links', $this->tenant), ['employees' => []])->assertSessionHasErrors('employees');
 });
 
