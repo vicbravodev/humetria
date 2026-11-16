@@ -3,7 +3,7 @@ import { useState } from 'react';
 import EnrollScreen from '@/components/attendance/enroll-screen';
 import { useEnrollment } from '@/hooks/use-enrollment';
 import type { EnrollStep } from '@/lib/attendance/enroll';
-import { deviceLabel } from '@/lib/attendance/webauthn';
+import { deviceLabel } from '@/lib/webauthn';
 
 /**
  * A person links their phone with the link RH sent them, in four steps (board P1): reads and accepts the agreement, confirms

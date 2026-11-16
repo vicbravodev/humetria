@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import { enrollDevice } from '@/lib/attendance/enroll';
 import type { EnrollOutcome, EnrollRequest } from '@/lib/attendance/enroll';
-import type { CreatedKey } from '@/lib/attendance/webauthn';
+import type { CreatedKey } from '@/lib/webauthn';
 
 /** `navigator.credentials.create()` for a new key; null when the browser gave something else. */
 async function createKey(

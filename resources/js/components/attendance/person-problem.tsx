@@ -8,7 +8,7 @@ import {
     TriangleAlert,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import ToneTile from '@/components/attendance/tone-tile';
+import ToneTile from '@/components/humetria/tone-tile';
 import type { Problem, ProblemKind } from '@/lib/attendance/punch-problem';
 
 const ICONS: Record<ProblemKind, LucideIcon> = {

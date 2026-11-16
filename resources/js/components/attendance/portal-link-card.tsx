@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronRight } from 'lucide-react';
-import ToneTile from '@/components/attendance/tone-tile';
+import ToneTile from '@/components/humetria/tone-tile';
 
 /** One of the ways «Mi jornada» goes on, as a whole tappable card: its icon, what it is for and an arrow. */
 export default function PortalLinkCard({

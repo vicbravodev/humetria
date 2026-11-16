@@ -5,7 +5,7 @@ import {
     agreementOf,
 } from '@/lib/attendance/punch-agreement';
 import type { AcceptRequest } from '@/lib/attendance/punch-agreement';
-import type { SignedKey } from '@/lib/attendance/webauthn';
+import type { SignedKey } from '@/lib/webauthn';
 
 const options = { challenge: 'AQID', rpId: 'localhost' };
 

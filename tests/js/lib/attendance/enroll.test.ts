@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { CreatedKey } from '@/lib/attendance/webauthn';
+import type { CreatedKey } from '@/lib/webauthn';
 import {
     AGREEMENT_POINTS,
     agreementSections,

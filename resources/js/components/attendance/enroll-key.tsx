@@ -1,8 +1,8 @@
 import { Fingerprint } from 'lucide-react';
 import EnrollProgress from '@/components/attendance/enroll-progress';
 import PersonFrame from '@/components/attendance/person-frame';
-import PersonHeading from '@/components/attendance/person-heading';
-import ToneTile from '@/components/attendance/tone-tile';
+import PersonHeading from '@/components/humetria/person-heading';
+import ToneTile from '@/components/humetria/tone-tile';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 

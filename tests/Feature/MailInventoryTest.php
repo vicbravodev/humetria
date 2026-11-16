@@ -92,6 +92,7 @@ function inventory(): array
         'telework moved' => [fn () => new TeleworkMoved($company, 'Ana', 'A', 'B', $url), true],
         'attendance enrollment' => [fn () => new App\Modules\Attendance\Notifications\EnrollmentInvitation($url, 'Ana', $company), true],
         'attendance device linked' => [fn () => new App\Modules\Attendance\Notifications\DeviceLinked('iPhone', CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'), 'Ana', $company), true],
+        'worker access link requested' => [fn () => new App\Modules\WorkerAccess\Notifications\AccessLinkRequested($url, 'Ana', $company), true],
         'leave request to decide' => [fn () => new App\Modules\Leave\Notifications\RequestToDecide($url, $company, 'Beto', 'Ana', new App\Modules\Leave\Support\RequestSummary(true, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, true)), true],
         'leave request escalated' => [fn () => new App\Modules\Leave\Notifications\RequestEscalated($url, $company, 'Ana', App\Modules\Leave\Enums\EscalationReason::Timeout, new App\Modules\Leave\Support\RequestSummary(false, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, null)), true],
         'leave request decided' => [fn () => new App\Modules\Leave\Notifications\RequestDecided($url, $company, 'Ana', new App\Modules\Leave\Support\RequestSummary(true, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, true), false, 'Cierre de mes'), true],
@@ -137,5 +138,5 @@ it('speaks to the worker as usted under the button too', function (Closure $make
 })->with(array_map(fn (array $row): array => [$row[0]], array_intersect_key(inventory(), array_flip([
     'vacations portal link', 'leave request decided', 'leave request to decide', 'attendance enrollment', 'attendance device linked',
     'policy to confirm', 'support waiting', 'risks to confirm', 'standing questions', 'portal invitation', 'portal link', 'portal reminder',
-    'notice answered', 'climate feedback published',
+    'notice answered', 'climate feedback published', 'worker access link requested',
 ]))));

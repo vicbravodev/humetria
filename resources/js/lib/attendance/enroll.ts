@@ -1,9 +1,6 @@
 import type { Problem } from '@/lib/attendance/punch-problem';
-import type { CreatedKey } from '@/lib/attendance/webauthn';
-import {
-    creationOptions,
-    registrationPayload,
-} from '@/lib/attendance/webauthn';
+import type { CreatedKey } from '@/lib/webauthn';
+import { creationOptions, registrationPayload } from '@/lib/webauthn';
 
 /** How linking the device ended. */
 export type EnrollOutcome =

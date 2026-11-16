@@ -7,7 +7,7 @@ import {
     registrationPayload,
     requestOptions,
     toBase64url,
-} from '@/lib/attendance/webauthn';
+} from '@/lib/webauthn';
 
 const bytes = (...values: number[]) => new Uint8Array(values);
 

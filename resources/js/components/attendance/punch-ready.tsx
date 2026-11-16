@@ -6,7 +6,7 @@ import LinkDeviceNote from '@/components/attendance/link-device-note';
 import LocationNote from '@/components/attendance/location-note';
 import NotYou from '@/components/attendance/not-you';
 import PersonFrame from '@/components/attendance/person-frame';
-import PersonHeading from '@/components/attendance/person-heading';
+import PersonHeading from '@/components/humetria/person-heading';
 import PunchButton from '@/components/attendance/punch-button';
 import PunchFeedback from '@/components/attendance/punch-feedback';
 import PunchHint from '@/components/attendance/punch-hint';

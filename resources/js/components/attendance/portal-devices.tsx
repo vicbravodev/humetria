@@ -1,6 +1,6 @@
 import { Form } from '@inertiajs/react';
 import { Smartphone } from 'lucide-react';
-import ToneTile from '@/components/attendance/tone-tile';
+import ToneTile from '@/components/humetria/tone-tile';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { describeDate } from '@/lib/calendar-date';

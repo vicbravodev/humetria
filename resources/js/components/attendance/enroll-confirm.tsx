@@ -1,7 +1,7 @@
 import { Info } from 'lucide-react';
 import EnrollProgress from '@/components/attendance/enroll-progress';
 import PersonFrame from '@/components/attendance/person-frame';
-import PersonHeading from '@/components/attendance/person-heading';
+import PersonHeading from '@/components/humetria/person-heading';
 import Initials from '@/components/humetria/initials';
 import { Button } from '@/components/ui/button';
 

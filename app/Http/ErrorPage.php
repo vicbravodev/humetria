@@ -24,7 +24,7 @@ final class ErrorPage
 
     /** What a throttled response says about trying again, kept on the page that replaces it. */
     /** The pages whoever is not in the panel opens with their own link, spoken to as «usted». */
-    public const array WORKER_ROUTES = ['survey.*', 'engagement.survey.*', 'complaints.public.*', 'complaints.follow-up.*', 'portal.*', 'attendance.device.*', 'workers.*'];
+    public const array WORKER_ROUTES = ['survey.*', 'engagement.survey.*', 'complaints.public.*', 'complaints.follow-up.*', 'portal.*', 'attendance.device.*', 'worker.*', 'workers.*'];
 
     private const array KEPT_HEADERS = ['Retry-After', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'];
 

@@ -1,6 +1,6 @@
 import AgreementCard from '@/components/attendance/agreement-card';
 import PersonFrame from '@/components/attendance/person-frame';
-import PersonHeading from '@/components/attendance/person-heading';
+import PersonHeading from '@/components/humetria/person-heading';
 import { Button } from '@/components/ui/button';
 import { usePunchAgreement } from '@/hooks/use-punch-agreement';
 import type { Agreement } from '@/lib/attendance/punch-agreement';

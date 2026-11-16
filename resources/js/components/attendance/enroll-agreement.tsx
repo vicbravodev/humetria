@@ -3,7 +3,7 @@ import { useState } from 'react';
 import AgreementCard from '@/components/attendance/agreement-card';
 import EnrollProgress from '@/components/attendance/enroll-progress';
 import PersonFrame from '@/components/attendance/person-frame';
-import PersonHeading from '@/components/attendance/person-heading';
+import PersonHeading from '@/components/humetria/person-heading';
 import { Button } from '@/components/ui/button';
 import { AGREEMENT_POINTS } from '@/lib/attendance/enroll';
 

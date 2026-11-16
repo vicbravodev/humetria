@@ -1,6 +1,6 @@
 import { Clock, Coffee, Flag, LogIn } from 'lucide-react';
-import ToneTile from '@/components/attendance/tone-tile';
-import type { Tone } from '@/components/attendance/tone-tile';
+import ToneTile from '@/components/humetria/tone-tile';
+import type { Tone } from '@/components/humetria/tone-tile';
 import type { DayStatus } from '@/lib/attendance/punch-view';
 
 const LOOKS = {

@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { CircleCheck, Smartphone } from 'lucide-react';
 import EnrollProgress from '@/components/attendance/enroll-progress';
 import PersonFrame from '@/components/attendance/person-frame';
-import ToneTile from '@/components/attendance/tone-tile';
+import ToneTile from '@/components/humetria/tone-tile';
 import { Button } from '@/components/ui/button';
 
 /** The phone is linked (board P1, step 4): what the person can do now, and that the key stays in their phone. */

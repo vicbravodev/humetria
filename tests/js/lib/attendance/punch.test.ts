@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { punch, punchDay } from '@/lib/attendance/punch';
 import type { PunchRequest } from '@/lib/attendance/punch';
-import type { SignedKey } from '@/lib/attendance/webauthn';
+import type { SignedKey } from '@/lib/webauthn';
 
 const options = { challenge: 'AQID', rpId: 'localhost' };
 

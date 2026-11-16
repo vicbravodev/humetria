@@ -1,6 +1,6 @@
 import { Clock, UserX } from 'lucide-react';
 import PersonFrame from '@/components/attendance/person-frame';
-import ToneTile from '@/components/attendance/tone-tile';
+import ToneTile from '@/components/humetria/tone-tile';
 
 /** The person left the way without linking (board P1): because the link is not theirs, or because it is not the time. */
 export default function EnrollExit({

@@ -152,6 +152,18 @@ function agreementAccepted(string $employeeId, ?string $credentialId = null): vo
 }
 
 /**
+ * Opens a session of `$employeeId` in their company on this test's browser, as entering does (with their key unless told
+ * otherwise; a key needs its id). Works in the company of the person.
+ */
+function enteredAs(string $employeeId, App\Modules\WorkerAccess\Enums\EntryVia $via = App\Modules\WorkerAccess\Enums\EntryVia::Key, ?string $credentialId = null): void
+{
+    $person = App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId);
+    workIn(Tenant::query()->findOrFail($person->tenant_id));
+
+    resolve(App\Modules\WorkerAccess\Support\WorkerSessionStore::class)->start($employeeId, $via, $credentialId);
+}
+
+/**
  * The scope Humi works in for a new person of `$tenant` with `$role`, as the server builds it for a request there.
  */
 function assistantScopeIn(Tenant $tenant, TenantRole $role = TenantRole::Hr): AssistantScope
