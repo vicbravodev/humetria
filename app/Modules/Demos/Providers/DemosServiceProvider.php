@@ -51,5 +51,8 @@ final class DemosServiceProvider extends ServiceProvider
                 Limit::perDay(20)->by('day:'.$request->ip())->response($tooMany),
             ];
         });
+
+        // The door of a live demo: a whole room scans it from one Wi-Fi within a minute, and nobody can try codes in bulk.
+        RateLimiter::for('demo-door', fn (Request $request): Limit => Limit::perMinute(120)->by('demo-door:'.$request->ip()));
     }
 }
