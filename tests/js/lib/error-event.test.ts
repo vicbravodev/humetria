@@ -128,7 +128,9 @@ describe('errorOnlyEvent', () => {
             properties: expect.objectContaining({ token: 't' }),
         });
     });
+});
 
+describe('errorOnlyEvent: the exception list', () => {
     it('masks what the message may quote and keeps where it broke, without the page address', () => {
         const result = send(
             exception({
