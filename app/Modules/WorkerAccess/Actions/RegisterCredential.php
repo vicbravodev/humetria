@@ -10,6 +10,7 @@ use App\Modules\WorkerAccess\Data\CredentialData;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -23,7 +24,8 @@ final readonly class RegisterCredential
     public function handle(string $employeeId, CredentialData $key, string $label): ?WorkerCredential
     {
         try {
-            $credential = WorkerCredential::query()->create([
+            // Its own savepoint: a key saved twice must not abort the caller's transaction.
+            $credential = DB::transaction(fn (): WorkerCredential => WorkerCredential::query()->create([
                 'tenant_id' => $this->tenant->id(),
                 'employee_id' => $employeeId,
                 'credential_id' => $key->credentialId,
@@ -34,7 +36,7 @@ final readonly class RegisterCredential
                 'label' => $label,
                 'registered_via' => 'issued_link',
                 'registered_at' => CarbonImmutable::now(),
-            ]);
+            ]));
         } catch (UniqueConstraintViolationException) {
             return null;
         }
