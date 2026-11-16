@@ -101,10 +101,11 @@ foreach (modules() as $module) {
         ->toHaveMethod('handle');
 
     foreach (internalNamespacesOf($module) as $internalNamespace) {
-        // The module's factories (database/factories/{Module}, CLAUDE.md) build its models, so they count as inside it.
+        // The module's factories (database/factories/{Module}, CLAUDE.md) build its models, so they count as inside it. The demo's
+        // story (database/seeders/Demo) is no module: it tells each module's part through that module's own actions, as a person would.
         arch("{$internalNamespace} is internal to the {$module} module")
             ->expect($internalNamespace)
-            ->toOnlyBeUsedIn(["App\\Modules\\{$module}", "Database\\Factories\\{$module}"]);
+            ->toOnlyBeUsedIn(["App\\Modules\\{$module}", "Database\\Factories\\{$module}", 'Database\\Seeders\\Demo']);
 
         if (str_ends_with($internalNamespace, '\\Actions') || str_ends_with($internalNamespace, '\\Models')) {
             arch("{$internalNamespace} does not depend on HTTP")

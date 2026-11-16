@@ -6,7 +6,9 @@ namespace App\Modules\Demos\Providers;
 
 use App\Models\User;
 use App\Modules\Demos\Contracts\DemoLeads;
+use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Demos\Support\DemoLeadRegistry;
+use Database\Seeders\Demo\DemoWorkspaceRunner;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -20,6 +22,8 @@ final class DemosServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(DemoLeads::class, DemoLeadRegistry::class);
+        // The story lives outside the modules (database/seeders/Demo, autoloaded in production too): it drives every module's actions.
+        $this->app->bind(DemoWorkspace::class, DemoWorkspaceRunner::class);
     }
 
     public function boot(): void
