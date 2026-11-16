@@ -47,6 +47,8 @@ final class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             // Where to write to Humetria; null while none is configured, so no notice carries an empty mail link.
             'support' => ['email' => $this->supportEmail()],
+            // The profiles configured for the landing footer: only https links, in a fixed order.
+            'social' => $this->socialLinks(),
             'auth' => [
                 'user' => $request->user(),
                 'isSuperadmin' => $request->user()?->isSuperadmin() ?? false,
@@ -65,6 +67,24 @@ final class HandleInertiaRequests extends Middleware
             'firstSteps' => fn (): ?array => $this->firstSteps($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * @return list<array{network: string, url: string}>
+     */
+    private function socialLinks(): array
+    {
+        $links = [];
+
+        foreach (['linkedin', 'facebook', 'instagram'] as $network) {
+            $url = config("app.social.{$network}");
+
+            if (is_string($url) && str_starts_with($url, 'https://')) {
+                $links[] = ['network' => $network, 'url' => $url];
+            }
+        }
+
+        return $links;
     }
 
     private function supportEmail(): ?string
