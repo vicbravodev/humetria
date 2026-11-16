@@ -45,13 +45,17 @@ Se maneja desde la **sala de demostración**, `/admin/demo` («Sala de demostrac
 3. Cada persona del público escanea y recibe **un trabajador demo propio** (hay 40 reservados, repartidos en los 4
    centros). La puerta le da un enlace de un solo uso (WorkerAccess, el que RH emite, a nombre de la jefa de RH de la
    demo): pulsa «Continuar», se le pide **crear su llave de acceso** en su teléfono (huella, rostro o PIN) y entra a su
-   portal personal (`/me/{slug}`). Una cookie le devuelve el mismo trabajador si vuelve a escanear (con un enlace nuevo:
+   portal personal (`/me/{slug}`). La pantalla de la llave no tiene «Ahora no»: quien quiera mirar antes, abre
+   `/me/{slug}` directamente. El enlace vale 48 h o hasta el siguiente reinicio (sobrevive a la sesión de la sala:
+   cerrarla no lo anula). Una cookie le devuelve el mismo trabajador si vuelve a escanear (con un enlace nuevo:
    el anterior ya se gastó o deja de servir). Cada trabajador se
    entrega **una sola vez hasta el siguiente reinicio**: no hay «liberar». Sin trabajadores libres la puerta dice
    «La sala está llena»: reiniciar. La sala muestra cuántos quedan libres.
 4. Qué hace el público desde su portal. Lo delicado (confirmar la política, el puesto de pie o un documento de
    teletrabajo, el mensaje de apoyo) pide una prueba reciente: la da **con la llave que creó** al entrar. Quien no creó
-   llave no puede: el código por correo nunca llega, porque el correo de la demo no sale.
+   llave no puede: el código por correo nunca llega, porque el correo de la demo no sale. Es el alta real del producto,
+   no un atajo de la demo: **avisar al público** antes de que escanee que se le pedirá crear una llave en su teléfono.
+   La llave se queda en su teléfono a nombre de una persona ficticia y no sirve tras un reinicio: puede borrarla.
    - contestar el **pulso** abierto o la **evaluación NOM-035** abierta (el avance sube en vivo);
    - **confirmar la política** publicada (sus acuses están pendientes a propósito);
    - poner una **denuncia** en el canal de la demo (QR en la sala). El canal de la demo acepta 60 envíos por hora y 120
@@ -71,7 +75,7 @@ Se maneja desde la **sala de demostración**, `/admin/demo` («Sala de demostrac
   conocido de Engagement, pendiente de su propio arreglo).
 - **Ley Silla (Oficinas Querétaro):** cinco puntos quedan en «Falta» a propósito, para completarlos en vivo: R2
   (evaluación vigente de cada persona que trabaja de pie), R3 (acta de cada evaluación firmada), R8 (confirmación de cada
-  persona evaluada: una persona de la puerta confirma en vivo), R10 (reglamento interior firmado, depositado y repartido) y
+  persona evaluada: una persona de la puerta confirma en vivo con su llave), R10 (reglamento interior firmado, depositado y repartido) y
   R12 (diagnóstico y programa de seguridad y salud). R7 (medida para cada evaluación Media o Alta) queda en aviso.
 - **Humi está vivo:** cada pregunta es una llamada real al modelo, cuesta y llega a PostHog como `$ai_generation`.
 - **Acuses de la política: 77 %.** No es un error: las 40 personas de la puerta quedan pendientes.
@@ -114,6 +118,12 @@ solo con ids.
 - **La puerta `demo/{code}`** es pública: el código se guarda solo como hash y se muestra una vez, tiene throttle
   por dirección (`demo-door`) y responde la misma página si el código es desconocido, está cerrado o venció. Solo entrega
   personas activas de la empresa demo.
+- **Los enlaces de la puerta** son enlaces de un solo uso de WorkerAccess emitidos como la jefa de RH de la demo: valen
+  48 h o hasta el siguiente reinicio, sobreviven a la sesión de la sala (`CloseDoor` no los anula) y solo se emiten dentro
+  de la demo para una persona de la puerta. Cada uno deja el log `worker_access.link_created`, pero **ninguna entrada en
+  la bitácora**: siendo de solo inserción, crecería con cada escaneo (aceptado). Pulsar «Continuar» es lo único que gasta
+  el enlace: la vista previa de un QR no lo quema. Lo delicado pide una prueba reciente, que el visitante solo puede dar
+  con una llave que cree en su propio teléfono.
 
 ## 7. Si algo falla
 
@@ -127,3 +137,5 @@ solo con ids.
 | El QR de denuncias da error | `APP_KEY` rotada o código rotado en la demo | Reiniciar demo |
 | No se puede emitir el enlace del checador | La pantalla ya muestra su código | Usar esa pantalla, o reiniciar demo |
 | «Por jefe» da 404 | Bug conocido (§4) | No abrirlo en la sesión |
+| Demasiadas solicitudes (429) al abrir el enlace o crear la llave | Límites de WorkerAccess por dirección: abrir el enlace 30 por minuto, crear la llave 30 por minuto, dar la prueba 60 por minuto. Un salón de ~40 personas detrás de una sola Wi-Fi los alcanza | Pedir que escaneen en tandas de ~10 o con datos móviles. La puerta permite 120 por minuto y el canal de denuncias se subió para la demo; los límites de WorkerAccess no se subieron (son los de seguridad del producto): subirlos es decisión del dueño |
+| Pide una prueba o no puede confirmar | El visitante aún no tiene llave | Que cree su llave en su teléfono (§3) |
