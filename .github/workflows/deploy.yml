@@ -23,7 +23,7 @@ jobs:
   # mismas, porque .dockerignore deja fuera docs: no se despliega. Se pregunta a esa corrida si su job `build` corrió (`tests` va en shards y su nombre lleva el número);
   # si no se puede leer la respuesta, se despliega.
   pipeline:
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -40,7 +40,7 @@ jobs:
   image:
     needs: pipeline
     # always(): a mano el job `pipeline` no corre, y sin esto GitHub se saltaría también este.
-    if: always() && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && needs.pipeline.outputs.tests != 'skipped'))
+    if: always() && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository && needs.pipeline.outputs.tests != 'skipped'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

@@ -740,3 +740,22 @@ it('keeps a space between the words of the headline, though each one is its own 
         ->assertScript("() => [...document.querySelectorAll('#hero-title span')].slice(0, -1).every((word) => word.textContent.endsWith('\\u00A0'))")
         ->assertScript("() => document.querySelector('#hero-title').innerText.replace(/\\u00A0/g, ' ').includes('Tu gente contesta desde el celular.')");
 });
+
+it('links the configured social profiles in the footer, as plain links that open in a new tab', function (): void {
+    config(['app.social' => [
+        'linkedin' => 'https://www.linkedin.com/company/humetria',
+        'facebook' => null,
+        'instagram' => 'https://www.instagram.com/humetria',
+    ]]);
+
+    visit('/')
+        ->assertScript("() => [...document.querySelectorAll('footer [aria-label=\"Redes sociales\"] a')].map((a) => a.getAttribute('href') + '|' + a.target + '|' + a.rel).join(',')", 'https://www.linkedin.com/company/humetria|_blank|noopener noreferrer,https://www.instagram.com/humetria|_blank|noopener noreferrer')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows no social list in the footer while none is configured', function (): void {
+    config(['app.social' => ['linkedin' => null, 'facebook' => null, 'instagram' => null]]);
+
+    visit('/')
+        ->assertScript("() => document.querySelector('footer [aria-label=\"Redes sociales\"]') === null");
+});
