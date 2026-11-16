@@ -148,8 +148,13 @@ layouts/  hooks/  lib/  types/
   Si Node falla la página responde 200 sin cuerpo renderizado (React la pinta), deja un `ssr.render_failed` (una línea por tipo
   y minuto, sin props) y `X-Rendered-By` dice `csr`; nunca se responde 5xx por Node. Quién opera el servicio `ssr`
   (variables, rollback, señales) lo dice `docs/operations/ssr.md`: se actualiza en el mismo PR que cambie esas piezas.
-- PostHog (nube US, `posthog-js` en su build sin scripts externos) arranca solo en el documento de la landing
+- PostHog (nube US, `posthog-js` en su build sin scripts externos) **mide** solo en el documento de la landing
   (`App\Http\Analytics`: ruta `home`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
+  Toda otra página, con el token, lo carga en **modo solo errores** (`error-tracking-config`, `lib/error-tracking.ts`):
+  solo `$exception`, sin dirección (origen + componente de la página + `request_id`), sin persistencia ni persona.
+  Humi (y todo agente de `laravel/ai`) manda cada llamada como `$ai_generation` (`SendLlmAnalytics`): solo Humi lleva
+  prompt y respuesta; un agente sobre texto de encuestas (comentarios de clima) manda solo números, y un test lo exige.
+  Detalle y alertas: `docs/operations/observability.md`.
   `POSTHOG_CONSENT_DEFAULT` en `denied` (el valor por omisión) apaga la medición de visitantes: sin bloque `analytics-config`, sin
   descarga de PostHog, sin su origen en la CSP, sin `humetria_acq`. En producción el dueño lo puso en `granted` (Dokploy).
   Sin autocapture, sin grabación de sesión, sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento local) y sin IP.
@@ -159,8 +164,10 @@ layouts/  hooks/  lib/  types/
   `data-track-target="id"` (un solo escucha de clics, `use-landing-measurement`); sus propiedades son identificadores o números
   (`cleanProperties`), nunca texto libre. Un evento nuevo se agrega al catálogo de ese documento. Se mide la landing; el panel (`/admin`),
   las encuestas y los portales **no** (hoy; medir el panel es un trabajo aparte con su revisión de privacidad).
-- Errores: el navegador de la landing manda a PostHog `$exception` con el mensaje enmascarado (correos y números) y el servidor manda
-  (`App\Support\PostHogExceptions`, en cola, mejor esfuerzo) solo clase, archivo, línea y traza sin argumentos, nunca el mensaje, la URL
+- Errores: el navegador de toda página manda a PostHog `$exception` con el mensaje enmascarado (correos y números);
+  `AppErrorBoundary` muestra «Algo salió mal» con el código para soporte. El servidor manda
+  (`App\Support\PostHogExceptions`, en cola, mejor esfuerzo, máximo 10 por clase al minuto, y nunca rompe el reporte: cola o
+  limitador caídos → `posthog.dispatch_failed`) solo clase, archivo, línea y traza sin argumentos, nunca el mensaje, la URL
   ni el usuario. El del servidor solo exige el token (no lleva datos de visitantes); un `report()` nuevo en `bootstrap/app.php`
   va después del de PostHog, porque los que devuelven `false` cortan la cadena.
 - La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente
@@ -184,7 +191,11 @@ layouts/  hooks/  lib/  types/
 
 ## Logging y auditoría
 
-- Logs en JSON, una línea por evento (tap `App\Logging\StructuredLogging` en single, daily y stderr).
+- Logs en JSON, una línea por evento (tap `App\Logging\StructuredLogging` en single, daily y stderr). En producción
+  `LOG_STACK=stderr,posthog`: el canal `posthog` (`App\Logging\PostHogLogs`) manda a PostHog Logs en lote al terminar cada
+  petición, job o comando, ya redactado. Fallos de jobs y del scheduler se loguean en un solo lugar (`queue.job_failed`,
+  `queue.long_wait`, `schedule.command_failed`, `schedule.heartbeat` cada 5 min): de ahí salen las alertas de PostHog.
+  Un job nuevo de un solo correo lleva `tries=3`, `backoff=[60,300]`, salvo que reintentar no sea seguro.
 - `AssignRequestId` pone `request_id` y `AssignRequestContext` pone `user_id` en `Context`: aparecen en cada línea
   de log, en la bitácora y en los jobs en cola. `tenant_id` lo agrega `ResolveTenant` (Tenancy) en las rutas de una
   empresa; `impersonator_id` lo agrega `AssignRequestContext` mientras se impersona.
