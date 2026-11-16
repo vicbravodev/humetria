@@ -54,6 +54,16 @@ it('says Humi conversations go to PostHog in the United States, and the anonymou
         ->and($listener)->toContain('$prompt->agent instanceof HumiAssistant')->toContain("'\$ai_input'");
 });
 
+it('says browser errors of the rest of the platform go to PostHog without the page address, and keeps nothing in the browser', function (): void {
+    $text = privacyNoticeText();
+    $options = (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/error-tracking.ts');
+
+    expect($text)->toContain('no medimos visitas')->not->toContain('el panel no lo cargan')
+        ->toContain('si algo falla en tu navegador')->toContain('nunca la dirección de la página')
+        ->toContain('no guarda nada en tu navegador')
+        ->and($options)->toContain("persistence: 'memory'")->toContain("person_profiles: 'never'")->toContain('ip: false');
+});
+
 it('says the theme preference lasts a year, as the appearance hook writes it', function (): void {
     expect(privacyNoticeText())->toContain('en el almacenamiento local de tu navegador')
         ->and((string) file_get_contents(dirname(__DIR__, 2).'/resources/js/hooks/use-appearance.tsx'))->toContain('days = 365');

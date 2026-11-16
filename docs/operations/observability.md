@@ -10,6 +10,7 @@ funciona igual. `tests/Unit/OperationsDocsTest.php` exige que este manual nombre
 |-----|------|------------------------|-----------|-----------------|
 | Excepciones del servidor | evento `$exception` en cola (`App\Support\PostHogExceptions`), máximo 10 por clase al minuto | Error tracking | clase, archivo, línea, traza sin argumentos, ruta, `request_id` | el mensaje, la URL, el usuario |
 | Logs | canal `posthog` (`App\Logging\PostHogLogs`), OTLP/HTTP JSON a `https://us.i.posthog.com/i/v1/logs`, en lote al terminar cada petición, job o comando (o cada 100 líneas); nunca por la cola | Logs | el nombre del evento (`modulo.accion`) y su contexto ya redactado (`RedactSensitiveData`); de una excepción, solo su clase, archivo y línea | respuestas, contraseñas, tokens (redactados), el texto de una excepción |
+| Errores del navegador (fuera de la landing) | `$exception` desde `posthog-js` (build sin scripts externos) en modo solo errores (`resources/js/lib/error-tracking.ts`); los mandan el `AppErrorBoundary` (una página que se rompe al pintar), los errores y promesas sin atrapar de `window` y una respuesta fallida de Humi (`HumiStreamError`, no las negativas a propósito) | Error tracking | tipo, mensaje enmascarado (correos, números largos, URLs a su origen), marcos con la ruta del script, `page` (el componente de Inertia), `request_id`, navegador y sistema | la dirección de la página (`$current_url` es solo el origen: la encuesta y los portales llevan un token de un solo uso en la ruta), el referente, la sesión, los pasos previos, el texto de Humi; nada en el navegador (`persistence: 'memory'`), sin perfil ni IP |
 | Llamadas a modelos | evento `$ai_generation` en cola (`App\Modules\Assistant\Listeners\SendLlmAnalytics`), uno por llamada, también si falla | LLM analytics | modelo, proveedor, tokens, latencia en segundos, error (clase), herramientas usadas, `tenant_id`; de **Humi**, además, el prompt completo (instrucciones y mensaje ya enmascarado) y la respuesta | de cualquier otro agente (resumen de comentarios de clima): ningún texto, ni de entrada ni de salida |
 
 Notas:
@@ -21,6 +22,15 @@ Notas:
 - Si Valkey o el limitador fallan al reportar una excepción, se pierde el evento de PostHog, no el log de la excepción:
   queda `posthog.dispatch_failed` (warning). Si PostHog rechaza o no responde un evento: `posthog.send_failed`. Si PostHog
   Logs no responde, ese lote se pierde en silencio (la misma línea ya está en stderr).
+
+- En el navegador hay dos modos y nunca los dos a la vez (`App\Http\Analytics`): la **landing** (ruta `home`) sigue con
+  su medición y su consentimiento (`docs/operations/ssr.md` §8); **toda otra página** (panel, encuestas, buzón, portales,
+  Humi) recibe el bloque `error-tracking-config` (solo token y host) y la CSP abre `https://us.i.posthog.com` en
+  `connect-src`, con el token solo: no lleva datos de visitantes. Sin token, ni bloque ni origen. `before_send` deja pasar
+  únicamente `$exception` y solo las propiedades de una lista cerrada (`resources/js/lib/error-event.ts`).
+- Si una página se rompe, la persona ve «Algo salió mal» con el **código para soporte** (el `request_id`); la página de
+  error 500/503 lo muestra igual. Con ese código se encuentran en Logs las líneas de esa petición y en Error tracking los
+  `$exception` del servidor y del navegador (`request_id`).
 
 ## 2. Variables
 
@@ -50,8 +60,8 @@ Los jobs que mandan un solo correo reintentan 3 veces (60 s y 300 s) antes de `q
 
 Todas con notificación al correo del dueño. Revisar umbrales tras las primeras semanas con clientes.
 
-1. **Pico de errores del servidor** (Error tracking → alerta): más de 10 `$exception` en 15 minutos, o cualquier clase
-   nueva de error. Se ve también en Logs como líneas de nivel error.
+1. **Pico de errores** (Error tracking → alerta): más de 10 `$exception` en 15 minutos, o cualquier clase nueva de
+   error, del servidor (`$lib = humetria-php`) o del navegador (`$lib = web`). Se ve también en Logs como líneas de nivel error.
 2. **Job fallido** (Logs → alerta): al menos 1 línea con cuerpo `queue.job_failed` en 15 minutos.
 3. **Comando programado fallido** (Logs → alerta): al menos 1 línea `schedule.command_failed` en 1 hora.
 4. **Scheduler caído** (Logs → alerta por ausencia): 0 líneas `schedule.heartbeat` en 15 minutos.
@@ -66,3 +76,6 @@ Todas con notificación al correo del dueño. Revisar umbrales tras las primeras
 - Confirmar en producción que PostHog Logs recibe el lote (pestaña Logs, servicio `humetria`) y que acepta OTLP en JSON;
   si respondiera 415, cambiar el envío a protobuf es trabajo aparte (sin dependencia nueva no se puede: avisar).
 - Crear las 7 alertas de la sección 4.
+- Con el token puesto, provocar un error en el panel y en una encuesta y confirmar en Error tracking que llega el
+  `$exception` con `page` y `request_id`, sin la ruta de la página, y que el navegador no hace otras peticiones a PostHog
+  (ni `/flags` ni configuración remota) ni guarda nada en su almacenamiento local.
