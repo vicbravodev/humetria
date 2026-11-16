@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use App\Modules\Leave\Actions\SendPortalLinks;
+use App\Modules\Leave\Actions\InviteToPortal;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
@@ -13,7 +13,7 @@ use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-mutates(SendPortalLinks::class);
+mutates(InviteToPortal::class);
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'autopartes']));
@@ -39,7 +39,7 @@ function leaveInvitationsSent(): array
 }
 
 it('invites each person to their portal (WorkerAccess), issued by RH, and says how many went out', function (): void {
-    $sent = resolve(SendPortalLinks::class)->handle([$this->ana->id, $this->beto->id], $this->rh->id);
+    $sent = resolve(InviteToPortal::class)->handle([$this->ana->id, $this->beto->id], $this->rh->id);
 
     $links = leaveInvitationsSent();
 
@@ -54,7 +54,7 @@ it('skips whoever has no email, whoever left and whoever is of another company, 
     $gone = Employee::factory()->deactivated()->create(['tenant_id' => $this->tenant->id, 'email' => 'gone@autopartes.test']);
     $stranger = Employee::factory()->create(['email' => 'stranger@otra.test']);
 
-    $sent = resolve(SendPortalLinks::class)->handle([$noMail->id, $gone->id, $stranger->id, $this->ana->id], $this->rh->id);
+    $sent = resolve(InviteToPortal::class)->handle([$noMail->id, $gone->id, $stranger->id, $this->ana->id], $this->rh->id);
 
     expect($sent)->toBe(1)
         ->and(array_keys(leaveInvitationsSent()))->toBe(['ana@autopartes.test'])
@@ -62,7 +62,7 @@ it('skips whoever has no email, whoever left and whoever is of another company, 
 });
 
 it('sends nothing to nobody', function (): void {
-    expect(resolve(SendPortalLinks::class)->handle([], $this->rh->id))->toBe(0);
+    expect(resolve(InviteToPortal::class)->handle([], $this->rh->id))->toBe(0);
 
     Notification::assertNothingSent();
 });
@@ -74,9 +74,9 @@ it('logs how many went out and who asked, never a link', function (): void {
     });
     $noMail = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'email' => null]);
 
-    resolve(SendPortalLinks::class)->handle([$this->ana->id, $noMail->id], $this->rh->id);
+    resolve(InviteToPortal::class)->handle([$this->ana->id, $noMail->id], $this->rh->id);
 
     // Issuing the invitation writes WorkerAccess's own line.
-    expect(array_values(array_filter($lines, fn (string $line): bool => str_starts_with($line, 'leave.'))))->toBe(['leave.portal_links_sent '.json_encode(['sent' => 1, 'asked' => 2, 'user_id' => $this->rh->id], JSON_THROW_ON_ERROR)])
+    expect(array_values(array_filter($lines, fn (string $line): bool => str_starts_with($line, 'leave.'))))->toBe(['leave.portal_invitations_sent '.json_encode(['sent' => 1, 'asked' => 2, 'user_id' => $this->rh->id], JSON_THROW_ON_ERROR)])
         ->and(implode("\n", $lines))->not->toContain(basename(leaveInvitationsSent()['ana@autopartes.test']));
 });

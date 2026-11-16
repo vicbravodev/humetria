@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  * there the first time to read and confirm their annual statement. Whoever has no email (RH invites them by hand in
  * «Accesos»), left, or is of another company gets none.
  */
-final readonly class SendPortalLinks
+final readonly class InviteToPortal
 {
     public function __construct(private Roster $roster, private WorkerInvitations $invitations) {}
 
@@ -34,7 +34,7 @@ final readonly class SendPortalLinks
             }
         }
 
-        Log::info('leave.portal_links_sent', ['sent' => $sent, 'asked' => count($employeeIds), 'user_id' => $userId]);
+        Log::info('leave.portal_invitations_sent', ['sent' => $sent, 'asked' => count($employeeIds), 'user_id' => $userId]);
 
         return $sent;
     }

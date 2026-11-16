@@ -427,7 +427,7 @@
         "Tests\\Feature\\Leave\\RequestsPanelTest": 6.3045,
         "Tests\\Feature\\Leave\\RouteRequestsTest": 1.0975,
         "Tests\\Feature\\Leave\\SavePolicyTest": 0.813,
-        "Tests\\Feature\\Leave\\SendPortalLinksTest": 0.2832,
+        "Tests\\Feature\\Leave\\InviteToPortalTest": 0.2832,
         "Tests\\Feature\\Leave\\SettingsPanelTest": 1.6946,
         "Tests\\Feature\\Leave\\StatementPanelTest": 0.4856,
         "Tests\\Feature\\Leave\\StatementTest": 0.3827,
