@@ -10,6 +10,7 @@ use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Exceptions\InvalidStatement;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class RenewSubscriptions
 {
-    public function __construct(private GenerateStatement $generate, private RecordAudit $recordAudit, private ApplyScheduledChanges $applyChanges) {}
+    public function __construct(private GenerateStatement $generate, private RecordAudit $recordAudit, private ApplyScheduledChanges $applyChanges, private DemoCompanies $demos) {}
 
     public function handle(?CarbonImmutable $on = null): RenewalSummary
     {
@@ -32,7 +33,13 @@ final readonly class RenewSubscriptions
         // First what waited for the cut (reductions), so the month is drafted at the plan the company has from today.
         $this->applyChanges->handle($on);
 
-        foreach (Subscription::query()->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::PastDue, SubscriptionStatus::CancelScheduled])->orderBy('id')->get() as $subscription) {
+        // The demo company is never billed, whatever it was given.
+        $subscriptions = Subscription::query()
+            ->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::PastDue, SubscriptionStatus::CancelScheduled])
+            ->when($this->demos->id(), fn ($query, string $demo) => $query->where('tenant_id', '<>', $demo))
+            ->orderBy('id')->get();
+
+        foreach ($subscriptions as $subscription) {
             if ($subscription->status === SubscriptionStatus::CancelScheduled && $subscription->renews_on->lessThanOrEqualTo($start)) {
                 $this->end($subscription, $period);
                 $ended++;
