@@ -1,6 +1,6 @@
 # Empresa demo: una empresa creíble, sembrada desde la consola, para vender en vivo
 
-Fecha: 2026-11-16 · Estado: **borrador, pendiente de su aprobación**
+Fecha: 2026-11-16 · Estado: **implementado** (operación: `docs/operations/demo.md`)
 
 ## Intención
 
@@ -71,7 +71,7 @@ permite **una sola** empresa demo. Solo la acción que prepara la demo la encien
   RFC 6761) y un listener de `MessageSending` cancela todo mensaje cuyos destinatarios sean todos de ese dominio y lo loguea
   (`demo.mail_blocked`). Además, los jobs de resúmenes y recordatorios se saltan la empresa demo.
 - **Reportes:** los PDF y las páginas de resultados llevan una marca «DEMO».
-- **Entrada:** el dueño de la demo entra por la impersonación que ya existe desde la consola, sin contraseña compartida.
+- **Entrada:** se entra por la impersonación que ya existe, desde la sala (como dueño o como RH), sin contraseña compartida.
 
 ### 2. La historia (una empresa, todos los módulos)
 
@@ -96,7 +96,7 @@ Cada módulo cuenta su parte con **números derivados de la misma plantilla**: u
 trabajadores del organigrama con los de cada centro, los respondentes de cada campaña con sus invitaciones, y los grupos
 con el mínimo de 5.
 
-**Datos vivos:** una encuesta de clima abierta (~60 % contestada) con **invitaciones pendientes reservadas** para el
+**Datos vivos:** un pulso de clima abierto (~60 % contestado) con **invitaciones pendientes reservadas** para el
 público, una campaña NOM-035 abierta igual, el canal de denuncias activo, un centro con checador de pantalla activado y
 un teléfono por vincular. Lo que el público conteste en vivo se suma a lo sembrado y mueve el avance.
 
@@ -108,17 +108,28 @@ misma historia, corrida a la fecha de hoy.
 Un contrato en `Demos` (`DemoWorkspace`) con `prepare()` y `reset()`; la implementación vive fuera de `app/Modules` y
 recorre una clase de historia por módulo, cada una usando las **acciones reales** (lanzar, contestar por enlace, cerrar,
 registrar marca) con el reloj corrido al pasado, como ya hace `Nom035EvaluationSeeder`. Corre en un job de cola, con
-progreso visible en la consola y un candado: nunca dos a la vez. `reset()` borra todo lo de la empresa demo (incluido lo
-que el público haya creado en vivo: quejas, dispositivos vinculados, respuestas) y vuelve a preparar. Un test comprueba
-que, tras borrar, no queda ninguna fila con el `tenant_id` de la demo en ninguna tabla de negocio.
+progreso visible en la consola y un candado: nunca dos a la vez (una corrida de más de 30 minutos se da por abandonada y
+su job, si llega tarde, no hace nada). Los jobs (`PrepareDemo`, `ResetDemo`) van en su propia cola `demo` de la conexión
+`redis-long` (supervisor `supervisor-demo` de Horizon), cuyo `retry_after` supera su límite de 10 minutos; no relanzan
+su error: la señal es `demo.run_failed`. `reset()` conserva la fila de la empresa, borra todo lo demás de la demo
+(incluido lo que el público haya creado en vivo: quejas, dispositivos vinculados, respuestas) y vuelve a preparar. Un
+test comprueba que, tras borrar, no queda ninguna fila con el `tenant_id` de la demo en ninguna tabla de negocio, salvo
+la bitácora.
+
+**Excepción a las tablas de solo inserción (decisión del usuario, sensible para la seguridad).** Una migración cambia
+los triggers de las 14 tablas de solo inserción que la demo escribe para que permitan **DELETE solo de las filas de la
+empresa con `is_demo`**; UPDATE y TRUNCATE siguen bloqueados para todas, y `audit_entries` no se toca.
 
 ### 4. La sala de demostración (consola)
 
-Una página de la consola, solo para superadmin, con el estado de la demo (preparada, qué tan vieja, cuántos
+Una página de la consola (`/admin/demo`), solo para superadmin (gate `manage-demo`; a cualquier otro, soporte incluido,
+404), con el estado de la demo (preparada, qué tan vieja, cuántos
 trabajadores libres quedan) y lo que se comparte en vivo:
 
 - «Entrar como dueño» y «Entrar como RH».
-- QR y enlace del **canal de denuncias** de la demo y de la **pantalla de checador** del centro.
+- QR y enlace del **canal de denuncias** de la demo y de la **pantalla de checador** del centro. El enlace de la
+  pantalla se emite al pulsar, se muestra una vez y deja el checador sin activar hasta que se abre; cuando la pantalla
+  ya muestra su código no se emite otro hasta reiniciar.
 - La **puerta**: abrir o cerrar una sesión de demostración (2 horas por omisión), con su QR.
 - Reiniciar.
 
@@ -128,9 +139,11 @@ trabajadores libres quedan) y lo que se comparte en vivo:
 trabajadores de la empresa demo. Al escanear, asigna al visitante un **trabajador demo libre** del grupo reservado
 para el público (un cookie firmado recuerda cuál, para que si recarga conserve el suyo) y lo redirige a su **portal
 personal** (`portal/{token}`), la entrada única que ya existe: desde ahí contesta la encuesta, ve resultados, entra al
-canal de quejas y vincula su teléfono para marcar. Sin trabajadores libres, muestra «sala llena» y la consola permite
-liberar los abandonados. La puerta registra la asignación sin ligarla a ninguna respuesta, y los enlaces viejos del
-portal siguen funcionando.
+canal de quejas y vincula su teléfono para marcar. Cada trabajador se entrega **una sola vez hasta el siguiente
+reinicio** (no hay «liberar abandonados»: su enlace del portal no rota y llegaría a un segundo visitante); sin
+trabajadores libres, muestra «sala llena» y la sala sugiere reiniciar. La puerta registra la asignación sin ligarla a
+ninguna respuesta. El canal de denuncias de la demo acepta 60 envíos por hora y 120 al día por dirección (un salón
+comparte la Wi-Fi); el tope diario del canal (200) no cambia.
 
 ### 6. Seguridad y privacidad
 
@@ -144,7 +157,7 @@ las listas, conteos ni correos de ninguna otra empresa, y que otra empresa no pu
 Unit/Feature: preparar es idempotente; los números cuadran entre módulos; los umbrales de NOM-035 por centro; sin correos
 reales y `demo.mail_blocked` logueado; la demo no aparece en facturación, métricas ni conteos; reinicio sin filas
 huérfanas; la puerta (sesión cerrada, vencida, sin trabajadores libres, otra empresa, throttle); anonimato en las props de
-cada página nueva; autorización de la sala (solo superadmin, 403 antes de validar). Browser: prueba de humo de la sala
+cada página nueva; autorización de la sala (solo superadmin, 404 antes de validar). Browser: prueba de humo de la sala
 (`visitPage()`), y un flujo largo de la puerta al portal en celular. Cobertura ≥ 90 %.
 
 ## Decisiones suyas (ya respondidas)
@@ -162,8 +175,8 @@ cada página nueva; autorización de la sala (solo superadmin, 403 antes de vali
 - **Bitácora (`audit_entries`) es de solo inserción:** preparar con las acciones reales escribe filas que no se pueden
   borrar. La regla de «no queda ninguna fila» del reinicio **exceptúa la bitácora**; el constructor puede evitar que
   preparar la escriba si es fácil. Crecen unas pocas filas por reinicio y no se muestran fuera de la consola.
-- **«Liberar abandonados» reemite:** libera al trabajador y le emite una invitación nueva a la campaña abierta, de modo
-  que vuelva a servir; el avance de la campaña se calcula sobre las invitaciones vigentes.
+- **Sin «liberar abandonados»** (cambió al construir): cada trabajador de la puerta se entrega una vez por preparación;
+  reiniciar es la única manera de rellenar la puerta.
 
 - Nombre de la empresa, tamaños de centros, y la narrativa de «turno 2 de la planta».
 - Sesión de la puerta de 2 horas y un grupo reservado de ~40 trabajadores para el público.
