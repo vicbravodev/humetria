@@ -35,6 +35,8 @@ declare module '@inertiajs/core' {
             inCourse: InCourse | null;
             /** The owner's guided tour of the company; null for anyone else, outside a company, once finished or when switched off. */
             firstSteps: FirstSteps | null;
+            /** Whether the company of the page is the demo: then every page, its reports above all, carries the «DEMO» mark. */
+            demo: boolean;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

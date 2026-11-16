@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import type { ReactNode } from 'react';
+import DemoMark from '@/components/demo-mark';
 import { appFrame, authFrame, settingsFrame } from '@/layouts/frame-modules';
 import DeferredLayout from '@/layouts/deferred-layout';
 import { isStandalone } from '@/lib/page-frame';
@@ -20,20 +21,23 @@ export const AppFrame = frame('app');
 export const AuthFrame = frame('auth');
 export const SettingsFrame = frame('settings');
 
-/** The frame a page renders in; the survey, the portals and the error page have their own, outside the panel. */
+/**
+ * The frame a page renders in; the survey, the portals and the error page have their own, outside the panel. Every page,
+ * standalone or not, goes inside DemoMark: the one place the demo company's mark is put.
+ */
 export function frameFor(name: string) {
     if (isStandalone(name)) {
-        return null;
+        return DemoMark;
     }
 
     switch (true) {
         case name.startsWith('auth/'):
         case name === 'tenancy/accept-invitation':
-            return AuthFrame;
+            return [DemoMark, AuthFrame];
         case name.startsWith('settings/'):
-            return [AppFrame, SettingsFrame];
+            return [DemoMark, AppFrame, SettingsFrame];
         default:
-            return AppFrame;
+            return [DemoMark, AppFrame];
     }
 }
 

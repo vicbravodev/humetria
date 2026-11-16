@@ -9,6 +9,9 @@ interface DemoCompanies
 {
     public function isDemo(string $tenantId): bool;
 
+    /** Whether the company the request works in is the demo, so its reports carry the mark; false outside a company. */
+    public function isCurrent(): bool;
+
     /** The demo company's id; null when there is none. */
     public function id(): ?string;
 }
