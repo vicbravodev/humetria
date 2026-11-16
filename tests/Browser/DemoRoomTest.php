@@ -46,6 +46,7 @@ it('shows the prepared demo: enter it, its door, its complaint channel and its t
         ->assertSee('Entrar como RH')
         ->assertSee('La puerta')
         ->assertSee('Abrir sala (2 h)')
+        ->assertSee('Cada persona se entrega una sola vez: al acabarse, la puerta dice «La sala está llena» hasta que reinicies la demo.')
         ->assertSee('Canal de denuncias')
         ->assertSee('Pantalla del checador')
         ->assertSee('Antes de presentar')

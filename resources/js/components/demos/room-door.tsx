@@ -30,7 +30,7 @@ export default function RoomDoor({ door }: { door: DemoDoor }) {
                 )}
             </div>
             <p className="text-sm text-pretty text-muted-foreground">
-                {`Cada quien escanea el QR y entra como una persona trabajadora de la demo. Quedan ${door.free} de ${door.total} libres; ${door.claimed} ya tienen a alguien.`}
+                {`Cada quien escanea el QR y entra como una persona trabajadora de la demo. Quedan ${door.free} de ${door.total} libres; ${door.claimed} ya tienen a alguien. Cada persona se entrega una sola vez: al acabarse, la puerta dice «La sala está llena» hasta que reinicies la demo.`}
             </p>
             {link !== undefined && (
                 <RoomShareLink link={link} alt="Código QR de la puerta">
