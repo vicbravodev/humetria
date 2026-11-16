@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\WorkerAccess\Http\Controllers;
 
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Support\KeyAllowance;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,7 +34,7 @@ final readonly class HomeController
         return Inertia::render('worker-access/home', [
             'company' => $session->identity->companyName,
             'name' => $session->identity->personName,
-            'keyUrl' => null,
+            'keyUrl' => KeyAllowance::refusal($session) === null ? route('worker.key.show', $tenant) : null,
             'leaveUrl' => route('worker.leave', $tenant),
         ]);
     }

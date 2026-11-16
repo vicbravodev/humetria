@@ -8,6 +8,7 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\WorkerAccess\Actions\OpenAccessLink;
 use App\Modules\WorkerAccess\Actions\RequestAccessLink;
+use App\Modules\WorkerAccess\Enums\LinkKind;
 use App\Modules\WorkerAccess\Http\Requests\RequestLinkRequest;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
@@ -53,7 +54,8 @@ final readonly class AccessLinkController
         $sessions->start($link->employee_id, $link->kind->entry());
         Log::info('worker_access.entered', ['employee_id' => $link->employee_id, 'via' => $link->kind->entry()->value]);
 
-        return redirect()->route('worker.home', $tenant);
+        // A link RH issued is for registering a key; one the person asked for goes straight to their start.
+        return redirect()->route($link->kind === LinkKind::Issued ? 'worker.key.show' : 'worker.home', $tenant);
     }
 
     /** Whether the link would still open, without spending it: the same rule as OpenAccessLink. */

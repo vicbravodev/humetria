@@ -76,3 +76,31 @@ it('shows one screen for a link that does not work', function (): void {
         ->assertSee('Pedir un enlace nuevo')
         ->assertNoAccessibilityIssues(1);
 });
+
+it('opens RH\'s link straight into creating a key, with the warning on shared accounts', function (bool $dark, bool $mobile): void {
+    anaLink('issued-token');
+
+    visitPage('worker-access/key', '/me/acme/link/issued-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('cree su llave de acceso'))
+        ->assertSee('Ana López, cree su llave de acceso')
+        ->assertSee('Si comparte su cuenta de iCloud o de Google con su familia')
+        ->assertSee('Crear llave')
+        ->assertNoAccessibilityIssues(1);
+})->with([
+    'light desktop' => [false, false],
+    'dark desktop' => [true, false],
+    'light mobile' => [false, true],
+]);
+
+it('asks before «No fui yo» revokes a key, then says it is done', function (bool $dark, bool $mobile): void {
+    $key = App\Modules\WorkerAccess\Models\WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'iPhone']);
+    $url = Illuminate\Support\Facades\URL::temporarySignedRoute('worker.not-me.show', now()->addDays(30), ['tenant' => 'acme', 'credential' => $key->id], absolute: false);
+
+    $page = visitPage('worker-access/not-me', $url, $dark, $mobile)
+        ->assertSee('¿No creó usted la llave «iPhone»?')
+        ->assertNoAccessibilityIssues(1);
+
+    $page->press('Anular esa llave')->waitForText('La llave quedó anulada');
+})->with([
+    'light desktop' => [false, false],
+    'dark mobile' => [true, true],
+]);

@@ -66,6 +66,9 @@ final class WorkerAccessServiceProvider extends ServiceProvider
             ];
         });
 
+        // Registering a key takes three requests (the page, the options, the key): per address.
+        RateLimiter::for('worker-key', fn (Request $request): Limit => Limit::perMinute(30)->by('worker-key-ip:'.$request->ip()));
+
         // Opening a link takes two requests (the page, «Continuar»): per address, and per link, so guessing or replaying one is
         // slowed down even from many addresses. Only the link's hash names its counter.
         RateLimiter::for('worker-link', fn (Request $request): array => [

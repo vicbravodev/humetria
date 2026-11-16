@@ -50,22 +50,22 @@ it('shows «Continuar» for a link that works, and opening the page spends nothi
     expect($link->refresh()->used_at)->toBeNull();
 });
 
-it('spends the link and opens the session of its person, as the kind of link says', function (string $kind, string $via): void {
+it('spends the link and opens the session of its person: RH\'s goes to register a key, the person\'s to their start', function (string $kind, string $via, string $to): void {
     linkOf($this->ana, 'good-token', fn ($factory) => $kind === 'requested' ? $factory->requested() : $factory);
     Log::spy();
 
-    $this->post(route('worker.link.open', ['acme', 'good-token']))->assertRedirect(route('worker.home', 'acme'));
+    $this->post(route('worker.link.open', ['acme', 'good-token']))->assertRedirect(route($to, 'acme'));
 
     $session = resolve(WorkerSessionStore::class)->open();
     expect($session?->identity->employeeId)->toBe($this->ana->id)->and($session?->via->value)->toBe($via)
         ->and(WorkerAccessLink::query()->sole()->used_at?->toIso8601String())->toBe('2026-11-16T15:00:00+00:00');
     Log::shouldHaveReceived('info')->with('worker_access.entered', ['employee_id' => $this->ana->id, 'via' => $via]);
-})->with([['issued', 'issued_link'], ['requested', 'requested_link']]);
+})->with([['issued', 'issued_link', 'worker.key.show'], ['requested', 'requested_link', 'worker.home']]);
 
 it('opens a link once: the second time it shows the screen of a link that does not work', function (): void {
     linkOf($this->ana, 'good-token');
 
-    $this->post(route('worker.link.open', ['acme', 'good-token']))->assertRedirect(route('worker.home', 'acme'));
+    $this->post(route('worker.link.open', ['acme', 'good-token']))->assertRedirect(route('worker.key.show', 'acme'));
     resolve(WorkerSessionStore::class)->end();
 
     $this->post(route('worker.link.open', ['acme', 'good-token']))->assertRedirect(route('worker.link.show', ['acme', 'good-token']));
@@ -117,7 +117,7 @@ it('does not open in company A a link of company B, even with its own slug in th
     workIn($this->tenant);
 
     $this->post(route('worker.link.open', ['acme', 'beto-token']))->assertRedirect(route('worker.link.show', ['acme', 'beto-token']));
-    $this->post(route('worker.link.open', ['other', 'beto-token']))->assertRedirect(route('worker.home', 'other'));
+    $this->post(route('worker.link.open', ['other', 'beto-token']))->assertRedirect(route('worker.key.show', 'other'));
 });
 
 it('slows down a link opened too often, whatever the address', function (): void {

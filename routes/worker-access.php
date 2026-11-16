@@ -8,6 +8,8 @@ declare(strict_types=1);
 use App\Modules\WorkerAccess\Http\Controllers\AccessLinkController;
 use App\Modules\WorkerAccess\Http\Controllers\EntryController;
 use App\Modules\WorkerAccess\Http\Controllers\HomeController;
+use App\Modules\WorkerAccess\Http\Controllers\KeyController;
+use App\Modules\WorkerAccess\Http\Controllers\NotMeController;
 use App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant;
 use Illuminate\Support\Facades\Route;
 
@@ -29,4 +31,18 @@ Route::middleware(['throttle:worker-link-request', ResolveWorkerTenant::class])-
 Route::middleware(['throttle:worker-link', ResolveWorkerTenant::class])->group(function (): void {
     Route::get('me/{tenant:slug}/link/{token}', [AccessLinkController::class, 'show'])->name('worker.link.show');
     Route::post('me/{tenant:slug}/link/{token}', [AccessLinkController::class, 'open'])->name('worker.link.open');
+});
+
+// Registering a key takes the person's session (checked by the controller: a link RH issued or a key; never a link the person
+// asked for). Per address.
+Route::middleware(['throttle:worker-key', ResolveWorkerTenant::class])->group(function (): void {
+    Route::get('me/{tenant:slug}/key', [KeyController::class, 'show'])->name('worker.key.show');
+    Route::post('me/{tenant:slug}/key/options', [KeyController::class, 'options'])->name('worker.key.options');
+    Route::post('me/{tenant:slug}/key', [KeyController::class, 'store'])->name('worker.key.store');
+});
+
+// «No fui yo», from the email of a new key: the address the app signed is the credential (a missing or altered signature, 403).
+Route::middleware(['throttle:worker-enter', 'signed:relative', ResolveWorkerTenant::class])->group(function (): void {
+    Route::get('me/{tenant:slug}/not-me/{credential}', [NotMeController::class, 'show'])->whereUuid('credential')->name('worker.not-me.show');
+    Route::post('me/{tenant:slug}/not-me/{credential}', [NotMeController::class, 'confirm'])->whereUuid('credential')->name('worker.not-me.confirm');
 });

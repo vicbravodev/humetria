@@ -30,10 +30,12 @@ const STANDALONE_NAMES = new Set([
     'attendance/punch',
     // A person sees and answers their week from their linked device: no account, the same frame.
     'attendance/week',
-    // The person's own pages (enter, start, a one-time link): no account, their own frame.
+    // The person's own pages (enter, start, a one-time link, a key, «No fui yo»): no account, their own frame.
     'worker-access/enter',
     'worker-access/home',
     'worker-access/link',
+    'worker-access/key',
+    'worker-access/not-me',
     // The report of a contract scenario opened from a temporary link: nobody signed in.
     'compensation/shared-report',
     // A first-time configuration has its own frame (SetupFrame): one question at a time, nothing else around it.
