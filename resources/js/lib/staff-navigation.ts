@@ -3,6 +3,7 @@ import {
     Building2,
     ChartNoAxesColumn,
     Inbox,
+    Presentation,
     ScrollText,
     UserCog,
     WalletCards,
@@ -11,6 +12,7 @@ import { index as audit } from '@/routes/audit';
 import { index as accounts } from '@/routes/billing/accounts';
 import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
+import { show as demoRoom } from '@/routes/demo-room';
 import { index as overview } from '@/routes/overview';
 import { index as users } from '@/routes/platform-users';
 import type { NavItem } from '@/types';
@@ -24,6 +26,7 @@ const staffNavItems: NavItem[] = [
 
 // The platform's people and its audit trail are the superadmin's alone: support does not see them in the menu.
 const superadminOnlyNavItems: NavItem[] = [
+    { title: 'Sala de demostración', href: demoRoom(), icon: Presentation },
     { title: 'Usuarios', href: users(), icon: UserCog },
     { title: 'Bitácora', href: audit(), icon: ScrollText },
     // Horizon's own dashboard, outside the panel: a plain address, not an Inertia visit.

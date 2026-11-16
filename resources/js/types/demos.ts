@@ -40,6 +40,35 @@ export type Paginated<T> = {
     next_page_url: string | null;
 };
 
+/** «Sala de demostración»: the demo company, the run preparing it, how old it is and what is shared live. */
+export type DemoRoom = {
+    company: { id: string; name: string } | null;
+    run: DemoRunState | null;
+    prepared: { ago: string; at: string; stale: boolean } | null;
+    complaints: DemoShareLink | null;
+    door: DemoDoor;
+};
+
+export type DemoRunState = {
+    kind: 'prepare' | 'reset';
+    status: 'running' | 'finished' | 'failed';
+    step: string | null;
+    error_class: string | null;
+};
+
+/** A link to share in the room, with its QR as a data URI. */
+export type DemoShareLink = { url: string; qr: string };
+
+export type DemoDoor = {
+    open: boolean;
+    /** «14:30», Mexico City time; null while closed. */
+    closes_at: string | null;
+    /** The workers reserved for the audience: taken, free and all. */
+    claimed: number;
+    free: number;
+    total: number;
+};
+
 /** The demo request a company is about to be created from, to fill the dialog with. */
 export type TenantPrefill = {
     demo_request_id: string;

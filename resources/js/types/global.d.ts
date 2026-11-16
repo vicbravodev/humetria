@@ -1,5 +1,6 @@
 import type { Auth } from '@/types/auth';
 import type { SalaryImportSummary } from '@/types/compensation';
+import type { DemoShareLink } from '@/types/demos';
 import type { FirstSteps } from '@/types/first-steps';
 import type { InCourse } from '@/types/navigation';
 import type { LeaveImportSummary } from '@/types/leave-policy';
@@ -56,6 +57,10 @@ declare module '@inertiajs/core' {
             portalLink?: string;
             /** The link of a QR screen just issued, shown once: only its hash is kept, and it opens once. */
             kioskLink?: string;
+            /** The demo room's door, just opened: its address and QR, shown once (only its hash is kept). */
+            doorLink?: DemoShareLink;
+            /** The demo's time-clock screen link, just issued from the demo room, with its QR: shown once. */
+            demoKioskLink?: DemoShareLink;
             /** A person's link to link their phone, shown once to RH only when the person has no email; it works once, 48 h. */
             enrollmentLink?: { name: string; url: string };
         };
