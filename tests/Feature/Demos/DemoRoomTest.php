@@ -18,6 +18,7 @@ use Database\Seeders\Demo\Stories\ComplaintsStory;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\PermissionRegistrar;
 
 /*
  * La sala de demostración: the console page from which the staff prepares the demo company, enters it as its owner or
@@ -262,7 +263,8 @@ describe('the time-clock screen', function (): void {
         $this->actingAs(superadmin())->post(route('demo-room.kiosk.reissue'))->assertRedirect();
 
         expect(Context::has('tenant_id'))->toBeFalse()
-            ->and(Context::hasHidden(TenantContext::DEMO))->toBeFalse();
+            ->and(Context::hasHidden(TenantContext::DEMO))->toBeFalse()
+            ->and(resolve(PermissionRegistrar::class)->getPermissionsTeamId())->toBeNull();
     });
 
     it('never touches the screen of another company', function (): void {

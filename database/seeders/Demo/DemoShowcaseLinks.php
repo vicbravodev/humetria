@@ -11,11 +11,12 @@ use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Database\Seeders\Demo\Stories\ComplaintsStory;
 use Illuminate\Support\Facades\Context;
+use Spatie\Permission\PermissionRegistrar;
 
 /** The demo's links the room shares live, found the way the story built them. */
 final readonly class DemoShowcaseLinks implements DemoShowcase
 {
-    public function __construct(private DemoCompanies $demos, private Companies $companies, private ReissueKioskDevice $reissue) {}
+    public function __construct(private DemoCompanies $demos, private Companies $companies, private ReissueKioskDevice $reissue, private PermissionRegistrar $permissions) {}
 
     public function complaintChannelUrl(): ?string
     {
@@ -32,15 +33,21 @@ final readonly class DemoShowcaseLinks implements DemoShowcase
         }
 
         // Inside the demo company (a screen of any other company is out of reach), and only for this: the console's request
-        // must not go on as the demo, or its pages would carry the demo's mark.
+        // must not go on as the demo, or its pages would carry the demo's mark. Entering also sets Spatie's team, which
+        // Context::scope does not restore: it is put back by hand.
         $link = null;
+        $team = $this->permissions->getPermissionsTeamId();
 
-        Context::scope(function () use ($tenantId, &$link): void {
-            $company = $this->companies->enter($tenantId);
-            $kioskId = KioskDevice::query()->whereNull('revoked_at')->latest('created_at')->value('id');
-            $token = is_string($kioskId) ? $this->reissue->handle($kioskId) : null;
-            $link = $token === null ? null : route('attendance.device.kiosk.activate', [$company->slug, $token]);
-        });
+        try {
+            Context::scope(function () use ($tenantId, &$link): void {
+                $company = $this->companies->enter($tenantId);
+                $kioskId = KioskDevice::query()->whereNull('revoked_at')->latest('created_at')->value('id');
+                $token = is_string($kioskId) ? $this->reissue->handle($kioskId) : null;
+                $link = $token === null ? null : route('attendance.device.kiosk.activate', [$company->slug, $token]);
+            });
+        } finally {
+            $this->permissions->setPermissionsTeamId($team);
+        }
 
         return $link;
     }
