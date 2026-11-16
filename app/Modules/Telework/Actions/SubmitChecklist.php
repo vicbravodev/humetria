@@ -42,7 +42,7 @@ final readonly class SubmitChecklist
         try {
             DB::transaction(fn () => $this->submit($portal, $applicationId, $consent, $answers, $riskNotes, $specialNeeds, $photos));
         } catch (Throwable $failure) {
-            $this->files->delete(...array_merge(...array_values($photos)));
+            $this->files->discard(...array_merge(...array_values($photos)));
 
             throw $failure;
         }

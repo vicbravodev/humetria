@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Billing\Models\UsageCounter;
 use App\Modules\Complaints\Actions\PurgeComplaints;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
@@ -207,6 +208,13 @@ it('is cleared with everything else when the case is purged', function (): void 
     resolve(PurgeComplaints::class)->handle();
 
     expect($complaint->refresh()->reporter_email)->toBeNull()->and($complaint->purged_on)->not->toBeNull();
+});
+
+// Mail a visitor triggers must not draw on the meter that gates the company's own bulk sends (audit C1).
+it('does not charge the confirmation a visitor triggers to the campaign mail meter of the company', function (): void {
+    withEmail($this)->assertCreated();
+
+    expect(UsageCounter::query()->where('tenant_id', $this->tenant->id)->where('meter', 'email_campaign')->sum('used'))->toEqual(0);
 });
 
 it('shows the public form no address of anybody, only the question', function (): void {

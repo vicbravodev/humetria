@@ -336,6 +336,12 @@ describe('revoking a device', function (): void {
         $this->get(devicesUrl(['status' => 'linked']))->assertInertia(fn (AssertableInertia $page) => $page->where('people.total', 0));
     });
 
+    it('does not let a viewer find anyone by email', function (): void {
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
+            ->get(devicesUrl(['q' => 'carla@acme']))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('people.total', 0));
+    });
+
     it('cannot be done by a viewer, and answers 404 for a device of another company or unknown', function (): void {
         $theirs = AttendanceDevice::factory()->create();
         workIn($this->tenant);

@@ -25,6 +25,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'seating:remind-questions' => '0 9 * * *',
         'seating:send-digests' => '30 8 * * *',
         'complaints:send-digests' => '0 * * * *',
+        'complaints:release-held' => '10 0 * * *',
         'complaints:purge' => '15 3 * * *',
         'attendance:close-days' => '15 0 * * *',
         'humetria:reconcile-limits' => '30 3 * * *',

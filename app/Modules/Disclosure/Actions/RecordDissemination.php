@@ -90,7 +90,7 @@ final readonly class RecordDissemination
             ]);
         } catch (Throwable $failure) {
             // A file nobody points at is not evidence: it goes with the record that failed.
-            $this->files->delete(...array_filter([$stored]));
+            $this->files->discard(...array_filter([$stored]));
 
             throw $failure;
         }

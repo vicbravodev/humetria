@@ -24,6 +24,8 @@ final class PortalEvidenceController extends Controller
     public function photos(string $token, string $evidenceRequest, EvidencePhotosRequest $request, OpenPortal $openPortal, FulfillPhotoRequest $fulfil, PhotoStore $photos): RedirectResponse
     {
         $portal = $this->portal($token, $openPortal);
+        // Before storing: a refused send must not take the company's quota.
+        $fulfil->ensureOpen($portal, $evidenceRequest);
         $stored = $photos->storeMany(['general' => $request->photos()], "evidence/{$portal->tenantId}/{$evidenceRequest}");
 
         $fulfil->handle($portal, $evidenceRequest, $stored['general'] ?? []);

@@ -81,11 +81,14 @@ final class OrgChartPeopleController extends Controller
      */
     private function people(string $search, array $excluded): array
     {
+        // Contact data is searched only by whoever may read it in Empleados: for anyone else it would be an oracle.
+        $contact = Gate::allows('manage-organization');
+
         return array_values(Employee::query()
             ->whereNull('deactivated_at')
             ->when($excluded !== [], fn ($query) => $query->whereKeyNot($excluded))
-            // The same search as the Empleados list, so ⌘K finds whoever the list finds.
-            ->matching(['name', 'email', 'employee_number'], $search, ['mobile'])
+            ->when($contact, fn ($query) => $query->matching(['name', 'email', 'employee_number'], $search, ['mobile']))
+            ->when(! $contact, fn ($query) => $query->matching(['name', 'employee_number'], $search))
             ->orderBy('name')
             ->orderBy('id')
             ->limit(self::LIMIT)

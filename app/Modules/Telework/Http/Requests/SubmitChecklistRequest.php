@@ -25,7 +25,7 @@ final class SubmitChecklistRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'consent' => ['nullable', 'boolean'],
             'answers' => ['required', 'array'],
             'answers.*' => ['nullable', 'string', 'max:20'],
@@ -33,6 +33,15 @@ final class SubmitChecklistRequest extends FormRequest
             'risk_notes.*' => ['nullable', 'string', 'max:2000'],
             'special_needs' => ['nullable', 'string', 'max:2000'],
         ];
+
+        // Each file is capped on its own field, before PhotoStore reads it.
+        foreach (array_keys($this->allFiles()) as $field) {
+            if (preg_match('/^photo_([0-9a-f-]{36}|general)_\d{1,3}$/', (string) $field) === 1) {
+                $rules[(string) $field] = ['file', 'max:'.config()->integer('telework.max_photo_kb')];
+            }
+        }
+
+        return $rules;
     }
 
     /** @return list<Closure(Validator): void> */
@@ -43,6 +52,12 @@ final class SubmitChecklistRequest extends FormRequest
 
             if (array_filter($this->photos(), fn (array $group): bool => count($group) > $most) !== []) {
                 $validator->errors()->add('photos', "Puede agregar hasta {$most} fotos por pregunta y {$most} del lugar.");
+            }
+
+            $total = config()->integer('telework.max_photos_per_checklist');
+
+            if (array_sum(array_map(count(...), $this->photos())) > $total) {
+                $validator->errors()->add('photos', "Puede enviar hasta {$total} fotos en total.");
             }
         }];
     }

@@ -2,6 +2,7 @@ import { Form, Link, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Initials from '@/components/humetria/initials';
 import InputError from '@/components/humetria/input-error';
+import CurrentPasswordField from '@/components/settings/current-password-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -76,6 +77,7 @@ export default function ProfileForm({
                             <InputError message={errors['email']} />
                         </div>
                     </div>
+                    <CurrentPasswordField error={errors['current_password']} />
                     {unverified && (
                         <p className="text-sm text-muted-foreground">
                             Tu correo no está verificado.{' '}

@@ -14,6 +14,7 @@ final readonly class UnassignedCases
     public function count(): int
     {
         return Complaint::query()
+            ->where('held', false)
             ->where('status', '<>', ComplaintStatus::Closed->value)
             ->whereNotIn('id', ComplaintAssignment::query()->whereNull('ended_on')->select('complaint_id'))
             ->count();

@@ -48,7 +48,7 @@ final readonly class AttachVisitDocument
         try {
             $authorization->update(['document_path' => $path]);
         } catch (Throwable $failure) {
-            $this->files->delete($path);
+            $this->files->discard($path);
 
             throw $failure;
         }
