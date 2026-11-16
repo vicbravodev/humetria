@@ -92,6 +92,13 @@ final class CompanyRoster implements Roster
         return $ids;
     }
 
+    public function idsByEmail(string $email): array
+    {
+        $email = mb_strtolower(trim($email));
+
+        return $email === '' ? [] : array_values(Employee::query()->where('email', $email)->whereNull('deactivated_at')->orderBy('id')->get(['id'])->map(fn (Employee $employee): string => $employee->id)->all());
+    }
+
     /**
      * @return Builder<Employee>
      */

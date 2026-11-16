@@ -104,6 +104,11 @@ function spyOnRosterReads(): ArrayObject
         {
             return $this->roster->idsByEmployeeNumber($numbers);
         }
+
+        public function idsByEmail(string $email): array
+        {
+            return $this->roster->idsByEmail($email);
+        }
     });
 
     return $reads;
