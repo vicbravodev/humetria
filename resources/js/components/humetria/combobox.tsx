@@ -32,14 +32,10 @@ const TRIGGER =
  */
 export default function Combobox(props: Props) {
     const { id, name, source, placeholder, describedBy } = props;
-    const { selected, open, setOpen, ...search } = useCombobox(
-        id,
-        source,
-        props,
-    );
+    const { selected, setOpen, ...search } = useCombobox(id, source, props);
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={search.open} onOpenChange={setOpen}>
             <input type="hidden" name={name} value={selected?.value ?? ''} />
             <PopoverTrigger
                 id={id}
@@ -121,7 +117,10 @@ export default function Combobox(props: Props) {
                 </ul>
                 <p
                     aria-live="polite"
-                    className="px-4 py-3 text-sm text-muted-foreground empty:hidden"
+                    className={cn(
+                        'px-4 py-3 text-sm text-muted-foreground empty:hidden',
+                        search.loading && 'sr-only',
+                    )}
                 >
                     {search.note}
                 </p>

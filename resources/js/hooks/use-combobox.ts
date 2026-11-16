@@ -12,7 +12,7 @@ type ChoiceHandlers = {
 
 /**
  * The state of a Combobox's search: what was typed, the options it finds, the one the arrows point at
- * (kept in view), the chosen option and whether it is open, and the keys that move it or pick it.
+ * (kept in view; `loading` is for the note to be only read out while it searches, since showing it would resize the popover twice), the chosen option and whether it is open, and the keys that move it or pick it.
  */
 export function useCombobox(
     id: string,
@@ -23,7 +23,7 @@ export function useCombobox(
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [active, setActive] = useState(0);
-    const { options, note } = useOptionSearch(source, query, open);
+    const { options, note, loading } = useOptionSearch(source, query, open);
     const listId = `${id}-options`;
     const activeId =
         options[active] === undefined ? undefined : `${listId}-${active}`;
@@ -73,6 +73,7 @@ export function useCombobox(
         type,
         options,
         note,
+        loading,
         active,
         setActive,
         listId,

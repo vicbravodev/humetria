@@ -121,6 +121,7 @@ export function useOptionSearch(
 
     return {
         options,
+        loading: status === 'loading',
         note: searchNote({ status, found: options.length, more, minLength }),
     };
 }
