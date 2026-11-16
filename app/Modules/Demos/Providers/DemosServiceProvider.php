@@ -10,8 +10,8 @@ use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Demos\Contracts\DemoShowcase;
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Demos\Contracts\DoorControl;
-use App\Modules\Demos\Support\ClosedDoor;
 use App\Modules\Demos\Support\DemoLeadRegistry;
+use App\Modules\Demos\Support\DoorKeeper;
 use Database\Seeders\Demo\DemoShowcaseLinks;
 use Database\Seeders\Demo\DemoWorkspaceRunner;
 use Database\Seeders\Demo\RosterDoorPool;
@@ -32,8 +32,7 @@ final class DemosServiceProvider extends ServiceProvider
         $this->app->bind(DemoWorkspace::class, DemoWorkspaceRunner::class);
         $this->app->bind(DemoDoorPool::class, RosterDoorPool::class);
         $this->app->bind(DemoShowcase::class, DemoShowcaseLinks::class);
-        // Until the door is merged; then its actions take this binding (one line).
-        $this->app->bind(DoorControl::class, ClosedDoor::class);
+        $this->app->bind(DoorControl::class, DoorKeeper::class);
     }
 
     public function boot(): void

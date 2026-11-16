@@ -8,7 +8,6 @@ use App\Modules\Demos\Contracts\DoorControl;
 use App\Modules\Demos\Jobs\PrepareDemo;
 use App\Modules\Demos\Jobs\ResetDemo;
 use App\Modules\Demos\Models\DemoRun;
-use App\Modules\Demos\Support\ClosedDoor;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\TenantContext;
@@ -287,12 +286,4 @@ describe('the time-clock screen', function (): void {
 
 it('answers 404 to a new screen link when there is no demo', function (): void {
     $this->actingAs(superadmin())->post(route('demo-room.kiosk.reissue'))->assertNotFound();
-});
-
-it('keeps the door closed, with nobody reserved, until the door itself is built', function (): void {
-    $door = new ClosedDoor;
-    $door->close();
-
-    expect($door->state())->toBe(['open' => false, 'expires_at' => null, 'claimed' => 0, 'free' => 0, 'total' => 0])
-        ->and(fn (): array => $door->open(120))->toThrow(LogicException::class);
 });
