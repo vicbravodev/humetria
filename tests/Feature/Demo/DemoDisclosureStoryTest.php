@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Disclosure\Actions\OpenWorkersPage;
@@ -79,7 +80,7 @@ it('tells the disclosure story: a policy with its blocks in every center, confir
     expect(Acknowledgment::query()->where('document_id', $policy->id)->where('employee_id', $visitor)->sole()->channel)->toBe('portal');
 
     // publishes the results of every closed evaluation that has them (not the Guía I alone), the plant's with its measures
-    $closed = Campaign::query()->whereNotNull('closed_at')->get()->keyBy('work_center_id');
+    $closed = Campaign::query()->where('kind', CampaignKind::Nom035Evaluation)->whereNotNull('closed_at')->get()->keyBy('work_center_id');
     $publications = ResultPublication::query()->whereNull('withdrawn_at')->get()->keyBy('work_center_id');
     $monterrey = collect(resolve(WorkCenters::class)->all())->firstWhere('name', DemoRoster::CENTERS['monterrey'])?->id;
     $plant = collect(resolve(WorkCenters::class)->all())->firstWhere('name', DemoRoster::CENTERS['plant'])?->id;
