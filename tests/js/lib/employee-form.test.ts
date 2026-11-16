@@ -58,7 +58,7 @@ describe('namedSource', () => {
             { value: 'Operador', label: 'Operador' },
         ]);
         expect(source.allowNew).toBe(true);
-        expect(source.minLength).toBe(1);
+        expect(source.minLength).toBe(0);
     });
 
     it('offers only to clear it when nothing is chosen', () => {
