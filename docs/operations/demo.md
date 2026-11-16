@@ -1,6 +1,7 @@
 # Manual de operación: la empresa demo
 
-Para quien vende con la demo y para quien la opera. Se lee en cinco minutos. El diseño está en
+Para quien vende con la demo y para quien la opera. Se lee en cinco minutos: quien presenta puede parar al terminar
+§5; lo que va bajo «Para quien opera» es de ingeniería. El diseño está en
 `docs/superpowers/specs/2026-11-16-demo-company-design.md`.
 
 ## 1. Qué es y dónde vive
@@ -18,22 +19,21 @@ Se maneja desde la **sala de demostración**, `/admin/demo` («Sala de demostrac
 ## 2. Antes de una sesión
 
 - [ ] **Reiniciar demo** a lo más **2 días** antes. La sala marca la demo como vieja pasados 2 días. Lo que envejece:
-  - una denuncia recibida «ayer» queda vencida a los ~2 días;
-  - las solicitudes de vacaciones pendientes se escalan a los ~4 días hábiles;
-  - la campaña NOM-035 abierta y el pulso abierto cierran a los ~9 días;
+  - una denuncia recibida «ayer» queda vencida a los ~2 días, y las dos en revisión (recibidas hace 20 y 14 días) pasan
+    su plazo de 30 días a los 10 y 16 días;
+  - las solicitudes de vacaciones pendientes se escalan: las pedidas «ayer» a los ~3 días hábiles, las de «hoy» a
+    los ~4;
+  - el pulso abierto cierra a los ~9 días y la evaluación NOM-035 abierta a los ~18;
   - la asistencia de «la semana pasada» deja de serlo a la semana.
-- [ ] Reiniciar también **rellena la puerta**: cada trabajador de la puerta se entrega una sola vez hasta el siguiente
-  reinicio (ver §3).
+- [ ] Reiniciar también **rellena la puerta** y la **cierra**: hay que abrirla otra vez. Cada trabajador de la puerta se
+  entrega una sola vez hasta el siguiente reinicio, y recibe ids nuevos en cada preparación: el enlace del portal que se
+  llevó un público anterior deja de servir (ver §3).
+- [ ] **Revisar el buzón de denuncias.** El QR del canal no cambia entre reinicios: alguien de un público anterior puede
+  seguir mandando denuncias a la demo.
 - [ ] Esperar a que la sala diga **Preparada**. Mientras corre muestra **Preparando** y el paso en que va; se puede
-  cerrar la página. Tarda menos de un minuto en un servidor libre y unos minutos en uno ocupado; el job se corta a los
-  10 minutos.
+  cerrar la página. Tarda alrededor de medio minuto (unos 25 s medidos fuera de pruebas) y unos minutos si la cola está
+  ocupada; el job se corta a los 10 minutos.
 - [ ] Si se rotó `APP_KEY` desde la última preparación: reiniciar (ver §6).
-
-Cómo corre: `PrepareDemo` o `ResetDemo` en la cola `demo` de la conexión `redis-long`, que atiende el supervisor
-`supervisor-demo` de Horizon, uno a la vez. Nunca corren dos: un segundo clic responde «Ya hay una preparación corriendo».
-Una corrida que se queda en «running» más de 30 minutos (un worker que murió) se da por abandonada y la siguiente toma su
-lugar (`demo.run_abandoned`); si su job llega tarde, ya no hace nada. Un fallo queda en la sala («La última preparación
-falló en …» con la clase del error) y en el log `demo.run_failed` (nivel error), solo con la clase, nunca el mensaje.
 
 ## 3. La sesión
 
@@ -63,10 +63,10 @@ falló en …» con la clase del error) y en el log `demo.run_failed` (nivel err
 
 - **Evitar «Por jefe» en los pulsos.** Lista grupos por jefe y cada uno enlaza a un detalle que responde 404 (bug
   conocido de Engagement, pendiente de su propio arreglo).
-- **Ley Silla:** tres puntos quedan en «Falta» a propósito, para completarlos en vivo: R3 (minuta de la Comisión),
-  R10 (reglamento interior) y R12 (análisis integrado).
-- **Compensación:** el escenario de Monterrey se calcula con el impuesto sobre nómina de Querétaro (la calculadora lee el
-  estado de la persona, no el del centro). No enseñar ese detalle como si fuera correcto.
+- **Ley Silla (Oficinas Querétaro):** cinco puntos quedan en «Falta» a propósito, para completarlos en vivo: R2
+  (evaluación vigente de cada persona que trabaja de pie), R3 (acta de cada evaluación firmada), R8 (confirmación de cada
+  persona evaluada: una persona de la puerta confirma en vivo), R10 (reglamento interior firmado, depositado y repartido) y
+  R12 (diagnóstico y programa de seguridad y salud). R7 (medida para cada evaluación Media o Alta) queda en aviso.
 - **Humi está vivo:** cada pregunta es una llamada real al modelo, cuesta y llega a PostHog como `$ai_generation`.
 - **Acuses de la política: 77 %.** No es un error: las 40 personas de la puerta quedan pendientes.
 
@@ -79,12 +79,28 @@ falló en …» con la clase del error) y en el log `demo.run_failed` (nivel err
   saltan.
 - Toda página de la demo lleva la marca **DEMO**.
 
+## Para quien opera
+
+Lo que sigue es de ingeniería: cómo corre la preparación, qué excepciones de seguridad tiene y qué revisar si algo falla.
+
+**Cómo corre:** `PrepareDemo` o `ResetDemo` en la cola `demo` de la conexión `redis-long`, que atiende el supervisor
+`supervisor-demo` de Horizon, uno a la vez. Nunca corren dos: un segundo clic responde «Ya hay una preparación corriendo».
+Si la cola no acepta el job (Redis caído), la corrida falla en ese momento y la sala dice «No se pudo encolar la
+preparación». Una corrida que se queda en «running» más de 30 minutos (un worker que murió) se da por abandonada y la
+siguiente toma su lugar (`demo.run_abandoned`); si su job llega tarde, ya no hace nada. Un fallo queda en la sala («La
+última preparación falló en …» con la clase del error) y en el log `demo.run_failed` (nivel error), solo con la clase,
+nunca el mensaje. Preparar, reiniciar, abrir y cerrar la puerta y emitir el enlace del checador dejan su entrada en la
+bitácora (`demo.prepare_started`, `demo.reset_started`, `demo.door_opened`, `demo.door_closed`, `demo.kiosk_reissued`),
+solo con ids.
+
 ## 6. Notas de seguridad
 
 - **Excepción a las tablas de solo inserción.** Una migración deja que 14 tablas de solo inserción (respuestas anónimas,
   tamizajes de Guía I, clima, marcas y convenios de asistencia, movimientos de vacaciones, uso, evidencia de difusión,
   evaluaciones de Ley Silla firmadas) **borren filas solo de la empresa con `is_demo`**. UPDATE y TRUNCATE siguen
   bloqueados para todas, la demo incluida. `audit_entries` no se toca: crece un poco con cada reinicio.
+- **La marca `is_demo`** se pone al crear la empresa y no cambia: un trigger rechaza cambiarla en cualquier sentido, así
+  que ninguna empresa real puede volverse la demo (y quedar borrable) ni la demo dejar de serlo.
 - **`APP_KEY`.** Sellan con ella el código del canal de denuncias de la demo (su QR), los enlaces del portal y de las
   encuestas. Al rotarla la sala muestra un QR nuevo que solo sirve tras reiniciar, y los textos cifrados viejos solo se
   leen si la llave anterior está en `APP_PREVIOUS_KEYS`. Si alguien pulsa «rotar código» en el canal de la demo, el QR de

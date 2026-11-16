@@ -41,6 +41,15 @@ use Illuminate\Support\Facades\Storage;
  * that test.
  */
 return [
+    'leaves on purpose, for the presenter to complete live, the items the manual names as missing' => function (): void {
+        $offices = collect(resolve(WorkCenters::class)->all())->firstWhere('name', DemoRoster::CENTERS['offices'])?->id ?? '';
+        $rows = resolve(App\Modules\Seating\Support\CenterBoard::class)->for($offices)['requirements'];
+        $missing = array_values(array_map(fn (array $row): string => $row['key'], array_filter($rows, fn (array $row): bool => $row['state'] === 'missing')));
+
+        // docs/operations/demo.md, section 4
+        expect($missing)->toBe(['r2', 'r3', 'r8', 'r10', 'r12'], 'states: '.json_encode(array_column($rows, 'state', 'key')));
+    },
+
     'tells the Ley Silla story of the offices: positions, seats, signed assessments, open and closed measures and a keyless survey' => function (array &$logged): void {
         $tenantId = resolve(DemoCompanies::class)->id();
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
