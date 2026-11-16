@@ -19,6 +19,7 @@ use App\Modules\Billing\Models\UsageGrant;
 use App\Modules\Billing\Models\UsageReservation;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Demos\Models\DemoRun;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -70,6 +71,9 @@ const PLATFORM_MODELS = [
     StatementLine::class => 'a line of a statement; the statement carries the company',
     Payment::class => 'money an account paid, for all the companies it pays',
     PaymentAllocation::class => 'the part of a payment that settles a statement',
+    // The console prepares or resets the demo company; the run is the platform's lock and progress, not the company's
+    // content, and it outlives every reset of the demo.
+    DemoRun::class => 'a preparation of the demo company, run by the staff console',
 ];
 
 /** @return list<class-string<Model>> */
