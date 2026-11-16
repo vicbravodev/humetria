@@ -898,4 +898,36 @@ Paso 6-2 (Disclosure, Engagement y Results, con sus correos del grupo 8).
 - **Rutas delicadas para el grupo 7** (aún sin `worker.proof`): `portal.policy.acknowledge` y `portal.support.show`. Ni
   `portal.policy.show`, ni `portal.climate.show` ni `portal.feedback.show` entran en la tabla del grupo 7.
 
+Paso 7 (prueba reciente y las rutas delicadas).
+
+- **Rutas** `worker.proof.show` (`GET /me/{slug}/proof`), `.options`, `.store` (`POST /me/{slug}/proof`, la firma),
+  `.code.send` (`POST .../proof/code`) y `.code.check` (`POST .../proof/code/check`), con `ResolveWorkerTenant`,
+  `RequireWorkerSession` y el limitador `worker-proof` (60 por minuto por dirección y 20 por sesión). No son públicas.
+- **Menos clases**: sin `ProveWithKey`; la firma la verifica `ProofController` como `EntryController` (las acciones no tocan la
+  sesión) y exige que la llave sea de la persona de la sesión (otra persona, otra empresa, revocada, reto de otro contexto o
+  alterada: la misma respuesta 422). `SendProofCode` y `ProveWithCode` son acciones; `Support/ProofSteps` dice el modo
+  (`key`, `code` o `none`) y arma las direcciones; `WorkerSessionStore::prove()` fija `proof_at`.
+- **El código** (`Support/ProofCodes`): en caché un HMAC (con la llave de la app) del código y del id de la sesión, por persona;
+  10 minutos, 5 intentos contados antes de comparar (el sexto se rechaza aunque sea correcto), sirve una vez, uno nuevo anula el
+  anterior y nunca es igual. Envíos: 3 por persona y 3 por sesión cada 10 minutos (`proof.code_sends`). Se rechaza (403) a
+  quien tiene una llave activa y a quien no tiene correo, al pedir y al escribir. El correo `ProofCode` sale con `notifyNow`
+  y, como todo correo, lleva un botón («Ir a mi portal»).
+- **Un envío sin prueba** regresa a la página de donde salió (`WorkerDestination::back`, mismas reglas: si no es una página
+  `/me/{slug}/...` de esa empresa, al inicio) con el flash `proofRequired` (el paso). En lugar de tocar los nueve
+  formularios con `use-recent-proof`, un solo `components/worker-access/recent-proof-dialog.tsx`, montado en `app.tsx`,
+  recuerda el último envío de Inertia (`router.on('before')`), abre el paso ante el flash y, ya probada, lo reenvía con los
+  mismos datos. Inertia v3 conserva el estado de la página en el regreso de un envío; los `onSuccess` del formulario original no
+  corren en el reenvío (la página recarga sus props). JSON: 403 con `proofRequired: true`.
+- **Una página sin prueba** guarda su destino en la misma llave que la entrada (`worker_destination`): entrar y probar nunca
+  ocurren a la vez, y entrar con llave ya es una prueba.
+- **Una lectura por petición**: `RequestWorkerSession` ahora memoriza la `OpenSession` (atributo `worker_access.session`), así
+  `RequireRecentProof` no lee la sesión otra vez.
+- **Logs** `worker_access.proof_given` (`via`: `key` con `key_id`, o `code`), `worker_access.proof_refused` y
+  `worker_access.proof_code_sent`, no `worker.proof_passed`/`_failed`. Sin bitácora ni evento.
+- **Rutas delicadas**, las de la tabla del grupo 7 y nada más (las fija `RecentProofTest`). Leer el estado de cuenta de
+  vacaciones (`portal.vacations.statements.show`) y la política (`portal.policy.show`) no pide prueba: son lo propio de la
+  persona, como su saldo; solo confirmarlos. `RouteSecurityTest` exige `RequireWorkerSession` antes de `worker.proof`.
+- **Navegador**: `tests/Browser/WorkerProofTest.php` y los helpers `provedWithCode()` y `enteringProvedTo()` de `tests/Pest.php`;
+  Ley Silla, la política y el mensaje de apoyo recorren el paso por código; vacaciones y teletrabajo prueban antes de enviar.
+
 *Drafted with EGM*

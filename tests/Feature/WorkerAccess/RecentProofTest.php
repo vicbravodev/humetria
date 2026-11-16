@@ -85,6 +85,27 @@ function proofStep(string $mode): array
     ];
 }
 
+it('asks for a recent proof on exactly the delicate pages and forms of the person', function (): void {
+    $delicate = collect(Route::getRoutes()->getRoutes())
+        ->filter(fn (Illuminate\Routing\Route $route): bool => in_array(RequireRecentProof::class, Route::gatherRouteMiddleware($route), true))
+        ->map(fn (Illuminate\Routing\Route $route): ?string => $route->getName())
+        ->reject(fn (?string $name): bool => str_starts_with((string) $name, 'worker.test.'))
+        ->sort()->values()->all();
+
+    expect($delicate)->toBe([
+        'portal.documents.acknowledge',
+        'portal.equipment.respond',
+        'portal.policy.acknowledge',
+        'portal.seating.acknowledgments.store',
+        'portal.support.show',
+        'portal.vacations.requests.store',
+        'portal.vacations.statements.acknowledge',
+        'portal.vacations.team.approve',
+        'portal.vacations.team.reject',
+        'portal.visits.confirm',
+    ]);
+});
+
 it('lets a page and a form through for less than 5 minutes after the proof, and not from the fifth minute on', function (int $seconds, bool $passes): void {
     enteredAs($this->ana->id);
     $this->travel($seconds)->seconds();
