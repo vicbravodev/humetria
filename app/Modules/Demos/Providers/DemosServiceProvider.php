@@ -42,6 +42,10 @@ final class DemosServiceProvider extends ServiceProvider
         // Working a request (status, note, creating its company) is the superadmin's alone, through Gate::before.
         Gate::define('manage-demo-requests', fn (User $user): AccessResponse => AccessResponse::denyAsNotFound());
 
+        // The demo room (preparing, resetting and sharing the demo company) is the superadmin's alone, through Gate::before;
+        // everyone else, support included, gets a 404 that reveals nothing.
+        Gate::define('manage-demo', fn (User $user): AccessResponse => AccessResponse::denyAsNotFound());
+
         // The demo form is public: cap each address so nobody can flood the table.
         RateLimiter::for('demo-requests', function (Request $request): array {
             $tooMany = fn (Request $request, array $headers): Response => new Response(

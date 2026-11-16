@@ -100,9 +100,15 @@ it('answers 404 to whoever is not on the staff, before anything runs', function 
     Queue::assertNothingPushed();
 })->with($routes);
 
-it('lets support in as well as the superadmin', function (): void {
-    $this->actingAs(support())->get(route('demo-room.show'))->assertOk();
-});
+it('answers 404 to support too: the room is the superadmin\'s alone', function (string $method, string $route): void {
+    Queue::fake();
+    demoCompany();
+
+    $this->actingAs(support())->{$method}(route($route))->assertNotFound()->assertSessionHasNoErrors();
+
+    expect(DemoRun::query()->count())->toBe(0)->and($this->door->getArrayCopy())->toBe([]);
+    Queue::assertNothingPushed();
+})->with($routes);
 
 it('offers to prepare the demo when there is none', function (): void {
     $this->actingAs(superadmin())
