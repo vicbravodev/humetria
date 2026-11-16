@@ -31,9 +31,27 @@ export type OptionSource =
           delay?: number;
       };
 
+function mergeOptions(first: Option[], rest: Option[]): Option[] {
+    const seen = new Set(first.map(({ value }) => value));
+
+    return [...first, ...rest.filter(({ value }) => !seen.has(value))];
+}
+
+function remoteOptions(
+    listed: Option[],
+    found: Option[],
+    query: string,
+): Option[] {
+    return query === '' ? mergeOptions(listed, found) : found;
+}
+
 const IDLE: SearchState = { status: 'idle', options: [] };
 
-function useRemoteSearch(source: OptionSource, query: string): SearchState {
+function useRemoteSearch(
+    source: OptionSource,
+    query: string,
+    active: boolean,
+): SearchState {
     const [state, setState] = useState(IDLE);
     const remote = 'load' in source ? source : null;
     const load = useRef(remote?.load);
@@ -63,9 +81,12 @@ function useRemoteSearch(source: OptionSource, query: string): SearchState {
         return searcher.cancel;
     }, [enabled, delay, minLength]);
 
+    // Nothing is asked until the field is opened: a page full of fields must not ask on load.
     useEffect(() => {
-        search.current?.search(query);
-    }, [query]);
+        if (active) {
+            search.current?.search(query);
+        }
+    }, [query, active]);
 
     return state;
 }
@@ -75,16 +96,23 @@ function useRemoteSearch(source: OptionSource, query: string): SearchState {
  * folded ahead, so Enter always picks from what is on screen; server ones are debounced, cancelled when stale and
  * cached.
  */
-export function useOptionSearch(source: OptionSource, query: string) {
+export function useOptionSearch(
+    source: OptionSource,
+    query: string,
+    active = true,
+) {
     const listed = 'options' in source ? source.options : source.initial;
     const index = useMemo(() => indexOptions(listed), [listed]);
-    const remote = useRemoteSearch(source, query);
+    const remote = useRemoteSearch(source, query, active);
     const minLength = 'load' in source ? (source.minLength ?? 2) : 0;
     const local = filterOptions(index, query, LIMIT);
     const fromServer = 'load' in source && remote.status !== 'idle';
     const status = 'load' in source ? remote.status : 'done';
     const allowNew = source.allowNew === true;
-    const found = fromServer ? remote.options : local.options;
+    // With nothing typed the server's first page shows after the given options ("Todas", the chosen one).
+    const found = fromServer
+        ? remoteOptions(listed, remote.options, query)
+        : local.options;
     const options = allowNew ? withNewOption(found, query) : found;
     const more = !fromServer && local.more;
 

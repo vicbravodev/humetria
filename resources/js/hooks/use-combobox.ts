@@ -5,18 +5,25 @@ import { useOptionSearch } from '@/hooks/use-option-search';
 import { moveActive } from '@/lib/commands';
 import type { Option } from '@/lib/option-search';
 
+type ChoiceHandlers = {
+    defaultValue?: Option | undefined;
+    onChange?: ((option: Option) => void) | undefined;
+};
+
 /**
  * The state of a Combobox's search: what was typed, the options it finds, the one the arrows point at
- * (kept in view) and the keys that move it or pick it.
+ * (kept in view), the chosen option and whether it is open, and the keys that move it or pick it.
  */
 export function useCombobox(
     id: string,
     source: OptionSource,
-    onPick: (option: Option) => void,
+    { defaultValue, onChange }: ChoiceHandlers,
 ) {
+    const [selected, setSelected] = useState(defaultValue);
+    const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [active, setActive] = useState(0);
-    const { options, note } = useOptionSearch(source, query);
+    const { options, note } = useOptionSearch(source, query, open);
     const listId = `${id}-options`;
     const activeId =
         options[active] === undefined ? undefined : `${listId}-${active}`;
@@ -33,7 +40,9 @@ export function useCombobox(
     const pick = (option: Option) => {
         setQuery('');
         setActive(0);
-        onPick({ value: option.value, label: option.label });
+        setSelected(option);
+        setOpen(false);
+        onChange?.({ value: option.value, label: option.label });
     };
 
     const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -57,6 +66,9 @@ export function useCombobox(
     };
 
     return {
+        selected,
+        open,
+        setOpen,
         query,
         type,
         options,

@@ -207,3 +207,40 @@ describe('createRemoteSearch memory and cancellation', () => {
         ]);
     });
 });
+
+describe('createRemoteSearch with a short list', () => {
+    it('filters here once the first page was the whole list, without asking again', async () => {
+        const load = vi.fn(async () => [option('Norte'), option('Sur')]);
+        const search = createRemoteSearch({
+            load,
+            delay: 300,
+            minLength: 0,
+            onChange: (state: SearchState) => states.push(state),
+        });
+
+        search.search('');
+        await vi.advanceTimersByTimeAsync(300);
+        search.search('su');
+
+        expect(last()).toEqual({ status: 'done', options: [option('Sur')] });
+        expect(load).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps asking the server when the first page was full', async () => {
+        const full = Array.from({ length: 20 }, (_, i) => option(`C${i}`));
+        const load = vi.fn(async () => full);
+        const search = createRemoteSearch({
+            load,
+            delay: 300,
+            minLength: 0,
+            onChange: (state: SearchState) => states.push(state),
+        });
+
+        search.search('');
+        await vi.advanceTimersByTimeAsync(300);
+        search.search('c1');
+        await vi.advanceTimersByTimeAsync(300);
+
+        expect(load).toHaveBeenCalledTimes(2);
+    });
+});

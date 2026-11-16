@@ -1,5 +1,4 @@
 import { Check, ChevronDown, Search } from 'lucide-react';
-import { useState } from 'react';
 import {
     Popover,
     PopoverContent,
@@ -33,13 +32,11 @@ const TRIGGER =
  */
 export default function Combobox(props: Props) {
     const { id, name, source, placeholder, describedBy } = props;
-    const [selected, setSelected] = useState(props.defaultValue);
-    const [open, setOpen] = useState(false);
-    const search = useCombobox(id, source, (option) => {
-        setSelected(option);
-        setOpen(false);
-        props.onChange?.(option);
-    });
+    const { selected, open, setOpen, ...search } = useCombobox(
+        id,
+        source,
+        props,
+    );
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
