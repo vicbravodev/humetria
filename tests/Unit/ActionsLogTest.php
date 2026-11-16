@@ -45,12 +45,14 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/Complaints/Actions/OpenFollowUp.php' => 'reads the case a reference and a key open; the actions that change it log (without the case, by design)',
     'app/Modules/Complaints/Actions/OpenChannel.php' => 'reads the channel by its code; each action on a complaint logs what changes',
     'app/Modules/FirstSteps/Actions/BuildFirstSteps.php' => 'reads the steps of a company; changes nothing',
+    'app/Modules/Demos/Actions/ReadDoorState.php' => 'reads the door of the demo room; opening, closing and admitting log',
     // Steps of a logged action: the action that calls them writes the line, with the counts.
     'app/Modules/Complaints/Actions/AssignComplaint.php' => 'at receipt the system assigns with no line (a line with the case would tie it to the hour it came); RouteUnassignedComplaints logs the assignments made by a person',
     'app/Modules/Campaigns/Actions/CloseExpiredCampaigns.php' => 'each close is logged by CloseCampaign',
     'app/Modules/Engagement/Actions/CloseExpiredSurveys.php' => 'each close is logged by CloseSurvey',
     'app/Modules/Campaigns/Actions/QueueSurveyInvitations.php' => 'its callers (launch, resend, invite missing, replacements) log with the counts',
     'app/Modules/Engagement/Actions/QueueInvitations.php' => 'its callers (launch, remind) log with the counts',
+    'app/Modules/Demos/Actions/StartDemoRun.php' => 'DemoRun::start logs demo.run_started (or the run it abandons); the jobs log each step and the end',
     'app/Modules/Tenancy/Actions/SendInvitationEmail.php' => 'only queues the email; InviteMember, InviteOwner and ResendInvitation log it',
     // The audit trail itself: every caller logs the same event beside it.
     'app/Actions/RecordAudit.php' => 'it is the audit trail; its callers log',
