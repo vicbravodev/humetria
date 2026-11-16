@@ -17,39 +17,39 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * A manager answers, from their own portal, the requests that wait for them. The link says who they are: a request that
+ * A manager answers, from their own pages, the requests that wait for them. The session says who they are: a request that
  * is not theirs to answer (a peer's, one given to someone else, one that went to RH with nobody above) does not exist.
  */
 final class PortalTeamRequestsController extends Controller
 {
-    public function show(string $token, PortalVisitor $visitor, PortalTeamPages $pages): Response
+    public function show(string $tenant, PortalVisitor $visitor, PortalTeamPages $pages): Response
     {
-        $person = $visitor->open($token);
+        $person = $visitor->current();
 
         return Inertia::render('leave/portal-team', [
-            'token' => $token,
-            'company' => $person->company,
-            'name' => $person->name,
+            'slug' => $tenant,
+            'company' => $person->companyName,
+            'name' => $person->personName,
             'requests' => $pages->requests($person->employeeId),
         ]);
     }
 
-    public function approve(string $token, string $request, PortalVisitor $visitor, DecideRequest $decide): RedirectResponse
+    public function approve(string $tenant, string $request, PortalVisitor $visitor, DecideRequest $decide): RedirectResponse
     {
-        return $this->answer($token, $request, true, null, $visitor, $decide);
+        return $this->answer($tenant, $request, true, null, $visitor, $decide);
     }
 
-    public function reject(string $token, string $request, PortalDecisionRequest $decision, PortalVisitor $visitor, DecideRequest $decide): RedirectResponse
+    public function reject(string $tenant, string $request, PortalDecisionRequest $decision, PortalVisitor $visitor, DecideRequest $decide): RedirectResponse
     {
-        return $this->answer($token, $request, false, $decision->string('reason')->toString(), $visitor, $decide);
+        return $this->answer($tenant, $request, false, $decision->string('reason')->toString(), $visitor, $decide);
     }
 
     /**
      * One answer wins: a second one, or one after RH answered, is told so and changes nothing.
      */
-    private function answer(string $token, string $requestId, bool $approve, ?string $reason, PortalVisitor $visitor, DecideRequest $decide): RedirectResponse
+    private function answer(string $tenant, string $requestId, bool $approve, ?string $reason, PortalVisitor $visitor, DecideRequest $decide): RedirectResponse
     {
-        $person = $visitor->open($token);
+        $person = $visitor->current();
 
         try {
             $decide->handle($requestId, $approve, Decider::manager($person->employeeId), $reason);
@@ -58,6 +58,6 @@ final class PortalTeamRequestsController extends Controller
             Inertia::flash('toast', ['type' => 'error', 'message' => $refused->getMessage()]);
         }
 
-        return to_route('portal.vacations.team.show', $token);
+        return to_route('portal.vacations.team.show', $tenant);
     }
 }

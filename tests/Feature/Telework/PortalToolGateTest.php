@@ -33,7 +33,6 @@ it('answers 404 on the page by link of a tool the company does not have, and kee
     $this->get(route($route, $this->token))->assertNotFound();
     $this->get(route('portal.show', $this->token))->assertOk();
 })->with([
-    'Vacaciones' => ['portal.vacations.show', 'vacations'],
     'Ley Silla' => ['portal.seating.show', 'seating'],
     'Política NOM-035' => ['portal.policy.show', 'nom035'],
     'Apoyo NOM-035' => ['portal.support.show', 'nom035'],
@@ -41,6 +40,7 @@ it('answers 404 on the page by link of a tool the company does not have, and kee
 
 it('answers 404 on a page of the person in their session when the company of the address does not have the tool', function (string $route): void {
     TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->employee->id]);
+    App\Modules\Leave\Models\LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
     $slug = asPerson($this->employee->id);
 
     $this->get(route($route, $slug))->assertOk();
@@ -49,11 +49,11 @@ it('answers 404 on a page of the person in their session when the company of the
 
     $this->get(route($route, $slug))->assertNotFound();
     $this->get(route('worker.home', $slug))->assertOk();
-})->with(['portal.telework.show', 'portal.notices.show', 'portal.team.show']);
+})->with(['portal.telework.show', 'portal.notices.show', 'portal.team.show', 'portal.vacations.show']);
 
 it('lets a link that is not valid through to the page, which answers it its own way', function (): void {
     onlyAttendance();
-    $request = Request::create('/portal/nope/vacations');
+    $request = Request::create('/portal/nope');
     $route = Route::getRoutes()->match($request);
     $request->setRouteResolver(fn () => $route);
 

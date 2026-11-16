@@ -11,12 +11,12 @@ import { Form } from '@inertiajs/react';
 
 /** The annual statement of one period in the person's portal, in usted: to read, to print and to confirm they received it. */
 export default function LeavePortalStatement({
-    token,
+    slug,
     company,
     statement,
     sheet,
 }: {
-    token: string;
+    slug: string;
     company: string;
     statement: { id: string };
     sheet: StatementSheetData;
@@ -27,7 +27,7 @@ export default function LeavePortalStatement({
             <div className="flex w-full max-w-[760px] flex-col gap-6">
                 <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
                     <Link
-                        href={show.url({ token })}
+                        href={show.url(slug)}
                         className="touch-hit flex w-fit items-center gap-1.5 text-base font-medium text-primary"
                     >
                         <ArrowLeft aria-hidden className="size-4" />
@@ -40,7 +40,7 @@ export default function LeavePortalStatement({
                     {sheet.acknowledgedOn === null ? (
                         <Form
                             {...acknowledge.form({
-                                token,
+                                tenant: slug,
                                 statement: statement.id,
                             })}
                         >

@@ -213,17 +213,15 @@ it('sends each list of records as a paginator', function (string $component, Clo
         [$tenant] = listsCompany();
         Database\Factories\Leave\LeaveSettingFactory::new()->create(['tenant_id' => $tenant->id]);
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
-        workIn($tenant);
 
-        return route('portal.vacations.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+        return route('portal.vacations.show', asPerson($employee->id));
     }, ['requests']],
     'the requests a manager answers in the portal' => ['leave/portal-team', function () {
         [$tenant] = listsCompany();
         Database\Factories\Leave\LeaveSettingFactory::new()->create(['tenant_id' => $tenant->id]);
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
-        workIn($tenant);
 
-        return route('portal.vacations.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+        return route('portal.vacations.team.show', asPerson($employee->id));
     }, ['requests']],
     'Clima' => ['engagement/index', fn () => route('tenant.climate.index', listsCompany()[0]), ['surveys']],
     'a draft of Clima' => ['engagement/show', function () {

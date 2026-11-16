@@ -13,7 +13,6 @@ use App\Modules\Leave\Notifications\RequestEscalated;
 use App\Modules\Leave\Notifications\RequestToDecide;
 use App\Modules\Organization\Contracts\ReportingLines;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Log\Events\MessageLogged;
@@ -196,7 +195,7 @@ it('follows a change of manager: the next run gives the request to the new one a
 
     workIn($this->tenant);
     expect(reloadedRequest($request)->only(['approver_employee_id', 'escalated_at']))->toBe(['approver_employee_id' => $this->director->id, 'escalated_at' => null])
-        ->and(routedMails(RequestToDecide::class))->toBe([['dora@autopartes.test', url('portal/'.resolve(PortalAccess::class)->token($this->director->id).'/vacations/team')]]);
+        ->and(routedMails(RequestToDecide::class))->toBe([['dora@autopartes.test', url('me/autopartes/vacations/team')]]);
 
     expect(routeRequests())->toBe(['taken' => 0, 'reassigned' => 0, 'escalated' => 0]);
     Notification::assertSentOnDemandTimes(RequestToDecide::class, 1);
@@ -297,8 +296,7 @@ it('logs each change with ids, and the totals of the run', function (): void {
     ];
     sort($expected);
     workIn($this->tenant);
-    expect($leave)->toBe($expected)
-        ->and(implode("\n", $lines))->not->toContain(resolve(PortalAccess::class)->token($this->director->id));
+    expect($leave)->toBe($expected);
 });
 
 it('runs as a command and reports what it did', function (): void {

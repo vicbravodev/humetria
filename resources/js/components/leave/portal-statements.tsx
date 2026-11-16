@@ -6,10 +6,10 @@ import type { PendingStatement } from '@/types';
 
 /** The way to each annual statement the person has yet to confirm they received. */
 export default function PortalStatements({
-    token,
+    slug,
     statements,
 }: {
-    token: string;
+    slug: string;
     statements: PendingStatement[];
 }) {
     if (statements.length === 0) {
@@ -21,7 +21,7 @@ export default function PortalStatements({
             {statements.map((statement) => (
                 <Link
                     key={statement.id}
-                    href={show.url({ token, statement: statement.id })}
+                    href={show.url({ tenant: slug, statement: statement.id })}
                     className="flex items-start gap-3.5 card p-4 hover:bg-accent/50"
                 >
                     <IconTile icon={FileCheck} />

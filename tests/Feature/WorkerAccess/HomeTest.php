@@ -112,6 +112,7 @@ it('reads the start with the same queries whatever the tools offer', function (i
 
 /**
  * The company of the slug, the session (the person's state, the person and their area) and the person's keys; then the
- * company again (its row and its tools) for each tool that asks whether it has the module: Telework, Marcar and Mi equipo.
+ * company again (its row and its tools) for each tool that asks whether it has the module: Telework, Marcar, Mi equipo and Mis
+ * vacaciones, which also asks whether the company opened Vacaciones.
  */
-const WORKER_HOME_QUERIES = 14;
+const WORKER_HOME_QUERIES = 17;

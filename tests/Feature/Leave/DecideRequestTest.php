@@ -20,8 +20,8 @@ use App\Modules\Leave\Notifications\RequestDecided;
 use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -325,7 +325,7 @@ it('approves a leave without touching any balance, whatever the person has', fun
         ->and(leftByPeriod())->toBe([3, 14]);
 });
 
-it('emails the answer to who asked, with the link of their own portal', function (): void {
+it('emails the answer to who asked, with the address of their own vacations and no credential', function (): void {
     decide(waiting(), true, asBoss());
 
     [$mail] = answersSent();
@@ -333,7 +333,7 @@ it('emails the answer to who asked, with the link of their own portal', function
         ->and($mail->greeting)->toBe('Hola, Ana Solís')
         ->and($mail->introLines)->toBe(['Su solicitud de vacaciones del 9 de noviembre de 2026 al 20 de noviembre de 2026: 9 días laborables fue aprobada.'])
         ->and($mail->actionText)->toBe('Ver mis vacaciones')
-        ->and($mail->actionUrl)->toBe(route('portal.vacations.show', resolve(PortalAccess::class)->token($this->ana->id)));
+        ->and($mail->actionUrl)->toBe(route('portal.vacations.show', $this->tenant->slug));
     Notification::assertSentOnDemandTimes(RequestDecided::class, 1);
 });
 
@@ -357,7 +357,7 @@ it('emails nobody when who asked has no email or the email cannot be made, and t
 
     $this->ana->update(['email' => 'ana@autopartes.test']);
     Exceptions::fake();
-    $this->mock(PortalAccess::class)->shouldReceive('token')->andThrow(new RuntimeException('no link'));
+    $this->mock(WorkerLinks::class)->shouldReceive('to')->andThrow(new RuntimeException('no link'));
     $second = waiting(['starts_on' => '2026-12-01', 'ends_on' => '2026-12-02', 'working_days' => 2]);
 
     expect(decide($second, true, asBoss())->refresh()->status)->toBe(RequestStatus::Approved);
@@ -365,7 +365,7 @@ it('emails nobody when who asked has no email or the email cannot be made, and t
     Notification::assertNothingSent();
 });
 
-it('logs each answer with ids and days: never the reason, the note nor a portal token', function (): void {
+it('logs each answer with ids and days: never the reason nor the note', function (): void {
     $approved = waiting();
     $rejected = waiting(['starts_on' => '2026-12-01', 'ends_on' => '2026-12-02', 'working_days' => 2]);
     $lines = [];
@@ -380,5 +380,5 @@ it('logs each answer with ids and days: never the reason, the note nor a portal 
     expect(array_values(array_filter($lines, fn (string $line): bool => str_starts_with($line, 'leave.'))))->toBe([
         'leave.request_approved '.json_encode(['request_id' => $approved->id, 'employee_id' => $this->ana->id, 'working_days' => 9, 'by_hr' => false, 'advanced' => 0], JSON_THROW_ON_ERROR),
         'leave.request_rejected '.json_encode(['request_id' => $rejected->id, 'employee_id' => $this->ana->id, 'working_days' => 2, 'by_hr' => true], JSON_THROW_ON_ERROR),
-    ])->and($all)->not->toContain('privad')->not->toContain(resolve(PortalAccess::class)->token($this->ana->id));
+    ])->and($all)->not->toContain('privad');
 });

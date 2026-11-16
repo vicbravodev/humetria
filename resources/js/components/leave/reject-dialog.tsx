@@ -7,12 +7,12 @@ import type { TeamLeaveRequest } from '@/types';
 
 /** The manager rejects a request: the reason is required, and the person who asked reads it. */
 export default function RejectDialog({
-    token,
+    slug,
     request,
     open,
     onOpenChange,
 }: {
-    token: string;
+    slug: string;
     request: TeamLeaveRequest;
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -25,7 +25,7 @@ export default function RejectDialog({
             onOpenChange={onOpenChange}
             title="Rechazar solicitud"
             description={`${request.name} leerá el motivo que usted escriba.`}
-            form={reject.form({ token, request: request.id })}
+            form={reject.form({ tenant: slug, request: request.id })}
             submit="Rechazar solicitud"
             tone="destructive"
         >

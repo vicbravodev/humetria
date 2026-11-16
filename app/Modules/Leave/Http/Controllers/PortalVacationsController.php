@@ -19,19 +19,19 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * «Mis vacaciones» in a person's portal, under the same link as the rest: their days by period and their requests. The
- * link is the credential and only ever shows, and acts on, what is of its person.
+ * «Mis vacaciones» in the person's pages: their days by period and their requests. The session says who they are, and
+ * only ever shows, and acts on, what is of that person.
  */
 final class PortalVacationsController extends Controller
 {
-    public function show(string $token, PortalVisitor $visitor): Response
+    public function show(string $tenant, PortalVisitor $visitor): Response
     {
-        $person = $visitor->open($token);
+        $person = $visitor->current();
 
         return Inertia::render('leave/portal', [
-            'token' => $token,
-            'company' => $person->company,
-            'name' => $person->name,
+            'slug' => $tenant,
+            'company' => $person->companyName,
+            'name' => $person->personName,
             ...PortalVacationsPages::for($person->employeeId),
         ]);
     }
@@ -39,9 +39,9 @@ final class PortalVacationsController extends Controller
     /**
      * What the dates would be as a request, before sending it: nothing is written.
      */
-    public function preview(string $token, PortalLeaveRequest $request, PortalVisitor $visitor, RequestLeave $ask): JsonResponse
+    public function preview(string $tenant, PortalLeaveRequest $request, PortalVisitor $visitor, RequestLeave $ask): JsonResponse
     {
-        $person = $visitor->open($token);
+        $person = $visitor->current();
 
         try {
             $plan = $ask->preview($person->employeeId, $request->typeId(), $request->startsOn(), $request->endsOn());
@@ -52,9 +52,9 @@ final class PortalVacationsController extends Controller
         return response()->json(['workingDays' => $plan['workingDays'], 'hadBalance' => $plan['hadBalance'], 'shortBy' => $plan['shortBy'], 'continuousNotice' => $plan['continuousNotice']]);
     }
 
-    public function store(string $token, PortalLeaveRequest $request, PortalVisitor $visitor, RequestLeave $ask): RedirectResponse
+    public function store(string $tenant, PortalLeaveRequest $request, PortalVisitor $visitor, RequestLeave $ask): RedirectResponse
     {
-        $person = $visitor->open($token);
+        $person = $visitor->current();
 
         try {
             $ask->handle($person->employeeId, $request->typeId(), $request->startsOn(), $request->endsOn(), $request->string('note')->toString());
@@ -64,15 +64,15 @@ final class PortalVacationsController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Enviamos su solicitud. Le avisaremos cuando la respondan.']);
 
-        return to_route('portal.vacations.show', $token);
+        return to_route('portal.vacations.show', $tenant);
     }
 
     /**
      * The person cancels a request of theirs; one that is not theirs does not exist.
      */
-    public function cancel(string $token, string $request, PortalVisitor $visitor, CancelRequest $cancel): RedirectResponse
+    public function cancel(string $tenant, string $request, PortalVisitor $visitor, CancelRequest $cancel): RedirectResponse
     {
-        $person = $visitor->open($token);
+        $person = $visitor->current();
 
         try {
             $cancel->handle($request, Decider::requester($person->employeeId));
@@ -81,6 +81,6 @@ final class PortalVacationsController extends Controller
             Inertia::flash('toast', ['type' => 'error', 'message' => 'Esta solicitud ya no se puede cancelar.']);
         }
 
-        return to_route('portal.vacations.show', $token);
+        return to_route('portal.vacations.show', $tenant);
     }
 }

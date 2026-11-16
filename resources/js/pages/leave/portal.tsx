@@ -1,12 +1,11 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { Head } from '@inertiajs/react';
 import PortalBalance from '@/components/leave/portal-balance';
 import PortalRequests from '@/components/leave/portal-requests';
 import PortalShell from '@/components/leave/portal-shell';
 import PortalStatements from '@/components/leave/portal-statements';
 import PortalTeamLink from '@/components/leave/portal-team-link';
 import RequestForm from '@/components/leave/request-form';
-import { show } from '@/routes/portal';
+import WorkerHomeLink from '@/components/worker-home-link';
 import type {
     LeavePeriod,
     LeaveTypeOption,
@@ -20,7 +19,7 @@ import type {
  * days and dates, never an amount.
  */
 export default function LeavePortal({
-    token,
+    slug,
     company,
     today,
     periods,
@@ -31,7 +30,7 @@ export default function LeavePortal({
     requests,
     types,
 }: {
-    token: string;
+    slug: string;
     company: string;
     name: string;
     /** Today as the company lives it, Y-m-d. */
@@ -51,13 +50,7 @@ export default function LeavePortal({
         <PortalShell company={company}>
             <Head title="Mis vacaciones" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
-                <Link
-                    href={show.url({ token })}
-                    className="touch-hit flex w-fit items-center gap-1.5 text-base font-medium text-primary"
-                >
-                    <ArrowLeft aria-hidden className="size-4" />
-                    Volver a mi portal
-                </Link>
+                <WorkerHomeLink slug={slug} />
                 <div className="flex flex-col gap-2">
                     <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
                         Mis vacaciones
@@ -67,15 +60,15 @@ export default function LeavePortal({
                         tiene registrados su empresa.
                     </p>
                 </div>
-                <PortalStatements token={token} statements={statements} />
-                <PortalTeamLink token={token} pending={teamPending} />
+                <PortalStatements slug={slug} statements={statements} />
+                <PortalTeamLink slug={slug} pending={teamPending} />
                 <PortalBalance
                     periods={periods}
                     advanced={advanced}
                     waiting={waiting}
                 />
-                <RequestForm token={token} today={today} types={types} />
-                <PortalRequests token={token} requests={requests} />
+                <RequestForm slug={slug} today={today} types={types} />
+                <PortalRequests slug={slug} requests={requests} />
             </div>
         </PortalShell>
     );

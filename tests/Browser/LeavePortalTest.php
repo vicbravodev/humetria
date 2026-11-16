@@ -8,7 +8,6 @@ use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 
 // Light and dark, on a desktop and on a phone.
@@ -23,7 +22,7 @@ $looks = [
  * Ana, who reports to Beto in a company that uses Vacaciones, on a Monday at noon in Mexico City: 3 days left of her
  * 2025 period, which could already prescribe, and 14 of the 2026 one.
  *
- * @return array{ana: Employee, boss: Employee, url: string}
+ * @return array{ana: Employee, boss: Employee, url: string, enter: Closure}
  */
 function leaveVacationsPortal(bool $periods = true): array
 {
@@ -41,7 +40,8 @@ function leaveVacationsPortal(bool $periods = true): array
 
     workIn($tenant);
 
-    return ['ana' => $ana, 'boss' => $boss, 'url' => '/portal/'.resolve(IssuePortalLink::class)->handle($ana->id).'/vacations'];
+    // Ana opens her vacations without a session: she enters with a link she asked for and lands back on them.
+    return ['ana' => $ana, 'boss' => $boss, 'url' => '/me/acme/vacations', 'enter' => enteringTo($ana->id, 'Mis vacaciones')];
 }
 
 // Boards LS-Portal and N037-Portal: one column, the person's own frame.
@@ -51,7 +51,7 @@ it('shows a person their days by period and what they asked for', function (bool
 
     LeaveRequest::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'employee_id' => $portal['ana']->id, 'starts_on' => '2026-12-21', 'ends_on' => '2026-12-22', 'working_days' => 2]);
 
-    visitPage('leave/portal', $portal['url'], $dark, $mobile)
+    visitPage('leave/portal', $portal['url'], $dark, $mobile, $portal['enter'])
         ->assertSee('Mis vacaciones')
         // The person's own frame, even in a browser signed in to the panel: no sidebar, no top bar.
         ->assertNotPresent('[data-sidebar="sidebar"]')
@@ -71,7 +71,7 @@ it('shows a person their days by period and what they asked for', function (bool
 })->with($looks);
 
 it('tells a person with no days yet when they will have them', function (): void {
-    visitPage('leave/portal', leaveVacationsPortal(periods: false)['url'])
+    visitPage('leave/portal', ($portal = leaveVacationsPortal(periods: false))['url'], reach: $portal['enter'])
         ->assertSee('Aún no tiene días disponibles')
         ->assertSee('Aún no ha pedido días.');
 });
@@ -79,7 +79,7 @@ it('tells a person with no days yet when they will have them', function (): void
 it('lets a person ask for days and see the request waiting', function (bool $dark, bool $mobile): void {
     $portal = leaveVacationsPortal();
 
-    visitPage('leave/portal', $portal['url'], $dark, $mobile)
+    visitPage('leave/portal', $portal['url'], $dark, $mobile, $portal['enter'])
         // The button waits for both dates, and says so instead of just being off.
         ->assertSee('Elija el día en que empieza y el día en que termina para poder enviar la solicitud.')
         // The dates are picked in a calendar, never typed; it opens on the month of the first day it allows.
@@ -108,7 +108,7 @@ it('lets a person ask for days and see the request waiting', function (bool $dar
 it('says a person has no days for the dates and still lets them send the request', function (): void {
     $portal = leaveVacationsPortal(periods: false);
 
-    visitPage('leave/portal', $portal['url'])
+    visitPage('leave/portal', $portal['url'], reach: $portal['enter'])
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-09"] button')
         ->assertScript(calendarClosed(), true)
@@ -125,7 +125,7 @@ it('says a person has no days for the dates and still lets them send the request
 });
 
 it('says why dates cannot be asked as soon as they are picked', function (): void {
-    visitPage('leave/portal', leaveVacationsPortal()['url'])
+    visitPage('leave/portal', ($portal = leaveVacationsPortal())['url'], reach: $portal['enter'])
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-07"] button')
         ->assertScript(calendarClosed(), true)
@@ -140,7 +140,7 @@ it('lets a person ask for a leave of the company, which uses none of their days'
     $portal = leaveVacationsPortal();
     LeaveType::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'name' => 'Paternidad']);
 
-    visitPage('leave/portal', $portal['url'])
+    visitPage('leave/portal', $portal['url'], reach: $portal['enter'])
         ->click('#leave-type')
         ->click('[role="option"]:has-text("Paternidad")')
         ->click('#leave-starts-on')
@@ -160,7 +160,7 @@ it('lets a person cancel a request of theirs, after asking', function (bool $dar
     $portal = leaveVacationsPortal();
     $request = LeaveRequest::factory()->create(['tenant_id' => $portal['ana']->tenant_id, 'employee_id' => $portal['ana']->id]);
 
-    visitPage('leave/portal', $portal['url'], $dark, $mobile)
+    visitPage('leave/portal', $portal['url'], $dark, $mobile, $portal['enter'])
         ->press('Cancelar solicitud')
         ->assertSee('¿Cancelar esta solicitud?')
         // The answer that goes ahead is the dialog's submit: its text has a comma, which a text selector would split.
@@ -173,12 +173,13 @@ it('lets a person cancel a request of theirs, after asking', function (bool $dar
     expect($request->refresh()->status->value)->toBe('cancelled');
 })->with($looks);
 
-// E-02: the home of the portal lists the person's tools, and every tool leads back to it.
-it('leads from the home of the portal to vacations and back', function (bool $dark, bool $mobile): void {
+// E-02: the start of the person's pages lists their tools, and every tool leads back to it.
+it('leads from the start of the person\'s pages to vacations and back', function (bool $dark, bool $mobile): void {
     $portal = leaveVacationsPortal();
     $home = preg_replace('#/vacations$#', '', $portal['url']) ?? '';
+    $enter = enteringTo($portal['ana']->id, 'Hola, Ana Solís');
 
-    visitPage('telework/portal', $home, $dark, $mobile)
+    visitPage('worker-access/home', $home, $dark, $mobile, $enter)
         ->assertSee('Hola, Ana Solís')
         ->assertSee('Mis vacaciones')
         ->assertDontSee('teletrabajo')
@@ -194,7 +195,7 @@ it('leads from the home of the portal to vacations and back', function (bool $da
 it('tells the days waiting for an answer and leaves nothing to send twice', function (): void {
     $portal = leaveVacationsPortal();
 
-    $page = visitPage('leave/portal', $portal['url'])
+    $page = visitPage('leave/portal', $portal['url'], reach: $portal['enter'])
         ->assertButtonDisabled('Enviar solicitud')
         ->click('#leave-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-09"] button')

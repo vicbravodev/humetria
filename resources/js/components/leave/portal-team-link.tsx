@@ -6,10 +6,10 @@ import { show } from '@/routes/portal/vacations/team';
 
 /** The way to the requests of the person's team, while any waits for their answer. */
 export default function PortalTeamLink({
-    token,
+    slug,
     pending,
 }: {
-    token: string;
+    slug: string;
     pending: number;
 }) {
     if (pending === 0) {
@@ -18,7 +18,7 @@ export default function PortalTeamLink({
 
     return (
         <Link
-            href={show.url({ token })}
+            href={show.url(slug)}
             className="flex items-start gap-3.5 card p-4 hover:bg-accent/50"
         >
             <IconTile icon={Users} />
