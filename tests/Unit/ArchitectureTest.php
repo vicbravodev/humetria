@@ -28,6 +28,17 @@ function internalNamespacesOf(string $module): array
     ));
 }
 
+/**
+ * The demo's story (database/seeders/Demo, spec 2026-11-16-demo-company §3) is no module: it tells each module's part through
+ * that module's own actions, models and enums, as a person would, and nothing else of it (no HTTP, jobs, listeners or notifications).
+ *
+ * @return list<string>
+ */
+function demoStoryMayUse(string $internalNamespace): array
+{
+    return preg_match('/\\\\(Actions|Models|Enums)$/', $internalNamespace) === 1 ? ['Database\\Seeders\\Demo'] : [];
+}
+
 it('has the Attendance module registered in the architecture rules', function (): void {
     expect(modules())->toContain('Attendance');
 });
@@ -101,11 +112,11 @@ foreach (modules() as $module) {
         ->toHaveMethod('handle');
 
     foreach (internalNamespacesOf($module) as $internalNamespace) {
-        // The module's factories (database/factories/{Module}, CLAUDE.md) build its models, so they count as inside it. The demo's
-        // story (database/seeders/Demo) is no module: it tells each module's part through that module's own actions, as a person would.
+        // The module's factories (database/factories/{Module}, CLAUDE.md) build its models, so they count as inside it; the demo's
+        // story may use its actions, models and enums (demoStoryMayUse).
         arch("{$internalNamespace} is internal to the {$module} module")
             ->expect($internalNamespace)
-            ->toOnlyBeUsedIn(["App\\Modules\\{$module}", "Database\\Factories\\{$module}", 'Database\\Seeders\\Demo']);
+            ->toOnlyBeUsedIn(["App\\Modules\\{$module}", "Database\\Factories\\{$module}", ...demoStoryMayUse($internalNamespace)]);
 
         if (str_ends_with($internalNamespace, '\\Actions') || str_ends_with($internalNamespace, '\\Models')) {
             arch("{$internalNamespace} does not depend on HTTP")
@@ -114,6 +125,11 @@ foreach (modules() as $module) {
         }
     }
 }
+
+// The fence of that exception: only the story itself and the binding of DemoWorkspace (spec §3) reach database/seeders/Demo.
+arch('the demo story is used only by itself and the Demos providers')
+    ->expect('Database\\Seeders\\Demo')
+    ->toOnlyBeUsedIn(['Database\\Seeders\\Demo', 'App\\Modules\\Demos\\Providers']);
 
 /*
  * Telework (NOM-037) holds the most personal data of the platform, so its boundaries are spelled out on their own: the
@@ -134,9 +150,10 @@ foreach (['Actions', 'Models'] as $layer) {
 }
 
 foreach (['Actions', 'Models', 'Support'] as $layer) {
+    // The demo's story uses its actions and models too (spec 2026-11-16-demo-company §3).
     arch("Telework {$layer} are not used by the shared kernel")
         ->expect("App\\Modules\\Telework\\{$layer}")
-        ->toOnlyBeUsedIn(['App\Modules\Telework', 'Database\Factories\Telework']);
+        ->toOnlyBeUsedIn(['App\Modules\Telework', 'Database\Factories\Telework', ...demoStoryMayUse("App\\Modules\\Telework\\{$layer}")]);
 }
 
 /*
@@ -156,9 +173,10 @@ foreach (['Actions', 'Models'] as $layer) {
 }
 
 foreach (['Actions', 'Models', 'Support'] as $layer) {
+    // The demo's story uses its actions and models too (spec 2026-11-16-demo-company §3).
     arch("Seating {$layer} are not used by the shared kernel")
         ->expect("App\\Modules\\Seating\\{$layer}")
-        ->toOnlyBeUsedIn(['App\Modules\Seating', 'Database\Factories\Seating']);
+        ->toOnlyBeUsedIn(['App\Modules\Seating', 'Database\Factories\Seating', ...demoStoryMayUse("App\\Modules\\Seating\\{$layer}")]);
 }
 
 /*
@@ -178,9 +196,10 @@ foreach (['Actions', 'Models'] as $layer) {
 }
 
 foreach (['Actions', 'Models', 'Support'] as $layer) {
+    // The demo's story uses its actions and models too (spec 2026-11-16-demo-company §3).
     arch("Compensation {$layer} are not used by the shared kernel")
         ->expect("App\\Modules\\Compensation\\{$layer}")
-        ->toOnlyBeUsedIn(['App\\Modules\\Compensation', 'Database\\Factories\\Compensation']);
+        ->toOnlyBeUsedIn(['App\\Modules\\Compensation', 'Database\\Factories\\Compensation', ...demoStoryMayUse("App\\Modules\\Compensation\\{$layer}")]);
 }
 
 /*
@@ -200,9 +219,10 @@ foreach (['Actions', 'Models'] as $layer) {
 }
 
 foreach (['Actions', 'Models', 'Support'] as $layer) {
+    // The demo's story uses its actions and models too (spec 2026-11-16-demo-company §3).
     arch("Complaints {$layer} are not used by the shared kernel")
         ->expect("App\\Modules\\Complaints\\{$layer}")
-        ->toOnlyBeUsedIn(['App\Modules\Complaints', 'Database\Factories\Complaints']);
+        ->toOnlyBeUsedIn(['App\Modules\Complaints', 'Database\Factories\Complaints', ...demoStoryMayUse("App\\Modules\\Complaints\\{$layer}")]);
 }
 
 /*
@@ -223,7 +243,8 @@ foreach (['Actions', 'Models'] as $layer) {
 }
 
 foreach (['Actions', 'Models', 'Support'] as $layer) {
+    // The demo's story uses its actions and models too (spec 2026-11-16-demo-company §3).
     arch("Disclosure {$layer} are not used by the shared kernel")
         ->expect("App\\Modules\\Disclosure\\{$layer}")
-        ->toOnlyBeUsedIn(['App\\Modules\\Disclosure', 'Database\\Factories\\Disclosure']);
+        ->toOnlyBeUsedIn(['App\\Modules\\Disclosure', 'Database\\Factories\\Disclosure', ...demoStoryMayUse("App\\Modules\\Disclosure\\{$layer}")]);
 }
