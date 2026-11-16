@@ -95,6 +95,17 @@ const ANALYTICS: PrivacySection = {
     ],
 };
 
+const PLATFORM: PrivacySection = {
+    id: 'humi-y-registros',
+    title: 'Humi y los registros técnicos de la plataforma',
+    paragraphs: [
+        'Si usas Humi, el asistente de la plataforma, enviamos a PostHog (us.i.posthog.com, en Estados Unidos) lo que le escribes y lo que te responde, con las instrucciones que recibe, el modelo que contestó, cuánto tardó y si hubo un error, para mejorar el asistente. Antes de salir, tu mensaje pasa por el mismo filtro que oculta correos, teléfonos, CURP, RFC y NSS. A PostHog no le decimos quién eres: te identifica con un código que no se puede convertir en tu nombre ni en tu correo, y no crea un perfil tuyo.',
+        'Cuando la plataforma resume los comentarios de una encuesta de clima, a PostHog solo le llegan el modelo, la cantidad de texto procesado, el tiempo y si hubo un error: nunca el texto de los comentarios ni el resumen.',
+        'Los registros técnicos de nuestro servidor también se guardan en PostHog para detectar fallas y avisarnos: qué pasó, cuándo y con qué identificadores internos, nunca respuestas de encuestas ni contraseñas.',
+        `El texto de esta sección está ${REVIEW}.`,
+    ],
+};
+
 const CONTROL: PrivacySection = {
     id: 'borrar-o-rechazar-cookies',
     title: 'Cómo borrar o rechazar las cookies',
@@ -123,7 +134,7 @@ const RIGHTS: PrivacySection = {
     ],
 };
 
-/** The eight sections of the notice, in the order the page shows them. */
+/** The nine sections of the notice, in the order the page shows them. */
 export function privacySections(parties: PrivacyParties): PrivacySection[] {
     return [
         controller(parties),
@@ -131,6 +142,7 @@ export function privacySections(parties: PrivacyParties): PrivacySection[] {
         ORIGIN,
         OWN_COOKIES,
         ANALYTICS,
+        PLATFORM,
         CONTROL,
         RETENTION,
         RIGHTS,
