@@ -235,6 +235,18 @@ it('tells no cache to keep the redirect that carries the portal', function (): v
     expect(scan($this, openDoorPath())->assertRedirect()->headers->get('Cache-Control'))->toContain('no-store');
 });
 
+it('keeps the cookie no longer than the session that let the visitor in', function (): void {
+    $this->freezeTime();
+    demoDoorFixture($this);
+    $path = openDoorPath(90);
+    $this->travel(30)->minutes();
+
+    $cookie = scan($this, $path)->getCookie(DOOR_COOKIE, false);
+
+    expect($cookie?->getExpiresTime())->toBeGreaterThan(now()->getTimestamp())
+        ->toBeLessThanOrEqual(now()->addMinutes(60)->getTimestamp());
+});
+
 it('tells the room how many workers are taken and free', function (): void {
     $this->freezeTime();
     demoDoorFixture($this, 3);

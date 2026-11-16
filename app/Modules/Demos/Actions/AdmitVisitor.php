@@ -49,7 +49,7 @@ final readonly class AdmitVisitor
             if ($returning !== null) {
                 $url = $this->portals->url($returning->employee_id);
 
-                return $url === null ? AdmissionResult::closed() : AdmissionResult::admitted($returning->id, $returning->employee_id, $url);
+                return $url === null ? AdmissionResult::closed() : AdmissionResult::admitted($returning->id, $returning->employee_id, $url, $session->expires_at);
             }
 
             return $this->claim($session);
@@ -70,7 +70,7 @@ final readonly class AdmitVisitor
                 $assignment = DoorAssignment::query()->create(['tenant_id' => $session->tenant_id, 'session_id' => $session->id, 'employee_id' => $id, 'claimed_at' => now()]);
                 Log::info('demo.door_admitted', ['assignment_id' => $assignment->id]);
 
-                return AdmissionResult::admitted($assignment->id, $id, $url);
+                return AdmissionResult::admitted($assignment->id, $id, $url, $session->expires_at);
             }
         }
 

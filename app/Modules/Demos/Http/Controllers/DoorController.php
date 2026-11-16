@@ -24,10 +24,13 @@ final readonly class DoorController
         $cookie = $request->cookie(self::COOKIE);
         $result = $admit->handle($code, is_string($cookie) ? $cookie : null);
 
-        if ($result->state === 'admitted' && $result->portalUrl !== null && $result->assignmentId !== null) {
+        if ($result->state === 'admitted' && $result->portalUrl !== null && $result->assignmentId !== null && $result->until !== null) {
+            // The cookie lasts no longer than the session that let the visitor in.
+            $minutes = max(1, intdiv(max(0, $result->until->getTimestamp() - now()->getTimestamp()) + 59, 60));
+
             // The address is the person's portal, a bearer link: no cache keeps it.
             return redirect()->away($result->portalUrl, 302, ['Cache-Control' => 'no-store, private'])
-                ->withCookie(Cookie::make(self::COOKIE, $result->assignmentId, 12 * 60, '/demo', null, null, true, false, 'lax'));
+                ->withCookie(Cookie::make(self::COOKIE, $result->assignmentId, $minutes, '/demo', null, null, true, false, 'lax'));
         }
 
         // Closed, expired, unknown or of another company: the same page, so nobody can tell them apart.
