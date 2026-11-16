@@ -33,12 +33,16 @@ final class SendPostHogEvent implements ShouldQueue
     ) {}
 
     /**
-     * Queues the event and never throws: a queue that is down loses the event, not the request (or the report) that sent it.
+     * Queues the event, when there is a token, and never throws: a queue that is down loses the event, not the request (or the report) that sent it.
      *
      * @param  array<string, mixed>  $properties
      */
     public static function safely(string $event, string $distinctId, array $properties): void
     {
+        if (Analytics::serverToken() === null) {
+            return;
+        }
+
         try {
             Bus::dispatch(new self($event, $distinctId, $properties));
         } catch (Throwable $failure) {
