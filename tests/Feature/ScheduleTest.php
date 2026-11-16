@@ -42,7 +42,8 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'schedule:heartbeat' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',
         'queue:prune-batches' => '0 0 * * *',
-        'queue:prune-failed' => '0 0 * * *',
+        // As long as Horizon keeps them (trim.failed): a week to look at a failure before it is gone.
+        'queue:prune-failed --hours=168' => '0 0 * * *',
     ]);
 
     $telework = collect(app(Schedule::class)->events())->filter(fn (Event $event): bool => str_contains($event->command ?? '', 'telework:'));

@@ -196,4 +196,5 @@ Schedule::command('schedule:heartbeat')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
 Schedule::command('queue:prune-batches')->daily();
-Schedule::command('queue:prune-failed')->daily();
+// A week, as long as Horizon keeps them (horizon.trim.failed): a failure is still there to read after a weekend.
+Schedule::command('queue:prune-failed', ['--hours' => 168])->daily();
