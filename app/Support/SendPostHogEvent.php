@@ -10,8 +10,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * One event on its way to PostHog, off the request that caused it: a PostHog that is slow or down never slows or breaks
@@ -29,6 +31,25 @@ final class SendPostHogEvent implements ShouldQueue
         private readonly string $distinctId,
         private readonly array $properties,
     ) {}
+
+    /**
+     * Queues the event, when there is a token, and never throws: a queue that is down loses the event, not the request (or the report) that sent it.
+     *
+     * @param  array<string, mixed>  $properties
+     */
+    public static function safely(string $event, string $distinctId, array $properties): void
+    {
+        if (Analytics::serverToken() === null) {
+            return;
+        }
+
+        try {
+            Bus::dispatch(new self($event, $distinctId, $properties));
+        } catch (Throwable $failure) {
+            // The class only: a connection error can quote a host and its credentials.
+            Log::warning('posthog.dispatch_failed', ['exception' => class_basename($failure)]);
+        }
+    }
 
     public function handle(): void
     {

@@ -22,7 +22,7 @@ export type AnalyticsEngine = {
     captureException: (error: unknown) => void;
 };
 
-type ConfigSource = {
+export type ConfigSource = {
     getElementById: (id: string) => { textContent: string | null } | null;
 };
 
@@ -39,19 +39,26 @@ function parse(text: string): unknown {
     }
 }
 
-function field(value: object, name: string): string | undefined {
+export function field(value: object, name: string): string | undefined {
     const found: unknown = Reflect.get(value, name);
 
     return typeof found === 'string' && found !== '' ? found : undefined;
+}
+
+/** The JSON object of a block the server wrote in the document, or null when there is none or it is not one. */
+export function readBlock(source: ConfigSource, id: string): object | null {
+    const value = parse(source.getElementById(id)?.textContent ?? '');
+
+    return typeof value === 'object' && value !== null ? value : null;
 }
 
 /** The configuration the server wrote, or null when it wrote none (no token, no consent, another page). */
 export function readAnalyticsConfig(
     source: ConfigSource,
 ): AnalyticsConfig | null {
-    const value = parse(source.getElementById(BLOCK_ID)?.textContent ?? '');
+    const value = readBlock(source, BLOCK_ID);
 
-    if (typeof value !== 'object' || value === null) {
+    if (value === null) {
         return null;
     }
 
@@ -81,7 +88,7 @@ const NUMBER = /\d[\d\s().-]{6,}\d/g;
 const MAX_MESSAGE = 200;
 
 /** What an error says may quote what the visitor typed: addresses and numbers are masked, and it is cut short. */
-function scrubMessage(text: string): string {
+export function scrubMessage(text: string): string {
     return text
         .replace(EMAIL, '[email]')
         .replace(NUMBER, '[number]')

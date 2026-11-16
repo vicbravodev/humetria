@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import {
     clickEvent,
     createMilestones,
-    errorSource,
     scrollPercent,
 } from '@/lib/analytics-behavior';
 import { captureError, track } from '@/lib/analytics';
+import { watchErrors } from '@/lib/error-tracking';
 
 const DEPTHS = [25, 50, 75, 100] as const;
 
@@ -86,21 +86,6 @@ function watchFormStart(): () => void {
     return () => document.removeEventListener('focusin', onFocus);
 }
 
-/** What breaks in the visitor's browser: an uncaught error or a promise nobody caught. */
-function watchErrors(): () => void {
-    const onError = (event: ErrorEvent) => captureError(errorSource(event));
-    const onRejection = (event: PromiseRejectionEvent) =>
-        captureError(errorSource(event));
-
-    window.addEventListener('error', onError);
-    window.addEventListener('unhandledrejection', onRejection);
-
-    return () => {
-        window.removeEventListener('error', onError);
-        window.removeEventListener('unhandledrejection', onRejection);
-    };
-}
-
 /**
  * What the landing measures besides the page view and the lead (App\Http\Analytics decides whether PostHog runs at all;
  * without it every call here does nothing): clicks, scroll depth, sections seen, the start of the form and browser errors.
@@ -112,7 +97,8 @@ export function useLandingMeasurement(): void {
             watchScroll(),
             watchSections(),
             watchFormStart(),
-            watchErrors(),
+            // What breaks in the visitor's browser: an uncaught error or a promise nobody caught.
+            watchErrors(window, captureError),
         ];
 
         return () => stops.forEach((stop) => stop());

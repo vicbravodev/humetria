@@ -35,7 +35,7 @@ it('records the tokens, the tools and the time of a message for the person and t
 });
 
 it('keeps no column that could hold what was said', function (): void {
-    expect(Schema::getColumnListing('ai_usage'))->toBe(['id', 'tenant_id', 'participant_id', 'conversation_id', 'agent', 'input_tokens', 'output_tokens', 'tools', 'latency_ms', 'stopped', 'created_at']);
+    expect(Schema::getColumnListing('ai_usage'))->toBe(['id', 'tenant_id', 'participant_id', 'conversation_id', 'agent', 'input_tokens', 'output_tokens', 'tools', 'latency_ms', 'stopped', 'created_at', 'provider', 'model']);
 });
 
 it('logs the message by its ids and counts, and a stopped one as stopped', function (): void {

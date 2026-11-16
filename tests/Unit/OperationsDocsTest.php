@@ -47,6 +47,19 @@ it('documents in the manual every signal the SSR leaves', function (): void {
     }
 });
 
+it('documents in the observability manual every signal the alerts read, as the code spells it', function (): void {
+    $manual = repoFile('docs/operations/observability.md');
+    $code = repoFile('app/Providers/AppServiceProvider.php').repoFile('routes/console.php').repoFile('app/Support/PostHogExceptions.php')
+        .repoFile('app/Support/SendPostHogEvent.php').repoFile('app/Modules/Assistant/Listeners/SendLlmAnalytics.php').repoFile('config/logging.php');
+
+    foreach (['queue.job_failed', 'queue.long_wait', 'schedule.command_failed', 'schedule.heartbeat', 'posthog.dispatch_failed', 'posthog.send_failed', '$exception', '$ai_generation', 'LOG_POSTHOG_LEVEL'] as $signal) {
+        expect(str_contains($code, $signal))->toBeTrue("The code no longer says {$signal}")
+            ->and(str_contains($manual, $signal))->toBeTrue("The observability manual does not mention {$signal}");
+    }
+
+    expect($manual)->toContain('LOG_STACK=stderr,posthog')->toContain(App\Logging\PostHogLogs::URL);
+});
+
 it('spells the bundle variable the way config/inertia.php reads it, and not the way the package does', function (): void {
     $names = [repoFile('docs/operations/ssr.md'), repoFile('.env.example'), repoFile('.env.production.example')];
 

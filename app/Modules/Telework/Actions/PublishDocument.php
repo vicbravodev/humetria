@@ -78,7 +78,7 @@ final readonly class PublishDocument
             });
         } catch (Throwable $failure) {
             // The file went in before the commit: a failed publication must not leave it behind.
-            $this->files->delete($path);
+            $this->files->discard($path);
 
             throw $failure;
         }

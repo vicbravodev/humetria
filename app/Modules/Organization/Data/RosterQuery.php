@@ -6,7 +6,7 @@ namespace App\Modules\Organization\Data;
 
 /**
  * Which people of the company another module asks for: some by id (deactivated ones included), or the active people
- * of a work center; narrowed by text in the name, email or number, and by area.
+ * of a work center; narrowed by text in the name or number (never contact data), and by area.
  */
 final readonly class RosterQuery
 {

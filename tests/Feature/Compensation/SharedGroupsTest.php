@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Compensation\Data\CostBreakdown;
+use App\Modules\Compensation\Data\CostCell;
 use App\Modules\Compensation\Data\CostCut;
 use App\Modules\Compensation\Support\SharedGroups;
 use App\Modules\Organization\Data\RosterGaps;
@@ -115,4 +116,65 @@ it('leaves everything but the cuts of the breakdown as it was', function (): voi
     expect($shared->beforeCents)->toBe(100)->and($shared->afterCents)->toBe(200)->and($shared->recurringCents)->toBe(300)
         ->and($shared->retroactiveCents)->toBe(400)->and($shared->people)->toBe(7)
         ->and($shared->uncalculatedLines)->toBe(['work_risk'])->and($shared->staleKeys)->toBe(['uma']);
+});
+
+/**
+ * @param  array<string, int>  $people  people by "area|grade|group" cell; 1,000 cents before and 1,100 after for each person
+ */
+function crossedBreakdown(array $people): CostBreakdown
+{
+    $cells = [];
+    $cuts = ['area' => [], 'grade' => [], 'group' => []];
+
+    foreach ($people as $id => $count) {
+        [$area, $grade, $group] = explode('|', $id);
+        $cells[] = new CostCell($area, $grade, $group, $count, $count * 1_000, $count * 1_100);
+
+        foreach (['area' => $area, 'grade' => $grade, 'group' => $group] as $cut => $key) {
+            $cuts[$cut][$key] = ($cuts[$cut][$key] ?? 0) + $count;
+        }
+    }
+
+    [$byArea, $byGrade, $byGroup] = array_map(fn (array $cut): array => sharedCuts($cut), array_values($cuts));
+
+    return new CostBreakdown(0, 0, 0, 0, 0, [], [], $byArea, $byGrade, $byGroup, [], [], [], new RosterGaps(0, 0, [], 0, 0), $cells);
+}
+
+/** @return array<string, array<string, int>> people by key of each cut shown */
+function crossedShown(CostBreakdown $cost): array
+{
+    $shown = [];
+
+    foreach (['area' => $cost->byArea, 'grade' => $cost->byGrade, 'group' => $cost->byGroup] as $cut => $parts) {
+        foreach ($parts as $part) {
+            $shown[$cut][$part->key ?? ''] = $part->people;
+        }
+    }
+
+    return $shown;
+}
+
+it('does not let an area minus a category hand over the one person left alone in their cell', function (): void {
+    // Ventas 8 Vendedor + 1 Gerente, Administración 6 Analista + 5 Gerente: Ventas minus Vendedor would be the lone manager.
+    $shown = crossedShown(shared(crossedBreakdown([
+        'Ventas|Vendedor|u' => 8, 'Ventas|Gerente|u' => 1, 'Admin|Analista|u' => 6, 'Admin|Gerente|u' => 5,
+    ])));
+
+    expect($shown['area'])->toBe(['Ventas' => 8, 'Admin' => 6, SharedGroups::OTHERS => 6])
+        ->and($shown['grade'])->toBe(['Vendedor' => 8, 'Analista' => 6, SharedGroups::OTHERS => 6]);
+});
+
+it('does not let the second staffing hand over the lone Jefe of Almacen either', function (): void {
+    $shown = crossedShown(shared(crossedBreakdown([
+        'Produccion|Operador|u' => 20, 'Produccion|Jefe|u' => 5, 'Almacen|Almacenista|u' => 5, 'Almacen|Jefe|u' => 1,
+    ])));
+
+    expect($shown['area'])->toBe(['Produccion' => 20, 'Almacen' => 5, SharedGroups::OTHERS => 6])
+        ->and($shown['grade'])->toBe(['Operador' => 20, 'Almacenista' => 5, SharedGroups::OTHERS => 6]);
+});
+
+it('keeps the cuts as they are when every cell reaches the minimum', function (): void {
+    $shown = crossedShown(shared(crossedBreakdown(['A|x|u' => 6, 'A|y|u' => 5, 'B|x|t' => 7, 'B|y|t' => 9])));
+
+    expect($shown['area'])->toEqual(['A' => 11, 'B' => 16])->and($shown['group'])->toEqual(['u' => 11, 't' => 16]);
 });

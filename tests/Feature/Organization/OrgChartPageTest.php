@@ -231,3 +231,21 @@ it('searches active people of the company to focus one, a few at a time', functi
         ->assertJsonPath('0.value', $first->id);
     $this->getJson(route('tenant.org-chart.people.search', [$this->tenant, 'q' => ' zúl ']))->assertExactJson([['value' => $number->id, 'label' => 'Otra']]);
 });
+
+it('matches email and mobile in the people search only for whoever may read them', function (): void {
+    [, , $ana] = orgChartLine();
+    $email = substr((string) $ana->email, 0, 4);
+    $mobile = (string) $ana->mobile;
+    $search = fn (string $q) => $this->getJson(route('tenant.org-chart.people.search', [$this->tenant, 'q' => $q]));
+
+    $this->actingAs($this->viewer);
+    $search($email)->assertExactJson([]);
+    $search($mobile)->assertExactJson([]);
+    $search('ana')->assertJsonCount(1);
+
+    foreach ([TenantRole::Owner, TenantRole::Hr] as $role) {
+        $this->actingAs(memberOf($this->tenant, $role));
+        $search($email)->assertJsonFragment(['value' => $ana->id]);
+        $search($mobile)->assertJsonFragment(['value' => $ana->id]);
+    }
+});

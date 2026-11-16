@@ -114,6 +114,8 @@ it('groups five direct reports under their manager and leaves the manager in no 
     $area = engagementArea($this->tenant);
     $boss = engagementStaff($this->tenant, $this->plant, $area, 1)->sole();
     $team = engagementStaff($this->tenant, $this->plant, $area, 5, ['manager_id' => $boss->id]);
+    // Four peers of the manager, so the people reported with the company alone are none or five: a lone manager would be the company minus their team.
+    engagementStaff($this->tenant, $this->plant, $area, 4);
 
     resolve(SnapshotAudience::class)->handle($this->survey);
 
@@ -127,6 +129,8 @@ it('gives the comments of a manager their own group only from ten people', funct
     $area = engagementArea($this->tenant);
     $boss = engagementStaff($this->tenant, $this->plant, $area, 1)->sole();
     $team = engagementStaff($this->tenant, $this->plant, $area, 10, ['manager_id' => $boss->id]);
+    // Four peers of the manager, so the people reported with the company alone are none or five: a lone manager would be the company minus their team.
+    engagementStaff($this->tenant, $this->plant, $area, 4);
 
     resolve(SnapshotAudience::class)->handle($this->survey);
 
@@ -138,6 +142,8 @@ it('asks about no manager who left, and lifts the group to the next active one',
     $top = engagementStaff($this->tenant, $this->plant, $area, 1)->sole();
     $left = engagementStaff($this->tenant, $this->plant, $area, 1, ['manager_id' => $top->id, 'deactivated_at' => now()])->sole();
     $team = engagementStaff($this->tenant, $this->plant, $area, 5, ['manager_id' => $left->id]);
+    // Four peers of the manager, so the people reported with the company alone are none or five: a lone manager would be the company minus their team.
+    engagementStaff($this->tenant, $this->plant, $area, 4);
 
     resolve(SnapshotAudience::class)->handle($this->survey);
 

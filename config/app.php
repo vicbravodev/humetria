@@ -99,6 +99,13 @@ return [
 
     'support_email' => env('SUPPORT_EMAIL'),
 
+    // The company's social profiles, shown in the landing footer; a network left empty shows no link.
+    'social' => [
+        'linkedin' => env('SOCIAL_LINKEDIN_URL'),
+        'facebook' => env('SOCIAL_FACEBOOK_URL'),
+        'instagram' => env('SOCIAL_INSTAGRAM_URL'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

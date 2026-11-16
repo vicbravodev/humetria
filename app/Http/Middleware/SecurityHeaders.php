@@ -41,8 +41,9 @@ final class SecurityHeaders
     private const string MAP_TILES = 'https://tile.openstreetmap.org';
 
     /**
-     * The one origin PostHog needs: where it sends the events (connect-src). Only on `GET /` for a visitor without a session,
-     * with a valid project token and consent (Analytics::projectToken): without them the policy is exactly the one of any page.
+     * The one origin PostHog needs: where it sends the events (connect-src). On `GET /` only for a visitor without a session,
+     * with a valid project token and consent (Analytics::projectToken); on any other page, for its error reports, with the
+     * token alone (Analytics::errorToken). Without a token the policy is exactly the one of any page.
      * posthog-js ships in our own bundle, in its build that never loads external scripts, so no script, image or style origin
      * opens: the page's policy stays 'self' plus this one.
      */
@@ -61,7 +62,7 @@ final class SecurityHeaders
         $response = $next($request);
 
         $headers = [
-            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request), $this->isHorizon($request), Analytics::projectToken($request) !== null),
+            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request), $this->isHorizon($request), Analytics::opensPostHog($request)),
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'DENY',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',

@@ -13,4 +13,9 @@ return [
     | Most photos one submission may carry for each question, and for the whole list.
     */
     'max_photos_per_group' => 10,
+
+    /*
+    | Most photos one checklist submission may carry in all, whatever the groups.
+    */
+    'max_photos_per_checklist' => 40,
 ];

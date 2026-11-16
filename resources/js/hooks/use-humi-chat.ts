@@ -10,13 +10,18 @@ import {
     type Thumb,
 } from '@/lib/assistant/api';
 import { DefaultChatTransport, useChat } from '@/lib/assistant/ai-client';
-import { chatFailure, type ChatFailure } from '@/lib/assistant/chat-errors';
+import {
+    chatFailure,
+    reportableFailure,
+    type ChatFailure,
+} from '@/lib/assistant/chat-errors';
 import {
     chatContext,
     lastUserText,
     type PageContext,
 } from '@/lib/assistant/chat-request';
 import { uiMessagesFrom } from '@/lib/assistant/history';
+import { reportError } from '@/lib/error-tracking';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import assistant from '@/routes/tenant/assistant';
 
@@ -84,6 +89,13 @@ export function useHumiChat(
 
     const chat = useChat<UIMessage>({
         transport,
+        onError: (error) => {
+            const reported = reportableFailure(error);
+
+            if (reported !== null) {
+                reportError(reported);
+            }
+        },
         onFinish: ({ message, isError }) => {
             if (!isError) {
                 void learn(message.id);

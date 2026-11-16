@@ -13,6 +13,7 @@
         "inCourse": null,
         "name": "Humetría",
         "sidebarOpen": true,
+        "social": [],
         "support": {
             "email": "soporte@humetria.example"
         },
@@ -42,6 +43,7 @@
         "inCourse",
         "name",
         "sidebarOpen",
+        "social",
         "support",
         "tenant",
         "tenants"

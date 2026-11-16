@@ -276,9 +276,25 @@ it('keeps the policy of the landing exactly as it was without a token, without c
     'no token' => [fn (): TestResponse => test()->get(route('home')), '', 'granted'],
     'consent denied' => [fn (): TestResponse => test()->get(route('home')), 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG', 'denied'],
     'a malformed token' => [fn (): TestResponse => test()->get(route('home')), 'phc_abc', 'granted'],
-    'another page' => [fn (): TestResponse => test()->get(route('privacy-notice')), 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG', 'granted'],
-    'the login' => [fn (): TestResponse => test()->get(route('login')), 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG', 'granted'],
 ]);
+
+it('opens the PostHog origin for error reports on every page but the landing when there is a token, consent or not', function (Closure $visit, string $consent): void {
+    measureLandingWith(consent: $consent);
+
+    $response = $visit();
+
+    $response->assertHeader('Content-Security-Policy', cspFor(nonceOf($response), map: false, analytics: true));
+})->with([
+    'another page' => [fn (): TestResponse => test()->get(route('privacy-notice')), 'granted'],
+    'the login' => [fn (): TestResponse => test()->get(route('login')), 'denied'],
+    'a survey link' => [fn (): TestResponse => test()->get('/survey/NO-SUCH-TOKEN'), 'denied'],
+]);
+
+it('opens no PostHog origin for error reports without a token', function (): void {
+    measureLandingWith('');
+
+    expect((string) $this->get(route('login'))->headers->get('Content-Security-Policy'))->not->toContain('posthog');
+});
 
 it('keeps the policy of the landing as it was for someone with a session', function (): void {
     measureLandingWith();

@@ -5,19 +5,16 @@ declare(strict_types=1);
 namespace App\Modules\Assistant\Listeners;
 
 use App\Modules\Assistant\Models\ConversationParticipant;
-use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Events\MemberRemoved;
 use Illuminate\Support\Facades\Log;
 
 /** Someone who lost their access to a company keeps none of what they asked Humi there: their conversations and their participant go. */
 final readonly class DeleteMemberConversations
 {
-    public function __construct(private Companies $companies) {}
-
     public function handle(MemberRemoved $event): void
     {
-        $this->companies->enter($event->tenantId);
-        $participant = ConversationParticipant::query()->where('user_id', $event->userId)->first();
+        // No company context: the event also fires outside one (an owner change), so the company is filtered here.
+        $participant = ConversationParticipant::query()->withoutGlobalScopes()->where('tenant_id', $event->tenantId)->where('user_id', $event->userId)->first();
 
         if ($participant === null) {
             return;
