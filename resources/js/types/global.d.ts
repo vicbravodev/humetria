@@ -25,6 +25,11 @@ declare module '@inertiajs/core' {
             name: string;
             /** Where to write to Humetria; null while none is configured. */
             support: { email: string | null };
+            /** Humetría's social profiles for the landing footer: only the ones configured, always https. */
+            social: {
+                network: 'linkedin' | 'facebook' | 'instagram';
+                url: string;
+            }[];
             auth: Auth;
             /** The superadmin working as auth.user; null outside an impersonation. */
             impersonator: string | null;
