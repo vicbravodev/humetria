@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Support\CompanyDirectory;
@@ -17,6 +18,7 @@ use App\Modules\Tenancy\Support\CompanyLimitCounters;
 use App\Modules\Tenancy\Support\CompanyMembers;
 use App\Modules\Tenancy\Support\CompanyModuleAccess;
 use App\Modules\Tenancy\Support\CompanyWorkCenters;
+use App\Modules\Tenancy\Support\DemoCompanyRegistry;
 use App\Modules\Tenancy\Support\ModuleStates;
 use App\Modules\Tenancy\Support\TenantContext;
 use App\Modules\Tenancy\Support\TenantRegistry;
@@ -44,6 +46,7 @@ final class TenancyServiceProvider extends ServiceProvider
         $this->app->scoped(ModuleStates::class);
         $this->app->bind(CompanyModules::class, CompanyModuleAccess::class);
         $this->app->bind(CompanyLimits::class, CompanyLimitCounters::class);
+        $this->app->bind(DemoCompanies::class, DemoCompanyRegistry::class);
     }
 
     public function boot(): void

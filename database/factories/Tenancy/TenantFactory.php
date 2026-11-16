@@ -40,6 +40,11 @@ final class TenantFactory extends Factory
         return $this->state(['type' => TenantType::Union]);
     }
 
+    public function demo(): self
+    {
+        return $this->state(['is_demo' => true]);
+    }
+
     public function inTrial(CarbonInterface $startedAt): self
     {
         return $this->state(['trial_started_at' => $startedAt]);
