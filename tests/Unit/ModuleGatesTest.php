@@ -12,6 +12,8 @@ const MAY_READ_BLOCKED = [
     'app/Modules/Telework/Actions/OpenPortal.php' => 'the personal link is the person\'s, for every company: it is no module (each tool behind it asks its own, see RequirePortalTool)',
     'app/Modules/Compensation/Http/Controllers/SharedReportController.php' => 'the CCT calculator is the union\'s and every company\'s: it is no module',
     'app/Modules/FirstSteps/Support/CompanyFirstSteps.php' => 'the first steps guide every owner through the platform: they are no module, only a blocked company loses them',
+    'app/Modules/WorkerAccess/Jobs/SendRequestedLink.php' => 'the person\'s identity is every company\'s: it is no module, only a blocked company loses it',
+    'app/Modules/WorkerAccess/Support/WorkerSessionStore.php' => 'the person\'s identity is every company\'s: it is no module, only a blocked company loses it',
 ];
 
 /** @return list<string> */
