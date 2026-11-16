@@ -873,4 +873,29 @@ Paso 6-1 (Organization, lo que quedaba de Telework, Leave y Seating, con sus cor
   `portal.vacations.team.approve` y `.team.reject`; de Telework, `portal.documents.acknowledge`, `portal.equipment.respond` y
   `portal.visits.confirm`.
 
+Paso 6-2 (Disclosure, Engagement y Results, con sus correos del grupo 8).
+
+- **Rutas**: `portal.policy.show` y `.acknowledge` en `/me/{slug}/policy`; `portal.climate.show` y `portal.feedback.show` en
+  `/me/{slug}/climate` y `/me/{slug}/feedback`; `portal.support.show` en `/me/{slug}/support`. Mismos nombres, limitadores y
+  gates: política y apoyo siguen con `RequirePortalTool:nom035`; clima y retroalimentación siguen sin gate de ruta (como
+  antes: la página responde 404 si no hay nada publicado y la sección revisa la herramienta). Las páginas reciben `slug`;
+  «Nos dijeron / Haremos» ya no arma su propio regreso a `portal.show`: usa `worker-home-link`. Se borró
+  `components/portal-home-link.tsx` (ya nadie lo usaba).
+- **Secciones**: `PolicyWorkerSection`, `CenterWorkerSection`, `ClimateWorkerSection`, `FeedbackWorkerSection`,
+  `Engagement\SurveyWorkerSection` y `SupportWorkerSection`. Además, fuera de los tres módulos, `Campaigns\SurveyWorkerSection`
+  («Su evaluación NOM-035») y `ComplaintsWorkerSection` («Quejas y denuncias»): no llevaban token y eran las únicas
+  `PortalSection` que quedaban fuera de Attendance; ahora solo `AttendancePortalSection` usa el contrato viejo y el inicio por
+  enlace solo muestra «Mi jornada» (hasta el paso 9). Las encuestas, el canal y sus enlaces no cambiaron.
+- **Correos sin credencial**: `SendPolicyReminder`, `SendFeedbackPublished` (una sola dirección para todos, armada una vez),
+  `NotifyManagers` y `SendSupportNotice` usan `WorkerLinks::to()`. En `PolicyToConfirm`, `FeedbackPublished` y
+  `SupportWaiting` se quitó «Si su empresa le envía uno nuevo, el anterior deja de funcionar».
+- **Pendiente para el paso 9**: la invitación a clima y pulso (`Engagement\Jobs\SendInvitations`) y la de la evaluación
+  (`Campaigns\Jobs\SendSurveyInvitations`) aún ponen al pie `PortalAccess::url()`, el inicio viejo con token. No es una página
+  de estos módulos; cambia con el borrado del inicio viejo.
+- **Consultas del inicio**: de 19 a 32 (Política +2, Centro +2, Clima +2, Retroalimentación +2, Apoyo +2, y una consulta por
+  cada lista de pendientes —evaluación, clima o pulso, canal— que solo lee la empresa si hay algo). Constante. El inicio por
+  enlace bajó de 21 a 8.
+- **Rutas delicadas para el grupo 7** (aún sin `worker.proof`): `portal.policy.acknowledge` y `portal.support.show`. Ni
+  `portal.policy.show`, ni `portal.climate.show` ni `portal.feedback.show` entran en la tabla del grupo 7.
+
 *Drafted with EGM*
