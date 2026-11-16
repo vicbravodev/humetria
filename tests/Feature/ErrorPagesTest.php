@@ -154,10 +154,17 @@ it('shows its page even when what every page shares cannot be read (the database
             ->where('requestId', fn (?string $id): bool => is_string($id) && Str::isUuid($id)));
 });
 
-it('shares the id of the request, the one in X-Request-Id, so a person can quote it', function (): void {
-    Route::middleware('web')->get('/test/forbidden-id', fn () => abort(403));
+it('gives a server error the id of the request, the one in X-Request-Id, so a person can quote it', function (): void {
+    Route::middleware('web')->get('/test/failed-id', fn () => abort(503));
 
-    $response = $this->get('/test/forbidden-id')->assertForbidden();
+    $response = $this->get('/test/failed-id')->assertServiceUnavailable();
 
     $response->assertInertia(fn (Assert $page) => $page->where('requestId', $response->headers->get('X-Request-Id')));
 });
+
+it('gives no request id to an error the person caused: two equal pages must stay equal', function (int $status): void {
+    Route::middleware('web')->get('/test/own-error', fn () => abort($status));
+
+    $this->get('/test/own-error')->assertStatus($status)
+        ->assertInertia(fn (Assert $page) => $page->where('requestId', null));
+})->with([403, 404, 419, 429]);

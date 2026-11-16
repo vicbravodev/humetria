@@ -151,7 +151,7 @@ layouts/  hooks/  lib/  types/
 - PostHog (nube US, `posthog-js` en su build sin scripts externos) **mide** solo en el documento de la landing
   (`App\Http\Analytics`: ruta `home`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
   Toda otra página, con el token, lo carga en **modo solo errores** (`error-tracking-config`, `lib/error-tracking.ts`):
-  solo `$exception`, sin dirección (origen + componente de la página + `request_id`), sin persistencia ni persona.
+  solo `$exception`, sin dirección (origen + componente de la página; `request_id` solo en la página de error 5xx), sin persistencia ni persona.
   Humi (y todo agente de `laravel/ai`) manda cada llamada como `$ai_generation` (`SendLlmAnalytics`): solo Humi lleva
   prompt y respuesta; un agente sobre texto de encuestas (comentarios de clima) manda solo números, y un test lo exige.
   Detalle y alertas: `docs/operations/observability.md`.

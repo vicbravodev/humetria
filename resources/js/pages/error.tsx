@@ -29,11 +29,14 @@ const ICONS: Record<number, LucideIcon> = {
 export default function ErrorPage({
     status,
     survey,
+    requestId,
 }: {
     status: number;
     survey: boolean;
+    /** The id of this request (X-Request-Id, and every log line of it): what a person quotes to support. */
+    requestId: string | null;
 }) {
-    const { tenant, requestId } = usePage().props;
+    const { tenant } = usePage().props;
     const message = errorMessage(status, survey);
     const limit = roleLimit(status, tenant);
 

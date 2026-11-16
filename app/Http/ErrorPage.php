@@ -7,6 +7,7 @@ namespace App\Http;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -41,7 +42,11 @@ final class ErrorPage
             return $response;
         }
 
-        $props = ['status' => $status, 'survey' => $request->routeIs(...self::WORKER_ROUTES)];
+        // The id in X-Request-Id and in every log line of this request: what a person quotes to support when the server
+        // failed. Only then: a value that changes on every request would tell apart two pages that must be the same
+        // (an unknown link and a revoked one both answer the same 404).
+        $requestId = Context::get('request_id');
+        $props = ['status' => $status, 'survey' => $request->routeIs(...self::WORKER_ROUTES), 'requestId' => $status >= 500 && is_string($requestId) ? $requestId : null];
 
         try {
             // An address no route answers never ran the web middleware: share here what every page gets.

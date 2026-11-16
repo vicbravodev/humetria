@@ -10,7 +10,7 @@ funciona igual. `tests/Unit/OperationsDocsTest.php` exige que este manual nombre
 |-----|------|------------------------|-----------|-----------------|
 | Excepciones del servidor | evento `$exception` en cola (`App\Support\PostHogExceptions`), máximo 10 por clase al minuto | Error tracking | clase, archivo, línea, traza sin argumentos, ruta, `request_id` | el mensaje, la URL, el usuario |
 | Logs | canal `posthog` (`App\Logging\PostHogLogs`), OTLP/HTTP JSON a `https://us.i.posthog.com/i/v1/logs`, en lote al terminar cada petición, job o comando (o cada 100 líneas); nunca por la cola | Logs | el nombre del evento (`modulo.accion`) y su contexto ya redactado (`RedactSensitiveData`); de una excepción, solo su clase, archivo y línea | respuestas, contraseñas, tokens (redactados), el texto de una excepción |
-| Errores del navegador (fuera de la landing) | `$exception` desde `posthog-js` (build sin scripts externos) en modo solo errores (`resources/js/lib/error-tracking.ts`); los mandan el `AppErrorBoundary` (una página que se rompe al pintar), los errores y promesas sin atrapar de `window` y una respuesta fallida de Humi (`HumiStreamError`, no las negativas a propósito) | Error tracking | tipo, mensaje enmascarado (correos, números largos, URLs a su origen), marcos con la ruta del script, `page` (el componente de Inertia), `request_id`, navegador y sistema | la dirección de la página (`$current_url` es solo el origen: la encuesta y los portales llevan un token de un solo uso en la ruta), el referente, la sesión, los pasos previos, el texto de Humi; nada en el navegador (`persistence: 'memory'`), sin perfil ni IP |
+| Errores del navegador (fuera de la landing) | `$exception` desde `posthog-js` (build sin scripts externos) en modo solo errores (`resources/js/lib/error-tracking.ts`); los mandan el `AppErrorBoundary` (una página que se rompe al pintar), los errores y promesas sin atrapar de `window` y una respuesta fallida de Humi (`HumiStreamError`, no las negativas a propósito) | Error tracking | tipo, mensaje enmascarado (correos, números largos, URLs a su origen), marcos con la ruta del script, `page` (el componente de Inertia), `request_id` (solo en la página de error 5xx), navegador y sistema | la dirección de la página (`$current_url` es solo el origen: la encuesta y los portales llevan un token de un solo uso en la ruta), el referente, la sesión, los pasos previos, el texto de Humi; nada en el navegador (`persistence: 'memory'`), sin perfil ni IP |
 | Llamadas a modelos | evento `$ai_generation` en cola (`App\Modules\Assistant\Listeners\SendLlmAnalytics`), uno por llamada, también si falla | LLM analytics | modelo, proveedor, tokens, latencia en segundos, error (clase), herramientas usadas, `tenant_id`; de **Humi**, además, el prompt completo (instrucciones y mensaje ya enmascarado) y la respuesta | de cualquier otro agente (resumen de comentarios de clima): ningún texto, ni de entrada ni de salida |
 
 Notas:
@@ -28,9 +28,10 @@ Notas:
   Humi) recibe el bloque `error-tracking-config` (solo token y host) y la CSP abre `https://us.i.posthog.com` en
   `connect-src`, con el token solo: no lleva datos de visitantes. Sin token, ni bloque ni origen. `before_send` deja pasar
   únicamente `$exception` y solo las propiedades de una lista cerrada (`resources/js/lib/error-event.ts`).
-- Si una página se rompe, la persona ve «Algo salió mal» con el **código para soporte** (el `request_id`); la página de
-  error 500/503 lo muestra igual. Con ese código se encuentran en Logs las líneas de esa petición y en Error tracking los
-  `$exception` del servidor y del navegador (`request_id`).
+- La página de error 500/503 muestra el **código para soporte** (el `request_id`, solo ahí: un valor que cambia en cada
+  petición distinguiría dos páginas que deben ser iguales, como el 404 de un enlace desconocido y el de uno revocado). Con
+  ese código se encuentran en Logs las líneas de esa petición y en Error tracking el `$exception` del servidor. Si una
+  página se rompe al pintar, la persona ve «Algo salió mal» con «Recargar la página», sin código.
 
 ## 2. Variables
 

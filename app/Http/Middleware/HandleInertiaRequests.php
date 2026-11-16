@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use App\Modules\FirstSteps\Contracts\FirstSteps;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Context;
 use Inertia\Inertia;
 use Inertia\Middleware;
 use stdClass;
@@ -66,8 +65,6 @@ final class HandleInertiaRequests extends Middleware
             // The guided tour of the company's owner: nobody else is asked anything, and outside a company nothing is.
             'firstSteps' => fn (): ?array => $this->firstSteps($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            // The id in X-Request-Id and in every log line of this request: what a person quotes, and what the browser's errors carry.
-            'requestId' => self::requestId(),
         ];
     }
 
@@ -90,15 +87,7 @@ final class HandleInertiaRequests extends Middleware
             'inCourse' => null,
             'firstSteps' => null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'requestId' => self::requestId(),
         ];
-    }
-
-    private static function requestId(): ?string
-    {
-        $id = Context::get('request_id');
-
-        return is_string($id) ? $id : null;
     }
 
     private function supportEmail(): ?string

@@ -36,8 +36,6 @@ declare module '@inertiajs/core' {
             /** The owner's guided tour of the company; null for anyone else, outside a company, once finished or when switched off. */
             firstSteps: FirstSteps | null;
             sidebarOpen: boolean;
-            /** The id of this request (X-Request-Id, and every log line of it): what a person quotes, what browser errors carry; null outside the web middleware. */
-            requestId: string | null;
             [key: string]: unknown;
         };
         flashDataType: {
