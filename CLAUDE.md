@@ -129,6 +129,13 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
 - PostHog mide solo la landing: lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
   medición. Ningún dato de la persona va a PostHog. Todo enlace que sale de la landing o llega a ella es un `<a href>`.
 - Reglas y operación de SSR, medición, eventos y errores a PostHog: `docs/operations/ssr.md` (se actualiza en el mismo PR).
+- Errores: el navegador de toda página manda a PostHog `$exception` con el mensaje enmascarado (`lib/error-tracking.ts`,
+  solo errores, sin persona ni persistencia); `AppErrorBoundary` muestra «Algo salió mal» con el código de soporte. El servidor
+  manda (`App\Support\PostHogExceptions`, en cola, mejor esfuerzo, máx. 10 por clase al minuto) solo clase, archivo, línea y
+  traza sin argumentos, nunca mensaje, URL ni usuario; un `report()` nuevo en `bootstrap/app.php` va después del de PostHog.
+- Humi (y todo agente de `laravel/ai`) manda cada llamada como `$ai_generation` (`SendLlmAnalytics`): solo Humi lleva prompt
+  y respuesta; un agente sobre texto de encuestas manda solo números, y un test lo exige. Detalle y alertas:
+  `docs/operations/observability.md`.
 
 ## Privacidad (invariante)
 
@@ -152,6 +159,10 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
 - **Nunca** van a logs ni a la bitácora respuestas de encuesta ni nada que ligue a un empleado con una respuesta anónima
   (`tests/Feature/Responses/SeatingResponsesPrivacyTest.php` lo prueba). `RedactSensitiveData` borra llaves conocidas; una
   nueva se agrega ahí con su test. Un `QueryException` se reporta sin sus valores.
+- En producción `LOG_STACK=stderr,posthog`: el canal `posthog` (`App\Logging\PostHogLogs`) manda los logs ya redactados, en lote.
+  Fallos de jobs y del scheduler se loguean en un solo lugar (`queue.job_failed`, `queue.long_wait`, `schedule.command_failed`,
+  `schedule.heartbeat` cada 5 min) y de ahí salen las alertas. Un job nuevo de un solo correo lleva `tries=3`, `backoff=[60,300]`,
+  salvo que reintentar no sea seguro.
 
 ## Idioma y tiempo
 

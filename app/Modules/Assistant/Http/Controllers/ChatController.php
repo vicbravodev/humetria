@@ -117,6 +117,8 @@ final readonly class ChatController
             $tools,
             intdiv(hrtime(true) - $startedAt, 1_000_000),
             $this->stop->requested($scope->participantId),
+            $answer->meta->provider,
+            $answer->meta->model,
         );
         $this->stop->clear($scope->participantId);
     }

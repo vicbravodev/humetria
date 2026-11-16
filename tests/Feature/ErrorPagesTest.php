@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -135,3 +137,34 @@ it('answers a throttled send from the portal with a toast in «usted»', functio
         ->assertRedirect()
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'error', 'message' => 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.']]);
 });
+
+it('shows its page even when what every page shares cannot be read (the database is down)', function (): void {
+    Route::middleware('web')->get('/test/database-down', function (): never {
+        Inertia::share('inCourse', fn () => throw new RuntimeException('SQLSTATE[08006] connection refused'));
+
+        abort(500);
+    });
+
+    $this->get('/test/database-down')
+        ->assertStatus(500)
+        ->assertInertia(fn (Assert $page) => $page->component('error')->where('status', 500)
+            ->where('auth.user', null)
+            ->where('tenant', null)
+            ->where('inCourse', null)
+            ->where('requestId', fn (?string $id): bool => is_string($id) && Str::isUuid($id)));
+});
+
+it('gives a server error the id of the request, the one in X-Request-Id, so a person can quote it', function (): void {
+    Route::middleware('web')->get('/test/failed-id', fn () => abort(503));
+
+    $response = $this->get('/test/failed-id')->assertServiceUnavailable();
+
+    $response->assertInertia(fn (Assert $page) => $page->where('requestId', $response->headers->get('X-Request-Id')));
+});
+
+it('gives no request id to an error the person caused: two equal pages must stay equal', function (int $status): void {
+    Route::middleware('web')->get('/test/own-error', fn () => abort($status));
+
+    $this->get('/test/own-error')->assertStatus($status)
+        ->assertInertia(fn (Assert $page) => $page->where('requestId', null));
+})->with([403, 404, 419, 429]);

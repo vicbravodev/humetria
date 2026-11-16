@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { chatFailure } from '@/lib/assistant/chat-errors';
+import { chatFailure, reportableFailure } from '@/lib/assistant/chat-errors';
 
 describe('chatFailure', () => {
     it('says what the server said when it refused with a reason', () => {
@@ -46,5 +46,29 @@ describe('chatFailure', () => {
         expect(chatFailure(new Error('{"reason":"rate"}'))).toEqual(generic);
         expect(chatFailure(new Error('null'))).toEqual(generic);
         expect(chatFailure(new Error(''))).toEqual(generic);
+    });
+});
+
+describe('reportableFailure', () => {
+    it('reports a failed answer as an error of its own, without what the response said', () => {
+        const reported = reportableFailure(
+            new Error(
+                '<html>Server Error: ana@x.mx asked about her salary</html>',
+            ),
+        );
+
+        expect(reported).toBeInstanceOf(Error);
+        expect(reported?.name).toBe('HumiStreamError');
+        expect(reported?.message).toBe('Humi did not answer');
+    });
+
+    it('reports nothing when the server refused on purpose: Humi off, budget used, too many messages', () => {
+        expect(
+            reportableFailure(
+                new Error(
+                    '{"reason":"budget","message":"Se agotó el presupuesto."}',
+                ),
+            ),
+        ).toBeNull();
     });
 });
