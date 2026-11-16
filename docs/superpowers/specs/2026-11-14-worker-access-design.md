@@ -772,4 +772,29 @@ Anotadas al construir el grupo 3 (enlaces, sesión, entrada, registro de llave y
   el logo); `components/attendance/person-frame.tsx` es su envoltura con «Registro de jornada».
 - **`RedactSensitiveData`** no ganó llaves: ningún log nuevo lleva token, código, reto ni llave pública.
 
+Anotadas al construir el grupo 4 («Accesos» y fin del alta de asistencia).
+
+- **Rutas del panel** en `routes/worker-access-panel.php` con nombres `tenant.worker-access.*` (no `tenant.access.*`);
+  están en `ModuleRoutes::always()` (toda empresa, con o sin herramientas) y en `ComplianceRoutes` (un sindicato, 404).
+- **Menos clases**: no hay `InviteWorker`, `RevokeKey`, `InviteRequest` ni el evento `WorkerAccessRevoked` (nadie lo
+  escucha). Se reusan `IssueAccessLink`, `RevokeCredential`, `AccessPersonRequest` e `InviteCenterRequest`.
+  `InvitationOutcome` no ganó `has_key`/`has_open_link`: invitar a una persona siempre emite; el lote por centro cuenta
+  `with_key` y `with_link`.
+- **Revocar una llave** desde el panel solo la detiene (`revoked_by_hr`, deja de verificar); no mueve `valid_after`. El
+  teléfono perdido es «Reemitir acceso», que también cierra sesiones; el diálogo de revocar lo dice.
+- **Estados**: con llave, invitada (un enlace `issued` que aún abre) y sin invitar (incluye un enlace vencido y solo
+  llaves revocadas). Sin la tarjeta «Avance del alta»: las pestañas con conteo dicen lo mismo.
+- **Lote por centro**: a quien no tiene correo solo se le cuenta; RH crea su enlace desde su renglón y lo ve una vez.
+- **Bitácora del enlace mostrado**: es `worker_access.link_issued` con `delivered_by_rh: true` y el actor.
+- **«Mi jornada» del portal por token** ya no emite enlaces para crear llave (alternativa A y decisión 3): lista las
+  llaves, pide a quien no tiene el enlace de RH y lleva a quien tiene una a `/me/{slug}` para agregar otra con sesión.
+  Marcar sin llave dice lo mismo, con un enlace a `/me/{slug}`.
+- **Se borraron sin uso**: `WorkerCredentials::revoke` (era temporal para «Dispositivos»), `CenterReadiness` (el aviso
+  «hoy nadie puede marcar» sale de Accesos), `DeviceLabel`, `MaskedEmail` y `Attendance\Exceptions\InvalidCredential`.
+  `CompanyAttendanceUsage` ya no cuenta `worker_credentials`: una llave es de toda empresa, no de Asistencia.
+- **Piezas compartidas**: `list-toolbar` y `center-filter` pasan a `components/` (raíz), porque `components/humetria` no
+  importa otras piezas de humetria; `one-time-link` a `components/humetria`; `panelListQuery` a `lib/panel-list.ts`.
+- **Los tres botones del enlace del portal** (empleados, teletrabajadores, saldos de vacaciones) siguen igual hasta los
+  grupos 6 y 8.
+
 *Drafted with EGM*
