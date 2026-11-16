@@ -102,6 +102,19 @@ it('emails each person of its block the link of the survey, and keeps only the h
     }
 });
 
+it('ends each email with the person\'s entrance, which carries no credential', function (): void {
+    [, $jobs] = launchedSurvey($this->tenant, $this->plant, $this->area, $this->user, 5);
+
+    $jobs[0]->handle();
+
+    Notification::assertSentOnDemand(SurveyInvitation::class, function (SurveyInvitation $mail, array $channels, AnonymousNotifiable $notifiable): bool {
+        $html = (string) $mail->toMail($notifiable)->render();
+        expect($html)->toContain('href="'.rtrim(config()->string('app.url'), '/').'/me/'.$this->tenant->slug.'"')->not->toContain('/portal/');
+
+        return true;
+    });
+});
+
 it('sends once even when the job runs again', function (): void {
     [, $jobs] = launchedSurvey($this->tenant, $this->plant, $this->area, $this->user, 20);
 

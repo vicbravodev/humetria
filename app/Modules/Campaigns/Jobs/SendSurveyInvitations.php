@@ -16,9 +16,9 @@ use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -87,7 +87,8 @@ final class SendSurveyInvitations implements ShouldQueue
         $contact = $companies->contact();
         $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
 
-        $portal = resolve(PortalAccess::class);
+        // The foot of every email: the person's entrance, the same for all and with no credential in it.
+        $home = resolve(WorkerLinks::class)->home();
 
         foreach ($waiting as $participant) {
             $person = $people[$participant->employee_id] ?? null;
@@ -116,7 +117,7 @@ final class SendSurveyInvitations implements ShouldQueue
             $token = $participant->surveyToken();
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
             Notification::routes($routes)->notify(new SurveyInvitation(
-                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant), $portal->url($person->id),
+                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant), $home,
             ));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }
