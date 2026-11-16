@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\RespondEquipment;
-use App\Modules\Telework\Exceptions\PortalUnavailable;
+use App\Modules\Telework\Support\SessionPortal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -17,17 +16,12 @@ use Illuminate\Http\Request;
  */
 final class PortalEquipmentController extends Controller
 {
-    public function respond(string $token, string $item, Request $request, OpenPortal $openPortal, RespondEquipment $respond): RedirectResponse
+    public function respond(string $tenant, string $item, Request $request, SessionPortal $portals, RespondEquipment $respond): RedirectResponse
     {
-        try {
-            $portal = $openPortal->handle($token);
-        } catch (PortalUnavailable) {
-            abort(404);
-        }
-
+        $portal = $portals->current() ?? abort(404);
         $request->validate(['received' => ['required', 'boolean'], 'reason' => ['nullable', 'string', 'max:1000']]);
         $respond->handle($portal, $item, $request->boolean('received'), $request->string('reason')->toString(), $request->ip());
 
-        return to_route('portal.show', $token);
+        return to_route('portal.telework.show', $tenant);
     }
 }

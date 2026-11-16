@@ -6,7 +6,6 @@ use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 
 // Light and dark, on a desktop and on a phone.
@@ -20,7 +19,7 @@ $looks = [
 /**
  * The statement of Ana's second year, issued on her anniversary and not yet confirmed.
  *
- * @return array{statement: LeaveStatement, url: string}
+ * @return array{statement: LeaveStatement, url: string, ana: string}
  */
 function leaveStatementPortal(): array
 {
@@ -32,13 +31,14 @@ function leaveStatementPortal(): array
     $statement = LeaveStatement::factory()->create(['tenant_id' => $tenant->id, 'leave_entitlement_id' => $period->id, 'issued_at' => '2026-03-15 18:00:00']);
     workIn($tenant);
 
-    return ['statement' => $statement, 'url' => '/portal/'.resolve(IssuePortalLink::class)->handle($ana->id).'/vacations/statements/'.$statement->id];
+    // In Ana's pages: she enters first (enteringTo) and lands back where she was going.
+    return ['statement' => $statement, 'url' => '/me/acme/vacations/statements/'.$statement->id, 'ana' => $ana->id];
 }
 
 it('shows the statement and lets the person confirm they received it', function (bool $dark, bool $mobile): void {
     $portal = leaveStatementPortal();
 
-    visitPage('leave/portal-statement', $portal['url'], $dark, $mobile)
+    visitPage('leave/portal-statement', $portal['url'], $dark, $mobile, enteringProvedTo($portal['ana'], 'Constancia de vacaciones'))
         ->assertSee('Constancia de vacaciones')
         ->assertSee('Ana Solís')
         ->assertSee('2 años')
@@ -58,7 +58,7 @@ it('shows the statement and lets the person confirm they received it', function 
 it('offers the statement on the vacations page while it is not confirmed', function (): void {
     $portal = leaveStatementPortal();
 
-    visitPage('leave/portal', dirname($portal['url'], 2))
+    visitPage('leave/portal', dirname($portal['url'], 2), reach: enteringTo($portal['ana'], 'Mis vacaciones'))
         ->assertSee('Constancia de vacaciones 2026')
         ->click('Constancia de vacaciones 2026')
         ->assertSee('Constancia de vacaciones')

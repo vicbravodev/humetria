@@ -10,12 +10,12 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * The email that carries a person's portal link, from their company and written as the portal speaks ("usted"). Sent as the job that made the
- * link runs, never queued: the plain token must not reach the queue.
+ * The email that asks a new teleworker for their checklist, from their company and written as the portal speaks ("usted"),
+ * with the address of their telework section: no credential, they enter first.
  */
 final class PortalInvitation extends Notification implements MailBag
 {
-    public function __construct(private readonly string $token, private readonly string $name, private readonly CompanySummary $company) {}
+    public function __construct(private readonly string $url, private readonly string $name, private readonly CompanySummary $company) {}
 
     /**
      * @return list<string>
@@ -31,9 +31,9 @@ final class PortalInvitation extends Notification implements MailBag
             ->subject('Su espacio de trabajo en casa: una lista de 10 minutos')
             ->greeting("Hola, {$this->name}")
             ->line('Para que pueda trabajar desde casa, necesitamos saber cómo es su espacio: luz, silla, instalación eléctrica. Son unas preguntas y, si usted quiere, unas fotos.')
-            ->action('Contestar la lista', route('portal.show', $this->token))
+            ->action('Contestar la lista', $this->url)
             ->line('Solo lo ven Recursos Humanos y la Comisión de Seguridad e Higiene. Puede contestar desde su celular.')
-            ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+            ->line('Este enlace es solo suyo: no lo comparta.');
     }
 
     public function mailBag(): string

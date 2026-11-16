@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ANY_STEP } from '@/lib/attendance/next-step';
-import { stateAfter } from '@/lib/attendance/punch-state';
+import { feedbackAgreement, stateAfter } from '@/lib/attendance/punch-state';
 
 const day = {
     name: 'Bob Ruiz',
@@ -53,6 +53,22 @@ describe('stateAfter', () => {
         },
     );
 
+    it('keeps the agreement to accept with its refusal, for the screen to show it', () => {
+        expect(
+            stateAfter({
+                kind: 'failed',
+                reason: 'agreement_not_accepted',
+                person: { name: 'Bob Ruiz', next: ['start'] },
+                agreement: { version: 2, body: 'Texto' },
+            }).feedback,
+        ).toEqual({
+            kind: 'error',
+            text: 'Para marcar, primero acepte el acuerdo de registro electrónico.',
+            reason: 'agreement_not_accepted',
+            agreement: { version: 2, body: 'Texto' },
+        });
+    });
+
     it('keeps the steps the server gave after a rejection of the policy', () => {
         expect(
             stateAfter({
@@ -79,5 +95,18 @@ describe('stateAfter', () => {
                 reason: 'not_verified',
             },
         });
+    });
+});
+
+describe('feedbackAgreement', () => {
+    it('is the agreement to accept of a refusal, and null otherwise', () => {
+        const agreement = { version: 2, body: 'Texto' };
+
+        expect(
+            feedbackAgreement({ kind: 'error', text: 'x', agreement }),
+        ).toEqual(agreement);
+        expect(feedbackAgreement({ kind: 'error', text: 'x' })).toBeNull();
+        expect(feedbackAgreement({ kind: 'done', text: 'Listo.' })).toBeNull();
+        expect(feedbackAgreement(null)).toBeNull();
     });
 });

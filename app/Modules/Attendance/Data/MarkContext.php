@@ -16,6 +16,6 @@ final readonly class MarkContext
         public ?float $longitude,
         public ?float $accuracy,
         public ?float $distance,
-        public ?string $deviceId,
+        public ?string $credentialId,
     ) {}
 }

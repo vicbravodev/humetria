@@ -11,7 +11,7 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 final class PortalDecisionRequest extends FormRequest
 {
-    /** The portal link is the credential: the controller opens it. */
+    /** The session of the person is the credential (RequireWorkerSession): the controller asks it who they are. */
     public function authorize(): bool
     {
         return true;

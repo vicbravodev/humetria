@@ -5,7 +5,7 @@ import PortalNoticeDialog from '@/components/telework/portal/portal-notice-dialo
 import PortalNoticesList from '@/components/telework/portal/portal-notices-list';
 import PortalShell from '@/components/telework/portal/portal-shell';
 import { NOTICE_KINDS } from '@/lib/telework/notices';
-import { show } from '@/routes/portal';
+import { show } from '@/routes/portal/telework';
 import type { NoticeKindValue, Paginated, PortalNotice } from '@/types';
 
 const ICONS = {
@@ -15,14 +15,14 @@ const ICONS = {
 } satisfies Record<NoticeKindValue, typeof Home>;
 
 export default function PortalNotices({
-    token,
+    slug,
     company,
     name,
     today,
     states,
     notices,
 }: {
-    token: string;
+    slug: string;
     company: string;
     name: string;
     today: string;
@@ -34,7 +34,7 @@ export default function PortalNotices({
             <Head title="Sus avisos" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
                 <Link
-                    href={show.url({ token })}
+                    href={show.url(slug)}
                     className="touch-hit flex w-fit items-center gap-1.5 text-base font-medium text-primary"
                 >
                     <ArrowLeft aria-hidden className="size-4" />
@@ -69,7 +69,7 @@ export default function PortalNotices({
                                     </p>
                                     <div className="mt-2">
                                         <PortalNoticeDialog
-                                            token={token}
+                                            slug={slug}
                                             kind={kind.value}
                                             title={kind.title}
                                             name={name}

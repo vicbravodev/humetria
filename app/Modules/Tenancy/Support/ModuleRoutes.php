@@ -29,7 +29,7 @@ final class ModuleRoutes
     }
 
     /**
-     * What every company has whatever its modules: the panel, its people and centers, Humi and the CCT calculator.
+     * What every company has whatever its modules: the panel, its people, their access and centers, Humi and the CCT calculator.
      *
      * @return list<string>
      */
@@ -46,6 +46,7 @@ final class ModuleRoutes
             'tenant.members.*',
             'tenant.plan',
             'tenant.work-centers.*',
+            'tenant.worker-access.*',
         ];
     }
 }

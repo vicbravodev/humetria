@@ -9,20 +9,23 @@ use App\Modules\Results\Enums\Destination;
 use App\Modules\Results\Http\Controllers\PortalSupportController;
 use App\Modules\Results\Jobs\SendSupportNotice;
 use App\Modules\Results\Notifications\SupportWaiting;
-use App\Modules\Telework\Contracts\PortalAccess;
+use App\Modules\Results\Support\SupportWorkerSection;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
+use Carbon\CarbonImmutable;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PortalSupportController::class, SendSupportNotice::class, SupportWaiting::class, Destination::class);
+mutates(PortalSupportController::class, SendSupportNotice::class, SupportWaiting::class, Destination::class, SupportWorkerSection::class);
 
 // Rediseño v2 (board V4-N035-Canalizacion, «Aviso en su portal»): a person channeled through their portal gets an email that
-// says only that a message waits, and reads it with their link, as «usted»: never the note nor anything of the Guía I.
+// says only that a message waits, and reads it in their session, as «usted»: never the note nor anything of the Guía I.
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-04 18:00:00');
@@ -33,7 +36,7 @@ beforeEach(function (): void {
     $this->campaign = Campaign::factory()->trauma()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id]);
     TraumaScreening::factory()->create(['campaign_id' => $this->campaign->id, 'employee_id' => $this->ana->id, 'requires_clinical_assessment' => true]);
     workIn($this->tenant);
-    $this->token = resolve(PortalAccess::class)->token($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
 });
 
 function channelAna(string $told, string $destination = 'imss'): void
@@ -52,7 +55,8 @@ it('emails the person told through their portal that a message waits, without wh
 
         return $notifiable->routes['mail'] === 'ana@acme.test'
             && $mail->subject === 'Tiene un mensaje de Acme'
-            && $mail->actionUrl === route('portal.support.show', $this->token)
+            && $mail->actionUrl === route('portal.support.show', $this->tenant->slug)
+            && ! str_contains((string) $mail->render(), 'el anterior deja de funcionar')
             && ! str_contains($text, 'IMSS') && ! str_contains($text, 'Nota privada') && ! str_contains($text, 'encuesta');
     });
 });
@@ -68,7 +72,7 @@ it('sends nothing to whoever was told in person, nor to a person without email',
 it('shows the person their message as «usted», with where it proposes they go and nothing else', function (): void {
     channelAna('portal', 'other');
 
-    $response = $this->get(route('portal.support.show', $this->token))->assertOk();
+    $response = $this->get(route('portal.support.show', $this->slug))->assertOk();
     $response->assertInertia(fn (Assert $page) => $page->component('results/portal-support')
         ->where('company', 'Acme')
         ->where('name', 'Ana Ruiz')
@@ -77,15 +81,81 @@ it('shows the person their message as «usted», with where it proposes they go 
     expect((string) $response->getContent())->not->toContain('Nota privada');
 });
 
-it('has no message for a person told in person, nor for a link that is not valid', function (): void {
-    channelAna('in_person');
+it('gives the message only after a recent proof that it is the person, saying nothing of it before', function (EntryVia $via, int $minutes): void {
+    channelAna('portal');
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
 
-    $this->get(route('portal.support.show', $this->token))->assertNotFound();
-    $this->get(route('portal.support.show', 'inventado'))->assertNotFound();
+    $refused = $this->get(route('portal.support.show', $this->slug))->assertRedirect(route('worker.proof.show', $this->slug));
+    $proof = $this->get(route('worker.proof.show', $this->slug))->assertOk()->assertInertia(fn (Assert $page) => $page->component('worker-access/proof'));
+    expect((string) $refused->getContent().json_encode($proof->viewData('page')['props'], JSON_THROW_ON_ERROR))->not->toContain('apoyo')->not->toContain('IMSS')->not->toContain('me/acme/support');
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->get(route('portal.support.show', $this->slug))->assertOk()->assertInertia(fn (Assert $page) => $page->component('results/portal-support'));
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
+
+it('asks for the proof the same whether a message waits or not', function (): void {
+    enteredAs($this->ana->id, EntryVia::RequestedLink);
+
+    $this->get(route('portal.support.show', $this->slug))->assertRedirect(route('worker.proof.show', $this->slug));
 });
 
-it('lives next to the rest of the personal page, throttled like it', function (): void {
-    expect(route('portal.support.show', 'abc', absolute: false))->toBe('/portal/abc/support')
+it('has no message for a person told in person', function (): void {
+    channelAna('in_person');
+
+    $this->get(route('portal.support.show', $this->slug))->assertNotFound();
+});
+
+it('sends a visitor to enter, ends the page for a person who left, and opens nothing of another company with this session', function (): void {
+    channelAna('portal');
+    $other = Tenant::factory()->create();
+
+    $this->get(route('portal.support.show', $other->slug))->assertRedirect(route('worker.home', $other->slug));
+
+    $this->ana->update(['deactivated_at' => now()]);
+    $this->get(route('portal.support.show', $this->slug))->assertRedirect(route('worker.home', $this->slug));
+
+    session()->flush();
+    $this->get(route('portal.support.show', $this->slug))->assertRedirect(route('worker.home', $this->slug));
+});
+
+it('answers 404 when the company of the address no longer has NOM-035', function (): void {
+    channelAna('portal');
+    $this->get(route('portal.support.show', $this->slug))->assertOk();
+
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    $this->get(route('portal.support.show', $this->slug))->assertNotFound();
+});
+
+it('never shows a person the message of another', function (): void {
+    channelAna('portal');
+    $beto = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Paz']);
+
+    $this->get(route('portal.support.show', asPerson($beto->id)))->assertNotFound();
+});
+
+it('offers «Apoyo» in the person\'s start only to whoever was told through the portal, at their page with no credential', function (): void {
+    $section = fn () => resolve(SupportWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz'));
+
+    channelAna('in_person');
+    expect($section())->toBeNull();
+
+    channelAna('portal');
+    expect($section()?->key)->toBe('support')
+        ->and($section()?->label)->toBe('Apoyo')
+        ->and($section()?->href)->toBe(route('portal.support.show', 'acme'))
+        ->and($section()?->pending)->toBe(1);
+
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
+    expect($section())->toBeNull();
+});
+
+it('lives in the person\'s pages, throttled like them', function (): void {
+    expect(route('portal.support.show', 'acme', absolute: false))->toBe('/me/acme/support')
         ->and(Route::getRoutes()->getByName('portal.support.show')?->gatherMiddleware())->toContain('throttle:portal-views');
 });
 

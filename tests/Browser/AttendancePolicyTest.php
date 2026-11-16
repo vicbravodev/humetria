@@ -81,16 +81,12 @@ it('shows a viewer the policy without letting them change it', function (): void
         ->assertScript('() => document.querySelector("#policy-retention_months").matches(":disabled")', true);
 });
 
-it('takes RH from the sidebar to the devices, the schedules and the policy, lighting each', function (): void {
+it('takes RH from the sidebar to the schedules and the policy, lighting each', function (): void {
     $url = signInToPanel();
 
     visit($url)
         ->click('Cumple la norma')
         ->click('[data-sidebar="sidebar"] >> text=Asistencia')
-        ->click('[data-sidebar="sidebar"] >> text=Dispositivos')
-        ->waitForText('Envíale su enlace de alta')
-        ->assertPathIs("{$url}/attendance/devices")
-        ->assertAttribute('[data-sidebar="sidebar"] a[href$="/attendance/devices"]', 'data-active', 'true')
         ->click('[data-sidebar="sidebar"] >> text=Horarios')
         ->waitForText('lo que trabaje de más cuenta como tiempo extra')
         ->assertPathIs("{$url}/attendance/schedules")

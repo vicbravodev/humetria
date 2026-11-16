@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
-import PortalHomeLink from '@/components/portal-home-link';
+import WorkerHomeLink from '@/components/worker-home-link';
 import PortalConfirmation from '@/components/seating/portal-confirmation';
 import PortalDeclined from '@/components/seating/portal-declined';
 import PortalIntro from '@/components/seating/portal-intro';
@@ -17,7 +17,7 @@ type Screen = 'intro' | 'questions' | 'declined' | 'sent';
  * questions on footwear and discomfort, voluntary, one at a time and only after the notice; and a damaged seat to report.
  */
 export default function SeatingPortal({
-    token,
+    slug,
     company,
     name,
     notice,
@@ -27,7 +27,7 @@ export default function SeatingPortal({
     acknowledgment,
     acknowledgedOn,
 }: {
-    token: string;
+    slug: string;
     company: string;
     name: string;
     notice: string;
@@ -48,9 +48,9 @@ export default function SeatingPortal({
         <PortalShell company={company}>
             <Head title="Su trabajo de pie" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
-                <PortalHomeLink token={token} />
+                <WorkerHomeLink slug={slug} />
                 <PortalConfirmation
-                    token={token}
+                    slug={slug}
                     acknowledgment={acknowledgment}
                     acknowledgedOn={acknowledgedOn}
                 />
@@ -65,7 +65,7 @@ export default function SeatingPortal({
                 {shown === 'questions' && (
                     <PortalQuestions
                         key={sentOn}
-                        token={token}
+                        slug={slug}
                         footwear={footwear}
                         discomfort={discomfort}
                         onSent={() => setScreen('sent')}
@@ -80,7 +80,7 @@ export default function SeatingPortal({
                         onAgain={() => setScreen('questions')}
                     />
                 )}
-                {shown !== 'questions' && <PortalSeatReport token={token} />}
+                {shown !== 'questions' && <PortalSeatReport slug={slug} />}
             </div>
         </PortalShell>
     );

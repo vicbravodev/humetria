@@ -5,18 +5,18 @@ import type { PortalAcknowledgment as Pending } from '@/types';
 
 /** The confirmation of the person's assessment: the one that waits for it, or the day they gave it. */
 export default function PortalConfirmation({
-    token,
+    slug,
     acknowledgment,
     acknowledgedOn,
 }: {
-    token: string;
+    slug: string;
     acknowledgment: Pending | null;
     acknowledgedOn: string | null;
 }) {
     return (
         <>
             {acknowledgment !== null && (
-                <PortalAcknowledgment token={token} pending={acknowledgment} />
+                <PortalAcknowledgment slug={slug} pending={acknowledgment} />
             )}
             {acknowledgedOn !== null && (
                 <p className="flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-base text-accent-foreground">

@@ -13,8 +13,8 @@ use App\Modules\Leave\Notifications\RequestToDecide;
 use App\Modules\Leave\Support\Approver;
 use App\Modules\Leave\Support\RequestNotifier;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Carbon\CarbonImmutable;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -100,8 +100,8 @@ it('assigns the request to the manager and emails them the link of their own por
             ->and($mail->subject)->toBe('Ana Solís pidió vacaciones')
             ->and($mail->greeting)->toBe('Hola, Beto Ruiz')
             ->and($mail->actionText)->toBe('Revisar solicitud')
-            ->and($mail->actionUrl)->toBe(route('portal.vacations.team.show', resolve(PortalAccess::class)->token($this->boss->id)))
-            ->and($mail->actionUrl)->not->toContain(resolve(PortalAccess::class)->token($this->ana->id))
+            // The manager's own page of their team's requests, with no credential: they enter first.
+            ->and($mail->actionUrl)->toBe(route('portal.vacations.team.show', $this->tenant->slug))
             ->and($text)->toContain('Ana Solís pidió vacaciones del 9 de noviembre de 2026 al 20 de noviembre de 2026: 9 días laborables.')
             ->toContain('Tiene días disponibles.')
             ->not->toContain('Nota privada');
@@ -193,13 +193,13 @@ it('emails nobody about what RH records for a person, but still says whose it is
 
 it('keeps the request when the email cannot be sent', function (): void {
     Illuminate\Support\Facades\Exceptions::fake();
-    $this->mock(PortalAccess::class)->shouldReceive('token')->andThrow(new RuntimeException('no link'));
+    $this->mock(WorkerLinks::class)->shouldReceive('to')->andThrow(new RuntimeException('no link'));
 
     expect(requestBy($this->ana)->exists)->toBeTrue();
     Illuminate\Support\Facades\Exceptions::assertReported(RuntimeException::class);
 });
 
-it('logs who was born with RH, and never a portal token', function (): void {
+it('logs who was born with RH', function (): void {
     $lines = [];
     Log::listen(function (MessageLogged $logged) use (&$lines): void {
         $lines[] = $logged->message.' '.json_encode($logged->context, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
@@ -212,5 +212,5 @@ it('logs who was born with RH, and never a portal token', function (): void {
         'leave.request_created '.json_encode(['request_id' => $assigned->id, 'employee_id' => $this->ana->id, 'working_days' => 9, 'had_balance' => false], JSON_THROW_ON_ERROR),
         'leave.request_created '.json_encode(['request_id' => $escalated->id, 'employee_id' => $this->director->id, 'working_days' => 9, 'had_balance' => false], JSON_THROW_ON_ERROR),
         'leave.request_escalated '.json_encode(['request_id' => $escalated->id, 'reason' => 'no_manager'], JSON_THROW_ON_ERROR),
-    ])->and(implode("\n", $lines))->not->toContain(resolve(PortalAccess::class)->token($this->boss->id))->not->toContain(resolve(PortalAccess::class)->token($this->ana->id));
+    ]);
 });

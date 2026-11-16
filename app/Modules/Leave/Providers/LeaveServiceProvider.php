@@ -13,7 +13,7 @@ use App\Modules\Leave\Listeners\VoidTerminationOnReactivation;
 use App\Modules\Leave\Support\CompanyAbsences;
 use App\Modules\Leave\Support\CompanyPendingRequests;
 use App\Modules\Leave\Support\PolicyVacationTerms;
-use App\Modules\Leave\Support\VacationsPortalSection;
+use App\Modules\Leave\Support\VacationsWorkerSection;
 use App\Modules\Organization\Events\EmployeeCreated;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeReactivated;
@@ -29,7 +29,7 @@ final class LeaveServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->tag([VacationsPortalSection::class], 'portal.sections');
+        $this->app->tag([VacationsWorkerSection::class], 'worker.sections');
         $this->app->bind(Absences::class, CompanyAbsences::class);
         $this->app->bind(VacationTerms::class, PolicyVacationTerms::class);
         $this->app->bind(PendingRequests::class, CompanyPendingRequests::class);

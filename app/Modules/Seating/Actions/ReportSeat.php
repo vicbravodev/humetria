@@ -8,8 +8,8 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Seating\Enums\ReportStatus;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\SeatReport;
-use App\Modules\Telework\Data\PortalIdentity;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
@@ -21,9 +21,9 @@ final readonly class ReportSeat
 {
     public function __construct(private CurrentTenant $tenant, private Roster $roster) {}
 
-    public function handle(PortalIdentity $person, string $description): SeatReport
+    public function handle(WorkerIdentity $person, string $description): SeatReport
     {
-        // The identity was opened a moment ago, so the person is in the roster.
+        // The session holds only for an active person, so the person is in the roster.
         $workCenterId = ($this->roster->find($person->employeeId) ?? throw new InvalidArgumentException('The person is not in the roster.'))->workCenterId;
 
         $report = SeatReport::query()->create([

@@ -684,10 +684,12 @@ it('shows the person the message of their company in their portal, in both theme
     App\Modules\Responses\Models\TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $person->id, 'requires_clinical_assessment' => true]);
     App\Modules\Results\Models\ScreeningReferral::factory()->create(['tenant_id' => $tenant->id, 'campaign_id' => $campaign->id, 'employee_id' => $person->id, 'told' => 'portal']);
     workIn($tenant);
-    $token = resolve(App\Modules\Telework\Contracts\PortalAccess::class)->token($person->id);
     Illuminate\Support\Facades\Auth::logout();
+    Illuminate\Support\Facades\Notification::fake();
+    // She enters with a link, and the message takes a recent proof first: a code by email (WorkerAccess).
+    $reach = fn (Pest\Browser\Api\AwaitableWebpage $page): mixed => provedWithCode(enteringTo($person->id, 'Confirme que es usted')($page), 'Confidencial');
 
-    visitPage('results/portal-support', "/portal/{$token}/support", $dark, $mobile)
+    visitPage('results/portal-support', route('portal.support.show', $tenant->slug, absolute: false), $dark, $mobile, $reach)
         ->assertSee('Le proponemos acudir a su Unidad de Medicina Familiar del IMSS')
         ->assertSee('Confidencial');
 })->with($looks);

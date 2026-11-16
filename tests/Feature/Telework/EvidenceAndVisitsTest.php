@@ -6,7 +6,6 @@ use App\Modules\Telework\Actions\AttachVisitDocument;
 use App\Modules\Telework\Actions\CancelVisitAuthorization;
 use App\Modules\Telework\Actions\ConfirmVisitAuthorization;
 use App\Modules\Telework\Actions\FulfillPhotoRequest;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\RecordVisit;
 use App\Modules\Telework\Actions\RequestEvidence;
 use App\Modules\Telework\Actions\RequestVisitAuthorization;
@@ -51,7 +50,7 @@ beforeEach(function (): void {
     CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $this->cora->id]);
     $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->employee->id]);
     $this->workplace = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $teleworker->id]);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->employee->id);
+    $this->slug = asPerson($this->employee->id);
 });
 
 function evidenceUrl(): string
@@ -59,10 +58,10 @@ function evidenceUrl(): string
     return route('tenant.telework.evidence.store', [test()->tenant, test()->workplace->id]);
 }
 
-/** @return array<string, mixed> The props of the portal page. */
+/** @return array<string, mixed> The pending items of the person's telework section. */
 function evidencePending(): array
 {
-    $response = test()->get(route('portal.show', test()->token));
+    $response = test()->get(route('portal.telework.show', test()->slug));
     $response->assertOk();
 
     return $response->viewData('page')['props']['pending'];
@@ -133,7 +132,7 @@ it('lets the person send the photos asked for through the portal, once', functio
     $request = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     Log::spy();
 
-    $this->post(route('portal.evidence.store', [$this->token, $request->id]), ['photo_general_0' => evidencePng(), 'photo_general_1' => evidencePng('otra.png')])->assertSessionHasNoErrors()->assertRedirect(route('portal.show', $this->token));
+    $this->post(route('portal.evidence.store', [$this->slug, $request->id]), ['photo_general_0' => evidencePng(), 'photo_general_1' => evidencePng('otra.png')])->assertSessionHasNoErrors()->assertRedirect(route('portal.telework.show', $this->slug));
 
     $stored = EvidencePhoto::query()->get();
     expect($stored)->toHaveCount(2)
@@ -148,13 +147,13 @@ it('lets the person send the photos asked for through the portal, once', functio
     Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context): bool => $message === 'telework.evidence_fulfilled'
         && $context === ['evidence_request_id' => $request->id, 'workplace_id' => $this->workplace->id, 'kind' => 'photos', 'photo_count' => 2])->once();
 
-    $this->post(route('portal.evidence.store', [$this->token, $request->id]), ['photo_general_0' => evidencePng()])->assertSessionHasErrors('evidence');
+    $this->post(route('portal.evidence.store', [$this->slug, $request->id]), ['photo_general_0' => evidencePng()])->assertSessionHasErrors('evidence');
     expect(EvidencePhoto::query()->count())->toBe(2);
 });
 
 it('refuses photos that are not images, none at all, and more than the cap, leaving nothing behind', function (): void {
     $request = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
-    $url = route('portal.evidence.store', [$this->token, $request->id]);
+    $url = route('portal.evidence.store', [$this->slug, $request->id]);
     $bad = UploadedFile::fake()->createWithContent('foto.jpg', '%PDF-1.4 not an image');
 
     $this->post($url, [])->assertSessionHasErrors('photos');
@@ -180,10 +179,12 @@ it('keeps the photo requests of other people, other kinds and retired workplaces
     $old = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $retired->id]);
 
     foreach ([$theirs, $remote, $old] as $request) {
-        $this->post(route('portal.evidence.store', [$this->token, $request->id]), ['photo_general_0' => evidencePng()])->assertNotFound();
+        $this->post(route('portal.evidence.store', [$this->slug, $request->id]), ['photo_general_0' => evidencePng()])->assertNotFound();
     }
 
-    $this->post(route('portal.evidence.store', ['not-a-link', $remote->id]), ['photo_general_0' => evidencePng()])->assertNotFound();
+    resolve(App\Modules\WorkerAccess\Support\WorkerSessionStore::class)->end();
+    $this->post(route('portal.evidence.store', [$this->slug, $remote->id]), ['photo_general_0' => evidencePng()])->assertRedirect(route('worker.home', $this->slug));
+    asPerson($this->employee->id);
     expect(EvidencePhoto::query()->count())->toBe(0)->and(evidencePending()['photos'])->toBe([]);
 });
 
@@ -222,7 +223,7 @@ it('records the confirmation of the person with its time and address', function 
     $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     Log::spy();
 
-    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.9'])->post(route('portal.visits.confirm', [$this->token, $authorization->id]))->assertSessionHasNoErrors()->assertRedirect(route('portal.show', $this->token));
+    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.9'])->post(route('portal.visits.confirm', [$this->slug, $authorization->id]))->assertSessionHasNoErrors()->assertRedirect(route('portal.telework.show', $this->slug));
 
     $authorization->refresh();
     expect($authorization->confirmed_at?->toIso8601String())->toBe('2026-03-10T18:00:00+00:00')
@@ -232,7 +233,7 @@ it('records the confirmation of the person with its time and address', function 
     Log::shouldHaveReceived('info')->withArgs(fn (string $message, array $context): bool => $message === 'telework.visit_authorization_confirmed'
         && $context === ['visit_authorization_id' => $authorization->id, 'workplace_id' => $this->workplace->id])->once();
 
-    $this->post(route('portal.visits.confirm', [$this->token, $authorization->id]))->assertSessionHasErrors('visit');
+    $this->post(route('portal.visits.confirm', [$this->slug, $authorization->id]))->assertSessionHasErrors('visit');
 });
 
 it('does not let a person confirm the visit of someone else\'s workplace', function (): void {
@@ -240,7 +241,7 @@ it('does not let a person confirm the visit of someone else\'s workplace', funct
     $otherWorkplace = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $otherEmployee->id])->id]);
     $theirs = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $otherWorkplace->id]);
 
-    $this->post(route('portal.visits.confirm', [$this->token, $theirs->id]))->assertNotFound();
+    $this->post(route('portal.visits.confirm', [$this->slug, $theirs->id]))->assertNotFound();
 
     expect($theirs->refresh()->confirmed_at)->toBeNull();
 });
@@ -357,7 +358,7 @@ it('keeps the other company\'s evidence out of the portal and the panel', functi
 
 it('keeps a confirmation whose address is unknown, with the address empty', function (): void {
     $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
-    $portal = resolve(App\Modules\Telework\Actions\OpenPortal::class)->handle($this->token);
+    $portal = teleworkPortalOf($this->employee->id);
 
     resolve(ConfirmVisitAuthorization::class)->handle($portal, $authorization->id, null);
 
@@ -417,7 +418,7 @@ it('does not let a cancelled request be confirmed, signed or used', function ():
     $given = VisitAuthorizationFactory::new()->confirmed()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
     $given->update(['cancelled_at' => now(), 'cancelled_by' => $this->cora->id]);
 
-    $this->post(route('portal.visits.confirm', [$this->token, $authorization->id]))->assertNotFound();
+    $this->post(route('portal.visits.confirm', [$this->slug, $authorization->id]))->assertNotFound();
     expect(evidenceRefused(fn () => resolve(AttachVisitDocument::class)->handle($authorization, __FILE__)))->toHaveKey('document')
         ->and(evidenceRefused(fn () => resolve(RecordVisit::class)->handle($this->workplace, $given, CarbonImmutable::now(config()->string('app.display_timezone')), ReviewDecision::Valid, '', null, null, $this->cora->id)))->toHaveKey('visit_authorization_id');
 });

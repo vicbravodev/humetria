@@ -221,7 +221,7 @@ it('refuses to confirm a superseded version from the portal, the panel and on pa
     $oldRisk = published(DocumentKind::RiskInformation);
     published();
     published(DocumentKind::RiskInformation);
-    $portal = resolve(App\Modules\Telework\Actions\OpenPortal::class)->handle(resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($ana->id));
+    $portal = teleworkPortalOf($ana->id);
 
     expect(fn () => resolve(Acknowledge::class)->handle($portal, $oldPolicy->id, null))->toThrow(Illuminate\Validation\ValidationException::class)
         ->and(fn () => resolve(Acknowledge::class)->inPanel($cora->id, $oldRisk->id, null))->toThrow(Illuminate\Validation\ValidationException::class)

@@ -7,8 +7,6 @@ use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Actions\Acknowledge;
-use App\Modules\Telework\Actions\IssuePortalLink;
-use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\PublishDocument;
 use App\Modules\Telework\Actions\RequestAcknowledgements;
 use App\Modules\Telework\Data\PendingDocument;
@@ -21,7 +19,6 @@ use App\Modules\Telework\Listeners\RequestOnPublication;
 use App\Modules\Telework\Listeners\RequestPolicyFromNewStaff;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\CommitteeAssignment;
-use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Notifications\DocumentsToConfirm;
 use App\Modules\Telework\Notifications\PortalReminder;
@@ -150,47 +147,24 @@ it('logs telework.acknowledgement_requested with ids and counts only', function 
     expect(json_encode(Acknowledgement::query()->get()->toArray(), JSON_THROW_ON_ERROR))->toContain($ana->id);
 });
 
-it('mails the employee their portal link, derived as the job runs: the same one they had', function (): void {
+it('mails the employee the address of their telework section, with no credential in it', function (): void {
     Notification::fake();
     $ana = staffer($this->center, ['name' => 'Ana Ruiz']);
-    $old = resolve(IssuePortalLink::class)->handle($ana->id);
     publishDocument(DocumentKind::Policy, $this->center);
 
     $job = new SendPortalReminder($this->tenant->id, $ana->id, null);
     app()->call($job->handle(...));
 
-    $url = null;
-    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable) use (&$url, $ana): bool {
+    $mail = null;
+    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable) use (&$mail, $ana): bool {
         $mail = $notification->toMail($notifiable);
-        $url = $mail->actionUrl;
 
         // Board V3-Correos: a document to confirm is «Tiene algo por confirmar».
         return $mail->subject === 'Tiene algo por confirmar' && $mail->actionText === 'Ver y confirmar' && $notifiable->routes['mail'] === $ana->email && $channels === ['mail'];
     });
-    expect(basename($url))->toBe($old)
-        ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $old))
-        ->and($job)->toBeInstanceOf(ShouldQueueAfterCommit::class)
-        ->and(serialize($job))->not->toContain(basename($url));
-});
-
-it('mails the same link in every reminder, so the first email still opens the portal', function (): void {
-    Notification::fake();
-    // Only the reminders below run.
-    Queue::fake();
-    $ana = staffer($this->center);
-    publishDocument(DocumentKind::Policy, $this->center);
-    $urls = [];
-
-    app()->call((new SendPortalReminder($this->tenant->id, $ana->id, null))->handle(...));
-    app()->call((new SendPortalReminder($this->tenant->id, $ana->id, null))->handle(...));
-
-    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable) use (&$urls): bool {
-        $urls[] = $notification->toMail($notifiable)->actionUrl;
-
-        return true;
-    });
-    expect($urls)->toHaveCount(2)->and($urls[0])->toBe($urls[1])
-        ->and(resolve(OpenPortal::class)->handle(basename($urls[0]))->employeeId)->toBe($ana->id);
+    expect($mail->actionUrl)->toBe(route('portal.telework.show', $this->tenant->slug))
+        ->and(implode("\n", $mail->outroLines))->not->toContain('el anterior deja de funcionar')
+        ->and($job)->toBeInstanceOf(ShouldQueueAfterCommit::class);
 });
 
 it('mails a Comisión member the link to the documents page', function (): void {
@@ -220,7 +194,6 @@ it('sends nothing when nothing is pending, the person left or the company is blo
     app()->call($job->handle(...));
 
     Notification::assertNothingSent();
-    expect(PortalLink::query()->count())->toBe(0);
 });
 
 it('asks new, reactivated and moved-in staff for the policy in force of their center', function (string $arrival): void {
@@ -287,18 +260,12 @@ it('asks the risk information when someone joins the roster', function (): void 
         ->and(resolve(RequestAcknowledgements::class)->forEmployee($person->id, $this->other->id, DocumentKind::RiskInformation))->toBe(0);
 });
 
-/** The portal token of an employee who was asked for the policy of the center. */
-function portalOf(Employee $employee): string
-{
-    return resolve(IssuePortalLink::class)->handle($employee->id);
-}
-
 it('acknowledges from the portal with the time, the address and the channel', function (): void {
     Queue::fake();
     $this->travelTo('2026-05-04 15:30:00');
     $ana = staffer($this->center);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+    $portal = teleworkPortalOf($ana->id);
 
     resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
 
@@ -313,7 +280,7 @@ it('acknowledges once: the second time is refused and nothing changes', function
     Queue::fake();
     $ana = staffer($this->center);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+    $portal = teleworkPortalOf($ana->id);
     resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
     $this->travelTo(now()->addDay());
 
@@ -328,7 +295,7 @@ it('does not let a person acknowledge what was not asked of them', function (): 
     $ana = staffer($this->center);
     $outsider = staffer($this->other);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $portal = resolve(OpenPortal::class)->handle(portalOf($outsider));
+    $portal = teleworkPortalOf($outsider->id);
 
     expect(fn () => resolve(Acknowledge::class)->handle($portal, $document->id, null))->toThrow(ModelNotFoundException::class)
         ->and(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(0)
@@ -339,7 +306,7 @@ it('logs telework.acknowledged with ids and channel, never the address', functio
     Queue::fake();
     $ana = staffer($this->center);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+    $portal = teleworkPortalOf($ana->id);
     Log::spy();
 
     resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
@@ -354,17 +321,25 @@ it('lists what is pending in the portal, newest versions only, and shows it gone
     publishDocument(DocumentKind::Policy, $this->center);
     [$latest] = publishDocument(DocumentKind::Policy, $this->center);
     [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
-    $token = portalOf($ana);
+    $slug = asPerson($ana->id);
 
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page
+    // Not a teleworker: the start offers the section while a document waits for them.
+    $this->get(route('worker.home', $slug))->assertInertia(fn (Assert $page) => $page
+        ->where('sections.0.key', 'telework')
+        ->where('sections.0.href', route('portal.telework.show', $slug))
+        ->where('sections.0.description', 'Los documentos que su empresa le pidió confirmar.')
+        ->where('sections.0.pending', 1)
+        ->etc());
+    $this->get(route('portal.telework.show', $slug))->assertInertia(fn (Assert $page) => $page
         ->has('pending.documents', 1)
         ->where('pending.documents.0.id', $latest->id)
         ->where('pending.documents.0.title', 'Política de Teletrabajo · versión 2')
         ->where('pending.documents.0.publishedOn', now()->setTimezone(config()->string('app.display_timezone'))->toDateString()));
 
-    $this->post(route('portal.documents.acknowledge', [$token, $latest->id]))->assertRedirect(route('portal.show', $token));
+    $this->post(route('portal.documents.acknowledge', [$slug, $latest->id]))->assertRedirect(route('portal.telework.show', $slug));
 
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
+    $this->get(route('portal.telework.show', $slug))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
+    $this->get(route('worker.home', $slug))->assertInertia(fn (Assert $page) => $page->where('sections', fn ($sections): bool => ! collect($sections)->contains('key', 'telework'))->etc());
     expect($risk->id)->not->toBe($latest->id);
 });
 
@@ -374,7 +349,7 @@ it('keeps the documents of another person out of a portal', function (): void {
     $outsider = staffer($this->other);
     publishDocument(DocumentKind::Policy, $this->center);
 
-    $this->get(route('portal.show', portalOf($outsider)))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
+    $this->get(route('portal.telework.show', asPerson($outsider->id)))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
 });
 
 it('serves the PDF through the portal only to the person it was asked of', function (): void {
@@ -382,25 +357,26 @@ it('serves the PDF through the portal only to the person it was asked of', funct
     $ana = staffer($this->center);
     $outsider = staffer($this->other);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $token = portalOf($ana);
+    $slug = asPerson($ana->id);
 
-    $response = $this->get(route('portal.documents.file', [$token, $document->id]))->assertOk();
+    $response = $this->get(route('portal.documents.file', [$slug, $document->id]))->assertOk();
     expect($response->headers->get('Cache-Control'))->toContain('no-store')
         ->and($response->streamedContent())->toStartWith('%PDF');
-    $this->get(route('portal.documents.file', [portalOf($outsider), $document->id]))->assertNotFound();
-    $this->get(route('portal.documents.file', ['nope', $document->id]))->assertNotFound();
-    $this->get(route('portal.documents.file', [$token, 'not-a-uuid']))->assertNotFound();
+    $this->get(route('portal.documents.file', [$slug, 'not-a-uuid']))->assertNotFound();
+    $this->get(route('portal.documents.file', [asPerson($outsider->id), $document->id]))->assertNotFound();
+    resolve(App\Modules\WorkerAccess\Support\WorkerSessionStore::class)->end();
+    $this->get(route('portal.documents.file', [$slug, $document->id]))->assertRedirect(route('worker.home', $slug));
 });
 
-it('answers 404 when a dead link tries to acknowledge, and shows a validation error on a second try', function (): void {
+it('sends a visitor who tries to acknowledge to enter, and shows a validation error on a second try', function (): void {
     Queue::fake();
     $ana = staffer($this->center);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $token = portalOf($ana);
 
-    $this->post(route('portal.documents.acknowledge', ['dead', $document->id]))->assertNotFound();
-    $this->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasNoErrors();
-    $this->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasErrors('document');
+    $this->post(route('portal.documents.acknowledge', [$this->tenant->slug, $document->id]))->assertRedirect(route('worker.home', $this->tenant->slug));
+    $slug = asPerson($ana->id);
+    $this->post(route('portal.documents.acknowledge', [$slug, $document->id]))->assertSessionHasNoErrors();
+    $this->post(route('portal.documents.acknowledge', [$slug, $document->id]))->assertSessionHasErrors('document');
 });
 
 it('publishes without making the requests inline: a queued listener does it after the commit', function (): void {
@@ -465,7 +441,7 @@ it('waits two minutes and keeps one waiting email per person, listing everything
 
 it('writes the Comisión email in the panel voice and the person email in the portal voice', function (): void {
     $member = (new DocumentsToConfirm('https://x.test/docs', 'Cora', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), ['Información sobre riesgos del Teletrabajo · versión 1']))->toMail(new AnonymousNotifiable);
-    $person = (new PortalReminder('https://x.test/portal/t', 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), new PortalPendingData([], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')])))->toMail(new AnonymousNotifiable);
+    $person = (new PortalReminder('https://x.test/me/acme/telework', 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), new PortalPendingData([], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')])))->toMail(new AnonymousNotifiable);
 
     expect($member->subject)->toBe('Tienes documentos por confirmar')
         ->and(implode(' ', $member->introLines))->toContain('debes leer y confirmar en el panel')
@@ -541,7 +517,7 @@ it('adds up the Comisión members asked across documents', function (): void {
 it('keeps «Tiene pendientes en su portal» when the portal asks for more than confirming', function (): void {
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false);
     $pending = new PortalPendingData([new App\Modules\Telework\Data\PendingChecklist('w', 'Casa', 1, 'Sección I')], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')]);
-    $mail = (new PortalReminder('https://x.test/portal/t', 'Ana', $company, $pending))->toMail(new AnonymousNotifiable);
+    $mail = (new PortalReminder('https://x.test/me/acme/telework', 'Ana', $company, $pending))->toMail(new AnonymousNotifiable);
 
     expect($mail->subject)->toBe('Tiene pendientes en su portal')
         ->and($mail->actionText)->toBe('Abrir mi portal');

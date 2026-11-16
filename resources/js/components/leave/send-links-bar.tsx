@@ -7,8 +7,8 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { links } from '@/routes/tenant/vacations/balances';
 
 /**
- * Who is ticked and the one thing to do with them: email each the link to their own vacations, where they read and confirm
- * their annual statement. It sticks to the bottom of the table only while someone is ticked.
+ * Who is ticked and the one thing to do with them: invite each to their portal, where they read and confirm their annual
+ * statement in their vacations. It sticks to the bottom of the table only while someone is ticked.
  */
 export default function SendLinksBar({
     chosen,

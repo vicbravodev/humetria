@@ -7,7 +7,9 @@ use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
+use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -21,6 +23,7 @@ beforeEach(function (): void {
     $this->center = WorkCenter::factory()->for($this->tenant)->create();
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     workIn($this->tenant);
+    agreementAccepted($this->ana->id);
 });
 
 function onsite(): MarkContext
@@ -86,6 +89,7 @@ it('rejects a mark that breaks the sequence and creates no row', function (array
 
 it('follows each person\'s own sequence', function (): void {
     $luis = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    agreementAccepted($luis->id);
     markAll($this->ana->id, [MarkType::Start]);
 
     markAll($luis->id, [MarkType::Start]);
@@ -129,4 +133,29 @@ it('logs the mark with ids and never the coordinates', function (): void {
         'type' => 'start',
         'method' => 'qr_and_geofence',
     ]);
+});
+
+it('does not let a person who has not accepted the current agreement mark, whoever accepted it', function (): void {
+    $luis = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+    $other = Tenant::factory()->create();
+    // Luis of another company, with the same name, accepted his own company's agreement.
+    agreementAccepted(EmployeeFactory::new()->create(['tenant_id' => $other->id])->id);
+    workIn($this->tenant);
+
+    expect(fn () => markAll($luis->id, [MarkType::Start]))
+        ->toThrow(fn (MarkRejected $e) => expect($e->reason)->toBe('agreement_not_accepted'))
+        ->and(AttendanceMark::query()->withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('does not let a person mark with an acceptance of a version that is no longer the current one', function (): void {
+    AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'retention_months' => 36]);
+
+    expect(fn () => markAll($this->ana->id, [MarkType::Start]))
+        ->toThrow(fn (MarkRejected $e) => expect($e->reason)->toBe('agreement_not_accepted'))
+        ->and(AttendanceMark::query()->count())->toBe(0);
+
+    agreementAccepted($this->ana->id);
+    markAll($this->ana->id, [MarkType::Start]);
+
+    expect(AttendanceMark::query()->count())->toBe(1);
 });

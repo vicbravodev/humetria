@@ -21,6 +21,7 @@ use App\Modules\Results\Providers\ResultsServiceProvider;
 use App\Modules\Seating\Providers\SeatingServiceProvider;
 use App\Modules\Telework\Providers\TeleworkServiceProvider;
 use App\Modules\Tenancy\Providers\TenancyServiceProvider;
+use App\Modules\WorkerAccess\Providers\WorkerAccessServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Providers\HorizonServiceProvider;
@@ -40,6 +41,7 @@ return [
     InterventionsServiceProvider::class,
     TeleworkServiceProvider::class,
     SeatingServiceProvider::class,
+    WorkerAccessServiceProvider::class,
     AttendanceServiceProvider::class,
     LeaveServiceProvider::class,
     CompensationServiceProvider::class,

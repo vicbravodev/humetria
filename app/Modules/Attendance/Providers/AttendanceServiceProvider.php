@@ -8,9 +8,9 @@ use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Attendance\Contracts\PlaceSearch;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
-use App\Modules\Attendance\Support\AttendancePortalSection;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
+use App\Modules\Attendance\Support\PunchWorkerSection;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -28,7 +28,8 @@ final class AttendanceServiceProvider extends ServiceProvider
     {
         $this->app->bind(AttendanceUsage::class, CompanyAttendanceUsage::class);
         $this->app->bind(PlaceSearch::class, NominatimPlaceSearch::class);
-        $this->app->tag([AttendancePortalSection::class], 'portal.sections');
+        // «Marcar» in the person's start.
+        $this->app->tag([PunchWorkerSection::class], 'worker.sections');
     }
 
     public function boot(): void
@@ -38,13 +39,6 @@ final class AttendanceServiceProvider extends ServiceProvider
         // A screen asks for a code about twice a minute: per address, so a center with several screens behind one router fits,
         // and guessing a token is slowed down before any is read.
         RateLimiter::for('attendance-device', fn (Request $request): Limit => Limit::perMinute(120)->by('attendance-device:'.$request->ip()));
-
-        // Linking a device takes three requests (the page, the options, the key): per address, and per link so that guessing
-        // or replaying one is slowed down even from many addresses. Only the link's hash names its counter.
-        RateLimiter::for('attendance-enroll', fn (Request $request): array => [
-            Limit::perMinute(30)->by('attendance-enroll-ip:'.$request->ip()),
-            Limit::perMinute(10)->by('attendance-enroll-link:'.hash('sha256', $request->route('token') ?? '')),
-        ]);
 
         // Marking takes three requests (the page, the options, the signature). Per address 300 a minute: a shift of a hundred
         // people behind one router marking in the same minute fits. Per key 12 a minute: a person marks a few times a day,

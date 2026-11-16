@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property MarkType $type
  * @property CarbonImmutable $proposed_at
  * @property string $reason
- * @property string|null $device_id
+ * @property string|null $credential_id
  * @property CorrectionStatus $status
  * @property int|null $resolved_by
  * @property CarbonImmutable|null $resolved_at
@@ -35,7 +35,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'employee_id', 'mark_id', 'type', 'proposed_at', 'reason', 'device_id', 'status', 'resolved_by', 'resolved_at', 'note', 'resulting_mark_id'])]
+#[Fillable(['tenant_id', 'employee_id', 'mark_id', 'type', 'proposed_at', 'reason', 'credential_id', 'status', 'resolved_by', 'resolved_at', 'note', 'resulting_mark_id'])]
 #[UseFactory(CorrectionRequestFactory::class)]
 final class CorrectionRequest extends Model
 {

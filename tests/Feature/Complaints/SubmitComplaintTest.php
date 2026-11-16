@@ -380,7 +380,7 @@ it('keeps no key from a complaint to an employee, an invitation, a portal link, 
 
     $reached = collect($targets)->pluck('target')->unique()->sort()->values()->all();
 
-    expect($reached)->not->toContain('employees', 'participants', 'participant_instruments', 'portal_links', 'anonymous_responses', 'campaigns', 'trauma_screenings')
+    expect($reached)->not->toContain('employees', 'participants', 'participant_instruments', 'anonymous_responses', 'campaigns', 'trauma_screenings')
         ->and($reached)->toBe(['complaint_channels', 'complaints', 'tenants', 'users', 'work_centers']);
 });
 

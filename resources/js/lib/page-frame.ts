@@ -22,14 +22,17 @@ const STANDALONE_NAMES = new Set([
     'results/shared-report',
     // The QR screen of a work center: a fixed tablet, no account, the whole screen for the code.
     'attendance/kiosk',
-    // A person links their phone from the link RH sent them: no account, their own frame.
-    'attendance/enroll',
-    // «Mi jornada» in the person's portal (marking, the week, their phones): their own link, no account, the same frame.
-    'attendance/portal',
     // A person marks from their linked device: no account, their own frame.
     'attendance/punch',
     // A person sees and answers their week from their linked device: no account, the same frame.
     'attendance/week',
+    // The person's own pages (enter, start, a one-time link, a key, «No fui yo»): no account, their own frame.
+    'worker-access/enter',
+    'worker-access/home',
+    'worker-access/link',
+    'worker-access/key',
+    'worker-access/not-me',
+    'worker-access/proof',
     // The report of a contract scenario opened from a temporary link: nobody signed in.
     'compensation/shared-report',
     // A first-time configuration has its own frame (SetupFrame): one question at a time, nothing else around it.

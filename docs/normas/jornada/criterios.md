@@ -141,9 +141,11 @@ la STPS los exceptúa, basta cambiar la política.
 
 ## 5. Acuerdo y evidencia
 
-**5.1 Aceptación al vincular** · Humetría · la primera vez, la persona acepta el acuerdo de registro electrónico:
-medios, datos que se registran (incluida la ubicación), cómo se corrige, quién ve, plazo de conservación y su valor de
-prueba. Se guarda el texto, su versión y el momento.
+**5.1 Aceptación antes de la primera marca** · Humetría · antes de su primera marca, la persona acepta el acuerdo de
+registro electrónico: medios, datos que se registran (incluida la ubicación), cómo se corrige, quién ve, plazo de
+conservación y su valor de prueba. Lo acepta al marcar, con su propia llave (una firma de esa sola acción); sin la
+aceptación de la **versión vigente** no puede marcar. Si el texto cambia (por ejemplo, el plazo de conservación), la
+siguiente marca pide aceptar la versión nueva. Se guarda el texto, su versión, la llave con que firmó y el momento.
 
 **5.2 Conformidad semanal** · Humetría · cada semana la persona revisa su registro y lo **confirma** u **objeta** con
 motivo. Lo confirmado es contenido «acordado» (1.3). Lo objetado queda a la vista de RH hasta resolverse.

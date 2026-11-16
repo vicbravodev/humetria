@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace App\Modules\Leave\Support;
 
 use App\Modules\Leave\Models\LeaveSetting;
-use App\Modules\Telework\Contracts\PortalAccess;
-use App\Modules\Telework\Data\PortalIdentity;
+use App\Modules\WorkerAccess\Contracts\WorkerSession;
+use App\Modules\WorkerAccess\Data\WorkerIdentity;
 
 /**
- * Who opens a vacations page of the portal: the person of the link, in a company that uses Vacaciones. Anything else (a
- * link that is not valid, a company that never opened the tool) is a 404 that says nothing more.
+ * Who opens a vacations page of the person: the person of the session, in a company that uses Vacaciones. A company that
+ * never opened the tool is a 404 that says nothing more.
  */
 final readonly class PortalVisitor
 {
-    public function __construct(private PortalAccess $access) {}
+    public function __construct(private WorkerSession $session) {}
 
-    public function open(string $token): PortalIdentity
+    public function current(): WorkerIdentity
     {
-        $person = $this->access->open($token);
+        $person = $this->session->current();
 
         if ($person === null || ! LeaveSetting::query()->exists()) {
             abort(404);

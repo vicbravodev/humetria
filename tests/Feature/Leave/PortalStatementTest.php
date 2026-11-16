@@ -7,8 +7,9 @@ use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Leave\Support\StatementSheet;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -22,22 +23,22 @@ beforeEach(function (): void {
     $this->ana = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana Solís', 'hired_on' => '2024-03-15']);
     $this->period = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 2, 'anniversary_on' => '2026-03-15', 'statutory_days' => 14, 'extra_days' => 2, 'premium_percent' => 30]);
     $this->statement = LeaveStatement::factory()->create(['tenant_id' => $this->tenant->id, 'leave_entitlement_id' => $this->period->id, 'issued_at' => '2026-03-15 18:00:00']);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
 });
 
-it('lives under the personal link, throttled as the rest of the portal', function (): void {
-    expect(route('portal.vacations.statements.show', ['abc', 's1'], absolute: false))->toBe('/portal/abc/vacations/statements/s1')
-        ->and(route('portal.vacations.statements.acknowledge', ['abc', 's1'], absolute: false))->toBe('/portal/abc/vacations/statements/s1/acknowledge')
+it('lives in the person\'s pages, throttled as the rest of the portal', function (): void {
+    expect(route('portal.vacations.statements.show', ['acme', 's1'], absolute: false))->toBe('/me/acme/vacations/statements/s1')
+        ->and(route('portal.vacations.statements.acknowledge', ['acme', 's1'], absolute: false))->toBe('/me/acme/vacations/statements/s1/acknowledge')
         ->and(Route::getRoutes()->getByName('portal.vacations.statements.show')?->gatherMiddleware())->toContain('throttle:portal-views')
         ->and(Route::getRoutes()->getByName('portal.vacations.statements.acknowledge')?->gatherMiddleware())->toContain('throttle:portal-actions');
 });
 
 it('shows the sheet: seniority, days, when to enjoy them and the premium as a percent, never an amount', function (): void {
-    $this->get(route('portal.vacations.statements.show', [$this->token, $this->statement->id]))
+    $this->get(route('portal.vacations.statements.show', [$this->slug, $this->statement->id]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('leave/portal-statement')
-            ->where('token', $this->token)
+            ->where('slug', $this->tenant->slug)
             ->where('company', 'Acme')
             ->where('statement.id', $this->statement->id)
             ->where('sheet', [
@@ -47,24 +48,44 @@ it('shows the sheet: seniority, days, when to enjoy them and the premium as a pe
             ]));
 });
 
-it('turns the sheet into a received one once the person confirms, only once', function (): void {
-    $this->post(route('portal.vacations.statements.acknowledge', [$this->token, $this->statement->id]))
-        ->assertRedirect(route('portal.vacations.statements.show', [$this->token, $this->statement->id]));
+it('takes the confirmation of the statement only after a recent proof that it is the person, and shows it without one', function (EntryVia $via, int $minutes): void {
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.vacations.statements.show', [$this->slug, $this->statement->id]);
 
-    $this->get(route('portal.vacations.statements.show', [$this->token, $this->statement->id]))
+    $this->get($page)->assertOk();
+    $this->from($page)->post(route('portal.vacations.statements.acknowledge', [$this->slug, $this->statement->id]))->assertRedirect($page)->assertInertiaFlash('proofRequired');
+    expect($this->statement->refresh()->acknowledged_at)->toBeNull();
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.vacations.statements.acknowledge', [$this->slug, $this->statement->id]))->assertRedirect($page)->assertSessionHasNoErrors();
+    expect($this->statement->refresh()->acknowledged_at)->not->toBeNull();
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
+
+it('turns the sheet into a received one once the person confirms, only once', function (): void {
+    $this->post(route('portal.vacations.statements.acknowledge', [$this->slug, $this->statement->id]))
+        ->assertRedirect(route('portal.vacations.statements.show', [$this->slug, $this->statement->id]));
+
+    $this->get(route('portal.vacations.statements.show', [$this->slug, $this->statement->id]))
         ->assertInertia(fn (Assert $page) => $page->where('sheet.acknowledgedOn', '16 de marzo de 2026'));
 
-    $this->post(route('portal.vacations.statements.acknowledge', [$this->token, $this->statement->id]))
+    $this->post(route('portal.vacations.statements.acknowledge', [$this->slug, $this->statement->id]))
         ->assertSessionHasErrors(['statement' => 'Ya confirmó esta constancia.']);
 });
 
-it("answers 'not found' for the statement of somebody else, for any link", function (): void {
+it("answers 'not found' for the statement of somebody else, and lets no one without the session read it", function (): void {
     $caro = Employee::factory()->create(['tenant_id' => $this->tenant->id]);
     $other = LeaveStatement::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $caro->id, 'leave_entitlement_id' => LeaveEntitlement::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $caro->id])->id]);
 
-    $this->get(route('portal.vacations.statements.show', [$this->token, $other->id]))->assertNotFound();
-    $this->post(route('portal.vacations.statements.acknowledge', [$this->token, $other->id]))->assertNotFound();
-    $this->get(route('portal.vacations.statements.show', ['made-up', $this->statement->id]))->assertNotFound();
+    $this->get(route('portal.vacations.statements.show', [$this->slug, $other->id]))->assertNotFound();
+    $this->post(route('portal.vacations.statements.acknowledge', [$this->slug, $other->id]))->assertNotFound();
+    session()->flush();
+    $this->get(route('portal.vacations.statements.show', [$this->slug, $this->statement->id]))->assertRedirect(route('worker.home', $this->slug));
+    $this->post(route('portal.vacations.statements.acknowledge', [$this->slug, $this->statement->id]))->assertRedirect(route('worker.home', $this->slug));
+    expect($this->statement->refresh()->acknowledged_at)->toBeNull();
     expect($other->refresh()->acknowledged_at)->toBeNull();
 });
 
@@ -72,6 +93,6 @@ it('lists on the vacations page only the statements still to confirm', function 
     $older = LeaveEntitlement::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'years_of_service' => 1, 'anniversary_on' => '2025-03-15']);
     LeaveStatement::factory()->create(['tenant_id' => $this->tenant->id, 'leave_entitlement_id' => $older->id, 'acknowledged_at' => '2025-03-20 18:00:00']);
 
-    $this->get(route('portal.vacations.show', $this->token))
+    $this->get(route('portal.vacations.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->where('statements', [['id' => $this->statement->id, 'year' => 2026]]));
 });

@@ -233,3 +233,17 @@ it('searches the roster by words in any order', function (): void {
     expect($ids('perez juan'))->toBe([$juan->id])
         ->and($ids('juan lopez'))->toBe([]);
 });
+
+it('finds the active people of the company by email, whatever the case or the spaces it is written with', function (): void {
+    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['email' => 'ana@acme.mx']);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['email' => 'gone@acme.mx', 'deactivated_at' => now()]);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['email' => null]);
+    $other = Tenant::factory()->create();
+    rosterEmployee($other, WorkCenter::factory()->for($other)->create(), Area::factory()->create(['tenant_id' => $other->id]), ['email' => 'ana@acme.mx']);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->idsByEmail(' ana@ACME.mx '))->toBe([$ana->id])
+        ->and(resolve(Roster::class)->idsByEmail('gone@acme.mx'))->toBe([])
+        ->and(resolve(Roster::class)->idsByEmail(''))->toBe([])
+        ->and(resolve(Roster::class)->idsByEmail('nobody@acme.mx'))->toBe([]);
+});

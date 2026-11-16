@@ -72,7 +72,7 @@ function lifeOfComplaints(object $test): array
         $ticket = resolve(TicketSigner::class)->issue($test->channel->access_code);
         Carbon::setTestNow(now()->addSeconds(10));
 
-        $response = $test->withServerVariables(['REMOTE_ADDR' => M_IP])->withHeaders(['User-Agent' => M_AGENT, 'Referer' => 'https://portal.example/portal/token-secreto'])
+        $response = $test->withServerVariables(['REMOTE_ADDR' => M_IP])->withHeaders(['User-Agent' => M_AGENT, 'Referer' => 'https://portal.example/survey/token-secreto'])
             ->postJson('/c/'.$test->channel->access_code, ['ticket' => $ticket, 'respondent_kind' => 'direct_supervisor', ...$data])->assertCreated()->json();
         // The address and the browser were the person's, for this one request: the handlers that follow come from elsewhere.
         $test->withServerVariables([])->flushHeaders();

@@ -11,8 +11,8 @@ namespace App\Modules\Attendance\Contracts;
 interface AttendanceUsage
 {
     /**
-     * Which of the companies use Attendance: they have a policy, a kiosk, a linked phone or a mark. Works from anywhere, in
-     * no company, and enters none.
+     * Which of the companies use Attendance: they have a policy, a kiosk or a mark (a person's key is every company's, not
+     * Attendance's). Works from anywhere, in no company, and enters none.
      *
      * @param  list<string>  $tenantIds
      * @return list<string> the ids among them that do, in the order given.

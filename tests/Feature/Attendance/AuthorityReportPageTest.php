@@ -104,6 +104,11 @@ function spyOnRosterReads(): ArrayObject
         {
             return $this->roster->idsByEmployeeNumber($numbers);
         }
+
+        public function idsByEmail(string $email): array
+        {
+            return $this->roster->idsByEmail($email);
+        }
     });
 
     return $reads;
@@ -175,7 +180,7 @@ describe('the page', function (): void {
             ->where('exportUrl', route('tenant.attendance.report.export', ['acme', 'center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31'])));
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('longitude')
-            ->not->toContain('accuracy')->not->toContain('distance')->not->toContain('device_id')->not->toContain('deviceId');
+            ->not->toContain('accuracy')->not->toContain('distance')->not->toContain('credential_id')->not->toContain('credentialId');
     });
 
     it('shows an empty period as such, with no people', function (): void {

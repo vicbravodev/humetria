@@ -12,11 +12,11 @@ import type { Paginated, TeamLeaveRequest } from '@/types';
  * to approve or to reject with a reason. Only what is theirs to answer.
  */
 export default function LeavePortalTeam({
-    token,
+    slug,
     company,
     requests,
 }: {
-    token: string;
+    slug: string;
     company: string;
     name: string;
     requests: Paginated<TeamLeaveRequest>;
@@ -26,7 +26,7 @@ export default function LeavePortalTeam({
             <Head title="Solicitudes de mi equipo" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
                 <Link
-                    href={show.url({ token })}
+                    href={show.url(slug)}
                     className="touch-hit flex w-fit items-center gap-1.5 text-base font-medium text-primary"
                 >
                     <ArrowLeft aria-hidden className="size-4" />
@@ -54,7 +54,7 @@ export default function LeavePortalTeam({
                         {requests.data.map((request) => (
                             <DecisionCard
                                 key={request.id}
-                                token={token}
+                                slug={slug}
                                 request={request}
                             />
                         ))}

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Enums\EndReason;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Http\Controllers\PortalChecklistController;
@@ -12,6 +11,8 @@ use App\Modules\Telework\Models\ChecklistPhoto;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Support\PhotoStore;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Models\WorkerAccessState;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistApplicationFactory;
 use Database\Factories\Telework\ChecklistFactory;
@@ -36,8 +37,8 @@ beforeEach(function (): void {
     $this->yes = addQuestion($this->checklist, 1, 'yes');
     $this->health = addQuestion($this->checklist, 2, 'yes', sensitive: true);
     $this->application = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'checklist_id' => $this->checklist->id]);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->employee->id);
-    $this->url = route('portal.checklist.show', [$this->token, $this->application->id]);
+    $this->slug = asPerson($this->employee->id);
+    $this->url = route('portal.checklist.show', [$this->slug, $this->application->id]);
 });
 
 /** @return array<string, mixed> */
@@ -46,14 +47,13 @@ function form(array $overrides = []): array
     return ['consent' => '1', 'answers' => [test()->yes->id => 'no', test()->health->id => 'yes'], 'risk_notes' => [test()->yes->id => 'Cable suelto'], ...$overrides];
 }
 
-it('lives at /portal/{token}/checklists/{application}', function (): void {
-    expect(route('portal.checklist.show', ['abc', 'def'], absolute: false))->toBe('/portal/abc/checklists/def');
+it('lives at /me/{slug}/telework/checklists/{application}, in the person\'s pages', function (): void {
+    expect(route('portal.checklist.show', ['abc', 'def'], absolute: false))->toBe('/me/abc/telework/checklists/def');
 });
 
 it('shows the questions with the instructions, the notice and the consent, and no answers', function (): void {
     $this->get($this->url)->assertInertia(fn (Assert $page) => $page
         ->component('telework/portal-checklist')
-        ->where('unavailable', false)
         ->where('company', 'Acme')
         ->where('application.id', $this->application->id)
         ->where('application.section', 1)
@@ -78,37 +78,50 @@ it('is a 404 for an application that is not the person\'s, not found, retired or
     $other = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
     $theirs = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $other->id])->id])->id, 'checklist_id' => $this->checklist->id]);
 
-    $this->get(route('portal.checklist.show', [$this->token, $theirs->id]))->assertNotFound();
-    $this->post(route('portal.checklist.store', [$this->token, $theirs->id]), form())->assertNotFound();
-    $this->get('/portal/'.$this->token.'/checklists/not-a-uuid')->assertNotFound();
-    $this->get(route('portal.checklist.show', [$this->token, (string) Str::uuid()]))->assertNotFound();
+    $this->get(route('portal.checklist.show', [$this->slug, $theirs->id]))->assertNotFound();
+    $this->post(route('portal.checklist.store', [$this->slug, $theirs->id]), form())->assertNotFound();
+    $this->get('/me/'.$this->slug.'/telework/checklists/not-a-uuid')->assertNotFound();
+    $this->get(route('portal.checklist.show', [$this->slug, (string) Str::uuid()]))->assertNotFound();
 
     $this->workplace->update(['retired_at' => now()]);
     $this->get($this->url)->assertNotFound();
 });
 
-it('tells a bad link apart from nothing: the unavailable page, like the portal', function (): void {
-    $this->get(route('portal.checklist.show', ['nope', $this->application->id]))
-        ->assertInertia(fn (Assert $page) => $page->component('telework/portal-checklist')->where('unavailable', true)->where('questions', [])
-            ->where('token', null)->where('company', null)->where('application', null)->where('instructions', '')->where('notice', '')->where('consent', null));
-    $this->post(route('portal.checklist.store', ['nope', $this->application->id]), form())->assertNotFound();
+it('sends a visitor to enter first, and to the list after; a list sent without a session is not taken', function (): void {
+    resolve(WorkerSessionStore::class)->end();
+
+    $this->get($this->url)->assertRedirect(route('worker.home', $this->slug));
+    expect(session('worker_destination'))->toBe($this->url);
+    $this->post(route('portal.checklist.store', [$this->slug, $this->application->id]), form())->assertRedirect(route('worker.home', $this->slug));
+
+    expect($this->application->refresh()->submitted_at)->toBeNull();
 });
 
-it('sends the token of the link that opened the list', function (): void {
-    $this->get($this->url)->assertInertia(fn (Assert $page) => $page->where('token', $this->token));
+it('does not open the list of company A with a session of company B, nor with A\'s session in B\'s address', function (): void {
+    $other = Tenant::factory()->create();
+    $beto = EmployeeFactory::new()->create(['tenant_id' => $other->id]);
+
+    $this->get(route('portal.checklist.show', [$other->slug, $this->application->id]))->assertRedirect(route('worker.home', $other->slug));
+    asPerson($beto->id);
+    $this->get(route('portal.checklist.show', [$other->slug, $this->application->id]))->assertNotFound();
+    $this->get($this->url)->assertRedirect(route('worker.home', $this->slug));
 });
 
-it('sends a sent list back to the portal', function (): void {
-    $this->post(route('portal.checklist.store', [$this->token, $this->application->id]), form())->assertRedirect(route('portal.show', $this->token));
+it('sends the slug of the company, never a credential', function (): void {
+    $this->get($this->url)->assertInertia(fn (Assert $page) => $page->where('slug', $this->slug)->missing('token')->etc());
+});
 
-    $this->get($this->url)->assertRedirect(route('portal.show', $this->token));
+it('sends a sent list back to the telework section', function (): void {
+    $this->post(route('portal.checklist.store', [$this->slug, $this->application->id]), form())->assertRedirect(route('portal.telework.show', $this->slug));
+
+    $this->get($this->url)->assertRedirect(route('portal.telework.show', $this->slug));
 });
 
 it('saves the answers, the note and a re-encoded photo, then returns to the portal', function (): void {
     $photo = new UploadedFile(__DIR__.'/../../Fixtures/photo-with-gps.jpg', 'foto.jpg', null, null, true);
 
-    $this->post(route('portal.checklist.store', [$this->token, $this->application->id]), form(['special_needs' => 'Escritorio alto', "photo_{$this->yes->id}_0" => $photo, 'photo_general_0' => $photo]))
-        ->assertRedirect(route('portal.show', $this->token))
+    $this->post(route('portal.checklist.store', [$this->slug, $this->application->id]), form(['special_needs' => 'Escritorio alto', "photo_{$this->yes->id}_0" => $photo, 'photo_general_0' => $photo]))
+        ->assertRedirect(route('portal.telework.show', $this->slug))
         ->assertSessionHasNoErrors();
 
     $application = ChecklistApplication::query()->findOrFail($this->application->id);
@@ -148,18 +161,21 @@ it('says the list was already sent on a second post', function (): void {
     $this->from($this->url)->post($this->url, form())->assertSessionHasErrors(['application' => 'Esta lista ya se envió.']);
 });
 
-it('throttles the sends per link', function (): void {
-    foreach (range(1, 10) as $_) {
-        $this->post($this->url, [])->assertRedirect();
+it('throttles the sends per session', function (): void {
+    $cookie = config()->string('session.cookie');
+    $session = $this->post($this->url, [])->assertRedirect()->getCookie($cookie)?->getValue() ?? throw new LogicException;
+
+    foreach (range(2, 10) as $_) {
+        $this->withCredentials()->withCookie($cookie, $session)->post($this->url, [])->assertRedirect();
     }
 
-    $this->post($this->url, [])->assertStatus(429);
+    $this->withCredentials()->withCookie($cookie, $session)->post($this->url, [])->assertStatus(429);
 });
 
 it('never puts individual answers in the props of its pages', function (): void {
     $this->post($this->url, form())->assertRedirect();
 
-    $json = json_encode($this->get(route('portal.show', $this->token))->viewData('page')['props'], JSON_THROW_ON_ERROR);
+    $json = json_encode($this->get(route('portal.telework.show', $this->slug))->viewData('page')['props'], JSON_THROW_ON_ERROR);
     expect($json)->not->toContain('Cable suelto')->not->toContain($this->yes->id);
 });
 
@@ -197,20 +213,11 @@ it('takes photos of the whole list with consent', function (): void {
     expect(ChecklistPhoto::query()->whereNull('question_id')->count())->toBe(1);
 });
 
-it('lets the person finish with the link they opened after reminders were mailed, which carry the same link', function (): void {
-    $opened = $this->token;
+it('does not take a submission once RH reissued the person\'s access, which ends their sessions', function (): void {
+    $this->travel(1)->seconds();
+    WorkerAccessState::moveValidAfter($this->tenant->id, $this->employee->id);
 
-    expect(resolve(IssuePortalLink::class)->handle($this->employee->id))->toBe($opened);
-    $this->post(route('portal.checklist.store', [$opened, $this->application->id]), form())->assertSessionHasNoErrors()->assertRedirect(route('portal.show', $opened));
-
-    expect($this->application->refresh()->submitted_at)->not->toBeNull();
-});
-
-it('does not take a submission with a link RH revoked', function (): void {
-    $opened = $this->token;
-    resolve(IssuePortalLink::class)->handle($this->employee->id, revoke: true);
-
-    $this->post(route('portal.checklist.store', [$opened, $this->application->id]), form())->assertNotFound();
+    $this->post(route('portal.checklist.store', [$this->slug, $this->application->id]), form())->assertRedirect(route('worker.home', $this->slug));
 
     expect($this->application->refresh()->submitted_at)->toBeNull();
 });

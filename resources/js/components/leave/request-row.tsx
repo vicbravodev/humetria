@@ -7,10 +7,10 @@ import type { PortalLeaveRequest } from '@/types';
 
 /** A request of the person: what they asked, for which days, where it stands, and the way to cancel it while they can. */
 export default function RequestRow({
-    token,
+    slug,
     request,
 }: {
-    token: string;
+    slug: string;
     request: PortalLeaveRequest;
 }) {
     return (
@@ -47,7 +47,7 @@ export default function RequestRow({
                     description="Sus fechas quedan libres. Si ya estaba aprobada, los días vuelven a su saldo."
                     confirmLabel="Sí, cancelar"
                     dismissLabel="Volver"
-                    form={cancel.form({ token, request: request.id })}
+                    form={cancel.form({ tenant: slug, request: request.id })}
                     preserveScroll
                 />
             )}

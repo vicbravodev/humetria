@@ -1,5 +1,5 @@
-import type { SignedKey } from '@/lib/attendance/webauthn';
-import { assertionPayload, requestOptions } from '@/lib/attendance/webauthn';
+import type { SignedKey } from '@/lib/webauthn';
+import { assertionPayload, requestOptions } from '@/lib/webauthn';
 
 export type SignDeps = {
     fetcher: typeof fetch;

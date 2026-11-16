@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-use App\Modules\Attendance\Actions\RevokeDevice;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Http\Controllers\WeekController;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\PersonWeek;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Actions\RevokeCredential;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Http\Request;
@@ -45,13 +45,13 @@ beforeEach(function (): void {
 });
 
 /** The phone's key, linked to `$person` in their company. */
-function weekDevice(SoftAuthenticator $phone, Employee $person): AttendanceDevice
+function weekDevice(SoftAuthenticator $phone, Employee $person): WorkerCredential
 {
     workIn(Tenant::query()->findOrFail($person->tenant_id));
     $ceremony = resolve(WebAuthnCeremony::class);
     $credential = $ceremony->verifyRegistration($person->id, $phone->create($ceremony->registrationOptions($person->id, 'Ana')));
 
-    return AttendanceDevice::factory()->create([
+    return WorkerCredential::factory()->create([
         'tenant_id' => $person->tenant_id, 'employee_id' => $person->id,
         'credential_id' => $credential->credentialId, 'public_key' => $credential->publicKey,
     ]);
@@ -264,7 +264,7 @@ describe('reading the week', function (): void {
     it('tells the answer already given, with its moment and the person\'s own reason', function (): void {
         WeeklyConfirmation::factory()->create([
             'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02', 'status' => WeekStatus::Disputed,
-            'disputed_at' => CarbonImmutable::parse('2026-11-10 16:30', 'UTC'), 'reason' => 'El martes salí a las 20:00.', 'device_id' => $this->device->id, 'digest' => anaDigest(),
+            'disputed_at' => CarbonImmutable::parse('2026-11-10 16:30', 'UTC'), 'reason' => 'El martes salí a las 20:00.', 'credential_id' => $this->device->id, 'digest' => anaDigest(),
         ]);
 
         anaReadsWeek(['start' => '2026-11-02'])->assertOk()
@@ -290,7 +290,7 @@ describe('answering', function (): void {
             ->assertJsonPath('confirmUrl', null)
             ->assertJsonPath('disputeUrl', route('attendance.device.week.dispute', ['acme', '2026-11-02']));
 
-        expect(WeeklyConfirmation::query()->sole())->status->toBe(WeekStatus::Confirmed)->device_id->toBe($this->device->id)->digest->toBe(anaDigest());
+        expect(WeeklyConfirmation::query()->sole())->status->toBe(WeekStatus::Confirmed)->credential_id->toBe($this->device->id)->digest->toBe(anaDigest());
     });
 
     it('disputes the week with a reason', function (): void {
@@ -383,7 +383,7 @@ describe('answering', function (): void {
 
 describe('who reads and answers', function (): void {
     it('answers the same 404 to a revoked device and to a person who left', function (string $how): void {
-        $how === 'revoked' ? resolve(RevokeDevice::class)->handle($this->device->id) : $this->ana->update(['deactivated_at' => now()]);
+        $how === 'revoked' ? resolve(RevokeCredential::class)->handle($this->device->id) : $this->ana->update(['deactivated_at' => now()]);
 
         anaReadsWeek()->assertNotFound();
         anaAnswers('confirm')->assertNotFound();
@@ -410,7 +410,7 @@ describe('who reads and answers', function (): void {
 
     it('logs a signature that did not verify with the company and the request only', function (): void {
         Log::spy();
-        resolve(RevokeDevice::class)->handle($this->device->id);
+        resolve(RevokeCredential::class)->handle($this->device->id);
 
         anaAnswers('confirm')->assertNotFound();
 

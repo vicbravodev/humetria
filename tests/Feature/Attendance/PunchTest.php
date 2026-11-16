@@ -2,25 +2,27 @@
 
 declare(strict_types=1);
 
-use App\Modules\Attendance\Actions\RevokeDevice;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Http\Controllers\MarkController;
-use App\Modules\Attendance\Models\AttendanceDevice;
+use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Attendance\Support\CurrentAgreement;
 use App\Modules\Attendance\Support\PunchDay;
 use App\Modules\Attendance\Support\QrToken;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Actions\RevokeCredential;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Http\Request;
@@ -52,19 +54,25 @@ beforeEach(function (): void {
     $this->device = punchDevice($this->phone, $this->ana);
 });
 
-/** The phone's key, linked to `$person` in their company. */
-function punchDevice(SoftAuthenticator $phone, Employee $person): AttendanceDevice
+/** The phone's key, linked to `$person` in their company, who accepted the current agreement with it unless told otherwise. */
+function punchDevice(SoftAuthenticator $phone, Employee $person, bool $accepted = true): WorkerCredential
 {
     workIn(Tenant::query()->findOrFail($person->tenant_id));
     $ceremony = resolve(WebAuthnCeremony::class);
     $credential = $ceremony->verifyRegistration($person->id, $phone->create($ceremony->registrationOptions($person->id, 'Ana')));
 
-    return AttendanceDevice::factory()->create([
+    $device = WorkerCredential::factory()->create([
         'tenant_id' => $person->tenant_id,
         'employee_id' => $person->id,
         'credential_id' => $credential->credentialId,
         'public_key' => $credential->publicKey,
     ]);
+
+    if ($accepted) {
+        agreementAccepted($person->id, $device->id);
+    }
+
+    return $device;
 }
 
 /** The session the page of Marcar opens, as the browser keeps it in its cookie. */
@@ -99,6 +107,20 @@ function punchWith(SoftAuthenticator $phone, string $userHandle, array $body, ?s
     ]);
 }
 
+/** The phone accepts `$version` of the agreement as the page does: options for its session, the key signs (with `$userHandle`). */
+function acceptWith(SoftAuthenticator $phone, string $userHandle, int $version, ?string $session = null): TestResponse
+{
+    $cookie = config()->string('session.cookie');
+    $session ??= punchSession();
+    $options = test()->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.agreement.options', 'acme'))
+        ->assertOk()->assertHeader('Cache-Control', 'no-store, private')->json();
+
+    return test()->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.agreement.accept', 'acme'), [
+        'agreement_version' => $version,
+        'credential' => $phone->get($options, $userHandle),
+    ]);
+}
+
 /**
  * Ana marks on site with the plant's code, inside the zone, unless told otherwise.
  *
@@ -110,6 +132,13 @@ function anaPunches(array $body = []): TestResponse
 }
 
 describe('the page', function (): void {
+    it('gives the screen where to accept the agreement', function (): void {
+        $this->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->component('attendance/punch')
+                ->where('agreementOptionsUrl', route('attendance.device.agreement.options', 'acme'))
+                ->where('agreementUrl', route('attendance.device.agreement.accept', 'acme')));
+    });
+
     it('opens for a device that has not marked here yet, asking for the location only when marking', function (): void {
         $this->get(route('attendance.device.punch.home', 'acme'))
             ->assertOk()
@@ -121,6 +150,11 @@ describe('the page', function (): void {
                 ->where('optionsUrl', route('attendance.device.punch.options', 'acme'))
                 ->where('punchUrl', route('attendance.device.punch.store', 'acme'))
                 ->where('forgetUrl', route('attendance.device.punch.forget', 'acme')));
+    });
+
+    it('tells a person without a key where to add one: their entrance, with a session; the first comes from RH', function (): void {
+        $this->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('enterUrl', route('worker.home', 'acme')));
     });
 
     it('opens from the QR of the center\'s screen carrying its code', function (): void {
@@ -222,7 +256,7 @@ describe('the page', function (): void {
         punchWith($this->phone, $this->ana->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'mark_type' => 'end'], $session)->assertOk();
 
         if ($how === 'revoked') {
-            resolve(RevokeDevice::class)->handle($this->device->id);
+            resolve(RevokeCredential::class)->handle($this->device->id);
         } else {
             $this->ana->update(['deactivated_at' => now()]);
         }
@@ -244,7 +278,7 @@ describe('on site', function (): void {
 
         $mark = AttendanceMark::query()->sole();
         expect($mark)->employee_id->toBe($this->ana->id)->type->toBe(MarkType::Start)->method->toBe(MarkMethod::QrAndGeofence)
-            ->zone_id->toBe($this->zone->id)->device_id->toBe($this->device->id)->work_center_id->toBe($this->plant->id)
+            ->zone_id->toBe($this->zone->id)->credential_id->toBe($this->device->id)->work_center_id->toBe($this->plant->id)
             ->latitude->toBe('19.432700')->longitude->toBe('-99.133200')->accuracy_m->toBe(12.0)
             ->and($mark->distance_m)->toEqualWithDelta(11.1, 0.1)
             ->and($mark->marked_at?->utc()->toDateTimeString())->toBe('2026-11-09 15:00:00');
@@ -349,7 +383,7 @@ describe('on site', function (): void {
         // And once RH sets the center up, the same browser marks with the same key.
         AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'latitude' => 19.4326, 'longitude' => -99.1332, 'radius_m' => 500]);
         $try(['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE])->assertOk();
-        expect(AttendanceDevice::query()->whereNull('revoked_at')->count())->toBe(1);
+        expect(WorkerCredential::query()->whereNull('revoked_at')->count())->toBe(1);
     });
 
     it('ignores a revoked or never-seen screen when telling whether the center is ready', function (): void {
@@ -452,7 +486,7 @@ describe('who marks', function (): void {
     });
 
     it('answers 404 to a revoked device', function (): void {
-        resolve(RevokeDevice::class)->handle($this->device->id);
+        resolve(RevokeCredential::class)->handle($this->device->id);
 
         anaPunches()->assertNotFound();
         expect(AttendanceMark::query()->count())->toBe(0);
@@ -472,7 +506,7 @@ describe('who marks', function (): void {
 
     it('logs a signature that did not verify with the company and the request only', function (): void {
         Log::spy();
-        resolve(RevokeDevice::class)->handle($this->device->id);
+        resolve(RevokeCredential::class)->handle($this->device->id);
 
         anaPunches()->assertNotFound();
 
@@ -582,6 +616,93 @@ describe('throttling', function (): void {
         }
 
         anaPunches()->assertTooManyRequests();
+    });
+});
+
+describe('the agreement', function (): void {
+    it('refuses the mark of a person who has not accepted the current agreement, and gives the screen its text', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Bob Ruiz']);
+        $bobPhone = new SoftAuthenticator;
+        punchDevice($bobPhone, $bob, accepted: false);
+        $agreement = resolve(CurrentAgreement::class)->get();
+
+        punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE])
+            ->assertUnprocessable()
+            ->assertExactJson(['reason' => 'agreement_not_accepted', 'name' => 'Bob Ruiz', 'next' => ['start'], 'agreement' => ['version' => $agreement->version, 'body' => $agreement->body]]);
+
+        expect(AttendanceMark::query()->count())->toBe(0);
+    });
+
+    it('asks for the agreement before the policy: a person who has not accepted it is not sent to fix the code first', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+        $bobPhone = new SoftAuthenticator;
+        punchDevice($bobPhone, $bob, accepted: false);
+
+        punchWith($bobPhone, $bob->id, ['q' => 'not-a-code', ...PUNCH_INSIDE])->assertUnprocessable()->assertJsonPath('reason', 'agreement_not_accepted');
+    });
+
+    it('refuses the mark when the agreement changed after the person accepted it, and takes it once they accept the new one', function (): void {
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'retention_months' => 36]);
+
+        anaPunches()->assertUnprocessable()->assertJsonPath('reason', 'agreement_not_accepted')->assertJsonPath('agreement.version', 2);
+        agreementAccepted($this->ana->id, $this->device->id);
+        anaPunches()->assertOk();
+    });
+
+    it('accepts the current version with the key that signed, once, and then lets the person mark', function (): void {
+        Log::spy();
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Bob Ruiz']);
+        $bobPhone = new SoftAuthenticator;
+        $bobDevice = punchDevice($bobPhone, $bob, accepted: false);
+        $version = resolve(CurrentAgreement::class)->get()->version;
+
+        acceptWith($bobPhone, $bob->id, $version)->assertOk()->assertExactJson(['accepted' => true])->assertHeader('Cache-Control', 'no-store, private');
+        acceptWith($bobPhone, $bob->id, $version)->assertOk()->assertExactJson(['accepted' => true]);
+
+        $acceptance = AgreementAcceptance::query()->where('employee_id', $bob->id)->sole();
+        expect($acceptance)->credential_id->toBe($bobDevice->id);
+        Log::shouldHaveReceived('info')->once()->with('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $bob->id, 'key_id' => $bobDevice->id, 'version' => $version]);
+        punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE])->assertOk();
+    });
+
+    it('answers 409 with the current text to an acceptance of a version that is not the current one, and records nothing', function (): void {
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'retention_months' => 36]);
+        $current = resolve(CurrentAgreement::class)->get();
+
+        acceptWith($this->phone, $this->ana->id, 1)->assertConflict()
+            ->assertExactJson(['reason' => 'agreement_outdated', 'agreement' => ['version' => 2, 'body' => $current->body]]);
+
+        expect(AgreementAcceptance::query()->where('agreement_id', $current->id)->count())->toBe(0);
+    });
+
+    it('answers 404 to an acceptance whose signature does not verify, of a revoked key or of a person who left', function (): void {
+        $count = AgreementAcceptance::query()->count();
+        $version = resolve(CurrentAgreement::class)->get()->version;
+        $session = punchSession();
+        $cookie = config()->string('session.cookie');
+        $options = $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.agreement.options', 'acme'))->json();
+
+        // Signed by an unknown phone.
+        $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.agreement.accept', 'acme'), [
+            'agreement_version' => $version, 'credential' => (new SoftAuthenticator)->get($options, $this->ana->id),
+        ])->assertNotFound();
+        // A challenge given to mark does not accept the agreement.
+        $markOptions = $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.punch.options', 'acme'))->json();
+        $this->withCredentials()->withCookie($cookie, $session)->postJson(route('attendance.device.agreement.accept', 'acme'), [
+            'agreement_version' => $version, 'credential' => $this->phone->get($markOptions, $this->ana->id),
+        ])->assertNotFound();
+        $this->ana->update(['deactivated_at' => now()]);
+        acceptWith($this->phone, $this->ana->id, $version)->assertNotFound();
+
+        expect(AgreementAcceptance::query()->count())->toBe($count);
+    });
+
+    it('validates the version and the signature', function (): void {
+        $this->postJson(route('attendance.device.agreement.accept', 'acme'), [])->assertUnprocessable()->assertJsonValidationErrors(['agreement_version', 'credential']);
+    });
+
+    it('gives the agreement only with its own refusal', function (): void {
+        anaPunches(PUNCH_OUTSIDE)->assertUnprocessable()->assertJsonMissingPath('agreement');
     });
 });
 

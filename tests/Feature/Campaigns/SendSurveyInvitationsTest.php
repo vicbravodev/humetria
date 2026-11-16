@@ -92,6 +92,20 @@ it('gives each person of its block a new link and emails it, once even when run 
         && $participant->invited_at?->equalTo(now()) === true))->toBeTrue();
 });
 
+it('ends each email with the person\'s entrance, which carries no credential', function (): void {
+    queuedEvaluation($this->tenant, $this->plant, $this->hr, 1);
+    [$job] = batchedJobs();
+
+    $job->handle();
+
+    Notification::assertSentOnDemand(SurveyInvitation::class, function (SurveyInvitation $mail, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable): bool {
+        $html = (string) $mail->toMail($notifiable)->render();
+        expect($html)->toContain('href="'.rtrim(config()->string('app.url'), '/').'/me/'.$this->tenant->slug.'"');
+
+        return true;
+    });
+});
+
 it('sends no link while the company is blocked, and marks who was waiting as failed so it can be sent again', function (): void {
     $campaign = queuedEvaluation($this->tenant, $this->plant, $this->hr, 20);
     [$job] = batchedJobs();

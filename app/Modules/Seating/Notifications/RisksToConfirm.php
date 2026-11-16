@@ -11,7 +11,7 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Tells a person, as "usted", that their company assessed their work standing and that they can read the result and confirm
- * it was explained to them. The link is theirs (made as the job runs, so the plain token never reaches the queue).
+ * it was explained to them. The address is of their Ley Silla page, with no credential: they enter first.
  */
 final class RisksToConfirm extends Notification implements MailBag
 {
@@ -35,7 +35,7 @@ final class RisksToConfirm extends Notification implements MailBag
             ->line("{$this->company->tradeName} evaluó los riesgos de su trabajo de pie y definió medidas para cuidarle.")
             ->line('Puede ver el resultado y confirmar que se lo explicaron desde su página personal.')
             ->action('Ver y confirmar', $this->url)
-            ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+            ->line('Este enlace es solo suyo: no lo comparta.');
     }
 
     public function mailBag(): string

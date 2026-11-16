@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -575,17 +574,24 @@ it('shows a viewer the list without a way to change a manager', function (): voi
         ->assertNoJavaScriptErrors();
 });
 
-/** The address of the personal portal of one of the people of Acme's org chart. */
-function teamPortal(string $who, bool $lines = true): string
+/**
+ * One of the people of Acme's org chart: the address of their «Mi equipo» (or of `$page` in their pages) and the steps that
+ * take them there through the entrance, once the page shows `$text`.
+ *
+ * @return array{string, Closure}
+ */
+function teamPortal(string $who, bool $lines = true, string $page = '/team', string $text = 'Mi equipo'): array
 {
     $person = acmeOrgChart($lines)[$who];
-    workIn(Tenant::query()->findOrFail($person->tenant_id));
+    $slug = Tenant::query()->findOrFail($person->tenant_id)->slug;
 
-    return '/portal/'.resolve(IssuePortalLink::class)->handle($person->id);
+    return ["/me/{$slug}{$page}", enteringTo($person->id, $text)];
 }
 
-it('shows a person their team in their portal: their manager, their peers and whoever reports to them', function (bool $dark, bool $mobile): void {
-    visitPage('organization/portal-team', teamPortal('gerardo').'/team', $dark, $mobile)
+it('shows a person their team in their pages: their manager, their peers and whoever reports to them', function (bool $dark, bool $mobile): void {
+    [$address, $enter] = teamPortal('gerardo');
+
+    visitPage('organization/portal-team', $address, $dark, $mobile, $enter)
         ->assertSee('Mi equipo')
         // The person's own frame, even in a browser signed in to the panel: no sidebar, no top bar.
         ->assertNotPresent('[data-sidebar="sidebar"]')
@@ -601,7 +607,9 @@ it('shows a person their team in their portal: their manager, their peers and wh
 })->with($looks);
 
 it('tells a person with nobody above what to do, without lists of nobody', function (bool $dark, bool $mobile): void {
-    visitPage('organization/portal-team', teamPortal('ana', lines: false).'/team', $dark, $mobile)
+    [$address, $enter] = teamPortal('ana', lines: false);
+
+    visitPage('organization/portal-team', $address, $dark, $mobile, $enter)
         ->assertSee('No tiene un jefe directo registrado. Si esto no es correcto, avise a Recursos Humanos.')
         ->assertNotPresent('#team-peers')
         ->assertNotPresent('#team-reports')
@@ -609,39 +617,43 @@ it('tells a person with nobody above what to do, without lists of nobody', funct
 })->with($looks);
 
 it('tells a person whose peers are nobody that nobody else reports to the same person', function (): void {
-    visitPage('organization/portal-team', teamPortal('dir').'/team')
+    [$address, $enter] = teamPortal('dir');
+
+    visitPage('organization/portal-team', $address, reach: $enter)
         ->assertSee('No tiene un jefe directo registrado.')
         ->assertNotPresent('#team-peers')
         ->assertSeeIn('section[aria-labelledby="team-reports"]', 'Gerardo Paz');
+});
 
-    $people = Employee::query()->withoutGlobalScopes()->where('name', 'Sofía Luna')->sole();
-    $people->update(['deactivated_at' => now()]);
+it('tells a person whose only peer left that nobody else reports to the same person', function (): void {
+    [$address, $enter] = teamPortal('gerardo', text: 'Nadie más reporta a la misma persona.');
+    Employee::query()->withoutGlobalScopes()->where('name', 'Sofía Luna')->sole()->update(['deactivated_at' => now()]);
 
-    visit('/portal/'.resolve(IssuePortalLink::class)->handle(Employee::query()->where('name', 'Gerardo Paz')->sole()->id).'/team')
+    $enter(visit($address))
         ->assertSee('Nadie más reporta a la misma persona.')
         ->assertNoJavaScriptErrors();
 });
 
-it('reaches the team from the start of the portal, and comes back', function (): void {
-    $portal = teamPortal('gerardo');
+it('reaches the team from the start of the person\'s pages, and comes back', function (): void {
+    [$start, $enter] = teamPortal('gerardo', page: '', text: 'Mi equipo');
 
-    visit($portal)
+    $enter(visit($start))
         ->click('Mi equipo')
-        ->assertScript(pathBecomes($portal.'/team'), true)
-        ->assertPathIs($portal.'/team')
+        ->assertScript(pathBecomes($start.'/team'), true)
+        ->assertPathIs($start.'/team')
         ->assertSee('Su jefe directo')
         ->click('Volver a mi portal')
-        ->assertScript(pathBecomes($portal), true)
-        ->assertPathIs($portal)
+        ->assertScript(pathBecomes($start), true)
+        ->assertPathIs($start)
         ->assertNoJavaScriptErrors();
 });
 
 it('turns the pages of the reports without moving the peers', function (): void {
-    $portal = teamPortal('gerardo');
-    $gerardo = Employee::query()->where('name', 'Gerardo Paz')->sole();
-    Employee::factory()->count(10)->reportingTo($gerardo)->create(['name' => 'Abel Primero', 'work_center_id' => $gerardo->work_center_id, 'area_id' => $gerardo->area_id]);
+    [$address, $enter] = teamPortal('gerardo');
+    $gerardo = Employee::query()->withoutGlobalScopes()->where('name', 'Gerardo Paz')->sole();
+    Employee::factory()->count(10)->reportingTo($gerardo)->create(['tenant_id' => $gerardo->tenant_id, 'name' => 'Abel Primero', 'work_center_id' => $gerardo->work_center_id, 'area_id' => $gerardo->area_id]);
 
-    visit($portal.'/team')
+    $enter(visit($address))
         ->assertSee('Abel Primero')
         ->assertDontSee('Beto Díaz')
         ->click('nav[aria-label="Quienes le reportan"] >> text=Siguientes')

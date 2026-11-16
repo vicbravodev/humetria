@@ -7,8 +7,8 @@ namespace App\Modules\Seating\Actions;
 use App\Modules\Seating\Enums\AssessmentStatus;
 use App\Modules\Seating\Models\RiskAcknowledgment;
 use App\Modules\Seating\Models\RiskAssessment;
-use App\Modules\Telework\Data\PortalIdentity;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -20,7 +20,7 @@ final readonly class AcknowledgeRisks
 {
     public function __construct(private CurrentTenant $tenant) {}
 
-    public function handle(PortalIdentity $person): RiskAcknowledgment
+    public function handle(WorkerIdentity $person): RiskAcknowledgment
     {
         $assessment = RiskAssessment::query()->where('employee_id', $person->employeeId)->where('status', AssessmentStatus::Signed)->latest('signed_at')->firstOrFail();
 

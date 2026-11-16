@@ -1,97 +1,44 @@
-import { router } from '@inertiajs/react';
-import { Check, Copy, Link2, Mail } from 'lucide-react';
-import ConfirmDialog from '@/components/humetria/confirm-dialog';
+import { Link } from '@inertiajs/react';
+import { KeyRound, Link2, Mail } from 'lucide-react';
 import IconTile from '@/components/humetria/icon-tile';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useClipboard } from '@/hooks/use-clipboard';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { link } from '@/routes/tenant/telework/teleworkers';
+import { index as access } from '@/routes/tenant/worker-access';
 
 /**
- * The person's portal link. With an email it went there; without one (or to start over) RH makes a new link to copy and
- * hand over in person. A new link replaces the old one, and it is shown only once: only its hash is kept.
+ * How the person reaches their portal. With an email, the address of their telework section went there and they enter with
+ * it; without one (or to start over) RH invites them, or reissues their access, in «Accesos».
  */
 export default function PortalLinkPanel({
-    teleworkerId,
+    name,
     hasEmail,
-    newLink,
 }: {
-    teleworkerId: string;
+    name: string;
     hasEmail: boolean;
-    newLink: string | undefined;
 }) {
     const tenantSlug = useTenantSlug();
-    const [copied, copy] = useClipboard();
 
     return (
-        <section className="grid gap-4 card p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                    <IconTile icon={hasEmail ? Mail : Link2} />
-                    <div>
-                        <h2 className="text-base font-semibold">
-                            Enlace a su portal
-                        </h2>
-                        <p className="text-meta text-muted-foreground">
-                            {hasEmail
-                                ? 'Se envió a su correo al registrar a esta persona.'
-                                : 'Sin correo'}
-                        </p>
-                    </div>
-                </div>
-                <ConfirmDialog
-                    trigger={
-                        <Button variant="outline">
-                            Generar enlace para copiar
-                        </Button>
-                    }
-                    title="¿Generar un enlace nuevo?"
-                    description="El enlace anterior de esta persona dejará de funcionar. El nuevo se muestra una sola vez para que lo copies."
-                    confirmLabel="Generar enlace"
-                    onConfirm={() =>
-                        router.post(
-                            link.url({
-                                tenant: tenantSlug,
-                                teleworker: teleworkerId,
-                            }),
-                            {},
-                            { preserveScroll: true },
-                        )
-                    }
-                    destructive={false}
-                />
-            </div>
-            {newLink !== undefined && (
-                <div className="grid gap-2 rounded-lg border bg-accent/40 p-4">
-                    <Label htmlFor="portal-link">Enlace nuevo</Label>
-                    <div className="flex gap-2">
-                        <Input
-                            id="portal-link"
-                            readOnly
-                            value={newLink}
-                            onFocus={(event) => event.currentTarget.select()}
-                        />
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => void copy(newLink)}
-                        >
-                            {copied === newLink ? (
-                                <Check aria-hidden />
-                            ) : (
-                                <Copy aria-hidden />
-                            )}
-                            {copied === newLink ? 'Copiado' : 'Copiar'}
-                        </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        Dáselo a la persona en privado. No se vuelve a mostrar y
-                        el anterior ya no sirve.
+        <section className="flex flex-wrap items-center justify-between gap-3 card p-5">
+            <div className="flex items-center gap-3">
+                <IconTile icon={hasEmail ? Mail : Link2} />
+                <div>
+                    <h2 className="text-base font-semibold">
+                        Acceso a su portal
+                    </h2>
+                    <p className="text-meta text-muted-foreground">
+                        {hasEmail
+                            ? 'Se le avisó por correo al registrar a esta persona.'
+                            : 'Sin correo'}
                     </p>
                 </div>
-            )}
+            </div>
+            <Button variant="outline" asChild>
+                <Link href={access.url(tenantSlug, { query: { q: name } })}>
+                    <KeyRound aria-hidden />
+                    Ver su acceso
+                </Link>
+            </Button>
         </section>
     );
 }

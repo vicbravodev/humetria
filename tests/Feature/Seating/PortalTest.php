@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 use App\Modules\Seating\Http\Controllers\PortalController;
 use App\Modules\Seating\Models\PersonInput;
-use App\Modules\Telework\Actions\IssuePortalLink;
+use App\Modules\Seating\Support\SeatingWorkerSection;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PortalController::class);
+mutates(PortalController::class, SeatingWorkerSection::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana Ruiz']);
     $this->beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'name' => 'Beto Pérez']);
     workIn($this->tenant);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
 });
 
-it('lives at /portal/{token}/seating, outside the panel, throttled like the rest of the portal', function (): void {
-    expect(route('portal.seating.show', 'abc', absolute: false))->toBe('/portal/abc/seating');
+it('lives at /me/{slug}/seating, in the person\'s pages, throttled like the rest of them', function (): void {
+    expect(route('portal.seating.show', 'acme', absolute: false))->toBe('/me/acme/seating');
 
     $show = Route::getRoutes()->getByName('portal.seating.show');
     $store = Route::getRoutes()->getByName('portal.seating.inputs.store');
@@ -31,11 +31,11 @@ it('lives at /portal/{token}/seating, outside the panel, throttled like the rest
 });
 
 it('shows the person their own page: the company, their name, the notice and the DOF options of footwear and discomfort', function (): void {
-    $this->get(route('portal.seating.show', $this->token))
+    $this->get(route('portal.seating.show', $this->slug))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('seating/portal')
-            ->where('token', $this->token)
+            ->where('slug', $this->tenant->slug)
             ->where('company', 'Acme')
             ->where('name', 'Ana Ruiz')
             ->where('notice', fn (string $notice) => str_contains($notice, 'voluntari'))
@@ -50,38 +50,39 @@ it('shows only the person own last answer date, never anything of other people',
     PersonInput::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->beto->id, 'work_center_id' => $this->beto->work_center_id, 'note' => 'Nota de Beto', 'submitted_at' => '2026-02-01 12:00:00']);
     PersonInput::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->ana->work_center_id, 'note' => 'Nota de Ana', 'submitted_at' => '2026-03-01 18:00:00']);
 
-    $response = $this->get(route('portal.seating.show', $this->token))
+    $response = $this->get(route('portal.seating.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->where('sentOn', '2026-03-01'));
 
     expect(json_encode($response->viewData('page')['props']))->not->toContain('Beto')->not->toContain('Nota de');
 });
 
-it("answers 'not valid' the same for a made-up link, another company's link, a replaced one and a person who left", function (): void {
+it('sends a visitor to enter, ends the page for a person who left, and opens nothing of another company with this session', function (): void {
     $other = Tenant::factory()->create();
     $stranger = EmployeeFactory::new()->create(['tenant_id' => $other->id]);
-    workIn($other);
-    $foreign = resolve(IssuePortalLink::class)->handle($stranger->id);
-    workIn($this->tenant);
-    $old = $this->token;
-    resolve(IssuePortalLink::class)->handle($this->ana->id, revoke: true);
-    $this->beto->forceFill(['deactivated_at' => now()])->save();
-    $gone = resolve(IssuePortalLink::class)->handle($this->beto->id);
 
-    $this->get(route('portal.seating.show', 'x'.str_repeat('0', 63)))->assertNotFound();
-    $this->get(route('portal.seating.show', $old))->assertNotFound();
-    $this->get(route('portal.seating.show', $gone))->assertNotFound();
-    // A real link of another company opens THAT company's page, never ours.
-    $this->get(route('portal.seating.show', $foreign))->assertOk()->assertInertia(fn (Assert $page) => $page->where('name', $stranger->name)->where('company', $other->trade_name));
+    $this->get(route('portal.seating.show', $other->slug))->assertRedirect(route('worker.home', $other->slug));
+
+    $this->beto->forceFill(['deactivated_at' => now()])->save();
+    $slug = asPerson($this->beto->id);
+    $this->get(route('portal.seating.show', $slug))->assertRedirect(route('worker.home', $slug));
+
+    session()->flush();
+    $this->get(route('portal.seating.show', $this->slug))->assertRedirect(route('worker.home', $this->slug));
+    // The person of another company opens THAT company's page, never ours.
+    $this->get(route('portal.seating.show', asPerson($stranger->id)))->assertOk()->assertInertia(fn (Assert $page) => $page->where('name', $stranger->name)->where('company', $other->trade_name));
 });
 
-// R2-employee-06: what waits for the person shows on the home of the portal, as the other tools do.
-it('counts on the home of the portal the signed assessment the person has not confirmed', function (): void {
+// R2-employee-06: what waits for the person shows on their start, as the other tools do.
+it('counts on the person\'s start the signed assessment the person has not confirmed, at their page with no credential', function (): void {
     $position = App\Modules\Seating\Models\StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->ana->work_center_id]);
     App\Modules\Seating\Models\PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $position->id]);
-    $identity = new App\Modules\Telework\Data\PortalIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz');
-    $section = fn (): ?App\Modules\Telework\Data\PortalSectionLink => resolve(App\Modules\Seating\Support\SeatingPortalSection::class)->for($identity, $this->token);
+    $identity = new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz');
+    $section = fn (): ?App\Modules\WorkerAccess\Data\WorkerSectionLink => resolve(SeatingWorkerSection::class)->for($identity);
 
-    expect($section()?->pending)->toBeNull();
+    expect($section()?->pending)->toBeNull()
+        ->and($section()?->key)->toBe('seating')
+        ->and($section()?->href)->toBe(route('portal.seating.show', $this->tenant->slug))
+        ->and(resolve(SeatingWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $this->beto->id, 'Acme', 'Beto Pérez')))->toBeNull();
 
     $assessment = App\Modules\Seating\Models\RiskAssessment::factory()->signed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $position->id, 'work_center_id' => $this->ana->work_center_id]);
 

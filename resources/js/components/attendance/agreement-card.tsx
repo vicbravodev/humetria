@@ -1,5 +1,5 @@
 import { FileText } from 'lucide-react';
-import { agreementSections } from '@/lib/attendance/enroll';
+import { agreementSections } from '@/lib/attendance/punch-agreement';
 
 /** The agreement on the electronic record the person reads before linking their device, a section per paragraph. */
 export default function AgreementCard({

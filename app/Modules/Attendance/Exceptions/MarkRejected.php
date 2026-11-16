@@ -8,7 +8,8 @@ use RuntimeException;
 
 /**
  * A mark the company's policy does not take (criterios 4.2 to 4.4): `qr_invalid`, `qr_required`, `no_location`,
- * `accuracy_too_low`, `outside_zone` or `center_not_ready`. The reason is a stable code; the screen words it.
+ * `accuracy_too_low`, `outside_zone` or `center_not_ready`; or the person has not accepted the current agreement
+ * (`agreement_not_accepted`, criterio 5.1). The reason is a stable code; the screen words it.
  */
 final class MarkRejected extends RuntimeException
 {

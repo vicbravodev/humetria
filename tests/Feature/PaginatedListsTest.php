@@ -106,6 +106,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.seating.plan', [$tenant, $plant->id]);
     }, ['measures', 'agreements']],
+    'the people\'s access: the people with their keys and invitations' => ['worker-access/access', fn () => route('tenant.worker-access.index', listsCompany()[0]), ['people']],
     'time clock correction requests' => ['attendance/corrections', fn () => route('tenant.attendance.corrections.index', listsCompany()[0]), ['requests']],
     'time clock overview: the people of a week and the centers' => ['attendance/index', fn () => route('tenant.attendance.index', listsCompany()[0]), ['people', 'centers']],
     'time clock center: its zones and its QR screens' => ['attendance/center', function () {
@@ -113,7 +114,6 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('tenant.attendance.center', [$tenant, $plant->id]);
     }, ['zones', 'kiosks']],
-    'time clock devices: the people with their linked devices' => ['attendance/devices', fn () => route('tenant.attendance.devices.index', listsCompany()[0]), ['people']],
     'time clock schedules: the people with their agreed schedules' => ['attendance/schedules', fn () => route('tenant.attendance.schedules.index', listsCompany()[0]), ['people']],
     'time clock report for the authority: the people of a center\'s period with their days' => ['attendance/report', function () {
         [$tenant, $plant] = listsCompany();
@@ -200,32 +200,28 @@ it('sends each list of records as a paginator', function (string $component, Clo
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
         $teleworker = Database\Factories\Telework\TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
         Database\Factories\Telework\WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
-        workIn($tenant);
 
-        return route('portal.notices.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+        return route('portal.notices.show', asPerson($employee->id));
     }, ['notices']],
     'my team in the portal' => ['organization/portal-team', function () {
         [$tenant] = listsCompany();
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
-        workIn($tenant);
 
-        return route('portal.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+        return route('portal.team.show', asPerson($employee->id));
     }, ['peers', 'reports']],
     'my vacations in the portal' => ['leave/portal', function () {
         [$tenant] = listsCompany();
         Database\Factories\Leave\LeaveSettingFactory::new()->create(['tenant_id' => $tenant->id]);
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
-        workIn($tenant);
 
-        return route('portal.vacations.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+        return route('portal.vacations.show', asPerson($employee->id));
     }, ['requests']],
     'the requests a manager answers in the portal' => ['leave/portal-team', function () {
         [$tenant] = listsCompany();
         Database\Factories\Leave\LeaveSettingFactory::new()->create(['tenant_id' => $tenant->id]);
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
-        workIn($tenant);
 
-        return route('portal.vacations.team.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+        return route('portal.vacations.team.show', asPerson($employee->id));
     }, ['requests']],
     'Clima' => ['engagement/index', fn () => route('tenant.climate.index', listsCompany()[0]), ['surveys']],
     'a draft of Clima' => ['engagement/show', function () {

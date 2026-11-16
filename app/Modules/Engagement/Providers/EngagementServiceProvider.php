@@ -8,9 +8,9 @@ use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Listeners\CancelOnDeactivation;
 use App\Modules\Engagement\Listeners\NotifyManagers;
 use App\Modules\Engagement\Listeners\QueueCommentSummaries;
-use App\Modules\Engagement\Support\ClimatePortalSection;
-use App\Modules\Engagement\Support\FeedbackPortalSection;
-use App\Modules\Engagement\Support\SurveyPortalSection;
+use App\Modules\Engagement\Support\ClimateWorkerSection;
+use App\Modules\Engagement\Support\FeedbackWorkerSection;
+use App\Modules\Engagement\Support\SurveyWorkerSection;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -27,7 +27,7 @@ final class EngagementServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->tag([SurveyPortalSection::class, ClimatePortalSection::class, FeedbackPortalSection::class], 'portal.sections');
+        $this->app->tag([SurveyWorkerSection::class, ClimateWorkerSection::class, FeedbackWorkerSection::class], 'worker.sections');
     }
 
     public function boot(): void

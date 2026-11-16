@@ -57,9 +57,9 @@ it('opens «Mi semana» showing nothing of anybody until the device signs', func
 /** Ana's phone, linked from the link RH sent her, then on Marcar, from where she opens her week and signs to see it. */
 function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
 {
-    $enroll = (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
-    $page = visitPage('attendance/enroll', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
-    linkThePhone($page);
+    $enroll = accessLinkPath(test()->ana->id);
+    $page = visitPage('worker-access/link', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
+    linkThePhone($page, test()->ana->id);
 
     return $page->navigate('/a/acme')
         ->waitForText('Mi semana')
@@ -200,9 +200,9 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
 });
 
 it('lets a person whose mark was refused ask RH from Marcar to add it', function (): void {
-    $enroll = (string) parse_url(enrollmentUrl($this->ana->id), PHP_URL_PATH);
-    $page = visitPage('attendance/enroll', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
-    linkThePhone($page);
+    $enroll = accessLinkPath($this->ana->id);
+    $page = visitPage('worker-access/link', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
+    linkThePhone($page, $this->ana->id);
 
     // On site, with no code of the center's screen: the mark is refused.
     $page->navigate('/a/acme')

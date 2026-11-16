@@ -9,7 +9,7 @@ import type { PunchPhase } from '@/lib/attendance/punch-phase';
 import type { Signer } from '@/lib/attendance/punch';
 import { stateAfter } from '@/lib/attendance/punch-state';
 import type { PunchState } from '@/lib/attendance/punch-state';
-import type { SignedKey } from '@/lib/attendance/webauthn';
+import type { SignedKey } from '@/lib/webauthn';
 
 /** `navigator.credentials.get()` for a signature; null when the browser gave something else. */
 export async function getKey(

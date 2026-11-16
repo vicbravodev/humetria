@@ -8,6 +8,7 @@ use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Tenancy\TenantFactory;
+use Database\Factories\WorkerAccess\WorkerCredentialFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -51,7 +52,7 @@ final class WeeklyConfirmationFactory extends Factory
     {
         return $this->state([
             ...$answer,
-            'device_id' => fn (array $attributes) => AttendanceDeviceFactory::new()->state(['tenant_id' => $attributes['tenant_id'], 'employee_id' => $attributes['employee_id']]),
+            'credential_id' => fn (array $attributes) => WorkerCredentialFactory::new()->state(['tenant_id' => $attributes['tenant_id'], 'employee_id' => $attributes['employee_id']]),
             'digest' => hash('sha256', ''),
         ]);
     }

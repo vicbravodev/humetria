@@ -10,8 +10,8 @@ use App\Modules\Leave\Notifications\RequestDecided;
 use App\Modules\Leave\Notifications\RequestEscalated;
 use App\Modules\Leave\Notifications\RequestToDecide;
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -20,14 +20,14 @@ use Throwable;
 /**
  * The emails of a request of the current company, by mail only. They are sent after the request is saved: one that
  * cannot be sent is reported and the request stays, since it is in the portal and in the panel anyway. Whoever has no
- * email gets none. Portal links are made here and never logged.
+ * email gets none. The addresses of the person's pages carry no credential: they enter first.
  */
 final readonly class RequestNotifier
 {
-    public function __construct(private Companies $companies, private Roster $roster, private PortalAccess $portal) {}
+    public function __construct(private Companies $companies, private Roster $roster, private WorkerLinks $links) {}
 
     /**
-     * Tells the manager whose it is to answer, with the link of their own portal.
+     * Tells the manager whose it is to answer, with the address of their team's requests in their pages.
      */
     public function toDecide(LeaveRequest $request): void
     {
@@ -36,7 +36,7 @@ final readonly class RequestNotifier
             $manager = $people[$request->approver_employee_id ?? ''] ?? null;
 
             if ($manager !== null && $manager->email !== null) {
-                $url = route('portal.vacations.team.show', $this->portal->token($manager->id));
+                $url = $this->links->to('portal.vacations.team.show');
                 Notification::route('mail', $manager->email)->notify(new RequestToDecide($url, $this->companies->current(), $manager->name, ($people[$request->employee_id] ?? $manager)->name, RequestSummary::of($request)));
             }
         });
@@ -59,7 +59,7 @@ final readonly class RequestNotifier
     }
 
     /**
-     * Tells who asked what was answered, with the link of their own portal.
+     * Tells who asked what was answered, with the address of their vacations in their pages.
      */
     public function decided(LeaveRequest $request): void
     {
@@ -67,7 +67,7 @@ final readonly class RequestNotifier
             $person = $this->roster->find($request->employee_id);
 
             if ($person !== null && $person->email !== null) {
-                $url = route('portal.vacations.show', $this->portal->token($person->id));
+                $url = $this->links->to('portal.vacations.show');
                 Notification::route('mail', $person->email)->notify(new RequestDecided($url, $this->companies->current(), $person->name, RequestSummary::of($request), $request->status === RequestStatus::Approved, $request->rejection_reason));
             }
         });

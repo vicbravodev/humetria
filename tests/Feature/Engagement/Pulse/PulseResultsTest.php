@@ -9,7 +9,6 @@ use App\Modules\Engagement\Jobs\SummarizeComments;
 use App\Modules\Engagement\Listeners\QueueCommentSummaries;
 use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Queue;
@@ -85,7 +84,7 @@ it('gives the manager of a manager pulse only their two questions, with no stren
     $ana = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana Sol']);
     pulseResultsSurvey($this->tenant, PulseMode::Manager, 6, manager: $ana->id);
 
-    $this->get(route('portal.feedback.show', (string) resolve(IssuePortalLink::class)->handle($ana->id)))->assertOk()
+    $this->get(route('portal.feedback.show', asPerson($ana->id)))->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->has('feedback.items', 2)
             ->where('feedback.items.0.key', 'manager.priorities')
@@ -100,7 +99,7 @@ it('keeps the last survey with all the questions about the manager when a pulse 
     $climate->update(['closed_at' => now()->subMonths(2)]);
     pulseResultsSurvey($this->tenant, PulseMode::Tour, 6, manager: $ana->id);
 
-    $this->get(route('portal.feedback.show', (string) resolve(IssuePortalLink::class)->handle($ana->id)))->assertOk()
+    $this->get(route('portal.feedback.show', asPerson($ana->id)))->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('survey.name', $climate->name)->has('feedback.items', 8));
 });
 

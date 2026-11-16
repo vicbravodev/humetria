@@ -1,21 +1,26 @@
+import PunchAgreement from '@/components/attendance/punch-agreement';
 import PunchDone from '@/components/attendance/punch-done';
 import PunchProblemView from '@/components/attendance/punch-problem-view';
 import PunchProgress from '@/components/attendance/punch-progress';
 import PunchReady from '@/components/attendance/punch-ready';
 import type { usePunch } from '@/hooks/use-punch';
 import { feedbackProblem } from '@/lib/attendance/punch-problem';
+import { feedbackAgreement } from '@/lib/attendance/punch-state';
 
 /**
  * The screen of Marcar that fits the moment: each test as it passes while a mark is checked, the mark taken, what went
- * wrong and what to do, or the screen before marking (where a mark that came out of order is said).
+ * wrong and what to do, the agreement to accept before marking, or the screen before marking (where a mark that came out of order is said).
  */
 export default function PunchScreen({
     company,
     punch,
     scanned,
     weekUrl,
+    enterUrl,
     correctionOptionsUrl,
     correctionUrl,
+    agreementOptionsUrl,
+    agreementUrl,
     timezone,
     now,
 }: {
@@ -23,13 +28,17 @@ export default function PunchScreen({
     punch: ReturnType<typeof usePunch>;
     scanned: boolean;
     weekUrl: string;
+    enterUrl: string;
     correctionOptionsUrl: string;
     correctionUrl: string;
+    agreementOptionsUrl: string;
+    agreementUrl: string;
     timezone: string;
     now: number;
 }) {
     const { feedback, phase, marks } = punch;
     const problem = feedbackProblem(feedback, punch.location);
+    const agreement = feedbackAgreement(feedback);
 
     if (phase !== null) {
         return <PunchProgress company={company} phase={phase} />;
@@ -47,6 +56,19 @@ export default function PunchScreen({
                 now={now}
                 weekUrl={weekUrl}
                 onDone={punch.dismiss}
+            />
+        );
+    }
+
+    if (agreement !== null) {
+        return (
+            <PunchAgreement
+                company={company}
+                agreement={agreement}
+                optionsUrl={agreementOptionsUrl}
+                url={agreementUrl}
+                onAccepted={punch.retry}
+                onLater={punch.dismiss}
             />
         );
     }
@@ -73,6 +95,7 @@ export default function PunchScreen({
             feedback={feedback}
             scanned={scanned}
             weekUrl={weekUrl}
+            enterUrl={enterUrl}
             timezone={timezone}
             now={now}
             onMark={(type) => void punch.mark(type)}

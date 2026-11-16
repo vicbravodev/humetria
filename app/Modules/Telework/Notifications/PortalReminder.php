@@ -16,8 +16,8 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Tells an employee, as "usted", everything waiting in their portal, with their personal link (made as the job runs, so
- * the notification is sent at once and never queued: the plain token must not reach the queue).
+ * Tells an employee, as "usted", everything waiting in their portal, with the address of their telework section (no
+ * credential: they enter first).
  */
 final class PortalReminder extends Notification implements MailBag
 {
@@ -50,7 +50,7 @@ final class PortalReminder extends Notification implements MailBag
         $this->list($mail, 'Autorizaciones de visita', array_map(fn (PendingVisit $item): string => $item->workplace, $this->pending->visits));
 
         return $mail->action($confirm ? 'Ver y confirmar' : 'Abrir mi portal', $this->url)
-            ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+            ->line('Este enlace es solo suyo: no lo comparta.');
     }
 
     /**

@@ -13,7 +13,6 @@ use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Seating\Support\SuggestedMeasures;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -191,9 +190,9 @@ it('rejects scores outside 1 to 3, an unknown condition and a verification in th
 it('only flags reassessment and keeps the signed assessment current when the person reports more discomfort', function (int $discomfort, bool $flagged): void {
     $signed = RiskAssessment::factory()->signed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id, 'work_center_id' => $this->center->id]);
     $before = $signed->scores;
-    $token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $slug = asPerson($this->ana->id);
 
-    $this->post(route('portal.seating.inputs.store', $token), ['footwear' => $before['footwear'], 'discomfort' => $discomfort, 'accepted' => '1'])->assertSessionHasNoErrors();
+    $this->post(route('portal.seating.inputs.store', $slug), ['footwear' => $before['footwear'], 'discomfort' => $discomfort, 'accepted' => '1'])->assertSessionHasNoErrors();
 
     $fresh = RiskAssessment::query()->sole();
     expect($fresh->reassessment_due)->toBe($flagged)
@@ -206,9 +205,9 @@ it('only flags reassessment and keeps the signed assessment current when the per
 
 it('flags reassessment when the footwear answer changes', function (): void {
     $signed = RiskAssessment::factory()->signed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id, 'work_center_id' => $this->center->id]);
-    $token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $slug = asPerson($this->ana->id);
 
-    $this->post(route('portal.seating.inputs.store', $token), ['footwear' => $signed->scores['footwear'] + 1, 'discomfort' => 1, 'accepted' => '1']);
+    $this->post(route('portal.seating.inputs.store', $slug), ['footwear' => $signed->scores['footwear'] + 1, 'discomfort' => 1, 'accepted' => '1']);
 
     expect(RiskAssessment::query()->sole()->reassessment_due)->toBeTrue();
 });
@@ -228,9 +227,9 @@ it('flags reassessment when the person changes position, and not when they take 
 });
 
 it('flags nothing for a person with no signed assessment', function (): void {
-    $token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $slug = asPerson($this->ana->id);
 
-    $this->post(route('portal.seating.inputs.store', $token), ['footwear' => 3, 'discomfort' => 3, 'accepted' => '1'])->assertSessionHasNoErrors();
+    $this->post(route('portal.seating.inputs.store', $slug), ['footwear' => 3, 'discomfort' => 3, 'accepted' => '1'])->assertSessionHasNoErrors();
 
     expect(RiskAssessment::query()->count())->toBe(0);
 });

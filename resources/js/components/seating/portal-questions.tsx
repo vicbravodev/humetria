@@ -17,12 +17,12 @@ import type { PortalCondition } from '@/types';
  * Without a network, the answers stay in the page and go out when it is back.
  */
 export default function PortalQuestions({
-    token,
+    slug,
     footwear,
     discomfort,
     onSent,
 }: {
-    token: string;
+    slug: string;
     footwear: PortalCondition;
     discomfort: PortalCondition;
     onSent: () => void;
@@ -38,7 +38,7 @@ export default function PortalQuestions({
     return (
         <Form
             ref={form}
-            {...store.form({ token })}
+            {...store.form(slug)}
             options={{ preserveScroll: true }}
             onNetworkError={offline.failed}
             onSuccess={() => {

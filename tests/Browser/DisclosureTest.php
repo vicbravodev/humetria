@@ -142,8 +142,13 @@ it('publishes the policy from the end of its questions and goes back to the rout
         ->assertNoJavaScriptErrors();
 });
 
-/** The personal link to the policy of an employee the published policy asked; returns its address. */
-function personalPolicyUrl(): string
+/**
+ * The policy page of an employee the published policy asked, and the steps that take her there through the entrance (she
+ * opens it without a session, enters with a link she asked for and lands back on it).
+ *
+ * @return array{string, Closure}
+ */
+function personalPolicyUrl(): array
 {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     $center = WorkCenter::factory()->for($tenant)->create();
@@ -158,20 +163,25 @@ function personalPolicyUrl(): string
     ], $draft->content));
     resolve(PublishPolicy::class)->handle($draft->id, null, ['a', 'b', 'c'], true, $hr->id);
 
-    return route('portal.policy.show', resolve(App\Modules\Telework\Contracts\PortalAccess::class)->token($ana->id), absolute: false);
+    return [route('portal.policy.show', $tenant->slug, absolute: false), enteringTo($ana->id, 'La política de prevención')];
 }
 
 it('shows a person the policy of their center to read and confirm', function (bool $dark, bool $mobile): void {
-    visitPage('disclosure/portal-policy', personalPolicyUrl(), $dark, $mobile)
+    [$url, $enter] = personalPolicyUrl();
+
+    visitPage('disclosure/portal-policy', $url, $dark, $mobile, $enter)
         ->assertSee('La política de prevención, Ana Ruiz')
         ->assertSee('Compromisos')
         ->assertSee('Confirmo que la leí');
 })->with($looks);
 
 it('lets the person confirm from the phone, once', function (): void {
-    visit(personalPolicyUrl())->on()->mobile()
-        ->press('Confirmo que la leí')
-        ->assertSee('Gracias. Quedó registrado que leyó la política.')
+    [$url, $enter] = personalPolicyUrl();
+
+    Illuminate\Support\Facades\Notification::fake();
+
+    // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
+    provedWithCode($enter(visit($url)->on()->mobile())->press('Confirmo que la leí'), 'Gracias. Quedó registrado que leyó la política.')
         ->assertSee('Usted confirmó el')
         ->assertDontSee('Confirmo que la leí');
 });
@@ -342,7 +352,7 @@ it('shows the people the policy of their center', function (bool $dark, bool $mo
         ->assertSee('Para las personas trabajadoras')
         ->assertSee('Nuestra política')
         ->assertSee('Es obligación de supervisores, gerentes y directores')
-        ->assertSee('Para confirmar que la leyó, use el enlace personal que le llegó por correo.')
+        ->assertSee('Para confirmar que la leyó, entre a su portal desde el correo que le llegó.')
         ->assertSee('no guardamos quién visita esta página')
         ->assertSee('Otro centro')
         ->click('Leer completa')
@@ -537,5 +547,5 @@ it('reviews the draft of the health effects and publishes it to the centers', fu
 // E-02: the page of the people points to the personal link for what is personal.
 it('tells the people where their personal procedures are', function (): void {
     visit(workersPageUrl())
-        ->assertSee('Sus trámites personales (vacaciones, confirmaciones) están en el enlace personal que llegó a su correo.');
+        ->assertSee('Sus trámites personales (vacaciones, confirmaciones) están en su portal: entre con su llave o desde un correo de su empresa.');
 });

@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\RequirePortalTool;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Database\Factories\Telework\TeleworkerFactory;
 
 mutates(RequirePortalTool::class);
 
@@ -15,24 +15,23 @@ beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     $this->employee = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana Ruiz']);
     workIn($this->tenant);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->employee->id);
 });
 
-it('answers 404 on the page of a tool the company does not have, and keeps the rest of the portal open', function (string $route, string $module): void {
-    // A company whose plan has only the tool named "attendance", which has no page in the portal.
-    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+/** A company whose plan has only the tool named "attendance", which has no page of its own here. */
+function onlyAttendance(): void
+{
+    resolve(CompanyModules::class)->syncPlan(test()->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+}
 
-    $this->get(route($route, $this->token))->assertNotFound();
-    $this->get(route('portal.show', $this->token))->assertOk();
-})->with([
-    'Vacaciones' => ['portal.vacations.show', 'vacations'],
-    'Ley Silla' => ['portal.seating.show', 'seating'],
-    'Organigrama' => ['portal.team.show', 'org_chart'],
-    'Política NOM-035' => ['portal.policy.show', 'nom035'],
-    'Apoyo NOM-035' => ['portal.support.show', 'nom035'],
-    'NOM-037' => ['portal.notices.show', 'nom037'],
-]);
+it('answers 404 on a page of the person in their session when the company of the address does not have the tool', function (string $route): void {
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->employee->id]);
+    App\Modules\Leave\Models\LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
+    $slug = asPerson($this->employee->id);
 
-it('lets a link that is not valid through to the page, which answers it its own way', function (): void {
-    $this->get(route('portal.checklist.show', ['nope', (string) Illuminate\Support\Str::uuid()]))->assertOk()->assertInertia(fn ($page) => $page->where('unavailable', true));
-});
+    $this->get(route($route, $slug))->assertOk();
+
+    onlyAttendance();
+
+    $this->get(route($route, $slug))->assertNotFound();
+    $this->get(route('worker.home', $slug))->assertOk();
+})->with(['portal.telework.show', 'portal.notices.show', 'portal.team.show', 'portal.vacations.show', 'portal.seating.show', 'portal.policy.show']);

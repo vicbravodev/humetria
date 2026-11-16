@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-    centerFacts,
-    centerState,
-    notReadyNote,
-} from '@/lib/attendance/center-state';
+import { centerFacts, centerState } from '@/lib/attendance/center-state';
 
 describe('centerState', () => {
     it('is not ready without a zone, whatever its screens: nobody marks with their location', () => {
@@ -48,14 +44,6 @@ describe('centerFacts', () => {
         );
         expect(centerFacts({ people: 1, zones: 1, screens: 1 })).toBe(
             '1 persona · 1 zona · 1 pantalla activa',
-        );
-    });
-});
-
-describe('notReadyNote', () => {
-    it('tells RH, before sending the links, that nobody can mark in the center yet', () => {
-        expect(notReadyNote('Sucursal')).toBe(
-            'Hoy nadie puede marcar en Sucursal: le falta una zona o una pantalla.',
         );
     });
 });

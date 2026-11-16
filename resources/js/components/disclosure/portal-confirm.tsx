@@ -7,10 +7,10 @@ import type { PolicyAcknowledgment } from '@/types';
 
 /** The person's confirmation: the button while it is pending, the day they confirmed after (criterio C-53). */
 export default function PortalConfirm({
-    token,
+    slug,
     acknowledgment,
 }: {
-    token: string;
+    slug: string;
     acknowledgment: PolicyAcknowledgment;
 }) {
     if (acknowledgment.state === 'confirmed') {
@@ -24,7 +24,7 @@ export default function PortalConfirm({
 
     return (
         <Form
-            {...acknowledge.form({ token })}
+            {...acknowledge.form({ tenant: slug })}
             transform={() => ({ document: acknowledgment.documentId })}
             options={{ preserveScroll: true }}
             className="flex flex-col gap-3 card p-5"

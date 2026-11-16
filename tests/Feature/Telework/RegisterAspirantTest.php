@@ -13,7 +13,6 @@ use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Jobs\SendPortalInvitation;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistApplication;
-use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Notifications\PortalInvitation;
@@ -129,7 +128,7 @@ it('refuses while the work center has no published checklist', function (): void
 
     $this->post(registerUrl(), aspirantForm())->assertSessionHasErrors(['work_center' => 'La Comisión aún no publica la lista']);
 
-    expect(Teleworker::query()->count())->toBe(0)->and(PortalLink::query()->count())->toBe(0);
+    expect(Teleworker::query()->count())->toBe(0);
 });
 
 it('creates one Sección I application per workplace with the latest published version', function (): void {
@@ -153,10 +152,9 @@ it('rejects a second open period for the same employee', function (): void {
     expect(Teleworker::query()->count())->toBe(1)->and(Workplace::query()->count())->toBe(1);
 });
 
-it('emails the portal link and stores only its hash', function (): void {
+it('emails a link to the person\'s telework section, with no credential in it', function (): void {
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
 
-    $link = PortalLink::query()->sole();
     $sent = [];
     Notification::assertSentOnDemand(PortalInvitation::class, function (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$sent): bool {
         $mail = $notification->toMail($notifiable);
@@ -164,7 +162,6 @@ it('emails the portal link and stores only its hash', function (): void {
 
         return true;
     });
-    $token = basename($sent['url']);
 
     expect($sent['to'])->toBe('ana@acme.test')
         // Board V3-Correos: the list of 10 minutes, what it asks and who sees it.
@@ -172,14 +169,14 @@ it('emails the portal link and stores only its hash', function (): void {
         ->and($sent['action'])->toBe('Contestar la lista')
         ->and($sent['lines'])->toContain('Para que pueda trabajar desde casa, necesitamos saber cómo es su espacio: luz, silla, instalación eléctrica. Son unas preguntas y, si usted quiere, unas fotos.')
         ->toContain('Solo lo ven Recursos Humanos y la Comisión de Seguridad e Higiene. Puede contestar desde su celular.')
+        ->and(implode("\n", $sent['lines']))->not->toContain('el anterior deja de funcionar')
         ->and($sent['channels'])->toBe(['mail'])
-        ->and($sent['url'])->toBe(route('portal.show', $token))
-        ->and($link->token_hash)->toBe(hash('sha256', $token))
-        ->and($link->employee_id)->toBe($this->employee->id);
-    $this->assertDatabaseMissing('portal_links', ['token_hash' => $token]);
+        ->and($sent['url'])->toBe(route('portal.telework.show', $this->tenant->slug));
 
+    // The person enters first, and lands on their telework section with the checklist waiting.
     auth()->logout();
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false)->has('pending.checklists', 1));
+    $this->get($sent['url'])->assertRedirect(route('worker.home', $this->tenant->slug));
+    $this->get(route('portal.telework.show', asPerson($this->employee->id)))->assertInertia(fn (Assert $page) => $page->has('pending.checklists', 1)->etc());
 });
 
 it('sends no email to someone without one: RH hands them a link from the page', function (): void {
@@ -188,10 +185,9 @@ it('sends no email to someone without one: RH hands them a link from the page', 
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
 
     Notification::assertNothingSent();
-    expect(PortalLink::query()->count())->toBe(0);
 });
 
-it('queues only ids: the plain token never reaches the queue, and the job makes a working link', function (): void {
+it('queues only ids, and the job emails the link to the section of that person\'s company', function (): void {
     Queue::fake();
 
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
@@ -202,24 +198,11 @@ it('queues only ids: the plain token never reaches the queue, and the job makes 
 
         return $pushed->tenantId === $this->tenant->id && $pushed->employeeId === $this->employee->id;
     });
-    expect(PortalLink::query()->count())->toBe(0);
 
     app()->call($job->handle(...));
 
-    $url = null;
-    Notification::assertSentOnDemand(PortalInvitation::class, function (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$url): bool {
-        $url = $notification->toMail($notifiable)->actionUrl;
-
-        return true;
-    });
-    $token = basename($url);
-
-    expect(serialize($job))->not->toContain($token)
-        ->and($job)->toBeInstanceOf(ShouldQueue::class)
-        ->and(new PortalInvitation($token, 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false)))->not->toBeInstanceOf(ShouldQueue::class)
-        ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token));
-    auth()->logout();
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
+    Notification::assertSentOnDemand(PortalInvitation::class, fn (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notification->toMail($notifiable)->actionUrl === route('portal.telework.show', $this->tenant->slug));
+    expect($job)->toBeInstanceOf(ShouldQueue::class);
 });
 
 it('sends nothing when the person left before the job runs', function (): void {
@@ -228,7 +211,6 @@ it('sends nothing when the person left before the job runs', function (): void {
     app()->call((new SendPortalInvitation($this->tenant->id, $this->employee->id))->handle(...));
 
     Notification::assertNothingSent();
-    expect(PortalLink::query()->count())->toBe(0);
 });
 
 it('sends nothing when the company may not be used by the time the job runs', function (): void {
@@ -237,8 +219,6 @@ it('sends nothing when the company may not be used by the time the job runs', fu
     app()->call((new SendPortalInvitation($this->tenant->id, $this->employee->id))->handle(...));
 
     Notification::assertNothingSent();
-    workIn(tenantOf($this->tenant->id));
-    expect(PortalLink::query()->count())->toBe(0);
 });
 
 it('answers with the pending application when the insert races, even inside a transaction', function (): void {
@@ -326,35 +306,15 @@ it('shows a teleworker with their workplaces and the missing email', function ()
             ->missing('teleworker.link'));
 });
 
-it('issues a new link to copy and invalidates the previous', function (): void {
-    $this->employee->forceFill(['email' => null])->save();
-    $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
-    $teleworker = aspirant();
-    expect(PortalLink::query()->count())->toBe(0);
-
-    $response = $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $teleworker->id]));
-
-    $response->assertRedirect(route('tenant.telework.teleworkers.show', [$this->tenant, $teleworker->id]));
-    $flash = session('inertia.flash_data')['portalLink'] ?? null;
-    expect($flash)->toBeString()->toStartWith(url('/portal/'));
-    $token = basename($flash);
-    expect(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token));
-
-    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $teleworker->id]));
-    $newer = basename(session('inertia.flash_data')['portalLink']);
-
-    auth()->logout();
-    expect($newer)->not->toBe($token);
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', true));
-    $this->get(route('portal.show', $newer))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
+it('no longer issues a portal link from the teleworker: RH invites the person in «Accesos»', function (): void {
+    expect(Illuminate\Support\Facades\Route::has('tenant.telework.teleworkers.link'))->toBeFalse();
 });
 
-it('does not hand a link to anyone but RH and the owner', function (TenantRole $role): void {
+it('does not show a teleworker nor register one to anyone but RH and the owner', function (TenantRole $role): void {
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
     $teleworker = aspirant();
     $this->actingAs(memberOf($this->tenant, $role));
 
-    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $teleworker->id]))->assertForbidden();
     $this->post(registerUrl(), aspirantForm())->assertForbidden();
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $teleworker->id]))->assertForbidden();
     $this->get(route('tenant.telework.teleworkers.create', [$this->tenant, $this->center->id]))->assertForbidden();
@@ -368,7 +328,6 @@ it('answers 404, not 403, for a teleworker or work center of another company', f
     $foreignCenter = WorkCenter::factory()->for($other)->create();
 
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $foreign->id]))->assertNotFound();
-    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $foreign->id]))->assertNotFound();
     $this->post(route('tenant.telework.teleworkers.workplaces.store', [$this->tenant, $foreign->id]), homeOffice())->assertNotFound();
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, 'not-a-uuid']))->assertNotFound();
     $this->post(registerUrl($foreignCenter), aspirantForm())->assertNotFound();

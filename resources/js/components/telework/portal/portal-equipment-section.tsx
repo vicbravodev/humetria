@@ -4,10 +4,10 @@ import type { PortalEquipment } from '@/types';
 /** The equipment the company says it delivered, for the person to confirm they received it or refuse it. */
 export default function PortalEquipmentSection({
     equipment,
-    token,
+    slug,
 }: {
     equipment: PortalEquipment[];
-    token: string;
+    slug: string;
 }) {
     if (equipment.length === 0) {
         return null;
@@ -23,7 +23,7 @@ export default function PortalEquipmentSection({
                     <PortalEquipmentCard
                         key={item.id}
                         item={item}
-                        token={token}
+                        slug={slug}
                     />
                 ))}
             </ul>

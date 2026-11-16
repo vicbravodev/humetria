@@ -17,7 +17,7 @@ use App\Modules\Seating\Listeners\RequestOnSignature;
 use App\Modules\Seating\Support\CompanyCommitteeWork;
 use App\Modules\Seating\Support\CompanySeatingApplicability;
 use App\Modules\Seating\Support\CompanySeatingRoute;
-use App\Modules\Seating\Support\SeatingPortalSection;
+use App\Modules\Seating\Support\SeatingWorkerSection;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,7 +29,7 @@ final class SeatingServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->tag([SeatingPortalSection::class], 'portal.sections');
+        $this->app->tag([SeatingWorkerSection::class], 'worker.sections');
         $this->app->bind(SeatingRoute::class, CompanySeatingRoute::class);
         $this->app->bind(SeatingApplicability::class, CompanySeatingApplicability::class);
         $this->app->bind(CommitteeWork::class, CompanyCommitteeWork::class);

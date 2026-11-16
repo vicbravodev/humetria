@@ -12,11 +12,12 @@ use App\Modules\Seating\Models\RiskAcknowledgment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Seating\Notifications\RisksToConfirm;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -36,7 +37,7 @@ beforeEach(function (): void {
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => 'Ana Ruiz', 'email' => 'ana@acme.test']);
     PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id]);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
 });
 
 function signedFor(string $employeeId, array $overrides = []): RiskAssessment
@@ -58,7 +59,7 @@ it('queues the link once when an assessment is signed', function (): void {
     Queue::assertPushed(SendRisksToConfirm::class, fn (SendRisksToConfirm $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->ana->id);
 });
 
-it('emails the person, as usted, with their link to the Ley Silla page, when the job runs', function (): void {
+it('emails the person, as usted, the address of their Ley Silla page with no credential, when the job runs', function (): void {
     Notification::fake();
     signedFor($this->ana->id);
 
@@ -69,7 +70,8 @@ it('emails the person, as usted, with their link to the Ley Silla page, when the
 
         return $notifiable->routes['mail'] === 'ana@acme.test'
             && $channels === ['mail']
-            && str_contains(implode(' ', [...$mail->introLines, $mail->actionUrl ?? '']), route('portal.seating.show', $this->token));
+            && $mail->actionUrl === route('portal.seating.show', $this->tenant->slug)
+            && ! str_contains(implode(' ', $mail->outroLines), 'el anterior deja de funcionar');
     });
 });
 
@@ -133,35 +135,54 @@ it('does not resend a draft', function (): void {
 it('shows the person what to confirm, and records the confirmation with date and time, once', function (): void {
     $assessment = signedFor($this->ana->id);
 
-    $this->get(route('portal.seating.show', $this->token))->assertInertia(fn (Assert $page) => $page
+    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page
         ->where('acknowledgment.assessmentId', $assessment->id)->where('acknowledgment.levelLabel', 'Bajo')->where('acknowledgment.measures', []));
 
-    $this->post(route('portal.seating.acknowledgments.store', $this->token))->assertRedirect(route('portal.seating.show', $this->token))->assertSessionHasNoErrors();
+    $this->post(route('portal.seating.acknowledgments.store', $this->slug))->assertRedirect(route('portal.seating.show', $this->slug))->assertSessionHasNoErrors();
     $this->travelTo('2026-03-01 13:00:00');
-    $this->post(route('portal.seating.acknowledgments.store', $this->token))->assertSessionHasNoErrors();
+    // An hour later the session went quiet: the person enters again.
+    asPerson($this->ana->id);
+    $this->post(route('portal.seating.acknowledgments.store', $this->slug))->assertSessionHasNoErrors();
 
     $row = RiskAcknowledgment::query()->sole();
     expect($row->employee_id)->toBe($this->ana->id)->and($row->assessment_id)->toBe($assessment->id)
         ->and($row->acknowledged_at->toDateTimeString())->toBe('2026-03-01 12:00:00');
-    $this->get(route('portal.seating.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null)->where('acknowledgedOn', '2026-03-01'));
+    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null)->where('acknowledgedOn', '2026-03-01'));
 });
+
+it('takes the confirmation only after a recent proof that it is the person', function (EntryVia $via, int $minutes): void {
+    signedFor($this->ana->id);
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.seating.show', $this->slug);
+
+    $this->from($page)->post(route('portal.seating.acknowledgments.store', $this->slug))->assertRedirect($page)->assertInertiaFlash('proofRequired.mode', 'code');
+    expect(RiskAcknowledgment::query()->count())->toBe(0);
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.seating.acknowledgments.store', $this->slug))->assertRedirect($page)->assertSessionHasNoErrors();
+    expect(RiskAcknowledgment::query()->count())->toBe(1);
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
 
 it('does not ask again when the assessment is marked for reassessment, but asks again for a new signed one', function (): void {
     $first = signedFor($this->ana->id);
-    $this->post(route('portal.seating.acknowledgments.store', $this->token));
+    $this->post(route('portal.seating.acknowledgments.store', $this->slug));
     $first->forceFill(['reassessment_due' => true])->save();
 
-    $this->get(route('portal.seating.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null));
+    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null));
 
     $second = signedFor($this->ana->id, ['signed_at' => now()->addDay()]);
-    $this->get(route('portal.seating.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('acknowledgment.assessmentId', $second->id));
+    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment.assessmentId', $second->id));
 });
 
 it('confirms only the current signed assessment of the person, never another one', function (): void {
     $other = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     signedFor($other->id);
 
-    $this->post(route('portal.seating.acknowledgments.store', $this->token))->assertNotFound();
+    $this->post(route('portal.seating.acknowledgments.store', $this->slug))->assertNotFound();
 
     expect(RiskAcknowledgment::query()->count())->toBe(0);
 });

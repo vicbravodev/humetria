@@ -525,12 +525,11 @@ it('labels the status of a workplace as the criteria do', function (): void {
         ->and(ReviewDecision::NotValid->label())->toBe('No validado');
 });
 
-it('offers nothing to do on an ended period: no link, no workplace, no expiry', function (): void {
+it('offers nothing to do on an ended period: no workplace, no expiry', function (): void {
     $period = TeleworkerFactory::new()->ended()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     $place = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $period->id]);
     WorkplaceReviewFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $place->id]);
 
-    $this->post(route('tenant.telework.teleworkers.link', [$this->tenant, $period->id]))->assertNotFound();
     $this->post(route('tenant.telework.teleworkers.workplaces.store', [$this->tenant, $period->id]), rosterForm())->assertNotFound();
     $this->get(route('tenant.telework.teleworkers.show', [$this->tenant, $period->id]))
         ->assertInertia(fn (Assert $page) => $page->where('teleworker.workplaces.0.expiresOn', null)->where('teleworker.workplaces.0.status', 'valid'));

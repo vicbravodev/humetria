@@ -7,8 +7,8 @@ namespace App\Modules\Disclosure\Support;
 use App\Modules\Disclosure\Models\Acknowledgment;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Telework\Data\PortalIdentity;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\WorkerAccess\Data\WorkerIdentity;
 
 /**
  * What a person's policy page receives: the version in force in their work center, with the company name in place, and
@@ -21,7 +21,7 @@ final readonly class PortalPolicyPages
     /**
      * @return array<string, mixed>
      */
-    public function show(PortalIdentity $person, string $token): array
+    public function show(WorkerIdentity $person, string $slug): array
     {
         $center = $this->roster->find($person->employeeId)->workCenterId ?? '';
         $fact = $this->standing->inForce([$center])[$center] ?? null;
@@ -29,13 +29,13 @@ final readonly class PortalPolicyPages
         $ack = $fact === null ? null : Acknowledgment::query()->where('document_id', $fact->documentId)->where('employee_id', $person->employeeId)->first();
 
         return [
-            'token' => $token,
-            'company' => $person->company,
-            'name' => $person->name,
+            'slug' => $slug,
+            'company' => $person->companyName,
+            'name' => $person->personName,
             'policy' => $fact === null || $document === null ? null : [
                 'version' => $fact->version,
                 'publishedOn' => Days::moment($fact->publishedAt),
-                'sections' => PolicyText::sections($document->content, $this->workCenters->profile($center)->legalName ?? $person->company),
+                'sections' => PolicyText::sections($document->content, $this->workCenters->profile($center)->legalName ?? $person->companyName),
             ],
             'acknowledgment' => $ack === null ? null : [
                 'documentId' => $ack->document_id,

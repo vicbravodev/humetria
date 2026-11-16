@@ -8,11 +8,11 @@ import PortalCard from '@/components/telework/portal/portal-card';
 /** One checklist of a workplace: where it is, which section and where it stands (pantalla: Encuesta-Movil). */
 export default function PortalChecklistCard({
     checklist,
-    token,
+    slug,
     pending,
 }: {
     checklist: PortalChecklist;
-    token: string;
+    slug: string;
     pending: boolean;
 }) {
     return (
@@ -38,7 +38,7 @@ export default function PortalChecklistCard({
                 <Button asChild className="mt-2 h-12 self-start text-base">
                     <Link
                         href={PortalChecklistController.show.url({
-                            token,
+                            tenant: slug,
                             application: checklist.id,
                         })}
                     >

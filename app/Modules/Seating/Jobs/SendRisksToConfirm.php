@@ -9,8 +9,8 @@ use App\Modules\Seating\Enums\AssessmentStatus;
 use App\Modules\Seating\Models\RiskAcknowledgment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Notifications\RisksToConfirm;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
@@ -18,7 +18,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Tells a person their current signed assessment is waiting for their confirmation, with their personal link derived here.
+ * Tells a person their current signed assessment is waiting for their confirmation, with the address of their Ley Silla page (no credential: they enter first).
  * Only ids travel in the job. Nothing is sent when they already confirmed it, have no email, left, or the company may
  * not be used; a person has at most one waiting.
  */
@@ -42,7 +42,7 @@ final class SendRisksToConfirm implements ShouldBeUniqueUntilProcessing, ShouldQ
         return "{$this->tenantId}:{$this->employeeId}";
     }
 
-    public function handle(Companies $companies, Roster $roster, PortalAccess $access): void
+    public function handle(Companies $companies, Roster $roster, WorkerLinks $links): void
     {
         $company = $companies->enter($this->tenantId);
         $person = $roster->find($this->employeeId);
@@ -57,6 +57,6 @@ final class SendRisksToConfirm implements ShouldBeUniqueUntilProcessing, ShouldQ
             return;
         }
 
-        Notification::route('mail', $person->email)->notify(new RisksToConfirm(route('portal.seating.show', $access->token($person->id)), $person->name, $company));
+        Notification::route('mail', $person->email)->notify(new RisksToConfirm($links->to('portal.seating.show'), $person->name, $company));
     }
 }

@@ -207,16 +207,15 @@ it('shows Empleados in the sidebar to owner and hr, never to a viewer', function
     visit('/admin/acme')->click('Empleados')->assertPathIs('/admin/acme/employees');
 });
 
-// E-08: RH sends a person the link of their portal from the row, and is told when there is no email to send it to.
-it('sends a person the link of their portal from their row, or says why it cannot', function (): void {
-    Illuminate\Support\Facades\Notification::fake();
+// E-08: RH opens a person's access (invite, reissue, their keys) from their row, in «Accesos» narrowed to them.
+it('opens the access of a person from their row, in «Accesos» narrowed to them', function (): void {
     acmeWithEmployees();
 
     visit('/admin/acme/employees')
-        ->click('[aria-label="Acciones de Ana López"]')->click('Enviar enlace a su portal')
-        ->assertSee('Le enviamos su enlace por correo.')
-        ->click('[aria-label="Acciones de Carla Ruiz"]')->click('Enviar enlace a su portal')
-        ->assertSee('No tiene correo registrado: agrégalo en su ficha para enviarle el enlace.')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Ver su acceso')
+        ->assertPathIs('/admin/acme/access')
+        ->assertQueryStringHas('q', 'Ana López')
+        ->assertSee('Ana López')
         ->assertNoJavaScriptErrors();
 });
 

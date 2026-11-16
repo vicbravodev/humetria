@@ -6,14 +6,12 @@ use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Enums\Section;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\ChecklistApplication;
-use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistApplicationFactory;
 use Database\Factories\Telework\ChecklistFactory;
-use Database\Factories\Telework\PortalLinkFactory;
 use Database\Factories\Telework\TeleworkerFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -39,8 +37,7 @@ it('builds a teleworker with its workplace, application and link inside one comp
     expect($teleworker->status)->toBe(TeleworkerStatus::Aspirant)
         ->and($application->section)->toBe(Section::One)
         ->and($application->submitted_at)->toBeNull()
-        ->and($workplace->tenant_id)->toBe($teleworker->tenant_id)
-        ->and(PortalLinkFactory::new()->create(['employee_id' => $teleworker->employee_id, 'tenant_id' => $teleworker->tenant_id])->token_hash)->toHaveLength(64);
+        ->and($workplace->tenant_id)->toBe($teleworker->tenant_id);
 });
 
 it('accepts a telework percentage over 40 and refuses 40 straight in the database', function (int $percentage, bool $accepted): void {
@@ -75,27 +72,20 @@ it('keeps one pending application per workplace and section', function (): void 
     expect($second()->section)->toBe(Section::One);
 });
 
-it('keeps one portal link per employee', function (): void {
-    $link = PortalLinkFactory::new()->create();
-
-    refused(fn () => PortalLinkFactory::new()->create(['employee_id' => $link->employee_id, 'tenant_id' => $link->tenant_id]), UniqueConstraintViolationException::class);
-});
-
 it('does not let company B read or reference the rows of company A', function (): void {
     $application = ChecklistApplicationFactory::new()->create();
-    $link = PortalLinkFactory::new()->create();
+    $theirs = EmployeeFactory::new()->create();
     $other = Tenant::factory()->create();
     workIn($other);
 
     expect(Teleworker::query()->count())->toBe(0)
         ->and(Workplace::query()->count())->toBe(0)
-        ->and(PortalLink::query()->count())->toBe(0)
         ->and(ChecklistApplication::query()->count())->toBe(0);
 
     $foreign = EmployeeFactory::new()->create(['tenant_id' => $other->id]);
 
     // A teleworker of B cannot point at A's employee or checklist: the composite keys are per company.
-    refused(fn () => TeleworkerFactory::new()->create(['tenant_id' => $other->id, 'employee_id' => $link->employee_id, 'work_center_id' => $foreign->work_center_id]));
+    refused(fn () => TeleworkerFactory::new()->create(['tenant_id' => $other->id, 'employee_id' => $theirs->id, 'work_center_id' => $foreign->work_center_id]));
     refused(fn () => ChecklistApplicationFactory::new()->create(['tenant_id' => $other->id, 'workplace_id' => $application->workplace_id, 'checklist_id' => $application->checklist_id]));
 
     expect(Employee::query()->whereKey($foreign->id)->exists())->toBeTrue();

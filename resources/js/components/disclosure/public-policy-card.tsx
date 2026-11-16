@@ -43,8 +43,8 @@ export default function PublicPolicyCard({
                 </div>
             </details>
             <p className="rounded-lg bg-muted px-3.5 py-2.5 text-sm text-muted-foreground">
-                Para confirmar que la leyó, use el enlace personal que le llegó
-                por correo. Esta página no guarda quién la visita.
+                Para confirmar que la leyó, entre a su portal desde el correo
+                que le llegó. Esta página no guarda quién la visita.
             </p>
         </section>
     );

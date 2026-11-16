@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * What a person asks for from their portal: the first and the last day, the leave type when it is not vacations, and an
- * optional note. Whose request it is comes from the link, never from what is sent.
+ * optional note. Whose request it is comes from the session, never from what is sent.
  */
 final class PortalLeaveRequest extends FormRequest
 {
@@ -24,7 +24,7 @@ final class PortalLeaveRequest extends FormRequest
         'type_unavailable' => ['leave_type_id', 'Ese tipo de permiso ya no está disponible. Elija otro.'],
     ];
 
-    /** The portal link is the credential: the controller opens it. */
+    /** The session of the person is the credential (RequireWorkerSession): the controller asks it who they are. */
     public function authorize(): bool
     {
         return true;

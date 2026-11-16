@@ -118,7 +118,7 @@ export type PolicyAcknowledgment = {
 };
 
 export type PortalPolicyProps = {
-    token: string;
+    slug: string;
     company: string;
     name: string;
     /** The version in force in the person's center; null while the center has none. */
