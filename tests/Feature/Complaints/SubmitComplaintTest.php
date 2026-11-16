@@ -5,14 +5,17 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Complaints\Actions\SubmitComplaint;
 use App\Modules\Complaints\Models\Complaint;
+use App\Modules\Complaints\Models\ComplaintAssignment;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
+use App\Modules\Complaints\Notifications\ComplaintReceived;
 use App\Modules\Complaints\Notifications\DailyCapReached;
 use App\Modules\Complaints\Support\ReferenceSource;
 use App\Modules\Complaints\Support\TicketSigner;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -281,17 +284,42 @@ it('stops the eleventh submission of a day from one address, though no hour went
     expect(Complaint::query()->count())->toBe(11);
 });
 
-it('takes no more than the daily cap of the channel, and tells who manages it once', function (): void {
+it('keeps receiving past the daily cap, but holds the complaint: no handlers, no mail, and the managers are told once', function (): void {
     Notification::fake();
     config(['complaints.rate_limits.daily_cap' => 2]);
     memberOf($this->tenant, TenantRole::Hr);
     Complaint::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'channel_id' => $this->channel->id, 'received_on' => '2026-11-19']);
 
-    submitComplaint($this, complaintForm($this))->assertStatus(429)->assertJsonPath('message', 'El canal recibió muchas quejas hoy. Inténtelo de nuevo mañana.');
-    submitComplaint($this, complaintForm($this))->assertStatus(429);
+    $first = submitComplaint($this, complaintForm($this, ['notify_email' => 'ana@example.test']))->assertCreated();
+    submitComplaint($this, complaintForm($this))->assertCreated();
 
-    expect(Complaint::query()->count())->toBe(2);
+    expect($first->json('reference'))->toBeString()->and($first->json('key'))->toBeString();
+    $held = Complaint::query()->where('held', true)->get();
+    expect($held)->toHaveCount(2)
+        ->and(Complaint::query()->count())->toBe(4)
+        ->and(ComplaintAssignment::query()->whereIn('complaint_id', $held->pluck('id'))->count())->toBe(0);
     Notification::assertSentOnDemandTimes(DailyCapReached::class, 2);
+    Notification::assertNotSentTo($this->owner, ComplaintReceived::class);
+    Notification::assertNotSentTo(new AnonymousNotifiable, ComplaintReceived::class);
+});
+
+it('logs the hold with ids only', function (): void {
+    config(['complaints.rate_limits.daily_cap' => 0]);
+    Log::spy();
+
+    submitComplaint($this, complaintForm($this))->assertCreated();
+
+    Log::shouldHaveReceived('info')->with('complaint.held', ['channel_id' => $this->channel->id])->once();
+});
+
+it('refuses with 429 once the held complaints of the day reach their ceiling', function (): void {
+    config(['complaints.rate_limits.daily_cap' => 1, 'complaints.held_cap' => 2]);
+    Complaint::factory()->create(['tenant_id' => $this->tenant->id, 'channel_id' => $this->channel->id, 'received_on' => '2026-11-19']);
+    Complaint::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'channel_id' => $this->channel->id, 'received_on' => '2026-11-19', 'held' => true]);
+
+    submitComplaint($this, complaintForm($this))->assertStatus(429)->assertJsonPath('message', 'El canal recibió muchas quejas hoy. Inténtelo de nuevo mañana.');
+
+    expect(Complaint::query()->count())->toBe(3);
 });
 
 it('counts yesterday\'s complaints out of today\'s cap', function (): void {

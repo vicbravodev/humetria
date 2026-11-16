@@ -46,6 +46,6 @@ final readonly class ChannelStatusPages
     {
         $limit = Dates::today()->subDays($channel->acknowledge_within_days)->toDateString();
 
-        return Complaint::query()->where('status', ComplaintStatus::New->value)->whereNull('acknowledged_at')->whereDate('received_on', '<', $limit)->count();
+        return Complaint::query()->where('held', false)->where('status', ComplaintStatus::New->value)->whereNull('acknowledged_at')->whereDate('received_on', '<', $limit)->count();
     }
 }

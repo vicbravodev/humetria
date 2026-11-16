@@ -52,6 +52,9 @@ return [
         'follow_ups_per_hour' => (int) env('COMPLAINTS_FOLLOW_UPS_PER_HOUR', 30),
         'daily_cap' => (int) env('COMPLAINTS_DAILY_CAP', 200),
     ],
+
+    // Past the daily cap a complaint is received but held until the next day; this bounds how many are held per channel per day.
+    'held_cap' => (int) env('COMPLAINTS_HELD_CAP', 1000),
     'ticket' => ['min_seconds' => 3, 'max_seconds' => 7200],
 
     /*
