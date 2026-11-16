@@ -38,6 +38,7 @@ use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 
 it('tells the Ley Silla story of the offices: positions, seats, signed assessments, open and closed measures and a keyless survey', function (): void {
     // In production the jobs run later on the queue: the story must stand without them.
@@ -172,6 +173,11 @@ it('tells the Ley Silla story of the offices: positions, seats, signed assessmen
         expect(str_contains($logs, (string) $note))->toBeFalse()->and(str_contains($audits, (string) $note))->toBeFalse();
     }
     expect(str_contains($logs, '"scores"'))->toBeFalse()->and(str_contains($audits, '"scores"'))->toBeFalse();
+
+    // preparing the demo writes its NOM-037 PDFs to the fake disk every demo test gets, never to the real one
+    $disk = Storage::disk(config()->string('filesystems.telework_files'));
+    expect($disk->path(''))->toContain('framework/testing/disks')
+        ->and($disk->allFiles("documents/{$tenantId}"))->toHaveCount(2);
 
     // nothing outside the demo company
     foreach ([SeatingProfile::class, StandingPosition::class, PositionAssignment::class, Seat::class, RiskAssessment::class, PreventiveMeasure::class, PauseAgreement::class, RiskAcknowledgment::class] as $model) {

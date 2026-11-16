@@ -20,6 +20,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Models\Conversation;
@@ -42,6 +43,11 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature', 'Browser', 'Ssr');
+
+// Preparing the demo publishes the NOM-037 documents as PDFs: on a fake disk, so no test leaves files on the real one.
+pest()->beforeEach(function (): void {
+    Storage::fake(config()->string('filesystems.telework_files'));
+})->in('Feature/Demo');
 
 // Each CI runner drives four browsers at once: an action that waits for a button or a page gets 15 s instead of Pest's 5 s,
 // which a busy runner ran out of now and then (a click, a calendar day). It waits longer, it asserts nothing less.

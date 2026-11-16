@@ -44,7 +44,6 @@ use Illuminate\Support\Facades\Storage;
 it('tells the telework story of the offices: twelve teleworkers with their checklists, documents, equipment, training and the Comisión', function (): void {
     // In production the jobs run later on the queue: the story must stand without them.
     Bus::fake();
-    Storage::fake(config()->string('filesystems.telework_files'));
     $logged = [];
     Event::listen(MessageLogged::class, function (MessageLogged $log) use (&$logged): void {
         $logged[] = $log->message.' '.json_encode($log->context);
