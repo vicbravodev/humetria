@@ -23,6 +23,15 @@ interface ReportingLines
     public function chainOf(string $employeeId): array;
 
     /**
+     * The chain of each person, as chainOf tells it, in one query for any number of people. Whoever is not in the
+     * company has an empty chain.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, list<string>> by employee id, one entry for each id asked
+     */
+    public function chainsOf(array $employeeIds): array;
+
+    /**
      * The active people who report directly to the person, by name.
      *
      * @return list<string>

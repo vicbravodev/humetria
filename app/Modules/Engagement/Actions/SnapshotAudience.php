@@ -45,11 +45,12 @@ final readonly class SnapshotAudience
             return $existing;
         }
 
-        ['ids' => $ids, 'segments' => $segments, 'commentGroups' => $commentGroups, 'activeSet' => $activeSet] = $this->plan();
+        ['ids' => $ids, 'segments' => $segments, 'commentGroups' => $commentGroups, 'activeSet' => $activeSet, 'chains' => $chains] = $this->plan();
 
-        DB::transaction(function () use ($survey, $ids, $segments, $commentGroups, $activeSet): void {
+        DB::transaction(function () use ($survey, $ids, $segments, $commentGroups, $activeSet, $chains): void {
             foreach ($ids as $id) {
-                $direct = $this->lines->managerOf($id);
+                // The direct manager, whether they still work here or not: the first of the chain.
+                $direct = $chains[$id][0] ?? null;
                 Invitation::query()->create([
                     'tenant_id' => $survey->tenant_id,
                     'survey_id' => $survey->id,
@@ -93,7 +94,7 @@ final readonly class SnapshotAudience
     /**
      * Who would be invited and the coarse group each one is in, as of today.
      *
-     * @return array{ids: list<string>, segments: array<string, Segment>, commentGroups: array<string, string|null>, activeSet: array<string, int>}
+     * @return array{ids: list<string>, segments: array<string, Segment>, commentGroups: array<string, string|null>, activeSet: array<string, int>, chains: array<string, list<string>>}
      */
     private function plan(): array
     {
@@ -103,10 +104,10 @@ final readonly class SnapshotAudience
         $starts = $this->seniority->startDatesFor($ids);
         $today = SurveyClock::day();
 
-        // ponytail: one chainOf call per person at launch; ask ReportingLines for a bulk read if a company passes a few thousand.
+        $chains = $this->lines->chainsOf($ids);
         $managerOf = [];
         foreach ($ids as $id) {
-            $chain = array_values(array_filter($this->lines->chainOf($id), fn (string $manager): bool => isset($activeSet[$manager])));
+            $chain = array_values(array_filter($chains[$id] ?? [], fn (string $manager): bool => isset($activeSet[$manager])));
             $managerOf[$id] = $chain[0] ?? null;
             foreach ($chain as $level => $manager) {
                 $managerOf[$manager] = $chain[$level + 1] ?? null;
@@ -128,6 +129,6 @@ final readonly class SnapshotAudience
 
         $segments = SegmentGeneralizer::generalize($segments, $this->thresholds->met(...));
 
-        return ['ids' => $ids, 'segments' => $segments, 'commentGroups' => $commentGroups, 'activeSet' => $activeSet];
+        return ['ids' => $ids, 'segments' => $segments, 'commentGroups' => $commentGroups, 'activeSet' => $activeSet, 'chains' => $chains];
     }
 }

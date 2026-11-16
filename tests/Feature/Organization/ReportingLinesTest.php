@@ -82,3 +82,47 @@ it('ends on a cycle already in the data, without repeating anyone or the person'
     expect($this->lines->chainOf($this->ana->id))->toBe([$this->jefa->id])
         ->and($this->lines->subtreeIds($this->ana->id))->toBe([$this->jefa->id]);
 });
+
+it('tells the same chain of each person with branches, roots and another company around', function (): void {
+    // A second branch under Gte, a second root with a report, and a company next door with a line of its own.
+    $ventas = Employee::factory()->reportingTo($this->gte)->create();
+    $beto = Employee::factory()->reportingTo($ventas)->create();
+    $solo = Employee::factory()->create(['tenant_id' => $this->tenant->id]);
+    $eva = Employee::factory()->reportingTo($solo)->create();
+    $elsewhere = Employee::factory()->reportingTo(Employee::factory()->create())->create();
+
+    expect($this->lines->chainOf($beto->id))->toBe([$ventas->id, $this->gte->id, $this->dir->id])
+        ->and($this->lines->chainOf($this->luis->id))->toBe([$this->jefa->id, $this->gte->id, $this->dir->id])
+        ->and($this->lines->chainOf($eva->id))->toBe([$solo->id])
+        ->and($this->lines->chainOf($solo->id))->toBe([])
+        ->and($this->lines->chainOf($elsewhere->id))->toBe([])
+        ->and($this->lines->chainOf('not-a-uuid'))->toBe([]);
+});
+
+it('tells the chains of many people in one query, whatever their number', function (): void {
+    $ventas = Employee::factory()->reportingTo($this->gte)->create();
+    $beto = Employee::factory()->reportingTo($ventas)->create();
+    $elsewhere = Employee::factory()->reportingTo(Employee::factory()->create())->create();
+    $this->expectsDatabaseQueryCount(1);
+
+    expect($this->lines->chainsOf([$this->ana->id, $this->luis->id, $beto->id, $this->dir->id, $elsewhere->id, 'not-a-uuid']))->toBe([
+        $this->ana->id => [$this->jefa->id, $this->gte->id, $this->dir->id],
+        $this->luis->id => [$this->jefa->id, $this->gte->id, $this->dir->id],
+        $beto->id => [$ventas->id, $this->gte->id, $this->dir->id],
+        $this->dir->id => [],
+        $elsewhere->id => [],
+        'not-a-uuid' => [],
+    ]);
+});
+
+it('ends every chain asked together on a cycle already in the data', function (): void {
+    DB::statement('ALTER TABLE employees DISABLE TRIGGER employees_manager_acyclic');
+    DB::table('employees')->where('id', $this->jefa->id)->update(['manager_id' => $this->ana->id]);
+    DB::statement('ALTER TABLE employees ENABLE TRIGGER employees_manager_acyclic');
+
+    expect($this->lines->chainsOf([$this->ana->id, $this->luis->id, $this->gte->id]))->toBe([
+        $this->ana->id => [$this->jefa->id],
+        $this->luis->id => [$this->jefa->id, $this->ana->id],
+        $this->gte->id => [$this->dir->id],
+    ]);
+});

@@ -80,6 +80,11 @@ function watchedLines(?string $failingTenantId = null): ReportingLines
             return resolve(CurrentTenant::class)->id() === $this->failingTenantId ? throw new RuntimeException('Broken company.') : $this->real->chainOf($employeeId);
         }
 
+        public function chainsOf(array $employeeIds): array
+        {
+            return $this->real->chainsOf($employeeIds);
+        }
+
         public function directReportIds(string $employeeId): array
         {
             return $this->real->directReportIds($employeeId);
