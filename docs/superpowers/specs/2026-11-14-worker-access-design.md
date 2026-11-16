@@ -748,4 +748,28 @@ Transversal a este grupo:
 
 --------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
+
+## Desviaciones
+
+Anotadas al construir el grupo 3 (enlaces, sesión, entrada, registro de llave y «No fui yo»).
+
+- **Nombres de log** `worker_access.*` (`worker_access.entered`, `.left`, `.link_requested`, `.link_used`,
+  `.key_registered`, `.not_me`…) en lugar de `worker.*`: el módulo ya registraba así sus llaves y la regla es `modulo.accion`.
+- **Archivo de rutas** `routes/worker-access.php`, no `routes/worker.php`.
+- **Sin acciones que toquen la sesión** (`EnterWithKey`, `LeaveSession`): las acciones no dependen de HTTP. Entrar y salir
+  los hacen los controladores con `Support/WorkerSessionStore`; `OpenAccessLink` solo gasta el enlace.
+- **`auth:worker` aún no está en las rutas.** El guard existe y responde; los controladores preguntan a la sesión. El
+  middleware y el regreso al destino guardado (`bootstrap/app.php`) llegan con el grupo 6 y 8.
+- **Varias coincidencias de correo** no pueden ocurrir hoy (`employees` tiene correo único por empresa); la regla de
+  «exactamente una» se conserva en `RequestAccessLink`.
+- **«No fui yo» avisa a `Companies::contact()`** (el dueño), como dice la tabla del grupo 3, no a cada miembro owner/hr.
+  La dirección firmada vale 30 días. Si RH ya había revocado la llave, igual cierra sesiones y enlaces y deja el motivo
+  `not_me` con la fecha de la primera revocación. Después la persona todavía puede pedir un enlace `requested` (que no crea
+  llaves); para una llave nueva necesita a RH.
+- **La página del enlace no recibe el token**: recibe `opens` y «Continuar» envía a su propia dirección.
+- **El marco de la persona** queda en `components/person-frame.tsx` (no en `components/humetria/`, que no puede importar
+  el logo); `components/attendance/person-frame.tsx` es su envoltura con «Registro de jornada».
+- **`RedactSensitiveData`** no ganó llaves: ningún log nuevo lleva token, código, reto ni llave pública.
+
 *Drafted with EGM*

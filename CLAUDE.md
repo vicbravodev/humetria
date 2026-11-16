@@ -96,6 +96,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Seating`: Ley Silla: asientos, evaluación de riesgo, medidas, encuesta.
 - `Telework`: NOM-037: teletrabajadores, lista de verificación, documentos, comité, portal.
 - `Tenancy`: empresas, centros de trabajo, miembros y roles, módulos y límites por empresa (`CompanyModules`).
+- `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso y sesión en `/me/{slug}` (ver su README).
 - `WorkerAccess`: identidad de la persona trabajadora: sus llaves de acceso (WebAuthn) y su revocación; sesión y enlaces de un solo uso en curso (`docs/superpowers/specs/2026-11-14-worker-access-design.md`).
 
 No hay módulo de notificaciones: cada módulo manda sus correos con `Notifications/`. No hay SMS ni WhatsApp.
