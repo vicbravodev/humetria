@@ -12,6 +12,17 @@
       "Bash(vendor/bin/pint:*)",
       "Bash(vendor/bin/phpstan:*)",
       "Bash(composer test)",
+      "Bash(composer test:*)",
+      "Bash(composer ci:check)",
+      "Bash(composer check:fast)",
+      "Bash(composer worktree:*)",
+      "Bash(./vendor/bin/sail artisan:*)",
+      "Bash(vendor/bin/sail artisan:*)",
+      "Bash(./vendor/bin/sail npm run:*)",
+      "Bash(npm run test:js)",
+      "Bash(gh run view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh pr view:*)",
       "Bash(npm run check)",
       "Bash(npm run types:check)",
       "Bash(php artisan route:list:*)",
@@ -66,7 +77,7 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/run-suite-on-stop.sh",
             "timeout": 300,
-            "statusMessage": "composer check:fast (Pint, PHPStan, affected tests) + frontend checks if TS/CSS changed"
+            "statusMessage": "Pint + PHPStan on changed PHP, npm check + types:check if frontend changed (no tests)"
           }
         ]
       }

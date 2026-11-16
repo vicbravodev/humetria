@@ -19,10 +19,10 @@ composer test:fast                                                       # Tia: 
 composer mutate -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # una clase (o un namespace), 4 procesos
 composer mutate:retry -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # lo que escapó, primero
 composer mutate:critical                                                 # las clases de lógica de negocio, un módulo a la vez; CI le pone --min=95
-composer mutate:full                                                     # las 293 de mutates(), --min=95
+composer mutate:full                                                     # todas las clases de mutates(), --min=95
 ```
 
-Cada checkout usa su propia base de pruebas (ver CLAUDE.md, "Worktrees en paralelo"): dos worktrees ya no se pisan. Dentro de un mismo checkout, no corras la mutación al mismo tiempo que `composer test`: comparten su base.
+Cada checkout usa su propia base de pruebas (ver `docs/setup.md`, "Worktrees en paralelo"): dos worktrees ya no se pisan. Dentro de un mismo checkout, no corras la mutación al mismo tiempo que `composer test`: comparten su base.
 
 ## Dónde corre
 
@@ -52,6 +52,20 @@ declaran `mutates()` de ellas. Eso fija el tamaño del filtro al de un módulo, 
 - `mutate:full` (y `mutate` sin `--class`) no se parte así: con un filtro de esa línea compartida puede caer igual. Para medir, usa `mutate:critical`.
 
 Si la corrida semanal falla, el workflow queda en rojo y GitHub avisa al correo de quien editó el cron; no toca ningún PR.
+
+### Si la corrida falla
+
+- Se reproduce con `composer mutate -- --class='App\Modules\X\Actions\Y'` y se agrega el test que mata al mutante.
+- No se baja `--min`, no se excluye la clase ni se vuelve a poner la mutación en los PR.
+- El umbral solo sube: si el score sostiene más de 2 puntos por encima, súbelo en `mutation.yml` y aquí.
+- Para dejar una clase fuera de la mutación, su test no declara `mutates()`; la lista sale de `scripts/mutation-classes.php`,
+  no hay una lista que mantener a mano.
+
+### Cobertura
+
+Unit/Feature corren en paralelo (`composer test:coverage`); como Pest no aplica `--min` en paralelo, `scripts/coverage-min.php`
+lee el clover y falla bajo 90%. Los tests de navegador no aportan cobertura de PHP. Si la cobertura baja, faltan tests: no se
+baja el umbral.
 
 El 95% es el score de las clases críticas (97,44% el 1 nov 2026) redondeado hacia abajo: detecta regresiones sin fallar hoy.
 Esa medición tuvo 7432 mutantes probados, ninguno escapó, y 195 "uncovered" (líneas que la cobertura no marca, como el
