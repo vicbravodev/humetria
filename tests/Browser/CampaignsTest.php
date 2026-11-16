@@ -685,8 +685,11 @@ it('shows the person the message of their company in their portal, in both theme
     App\Modules\Results\Models\ScreeningReferral::factory()->create(['tenant_id' => $tenant->id, 'campaign_id' => $campaign->id, 'employee_id' => $person->id, 'told' => 'portal']);
     workIn($tenant);
     Illuminate\Support\Facades\Auth::logout();
+    Illuminate\Support\Facades\Notification::fake();
+    // She enters with a link, and the message takes a recent proof first: a code by email (WorkerAccess).
+    $reach = fn (Pest\Browser\Api\AwaitableWebpage $page): mixed => provedWithCode(enteringTo($person->id, 'Confirme que es usted')($page), 'Confidencial');
 
-    visitPage('results/portal-support', route('portal.support.show', $tenant->slug, absolute: false), $dark, $mobile, enteringTo($person->id, 'Confidencial'))
+    visitPage('results/portal-support', route('portal.support.show', $tenant->slug, absolute: false), $dark, $mobile, $reach)
         ->assertSee('Le proponemos acudir a su Unidad de Medicina Familiar del IMSS')
         ->assertSee('Confidencial');
 })->with($looks);

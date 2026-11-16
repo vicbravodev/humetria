@@ -13,6 +13,8 @@ use App\Modules\Results\Support\SupportWorkerSection;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Carbon;
@@ -77,6 +79,28 @@ it('shows the person their message as «usted», with where it proposes they go 
         ->where('on', '4 nov 2026')
         ->where('message', 'Por lo que contestó en la encuesta, la empresa quiere ofrecerle apoyo. Es confidencial y no afecta su trabajo. Le proponemos acudir a la institución que prefiera. Si tiene dudas, puede hablar con Recursos Humanos.'));
     expect((string) $response->getContent())->not->toContain('Nota privada');
+});
+
+it('gives the message only after a recent proof that it is the person, saying nothing of it before', function (EntryVia $via, int $minutes): void {
+    channelAna('portal');
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
+
+    $refused = $this->get(route('portal.support.show', $this->slug))->assertRedirect(route('worker.proof.show', $this->slug));
+    $proof = $this->get(route('worker.proof.show', $this->slug))->assertOk()->assertInertia(fn (Assert $page) => $page->component('worker-access/proof'));
+    expect((string) $refused->getContent().json_encode($proof->viewData('page')['props'], JSON_THROW_ON_ERROR))->not->toContain('apoyo')->not->toContain('IMSS')->not->toContain('me/acme/support');
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->get(route('portal.support.show', $this->slug))->assertOk()->assertInertia(fn (Assert $page) => $page->component('results/portal-support'));
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
+
+it('asks for the proof the same whether a message waits or not', function (): void {
+    enteredAs($this->ana->id, EntryVia::RequestedLink);
+
+    $this->get(route('portal.support.show', $this->slug))->assertRedirect(route('worker.proof.show', $this->slug));
 });
 
 it('has no message for a person told in person', function (): void {
