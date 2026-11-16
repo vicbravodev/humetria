@@ -8,6 +8,7 @@ use App\Modules\Demos\Actions\CloseDoor;
 use App\Modules\Demos\Actions\OpenDoor;
 use App\Modules\Demos\Actions\ReadDoorState;
 use App\Modules\Demos\Contracts\DemoDoorPool;
+use App\Modules\Demos\Contracts\DemoEntrance;
 use App\Modules\Demos\Models\DoorAssignment;
 use App\Modules\Demos\Models\DoorSession;
 use App\Modules\Organization\Models\Employee;
@@ -380,4 +381,25 @@ it('leaks nothing in the headers of the door', function (): void {
     }
 
     expect($redirect->headers->get('Location'))->toStartWith(url('/me/alba/link/'));
+});
+
+it('issues no way in from a company that is not the demo', function (): void {
+    demoDoorFixture($this);
+    $other = Tenant::factory()->create();
+    $stranger = Employee::factory()->create(['tenant_id' => $other->id])->id;
+    usePool([$stranger]);
+    workIn($other);
+
+    expect(fn (): string => resolve(DemoEntrance::class)->for($stranger))->toThrow(LogicException::class, 'demo');
+    expect(WorkerAccessLink::query()->withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('issues no way in for a demo person the door does not hand out', function (): void {
+    [$first] = demoDoorFixture($this, 1);
+    $kept = Employee::factory()->create(['tenant_id' => $this->demo->id])->id;
+    workIn($this->demo);
+
+    expect(fn (): string => resolve(DemoEntrance::class)->for($kept))->toThrow(InvalidArgumentException::class, 'door');
+    expect(WorkerAccessLink::query()->withoutGlobalScopes()->count())->toBe(0)
+        ->and(resolve(DemoEntrance::class)->for($first))->toStartWith(url('/me/alba/link/'));
 });
