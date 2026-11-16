@@ -33,7 +33,7 @@ final class StandingQuestions extends Notification implements MailBag
             ->line('Queremos saber cómo es su calzado y si ha sentido alguna molestia al trabajar de pie. Con eso decidimos qué asiento y qué descansos le corresponden.')
             ->action('Contestar ahora', $this->url)
             ->line('Contestar es voluntario y toma un minuto. No tiene ninguna consecuencia si prefiere no hacerlo.')
-            ->line('Este enlace es solo suyo: no lo comparta. Si su empresa le envía uno nuevo, el anterior deja de funcionar.');
+            ->line('Este enlace es solo suyo: no lo comparta.');
     }
 
     public function mailBag(): string

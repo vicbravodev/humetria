@@ -10,7 +10,6 @@ use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Seating\Notifications\StandingQuestions;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -61,15 +60,14 @@ it('asks the person once, after the commit, when their assessment starts', funct
     Queue::assertPushed(SendStandingQuestions::class, fn (SendStandingQuestions $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->ana->id && $job instanceof ShouldQueueAfterCommit);
 });
 
-it('emails the 2 questions, as usted, with the link to their Ley Silla page and nothing they answered', function (): void {
+it('emails the 2 questions, as usted, with the address of their Ley Silla page (no credential) and nothing they answered', function (): void {
     Notification::fake();
     Log::spy();
     startAna();
-    $token = resolve(IssuePortalLink::class)->handle($this->ana->id);
 
     sendQuestions();
 
-    Notification::assertSentOnDemand(StandingQuestions::class, function (StandingQuestions $notification, array $channels, AnonymousNotifiable $notifiable) use ($token): bool {
+    Notification::assertSentOnDemand(StandingQuestions::class, function (StandingQuestions $notification, array $channels, AnonymousNotifiable $notifiable): bool {
         $mail = $notification->toMail($notifiable);
         $html = (string) $mail->render();
 
@@ -79,9 +77,10 @@ it('emails the 2 questions, as usted, with the link to their Ley Silla page and 
             && $mail->greeting === 'Hola, Ana Ruiz'
             && $mail->introLines === ['Queremos saber cómo es su calzado y si ha sentido alguna molestia al trabajar de pie. Con eso decidimos qué asiento y qué descansos le corresponden.']
             && $mail->actionText === 'Contestar ahora'
-            && $mail->actionUrl === route('portal.seating.show', $token)
+            && $mail->actionUrl === route('portal.seating.show', $this->tenant->slug)
             && str_contains($html, 'Contestar es voluntario y toma un minuto. No tiene ninguna consecuencia si prefiere no hacerlo.')
-            && str_contains($html, 'Acme</span>');
+            && str_contains($html, 'Acme</span>')
+            && ! str_contains($html, 'el anterior deja de funcionar');
     });
     Log::shouldHaveReceived('info')->with('seating.standing_questions_sent', ['employee_id' => $this->ana->id]);
 });

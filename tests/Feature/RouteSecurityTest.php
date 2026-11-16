@@ -39,10 +39,6 @@ function publicRouteNames(): array
         'engagement.survey.show', // guest: la persona abre la encuesta de clima o pulso desde su correo; el token del enlace es la credencial; no muestra nada de nadie; un enlace inválido, usado o cancelado no dice por qué; throttled
         'engagement.survey.submit', // guest: envía la encuesta completa una sola vez, bajo candado; el token es la credencial; throttled
         'portal.show', // guest: el inicio del portal por enlace, mientras las demás herramientas abren sus páginas con él (hasta el paso 9 del diseño de WorkerAccess); el token es la credencial; su sección de teletrabajo lleva a las páginas de la persona, sin credencial; throttled
-        'portal.seating.show', // guest: la persona ve su página de Ley Silla; el token del portal es la credencial; solo ve lo suyo; un enlace no válido da 404 sin decir nada más; throttled
-        'portal.seating.inputs.store', // guest: la persona envía su calzado y sus molestias, de forma voluntaria y tras aceptar el aviso; el token del portal es la credencial; throttled
-        'portal.seating.acknowledgments.store', // guest: la persona confirma, una sola vez, que le informaron de su evaluación; el token del portal es la credencial; solo la suya; throttled
-        'portal.seating.reports.store', // guest: la persona reporta un asiento dañado sin que se guarde quién; el token del portal es la credencial; throttled
         'portal.feedback.show', // guest: la persona con equipo a cargo ve el resultado agregado de su grupo; el token del portal es la credencial; nunca respuestas ni textos de nadie; throttled
         'portal.policy.show', // guest: la persona lee la política vigente de su centro y su propio estado de acuse; el token del portal es la credencial; solo ve lo suyo y lo que la empresa publicó; un enlace no válido da 404 sin decir nada más; throttled
         'portal.climate.show', // guest: la persona lee lo que la empresa publicó tras la encuesta de clima: participación, índice y compromisos de la empresa y de sus propios grupos; el token del portal es la credencial; nada individual; 404 si no hay nada publicado; throttled

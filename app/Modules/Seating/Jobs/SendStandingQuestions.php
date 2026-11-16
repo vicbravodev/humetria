@@ -9,8 +9,8 @@ use App\Modules\Seating\Enums\AssessmentStatus;
 use App\Modules\Seating\Models\PersonInput;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Notifications\StandingQuestions;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Asks a person the 2 questions of their Ley Silla page while their assessment waits, with their personal link derived here.
+ * Asks a person the 2 questions of their Ley Silla page while their assessment waits, with the address of their Ley Silla page (no credential: they enter first).
  * Only ids travel in the job. Nothing is sent once they answered after it started, when it is signed, when they have no
  * email or left, or when the company may not be used; a person has at most one waiting.
  */
@@ -43,7 +43,7 @@ final class SendStandingQuestions implements ShouldBeUniqueUntilProcessing, Shou
         return "{$this->tenantId}:{$this->employeeId}";
     }
 
-    public function handle(Companies $companies, Roster $roster, PortalAccess $access): void
+    public function handle(Companies $companies, Roster $roster, WorkerLinks $links): void
     {
         $company = $companies->enter($this->tenantId);
         $person = $roster->find($this->employeeId);
@@ -58,7 +58,7 @@ final class SendStandingQuestions implements ShouldBeUniqueUntilProcessing, Shou
             return;
         }
 
-        Notification::route('mail', $person->email)->notify(new StandingQuestions($company, $person->name, route('portal.seating.show', $access->token($person->id))));
+        Notification::route('mail', $person->email)->notify(new StandingQuestions($company, $person->name, $links->to('portal.seating.show')));
         Log::info('seating.standing_questions_sent', ['employee_id' => $person->id]);
     }
 }

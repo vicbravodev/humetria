@@ -22,7 +22,7 @@ use Database\Factories\Telework\TeleworkerFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** Opening the link once (the middleware and the page share it) and what each listed tool reads for its section. */
-const PORTAL_HOME_QUERIES = 25;
+const PORTAL_HOME_QUERIES = 21;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -52,15 +52,12 @@ it('has only «Mi jornada» for a person with nothing in any other tool («Mi eq
     expect(array_keys(portalSections($this->token)))->toBe(['attendance']);
 });
 
-it('lists Ley Silla for a person who is not a teleworker, and not the telework tool nor vacations (in the person\'s start, in their session)', function (): void {
+it('leaves vacations and Ley Silla out of the start by link: they are in the person\'s start, in their session', function (): void {
     LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
     PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     portalPlan(['vacations', 'seating']);
 
-    $sections = portalSections($this->token);
-
-    expect(array_keys($sections))->toBe(['seating'])
-        ->and($sections['seating']['href'])->toBe(route('portal.seating.show', $this->token));
+    expect(portalSections($this->token))->toBe([]);
 });
 
 it('puts the telework tool first, with the pending items of the person, at their page with no credential', function (): void {
@@ -75,11 +72,14 @@ it('puts the telework tool first, with the pending items of the person, at their
 });
 
 it('drops the section of a tool the company no longer has', function (): void {
-    LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
-    PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    portalPlan(['nom035']);
+
+    expect(array_keys(portalSections($this->token)))->toBe(['policy']);
+
     portalPlan(['seating']);
 
-    expect(array_keys(portalSections($this->token)))->toBe(['seating']);
+    expect(portalSections($this->token))->toBe([]);
 });
 
 it('tells the person the policy that waits for them', function (): void {
@@ -132,7 +132,7 @@ it('keeps the order fixed and sends nothing of another person', function (): voi
     $bea = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Bea Paz']);
     Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $bea->id]);
 
-    expect(array_keys(portalSections($this->token)))->toBe(['attendance', 'seating', 'center']);
+    expect(array_keys(portalSections($this->token)))->toBe(['attendance', 'center']);
     $this->get(route('portal.show', $this->token))->assertInertia(function (Assert $page): void {
         expect(json_encode($page->toArray()['props'], JSON_THROW_ON_ERROR))->not->toContain('Bea Paz')->not->toContain($this->token.'x');
     });

@@ -7,7 +7,6 @@ use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -38,7 +37,7 @@ beforeEach(function (): void {
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
     $this->cora = memberOf($this->tenant, TenantRole::Committee);
     CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $this->cora->id]);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
     $this->logged = [];
     Log::listen(function (MessageLogged $event): void {
         $this->logged[] = json_encode([$event->message, $event->context]);
@@ -48,7 +47,7 @@ beforeEach(function (): void {
 /** Runs the whole path of a person's health data and the survey, as the people involved would. */
 function runHealthFlows(object $test): void
 {
-    $test->post(route('portal.seating.inputs.store', $test->token), ['footwear' => 3, 'discomfort' => 3, 'note' => 'NOTA-SALUD-SECRETA', 'accepted' => '1'])->assertSessionHasNoErrors();
+    $test->post(route('portal.seating.inputs.store', $test->slug), ['footwear' => 3, 'discomfort' => 3, 'note' => 'NOTA-SALUD-SECRETA', 'accepted' => '1'])->assertSessionHasNoErrors();
     $draft = RiskAssessment::factory()->create([
         'tenant_id' => $test->tenant->id, 'employee_id' => $test->ana->id, 'position_id' => $test->position->id, 'work_center_id' => $test->center->id,
         'scores' => ['standing_time' => 3, 'posture_change' => 2, 'surface' => 3, 'footwear' => 3, 'movement_space' => 2, 'discomfort' => 3, 'pauses' => 2],
@@ -56,8 +55,8 @@ function runHealthFlows(object $test): void
     ]);
     $test->actingAs($test->cora)->post(route('tenant.seating.assessments.sign', [$test->tenant, $draft->id]))->assertSessionHasNoErrors();
     $test->actingAs($test->hr)->post(route('tenant.seating.referrals.store', [$test->tenant, $draft->id]), ['referred' => true, 'referred_on' => '2026-03-01', 'note' => 'NOTA-CANALIZACION-SECRETA'])->assertSessionHasNoErrors();
-    $test->post(route('portal.seating.acknowledgments.store', $test->token))->assertSessionHasNoErrors();
-    $test->post(route('portal.seating.reports.store', $test->token), ['description' => 'DESCRIPCION-REPORTE-SECRETA'])->assertSessionHasNoErrors();
+    $test->post(route('portal.seating.acknowledgments.store', $test->slug))->assertSessionHasNoErrors();
+    $test->post(route('portal.seating.reports.store', $test->slug), ['description' => 'DESCRIPCION-REPORTE-SECRETA'])->assertSessionHasNoErrors();
     $test->actingAs($test->hr)->post(route('tenant.seating.survey.launch', [$test->tenant, $test->center->id]), ['closes_on' => '2026-03-12'])->assertSessionHasNoErrors();
     $participant = Participant::query()->where('employee_id', $test->ana->id)->sole();
     $participant->forceFill(['token_hash' => Participant::hashToken('survey-token')])->save();

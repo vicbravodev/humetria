@@ -9,7 +9,6 @@ use App\Modules\Seating\Http\Controllers\SeatReportController;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\SeatReport;
 use App\Modules\Seating\Models\StandingPosition;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -29,7 +28,7 @@ beforeEach(function (): void {
     $this->position = StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => 'Cajera']);
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => 'Ana Ruiz']);
     PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id]);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
     $this->cora = memberOf($this->tenant, TenantRole::Committee);
     CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $this->cora->id]);
@@ -38,8 +37,8 @@ beforeEach(function (): void {
 it('takes the report of a damaged seat from the portal, tied to the center and the position and to nobody', function (): void {
     Log::spy();
 
-    $this->post(route('portal.seating.reports.store', $this->token), ['description' => 'Se le cayó el respaldo a la silla de la caja 2.'])
-        ->assertRedirect(route('portal.seating.show', $this->token))->assertSessionHasNoErrors();
+    $this->post(route('portal.seating.reports.store', $this->slug), ['description' => 'Se le cayó el respaldo a la silla de la caja 2.'])
+        ->assertRedirect(route('portal.seating.show', $this->slug))->assertSessionHasNoErrors();
 
     $report = SeatReport::query()->sole();
     expect($report->work_center_id)->toBe($this->center->id)
@@ -53,8 +52,8 @@ it('takes the report of a damaged seat from the portal, tied to the center and t
 });
 
 it('rejects an empty or too long description and a link that is not valid', function (): void {
-    $this->post(route('portal.seating.reports.store', $this->token), ['description' => ' '])->assertSessionHasErrors('description');
-    $this->post(route('portal.seating.reports.store', $this->token), ['description' => str_repeat('a', 1001)])->assertSessionHasErrors('description');
+    $this->post(route('portal.seating.reports.store', $this->slug), ['description' => ' '])->assertSessionHasErrors('description');
+    $this->post(route('portal.seating.reports.store', $this->slug), ['description' => str_repeat('a', 1001)])->assertSessionHasErrors('description');
     $this->post(route('portal.seating.reports.store', 'nope'), ['description' => 'Algo'])->assertNotFound();
 
     expect(SeatReport::query()->count())->toBe(0);

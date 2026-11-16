@@ -7,10 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { store } from '@/routes/portal/seating/reports';
 
 /** Reports a damaged seat. It does not record who reported: the person only says what is wrong. */
-export default function PortalSeatReport({ token }: { token: string }) {
+export default function PortalSeatReport({ slug }: { slug: string }) {
     return (
         <Form
-            {...store.form({ token })}
+            {...store.form(slug)}
             options={{ preserveScroll: true }}
             resetOnSuccess
             className="flex flex-col gap-3 card p-5"

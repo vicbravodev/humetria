@@ -12,7 +12,6 @@ use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -210,9 +209,9 @@ it('tells the person, when they confirm, the measures that apply to them and not
     }
     PreventiveMeasure::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'position_id' => $this->position->id, 'kind' => 'cushioned_floor']);
     PreventiveMeasure::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'position_id' => StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id])->id, 'kind' => 'active_breaks']);
-    $token = resolve(IssuePortalLink::class)->handle($this->ana->id);
+    $slug = asPerson($this->ana->id);
 
-    $this->get(route('portal.seating.show', $token))->assertInertia(fn (Assert $page) => $page->where('acknowledgment.measures', fn ($measures) => collect($measures)->sort()->values()->all() === collect(['Acondicionar el piso con superficie amortiguada', 'Alternar tareas para cambiar de postura'])->sort()->values()->all()));
+    $this->get(route('portal.seating.show', $slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment.measures', fn ($measures) => collect($measures)->sort()->values()->all() === collect(['Acondicionar el piso con superficie amortiguada', 'Alternar tareas para cambiar de postura'])->sort()->values()->all()));
 });
 
 it('refuses in the database a measure with an unknown kind or status, or tied to nothing', function (): void {

@@ -7,8 +7,8 @@ namespace App\Modules\Seating\Actions;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Seating\Events\PersonInputSubmitted;
 use App\Modules\Seating\Models\PersonInput;
-use App\Modules\Telework\Data\PortalIdentity;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -21,9 +21,9 @@ final readonly class SubmitPersonInput
 {
     public function __construct(private CurrentTenant $tenant, private Roster $roster) {}
 
-    public function handle(PortalIdentity $person, int $footwear, int $discomfort, ?string $note): PersonInput
+    public function handle(WorkerIdentity $person, int $footwear, int $discomfort, ?string $note): PersonInput
     {
-        // The identity was opened a moment ago, so the person is in the roster.
+        // The session holds only for an active person, so the person is in the roster.
         $workCenterId = ($this->roster->find($person->employeeId) ?? throw new InvalidArgumentException('The person is not in the roster.'))->workCenterId;
 
         $now = now();
