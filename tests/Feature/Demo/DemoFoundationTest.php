@@ -19,6 +19,12 @@ use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoPerson;
 use Database\Seeders\Demo\DemoRoster;
 use Database\Seeders\Demo\DemoWorkspaceRunner;
+use Illuminate\Support\Facades\Bus;
+
+// In production the invitation jobs run later on the queue: preparing the demo does not wait for them (and it is twice as fast).
+beforeEach(function (): void {
+    Bus::fake();
+});
 
 /** The demo company's people, by the name of their work center. */
 function demoHeadcount(string $tenantId): array
