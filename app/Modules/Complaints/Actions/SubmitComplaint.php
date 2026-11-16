@@ -27,7 +27,8 @@ use Illuminate\Support\Facades\Notification;
 /**
  * Receives a complaint from the public form. Nothing identifies the person: no address, browser, cookie or hour is kept,
  * only the day. The person leaves with a reference and a key; the key is kept as a hash. The log line carries no id, so
- * that no line can be tied to a case by the moment it was written (criterio C-46).
+ * that no line can be tied to a case by the moment it was written (criterio C-46). Past the channel's daily cap the complaint is
+ * still received, but held: nobody is assigned or mailed until `ReleaseHeldComplaints` frees it on a later day.
  */
 final readonly class SubmitComplaint
 {
@@ -43,15 +44,22 @@ final readonly class SubmitComplaint
     ) {}
 
     /**
-     * @throws ChannelOverCap
+     * @throws ChannelOverCap when even the held complaints of the day reached their ceiling.
      */
     public function handle(ComplaintChannel $channel, ComplaintInput $input): Receipt
     {
         $today = Dates::today();
-        $this->guardCap($channel, $today->toDateString());
+        $held = $this->overCap($channel, $today->toDateString());
 
         $key = RandomCode::make(20);
-        $reference = $this->store($channel, $input, $key, $today->toDateString());
+        $reference = $this->store($channel, $input, $key, $today->toDateString(), $held);
+
+        // A held complaint is receipted like any other, but nobody is told of it until it is released (the next day).
+        if ($held) {
+            Log::info('complaint.held', ['channel_id' => $channel->id]);
+
+            return new Receipt($reference, $key);
+        }
 
         Log::info('complaints.submitted', ['channel_id' => $channel->id, 'type' => $input->type->value, 'identity_mode' => $input->identityMode->value]);
         $this->notifier->received($channel, $input->notifyEmail);
@@ -59,13 +67,13 @@ final readonly class SubmitComplaint
         return new Receipt($reference, $key);
     }
 
-    private function store(ComplaintChannel $channel, ComplaintInput $input, string $key, string $day): string
+    private function store(ComplaintChannel $channel, ComplaintInput $input, string $key, string $day, bool $held): string
     {
         for ($attempt = 1; ; $attempt++) {
             $reference = $this->references->next();
 
             try {
-                DB::transaction(function () use ($channel, $input, $key, $day, $reference): void {
+                DB::transaction(function () use ($channel, $input, $key, $day, $reference, $held): void {
                     $complaint = Complaint::query()->create([
                         'tenant_id' => $this->tenant->id(),
                         'channel_id' => $channel->id,
@@ -85,8 +93,12 @@ final readonly class SubmitComplaint
                         'involved_text' => $input->involvedText,
                         'occurred_on' => $input->occurredOn,
                         'received_on' => $day,
+                        'held' => $held,
                     ]);
-                    $this->assign->handle($complaint);
+
+                    if (! $held) {
+                        $this->assign->handle($complaint);
+                    }
                 });
 
                 return $reference;
@@ -98,12 +110,15 @@ final readonly class SubmitComplaint
         }
     }
 
-    private function guardCap(ComplaintChannel $channel, string $day): void
+    /** Whether the channel is past its daily cap, in which case the complaint is held. */
+    private function overCap(ComplaintChannel $channel, string $day): bool
     {
         $cap = config()->integer('complaints.rate_limits.daily_cap');
 
-        if (Complaint::query()->where('channel_id', $channel->id)->whereDate('received_on', $day)->count() < $cap) {
-            return;
+        $today = Complaint::query()->where('channel_id', $channel->id)->whereDate('received_on', $day);
+
+        if ((clone $today)->where('held', false)->count() < $cap) {
+            return false;
         }
 
         // Once a day, the people who manage the channel are told: how many, never what.
@@ -117,6 +132,11 @@ final readonly class SubmitComplaint
             Log::info('complaints.cap_reached', ['channel_id' => $channel->id]);
         }
 
-        throw new ChannelOverCap;
+        // The held ones are bounded too, so the table is.
+        if ((clone $today)->where('held', true)->count() >= config()->integer('complaints.held_cap')) {
+            throw new ChannelOverCap;
+        }
+
+        return true;
     }
 }

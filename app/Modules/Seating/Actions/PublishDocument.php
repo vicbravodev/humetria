@@ -43,7 +43,7 @@ final readonly class PublishDocument
                 'uploaded_by' => $userId,
             ]);
         } catch (Throwable $failure) {
-            $this->files->delete($path);
+            $this->files->discard($path);
 
             throw $failure;
         }

@@ -18,6 +18,7 @@ use App\Modules\Telework\Support\PhotoStore;
 use App\Modules\Telework\Support\Settings;
 use App\Modules\Telework\Support\WorkplaceAddress;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -78,6 +79,8 @@ final class PortalChecklistController extends Controller
         }
 
         $found = $this->application($portal, $application);
+        // Before storing: a refused send must not take the company's quota.
+        throw_if($found->submitted_at !== null, ValidationException::withMessages(['application' => 'Esta lista ya se envió.']));
         $stored = $photos->storeMany($request->photos(), "checklists/{$portal->tenantId}/{$found->id}");
 
         $submit->handle($portal, $found->id, $request->boolean('consent'), $request->answers(), $request->riskNotes(), $request->filled('special_needs') ? $request->string('special_needs')->toString() : null, $stored);

@@ -12,6 +12,7 @@ use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\RemindNextEvaluations;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
 use App\Modules\Complaints\Actions\PurgeComplaints;
+use App\Modules\Complaints\Actions\ReleaseHeldComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Engagement\Actions\AnnounceUpcomingPulses;
@@ -99,6 +100,10 @@ Artisan::command('complaints:purge', function (PurgeComplaints $purge): void {
     $this->info('Casos purgados: '.$purge->handle());
 })->purpose('Delete the content of the complaints closed longer ago than their company keeps them, leaving a skeleton with no personal data');
 
+Artisan::command('complaints:release-held', function (ReleaseHeldComplaints $release): void {
+    $this->info('Quejas liberadas: '.$release->handle());
+})->purpose('Release the complaints held past the daily cap of earlier days: assign them to their handlers as any other that arrives');
+
 Artisan::command('seating:send-digests', function (SendSeatingDigests $sendDigests): void {
     $this->info('Resúmenes enviados: '.$sendDigests->handle());
 })->purpose('Email the owner and each Comisión member what waits for them in Ley Silla');
@@ -145,6 +150,7 @@ Schedule::command('seating:schedule-checks')->dailyAt('07:30')->timezone(config(
 Schedule::command('seating:remind-questions')->dailyAt('09:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('seating:send-digests')->dailyAt('08:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:send-digests')->hourly()->onOneServer()->withoutOverlapping();
+Schedule::command('complaints:release-held')->dailyAt('00:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // Shortly after local midnight; it closes the day before yesterday, a whole day after it ended. Once is enough: closing a
 // day again gives the same day.

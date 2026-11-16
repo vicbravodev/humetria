@@ -28,7 +28,7 @@ final readonly class RouteUnassignedComplaints
         $made = DB::transaction(function () use ($byUserId): int {
             $made = 0;
 
-            foreach (Complaint::query()->where('status', '<>', ComplaintStatus::Closed->value)->whereNotIn('id', ComplaintAssignment::query()->whereNull('ended_on')->select('complaint_id'))->get() as $complaint) {
+            foreach (Complaint::query()->where('held', false)->where('status', '<>', ComplaintStatus::Closed->value)->whereNotIn('id', ComplaintAssignment::query()->whereNull('ended_on')->select('complaint_id'))->get() as $complaint) {
                 $made += $this->assign->handle($complaint, $byUserId);
             }
 

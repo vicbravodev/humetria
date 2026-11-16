@@ -17,6 +17,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -126,6 +127,19 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifyEmailNotification);
+    }
+
+    /**
+     * Emails are stored in lowercase: two accounts can never differ only by case. A saving hook, not an accessor, so
+     * strict mode still refuses to read an email that was not selected.
+     */
+    protected static function booted(): void
+    {
+        self::saving(function (User $user): void {
+            if ($user->isDirty('email')) {
+                $user->email = Str::lower(trim($user->email));
+            }
+        });
     }
 
     /**

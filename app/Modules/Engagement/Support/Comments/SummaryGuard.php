@@ -22,26 +22,29 @@ final class SummaryGuard
 
     /**
      * @param  array<array-key, mixed>  $themes  `{valued: [{theme, count}], change: [{theme, count}]}`
-     * @param  list<string>  $comments  the comments the themes were drawn from
+     * @param  list<string>  $comments  the comments the themes were drawn from, the valued ones first
+     * @param  int|null  $valuedComments  how many of them are valued ones, so each list's counts are capped by its own comments
      * @return array{valued: list<array{theme: string, count: int}>, change: list<array{theme: string, count: int}>}
      *
      * @throws UnsafeSummary
      */
-    public static function clean(array $themes, array $comments, int $minSupport): array
+    public static function clean(array $themes, array $comments, int $minSupport, ?int $valuedComments = null): array
     {
-        $windows = self::windows($comments);
+        $changeComments = $valuedComments === null ? count($comments) : count($comments) - $valuedComments;
+        $valuedComments ??= count($comments);
+        $guard = ['windows' => self::windows($comments), 'phrases' => self::phrases($comments), 'names' => self::names($comments)];
 
         return [
-            'valued' => self::list($themes['valued'] ?? null, $windows, count($comments), $minSupport),
-            'change' => self::list($themes['change'] ?? null, $windows, count($comments), $minSupport),
+            'valued' => self::list($themes['valued'] ?? null, $guard, $valuedComments, $minSupport),
+            'change' => self::list($themes['change'] ?? null, $guard, $changeComments, $minSupport),
         ];
     }
 
     /**
-     * @param  array<string, true>  $windows
+     * @param  array{windows: array<string, true>, phrases: list<string>, names: array<string, true>}  $guard
      * @return list<array{theme: string, count: int}>
      */
-    private static function list(mixed $items, array $windows, int $comments, int $minSupport): array
+    private static function list(mixed $items, array $guard, int $comments, int $minSupport): array
     {
         if (! is_array($items)) {
             throw new UnsafeSummary('The themes are not a list.');
@@ -53,9 +56,9 @@ final class SummaryGuard
                 throw new UnsafeSummary('A theme is not a text with a count.');
             }
 
-            self::check($item['theme'], $item['count'], $windows, $comments);
+            self::check($item['theme'], $item['count'], $guard, $comments);
 
-            if ($item['count'] >= $minSupport) {
+            if ($item['count'] >= $minSupport && ! self::namesSomeone($item['theme'], $guard['names'])) {
                 $kept[] = ['theme' => $item['theme'], 'count' => $item['count']];
             }
         }
@@ -64,19 +67,83 @@ final class SummaryGuard
     }
 
     /**
-     * @param  array<string, true>  $windows
+     * @param  array{windows: array<string, true>, phrases: list<string>, names: array<string, true>}  $guard
      */
-    private static function check(string $theme, int $count, array $windows, int $comments): void
+    private static function check(string $theme, int $count, array $guard, int $comments): void
     {
         if (mb_strlen($theme) > self::MAX_LENGTH || $count > $comments || preg_match('/[\d"\'«»“”‘’]/u', $theme) === 1) {
             throw new UnsafeSummary('A theme is too long, quotes, carries a figure or claims too much support.');
         }
 
         foreach (array_keys(self::windows([$theme])) as $window) {
-            if (isset($windows[$window])) {
+            if (isset($guard['windows'][$window])) {
                 throw new UnsafeSummary('A theme repeats a stretch of a comment.');
             }
         }
+
+        $normalized = ' '.implode(' ', self::words($theme)).' ';
+        foreach ($guard['phrases'] as $phrase) {
+            // Containment only counts from three words: a short comment ("Bien") is inside ordinary themes.
+            if ($normalized === $phrase || (substr_count($phrase, ' ') >= 4 && str_contains($normalized, $phrase))) {
+                throw new UnsafeSummary('A theme is or contains a whole comment.');
+            }
+        }
+    }
+
+    /**
+     * Each comment as its normalized words between spaces, to find it whole inside a theme.
+     *
+     * @param  list<string>  $comments
+     * @return list<string>
+     */
+    private static function phrases(array $comments): array
+    {
+        $phrases = [];
+        foreach ($comments as $comment) {
+            $words = self::words($comment);
+            if ($words !== []) {
+                $phrases[] = ' '.implode(' ', $words).' ';
+            }
+        }
+
+        return $phrases;
+    }
+
+    /**
+     * Words written with a capital that do not start a sentence: the cheap sign of a name.
+     *
+     * @param  list<string>  $comments
+     * @return array<string, true>
+     */
+    private static function names(array $comments): array
+    {
+        $names = [];
+        foreach ($comments as $comment) {
+            preg_match_all('/(?<![.!?¡¿]\s)(?<=\s)\p{Lu}\p{L}+/u', $comment, $found);
+            foreach ($found[0] as $name) {
+                $names[implode('', self::words($name))] = true;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * @param  array<string, true>  $names
+     */
+    private static function namesSomeone(string $theme, array $names): bool
+    {
+        return array_any(self::words($theme), fn (string $word): bool => isset($names[$word]));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function words(string $text): array
+    {
+        $words = preg_split('/[^a-z0-9]+/', mb_strtolower(Str::ascii($text)), -1, PREG_SPLIT_NO_EMPTY);
+
+        return $words === false ? [] : $words;
     }
 
     /**
@@ -89,8 +156,7 @@ final class SummaryGuard
     {
         $windows = [];
         foreach ($texts as $text) {
-            $words = preg_split('/[^a-z0-9]+/', mb_strtolower(Str::ascii($text)), -1, PREG_SPLIT_NO_EMPTY);
-            $words = $words === false ? [] : $words;
+            $words = self::words($text);
 
             for ($i = 0; $i + self::QUOTE_WORDS <= count($words); $i++) {
                 $windows[implode(' ', array_slice($words, $i, self::QUOTE_WORDS))] = true;

@@ -42,6 +42,6 @@ final class ComplaintReceived extends Notification implements MailBag
 
     public function mailBag(): string
     {
-        return MailBag::CAMPAIGN;
+        return MailBag::ESSENTIAL;
     }
 }
