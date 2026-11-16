@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Disclosure\Models\Acknowledgment;
 use App\Modules\Disclosure\Models\PageLink;
-use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Responses\Models\TraumaScreening;
@@ -22,7 +21,7 @@ use Database\Factories\Telework\TeleworkerFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** Opening the link once (the middleware and the page share it) and what each listed tool reads for its section. */
-const PORTAL_HOME_QUERIES = 17;
+const PORTAL_HOME_QUERIES = 12;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -98,21 +97,13 @@ it('offers support only to who was told through the portal', function (): void {
     expect(portalSections($this->token)['support']['href'])->toBe(route('portal.support.show', $this->token));
 });
 
-it('offers the climate page once the company published what it will do', function (): void {
+it('leaves the climate and the feedback pages out of the start by link: they are in the person\'s start, in their session', function (): void {
     $survey = climateResultsSurvey($this->tenant, 12);
     $survey->update(['invited' => 20, 'results_published_at' => now()]);
-    Invitation::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $survey->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->center->id]);
     App\Modules\Engagement\Models\Commitment::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $survey->id]);
+    climateManagerSurvey($this->tenant, [$this->ana->id => [6, 5]]);
 
-    expect(portalSections($this->token)['climate']['href'])->toBe(route('portal.climate.show', $this->token));
-});
-
-it('offers the feedback page to a manager whose group is shown', function (): void {
-    $other = Employee::factory()->create(['tenant_id' => $this->tenant->id]);
-    climateManagerSurvey($this->tenant, [$this->ana->id => [6, 5], $other->id => [6, 1]]);
-
-    expect(portalSections($this->token)['feedback']['href'])->toBe(route('portal.feedback.show', $this->token))
-        ->and(portalSections(resolve(IssuePortalLink::class)->handle($other->id)))->toHaveKey('feedback');
+    expect(portalSections($this->token))->not->toHaveKeys(['climate', 'feedback']);
 });
 
 it('keeps the order fixed and sends nothing of another person', function (): void {

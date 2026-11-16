@@ -8,7 +8,6 @@ use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Response;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\File;
@@ -102,28 +101,30 @@ it('keeps every individual response and comment out of the props of every page o
         }
     }
 
-    // The two pages of the portal, for the manager of the group.
-    $link = (string) resolve(IssuePortalLink::class)->handle($ana->id);
+    // The two pages of the person, for the manager of the group, in their session.
+    $slug = asPerson($ana->id);
     foreach (['portal.climate.show', 'portal.feedback.show'] as $name) {
-        $this->get(route($name, $link))->assertOk()->assertInertia(fn (Assert $page) => expectNoEngagementResponses($page->toArray()['props']));
+        $this->get(route($name, $slug))->assertOk()->assertInertia(fn (Assert $page) => expectNoEngagementResponses($page->toArray()['props']));
         $visited[] = $name;
     }
 
     expect($visited)->toContain('tenant.climate.index', 'tenant.climate.show', 'tenant.climate.results', 'tenant.climate.results.items', 'tenant.climate.comments', 'tenant.climate.commitments.index', 'tenant.climate.managers', 'tenant.climate.managers.show', 'portal.climate.show', 'portal.feedback.show');
 });
 
-it('names every route of climate and puts it behind auth, unless it is a link with its own token', function (): void {
+it('names every route of climate and puts it behind auth, unless it is a link with its own token or a page of the person behind their session', function (): void {
     $tokenLinks = [
         'engagement.survey.show', // the person opens the survey from their email; the token is the credential
         'engagement.survey.submit', // sends the survey once; the token is the credential
-        'portal.climate.show', // what the company will do; the portal token is the credential
-        'portal.feedback.show', // the manager's feedback; the portal token is the credential
+    ];
+    $personPages = [
+        'portal.climate.show', // what the company will do; the person's session says who they are
+        'portal.feedback.show', // the manager's feedback; the person's session says whose group it is
     ];
     $seen = 0;
 
     foreach (Route::getRoutes()->getRoutes() as $route) {
         $uri = $route->uri();
-        $isClimate = str_contains($uri, '/climate') || str_starts_with($uri, 'engagement/') || (str_starts_with($uri, 'portal/') && str_ends_with($uri, '/feedback'));
+        $isClimate = str_contains($uri, '/climate') || str_starts_with($uri, 'engagement/') || (str_starts_with($uri, 'me/') && str_ends_with($uri, '/feedback'));
         if (! $isClimate) {
             continue;
         }
@@ -131,7 +132,9 @@ it('names every route of climate and puts it behind auth, unless it is a link wi
         $seen++;
         $name = (string) $route->getName();
         expect($name)->not->toBe('');
-        expect(in_array('auth', $route->gatherMiddleware(), true) || in_array($name, $tokenLinks, true))->toBeTrue("{$name} has no auth and is not a link with its own token");
+        $middleware = $route->gatherMiddleware();
+        $guarded = in_array('auth', $middleware, true) || in_array($name, $tokenLinks, true) || (in_array($name, $personPages, true) && in_array(App\Modules\WorkerAccess\Http\Middleware\RequireWorkerSession::class, $middleware, true));
+        expect($guarded)->toBeTrue("{$name} has no auth, is not a link with its own token and is not a page of the person behind their session");
     }
 
     expect($seen)->toBeGreaterThan(20);

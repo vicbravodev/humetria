@@ -1,11 +1,11 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Target } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import { Target } from 'lucide-react';
 import HeardWillDo from '@/components/engagement/portal/heard-will-do';
 import PortalParticipation from '@/components/engagement/portal/portal-participation';
 import SurveyShell from '@/components/engagement/survey/survey-shell';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
-import { show } from '@/routes/portal';
+import WorkerHomeLink from '@/components/worker-home-link';
 import type { PortalClimate } from '@/types';
 
 /**
@@ -13,7 +13,7 @@ import type { PortalClimate } from '@/types';
  * will do about it, for the whole company and for the groups the person belongs to.
  */
 export default function PortalClimatePage({
-    token,
+    slug,
     company,
     survey,
     participation,
@@ -24,13 +24,7 @@ export default function PortalClimatePage({
         <SurveyShell company={company} label="Personal">
             <Head title="Lo que dijeron y lo que haremos" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
-                <Link
-                    href={show.url({ token })}
-                    className="touch-hit flex w-fit items-center gap-1.5 text-base font-medium text-primary"
-                >
-                    <ArrowLeft aria-hidden className="size-4" />
-                    Volver a mi portal
-                </Link>
+                <WorkerHomeLink slug={slug} />
                 <div className="flex flex-col gap-2">
                     <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
                         Lo que dijeron y lo que haremos

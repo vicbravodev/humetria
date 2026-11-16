@@ -7,20 +7,20 @@ namespace App\Modules\Engagement\Support;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Models\Invitation;
-use App\Modules\Telework\Contracts\PortalSection;
-use App\Modules\Telework\Data\PortalIdentity;
-use App\Modules\Telework\Data\PortalSectionLink;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerSection;
+use App\Modules\WorkerAccess\Data\WorkerIdentity;
+use App\Modules\WorkerAccess\Data\WorkerSectionLink;
 
 /**
- * «Encuesta de clima» or «Pulso» in the home of the portal, while the person has an invitation to an open survey they have
+ * «Encuesta de clima» or «Pulso» in the person's start, while the person has an invitation to an open survey they have
  * not answered: the link is the one of their email (derived, never stored). Nothing here leads to the answers.
  */
-final readonly class SurveyPortalSection implements PortalSection
+final readonly class SurveyWorkerSection implements WorkerSection
 {
     public function __construct(private Companies $companies) {}
 
-    public function for(PortalIdentity $person, string $token): ?PortalSectionLink
+    public function for(WorkerIdentity $person): ?WorkerSectionLink
     {
         $open = Invitation::query()
             ->where('employee_id', $person->employeeId)
@@ -48,6 +48,6 @@ final readonly class SurveyPortalSection implements PortalSection
 
         $label = $first->survey?->kind === SurveyKind::Pulse ? 'Pulso' : 'Encuesta de clima';
 
-        return new PortalSectionLink('engagement', $label, 'Cuéntenos cómo está su trabajo. Es anónima: su empresa solo ve resultados de grupos.', route('engagement.survey.show', $first->surveyToken()), $open->count());
+        return new WorkerSectionLink('engagement', $label, 'Cuéntenos cómo está su trabajo. Es anónima: su empresa solo ve resultados de grupos.', route('engagement.survey.show', $first->surveyToken()), $open->count());
     }
 }

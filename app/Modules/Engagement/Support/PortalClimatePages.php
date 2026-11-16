@@ -12,13 +12,13 @@ use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Results\SurveyResults;
-use App\Modules\Telework\Data\PortalIdentity;
+use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * «Nos dijeron / Haremos» as a person reads it in their portal: how many answered and how the company stands, if it is
+ * «Nos dijeron / Haremos» as a person reads it in their pages: how many answered and how the company stands, if it is
  * big enough to say so, and the commitments of the company and of the groups the person was invited in. Never a response,
  * a comment, or a result of a group: the person reads what will be done, not what a group answered.
  */
@@ -40,7 +40,7 @@ final readonly class PortalClimatePages
     /**
      * @return array<string, mixed>
      */
-    public function props(Survey $survey, PortalIdentity $person, string $token): array
+    public function props(Survey $survey, WorkerIdentity $person, string $slug): array
     {
         $results = SurveyResults::for($survey);
         $company = $results->company();
@@ -48,9 +48,9 @@ final readonly class PortalClimatePages
         $shown = resolve(Thresholds::class)->met($company->responses);
 
         return [
-            'token' => $token,
-            'company' => $person->company,
-            'name' => $person->name,
+            'slug' => $slug,
+            'company' => $person->companyName,
+            'name' => $person->personName,
             'survey' => ['name' => $survey->name],
             'participation' => $shown && $invited > 0 ? ['percent' => min(100, intdiv(200 * $company->responses + $invited, 2 * $invited))] : null,
             'index' => $shown ? $company->index : null,

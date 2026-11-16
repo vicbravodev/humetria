@@ -6,11 +6,15 @@ use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 
-/** Ana, invited to a published climate survey whose company and area (Ventas) have commitments. */
-function climatePortal(): string
+/**
+ * Ana, invited to a published climate survey whose company and area (Ventas) have commitments: the address of her page and
+ * the steps that take her there through the entrance.
+ *
+ * @return array{string, Closure}
+ */
+function climatePortal(): array
 {
     $tenant = Tenant::factory()->create(['slug' => 'acme', 'trade_name' => 'Autopartes Demo']);
     $sales = Area::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Ventas']);
@@ -22,11 +26,13 @@ function climatePortal(): string
     Commitment::factory()->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'heard' => 'Que el buen trabajo no se reconoce.', 'will_do' => 'Reconocer por escrito cada logro del mes.', 'owner_name' => 'Ana Torres']);
     Commitment::factory()->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'group_type' => 'area', 'group_id' => $sales->id, 'will_do' => 'Revisar las metas de Ventas cada mes.']);
 
-    return '/portal/'.resolve(IssuePortalLink::class)->handle($ana->id).'/climate';
+    return ['/me/acme/climate', enteringTo($ana->id, 'Lo que dijeron y lo que haremos')];
 }
 
 it('shows the person what the company heard and will do, in their own frame, on a phone and a desktop', function (bool $dark, bool $mobile): void {
-    visitPage('engagement/portal-climate', climatePortal(), $dark, $mobile)
+    [$url, $enter] = climatePortal();
+
+    visitPage('engagement/portal-climate', $url, $dark, $mobile, $enter)
         ->assertSee('Lo que dijeron y lo que haremos')
         ->assertSee('Autopartes Demo')
         ->assertSee('Personas que contestaron')

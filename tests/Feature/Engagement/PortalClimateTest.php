@@ -7,15 +7,15 @@ use App\Modules\Engagement\Http\Controllers\PortalClimateController;
 use App\Modules\Engagement\Models\Comment;
 use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
+use App\Modules\Engagement\Support\ClimateWorkerSection;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PortalClimateController::class);
+mutates(PortalClimateController::class, ClimateWorkerSection::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -24,7 +24,7 @@ beforeEach(function (): void {
     $this->stock = Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Bodega']);
     $this->ana = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'area_id' => $this->sales->id, 'name' => 'Ana Ruiz', 'email' => 'ana@acme.test']);
     workIn($this->tenant);
-    $this->token = resolve(PortalAccess::class)->token($this->ana->id);
+    $this->slug = asPerson($this->ana->id);
     $this->survey = climateResultsSurvey($this->tenant, 12);
     $this->survey->update(['invited' => 20, 'results_published_at' => now()]);
     Invitation::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $this->survey->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id, 'area_id' => $this->sales->id]);
@@ -35,8 +35,8 @@ function portalCommitment(array $state = []): Commitment
     return Commitment::factory()->create([...$state, 'tenant_id' => test()->tenant->id, 'survey_id' => test()->survey->id]);
 }
 
-it('lives at /portal/{token}/climate, throttled like the rest of the portal', function (): void {
-    expect(route('portal.climate.show', 'abc', absolute: false))->toBe('/portal/abc/climate')
+it('lives at /me/{slug}/climate, in the person\'s pages, throttled like the rest of them', function (): void {
+    expect(route('portal.climate.show', 'acme', absolute: false))->toBe('/me/acme/climate')
         ->and(Route::getRoutes()->getByName('portal.climate.show')?->gatherMiddleware())->toContain('throttle:portal-views');
 });
 
@@ -47,7 +47,7 @@ it('shows the person what the company said it will do: the company and their own
     portalCommitment(['group_type' => 'work_center', 'group_id' => $this->plant->id, 'will_do' => 'Acción del centro']);
     portalCommitment(['will_do' => 'Acción descartada', 'status' => CommitmentStatus::Dropped]);
 
-    $this->get(route('portal.climate.show', $this->token))->assertOk()
+    $this->get(route('portal.climate.show', $this->slug))->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('engagement/portal-climate')
             ->where('company', 'Acme')
@@ -65,7 +65,7 @@ it('lists the commitments of the group of the person\'s manager', function (): v
     portalCommitment(['group_type' => 'manager', 'group_id' => $manager->id, 'will_do' => 'Acción del equipo']);
     portalCommitment(['group_type' => 'manager', 'group_id' => Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id])->id, 'will_do' => 'Acción de otro equipo']);
 
-    $this->get(route('portal.climate.show', $this->token))
+    $this->get(route('portal.climate.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->has('commitments.data', 1)->where('commitments.data.0.will_do', 'Acción del equipo'));
 });
 
@@ -74,7 +74,7 @@ it('shows only the company to someone who was not invited', function (): void {
     portalCommitment(['will_do' => 'Acción de toda la empresa']);
     portalCommitment(['group_type' => 'area', 'group_id' => $this->sales->id]);
 
-    $this->get(route('portal.climate.show', $this->token))
+    $this->get(route('portal.climate.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->has('commitments.data', 1)->where('commitments.data.0.group_name', 'Toda la empresa'));
 });
 
@@ -87,20 +87,20 @@ it('pages the commitments', function (): void {
     portalCommitment();
     portalCommitment(['group_type' => 'work_center', 'group_id' => $this->plant->id]);
 
-    $this->get(route('portal.climate.show', $this->token))
+    $this->get(route('portal.climate.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->has('commitments', fn (Assert $list) => $list->hasAll(['data', 'current_page', 'last_page', 'per_page', 'total', 'prev_page_url', 'next_page_url', 'links'])->etc())->where('commitments.total', 7)->has('commitments.data', 5));
 });
 
-it('is not found with no published survey, with one not published yet, with a link that is not valid, or without commitments', function (): void {
-    $this->get(route('portal.climate.show', 'not-a-token'))->assertNotFound();
+it('is not found with no published survey, with one not published yet, or without commitments', function (): void {
+    $this->get(route('portal.climate.show', $this->slug))->assertNotFound();
 
     portalCommitment();
     $this->survey->update(['results_published_at' => null]);
-    $this->get(route('portal.climate.show', $this->token))->assertNotFound();
+    $this->get(route('portal.climate.show', $this->slug))->assertNotFound();
 
     $this->survey->update(['results_published_at' => now()]);
     Commitment::query()->delete();
-    $this->get(route('portal.climate.show', $this->token))->assertNotFound();
+    $this->get(route('portal.climate.show', $this->slug))->assertNotFound();
 });
 
 it('shows the latest published survey', function (): void {
@@ -110,7 +110,7 @@ it('shows the latest published survey', function (): void {
     $newer->update(['results_published_at' => now(), 'name' => 'Clima · la nueva']);
     Commitment::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $newer->id, 'will_do' => 'Acción nueva']);
 
-    $this->get(route('portal.climate.show', $this->token))
+    $this->get(route('portal.climate.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->where('survey.name', 'Clima · la nueva')->where('commitments.data.0.will_do', 'Acción nueva'));
 });
 
@@ -122,7 +122,7 @@ it('does not use the survey of another company', function (): void {
     workIn($this->tenant);
     portalCommitment(['will_do' => 'Acción propia']);
 
-    $this->get(route('portal.climate.show', $this->token))
+    $this->get(route('portal.climate.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->where('survey.name', $this->survey->name)->where('commitments.data.0.will_do', 'Acción propia'));
 });
 
@@ -131,7 +131,7 @@ it('hides the participation and the index of a company too small to show', funct
     $small->update(['results_published_at' => now()->addMinute(), 'invited' => 5]);
     Commitment::factory()->create(['tenant_id' => $this->tenant->id, 'survey_id' => $small->id]);
 
-    $this->get(route('portal.climate.show', $this->token))
+    $this->get(route('portal.climate.show', $this->slug))
         ->assertInertia(fn (Assert $page) => $page->where('survey.name', $small->name)->where('participation', null)->where('index', null));
 });
 
@@ -140,10 +140,39 @@ it('never carries a response, a comment or a result of a group', function (): vo
     portalCommitment();
     portalCommitment(['group_type' => 'area', 'group_id' => $this->sales->id]);
 
-    $response = $this->get(route('portal.climate.show', $this->token))->assertOk();
+    $response = $this->get(route('portal.climate.show', $this->slug))->assertOk();
     $props = Assert::fromTestResponse($response)->toArray()['props'];
 
     expectNoEngagementResponses($props);
     expect(array_keys($props))->not->toContain('groups')->not->toContain('drivers')->not->toContain('comments')->not->toContain('priorities')
         ->and(json_encode($props, JSON_THROW_ON_ERROR))->not->toContain('Net Promoter')->not->toContain('eNPS');
+});
+
+it('sends a visitor to enter, ends the page for a person who left, and opens nothing of another company with this session', function (): void {
+    portalCommitment();
+    $other = Tenant::factory()->create();
+
+    $this->get(route('portal.climate.show', $other->slug))->assertRedirect(route('worker.home', $other->slug));
+
+    $this->ana->update(['deactivated_at' => now()]);
+    $this->get(route('portal.climate.show', $this->slug))->assertRedirect(route('worker.home', $this->slug));
+
+    session()->flush();
+    $this->get(route('portal.climate.show', $this->slug))->assertRedirect(route('worker.home', $this->slug));
+});
+
+it('offers «Nos dijeron / Haremos» in the person\'s start once the company published what it will do, at their page with no credential', function (): void {
+    $section = fn () => resolve(ClimateWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz'));
+
+    expect($section())->toBeNull();
+
+    portalCommitment();
+
+    expect($section()?->key)->toBe('climate')
+        ->and($section()?->label)->toBe('Nos dijeron / Haremos')
+        ->and($section()?->href)->toBe(route('portal.climate.show', $this->tenant->slug))
+        ->and($section()?->pending)->toBeNull();
+
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['pulse'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+    expect($section())->toBeNull();
 });

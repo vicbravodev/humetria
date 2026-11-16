@@ -12,7 +12,7 @@ use App\Modules\Complaints\Support\ComplaintsPortalSection;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\SurveyClock;
-use App\Modules\Engagement\Support\SurveyPortalSection as EngagementSurveySection;
+use App\Modules\Engagement\Support\SurveyWorkerSection as EngagementSurveySection;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Contracts\CompanyModules;
@@ -55,6 +55,17 @@ function singleLinkEvaluationInvitation(Employee $person, Campaign $campaign, bo
     ($guideLeft ? $guide : $guide->completed())->create();
 
     return $participant;
+}
+
+/** @return array<string, mixed> The `sections` of the start of Ana, in her session, keyed by their key. */
+function singleLinkStartSections(): array
+{
+    $sections = [];
+    test()->get(route('worker.home', asPerson(test()->ana->id)))->assertOk()->assertInertia(function (Assert $page) use (&$sections): void {
+        $sections = collect($page->toArray()['props']['sections'])->keyBy('key')->all();
+    });
+
+    return $sections;
 }
 
 function singleLinkClimateInvitation(Employee $person, Survey $survey, array $state = []): Invitation
@@ -145,12 +156,12 @@ describe('NOM-035 evaluation', function (): void {
     });
 });
 
-describe('climate and pulse survey', function (): void {
+describe('climate and pulse survey, in the person\'s start', function (): void {
     it('sends the person to their own link while the survey is open and they have not answered', function (): void {
         $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]);
         $invitation = singleLinkClimateInvitation($this->ana, $survey);
 
-        $section = singleLinkHomeSections($this->token)['engagement'];
+        $section = singleLinkStartSections()['engagement'];
 
         expect($section['href'])->toBe(route('engagement.survey.show', $invitation->surveyToken()))
             ->and($section['label'])->toBe('Encuesta de clima')
@@ -161,32 +172,32 @@ describe('climate and pulse survey', function (): void {
         $survey = Survey::factory()->pulse()->active()->create(['tenant_id' => $this->tenant->id]);
         singleLinkClimateInvitation($this->ana, $survey);
 
-        expect(singleLinkHomeSections($this->token)['engagement']['label'])->toBe('Pulso');
+        expect(singleLinkStartSections()['engagement']['label'])->toBe('Pulso');
     });
 
     it('offers nothing when it was answered, cancelled, not sent, closed, still a draft or the module is off', function (): void {
         $survey = Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]);
         $invitation = singleLinkClimateInvitation($this->ana, $survey, ['answered' => true]);
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
+        expect(singleLinkStartSections())->not->toHaveKey('engagement');
 
         $invitation->forceFill(['answered' => false, 'cancelled' => true])->save();
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
+        expect(singleLinkStartSections())->not->toHaveKey('engagement');
 
         $invitation->forceFill(['cancelled' => false, 'token_hash' => null])->save();
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
+        expect(singleLinkStartSections())->not->toHaveKey('engagement');
 
         $invitation->forceFill(['token_hash' => Invitation::hashToken($invitation->surveyToken())])->save();
-        expect(singleLinkHomeSections($this->token))->toHaveKey('engagement');
+        expect(singleLinkStartSections())->toHaveKey('engagement');
 
         $survey->update(['closes_on' => SurveyClock::day()->subDay()->toDateString()]);
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
+        expect(singleLinkStartSections())->not->toHaveKey('engagement');
 
         $survey->update(['closes_on' => SurveyClock::day()->addDay()->toDateString(), 'status' => 'draft']);
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
+        expect(singleLinkStartSections())->not->toHaveKey('engagement');
 
         $survey->update(['status' => 'active']);
         resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
+        expect(singleLinkStartSections())->not->toHaveKey('engagement');
     });
 
     it('never offers the survey of somebody else', function (): void {
@@ -194,8 +205,15 @@ describe('climate and pulse survey', function (): void {
         $beto = Employee::factory()->create(['tenant_id' => $this->tenant->id]);
         $theirs = singleLinkClimateInvitation($beto, $survey);
 
-        $this->get(route('portal.show', $this->token))->assertInertia(function (Assert $page) use ($theirs): void {
+        $this->get(route('worker.home', asPerson($this->ana->id)))->assertInertia(function (Assert $page) use ($theirs): void {
             expect(json_encode($page->toArray()['props'], JSON_THROW_ON_ERROR))->not->toContain($theirs->surveyToken());
         });
+        expect(singleLinkStartSections())->not->toHaveKey('engagement');
+    });
+
+    it('is no longer in the start by link: it is in the person\'s start, in their session', function (): void {
+        singleLinkClimateInvitation($this->ana, Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]));
+
+        expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
     });
 });

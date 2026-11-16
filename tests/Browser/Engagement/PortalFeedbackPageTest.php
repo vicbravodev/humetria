@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 use App\Modules\Engagement\Models\CommentSummary;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
 
 /**
  * The portal of Marta Ruiz, who manages a group of six at Autopartes del Bajío that answered a closed climate survey; with a
- * summary of its comments when `$summary`, nothing at all when `$answered` is false.
+ * summary of its comments when `$summary`, nothing at all when `$answered` is false. The address of her page and the steps
+ * that take her there through the entrance.
+ *
+ * @return array{string, Closure}
  */
-function managerPortalFeedback(bool $answered = true): string
+function managerPortalFeedback(bool $answered = true): array
 {
     $tenant = Tenant::factory()->create(['trade_name' => 'Autopartes del Bajío']);
     workIn($tenant);
@@ -22,11 +24,13 @@ function managerPortalFeedback(bool $answered = true): string
         CommentSummary::factory()->create(['tenant_id' => $tenant->id, 'survey_id' => $survey->id, 'manager_group_id' => $marta->id]);
     }
 
-    return route('portal.feedback.show', (string) resolve(IssuePortalLink::class)->handle($marta->id));
+    return [route('portal.feedback.show', $tenant->slug, absolute: false), enteringTo($marta->id, $answered ? 'Lo que dijo su equipo' : 'Todavía no hay resultados para mostrar')];
 }
 
 it('shows the manager the feedback of their group in their portal', function (bool $dark, bool $mobile): void {
-    visitPage('engagement/portal-feedback', managerPortalFeedback(), $dark, $mobile)
+    [$url, $enter] = managerPortalFeedback();
+
+    visitPage('engagement/portal-feedback', $url, $dark, $mobile, $enter)
         ->assertSee('Autopartes del Bajío')
         ->assertSee('Lo que dijo su equipo')
         ->assertSee('Solo se muestran resultados de grupo')
@@ -43,7 +47,9 @@ it('shows the manager the feedback of their group in their portal', function (bo
 ]);
 
 it('says there is nothing to show yet, without saying why', function (bool $dark, bool $mobile): void {
-    visitPage('engagement/portal-feedback', managerPortalFeedback(false), $dark, $mobile)
+    [$url, $enter] = managerPortalFeedback(false);
+
+    visitPage('engagement/portal-feedback', $url, $dark, $mobile, $enter)
         ->assertSee('Todavía no hay resultados para mostrar')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');

@@ -11,7 +11,6 @@ use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Notifications\FeedbackPublished;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -69,7 +68,7 @@ it('publishes once: it dates the survey, audits it and queues the emails, and a 
     expect(AuditEntry::query()->where('event', 'engagement.feedback_published')->count())->toBe(1);
 });
 
-it('emails the people invited who are active and have an address, each with their own link', function (): void {
+it('emails the people invited who are active and have an address, with the address of the page (no credential)', function (): void {
     Notification::fake();
     $ana = invitedToClimate($this->survey, 'ana@acme.test', ['name' => 'Ana Ruiz']);
     invitedToClimate($this->survey, 'baja@acme.test', ['deactivated_at' => now()]);
@@ -81,16 +80,17 @@ it('emails the people invited who are active and have an address, each with thei
     resolve(PublishFeedback::class)->handle($this->survey->id, $this->hr->id);
 
     Notification::assertSentOnDemand(FeedbackPublished::class, fn (FeedbackPublished $notification, array $channels, $notifiable): bool => $notifiable->routes['mail'] === 'ana@acme.test'
-        && str_contains((string) $notification->toMail($notifiable)->actionUrl, resolve(PortalAccess::class)->token($ana->id).'/climate'));
+        && $notification->toMail($notifiable)->actionUrl === route('portal.climate.show', $this->tenant->slug)
+        && ! str_contains((string) $notification->toMail($notifiable)->render(), 'el anterior deja de funcionar'));
     Notification::assertSentOnDemandTimes(FeedbackPublished::class, 1);
 });
 
 it('writes the mail in usted, from the company, without anything of the answers', function (): void {
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false);
-    $mail = (new FeedbackPublished('https://x.test/portal/tok/climate', 'Ana', $company))->toMail(new Illuminate\Notifications\AnonymousNotifiable);
+    $mail = (new FeedbackPublished('https://x.test/me/acme/climate', 'Ana', $company))->toMail(new Illuminate\Notifications\AnonymousNotifiable);
 
     expect($mail->subject)->toBe('Lo que dijeron en la encuesta y lo que haremos')
-        ->and($mail->actionUrl)->toBe('https://x.test/portal/tok/climate')
+        ->and($mail->actionUrl)->toBe('https://x.test/me/acme/climate')
         ->and(implode(' ', [...$mail->introLines, ...$mail->outroLines]))->toContain('Acme')->toContain('solo suyo');
 });
 
