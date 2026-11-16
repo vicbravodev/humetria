@@ -15,6 +15,7 @@ use Database\Seeders\Demo\Stories\LeaveStory;
 use Database\Seeders\Demo\Stories\Nom035Story;
 use Database\Seeders\Demo\Stories\OrganizationStory;
 use Database\Seeders\Demo\Stories\SeatingStory;
+use Database\Seeders\Demo\Stories\TeleworkStory;
 use Illuminate\Support\Facades\Log;
 use LogicException;
 
@@ -23,7 +24,7 @@ use LogicException;
  */
 final readonly class DemoWorkspaceRunner implements DemoWorkspace
 {
-    public function __construct(private OrganizationStory $organization, private Nom035Story $nom035, private EngagementStory $engagement, private AttendanceStory $attendance, private LeaveStory $leave, private ComplaintsStory $complaints, private DisclosureStory $disclosure, private CompensationStory $compensation, private SeatingStory $seating, private Companies $companies) {}
+    public function __construct(private OrganizationStory $organization, private Nom035Story $nom035, private EngagementStory $engagement, private AttendanceStory $attendance, private LeaveStory $leave, private ComplaintsStory $complaints, private DisclosureStory $disclosure, private CompensationStory $compensation, private SeatingStory $seating, private TeleworkStory $telework, private Companies $companies) {}
 
     public function prepare(): void
     {
@@ -48,6 +49,6 @@ final readonly class DemoWorkspaceRunner implements DemoWorkspace
     /** @return list<DemoStory> */
     private function stories(): array
     {
-        return [$this->organization, $this->nom035, $this->engagement, $this->attendance, $this->leave, $this->complaints, $this->disclosure, $this->compensation, $this->seating];
+        return [$this->organization, $this->nom035, $this->engagement, $this->attendance, $this->leave, $this->complaints, $this->disclosure, $this->compensation, $this->seating, $this->telework];
     }
 }
