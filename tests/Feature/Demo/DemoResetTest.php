@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
+use Database\Factories\Attendance\AttendanceMarkFactory;
 use Database\Seeders\Demo\DemoPerson;
 use Database\Seeders\Demo\DemoRoster;
 use Illuminate\Log\Events\MessageLogged;
@@ -83,11 +84,14 @@ it('prepares the same story over itself on the same company, resets it to nothin
     Event::listen(MessageLogged::class, function (MessageLogged $log) use (&$blocked): void {
         $blocked += $log->message === 'demo.mail_blocked' ? 1 : 0;
     });
+    // Another company, with an insert-only row and a file: the reset never touches it.
+    $other = AttendanceMarkFactory::new()->createOne()->tenant_id;
+    $otherFile = "documents/{$other}/firmado.pdf";
+    Storage::disk(config()->string('filesystems.telework_files'))->put($otherFile, 'PDF');
+    $otherRows = demoRows($other);
     $workspace = resolve(DemoWorkspace::class);
 
-    $started = microtime(true);
     $workspace->prepare();
-    $prepared = microtime(true);
 
     $tenantId = DB::table('tenants')->where('is_demo', true)->value('id');
     $before = demoKeepsakes();
@@ -102,7 +106,6 @@ it('prepares the same story over itself on the same company, resets it to nothin
 
     // Preparing a demo that exists resets it first: the same company and story, never a second one nor a policy version 2.
     $workspace->prepare();
-    $again = microtime(true);
 
     expect(demoKeepsakes())->toBe($before)
         ->and(demoRows($tenantId))->toBe($rows)
@@ -110,13 +113,13 @@ it('prepares the same story over itself on the same company, resets it to nothin
         ->and(DB::table('disclosure_documents')->where('tenant_id', $tenantId)->max('version'))->toBe(1);
 
     $workspace->reset();
-    $reset = microtime(true);
 
     expect(array_filter(demoRows($tenantId)))->toBe([])
         ->and(demoFiles($tenantId))->toBe([])
         ->and(DB::table('tenants')->where('is_demo', true)->value('id'))->toBe($tenantId)
         ->and(DB::table('audit_entries')->where('tenant_id', $tenantId)->exists())->toBeTrue()
-        ->and(DB::table('users')->whereIn('id', $before['members'])->count())->toBe(2);
-
-    fwrite(STDERR, sprintf("\n[demo reset] prepare %.1fs, prepare over it %.1fs, reset %.1fs\n", $prepared - $started, $again - $prepared, $reset - $again));
+        ->and(DB::table('users')->whereIn('id', $before['members'])->count())->toBe(2)
+        ->and(demoRows($other))->toBe($otherRows)
+        ->and($otherRows['attendance_marks'])->toBe(1)
+        ->and(Storage::disk(config()->string('filesystems.telework_files'))->exists($otherFile))->toBeTrue();
 });

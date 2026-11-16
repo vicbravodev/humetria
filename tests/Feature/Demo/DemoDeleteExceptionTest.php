@@ -99,7 +99,9 @@ function insertOnlyTables(): array
     ];
 }
 
-it('still refuses to delete a row of a real company', function (string $table, string $id, string $message): void {
+it('still refuses to delete a row of a real company while a demo company exists', function (string $table, string $id, string $message): void {
+    // Another company is the demo: the exception must ask about the row's own company, not whether any demo exists.
+    TenantFactory::new()->createOne(['is_demo' => true]);
 
     expect(refused("delete from {$table} where id = ?", [$id]))->toContain($message)
         ->and(DB::table($table)->where('id', $id)->exists())->toBeTrue();
