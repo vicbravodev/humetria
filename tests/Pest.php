@@ -65,6 +65,37 @@ pest()->browser()->timeout(15_000);
 */
 
 /**
+ * Runs one named group of a test whose groups share one costly state (the demo's stories, on one prepared company). A
+ * failure stays a failure and leads with the group's name and the line of the group that failed.
+ */
+function section(string $name, Closure $group): void
+{
+    try {
+        $group();
+    } catch (PHPUnit\Framework\ExpectationFailedException $failure) {
+        throw new PHPUnit\Framework\ExpectationFailedException(sectionLabel($name, $failure).$failure->getMessage(), $failure->getComparisonFailure(), $failure);
+    } catch (PHPUnit\Framework\AssertionFailedError $failure) {
+        throw new PHPUnit\Framework\AssertionFailedError(sectionLabel($name, $failure).$failure->getMessage(), 0, $failure);
+    } catch (Throwable $error) {
+        throw new RuntimeException(sectionLabel($name, $error).$error::class.": {$error->getMessage()}", 0, $error);
+    }
+}
+
+/** «[name] (tests/…/file.php:line) »: the first line under tests/ the throwable passed through, Pest.php aside. */
+function sectionLabel(string $name, Throwable $error): string
+{
+    foreach ([['file' => $error->getFile(), 'line' => $error->getLine()], ...$error->getTrace()] as $frame) {
+        $file = $frame['file'] ?? '';
+
+        if (str_contains($file, '/tests/') && ! str_ends_with($file, '/Pest.php')) {
+            return "[{$name}] (".substr($file, strpos($file, '/tests/') + 1).':'.($frame['line'] ?? 0).') ';
+        }
+    }
+
+    return "[{$name}] ";
+}
+
+/**
  * What an audit entry says, as text, for a privacy assertion: the event, the subject and the metadata. Not its UUIDs,
  * its actor or its dates: they hold digit runs («50000») that a short number looked for in the whole entry meets by chance.
  *
