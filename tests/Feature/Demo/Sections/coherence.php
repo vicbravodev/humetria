@@ -110,6 +110,19 @@ function demoPanelPages(Tenant $tenant, array $values, array $byRoute, array $le
  * DemoStoriesTest includes this file inside its one test, on the prepared demo, so `$this` is that test.
  */
 return [
+    'has nobody evaluated, marking or asked to confirm the policy before the day they were hired' => function (): void {
+        $tenantId = resolve(DemoCompanies::class)->id();
+        // By the local day of the event against the hire day (a date), as the panel shows both.
+        $before = fn (string $sql): array => DB::table('employees as e')->where('e.tenant_id', $tenantId)->whereRaw($sql)->orderBy('e.employee_number')->distinct()->pluck('e.employee_number')->all();
+
+        expect($before("exists (select 1 from campaign_participants p join campaigns c on c.id = p.campaign_id where p.employee_id = e.id and (c.launched_at at time zone 'America/Mexico_City')::date < e.hired_on)"))->toBe([])
+            ->and($before("exists (select 1 from attendance_marks m where m.employee_id = e.id and (m.marked_at at time zone 'America/Mexico_City')::date < e.hired_on)"))->toBe([])
+            ->and($before("exists (select 1 from disclosure_acknowledgments a where a.employee_id = e.id and (a.requested_at at time zone 'America/Mexico_City')::date < e.hired_on)"))->toBe([])
+            ->and($before("exists (select 1 from disclosure_acknowledgments a where a.employee_id = e.id and (a.acknowledged_at at time zone 'America/Mexico_City')::date < e.hired_on)"))->toBe([])
+            // whoever had a year with the company still has it: the same people have vacation periods
+            ->and(count(array_filter(DemoRoster::people(), fn ($person): bool => $person->tenureDays >= 365)))->toBe(169);
+    },
+
     'has the same 180 people in the org chart, the centers, attendance, leave and the campaigns' => function (): void {
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
         $employees = Employee::query()->get()->keyBy('id');

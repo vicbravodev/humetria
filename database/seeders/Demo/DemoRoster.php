@@ -221,8 +221,9 @@ final class DemoRoster
                     position: $position,
                     category: $category,
                     level: $level,
-                    // Heads have been longer with the company: between 4 and 15 years; the rest, from 2 months to 10 years.
-                    tenureDays: $head === null ? 60 + ($staff * 211) % 3600 : 1460 + ($number * 397) % 4000,
+                    // Heads have been longer with the company: between 4 and 15 years; the rest, from 7 months to 10 years: everyone
+                    // joined before the story's first events (the policy asked at -200 days, the evaluation at -190, the marks).
+                    tenureDays: $head === null ? max(210 + $staff % 30, 60 + ($staff * 211) % 3600) : 1460 + ($number * 397) % 4000,
                     reportsTo: $reportsTo,
                     reservedForDoor: false,
                     employeeNumber: sprintf('MAB-%04d', $number),
