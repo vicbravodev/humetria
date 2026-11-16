@@ -85,7 +85,7 @@ it('ends the passkeys and the other sessions of an account whose password was re
     $addPasskey($user);
     $addPasskey($other);
     foreach ([$user, $other] as $owner) {
-        DB::table('sessions')->insert(['id' => 's'.$owner->id, 'user_id' => $owner->id, 'payload' => '', 'last_activity' => time()]);
+        DB::table('sessions')->insert(['id' => 's'.$owner->id, 'user_id' => $owner->id, 'payload' => '', 'last_activity' => now()->getTimestamp()]);
     }
 
     resolve(ResetUserPassword::class)->reset($user, ['password' => 'new-password-123', 'password_confirmation' => 'new-password-123']);

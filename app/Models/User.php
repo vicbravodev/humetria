@@ -12,7 +12,6 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -131,13 +130,16 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     }
 
     /**
-     * Emails are stored in lowercase: two accounts can never differ only by case.
-     *
-     * @return Attribute<string, string>
+     * Emails are stored in lowercase: two accounts can never differ only by case. A saving hook, not an accessor, so
+     * strict mode still refuses to read an email that was not selected.
      */
-    protected function email(): Attribute
+    protected static function booted(): void
     {
-        return Attribute::make(set: fn (string $value): string => Str::lower(trim($value)));
+        self::saving(function (User $user): void {
+            if ($user->isDirty('email')) {
+                $user->email = Str::lower(trim($user->email));
+            }
+        });
     }
 
     /**
