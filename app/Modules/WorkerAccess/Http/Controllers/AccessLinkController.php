@@ -38,7 +38,8 @@ final readonly class AccessLinkController
     {
         return Inertia::render('worker-access/link', [
             'company' => $this->companies->current()->tradeName,
-            'openUrl' => $this->opens($token) ? route('worker.link.open', [$tenant, $token]) : null,
+            // The token stays in the address only: «Continuar» posts to the page's own address.
+            'opens' => $this->opens($token),
             'homeUrl' => route('worker.home', $tenant),
         ]);
     }

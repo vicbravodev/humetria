@@ -5,21 +5,21 @@ import LinkProblem from '@/components/worker-access/link-problem';
 /** A one-time link opened: «Continuar» while it works; one screen for every link that does not. */
 export default function AccessLink({
     company,
-    openUrl,
+    opens,
     homeUrl,
 }: {
     company: string;
-    /** Null when the link does not work. */
-    openUrl: string | null;
+    /** Whether the link still works; «Continuar» posts to this page's own address, so the token is in no prop. */
+    opens: boolean;
     homeUrl: string;
 }) {
     return (
         <>
             <Head title="Entrar a mi portal" />
-            {openUrl === null ? (
-                <LinkProblem company={company} homeUrl={homeUrl} />
+            {opens ? (
+                <LinkContinue company={company} />
             ) : (
-                <LinkContinue company={company} openUrl={openUrl} />
+                <LinkProblem company={company} homeUrl={homeUrl} />
             )}
         </>
     );

@@ -32,7 +32,7 @@ function linkOf(Employee $person, string $token, ?Closure $state = null): Worker
 function expectInvalidLink(string $slug, string $token): void
 {
     test()->get(route('worker.link.show', [$slug, $token]))->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('worker-access/link')->where('openUrl', null)->where('homeUrl', route('worker.home', $slug))->etc());
+        ->assertInertia(fn (Assert $page) => $page->component('worker-access/link')->where('opens', false)->where('homeUrl', route('worker.home', $slug))->etc());
 }
 
 it('shows «Continuar» for a link that works, and opening the page spends nothing', function (): void {
@@ -42,7 +42,7 @@ it('shows «Continuar» for a link that works, and opening the page spends nothi
         $this->get(route('worker.link.show', ['acme', 'good-token']))->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('worker-access/link')
                 ->where('company', 'Acme')
-                ->where('openUrl', route('worker.link.open', ['acme', 'good-token']))
+                ->where('opens', true)
                 ->etc())
             ->assertDontSee('Ana López');
     }
@@ -86,7 +86,7 @@ it('keeps an issued link 48 hours and a requested one 30 minutes, to the second'
     linkOf($this->ana, 'good-token', fn ($factory) => ($kind === 'requested' ? $factory->requested() : $factory)->state(['expires_at' => now()->addSeconds($seconds)]));
 
     $this->travel($seconds - 1)->seconds();
-    $this->get(route('worker.link.show', ['acme', 'good-token']))->assertInertia(fn (Assert $page) => $page->where('openUrl', route('worker.link.open', ['acme', 'good-token']))->etc());
+    $this->get(route('worker.link.show', ['acme', 'good-token']))->assertInertia(fn (Assert $page) => $page->where('opens', true)->etc());
 
     $this->travel(1)->seconds();
     expectInvalidLink('acme', 'good-token');

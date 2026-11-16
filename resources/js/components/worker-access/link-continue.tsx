@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { MailCheck } from 'lucide-react';
 import WorkerFrame from '@/components/worker-access/worker-frame';
@@ -8,17 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
 /** A one-time link that still works: «Continuar» spends it (opening it does not, so a mail filter cannot use it up). */
-export default function LinkContinue({
-    company,
-    openUrl,
-}: {
-    company: string;
-    openUrl: string;
-}) {
+export default function LinkContinue({ company }: { company: string }) {
+    const { url } = usePage();
     const [working, setWorking] = useState(false);
     const open = () =>
         router.post(
-            openUrl,
+            url,
             {},
             {
                 onStart: () => setWorking(true),
