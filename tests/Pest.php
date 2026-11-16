@@ -26,6 +26,8 @@ use Laravel\Ai\Models\Conversation;
 use Laravel\Ai\Models\ConversationMessage;
 use Laravel\Ai\Tools\Request as ToolRequest;
 use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\On;
+use Pest\Browser\Api\PendingAwaitablePage;
 use Tests\TestCase;
 
 /*
@@ -185,9 +187,10 @@ function teleworkPortalOf(string $employeeId): App\Modules\Telework\Support\Open
 /**
  * In the browser: the steps of a person (`$employeeId`) who opened a page of theirs without a session and was sent to enter.
  * They open a one-time link they asked for (made here), press «Continuar» and land on that page, which shows `$text`.
- * Use as the `$reach` of visitPage() with the person's page as its address.
+ * Use as the `$reach` of visitPage() with the person's page as its address, or on a page just opened with visit() (pending:
+ * it opens on the first step); go on with the page it returns.
  *
- * @return Closure(AwaitableWebpage): mixed
+ * @return Closure(AwaitableWebpage|PendingAwaitablePage|On): AwaitableWebpage
  */
 function enteringTo(string $employeeId, string $text): Closure
 {
@@ -196,7 +199,7 @@ function enteringTo(string $employeeId, string $text): Closure
     $token = Str::random(40);
     App\Modules\WorkerAccess\Models\WorkerAccessLink::factory()->withToken($token)->requested()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id]);
 
-    return fn (AwaitableWebpage $page): mixed => $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
+    return fn (AwaitableWebpage|PendingAwaitablePage|On $page): AwaitableWebpage => $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
 }
 
 /**
@@ -222,19 +225,19 @@ function provedWithCode(AwaitableWebpage $page, string $text): mixed
  * them with a code by email (the mail is faked if it was not), and back on the page, which shows `$text`. Its delicate forms
  * then go straight through: the proof holds while the test's clock stands still.
  *
- * @return Closure(AwaitableWebpage): mixed
+ * @return Closure(AwaitableWebpage|PendingAwaitablePage|On): AwaitableWebpage
  */
 function enteringProvedTo(string $employeeId, string $text): Closure
 {
     $enter = enteringTo($employeeId, $text);
     $slug = Tenant::query()->findOrFail(App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId)->tenant_id)->slug;
 
-    return function (AwaitableWebpage $page) use ($enter, $slug, $text): mixed {
+    return function (AwaitableWebpage|PendingAwaitablePage|On $pending) use ($enter, $slug, $text): AwaitableWebpage {
         if (! Illuminate\Support\Facades\Notification::getFacadeRoot() instanceof Illuminate\Support\Testing\Fakes\NotificationFake) {
             Illuminate\Support\Facades\Notification::fake();
         }
 
-        $enter($page);
+        $page = $enter($pending);
         $there = $page->url();
         provedWithCode($page->navigate("/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Hola,');
 
