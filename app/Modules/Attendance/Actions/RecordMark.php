@@ -7,7 +7,9 @@ namespace App\Modules\Attendance\Actions;
 use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
+use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Support\AgreementStatus;
 use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Attendance\Support\MarkLock;
 use App\Modules\Organization\Contracts\Roster;
@@ -19,17 +21,22 @@ use InvalidArgumentException;
 /**
  * Records a mark of an active person at the server's time (criterio 3.3), only if it follows their last one: a start only
  * with no day open, a break or an end only with the day open, a break end only during a break. A start after an end opens
- * a new segment.
+ * a new segment. Never of a person who has not accepted the company's current agreement (criterio 5.1).
  */
 final readonly class RecordMark
 {
-    public function __construct(private CurrentTenant $tenant, private Roster $roster) {}
+    public function __construct(private CurrentTenant $tenant, private Roster $roster, private AgreementStatus $agreements) {}
 
+    /** @throws MarkRejected `agreement_not_accepted` */
     public function handle(string $employeeId, MarkType $type, MarkContext $context): AttendanceMark
     {
         $person = $this->roster->find($employeeId);
         if ($person === null || ! $person->active) {
             throw new InvalidArgumentException('Only an active person of the company marks.');
+        }
+
+        if (! $this->agreements->accepted($person->id)) {
+            throw new MarkRejected('agreement_not_accepted');
         }
 
         $mark = DB::transaction(function () use ($person, $type, $context): AttendanceMark {

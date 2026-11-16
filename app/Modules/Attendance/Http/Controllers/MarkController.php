@@ -12,7 +12,9 @@ use App\Modules\Attendance\Http\Requests\MarkRequest;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Attendance\Support\AgreementStatus;
 use App\Modules\Attendance\Support\CompanyPolicy;
+use App\Modules\Attendance\Support\CurrentAgreement;
 use App\Modules\Attendance\Support\MarkPolicyCheck;
 use App\Modules\Attendance\Support\PunchDay;
 use App\Modules\Attendance\Support\QrToken;
@@ -35,7 +37,8 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
  * A person marks from their linked device, with no account (criterios 3.3, 4.2 to 4.4). The order of the checks:
  * the company only from the slug (ResolveDeviceTenant); the body validated; the signature verified against a challenge
  * given to this browser's session, which alone names the person (their key's user handle), never the body; the person's
- * current work center then decides which code and which zones count; the policy decides how the mark is taken
+ * current work center then decides which code and which zones count; a person who has not accepted the current
+ * agreement is refused first, with its text (criterio 5.1); the policy decides how the mark is taken
  * (MarkPolicyCheck); RecordMark stamps the server's time and keeps the sequence. A signature that does not verify, of a
  * revoked device, of a person who left or of another company gets the same 404. Logs carry ids and reasons only: never a
  * position, the code or the key.
@@ -73,6 +76,8 @@ final readonly class MarkController
             'weekUrl' => route('attendance.device.week.show', $tenant),
             'correctionOptionsUrl' => route('attendance.device.correction.options', $tenant),
             'correctionUrl' => route('attendance.device.correction.store', $tenant),
+            'agreementOptionsUrl' => route('attendance.device.agreement.options', $tenant),
+            'agreementUrl' => route('attendance.device.agreement.accept', $tenant),
             // A mark refused is asked of RH at the time of the company's clock, whatever the phone's zone.
             'timezone' => config()->string('app.display_timezone'),
         ]);
@@ -96,7 +101,7 @@ final readonly class MarkController
         return response()->json($signatures->options($request->session()->getId()))->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(MarkRequest $request, WorkerSignatures $signatures, RecordMark $record): JsonResponse
+    public function store(MarkRequest $request, WorkerSignatures $signatures, RecordMark $record, AgreementStatus $agreements, CurrentAgreement $agreement): JsonResponse
     {
         $signed = $signatures->verify($request->session()->getId(), $request->credential());
 
@@ -114,6 +119,11 @@ final readonly class MarkController
         $zones = AttendanceZone::query()->where('work_center_id', $person->workCenterId)->get()->all();
 
         try {
+            // The agreement first: a person who has not accepted it is not sent to fix the code or the position for nothing.
+            if (! $agreements->accepted($person->id)) {
+                throw new MarkRejected('agreement_not_accepted');
+            }
+
             $context = MarkPolicyCheck::decide(
                 $this->schedule($person->id),
                 CompanyPolicy::current(),
@@ -129,7 +139,15 @@ final readonly class MarkController
             Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'credential_id' => $signed->credentialId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
 
             // Who signed and what they may do: never the steps of whoever marked before on this browser.
-            return response()->json(['reason' => $rejected->reason, 'name' => $person->name, 'next' => PunchDay::of($person->id)['next']], 422);
+            $current = $rejected->reason === 'agreement_not_accepted' ? $agreement->get() : null;
+
+            return response()->json([
+                'reason' => $rejected->reason,
+                'name' => $person->name,
+                'next' => PunchDay::of($person->id)['next'],
+                // What to read and accept, for the screen to show it.
+                ...($current === null ? [] : ['agreement' => ['version' => $current->version, 'body' => $current->body]]),
+            ], 422);
         }
 
         $onsite = in_array($context->method, [MarkMethod::QrAndGeofence, MarkMethod::Qr, MarkMethod::Geofence], true);

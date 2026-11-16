@@ -1,5 +1,7 @@
 import type { Reading } from '@/lib/attendance/geolocation';
 import { markName } from '@/lib/attendance/next-step';
+import { agreementOf } from '@/lib/attendance/punch-agreement';
+import type { Agreement } from '@/lib/attendance/punch-agreement';
 import type { MarkType } from '@/lib/attendance/next-step';
 import { sendSigned } from '@/lib/attendance/signed-request';
 import type { SignDeps } from '@/lib/attendance/signed-request';
@@ -22,7 +24,13 @@ export type PunchDay = {
 
 export type PunchOutcome =
     | { kind: 'done'; day: PunchDay }
-    | { kind: 'failed'; reason: string; person: Signer | null };
+    | {
+          kind: 'failed';
+          reason: string;
+          person: Signer | null;
+          /** The agreement to accept, when that is why the mark was refused. */
+          agreement?: Agreement;
+      };
 
 export type PunchRequest = {
     optionsUrl: string;
@@ -83,7 +91,14 @@ async function failure(response: Response): Promise<PunchOutcome> {
             ? body['reason']
             : known;
 
-    return { kind: 'failed', reason: reason ?? 'failed', person: signer(body) };
+    const agreement = agreementOf(body);
+
+    return {
+        kind: 'failed',
+        reason: reason ?? 'failed',
+        person: signer(body),
+        ...(agreement === null ? {} : { agreement }),
+    };
 }
 
 /** Who a rejection names; null when it names nobody readable. */
@@ -156,6 +171,8 @@ const MESSAGES: Record<string, string> = {
     day_not_open: 'Primero marque su entrada.',
     already_on_break: 'Ya marcó su salida a comer.',
     not_on_break: 'Aún no marca su salida a comer.',
+    agreement_not_accepted:
+        'Para marcar, primero acepte el acuerdo de registro electrónico.',
     not_verified:
         'No se pudo verificar su dispositivo. Si aún no lo vincula, pida a Recursos Humanos su enlace para vincularlo.',
     cancelled:

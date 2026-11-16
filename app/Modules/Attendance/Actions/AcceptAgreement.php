@@ -12,8 +12,9 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Records that a person accepted the version of the agreement they read, on the device they link, and when (criterio
- * 5.1). Only the current version: a person who read an older one reads the new one first.
+ * Records that a person accepted the version of the agreement they read, with the key that signed it, and when (criterio
+ * 5.1): before their first mark, and again when the text changes. Only the current version: a person who read an older one
+ * reads the new one first. Accepting a version again keeps the first acceptance.
  */
 final readonly class AcceptAgreement
 {
@@ -26,6 +27,12 @@ final readonly class AcceptAgreement
 
         if ($agreement->version !== $version) {
             throw new AgreementOutdated;
+        }
+
+        $accepted = AgreementAcceptance::query()->where('employee_id', $employeeId)->where('agreement_id', $agreement->id)->first();
+
+        if ($accepted !== null) {
+            return $accepted;
         }
 
         $acceptance = AgreementAcceptance::query()->create([

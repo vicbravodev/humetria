@@ -5,6 +5,7 @@ declare(strict_types=1);
 // Required from routes/web.php: the routes of the time-clock devices, outside the company group.
 // Every name starts with attendance.device.
 
+use App\Modules\Attendance\Http\Controllers\AgreementController;
 use App\Modules\Attendance\Http\Controllers\CorrectionRequestController;
 use App\Modules\Attendance\Http\Controllers\EnrollmentController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
@@ -40,6 +41,9 @@ Route::middleware(['throttle:attendance-punch', ResolveDeviceTenant::class])->gr
     Route::post('a/{tenant:slug}/punch/options', [MarkController::class, 'options'])->name('attendance.device.punch.options');
     Route::post('a/{tenant:slug}/punch', [MarkController::class, 'store'])->name('attendance.device.punch.store');
     Route::post('a/{tenant:slug}/punch/forget', [MarkController::class, 'forget'])->name('attendance.device.punch.forget');
+    // The agreement, accepted from Marcar before the first mark (and again when its text changes): a signature of its own.
+    Route::post('a/{tenant:slug}/agreement/options', [AgreementController::class, 'options'])->name('attendance.device.agreement.options');
+    Route::post('a/{tenant:slug}/agreement', [AgreementController::class, 'accept'])->name('attendance.device.agreement.accept');
 });
 
 // «Mi semana»: a person sees one of their weeks and confirms or disputes it (no account). Each read and each answer takes a

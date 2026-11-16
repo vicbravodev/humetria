@@ -269,3 +269,28 @@ describe('punch, telling who signed', () => {
         });
     });
 });
+
+describe('punch, when the agreement was not accepted', () => {
+    it('gives the agreement to accept when the person has not accepted the current one', async () => {
+        await expect(
+            punch(request, {
+                fetcher: serverAnswering({
+                    markStatus: 422,
+                    markBody: {
+                        reason: 'agreement_not_accepted',
+                        name: 'Ana López',
+                        next: ['start'],
+                        agreement: { version: 2, body: 'Texto' },
+                    },
+                }),
+                getKey: signs,
+                xsrf: null,
+            }),
+        ).resolves.toStrictEqual({
+            kind: 'failed',
+            reason: 'agreement_not_accepted',
+            person: { name: 'Ana López', next: ['start'] },
+            agreement: { version: 2, body: 'Texto' },
+        });
+    });
+});

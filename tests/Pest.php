@@ -139,6 +139,19 @@ function workIn(Tenant $tenant): void
 }
 
 /**
+ * `$employeeId` accepted their company's current agreement on the registro de jornada (criterio 5.1) with `$credentialId`
+ * (a new key of theirs when none): without it, they cannot mark. Works in the company of the person.
+ */
+function agreementAccepted(string $employeeId, ?string $credentialId = null): void
+{
+    $person = App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId);
+    workIn(Tenant::query()->findOrFail($person->tenant_id));
+    $credentialId ??= App\Modules\WorkerAccess\Models\WorkerCredential::factory()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $employeeId])->id;
+
+    resolve(App\Modules\Attendance\Actions\AcceptAgreement::class)->handle($employeeId, $credentialId, resolve(App\Modules\Attendance\Support\CurrentAgreement::class)->get()->version);
+}
+
+/**
  * The scope Humi works in for a new person of `$tenant` with `$role`, as the server builds it for a request there.
  */
 function assistantScopeIn(Tenant $tenant, TenantRole $role = TenantRole::Hr): AssistantScope

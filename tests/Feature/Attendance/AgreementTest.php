@@ -94,3 +94,12 @@ it('never changes nor deletes the text a person accepted, nor the acceptance', f
     'edit an acceptance' => ['UPDATE attendance_agreement_acceptances SET accepted_at = now()'],
     'delete an acceptance' => ['DELETE FROM attendance_agreement_acceptances'],
 ]);
+
+it('keeps the first acceptance when a person accepts the same version again', function (): void {
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    $first = resolve(AcceptAgreement::class)->handle($ana->id, WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 1);
+
+    $again = resolve(AcceptAgreement::class)->handle($ana->id, WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 1);
+
+    expect($again->id)->toBe($first->id)->and(AgreementAcceptance::query()->count())->toBe(1);
+});

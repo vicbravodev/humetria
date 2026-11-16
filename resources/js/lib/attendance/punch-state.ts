@@ -1,5 +1,6 @@
 import { ANY_STEP } from '@/lib/attendance/next-step';
 import { doneMessage, punchMessage } from '@/lib/attendance/punch';
+import type { Agreement } from '@/lib/attendance/punch-agreement';
 import { isSequence } from '@/lib/attendance/punch-problem';
 import type { PunchOutcome, Signer } from '@/lib/attendance/punch';
 
@@ -11,7 +12,7 @@ export type PunchFeedback =
           evidence?: string | null;
           flag?: string | null;
       }
-    | { kind: 'error'; text: string; reason?: string };
+    | { kind: 'error'; text: string; reason?: string; agreement?: Agreement };
 
 export type PunchState = {
     person: Signer | null;
@@ -49,6 +50,16 @@ export function stateAfter(outcome: PunchOutcome): PunchState {
             kind: 'error',
             text: punchMessage(outcome.reason),
             reason: outcome.reason,
+            ...(outcome.agreement === undefined
+                ? {}
+                : { agreement: outcome.agreement }),
         },
     };
+}
+
+/** The agreement the last answer asks to accept before marking; null when it asks none. */
+export function feedbackAgreement(
+    feedback: PunchFeedback | null,
+): Agreement | null {
+    return feedback?.kind === 'error' ? (feedback.agreement ?? null) : null;
 }
