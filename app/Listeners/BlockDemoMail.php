@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * No mail of the demo company leaves: a message whose recipients are all at the demo domain is cancelled (false); one with
- * any real recipient goes. The log carries only how many recipients, never an address, subject or body. Null, not true, lets
- * the other MessageSending listeners run.
+ * any real recipient goes. The log carries only how many recipients, never an address, subject or body, and it is debug:
+ * a preparation blocks over a thousand messages, and PostHog only receives info and above (LOG_POSTHOG_LEVEL). Null, not
+ * true, lets the other MessageSending listeners run.
  */
 final class BlockDemoMail
 {
@@ -29,7 +30,7 @@ final class BlockDemoMail
             return null;
         }
 
-        Log::info('demo.mail_blocked', ['recipients' => count($recipients)]);
+        Log::debug('demo.mail_blocked', ['recipients' => count($recipients)]);
 
         return false;
     }

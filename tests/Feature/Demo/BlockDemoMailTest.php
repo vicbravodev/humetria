@@ -47,7 +47,7 @@ it('cancels a message whose recipients are all demo addresses', function (): voi
     Mail::raw('Hola', fn ($message) => $message->to('ana@'.DemoMail::DOMAIN)->cc('luis@'.strtoupper(DemoMail::DOMAIN))->subject('Secreto'));
 
     expect(deliveredMail())->toBe(0);
-    Log::shouldHaveReceived('info')->with('demo.mail_blocked', ['recipients' => 2])->once();
+    Log::shouldHaveReceived('debug')->with('demo.mail_blocked', ['recipients' => 2])->once();
 });
 
 it('lets through a message with any real recipient', function (): void {
@@ -57,7 +57,7 @@ it('lets through a message with any real recipient', function (): void {
     Mail::raw('Hola', fn ($message) => $message->to('pedro@'.DemoMail::DOMAIN.'.example.com'));
 
     expect(deliveredMail())->toBe(2);
-    Log::shouldNotHaveReceived('info', ['demo.mail_blocked', Mockery::any()]);
+    Log::shouldNotHaveReceived('debug', ['demo.mail_blocked', Mockery::any()]);
 });
 
 it('skips the demo in the digests and reminders', function (string $action, Closure $row): void {
