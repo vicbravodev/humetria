@@ -109,6 +109,7 @@ it('ignores a destination that is not a page of the person in this company, and 
     Tenant::factory()->create(['slug' => 'other']);
     destinationLink($this->ana, 'asked', requested: true);
     session()->put('worker_destination', $kept);
+    session()->put('worker_destination_at', now()->getTimestamp());
 
     $this->post(route('worker.link.open', ['acme', 'asked']))->assertRedirect(route('worker.home', 'acme'));
 
@@ -155,3 +156,17 @@ it('ends the session of a person who left, and answers 404 for a blocked company
     $this->tenant->update(suspension());
     $this->get('/me/acme/probe')->assertNotFound();
 });
+
+it('keeps where they were going for ten minutes, and forgets it after: a page left half way is not where they go hours later', function (int $seconds, bool $kept): void {
+    $this->get('/me/acme/probe?page=2')->assertRedirect(route('worker.home', 'acme'));
+    $this->travel($seconds)->seconds();
+
+    expect(resolve(WorkerDestination::class)->pull('acme'))->toBe($kept ? 'http://localhost/me/acme/probe?page=2' : route('worker.home', 'acme'))
+        ->and(session()->has('worker_destination'))->toBeFalse()
+        ->and(session()->has('worker_destination_at'))->toBeFalse();
+})->with([
+    'just kept' => [0, true],
+    'at ten minutes' => [600, true],
+    'a second after ten minutes' => [601, false],
+    'hours later' => [7200, false],
+]);

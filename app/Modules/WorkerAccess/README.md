@@ -23,7 +23,7 @@ bloqueada; si no, se borra. Entrar y salir regeneran el id; «Salir» borra solo
 Una página de la persona (`/me/{slug}/...`) lleva `ResolveWorkerTenant` y `RequireWorkerSession` (no `auth:worker`, que haría
 a la persona el usuario de la petición). Sin sesión, la página lleva a la entrada de esa empresa y guarda el destino
 (`Support/WorkerDestination`: solo una página `/me/{slug}/...` de la misma empresa en este sitio, en su propia llave de
-sesión, nunca en `url.intended` del panel); al entrar con llave, con un enlace pedido o tras crear la llave de un enlace de RH,
+sesión y solo por 10 minutos, nunca en `url.intended` del panel); al entrar con llave, con un enlace pedido o tras crear la llave de un enlace de RH,
 la persona llega ahí una vez. `WorkerSession` se lee una vez por petición (`Support/RequestWorkerSession`).
 
 ## Prueba reciente
