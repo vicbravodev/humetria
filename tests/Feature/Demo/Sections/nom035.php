@@ -21,6 +21,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\DemoPerson;
 use Database\Seeders\Demo\DemoRoster;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /** The NOM-035 evaluations of a demo center, by status, after preparing the demo. */
@@ -107,6 +108,17 @@ return [
             ->and($overdue)->toHaveCount(1)
             ->and($planned)->not->toBeEmpty()
             ->and($done->first()?->completed_on?->lt($today))->toBeTrue();
+    },
+
+    'gives every Programa at least one action, not only the plant\'s' => function (): void {
+        $programs = Program::query()->get();
+
+        expect($programs)->toHaveCount(3);
+
+        foreach ($programs as $program) {
+            $items = DB::table('intervention_items')->where('program_id', $program->id)->pluck('scope_key')->implode(', ');
+            expect(ProgramAction::query()->where('program_id', $program->id)->count())->toBeGreaterThan(0, "Programa {$program->id} ({$items}) has no action");
+        }
     },
 
     'keeps answers keyless' => function (): void {

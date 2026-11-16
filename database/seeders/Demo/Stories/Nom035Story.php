@@ -52,8 +52,22 @@ final class Nom035Story implements DemoStory
     /** The Guía III items of overtime and work brought home (domains work_day and work_family): the night shift's 4s. */
     private const array OVERTIME_ITEMS = [17, 18, 19, 20];
 
-    /** Two people of the night shift whose Guía I sends them to a clinical assessment (GR.I: three "yes" in section III). */
+    /**
+     * Two people of the night shift whose Guía I sends them to a clinical assessment: plant-031 with three "yes" in section
+     * III, plant-044 with the "yes" of item 7 (section II).
+     */
     private const array SCREENED = ['plant-031' => [3, 9, 10, 11], 'plant-044' => [2, 7, 12, 13]];
+
+    /**
+     * The one action of the other Programas (offices and distribution scored Medio somewhere, so the system drafted theirs, criterio
+     * C-30): by center, the rows to put it in (the first the Programa has), what it is, its title and how it is going.
+     *
+     * @var array<string, array{list<string>, ActionKind, string, string}>
+     */
+    private const array OTHER_ACTIONS = [
+        'offices' => [['leadership', 'leadership_relations', 'workload', 'final'], ActionKind::Training, 'Sesiones de comunicación y retroalimentación con los jefes de área', 'Se dio la primera sesión con Finanzas y Ventas; siguen Sistemas y Recursos humanos.'],
+        'distribution' => [['workload', 'work_day', 'final'], ActionKind::WorkOrganization, 'Taller de reparto de cargas en el almacén y el transporte', 'Se reacomodaron las rutas de surtido; falta repartir las de transporte.'],
+    ];
 
     /** About 60 % of each center answers the open evaluation. */
     private const float OPEN_ANSWERED = 0.6;
@@ -89,8 +103,13 @@ final class Nom035Story implements DemoStory
         $step = fn (string $actionId, ActionStatus $to, int $day, string $note) => DemoClock::at("{$day} days", fn () => $this->progress->handle($actionId, $to, $today->addDays($day)->toDateString(), $note, $context->hr->id));
         $step($rotation, ActionStatus::InProgress, -160, 'Se acordó con supervisión una rotación fija por cuadrilla.');
         $step($rotation, ActionStatus::Done, -125, 'La nueva rotación arrancó en las cuatro cuadrillas.');
-        $step($overtime, ActionStatus::InProgress, -95, 'Se fijó un tope de nueve horas extra por semana.');
-        $step($overtime, ActionStatus::InProgress, -20, 'Las horas extra del turno 2 bajaron a la mitad; falta cubrir dos vacantes.');
+        $step($overtime, ActionStatus::InProgress, -95, 'Se propuso un tope de nueve horas extra por semana; aplicarlo depende de cubrir dos vacantes.');
+        $step($overtime, ActionStatus::InProgress, -20, 'Con el tope en marcha, las horas extra del turno 2 bajaron casi a la mitad, dentro de la norma; falta cubrir dos vacantes.');
+
+        foreach (self::OTHER_ACTIONS as $center => [$keys, $kind, $title, $note]) {
+            $actionId = DemoClock::at('-170 days', fn (): string => $this->otherAction($context, $closed[$center], $keys, $kind, $title, $today));
+            $step($actionId, ActionStatus::InProgress, -110, $note);
+        }
         $step($workshop, ActionStatus::InProgress, -50, 'Se dieron dos de las cuatro sesiones; faltan fechas con el turno 2.');
 
         foreach (array_keys(DemoRoster::CENTERS) as $center) {
@@ -286,6 +305,25 @@ final class Nom035Story implements DemoStory
             $action($workDay, ActionKind::WorkOrganization, ActionLevel::Organizational, 'Tope de horas extra y registro semanal por supervisor', $nightShift->id, -100, 30),
             $action($final, ActionKind::Training, ActionLevel::Group, 'Taller de liderazgo para los supervisores de producción', $nightShift->id, -60, -7),
         ];
+    }
+
+    /**
+     * The one action of a center's drafted Programa, in the first of `$keys` it has: HR in charge, for the whole center.
+     *
+     * @param  list<string>  $keys
+     */
+    private function otherAction(DemoContext $context, Campaign $campaign, array $keys, ActionKind $kind, string $title, CarbonImmutable $today): string
+    {
+        $program = Program::query()->where('campaign_id', $campaign->id)->firstOrFail();
+        $this->responsible->handle($program->id, $context->hr->id, null);
+        $items = ProgramItem::query()->where('program_id', $program->id)->whereIn('scope_key', $keys)->get();
+        $item = $items->sortBy(fn (ProgramItem $item): int|false => array_search($item->scope_key, $keys, true))->first()
+            ?? throw new LogicException("The Programa of {$campaign->id} has none of its rows.");
+
+        return $this->saveAction->handle(new ActionData(
+            null, $item->id, $kind, ActionLevel::Group, $title, 'Acción del Programa de intervención del centro.',
+            ActionSubjects::Center, [], $today->addDays(-120)->toDateString(), $today->addDays(45)->toDateString(), null, $context->hr->id, null,
+        ), $context->hr->id)->id;
     }
 
     private function item(Program $program, string $key): ProgramItem
