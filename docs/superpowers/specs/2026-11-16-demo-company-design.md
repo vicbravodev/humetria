@@ -89,7 +89,7 @@ El hilo: hace ~6 meses una primera evaluación NOM-035 cerró y mostró riesgo a
 (rotación y horas extra). RH lanzó un programa de intervención (acciones hechas, en curso, una vencida, una por empezar),
 y una encuesta de pulso reciente muestra que el clima mejora. La asistencia refleja las horas extra de ese turno; hay
 quejas en el canal con estados distintos; vacaciones con saldos y solicitudes pendientes; compensación con un escenario de
-contrato colectivo y su costo; políticas publicadas con acuses (~87 %); Ley Silla con evaluación de riesgo y medidas en
+contrato colectivo y su costo; políticas publicadas con acuses (~77 %: las ~40 personas reservadas para la puerta quedan pendientes para que cada visitante tenga algo que confirmar en vivo); Ley Silla con evaluación de riesgo y medidas en
 las oficinas; NOM-037 con ~12 teletrabajadores y su lista de verificación. Humi responde sobre estos datos.
 
 Cada módulo cuenta su parte con **números derivados de la misma plantilla**: un test compara, por ejemplo, el total de
