@@ -111,6 +111,7 @@ final class HandleInertiaRequests extends Middleware
             'tenants' => [],
             'inCourse' => null,
             'firstSteps' => null,
+            'demo' => false,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
