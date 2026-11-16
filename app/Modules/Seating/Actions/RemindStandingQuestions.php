@@ -8,6 +8,7 @@ use App\Modules\Seating\Enums\AssessmentStatus;
 use App\Modules\Seating\Jobs\SendStandingQuestions;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +23,7 @@ final readonly class RemindStandingQuestions
     /** Days after the start of an assessment when the person is reminded. */
     private const array DAYS = [7, 14];
 
-    public function __construct(private Companies $companies) {}
+    public function __construct(private Companies $companies, private DemoCompanies $demos) {}
 
     /**
      * @return int how many reminders were queued.
@@ -34,6 +35,10 @@ final readonly class RemindStandingQuestions
         $today = CarbonImmutable::now($zone)->startOfDay();
 
         foreach (RiskAssessment::query()->withoutGlobalScopes()->where('status', AssessmentStatus::Draft)->distinct()->orderBy('tenant_id')->get(['tenant_id'])->map(fn (RiskAssessment $assessment): string => $assessment->tenant_id) as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, $zone, $today, &$queued): void {

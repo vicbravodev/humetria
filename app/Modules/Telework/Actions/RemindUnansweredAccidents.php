@@ -8,6 +8,7 @@ use App\Modules\Telework\Enums\NoticeKind;
 use App\Modules\Telework\Jobs\SendAccidentAlert;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +24,7 @@ final readonly class RemindUnansweredAccidents
 {
     public const int DAYS = 3;
 
-    public function __construct(private Companies $companies) {}
+    public function __construct(private Companies $companies, private DemoCompanies $demos) {}
 
     /**
      * @return int how many reminders were queued.
@@ -33,6 +34,10 @@ final readonly class RemindUnansweredAccidents
         $sent = 0;
 
         foreach ($this->due()->withoutGlobalScopes()->distinct()->orderBy('tenant_id')->get(['tenant_id'])->map(fn (WorkerNotice $notice): string => $notice->tenant_id) as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, &$sent): void {

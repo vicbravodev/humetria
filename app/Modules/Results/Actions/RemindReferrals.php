@@ -7,6 +7,7 @@ namespace App\Modules\Results\Actions;
 use App\Modules\Results\Jobs\SendReferralReminder;
 use App\Modules\Results\Models\ScreeningReferral;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,7 @@ use Throwable;
  */
 final readonly class RemindReferrals
 {
-    public function __construct(private Companies $companies) {}
+    public function __construct(private Companies $companies, private DemoCompanies $demos) {}
 
     /**
      * @return int how many reminders were queued.
@@ -30,6 +31,10 @@ final readonly class RemindReferrals
         $sent = 0;
 
         foreach ($this->due()->withoutGlobalScopes()->distinct()->orderBy('tenant_id')->get(['tenant_id'])->map(fn (ScreeningReferral $referral): string => $referral->tenant_id) as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, &$sent): void {

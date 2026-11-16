@@ -10,6 +10,7 @@ use App\Modules\Engagement\Support\Pulse\OpenCommitments;
 use App\Modules\Engagement\Support\Pulse\UpcomingPulse;
 use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\Members;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ final readonly class AnnounceUpcomingPulses
     /** How many days before the run the heads-up goes out. */
     public const int DAYS_BEFORE = 3;
 
-    public function __construct(private Companies $companies, private Members $members) {}
+    public function __construct(private Companies $companies, private Members $members, private DemoCompanies $demos) {}
 
     /**
      * @return int how many emails were sent.
@@ -40,6 +41,10 @@ final readonly class AnnounceUpcomingPulses
         $sent = 0;
 
         foreach ($due as $schedule) {
+            if ($this->demos->isDemo($schedule->tenant_id)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($schedule, &$sent): void {

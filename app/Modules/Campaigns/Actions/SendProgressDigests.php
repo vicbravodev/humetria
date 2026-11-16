@@ -17,6 +17,7 @@ use App\Modules\Campaigns\Support\InstrumentTally;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +40,7 @@ final readonly class SendProgressDigests
         private Roster $roster,
         private InstrumentTally $tally,
         private CampaignPages $pages,
+        private DemoCompanies $demos,
     ) {}
 
     /**
@@ -49,6 +51,10 @@ final readonly class SendProgressDigests
         $sent = 0;
 
         foreach (Campaign::query()->withoutGlobalScopes()->whereIn('kind', CampaignKind::nom035())->where('status', CampaignStatus::Active)->orderBy('tenant_id')->get(['id', 'tenant_id']) as $campaign) {
+            if ($this->demos->isDemo($campaign->tenant_id)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($campaign, &$sent): void {

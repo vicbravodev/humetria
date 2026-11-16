@@ -11,6 +11,7 @@ use App\Modules\Interventions\Models\ProgramItem;
 use App\Modules\Interventions\Notifications\ProgramDigest;
 use App\Modules\Interventions\Support\ProgramClock;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
@@ -27,7 +28,7 @@ use Throwable;
  */
 final readonly class SendProgramDigests
 {
-    public function __construct(private Companies $companies, private Members $members) {}
+    public function __construct(private Companies $companies, private Members $members, private DemoCompanies $demos) {}
 
     /**
      * @return int how many emails were sent.
@@ -37,6 +38,10 @@ final readonly class SendProgramDigests
         $sent = ['owner' => 0, 'responsible' => 0];
 
         foreach (array_filter(Program::query()->withoutGlobalScopes()->distinct()->orderBy('tenant_id')->pluck('tenant_id')->all(), is_string(...)) as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, &$sent): void {

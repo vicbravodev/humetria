@@ -20,6 +20,7 @@ use App\Modules\Telework\Support\CommitteeGate;
 use App\Modules\Telework\Support\TrainingDue;
 use App\Modules\Telework\Support\WorkplaceStanding;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
@@ -47,6 +48,7 @@ final readonly class SendTeleworkDigests
         private WorkplaceStanding $standing,
         private TrainingDue $training,
         private CommitteeWork $seating,
+        private DemoCompanies $demos,
     ) {}
 
     /**
@@ -57,6 +59,10 @@ final readonly class SendTeleworkDigests
         $sent = ['owner' => 0, 'committee' => 0];
 
         foreach (Teleworker::query()->withoutGlobalScopes()->distinct()->orderBy('tenant_id')->get(['tenant_id'])->map(fn (Teleworker $teleworker): string => $teleworker->tenant_id) as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, &$sent): void {
