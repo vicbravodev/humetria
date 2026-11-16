@@ -145,14 +145,14 @@ it('tells RH, on the draft, who will be invited, who cannot be reached and who i
     $plant = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
     $office = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
     climatePanelStaff($this->tenant, $plant, 6);
-    // Two in an area of their own and one alone in the office: no group of five to show them in.
+    // Two in an area of their own and three alone in the office: no group of five to show them in, and five together with the company.
     climatePanelStaff($this->tenant, $plant, 2, ['email' => null]);
-    climatePanelStaff($this->tenant, $office, 1);
+    climatePanelStaff($this->tenant, $office, 3);
     $survey = Survey::factory()->create(['tenant_id' => $this->tenant->id]);
 
     $props = $this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $survey]))->assertOk()->inertiaProps();
 
-    expect($props['draft'])->toMatchArray(['people' => 9, 'withoutEmail' => 2, 'companyOnly' => 3, 'minGroup' => 5, 'canLaunch' => true])
+    expect($props['draft'])->toMatchArray(['people' => 11, 'withoutEmail' => 2, 'companyOnly' => 5, 'minGroup' => 5, 'canLaunch' => true])
         ->and($props['draft']['limits'])->toBe(['min' => '2026-11-10', 'suggested' => '2026-11-23', 'max' => '2027-01-08'])
         ->and($props['unreachable']['total'])->toBe(2)
         ->and($props['participation'])->toBeNull();

@@ -17,6 +17,7 @@ use App\Modules\Engagement\Models\CommentSummary;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Ai\Prompts\AgentPrompt;
@@ -303,4 +304,29 @@ it('does not find the summary of another company to retry', function (): void {
     $summary = CommentSummary::factory()->status(SummaryStatus::Failed)->create(['tenant_id' => $other->id, 'survey_id' => $survey->id]);
 
     expect(fn () => resolve(RetrySummary::class)->handle($summary->id))->toThrow(Illuminate\Database\Eloquent\ModelNotFoundException::class);
+});
+
+it('tells PostHog only the numbers of each call to the model, never a comment or the summary: they are anonymous answers', function (): void {
+    config(['services.posthog.project_token' => 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG']);
+    Http::fake(['https://us.i.posthog.com/i/v0/e/' => Http::response(['status' => 1])]);
+    CommentScreener::fake(fn (): array => ['sensitive' => []]);
+    CommentSummarizer::fake(fn (): array => SUMMARY_THEMES);
+    $texts = array_map(fn (int $n): string => "Mi jefa Rocío nos grita, comentario secreto {$n}", range(0, 9));
+    summaryComments($this->survey, 5, 5, texts: $texts);
+
+    SummarizeComments::dispatchSync($this->survey->id, null);
+
+    $sent = array_values(Http::recorded()->map(fn (array $pair): array => $pair[0]->data())->filter(fn (array $body): bool => $body['event'] === '$ai_generation')->all());
+    expect(collect($sent)->pluck('properties.$ai_span_name')->sort()->values()->all())->toBe(['CommentScreener', 'CommentSummarizer']);
+
+    foreach ($sent as $event) {
+        expect($event['properties'])->not->toHaveKey('$ai_input')->not->toHaveKey('$ai_output_choices')
+            ->and($event['properties']['$ai_input_tokens'])->toBeInt()
+            ->and($event['properties']['$ai_model'])->toBeString()->not->toBe('')
+            ->and($event['properties']['$ai_is_error'])->toBeFalse();
+    }
+
+    $body = json_encode($sent, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+    expect($body)->not->toContain('comentario secreto')->not->toContain('Rocío')
+        ->not->toContain('Buen trato entre compañeros')->not->toContain('Más comunicación');
 });

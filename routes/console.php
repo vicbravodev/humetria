@@ -12,6 +12,7 @@ use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
 use App\Modules\Campaigns\Actions\RemindNextEvaluations;
 use App\Modules\Campaigns\Actions\SendProgressDigests;
 use App\Modules\Complaints\Actions\PurgeComplaints;
+use App\Modules\Complaints\Actions\ReleaseHeldComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Engagement\Actions\AnnounceUpcomingPulses;
@@ -29,6 +30,7 @@ use App\Modules\Telework\Actions\RemindUnansweredAccidents;
 use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('engagement:item-stats {survey}', function (string $survey, ItemStatisticsReport $report): int {
@@ -46,6 +48,9 @@ Artisan::command('engagement:item-stats {survey}', function (string $survey, Ite
 
     return 0;
 })->purpose('Print, per question of a survey, how many were shown it, answered and skipped it (for the pilot)');
+
+// PostHog alerts when this line stops arriving: the scheduler (or its container) is down (docs/operations/observability.md).
+Artisan::command('schedule:heartbeat', fn () => Log::info('schedule.heartbeat'))->purpose('Log that the scheduler is alive');
 
 Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $closeExpired): void {
     $this->info('Evaluaciones cerradas: '.$closeExpired->handle());
@@ -95,6 +100,10 @@ Artisan::command('complaints:purge', function (PurgeComplaints $purge): void {
     $this->info('Casos purgados: '.$purge->handle());
 })->purpose('Delete the content of the complaints closed longer ago than their company keeps them, leaving a skeleton with no personal data');
 
+Artisan::command('complaints:release-held', function (ReleaseHeldComplaints $release): void {
+    $this->info('Quejas liberadas: '.$release->handle());
+})->purpose('Release the complaints held past the daily cap of earlier days: assign them to their handlers as any other that arrives');
+
 Artisan::command('seating:send-digests', function (SendSeatingDigests $sendDigests): void {
     $this->info('Resúmenes enviados: '.$sendDigests->handle());
 })->purpose('Email the owner and each Comisión member what waits for them in Ley Silla');
@@ -141,6 +150,7 @@ Schedule::command('seating:schedule-checks')->dailyAt('07:30')->timezone(config(
 Schedule::command('seating:remind-questions')->dailyAt('09:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('seating:send-digests')->dailyAt('08:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:send-digests')->hourly()->onOneServer()->withoutOverlapping();
+Schedule::command('complaints:release-held')->dailyAt('00:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // Shortly after local midnight; it closes the day before yesterday, a whole day after it ended. Once is enough: closing a
 // day again gives the same day.
@@ -188,7 +198,9 @@ Schedule::command('engagement:launch-pulses')->dailyAt('08:00')->timezone(config
 // Ten minutes later, and three days ahead of the run: the date of a heads-up is the day the launch command will find due.
 Schedule::command('engagement:announce-pulses')->dailyAt('08:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
+Schedule::command('schedule:heartbeat')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
 Schedule::command('geoip:update')->monthlyOn(5, '06:00');
 Schedule::command('queue:prune-batches')->daily();
-Schedule::command('queue:prune-failed')->daily();
+// A week, as long as Horizon keeps them (horizon.trim.failed): a failure is still there to read after a weekend.
+Schedule::command('queue:prune-failed', ['--hours' => 168])->daily();

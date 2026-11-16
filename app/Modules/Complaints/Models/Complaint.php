@@ -38,6 +38,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property ComplaintStatus $status
  * @property ComplaintResolution|null $resolution
  * @property bool $on_hold
+ * @property bool $held
  * @property string|null $description
  * @property string|null $respondent_text
  * @property string|null $reporter_name
@@ -51,7 +52,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable|null $closed_on
  * @property CarbonImmutable|null $purged_on
  */
-#[Fillable(['tenant_id', 'channel_id', 'reference', 'access_key_hash', 'type', 'category', 'respondent_kind', 'work_center_id', 'identity_mode', 'status', 'resolution', 'on_hold', 'description', 'respondent_text', 'reporter_name', 'reporter_contact', 'reporter_email', 'involved_text', 'occurred_on', 'received_on', 'acknowledged_at', 'closed_at', 'closed_on', 'purged_on'])]
+#[Fillable(['tenant_id', 'channel_id', 'reference', 'access_key_hash', 'type', 'category', 'respondent_kind', 'work_center_id', 'identity_mode', 'status', 'resolution', 'on_hold', 'held', 'description', 'respondent_text', 'reporter_name', 'reporter_contact', 'reporter_email', 'involved_text', 'occurred_on', 'received_on', 'acknowledged_at', 'closed_at', 'closed_on', 'purged_on'])]
 #[WithoutTimestamps]
 #[UseFactory(ComplaintFactory::class)]
 final class Complaint extends Model
@@ -72,6 +73,7 @@ final class Complaint extends Model
             'status' => ComplaintStatus::class,
             'resolution' => ComplaintResolution::class,
             'on_hold' => 'boolean',
+            'held' => 'boolean',
             'description' => 'encrypted',
             'respondent_text' => 'encrypted',
             'reporter_name' => 'encrypted',

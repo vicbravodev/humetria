@@ -164,7 +164,7 @@ it('writes the block safely: a token or a campaign value cannot close the script
         ->and(analyticsConfigIn($html)['page_location'] ?? null)->toBe('http://localhost/?utm_source=%3C%2Fscript%3E%3Cscript%3Ealert%281%29%3C%2Fscript%3E');
 });
 
-it('has no block and no PostHog origin in the policy unless the four conditions hold', function (Closure $setUp, string $uri, bool $signedIn, bool $loads): void {
+it('has no measurement block unless the four conditions hold, and PostHog only for errors elsewhere', function (Closure $setUp, string $uri, bool $signedIn, bool $loads, bool $errors): void {
     measuring();
     $setUp();
     $visit = $signedIn ? $this->actingAs(User::factory()->create()) : $this;
@@ -174,26 +174,61 @@ it('has no block and no PostHog origin in the policy unless the four conditions 
     $policy = (string) $response->headers->get('Content-Security-Policy');
 
     expect(str_contains($html, 'analytics-config'))->toBe($loads)
-        ->and(str_contains($html, 'phc_'))->toBe($loads)
-        ->and(str_contains($policy, PH_HOST))->toBe($loads)
-        ->and(str_contains($policy, 'posthog.com'))->toBe($loads);
+        ->and(str_contains($html, 'error-tracking-config'))->toBe($errors)
+        ->and(str_contains($html, 'phc_'))->toBe($loads || $errors)
+        ->and(str_contains($policy, PH_HOST))->toBe($loads || $errors)
+        ->and(str_contains($policy, 'posthog.com'))->toBe($loads || $errors);
 })->with([
-    'the landing with a token' => [fn () => null, '/', false, true],
-    'the landing without a token' => [fn () => measuring(''), '/', false, false],
-    'the landing without consent' => [fn () => measuring(consent: 'denied'), '/', false, false],
-    'the landing with a session' => [fn () => null, '/', true, false],
-    'the privacy notice' => [fn () => null, '/privacy-notice', false, false],
-    'the login' => [fn () => null, '/admin/login', false, false],
+    'the landing with a token' => [fn () => null, '/', false, true, false],
+    'the landing without a token' => [fn () => measuring(''), '/', false, false, false],
+    'the landing without consent' => [fn () => measuring(consent: 'denied'), '/', false, false, false],
+    'the landing with a session' => [fn () => null, '/', true, false, false],
+    'the privacy notice' => [fn () => null, '/privacy-notice', false, false, true],
+    'the login' => [fn () => null, '/admin/login', false, false, true],
+    'the login without a token' => [fn () => measuring(''), '/admin/login', false, false, false],
 ]);
 
-it('has no block on a page that takes a token or a code in its address', function (): void {
+it('reports browser errors on every page but the landing, with only a token: consent is about measuring visitors', function (string $uri, ?string $token): void {
+    measuring(consent: 'denied');
+
+    expect(Analytics::errorToken(matchedRequest($uri)))->toBe($token);
+})->with([
+    'the landing' => ['/', null],
+    'the privacy notice' => ['/privacy-notice', PH_TOKEN],
+    'the login' => ['/admin/login', PH_TOKEN],
+    'a survey link' => ['/survey/some-token', PH_TOKEN],
+]);
+
+it('reports no browser error without a well-formed token', function (): void {
+    measuring('phc_abc');
+
+    expect(Analytics::errorToken(matchedRequest('/admin/login')))->toBeNull();
+});
+
+/** The block of the error reports a page hands the browser, decoded. */
+function errorConfigIn(string $html): ?array
+{
+    if (preg_match('/<script type="application\/json" id="error-tracking-config">(.*?)<\/script>/s', $html, $match) !== 1) {
+        return null;
+    }
+
+    return json_decode($match[1], true, flags: JSON_THROW_ON_ERROR);
+}
+
+it('hands the browser of any other page only the token and the host for its error reports', function (): void {
+    measuring(consent: 'denied');
+
+    expect(errorConfigIn((string) $this->get('/admin/login')->assertOk()->getContent()))->toBe(['token' => PH_TOKEN, 'host' => PH_HOST]);
+});
+
+it('has no measurement block on a page that takes a token or a code in its address, and its error block never carries the address', function (): void {
     measuring();
 
     foreach (['/c/NO-SUCH-CODE', '/workers/NO-SUCH-TOKEN', '/survey/NO-SUCH-TOKEN', '/report/NO-SUCH-TOKEN', '/portal/NO-SUCH-TOKEN', '/engagement/NO-SUCH-TOKEN', '/admin/invitations/NO-SUCH-TOKEN'] as $uri) {
-        $response = $this->get($uri);
+        $html = (string) $this->get($uri)->getContent();
 
-        expect((string) $response->getContent())->not->toContain('analytics-config')
-            ->and((string) $response->headers->get('Content-Security-Policy'))->not->toContain('posthog');
+        expect($html)->not->toContain('analytics-config')
+            ->and(errorConfigIn($html))->toBe(['token' => PH_TOKEN, 'host' => PH_HOST]);
     }
 });
 

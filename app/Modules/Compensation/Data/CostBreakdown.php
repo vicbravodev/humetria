@@ -23,6 +23,7 @@ final readonly class CostBreakdown
      * @param  array<string, int>  $uncostedGrades  people left out for want of a tabulator salary, by category and level id
      * @param  list<string>  $uncalculatedLines  contribution lines that could not be calculated (work_risk, payroll_tax)
      * @param  list<string>  $staleKeys  fiscal values carried past their vigencia
+     * @param  list<CostCell>  $cells  the cost by area, category and level and group together: what the three cuts above add up from
      */
     public function __construct(
         public int $beforeCents,
@@ -39,6 +40,7 @@ final readonly class CostBreakdown
         public array $uncalculatedLines,
         public array $staleKeys,
         public RosterGaps $gaps,
+        public array $cells = [],
     ) {}
 
     public function deltaCents(): int

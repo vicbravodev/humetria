@@ -75,8 +75,7 @@ it('uses no raw colors in the frontend', function () {
     $root = realpath(__DIR__.'/../../resources/js');
     $violations = [];
 
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
-    foreach ($files as $file) {
+    foreach (frontendSourceFiles() as $file) {
         $path = substr($file->getPathname(), strlen($root) + 1);
 
         if (! preg_match('/\.tsx?$/', $path) || array_filter(DESIGN_TOKENS_EXCLUDED, fn (string $excluded): bool => str_starts_with($path, $excluded))) {

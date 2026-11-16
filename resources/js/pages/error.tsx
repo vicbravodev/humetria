@@ -10,6 +10,7 @@ import {
 import ErrorPageAction from '@/components/error-page-action';
 import Logo from '@/components/humetria/logo';
 import StatusMessage from '@/components/humetria/status-message';
+import RequestIdNote from '@/components/request-id-note';
 import { errorMessage, roleLimit } from '@/lib/error-page';
 import { home } from '@/routes';
 
@@ -28,9 +29,12 @@ const ICONS: Record<number, LucideIcon> = {
 export default function ErrorPage({
     status,
     survey,
+    requestId,
 }: {
     status: number;
     survey: boolean;
+    /** The id of this request (X-Request-Id, and every log line of it): what a person quotes to support. */
+    requestId: string | null;
 }) {
     const { tenant } = usePage().props;
     const message = errorMessage(status, survey);
@@ -74,6 +78,7 @@ export default function ErrorPage({
                             quien administra la cuenta que cambie tu rol.
                         </>
                     )}
+                    {status >= 500 && <RequestIdNote requestId={requestId} />}
                 </StatusMessage>
             </main>
         </div>

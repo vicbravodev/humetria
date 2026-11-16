@@ -25,7 +25,19 @@ export function useFirstStepsActions(): {
                 router.post(
                     welcome.url(slug),
                     {},
-                    { preserveScroll: true, preserveState: true },
+                    {
+                        preserveScroll: true,
+                        preserveState: true,
+                        // The welcome closes at once and the request runs aside (an optimistic visit is async). Waiting for
+                        // it, the dialog stayed open over the panel: a step opened meanwhile was cut short by the request,
+                        // and closing the dialog sent a second one that cut short the step's visit.
+                        optimistic: (props) => ({
+                            firstSteps:
+                                props.firstSteps === null
+                                    ? null
+                                    : { ...props.firstSteps, welcomed: true },
+                        }),
+                    },
                 );
             }
         },

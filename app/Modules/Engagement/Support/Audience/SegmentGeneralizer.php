@@ -37,6 +37,38 @@ final class SegmentGeneralizer
             }
         }
 
-        return $segments;
+        return self::closeCompanyCell($segments, $met);
+    }
+
+    /**
+     * The company-only cell takes part in every subtraction from the company total, so it must be empty or at the
+     * minimum: while it is under, the smallest remaining cell (by key on a tie) joins it.
+     *
+     * @param  array<string, Segment>  $segments
+     * @param  Closure(int): bool  $met
+     * @return array<string, Segment>
+     */
+    private static function closeCompanyCell(array $segments, Closure $met): array
+    {
+        $none = new Segment(null, null, null, null);
+
+        while (true) {
+            $counts = array_count_values(array_map(fn (Segment $segment): string => $segment->key(), $segments));
+            $rest = $counts[$none->key()] ?? 0;
+            unset($counts[$none->key()]);
+
+            if ($rest === 0 || $met($rest) || $counts === []) {
+                return $segments;
+            }
+
+            $keys = array_keys($counts);
+            usort($keys, fn (string $a, string $b): int => [$counts[$a], $a] <=> [$counts[$b], $b]);
+
+            foreach ($segments as $id => $segment) {
+                if ($segment->key() === $keys[0]) {
+                    $segments[$id] = $none;
+                }
+            }
+        }
     }
 }

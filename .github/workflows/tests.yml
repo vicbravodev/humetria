@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+  # A merge queue runs the pipeline on the merge group before the merge (the queue is turned on in the settings of main).
+  merge_group:
 
 permissions:
   contents: read
@@ -23,7 +25,8 @@ env:
   DB_USERNAME: sail
   DB_PASSWORD: password
 
-# The jobs run side by side: the run takes as long as the slowest one, not their sum. Branch protection on main
+# The jobs run side by side: the run takes as long as the slowest one, not their sum. The build job builds the frontend once
+# and the jobs that serve pages download it. Branch protection on main
 # requires only the ci job, which waits for every other job: a job can be added, split or renamed without touching the
 # settings. Every job but changes and ci waits for changes and runs only when the change needs the pipeline
 # (tests/Unit/CiPipelineTest.php pins it). Mutation testing is not here: mutation.yml runs it every week, and it never
@@ -33,6 +36,7 @@ jobs:
   # below are skipped and ci passes on its own. When the change cannot be read, everything runs.
   changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       code: ${{ steps.changed.outputs.code }}
     steps:
@@ -50,17 +54,20 @@ jobs:
           BEFORE: ${{ github.event.before }}
         run: |
           paths=''
-          # On main, only when the push is that one commit: a push of several is not read, so everything runs.
-          if [ "$EVENT" = pull_request ] || [ "$(git rev-parse HEAD^1)" = "$BEFORE" ]; then
+          # On main, only when the push is that one commit: a push of several is not read, so everything runs. A merge
+          # group is not read either: it runs everything.
+          if [ "$EVENT" = pull_request ] || { [ "$EVENT" = push ] && [ "$(git rev-parse HEAD^1)" = "$BEFORE" ]; }; then
             paths=$(git diff --no-renames --name-only HEAD^1 HEAD)
           fi
           echo "code=$(printf '%s\n' "$paths" | bash scripts/ci-code-changed.sh)" >> "$GITHUB_OUTPUT"
 
-  # Static checks and the frontend: the fast feedback (a style or type error shows up here in a couple of minutes).
-  checks:
+  # The frontend, built once: the client (public/build), the SSR bundle (bootstrap/ssr) and Wayfinder's generated files.
+  # Every job that serves pages downloads it instead of building again.
+  build:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services: &postgres
       postgres:
         image: postgres:18-alpine
@@ -70,7 +77,9 @@ jobs:
           POSTGRES_DB: testing
         ports:
           - 5433:5432
+        # The data directory in memory: the database lives as long as the job (the setup action turns off fsync).
         options: >-
+          --tmpfs /var/lib/postgresql:rw
           --health-cmd pg_isready
           --health-interval 5s
           --health-timeout 5s
@@ -81,6 +90,35 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/setup
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: assets
+          path: |
+            public/build
+            bootstrap/ssr
+            resources/js/actions
+            resources/js/routes
+            resources/js/wayfinder
+          if-no-files-found: error
+          retention-days: 1
+
+  # Static checks and the frontend: the fast feedback (a style or type error shows up here in a couple of minutes). It
+  # builds nothing: Wayfinder's files, which TypeScript and the linter read, are generated on their own.
+  checks:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services: *postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          assets: none
 
       - name: Audit Dependencies
         run: |
@@ -93,35 +131,21 @@ jobs:
           composer lint:check
           composer types:check
 
+      # The same command the Vite plugin runs (vite.config.ts: formVariants).
       - name: Frontend checks
         run: |
+          php artisan wayfinder:generate --with-form
           npm run check
           npm run types:check
           npm run test:js
 
-  # Unit and Feature, in parallel and with coverage. Pest does not apply --min in parallel, so the script reads the report.
+  # Unit and Feature with coverage, in three shards balanced by the time of each file (tests/.pest/shards.json). Each
+  # shard keeps its coverage; the coverage job joins them and applies the minimum.
   tests:
-    needs: changes
+    needs: [changes, build]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
-    services: *postgres
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup
-        with:
-          coverage: pcov
-
-      - name: Unit and Feature with coverage
-        run: composer test:coverage
-
-  # The browser tests, split in three runs of about a third each.
-  browser:
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    timeout-minutes: 30
     services: *postgres
     strategy:
       fail-fast: false
@@ -133,20 +157,88 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/setup
+        with:
+          coverage: pcov
+          assets: download
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+      - name: Unit and Feature with coverage (shard ${{ matrix.shard }}/3)
+        run: vendor/bin/pest --parallel --exclude-testsuite=Browser,Ssr --shard=${{ matrix.shard }}/3 --coverage-php=coverage-${{ matrix.shard }}.cov
 
-      - name: Browser tests (shard ${{ matrix.shard }}/3)
-        run: composer test:browser -- --shard=${{ matrix.shard }}/3
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-${{ matrix.shard }}
+          path: coverage-${{ matrix.shard }}.cov
+          if-no-files-found: error
+          retention-days: 1
+
+  # The coverage of the three shards together. Pest does not apply --min in parallel, so the script reads the report.
+  coverage:
+    needs: [changes, tests]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          assets: none
+          database: 'false'
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+
+      - name: Coverage of Unit and Feature
+        run: |
+          php scripts/coverage-merge.php coverage.xml coverage-*.cov
+          php scripts/coverage-min.php coverage.xml 90
+
+  # The browser tests, in four shards balanced by the time of each file (tests/.pest/shards.json).
+  browser:
+    needs: [changes, build]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services: *postgres
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          assets: download
+          playwright: 'true'
+
+      - name: Browser tests (shard ${{ matrix.shard }}/4)
+        run: composer test:browser -- --shard=${{ matrix.shard }}/4
+
+      # What the page looked like when an assertion failed (Pest Browser saves it on every failure).
+      - name: Screenshots of the failures
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: browser-screenshots-${{ matrix.shard }}
+          path: tests/Browser/Screenshots
+          if-no-files-found: ignore
+          retention-days: 7
 
   # The tests that need a real Node and a real Docker: the SSR bundle served by Node under the browser (composer test:ssr) and
   # the `ssr` image, built and run with the restrictions of compose.production.yaml (scripts/ssr/container-test.sh). A broken
   # bundle would otherwise reach main hidden by the fallback to the browser. The `app` image is not built here, only on deploy.
   ssr:
-    needs: changes
+    needs: [changes, build]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services: *postgres
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -154,23 +246,36 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/setup
+        with:
+          assets: download
+          playwright: 'true'
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
+      # The bundle came from the build job.
       - name: SSR bundle with a real Node
+        env:
+          SSR_PREBUILT: 'true'
         run: composer test:ssr
 
       - name: ssr image with a real Docker
         run: scripts/ssr/container-test.sh
 
+      - name: Screenshots of the failures
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ssr-screenshots
+          path: tests/Browser/Screenshots
+          if-no-files-found: ignore
+          retention-days: 7
+
   # The required check: every job passed, or the change was only documentation and they were skipped.
   ci:
-    needs: [changes, checks, tests, browser, ssr]
+    needs: [changes, build, checks, tests, coverage, browser, ssr]
     # Runs even when a job fails or is skipped, so this required check never shows as skipped: scripts/ci-verdict.sh
     # reads the result of each job and fails it when one did not pass.
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

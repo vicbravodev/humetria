@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Assistant\Agents\HumiAssistant;
 use App\Modules\Assistant\Http\Controllers\ChatController;
+use App\Modules\Assistant\Listeners\SendLlmAnalytics;
 use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\ChatConversation;
 use App\Modules\Assistant\Models\ChatMessage;
@@ -18,11 +19,12 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Ai\Middleware\Stop;
 use Laravel\Ai\Prompts\AgentPrompt;
 
-mutates(ChatController::class, StopSwitch::class);
+mutates(ChatController::class, StopSwitch::class, SendLlmAnalytics::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create(['slug' => 'acme']);
@@ -264,6 +266,90 @@ it('wires the stop switch into the steps of the agent', function (): void {
     resolve(StopSwitch::class)->request($scope->participantId);
 
     expect(value($condition))->toBeTrue();
+});
+
+describe('LLM analytics in PostHog', function (): void {
+    beforeEach(function (): void {
+        config(['services.posthog.project_token' => 'phc_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEFG']);
+        Http::fake(['https://us.i.posthog.com/i/v0/e/' => Http::response(['status' => 1])]);
+    });
+
+    /** @return list<array<string, mixed>> The $ai_generation events PostHog received. */
+    function generationsSent(): array
+    {
+        return array_values(Http::recorded()
+            ->map(fn (array $pair): array => $pair[0]->data())
+            ->filter(fn (array $body): bool => ($body['event'] ?? null) === '$ai_generation')
+            ->all());
+    }
+
+    it('sends each turn of Humi as an $ai_generation, with the whole prompt and answer, model, tokens and time', function (): void {
+        HumiAssistant::fake(['Tu campaña va bien.']);
+
+        chat(['message' => '¿Cómo va mi campaña?'])->streamedContent();
+
+        $sent = generationsSent();
+        expect($sent)->toHaveCount(1);
+        $properties = $sent[0]['properties'];
+
+        expect($sent[0]['distinct_id'])->toBe(hash_hmac('sha256', 'posthog:'.$this->hr->id, config()->string('app.key')))
+            ->and($properties)->toMatchArray([
+                '$ai_trace_id' => ChatConversation::query()->sole()->id,
+                '$ai_span_name' => 'HumiAssistant',
+                '$ai_model' => config('humi.model'),
+                '$ai_provider' => config('humi.provider'),
+                '$ai_stream' => true,
+                '$ai_is_error' => false,
+                '$process_person_profile' => false,
+                'tenant_id' => $this->a->id,
+            ])
+            ->and($properties['$ai_input_tokens'])->toBeInt()
+            ->and($properties['$ai_output_tokens'])->toBeInt()
+            ->and($properties['$ai_latency'])->toBeFloat()->toBeGreaterThanOrEqual(0)
+            ->and($properties['$ai_input'][0]['role'])->toBe('system')
+            ->and($properties['$ai_input'][0]['content'])->toBe((string) HumiAssistant::make(scope: assistantScopeIn($this->a))->instructions())
+            ->and($properties['$ai_input'][1])->toBe(['role' => 'user', 'content' => '¿Cómo va mi campaña?'])
+            ->and($properties['$ai_output_choices'])->toBe([['role' => 'assistant', 'content' => 'Tu campaña va bien.']]);
+    });
+
+    it('sends the prompt only after the personal data in it was masked', function (): void {
+        HumiAssistant::fake(['Listo.']);
+
+        chat(['message' => 'Su CURP es PEPJ800101HDFRRN09, correo juan@acme.mx'])->streamedContent();
+
+        $body = json_encode(generationsSent(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        expect($body)->toContain('Su CURP es [CURP], correo [correo]')
+            ->not->toContain('PEPJ800101HDFRRN09')->not->toContain('juan@acme.mx');
+    });
+
+    it('sends a turn that failed as an error, with the class of the error and the prompt', function (): void {
+        HumiAssistant::fake(fn () => throw new RuntimeException('provider down for juan@acme.mx'));
+
+        rescue(fn () => chat(['message' => 'Hola'])->streamedContent(), report: false);
+
+        $sent = generationsSent();
+        expect($sent)->toHaveCount(1)
+            ->and($sent[0]['properties'])->toMatchArray(['$ai_is_error' => true, '$ai_error' => 'RuntimeException', '$ai_model' => config('humi.model')])
+            ->and($sent[0]['properties']['$ai_input'][1])->toBe(['role' => 'user', 'content' => 'Hola'])
+            ->and(json_encode($sent, JSON_THROW_ON_ERROR))->not->toContain('juan@acme.mx');
+    });
+
+    it('sends nothing without a token, and the answer is the same', function (): void {
+        config(['services.posthog.project_token' => '']);
+        HumiAssistant::fake(['Listo.']);
+
+        expect(streamedText(chat(['message' => 'Hola'])->streamedContent()))->toBe('Listo.')
+            ->and(generationsSent())->toBe([]);
+    });
+
+    it('records the provider and model of the answer with its usage', function (): void {
+        HumiAssistant::fake(['Listo.']);
+
+        chat(['message' => 'Hola'])->streamedContent();
+
+        expect(AiUsage::query()->withoutGlobalScopes()->sole()->only(['provider', 'model']))
+            ->toBe(['provider' => config('humi.provider'), 'model' => config('humi.model')]);
+    });
 });
 
 it('only stops the person who pressed it, never a colleague', function (): void {

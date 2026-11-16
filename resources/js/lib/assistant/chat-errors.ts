@@ -52,3 +52,18 @@ export function chatFailure(error: Error): ChatFailure {
 
     return GENERIC;
 }
+
+/**
+ * What PostHog learns of a failed answer: that Humi did not answer, as an error of its own. Never the response's body (it
+ * can quote the conversation) and nothing for a refusal on purpose, which is not a fault.
+ */
+export function reportableFailure(error: Error): Error | null {
+    if (chatFailure(error).reason !== 'error') {
+        return null;
+    }
+
+    const reported = new Error('Humi did not answer');
+    reported.name = 'HumiStreamError';
+
+    return reported;
+}

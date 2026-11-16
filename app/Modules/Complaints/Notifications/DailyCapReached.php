@@ -41,6 +41,6 @@ final class DailyCapReached extends Notification implements MailBag, ShouldQueue
 
     public function mailBag(): string
     {
-        return MailBag::CAMPAIGN;
+        return MailBag::ESSENTIAL;
     }
 }

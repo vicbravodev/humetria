@@ -32,5 +32,6 @@ it('reads its settings from config/complaints.php', function (): void {
         ->and(config('complaints.rate_limits.submissions_per_hour'))->toBe(5)
         ->and(config('complaints.rate_limits.follow_ups_per_hour'))->toBe(30)
         ->and(config('complaints.rate_limits.daily_cap'))->toBe(200)
+        ->and(config('complaints.held_cap'))->toBe(1000)
         ->and(config('complaints.external_alternative.source'))->toContain('STPS');
 });

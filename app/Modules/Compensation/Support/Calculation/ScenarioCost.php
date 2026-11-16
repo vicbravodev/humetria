@@ -7,6 +7,7 @@ namespace App\Modules\Compensation\Support\Calculation;
 use App\Modules\Compensation\Data\BenefitSpec;
 use App\Modules\Compensation\Data\ConceptCost;
 use App\Modules\Compensation\Data\CostBreakdown;
+use App\Modules\Compensation\Data\CostCell;
 use App\Modules\Compensation\Data\CostCut;
 use App\Modules\Compensation\Data\CostSubject;
 use App\Modules\Compensation\Data\CostUnit;
@@ -87,6 +88,7 @@ final class ScenarioCost
             uncalculatedLines: self::uncalculated($results, $concepts),
             staleKeys: $in->fiscal->staleKeys(),
             gaps: $in->gaps,
+            cells: self::cells($results),
         );
     }
 
@@ -370,6 +372,26 @@ final class ScenarioCost
         ksort($slices);
 
         return array_values(array_map(fn (array $slice): CostCut => new CostCut($slice['key'], $slice['people'], $slice['before'], $slice['after']), $slices));
+    }
+
+    /**
+     * @param  list<UnitCost>  $results
+     * @return list<CostCell>
+     */
+    private static function cells(array $results): array
+    {
+        $slices = [];
+
+        foreach ($results as $result) {
+            $unit = $result->unit;
+            $id = "{$unit->areaId}|{$unit->jobGradeId}|{$unit->group->value}";
+            $slices[$id] ??= ['area' => $unit->areaId, 'grade' => $unit->jobGradeId, 'group' => $unit->group->value, 'people' => 0, 'before' => 0, 'after' => 0];
+            $slices[$id]['people'] += $unit->count;
+            $slices[$id]['before'] += $result->before->yearCents();
+            $slices[$id]['after'] += $result->after->yearCents();
+        }
+
+        return array_values(array_map(fn (array $slice): CostCell => new CostCell($slice['area'], $slice['grade'], $slice['group'], $slice['people'], $slice['before'], $slice['after']), $slices));
     }
 
     /**

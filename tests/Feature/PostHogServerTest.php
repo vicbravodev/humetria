@@ -227,3 +227,65 @@ describe('the errors of the server', function (): void {
             ->and(sentToPostHog()[0]['properties']['$exception_list'][0]['type'])->toBe('LogicException');
     });
 });
+
+describe('a reporter that cannot reach its queue', function (): void {
+    it('still logs the original exception when the queue is down, and answers the same', function (): void {
+        serverMeasuring();
+        Bus::shouldReceive('dispatch')->andThrow(new RuntimeException('Connection refused [tcp://valkey:6379]'));
+        throwingRoute(new RuntimeException('the-original-error'));
+        Log::spy();
+
+        $this->get('/_boom')->assertServerError();
+
+        Log::shouldHaveReceived('error')->withArgs(fn (string $message): bool => str_contains($message, 'the-original-error'))->atLeast()->once();
+        Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context): bool => $message === 'posthog.dispatch_failed'
+            && $context === ['exception' => 'RuntimeException'])->once();
+    });
+
+    it('still logs the original exception when the rate limiter store is down', function (): void {
+        serverMeasuring();
+        RateLimiter::shouldReceive('attempt')->andThrow(new RuntimeException('cache down'));
+        Log::spy();
+
+        report(new LogicException('the-original-error'));
+
+        Log::shouldHaveReceived('error')->withArgs(fn (string $message): bool => str_contains($message, 'the-original-error'))->once();
+        expect(sentToPostHog())->toBe([]);
+    });
+});
+
+it('stores a demo request and answers the same when the queue is down', function (): void {
+    serverMeasuring();
+    Bus::shouldReceive('dispatch')->andThrow(new RuntimeException('Connection refused'));
+
+    $this->post(route('demo-requests.store'), submittedDemo())->assertRedirect()->assertSessionHasNoErrors();
+
+    $this->assertDatabaseCount('demo_requests', 1);
+});
+
+describe('a storm of the same error', function (): void {
+    it('sends at most ten of one class a minute, and every other class still gets through', function (): void {
+        serverMeasuring();
+
+        foreach (range(1, 12) as $ignored) {
+            report(new LogicException('again'));
+        }
+        report(new DomainException('another'));
+
+        $types = collect(sentToPostHog())->map(fn (array $sent): string => $sent['properties']['$exception_list'][0]['type'])->countBy()->all();
+        expect($types)->toBe(['LogicException' => 10, 'DomainException' => 1]);
+    });
+
+    it('sends that class again once the minute is over', function (): void {
+        serverMeasuring();
+        $this->freezeSecond();
+
+        foreach (range(1, 11) as $ignored) {
+            report(new LogicException('again'));
+        }
+        $this->travel(61)->seconds();
+        report(new LogicException('again'));
+
+        expect(sentToPostHog())->toHaveCount(11);
+    });
+});

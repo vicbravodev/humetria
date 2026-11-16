@@ -43,6 +43,18 @@ final readonly class DisclosureFiles
         $this->disk()->delete($paths);
     }
 
+    /** A rollback: deletes what this request stored and gives back the quota `put()` took for it. */
+    public function discard(string ...$paths): void
+    {
+        foreach ($paths as $path) {
+            if ($this->disk()->exists($path)) {
+                $this->storage->release($path, $this->disk()->size($path));
+            }
+        }
+
+        $this->delete(...$paths);
+    }
+
     private function disk(): FilesystemAdapter
     {
         return Storage::disk(config()->string('filesystems.disclosure_files'));
