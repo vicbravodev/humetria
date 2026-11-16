@@ -178,9 +178,10 @@ it('shows a person the policy of their center to read and confirm', function (bo
 it('lets the person confirm from the phone, once', function (): void {
     [$url, $enter] = personalPolicyUrl();
 
-    $enter(visit($url)->on()->mobile())
-        ->press('Confirmo que la leí')
-        ->assertSee('Gracias. Quedó registrado que leyó la política.')
+    Illuminate\Support\Facades\Notification::fake();
+
+    // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
+    provedWithCode($enter(visit($url)->on()->mobile())->press('Confirmo que la leí'), 'Gracias. Quedó registrado que leyó la política.')
         ->assertSee('Usted confirmó el')
         ->assertDontSee('Confirmo que la leí');
 });

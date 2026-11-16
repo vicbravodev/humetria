@@ -12,6 +12,8 @@ use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -58,6 +60,24 @@ it('shows the person the policy in force in their center, with the company name 
             ->where('policy.sections.0.text', fn ($text) => str_contains($text, 'Acme Manufacturas S.A. de C.V.') && ! str_contains($text, '{legal_name}'))
             ->where('acknowledgment', fn ($ack) => $ack['state'] === 'pending' && $ack['on'] === null && isset($ack['documentId'])));
 });
+
+it('reads the policy without a proof, and takes the confirmation only after a recent proof that it is the person', function (EntryVia $via, int $minutes): void {
+    $policy = policyAskedOfAna();
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.policy.show', $this->slug);
+
+    $this->get($page)->assertOk();
+    $this->from($page)->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id])->assertRedirect($page)->assertInertiaFlash('proofRequired.mode', 'code');
+    expect(Acknowledgment::query()->sole()->acknowledged_at)->toBeNull();
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.policy.acknowledge', $this->slug), ['document' => $policy->id])->assertRedirect($page)->assertSessionHasNoErrors();
+    expect(Acknowledgment::query()->sole()->acknowledged_at)->not->toBeNull();
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
 
 it('says when the person confirmed it', function (): void {
     $this->travelTo('2026-11-20 18:00:00');
