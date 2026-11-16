@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Attendance\Support;
+namespace App\Modules\WorkerAccess\Support;
 
-use App\Modules\Attendance\Data\CredentialData;
-use App\Modules\Attendance\Data\VerifiedAssertion;
-use App\Modules\Attendance\Exceptions\InvalidCredential;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\WorkerAccess\Data\CredentialData;
+use App\Modules\WorkerAccess\Data\SignedBy;
+use App\Modules\WorkerAccess\Exceptions\InvalidCredential;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Closure;
 use Cose\Algorithms;
@@ -39,7 +39,7 @@ use Webauthn\PublicKeyCredentialUserEntity;
 use Webauthn\TrustPath\EmptyTrustPath;
 
 /**
- * The WebAuthn ceremonies of a person's linked device, on web-auth/webauthn-lib (spec «Seguridad del enlace personal»).
+ * The WebAuthn ceremonies of a person's key, on web-auth/webauthn-lib (spec «Seguridad del enlace personal»).
  * A person has no account: their key is discoverable (it carries their id as its user handle), asked of the device's own
  * authenticator (platform), and unlocked with the person verified (fingerprint, face or PIN). The key is bound to the
  * person's passkey provider account, not provably to one physical device: synced passkeys (iCloud Keychain, Google
@@ -119,7 +119,7 @@ final readonly class WebAuthnCeremony
      *
      * @throws InvalidCredential for any answer that does not verify
      */
-    public function verifyAssertion(string $context, array $response): VerifiedAssertion
+    public function verifyAssertion(string $context, array $response): SignedBy
     {
         $credential = $this->credential($response);
         $assertion = $credential->response;
@@ -131,9 +131,9 @@ final readonly class WebAuthnCeremony
         $challenge = $assertion->clientDataJSON->challenge;
         $this->consume("assert:{$context}", $challenge);
 
-        return DB::transaction(function () use ($credential, $assertion, $challenge): VerifiedAssertion {
+        return DB::transaction(function () use ($credential, $assertion, $challenge): SignedBy {
             // Locked: two signatures of the same key at once are checked one after the other against the counter.
-            $device = AttendanceDevice::query()->where('credential_id', self::encode($credential->rawId))->whereNull('revoked_at')->lockForUpdate()->first();
+            $device = WorkerCredential::query()->where('credential_id', self::encode($credential->rawId))->whereNull('revoked_at')->lockForUpdate()->first();
             $person = $device === null ? null : $this->roster->find($device->employee_id);
 
             if ($device === null || $person === null || ! $person->active) {
@@ -145,7 +145,7 @@ final readonly class WebAuthnCeremony
 
             $device->update(['sign_count' => $record->counter, 'backup_state' => $record->backupStatus === true, 'last_used_at' => CarbonImmutable::now()]);
 
-            return new VerifiedAssertion($device->id, $device->employee_id);
+            return new SignedBy($device->id, $device->employee_id);
         });
     }
 
@@ -183,7 +183,7 @@ final readonly class WebAuthnCeremony
     }
 
     /** The device's key as the library checks it: no attestation kept, the person's id as its user handle. */
-    private function record(AttendanceDevice $device): CredentialRecord
+    private function record(WorkerCredential $device): CredentialRecord
     {
         return CredentialRecord::create(
             publicKeyCredentialId: self::decode($device->credential_id),
@@ -223,7 +223,7 @@ final readonly class WebAuthnCeremony
 
     private function key(string $context, string $challenge): string
     {
-        return 'attendance-webauthn:'.$this->tenant->id().':'.hash('sha256', $context).':'.hash('sha256', $challenge);
+        return 'worker-access-webauthn:'.$this->tenant->id().':'.hash('sha256', $context).':'.hash('sha256', $challenge);
     }
 
     /**
@@ -298,12 +298,12 @@ final readonly class WebAuthnCeremony
     }
 
     /**
-     * Seconds a challenge is good for (config/attendance.php).
+     * Seconds a challenge is good for (config/worker_access.php).
      *
      * @return int<1, max>
      */
     private static function ttl(): int
     {
-        return max(1, config()->integer('attendance.webauthn.challenge_seconds'));
+        return max(1, config()->integer('worker_access.webauthn.challenge_seconds'));
     }
 }

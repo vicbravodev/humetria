@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
@@ -12,6 +11,7 @@ use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -82,7 +82,7 @@ it('logs no position, credential, screen code, enrollment or kiosk token along a
     $this->postJson(route('attendance.device.enroll.register', ['acme', $enrollToken]), [
         'agreement_accepted' => true, 'agreement_version' => 1, 'device_label' => 'iPhone', 'credential' => $phone->create($options),
     ])->assertOk();
-    $device = AttendanceDevice::query()->sole();
+    $device = WorkerCredential::query()->sole();
 
     // She marks her start at the door and her end in the afternoon.
     $session = $this->get(route('attendance.device.punch.show', ['acme', 'q' => $qr]))->assertOk()->getCookie($cookie)?->getValue() ?? '';

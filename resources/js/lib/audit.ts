@@ -43,11 +43,11 @@ const LABELS: Record<string, string> = {
     'attendance.mark_corrected': 'Marca de asistencia corregida',
     'attendance.enrollment_issued': 'Enlace de registro de dispositivo emitido',
     'attendance.zone_saved': 'Zona de asistencia guardada',
-    'attendance.device_revoked': 'Dispositivo de asistencia revocado',
+    'worker_access.credential_revoked': 'Llave de acceso revocada',
     'attendance.week_reopened': 'Semana de asistencia reabierta',
     'attendance.enrollments_sent':
         'Enlaces de registro de dispositivo enviados',
-    'attendance.device_enrolled': 'Dispositivo de asistencia registrado',
+    'worker_access.credential_registered': 'Llave de acceso registrada',
     'attendance.report_exported': 'Reporte de asistencia exportado',
     'employee.manager_changed': 'Jefe directo cambiado',
     'employee.deactivated': 'Persona dada de baja',

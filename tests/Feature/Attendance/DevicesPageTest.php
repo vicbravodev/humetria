@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Attendance\Http\Controllers\DeviceController;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -14,6 +13,7 @@ use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -38,9 +38,9 @@ beforeEach(function (): void {
     $this->carla = devicesPerson($this->office, 'Carla Ruiz', 'Analista', 'carla@acme.test');
     EmployeeFactory::new()->deactivated()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ex Empleado']);
     // Ana: her phone (a passkey of one device) and an old one revoked. Carla: a synced passkey of her account, revoked.
-    $this->phone = AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'iPhone de Ana', 'enrolled_at' => CarbonImmutable::parse('2026-11-02 15:00:00', 'UTC'), 'last_used_at' => CarbonImmutable::parse('2026-11-10 14:05:00', 'UTC')]);
-    $this->old = AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'Moto viejo', 'enrolled_at' => CarbonImmutable::parse('2026-10-01 15:00:00', 'UTC'), 'revoked_at' => CarbonImmutable::parse('2026-11-01 15:00:00', 'UTC')]);
-    $this->synced = AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->carla->id, 'label' => 'Pixel', 'backup_eligible' => true, 'backup_state' => true, 'enrolled_at' => CarbonImmutable::parse('2026-10-20 15:00:00', 'UTC'), 'revoked_at' => CarbonImmutable::parse('2026-11-05 15:00:00', 'UTC')]);
+    $this->phone = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'iPhone de Ana', 'registered_at' => CarbonImmutable::parse('2026-11-02 15:00:00', 'UTC'), 'last_used_at' => CarbonImmutable::parse('2026-11-10 14:05:00', 'UTC')]);
+    $this->old = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'Moto viejo', 'registered_at' => CarbonImmutable::parse('2026-10-01 15:00:00', 'UTC'), 'revoked_at' => CarbonImmutable::parse('2026-11-01 15:00:00', 'UTC')]);
+    $this->synced = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->carla->id, 'label' => 'Pixel', 'backup_eligible' => true, 'backup_state' => true, 'registered_at' => CarbonImmutable::parse('2026-10-20 15:00:00', 'UTC'), 'revoked_at' => CarbonImmutable::parse('2026-11-05 15:00:00', 'UTC')]);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
     Notification::fake();
 });
@@ -237,7 +237,7 @@ describe('the list', function (): void {
 
     it('takes the same queries with a few people or many, with their devices', function (int $more): void {
         foreach (EmployeeFactory::new()->count($more)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->office->id]) as $person) {
-            AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $person->id]);
+            WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $person->id]);
         }
         $this->actingAs($this->hr);
 
@@ -332,7 +332,7 @@ describe('revoking a device', function (): void {
             ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Dispositivo revocado. Ya no puede marcar.']);
 
         expect($this->phone->fresh()?->revoked_at)->not->toBeNull()
-            ->and(AuditEntry::query()->where('event', 'attendance.device_revoked')->sole()->subject_id)->toBe($this->phone->id);
+            ->and(AuditEntry::query()->where('event', 'worker_access.credential_revoked')->sole()->subject_id)->toBe($this->phone->id);
         $this->get(devicesUrl(['status' => 'linked']))->assertInertia(fn (AssertableInertia $page) => $page->where('people.total', 0));
     });
 
@@ -343,7 +343,7 @@ describe('revoking a device', function (): void {
     });
 
     it('cannot be done by a viewer, and answers 404 for a device of another company or unknown', function (): void {
-        $theirs = AttendanceDevice::factory()->create();
+        $theirs = WorkerCredential::factory()->create();
         workIn($this->tenant);
 
         $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))->post(route('tenant.attendance.devices.revoke', ['acme', $this->phone->id]))->assertForbidden();
@@ -351,6 +351,6 @@ describe('revoking a device', function (): void {
         $this->post(route('tenant.attendance.devices.revoke', ['acme', '0b8a3a4e-0000-4000-8000-000000000000']))->assertNotFound();
 
         expect($this->phone->fresh()?->revoked_at)->toBeNull()
-            ->and(AttendanceDevice::query()->withoutGlobalScopes()->whereKey($theirs->id)->value('revoked_at'))->toBeNull();
+            ->and(WorkerCredential::query()->withoutGlobalScopes()->whereKey($theirs->id)->value('revoked_at'))->toBeNull();
     });
 });

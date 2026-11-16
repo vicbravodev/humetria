@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
@@ -11,6 +10,7 @@ use App\Modules\Attendance\Support\SetupProgress;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia;
@@ -121,8 +121,8 @@ describe('the road to the first mark', function (): void {
     });
 
     it('counts the people with an active device, not one with only a revoked one', function (): void {
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->bob->id, 'revoked_at' => now()]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->bob->id, 'revoked_at' => now()]);
 
         expect(setupProps()['devices'])->toMatchArray(['done' => 1, 'total' => 3]);
     });
@@ -161,7 +161,7 @@ describe('the road to the first mark', function (): void {
         $outsider = EmployeeFactory::new()->create(['tenant_id' => $globex->id, 'work_center_id' => $theirs->id]);
         AttendanceZone::factory()->create(['tenant_id' => $globex->id, 'work_center_id' => $theirs->id]);
         KioskDevice::factory()->create(['tenant_id' => $globex->id, 'work_center_id' => $theirs->id, 'activated_at' => now(), 'last_seen_at' => now()]);
-        AttendanceDevice::factory()->create(['tenant_id' => $globex->id, 'employee_id' => $outsider->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $globex->id, 'employee_id' => $outsider->id]);
         AttendanceSchedule::factory()->create(['tenant_id' => $globex->id, 'employee_id' => $outsider->id]);
         workIn($this->tenant);
 
@@ -176,7 +176,7 @@ describe('the road to the first mark', function (): void {
     it('is read in the same number of queries, however many centers and people', function (int $more): void {
         $center = WorkCenter::factory()->for($this->tenant)->create();
         foreach (EmployeeFactory::new()->count($more)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]) as $person) {
-            AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $person->id]);
+            WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $person->id]);
         }
         $this->actingAs($this->hr);
 
@@ -210,7 +210,7 @@ describe('the page', function (): void {
 
     it('sends no position, device or email', function (): void {
         AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'latitude' => 19.432712, 'longitude' => -99.133298, 'radius_m' => 50]);
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
         $this->actingAs($this->hr);
 
         $setup = json_encode($this->get(route('tenant.attendance.setup', 'acme'))->inertiaProps('setup'));

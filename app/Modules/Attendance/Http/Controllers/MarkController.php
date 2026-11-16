@@ -6,11 +6,9 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Enums\MarkMethod;
-use App\Modules\Attendance\Exceptions\InvalidCredential;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -18,11 +16,12 @@ use App\Modules\Attendance\Support\CompanyPolicy;
 use App\Modules\Attendance\Support\MarkPolicyCheck;
 use App\Modules\Attendance\Support\PunchDay;
 use App\Modules\Attendance\Support\QrToken;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
+use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -50,7 +49,7 @@ final readonly class MarkController
 {
     private const string SESSION_KEY = 'attendance.person';
 
-    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant) {}
+    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials) {}
 
     /**
      * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
@@ -92,16 +91,16 @@ final readonly class MarkController
         return back();
     }
 
-    public function options(Request $request, WebAuthnCeremony $ceremony): JsonResponse
+    public function options(Request $request, WorkerSignatures $signatures): JsonResponse
     {
-        return response()->json($ceremony->assertionOptions($request->session()->getId()))->header('Cache-Control', 'no-store, private');
+        return response()->json($signatures->options($request->session()->getId()))->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(MarkRequest $request, WebAuthnCeremony $ceremony, RecordMark $record): JsonResponse
+    public function store(MarkRequest $request, WorkerSignatures $signatures, RecordMark $record): JsonResponse
     {
-        try {
-            $signed = $ceremony->verifyAssertion($request->session()->getId(), $request->credential());
-        } catch (InvalidCredential) {
+        $signed = $signatures->verify($request->session()->getId(), $request->credential());
+
+        if ($signed === null) {
             // Ids only: never the credential, the address or the body.
             Log::warning('attendance.mark_unverified', ['tenant_id' => $this->tenant->id(), 'request_id' => Context::get('request_id')]);
             abort(404);
@@ -122,12 +121,12 @@ final readonly class MarkController
                 $qr === null ? null : QrToken::verify($qr, $this->tenant->id(), $person->workCenterId, CarbonImmutable::now()),
                 $zones,
                 $request->position(),
-                $signed->deviceId,
+                $signed->credentialId,
                 KioskDevice::inUseIn($person->workCenterId),
             );
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {
-            Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'device_id' => $signed->deviceId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
+            Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'device_id' => $signed->credentialId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
 
             // Who signed and what they may do: never the steps of whoever marked before on this browser.
             return response()->json(['reason' => $rejected->reason, 'name' => $person->name, 'next' => PunchDay::of($person->id)['next']], 422);
@@ -163,7 +162,7 @@ final readonly class MarkController
             : null;
         $person = is_string($id) ? $this->roster->find($id) : null;
 
-        if ($person === null || ! $person->active || ! AttendanceDevice::query()->where('employee_id', $person->id)->whereNull('revoked_at')->exists()) {
+        if ($person === null || ! $person->active || ($this->credentials->countsByEmployee([$person->id])[$person->id]->active ?? 0) === 0) {
             $request->session()->forget(self::SESSION_KEY);
 
             return null;

@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Contracts\AttendanceUsage;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Database\Factories\Organization\EmployeeFactory;
 
 mutates(CompanyAttendanceUsage::class);
@@ -26,7 +26,7 @@ it('tells which companies record working time with Attendance: a policy, a kiosk
     'a linked phone' => [function (Tenant $tenant): void {
         $center = WorkCenter::factory()->for($tenant)->create();
         $person = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
-        AttendanceDevice::factory()->create(['tenant_id' => $tenant->id, 'employee_id' => $person->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $tenant->id, 'employee_id' => $person->id]);
     }],
     'a mark' => [fn (Tenant $tenant) => AttendanceMark::factory()->create(['tenant_id' => $tenant->id])],
 ]);

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Database\Factories\Organization\EmployeeFactory;
 
 /** RH's panel with a center: Ana linked her phone (a synced key), Bob has no email and no device. */
@@ -17,7 +17,7 @@ function devicesPanel(): string
     $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
     $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'name' => 'Ana López', 'job_title' => 'Operadora', 'email' => 'ana@acme.test']);
     EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'name' => 'Bob Díaz', 'job_title' => 'Almacenista', 'email' => null]);
-    AttendanceDevice::factory()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'label' => 'iPhone de Ana', 'backup_eligible' => true, 'backup_state' => true, 'last_used_at' => now()]);
+    WorkerCredential::factory()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'label' => 'iPhone de Ana', 'backup_eligible' => true, 'backup_state' => true, 'last_used_at' => now()]);
 
     return $url;
 }
@@ -96,7 +96,7 @@ it('lets RH revoke a lost phone after asking', function (): void {
         ->assertScript(deviceChipOf('Ana López'), 'Revocado')
         ->assertNoJavaScriptErrors();
 
-    expect(AttendanceDevice::query()->withoutGlobalScopes()->sole()->revoked_at)->not->toBeNull();
+    expect(WorkerCredential::query()->withoutGlobalScopes()->sole()->revoked_at)->not->toBeNull();
 });
 
 it('sends their link to everyone of a center without a device, leaving who has no email to RH', function (): void {

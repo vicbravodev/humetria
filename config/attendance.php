@@ -24,13 +24,6 @@ return [
     ],
 
     /*
-    | Seconds a passkey challenge (to link a phone or to mark) is good for.
-    */
-    'webauthn' => [
-        'challenge_seconds' => (int) env('ATTENDANCE_WEBAUTHN_CHALLENGE_SECONDS', 60),
-    ],
-
-    /*
     | Minutes the Marcar page of a browser remembers who marked last, to offer their next step.
     */
     'punch' => [

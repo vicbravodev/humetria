@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Attendance\Actions\SendEnrollmentLinks;
 use App\Modules\Attendance\Jobs\SendEnrollmentLink;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
@@ -14,6 +13,7 @@ use App\Modules\Attendance\Notifications\EnrollmentInvitation;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -35,8 +35,8 @@ beforeEach(function (): void {
     $this->dan = EmployeeFactory::new()->create([...$center, 'name' => 'Dan Soto', 'email' => 'dan@acme.test']);
     EmployeeFactory::new()->deactivated()->create([...$center, 'email' => 'ex@acme.test']);
     EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id, 'email' => 'otro@acme.test']);
-    AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->carla->id, 'revoked_at' => now()]);
-    AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->dan->id]);
+    WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->carla->id, 'revoked_at' => now()]);
+    WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->dan->id]);
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
     Notification::fake();
 });
@@ -211,7 +211,7 @@ it('queues one link per person even when RH sends the batch twice before the wor
 });
 
 it('sends nothing to a person who linked a device between the batch and the worker, and logs why with ids', function (): void {
-    AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     Log::spy();
 
     app()->call((new SendEnrollmentLink($this->tenant->id, $this->ana->id, $this->hr->id))->handle(...));

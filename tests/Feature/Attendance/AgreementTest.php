@@ -6,10 +6,10 @@ use App\Modules\Attendance\Actions\AcceptAgreement;
 use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Support\CurrentAgreement;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\QueryException;
@@ -60,7 +60,7 @@ it('keeps each company\'s own agreement', function (): void {
 it('records that a person accepted the current version, on a device, and when, logging ids only', function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'));
     $ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
-    $deviceId = AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id;
+    $deviceId = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id;
     Log::spy();
 
     $acceptance = resolve(AcceptAgreement::class)->handle($ana->id, $deviceId, 1);
@@ -77,15 +77,15 @@ it('does not record an acceptance of a version that is no longer the current one
     resolve(CurrentAgreement::class)->get();
     AttendancePolicy::query()->sole()->update(['retention_months' => 36]);
 
-    expect(fn () => resolve(AcceptAgreement::class)->handle($ana->id, AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 1))->toThrow(AgreementOutdated::class)
-        ->and(fn () => resolve(AcceptAgreement::class)->handle($ana->id, AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 3))->toThrow(AgreementOutdated::class)
+    expect(fn () => resolve(AcceptAgreement::class)->handle($ana->id, WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 1))->toThrow(AgreementOutdated::class)
+        ->and(fn () => resolve(AcceptAgreement::class)->handle($ana->id, WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 3))->toThrow(AgreementOutdated::class)
         ->and(AgreementAcceptance::query()->count())->toBe(0)
-        ->and(resolve(AcceptAgreement::class)->handle($ana->id, AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 2)->agreement_id)->toBe(AttendanceAgreement::query()->where('version', 2)->sole()->id);
+        ->and(resolve(AcceptAgreement::class)->handle($ana->id, WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 2)->agreement_id)->toBe(AttendanceAgreement::query()->where('version', 2)->sole()->id);
 });
 
 it('never changes nor deletes the text a person accepted, nor the acceptance', function (string $sql): void {
     $ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
-    resolve(AcceptAgreement::class)->handle($ana->id, AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 1);
+    resolve(AcceptAgreement::class)->handle($ana->id, WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 1);
 
     expect(fn () => DB::statement($sql))->toThrow(QueryException::class, 'append-only');
 })->with([

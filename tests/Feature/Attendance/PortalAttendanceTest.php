@@ -5,12 +5,12 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Attendance\Actions\IssueSelfEnrollment;
 use App\Modules\Attendance\Http\Controllers\PortalController;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Support\AttendancePortalSection;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Log;
@@ -59,15 +59,15 @@ describe('the section of the home', function (): void {
             ->and($section['label'])->toBe('Mi jornada')
             ->and($section['pending'])->toBe(1);
 
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
 
         expect(portalHomeSections($this->token)['attendance']['pending'])->toBeNull();
     });
 
     it('keeps asking while the only phone of the person is revoked, and ignores the phone of somebody else', function (): void {
         $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $beto->id]);
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'revoked_at' => now()]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $beto->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'revoked_at' => now()]);
 
         expect(portalHomeSections($this->token)['attendance']['pending'])->toBe(1);
     });
@@ -82,9 +82,9 @@ describe('the section of the home', function (): void {
 describe('the page', function (): void {
     it('shows the company, the person and the phones that are theirs, with the three ways to go on', function (): void {
         $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $beto->id, 'label' => 'Teléfono de Beto']);
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'iPhone de Ana', 'enrolled_at' => '2026-10-01 12:00:00', 'last_used_at' => '2026-11-06 20:00:00']);
-        AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'Viejo', 'revoked_at' => now()]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $beto->id, 'label' => 'Teléfono de Beto']);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'iPhone de Ana', 'registered_at' => '2026-10-01 12:00:00', 'last_used_at' => '2026-11-06 20:00:00']);
+        WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'Viejo', 'revoked_at' => now()]);
 
         $response = $this->get(route('portal.attendance.show', $this->token))
             ->assertOk()

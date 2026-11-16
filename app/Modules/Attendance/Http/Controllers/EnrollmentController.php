@@ -11,10 +11,10 @@ use App\Modules\Attendance\Http\Requests\EnrollRequest;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Support\CenterReadiness;
 use App\Modules\Attendance\Support\CurrentAgreement;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerKeys;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,24 +47,24 @@ final readonly class EnrollmentController
         ]);
     }
 
-    public function options(string $tenant, string $token, WebAuthnCeremony $ceremony): JsonResponse
+    public function options(string $tenant, string $token, WorkerKeys $keys): JsonResponse
     {
         $person = $this->person($token);
 
-        return response()->json($ceremony->registrationOptions($person->id, $person->name))->header('Cache-Control', 'no-store, private');
+        return response()->json($keys->registrationOptions($person->id, $person->name))->header('Cache-Control', 'no-store, private');
     }
 
     public function register(EnrollRequest $request, string $tenant, string $token, EnrollDevice $enroll): JsonResponse
     {
         try {
-            $device = $enroll->handle($token, $request->integer('agreement_version'), $request->credential(), $request->string('device_label')->toString());
+            $enrolled = $enroll->handle($token, $request->integer('agreement_version'), $request->credential(), $request->string('device_label')->toString());
         } catch (InvalidCredential) {
             return response()->json(['message' => 'No se pudo crear la llave. Intente de nuevo.'], 422);
         } catch (AgreementOutdated) {
             return response()->json(['message' => 'El acuerdo cambió. Recargue la página para leer la versión nueva.'], 409);
         }
 
-        abort_if($device === null, 404);
+        abort_if(! $enrolled, 404);
 
         return response()->json(['enrolled' => true]);
     }

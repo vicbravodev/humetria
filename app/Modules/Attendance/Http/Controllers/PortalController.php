@@ -6,9 +6,10 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\IssueSelfEnrollment;
 use App\Modules\Attendance\Exceptions\EmployeeNotAvailable;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
+use App\Modules\WorkerAccess\Data\CredentialSummary;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,7 +22,7 @@ use Inertia\Response;
  */
 final readonly class PortalController
 {
-    public function __construct(private PortalAccess $access, private Companies $companies) {}
+    public function __construct(private PortalAccess $access, private Companies $companies, private WorkerCredentials $credentials) {}
 
     public function show(string $token): Response
     {
@@ -34,12 +35,11 @@ final readonly class PortalController
             'token' => $token,
             'company' => $person->company,
             'name' => $person->name,
-            'devices' => AttendanceDevice::query()->where('employee_id', $person->employeeId)->whereNull('revoked_at')->oldest('enrolled_at')->get()
-                ->map(fn (AttendanceDevice $device): array => [
-                    'label' => $device->label,
-                    'enrolledOn' => $device->enrolled_at->toDateString(),
-                    'lastUsedOn' => $device->last_used_at?->toDateString(),
-                ])->all(),
+            'devices' => array_values(array_map(fn (CredentialSummary $device): array => [
+                'label' => $device->label,
+                'enrolledOn' => $device->registeredAt->toDateString(),
+                'lastUsedOn' => $device->lastUsedAt?->toDateString(),
+            ], array_reverse(array_filter($this->credentials->ofEmployees([$person->employeeId])[$person->employeeId] ?? [], fn (CredentialSummary $device): bool => $device->revokedAt === null)))),
             'markUrl' => route('attendance.device.punch.home', $slug),
             'weekUrl' => route('attendance.device.week.show', $slug),
             'enrollUrl' => route('portal.attendance.enroll', $token),

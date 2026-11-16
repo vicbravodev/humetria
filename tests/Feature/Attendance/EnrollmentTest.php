@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Attendance\Actions\EnrollDevice;
-use App\Modules\Attendance\Actions\RevokeDevice;
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
@@ -15,9 +13,11 @@ use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Notifications\DeviceLinked;
 use App\Modules\Attendance\Notifications\EnrollmentInvitation;
 use App\Modules\Attendance\Support\DeviceLabel;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Actions\RevokeCredential;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Http\Request;
@@ -118,16 +118,16 @@ it('links the phone: it saves the device and the acceptance of the agreement, us
 
     enrollWith($this->phone, $this->token)->assertOk()->assertExactJson(['enrolled' => true]);
 
-    $device = AttendanceDevice::query()->sole();
+    $device = WorkerCredential::query()->sole();
     $acceptance = AgreementAcceptance::query()->sole();
     expect($device)->employee_id->toBe($this->ana->id)->label->toBe('iPhone')->sign_count->toBe(0)->revoked_at->toBeNull()
         ->and($device->credential_id)->toBe(rtrim(strtr(base64_encode($this->phone->credentialId), '+/', '-_'), '='))
-        ->and($device->enrolled_at->toIso8601String())->toBe('2026-11-07T15:00:00+00:00')
+        ->and($device->registered_at->toIso8601String())->toBe('2026-11-07T15:00:00+00:00')
         ->and($acceptance)->device_id->toBe($device->id)->employee_id->toBe($this->ana->id)
         ->and($acceptance->agreement_id)->toBe(AttendanceAgreement::query()->sole()->id)
         ->and(EnrollmentLink::query()->sole()->used_at)->not->toBeNull();
 
-    $entry = AuditEntry::query()->where('event', 'attendance.device_enrolled')->sole();
+    $entry = AuditEntry::query()->where('event', 'worker_access.credential_registered')->sole();
     expect($entry)->subject_id->toBe($device->id)->metadata->toBe(['employee_id' => $this->ana->id]);
     Log::shouldHaveReceived('info')->with('attendance.device_enrolled', ['device_id' => $device->id, 'employee_id' => $this->ana->id]);
 });
@@ -138,7 +138,7 @@ it('works once: after linking, the link answers 404 everywhere', function (): vo
     $this->get(enrollRoute('show', $this->token))->assertNotFound();
     $this->postJson(enrollRoute('options', $this->token))->assertNotFound();
     $this->postJson(enrollRoute('register', $this->token), ['agreement_accepted' => true, 'agreement_version' => 1, 'device_label' => 'iPhone', 'credential' => ['id' => 'x']])->assertNotFound();
-    expect(AttendanceDevice::query()->count())->toBe(1);
+    expect(WorkerCredential::query()->count())->toBe(1);
 });
 
 it('does not let a link that passed its 48 hours link anything', function (): void {
@@ -147,7 +147,7 @@ it('does not let a link that passed its 48 hours link anything', function (): vo
 
     $this->get(enrollRoute('show', $this->token))->assertNotFound();
     $this->postJson(enrollRoute('register', $this->token), ['agreement_accepted' => true, 'agreement_version' => 1, 'device_label' => 'iPhone', 'credential' => $this->phone->create($options)])->assertNotFound();
-    expect(AttendanceDevice::query()->count())->toBe(0);
+    expect(WorkerCredential::query()->count())->toBe(0);
 });
 
 it('answers the same 404 for every link that does not work, whatever the reason', function (Closure $link): void {
@@ -159,7 +159,7 @@ it('answers the same 404 for every link that does not work, whatever the reason'
     expect($page($this->get(enrollRoute('show', $token, $slug))))->toBe($expected);
     $this->postJson(enrollRoute('options', $token, $slug))->assertNotFound();
     $this->postJson(enrollRoute('register', $token, $slug), ['agreement_accepted' => true, 'agreement_version' => 1, 'device_label' => 'iPhone', 'credential' => ['id' => 'x']])->assertNotFound();
-    expect(AttendanceDevice::query()->count())->toBe(0);
+    expect(WorkerCredential::query()->count())->toBe(0);
 })->with([
     'unknown token' => [fn (): array => ['acme', 'not-a-token']],
     'replaced by a newer link' => [function ($test): array {
@@ -201,7 +201,7 @@ it('answers the same 404 for every link that does not work, whatever the reason'
 it('does not link anything without the agreement accepted', function (array $overrides): void {
     enrollWith($this->phone, $this->token, $overrides)->assertUnprocessable()->assertJsonValidationErrors('agreement_accepted');
 
-    expect(AttendanceDevice::query()->count())->toBe(0)
+    expect(WorkerCredential::query()->count())->toBe(0)
         ->and(AgreementAcceptance::query()->count())->toBe(0)
         ->and(EnrollmentLink::findPending($this->token))->not->toBeNull();
 })->with([
@@ -212,7 +212,7 @@ it('does not link anything without the agreement accepted', function (array $ove
 it('refuses a key that does not verify with one plain message, and keeps the link for another try', function (): void {
     enrollWith($this->phone, $this->token, userVerified: false)->assertUnprocessable()->assertExactJson(['message' => 'No se pudo crear la llave. Intente de nuevo.']);
 
-    expect(AttendanceDevice::query()->count())->toBe(0)
+    expect(WorkerCredential::query()->count())->toBe(0)
         ->and(EnrollmentLink::findPending($this->token))->not->toBeNull();
     enrollWith($this->phone, $this->token)->assertOk();
 });
@@ -223,7 +223,7 @@ it('does not link a phone with a version of the agreement the person did not rea
 
     enrollWith($this->phone, $this->token)->assertConflict()->assertExactJson(['message' => 'El acuerdo cambió. Recargue la página para leer la versión nueva.']);
 
-    expect(AttendanceDevice::query()->count())->toBe(0)
+    expect(WorkerCredential::query()->count())->toBe(0)
         ->and(AgreementAcceptance::query()->count())->toBe(0)
         ->and(EnrollmentLink::findPending($this->token))->not->toBeNull();
     enrollWith($this->phone, $this->token, ['agreement_version' => 2])->assertOk();
@@ -234,7 +234,7 @@ it('does not link a phone for a person who left after the page opened', function
     $this->ana->update(['deactivated_at' => now()]);
 
     $this->postJson(enrollRoute('register', $this->token), ['agreement_accepted' => true, 'agreement_version' => 1, 'device_label' => 'iPhone', 'credential' => $this->phone->create($options)])->assertNotFound();
-    expect(AttendanceDevice::query()->count())->toBe(0);
+    expect(WorkerCredential::query()->count())->toBe(0);
 });
 
 it('asks for a name of the device and a credential', function (): void {
@@ -275,18 +275,18 @@ it('never writes the key of a device to a log line or the audit trail, from link
     Log::forgetChannel('single');
 
     enrollWith($this->phone, $this->token)->assertOk();
-    $device = AttendanceDevice::query()->sole();
+    $device = WorkerCredential::query()->sole();
     $ceremony = resolve(WebAuthnCeremony::class);
     $ceremony->verifyAssertion('s', $this->phone->get($ceremony->assertionOptions('s'), $this->ana->id));
-    resolve(RevokeDevice::class)->handle($device->id);
+    resolve(RevokeCredential::class)->handle($device->id);
     // Even an event that carried them by mistake.
     Log::info('attendance.probe', ['credential_id' => $device->credential_id, 'public_key' => $device->public_key]);
 
     $log = File::get($path);
     File::delete($path);
     $written = $log.AuditEntry::query()->get()->toJson();
-    expect($log)->toContain('attendance.device_enrolled')->toContain('attendance.device_revoked')->toContain('attendance.probe')
-        ->and(AuditEntry::query()->pluck('event')->all())->toContain('attendance.device_enrolled', 'attendance.device_revoked')
+    expect($log)->toContain('attendance.device_enrolled')->toContain('worker_access.credential_revoked')->toContain('attendance.probe')
+        ->and(AuditEntry::query()->pluck('event')->all())->toContain('worker_access.credential_registered', 'worker_access.credential_revoked')
         ->and($written)->not->toContain($device->credential_id)->not->toContain($device->public_key)->not->toContain($this->token);
 });
 
@@ -296,7 +296,7 @@ it('keeps whether the linked key is a synced passkey, for RH to see', function (
 
     enrollWith($this->phone, $this->token)->assertOk();
 
-    expect(AttendanceDevice::query()->sole())->backup_eligible->toBeTrue()->backup_state->toBeTrue();
+    expect(WorkerCredential::query()->sole())->backup_eligible->toBeTrue()->backup_state->toBeTrue();
 });
 
 it('tells the person by email that a device was linked, with its name and the local time, so they notice one that was not them', function (): void {
@@ -329,10 +329,10 @@ it('queues the email about a linked device, so a mail server that fails does not
 
     enrollWith($this->phone, $this->token)->assertOk()->assertExactJson(['enrolled' => true]);
 
-    expect(AttendanceDevice::query()->count())->toBe(1);
+    expect(WorkerCredential::query()->count())->toBe(1);
     Queue::assertPushed(SendQueuedNotifications::class, fn (SendQueuedNotifications $job): bool => $job->notification instanceof DeviceLinked
         && ! str_contains(serialize($job), $this->token)
-        && ! str_contains(serialize($job), AttendanceDevice::query()->sole()->credential_id));
+        && ! str_contains(serialize($job), WorkerCredential::query()->sole()->credential_id));
     Queue::assertNotPushed(SendQueuedNotifications::class, fn (SendQueuedNotifications $job): bool => $job->notification instanceof EnrollmentInvitation);
 });
 

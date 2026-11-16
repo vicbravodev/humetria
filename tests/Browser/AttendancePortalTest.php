@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Database\Factories\Organization\EmployeeFactory;
 
 /** «Mi jornada» in the portal: one place for marking, the week and the phones, light and dark, on a desktop and on a phone. */
@@ -33,7 +33,7 @@ it('asks a person with no phone to link one, and offers marking and the week', f
 ]);
 
 it('lists the phones of the person and lets them link another', function (bool $dark, bool $mobile): void {
-    AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'iPhone de Ana', 'enrolled_at' => '2026-10-01 12:00:00']);
+    WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'iPhone de Ana', 'registered_at' => '2026-10-01 12:00:00']);
 
     visitPage('attendance/portal', $this->path, $dark, $mobile)
         ->assertSee('iPhone de Ana')

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\IssueEnrollment;
-use App\Modules\Attendance\Actions\RevokeDevice;
 use App\Modules\Attendance\Actions\SendEnrollmentLinks;
 use App\Modules\Attendance\Exceptions\EmployeeNotAvailable;
 use App\Modules\Attendance\Exceptions\WorkCenterNotAvailable;
@@ -14,6 +13,7 @@ use App\Modules\Attendance\Http\Requests\EnrollPersonRequest;
 use App\Modules\Attendance\Support\DevicePages;
 use App\Modules\Attendance\Support\PanelScope;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -81,10 +81,10 @@ final readonly class DeviceController
         return back();
     }
 
-    public function revoke(mixed $tenant, string $device, RevokeDevice $revoke): RedirectResponse
+    public function revoke(mixed $tenant, string $device, WorkerCredentials $credentials): RedirectResponse
     {
         Gate::authorize('manage-attendance');
-        $revoke->handle($device);
+        $credentials->revoke($device);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Dispositivo revocado. Ya no puede marcar.']);
 
         return back();

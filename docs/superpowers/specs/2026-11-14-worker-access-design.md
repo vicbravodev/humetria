@@ -1,7 +1,7 @@
 # Identidad única de la persona trabajadora
 
 *   **Author:** Victor Jesus Bravo de la Peña
-*   **Status:** Proposed
+*   **Status:** Accepted (2026-11-16)
 *   **Date:** 2026-11-14
 
 --------------------------------------------------------------------------------

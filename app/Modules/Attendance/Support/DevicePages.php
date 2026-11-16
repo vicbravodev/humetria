@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Support;
 
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -13,6 +12,8 @@ use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
+use App\Modules\WorkerAccess\Data\CredentialSummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Gate;
 
@@ -29,7 +30,7 @@ final readonly class DevicePages
     /** linked: an active device; revoked: only revoked ones; unlinked: none ever. */
     private const array VIEWS = ['all', 'linked', 'unlinked', 'revoked'];
 
-    public function __construct(private Roster $roster, private WorkCenters $workCenters) {}
+    public function __construct(private Roster $roster, private WorkCenters $workCenters, private WorkerCredentials $credentials) {}
 
     /**
      * @return array<string, mixed>
@@ -142,14 +143,12 @@ final readonly class DevicePages
      */
     public static function states(array $people): array
     {
-        $active = AttendanceDevice::query()->among('employee_id', $people)->toBase()
-            ->selectRaw('employee_id, bool_or(revoked_at is null) as active')->groupBy('employee_id')
-            ->pluck('active', 'employee_id')->all();
+        $counts = resolve(WorkerCredentials::class)->countsByEmployee($people);
         $states = [];
         foreach ($people as $id) {
-            $states[$id] = match ($active[$id] ?? null) {
-                null => 'unlinked',
-                true => 'linked',
+            $states[$id] = match (true) {
+                ! isset($counts[$id]) => 'unlinked',
+                $counts[$id]->active > 0 => 'linked',
                 default => 'revoked',
             };
         }
@@ -167,24 +166,15 @@ final readonly class DevicePages
     {
         $zone = config()->string('app.display_timezone');
         $local = fn (?CarbonImmutable $at): ?string => $at?->setTimezone($zone)->format('Y-m-d H:i');
-        $devices = [];
 
-        $rows = AttendanceDevice::query()->among('employee_id', $people)
-            ->orderByRaw('revoked_at is not null')->orderByDesc('enrolled_at')->orderBy('id')
-            ->get(['id', 'employee_id', 'label', 'backup_eligible', 'backup_state', 'enrolled_at', 'last_used_at', 'revoked_at']);
-
-        foreach ($rows as $device) {
-            $devices[$device->employee_id][] = [
-                'id' => $device->id,
-                'label' => $device->label,
-                // A key that may be backed up lives in the person's passkey account, not provably on one phone.
-                'synced' => $device->backup_eligible || $device->backup_state,
-                'enrolledAt' => $device->enrolled_at->setTimezone($zone)->format('Y-m-d H:i'),
-                'lastUsedAt' => $local($device->last_used_at),
-                'revokedAt' => $local($device->revoked_at),
-            ];
-        }
-
-        return $devices;
+        return array_map(fn (array $keys): array => array_map(fn (CredentialSummary $device): array => [
+            'id' => $device->id,
+            'label' => $device->label,
+            // A key that may be backed up lives in the person's passkey account, not provably on one phone.
+            'synced' => $device->synced,
+            'enrolledAt' => $device->registeredAt->setTimezone($zone)->format('Y-m-d H:i'),
+            'lastUsedAt' => $local($device->lastUsedAt),
+            'revokedAt' => $local($device->revokedAt),
+        ], $keys), $this->credentials->ofEmployees($people));
     }
 }

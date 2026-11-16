@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Database\Factories\Attendance;
+namespace Database\Factories\WorkerAccess;
 
-use App\Modules\Attendance\Models\AttendanceDevice;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Tenancy\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * A linked device in use, of a key nobody holds.
+ * A key in use, of a key nobody holds.
  *
- * @extends Factory<AttendanceDevice>
+ * @extends Factory<WorkerCredential>
  */
-final class AttendanceDeviceFactory extends Factory
+final class WorkerCredentialFactory extends Factory
 {
-    protected $model = AttendanceDevice::class;
+    protected $model = WorkerCredential::class;
 
     /**
-     * @return array<model-property<AttendanceDevice>, mixed>
+     * @return array<model-property<WorkerCredential>, mixed>
      */
     public function definition(): array
     {
@@ -32,7 +32,8 @@ final class AttendanceDeviceFactory extends Factory
             'backup_eligible' => false,
             'backup_state' => false,
             'label' => 'iPhone',
-            'enrolled_at' => now(),
+            'registered_via' => 'issued_link',
+            'registered_at' => now(),
         ];
     }
 }

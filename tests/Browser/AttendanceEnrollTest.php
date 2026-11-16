@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Models\AgreementAcceptance;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
 use Pest\Browser\Api\AwaitableWebpage;
@@ -87,7 +87,7 @@ it('links the phone in four steps: the agreement, who the person is, the key, an
         ->assertScript(smallTouchTargets(), '')
         ->assertNoAccessibilityIssues(1);
 
-    expect(AttendanceDevice::query()->count())->toBe(0);
+    expect(WorkerCredential::query()->count())->toBe(0);
 
     $page->press('Crear llave')
         ->waitForText('Listo, su teléfono está vinculado')
@@ -100,7 +100,7 @@ it('links the phone in four steps: the agreement, who the person is, the key, an
         ->assertScript(smallTouchTargets(), '')
         ->assertNoAccessibilityIssues(1);
 
-    $device = AttendanceDevice::query()->sole();
+    $device = WorkerCredential::query()->sole();
     expect($device)->employee_id->toBe($this->ana->id)->label->toBeIn(['iPhone', 'iPad', 'Android', 'Mac', 'Windows', 'Dispositivo'])
         ->and(AgreementAcceptance::query()->sole()->device_id)->toBe($device->id);
 
@@ -121,7 +121,7 @@ it('links the phone of a person whose center cannot mark yet, and does not promi
         ->assertNoJavaScriptErrors()
         ->assertNoAccessibilityIssues(1);
 
-    expect(AttendanceDevice::query()->count())->toBe(1);
+    expect(WorkerCredential::query()->count())->toBe(1);
 });
 
 it('links nothing when the person says it is not them, and says what to do', function (): void {
@@ -134,7 +134,7 @@ it('links nothing when the person says it is not them, and says what to do', fun
         ->assertScript(smallTouchTargets(), '')
         ->assertNoAccessibilityIssues(1);
 
-    expect(AttendanceDevice::query()->count())->toBe(0);
+    expect(WorkerCredential::query()->count())->toBe(0);
 });
 
 it('lets the person leave with «Ahora no», and tells them the link stays good while it lasts', function (): void {
@@ -145,7 +145,7 @@ it('lets the person leave with «Ahora no», and tells them the link stays good 
         ->assertSee('48 horas')
         ->assertNoAccessibilityIssues(1);
 
-    expect(AttendanceDevice::query()->count())->toBe(0);
+    expect(WorkerCredential::query()->count())->toBe(0);
 });
 
 it('says the key was not created when the person is not verified, links nothing, and lets them try again', function (): void {
@@ -160,7 +160,7 @@ it('says the key was not created when the person is not verified, links nothing,
         ->assertNoJavaScriptErrors()
         ->assertNoAccessibilityIssues(1);
 
-    expect(AttendanceDevice::query()->count())->toBe(0);
+    expect(WorkerCredential::query()->count())->toBe(0);
 });
 
 it('says the link stopped working, without blame, when it was used or expired meanwhile', function (): void {
@@ -177,5 +177,5 @@ it('says the link stopped working, without blame, when it was used or expired me
         ->assertScript(smallTouchTargets(), '')
         ->assertNoAccessibilityIssues(1);
 
-    expect(AttendanceDevice::query()->count())->toBe(0);
+    expect(WorkerCredential::query()->count())->toBe(0);
 });

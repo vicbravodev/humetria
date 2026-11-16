@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Modules\Attendance\Actions\RevokeDevice;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Http\Controllers\MarkController;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -16,11 +14,13 @@ use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Support\PunchDay;
 use App\Modules\Attendance\Support\QrToken;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Actions\RevokeCredential;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Http\Request;
@@ -53,13 +53,13 @@ beforeEach(function (): void {
 });
 
 /** The phone's key, linked to `$person` in their company. */
-function punchDevice(SoftAuthenticator $phone, Employee $person): AttendanceDevice
+function punchDevice(SoftAuthenticator $phone, Employee $person): WorkerCredential
 {
     workIn(Tenant::query()->findOrFail($person->tenant_id));
     $ceremony = resolve(WebAuthnCeremony::class);
     $credential = $ceremony->verifyRegistration($person->id, $phone->create($ceremony->registrationOptions($person->id, 'Ana')));
 
-    return AttendanceDevice::factory()->create([
+    return WorkerCredential::factory()->create([
         'tenant_id' => $person->tenant_id,
         'employee_id' => $person->id,
         'credential_id' => $credential->credentialId,
@@ -222,7 +222,7 @@ describe('the page', function (): void {
         punchWith($this->phone, $this->ana->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'mark_type' => 'end'], $session)->assertOk();
 
         if ($how === 'revoked') {
-            resolve(RevokeDevice::class)->handle($this->device->id);
+            resolve(RevokeCredential::class)->handle($this->device->id);
         } else {
             $this->ana->update(['deactivated_at' => now()]);
         }
@@ -349,7 +349,7 @@ describe('on site', function (): void {
         // And once RH sets the center up, the same browser marks with the same key.
         AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'latitude' => 19.4326, 'longitude' => -99.1332, 'radius_m' => 500]);
         $try(['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE])->assertOk();
-        expect(AttendanceDevice::query()->whereNull('revoked_at')->count())->toBe(1);
+        expect(WorkerCredential::query()->whereNull('revoked_at')->count())->toBe(1);
     });
 
     it('ignores a revoked or never-seen screen when telling whether the center is ready', function (): void {
@@ -452,7 +452,7 @@ describe('who marks', function (): void {
     });
 
     it('answers 404 to a revoked device', function (): void {
-        resolve(RevokeDevice::class)->handle($this->device->id);
+        resolve(RevokeCredential::class)->handle($this->device->id);
 
         anaPunches()->assertNotFound();
         expect(AttendanceMark::query()->count())->toBe(0);
@@ -472,7 +472,7 @@ describe('who marks', function (): void {
 
     it('logs a signature that did not verify with the company and the request only', function (): void {
         Log::spy();
-        resolve(RevokeDevice::class)->handle($this->device->id);
+        resolve(RevokeCredential::class)->handle($this->device->id);
 
         anaPunches()->assertNotFound();
 

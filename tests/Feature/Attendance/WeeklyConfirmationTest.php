@@ -14,7 +14,6 @@ use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Events\WeekConfirmed;
 use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Exceptions\WeekRejected;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\WeekDigest;
@@ -22,6 +21,7 @@ use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\QueryException;
@@ -40,7 +40,7 @@ beforeEach(function (): void {
     workIn($this->tenant);
     $this->center = WorkCenter::factory()->for($this->tenant)->create();
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
-    $this->device = AttendanceDevice::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    $this->device = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
 });
 
 function weekMark(Employee $person, MarkType $type, string $local): AttendanceMark

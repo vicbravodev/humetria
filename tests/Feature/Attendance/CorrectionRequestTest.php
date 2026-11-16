@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Actions\RequestCorrection;
-use App\Modules\Attendance\Actions\RevokeDevice;
 use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Exceptions\CorrectionRejected;
 use App\Modules\Attendance\Http\Controllers\CorrectionRequestController;
-use App\Modules\Attendance\Models\AttendanceDevice;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
-use App\Modules\Attendance\Support\WebAuthnCeremony;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Actions\RevokeCredential;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\QueryException;
@@ -42,13 +42,13 @@ beforeEach(function (): void {
 });
 
 /** The phone's key, linked to `$person` in their company. */
-function correctionDevice(SoftAuthenticator $phone, Employee $person): AttendanceDevice
+function correctionDevice(SoftAuthenticator $phone, Employee $person): WorkerCredential
 {
     workIn(Tenant::query()->findOrFail($person->tenant_id));
     $ceremony = resolve(WebAuthnCeremony::class);
     $credential = $ceremony->verifyRegistration($person->id, $phone->create($ceremony->registrationOptions($person->id, 'Ana')));
 
-    return AttendanceDevice::factory()->create([
+    return WorkerCredential::factory()->create([
         'tenant_id' => $person->tenant_id, 'employee_id' => $person->id,
         'credential_id' => $credential->credentialId, 'public_key' => $credential->publicKey,
     ]);
@@ -281,7 +281,7 @@ describe('from the device', function (): void {
         correctionSigned(new SoftAuthenticator, $this->ana->id, $body)->assertNotFound();
         correctionSigned($this->phone, $this->ana->id, $body, slug: 'globex')->assertNotFound();
         workIn($this->tenant);
-        resolve(RevokeDevice::class)->handle($this->device->id);
+        resolve(RevokeCredential::class)->handle($this->device->id);
         anaSends()->assertNotFound();
 
         expect(CorrectionRequest::query()->withoutGlobalScopes()->count())->toBe(0);
@@ -289,7 +289,7 @@ describe('from the device', function (): void {
 
     it('logs a signature that did not verify with the company and the request only', function (): void {
         Log::spy();
-        resolve(RevokeDevice::class)->handle($this->device->id);
+        resolve(RevokeCredential::class)->handle($this->device->id);
 
         anaSends()->assertNotFound();
 
