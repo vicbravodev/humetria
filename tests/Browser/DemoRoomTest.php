@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Models\DemoRun;
+use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Tenancy\WorkCenterFactory;
 
@@ -86,6 +88,28 @@ it('shows the step a preparation is on and holds the buttons meanwhile', functio
         ->assertSee('Preparando: Asistencia.')
         ->assertButtonDisabled('Preparar demo');
 })->with(['light' => false, 'dark' => true]);
+
+it('brings the door up to date when the preparation it was waiting on ends', function (): void {
+    signInAsSuperadmin();
+    // The audience's workers are the demo's employees: none until the preparation makes them.
+    app()->instance(DemoDoorPool::class, new class implements DemoDoorPool
+    {
+        public function employeeIds(): array
+        {
+            return Employee::query()->withoutGlobalScopes()->pluck('id')->all();
+        }
+    });
+    $run = DemoRun::start('prepare') ?? throw new LogicException('Not started.');
+
+    $page = visitPage('demos/room', '/admin/demo')->assertSee('Preparando');
+
+    $demo = preparedDemo();
+    Employee::factory()->count(3)->create(['tenant_id' => $demo->id]);
+    $run->finish();
+
+    $page->assertSee('Quedan 3 de 3 libres')
+        ->assertNoJavaScriptErrors();
+});
 
 it('issues the link of the time-clock screen once, with its QR', function (): void {
     signInAsSuperadmin();

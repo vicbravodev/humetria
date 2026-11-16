@@ -3,7 +3,9 @@ import { Spinner } from '@/components/ui/spinner';
 
 /** The run going on, asked again every few seconds until it ends: then the page has the demo as it was left. */
 export default function RoomProgress({ step }: { step: string | null }) {
-    usePoll(3000, { only: ['run', 'company', 'prepared', 'complaints'] });
+    usePoll(3000, {
+        only: ['run', 'company', 'prepared', 'complaints', 'door'],
+    });
 
     return (
         <div role="status" className="flex items-center gap-3 card px-5 py-3.5">
