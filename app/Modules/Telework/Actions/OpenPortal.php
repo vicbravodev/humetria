@@ -13,7 +13,8 @@ use InvalidArgumentException;
 
 /**
  * The telework portal of an active person of the current company, known by id, as their session would open it
- * (SessionPortal): what acts as the person without a request of theirs, like the demo's story.
+ * (SessionPortal). Not for HTTP: it acts as the person with no session of theirs and no proof that it is them; only the
+ * demo's stories use it.
  */
 final readonly class OpenPortal
 {
