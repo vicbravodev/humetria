@@ -42,7 +42,7 @@ use Illuminate\Support\Facades\Storage;
  * that test.
  */
 return [
-    'tells the telework story of the offices: twelve teleworkers with their checklists, documents, equipment, training and the Comisión' => function (array $logged): void {
+    'tells the telework story of the offices: twelve teleworkers with their checklists, documents, equipment, training and the Comisión' => function (array &$logged): void {
         $tenantId = resolve(DemoCompanies::class)->id();
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
         $offices = (string) collect(resolve(WorkCenters::class)->all())->firstWhere('name', DemoRoster::CENTERS['offices'])?->id;

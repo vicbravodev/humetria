@@ -41,7 +41,7 @@ use Illuminate\Support\Facades\Storage;
  * that test.
  */
 return [
-    'tells the Ley Silla story of the offices: positions, seats, signed assessments, open and closed measures and a keyless survey' => function (array $logged): void {
+    'tells the Ley Silla story of the offices: positions, seats, signed assessments, open and closed measures and a keyless survey' => function (array &$logged): void {
         $tenantId = resolve(DemoCompanies::class)->id();
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
         $offices = collect(resolve(WorkCenters::class)->all())->firstWhere('name', DemoRoster::CENTERS['offices'])?->id;

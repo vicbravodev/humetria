@@ -30,7 +30,7 @@ use Database\Seeders\Demo\DemoRoster;
  * that test.
  */
 return [
-    'tells the compensation story: a tabulator, a collective contract above the law and two proposals with their cost' => function (array $logged): void {
+    'tells the compensation story: a tabulator, a collective contract above the law and two proposals with their cost' => function (array &$logged): void {
         $tenantId = resolve(DemoCompanies::class)->id();
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
 

@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\DB;
  * that test.
  */
 return [
-    'tells the complaints story: an active channel with a stable code, handlers, anonymous cases in several states' => function (array $logged): void {
+    'tells the complaints story: an active channel with a stable code, handlers, anonymous cases in several states' => function (array &$logged): void {
         $tenantId = resolve(DemoCompanies::class)->id();
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
         $channel = ComplaintChannel::query()->sole();

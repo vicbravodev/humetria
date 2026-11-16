@@ -32,7 +32,10 @@ it('tells the whole story on one prepared demo company', function (): void {
 
     foreach (['foundation', 'nom035', 'engagement', 'leave', 'attendance', 'complaints', 'disclosure', 'seating', 'telework', 'coherence', 'compensation'] as $story) {
         foreach (require __DIR__."/Sections/{$story}.php" as $name => $group) {
-            section("{$story}: {$name}", fn () => $group($logged));
+            // By reference: a group that scans the logs sees everything logged until then, its own visitor actions too.
+            section("{$story}: {$name}", function () use ($group, &$logged): void {
+                $group($logged);
+            });
         }
     }
 });
