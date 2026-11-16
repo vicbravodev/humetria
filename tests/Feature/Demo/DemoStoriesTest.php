@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Event;
  * - attendance records one more mark today, after leave checked that nobody marked on a day off;
  * - complaints files one more case, disclosure, seating and telework confirm from a door person's portal: each touches
  *   only its own module, checked before;
+ * - coherence checks the modules against each other once every story stands, and opens every page of the panel;
  * - compensation goes last: it ends by entering a new company to compare the catalog.
  */
 it('tells the whole story on one prepared demo company', function (): void {
@@ -28,7 +29,7 @@ it('tells the whole story on one prepared demo company', function (): void {
 
     resolve(DemoWorkspace::class)->prepare();
 
-    foreach (['foundation', 'nom035', 'engagement', 'leave', 'attendance', 'complaints', 'disclosure', 'seating', 'telework', 'compensation'] as $story) {
+    foreach (['foundation', 'nom035', 'engagement', 'leave', 'attendance', 'complaints', 'disclosure', 'seating', 'telework', 'coherence', 'compensation'] as $story) {
         foreach (require __DIR__."/Sections/{$story}.php" as $name => $group) {
             section("{$story}: {$name}", fn () => $group($logged));
         }
