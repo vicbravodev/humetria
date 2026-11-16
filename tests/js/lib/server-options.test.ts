@@ -51,13 +51,13 @@ describe('loadServerOptions', () => {
 });
 
 describe('serverSource', () => {
-    it('asks the server from the first letter, showing the given options until then', async () => {
+    it('asks the server as soon as it opens, showing the given options first', async () => {
         vi.stubGlobal('fetch', respond([{ value: 'a1', label: 'Ventas' }]));
         const initial = [{ value: '', label: 'Todas' }];
         const source = serverSource('/x', initial);
 
         expect(source.initial).toBe(initial);
-        expect(source.minLength).toBe(1);
+        expect(source.minLength).toBe(0);
         expect(source.allowNew).toBe(false);
         await expect(
             source.load('v', new AbortController().signal),

@@ -40,7 +40,7 @@ export async function loadServerOptions(
 }
 
 /**
- * Where a Combobox gets options that live on the server: `initial` until a letter is typed, then what the route finds.
+ * Where a Combobox gets options that live on the server: the route's first page as soon as it opens (all of it when it fits one page, then typing filters here), more from the route as letters narrow a longer list; `initial` shows first.
  * `allowNew` offers to add what was typed; `byName` makes each option's value its name, for a field that submits
  * names (an area, which may be new).
  */
@@ -51,7 +51,7 @@ export function serverSource(
 ) {
     return {
         initial,
-        minLength: 1,
+        minLength: 0,
         allowNew,
         load: async (query: string, signal: AbortSignal) => {
             const found = await loadServerOptions(url, query, signal);
