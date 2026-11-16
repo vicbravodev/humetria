@@ -22,7 +22,7 @@ final class ResetDemo implements ShouldQueue
 
     public int $tries = 1;
 
-    /** Seconds: a preparation takes about one minute in production. */
+    /** Seconds: a preparation takes about 25 s on an idle server and a few minutes on a busy one. */
     public int $timeout = 600;
 
     public bool $failOnTimeout = true;
@@ -36,6 +36,11 @@ final class ResetDemo implements ShouldQueue
     public function handle(DemoWorkspace $workspace): void
     {
         $run = DemoRun::query()->findOrFail($this->runId);
+
+        // Taken over while this job waited in the queue: the run that took over may be telling the story now.
+        if ($run->status !== 'running') {
+            return;
+        }
 
         try {
             $run->step('Borrando la demo');

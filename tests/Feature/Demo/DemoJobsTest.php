@@ -116,6 +116,21 @@ it('records the failure on its run without the message, and frees the lock', fun
         ->and(DemoRun::start('reset'))->toBeInstanceOf(DemoRun::class);
 })->with([PrepareDemo::class, ResetDemo::class]);
 
+it('does nothing when its run was taken over before a worker picked it up', function (string $job): void {
+    $calls = demoWorkspaceSpy();
+    $this->freezeSecond();
+    $abandoned = startedRun('prepare');
+    $this->travel(31)->minutes();
+    $current = startedRun('reset');
+
+    $job::dispatchSync($abandoned->id);
+
+    expect($calls->getArrayCopy())->toBe([])
+        ->and($abandoned->fresh()?->status)->toBe('failed')
+        ->and($abandoned->fresh()?->step)->toBeNull()
+        ->and($current->fresh()?->status)->toBe('running');
+})->with([PrepareDemo::class, ResetDemo::class]);
+
 it('records a job the worker gave up on as failed', function (): void {
     $run = startedRun('prepare');
 
