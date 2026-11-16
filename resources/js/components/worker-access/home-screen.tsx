@@ -1,20 +1,24 @@
 import { Link } from '@inertiajs/react';
 import { KeyRound } from 'lucide-react';
+import HomeSections from '@/components/worker-access/home-sections';
 import LeaveButton from '@/components/worker-access/leave-button';
 import WorkerFrame from '@/components/worker-access/worker-frame';
 import PersonHeading from '@/components/humetria/person-heading';
 import ToneTile from '@/components/humetria/tone-tile';
 import { Button } from '@/components/ui/button';
+import type { WorkerSection } from '@/types';
 
-/** The person's start: who they are, a key for this device when they may add one, and «Salir». */
+/** The person's start: who they are, the tools their company has for them, a key for this device when they may add one, and «Salir». */
 export default function HomeScreen({
     company,
     name,
+    sections,
     keyUrl,
     leaveUrl,
 }: {
     company: string;
     name: string;
+    sections: WorkerSection[];
     keyUrl: string | null;
     leaveUrl: string;
 }) {
@@ -24,6 +28,7 @@ export default function HomeScreen({
                 Este es su portal de {company}. Al terminar, toque «Salir»,
                 sobre todo en un dispositivo compartido.
             </PersonHeading>
+            <HomeSections sections={sections} />
             {keyUrl !== null && (
                 <section className="flex flex-col items-start gap-3 card p-5">
                     <ToneTile icon={KeyRound} />

@@ -46,4 +46,7 @@ muestra una vez en el flash `accessLink`; la bitácora (`worker_access.link_issu
 - `WorkerLinks`: `home()` y `to($route, $parameters)`, direcciones de la persona sin credencial.
 - `WorkerInvitations::send($employeeId, $issuedBy): InvitationOutcome`: RH emite el enlace (`sent`, `without_email` con
   el enlace para mostrarlo una vez, `unavailable`).
+- `WorkerSection::for(WorkerIdentity): ?WorkerSectionLink`: lo que cada herramienta ofrece en el inicio (`/me/{slug}`). Cada
+  módulo etiqueta la suya `worker.sections`; `Support/WorkerSections` las junta en un orden fijo y una que falla se reporta
+  y se omite sin tumbar el inicio.
 - `WorkerSignatures` y `WorkerCredentials`: firmar y leer llaves (los usa Attendance). `WorkerKeys`: crear una llave.

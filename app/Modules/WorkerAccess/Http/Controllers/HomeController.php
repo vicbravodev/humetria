@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\WorkerAccess\Http\Controllers;
 
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Data\WorkerSectionLink;
 use App\Modules\WorkerAccess\Support\KeyAllowance;
+use App\Modules\WorkerAccess\Support\WorkerSections;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,7 +20,7 @@ final readonly class HomeController
 {
     public function __construct(private Companies $companies, private WorkerSessionStore $sessions) {}
 
-    public function __invoke(string $tenant): Response
+    public function __invoke(string $tenant, WorkerSections $sections): Response
     {
         $session = $this->sessions->open();
 
@@ -34,6 +36,7 @@ final readonly class HomeController
         return Inertia::render('worker-access/home', [
             'company' => $session->identity->companyName,
             'name' => $session->identity->personName,
+            'sections' => array_map(fn (WorkerSectionLink $link): array => ['key' => $link->key, 'label' => $link->label, 'description' => $link->description, 'href' => $link->href, 'pending' => $link->pending], $sections->for($session->identity)),
             'keyUrl' => KeyAllowance::refusal($session) === null ? route('worker.key.show', $tenant) : null,
             'leaveUrl' => route('worker.leave', $tenant),
         ]);

@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import IconTile from '@/components/humetria/icon-tile';
-import { portalSectionIcon } from '@/lib/telework/portal';
+import { sectionIcon } from '@/lib/worker-access/sections';
 import type { PortalSection } from '@/types';
 
 /** The tools the person has, one big card each (at least 56 px tall, for a thumb), with what waits for them in it. */
@@ -22,7 +22,7 @@ export default function PortalSections({
                         href={section.href}
                         className="flex min-h-14 items-center gap-3.5 card p-4 hover:bg-accent/50"
                     >
-                        <IconTile icon={portalSectionIcon(section.key)} />
+                        <IconTile icon={sectionIcon(section.key)} />
                         <span className="flex min-w-0 flex-1 flex-col gap-1">
                             <span className="text-base font-semibold">
                                 {section.label}

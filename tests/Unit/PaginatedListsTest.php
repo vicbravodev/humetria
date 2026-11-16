@@ -68,6 +68,7 @@ const ARRAY_PROPS = [
     'telework/checklist:questions' => 'las preguntas de una versión de la lista: un instrumento, 122 en la base',
     'attendance/portal:devices' => 'resumen corto: los teléfonos vinculados de una persona, pocos',
     'telework/portal:sections' => 'resumen corto: las herramientas de una persona (a lo más nueve)',
+    'worker-access/home:sections' => 'resumen corto: las herramientas de la persona en su inicio (una por módulo, a lo más trece)',
     'telework/portal-checklist:questions' => 'las preguntas de una sección de la lista: un instrumento',
     'telework/checklist:requirements' => 'catálogo fijo: los requisitos del capítulo 7 y 5.1.1 (catorce)',
     'telework/documents:kinds' => 'catálogo fijo: los ocho tipos de documento de la norma, con sus incisos',
