@@ -1,21 +1,25 @@
-import DeviceItem from '@/components/attendance/device-item';
-import EnrollButton from '@/components/attendance/enroll-button';
-import LinkSteps from '@/components/attendance/link-steps';
 import Initials from '@/components/humetria/initials';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { deviceStatus, nextForPerson } from '@/lib/attendance/devices';
-import type { DevicePerson } from '@/types';
+import AccessKeyItem from '@/components/worker-access/access-key-item';
+import InviteButton from '@/components/worker-access/invite-button';
+import ReissueButton from '@/components/worker-access/reissue-button';
+import {
+    accessStatus,
+    inviteCaption,
+    nextForPerson,
+} from '@/lib/worker-access/access';
+import type { AccessPerson } from '@/types';
 
-/** A person: who, where, their devices (each revocable while active), where they stand, and their link to send. */
-export default function DevicePersonRow({
+/** A person: who, where, their invitation, their keys (each revocable while active), where they stand, and what RH can do. */
+export default function AccessRow({
     person,
     canManage,
 }: {
-    person: DevicePerson;
+    person: AccessPerson;
     canManage: boolean;
 }) {
-    const status = deviceStatus(person.status);
+    const status = accessStatus(person.status);
 
     return (
         <TableRow>
@@ -30,20 +34,20 @@ export default function DevicePersonRow({
                     </div>
                 </div>
             </TableCell>
-            <TableCell className="min-w-56 max-md:w-full">
-                <LinkSteps person={person} />
+            <TableCell className="min-w-56 text-sm whitespace-normal text-muted-foreground max-md:w-full">
+                {inviteCaption(person)}
             </TableCell>
             <TableCell className="min-w-64 whitespace-normal max-md:w-full">
-                {person.devices.length === 0 ? (
+                {person.keys.length === 0 ? (
                     <span className="text-sm text-muted-foreground">
                         {nextForPerson(person)}
                     </span>
                 ) : (
                     <ul className="flex flex-col gap-3">
-                        {person.devices.map((device) => (
-                            <DeviceItem
-                                key={device.id}
-                                device={device}
+                        {person.keys.map((key) => (
+                            <AccessKeyItem
+                                key={key.id}
+                                accessKey={key}
                                 owner={person.name}
                                 canManage={canManage}
                             />
@@ -56,7 +60,11 @@ export default function DevicePersonRow({
             </TableCell>
             {canManage && (
                 <TableCell className="text-right">
-                    <EnrollButton person={person} />
+                    {person.status === 'with_key' ? (
+                        <ReissueButton person={person} />
+                    ) : (
+                        <InviteButton person={person} />
+                    )}
                 </TableCell>
             )}
         </TableRow>

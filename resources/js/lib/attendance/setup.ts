@@ -1,7 +1,7 @@
 import { center } from '@/routes/tenant/attendance';
-import { index as devices } from '@/routes/tenant/attendance/devices';
 import { show as policy } from '@/routes/tenant/attendance/policy';
 import { index as schedules } from '@/routes/tenant/attendance/schedules';
+import { index as access } from '@/routes/tenant/worker-access';
 import type { AttendanceSetup, SetupCenterNeed } from '@/types';
 
 /** The four things a company does before its people can mark: its centers, schedules, phones and policy. */
@@ -14,10 +14,10 @@ export type SetupStep = {
     text: string;
     /** The button's label; null once the step is complete. */
     action: string | null;
-    /** Where the button goes: a page of the registro (a center, by id). */
+    /** Where the button goes: a page of the registro (a center, by id), or «Accesos». */
     target:
         | { page: 'center'; id: string }
-        | { page: 'schedules' | 'devices' | 'policy' };
+        | { page: 'schedules' | 'access' | 'policy' };
 };
 
 /** «Ana», «Ana y Bob», «Ana, Bob y Carla». */
@@ -127,12 +127,12 @@ function devicesStep(setup: AttendanceSetup): SetupStep {
         text:
             left === 0
                 ? 'Todas las personas vincularon su teléfono.'
-                : `${plural(left, 'Falta 1 persona', `Faltan ${left} personas`)}. Cada una recibe un enlace de alta por correo; sirve una sola vez.`,
+                : `${plural(left, 'Falta 1 persona', `Faltan ${left} personas`)}. Invítalas desde Accesos: cada una recibe su invitación por correo y crea su llave.`,
         action:
             left === 0
                 ? null
                 : `Vincular ${left} ${plural(left, 'teléfono', 'teléfonos')}`,
-        target: { page: 'devices' },
+        target: { page: 'access' },
     };
 }
 
@@ -188,8 +188,8 @@ export function setupHref(
         case 'schedules':
             return schedules(tenantSlug, { query: { status: 'unscheduled' } })
                 .url;
-        case 'devices':
-            return devices(tenantSlug, { query: { status: 'unlinked' } }).url;
+        case 'access':
+            return access(tenantSlug, { query: { status: 'not_invited' } }).url;
         case 'policy':
             return policy(tenantSlug).url;
     }

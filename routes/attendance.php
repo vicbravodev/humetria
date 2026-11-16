@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
-use App\Modules\Attendance\Http\Controllers\DeviceController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\PlaceController;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
@@ -40,14 +39,6 @@ Route::delete('admin/{tenant:slug}/attendance/kiosks/{kiosk}', [KioskController:
 Route::get('admin/{tenant:slug}/attendance/corrections', [CorrectionController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.corrections.index');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/approve', [CorrectionController::class, 'approve'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.approve');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/reject', [CorrectionController::class, 'reject'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.reject');
-
-// The people's linked devices: RH sends the link to link one (emailed; shown to RH only for a person without email) and revokes
-// one. The keys themselves never reach the panel.
-Route::get('admin/{tenant:slug}/attendance/devices', [DeviceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.devices.index');
-Route::post('admin/{tenant:slug}/attendance/devices/enroll', [DeviceController::class, 'enroll'])->where('tenant', $notReserved)->name('tenant.attendance.devices.enroll');
-// Every person of a center without a device gets their link by email, one queued job each.
-Route::post('admin/{tenant:slug}/attendance/devices/enroll-all', [DeviceController::class, 'enrollAll'])->where('tenant', $notReserved)->name('tenant.attendance.devices.enroll-all');
-Route::post('admin/{tenant:slug}/attendance/devices/{device}/revoke', [DeviceController::class, 'revoke'])->where('tenant', $notReserved)->whereUuid('device')->name('tenant.attendance.devices.revoke');
 
 // The company's policy: what a mark out of zone does, the accuracy asked of a position, the QR on site, the trusted browser
 // and how long the records are kept.

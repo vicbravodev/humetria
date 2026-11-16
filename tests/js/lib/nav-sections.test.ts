@@ -41,6 +41,7 @@ describe('navSections', () => {
                     'Panel',
                     'Centros de trabajo',
                     'Empleados',
+                    'Accesos',
                     'Usuarios',
                     'Plan y uso',
                 ],
@@ -74,7 +75,7 @@ describe('navSections', () => {
                 }),
             ),
         ).toEqual([
-            ['Humetría', ['Panel', 'Centros de trabajo']],
+            ['Humetría', ['Panel', 'Centros de trabajo', 'Accesos']],
             ['Cumple la norma', ['NOM-035', 'NOM-037', 'Ley Silla']],
         ]);
     });

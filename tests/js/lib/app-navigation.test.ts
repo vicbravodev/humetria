@@ -21,6 +21,15 @@ const acme = (
     role,
     can: can(manageOrganization, manageMembers),
 });
+/** The company's own pages of an owner, in the order of the menu. */
+const ACME_PAGES = [
+    '/admin/acme',
+    '/admin/acme/work-centers',
+    '/admin/acme/employees',
+    '/admin/acme/access',
+    '/admin/acme/members',
+    '/admin/acme/plan',
+];
 const titles = (tenant: ReturnType<typeof acme> | null) =>
     mainNavItems(tenant, false).map((item) => item.title);
 
@@ -44,13 +53,7 @@ describe('mainNavItems', () => {
     it('keeps the company pages for a superadmin inside a company they belong to', () => {
         expect(
             mainNavItems(acme(), true).map((item) => toUrl(item.href)),
-        ).toEqual([
-            '/admin/acme',
-            '/admin/acme/work-centers',
-            '/admin/acme/employees',
-            '/admin/acme/members',
-            '/admin/acme/plan',
-        ]);
+        ).toEqual(ACME_PAGES);
     });
 
     it("lists the company's pages the role may open", () => {
@@ -58,6 +61,7 @@ describe('mainNavItems', () => {
             'Panel',
             'Centros de trabajo',
             'Empleados',
+            'Accesos',
             'Usuarios',
             'Plan y uso',
         ]);
@@ -65,23 +69,19 @@ describe('mainNavItems', () => {
             'Panel',
             'Centros de trabajo',
             'Empleados',
+            'Accesos',
         ]);
         expect(titles(acme(false, false))).toEqual([
             'Panel',
             'Centros de trabajo',
+            'Accesos',
         ]);
     });
 
     it('points each page at the current company', () => {
         expect(
             mainNavItems(acme(), false).map((item) => toUrl(item.href)),
-        ).toEqual([
-            '/admin/acme',
-            '/admin/acme/work-centers',
-            '/admin/acme/employees',
-            '/admin/acme/members',
-            '/admin/acme/plan',
-        ]);
+        ).toEqual(ACME_PAGES);
     });
 });
 

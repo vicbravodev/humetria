@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Attendance\Http\Requests;
+namespace App\Modules\WorkerAccess\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/** The person RH sends a link to link a device: owner and hr only. Whether they are the company's is the action's to say. */
-final class EnrollPersonRequest extends FormRequest
+/** The person RH invites or whose access RH reissues: owner and hr only. Whether they are the company's is the action's to say. */
+final class AccessPersonRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-attendance') === true;
+        return $this->user()?->can('manage-worker-access') === true;
     }
 
     /**

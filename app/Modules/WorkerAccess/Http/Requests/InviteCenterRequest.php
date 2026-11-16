@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Attendance\Http\Requests;
+namespace App\Modules\WorkerAccess\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/** The center whose people without a device get their link: owner and hr only. Whether it is one in use is the action's to say. */
-final class EnrollCenterRequest extends FormRequest
+/** The center whose people without a key RH invites: owner and hr only. Whether it is one in use is the action's to say. */
+final class InviteCenterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-attendance') === true;
+        return $this->user()?->can('manage-worker-access') === true;
     }
 
     /**

@@ -53,7 +53,7 @@ Notas:
 | `posthog.dispatch_failed` | warning | no se pudo encolar un evento para PostHog | `exception` (clase) |
 | `posthog.send_failed` | warning | PostHog no aceptó un evento | `exception` (clase) |
 
-Los jobs que mandan un solo correo reintentan 3 veces (60 s y 300 s) antes de `queue.job_failed`. `SendEnrollmentLink` y
+Los jobs que mandan un solo correo reintentan 3 veces (60 s y 300 s) antes de `queue.job_failed`. `SendWorkerInvitation` y
 `SendFeedbackPublished` corren una sola vez: reintentarlos no es seguro. Los jobs fallidos se guardan una semana
 (`queue:prune-failed --hours=168`, igual que `horizon.trim.failed`).
 

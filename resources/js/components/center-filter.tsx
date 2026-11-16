@@ -5,7 +5,7 @@ import { options } from '@/routes/tenant/work-centers';
 
 const ALL_CENTERS = { value: '', label: 'Todos los centros' };
 
-/** Narrows a list of the registro to one center in use, searched on the server; «Todos los centros» undoes it. */
+/** Narrows a list of the panel to one center in use, searched on the server; «Todos los centros» undoes it. */
 export default function CenterFilter({
     id,
     center,

@@ -1,4 +1,4 @@
-import { Factory, House, Layers, UserCog, Users } from 'lucide-react';
+import { Factory, House, KeyRound, Layers, UserCog, Users } from 'lucide-react';
 import { dashboard } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editAppearance } from '@/routes/appearance';
@@ -7,6 +7,7 @@ import { dashboard as tenantDashboard, plan } from '@/routes/tenant';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
 import { index as workCenters } from '@/routes/tenant/work-centers';
+import { index as workerAccess } from '@/routes/tenant/worker-access';
 import { complaintCasesItems } from '@/lib/complaints-navigation';
 import { hasModule } from '@/lib/modules';
 import { toUrl } from '@/lib/utils';
@@ -36,6 +37,16 @@ const companyItems = (tenant: NavTenant): NavItem[] => [
                   title: isUnion(tenant) ? 'Agremiados' : 'Empleados',
                   href: employees(tenant.slug),
                   icon: Users,
+              },
+          ]
+        : []),
+    // The people's keys and invitations: every company has it, whatever its tools; a union has no people of its own here.
+    ...(tenant.can.view_worker_access && !isUnion(tenant)
+        ? [
+              {
+                  title: 'Accesos',
+                  href: workerAccess(tenant.slug),
+                  icon: KeyRound,
               },
           ]
         : []),

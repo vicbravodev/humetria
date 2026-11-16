@@ -101,9 +101,9 @@ describe('setupSteps', () => {
         expect(devices).toMatchObject({
             key: 'devices',
             title: 'Teléfonos vinculados',
-            text: 'Faltan 4 personas. Cada una recibe un enlace de alta por correo; sirve una sola vez.',
+            text: 'Faltan 4 personas. Invítalas desde Accesos: cada una recibe su invitación por correo y crea su llave.',
             action: 'Vincular 4 teléfonos',
-            target: { page: 'devices' },
+            target: { page: 'access' },
         });
         expect(policy).toMatchObject({
             key: 'policy',
@@ -140,7 +140,7 @@ describe('setupSteps', () => {
         );
         expect(schedules?.action).toBe('Fijar 1 horario');
         expect(devices?.text).toBe(
-            'Falta 1 persona. Cada una recibe un enlace de alta por correo; sirve una sola vez.',
+            'Falta 1 persona. Invítalas desde Accesos: cada una recibe su invitación por correo y crea su llave.',
         );
         expect(devices?.action).toBe('Vincular 1 teléfono');
     });
@@ -192,8 +192,8 @@ describe('setupHref', () => {
         expect(setupHref('acme', { page: 'schedules' })).toBe(
             '/admin/acme/attendance/schedules?status=unscheduled',
         );
-        expect(setupHref('acme', { page: 'devices' })).toBe(
-            '/admin/acme/attendance/devices?status=unlinked',
+        expect(setupHref('acme', { page: 'access' })).toBe(
+            '/admin/acme/access?status=not_invited',
         );
         expect(setupHref('acme', { page: 'policy' })).toBe(
             '/admin/acme/attendance/policy',

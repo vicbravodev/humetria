@@ -138,6 +138,7 @@ final class AuditPages
         'linked' => 'Con enlace',
         'with_link' => 'Con enlace',
         'keys_revoked' => 'Llaves revocadas',
+        'with_key' => 'Con llave',
         'center_ready' => 'Centro listo',
         'from_manager_id' => 'Jefe anterior',
         'to_manager_id' => 'Jefe nuevo',

@@ -100,7 +100,7 @@ describe('currentTab', () => {
 
     it('marks Normas on any of its standards and on the pages below them', () => {
         expect(on('/admin/acme/seating')).toBe('compliance');
-        expect(on('/admin/acme/attendance/devices')).toBe('compliance');
+        expect(on('/admin/acme/attendance/schedules')).toBe('compliance');
     });
 
     it('marks Operación on its pages and on the ones below them', () => {

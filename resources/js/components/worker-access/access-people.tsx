@@ -1,37 +1,37 @@
-import DevicesTable from '@/components/attendance/devices-table';
-import ListToolbar from '@/components/attendance/list-toolbar';
+import ListToolbar from '@/components/list-toolbar';
+import AccessTable from '@/components/worker-access/access-table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/attendance/devices';
-import type { AttendanceDevicesProps, DeviceView } from '@/types';
+import { index } from '@/routes/tenant/worker-access';
+import type { AccessView, WorkerAccessPageProps } from '@/types';
 
-const TABS: { status: DeviceView; label: string }[] = [
+const TABS: { status: AccessView; label: string }[] = [
     { status: 'all', label: 'Todas' },
-    { status: 'linked', label: 'Con dispositivo' },
-    { status: 'unlinked', label: 'Sin dispositivo' },
-    { status: 'revoked', label: 'Revocados' },
+    { status: 'with_key', label: 'Con llave' },
+    { status: 'invited', label: 'Invitadas' },
+    { status: 'not_invited', label: 'Sin invitar' },
 ];
 
-/** The people and their devices: a tab per state, searched by name, narrowed to a center. */
-export default function DevicePeople({
+/** The people and their keys: a tab per state, searched by name, narrowed to a center. */
+export default function AccessPeople({
     center,
     filters,
     counts,
     people,
     canManage,
-}: AttendanceDevicesProps) {
+}: WorkerAccessPageProps) {
     const tenantSlug = useTenantSlug();
 
     return (
         <section aria-labelledby="personas" className="flex flex-col gap-4">
             <h2 id="personas" className="sr-only">
-                Personas y sus dispositivos
+                Personas y sus llaves
             </h2>
             <ListToolbar
                 page={{
                     url: index.url(tenantSlug),
                     href: (options) => index(tenantSlug, options),
                 }}
-                label="Estado de los dispositivos"
+                label="Estado del acceso"
                 tabs={TABS}
                 center={center}
                 filters={filters}
@@ -48,7 +48,7 @@ export default function DevicePeople({
                 </strong>{' '}
                 la llave no sale de ese equipo.
             </p>
-            <DevicesTable
+            <AccessTable
                 people={people}
                 status={filters.status}
                 searching={filters.q !== ''}

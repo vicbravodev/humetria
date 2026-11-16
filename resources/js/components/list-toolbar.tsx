@@ -1,14 +1,14 @@
-import CenterFilter from '@/components/attendance/center-filter';
+import CenterFilter from '@/components/center-filter';
 import CountTabs from '@/components/humetria/count-tabs';
 import SearchField from '@/components/humetria/search-field';
 import { usePanelListFilters } from '@/hooks/use-panel-list-filters';
-import { panelListQuery } from '@/lib/attendance/devices';
+import { panelListQuery } from '@/lib/panel-list';
 import type { RouteDefinition, RouteQueryOptions } from '@/wayfinder';
 
 type Tab<V extends string> = { status: V; label: string };
 
 /**
- * The top of a list of the registro (pantalla Empleados): search by name and the center at the left, the tabs with their
+ * The top of a list of the panel by person (pantalla Empleados): search by name and the center at the left, the tabs with their
  * counts at the right. Each is a visit to the same page; the tab keeps the search and the center.
  */
 export default function ListToolbar<V extends string>({

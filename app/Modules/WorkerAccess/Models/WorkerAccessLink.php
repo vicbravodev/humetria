@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\WorkerAccess\Models;
 
 use App\Concerns\BelongsToCurrentTenant;
+use App\Concerns\MatchesManyIds;
 use App\Modules\WorkerAccess\Enums\LinkKind;
 use Carbon\CarbonImmutable;
 use Database\Factories\WorkerAccess\WorkerAccessLinkFactory;
@@ -38,7 +39,7 @@ use Illuminate\Database\Eloquent\Model;
 final class WorkerAccessLink extends Model
 {
     /** @use HasFactory<WorkerAccessLinkFactory> */
-    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids;
+    use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
 
     public static function hashToken(string $token): string
     {
@@ -61,6 +62,30 @@ final class WorkerAccessLink extends Model
 
         return self::query()->whereKey($this->id)->whereNull('used_at')->whereNull('revoked_at')->where('expires_at', '>', $now)
             ->update(['used_at' => $now]) === 1;
+    }
+
+    /**
+     * The links RH issued to these people that were neither used nor revoked, the newest of each person first; expired ones
+     * too (RH sees that a link no longer opens). One query.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, self> by person
+     */
+    public static function issuedWaiting(array $employeeIds): array
+    {
+        $links = [];
+        foreach (self::query()->among('employee_id', $employeeIds)->where('kind', LinkKind::Issued)->whereNull('used_at')->whereNull('revoked_at')
+            ->orderByDesc('created_at')->get(['employee_id', 'created_at', 'expires_at']) as $link) {
+            $links[$link->employee_id] ??= $link;
+        }
+
+        return $links;
+    }
+
+    /** Whether the link still opens: within its time (it was neither used nor revoked). */
+    public function open(): bool
+    {
+        return $this->expires_at->greaterThan(CarbonImmutable::now());
     }
 
     /** Revokes the links of a person that may still open; of one kind only, when it is given. */

@@ -2,27 +2,23 @@ import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import {
-    deviceKind,
-    deviceUse,
-    revokeDeviceText,
-} from '@/lib/attendance/devices';
-import { revoke } from '@/routes/tenant/attendance/devices';
-import type { LinkedDevice } from '@/types';
+import { keyKind, keyUse, revokeKeyText } from '@/lib/worker-access/access';
+import { revoke } from '@/routes/tenant/worker-access';
+import type { AccessKey } from '@/types';
 
-/** One linked device: its name, the kind of key it holds, when it was linked and used; revocable while active. */
-export default function DeviceItem({
-    device,
+/** One key: its name, its kind, when it was registered and used; revocable while active. */
+export default function AccessKeyItem({
+    accessKey,
     owner,
     canManage,
 }: {
-    device: LinkedDevice;
+    accessKey: AccessKey;
     owner: string;
     canManage: boolean;
 }) {
     const tenantSlug = useTenantSlug();
-    const kind = deviceKind(device.synced);
-    const active = device.revokedAt === null;
+    const kind = keyKind(accessKey.synced);
+    const active = accessKey.revokedAt === null;
 
     return (
         <li className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
@@ -35,14 +31,14 @@ export default function DeviceItem({
                                 : 'text-muted-foreground line-through'
                         }
                     >
-                        {device.label}
+                        {accessKey.label}
                     </span>
                     <Badge variant="outline" title={kind.hint}>
                         {kind.label}
                     </Badge>
                 </div>
                 <span className="text-caption text-muted-foreground">
-                    {deviceUse(device)}
+                    {keyUse(accessKey)}
                 </span>
             </div>
             {canManage && active && (
@@ -52,12 +48,12 @@ export default function DeviceItem({
                             Revocar
                         </Button>
                     }
-                    title={`¿Revocar «${device.label}»?`}
-                    description={revokeDeviceText(owner, device.label)}
-                    confirmLabel="Revocar dispositivo"
+                    title={`¿Revocar «${accessKey.label}»?`}
+                    description={revokeKeyText(owner, accessKey.label)}
+                    confirmLabel="Revocar llave"
                     form={revoke.form({
                         tenant: tenantSlug,
-                        device: device.id,
+                        credential: accessKey.id,
                     })}
                     preserveScroll
                 />

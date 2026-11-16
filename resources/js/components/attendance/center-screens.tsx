@@ -2,7 +2,7 @@ import { router, usePage } from '@inertiajs/react';
 import { MonitorSmartphone, Plus } from 'lucide-react';
 import KiosksTable from '@/components/attendance/kiosks-table';
 import ScreenSteps from '@/components/attendance/screen-steps';
-import OneTimeLink from '@/components/attendance/one-time-link';
+import OneTimeLink from '@/components/humetria/one-time-link';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
 import { Button } from '@/components/ui/button';

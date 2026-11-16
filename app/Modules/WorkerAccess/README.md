@@ -29,6 +29,17 @@ bloqueada; si no, se borra. Entrar y salir regeneran el id; «Salir» borra solo
   de entrada no muestra nombres.
 - Ni el token, ni su hash, ni el correo escrito llegan a logs, bitácora o props (`tests/Feature/WorkerAccess/PrivacyTest.php`).
 
+## Panel: «Accesos»
+
+`/admin/{tenant}/access` (`tenant.worker-access.*`, `routes/worker-access-panel.php`), para toda empresa con o sin
+herramientas; un sindicato recibe 404. `view-worker-access` (owner, hr, viewer) lo ve; `manage-worker-access` (owner, hr)
+actúa. Por persona: con llave, invitada (un enlace `issued` que aún abre) o sin invitar; sus llaves, respaldo y último uso.
+Acciones: invitar (`IssueAccessLink`), invitar a un centro (`InviteCenter`, un job `SendWorkerInvitation` por persona sin
+llave ni invitación vigente; las sin correo se cuentan), reemitir (`ReissueAccess`, CUJ 7: en una transacción revoca todas
+las llaves con `reissued`, mueve `valid_after`, anula sus enlaces y emite uno nuevo) y revocar una llave (`RevokeCredential`,
+`revoked_by_hr`: deja de verificar; no cierra sesiones, para eso está reemitir). Para una persona sin correo el enlace se
+muestra una vez en el flash `accessLink`; la bitácora (`worker_access.link_issued`, `delivered_by_rh`) guarda quién lo mostró.
+
 ## Contratos
 
 - `WorkerSession::current(): ?WorkerIdentity`: la persona de la sesión de esta petición.
