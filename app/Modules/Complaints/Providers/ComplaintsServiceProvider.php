@@ -7,12 +7,14 @@ namespace App\Modules\Complaints\Providers;
 use App\Modules\Complaints\Contracts\ComplaintChannels;
 use App\Modules\Complaints\Contracts\ComplaintsToAcknowledge;
 use App\Modules\Complaints\Listeners\EndHandlerOnMemberRemoval;
+use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Support\AddressKey;
 use App\Modules\Complaints\Support\CompanyComplaintChannels;
 use App\Modules\Complaints\Support\CompanyComplaintsToAcknowledge;
 use App\Modules\Complaints\Support\ComplaintsPortalSection;
 use App\Modules\Complaints\Support\RandomReferenceSource;
 use App\Modules\Complaints\Support\ReferenceSource;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Events\MemberRemoved;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -42,6 +44,16 @@ final class ComplaintsServiceProvider extends ServiceProvider
         // Keyed by a hash of the address, never the address; a whole office behind one address must still be able to use it.
         RateLimiter::for('complaints-view', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.views_per_hour'))->by(AddressKey::for($request)));
         RateLimiter::for('complaints-follow-up', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.follow_ups_per_hour'))->by(AddressKey::for($request)));
-        RateLimiter::for('complaints-submit', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.submissions_per_hour'))->by(AddressKey::for($request)));
+        RateLimiter::for('complaints-submit', fn (Request $request): Limit => Limit::perHour(config()->integer($this->isDemoChannel($request) ? 'complaints.rate_limits.demo_submissions_per_hour' : 'complaints.rate_limits.submissions_per_hour'))->by(AddressKey::for($request)));
+    }
+
+    /** Whether the code of the request is the demo company's channel, where a whole room files from one address. */
+    private function isDemoChannel(Request $request): bool
+    {
+        $demo = $this->app->make(DemoCompanies::class)->id();
+        $code = $request->route('code');
+
+        return $demo !== null && is_string($code)
+            && ComplaintChannel::query()->withoutGlobalScopes()->where('tenant_id', $demo)->where('access_code', strtoupper(trim($code)))->exists();
     }
 }
