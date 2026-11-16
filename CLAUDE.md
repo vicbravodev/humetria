@@ -63,6 +63,9 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - Factories en `database/factories/{Module}/` enlazadas con el atributo `#[UseFactory]`.
 - `tests/Unit/ArchitectureTest.php` hace cumplir todo esto. Si falla, se corrige el diseño, no la regla. En Pest, una
   expectativa `arch()` con varios destinos pasa en silencio si alguno no existe: una regla, un namespace destino.
+- Única excepción: la historia de la empresa demo vive en `database/seeders/Demo` y arma la empresa llamando a las Actions,
+  Models y Enums de los módulos (no a su Http, Jobs, Support ni Notifications). Nadie más puede usar `Database\Seeders\Demo`
+  salvo el proveedor del módulo `Demos`: lo exige una regla `arch()` aparte. No se amplía a otro código.
 
 ### Rutas
 
