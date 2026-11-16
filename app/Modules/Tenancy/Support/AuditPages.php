@@ -137,6 +137,7 @@ final class AuditPages
         'without_email' => 'Sin correo',
         'linked' => 'Con enlace',
         'with_link' => 'Con enlace',
+        'keys_revoked' => 'Llaves revocadas',
         'center_ready' => 'Centro listo',
         'from_manager_id' => 'Jefe anterior',
         'to_manager_id' => 'Jefe nuevo',
