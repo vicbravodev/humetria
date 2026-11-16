@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Results\Models\ReportShare;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Str;
+use Pest\Browser\Api\AwaitableWebpage;
 
 $looks = [
     'light desktop' => [false, false],
@@ -58,3 +61,44 @@ it('shows no mark on the reports of another company', function (): void {
         ->assertSee('Diagnóstico de factores de riesgo psicosocial')
         ->assertMissing('[data-slot="demo-mark"]');
 });
+
+/**
+ * The fixed pieces of the screen the mark must leave clear, by selector: those on the page, the ones it overlaps.
+ * The banner and the top bar must be there: the check means nothing without them.
+ */
+function markOverlaps(): string
+{
+    return <<<'JS'
+        () => {
+            const box = (element) => element.getBoundingClientRect();
+            const mark = box(document.querySelector('[data-slot="demo-mark"]'));
+            const required = ['[data-test="impersonation-banner"]', '[data-slot="app-topbar"]'];
+            const optional = ['nav[aria-label="Menú principal"]', 'button[aria-label^="Primeros pasos"]', '[data-slot="sidebar-footer"]'];
+
+            return [...required, ...optional].flatMap((selector) => {
+                const element = document.querySelector(selector);
+
+                if (element === null) {
+                    return required.includes(selector) ? [`${selector} missing`] : [];
+                }
+
+                const other = box(element);
+                const overlaps = other.width > 0 && mark.left < other.right && other.left < mark.right && mark.top < other.bottom && other.top < mark.bottom;
+
+                return overlaps ? [selector] : [];
+            });
+        }
+        JS;
+}
+
+it('keeps the mark clear of the impersonation banner and the top bar of the demo company', function (bool $dark, bool $mobile): void {
+    $this->actingAs(superadmin());
+    $demo = Tenant::factory()->demo()->create(['trade_name' => 'Manufacturas Alba del Bajío', 'slug' => 'alba-demo']);
+    TenantMembership::factory()->for($demo)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
+
+    visitPage('dashboard', '/admin/demo', $dark, $mobile, fn (AwaitableWebpage $page) => $page
+        ->click('Entrar como dueño')
+        ->assertScript(pathBecomes('/admin/alba-demo'), true))
+        ->assertSee('Estás viendo Humetría como Ana Pérez')
+        ->assertScript(markOverlaps(), []);
+})->with($looks);

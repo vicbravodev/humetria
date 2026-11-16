@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 /**
  * Wraps every page: in the demo company it adds the «DEMO» mark, fixed so it shows on screen and repeats on each printed
  * sheet, so nobody takes a demo report for a real diagnosis. Any other company, or no company, renders the page alone.
+ * On screen it is a narrow tab on the right edge, halfway down: clear of the impersonation banner and the top bar, the
+ * logos and titles of the standalone pages, the phone's bottom bar and the floating pills of Humi and the first steps. Its text runs top to bottom, so `px` pads its length and `py` its width.
  */
 export default function DemoMark({ children }: { children: ReactNode }) {
     const { demo } = usePage().props;
@@ -14,7 +16,7 @@ export default function DemoMark({ children }: { children: ReactNode }) {
             {demo && (
                 <div
                     data-slot="demo-mark"
-                    className="pointer-events-none fixed top-2 left-1/2 z-50 -translate-x-1/2 rounded-full border-2 border-primary bg-background px-3 py-0.5 text-sm font-semibold tracking-widest text-primary"
+                    className="pointer-events-none fixed top-1/2 right-0 z-50 -translate-y-1/2 rounded-l-md border border-r-0 border-primary bg-background px-2 py-0.5 text-xs font-semibold tracking-widest text-primary [writing-mode:vertical-rl]"
                 >
                     DEMO
                 </div>
