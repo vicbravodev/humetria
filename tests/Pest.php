@@ -789,25 +789,23 @@ require_once __DIR__.'/Unit/Compensation/ScenarioHelpers.php';
 require_once __DIR__.'/Browser/attendance-helpers.php';
 
 /**
- * Issues an enrollment link of `$employeeId` as RH does, and gives the URL the person got: the one emailed to them (the
+ * Issues `$employeeId` the link RH sends to enter and create their key, and gives its path: the one emailed to them (the
  * mail must be faked), or the one RH hands over when they have no email.
  */
-function enrollmentUrl(string $employeeId, ?int $userId = null): string
+function accessLinkPath(string $employeeId, ?int $userId = null): string
 {
-    $issued = resolve(App\Modules\Attendance\Actions\IssueEnrollment::class)->handle($employeeId, $userId ?? User::factory()->create()->id);
+    $outcome = resolve(App\Modules\WorkerAccess\Contracts\WorkerInvitations::class)->send($employeeId, $userId ?? User::factory()->create()->id);
+    $url = $outcome->url;
 
-    if ($issued->manualUrl !== null) {
-        return $issued->manualUrl;
+    if ($url === null) {
+        Illuminate\Support\Facades\Notification::assertSentOnDemand(App\Modules\WorkerAccess\Notifications\WorkerInvitation::class, function (App\Modules\WorkerAccess\Notifications\WorkerInvitation $notification, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable) use (&$url): bool {
+            $url = (string) $notification->toMail($notifiable)->actionUrl;
+
+            return true;
+        });
     }
 
-    $url = null;
-    Illuminate\Support\Facades\Notification::assertSentOnDemand(App\Modules\Attendance\Notifications\EnrollmentInvitation::class, function (App\Modules\Attendance\Notifications\EnrollmentInvitation $notification, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable) use (&$url): bool {
-        $url = $notification->toMail($notifiable)->actionUrl;
-
-        return true;
-    });
-
-    return is_string($url) ? $url : throw new LogicException('No enrollment email.');
+    return is_string($url) ? (string) parse_url($url, PHP_URL_PATH) : throw new LogicException('No access link.');
 }
 
 /**

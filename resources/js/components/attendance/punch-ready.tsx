@@ -31,6 +31,7 @@ export default function PunchReady({
     feedback,
     scanned,
     weekUrl,
+    enterUrl,
     timezone,
     now,
     onMark,
@@ -42,6 +43,7 @@ export default function PunchReady({
     feedback: Feedback | null;
     scanned: boolean;
     weekUrl: string;
+    enterUrl: string;
     timezone: string;
     /** The time of this device's clock: the date and the greeting are the company's at that moment. */
     now: number;
@@ -84,7 +86,7 @@ export default function PunchReady({
                 <PunchFeedback feedback={feedback} />
                 <LocationNote />
                 {marks !== null && <DayMarks marks={marks} />}
-                {person === null && <LinkDeviceNote />}
+                {person === null && <LinkDeviceNote enterUrl={enterUrl} />}
                 <Button
                     asChild
                     variant="outline"

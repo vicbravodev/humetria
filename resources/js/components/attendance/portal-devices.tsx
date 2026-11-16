@@ -1,8 +1,7 @@
-import { Form } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { Smartphone } from 'lucide-react';
 import ToneTile from '@/components/humetria/tone-tile';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { describeDate } from '@/lib/calendar-date';
 
 export type PortalDevice = {
@@ -12,15 +11,15 @@ export type PortalDevice = {
 };
 
 /**
- * The phones the person has linked and the button to link this one. Linking sends them to the same steps RH's email would
- * (the agreement, then the key of this phone): nothing here marks, only the key of the phone does.
+ * The person's keys in use, and how to get one: the first comes only from the link RH sends (this portal never creates
+ * one); with a key, another is added from their entrance. Nothing here marks, only the key does.
  */
 export default function PortalDevices({
     devices,
-    enrollUrl,
+    keyUrl,
 }: {
     devices: PortalDevice[];
-    enrollUrl: string;
+    keyUrl: string;
 }) {
     return (
         <section
@@ -29,12 +28,12 @@ export default function PortalDevices({
         >
             <div className="flex flex-col gap-1">
                 <h2 id="portal-devices" className="text-lg font-semibold">
-                    Mis teléfonos
+                    Mis llaves de acceso
                 </h2>
                 <p className="text-base text-muted-foreground">
                     {devices.length === 0
-                        ? 'Todavía no vinculó ningún teléfono: sin uno no puede marcar. Toma un minuto y usa el desbloqueo de este teléfono, no una contraseña.'
-                        : 'Solo estos teléfonos pueden marcar por usted. Si ve uno que no es suyo, avise a Recursos Humanos.'}
+                        ? 'Todavía no tiene una llave de acceso: sin ella no puede marcar. Pida a Recursos Humanos su enlace para crearla; le llega a su correo y sirve una sola vez.'
+                        : 'Solo estas llaves pueden marcar por usted. Si ve una que no es suya, avise a Recursos Humanos.'}
                 </p>
             </div>
             {devices.length > 0 && (
@@ -50,7 +49,7 @@ export default function PortalDevices({
                                     {device.label}
                                 </p>
                                 <p className="text-base text-muted-foreground">
-                                    Vinculado el{' '}
+                                    Registrada el{' '}
                                     {describeDate(device.enrolledOn) ??
                                         device.enrolledOn}
                                     {device.lastUsedOn !== null &&
@@ -61,21 +60,17 @@ export default function PortalDevices({
                     ))}
                 </ul>
             )}
-            <Form action={enrollUrl} method="post">
-                {({ processing }) => (
-                    <Button
-                        type="submit"
-                        variant={devices.length === 0 ? 'default' : 'outline'}
-                        disabled={processing}
-                        className="h-12 w-full text-base font-semibold"
-                    >
-                        {processing && <Spinner />}
-                        {devices.length === 0
-                            ? 'Vincular este teléfono'
-                            : 'Vincular otro teléfono'}
-                    </Button>
-                )}
-            </Form>
+            {devices.length > 0 && (
+                <Button
+                    asChild
+                    variant="outline"
+                    className="h-12 w-full text-base font-semibold"
+                >
+                    <Link href={keyUrl}>
+                        Agregar una llave en este teléfono
+                    </Link>
+                </Button>
+            )}
         </section>
     );
 }

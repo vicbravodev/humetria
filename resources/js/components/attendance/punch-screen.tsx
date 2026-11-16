@@ -16,6 +16,7 @@ export default function PunchScreen({
     punch,
     scanned,
     weekUrl,
+    enterUrl,
     correctionOptionsUrl,
     correctionUrl,
     agreementOptionsUrl,
@@ -27,6 +28,7 @@ export default function PunchScreen({
     punch: ReturnType<typeof usePunch>;
     scanned: boolean;
     weekUrl: string;
+    enterUrl: string;
     correctionOptionsUrl: string;
     correctionUrl: string;
     agreementOptionsUrl: string;
@@ -93,6 +95,7 @@ export default function PunchScreen({
             feedback={feedback}
             scanned={scanned}
             weekUrl={weekUrl}
+            enterUrl={enterUrl}
             timezone={timezone}
             now={now}
             onMark={(type) => void punch.mark(type)}

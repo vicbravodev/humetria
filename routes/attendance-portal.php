@@ -11,5 +11,3 @@ use App\Modules\Attendance\Http\Controllers\PortalController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('portal/{token}/attendance', [PortalController::class, 'show'])->middleware('throttle:portal-views')->middleware(RequirePortalTool::class.':attendance')->name('portal.attendance.show');
-// The person asks for the link of their phone: it is issued to them alone and replaces the one before.
-Route::post('portal/{token}/attendance/enroll', [PortalController::class, 'enroll'])->middleware('throttle:portal-actions')->middleware(RequirePortalTool::class.':attendance')->name('portal.attendance.enroll');

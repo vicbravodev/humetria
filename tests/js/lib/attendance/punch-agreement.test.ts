@@ -3,6 +3,7 @@ import {
     acceptAgreement,
     agreementMessage,
     agreementOf,
+    agreementSections,
 } from '@/lib/attendance/punch-agreement';
 import type { AcceptRequest } from '@/lib/attendance/punch-agreement';
 import type { SignedKey } from '@/lib/webauthn';
@@ -146,5 +147,19 @@ describe('agreementMessage', () => {
         expect(agreementMessage('failed')).toBe(
             'No se pudo enviar su aceptación. Revise su conexión e intente de nuevo.',
         );
+    });
+});
+
+describe('agreementSections', () => {
+    it('splits the agreement into its sections, each with its title', () => {
+        expect(
+            agreementSections(
+                'Qué se guarda. La hora.\n\nQuién lo ve. Usted.\n\nSin título',
+            ),
+        ).toEqual([
+            { title: 'Qué se guarda', text: 'La hora.' },
+            { title: 'Quién lo ve', text: 'Usted.' },
+            { title: '', text: 'Sin título' },
+        ]);
     });
 });

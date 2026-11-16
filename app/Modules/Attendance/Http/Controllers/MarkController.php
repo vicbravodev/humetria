@@ -74,6 +74,8 @@ final readonly class MarkController
             'punchUrl' => route('attendance.device.punch.store', $tenant),
             'forgetUrl' => route('attendance.device.punch.forget', $tenant),
             'weekUrl' => route('attendance.device.week.show', $tenant),
+            // Where a person without a key here adds one from a session; the first one comes only from RH's link.
+            'enterUrl' => route('worker.home', $tenant),
             'correctionOptionsUrl' => route('attendance.device.correction.options', $tenant),
             'correctionUrl' => route('attendance.device.correction.store', $tenant),
             'agreementOptionsUrl' => route('attendance.device.agreement.options', $tenant),

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\WorkerAccess\Support;
 
-use App\Modules\WorkerAccess\Actions\RevokeCredential;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use App\Modules\WorkerAccess\Data\CredentialCounts;
 use App\Modules\WorkerAccess\Data\CredentialSummary;
@@ -12,8 +11,6 @@ use App\Modules\WorkerAccess\Models\WorkerCredential;
 
 final readonly class CompanyWorkerCredentials implements WorkerCredentials
 {
-    public function __construct(private RevokeCredential $revoke) {}
-
     public function countsByEmployee(array $employeeIds): array
     {
         $active = [];
@@ -43,10 +40,5 @@ final readonly class CompanyWorkerCredentials implements WorkerCredentials
         }
 
         return $listed;
-    }
-
-    public function revoke(string $credentialId): void
-    {
-        $this->revoke->handle($credentialId);
     }
 }

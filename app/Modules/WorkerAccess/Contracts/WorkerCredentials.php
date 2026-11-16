@@ -6,10 +6,9 @@ namespace App\Modules\WorkerAccess\Contracts;
 
 use App\Modules\WorkerAccess\Data\CredentialCounts;
 use App\Modules\WorkerAccess\Data\CredentialSummary;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
- * What the other modules read of the keys of the company's people, and the revocation of one. Always the current company's.
+ * What the other modules read of the keys of the company's people. Always the current company's.
  */
 interface WorkerCredentials
 {
@@ -28,11 +27,4 @@ interface WorkerCredentials
      * @return array<string, list<CredentialSummary>>
      */
     public function ofEmployees(array $employeeIds): array;
-
-    /**
-     * Stops a key at once: it no longer verifies. Revoking it again changes nothing.
-     *
-     * @throws ModelNotFoundException when the key is not the company's
-     */
-    public function revoke(string $credentialId): void;
 }

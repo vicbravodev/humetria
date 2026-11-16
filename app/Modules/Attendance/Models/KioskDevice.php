@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * The QR screen of a work center: a fixed tablet whose token (shown once to RH, only its hash kept) authorizes it to show
- * the center's rotating code. Not a person's device: those enroll with WebAuthn.
+ * the center's rotating code. Not a person's device: a person marks with their key (WorkerAccess).
  *
  * @property string $id
  * @property string $tenant_id

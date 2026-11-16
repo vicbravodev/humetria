@@ -152,6 +152,11 @@ describe('the page', function (): void {
                 ->where('forgetUrl', route('attendance.device.punch.forget', 'acme')));
     });
 
+    it('tells a person without a key where to add one: their entrance, with a session; the first comes from RH', function (): void {
+        $this->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('enterUrl', route('worker.home', 'acme')));
+    });
+
     it('opens from the QR of the center\'s screen carrying its code', function (): void {
         $this->get(route('attendance.device.punch.show', ['acme', 'q' => 'abc123']))
             ->assertOk()

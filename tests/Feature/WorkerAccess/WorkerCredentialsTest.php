@@ -8,7 +8,6 @@ use App\Modules\WorkerAccess\Data\CredentialSummary;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'));
@@ -51,14 +50,4 @@ it('never shows the keys of another company', function (): void {
 
     expect($this->credentials->countsByEmployee([$other->employee_id]))->toBe([])
         ->and($this->credentials->ofEmployees([$other->employee_id]))->toBe([]);
-});
-
-it('revokes a key of the company and refuses one of another', function (): void {
-    $key = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
-    $other = WorkerCredential::factory()->create();
-
-    $this->credentials->revoke($key->id);
-
-    expect($key->fresh()?->revoked_at)->not->toBeNull()
-        ->and(fn () => $this->credentials->revoke($other->id))->toThrow(ModelNotFoundException::class);
 });

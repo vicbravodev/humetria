@@ -17,13 +17,6 @@ return [
     ],
 
     /*
-    | Hours a link to link a phone (enrollment) can be opened, once.
-    */
-    'enrollment' => [
-        'link_hours' => (int) env('ATTENDANCE_ENROLLMENT_LINK_HOURS', 48),
-    ],
-
-    /*
     | Minutes the Marcar page of a browser remembers who marked last, to offer their next step.
     */
     'punch' => [

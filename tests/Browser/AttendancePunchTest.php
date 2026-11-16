@@ -32,9 +32,9 @@ afterEach(function (): void {
 /** Ana's phone, linked from the link RH sent her, then opening Marcar from the QR of her center's screen. */
 function phoneAtThePunchScreen(bool $dark = false): AwaitableWebpage
 {
-    $enroll = (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
-    $page = visitPage('attendance/enroll', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
-    linkThePhone($page);
+    $enroll = accessLinkPath(test()->ana->id);
+    $page = visitPage('worker-access/link', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
+    linkThePhone($page, test()->ana->id);
 
     // The test goes on once the screen of Marcar is really there, not while the browser is still settling the navigation.
     return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
@@ -47,8 +47,8 @@ it('opens the screen of Marcar for a device not known yet: every step, why the p
         ->assertSee('Marcar entrada')
         ->assertSee('Salir a comer')
         ->assertSee('Al marcar, el teléfono le pedirá su ubicación: si usted trabaja en un centro, la usamos para comprobar que está ahí; si no, se descarta. No se guarda en este teléfono ni se sigue entre marcas.')
-        ->assertSee('Si este teléfono aún no está vinculado')
-        ->assertSee('Si ya lo vinculó, solo marque.')
+        ->assertSee('Si aún no tiene una llave de acceso')
+        ->assertSee('Si ya tiene llave aquí, solo marque.')
         // Whether the center asks for the screen's code is the server's to say when marking: until then it says how.
         ->assertSee('Si su centro tiene una pantalla QR');
 })->with([
@@ -152,11 +152,11 @@ function bobOnAnasPhone(): AwaitableWebpage
 {
     $bob = EmployeeFactory::new()->create(['tenant_id' => test()->tenant->id, 'work_center_id' => test()->plant->id, 'name' => 'Bob Ruiz']);
     $clearKeys = null;
-    $enroll = (string) parse_url(enrollmentUrl(test()->ana->id), PHP_URL_PATH);
-    $page = visitPage('attendance/enroll', $enroll, mobile: true, reach: function (AwaitableWebpage $page) use (&$clearKeys): void {
+    $enroll = accessLinkPath(test()->ana->id);
+    $page = visitPage('worker-access/link', $enroll, mobile: true, reach: function (AwaitableWebpage $page) use (&$clearKeys): void {
         $clearKeys = withFingerprintReader($page);
     });
-    linkThePhone($page);
+    linkThePhone($page, test()->ana->id);
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText('Marcar entrada')
@@ -168,7 +168,7 @@ function bobOnAnasPhone(): AwaitableWebpage
 
     expect($clearKeys)->toBeInstanceOf(Closure::class);
     $clearKeys();
-    linkThePhone($page->navigate((string) parse_url(enrollmentUrl($bob->id), PHP_URL_PATH)));
+    linkThePhone($page->navigate(accessLinkPath($bob->id)), $bob->id);
 
     return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true)
@@ -217,8 +217,8 @@ it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', funct
     $page->press('¿No es usted?')
         ->waitForText('Marcar su jornada')
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
-        ->assertSee('Si este teléfono aún no está vinculado')
-        ->assertSee('Si ya lo vinculó, solo marque.')
+        ->assertSee('Si aún no tiene una llave de acceso')
+        ->assertSee('Si ya tiene llave aquí, solo marque.')
         ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->press('Listo')

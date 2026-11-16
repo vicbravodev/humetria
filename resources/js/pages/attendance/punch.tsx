@@ -18,6 +18,7 @@ export default function Punch({
     punchUrl,
     forgetUrl,
     weekUrl,
+    enterUrl,
     correctionOptionsUrl,
     correctionUrl,
     agreementOptionsUrl,
@@ -31,6 +32,8 @@ export default function Punch({
     punchUrl: string;
     forgetUrl: string;
     weekUrl: string;
+    /** Where a person without a key here adds one, from a session: their entrance. */
+    enterUrl: string;
     correctionOptionsUrl: string;
     correctionUrl: string;
     agreementOptionsUrl: string;
@@ -54,6 +57,7 @@ export default function Punch({
                 punch={punch}
                 scanned={qr !== null}
                 weekUrl={weekUrl}
+                enterUrl={enterUrl}
                 correctionOptionsUrl={correctionOptionsUrl}
                 correctionUrl={correctionUrl}
                 agreementOptionsUrl={agreementOptionsUrl}

@@ -2,10 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\AuditEntry;
-use App\Modules\Attendance\Actions\IssueSelfEnrollment;
 use App\Modules\Attendance\Http\Controllers\PortalController;
-use App\Modules\Attendance\Models\EnrollmentLink;
 use App\Modules\Attendance\Support\AttendancePortalSection;
 use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Contracts\CompanyModules;
@@ -13,16 +10,15 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PortalController::class, IssueSelfEnrollment::class, AttendancePortalSection::class);
+mutates(PortalController::class, AttendancePortalSection::class);
 
 /*
- * «Mi jornada» in the personal portal: the one link of the person reaches marking, «Mi semana» and the linking of their
- * phone. The passkey is still what marks; the portal only hands a person who holds their own link (RH never receives it)
- * the same one-use enrollment link RH's email would (docs/superpowers/specs/2026-11-14-single-personal-link-design.md).
+ * «Mi jornada» in the personal portal: the one link of the person reaches marking, «Mi semana» and the keys that mark for
+ * them. The key is what marks; a new one comes only from RH's link (docs/superpowers/specs/2026-11-14-worker-access-design.md,
+ * decision 3), so the portal link never creates one: it points the person to their entrance, to add a key from a session.
  */
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'));
@@ -45,10 +41,7 @@ function portalHomeSections(string $token): array
 
 it('lives at /portal/{token}/attendance, outside the panel, throttled like the rest of the portal', function (): void {
     expect(route('portal.attendance.show', 'abc', absolute: false))->toBe('/portal/abc/attendance')
-        ->and(route('portal.attendance.enroll', 'abc', absolute: false))->toBe('/portal/abc/attendance/enroll');
-
-    expect(Route::getRoutes()->getByName('portal.attendance.show')?->gatherMiddleware())->toContain('throttle:portal-views')
-        ->and(Route::getRoutes()->getByName('portal.attendance.enroll')?->gatherMiddleware())->toContain('throttle:portal-actions');
+        ->and(Route::getRoutes()->getByName('portal.attendance.show')?->gatherMiddleware())->toContain('throttle:portal-views');
 });
 
 describe('the section of the home', function (): void {
@@ -99,7 +92,7 @@ describe('the page', function (): void {
                 ->where('devices.0.lastUsedOn', '2026-11-06')
                 ->where('markUrl', route('attendance.device.punch.home', 'acme'))
                 ->where('weekUrl', route('attendance.device.week.show', 'acme'))
-                ->where('enrollUrl', route('portal.attendance.enroll', $this->token))
+                ->where('keyUrl', route('worker.home', 'acme'))
                 ->where('homeUrl', route('portal.show', $this->token)));
 
         expect(json_encode($response->viewData('page')['props'], JSON_THROW_ON_ERROR))->not->toContain('Beto')->not->toContain('credential');
@@ -120,60 +113,10 @@ describe('the page', function (): void {
     });
 });
 
-describe('linking a phone from the portal', function (): void {
-    it('issues the person the one-use link of 48 hours and sends them to it, without RH or the audit trail ever holding it', function (): void {
-        Log::spy();
+describe('a new key', function (): void {
+    it('is never issued from the portal link: the route to link a phone is gone', function (): void {
+        expect(Route::has('portal.attendance.enroll'))->toBeFalse();
 
-        $response = $this->post(route('portal.attendance.enroll', $this->token));
-
-        $link = EnrollmentLink::query()->sole();
-        $location = $response->headers->get('Location');
-
-        expect($link->employee_id)->toBe($this->ana->id)
-            ->and($link->issued_by)->toBeNull()
-            ->and($link->used_at)->toBeNull()
-            ->and($link->expires_at->toIso8601String())->toBe(now()->addHours(config()->integer('attendance.enrollment.link_hours'))->toIso8601String())
-            ->and($location)->toStartWith(url('/a/acme/enroll/'));
-
-        $token = basename((string) $location);
-        expect(EnrollmentLink::findPending($token)?->id)->toBe($link->id)
-            ->and(EnrollmentLink::query()->where('token_hash', $token)->exists())->toBeFalse();
-
-        $entry = AuditEntry::query()->where('event', 'attendance.enrollment_issued')->sole();
-        expect($entry->metadata)->toMatchArray(['employee_id' => $this->ana->id, 'self_service' => true])
-            ->and(json_encode($entry->metadata, JSON_THROW_ON_ERROR))->not->toContain($token)
-            ->and($entry->actor_id)->toBeNull();
-
-        $this->get($location)->assertOk()->assertInertia(fn (Assert $page) => $page->component('attendance/enroll')->where('name', 'Ana López'));
-    });
-
-    it('replaces the link it issued before: only the last one opens', function (): void {
-        $first = basename((string) $this->post(route('portal.attendance.enroll', $this->token))->headers->get('Location'));
-        $second = basename((string) $this->post(route('portal.attendance.enroll', $this->token))->headers->get('Location'));
-
-        expect(EnrollmentLink::findPending($first))->toBeNull()
-            ->and(EnrollmentLink::findPending($second))->not->toBeNull()
-            ->and(EnrollmentLink::query()->count())->toBe(2);
-    });
-
-    it('answers 404 for a link that is not valid, a company without the module and a person who left, and issues nothing', function (): void {
-        $this->post(route('portal.attendance.enroll', 'x'.str_repeat('0', 63)))->assertNotFound();
-
-        $this->ana->forceFill(['deactivated_at' => now()])->save();
-        $this->post(route('portal.attendance.enroll', $this->token))->assertNotFound();
-
-        $this->ana->forceFill(['deactivated_at' => null])->save();
-        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
-        $this->post(route('portal.attendance.enroll', $this->token))->assertNotFound();
-
-        expect(EnrollmentLink::query()->count())->toBe(0);
-    });
-
-    it('never issues a link for somebody else than the owner of the portal link', function (): void {
-        $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
-
-        $this->post(route('portal.attendance.enroll', $this->token), ['employee_id' => $beto->id])->assertRedirect();
-
-        expect(EnrollmentLink::query()->sole()->employee_id)->toBe($this->ana->id);
+        $this->post("/portal/{$this->token}/attendance/enroll")->assertNotFound();
     });
 });

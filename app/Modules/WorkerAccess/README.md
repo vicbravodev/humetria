@@ -46,4 +46,4 @@ muestra una vez en el flash `accessLink`; la bitácora (`worker_access.link_issu
 - `WorkerLinks`: `home()` y `to($route, $parameters)`, direcciones de la persona sin credencial.
 - `WorkerInvitations::send($employeeId, $issuedBy): InvitationOutcome`: RH emite el enlace (`sent`, `without_email` con
   el enlace para mostrarlo una vez, `unavailable`).
-- `WorkerSignatures`, `WorkerKeys`, `WorkerCredentials`: firmar, crear y leer llaves (los usa Attendance).
+- `WorkerSignatures` y `WorkerCredentials`: firmar y leer llaves (los usa Attendance). `WorkerKeys`: crear una llave.

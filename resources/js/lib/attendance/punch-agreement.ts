@@ -90,3 +90,19 @@ export function agreementMessage(reason: string): string {
         'No se pudo enviar su aceptación. Revise su conexión e intente de nuevo.'
     );
 }
+
+/** The agreement's sections: one per paragraph, its title up to the first period. */
+export function agreementSections(
+    body: string,
+): { title: string; text: string }[] {
+    return body.split('\n\n').map((paragraph) => {
+        const end = paragraph.indexOf('. ');
+
+        return end === -1
+            ? { title: '', text: paragraph }
+            : {
+                  title: paragraph.slice(0, end),
+                  text: paragraph.slice(end + 2),
+              };
+    });
+}

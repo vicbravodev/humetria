@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Http\Controllers\AgreementController;
 use App\Modules\Attendance\Http\Controllers\CorrectionRequestController;
-use App\Modules\Attendance\Http\Controllers\EnrollmentController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\MarkController;
 use App\Modules\Attendance\Http\Controllers\WeekController;
@@ -24,15 +23,7 @@ Route::middleware(['throttle:attendance-device', ResolveDeviceTenant::class])->g
     Route::get('a/{tenant:slug}/qr', [KioskController::class, 'qr'])->name('attendance.device.kiosk.qr');
 });
 
-// A person links their device with the link RH sent them: good once and for 48 hours; the link is the credential. Its own
-// limiter, per address and per link.
-Route::middleware(['throttle:attendance-enroll', ResolveDeviceTenant::class])->group(function (): void {
-    Route::get('a/{tenant:slug}/enroll/{token}', [EnrollmentController::class, 'show'])->name('attendance.device.enroll.show');
-    Route::post('a/{tenant:slug}/enroll/{token}/options', [EnrollmentController::class, 'options'])->name('attendance.device.enroll.options');
-    Route::post('a/{tenant:slug}/enroll/{token}/register', [EnrollmentController::class, 'register'])->name('attendance.device.enroll.register');
-});
-
-// A person marks from their linked device (no account): the key it signs with names the person, inside the company of the
+// A person marks with their key (no account): the key it signs with names the person, inside the company of the
 // slug. The page opens from the address RH gave (`a/{slug}`) or from the QR of the center's screen (`a/{slug}/punch?q=`).
 // Its own limiter: generous per address (a whole shift behind one router) and strict per key.
 Route::middleware(['throttle:attendance-punch', ResolveDeviceTenant::class])->group(function (): void {

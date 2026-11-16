@@ -6,8 +6,8 @@ import type { PortalDevice } from '@/components/attendance/portal-devices';
 import PortalLinkCard from '@/components/attendance/portal-link-card';
 
 /**
- * «Mi jornada» in the person's portal, in usted: the way to mark and to see their week, and the phones that mark for them.
- * Marking and the week are signed by the key of the phone, never by the portal link.
+ * «Mi jornada» in the person's portal, in usted: the way to mark and to see their week, and the keys that mark for them.
+ * Marking and the week are signed by the person's key, never by the portal link.
  */
 export default function AttendancePortal({
     company,
@@ -15,7 +15,7 @@ export default function AttendancePortal({
     devices,
     markUrl,
     weekUrl,
-    enrollUrl,
+    keyUrl,
     homeUrl,
 }: {
     token: string;
@@ -24,7 +24,7 @@ export default function AttendancePortal({
     devices: PortalDevice[];
     markUrl: string;
     weekUrl: string;
-    enrollUrl: string;
+    keyUrl: string;
     homeUrl: string;
 }) {
     return (
@@ -58,7 +58,7 @@ export default function AttendancePortal({
                     Sus marcas y sus horas; confirme su semana o pida una
                     corrección.
                 </PortalLinkCard>
-                <PortalDevices devices={devices} enrollUrl={enrollUrl} />
+                <PortalDevices devices={devices} keyUrl={keyUrl} />
             </div>
         </PersonFrame>
     );

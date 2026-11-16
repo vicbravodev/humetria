@@ -17,7 +17,6 @@ describe('isStandalone', () => {
         'telework/portal-checklist',
         'results/shared-report',
         'attendance/kiosk',
-        'attendance/enroll',
         'attendance/punch',
         'attendance/portal',
         'attendance/week',

@@ -90,8 +90,6 @@ function inventory(): array
         'portal reminder' => [fn () => new PortalReminder($url, 'Ana', $company, new PortalPendingData([], [])), true],
         'telework digest' => [fn () => new TeleworkDigest($company, 'Olga', ['1 lista por revisar.'], $url), true],
         'telework moved' => [fn () => new TeleworkMoved($company, 'Ana', 'A', 'B', $url), true],
-        'attendance enrollment' => [fn () => new App\Modules\Attendance\Notifications\EnrollmentInvitation($url, 'Ana', $company), true],
-        'attendance device linked' => [fn () => new App\Modules\Attendance\Notifications\DeviceLinked('iPhone', CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'), 'Ana', $company), true],
         'worker access link requested' => [fn () => new App\Modules\WorkerAccess\Notifications\AccessLinkRequested($url, 'Ana', $company), true],
         'worker access key registered' => [fn () => new App\Modules\WorkerAccess\Notifications\KeyRegistered('iPhone', CarbonImmutable::parse('2026-11-16 15:00:00', 'UTC'), 'Ana', $company, $url), true],
         'worker access invitation' => [fn () => new App\Modules\WorkerAccess\Notifications\WorkerInvitation($url, 'Ana', $company), true],
@@ -139,7 +137,7 @@ it('speaks to the worker as usted under the button too', function (Closure $make
 
     expect($html)->toContain('copie este enlace en su navegador')->not->toContain('en tu navegador');
 })->with(array_map(fn (array $row): array => [$row[0]], array_intersect_key(inventory(), array_flip([
-    'vacations portal link', 'leave request decided', 'leave request to decide', 'attendance enrollment', 'attendance device linked',
+    'vacations portal link', 'leave request decided', 'leave request to decide',
     'policy to confirm', 'support waiting', 'risks to confirm', 'standing questions', 'portal invitation', 'portal link', 'portal reminder',
     'notice answered', 'climate feedback published', 'worker access link requested', 'worker access key registered', 'worker access invitation',
 ]))));

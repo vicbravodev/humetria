@@ -41,12 +41,9 @@ const LABELS: Record<string, string> = {
     'attendance.policy_saved': 'Política de asistencia guardada',
     'attendance.correction_resolved': 'Corrección de asistencia resuelta',
     'attendance.mark_corrected': 'Marca de asistencia corregida',
-    'attendance.enrollment_issued': 'Enlace de registro de dispositivo emitido',
     'attendance.zone_saved': 'Zona de asistencia guardada',
     'worker_access.credential_revoked': 'Llave de acceso revocada',
     'attendance.week_reopened': 'Semana de asistencia reabierta',
-    'attendance.enrollments_sent':
-        'Enlaces de registro de dispositivo enviados',
     'worker_access.credential_registered': 'Llave de acceso registrada',
     'worker_access.link_issued': 'Enlace de acceso emitido',
     'worker_access.access_reissued': 'Acceso reemitido',
