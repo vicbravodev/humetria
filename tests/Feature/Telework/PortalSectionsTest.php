@@ -21,7 +21,7 @@ use Database\Factories\Telework\TeleworkerFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** Opening the link once (the middleware and the page share it) and what each listed tool reads for its section. */
-const PORTAL_HOME_QUERIES = 12;
+const PORTAL_HOME_QUERIES = 10;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -87,14 +87,12 @@ it('leaves the policy and the page of the center out of the start by link: they 
     expect(portalSections($this->token))->not->toHaveKeys(['policy', 'center']);
 });
 
-it('offers support only to who was told through the portal', function (): void {
-    expect(portalSections($this->token))->not->toHaveKey('support');
-
+it('leaves support out of the start by link: it is in the person\'s start, in their session', function (): void {
     $campaign = Campaign::factory()->trauma()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     TraumaScreening::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $this->ana->id, 'requires_clinical_assessment' => true]);
     ScreeningReferral::factory()->create(['campaign_id' => $campaign->id, 'told' => HowTold::Portal]);
 
-    expect(portalSections($this->token)['support']['href'])->toBe(route('portal.support.show', $this->token));
+    expect(portalSections($this->token))->not->toHaveKey('support');
 });
 
 it('leaves the climate and the feedback pages out of the start by link: they are in the person\'s start, in their session', function (): void {

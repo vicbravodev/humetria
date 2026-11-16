@@ -27,15 +27,6 @@ function onlyAttendance(): void
     resolve(CompanyModules::class)->syncPlan(test()->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
 }
 
-it('answers 404 on the page by link of a tool the company does not have, and keeps the rest of the portal open', function (string $route, string $module): void {
-    onlyAttendance();
-
-    $this->get(route($route, $this->token))->assertNotFound();
-    $this->get(route('portal.show', $this->token))->assertOk();
-})->with([
-    'Apoyo NOM-035' => ['portal.support.show', 'nom035'],
-]);
-
 it('answers 404 on a page of the person in their session when the company of the address does not have the tool', function (string $route): void {
     TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->employee->id]);
     App\Modules\Leave\Models\LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
