@@ -20,6 +20,7 @@ Route::get('portal/{token}', [PortalController::class, 'show'])->middleware('thr
 
 // The telework section of the person (NOM-037), in their pages: the company of the slug (a company without NOM-037 answers
 // 404), then their session (a visitor goes to enter, and comes back here). Throttled per session and per address; sending is throttled harder.
+// Confirming a visit, a document or the equipment takes a recent proof that it is the person (worker.proof).
 Route::middleware([ResolveWorkerTenant::class, RequirePortalTool::class.':nom037', RequireWorkerSession::class])->prefix('me/{tenant:slug}/telework')->group(function (): void {
     // Their pending items and what they sent: checklists, photos and visits the Comisión asked for, documents, equipment.
     Route::get('/', [PortalController::class, 'section'])->middleware('throttle:portal-views')->name('portal.telework.show');
@@ -30,14 +31,14 @@ Route::middleware([ResolveWorkerTenant::class, RequirePortalTool::class.':nom037
 
     // What the Comisión asked of the person: photos of the workplace and the authorization of a visit.
     Route::post('evidence/{evidenceRequest}/photos', [PortalEvidenceController::class, 'photos'])->whereUuid('evidenceRequest')->middleware('throttle:portal-actions')->name('portal.evidence.store');
-    Route::post('visits/{authorization}/confirm', [PortalEvidenceController::class, 'confirmVisit'])->whereUuid('authorization')->middleware('throttle:portal-actions')->name('portal.visits.confirm');
+    Route::post('visits/{authorization}/confirm', [PortalEvidenceController::class, 'confirmVisit'])->whereUuid('authorization')->middleware(['throttle:portal-actions', 'worker.proof'])->name('portal.visits.confirm');
 
     // The documents the person was asked to confirm: read the PDF (or the text written with questions) and confirm it once.
     Route::get('documents/{document}/file', [PortalDocumentController::class, 'file'])->whereUuid('document')->middleware('throttle:portal-views')->name('portal.documents.file');
-    Route::post('documents/{document}/acknowledge', [PortalDocumentController::class, 'acknowledge'])->whereUuid('document')->middleware('throttle:portal-actions')->name('portal.documents.acknowledge');
+    Route::post('documents/{document}/acknowledge', [PortalDocumentController::class, 'acknowledge'])->whereUuid('document')->middleware(['throttle:portal-actions', 'worker.proof'])->name('portal.documents.acknowledge');
 
     // The equipment delivered to the person: they confirm they received each item, or refuse it with the reason, once.
-    Route::post('equipment/{item}/respond', [PortalEquipmentController::class, 'respond'])->whereUuid('item')->middleware('throttle:portal-actions')->name('portal.equipment.respond');
+    Route::post('equipment/{item}/respond', [PortalEquipmentController::class, 'respond'])->whereUuid('item')->middleware(['throttle:portal-actions', 'worker.proof'])->name('portal.equipment.respond');
 
     // The person's three written notices (6.3, 6.7, 6.9): the forms and what they sent. Only someone with an open telework period.
     Route::get('notices', [PortalNoticeController::class, 'show'])->middleware('throttle:portal-views')->name('portal.notices.show');

@@ -223,11 +223,11 @@ it('tells a stale editor that the version was published meanwhile', function ():
 
 /**
  * A person with one checklist to answer and one sent: the address of their telework section (or of `$page` under it) and the
- * steps that take them there through the entrance, once the page shows `$text`.
+ * steps that take them there through the entrance, once the page shows `$text` (`$proved`: and with a recent proof, by code).
  *
  * @return array{string, Closure}
  */
-function portalAddress(string $page = '', string $text = 'Su teletrabajo'): array
+function portalAddress(string $page = '', string $text = 'Su teletrabajo', bool $proved = false): array
 {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Ruiz']);
@@ -237,7 +237,7 @@ function portalAddress(string $page = '', string $text = 'Su teletrabajo'): arra
     ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $tenant->id, 'workplace_id' => WorkplaceFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id, 'street' => 'Calle Juárez'])->id]);
     workIn($tenant);
 
-    return ["/me/{$tenant->slug}/telework{$page}", enteringTo($employee->id, $text)];
+    return ["/me/{$tenant->slug}/telework{$page}", $proved ? enteringProvedTo($employee->id, $text) : enteringTo($employee->id, $text)];
 }
 
 it('shows the person their telework section with what is pending and what was sent', function (bool $dark, bool $mobile): void {
@@ -253,7 +253,8 @@ it('shows the person their telework section with what is pending and what was se
 })->with($looks);
 
 it('shows the person what the Comisión asked for and lets them authorize a visit', function (bool $dark, bool $mobile): void {
-    [$address, $enter] = portalAddress();
+    // Authorizing the visit takes a recent proof: she proves it is her with a code after entering.
+    [$address, $enter] = portalAddress(proved: true);
     $tenant = Tenant::query()->where('trade_name', 'Acme')->firstOrFail();
     workIn($tenant);
     $workplace = Workplace::query()->firstOrFail();
@@ -798,7 +799,8 @@ it('lets the person read and confirm a document from their portal', function (bo
     workIn($tenant);
     resolve(RequestAcknowledgements::class)->handle([$document->id]);
 
-    visitPage('telework/portal-section', "/me/{$tenant->slug}/telework", $dark, $mobile, enteringTo($employee->id, 'Su teletrabajo'))
+    // Confirming a document takes a recent proof: she proves it is her with a code after entering.
+    visitPage('telework/portal-section', "/me/{$tenant->slug}/telework", $dark, $mobile, enteringProvedTo($employee->id, 'Su teletrabajo'))
         ->assertSee('Documentos por confirmar')
         ->assertSee('Política de Teletrabajo · versión 1')
         ->assertSee('Ver el documento')
@@ -843,7 +845,8 @@ it('lets RH register equipment and the person confirm one item and refuse anothe
     EquipmentItemFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id, 'description' => 'Monitor de 24 pulgadas', 'kind' => 'computer']);
     workIn($tenant);
     $page = visit("/me/{$tenant->slug}/telework");
-    enteringTo($teleworker->employee_id, 'Su teletrabajo')($page);
+    // Answering for the equipment takes a recent proof: the person proves it is them with a code after entering.
+    enteringProvedTo($teleworker->employee_id, 'Su teletrabajo')($page);
 
     $page->assertSee('Equipo por confirmar')
         ->assertSee('Monitor de 24 pulgadas')

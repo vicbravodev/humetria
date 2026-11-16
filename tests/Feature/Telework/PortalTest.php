@@ -14,6 +14,8 @@ use App\Modules\Telework\Support\PortalPending;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Telework\ChecklistApplicationFactory;
@@ -372,6 +374,28 @@ it('answers 404 on every telework page of the portal when the company has no NOM
     ['post', 'portal.equipment.respond'],
     ['get', 'portal.notices.show'],
     ['post', 'portal.notices.store'],
+]);
+
+it('takes a document, the equipment or a visit confirmed only after a recent proof that it is the person', function (string $route, string $parameter, EntryVia $via, int $minutes): void {
+    portalApplication($this->employee);
+    enteredAs($this->employee->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.telework.show', $this->tenant->slug);
+    $address = route($route, ['tenant' => $this->tenant->slug, $parameter => (string) Str::uuid()]);
+
+    // Without it the tool is never reached: back to the page with the step to prove.
+    $this->from($page)->post($address, ['received' => '1'])->assertRedirect($page)->assertInertiaFlash('proofRequired');
+
+    // With it the tool answers as before (here, a 404 for a record that is not the person's).
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post($address, ['received' => '1'])->assertNotFound();
+})->with([
+    'a document' => ['portal.documents.acknowledge', 'document'],
+    'the equipment' => ['portal.equipment.respond', 'item'],
+    'a visit' => ['portal.visits.confirm', 'authorization'],
+])->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
 ]);
 
 it('throttles the person\'s telework pages per browser session, never one bucket for everyone', function (): void {
