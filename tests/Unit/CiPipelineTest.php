@@ -112,5 +112,13 @@ it('does not deploy a change that skipped the pipeline, and still deploys by han
     expect(jobRuns($jobs['pipeline'] ?? []))->toContain('select(.name == "tests") | .conclusion')
         ->and($jobs['pipeline']['permissions'] ?? null)->toBe(['actions' => 'read'])
         ->and($jobs['image']['needs'] ?? null)->toBe('pipeline')
-        ->and($jobs['image']['if'] ?? null)->toBe("always() && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && needs.pipeline.outputs.tests != 'skipped'))");
+        ->and($jobs['image']['if'] ?? null)->toBe("always() && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository && needs.pipeline.outputs.tests != 'skipped'))");
+});
+
+it('only builds and deploys from a push run in this repository, never from a fork or a pull request', function (): void {
+    $jobs = workflowJobs('deploy.yml');
+    $trusted = "github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository";
+
+    expect($jobs['pipeline']['if'] ?? '')->toContain($trusted)
+        ->and($jobs['image']['if'] ?? '')->toContain($trusted);
 });
