@@ -82,6 +82,27 @@ final class Analytics
     }
 
     /**
+     * Browser error reports (error-tracking.ts) on every page but the landing, which keeps its own measurement and its
+     * consent. Only a token, as the server's reports: nothing about the visitor goes, only what broke and where.
+     */
+    public static function errorToken(Request $request): ?string
+    {
+        return $request->route()?->getName() === 'home' ? null : self::serverToken();
+    }
+
+    /** What the error block carries for the browser: the token and the host, never the page's address. */
+    public static function errorConfiguration(string $token): string
+    {
+        return self::literal(['token' => $token, 'host' => self::HOST]);
+    }
+
+    /** Whether the document talks to PostHog at all: the landing's measurement or the error reports of any other page. */
+    public static function opensPostHog(Request $request): bool
+    {
+        return self::projectToken($request) !== null || self::errorToken($request) !== null;
+    }
+
+    /**
      * What the landing's JSON block carries for the browser: the token, the host, the page without its personal query
      * and, only for a page of this site, the referrer as an origin. A JS-safe literal that cannot close the script tag.
      */

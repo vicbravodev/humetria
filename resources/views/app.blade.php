@@ -40,6 +40,9 @@
 
         @if (($analyticsToken = App\Http\Analytics::projectToken(request())) !== null)
             @include('partials.analytics', ['token' => $analyticsToken])
+        @elseif (($errorToken = App\Http\Analytics::errorToken(request())) !== null)
+            {{-- Error reports only (resources/js/lib/error-tracking.ts): the token and the host, never the page's address. --}}
+            <script type="application/json" id="error-tracking-config">{!! App\Http\Analytics::errorConfiguration($errorToken) !!}</script>
         @endif
 
         <link rel="icon" href="/favicon.ico" sizes="any">
