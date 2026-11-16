@@ -40,7 +40,7 @@ it('saves a verified key with its label, to the audit trail and the log with ids
     $key = $this->keys->verifyRegistration($this->ana->id, $this->phone->create($this->keys->registrationOptions($this->ana->id, 'Ana')));
     Log::spy();
 
-    $id = $this->keys->save($this->ana->id, $key ?? throw new RuntimeException, 'iPhone');
+    $id = $this->keys->save($this->ana->id, $key ?? throw new RuntimeException, 'iPhone', 'issued_link');
 
     $credential = WorkerCredential::query()->sole();
     expect($id)->toBe($credential->id)
@@ -52,11 +52,19 @@ it('saves a verified key with its label, to the audit trail and the log with ids
     Log::shouldHaveReceived('info')->once()->with('worker_access.credential_registered', ['key_id' => $credential->id, 'employee_id' => $this->ana->id]);
 });
 
+it('keeps how the person was let in to register it: a key added from a session is registered via the session', function (): void {
+    $key = $this->keys->verifyRegistration($this->ana->id, $this->phone->create($this->keys->registrationOptions($this->ana->id, 'Ana'))) ?? throw new RuntimeException;
+
+    $this->keys->save($this->ana->id, $key, 'Mac', 'session');
+
+    expect(WorkerCredential::query()->sole()->registered_via)->toBe('session');
+});
+
 it('does not save the same key twice: the second answer is null and nothing is written', function (): void {
     $key = $this->keys->verifyRegistration($this->ana->id, $this->phone->create($this->keys->registrationOptions($this->ana->id, 'Ana'))) ?? throw new RuntimeException;
-    $this->keys->save($this->ana->id, $key, 'iPhone');
+    $this->keys->save($this->ana->id, $key, 'iPhone', 'issued_link');
 
-    expect($this->keys->save($this->ana->id, $key, 'iPhone again'))->toBeNull()
+    expect($this->keys->save($this->ana->id, $key, 'iPhone again', 'issued_link'))->toBeNull()
         ->and(WorkerCredential::query()->count())->toBe(1)
         ->and(AuditEntry::query()->where('event', 'worker_access.credential_registered')->count())->toBe(1);
 });

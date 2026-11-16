@@ -21,7 +21,8 @@ final readonly class RegisterCredential
 {
     public function __construct(private RecordAudit $audit, private CurrentTenant $tenant) {}
 
-    public function handle(string $employeeId, CredentialData $key, string $label): ?WorkerCredential
+    /** @param  'issued_link'|'session'  $registeredVia */
+    public function handle(string $employeeId, CredentialData $key, string $label, string $registeredVia): ?WorkerCredential
     {
         try {
             // Its own savepoint: a key saved twice must not abort the caller's transaction.
@@ -34,7 +35,7 @@ final readonly class RegisterCredential
                 'backup_eligible' => $key->backupEligible,
                 'backup_state' => $key->backupState,
                 'label' => $label,
-                'registered_via' => 'issued_link',
+                'registered_via' => $registeredVia,
                 'registered_at' => CarbonImmutable::now(),
             ]));
         } catch (UniqueConstraintViolationException) {

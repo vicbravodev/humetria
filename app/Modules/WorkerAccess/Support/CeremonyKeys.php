@@ -27,8 +27,8 @@ final readonly class CeremonyKeys implements WorkerKeys
         }
     }
 
-    public function save(string $employeeId, CredentialData $key, string $label): ?string
+    public function save(string $employeeId, CredentialData $key, string $label, string $registeredVia): ?string
     {
-        return $this->register->handle($employeeId, $key, $label)?->id;
+        return $this->register->handle($employeeId, $key, $label, $registeredVia)?->id;
     }
 }

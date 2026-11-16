@@ -27,6 +27,9 @@ interface WorkerKeys
 
     /**
      * Saves a verified key of the person, to the audit trail and the log. Its id, or null when that key is already saved.
+     *
+     * @param  'issued_link'|'session'  $registeredVia  how the person was let in to register it: a link RH issued, or a
+     *                                                  session opened with a key they already had
      */
-    public function save(string $employeeId, CredentialData $key, string $label): ?string;
+    public function save(string $employeeId, CredentialData $key, string $label, string $registeredVia): ?string;
 }

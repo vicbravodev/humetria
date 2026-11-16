@@ -54,7 +54,7 @@ final readonly class EnrollDevice
             }
 
             // A key already saved: the same refusal as any key that does not verify.
-            $credentialId = $this->keys->save($person->id, $key, $label) ?? throw new InvalidCredential;
+            $credentialId = $this->keys->save($person->id, $key, $label, 'issued_link') ?? throw new InvalidCredential;
 
             $this->accept->handle($person->id, $credentialId, $agreementVersion);
 
