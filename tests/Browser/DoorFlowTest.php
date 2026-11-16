@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 use App\Modules\Demos\Actions\CloseDoor;
 use App\Modules\Demos\Actions\OpenDoor;
-use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
+use Database\Seeders\Demo\DemoPerson;
+use Database\Seeders\Demo\DemoRoster;
 
 $looks = [
     'light' => [false, false],
@@ -21,7 +22,9 @@ $looks = [
 function openDemoDoor(): string
 {
     $demo = Tenant::factory()->demo()->create(['slug' => 'alba', 'trade_name' => 'Manufacturas Alba del Bajío']);
-    Employee::factory()->create(['id' => resolve(DemoDoorPool::class)->employeeIds()[0], 'tenant_id' => $demo->id, 'name' => 'Ana Solís']);
+    // The pool finds its people in the company by their employee number (their ids are new on every prepare).
+    $first = array_values(array_filter(DemoRoster::people(), fn (DemoPerson $person): bool => $person->reservedForDoor))[0];
+    Employee::factory()->create(['tenant_id' => $demo->id, 'name' => 'Ana Solís', 'employee_number' => $first->employeeNumber]);
 
     return (string) parse_url(resolve(OpenDoor::class)->handle()['url'], PHP_URL_PATH);
 }

@@ -263,7 +263,10 @@ final readonly class SeatingStory implements DemoStory
         $answered = 0;
         $standing = [];
 
-        foreach (Participant::query()->where('campaign_id', $survey->id)->orderBy('employee_id')->get() as $n => $participant) {
+        $participants = Participant::query()->where('campaign_id', $survey->id)->get()
+            ->sortBy(fn (Participant $participant): string => DemoRoster::sortKey($people[$participant->employee_id]->key))->values();
+
+        foreach ($participants as $n => $participant) {
             $person = $people[$participant->employee_id];
 
             if ($person->reservedForDoor) {

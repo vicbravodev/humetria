@@ -74,7 +74,8 @@ final class EngagementStory implements DemoStory
         });
 
         $people = $this->peopleById();
-        $invitations = array_values(Invitation::query()->where('survey_id', $survey->id)->orderBy('employee_id')->get()->all());
+        $invitations = array_values(Invitation::query()->where('survey_id', $survey->id)->get()
+            ->sortBy(fn (Invitation $invitation): string => DemoRoster::sortKey($people[$invitation->employee_id]->key))->all());
         // The open pulse leaves the door's links for prospects; anyone may have answered the closed waves.
         $answering = $this->answering($invitations, fn (Invitation $invitation): bool => $closes || ! $people[$invitation->employee_id]->reservedForDoor, $turnout);
         $answerDays = min($open, abs($day)) - 1;

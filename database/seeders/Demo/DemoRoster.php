@@ -7,12 +7,14 @@ namespace Database\Seeders\Demo;
 use App\Support\DemoMail;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use LogicException;
 use Ramsey\Uuid\Uuid;
 
 /**
  * The 180 people of Manufacturas Alba del Bajío, written by hand and the same on every run (no Faker: production does not
  * have it). The heads have their own names; the rest take theirs from fixed lists by their place in the roster. Each
- * person's id is derived from their key, so their portal link survives a reset.
+ * person's id is derived from their key, so their portal link survives a reset; the door's people are the exception: theirs
+ * are drawn anew on every prepare (drawDoorIds), so a link an earlier audience kept dies with the reset.
  */
 final class DemoRoster
 {
@@ -143,6 +145,9 @@ final class DemoRoster
     /** @var list<DemoPerson>|null */
     private static ?array $people = null;
 
+    /** Mixed into the door people's ids: new on every prepare, kept only in this process (afterwards, in the database). */
+    private static ?string $doorNonce = null;
+
     /**
      * Everyone, managers before the people under them.
      *
@@ -164,10 +169,36 @@ final class DemoRoster
         throw new InvalidArgumentException("No one in the demo roster has the key [{$key}].");
     }
 
-    /** The person's employee id: a UUID v5 of their key, the same on every run. */
+    /**
+     * The person's employee id: a UUID v5 of their key, the same on every run; a door person's also mixes in this prepare's
+     * draw, so it is new on every prepare. Outside the prepare that drew them, read a door person's id from the company.
+     *
+     * @throws LogicException for a door person when no prepare drew their ids in this process.
+     */
     public static function employeeId(string $key): string
     {
+        if (! self::person($key)->reservedForDoor) {
+            return self::sortKey($key);
+        }
+
+        $nonce = self::$doorNonce ?? throw new LogicException('The door people\'s ids are drawn by a prepare: read them from the demo company.');
+
+        return Uuid::uuid5(self::ID_NAMESPACE, "{$key}:{$nonce}")->toString();
+    }
+
+    /**
+     * Where the person goes when a story walks people in a fixed order: the UUID v5 of their key, the same on every run for
+     * everyone, door people included (ordering by their ids would tell a different story on every prepare).
+     */
+    public static function sortKey(string $key): string
+    {
         return Uuid::uuid5(self::ID_NAMESPACE, $key)->toString();
+    }
+
+    /** New ids for the door's people, for the prepare about to create them. */
+    public static function drawDoorIds(): void
+    {
+        self::$doorNonce = Str::random(32);
     }
 
     /** @return list<DemoPerson> */

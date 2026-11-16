@@ -115,7 +115,8 @@ final class Nom035Story implements DemoStory
         });
 
         $people = $this->peopleById();
-        $participants = Participant::query()->where('campaign_id', $campaign->id)->with('instruments')->orderBy('employee_id')->get();
+        $participants = Participant::query()->where('campaign_id', $campaign->id)->with('instruments')->get()
+            ->sortBy(fn (Participant $participant): string => DemoRoster::sortKey($people[$participant->employee_id]->key))->values();
         $risk = array_find($campaign->instruments, fn (string $key): bool => $key !== 'nom035.guide-i');
 
         foreach ($participants as $i => $participant) {

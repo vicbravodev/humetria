@@ -87,6 +87,8 @@ final readonly class OrganizationStory implements DemoStory
         }
 
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
+        // The door's people get new ids on every prepare: a portal link of an earlier audience finds nobody.
+        DemoRoster::drawDoorIds();
 
         foreach (DemoRoster::people() as $person) {
             $this->createEmployee->handle($this->employee($person, $context->center($person->centerKey), $today));

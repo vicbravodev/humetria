@@ -8,7 +8,7 @@ namespace Database\Seeders\Demo;
 final readonly class DemoPerson
 {
     /**
-     * @param  string  $key  stable across runs: the employee's id is derived from it (DemoRoster::employeeId).
+     * @param  string  $key  stable across runs: the employee's id is derived from it (DemoRoster::employeeId), a door person's anew on each prepare.
      * @param  'female'|'male'  $gender
      * @param  string  $centerKey  a key of DemoRoster::CENTERS.
      * @param  string  $category  with the level, the person's job grade.
