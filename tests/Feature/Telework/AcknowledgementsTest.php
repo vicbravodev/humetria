@@ -354,17 +354,25 @@ it('lists what is pending in the portal, newest versions only, and shows it gone
     publishDocument(DocumentKind::Policy, $this->center);
     [$latest] = publishDocument(DocumentKind::Policy, $this->center);
     [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
-    $token = portalOf($ana);
+    $slug = asPerson($ana->id);
 
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page
+    // Not a teleworker: the start offers the section while a document waits for them.
+    $this->get(route('worker.home', $slug))->assertInertia(fn (Assert $page) => $page
+        ->where('sections.0.key', 'telework')
+        ->where('sections.0.href', route('portal.telework.show', $slug))
+        ->where('sections.0.description', 'Los documentos que su empresa le pidió confirmar.')
+        ->where('sections.0.pending', 1)
+        ->etc());
+    $this->get(route('portal.telework.show', $slug))->assertInertia(fn (Assert $page) => $page
         ->has('pending.documents', 1)
         ->where('pending.documents.0.id', $latest->id)
         ->where('pending.documents.0.title', 'Política de Teletrabajo · versión 2')
         ->where('pending.documents.0.publishedOn', now()->setTimezone(config()->string('app.display_timezone'))->toDateString()));
 
-    $this->post(route('portal.documents.acknowledge', [$token, $latest->id]))->assertRedirect(route('portal.show', $token));
+    $this->post(route('portal.documents.acknowledge', [$slug, $latest->id]))->assertRedirect(route('portal.telework.show', $slug));
 
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
+    $this->get(route('portal.telework.show', $slug))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
+    $this->get(route('worker.home', $slug))->assertInertia(fn (Assert $page) => $page->where('sections', [])->etc());
     expect($risk->id)->not->toBe($latest->id);
 });
 
@@ -374,7 +382,7 @@ it('keeps the documents of another person out of a portal', function (): void {
     $outsider = staffer($this->other);
     publishDocument(DocumentKind::Policy, $this->center);
 
-    $this->get(route('portal.show', portalOf($outsider)))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
+    $this->get(route('portal.telework.show', asPerson($outsider->id)))->assertInertia(fn (Assert $page) => $page->has('pending.documents', 0));
 });
 
 it('serves the PDF through the portal only to the person it was asked of', function (): void {
@@ -382,25 +390,26 @@ it('serves the PDF through the portal only to the person it was asked of', funct
     $ana = staffer($this->center);
     $outsider = staffer($this->other);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $token = portalOf($ana);
+    $slug = asPerson($ana->id);
 
-    $response = $this->get(route('portal.documents.file', [$token, $document->id]))->assertOk();
+    $response = $this->get(route('portal.documents.file', [$slug, $document->id]))->assertOk();
     expect($response->headers->get('Cache-Control'))->toContain('no-store')
         ->and($response->streamedContent())->toStartWith('%PDF');
-    $this->get(route('portal.documents.file', [portalOf($outsider), $document->id]))->assertNotFound();
-    $this->get(route('portal.documents.file', ['nope', $document->id]))->assertNotFound();
-    $this->get(route('portal.documents.file', [$token, 'not-a-uuid']))->assertNotFound();
+    $this->get(route('portal.documents.file', [$slug, 'not-a-uuid']))->assertNotFound();
+    $this->get(route('portal.documents.file', [asPerson($outsider->id), $document->id]))->assertNotFound();
+    resolve(App\Modules\WorkerAccess\Support\WorkerSessionStore::class)->end();
+    $this->get(route('portal.documents.file', [$slug, $document->id]))->assertRedirect(route('worker.home', $slug));
 });
 
-it('answers 404 when a dead link tries to acknowledge, and shows a validation error on a second try', function (): void {
+it('sends a visitor who tries to acknowledge to enter, and shows a validation error on a second try', function (): void {
     Queue::fake();
     $ana = staffer($this->center);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $token = portalOf($ana);
 
-    $this->post(route('portal.documents.acknowledge', ['dead', $document->id]))->assertNotFound();
-    $this->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasNoErrors();
-    $this->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasErrors('document');
+    $this->post(route('portal.documents.acknowledge', [$this->tenant->slug, $document->id]))->assertRedirect(route('worker.home', $this->tenant->slug));
+    $slug = asPerson($ana->id);
+    $this->post(route('portal.documents.acknowledge', [$slug, $document->id]))->assertSessionHasNoErrors();
+    $this->post(route('portal.documents.acknowledge', [$slug, $document->id]))->assertSessionHasErrors('document');
 });
 
 it('publishes without making the requests inline: a queued listener does it after the commit', function (): void {

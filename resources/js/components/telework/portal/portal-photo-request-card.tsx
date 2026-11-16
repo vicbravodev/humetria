@@ -8,12 +8,12 @@ import type { PortalPhotoRequest } from '@/types';
 /** Photos the Comisión asked for: what to photograph, a picker and one send (pantalla: Encuesta-Movil). */
 export default function PortalPhotoRequestCard({
     request,
-    token,
+    slug,
 }: {
     request: PortalPhotoRequest;
-    token: string;
+    slug: string;
 }) {
-    const form = useEvidencePhotos(token, request.id);
+    const form = useEvidencePhotos(slug, request.id);
 
     return (
         <PortalCard

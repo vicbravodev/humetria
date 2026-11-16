@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\EquipmentItem;
@@ -68,10 +67,10 @@ it('never puts NOM-037 personal data or answers in a log line or audit entry', f
     $this->post(route('tenant.telework.teleworkers.equipment.store', [$tenant, $person->id]), ['kind' => 'chair', 'description' => $secrets['equipment'], 'delivered_on' => now(config()->string('app.display_timezone'))->toDateString()])->assertSessionHasNoErrors();
 
     // The person answers Sección I with an unfavorable answer, a note, special needs and a photo.
-    $token = resolve(IssuePortalLink::class)->handle($employee->id);
+    $slug = asPerson($employee->id);
     $application = ChecklistApplication::query()->sole();
     $photo = new UploadedFile(__DIR__.'/../../Fixtures/photo.png', 'p.png', null, null, true);
-    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.checklist.store', [$token, $application->id]), [
+    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.checklist.store', [$slug, $application->id]), [
         'consent' => '1', 'answers' => [$risk->id => 'no', $health->id => 'no'], 'risk_notes' => [$risk->id => $secrets['risk_note'], $health->id => $secrets['risk_note']],
         'special_needs' => $secrets['special_needs'], "photo_{$risk->id}_0" => $photo, 'photo_general_0' => $photo,
     ])->assertSessionHasNoErrors();
@@ -86,8 +85,8 @@ it('never puts NOM-037 personal data or answers in a log line or audit entry', f
 
     // The person refuses the equipment with a reason and gives a written notice.
     $item = EquipmentItem::query()->sole();
-    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.equipment.respond', [$token, $item->id]), ['received' => '0', 'reason' => $secrets['refusal']])->assertSessionHasNoErrors();
-    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.notices.store', $token), ['kind' => 'work_risk', 'written_on' => now(config()->string('app.display_timezone'))->toDateString(), 'occurred_on' => now(config()->string('app.display_timezone'))->toDateString(), 'description' => $secrets['notice']])->assertSessionHasNoErrors();
+    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.equipment.respond', [$slug, $item->id]), ['received' => '0', 'reason' => $secrets['refusal']])->assertSessionHasNoErrors();
+    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.notices.store', $slug), ['kind' => 'work_risk', 'written_on' => now(config()->string('app.display_timezone'))->toDateString(), 'occurred_on' => now(config()->string('app.display_timezone'))->toDateString(), 'description' => $secrets['notice']])->assertSessionHasNoErrors();
     $notice = WorkerNotice::query()->sole();
     $this->actingAs($hr)->post(route('tenant.telework.notices.review', [$tenant, $notice->id]), ['note' => $secrets['review_note']])->assertSessionHasNoErrors();
 
@@ -95,7 +94,7 @@ it('never puts NOM-037 personal data or answers in a log line or audit entry', f
     $document = TeleworkDocumentFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
     $this->post(route('tenant.telework.documents.acknowledgements.store', [$tenant, $document->id]), ['employee_ids' => [$employee->id], 'date' => now(config()->string('app.display_timezone'))->toDateString(), 'note' => $secrets['ack_note']])->assertSessionHasNoErrors();
     $this->post(route('tenant.telework.documents.acknowledgements.store', [$tenant, $document->id]), ['employee_ids' => [$employee->id], 'date' => now(config()->string('app.display_timezone'))->toDateString(), 'note' => $secrets['ack_note']]);
-    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.documents.acknowledge', [$token, $document->id]))->assertSessionHasNoErrors();
+    $this->withServerVariables(['REMOTE_ADDR' => $secrets['ip']])->post(route('portal.documents.acknowledge', [$slug, $document->id]))->assertSessionHasNoErrors();
 
     // Looking at the dossier and the pages RH uses is logged too.
     $this->get(route('tenant.telework.dossier', [$tenant, $center->id]))->assertOk();

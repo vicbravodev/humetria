@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\RemindUnansweredAccidents;
 use App\Modules\Telework\Jobs\SendAccidentAlert;
 use App\Modules\Telework\Notifications\AccidentReported;
@@ -32,7 +31,7 @@ beforeEach(function (): void {
 });
 
 it('emails RH at once when a person reports an accident, with who, where and when, never what they wrote', function (): void {
-    $this->post(route('portal.notices.store', resolve(IssuePortalLink::class)->handle($this->employee->id)), [
+    $this->post(route('portal.notices.store', asPerson($this->employee->id)), [
         'kind' => 'work_risk', 'written_on' => '2026-02-28', 'occurred_on' => '2026-02-25', 'description' => 'Me lastimé la espalda.',
     ])->assertSessionHasNoErrors();
     $notice = App\Modules\Telework\Models\WorkerNotice::query()->sole();
@@ -52,7 +51,7 @@ it('emails RH at once when a person reports an accident, with who, where and whe
 });
 
 it('emails nobody for the other notices', function (): void {
-    $this->post(route('portal.notices.store', resolve(IssuePortalLink::class)->handle($this->employee->id)), [
+    $this->post(route('portal.notices.store', asPerson($this->employee->id)), [
         'kind' => 'condition_change', 'written_on' => '2026-02-28', 'occurred_on' => '2026-02-25', 'description' => 'Se fue la luz.',
     ])->assertSessionHasNoErrors();
 

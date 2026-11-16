@@ -53,9 +53,10 @@ function equipmentUrl(?Teleworker $teleworker = null): string
     return route('tenant.telework.teleworkers.equipment.store', [test()->tenant, ($teleworker ?? test()->teleworker)->id]);
 }
 
+/** Enters as the teleworker and gives the slug of their company, for their pages. */
 function equipmentPortal(): string
 {
-    return resolve(IssuePortalLink::class)->handle(test()->employee->id);
+    return asPerson(test()->employee->id);
 }
 
 function pendingItem(array $state = []): EquipmentItem
@@ -132,7 +133,7 @@ it('lists the equipment pending confirmation in the portal, oldest delivery firs
     pendingItem(['status' => 'received', 'responded_at' => now()]);
     pendingItem(['status' => 'refused', 'refusal_reason' => 'No la necesito', 'responded_at' => now()]);
 
-    $this->get(route('portal.show', equipmentPortal()))->assertInertia(fn (Assert $page) => $page
+    $this->get(route('portal.telework.show', equipmentPortal()))->assertInertia(fn (Assert $page) => $page
         ->has('pending.equipment', 2)
         ->where('pending.equipment.0', ['id' => $earlier->id, 'title' => 'Silla', 'kind' => 'Silla ergonómica', 'deliveredOn' => '2026-02-10'])
         ->where('pending.equipment.1.id', $later->id));
@@ -142,12 +143,12 @@ it('shows no equipment of an ended period or another person', function (): void 
     pendingItem();
     $other = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
 
-    $this->get(route('portal.show', resolve(IssuePortalLink::class)->handle($other->id)))->assertInertia(fn (Assert $page) => $page->has('pending.equipment', 0));
+    $this->get(route('portal.telework.show', asPerson($other->id)))->assertInertia(fn (Assert $page) => $page->has('pending.equipment', 0));
 });
 
 it('confirms receipt once, with the time and the address', function (): void {
     $item = pendingItem();
-    $portal = resolve(OpenPortal::class)->handle(equipmentPortal());
+    $portal = resolve(OpenPortal::class)->handle(resolve(IssuePortalLink::class)->handle(test()->employee->id));
     Log::spy();
 
     resolve(RespondEquipment::class)->handle($portal, $item->id, true, null, '203.0.113.9');
@@ -168,7 +169,7 @@ it('confirms receipt once, with the time and the address', function (): void {
 
 it('requires a reason to refuse, and keeps it without logging it', function (): void {
     $item = pendingItem();
-    $portal = resolve(OpenPortal::class)->handle(equipmentPortal());
+    $portal = resolve(OpenPortal::class)->handle(resolve(IssuePortalLink::class)->handle(test()->employee->id));
 
     foreach ([null, '', '   '] as $blank) {
         expect(fn () => resolve(RespondEquipment::class)->handle($portal, $item->id, false, $blank, null))->toThrow(ValidationException::class);
@@ -190,7 +191,7 @@ it('requires a reason to refuse, and keeps it without logging it', function (): 
 it('ignores a reason when the person received the item', function (): void {
     $item = pendingItem();
 
-    resolve(RespondEquipment::class)->handle(resolve(OpenPortal::class)->handle(equipmentPortal()), $item->id, true, 'texto suelto', null);
+    resolve(RespondEquipment::class)->handle(resolve(OpenPortal::class)->handle(resolve(IssuePortalLink::class)->handle(test()->employee->id)), $item->id, true, 'texto suelto', null);
 
     expect($item->refresh()->refusal_reason)->toBeNull();
 });
@@ -200,9 +201,9 @@ it('answers from the portal and sends the person back to it', function (): void 
     $received = pendingItem();
     $refused = pendingItem();
 
-    $this->post(route('portal.equipment.respond', [$token, $received->id]), ['received' => '1'])->assertRedirect(route('portal.show', $token));
+    $this->post(route('portal.equipment.respond', [$token, $received->id]), ['received' => '1'])->assertRedirect(route('portal.telework.show', $token));
     $this->post(route('portal.equipment.respond', [$token, $refused->id]), ['received' => '0'])->assertSessionHasErrors('reason');
-    $this->post(route('portal.equipment.respond', [$token, $refused->id]), ['received' => '0', 'reason' => 'No la uso'])->assertRedirect(route('portal.show', $token));
+    $this->post(route('portal.equipment.respond', [$token, $refused->id]), ['received' => '0', 'reason' => 'No la uso'])->assertRedirect(route('portal.telework.show', $token));
 
     expect($received->refresh()->status)->toBe(EquipmentStatus::Received)
         ->and($refused->refresh()->status)->toBe(EquipmentStatus::Refused);
@@ -210,13 +211,13 @@ it('answers from the portal and sends the person back to it', function (): void 
     $this->post(route('portal.equipment.respond', [$token, $received->id]), [])->assertSessionHasErrors('received');
 });
 
-it('gives a 404 for the equipment of another person, an unknown link or a malformed id', function (): void {
+it('gives a 404 for the equipment of another person or a malformed id, and sends a visitor to enter', function (): void {
     $item = pendingItem();
     $outsider = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $outsider->id]);
 
-    $this->post(route('portal.equipment.respond', [resolve(IssuePortalLink::class)->handle($outsider->id), $item->id]), ['received' => '1'])->assertNotFound();
-    $this->post(route('portal.equipment.respond', ['dead', $item->id]), ['received' => '1'])->assertNotFound();
+    $this->post(route('portal.equipment.respond', [$this->tenant->slug, $item->id]), ['received' => '1'])->assertRedirect(route('worker.home', $this->tenant->slug));
+    $this->post(route('portal.equipment.respond', [asPerson($outsider->id), $item->id]), ['received' => '1'])->assertNotFound();
     $this->post(route('portal.equipment.respond', [equipmentPortal(), 'not-a-uuid']), ['received' => '1'])->assertNotFound();
     expect($item->refresh()->status)->toBe(EquipmentStatus::Pending);
 });

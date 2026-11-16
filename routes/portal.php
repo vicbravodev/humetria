@@ -9,27 +9,37 @@ use App\Modules\Telework\Http\Controllers\PortalDocumentController;
 use App\Modules\Telework\Http\Controllers\PortalEquipmentController;
 use App\Modules\Telework\Http\Controllers\PortalEvidenceController;
 use App\Modules\Telework\Http\Controllers\PortalNoticeController;
+use App\Modules\WorkerAccess\Http\Middleware\RequireWorkerSession;
+use App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant;
 use Illuminate\Support\Facades\Route;
 
-// The personal portal of a teleworker or any employee: no account, the link's token is the credential. Throttled per link
-// and per address (TeleworkServiceProvider), so a room can open theirs at once and nobody can try links in bulk.
+// The start of the personal portal by link (no account: the link's token is the credential), while the other tools still
+// open their pages with it. Its telework section goes to the person's pages below. Throttled per link and per address
+// (TeleworkServiceProvider), so a room can open theirs at once and nobody can try links in bulk.
 Route::get('portal/{token}', [PortalController::class, 'show'])->middleware('throttle:portal-views')->name('portal.show');
 
-// Answering a checklist: read it, send it once. Sending is throttled per link like the survey's answers.
-Route::get('portal/{token}/checklists/{application}', [PortalChecklistController::class, 'show'])->whereUuid('application')->middleware('throttle:portal-views')->middleware(RequirePortalTool::class.':nom037')->name('portal.checklist.show');
-Route::post('portal/{token}/checklists/{application}', [PortalChecklistController::class, 'store'])->whereUuid('application')->middleware('throttle:portal-actions')->middleware(RequirePortalTool::class.':nom037')->name('portal.checklist.store');
+// The telework section of the person (NOM-037), in their pages: the company of the slug (a company without NOM-037 answers
+// 404), then their session (a visitor goes to enter, and comes back here). Throttled per session and per address; sending is throttled harder.
+Route::middleware([ResolveWorkerTenant::class, RequirePortalTool::class.':nom037', RequireWorkerSession::class])->prefix('me/{tenant:slug}/telework')->group(function (): void {
+    // Their pending items and what they sent: checklists, photos and visits the Comisión asked for, documents, equipment.
+    Route::get('/', [PortalController::class, 'section'])->middleware('throttle:portal-views')->name('portal.telework.show');
 
-// What the Comisión asked of the person: photos of the workplace and the authorization of a visit. Sending is throttled per link.
-Route::post('portal/{token}/evidence/{evidenceRequest}/photos', [PortalEvidenceController::class, 'photos'])->whereUuid('evidenceRequest')->middleware('throttle:portal-actions')->middleware(RequirePortalTool::class.':nom037')->name('portal.evidence.store');
-Route::post('portal/{token}/visits/{authorization}/confirm', [PortalEvidenceController::class, 'confirmVisit'])->whereUuid('authorization')->middleware('throttle:portal-actions')->middleware(RequirePortalTool::class.':nom037')->name('portal.visits.confirm');
+    // Answering a checklist: read it, send it once.
+    Route::get('checklists/{application}', [PortalChecklistController::class, 'show'])->whereUuid('application')->middleware('throttle:portal-views')->name('portal.checklist.show');
+    Route::post('checklists/{application}', [PortalChecklistController::class, 'store'])->whereUuid('application')->middleware('throttle:portal-actions')->name('portal.checklist.store');
 
-// The documents the person was asked to confirm: read the PDF (or the text written with questions) and confirm it once. Confirming is throttled per link.
-Route::get('portal/{token}/documents/{document}/file', [PortalDocumentController::class, 'file'])->whereUuid('document')->middleware('throttle:portal-views')->middleware(RequirePortalTool::class.':nom037')->name('portal.documents.file');
-Route::post('portal/{token}/documents/{document}/acknowledge', [PortalDocumentController::class, 'acknowledge'])->whereUuid('document')->middleware('throttle:portal-actions')->middleware(RequirePortalTool::class.':nom037')->name('portal.documents.acknowledge');
+    // What the Comisión asked of the person: photos of the workplace and the authorization of a visit.
+    Route::post('evidence/{evidenceRequest}/photos', [PortalEvidenceController::class, 'photos'])->whereUuid('evidenceRequest')->middleware('throttle:portal-actions')->name('portal.evidence.store');
+    Route::post('visits/{authorization}/confirm', [PortalEvidenceController::class, 'confirmVisit'])->whereUuid('authorization')->middleware('throttle:portal-actions')->name('portal.visits.confirm');
 
-// The equipment delivered to the person: they confirm they received each item, or refuse it with the reason, once.
-Route::post('portal/{token}/equipment/{item}/respond', [PortalEquipmentController::class, 'respond'])->whereUuid('item')->middleware('throttle:portal-actions')->middleware(RequirePortalTool::class.':nom037')->name('portal.equipment.respond');
+    // The documents the person was asked to confirm: read the PDF (or the text written with questions) and confirm it once.
+    Route::get('documents/{document}/file', [PortalDocumentController::class, 'file'])->whereUuid('document')->middleware('throttle:portal-views')->name('portal.documents.file');
+    Route::post('documents/{document}/acknowledge', [PortalDocumentController::class, 'acknowledge'])->whereUuid('document')->middleware('throttle:portal-actions')->name('portal.documents.acknowledge');
 
-// The person's three written notices (6.3, 6.7, 6.9): the forms and what they sent. Only someone with an open telework period.
-Route::get('portal/{token}/notices', [PortalNoticeController::class, 'show'])->middleware('throttle:portal-views')->middleware(RequirePortalTool::class.':nom037')->name('portal.notices.show');
-Route::post('portal/{token}/notices', [PortalNoticeController::class, 'store'])->middleware('throttle:portal-actions')->middleware(RequirePortalTool::class.':nom037')->name('portal.notices.store');
+    // The equipment delivered to the person: they confirm they received each item, or refuse it with the reason, once.
+    Route::post('equipment/{item}/respond', [PortalEquipmentController::class, 'respond'])->whereUuid('item')->middleware('throttle:portal-actions')->name('portal.equipment.respond');
+
+    // The person's three written notices (6.3, 6.7, 6.9): the forms and what they sent. Only someone with an open telework period.
+    Route::get('notices', [PortalNoticeController::class, 'show'])->middleware('throttle:portal-views')->name('portal.notices.show');
+    Route::post('notices', [PortalNoticeController::class, 'store'])->middleware('throttle:portal-actions')->name('portal.notices.store');
+});

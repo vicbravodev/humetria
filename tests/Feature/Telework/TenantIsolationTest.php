@@ -149,7 +149,7 @@ it('does not let company A read a row of company B by query', function (string $
 })->with(fn (): array => array_combine(array_map(class_basename(...), teleworkModels()), array_map(fn (string $model): array => [$model], teleworkModels())));
 
 /**
- * The URLs that take the id of each model, with the company-A session (the owner) or the portal link of A.
+ * The URLs that take the id of each model, with the company-A session (the owner) or the session of a person of A in A's pages.
  * A model with no route of its own is reached through its parent and says so.
  *
  * @param  array<class-string<Model>, Model>  $b
@@ -161,9 +161,8 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
     $panel = fn (string $name, mixed ...$parameters): string => route("tenant.telework.{$name}", [$tenant, ...$parameters], absolute: false);
     $address = ['street' => 'Calle Hidalgo', 'exterior_number' => '1', 'neighborhood' => 'Centro', 'postal_code' => '76000', 'municipality' => 'Querétaro', 'state' => 'QUE'];
     $decision = ['decision' => 'valid'];
-    // The portal link of the company in session: its token is derived, not stored.
-    $token = PortalLink::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->sole()->token();
-    $portal = fn (string $name, mixed ...$parameters): string => route("portal.{$name}", [$token, ...$parameters], absolute: false);
+    // The pages of the person of A, in A's address: the session of that person (see enteredAs in the tests below) opens them.
+    $portal = fn (string $name, mixed ...$parameters): string => route("portal.{$name}", [$tenant->slug, ...$parameters], absolute: false);
 
     return [
         Acknowledgement::class => [['GET', $panel('documents.acknowledgements.index', $b[TeleworkDocument::class]->id)]],
@@ -239,6 +238,7 @@ it('lists the routes of every Telework model', function (): void {
 
 it('answers 404, never 403, to the id of a row of another company', function (string $model): void {
     $routes = isolationRoutes($this->alpha, $this->betaWorld, $this->owner->id)[$model];
+    enteredAs($this->alphaWorld[Teleworker::class]->employee_id);
 
     expect($routes)->toBeArray();
 
@@ -260,6 +260,7 @@ it('answers company A\'s own row, so the 404 above comes from the company and no
 
     // The first route of each model, with A's own ids: allowed or refused, but found (a model without routes has none).
     $route = isolationRoutes($this->alpha, $mine, $this->owner->id)[$model][0] ?? null;
+    enteredAs($mine[Teleworker::class]->employee_id);
 
     if ($route !== null) {
         [$method, $url] = $route;
@@ -269,3 +270,18 @@ it('answers company A\'s own row, so the 404 above comes from the company and no
         expect(isolationRoutes($this->alpha, $mine, $this->owner->id)[$model])->toBe([]);
     }
 })->with(fn (): array => array_combine(array_map(class_basename(...), teleworkModels()), array_map(fn (string $model): array => [$model], teleworkModels())));
+
+it('takes the session of a person of company A in the address of company B as a visitor of B, and opens nothing of B', function (): void {
+    enteredAs($this->alphaWorld[Teleworker::class]->employee_id);
+
+    foreach ([
+        route('portal.telework.show', 'beta'),
+        route('portal.checklist.show', ['beta', $this->betaWorld[ChecklistApplication::class]->id]),
+        route('portal.notices.show', 'beta'),
+    ] as $url) {
+        $this->get($url)->assertRedirect(route('worker.home', 'beta'));
+    }
+
+    $this->post(route('portal.equipment.respond', ['beta', $this->betaWorld[EquipmentItem::class]->id]), ['received' => true])->assertRedirect(route('worker.home', 'beta'));
+    expect($this->betaWorld[EquipmentItem::class]->refresh()->responded_at)->toBeNull();
+});

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\WorkerAccess\Http\Middleware\RequireWorkerSession;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
@@ -37,15 +38,7 @@ function publicRouteNames(): array
         'survey.submit', // guest: submits one guide; throttled, under a lock, once per guide
         'engagement.survey.show', // guest: la persona abre la encuesta de clima o pulso desde su correo; el token del enlace es la credencial; no muestra nada de nadie; un enlace inválido, usado o cancelado no dice por qué; throttled
         'engagement.survey.submit', // guest: envía la encuesta completa una sola vez, bajo candado; el token es la credencial; throttled
-        'portal.show', // guest: la persona teletrabajadora no tiene cuenta; el token es la credencial; throttled
-        'portal.checklist.show', // guest: la lista de verificación de la persona; el token del portal es la credencial; solo ve sus lugares; throttled
-        'portal.checklist.store', // guest: envía la lista una sola vez, bajo candado; el token del portal es la credencial; throttled
-        'portal.evidence.store', // guest: la persona envía las fotos que pidió la Comisión, una sola vez, bajo candado; el token del portal es la credencial; solo sus lugares; throttled
-        'portal.documents.file', // guest: la persona lee el PDF que le pidieron confirmar; el token del portal es la credencial; solo documentos pedidos a ella; throttled
-        'portal.documents.acknowledge', // guest: la persona confirma que leyó, una sola vez, bajo candado; el token del portal es la credencial; throttled
-        'portal.notices.show', // guest: la persona ve sus avisos escritos (6.3, 6.7, 6.9) y lo que envió; el token del portal es la credencial; solo con periodo abierto; throttled
-        'portal.notices.store', // guest: la persona envía un aviso escrito; el token del portal es la credencial; solo con periodo abierto; throttled
-        'portal.equipment.respond', // guest: la persona confirma que recibió un equipo o lo rechaza con su motivo, una sola vez, bajo candado; el token del portal es la credencial; solo su equipo; throttled
+        'portal.show', // guest: el inicio del portal por enlace, mientras las demás herramientas abren sus páginas con él (hasta el paso 9 del diseño de WorkerAccess); el token es la credencial; su sección de teletrabajo lleva a las páginas de la persona, sin credencial; throttled
         'portal.seating.show', // guest: la persona ve su página de Ley Silla; el token del portal es la credencial; solo ve lo suyo; un enlace no válido da 404 sin decir nada más; throttled
         'portal.seating.inputs.store', // guest: la persona envía su calzado y sus molestias, de forma voluntaria y tras aceptar el aviso; el token del portal es la credencial; throttled
         'portal.seating.acknowledgments.store', // guest: la persona confirma, una sola vez, que le informaron de su evaluación; el token del portal es la credencial; solo la suya; throttled
@@ -68,7 +61,6 @@ function publicRouteNames(): array
         'portal.policy.acknowledge', // guest: la persona confirma, una sola vez, que leyó la versión vigente de la política; el token del portal es la credencial; solo la suya; throttled
         'workers.show', // guest: las personas ven los centros de su empresa y lo que la empresa decidió que todos lean; el enlace permanente (derivado, rotable, desactivable, con vencimiento) es la credencial; sin sesión, sin cookies y sin rastro de quien la abre; el mismo 404 neutro por cualquier causa; throttled por dirección y por enlace
         'workers.center', // guest: las personas ven lo que un centro publica (la política vigente); el enlace permanente es la credencial; un centro ajeno, archivado o inexistente da el mismo 404 neutro que un enlace inventado; sin sesión ni cookies; throttled por dirección y por enlace
-        'portal.visits.confirm', // guest: la persona autoriza por escrito la visita a su lugar; el token del portal es la credencial; solo sus lugares; throttled
         'complaints.public.show', // guest: la persona presenta su queja sin cuenta, sin sesión y sin cookies; el código del canal es la credencial de la empresa; un código inválido o un canal sin activar dan el mismo 404; throttled por una huella de la dirección
         'complaints.public.centers', // guest: busca los centros de trabajo de la empresa del código para el formulario; solo con el canal abierto; el código es la credencial de la empresa; throttled
         'complaints.public.store', // guest: la persona envía su queja sin cuenta, sin sesión y sin cookies; boleto firmado, trampa para bots y tope por dirección y por día; el código es la credencial de la empresa
@@ -130,13 +122,15 @@ function appRoutes(): array
 
 /**
  * Resolved the way the router runs them: groups expanded (and aliases, once the HTTP kernel registered them), so `auth` inside a middleware group
- * (Horizon wraps its routes in a `horizon` group built from config/horizon.php) counts too.
+ * (Horizon wraps its routes in a `horizon` group built from config/horizon.php) counts too. A page of the person who works
+ * (`me/{slug}/...`) takes their session instead (RequireWorkerSession: without it, to enter; it never makes the person the
+ * user of the request).
  */
 function requiresAuthentication(LaravelRoute $route): bool
 {
     return collect(Route::gatherRouteMiddleware($route))
         ->contains(fn (mixed $middleware): bool => is_string($middleware)
-            && (in_array($middleware, ['auth', Authenticate::class], true) || Str::startsWith($middleware, ['auth:', Authenticate::class.':'])));
+            && (in_array($middleware, ['auth', Authenticate::class, RequireWorkerSession::class], true) || Str::startsWith($middleware, ['auth:', Authenticate::class.':'])));
 }
 
 test('every route has a name', function () {
@@ -166,4 +160,24 @@ test('the public allowlist has no stale entries', function () {
 
     expect(array_values(array_diff(publicRouteNames(), $names)))->toBe([])
         ->and(array_values(array_diff(unnamedPublicUris(), $uris)))->toBe([]);
+});
+
+test('the person\'s pages that take their session also enter the company of their address first', function () {
+    $pages = collect(appRoutes())->filter(fn (LaravelRoute $route): bool => in_array(RequireWorkerSession::class, Route::gatherRouteMiddleware($route), true));
+
+    expect($pages)->not->toBeEmpty();
+
+    foreach ($pages as $route) {
+        $middleware = Route::gatherRouteMiddleware($route);
+
+        expect($route->uri())->toStartWith('me/{tenant}/')
+            ->and(array_search(App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant::class, $middleware, true))->toBeLessThan(array_search(RequireWorkerSession::class, $middleware, true));
+    }
+});
+
+test('no page of the telework tool is opened with the portal link any more', function () {
+    $telework = collect(appRoutes())->filter(fn (LaravelRoute $route): bool => Str::startsWith((string) $route->getActionName(), 'App\\Modules\\Telework\\Http\\Controllers\\Portal'));
+
+    expect($telework->map(fn (LaravelRoute $route): string => $route->uri())->filter(fn (string $uri): bool => Str::contains($uri, '{token}'))->values()->all())
+        ->toBe(['portal/{token}']);
 });

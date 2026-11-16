@@ -200,9 +200,8 @@ it('sends each list of records as a paginator', function (string $component, Clo
         $employee = Database\Factories\Organization\EmployeeFactory::new()->create(['tenant_id' => $tenant->id]);
         $teleworker = Database\Factories\Telework\TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
         Database\Factories\Telework\WorkerNoticeFactory::new()->create(['tenant_id' => $tenant->id, 'teleworker_id' => $teleworker->id]);
-        workIn($tenant);
 
-        return route('portal.notices.show', resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($employee->id));
+        return route('portal.notices.show', asPerson($employee->id));
     }, ['notices']],
     'my team in the portal' => ['organization/portal-team', function () {
         [$tenant] = listsCompany();

@@ -9,10 +9,10 @@ import PortalCard from '@/components/telework/portal/portal-card';
 /** A document the company published: the person reads the PDF and then confirms, once, that they did. */
 export default function PortalDocumentCard({
     document,
-    token,
+    slug,
 }: {
     document: PortalDocument;
-    token: string;
+    slug: string;
 }) {
     const form = useForm({});
 
@@ -34,7 +34,7 @@ export default function PortalDocumentCard({
             <div className="mt-2 flex flex-wrap gap-2">
                 <Button variant="outline" className="h-12 text-base" asChild>
                     <a
-                        href={file.url({ token, document: document.id })}
+                        href={file.url({ tenant: slug, document: document.id })}
                         target="_blank"
                         rel="noreferrer"
                     >
@@ -47,7 +47,7 @@ export default function PortalDocumentCard({
                     onClick={() =>
                         form.post(
                             acknowledge.url({
-                                token,
+                                tenant: slug,
                                 document: document.id,
                             }),
                         )

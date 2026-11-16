@@ -106,5 +106,8 @@ it('reads the start with the same queries whatever the tools offer', function (i
     $this->get(route('worker.home', 'acme'))->assertOk();
 })->with([1, 5]);
 
-/** The company of the slug (two reads), the session (the person's state, the person and their area) and the person's keys. */
-const WORKER_HOME_QUERIES = 6;
+/**
+ * The company of the slug (two reads), the session (the person's state, the person and their area), the person's keys, and
+ * the telework section (the company, whether they telework, their documents to confirm).
+ */
+const WORKER_HOME_QUERIES = 10;

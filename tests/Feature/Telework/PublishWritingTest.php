@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\PublishWriting;
 use App\Modules\Telework\Enums\DocumentKind;
 use App\Modules\Telework\Events\DocumentPublished;
@@ -176,8 +175,6 @@ it('shows a written version as a page to read and print, in the panel and in the
     $this->actingAs($this->hr);
     publishWriting();
     $document = TeleworkDocument::query()->where('work_center_id', $this->north->id)->sole();
-    $token = resolve(IssuePortalLink::class)->handle($employee->id);
-
     $this->get(route('tenant.telework.documents.file', [$this->tenant, $document->id]))
         ->assertInertia(fn (Assert $page) => $page->component('telework/written-document')
             ->where('document.title', 'Política de Teletrabajo')
@@ -187,11 +184,13 @@ it('shows a written version as a page to read and print, in the panel and in the
             ->has('document.sections', 12)
             ->where('document.sections.0.heading', 'Horario y desconexión'));
 
-    $this->get(route('portal.documents.file', [$token, $document->id]))
+    $slug = asPerson($employee->id);
+    $this->get(route('portal.documents.file', [$slug, $document->id]))
         ->assertInertia(fn (Assert $page) => $page->component('telework/portal-document')
             ->where('document.title', 'Política de Teletrabajo')
             ->where('document.owner', 'Autopartes Demo · Planta Querétaro')
-            ->where('token', $token)
+            ->where('slug', $slug)
+            ->missing('token')
             ->has('document.sections', 12));
 });
 

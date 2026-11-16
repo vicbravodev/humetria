@@ -63,17 +63,16 @@ it('lists vacations and Ley Silla for a person who is not a teleworker, and not 
     expect(array_keys($sections))->toBe(['vacations', 'seating'])
         ->and($sections['vacations']['href'])->toBe(route('portal.vacations.show', $this->token))
         ->and($sections['seating']['href'])->toBe(route('portal.seating.show', $this->token));
-    $this->get(route('portal.show', $this->token))->assertInertia(fn (Assert $page) => $page->where('canNotify', false));
 });
 
-it('puts the telework tool first, with the pending items of the person', function (): void {
+it('puts the telework tool first, with the pending items of the person, at their page with no credential', function (): void {
     LeaveSetting::factory()->create(['tenant_id' => $this->tenant->id]);
     TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->center->id]);
 
     $sections = portalSections($this->token);
 
     expect(array_keys($sections)[0])->toBe('telework')
-        ->and($sections['telework']['href'])->toBe(route('portal.notices.show', $this->token))
+        ->and($sections['telework']['href'])->toBe(route('portal.telework.show', $this->tenant->slug))
         ->and(Teleworker::query()->count())->toBe(1);
 });
 

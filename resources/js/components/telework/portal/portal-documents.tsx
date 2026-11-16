@@ -4,10 +4,10 @@ import type { PortalDocument } from '@/types';
 /** The documents the company published that the person has to read and confirm. */
 export default function PortalDocuments({
     documents,
-    token,
+    slug,
 }: {
     documents: PortalDocument[];
-    token: string;
+    slug: string;
 }) {
     if (documents.length === 0) {
         return null;
@@ -23,7 +23,7 @@ export default function PortalDocuments({
                     <PortalDocumentCard
                         key={document.id}
                         document={document}
-                        token={token}
+                        slug={slug}
                     />
                 ))}
             </ul>

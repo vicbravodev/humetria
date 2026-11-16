@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\SubmitNotice;
 use App\Modules\Telework\Enums\NoticeAction;
-use App\Modules\Telework\Exceptions\PortalUnavailable;
 use App\Modules\Telework\Http\Requests\NoticeRequest;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Support\OpenedPortal;
+use App\Modules\Telework\Support\SessionPortal;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -25,13 +24,13 @@ use Inertia\Response;
  */
 final class PortalNoticeController extends Controller
 {
-    public function show(string $token, OpenPortal $openPortal, WorkCenters $workCenters): Response
+    public function show(string $tenant, SessionPortal $portals, WorkCenters $workCenters): Response
     {
-        $portal = $this->portal($token, $openPortal);
+        $portal = $this->portal($portals);
         $zone = config()->string('app.display_timezone');
 
         return Inertia::render('telework/portal-notices', [
-            'token' => $token,
+            'slug' => $tenant,
             'company' => $portal->company,
             'name' => $portal->name,
             'states' => $workCenters->states(),
@@ -52,24 +51,19 @@ final class PortalNoticeController extends Controller
         ]);
     }
 
-    public function store(string $token, NoticeRequest $request, OpenPortal $openPortal, SubmitNotice $submit): RedirectResponse
+    public function store(string $tenant, NoticeRequest $request, SessionPortal $portals, SubmitNotice $submit): RedirectResponse
     {
-        $portal = $this->portal($token, $openPortal);
+        $portal = $this->portal($portals);
 
         $submit->handle($portal, $request->kind(), $request->writtenOn(), $request->occurredOn(), $request->string('description')->toString(), $request->traumaticEvent(), $request->newAddress(), $request->temporary(), $request->ip());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Su aviso fue enviado. La empresa lo recibió.']);
 
-        return to_route('portal.notices.show', $token);
+        return to_route('portal.notices.show', $tenant);
     }
 
-    private function portal(string $token, OpenPortal $openPortal): OpenedPortal
+    private function portal(SessionPortal $portals): OpenedPortal
     {
-        try {
-            $portal = $openPortal->handle($token);
-        } catch (PortalUnavailable) {
-            abort(404);
-        }
-
+        $portal = $portals->current() ?? abort(404);
         abort_if($portal->teleworkerId === null, 404);
 
         return $portal;

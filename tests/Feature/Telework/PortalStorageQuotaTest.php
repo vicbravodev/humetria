@@ -6,7 +6,6 @@ use App\Modules\Billing\Models\UsageCounter;
 use App\Modules\Disclosure\Support\DisclosureFiles;
 use App\Modules\Interventions\Support\InterventionFiles;
 use App\Modules\Seating\Support\SeatingFiles;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Support\FileStore;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
@@ -34,13 +33,13 @@ beforeEach(function (): void {
     $teleworker = TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $employee->id]);
     $this->centerId = $teleworker->work_center_id;
     $this->workplace = WorkplaceFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $teleworker->id]);
-    $this->token = resolve(IssuePortalLink::class)->handle($employee->id);
+    $this->slug = asPerson($employee->id);
     $this->used = fn (): int => (int) UsageCounter::query()->where('tenant_id', $this->tenant->id)->where('meter', 'storage_bytes')->sum('used');
     $this->png = fn (string $name = 'lugar.png'): UploadedFile => new UploadedFile(__DIR__.'/../../Fixtures/photo.png', $name, null, null, true);
 });
 
 it('stores nothing and takes no quota when the evidence request is not the person\'s', function (): void {
-    $this->post(route('portal.evidence.store', [$this->token, (string) Str::uuid()]), ['photo_general_0' => ($this->png)(), 'photo_general_1' => ($this->png)('b.png')])->assertNotFound();
+    $this->post(route('portal.evidence.store', [$this->slug, (string) Str::uuid()]), ['photo_general_0' => ($this->png)(), 'photo_general_1' => ($this->png)('b.png')])->assertNotFound();
 
     expect(($this->used)())->toBe(0)->and(Storage::disk('fake-telework_files')->allFiles())->toBe([]);
 });
@@ -48,7 +47,7 @@ it('stores nothing and takes no quota when the evidence request is not the perso
 it('stores nothing and takes no quota when the photos were already sent', function (): void {
     $request = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'fulfilled_at' => now()]);
 
-    $this->post(route('portal.evidence.store', [$this->token, $request->id]), ['photo_general_0' => ($this->png)()])->assertSessionHasErrors('evidence');
+    $this->post(route('portal.evidence.store', [$this->slug, $request->id]), ['photo_general_0' => ($this->png)()])->assertSessionHasErrors('evidence');
 
     expect(($this->used)())->toBe(0)->and(Storage::disk('fake-telework_files')->allFiles())->toBe([]);
 });
@@ -57,7 +56,7 @@ it('stores nothing and takes no quota when the checklist was already sent', func
     $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->centerId]);
     $application = ChecklistApplicationFactory::new()->submitted()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'checklist_id' => $checklist->id]);
 
-    $this->post(route('portal.checklist.store', [$this->token, $application->id]), ['consent' => '1', 'answers' => ['x' => 'no'], 'photo_general_0' => ($this->png)()])->assertSessionHasErrors('application');
+    $this->post(route('portal.checklist.store', [$this->slug, $application->id]), ['consent' => '1', 'answers' => ['x' => 'no'], 'photo_general_0' => ($this->png)()])->assertSessionHasErrors('application');
 
     expect(($this->used)())->toBe(0)->and(Storage::disk('fake-telework_files')->allFiles())->toBe([]);
 });
@@ -81,11 +80,11 @@ it('refuses an oversized photo on the field itself, before anything is stored', 
     $big = UploadedFile::fake()->create('grande.png', config()->integer('telework.max_photo_kb') + 1);
     $request = EvidenceRequestFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
 
-    $this->post(route('portal.evidence.store', [$this->token, $request->id]), ['photo_general_0' => $big])->assertSessionHasErrors('photo_general_0');
+    $this->post(route('portal.evidence.store', [$this->slug, $request->id]), ['photo_general_0' => $big])->assertSessionHasErrors('photo_general_0');
 
     $checklist = ChecklistFactory::new()->published()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->centerId]);
     $application = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'checklist_id' => $checklist->id]);
-    $this->post(route('portal.checklist.store', [$this->token, $application->id]), ['answers' => ['x' => 'no'], 'photo_general_0' => $big])->assertSessionHasErrors('photo_general_0');
+    $this->post(route('portal.checklist.store', [$this->slug, $application->id]), ['answers' => ['x' => 'no'], 'photo_general_0' => $big])->assertSessionHasErrors('photo_general_0');
 
     expect(($this->used)())->toBe(0)->and(Storage::disk('fake-telework_files')->allFiles())->toBe([]);
 });
@@ -101,7 +100,7 @@ it('caps the photos of a whole checklist, not only each group', function (): voi
         $files["photo_{$question}_{$n}"] = ($this->png)("q{$n}.png");
     }
 
-    $this->post(route('portal.checklist.store', [$this->token, $application->id]), ['answers' => ['x' => 'no'], ...$files])->assertSessionHasErrors('photos');
+    $this->post(route('portal.checklist.store', [$this->slug, $application->id]), ['answers' => ['x' => 'no'], ...$files])->assertSessionHasErrors('photos');
 
     expect(($this->used)())->toBe(0)->and(Storage::disk('fake-telework_files')->allFiles())->toBe([]);
 });

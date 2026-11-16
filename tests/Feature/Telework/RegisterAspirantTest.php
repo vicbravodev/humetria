@@ -179,7 +179,8 @@ it('emails the portal link and stores only its hash', function (): void {
     $this->assertDatabaseMissing('portal_links', ['token_hash' => $token]);
 
     auth()->logout();
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false)->has('pending.checklists', 1));
+    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false)
+        ->where('sections.0.key', 'telework')->where('sections.0.pending', 1)->etc());
 });
 
 it('sends no email to someone without one: RH hands them a link from the page', function (): void {

@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import PortalController from '@/actions/App/Modules/Telework/Http/Controllers/PortalController';
+import { show } from '@/routes/portal/telework';
 import ChecklistConsent from '@/components/telework/checklist-consent';
 import ChecklistGroup from '@/components/telework/checklist-group';
 import GeneralPhotos from '@/components/telework/general-photos';
@@ -14,21 +14,21 @@ import type { PortalApplication, PortalQuestion } from '@/types';
 
 /** The checklist as the person fills it in, one send at the end (pantalla: Encuesta-Movil). */
 export default function ChecklistForm({
-    token,
+    slug,
     application,
     instructions,
     notice,
     consent,
     questions,
 }: {
-    token: string;
+    slug: string;
     application: PortalApplication;
     instructions: string;
     notice: string;
     consent: string;
     questions: PortalQuestion[];
 }) {
-    const form = useChecklistForm(token, application.id, questions);
+    const form = useChecklistForm(slug, application.id, questions);
     const consented = form.state.consent === true;
 
     return (
@@ -99,7 +99,7 @@ export default function ChecklistForm({
             <Button
                 type="button"
                 variant="ghost"
-                onClick={() => router.visit(PortalController.show.url(token))}
+                onClick={() => router.visit(show.url(slug))}
             >
                 Volver sin enviar
             </Button>

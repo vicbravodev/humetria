@@ -1,39 +1,46 @@
-import { PartyPopper } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { ArrowLeft, PartyPopper } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
-import PortalSections from '@/components/telework/portal/portal-sections';
+import PortalNoticesLink from '@/components/telework/portal/portal-notices-link';
 import PortalEquipmentSection from '@/components/telework/portal/portal-equipment-section';
 import PortalDocuments from '@/components/telework/portal/portal-documents';
 import PortalChecklistCard from '@/components/telework/portal/portal-checklist-card';
 import PortalAsked from '@/components/telework/portal/portal-asked';
 import { nothingPending } from '@/lib/telework/portal';
-import type { PortalPending, PortalSection } from '@/types';
+import { home } from '@/routes/worker';
+import type { PortalPending } from '@/types';
 
-/** What the person has to do and what they already sent, in plain words ("usted"). */
+/** The telework section of the person: what they have to do and what they already sent, in plain words ("usted"). */
 export default function PortalHome({
-    name,
-    token,
-    sections,
+    slug,
+    canNotify,
     pending,
 }: {
-    name: string;
-    token: string;
-    sections: PortalSection[];
+    slug: string;
+    canNotify: boolean;
     pending: PortalPending;
 }) {
     const nothing = nothingPending(pending);
 
     return (
         <div className="flex w-full max-w-2xl flex-col gap-6">
+            <Link
+                href={home.url(slug)}
+                className="touch-hit flex w-fit items-center gap-1.5 text-base font-medium text-primary"
+            >
+                <ArrowLeft aria-hidden className="size-4" />
+                Volver a mi portal
+            </Link>
             <div className="flex flex-col gap-2">
                 <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                    Hola, {name}
+                    Su teletrabajo
                 </h1>
                 <p className="text-muted-foreground">
-                    Aquí encuentra lo que su empresa tiene para usted. Este
-                    enlace es solo suyo: no lo comparta.
+                    Lo que su empresa y la Comisión de Seguridad e Higiene le
+                    piden, y lo que ya envió.
                 </p>
             </div>
-            <PortalSections sections={sections} />
+            {canNotify && <PortalNoticesLink slug={slug} />}
             {nothing && (
                 <EmptyState icon={PartyPopper} title="Nada pendiente por ahora">
                     Cuando su empresa le pida algo, lo verá aquí y le avisaremos
@@ -41,12 +48,9 @@ export default function PortalHome({
                     de su empresa.
                 </EmptyState>
             )}
-            <PortalDocuments documents={pending.documents} token={token} />
-            <PortalEquipmentSection
-                equipment={pending.equipment}
-                token={token}
-            />
-            <PortalAsked pending={pending} token={token} />
+            <PortalDocuments documents={pending.documents} slug={slug} />
+            <PortalEquipmentSection equipment={pending.equipment} slug={slug} />
+            <PortalAsked pending={pending} slug={slug} />
             {pending.checklists.length > 0 && (
                 <section
                     aria-labelledby="portal-pending"
@@ -60,7 +64,7 @@ export default function PortalHome({
                             <PortalChecklistCard
                                 key={checklist.id}
                                 checklist={checklist}
-                                token={token}
+                                slug={slug}
                                 pending
                             />
                         ))}
@@ -77,7 +81,7 @@ export default function PortalHome({
                             <PortalChecklistCard
                                 key={checklist.id}
                                 checklist={checklist}
-                                token={token}
+                                slug={slug}
                                 pending={false}
                             />
                         ))}

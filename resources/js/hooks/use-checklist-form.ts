@@ -24,7 +24,7 @@ const EMPTY: ChecklistState = {
  * nothing goes to the server until they send: the page never moves on by itself.
  */
 export function useChecklistForm(
-    token: string,
+    slug: string,
     applicationId: string,
     questions: PortalQuestion[],
 ) {
@@ -64,7 +64,7 @@ export function useChecklistForm(
             });
             form.post(
                 PortalChecklistController.store.url({
-                    token,
+                    tenant: slug,
                     application: applicationId,
                 }),
                 { forceFormData: true },

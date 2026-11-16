@@ -164,6 +164,33 @@ function enteredAs(string $employeeId, App\Modules\WorkerAccess\Enums\EntryVia $
 }
 
 /**
+ * Enters as `$employeeId` (enteredAs) and gives the slug of their company, for the person's pages: `route('portal.…', asPerson($id))`.
+ */
+function asPerson(string $employeeId): string
+{
+    enteredAs($employeeId);
+
+    return Tenant::query()->findOrFail(App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId)->tenant_id)->slug;
+}
+
+/**
+ * In the browser: the steps of a person (`$employeeId`) who opened a page of theirs without a session and was sent to enter.
+ * They open a one-time link they asked for (made here), press «Continuar» and land on that page, which shows `$text`.
+ * Use as the `$reach` of visitPage() with the person's page as its address.
+ *
+ * @return Closure(AwaitableWebpage): mixed
+ */
+function enteringTo(string $employeeId, string $text): Closure
+{
+    $person = App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId);
+    $slug = Tenant::query()->findOrFail($person->tenant_id)->slug;
+    $token = Str::random(40);
+    App\Modules\WorkerAccess\Models\WorkerAccessLink::factory()->withToken($token)->requested()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id]);
+
+    return fn (AwaitableWebpage $page): mixed => $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
+}
+
+/**
  * The scope Humi works in for a new person of `$tenant` with `$role`, as the server builds it for a request there.
  */
 function assistantScopeIn(Tenant $tenant, TenantRole $role = TenantRole::Hr): AssistantScope

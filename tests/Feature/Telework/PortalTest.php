@@ -44,6 +44,18 @@ function portalApplication(Employee $employee, array $application = []): void
     ChecklistApplicationFactory::new()->create(['tenant_id' => $teleworker->tenant_id, 'workplace_id' => $workplace->id, ...$application]);
 }
 
+/** @return array<string, mixed> The props of the telework section of the employee, entering as them. */
+function sectionProps(Employee $employee): array
+{
+    $response = test()->get(route('portal.telework.show', asPerson($employee->id)));
+    $response->assertOk();
+
+    $props = $response->viewData('page')['props'];
+    unset($props['errors']);
+
+    return $props;
+}
+
 /** @return array<string, mixed> The props of the portal page for a token. */
 function portalProps(string $token): array
 {
@@ -131,16 +143,20 @@ it('logs the issued link with ids only', function (): void {
         && ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), $token))->once();
 });
 
+it('lives at /me/{slug}/telework, in the person\'s pages', function (): void {
+    expect(route('portal.telework.show', 'acme', absolute: false))->toBe('/me/acme/telework');
+});
+
 it('shows the person their pending checklists, one per workplace', function (): void {
     portalApplication($this->employee);
     portalApplication($this->employee);
 
-    $this->get(route('portal.show', $this->token))
+    $this->get(route('portal.telework.show', asPerson($this->employee->id)))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('telework/portal')
-            ->where('unavailable', false)
+            ->component('telework/portal-section')
+            ->where('slug', $this->tenant->slug)
             ->where('company', 'Acme')
-            ->where('name', 'Ana Ruiz')
+            ->where('canNotify', true)
             ->has('pending.checklists', 2, fn (Assert $item) => $item
                 ->has('id')
                 ->where('workplace', 'Calle Hidalgo 45, Centro, Querétaro, Querétaro')
@@ -152,7 +168,7 @@ it('shows the person their pending checklists, one per workplace', function (): 
 it('labels a sent checklist as under review, never with an outcome', function (): void {
     portalApplication($this->employee, ['submitted_at' => now()]);
 
-    $props = portalProps($this->token);
+    $props = sectionProps($this->employee);
 
     expect($props['pending']['checklists'])->toBe([])
         ->and($props['pending']['sent'][0]['label'])->toBe('En revisión de la Comisión');
@@ -166,7 +182,7 @@ it('does not show retired workplaces', function (): void {
     portalApplication($this->employee);
     Workplace::query()->update(['retired_at' => now()]);
 
-    expect(portalProps($this->token)['pending']['checklists'])->toBe([]);
+    expect(sectionProps($this->employee)['pending']['checklists'])->toBe([]);
 });
 
 it('shows nothing of other people', function (): void {
@@ -174,16 +190,19 @@ it('shows nothing of other people', function (): void {
     portalApplication($other);
     portalApplication($this->employee);
 
-    $json = json_encode(portalProps($this->token), JSON_THROW_ON_ERROR);
+    $json = json_encode(sectionProps($this->employee), JSON_THROW_ON_ERROR);
 
     expect($json)->not->toContain('Beto')->not->toContain($other->id)
-        ->and(portalProps($this->token)['pending']['checklists'])->toHaveCount(1);
+        ->and(sectionProps($this->employee)['pending']['checklists'])->toHaveCount(1);
 });
 
 it('opens for a person who does not telework, with nothing pending yet', function (): void {
-    $props = portalProps($this->token);
+    expect(portalProps($this->token)['unavailable'])->toBeFalse()
+        ->and(portalProps($this->token)['sections'])->not->toContain(fn (array $section): bool => $section['key'] === 'telework');
 
-    expect($props['unavailable'])->toBeFalse()
+    $props = sectionProps($this->employee);
+
+    expect($props['canNotify'])->toBeFalse()
         ->and($props['pending'])->toBe(['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []]);
 });
 
@@ -277,20 +296,18 @@ it('sends nothing about anyone through a link that no longer opens', function ()
     $this->get(route('portal.show', 'not-a-real-token'))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('telework/portal')
         ->where('unavailable', true)
-        ->where('token', null)
         ->where('company', null)
         ->where('name', null)
-        ->where('canNotify', false)
-        ->where('pending', ['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []]));
+        ->where('sections', []));
 });
 
-it('sends the token, the company and the person through a link that opens', function (): void {
+it('sends the company and the person through a link that opens, and no longer the token as a prop of its own', function (): void {
     $this->get(route('portal.show', $this->token))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->where('unavailable', false)
-        ->where('token', $this->token)
         ->where('company', 'Acme')
         ->where('name', 'Ana Ruiz')
-        ->where('canNotify', false));
+        ->missing('token')
+        ->etc());
 });
 
 it('lists the checklists of a workplace in the order they were asked, whatever the order they were stored', function (): void {
@@ -327,14 +344,12 @@ it('lists two checklists asked at the same moment by their id', function (): voi
     expect(array_map(fn ($item): string => $item->id, $sent))->toBe(['00000000-0000-4000-8000-000000000000', 'ffffffff-ffff-4fff-bfff-ffffffffffff']);
 });
 
-it('opens the portal home without NOM-037 and sends nothing of the telework tool', function (): void {
+it('opens the portal home without NOM-037 and offers nothing of the telework tool', function (): void {
     resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
     portalApplication($this->employee);
 
-    $this->get(route('portal.show', $this->token))->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->where('unavailable', false)
-        ->where('canNotify', false)
-        ->where('pending', ['checklists' => [], 'sent' => [], 'photos' => [], 'visits' => [], 'documents' => [], 'equipment' => []]));
+    expect(portalProps($this->token)['unavailable'])->toBeFalse()
+        ->and(array_column(portalProps($this->token)['sections'], 'key'))->not->toContain('telework');
 });
 
 it('answers 404 on every telework page of the portal when the company has no NOM-037', function (string $method, string $route): void {
@@ -342,9 +357,12 @@ it('answers 404 on every telework page of the portal when the company has no NOM
     portalApplication($this->employee);
     $id = (string) Str::uuid();
 
-    // Parameters a route does not name become its query string, which the 404 does not read.
-    $this->{$method}(route($route, ['token' => $this->token, 'application' => $id, 'evidenceRequest' => $id, 'authorization' => $id, 'document' => $id, 'item' => $id]))->assertNotFound();
+    // Parameters a route does not name become its query string, which the 404 does not read. Not even a visitor is asked to enter.
+    $this->{$method}(route($route, ['tenant' => $this->tenant->slug, 'application' => $id, 'evidenceRequest' => $id, 'authorization' => $id, 'document' => $id, 'item' => $id]))->assertNotFound();
+    asPerson($this->employee->id);
+    $this->{$method}(route($route, ['tenant' => $this->tenant->slug, 'application' => $id, 'evidenceRequest' => $id, 'authorization' => $id, 'document' => $id, 'item' => $id]))->assertNotFound();
 })->with([
+    ['get', 'portal.telework.show'],
     ['get', 'portal.checklist.show'],
     ['post', 'portal.checklist.store'],
     ['post', 'portal.evidence.store'],
@@ -355,3 +373,47 @@ it('answers 404 on every telework page of the portal when the company has no NOM
     ['get', 'portal.notices.show'],
     ['post', 'portal.notices.store'],
 ]);
+
+it('throttles the person\'s telework pages per browser session, never one bucket for everyone', function (): void {
+    $slug = asPerson($this->employee->id);
+    $cookie = config()->string('session.cookie');
+    $session = $this->get(route('portal.telework.show', $slug))->assertOk()->getCookie($cookie)?->getValue() ?? throw new LogicException;
+
+    foreach (range(2, 30) as $ignored) {
+        $this->withCredentials()->withCookie($cookie, $session)->get(route('portal.telework.show', $slug))->assertOk();
+    }
+
+    $this->withCredentials()->withCookie($cookie, $session)->get(route('portal.telework.show', $slug))->assertTooManyRequests();
+
+    $key = function (string $id) use ($slug): string {
+        $request = Request::create("/me/{$slug}/telework");
+        $route = Route::getRoutes()->match($request);
+        $request->setRouteResolver(fn () => $route);
+        $request->setLaravelSession(tap(session()->driver())->setId($id));
+
+        return RateLimiter::limiter('portal-views')($request)[0]->key;
+    };
+    $one = str_repeat('a', 40);
+
+    expect($key($one))->toBe('portal-session:'.hash('sha256', $one))->not->toBe($key(str_repeat('b', 40)));
+});
+
+it('sends a visitor of the telework section to enter, and no page of another company opens with this session', function (): void {
+    $other = Tenant::factory()->create();
+
+    $this->get(route('portal.telework.show', $this->tenant->slug))->assertRedirect(route('worker.home', $this->tenant->slug));
+
+    asPerson($this->employee->id);
+    $this->get(route('portal.telework.show', $other->slug))->assertRedirect(route('worker.home', $other->slug));
+});
+
+it('ends the section for a person who left, and answers 404 for a blocked company', function (): void {
+    $slug = asPerson($this->employee->id);
+    Employee::query()->whereKey($this->employee->id)->update(['deactivated_at' => now()]);
+
+    $this->get(route('portal.telework.show', $slug))->assertRedirect(route('worker.home', $slug));
+
+    $slug = asPerson(EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id])->id);
+    Tenant::query()->whereKey($this->tenant->id)->update(suspension());
+    $this->get(route('portal.telework.show', $slug))->assertNotFound();
+});

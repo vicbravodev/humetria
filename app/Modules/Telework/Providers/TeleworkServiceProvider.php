@@ -24,6 +24,7 @@ use App\Modules\Telework\Support\CompanyTeleworkApplicability;
 use App\Modules\Telework\Support\CompanyTeleworkRoute;
 use App\Modules\Telework\Support\CompanyTeleworkStanding;
 use App\Modules\Telework\Support\EmailedPortalLinks;
+use App\Modules\Telework\Support\TeleworkWorkerSection;
 use App\Modules\Telework\Support\TokenPortalAccess;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -45,16 +46,17 @@ final class TeleworkServiceProvider extends ServiceProvider
         $this->app->bind(TeleworkStanding::class, CompanyTeleworkStanding::class);
         $this->app->bind(TeleworkRoute::class, CompanyTeleworkRoute::class);
         $this->app->bind(TeleworkApplicability::class, CompanyTeleworkApplicability::class);
+        $this->app->tag([TeleworkWorkerSection::class], 'worker.sections');
     }
 
     public function boot(): void
     {
-        // As the survey: per link, so a room on one Wi-Fi can use theirs at once, and a generous cap per address against
-        // bulk guessing. The link is hashed: a key never holds it.
+        // As the survey: per link (a person's page without one, per browser session), so a room on one Wi-Fi can use theirs
+        // at once, and a generous cap per address against bulk guessing. The link is hashed: a key never holds it.
         $link = function (Request $request): string {
             $token = $request->route('token');
 
-            return 'portal:'.hash('sha256', is_string($token) ? $token : '');
+            return is_string($token) ? 'portal:'.hash('sha256', $token) : 'portal-session:'.hash('sha256', $request->session()->getId());
         };
         RateLimiter::for('portal-views', fn (Request $request): array => [
             Limit::perMinute(30)->by($link($request)),

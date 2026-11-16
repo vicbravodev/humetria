@@ -52,6 +52,12 @@ function noticeToken(): string
     return resolve(IssuePortalLink::class)->handle(test()->employee->id);
 }
 
+/** Enters as the teleworker and gives the slug of their company, for their pages. */
+function noticePerson(): string
+{
+    return asPerson(test()->employee->id);
+}
+
 /** @return array<string, mixed> */
 function noticeForm(array $overrides = []): array
 {
@@ -76,17 +82,17 @@ function noticeFor(NoticeKind $kind, array $overrides = []): WorkerNotice
 }
 
 it('requires written date, occurrence date and description for each kind', function (string $kind, string $field): void {
-    $this->post(route('portal.notices.store', noticeToken()), noticeForm(['kind' => $kind, $field => '']))->assertSessionHasErrors($field);
+    $this->post(route('portal.notices.store', noticePerson()), noticeForm(['kind' => $kind, $field => '']))->assertSessionHasErrors($field);
 
     expect(WorkerNotice::query()->count())->toBe(0);
 })->with(fn () => collect(['condition_change', 'work_risk'])->crossJoin(['written_on', 'occurred_on', 'description'])->all());
 
 it('stores each notice with its dates, time and address, and logs only ids', function (string $kind): void {
     Log::spy();
-    $token = noticeToken();
+    $slug = noticePerson();
 
-    $this->post(route('portal.notices.store', $token), noticeForm(['kind' => $kind, 'description' => '  Texto privado del aviso  ']))
-        ->assertSessionHasNoErrors()->assertRedirect(route('portal.notices.show', $token));
+    $this->post(route('portal.notices.store', $slug), noticeForm(['kind' => $kind, 'description' => '  Texto privado del aviso  ']))
+        ->assertSessionHasNoErrors()->assertRedirect(route('portal.notices.show', $slug));
 
     $notice = WorkerNotice::query()->sole();
     expect($notice->kind->value)->toBe($kind)
@@ -114,7 +120,7 @@ it('never logs the description', function (): void {
 it('never logs nor audits that a person reported a traumatic event', function (): void {
     Log::spy();
 
-    $this->post(route('portal.notices.store', noticeToken()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1']))->assertSessionHasNoErrors();
+    $this->post(route('portal.notices.store', noticePerson()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1']))->assertSessionHasNoErrors();
 
     expect(WorkerNotice::query()->sole()->traumatic_event)->toBeTrue();
     Log::shouldNotHaveReceived('info', fn (string $message, array $context = []): bool => str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'traumatic'));
@@ -122,9 +128,9 @@ it('never logs nor audits that a person reported a traumatic event', function ()
 });
 
 it('accepts today and an occurrence before the written date, and refuses the future', function (): void {
-    $this->post(route('portal.notices.store', noticeToken()), noticeForm(['written_on' => '2026-03-01', 'occurred_on' => '2026-01-10']))->assertSessionHasNoErrors();
-    $this->post(route('portal.notices.store', noticeToken()), noticeForm(['written_on' => '2026-03-02']))->assertSessionHasErrors('written_on');
-    $this->post(route('portal.notices.store', noticeToken()), noticeForm(['occurred_on' => '2026-03-02']))->assertSessionHasErrors('occurred_on');
+    $this->post(route('portal.notices.store', noticePerson()), noticeForm(['written_on' => '2026-03-01', 'occurred_on' => '2026-01-10']))->assertSessionHasNoErrors();
+    $this->post(route('portal.notices.store', noticePerson()), noticeForm(['written_on' => '2026-03-02']))->assertSessionHasErrors('written_on');
+    $this->post(route('portal.notices.store', noticePerson()), noticeForm(['occurred_on' => '2026-03-02']))->assertSessionHasErrors('occurred_on');
 
     expect(WorkerNotice::query()->count())->toBe(1);
 });
@@ -132,8 +138,8 @@ it('accepts today and an occurrence before the written date, and refuses the fut
 it('judges the day in Mexico City, not UTC', function (): void {
     $this->travelTo('2026-03-02 03:00:00');
 
-    $this->post(route('portal.notices.store', noticeToken()), noticeForm(['written_on' => '2026-03-01']))->assertSessionHasNoErrors();
-    $this->post(route('portal.notices.store', noticeToken()), noticeForm(['written_on' => '2026-03-02']))->assertSessionHasErrors('written_on');
+    $this->post(route('portal.notices.store', noticePerson()), noticeForm(['written_on' => '2026-03-01']))->assertSessionHasNoErrors();
+    $this->post(route('portal.notices.store', noticePerson()), noticeForm(['written_on' => '2026-03-02']))->assertSessionHasErrors('written_on');
 });
 
 it('validates the action itself', function (array $override): void {
@@ -173,7 +179,7 @@ it('lists a person\'s sent notices without any review content', function (): voi
     $reviewed->update(['reviewed_by' => $this->hr->id, 'reviewed_at' => now(), 'review_note' => 'Nota-interna']);
     WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id])->id]);
 
-    $response = $this->get(route('portal.notices.show', noticeToken()));
+    $response = $this->get(route('portal.notices.show', noticePerson()));
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('telework/portal-notices')
@@ -185,15 +191,15 @@ it('lists a person\'s sent notices without any review content', function (): voi
 });
 
 it('sends the person\'s notices page in full, ten notices at a time, and confirms a sent notice', function (): void {
-    $token = noticeToken();
+    $slug = noticePerson();
     $this->tenant->update(['trade_name' => 'Acme']);
     foreach (range(1, 11) as $day) {
         WorkerNoticeFactory::new()->create(['tenant_id' => $this->tenant->id, 'teleworker_id' => $this->teleworker->id, 'submitted_at' => "2026-02-{$day} 10:00:00"]);
     }
     $newest = DB::table('worker_notices')->orderByDesc('submitted_at')->first();
 
-    $this->get(route('portal.notices.show', $token))->assertInertia(fn (Assert $page) => $page
-        ->where('token', $token)
+    $this->get(route('portal.notices.show', $slug))->assertInertia(fn (Assert $page) => $page
+        ->where('slug', $slug)
         ->where('company', 'Acme')
         ->where('name', 'Ana Ruiz')
         ->where('states.QUE', 'Querétaro')
@@ -202,32 +208,38 @@ it('sends the person\'s notices page in full, ten notices at a time, and confirm
         ->where('notices.per_page', 10)
         ->where('notices.data.0', ['id' => $newest->id, 'kind' => NoticeKind::WorkRisk->label(), 'writtenOn' => $newest->written_on, 'status' => 'Recibido', 'answer' => null]));
 
-    $this->post(route('portal.notices.store', $token), noticeForm())
+    $this->post(route('portal.notices.store', $slug), noticeForm())
         ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Su aviso fue enviado. La empresa lo recibió.']]);
 });
 
 it('shows the notices area only to a person with an open telework period', function (): void {
     $outsider = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
-    $other = resolve(IssuePortalLink::class)->handle($outsider->id);
+    $slug = asPerson($outsider->id);
 
-    $this->get(route('portal.notices.show', $other))->assertNotFound();
-    $this->post(route('portal.notices.store', $other), noticeForm())->assertNotFound();
-    $this->get(route('portal.notices.show', 'dead'))->assertNotFound();
-    $this->post(route('portal.notices.store', 'dead'), noticeForm())->assertNotFound();
+    $this->get(route('portal.notices.show', $slug))->assertNotFound();
+    $this->post(route('portal.notices.store', $slug), noticeForm())->assertNotFound();
+    $this->get(route('portal.telework.show', $slug))->assertInertia(fn (Assert $page) => $page->where('canNotify', false)->etc());
 
-    $this->get(route('portal.show', $other))->assertInertia(fn (Assert $page) => $page->where('canNotify', false));
-    $this->get(route('portal.show', noticeToken()))->assertInertia(fn (Assert $page) => $page->where('canNotify', true));
-    $this->get(route('portal.show', 'dead'))->assertInertia(fn (Assert $page) => $page->where('canNotify', false));
+    $this->get(route('portal.telework.show', noticePerson()))->assertInertia(fn (Assert $page) => $page->where('canNotify', true)->etc());
 
     $this->teleworker->update(['status' => 'ended', 'ended_at' => now(), 'end_reason' => 'other']);
-    $this->get(route('portal.notices.show', noticeToken()))->assertNotFound();
+    $this->get(route('portal.notices.show', noticePerson()))->assertNotFound();
+    $this->get(route('portal.telework.show', $slug))->assertInertia(fn (Assert $page) => $page->where('canNotify', false)->etc());
+});
+
+it('sends a visitor of the notices to enter first, and back here after', function (): void {
+    $this->get(route('portal.notices.show', $this->tenant->slug))->assertRedirect(route('worker.home', $this->tenant->slug));
+    $this->post(route('portal.notices.store', $this->tenant->slug), noticeForm())->assertRedirect(route('worker.home', $this->tenant->slug));
+
+    expect(WorkerNotice::query()->count())->toBe(0)
+        ->and(session('worker_destination'))->toBe(route('portal.notices.show', $this->tenant->slug));
 });
 
 describe('a severe traumatic event (6.3, C-27)', function (): void {
     it('announces the event with the person and their work center, and keeps the flag', function (): void {
         Event::fake([TraumaticEventReported::class]);
 
-        $this->post(route('portal.notices.store', noticeToken()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1']))->assertSessionHasNoErrors();
+        $this->post(route('portal.notices.store', noticePerson()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1']))->assertSessionHasNoErrors();
 
         expect(WorkerNotice::query()->sole()->traumatic_event)->toBeTrue();
         Event::assertDispatched(TraumaticEventReported::class, fn (TraumaticEventReported $event): bool => $event->tenantId === $this->tenant->id
@@ -239,7 +251,7 @@ describe('a severe traumatic event (6.3, C-27)', function (): void {
     it('announces nothing for a change of conditions that is not traumatic, nor for the other notices', function (array $form): void {
         Event::fake([TraumaticEventReported::class]);
 
-        $this->post(route('portal.notices.store', noticeToken()), noticeForm($form))->assertSessionHasNoErrors();
+        $this->post(route('portal.notices.store', noticePerson()), noticeForm($form))->assertSessionHasNoErrors();
 
         expect(WorkerNotice::query()->sole()->traumatic_event)->toBeFalse();
         Event::assertNotDispatched(TraumaticEventReported::class);
@@ -251,7 +263,7 @@ describe('a severe traumatic event (6.3, C-27)', function (): void {
     it('announces nothing when the notice is refused', function (): void {
         Event::fake([TraumaticEventReported::class]);
 
-        $this->post(route('portal.notices.store', noticeToken()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1', 'description' => '']))->assertSessionHasErrors('description');
+        $this->post(route('portal.notices.store', noticePerson()), noticeForm(['kind' => 'condition_change', 'traumatic_event' => '1', 'description' => '']))->assertSessionHasErrors('description');
 
         Event::assertNotDispatched(TraumaticEventReported::class);
     });
@@ -286,7 +298,7 @@ describe('a change of address (6.7)', function (): void {
     it('creates a new workplace with a Sección II application for an active teleworker', function (): void {
         Log::spy();
 
-        $this->post(route('portal.notices.store', noticeToken()), moveForm(['temporary' => '1']))->assertSessionHasNoErrors();
+        $this->post(route('portal.notices.store', noticePerson()), moveForm(['temporary' => '1']))->assertSessionHasNoErrors();
 
         $notice = WorkerNotice::query()->sole();
         $new = Workplace::query()->findOrFail($notice->new_workplace_id);
@@ -305,13 +317,13 @@ describe('a change of address (6.7)', function (): void {
     });
 
     it('requires the new address', function (string $field): void {
-        $this->post(route('portal.notices.store', noticeToken()), moveForm([$field => '']))->assertSessionHasErrors($field);
+        $this->post(route('portal.notices.store', noticePerson()), moveForm([$field => '']))->assertSessionHasErrors($field);
 
         expect(WorkerNotice::query()->count())->toBe(0)->and(Workplace::query()->count())->toBe(1);
     })->with(['street', 'exterior_number', 'neighborhood', 'postal_code', 'municipality', 'state']);
 
     it('does not ask for an address on the other kinds, nor for a temporary flag', function (): void {
-        $this->post(route('portal.notices.store', noticeToken()), noticeForm(['temporary' => '1']))->assertSessionHasNoErrors();
+        $this->post(route('portal.notices.store', noticePerson()), noticeForm(['temporary' => '1']))->assertSessionHasNoErrors();
 
         expect(WorkerNotice::query()->sole()->temporary)->toBeFalse()->and(Workplace::query()->count())->toBe(1);
     });

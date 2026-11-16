@@ -5,10 +5,10 @@ import type { PortalPending } from '@/types';
 /** What the Comisión asked of the person: photos of the workplace and the authorization of a visit. */
 export default function PortalAsked({
     pending,
-    token,
+    slug,
 }: {
     pending: PortalPending;
-    token: string;
+    slug: string;
 }) {
     if (pending.photos.length === 0 && pending.visits.length === 0) {
         return null;
@@ -24,15 +24,11 @@ export default function PortalAsked({
                     <PortalPhotoRequestCard
                         key={request.id}
                         request={request}
-                        token={token}
+                        slug={slug}
                     />
                 ))}
                 {pending.visits.map((visit) => (
-                    <PortalVisitCard
-                        key={visit.id}
-                        visit={visit}
-                        token={token}
-                    />
+                    <PortalVisitCard key={visit.id} visit={visit} slug={slug} />
                 ))}
             </ul>
         </section>
