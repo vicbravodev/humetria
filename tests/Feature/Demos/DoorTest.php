@@ -128,13 +128,32 @@ it('hands out a link that opens the worker\'s own session once, to create their 
 it('gives a returning visitor the same worker, and never a second one', function (): void {
     [$first] = demoDoorFixture($this);
     $path = openDoorPath();
-    $assignment = scan($this, $path)->getCookie(DOOR_COOKIE)?->getValue();
+    $firstScan = scan($this, $path);
+    $assignment = $firstScan->getCookie(DOOR_COOKIE)?->getValue();
+    $previous = basename((string) $firstScan->headers->get('Location'));
 
     foreach (range(1, 3) as $ignored) {
         $this->withCookie(DOOR_COOKIE, (string) $assignment);
-        assertEntersAs(scan($this, $path), $this->demo, $first);
+        $token = basename((string) assertEntersAs(scan($this, $path), $this->demo, $first)->headers->get('Location'));
+
+        // The fresh link replaces the one handed out before: that one stops opening.
+        expect($token)->not->toBe($previous)
+            ->and(WorkerAccessLink::findPending($previous))->toBeNull();
+        $this->post(route('worker.link.open', ['alba', $previous]))->assertRedirect(route('worker.link.show', ['alba', $previous]));
+        $previous = $token;
     }
 
+    expect(DoorAssignment::query()->count())->toBe(1);
+});
+
+it('lets a returning visitor in no more once their person is no longer active', function (): void {
+    [$first] = demoDoorFixture($this);
+    $path = openDoorPath();
+    $assignment = scan($this, $path)->getCookie(DOOR_COOKIE)?->getValue();
+    Employee::query()->withoutGlobalScopes()->whereKey($first)->update(['deactivated_at' => now(), 'terminated_on' => now()->toDateString()]);
+
+    $this->withCookie(DOOR_COOKIE, (string) $assignment);
+    assertNeutralDoor(scan($this, $path), 'closed');
     expect(DoorAssignment::query()->count())->toBe(1);
 });
 

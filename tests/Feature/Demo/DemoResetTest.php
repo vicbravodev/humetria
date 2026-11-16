@@ -115,6 +115,8 @@ it('prepares the same story over itself on the same company, resets it to nothin
     $doorIds = array_map(DemoRoster::employeeId(...), $doorKeys);
     $slug = DB::table('tenants')->where('id', $tenantId)->value('slug');
     $doorLink = resolve(DemoEntrance::class)->for($doorIds[0]);
+    // It opens now (looking does not spend it): what the reset ends below is a link that worked.
+    $this->get($doorLink)->assertOk()->assertInertia(fn (Assert $page) => $page->component('worker-access/link')->where('opens', true)->etc());
     $this->post(resolve(DemoEntrance::class)->for($doorIds[1]))->assertRedirect(route('worker.key.show', $slug));
     $this->get(route('worker.home', $slug))->assertOk()->assertInertia(fn (Assert $page) => $page->component('worker-access/home'));
 
