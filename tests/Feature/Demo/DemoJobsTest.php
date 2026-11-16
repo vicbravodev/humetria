@@ -89,13 +89,13 @@ it('prepares the demo step by step and finishes its run', function (): void {
         ->and($run->fresh()?->step)->toBe('NOM-035');
 });
 
-it('resets the demo, then prepares it again', function (): void {
+it('resets the demo by preparing it again, which wipes it once first', function (): void {
     $calls = demoWorkspaceSpy();
     $run = startedRun('reset');
 
     ResetDemo::dispatchSync($run->id);
 
-    expect($calls->getArrayCopy())->toBe(['reset', 'prepare'])
+    expect($calls->getArrayCopy())->toBe(['prepare'])
         ->and($run->fresh()?->status)->toBe('finished');
 });
 

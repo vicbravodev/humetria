@@ -11,7 +11,8 @@ use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
 
 /**
- * Resets the demo company for the console: wipes it, live visitors' traces included, and tells its story again. Only
+ * Resets the demo company for the console: wipes it, live visitors' traces included, and tells its story again (preparing
+ * a demo that exists wipes it first, under the step «Borrando la demo»: once, not twice). Only
  * its run travels in the job, and the run shows each step. Once only: a half-told story is not safe to tell again on top
  * (the next run starts by wiping it). A failure stays on the run with its class and step, never its message, and the job
  * ends without rethrowing it, so the message never reaches failed_jobs either.
@@ -43,8 +44,6 @@ final class ResetDemo implements ShouldQueue
         }
 
         try {
-            $run->reach('Borrando la demo');
-            $workspace->reset();
             $workspace->prepare($run->reach(...));
         } catch (Throwable $error) {
             $run->fail($error);
