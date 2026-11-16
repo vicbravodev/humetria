@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Data\CredentialData;
 use App\Modules\WorkerAccess\Exceptions\InvalidCredential;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
-use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\DB;
