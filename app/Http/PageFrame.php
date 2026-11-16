@@ -33,6 +33,7 @@ final class PageFrame
         'worker-access/link',
         'worker-access/key',
         'worker-access/not-me',
+        'worker-access/proof',
         'compensation/shared-report',
         'telework/applies',
         'telework/write',

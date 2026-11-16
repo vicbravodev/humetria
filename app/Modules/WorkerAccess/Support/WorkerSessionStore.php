@@ -16,7 +16,7 @@ use Carbon\CarbonImmutable;
  * The person's session, kept as the `worker` entry of Laravel's session (decision 4 of the spec): the only class that reads or
  * writes it. It holds only while all of this does: it is of the company of the request, it was used in the last 30 minutes
  * and opened in the last 8 hours (config/worker_access.php), it opened after the person's `valid_after`, the person is still
- * active and the company is not blocked. Otherwise the entry is forgotten and the request goes on as a visitor's. Every
+ * active and the company is not blocked. Its last recent proof (`proof_at`) is set by entering with a key and by prove(). Otherwise the entry is forgotten and the request goes on as a visitor's. Every
  * request it holds for moves its last use on. Entering and leaving change the session id; leaving forgets only this entry.
  */
 final readonly class WorkerSessionStore implements WorkerSession
@@ -68,6 +68,13 @@ final readonly class WorkerSessionStore implements WorkerSession
             // A key's signature is a recent proof; a link is not.
             'proof_at' => $via === EntryVia::Key ? $now : null,
         ]);
+    }
+
+    /** The person of the session just proved it is them (their key signed, or their code was right): a recent proof from now. */
+    public function prove(): void
+    {
+        session()->put(self::KEY.'.proof_at', self::stamp(CarbonImmutable::now()));
+        request()->attributes->remove(RequestWorkerSession::ATTRIBUTE);
     }
 
     /** Leaves: forgets only the person's entry, with a new session id. */

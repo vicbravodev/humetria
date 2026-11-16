@@ -10,6 +10,7 @@ use App\Modules\WorkerAccess\Contracts\WorkerKeys;
 use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
+use App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof;
 use App\Modules\WorkerAccess\Support\CeremonyKeys;
 use App\Modules\WorkerAccess\Support\CeremonySignatures;
 use App\Modules\WorkerAccess\Support\CompanyWorkerCredentials;
@@ -20,6 +21,7 @@ use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -39,8 +41,11 @@ final class WorkerAccessServiceProvider extends ServiceProvider
         $this->app->bind(WorkerInvitations::class, LinkInvitations::class);
     }
 
-    public function boot(): void
+    public function boot(Router $router): void
     {
+        // What is delicate in another module's pages asks for a recent proof by this name, after the person's session.
+        $router->aliasMiddleware('worker.proof', RequireRecentProof::class);
+
         // The `worker` guard (config/auth.php): the person of the session that holds in this request, or nobody.
         Auth::viaRequest('worker-session', function (): ?GenericUser {
             $person = $this->app->make(WorkerSessionStore::class)->current();
@@ -72,6 +77,13 @@ final class WorkerAccessServiceProvider extends ServiceProvider
 
         // Registering a key takes three requests (the page, the options, the key): per address.
         RateLimiter::for('worker-key', fn (Request $request): Limit => Limit::perMinute(30)->by('worker-key-ip:'.$request->ip()));
+
+        // Proving takes two or three requests (the page, the options or the code, the signature or the check): per address,
+        // and per session so one browser cannot hammer the codes. The session id's hash names its counter.
+        RateLimiter::for('worker-proof', fn (Request $request): array => [
+            Limit::perMinute(60)->by('worker-proof-ip:'.$request->ip()),
+            Limit::perMinute(20)->by('worker-proof-session:'.hash('sha256', $request->session()->getId())),
+        ]);
 
         // Opening a link takes two requests (the page, «Continuar»): per address, and per link, so guessing or replaying one is
         // slowed down even from many addresses. Only the link's hash names its counter.

@@ -191,6 +191,24 @@ function enteringTo(string $employeeId, string $text): Closure
 }
 
 /**
+ * In the browser: a person without a key, on the step to prove it is them (the page or the dialog of a delicate form; the
+ * mail must be faked), asks for the code, writes the one emailed to them and goes on to what they asked for, which shows
+ * `$text`.
+ */
+function provedWithCode(AwaitableWebpage $page, string $text): mixed
+{
+    $page->press('Enviarme un código')->waitForText('Le enviamos un código');
+    $code = null;
+    Illuminate\Support\Facades\Notification::assertSentOnDemand(App\Modules\WorkerAccess\Notifications\ProofCode::class, function (App\Modules\WorkerAccess\Notifications\ProofCode $notice) use (&$code): bool {
+        $code = $notice->code;
+
+        return true;
+    });
+
+    return $page->type('input[autocomplete="one-time-code"]', $code ?? throw new LogicException('No code was sent.'))->press('Confirmar código')->waitForText($text);
+}
+
+/**
  * The scope Humi works in for a new person of `$tenant` with `$role`, as the server builds it for a request there.
  */
 function assistantScopeIn(Tenant $tenant, TenantRole $role = TenantRole::Hr): AssistantScope

@@ -156,6 +156,16 @@ test('the person\'s pages that take their session also enter the company of thei
     }
 });
 
+test('what asks for a recent proof takes the person\'s session first', function () {
+    $delicate = collect(appRoutes())->filter(fn (LaravelRoute $route): bool => in_array(App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof::class, Route::gatherRouteMiddleware($route), true));
+
+    foreach ($delicate as $route) {
+        $middleware = Route::gatherRouteMiddleware($route);
+
+        expect(array_search(RequireWorkerSession::class, $middleware, true))->toBeInt()->toBeLessThan(array_search(App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof::class, $middleware, true));
+    }
+});
+
 test('no page of the telework tool is opened with the portal link any more', function () {
     $telework = collect(appRoutes())->filter(fn (LaravelRoute $route): bool => Str::startsWith((string) $route->getActionName(), 'App\\Modules\\Telework\\Http\\Controllers\\Portal'));
 

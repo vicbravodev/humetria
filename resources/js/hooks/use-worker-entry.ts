@@ -9,7 +9,7 @@ import { enterWithKey, requestLink } from '@/lib/worker-access/entry';
 import type { SignedKey } from '@/lib/webauthn';
 
 /** `navigator.credentials.get()` for a signature; null when the browser gave something else. */
-async function getKey(
+export async function getKey(
     options: PublicKeyCredentialRequestOptions,
 ): Promise<SignedKey | null> {
     const credential = await navigator.credentials.get({ publicKey: options });
@@ -24,7 +24,7 @@ async function getKey(
         : null;
 }
 
-function deps() {
+export function deps() {
     return { fetcher: fetch.bind(window), xsrf: xsrfToken(document.cookie) };
 }
 

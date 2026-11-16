@@ -26,6 +26,33 @@ a la persona el usuario de la petición). Sin sesión, la página lleva a la ent
 sesión, nunca en `url.intended` del panel); al entrar con llave, con un enlace pedido o tras crear la llave de un enlace de RH,
 la persona llega ahí una vez. `WorkerSession` se lee una vez por petición (`Support/RequestWorkerSession`).
 
+## Prueba reciente
+
+Lo delicado pide que la persona haya probado que es ella hace menos de 5 minutos (`proof_at` de su sesión,
+`worker_access.proof.minutes`). Cada módulo lo pide en su archivo de rutas con el alias **`worker.proof`**
+(`Http/Middleware/RequireRecentProof`), después de `RequireWorkerSession` (`RouteSecurityTest` lo exige). Sin prueba reciente
+el servidor no entrega el contenido ni acepta el envío:
+
+- Una página (`GET`) lleva a `worker.proof.show` (`/me/{slug}/proof`) y, ya probada, regresa a ella (`WorkerDestination`).
+- Un envío regresa a la página de donde salió (solo una de `/me/{slug}/...` de esa empresa; si no, al inicio) con el flash
+  `proofRequired` (el paso de prueba). `components/worker-access/recent-proof-dialog.tsx`, montado una vez en `app.tsx`,
+  lo abre y, ya probada, reenvía el último envío de Inertia de la página (mismos datos).
+- JSON: 403 con `proofRequired: true` (401 sin sesión).
+
+Cómo prueba la persona (`Support/ProofSteps`): con al menos una llave activa, firma con ella (reto de contexto
+`proof:{sesión}`; una llave ajena, revocada o de otra empresa da la misma respuesta) y **no se le ofrece código**. Sin llave,
+pide un código de seis dígitos por correo (`SendProofCode`, `Notifications/ProofCode`, inmediato, nunca en cola): en caché
+solo su HMAC ligado a la persona y a la sesión, 10 minutos, 5 intentos (el sexto se rechaza aunque sea correcto), uno nuevo
+anula el anterior y nunca es igual; 3 envíos por persona y por sesión cada 10 minutos (`Support/ProofCodes`). Sin llave ni
+correo no puede probar: que pida su acceso a Recursos Humanos. Entrar con llave ya es una prueba; entrar con un enlace no.
+Logs: `worker_access.proof_given` (`via`: `key` con `key_id`, o `code`), `worker_access.proof_refused`,
+`worker_access.proof_code_sent`; nunca el código ni el correo. Sin bitácora.
+
+Rutas delicadas: `portal.support.show` (el mensaje de apoyo de la NOM-035); `portal.policy.acknowledge`;
+`portal.seating.acknowledgments.store`; `portal.vacations.requests.store`, `portal.vacations.statements.acknowledge`,
+`portal.vacations.team.approve`, `portal.vacations.team.reject`; `portal.documents.acknowledge`, `portal.equipment.respond`,
+`portal.visits.confirm`.
+
 ## Reglas
 
 - Crear una llave: solo con una sesión que entró con un enlace `issued` o con otra llave, hasta 3 activas. Un enlace

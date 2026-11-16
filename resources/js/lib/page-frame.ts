@@ -34,6 +34,7 @@ const STANDALONE_NAMES = new Set([
     'worker-access/link',
     'worker-access/key',
     'worker-access/not-me',
+    'worker-access/proof',
     // The report of a contract scenario opened from a temporary link: nobody signed in.
     'compensation/shared-report',
     // A first-time configuration has its own frame (SetupFrame): one question at a time, nothing else around it.

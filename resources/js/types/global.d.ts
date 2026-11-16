@@ -7,6 +7,7 @@ import type { EmployeeImportSummary } from '@/types/organization';
 import type { ReportLink } from '@/types/results';
 import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
 import type { FlashToast } from '@/types/ui';
+import type { ProofStep } from '@/types/worker-access';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -59,6 +60,8 @@ declare module '@inertiajs/core' {
             kioskLink?: string;
             /** A person's link to enter and create their key, shown once to RH only when the person has no email; it works once, 48 h. */
             accessLink?: { name: string; url: string };
+            /** A delicate form of the person was not taken: they prove it is them (this step) and it is sent again. */
+            proofRequired?: ProofStep;
         };
     }
 }

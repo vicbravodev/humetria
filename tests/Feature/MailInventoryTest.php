@@ -93,6 +93,7 @@ function inventory(): array
         'worker access key registered' => [fn () => new App\Modules\WorkerAccess\Notifications\KeyRegistered('iPhone', CarbonImmutable::parse('2026-11-16 15:00:00', 'UTC'), 'Ana', $company, $url), true],
         'worker access invitation' => [fn () => new App\Modules\WorkerAccess\Notifications\WorkerInvitation($url, 'Ana', $company), true],
         'worker access key disowned' => [fn () => new App\Modules\WorkerAccess\Notifications\KeyDisowned('Ana', 'iPhone', $company), true],
+        'worker access proof code' => [fn () => new App\Modules\WorkerAccess\Notifications\ProofCode('123456', 'Ana', $company), true],
         'leave request to decide' => [fn () => new App\Modules\Leave\Notifications\RequestToDecide($url, $company, 'Beto', 'Ana', new App\Modules\Leave\Support\RequestSummary(true, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, true)), true],
         'leave request escalated' => [fn () => new App\Modules\Leave\Notifications\RequestEscalated($url, $company, 'Ana', App\Modules\Leave\Enums\EscalationReason::Timeout, new App\Modules\Leave\Support\RequestSummary(false, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, null)), true],
         'leave request decided' => [fn () => new App\Modules\Leave\Notifications\RequestDecided($url, $company, 'Ana', new App\Modules\Leave\Support\RequestSummary(true, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), 9, true), false, 'Cierre de mes'), true],
@@ -137,5 +138,5 @@ it('speaks to the worker as usted under the button too', function (Closure $make
 })->with(array_map(fn (array $row): array => [$row[0]], array_intersect_key(inventory(), array_flip([
     'vacations portal link', 'leave request decided', 'leave request to decide',
     'policy to confirm', 'support waiting', 'risks to confirm', 'standing questions', 'portal invitation', 'portal link', 'portal reminder',
-    'notice answered', 'climate feedback published', 'worker access link requested', 'worker access key registered', 'worker access invitation',
+    'notice answered', 'climate feedback published', 'worker access link requested', 'worker access key registered', 'worker access invitation', 'worker access proof code',
 ]))));

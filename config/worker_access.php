@@ -32,10 +32,15 @@ return [
     ],
 
     /*
-    | Minutes a signature (or a code) counts as a recent proof for what is delicate.
+    | Minutes a signature (or a code) counts as a recent proof for what is delicate. A person without a key proves with a
+    | code by email: it is good for these minutes and these tries, and a person (or a session) asks for at most this many
+    | codes in that time.
     */
     'proof' => [
         'minutes' => (int) env('WORKER_ACCESS_PROOF_MINUTES', 5),
+        'code_minutes' => (int) env('WORKER_ACCESS_PROOF_CODE_MINUTES', 10),
+        'code_attempts' => (int) env('WORKER_ACCESS_PROOF_CODE_ATTEMPTS', 5),
+        'code_sends' => (int) env('WORKER_ACCESS_PROOF_CODE_SENDS', 3),
     ],
 
     /*

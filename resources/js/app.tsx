@@ -2,6 +2,7 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import AppErrorBoundary from '@/components/app-error-boundary';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import RecentProofDialog from '@/components/worker-access/recent-proof-dialog';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { startAnalytics, type AnalyticsEngine } from '@/lib/analytics';
 import { cspNonce } from '@/lib/csp-nonce';
@@ -47,6 +48,7 @@ void createInertiaApp({
             <TooltipProvider delayDuration={0}>
                 <AppErrorBoundary>{app}</AppErrorBoundary>
                 <Toaster />
+                <RecentProofDialog />
             </TooltipProvider>
         );
     },

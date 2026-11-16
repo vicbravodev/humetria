@@ -10,7 +10,8 @@ use Illuminate\Support\Str;
 /**
  * Where a person without a session was going when they were sent to enter: a page of theirs (`/me/{slug}/...`) of the same
  * company, on this site, and nothing else (no other site, company or the panel, so the entrance is never an open redirect).
- * It is kept in the session apart from the panel's, checked again when it is used, and used once.
+ * It is kept in the session apart from the panel's, checked again when it is used, and used once: after entering, and after a
+ * recent proof (RequireRecentProof). The same rules choose the page a delicate form goes back to.
  */
 final readonly class WorkerDestination
 {
@@ -30,6 +31,14 @@ final readonly class WorkerDestination
         $kept = session()->pull(self::KEY);
 
         return is_string($kept) && self::allowed($kept, $slug) ? $kept : route('worker.home', $slug);
+    }
+
+    /** The page a form was sent from, to take the person back to it; their start when it was anything else. */
+    public function back(string $slug): string
+    {
+        $previous = url()->previous();
+
+        return self::allowed($previous, $slug) ? $previous : route('worker.home', $slug);
     }
 
     /** A page under the person's start of that company, on this site, whose path names only plain segments. */

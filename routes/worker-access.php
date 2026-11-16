@@ -10,6 +10,8 @@ use App\Modules\WorkerAccess\Http\Controllers\EntryController;
 use App\Modules\WorkerAccess\Http\Controllers\HomeController;
 use App\Modules\WorkerAccess\Http\Controllers\KeyController;
 use App\Modules\WorkerAccess\Http\Controllers\NotMeController;
+use App\Modules\WorkerAccess\Http\Controllers\ProofController;
+use App\Modules\WorkerAccess\Http\Middleware\RequireWorkerSession;
 use App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant;
 use Illuminate\Support\Facades\Route;
 
@@ -45,4 +47,14 @@ Route::middleware(['throttle:worker-key', ResolveWorkerTenant::class])->group(fu
 Route::middleware(['throttle:worker-enter', 'signed:relative', ResolveWorkerTenant::class])->group(function (): void {
     Route::get('me/{tenant:slug}/not-me/{credential}', [NotMeController::class, 'show'])->whereUuid('credential')->name('worker.not-me.show');
     Route::post('me/{tenant:slug}/not-me/{credential}', [NotMeController::class, 'confirm'])->whereUuid('credential')->name('worker.not-me.confirm');
+});
+
+// A recent proof before something delicate (RequireRecentProof, alias worker.proof): the person's key signs, or a person
+// without a key writes the code we emailed. Takes the person's session (a visitor goes to enter). Per address and per session.
+Route::middleware(['throttle:worker-proof', ResolveWorkerTenant::class, RequireWorkerSession::class])->prefix('me/{tenant:slug}/proof')->group(function (): void {
+    Route::get('/', [ProofController::class, 'show'])->name('worker.proof.show');
+    Route::post('options', [ProofController::class, 'options'])->name('worker.proof.options');
+    Route::post('/', [ProofController::class, 'store'])->name('worker.proof.store');
+    Route::post('code', [ProofController::class, 'sendCode'])->name('worker.proof.code.send');
+    Route::post('code/check', [ProofController::class, 'checkCode'])->name('worker.proof.code.check');
 });

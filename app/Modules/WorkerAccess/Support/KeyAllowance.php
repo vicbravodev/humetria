@@ -24,6 +24,12 @@ final class KeyAllowance
         return self::full($session->identity->employeeId) ? 'full' : null;
     }
 
+    /** Whether the person has a key in use: then a recent proof is their key's signature, never a code. */
+    public static function hasKey(string $employeeId): bool
+    {
+        return WorkerCredential::query()->where('employee_id', $employeeId)->whereNull('revoked_at')->exists();
+    }
+
     public static function full(string $employeeId): bool
     {
         return WorkerCredential::query()->where('employee_id', $employeeId)->whereNull('revoked_at')->count() >= config()->integer('worker_access.max_keys');
