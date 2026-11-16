@@ -15,10 +15,9 @@ const LANDING_LOGO = 'components/landing/landing-header.tsx';
 function linkTags(string $under = ''): array
 {
     $root = realpath(__DIR__.'/../../resources/js');
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root.'/'.$under, FilesystemIterator::SKIP_DOTS));
     $tags = [];
 
-    foreach ($files as $file) {
+    foreach (frontendSourceFiles($under) as $file) {
         if (! str_ends_with((string) $file, '.tsx') || str_contains((string) $file, '/routes/')) {
             continue;
         }

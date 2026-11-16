@@ -1,10 +1,11 @@
 # Humetria — Plataforma SaaS de herramientas de RH
 
-SaaS multi-tenant de herramientas de RH. El MVP arranca con NOM-035, NOM-037 (teletrabajo) y Ley Silla, y vendrán
-más: las empresas cargan a su gente, la plataforma invita y recolecta de forma confidencial, y RH recibe un
-diagnóstico listo para actuar y para presentar ante la STPS.
+SaaS multi-tenant de herramientas de RH: las empresas cargan a su gente, la plataforma invita y recolecta de forma
+confidencial, y RH recibe un diagnóstico listo para actuar y para presentar ante la STPS. Arrancó con NOM-035, NOM-037
+(teletrabajo) y Ley Silla; hoy suma clima y pulso, asistencia, vacaciones, denuncias, compensación y más (ver «Módulos»).
 
-Las guías del framework (Laravel Boost) están en @AGENTS.md. Este archivo manda sobre ellas cuando choquen.
+Las guías del framework (Laravel Boost) están en @AGENTS.md; este archivo manda cuando choquen («Excepciones a AGENTS.md»).
+El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toca.
 
 ## Reglas no negociables
 
@@ -18,319 +19,217 @@ Las guías del framework (Laravel Boost) están en @AGENTS.md. Este archivo mand
    baseline, `assert()` o `@var` inline para forzar tipos, y casts solo para callarlo. Se arregla la causa.
    Lo mismo aplica a TypeScript: `tsconfig.json` en modo strictest; prohibido `as`, `!`, `@ts-ignore`,
    `@ts-expect-error` y `any` para forzar tipos. Se arregla la causa.
-4. **El anonimato de las respuestas es un invariante** (ver "Privacidad"). Romperlo es un bug crítico.
+4. **El anonimato de las respuestas es un invariante** (ver «Privacidad»). Romperlo es un bug crítico.
 5. **Dependencias nuevas solo con aprobación del usuario.**
 6. Código, rutas, tablas, columnas, enums e identificadores siempre en **inglés**. Textos de UI en español (es-MX).
 
 ## Definición de terminado
 
-Nada está terminado hasta que esto pasa en verde:
-
-```bash
-composer test          # pint --test + phpstan (max) + Pest Unit/Feature en paralelo con cobertura ≥ 90% + Browser en paralelo
-npm run types:check
-npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
-```
-
-y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden: se corre al cerrar un trabajo, antes
-del "crea el PR", no tras cada turno. Mientras se trabaja basta lo acotado (abajo): los tests de la tarea, Pint y PHPStan.
-El check obligatorio de `main` es el job `ci`, que espera a los jobs `checks` (auditoría, Pint, PHPStan, frontend),
-`tests` (Unit/Feature con cobertura) y `browser` (3 shards), todos en paralelo (`.github/workflows/tests.yml`).
-Un cambio que solo trae documentación que nadie lee (lo que hay bajo `docs/` y los `.md` de la raíz) se salta esos jobs y
-el deploy, y `ci` pasa solo: lo decide `scripts/ci-code-changed.sh`. Un documento que un test o la app leen es código
-(`docs/normas`, `docs/operations`, `CLAUDE.md`…) y va en la lista de ese script; `tests/Unit/CiCodeChangedTest.php` falla
-hasta que esté ahí, y `tests/Unit/CiPipelineTest.php` exige que todo job nuevo de `tests.yml` espere al job `changes`.
-
-**Mutación: semanal, fuera de los PR.** No corre en los PR ni bloquea el merge, y no forma parte de "terminado".
-`.github/workflows/mutation.yml` la corre cada domingo por la noche (y a mano, `workflow_dispatch`) con
-`composer mutate:critical -- --min=95`: todas las clases que los tests declaran en `mutates()`, menos controladores,
-FormRequests y notificaciones, **un módulo a la vez** (`scripts/mutate-critical.sh`; una sola corrida desborda el límite de
-argumentos del sistema, ver `docs/testing.md`) y con el 95 aplicado a cada módulo. Si el score baja de 95, el workflow falla y GitHub avisa por correo.
-
-- Una clase de lógica nueva entra sola: su test declara `mutates(Clase::class)` (la lista sale de
-  `scripts/mutation-classes.php`; no hay una lista que mantener a mano). Para dejar una clase fuera, no se declara.
-- Si la corrida semanal falla: se reproduce con `composer mutate -- --class='App\Modules\X\Actions\Y'` y se agrega
-  el test que mata al mutante. No se baja `--min`, no se excluye la clase ni se vuelve a poner la mutación en los PR.
-  El umbral solo sube: si el score sostiene más de 2 puntos por encima, súbelo en `mutation.yml` y en `docs/testing.md`.
-- **No se corre en local por iniciativa propia**: ni al terminar una tarea ni tras cada cambio. Solo cuando el usuario
-  la pide, y acotada a las clases que tocaste: `composer mutate -- --class=…` (4 procesos, solo los tests con
-  `mutates()`); `composer mutate:retry` repite primero lo que escapó. `composer mutate:critical` (varios minutos) y
-  `composer mutate:full` (las 293 clases, `--min=95`) son para medir, a petición del usuario. Ver `docs/testing.md`.
-- No corras la mutación al mismo tiempo que `composer test` en el mismo checkout: comparten su base de pruebas y los dos dan resultados falsos (otro worktree no estorba).
-- La cobertura (Unit/Feature) corre en paralelo (`composer test:coverage`); como Pest no aplica `--min` en paralelo,
-  `scripts/coverage-min.php` lee el clover y falla bajo 90%. Si la cobertura baja, faltan tests: no se baja el umbral.
-
-Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo, o
-`composer test:fast` (Tia: solo los tests que tu cambio afecta; la primera corrida graba el grafo).
-`composer check:fast` = Pint + PHPStan + Tia; su primera corrida repasa toda la suite (35+ min), así que ya no lo corre el hook de Stop: se corre a mano, y solo cuando haga falta.
+- **Mientras se trabaja:** solo los tests de la tarea (`php artisan test --compact --filter=…` o la ruta; `composer test:fast`
+  corre lo que tu cambio afecta), Pint y PHPStan. Nunca la suite completa tras cada cambio.
+- **La verificación completa es el CI** (job `ci` de `.github/workflows/tests.yml`, que espera a `build` —el frontend, una vez—,
+  `checks`, `tests` en 3 shards, `coverage` —une los shards y aplica el 90 %—, `browser` en 4 shards y `ssr`; los shards se
+  reparten por tiempo con `tests/.pest/shards.json`, ver `docs/testing.md`). Terminado = CI en verde y cobertura ≥ 90%
+  (Unit/Feature y Vitest); no se baja el umbral.
+  `composer ci:check` repite el CI en local: solo si el dueño lo pide o para reproducir un fallo del CI.
+- Un cambio que solo trae documentación que nadie lee (`docs/`, `.md` de la raíz) se salta el CI y el deploy
+  (`scripts/ci-code-changed.sh`). Un documento que un test o la app leen es código (`docs/normas`, `docs/operations`,
+  `CLAUDE.md`…) y va en ese script (`tests/Unit/CiCodeChangedTest.php`); todo job nuevo de `tests.yml` espera a `changes`.
+- **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra sola la clase cuyo test declara
+  `mutates(Clase::class)`. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
+  `--min`; si falla, falta el test que mata al mutante. Detalle: `docs/testing.md`.
 
 ## Arquitectura: monolito modular
 
-La aplicación vive bajo `/admin` (login incluido); `/` y sus páginas públicas son marketing.
-
-Cada parte del negocio es un módulo en `app/Modules/{Module}`:
+La aplicación vive bajo `/admin` (login incluido); `/` y sus páginas públicas son marketing. Cada parte del negocio es un
+módulo en `app/Modules/{Module}`:
 
 ```
-app/Modules/{Module}/
-  Contracts/   API pública: interfaces que otros módulos pueden usar
-  Events/      API pública: eventos de dominio
-  Data/        API pública: DTOs readonly que cruzan la frontera
-  Actions/     casos de uso; una clase = una acción (`handle()`)
-  Models/      Eloquent, internos al módulo
-  Enums/  Policies/  Http/Controllers/  Http/Requests/  Providers/
+Contracts/  Events/  Data/   API pública: interfaces, eventos de dominio, DTOs readonly
+Actions/                     casos de uso; una clase = una acción (`handle()`)
+Models/  Enums/  Support/    internos: Eloquent, enums, lógica y lecturas del módulo
+Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exceptions/  Console/  Providers/
 ```
 
-- **Solo `Contracts`, `Events` y `Data` son públicos.** Todo lo demás es interno. Otro módulo jamás importa
-  un modelo, acción o enum ajeno. Para leer datos de otro módulo se usa su contrato; para reaccionar a algo,
-  su evento. Ningún módulo hace joins a tablas de otro.
+- **Solo `Contracts`, `Events` y `Data` son públicos.** Otro módulo jamás importa un modelo, acción o enum ajeno: lee por
+  contrato y reacciona a eventos. Ningún módulo hace joins a tablas de otro.
 - `Actions` y `Models` no dependen de HTTP (`Request`, `Inertia`, `request()`, `session()`, `auth()`).
   El controlador valida con su FormRequest, arma un DTO y llama a la acción.
-- Controladores delgados: autorizan (Policy), delegan a una acción y devuelven `Inertia::render`.
+- **Autorización** en el `authorize()` del FormRequest (403 antes de validar: `tests/Feature/FormRequestAuthorizationTest.php`)
+  y en `Gate` para permisos de plataforma; solo `FirstSteps` y `Engagement` tienen `Policies/`. Controladores delgados:
+  autorizan, delegan a una acción y devuelven `Inertia::render`.
 - Kernel compartido (`App\Models\User`, `App\Http`, `App\Concerns`) no depende de internos de módulos.
-- Las clases concretas son `final`; se depende de contratos, no de implementaciones (SOLID: D).
-- Rutas por módulo en `routes/{module}.php`, incluidas desde `routes/web.php`. Siempre con nombre.
-- Toda ruta tiene nombre y exige autenticación, salvo las de la lista pública de `tests/Feature/RouteSecurityTest.php`; agregar ahí una ruta exige una razón.
+- Las clases concretas son `final`; se depende de contratos, no de implementaciones.
 - Factories en `database/factories/{Module}/` enlazadas con el atributo `#[UseFactory]`.
-- `tests/Unit/ArchitectureTest.php` hace cumplir todo esto. Si falla, se corrige el diseño, no la regla.
-  Ojo: en Pest, una expectativa `arch()` con varios destinos pasa en silencio si alguno no existe;
-  escribe cada regla con un solo namespace destino.
+- `tests/Unit/ArchitectureTest.php` hace cumplir todo esto. Si falla, se corrige el diseño, no la regla. En Pest, una
+  expectativa `arch()` con varios destinos pasa en silencio si alguno no existe: una regla, un namespace destino.
 
-Módulos previstos: `Tenancy` (empresas, centros de trabajo), `Organization` (áreas, empleados),
-`Instruments` (Guías I/II/III y calificación), `Campaigns` (campañas, invitaciones),
-`Responses` (respuestas anónimas), `Results` (agregados y reportes), `Notifications` (correo/SMS/WhatsApp); ya existe `Assistant` (Humi, el asistente de IA; ver su README).
+### Rutas
+
+- Una por módulo en `routes/{module}.php`; las del panel de una empresa (`/admin/{tenant}`) se incluyen desde
+  `routes/company.php`, el resto desde `routes/web.php`.
+- Toda ruta tiene nombre y exige autenticación, salvo las de la lista pública de `tests/Feature/RouteSecurityTest.php`;
+  agregar ahí una ruta exige una razón.
+- Sin cuenta, el token del enlace es la credencial (con throttle por enlace y por dirección): `portal.php` y `*-portal.php`
+  son el **portal**, el enlace personal del trabajador; `survey.php` y `engagement-survey.php`, las encuestas;
+  `complaints-public.php`, el canal de denuncias; `shared-report.php` y `compensation-shared.php`, reportes por enlace
+  temporal; `workers.php`, la página de trabajadores; `attendance-device.php`, los checadores.
+
+### Módulos
+
+- `Assistant`: Humi, el asistente de IA (ver su README).
+- `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones.
+- `Billing`: cuentas, suscripciones, cargos, estados de cuenta y pagos.
+- `Campaigns`: evaluaciones NOM-035: campañas, participantes e invitaciones, la encuesta del empleado.
+- `Compensation`: compensación y contrato colectivo: prestaciones, salarios por nivel, escenarios y su costo.
+- `Complaints`: canal de denuncias: público, seguimiento anónimo, gestores de casos.
+- `Demos`: solicitudes de demo de la landing y su consola (el alta de empresas es solo por demo).
+- `Disclosure`: difusión: documentos y políticas, acuses, publicación de resultados, página de trabajadores.
+- `Engagement`: encuestas de clima y pulso, anónimas (ver su README).
+- `FirstSteps`: el recorrido de primeros pasos del dueño.
+- `Instruments`: catálogo y calificación de instrumentos (Guías I/II/III, lista de NOM-037, Ley Silla); sin tablas.
+- `Interventions`: programa de intervención: acciones, avance, evidencia.
+- `Leave`: vacaciones y permisos: políticas, saldos, solicitudes, días festivos.
+- `Organization`: áreas, empleados, niveles de puesto, líneas de reporte (organigrama).
+- `Responses`: respuestas anónimas y tamizaje de Guía I.
+- `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
+- `Seating`: Ley Silla: asientos, evaluación de riesgo, medidas, encuesta.
+- `Telework`: NOM-037: teletrabajadores, lista de verificación, documentos, comité, portal.
+- `Tenancy`: empresas, centros de trabajo, miembros y roles, módulos y límites por empresa (`CompanyModules`).
+
+No hay módulo de notificaciones: cada módulo manda sus correos con `Notifications/`. No hay SMS ni WhatsApp.
 
 ## Arquitectura del frontend
 
-`resources/js` sigue el mismo monolito modular:
-
-```
-pages/{module}/        una página por ruta, delgada: arma layout + componentes, sin lógica
-components/{module}/   componentes de una funcionalidad; espejo del módulo del backend
-components/humetria/   componentes del design system (solo usan ui, hooks y lib)
-components/ui/         primitivas de shadcn (generadas; solo los ajustes del design system)
-components/*.tsx       el marco compartido de la app (sidebar, navegación)
-layouts/  hooks/  lib/  types/
-```
-
+- `resources/js`: `pages/{module}/` (una página por ruta, delgada, sin lógica), `components/{module}/` (espejo del módulo
+  del backend), `components/humetria/` (design system: solo usa ui, hooks y lib), `components/ui/` (shadcn generado),
+  `components/*.tsx` (el marco de la app), `layouts/ hooks/ lib/ types/`.
 - Un módulo nunca importa componentes de otro. Las páginas no se importan desde ningún lado.
   `hooks`, `lib` y `types` no importan componentes ni layouts. Imports siempre con `@/`, nunca `../`.
-- Límites (estándar de ESLint salvo los dos marcados): 300 líneas por archivo, 100 por función o componente
-  (ESLint usa 50; un componente lleva JSX), complejidad ciclomática 10 (McCabe; ESLint usa 20),
-  profundidad 4, 3 parámetros. Un componente por archivo, archivos en kebab-case, sin dependencias circulares.
-- Lo hace cumplir `vp lint` (`frontend-architecture.ts`, conectado en `vite.config.ts`) y
-  `tests/Unit/FrontendArchitectureTest.php` lo fija. Si una regla estorba, se parte el componente: no se sube el
-  límite ni se agrega una excepción.
-- La lógica que no es de presentación (cálculos, formato, llamadas) va en `hooks/` o `lib/`, no dentro del
-  componente.
+- Límites: 300 líneas por archivo, 100 por función, complejidad 10, profundidad 4, 3 parámetros; un componente por archivo,
+  kebab-case, sin ciclos (`vp lint` con `frontend-architecture.ts`; `tests/Unit/FrontendArchitectureTest.php`). Si una regla
+  estorba, se parte el componente: no se sube el límite. La lógica no visual va en `hooks/` o `lib/`.
 
 ## Multi-tenancy
 
-- Una base de datos. Toda tabla de negocio lleva `tenant_id` y su modelo aplica un global scope por tenant
-  (`BelongsToCurrentTenant`). `tests/Feature/TenantScopedModelsTest.php` lo exige; las únicas excepciones, cada una con su
-  razón, son las que se leen entre empresas: `TenantMembership`, `TenantInvitation` y `AuditEntry`.
-- Cada modelo con tenant tiene un test que prueba que la empresa A no puede leer ni modificar datos de B,
-  tanto por consulta directa como por URL (route model binding debe dar 404, no 403 que delate existencia).
+- Una base de datos. Toda tabla de negocio lleva `tenant_id` y su modelo usa `BelongsToCurrentTenant`; las excepciones, cada
+  una con su razón, están en `tests/Feature/TenantScopedModelsTest.php`.
+- Cada modelo con tenant prueba que la empresa A no lee ni modifica datos de B, por consulta y por URL (404, no 403).
 - Nunca se confía en un `tenant_id` que venga del request.
 
 ## Seguridad
 
-- Toda respuesta web lleva los encabezados de `App\Http\Middleware\SecurityHeaders`, con una CSP basada en nonce.
-- Todo `<script>` o `<style>` inline lleva `nonce="{{ Vite::cspNonce() }}"`; en el front, las librerías que inyectan
-  estilos reciben `cspNonce` (`@/lib/csp-nonce`). Los tests de navegador afirman `->assertScript(cspViolations(), '[]')`.
-- Aflojar la CSP (un origen, `'unsafe-inline'`, un hash) exige explicar el motivo en el PR.
-- Una ruta nueva de la cuenta personal (perfil, contraseña, 2FA, passkeys) va en `ForbidWhileImpersonating::protectedRoutes()`;
-  un test lo exige.
-- Toda respuesta lleva `X-Robots-Tag: noindex, nofollow`, salvo una de las rutas de `App\Http\IndexablePages`
-  (hoy `home` y `privacy-notice`) que responde 200 en producción. Para que una página sea indexable se agrega ahí, con su
-  test en `tests/Feature/IndexablePagesTest.php`; staging y local nunca se indexan.
-- Solo las páginas de `App\Http\SsrPages` (ruta y componente, hoy la landing y el aviso) pasan por Node, y solo para
-  visitantes sin sesión, con `INERTIA_SSR_ENABLED` encendido y el cortacircuitos cerrado. Una ruta nueva no activa SSR por omisión.
-  Si Node falla la página responde 200 sin cuerpo renderizado (React la pinta), deja un `ssr.render_failed` (una línea por tipo
-  y minuto, sin props) y `X-Rendered-By` dice `csr`; nunca se responde 5xx por Node. Quién opera el servicio `ssr`
-  (variables, rollback, señales) lo dice `docs/operations/ssr.md`: se actualiza en el mismo PR que cambie esas piezas.
-- PostHog (nube US, `posthog-js` en su build sin scripts externos) arranca solo en el documento de la landing
-  (`App\Http\Analytics`: ruta `home`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
-  `POSTHOG_CONSENT_DEFAULT` en `denied` (el valor por omisión) apaga la medición de visitantes: sin bloque `analytics-config`, sin
-  descarga de PostHog, sin su origen en la CSP, sin `humetria_acq`. En producción el dueño lo puso en `granted` (Dokploy).
-  Sin autocapture, sin grabación de sesión, sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento local) y sin IP.
-  A PostHog no se le manda nada de la persona: la dirección sin más query que las `utm_*` y, de un referente de este sitio, solo su origen
-  (`resources/js/lib/analytics.ts` lo impone en `before_send`).
-- Eventos de la landing: solo los de `docs/operations/ssr.md` §8. Se declaran en el marcado con `data-track="evento"` y
-  `data-track-target="id"` (un solo escucha de clics, `use-landing-measurement`); sus propiedades son identificadores o números
-  (`cleanProperties`), nunca texto libre. Un evento nuevo se agrega al catálogo de ese documento. Se mide la landing; el panel (`/admin`),
-  las encuestas y los portales **no** (hoy; medir el panel es un trabajo aparte con su revisión de privacidad).
-- Errores: el navegador de la landing manda a PostHog `$exception` con el mensaje enmascarado (correos y números) y el servidor manda
-  (`App\Support\PostHogExceptions`, en cola, mejor esfuerzo) solo clase, archivo, línea y traza sin argumentos, nunca el mensaje, la URL
-  ni el usuario. El del servidor solo exige el token (no lleva datos de visitantes); un `report()` nuevo en `bootstrap/app.php`
-  va después del de PostHog, porque los que devuelven `false` cortan la cadena.
-- La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente
-  externo, nunca una URL ni identificadores de clic). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
-  consentimiento `granted`. Lo que diga el aviso de privacidad sobre cookies debe coincidir con el código
-  (`tests/Feature/PrivacyNoticeMatchesCodeTest.php`).
-- Todo enlace que sale de la landing o llega a ella es un `<a href>` normal, no un `<Link>` (solo el logo de la
-  cabecera de la landing, que va a la misma página): PostHog y su CSP viven en un documento, no en una visita de Inertia.
+- CSP con nonce (`App\Http\Middleware\SecurityHeaders`): todo `<script>`/`<style>` inline lleva `nonce="{{ Vite::cspNonce() }}"`
+  y las librerías que inyectan estilos reciben `cspNonce` (`@/lib/csp-nonce`). Aflojar la CSP exige su motivo en el PR.
+- Una ruta nueva de la cuenta personal (perfil, contraseña, 2FA, passkeys) va en `ForbidWhileImpersonating::protectedRoutes()`.
+- Toda respuesta lleva `X-Robots-Tag: noindex, nofollow`, salvo las rutas de `App\Http\IndexablePages` (con su test en
+  `tests/Feature/IndexablePagesTest.php`) que responden 200 en producción; staging y local nunca se indexan.
+- Solo las páginas de `App\Http\SsrPages` pasan por Node, y solo sin sesión; una ruta nueva no activa SSR. Si Node falla
+  la página responde 200 y React la pinta: nunca 5xx por Node.
+- PostHog mide solo la landing: lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
+  medición. Ningún dato de la persona va a PostHog. Todo enlace que sale de la landing o llega a ella es un `<a href>`.
+- Reglas y operación de SSR, medición, eventos y errores a PostHog: `docs/operations/ssr.md` (se actualiza en el mismo PR).
 
 ## Privacidad (invariante)
 
-- Las respuestas de Guía II/III y de la encuesta de Ley Silla viven en tablas **sin ninguna llave** hacia empleado, invitación ni token.
-  La invitación solo registra "ya contestó". El enlace es de un solo uso.
+- Las respuestas anónimas (Guías II/III, Ley Silla, clima y pulso) viven en tablas **sin ninguna llave** hacia empleado,
+  invitación ni token. La invitación solo registra "ya contestó". El enlace es de un solo uso.
 - IDs de respuestas: UUID v4 aleatorio (nunca ordenable por tiempo). RH nunca ve la hora exacta de cada respuesta.
-- Todo resultado agregado pasa por un único servicio que aplica el **mínimo de respondentes por grupo**
-  (default 5, configurable). Debajo del mínimo el grupo no se muestra. Cada filtro adicional reduce el grupo:
-  el mínimo se aplica después de filtrar. Aplica también a la encuesta de Ley Silla.
+- Todo resultado agregado aplica el **mínimo de respondentes por grupo**: 5, y `RESULTS_MIN_GROUP` solo puede subirlo
+  (`config/results.php`). Debajo del mínimo el grupo no se muestra; el mínimo se aplica después de cada filtro.
 - La Guía I sí es identificada (obligación de canalizar, numeral 5.5) y solo la ven roles autorizados.
 - Toda página que ve RH tiene un test que afirma que sus props de Inertia no contienen respuestas individuales.
 - El modelo de amenaza es RH y la aplicación, no el operador con acceso a la base de datos.
 
 ## Logging y auditoría
 
-- Logs en JSON, una línea por evento (tap `App\Logging\StructuredLogging` en single, daily y stderr).
-- `AssignRequestId` pone `request_id` y `AssignRequestContext` pone `user_id` en `Context`: aparecen en cada línea
-  de log, en la bitácora y en los jobs en cola. `tenant_id` lo agrega `ResolveTenant` (Tenancy) en las rutas de una
-  empresa; `impersonator_id` lo agrega `AssignRequestContext` mientras se impersona.
-- El mensaje del log es un nombre de evento fijo `modulo.accion` en pasado (`campaign.launched`,
-  `invitation.sent`); los datos van en el arreglo de contexto, nunca interpolados en el texto.
-- Toda acción que cambia estado escribe un log. Las acciones sensibles (lanzar o cerrar campaña, ver o exportar
-  resultados, consultar la lista de canalización de Guía I, cambiar roles) además van a la bitácora con
-  `App\Actions\RecordAudit`.
-- `audit_entries` es de solo inserción: un trigger de Postgres rechaza UPDATE, DELETE y TRUNCATE.
-- **Nunca** se escriben respuestas de encuesta, ni nada que ligue a un empleado con una respuesta de Guía II/III,
-  en logs ni en la bitácora. `RedactSensitiveData` borra llaves conocidas (`answers`, `password`, `token`…);
-  una llave sensible nueva se agrega ahí con su test. Un `QueryException` se reporta como `database.query_failed` con el
-  SQL, el código y la conexión, nunca con sus valores (`bootstrap/app.php`). El módulo Responses tendrá un test que envía una
-  respuesta y afirma que ninguna línea de log contiene sus valores.
+- Logs en JSON, una línea por evento (`App\Logging\StructuredLogging`); `request_id`, `user_id`, `tenant_id` e
+  `impersonator_id` llegan por `Context`. El mensaje es un evento fijo `modulo.accion` en pasado (`campaign.launched`);
+  los datos van en el contexto, nunca interpolados.
+- Toda acción que cambia estado escribe un log. Las sensibles (lanzar o cerrar campaña, ver o exportar resultados, la lista
+  de canalización de Guía I, cambiar roles) además van a la bitácora con `App\Actions\RecordAudit`. `audit_entries` es de
+  solo inserción (trigger de Postgres).
+- **Nunca** van a logs ni a la bitácora respuestas de encuesta ni nada que ligue a un empleado con una respuesta anónima
+  (`tests/Feature/Responses/SeatingResponsesPrivacyTest.php` lo prueba). `RedactSensitiveData` borra llaves conocidas; una
+  nueva se agrega ahí con su test. Un `QueryException` se reporta sin sus valores.
 
 ## Idioma y tiempo
 
-- Locale `es` (validación y auth en `lang/es/`). Atributo nuevo en un FormRequest → su nombre en
-  `lang/es/validation.php` → `attributes`.
-- Se guarda siempre en UTC (`app.timezone` y la sesión de Postgres). Solo al mostrar se convierte a
-  `config('app.display_timezone')` (America/Mexico_City). Columnas de fecha y hora: `timestampTz`.
+- Locale `es`; atributo nuevo en un FormRequest → `lang/es/validation.php` → `attributes`.
+- Todo en UTC (`timestampTz`); solo al mostrar se convierte a `config('app.display_timezone')` (America/Mexico_City).
 
 ## Design system
 
-- La fuente de verdad son los tokens y reglas de `docs/design-system/` y, para cómo se ve una pantalla, **la app misma**:
-  las pantallas ya construidas con el rediseño v2 y sus componentes (`components/humetria`, `components/ui`).
-  Toda pantalla nueva **debe quedar igual de pulida**: se parte de la pantalla más parecida de la app y se reusan sus
-  piezas (marco con sidebar y migas, encabezado con título, estado y ficha con íconos, tarjetas, tablas con cabecera
-  `muted`, medidor de arco, pestañas con conteo, estados vacíos con siguiente paso). Una pantalla que se vea como un
-  formulario o una tabla sin diseñar no está terminada. Antes de cerrar un trabajo con UI, se revisa en el navegador
-  en claro, oscuro y a 375 px contra la pantalla de referencia.
-- Las maquetas y capturas del diseño (`docs/design-system/capturas`, `docs/design-system/pantallas`,
-  `docs/rediseno/pantallas`) se retiraron el 2026-11-15 porque la app ya las implementa; siguen en el historial de git
-  (`git log --all -- docs/rediseno/pantallas`).
-- Un solo acento (`primary`); `brand-soft` y `brand-deep` solo dentro del logo.
-- Texto ≥ 4.5:1 y controles y foco ≥ 3:1, con `tests/Unit/DesignSystemTest.php` como protección: un color nuevo
-  entra ahí con su par.
-- El color va solo por tokens del design system; los colores crudos de la paleta de Tailwind o en hex los rechaza
-  `tests/Unit/DesignTokensOnlyTest.php` (excepto `components/ui`).
-- Los 5 ajustes a shadcn se aplican después de cada `npx shadcn add`, y `tests/Unit/ShadcnAdjustmentsTest.php`
-  los hace cumplir.
+- Fuente de verdad: los tokens de `docs/design-system/` y **la app misma**. Toda pantalla nueva parte de la más parecida y
+  reusa sus piezas (marco con migas, encabezado con estado, tarjetas, tablas `muted`, pestañas con conteo, estados vacíos
+  con siguiente paso); una que se vea como un formulario sin diseñar no está terminada. Antes de cerrar un trabajo con UI,
+  se revisa en el navegador en claro, oscuro y a 375 px.
+- Un solo acento (`primary`; `brand-*` solo en el logo); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
+  a shadcn tras cada `npx shadcn add` (`DesignTokensOnlyTest`, `DesignSystemTest`, `ShadcnAdjustmentsTest`).
 - El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.
 
-## Base de datos y rendimiento
+## Base de datos y listas
 
-- `Model::shouldBeStrict()` fuera de producción: lazy loading, atributos no seleccionados y mass assignment
-  silencioso lanzan excepción. Un N+1 rompe el test; se corrige con `with()`/`load()`, nunca desactivando.
-- Pantallas críticas (avance de campaña, resultados) afirman el número de consultas
-  con `$this->expectsDatabaseQueryCount(n)`.
-- Postgres en tests también (base `testing`), nunca SQLite: el comportamiento debe ser el de producción.
-- Integridad en la base de datos: llaves foráneas, `unique`, `check` y `not null` además de la validación.
-- Operaciones de varios pasos dentro de `DB::transaction()`.
-
-## Listas
-
-- Toda lista o tabla de registros se pagina en el servidor, sin excepción: llega a la página como paginador de
-  Laravel (`->paginate()->withQueryString()`, `Paginated<T>` en el front), nunca como arreglo completo. Con búsqueda
-  y filtros en el servidor cuando aplique (`SearchesText`: sin distinguir mayúsculas ni acentos).
-- Antes de mostrar una lista, evalúa si un resumen (conteos por estado) sirve mejor, con el detalle paginado a un clic.
-- Un campo que elige un registro que crece (centro de trabajo, área) lo busca en el servidor (`serverSource`), no
-  recibe la lista entera. Solo los catálogos fijos (enums) y los resúmenes cortos viajan como arreglo.
-- `tests/Unit/PaginatedListsTest.php` rechaza un arreglo en las props de una página salvo los de su lista, cada uno
-  con su razón, y exige que cada página paginada esté en `tests/Feature/PaginatedListsTest.php`, que afirma el paginador.
+- `Model::shouldBeStrict()` fuera de producción: un N+1 rompe el test; se corrige con `with()`/`load()`.
+- Pantallas críticas (avance de campaña, resultados) afirman `$this->expectsDatabaseQueryCount(n)`.
+- Postgres en tests, nunca SQLite. Integridad en la base (FK, `unique`, `check`, `not null`). Varios pasos: `DB::transaction()`.
+- Toda lista de registros se pagina y busca en el servidor (`->paginate()->withQueryString()`, `Paginated<T>`,
+  `SearchesText`); antes, evalúa si un resumen con conteos sirve mejor. Un selector de registros que crecen usa
+  `serverSource`. Lo exigen `tests/Unit/PaginatedListsTest.php` y `tests/Feature/PaginatedListsTest.php`.
 
 ## Testing
 
-| Capa | Herramienta | Qué cubre |
-|------|-------------|-----------|
-| Unit | Pest | Lógica pura: calificación de guías, tamaño de muestra, umbrales |
-| Unit (frontend) | Vitest (`vp test`) | Lógica de `resources/js/lib` en `tests/js` (espejo de `resources/js`), cobertura ≥ 90%; hooks y componentes los cubre Browser |
-| Feature | Pest + `assertInertia` | HTTP, validación, autorización, aislamiento de tenant, props que recibe cada página |
-| Browser | Pest Browser (Playwright) | Solo flujos críticos: el empleado contesta desde el celular, enlace de un solo uso, flujo de Guía I |
-| Arquitectura | Pest `arch()` | Aislamiento de módulos, tipos estrictos, clases final, presets php y security |
-| Mutación | `composer mutate -- --class=…` | Lógica con reglas, estados, límites y privacidad: su test declara `mutates(Clase::class)`; no controladores, FormRequests sin reglas propias, DTOs, enums de solo etiquetas |
+- Unit (lógica pura), Feature (`assertInertia`: HTTP, validación, autorización, tenant, props), `arch()`, Vitest
+  (`resources/js/lib` en `tests/js`).
+- **Browser:** toda página Inertia tiene su prueba de humo con `visitPage()` (componente, sin errores de JS ni de CSP, axe;
+  `tests/Unit/BrowserCoverageTest.php`). Flujos largos e interactivos solo para caminos críticos (el empleado contesta desde
+  el celular, enlace de un solo uso, Guía I). `composer test:browser` requiere `npm run build`.
+- Cada comportamiento: camino feliz + bordes + fallos. Bordes a pensar: límites exactos (15/16, 50/51), vacíos, duplicados,
+  otro tenant, usuario sin permiso, enlace ya usado, campaña cerrada, grupo debajo del mínimo.
+- Usa factories y sus estados. HTTP externo bloqueado (`Http::preventStrayRequests()`): `Http::fake()`. Proveedores
+  externos detrás de un contrato con un fake. Pruebas deterministas: `docs/testing.md`, «Pruebas que no fallan por azar».
 
-- Cada comportamiento: camino feliz + bordes + fallos. Bordes obligatorios a pensar: límites exactos
-  (15/16, 50/51 trabajadores), vacíos, duplicados, otro tenant, usuario sin permiso, enlace ya usado,
-  campaña cerrada, grupo debajo del mínimo.
-- Usa factories y sus estados; no armes modelos a mano.
-- Las peticiones HTTP externas están bloqueadas en tests (`Http::preventStrayRequests()`); usa `Http::fake()`.
-- Proveedores externos (SMS, WhatsApp, correo) detrás de un contrato con un fake para tests.
-- Tests de navegador: `composer test:browser` (en paralelo; requieren `npm run build`). La cobertura se mide sin ellos:
-  en paralelo `--min` no se aplica, y los tests de navegador no aportan cobertura de PHP.
-- Toda página Inertia tiene un test de navegador con `visitPage()` (componente exacto + sin errores de JS + sin violaciones
-  de CSP + axe); `tests/Unit/BrowserCoverageTest.php` lo hace cumplir.
+## Normas y documentos
 
-## Reglas de dominio NOM-035 (fuente: DOF 23/10/2018)
-
-La interpretación de la NOM-035 está en `docs/normas/nom-035/criterios.md`, con su fuente, y **manda**: si el código o un
-diseño la contradicen, se corrige el código o el diseño, o se actualiza el criterio con su justificación. El texto literal
-de las guías y sus tablas está en `docs/normas/nom-035/texto-de-referencia.md`; las pruebas del instrumento se escriben
-contra él.
-
-- La guía aplica **por centro de trabajo** (num. 4.4 y 2), no por empresa:
-  hasta 15 trabajadores → solo Guía I; 16 a 50 → Guías I y II; más de 50 → Guías I y III.
-- Guía I aplica a todos. Requiere valoración clínica si en la Sección I hay algún "SÍ" y además:
-  algún "SÍ" en Sección II, o 3+ "SÍ" en Sección III, o 2+ "SÍ" en Sección IV. Si la Sección I es toda "NO", termina ahí.
-- Muestra representativa (Guía III, num. III.1, más de 50 trabajadores):
-  `n = 0.9604·N / (0.0025·(N−1) + 0.9604)` (N=100 → n=80), selección aleatoria y proporcional por género.
-- Resultados disponibles para consulta de los trabajadores (num. 7.8).
-- Informe (num. 7.7): datos del centro, objetivo, actividades, método, resultados, conclusiones,
-  acciones de intervención y responsable con cédula profesional.
-- Evaluación al menos cada 2 años (num. 7.9). Evidencia conservada al menos 1 año (num. 10.4).
-  Registrar nombres de trabajadores con valoración clínica (num. 5.8).
+- `docs/normas/` (`nom-035`, `nom-037`, `ley-silla`, `jornada`, `vacaciones`, `compensation`): criterios con su fuente y texto
+  de referencia. **Mandan**: si el código los contradice, se corrige el código o se actualiza el criterio con su justificación.
+  Las pruebas de los instrumentos se escriben contra el texto de referencia.
+- NOM-035 aplica **por centro de trabajo**: hasta 15 trabajadores → solo Guía I; 16 a 50 → Guías I y II; más de 50 →
+  Guías I y III. El resto (Guía I, muestra, informe, plazos): `docs/normas/nom-035/criterios.md`.
+- `docs/superpowers/{specs,plans}`, `docs/rediseno*`: registros históricos de diseño. Si chocan con el código y los tests,
+  ganan el código y los tests. Excepción: el banco de reactivos de clima y pulso
+  (`docs/superpowers/specs/2026-11-09-engagement-item-bank.md`) lo lee un test.
 
 ## Entorno local
 
-- La app corre siempre en Docker con Sail: `./vendor/bin/sail up -d` levanta la app en `http://localhost` (puerto 80),
-  Postgres, Vite y los demás servicios. Vite arranca solo y Docker lo reinicia si se cae (`restart: unless-stopped`);
-  su `node_modules` de Linux vive en un volumen, aparte del de tu máquina. Todo comando de la app va por el
-  contenedor: `sail artisan …`, `sail composer …`, `sail npm …`. No se corre `php artisan serve` ni `npm run dev` local.
-- Las colas van en Redis (Valkey) y las procesa Horizon: el contenedor `horizon` (`php artisan horizon`) y el `scheduler`
-  (`php artisan schedule:work`) arrancan con `sail up -d` y Docker los reinicia si se caen. Tras cambiar el código de un
-  job: `sail artisan horizon:terminate`. El tablero vive en `/horizon`, solo para el superadmin. No se corre
-  `queue:work` a mano.
-- Los tests son la excepción: corren en local (`composer test`, Vitest, navegador) contra el Postgres de Docker en el
-  puerto 5433 (`FORWARD_DB_PORT`); `phpunit.xml` fija ese host y puerto, así que el `.env` puede apuntar a `pgsql`.
-- **Worktrees en paralelo:** cada checkout prueba contra su propia base: `testing` en el principal y
-  `testing_<directorio>_<hash>` en un worktree, que `tests/bootstrap.php` crea sola (un `DB_DATABASE` explícito en el
-  shell gana). No hace falta pasar nada a mano ni deadlockean entre sí. Un worktree nuevo se prepara con
-  `composer worktree:setup` (`.env`, dependencias y build); `composer worktree:prune` lista las bases de worktrees
-  borrados y `-- --drop` las elimina (revisa la lista antes: otra sesión podría usarlas).
-  La app de Sail en `http://localhost` sirve el checkout principal, no el worktree.
-- Primera vez: `composer install`, `cp .env.example .env`, `sail up -d`, `sail artisan key:generate`, `sail artisan migrate`.
-  El primer superadmin: `sail artisan humetria:create-superadmin`.
-  La base de ciudades para los correos de cuenta: `sail artisan geoip:update` (luego la baja cada mes el scheduler).
-- El correo local va a mailtrap-local (bandeja en `http://localhost:3550`): ningún correo, SMS ni WhatsApp sale del entorno de desarrollo.
-- Configuración nueva → `config/*.php` + `.env.example` (sin secretos reales).
-- Hooks de Claude (`.claude/hooks/`): Pint + PHPStan en cada PHP editado; `vp fmt` + `vp lint` en cada TS/TSX editado
-  (en el checkout dueño del archivo, sea worktree o principal); al terminar, solo checks
-  estáticos sobre lo cambiado: Pint (`--test`) y PHPStan en los PHP cambiados, y `npm run check` + `npm run types:check` si
-  cambió frontend. El hook de Stop NO corre tests: cada tarea corre los suyos (archivo o `--filter`), la suite completa
-  es `composer ci:check` al cerrar el trabajo, y el CI la repite.
-- Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.
+- La app corre en Sail (`./vendor/bin/sail up -d` → `http://localhost`, con Vite, Horizon y el scheduler): comandos de la app
+  con `sail artisan …`, `sail npm …`. Los tests corren en local contra el Postgres de Docker (5433); cada worktree tiene su
+  base (`composer worktree:setup`). Configuración nueva → `config/*.php` + `.env.example`, sin secretos.
+- Hooks de Claude: Pint/PHPStan y `vp fmt`/`vp lint` al editar; al terminar, Pint `--test`, PHPStan, `npm run check` y
+  `types:check` sobre lo cambiado. No corren tests. Detalle (primera vez, worktrees, colas, correo): `docs/setup.md`.
+
+## Excepciones a AGENTS.md
+
+`AGENTS.md` lo genera Laravel Boost (`boost:update` en `post-update-cmd`): no se edita a mano. Donde choca, manda esto:
+
+- "Copy, estilos y layout no requieren tests" → aquí TDD para todo cambio de comportamiento visible.
+- "Pídele al usuario que corra la suite" → tests acotados mientras se trabaja; la suite completa la corre el CI.
+- `npm run dev` / `composer run dev` → Vite ya corre en Sail; si falta el manifiesto, `npm run build`.
+- `php artisan …` → los comandos de la app van por `sail artisan …`; los tests corren en local.
+- Laravel Cloud y la skill `deploying-to-cloud` → producción es Dokploy (`docs/operations/ssr.md`).
+- Factories en `database/factories/{Module}/` con `#[UseFactory]`; la configuración de Vite es `vite.config.ts`.
+
+## Sesiones y agentes
+
+- Subagentes: Opus por omisión; Fable solo para análisis genuinamente difícil. En paralelo solo sobre archivos disjuntos,
+  cada uno en su worktree (`composer worktree:setup`). Todo brief lleva la regla de tests acotados.
+- Las notas de memoria sobre el estado del proyecto envejecen: verifícalas contra git antes de actuar.
 
 ## Flujo de trabajo: un PR por trabajo, commits atómicos
 
-- Todo PR llena `.github/pull_request_template.md`: qué feature, por qué, cómo se probó (RED/GREEN) y su checklist.
 - Nada se commitea directo a `main`: todo entra por PR desde una rama propia, con el CI en verde.
-- **Un PR = el trabajo que se pidió, completo** (p. ej. "consola de solicitudes de demo", "importar empleados por CSV",
-  "subir el nivel del design system"): trae su migración, backend, UI, tests y los refactors que necesita.
-  El proyecto lo trabaja una sola persona: no se parte un trabajo en varios PRs ni se apilan PRs; la granularidad
-  vive en los commits. Nunca dos trabajos sin relación en el mismo PR.
-- **El PR se abre solo cuando el usuario dice "crea el PR".** Mientras tanto se trabaja y se commitea en la rama,
-  corriendo los tests y el harness como siempre; esperar un pipeline por cada pedazo solo hace perder tiempo.
-- **Un commit = un comportamiento** dentro del PR (test + código que lo pasa). Cada commit deja los tests en verde,
-  para poder revertir o hacer bisect commit por commit.
-- Cada PR deja el sistema funcionando y es seguro de revertir solo: no deja código a medias detrás de él.
-- Cambios de dependencias y de harness (CI, hooks, reglas) que la feature no necesita van en su propio PR.
+- **Un PR = el trabajo que se pidió, completo**; no se parte ni se apilan PRs, y nunca dos trabajos sin relación juntos.
+  Dependencias y harness (CI, hooks, reglas) que la feature no necesita van en su propio PR.
+- **El PR se abre solo cuando el usuario dice "crea el PR"**, con `.github/pull_request_template.md` (RED/GREEN, checklist).
+- **Un commit = un comportamiento** (test + código que lo pasa), cada uno en verde. Cada PR es seguro de revertir solo.
+- Commits a nombre del usuario, sin atribución a Claude. El push siempre pide permiso.

@@ -6,7 +6,10 @@ declare(strict_types=1);
 function tourAnchorsIn(string $glob, string $pattern): array
 {
     $found = [];
-    foreach (glob(dirname(__DIR__, 2).'/'.$glob, GLOB_BRACE) ?: [] as $file) {
+    // The lint probes of FrontendArchitectureTest come and go under components/ while this runs (frontendSourceFiles).
+    $files = array_filter(glob(dirname(__DIR__, 2).'/'.$glob, GLOB_BRACE) ?: [], fn (string $file): bool => ! str_contains($file, '/zz-probe-'));
+
+    foreach ($files as $file) {
         preg_match_all($pattern, (string) file_get_contents($file), $matches);
         array_push($found, ...$matches[1]);
     }
@@ -30,7 +33,7 @@ it('runs exactly one tour runner per page: the dock owns it, the bare component 
         fn (string $file): string => str_replace($root.'/', '', $file),
         array_values(array_filter(
             glob($root.'/{pages,layouts,components}/{*,*/*,*/*/*}.tsx', GLOB_BRACE) ?: [],
-            fn (string $file): bool => str_contains((string) file_get_contents($file), '<FirstStepsTour'),
+            fn (string $file): bool => ! str_contains($file, '/zz-probe-') && str_contains((string) file_get_contents($file), '<FirstStepsTour'),
         )),
     );
 

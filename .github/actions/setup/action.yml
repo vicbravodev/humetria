@@ -3,8 +3,19 @@ description: PHP, Node, dependencies, the migrated database and the built assets
 
 inputs:
   coverage:
-    description: "PHP coverage driver: pcov for the job that measures coverage, none for the rest (pcov slows every test)."
+    description: "PHP coverage driver: pcov for the jobs that measure coverage, none for the rest (pcov slows every test)."
     default: none
+  assets:
+    description: >-
+      The built frontend: build (npm run build:ssr here), download (the `assets` artifact of the build job of tests.yml:
+      public/build, the SSR bundle and Wayfinder's generated files) or none.
+    default: build
+  database:
+    description: "true migrates the Postgres service and tunes it for tests; false for a job without the service."
+    default: 'true'
+  playwright:
+    description: "true installs Chromium for the browser tests, cached by the version of Playwright."
+    default: 'false'
 
 runs:
   using: composite
@@ -30,6 +41,65 @@ runs:
         path: vendor
         key: vendor-${{ runner.os }}-php8.5-${{ hashFiles('composer.lock') }}
 
+    # The CI database lives and dies with the job: no write needs to survive a crash. Off: fsync, full page writes and
+    # the wait for each commit to reach the disk (all three reload without a restart). The data directory is a tmpfs
+    # (tests.yml, service options).
+    - name: Tune Postgres for tests
+      if: inputs.database == 'true'
+      shell: bash
+      run: >-
+        PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" -v ON_ERROR_STOP=1
+        -c 'ALTER SYSTEM SET fsync = off'
+        -c 'ALTER SYSTEM SET synchronous_commit = off'
+        -c 'ALTER SYSTEM SET full_page_writes = off'
+        -c 'SELECT pg_reload_conf()'
+
+    # composer setup without the build: the build comes from the input `assets`.
     - name: Setup Application
       shell: bash
-      run: composer setup
+      env:
+        MIGRATE: ${{ inputs.database }}
+      run: |
+        composer install
+        php -r "file_exists('.env') || copy('.env.example', '.env');"
+        php artisan key:generate
+        if [ "$MIGRATE" = true ]; then php artisan migrate --force; fi
+        npm ci
+
+    - name: Build assets
+      if: inputs.assets == 'build'
+      shell: bash
+      run: npm run build:ssr
+
+    - name: Download the built assets
+      if: inputs.assets == 'download'
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: assets
+
+    - name: Playwright version
+      id: playwright
+      if: inputs.playwright == 'true'
+      shell: bash
+      run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      if: inputs.playwright == 'true'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+    # The browsers come from the cache; the system libraries they need do not, so a hit still installs those.
+    - name: Install Playwright Browsers
+      if: inputs.playwright == 'true'
+      shell: bash
+      env:
+        CACHED: ${{ steps.playwright-cache.outputs.cache-hit }}
+      run: |
+        if [ "$CACHED" = true ]; then
+          npx playwright install-deps chromium
+        else
+          npx playwright install --with-deps chromium
+        fi

@@ -5,7 +5,7 @@
 # the PHP server, which PHP's own `-S` runs on 8000 with SSR on and nothing that needs Redis or the app's session table.
 # They are outside `composer test`, the coverage and the mutation run: this is their own command, `composer test:ssr`.
 #
-# Usage: composer test:ssr [-- extra Pest arguments]
+# Usage: composer test:ssr [-- extra Pest arguments]   (SSR_PREBUILT=true skips the build when the bundle is already there)
 set -uo pipefail
 
 port=13714
@@ -18,7 +18,10 @@ for taken in "$port" "$web_port"; do
     fi
 done
 
-npm run build:ssr || exit 1
+# CI builds the bundle once, in the build job of tests.yml, and says so with SSR_PREBUILT=true.
+if [ "${SSR_PREBUILT:-}" != true ]; then
+    npm run build:ssr || exit 1
+fi
 
 node bootstrap/ssr/app.js >storage/logs/ssr-test.log 2>&1 &
 node_pid=$!
