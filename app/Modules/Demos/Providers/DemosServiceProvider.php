@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Providers;
 
 use App\Models\User;
+use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Demos\Support\DemoLeadRegistry;
 use Database\Seeders\Demo\DemoWorkspaceRunner;
+use Database\Seeders\Demo\RosterDoorPool;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -24,6 +26,7 @@ final class DemosServiceProvider extends ServiceProvider
         $this->app->bind(DemoLeads::class, DemoLeadRegistry::class);
         // The story lives outside the modules (database/seeders/Demo, autoloaded in production too): it drives every module's actions.
         $this->app->bind(DemoWorkspace::class, DemoWorkspaceRunner::class);
+        $this->app->bind(DemoDoorPool::class, RosterDoorPool::class);
     }
 
     public function boot(): void
@@ -48,5 +51,8 @@ final class DemosServiceProvider extends ServiceProvider
                 Limit::perDay(20)->by('day:'.$request->ip())->response($tooMany),
             ];
         });
+
+        // The door of a live demo: a whole room scans it from one Wi-Fi within a minute, and nobody can try codes in bulk.
+        RateLimiter::for('demo-door', fn (Request $request): Limit => Limit::perMinute(120)->by('demo-door:'.$request->ip()));
     }
 }

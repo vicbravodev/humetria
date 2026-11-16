@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Demos\Http\Controllers\DemoRequestConsoleController;
 use App\Modules\Demos\Http\Controllers\DemoRequestController;
+use App\Modules\Demos\Http\Controllers\DoorController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('demo', [DemoRequestController::class, 'store'])
@@ -17,3 +18,8 @@ Route::get('admin/demo-requests', [DemoRequestConsoleController::class, 'index']
 Route::put('admin/demo-requests/{demoRequest}', [DemoRequestConsoleController::class, 'update'])
     ->middleware(['auth', 'verified'])
     ->name('demo-requests.update');
+
+// The door of a live demo (its QR): public, the code is the credential of a while the console opened; throttled per address.
+Route::get('demo/{code}', DoorController::class)
+    ->middleware('throttle:demo-door')
+    ->name('demo.door');

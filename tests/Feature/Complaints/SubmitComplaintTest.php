@@ -261,6 +261,29 @@ it('stops the sixth submission of an hour from one address, and nobody else\'s',
     expect(Complaint::query()->count())->toBe(6);
 });
 
+it('lets a whole room on one address file complaints on the demo channel, up to its own hourly limit', function (): void {
+    expect(config('complaints.rate_limits.demo_submissions_per_hour'))->toBe(60);
+    config(['complaints.rate_limits.demo_submissions_per_hour' => 7]);
+    $this->tenant->forceFill(['is_demo' => true])->save();
+
+    foreach (range(1, 7) as $ignored) {
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertCreated();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertStatus(429);
+    expect(Complaint::query()->count())->toBe(7);
+});
+
+it('keeps the limit of an address on a real company\'s channel while a demo exists', function (): void {
+    Tenant::factory()->demo()->create();
+
+    foreach (range(1, 5) as $ignored) {
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertCreated();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertStatus(429);
+});
+
 it('takes no more than the daily cap of the channel, and tells who manages it once', function (): void {
     Notification::fake();
     config(['complaints.rate_limits.daily_cap' => 2]);

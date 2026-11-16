@@ -39,6 +39,8 @@ const STANDALONE_NAMES = new Set([
     'disclosure/policy-write',
     'tenancy/applies',
     'tenancy/onboarding',
+    // The door of a live demo, when it lets nobody in: a QR scanned by the audience, no account.
+    'demos/door',
     // An error page stands alone: the address may not even be a page of the panel.
     'error',
 ]);

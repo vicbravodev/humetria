@@ -47,6 +47,8 @@ return [
 
     'rate_limits' => [
         'submissions_per_hour' => (int) env('COMPLAINTS_SUBMISSIONS_PER_HOUR', 5),
+        // Only the demo company's channel: a room filing live from one Wi-Fi. The daily cap of the channel still holds.
+        'demo_submissions_per_hour' => 60,
         'views_per_hour' => (int) env('COMPLAINTS_VIEWS_PER_HOUR', 300),
         'follow_ups_per_hour' => (int) env('COMPLAINTS_FOLLOW_UPS_PER_HOUR', 30),
         'daily_cap' => (int) env('COMPLAINTS_DAILY_CAP', 200),

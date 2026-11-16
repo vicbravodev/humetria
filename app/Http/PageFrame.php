@@ -35,6 +35,7 @@ final class PageFrame
         'disclosure/policy-write',
         'tenancy/applies',
         'tenancy/onboarding',
+        'demos/door',
         'error',
     ];
 
