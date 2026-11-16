@@ -157,3 +157,14 @@ it('flushes on its own once the buffer is full', function (): void {
     expect(logBatches())->toHaveCount(1)
         ->and(shippedRecords())->toHaveCount(100);
 });
+
+it('flushes without asking the log facade, so a test that mocks it still ends its request', function (): void {
+    shippingLogs();
+    $handler = new PostHogLogs;
+    $handler->handle(new Monolog\LogRecord(new DateTimeImmutable, 'test', Monolog\Level::Info, 'campaign.launched'));
+    Log::shouldReceive('info')->never();
+
+    PostHogLogs::flush();
+
+    expect(shippedRecords())->toHaveCount(1);
+});

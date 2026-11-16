@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace App\Logging;
 
 use App\Http\Analytics;
-use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use JsonSerializable;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
-use Monolog\Logger as Monolog;
 use Monolog\LogRecord;
 use Throwable;
+use WeakMap;
 
 /**
  * The `posthog` log channel: PostHog Logs (OpenTelemetry over HTTP, JSON), so its alerts can read what the app logs.
@@ -31,18 +29,25 @@ final class PostHogLogs extends AbstractProcessingHandler
     /** @var list<array<string, mixed>> */
     private array $buffer = [];
 
+    /**
+     * Every handler alive, so flush finds them without the log facade (a test may mock it).
+     *
+     * @var WeakMap<self, true>|null
+     */
+    private static ?WeakMap $open = null;
+
+    public function __construct(int|string|Level $level = Level::Debug, bool $bubble = true)
+    {
+        parent::__construct($level, $bubble);
+        self::$open ??= new WeakMap;
+        self::$open[$this] = true;
+    }
+
     /** Sends what every open channel holds: called when a request, a job or a command ends. */
     public static function flush(): void
     {
-        // Through collect: a log facade swapped for a spy answers null.
-        foreach (collect(Log::getChannels()) as $channel) {
-            $monolog = $channel instanceof Logger ? $channel->getLogger() : null;
-
-            foreach ($monolog instanceof Monolog ? $monolog->getHandlers() : [] as $handler) {
-                if ($handler instanceof self) {
-                    $handler->send();
-                }
-            }
+        foreach (self::$open ?? [] as $handler => $_) {
+            $handler->send();
         }
     }
 
