@@ -41,14 +41,23 @@ final class ErrorPage
             return $response;
         }
 
-        // An address no route answers never ran the web middleware: share here what every page gets.
-        if (Inertia::getShared('auth') === null) {
-            Inertia::share($this->inertia->share($request));
+        $props = ['status' => $status, 'survey' => $request->routeIs(...self::WORKER_ROUTES)];
+
+        try {
+            // An address no route answers never ran the web middleware: share here what every page gets.
+            if (Inertia::getShared('auth') === null) {
+                Inertia::share($this->inertia->share($request));
+            }
+
+            $page = Inertia::render('error', $props)->toResponse($request);
+        } catch (Throwable) {
+            // What every page shares reads the database: when that is what failed, the page still shows, with nothing of it.
+            Inertia::flushShared();
+            Inertia::share($this->inertia->safeShare($request));
+            $page = Inertia::render('error', $props)->toResponse($request);
         }
 
-        $page = Inertia::render('error', ['status' => $status, 'survey' => $request->routeIs(...self::WORKER_ROUTES)])
-            ->toResponse($request)
-            ->setStatusCode($status);
+        $page->setStatusCode($status);
 
         foreach (self::KEPT_HEADERS as $header) {
             if ($response->headers->has($header)) {

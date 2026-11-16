@@ -11,6 +11,7 @@
         "impersonator": null,
         "inCourse": null,
         "name": "Humetría",
+        "requestId": "00000000-0000-4000-8000-000000000000",
         "sidebarOpen": true,
         "support": {
             "email": "soporte@humetria.example"
@@ -39,6 +40,7 @@
         "impersonator",
         "inCourse",
         "name",
+        "requestId",
         "sidebarOpen",
         "support",
         "tenant",
