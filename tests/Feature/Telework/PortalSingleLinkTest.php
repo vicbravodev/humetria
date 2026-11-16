@@ -6,9 +6,9 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Support\CampaignClock;
-use App\Modules\Campaigns\Support\SurveyPortalSection as CampaignsSurveySection;
+use App\Modules\Campaigns\Support\SurveyWorkerSection as CampaignsSurveySection;
 use App\Modules\Complaints\Models\ComplaintChannel;
-use App\Modules\Complaints\Support\ComplaintsPortalSection;
+use App\Modules\Complaints\Support\ComplaintsWorkerSection;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\SurveyClock;
@@ -21,11 +21,11 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ComplaintsPortalSection::class, CampaignsSurveySection::class, EngagementSurveySection::class);
+mutates(ComplaintsWorkerSection::class, CampaignsSurveySection::class, EngagementSurveySection::class);
 
 /*
- * One link for everything: the portal lists the evaluation, the climate survey and the complaints channel next to what it
- * already listed, each as a link of its own module (see docs/superpowers/specs/2026-11-14-single-personal-link-design.md).
+ * One start for everything: the person's start lists the evaluation, the climate survey and the complaints channel next to
+ * what it already listed, each as a link of its own module (see docs/superpowers/specs/2026-11-14-single-personal-link-design.md).
  */
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
@@ -80,28 +80,28 @@ describe('complaints channel', function (): void {
     it('links the public channel of the company, with nothing of the person in it', function (): void {
         $channel = ComplaintChannel::factory()->forTenant($this->tenant->id)->active()->create();
 
-        $section = singleLinkHomeSections($this->token)['complaints'];
+        $section = singleLinkStartSections()['complaints'];
 
         expect($section['href'])->toBe($channel->publicUrl())
             ->and($section['label'])->toBe('Quejas y denuncias')
             ->and($section['pending'])->toBeNull()
-            ->and($section['href'])->not->toContain($this->token)->not->toContain($this->ana->id);
+            ->and($section['href'])->not->toContain($this->ana->id);
     });
 
     it('does not offer a channel that takes nothing, a paused one, one that does not exist or a company without the module', function (): void {
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('complaints');
+        expect(singleLinkStartSections())->not->toHaveKey('complaints');
 
         $channel = ComplaintChannel::factory()->forTenant($this->tenant->id)->create();
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('complaints');
+        expect(singleLinkStartSections())->not->toHaveKey('complaints');
 
         $channel->forceFill(['enabled_at' => now(), 'published_on' => now()->toDateString(), 'paused_at' => now()])->save();
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('complaints');
+        expect(singleLinkStartSections())->not->toHaveKey('complaints');
 
         $channel->forceFill(['paused_at' => null])->save();
-        expect(singleLinkHomeSections($this->token))->toHaveKey('complaints');
+        expect(singleLinkStartSections())->toHaveKey('complaints');
 
         resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('complaints');
+        expect(singleLinkStartSections())->not->toHaveKey('complaints');
     });
 });
 
@@ -110,7 +110,7 @@ describe('NOM-035 evaluation', function (): void {
         $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
         $participant = singleLinkEvaluationInvitation($this->ana, $campaign);
 
-        $section = singleLinkHomeSections($this->token)['survey'];
+        $section = singleLinkStartSections()['survey'];
 
         expect($section['href'])->toBe(route('survey.show', $participant->surveyToken()))
             ->and($section['label'])->toBe('Su evaluación NOM-035')
@@ -120,21 +120,21 @@ describe('NOM-035 evaluation', function (): void {
     it('offers nothing once the guides are answered, the campaign is closed, the link was not sent or the module is off', function (): void {
         $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
         $participant = singleLinkEvaluationInvitation($this->ana, $campaign, guideLeft: false);
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
+        expect(singleLinkStartSections())->not->toHaveKey('survey');
 
         ParticipantInstrument::factory()->create(['tenant_id' => $this->tenant->id, 'participant_id' => $participant->id, 'instrument' => 'nom035.guide-ii']);
-        expect(singleLinkHomeSections($this->token))->toHaveKey('survey');
+        expect(singleLinkStartSections())->toHaveKey('survey');
 
         $participant->forceFill(['token_hash' => null])->save();
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
+        expect(singleLinkStartSections())->not->toHaveKey('survey');
 
         $participant->forceFill(['token_hash' => Participant::hashToken($participant->surveyToken())])->save();
         $campaign->update(['closes_on' => CampaignClock::today()->subDay()->toDateString()]);
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
+        expect(singleLinkStartSections())->not->toHaveKey('survey');
 
         $campaign->update(['closes_on' => CampaignClock::today()->addDay()->toDateString()]);
         resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
+        expect(singleLinkStartSections())->not->toHaveKey('survey');
     });
 
     it('never offers the survey of somebody else', function (): void {
@@ -142,17 +142,17 @@ describe('NOM-035 evaluation', function (): void {
         $beto = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
         $theirs = singleLinkEvaluationInvitation($beto, $campaign);
 
-        $this->get(route('portal.show', $this->token))->assertInertia(function (Assert $page) use ($theirs): void {
+        $this->get(route('worker.home', asPerson($this->ana->id)))->assertInertia(function (Assert $page) use ($theirs): void {
             expect(json_encode($page->toArray()['props'], JSON_THROW_ON_ERROR))->not->toContain($theirs->surveyToken());
         });
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
+        expect(singleLinkStartSections())->not->toHaveKey('survey');
     });
 
     it('does not count a campaign that is a draft', function (): void {
         $campaign = Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
         singleLinkEvaluationInvitation($this->ana, $campaign);
 
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('survey');
+        expect(singleLinkStartSections())->not->toHaveKey('survey');
     });
 });
 
@@ -211,9 +211,13 @@ describe('climate and pulse survey, in the person\'s start', function (): void {
         expect(singleLinkStartSections())->not->toHaveKey('engagement');
     });
 
-    it('is no longer in the start by link: it is in the person\'s start, in their session', function (): void {
-        singleLinkClimateInvitation($this->ana, Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]));
+});
 
-        expect(singleLinkHomeSections($this->token))->not->toHaveKey('engagement');
-    });
+it('lists none of them in the start by link any more: they are in the person\'s start, in their session', function (): void {
+    ComplaintChannel::factory()->forTenant($this->tenant->id)->active()->create();
+    singleLinkEvaluationInvitation($this->ana, Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]));
+    singleLinkClimateInvitation($this->ana, Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]));
+
+    expect(singleLinkStartSections())->toHaveKeys(['complaints', 'survey', 'engagement'])
+        ->and(singleLinkHomeSections($this->token))->not->toHaveKeys(['complaints', 'survey', 'engagement']);
 });

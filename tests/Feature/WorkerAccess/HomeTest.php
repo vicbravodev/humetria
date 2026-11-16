@@ -114,7 +114,8 @@ it('reads the start with the same queries whatever the tools offer', function (i
  * The company of the slug, the session (the person's state, the person and their area) and the person's keys; then the
  * company again (its row and its tools) for each tool that asks whether it has the module: Telework, Marcar, Mi equipo, Mis
  * vacaciones (which also asks whether the company opened Vacaciones), Mi puesto de pie, Política por confirmar, Avisos y
- * resultados de su centro, Nos dijeron / Haremos, Retroalimentación de mi equipo and Apoyo; and the open invitations of the
- * person to a climate or pulse survey, which read the company only when there is one.
+ * resultados de su centro, Nos dijeron / Haremos, Retroalimentación de mi equipo and Apoyo; then the open invitations of the
+ * person to a NOM-035 evaluation and to a climate or pulse survey, and the complaints channel, which read the company only
+ * when there is something to show.
  */
-const WORKER_HOME_QUERIES = 30;
+const WORKER_HOME_QUERIES = 32;

@@ -11,7 +11,7 @@ use App\Modules\Complaints\Listeners\EndHandlerOnMemberRemoval;
 use App\Modules\Complaints\Support\AddressKey;
 use App\Modules\Complaints\Support\CompanyComplaintChannels;
 use App\Modules\Complaints\Support\CompanyComplaintsToAcknowledge;
-use App\Modules\Complaints\Support\ComplaintsPortalSection;
+use App\Modules\Complaints\Support\ComplaintsWorkerSection;
 use App\Modules\Complaints\Support\RandomReferenceSource;
 use App\Modules\Complaints\Support\ReferenceSource;
 use App\Modules\Tenancy\Events\MemberRemoved;
@@ -34,7 +34,7 @@ final class ComplaintsServiceProvider extends ServiceProvider
         $this->app->bind(ComplaintChannels::class, CompanyComplaintChannels::class);
         $this->app->bind(ComplaintsToAcknowledge::class, CompanyComplaintsToAcknowledge::class);
         $this->app->bind(ReferenceSource::class, RandomReferenceSource::class);
-        $this->app->tag([ComplaintsPortalSection::class], 'portal.sections');
+        $this->app->tag([ComplaintsWorkerSection::class], 'worker.sections');
     }
 
     public function boot(): void

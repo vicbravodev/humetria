@@ -21,7 +21,7 @@ use Database\Factories\Telework\TeleworkerFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** Opening the link once (the middleware and the page share it) and what each listed tool reads for its section. */
-const PORTAL_HOME_QUERIES = 10;
+const PORTAL_HOME_QUERIES = 8;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
