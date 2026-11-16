@@ -83,7 +83,8 @@ final class SummaryGuard
 
         $normalized = ' '.implode(' ', self::words($theme)).' ';
         foreach ($guard['phrases'] as $phrase) {
-            if (str_contains($normalized, $phrase)) {
+            // Containment only counts from three words: a short comment ("Bien") is inside ordinary themes.
+            if ($normalized === $phrase || (substr_count($phrase, ' ') >= 4 && str_contains($normalized, $phrase))) {
                 throw new UnsafeSummary('A theme is or contains a whole comment.');
             }
         }

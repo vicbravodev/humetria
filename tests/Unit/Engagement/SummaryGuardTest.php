@@ -65,14 +65,22 @@ it('rejects an answer that is not the shape asked', function (array $themes): vo
 ]);
 
 it('rejects a theme equal to or containing a whole comment of any length', function (string $theme): void {
-    $comments = ['Mal horario', ...array_fill(0, 9, 'Todo bien')];
+    $comments = ['Mal horario', 'Turnos muy largos aqui', ...array_fill(0, 8, 'Todo bien')];
 
     expect(fn () => SummaryGuard::clean(['valued' => [['theme' => $theme, 'count' => 3]], 'change' => []], $comments, 3))->toThrow(UnsafeSummary::class);
 })->with([
     'equal' => 'Mal horario',
-    'with case and punctuation' => 'MAL, horario!',
-    'containing it' => 'Se queja del mal horario de los viernes',
+    'equal with case and punctuation' => 'MAL, horario!',
+    'containing a comment of three words' => 'Se queja de turnos muy largos aqui siempre',
 ]);
+
+it('accepts a theme that only contains a comment of one or two words', function (): void {
+    $comments = ['Bien', 'Todo bien', ...array_fill(0, 8, 'Sin comentarios')];
+
+    $clean = SummaryGuard::clean(['valued' => [['theme' => 'Se sienten bien tratados, todo bien', 'count' => 4]], 'change' => []], $comments, 3);
+
+    expect($clean['valued'])->toHaveCount(1);
+});
 
 it('rejects a count above the comments of its own list', function (): void {
     $themes = ['valued' => [['theme' => 'Trato respetuoso', 'count' => 4]], 'change' => []];
