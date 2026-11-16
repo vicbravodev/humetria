@@ -52,7 +52,7 @@ final class WeeklyConfirmationFactory extends Factory
     {
         return $this->state([
             ...$answer,
-            'device_id' => fn (array $attributes) => WorkerCredentialFactory::new()->state(['tenant_id' => $attributes['tenant_id'], 'employee_id' => $attributes['employee_id']]),
+            'credential_id' => fn (array $attributes) => WorkerCredentialFactory::new()->state(['tenant_id' => $attributes['tenant_id'], 'employee_id' => $attributes['employee_id']]),
             'digest' => hash('sha256', ''),
         ]);
     }

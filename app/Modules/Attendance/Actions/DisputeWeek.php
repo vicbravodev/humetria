@@ -34,7 +34,7 @@ final readonly class DisputeWeek
     /**
      * @throws WeekRejected
      */
-    public function handle(string $employeeId, CarbonImmutable $weekStart, string $reason, string $deviceId, string $digest): WeeklyConfirmation
+    public function handle(string $employeeId, CarbonImmutable $weekStart, string $reason, string $credentialId, string $digest): WeeklyConfirmation
     {
         $reason = trim($reason);
 
@@ -48,7 +48,7 @@ final readonly class DisputeWeek
             throw new WeekRejected('week_not_over');
         }
 
-        return DB::transaction(function () use ($employeeId, $week, $reason, $deviceId, $digest): WeeklyConfirmation {
+        return DB::transaction(function () use ($employeeId, $week, $reason, $credentialId, $digest): WeeklyConfirmation {
             // Before the row (a correction takes this lock, then the row): a correction in flight commits first, and the
             // marks read below are the ones after it.
             MarkLock::of($employeeId);
@@ -62,8 +62,8 @@ final readonly class DisputeWeek
                 throw new WeekRejected('week_changed');
             }
 
-            $confirmation->update(['status' => WeekStatus::Disputed, 'confirmed_at' => null, 'disputed_at' => CarbonImmutable::now()->utc(), 'reason' => $reason, 'device_id' => $deviceId, 'digest' => $digest]);
-            $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'device_id' => $deviceId];
+            $confirmation->update(['status' => WeekStatus::Disputed, 'confirmed_at' => null, 'disputed_at' => CarbonImmutable::now()->utc(), 'reason' => $reason, 'credential_id' => $credentialId, 'digest' => $digest]);
+            $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'credential_id' => $credentialId];
             $this->audit->handle('attendance.week_disputed', $confirmation, [...$ids, 'digest' => $digest]);
             Log::info('attendance.week_disputed', ['confirmation_id' => $confirmation->id, ...$ids]);
             event(new WeekDisputed($confirmation->id, $employeeId, $ids['week_start']));

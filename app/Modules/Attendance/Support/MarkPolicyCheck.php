@@ -39,14 +39,14 @@ final class MarkPolicyCheck
      *
      * @throws MarkRejected
      */
-    public static function decide(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, ?bool $qrValid, array $zones, ?Position $position, string $deviceId, int $screens): MarkContext
+    public static function decide(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, ?bool $qrValid, array $zones, ?Position $position, string $credentialId, int $screens): MarkContext
     {
         if ($schedule?->work_mode === WorkMode::Remote) {
-            return new MarkContext(MarkMethod::Remote, null, null, null, null, null, $deviceId);
+            return new MarkContext(MarkMethod::Remote, null, null, null, null, null, $credentialId);
         }
 
         if ($trusted && $policy->trusted_may_use_browser && $qrValid === null) {
-            return new MarkContext(MarkMethod::TrustedBrowser, null, null, null, null, null, $deviceId);
+            return new MarkContext(MarkMethod::TrustedBrowser, null, null, null, null, null, $credentialId);
         }
 
         if ($qrValid === false) {
@@ -68,11 +68,11 @@ final class MarkPolicyCheck
                 throw new MarkRejected('no_location');
             }
 
-            return new MarkContext(MarkMethod::Qr, null, null, null, null, null, $deviceId);
+            return new MarkContext(MarkMethod::Qr, null, null, null, null, null, $credentialId);
         }
 
         if ($zones === []) {
-            return new MarkContext(MarkMethod::Qr, null, $position->latitude, $position->longitude, $position->accuracyM, null, $deviceId);
+            return new MarkContext(MarkMethod::Qr, null, $position->latitude, $position->longitude, $position->accuracyM, null, $credentialId);
         }
 
         $reading = Geofence::evaluate($zones, $position->latitude, $position->longitude, $position->accuracyM, $policy->max_accuracy_m);
@@ -88,6 +88,6 @@ final class MarkPolicyCheck
             default => MarkMethod::Geofence,
         };
 
-        return new MarkContext($method, $inZone ? $reading->zoneId : null, $position->latitude, $position->longitude, $position->accuracyM, $reading->distanceM, $deviceId);
+        return new MarkContext($method, $inZone ? $reading->zoneId : null, $position->latitude, $position->longitude, $position->accuracyM, $reading->distanceM, $credentialId);
     }
 }

@@ -108,7 +108,7 @@ describe('asking', function (): void {
             ->mark_id->toBe($this->start->id)
             ->type->toBe(MarkType::Start)
             ->reason->toBe('Llegué a las 9, el QR no cargaba.')
-            ->device_id->toBe($this->device->id)
+            ->credential_id->toBe($this->device->id)
             ->and($request->fresh()?->proposed_at->toIso8601String())->toBe('2026-11-10T15:00:00+00:00');
         Log::shouldHaveReceived('info')->once()->with('attendance.correction_requested', ['request_id' => $request->id, 'employee_id' => $this->ana->id, 'mark_id' => $this->start->id]);
     });
@@ -212,7 +212,7 @@ describe('from the device', function (): void {
             ->assertJsonPath('requests.0.note', null)
             ->assertHeader('Cache-Control', 'no-store, private');
 
-        expect(CorrectionRequest::query()->sole())->device_id->toBe($this->device->id)->proposed_at->toIso8601String()->toBe('2026-11-10T15:00:00+00:00')
+        expect(CorrectionRequest::query()->sole())->credential_id->toBe($this->device->id)->proposed_at->toIso8601String()->toBe('2026-11-10T15:00:00+00:00')
             ->and($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain($this->device->id);
     });
 

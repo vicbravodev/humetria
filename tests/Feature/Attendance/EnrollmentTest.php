@@ -123,13 +123,13 @@ it('links the phone: it saves the device and the acceptance of the agreement, us
     expect($device)->employee_id->toBe($this->ana->id)->label->toBe('iPhone')->sign_count->toBe(0)->revoked_at->toBeNull()
         ->and($device->credential_id)->toBe(rtrim(strtr(base64_encode($this->phone->credentialId), '+/', '-_'), '='))
         ->and($device->registered_at->toIso8601String())->toBe('2026-11-07T15:00:00+00:00')
-        ->and($acceptance)->device_id->toBe($device->id)->employee_id->toBe($this->ana->id)
+        ->and($acceptance)->credential_id->toBe($device->id)->employee_id->toBe($this->ana->id)
         ->and($acceptance->agreement_id)->toBe(AttendanceAgreement::query()->sole()->id)
         ->and(EnrollmentLink::query()->sole()->used_at)->not->toBeNull();
 
     $entry = AuditEntry::query()->where('event', 'worker_access.credential_registered')->sole();
     expect($entry)->subject_id->toBe($device->id)->metadata->toBe(['employee_id' => $this->ana->id]);
-    Log::shouldHaveReceived('info')->with('attendance.device_enrolled', ['device_id' => $device->id, 'employee_id' => $this->ana->id]);
+    Log::shouldHaveReceived('info')->with('attendance.device_enrolled', ['credential_id' => $device->id, 'employee_id' => $this->ana->id]);
 });
 
 it('works once: after linking, the link answers 404 everywhere', function (): void {

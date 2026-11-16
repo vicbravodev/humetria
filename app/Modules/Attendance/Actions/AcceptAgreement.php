@@ -20,7 +20,7 @@ final readonly class AcceptAgreement
     public function __construct(private CurrentTenant $tenant, private CurrentAgreement $agreement) {}
 
     /** @throws AgreementOutdated when `$version` is not the company's current agreement */
-    public function handle(string $employeeId, string $deviceId, int $version): AgreementAcceptance
+    public function handle(string $employeeId, string $credentialId, int $version): AgreementAcceptance
     {
         $agreement = $this->agreement->get();
 
@@ -32,11 +32,11 @@ final readonly class AcceptAgreement
             'tenant_id' => $this->tenant->id(),
             'agreement_id' => $agreement->id,
             'employee_id' => $employeeId,
-            'device_id' => $deviceId,
+            'credential_id' => $credentialId,
             'accepted_at' => CarbonImmutable::now(),
         ]);
 
-        Log::info('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $employeeId, 'device_id' => $deviceId, 'version' => $version]);
+        Log::info('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $employeeId, 'credential_id' => $credentialId, 'version' => $version]);
 
         return $acceptance;
     }

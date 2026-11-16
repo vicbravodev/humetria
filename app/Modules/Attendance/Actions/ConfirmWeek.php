@@ -35,7 +35,7 @@ final readonly class ConfirmWeek
     /**
      * @throws WeekRejected
      */
-    public function handle(string $employeeId, CarbonImmutable $weekStart, string $deviceId, string $digest): WeeklyConfirmation
+    public function handle(string $employeeId, CarbonImmutable $weekStart, string $credentialId, string $digest): WeeklyConfirmation
     {
         $week = WeekPeriod::ofDate($weekStart);
 
@@ -43,7 +43,7 @@ final readonly class ConfirmWeek
             throw new WeekRejected('week_not_over');
         }
 
-        return DB::transaction(function () use ($employeeId, $week, $deviceId, $digest): WeeklyConfirmation {
+        return DB::transaction(function () use ($employeeId, $week, $credentialId, $digest): WeeklyConfirmation {
             // Before the row (a correction takes this lock, then the row): a correction in flight commits first, and the
             // marks read below are the ones after it.
             MarkLock::of($employeeId);
@@ -64,8 +64,8 @@ final readonly class ConfirmWeek
                 throw new WeekRejected($blocked);
             }
 
-            $confirmation->update(['status' => WeekStatus::Confirmed, 'confirmed_at' => CarbonImmutable::now()->utc(), 'device_id' => $deviceId, 'digest' => $digest]);
-            $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'device_id' => $deviceId];
+            $confirmation->update(['status' => WeekStatus::Confirmed, 'confirmed_at' => CarbonImmutable::now()->utc(), 'credential_id' => $credentialId, 'digest' => $digest]);
+            $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'credential_id' => $credentialId];
             $this->audit->handle('attendance.week_confirmed', $confirmation, [...$ids, 'digest' => $digest]);
             Log::info('attendance.week_confirmed', ['confirmation_id' => $confirmation->id, ...$ids]);
             event(new WeekConfirmed($confirmation->id, $employeeId, $ids['week_start']));

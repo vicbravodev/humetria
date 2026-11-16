@@ -126,7 +126,7 @@ final readonly class MarkController
             );
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {
-            Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'device_id' => $signed->credentialId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
+            Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'credential_id' => $signed->credentialId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
 
             // Who signed and what they may do: never the steps of whoever marked before on this browser.
             return response()->json(['reason' => $rejected->reason, 'name' => $person->name, 'next' => PunchDay::of($person->id)['next']], 422);

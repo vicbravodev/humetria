@@ -127,7 +127,7 @@ describe('approving', function (): void {
         $device = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
         $week = WeeklyConfirmation::factory()->create([
             'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02', 'status' => WeekStatus::Confirmed,
-            'confirmed_at' => now(), 'device_id' => $device->id, 'digest' => WeekDigest::of($this->ana->id, WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'))),
+            'confirmed_at' => now(), 'credential_id' => $device->id, 'digest' => WeekDigest::of($this->ana->id, WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'))),
         ]);
         $request = $which === 'start'
             ? anaRequest($this->start, MarkType::Start, '2026-11-02 09:00')

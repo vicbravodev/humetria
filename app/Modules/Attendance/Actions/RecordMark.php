@@ -49,7 +49,7 @@ final readonly class RecordMark
                 'longitude' => $context->longitude,
                 'accuracy_m' => $context->accuracy,
                 'distance_m' => $context->distance,
-                'device_id' => $context->deviceId,
+                'credential_id' => $context->credentialId,
             ]);
         });
 

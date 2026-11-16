@@ -19,10 +19,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $tenant_id
  * @property string $agreement_id
  * @property string $employee_id
- * @property string $device_id
+ * @property string $credential_id
  * @property CarbonImmutable $accepted_at
  */
-#[Fillable(['tenant_id', 'agreement_id', 'employee_id', 'device_id', 'accepted_at'])]
+#[Fillable(['tenant_id', 'agreement_id', 'employee_id', 'credential_id', 'accepted_at'])]
 #[Table('attendance_agreement_acceptances')]
 final class AgreementAcceptance extends Model
 {

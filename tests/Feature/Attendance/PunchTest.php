@@ -244,7 +244,7 @@ describe('on site', function (): void {
 
         $mark = AttendanceMark::query()->sole();
         expect($mark)->employee_id->toBe($this->ana->id)->type->toBe(MarkType::Start)->method->toBe(MarkMethod::QrAndGeofence)
-            ->zone_id->toBe($this->zone->id)->device_id->toBe($this->device->id)->work_center_id->toBe($this->plant->id)
+            ->zone_id->toBe($this->zone->id)->credential_id->toBe($this->device->id)->work_center_id->toBe($this->plant->id)
             ->latitude->toBe('19.432700')->longitude->toBe('-99.133200')->accuracy_m->toBe(12.0)
             ->and($mark->distance_m)->toEqualWithDelta(11.1, 0.1)
             ->and($mark->marked_at?->utc()->toDateTimeString())->toBe('2026-11-09 15:00:00');

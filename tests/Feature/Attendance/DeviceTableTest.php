@@ -15,7 +15,7 @@ beforeEach(function (): void {
 
 it('does not delete a device a mark points to', function (): void {
     $device = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id]);
-    AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'device_id' => $device->id]);
+    AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'credential_id' => $device->id]);
 
     expect(fn () => $device->delete())->toThrow(QueryException::class);
 });
@@ -23,8 +23,8 @@ it('does not delete a device a mark points to', function (): void {
 it('does not let a mark point to a device that does not exist or is of another company', function (): void {
     $deviceOfB = WorkerCredential::factory()->create();
 
-    expect(fn () => AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'device_id' => $deviceOfB->id]))->toThrow(QueryException::class)
-        ->and(fn () => AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'device_id' => (string) Str::uuid()]))->toThrow(QueryException::class);
+    expect(fn () => AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'credential_id' => $deviceOfB->id]))->toThrow(QueryException::class)
+        ->and(fn () => AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'credential_id' => (string) Str::uuid()]))->toThrow(QueryException::class);
 });
 
 it('keeps one device per key, and a counter a 32-bit authenticator can reach', function (): void {

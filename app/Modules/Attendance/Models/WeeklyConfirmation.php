@@ -29,12 +29,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable|null $confirmed_at
  * @property CarbonImmutable|null $disputed_at
  * @property string|null $reason
- * @property string|null $device_id
+ * @property string|null $credential_id
  * @property string|null $digest
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'employee_id', 'week_start', 'status', 'confirmed_at', 'disputed_at', 'reason', 'device_id', 'digest'])]
+#[Fillable(['tenant_id', 'employee_id', 'week_start', 'status', 'confirmed_at', 'disputed_at', 'reason', 'credential_id', 'digest'])]
 #[UseFactory(WeeklyConfirmationFactory::class)]
 final class WeeklyConfirmation extends Model
 {

@@ -112,7 +112,7 @@ describe('the summary', function (): void {
             ->where('centers.data.1', ['id' => $this->plant->id, 'name' => 'Planta Norte', 'people' => 2, 'zones' => 1, 'screens' => 0]));
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('longitude')
-            ->not->toContain('accuracy')->not->toContain('distance')->not->toContain('device_id')->not->toContain('deviceId');
+            ->not->toContain('accuracy')->not->toContain('distance')->not->toContain('credential_id')->not->toContain('credentialId');
     });
 
     it('gives each person the minutes of each day and of it the overtime, Monday to Sunday, for the week ribbon', function (): void {

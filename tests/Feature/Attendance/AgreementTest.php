@@ -60,15 +60,15 @@ it('keeps each company\'s own agreement', function (): void {
 it('records that a person accepted the current version, on a device, and when, logging ids only', function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'));
     $ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
-    $deviceId = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id;
+    $credentialId = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id;
     Log::spy();
 
-    $acceptance = resolve(AcceptAgreement::class)->handle($ana->id, $deviceId, 1);
+    $acceptance = resolve(AcceptAgreement::class)->handle($ana->id, $credentialId, 1);
 
-    expect($acceptance)->employee_id->toBe($ana->id)->device_id->toBe($deviceId)->tenant_id->toBe($this->tenant->id)
+    expect($acceptance)->employee_id->toBe($ana->id)->credential_id->toBe($credentialId)->tenant_id->toBe($this->tenant->id)
         ->and($acceptance->agreement_id)->toBe(AttendanceAgreement::query()->sole()->id)
         ->and($acceptance->accepted_at->toIso8601String())->toBe('2026-11-07T15:00:00+00:00');
-    Log::shouldHaveReceived('info')->with('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $ana->id, 'device_id' => $deviceId, 'version' => 1]);
+    Log::shouldHaveReceived('info')->with('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $ana->id, 'credential_id' => $credentialId, 'version' => 1]);
 });
 
 it('does not record an acceptance of a version that is no longer the current one', function (): void {

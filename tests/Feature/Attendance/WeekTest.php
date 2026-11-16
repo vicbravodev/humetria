@@ -264,7 +264,7 @@ describe('reading the week', function (): void {
     it('tells the answer already given, with its moment and the person\'s own reason', function (): void {
         WeeklyConfirmation::factory()->create([
             'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02', 'status' => WeekStatus::Disputed,
-            'disputed_at' => CarbonImmutable::parse('2026-11-10 16:30', 'UTC'), 'reason' => 'El martes salí a las 20:00.', 'device_id' => $this->device->id, 'digest' => anaDigest(),
+            'disputed_at' => CarbonImmutable::parse('2026-11-10 16:30', 'UTC'), 'reason' => 'El martes salí a las 20:00.', 'credential_id' => $this->device->id, 'digest' => anaDigest(),
         ]);
 
         anaReadsWeek(['start' => '2026-11-02'])->assertOk()
@@ -290,7 +290,7 @@ describe('answering', function (): void {
             ->assertJsonPath('confirmUrl', null)
             ->assertJsonPath('disputeUrl', route('attendance.device.week.dispute', ['acme', '2026-11-02']));
 
-        expect(WeeklyConfirmation::query()->sole())->status->toBe(WeekStatus::Confirmed)->device_id->toBe($this->device->id)->digest->toBe(anaDigest());
+        expect(WeeklyConfirmation::query()->sole())->status->toBe(WeekStatus::Confirmed)->credential_id->toBe($this->device->id)->digest->toBe(anaDigest());
     });
 
     it('disputes the week with a reason', function (): void {

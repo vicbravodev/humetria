@@ -42,7 +42,7 @@ final readonly class EnrollDevice
 
         $key = $this->keys->verifyRegistration($person->id, $credential) ?? throw new InvalidCredential;
 
-        $deviceId = DB::transaction(function () use ($link, $person, $key, $label, $agreementVersion): ?string {
+        $credentialId = DB::transaction(function () use ($link, $person, $key, $label, $agreementVersion): ?string {
             $now = CarbonImmutable::now();
 
             // One conditional UPDATE: of two requests with the same link at once, only one finds it still pending.
@@ -54,15 +54,15 @@ final readonly class EnrollDevice
             }
 
             // A key already saved: the same refusal as any key that does not verify.
-            $deviceId = $this->keys->save($person->id, $key, $label) ?? throw new InvalidCredential;
+            $credentialId = $this->keys->save($person->id, $key, $label) ?? throw new InvalidCredential;
 
-            $this->accept->handle($person->id, $deviceId, $agreementVersion);
+            $this->accept->handle($person->id, $credentialId, $agreementVersion);
 
-            return $deviceId;
+            return $credentialId;
         });
 
-        if ($deviceId !== null) {
-            Log::info('attendance.device_enrolled', ['device_id' => $deviceId, 'employee_id' => $person->id]);
+        if ($credentialId !== null) {
+            Log::info('attendance.device_enrolled', ['credential_id' => $credentialId, 'employee_id' => $person->id]);
 
             // After the commit: the person learns of every device linked to their record, so they notice one that was not them.
             if ($person->email !== null) {
@@ -70,6 +70,6 @@ final readonly class EnrollDevice
             }
         }
 
-        return $deviceId !== null;
+        return $credentialId !== null;
     }
 }

@@ -48,7 +48,7 @@ function csvMark(Employee $person, MarkType $type, string $local): AttendanceMar
         'tenant_id' => $person->tenant_id, 'employee_id' => $person->id, 'work_center_id' => $person->work_center_id, 'type' => $type,
         'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City')->utc(), 'latitude' => '19.432712', 'longitude' => '-99.133298',
         'accuracy_m' => 12.5, 'distance_m' => 11.25,
-        'device_id' => WorkerCredential::factory()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id])->id,
+        'credential_id' => WorkerCredential::factory()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id])->id,
     ]);
 }
 
@@ -129,7 +129,7 @@ describe('the file', function (): void {
         $this->actingAs($this->hr);
 
         expect($this->get(exportUrl(plantWeek($this)))->streamedContent())->not->toContain('19.43')->not->toContain('99.13')
-            ->not->toContain('12.5')->not->toContain('11.25')->not->toContain((string) $mark->device_id)->not->toContain('lat');
+            ->not->toContain('12.5')->not->toContain('11.25')->not->toContain((string) $mark->credential_id)->not->toContain('lat');
     });
 });
 

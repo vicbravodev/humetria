@@ -91,7 +91,7 @@ describe('confirming', function (): void {
         expect($week->fresh())
             ->employee_id->toBe($this->ana->id)
             ->status->toBe(WeekStatus::Confirmed)
-            ->device_id->toBe($this->device->id)
+            ->credential_id->toBe($this->device->id)
             ->digest->toBe(seenDigest($this))
             ->disputed_at->toBeNull()
             ->reason->toBeNull()
@@ -100,8 +100,8 @@ describe('confirming', function (): void {
         Event::assertDispatched(WeekConfirmed::class, fn (WeekConfirmed $event): bool => $event->confirmationId === $week->id && $event->employeeId === $this->ana->id && $event->weekStart === LAST_WEEK);
         $entry = AuditEntry::query()->where('event', 'attendance.week_confirmed')->sole();
         expect($entry->subject_id)->toBe($week->id)
-            ->and($entry->metadata)->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id, 'digest' => seenDigest($this)]);
-        Log::shouldHaveReceived('info')->with('attendance.week_confirmed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id]);
+            ->and($entry->metadata)->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'credential_id' => $this->device->id, 'digest' => seenDigest($this)]);
+        Log::shouldHaveReceived('info')->with('attendance.week_confirmed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'credential_id' => $this->device->id]);
     });
 
     it('takes any day of the week as the week', function (): void {
@@ -183,14 +183,14 @@ describe('disputing', function (): void {
         expect($week->fresh())
             ->status->toBe(WeekStatus::Disputed)
             ->reason->toBe('El jueves salí a las 20:00, no a las 18:00.')
-            ->device_id->toBe($this->device->id)
+            ->credential_id->toBe($this->device->id)
             ->digest->toBe(seenDigest($this))
             ->confirmed_at->toBeNull()
             ->and($week->disputed_at?->equalTo(now()))->toBeTrue();
         Event::assertDispatched(WeekDisputed::class, fn (WeekDisputed $event): bool => $event->confirmationId === $week->id && $event->weekStart === LAST_WEEK);
         expect(AuditEntry::query()->where('event', 'attendance.week_disputed')->sole()->metadata)
-            ->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id, 'digest' => seenDigest($this)]);
-        Log::shouldHaveReceived('info')->with('attendance.week_disputed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'device_id' => $this->device->id]);
+            ->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'credential_id' => $this->device->id, 'digest' => seenDigest($this)]);
+        Log::shouldHaveReceived('info')->with('attendance.week_disputed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'credential_id' => $this->device->id]);
     });
 
     it('requires a reason of at least 10 characters', function (string $reason): void {
@@ -243,7 +243,7 @@ describe('a correction', function (): void {
 
         resolve(CorrectMark::class)->handle($this->start->id, localDate('2026-11-04 09:00'), 'Llegó a las 9, el QR falló.', $this->hr->id);
 
-        expect($week->fresh())->status->toBe(WeekStatus::Pending)->confirmed_at->toBeNull()->device_id->toBeNull()->digest->toBeNull();
+        expect($week->fresh())->status->toBe(WeekStatus::Pending)->confirmed_at->toBeNull()->credential_id->toBeNull()->digest->toBeNull();
         expect(AuditEntry::query()->where('event', 'attendance.week_reopened')->sole()->subject_id)->toBe($week->id);
         Log::shouldHaveReceived('info')->with('attendance.week_reopened', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK]);
     });
@@ -398,7 +398,7 @@ describe('the table', function (): void {
         expect(fn () => WeeklyConfirmation::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, ...$attributes]))
             ->toThrow(QueryException::class, 'attendance_weekly_confirmations_status_consistent');
     })->with([
-        'confirmed without moment' => [['status' => 'confirmed', 'device_id' => null]],
+        'confirmed without moment' => [['status' => 'confirmed', 'credential_id' => null]],
         'disputed without reason' => [['status' => 'disputed', 'disputed_at' => now()]],
         'pending with a moment' => [['status' => 'pending', 'confirmed_at' => now()]],
         'pending with a digest' => [['status' => 'pending', 'digest' => str_repeat('a', 64)]],
@@ -406,7 +406,7 @@ describe('the table', function (): void {
 
     it('keeps the digest of the week an answer was given on', function (?string $digest): void {
         expect(fn () => WeeklyConfirmation::factory()->create([
-            'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'status' => 'confirmed', 'confirmed_at' => now(), 'device_id' => $this->device->id, 'digest' => $digest,
+            'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'status' => 'confirmed', 'confirmed_at' => now(), 'credential_id' => $this->device->id, 'digest' => $digest,
         ]))->toThrow(QueryException::class, 'attendance_weekly_confirmations_status_consistent');
     })->with(['none' => [null], 'not a sha256' => ['abc']]);
 });

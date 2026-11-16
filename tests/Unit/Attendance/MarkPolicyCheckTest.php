@@ -70,7 +70,7 @@ describe('on site', function (): void {
 
         expect($context->method)->toBe(MarkMethod::QrAndGeofence)
             ->and($context->zoneId)->toBe('zone-a')
-            ->and($context->deviceId)->toBe('device-1')
+            ->and($context->credentialId)->toBe('device-1')
             ->and($context->latitude)->toBe(19.0 + 10 / MPC_METERS_PER_DEGREE)
             ->and($context->longitude)->toBe(-99.0)
             ->and($context->accuracy)->toBe(10.0)

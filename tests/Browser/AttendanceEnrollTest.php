@@ -102,7 +102,7 @@ it('links the phone in four steps: the agreement, who the person is, the key, an
 
     $device = WorkerCredential::query()->sole();
     expect($device)->employee_id->toBe($this->ana->id)->label->toBeIn(['iPhone', 'iPad', 'Android', 'Mac', 'Windows', 'Dispositivo'])
-        ->and(AgreementAcceptance::query()->sole()->device_id)->toBe($device->id);
+        ->and(AgreementAcceptance::query()->sole()->credential_id)->toBe($device->id);
 
     // «Ir a marcar» goes to Marcar of the company.
     $page->click('Ir a marcar')->waitForText('Marcar su jornada')->assertScript('() => window.location.pathname', "/a/{$this->tenant->slug}");
