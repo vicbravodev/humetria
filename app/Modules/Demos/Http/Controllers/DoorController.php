@@ -25,7 +25,8 @@ final readonly class DoorController
         $result = $admit->handle($code, is_string($cookie) ? $cookie : null);
 
         if ($result->state === 'admitted' && $result->portalUrl !== null && $result->assignmentId !== null) {
-            return redirect()->away($result->portalUrl)
+            // The address is the person's portal, a bearer link: no cache keeps it.
+            return redirect()->away($result->portalUrl, 302, ['Cache-Control' => 'no-store, private'])
                 ->withCookie(Cookie::make(self::COOKIE, $result->assignmentId, 12 * 60, '/demo', null, null, true, false, 'lax'));
         }
 

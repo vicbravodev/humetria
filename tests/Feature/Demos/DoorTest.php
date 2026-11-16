@@ -229,6 +229,12 @@ it('says the room is full in a new session once every worker was handed out', fu
     expect(DoorAssignment::query()->count())->toBe(2);
 });
 
+it('tells no cache to keep the redirect that carries the portal', function (): void {
+    demoDoorFixture($this);
+
+    expect(scan($this, openDoorPath())->assertRedirect()->headers->get('Cache-Control'))->toContain('no-store');
+});
+
 it('tells the room how many workers are taken and free', function (): void {
     $this->freezeTime();
     demoDoorFixture($this, 3);
