@@ -7,6 +7,7 @@ namespace Database\Seeders\Demo;
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Tenancy\Contracts\Companies;
 use Database\Seeders\Demo\Stories\AttendanceStory;
+use Database\Seeders\Demo\Stories\ComplaintsStory;
 use Database\Seeders\Demo\Stories\EngagementStory;
 use Database\Seeders\Demo\Stories\LeaveStory;
 use Database\Seeders\Demo\Stories\Nom035Story;
@@ -19,7 +20,7 @@ use LogicException;
  */
 final readonly class DemoWorkspaceRunner implements DemoWorkspace
 {
-    public function __construct(private OrganizationStory $organization, private Nom035Story $nom035, private EngagementStory $engagement, private AttendanceStory $attendance, private LeaveStory $leave, private Companies $companies) {}
+    public function __construct(private OrganizationStory $organization, private Nom035Story $nom035, private EngagementStory $engagement, private AttendanceStory $attendance, private LeaveStory $leave, private ComplaintsStory $complaints, private Companies $companies) {}
 
     public function prepare(): void
     {
@@ -44,6 +45,6 @@ final readonly class DemoWorkspaceRunner implements DemoWorkspace
     /** @return list<DemoStory> */
     private function stories(): array
     {
-        return [$this->organization, $this->nom035, $this->engagement, $this->attendance, $this->leave];
+        return [$this->organization, $this->nom035, $this->engagement, $this->attendance, $this->leave, $this->complaints];
     }
 }
