@@ -14,6 +14,7 @@ describe('navSections for the platform', () => {
             'Empresas',
             'Cuentas',
             'Solicitudes de demo',
+            'Sala de demostración',
             'Usuarios',
             'Bitácora',
             'Colas',
@@ -22,6 +23,7 @@ describe('navSections for the platform', () => {
             'Empresas',
             'Cuentas',
             'Solicitudes de demo',
+            'Sala de demostración',
         ]);
     });
 

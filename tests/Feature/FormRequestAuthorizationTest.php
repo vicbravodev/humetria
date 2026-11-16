@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 
@@ -49,4 +50,18 @@ it('refuses a viewer before validating what they sent', function (string $method
     'end a telework period' => ['post', 'tenant.telework.teleworkers.end', ['teleworker' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
     'hand over equipment' => ['post', 'tenant.telework.teleworkers.equipment.store', ['teleworker' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
     'record manual acknowledgements' => ['post', 'tenant.telework.documents.acknowledgements.store', ['document' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
+]);
+
+it('answers 404 to whoever is not on the staff before a console request validates', function (string $method, string $route): void {
+    $this->actingAs(User::factory()->create())
+        ->from('/')
+        ->{$method}(route($route), [])
+        ->assertNotFound()
+        ->assertSessionHasNoErrors();
+})->with([
+    'prepare the demo' => ['post', 'demo-room.prepare'],
+    'reset the demo' => ['post', 'demo-room.reset'],
+    'open the demo door' => ['post', 'demo-room.door.open'],
+    'close the demo door' => ['delete', 'demo-room.door.close'],
+    'issue the demo screen link' => ['post', 'demo-room.kiosk.reissue'],
 ]);

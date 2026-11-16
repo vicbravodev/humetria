@@ -6,8 +6,12 @@ namespace App\Modules\Demos\Providers;
 
 use App\Models\User;
 use App\Modules\Demos\Contracts\DemoLeads;
+use App\Modules\Demos\Contracts\DemoShowcase;
 use App\Modules\Demos\Contracts\DemoWorkspace;
+use App\Modules\Demos\Contracts\DoorControl;
+use App\Modules\Demos\Support\ClosedDoor;
 use App\Modules\Demos\Support\DemoLeadRegistry;
+use Database\Seeders\Demo\DemoShowcaseLinks;
 use Database\Seeders\Demo\DemoWorkspaceRunner;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -24,6 +28,9 @@ final class DemosServiceProvider extends ServiceProvider
         $this->app->bind(DemoLeads::class, DemoLeadRegistry::class);
         // The story lives outside the modules (database/seeders/Demo, autoloaded in production too): it drives every module's actions.
         $this->app->bind(DemoWorkspace::class, DemoWorkspaceRunner::class);
+        $this->app->bind(DemoShowcase::class, DemoShowcaseLinks::class);
+        // Until the door is merged; then its actions take this binding (one line).
+        $this->app->bind(DoorControl::class, ClosedDoor::class);
     }
 
     public function boot(): void

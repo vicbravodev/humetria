@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Database\Seeders\Demo;
+
+use App\Modules\Attendance\Actions\ReissueKioskDevice;
+use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Demos\Contracts\DemoShowcase;
+use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
+use Database\Seeders\Demo\Stories\ComplaintsStory;
+use Illuminate\Support\Facades\Context;
+
+/** The demo's links the room shares live, found the way the story built them. */
+final readonly class DemoShowcaseLinks implements DemoShowcase
+{
+    public function __construct(private DemoCompanies $demos, private Companies $companies, private ReissueKioskDevice $reissue) {}
+
+    public function complaintChannelUrl(): ?string
+    {
+        // The channel's code is stable (see ComplaintsStory::accessCode()): no need to read the company to know it.
+        return $this->demos->id() === null ? null : route('complaints.public.show', ComplaintsStory::accessCode());
+    }
+
+    public function kioskLink(): ?string
+    {
+        $tenantId = $this->demos->id();
+
+        if ($tenantId === null) {
+            return null;
+        }
+
+        // Inside the demo company (a screen of any other company is out of reach), and only for this: the console's request
+        // must not go on as the demo, or its pages would carry the demo's mark.
+        $link = null;
+
+        Context::scope(function () use ($tenantId, &$link): void {
+            $company = $this->companies->enter($tenantId);
+            $kioskId = KioskDevice::query()->whereNull('revoked_at')->latest('created_at')->value('id');
+            $token = is_string($kioskId) ? $this->reissue->handle($kioskId) : null;
+            $link = $token === null ? null : route('attendance.device.kiosk.activate', [$company->slug, $token]);
+        });
+
+        return $link;
+    }
+}

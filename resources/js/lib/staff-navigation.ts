@@ -3,6 +3,7 @@ import {
     Building2,
     ChartNoAxesColumn,
     Inbox,
+    Presentation,
     ScrollText,
     UserCog,
     WalletCards,
@@ -11,6 +12,7 @@ import { index as audit } from '@/routes/audit';
 import { index as accounts } from '@/routes/billing/accounts';
 import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
+import { show as demoRoom } from '@/routes/demo-room';
 import { index as overview } from '@/routes/overview';
 import { index as users } from '@/routes/platform-users';
 import type { NavItem } from '@/types';
@@ -20,6 +22,7 @@ const staffNavItems: NavItem[] = [
     { title: 'Empresas', href: companies(), icon: Building2 },
     { title: 'Cuentas', href: accounts(), icon: WalletCards },
     { title: 'Solicitudes de demo', href: demoRequests(), icon: Inbox },
+    { title: 'Sala de demostración', href: demoRoom(), icon: Presentation },
 ];
 
 // The platform's people and its audit trail are the superadmin's alone: support does not see them in the menu.
