@@ -10,6 +10,7 @@ import {
 import ErrorPageAction from '@/components/error-page-action';
 import Logo from '@/components/humetria/logo';
 import StatusMessage from '@/components/humetria/status-message';
+import RequestIdNote from '@/components/request-id-note';
 import { errorMessage, roleLimit } from '@/lib/error-page';
 import { home } from '@/routes';
 
@@ -32,7 +33,7 @@ export default function ErrorPage({
     status: number;
     survey: boolean;
 }) {
-    const { tenant } = usePage().props;
+    const { tenant, requestId } = usePage().props;
     const message = errorMessage(status, survey);
     const limit = roleLimit(status, tenant);
 
@@ -74,6 +75,7 @@ export default function ErrorPage({
                             quien administra la cuenta que cambie tu rol.
                         </>
                     )}
+                    {status >= 500 && <RequestIdNote requestId={requestId} />}
                 </StatusMessage>
             </main>
         </div>
