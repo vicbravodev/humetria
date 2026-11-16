@@ -285,10 +285,11 @@ it('keeps the answers when the connection drops and sends them when it is back',
 })->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
 
 it('tells the person when they already answered', function (): void {
-    [$url, $ana, $enter] = seatingPortal();
+    [$url, $ana] = seatingPortal();
     PersonInput::factory()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
 
-    visitPage('seating/portal', $url, reach: $enter)->assertSee('Gracias, quedó enviado')->assertSee('Nos contestó el');
+    // Having answered, she lands on the thanks, not on the intro that names her standing work.
+    visitPage('seating/portal', $url, reach: enteringTo($ana->id, 'Gracias, quedó enviado'))->assertSee('Gracias, quedó enviado')->assertSee('Nos contestó el');
 });
 
 it('lets the person decline without consequence, and change their mind', function (): void {
