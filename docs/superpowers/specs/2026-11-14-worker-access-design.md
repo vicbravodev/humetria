@@ -1,7 +1,7 @@
 # Identidad única de la persona trabajadora
 
 *   **Author:** Victor Jesus Bravo de la Peña
-*   **Status:** Accepted (2026-11-16)
+*   **Status:** Implemented (pendiente de PR)
 *   **Date:** 2026-11-14
 
 --------------------------------------------------------------------------------
@@ -929,5 +929,42 @@ Paso 7 (prueba reciente y las rutas delicadas).
   persona, como su saldo; solo confirmarlos. `RouteSecurityTest` exige `RequireWorkerSession` antes de `worker.proof`.
 - **Navegador**: `tests/Browser/WorkerProofTest.php` y los helpers `provedWithCode()` y `enteringProvedTo()` de `tests/Pest.php`;
   Ley Silla, la política y el mensaje de apoyo recorren el paso por código; vacaciones y teletrabajo prueban antes de enviar.
+
+Paso 9 (borrado del portal por enlace y la prueba que prohíbe credenciales en direcciones).
+
+- **Invitaciones a encuestas**: el pie de la evaluación (`SendSurveyInvitations`) y de clima y pulso (`SendInvitations`) lleva
+  `WorkerLinks::home()` (`/me/{slug}`), la misma para todos y sin credencial; el enlace de la encuesta (`/survey/{token}`,
+  `/engagement/{token}`) sigue siendo su credencial de un solo uso. Sus pruebas viven ahora en `InvitationsTest` y
+  `SendSurveyInvitationsTest`; `PortalLinkInEmailsTest` se borró.
+- **Se borró** el inicio por enlace (`portal.show`, `Telework\PortalController::show`, `pages/telework/portal.tsx`,
+  `portal-start`, `portal-sections`, `portal-unavailable`, el tipo `PortalSection`), «Mi jornada» por enlace
+  (`portal.attendance.show`, `routes/attendance-portal.php`, `Attendance\PortalController`, `AttendancePortalSection`,
+  `pages/attendance/portal.tsx`, `portal-devices`, `portal-link-card`), y los contratos y piezas del token: `PortalAccess`,
+  `PortalSection`, `PortalSectionLink`, `PortalIdentity`, `PortalUnavailable`, `TokenPortalAccess`, `OpenPortal`,
+  `IssuePortalLink`, `PortalLink` y su factory. La lista de llaves de la persona ya está en `/me/{slug}/key`.
+  `OpenedPortal` queda (lo arma `SessionPortal` para las acciones de Telework, que no cambiaron de firma); las pruebas que lo
+  armaban con el token usan `teleworkPortalOf()` (`tests/Pest.php`).
+- **`routes/portal.php` pasa a `routes/telework-portal.php`**: solo quedan las páginas de teletrabajo de la persona, como los
+  demás `*-portal.php`.
+- **La tabla** `portal_links` se borra con `2027_01_23_100000_drop_portal_links_table` (sin migrar filas; `down()` la crea como
+  estaba: hash, `version` con su `check`, una por persona). Sus columnas e índices viejos (`previous_token_hash`…) ya no
+  existían; las migraciones antiguas quedan como historia.
+- **`RequirePortalTool`** solo pregunta a `Companies::current()`; los limitadores `portal-views` y `portal-actions` se mudaron a
+  `WorkerAccessServiceProvider` y cuentan solo por sesión del navegador (más el tope por dirección).
+- **La prueba de Goal 1** está en `RouteSecurityTest`: toda ruta sin cuenta del panel (la lista pública o con
+  `RequireWorkerSession`) cuyo parámetro se llame como credencial (`token`, `code`, `credential`, `key`…) o no sea el slug, un
+  UUID o una fecha debe estar en `credentialAddresses()` con su razón; bajo `me/`, `a/` o `portal` solo se permiten
+  `worker.link.show`, `worker.link.open`, `worker.not-me.*` (firmadas: la prueba exige `signed:relative`) y
+  `attendance.device.kiosk.activate` (la pantalla de un centro, no una persona). Se probó que falla con una ruta
+  `me/{slug}/sample/{token}` registrada en la prueba. También quedan permitidas, por no ser de la persona: las encuestas, el
+  canal de denuncias, la página de trabajadores, los reportes compartidos, el restablecer contraseña y la invitación de un
+  miembro del panel.
+- **Textos**: la página de trabajadores, la política pública y el mensaje de apoyo ya no mandan a «el enlace personal que le
+  llegó» ni piden «no comparta su enlace» (`tests/Unit/WorkerLinkCopyTest.php`).
+- **Leave** conserva `SendPortalLinks`/«Enviar enlace a su portal»: ya invita con `WorkerInvitations` (un enlace de un solo uso);
+  se renombró a `InviteToPortal` con el log `leave.portal_invitations_sent`.
+- **Deuda**: el inicio `/me/{slug}` hace 32 consultas (constante): `Companies::current()` relee la empresa y sus herramientas en
+  cada sección. Memorizarlo por petición en `CompanyDirectory` no es un cambio pequeño (jobs y acciones esperan leer el estado
+  «como está ahora», y las pruebas cambian la empresa a mitad de una petición); queda para su propio trabajo.
 
 *Drafted with EGM*

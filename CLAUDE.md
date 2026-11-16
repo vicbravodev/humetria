@@ -70,10 +70,12 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   `routes/company.php`, el resto desde `routes/web.php`.
 - Toda ruta tiene nombre y exige autenticación, salvo las de la lista pública de `tests/Feature/RouteSecurityTest.php`;
   agregar ahí una ruta exige una razón.
-- Sin cuenta, el token del enlace es la credencial (con throttle por enlace y por dirección): `portal.php` y `*-portal.php`
-  son el **portal**, el enlace personal del trabajador; `survey.php` y `engagement-survey.php`, las encuestas;
-  `complaints-public.php`, el canal de denuncias; `shared-report.php` y `compensation-shared.php`, reportes por enlace
-  temporal; `workers.php`, la página de trabajadores; `attendance-device.php`, los checadores.
+- Sin cuenta: `*-portal.php` son el **portal** de la persona trabajadora (`/me/{slug}/...`), que lee su sesión
+  (`worker-access.php`: entra con su llave o con un enlace de un solo uso); ninguna dirección suya lleva una credencial que
+  sirva más de una vez (`RouteSecurityTest`). El token del enlace es la credencial (con throttle por enlace y por
+  dirección) en `survey.php` y `engagement-survey.php`, las encuestas; `complaints-public.php`, el canal de denuncias;
+  `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `workers.php`, la página de trabajadores;
+  `attendance-device.php`, los checadores.
 
 ### Módulos
 
@@ -94,10 +96,10 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
 - `Seating`: Ley Silla: asientos, evaluación de riesgo, medidas, encuesta.
-- `Telework`: NOM-037: teletrabajadores, lista de verificación, documentos, comité, portal.
+- `Telework`: NOM-037: teletrabajadores, lista de verificación, documentos, comité, su sección del portal.
 - `Tenancy`: empresas, centros de trabajo, miembros y roles, módulos y límites por empresa (`CompanyModules`).
-- `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso y sesión en `/me/{slug}` (ver su README).
-- `WorkerAccess`: identidad de la persona trabajadora: sus llaves de acceso (WebAuthn) y su revocación; sesión y enlaces de un solo uso en curso (`docs/superpowers/specs/2026-11-14-worker-access-design.md`).
+- `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso, sesión y prueba reciente;
+  el inicio de su portal en `/me/{slug}` (ver su README).
 
 No hay módulo de notificaciones: cada módulo manda sus correos con `Notifications/`. No hay SMS ni WhatsApp.
 
