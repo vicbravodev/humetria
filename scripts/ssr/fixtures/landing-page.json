@@ -6,6 +6,7 @@
             "isSuperadmin": false,
             "isStaff": false
         },
+        "demo": false,
         "errors": {},
         "firstSteps": null,
         "impersonator": null,
@@ -34,6 +35,7 @@
     },
     "sharedProps": [
         "auth",
+        "demo",
         "errors",
         "firstSteps",
         "impersonator",

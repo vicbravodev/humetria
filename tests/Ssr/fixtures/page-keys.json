@@ -2,6 +2,7 @@
     "page": ["component", "props", "sharedProps", "url", "version"],
     "props": [
         "auth",
+        "demo",
         "errors",
         "firstSteps",
         "impersonator",
