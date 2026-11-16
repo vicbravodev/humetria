@@ -13,7 +13,7 @@ const MESSAGES = {
     full: {
         icon: Users,
         title: 'La sala está llena',
-        body: 'Ya no quedan trabajadores de demostración libres. Pídale a quien presenta que libere lugares; en un momento podrá volver a escanear el código.',
+        body: 'Ya no quedan trabajadores de demostración libres. Puede seguir la demostración en la pantalla de quien presenta.',
     },
 } as const satisfies Record<DoorState, object>;
 

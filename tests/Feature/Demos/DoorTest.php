@@ -6,7 +6,6 @@ use App\Modules\Demos\Actions\AdmitVisitor;
 use App\Modules\Demos\Actions\CloseDoor;
 use App\Modules\Demos\Actions\OpenDoor;
 use App\Modules\Demos\Actions\ReadDoorState;
-use App\Modules\Demos\Actions\ReleaseAbandoned;
 use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Models\DoorAssignment;
 use App\Modules\Demos\Models\DoorSession;
@@ -20,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(OpenDoor::class, CloseDoor::class, AdmitVisitor::class, ReleaseAbandoned::class, ReadDoorState::class);
+mutates(OpenDoor::class, CloseDoor::class, AdmitVisitor::class, ReadDoorState::class);
 
 const DOOR_COOKIE = 'demo_door';
 
@@ -203,23 +202,31 @@ it('throttles by address', function (): void {
     scan($this, $path, '198.51.100.2')->assertOk();
 });
 
-it('frees the workers whose visitor took them more than 30 minutes ago, and keeps the rest', function (): void {
-    [$first, $second, $third] = demoDoorFixture($this);
-    $path = openDoorPath();
-    scan($this, $path);
-    $this->travel(20)->minutes();
-    scan($this, $path);
-    $this->travel(11)->minutes();
+it('never hands a worker to a second visitor until a reset, whatever the door does', function (): void {
+    demoDoorFixture($this, 3);
 
-    expect(resolve(ReleaseAbandoned::class)->handle())->toBe(1)
-        ->and(DoorAssignment::query()->pluck('employee_id')->all())->toBe([$second]);
+    // A session, the same door closed and opened again, a new code that replaces it: one worker each, never one twice.
+    scan($this, openDoorPath())->assertRedirect();
+    resolve(CloseDoor::class)->handle();
+    scan($this, openDoorPath())->assertRedirect();
+    $replaced = openDoorPath();
+    scan($this, $replaced)->assertRedirect();
+    $this->travel(121)->minutes();
+    assertNeutralDoor(scan($this, $replaced), 'closed');
 
-    scan($this, $path)->assertRedirect(portalOf($this->demo, $first));
-    scan($this, $path)->assertRedirect(portalOf($this->demo, $third));
+    expect(DoorAssignment::query()->count())->toBe(3)
+        ->and(DoorAssignment::query()->distinct()->count('employee_id'))->toBe(3);
 });
 
-it('releases nothing when there is no demo company', function (): void {
-    expect(resolve(ReleaseAbandoned::class)->handle())->toBe(0);
+it('says the room is full in a new session once every worker was handed out', function (): void {
+    demoDoorFixture($this, 2);
+    $first = openDoorPath();
+    scan($this, $first)->assertRedirect();
+    scan($this, $first)->assertRedirect();
+    resolve(CloseDoor::class)->handle();
+
+    assertNeutralDoor(scan($this, openDoorPath()), 'full');
+    expect(DoorAssignment::query()->count())->toBe(2);
 });
 
 it('tells the room how many workers are taken and free', function (): void {
