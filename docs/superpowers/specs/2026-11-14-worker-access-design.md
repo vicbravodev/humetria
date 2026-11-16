@@ -841,4 +841,36 @@ Anotadas al construir el grupo 5 (inicio, `WorkerSection` y Telework como secci�
 - **`components/portal-home-link.tsx`** sigue llevando a `portal.show`: lo usan las páginas por token de los otros módulos
   (paso 6).
 
+Paso 6-1 (Organization, lo que quedaba de Telework, Leave y Seating, con sus correos del grupo 8).
+
+- **Rutas**: `portal.team.show` en `/me/{slug}/team`; las 9 de vacaciones bajo `/me/{slug}/vacations/...`; las 4 de Ley Silla
+  bajo `/me/{slug}/seating/...`. Mismos nombres `portal.*`, `ResolveWorkerTenant`, `RequirePortalTool`, `RequireWorkerSession`
+  y los limitadores `portal-views`/`portal-actions` (por sesión del navegador). Las páginas reciben `slug`, no `token`; el
+  regreso al inicio es `components/worker-home-link.tsx` (`portal-home-link.tsx` queda para Disclosure, Engagement y Results).
+- **Secciones**: `TeamWorkerSection`, `VacationsWorkerSection` y `SeatingWorkerSection` (etiqueta `worker.sections`) reemplazan
+  a sus `PortalSection`; el inicio por enlace (`portal/{token}`) ya no muestra Mi equipo, Mis vacaciones ni Mi puesto de pie.
+- **Correos en el mismo commit que sus rutas** (Leave y Seating): en cuanto la ruta deja de tener `{token}`,
+  `route('portal.x', $token)` arma `/me/{token}/...`; esperar al grupo 8 dejaba correos rotos.
+- **Correos sin credencial**: la invitación del aspirante a teletrabajo (`SendPortalInvitation`), su recordatorio
+  (`SendPortalReminder`), las dos de Ley Silla y las tres de vacaciones (`RequestNotifier`) usan `WorkerLinks::to()`. En las
+  de Telework y Ley Silla se quitó «Si su empresa le envía uno nuevo, el anterior deja de funcionar»; queda «Este enlace es
+  solo suyo: no lo comparta», como en `NoticeAnswered`.
+- **Botones del panel**: el de la fila de Empleados y el de la ficha del teletrabajador son «Ver su acceso», un enlace a
+  «Accesos» buscando a la persona por nombre (allí se invita, se reemite o se muestra el enlace a quien no tiene correo); no
+  llaman a `WorkerInvitations`, porque el enlace de quien no tiene correo solo se muestra en «Accesos». Se borraron la ruta
+  `tenant.employees.portal-link`, `tenant.telework.teleworkers.link`, el flash `portalLink`, `Telework\Contracts\PortalLinks`,
+  `Support\EmailedPortalLinks` y `Notifications\PortalLinkEmail`. El de Saldos de vacaciones sigue siendo un envío en lote:
+  `SendPortalLinks` (mismo nombre y mismo log `leave.portal_links_sent`) llama a `WorkerInvitations::send` solo para quien
+  tiene correo; `VacationsPortalLink` se borró.
+- **Ley Silla**: `AcknowledgeRisks`, `ReportSeat` y `SubmitPersonInput` reciben `WorkerIdentity` (solo usaban `employeeId`);
+  ya no dependen de `Telework\Data\PortalIdentity`.
+- **Consultas del inicio**: `Companies::current()` lee la empresa y sus herramientas (2 consultas) cada vez que una sección
+  pregunta si la empresa tiene la herramienta; el inicio pasó de 12 a 19 consultas (Mi equipo +2, Mis vacaciones +3, Mi
+  puesto de pie +2). Constante, sin N+1; si pesa, memorizar `current()` por petición en `CompanyDirectory`.
+- **Rutas delicadas para el grupo 7** (aún sin `worker.proof`): `portal.seating.acknowledgments.store`,
+  `portal.vacations.requests.store`, `portal.vacations.statements.acknowledge` (y `.statements.show` si «estado de cuenta»
+  incluye leerlo: la tabla del grupo 7 solo pone el acuse),
+  `portal.vacations.team.approve` y `.team.reject`; de Telework, `portal.documents.acknowledge`, `portal.equipment.respond` y
+  `portal.visits.confirm`.
+
 *Drafted with EGM*
