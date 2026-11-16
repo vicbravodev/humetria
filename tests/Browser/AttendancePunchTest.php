@@ -47,8 +47,8 @@ it('opens the screen of Marcar for a device not known yet: every step, why the p
         ->assertSee('Marcar entrada')
         ->assertSee('Salir a comer')
         ->assertSee('Al marcar, el teléfono le pedirá su ubicación: si usted trabaja en un centro, la usamos para comprobar que está ahí; si no, se descarta. No se guarda en este teléfono ni se sigue entre marcas.')
-        ->assertSee('Si aún no tiene una llave de acceso')
-        ->assertSee('Si ya tiene llave aquí, solo marque.')
+        ->assertSee('Marque con su llave de acceso')
+        ->assertSee('Si ya creó su llave en este dispositivo, solo marque.')
         // Whether the center asks for the screen's code is the server's to say when marking: until then it says how.
         ->assertSee('Si su centro tiene una pantalla QR');
 })->with([
@@ -217,8 +217,8 @@ it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', funct
     $page->press('¿No es usted?')
         ->waitForText('Marcar su jornada')
         ->assertScript('() => /\\bAna\\b/.test(document.body.innerText)', false)
-        ->assertSee('Si aún no tiene una llave de acceso')
-        ->assertSee('Si ya tiene llave aquí, solo marque.')
+        ->assertSee('Marque con su llave de acceso')
+        ->assertSee('Si ya creó su llave en este dispositivo, solo marque.')
         ->press('button:has-text("Marcar entrada")')
         ->waitForText('Entrada registrada')
         ->press('Listo')
