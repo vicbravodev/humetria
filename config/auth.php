@@ -44,6 +44,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // The person who works (no account): their session lives in the `worker` entry of Laravel's session and is checked
+        // on every request (App\Modules\WorkerAccess\Support\WorkerSessionStore). No user provider: nobody signs in here.
+        'worker' => [
+            'driver' => 'worker-session',
+        ],
     ],
 
     /*
