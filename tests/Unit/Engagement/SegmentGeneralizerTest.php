@@ -72,7 +72,8 @@ it('keeps the area once the people who dropped their tenure make five', function
 });
 
 it('sends an area of three in a center of twelve to the company, when the center alone would not reach five', function (): void {
-    $rows = sameSegment(9, new Segment('wc', 'big', '1to3', null), 'b') + sameSegment(3, new Segment('wc', 'small', '1to3', null), 's');
+    $rows = sameSegment(9, new Segment('wc', 'big', '1to3', null), 'b') + sameSegment(3, new Segment('wc', 'small', '1to3', null), 's')
+        + sameSegment(2, new Segment('other', 'solo', '1to3', null), 'o');
 
     $result = SegmentGeneralizer::generalize($rows, atLeastFive());
 
@@ -127,3 +128,33 @@ it('does not depend on the order of the rows', function (): void {
 
     expect(SegmentGeneralizer::generalize($shuffled, atLeastFive()))->toEqualCanonicalizing(SegmentGeneralizer::generalize($rows, atLeastFive()));
 });
+
+it('does not leave one to four people alone with the company, so no sum or difference of groups points at them', function (): void {
+    // 5 in area A (manager M inside), 5 reporting to M spread over B and C, 2 alone in D and E.
+    $rows = sameSegment(3, new Segment('wc', 'A', null, 'M'), 'a')
+        + sameSegment(2, new Segment('wc', 'A', null, null), 'x')
+        + sameSegment(3, new Segment('wc', 'B', null, 'M'), 'b')
+        + sameSegment(2, new Segment('wc', 'C', null, 'M'), 'c')
+        + sameSegment(1, new Segment('wc', 'D', null, null), 'd')
+        + sameSegment(1, new Segment('wc', 'E', null, null), 'e');
+
+    $result = SegmentGeneralizer::generalize($rows, atLeastFive());
+
+    $company = (new Segment(null, null, null, null))->key();
+    $rest = count(array_filter($result, fn (Segment $segment): bool => $segment->key() === $company));
+    expect($rest === 0 || $rest >= 5)->toBeTrue("{$rest} people alone with the company");
+});
+
+it('leaves the company cell empty or at the minimum in any group of people', function (int $seed): void {
+    mt_srand($seed);
+    $rows = [];
+    for ($i = 0; $i < 12; $i++) {
+        $rows["p{$i}"] = new Segment('wc', 'a'.mt_rand(1, 5), null, mt_rand(0, 2) === 0 ? null : 'boss'.mt_rand(1, 3));
+    }
+
+    $result = SegmentGeneralizer::generalize($rows, atLeastFive());
+
+    $company = (new Segment(null, null, null, null))->key();
+    $rest = count(array_filter($result, fn (Segment $segment): bool => $segment->key() === $company));
+    expect($rest === 0 || $rest >= 5)->toBeTrue("{$rest} people alone with the company");
+})->with(range(1, 25));

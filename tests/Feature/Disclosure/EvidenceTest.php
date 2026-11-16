@@ -64,6 +64,14 @@ it('records how many signed on paper with the scanned sheet, as the policy put i
     Storage::disk(config()->string('filesystems.disclosure_files'))->assertExists($record->evidence_path ?? '');
 });
 
+it('refuses evidence above the document cap on the field itself', function (): void {
+    $this->actingAs($this->hr);
+
+    recordEvidence(['medium' => 'poster', 'evidence' => UploadedFile::fake()->create('grande.pdf', config()->integer('disclosure.max_document_kb') + 1, 'application/pdf')])->assertSessionHasErrors('evidence');
+
+    expect(DisseminationRecord::query()->count())->toBe(0);
+});
+
 it('asks a list of signatures for its sheet and how many signed', function (array $body, string $field): void {
     $this->actingAs($this->hr);
 

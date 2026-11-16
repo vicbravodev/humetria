@@ -100,10 +100,11 @@ final class AcceptInvitationController extends Controller
     private function stateFor(TenantInvitation $invitation, ?User $user): string
     {
         if ($user !== null) {
-            return Str::lower($user->email) === $invitation->email ? 'confirm' : 'other_account';
+            return $user->hasVerifiedEmail() && Str::lower($user->email) === $invitation->email ? 'confirm' : 'other_account';
         }
 
-        return User::query()->whereRaw('lower(email) = ?', [$invitation->email])->exists() ? 'sign_in' : 'new_account';
+        // An address nobody proved holds no account: the link, sent to it, is the proof.
+        return User::query()->whereRaw('lower(email) = ?', [$invitation->email])->whereNotNull('email_verified_at')->exists() ? 'sign_in' : 'new_account';
     }
 
     private function pendingInvitation(string $token): ?TenantInvitation

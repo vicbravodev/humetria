@@ -634,6 +634,11 @@ un abogado antes del lanzamiento.
 **Qué hacemos.** El acuse de recibo (3 días por omisión) y la respuesta (30) son recordatorios que la empresa se fija. Se
 muestran a la persona, marcan «vencido» a quien atiende y a quien administra solo se le cuentan. No son plazos de la norma.
 
+Si el canal ya recibió su tope diario (200 por omisión), la queja se **recibe y se retiene**: la persona recibe su referencia y
+su clave como siempre, pero nadie la atiende ni se le avisa a nadie hasta que un proceso nocturno la libera al día siguiente y
+la asigna como cualquier otra. Los plazos corren desde el día en que llegó, no desde la liberación: la retención dura un día y
+la persona ya recibió su acuse. Pasado el tope de retenidas (1000 por canal al día) se responde 429.
+
 ## I. Política de prevención, difusión y página de las personas trabajadoras (numerales 5.1, 5.7 y 7.8)
 
 La norma pide que el patrón tenga **por escrito** una política de prevención, la **difunda** y deje a las personas

@@ -73,7 +73,7 @@ final readonly class SaveSeat
         } catch (Throwable $failure) {
             // The photo went in before the commit: a failed save must not leave it behind.
             if ($stored !== null) {
-                $this->files->delete($stored);
+                $this->files->discard($stored);
             }
 
             throw $failure;

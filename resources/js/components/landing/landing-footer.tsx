@@ -1,6 +1,7 @@
 import { WhenMounted } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import { WRAP } from '@/components/landing/landing-layout';
+import SocialLinks from '@/components/landing/social-links';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { currentYear } from '@/lib/current-year';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,7 @@ export default function LandingFooter({
                             Iniciar sesión
                         </a>
                     </nav>
+                    <SocialLinks />
                 </div>
                 <div className="justify-self-start md:justify-self-end">
                     {/* The theme is the browser's to know (and the switch is a Radix group that prints a style): the server prints its frame. */}

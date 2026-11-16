@@ -7,21 +7,30 @@ namespace App\Providers;
 use App\Contracts\Geolocation;
 use App\Http\Impersonation;
 use App\Http\SsrPages;
+use App\Logging\PostHogLogs;
 use App\Logging\RedactEveryChannel;
 use App\Models\User;
 use App\Support\DbIpGeolocation;
 use Carbon\CarbonImmutable;
+use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Ssr\SsrState;
+use Laravel\Horizon\Events\LongWaitDetected;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -52,6 +61,11 @@ final class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
+        // PostHog Logs leave in one batch when a request or command ends, and after each job of a worker that never ends.
+        $this->app->terminating(PostHogLogs::flush(...));
+        Event::listen([JobProcessed::class, JobExceptionOccurred::class], PostHogLogs::flush(...));
+        $this->logOperationalFailures();
+
         // Spatie's super-admin pattern: null lets every other user fall through to the real ability.
         Gate::before(fn (User $user): ?bool => $user->isSuperadmin() ? true : null);
 
@@ -59,6 +73,33 @@ final class AppServiceProvider extends ServiceProvider
         // Node, with the page already in SsrState; with a closure registered the package no longer reads
         // inertia.ssr.enabled, so SsrPages reads it.
         Inertia::disableSsr(fn (): bool => ! SsrPages::allows(request(), app(SsrState::class)->page));
+    }
+
+    /**
+     * The lines PostHog's alerts read (docs/operations/observability.md), one place for every job and every scheduled
+     * command: names, counts and classes, never a payload or an error's words.
+     */
+    private function logOperationalFailures(): void
+    {
+        Event::listen(fn (JobFailed $event) => Log::error('queue.job_failed', [
+            'job' => $event->job->resolveName(),
+            'queue' => $event->job->getQueue(),
+            'connection' => $event->connectionName,
+            'attempts' => $event->job->attempts(),
+            'exception' => $event->exception::class,
+        ]));
+
+        Event::listen(fn (LongWaitDetected $event) => Log::warning('queue.long_wait', [
+            'connection' => $event->connection,
+            'queue' => $event->queue,
+            'seconds' => $event->seconds,
+        ]));
+
+        Event::listen(fn (ScheduledTaskFailed $event) => Log::error('schedule.command_failed', [
+            'command' => Str::after($event->task->command ?? $event->task->description ?? '', "'artisan' "),
+            'exception' => $event->exception::class,
+            'runtime' => $event->runtime,
+        ]));
     }
 
     /**

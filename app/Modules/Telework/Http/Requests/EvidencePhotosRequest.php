@@ -25,7 +25,16 @@ final class EvidencePhotosRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [];
+        $rules = [];
+
+        // Each file is capped on its own field, before PhotoStore reads it.
+        foreach (array_keys($this->allFiles()) as $field) {
+            if (preg_match('/^photo_general_\d{1,3}$/', (string) $field) === 1) {
+                $rules[(string) $field] = ['file', 'max:'.config()->integer('telework.max_photo_kb')];
+            }
+        }
+
+        return $rules;
     }
 
     /** @return list<Closure(Validator): void> */

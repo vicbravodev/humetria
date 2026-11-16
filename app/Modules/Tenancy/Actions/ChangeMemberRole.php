@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Actions;
 use App\Actions\RecordAudit;
 use App\Models\User;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Events\MemberRoleChanged;
 use App\Modules\Tenancy\Exceptions\RoleNotAllowedInAccount;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyRoles;
@@ -30,6 +31,7 @@ final readonly class ChangeMemberRole
 
         DB::transaction(function () use ($member, $person, $tenant, $role, $from, $by): void {
             $this->roles->assign($person, $tenant, $role);
+            event(new MemberRoleChanged($tenant->id, $person->id, $role->value));
 
             $change = ['member_user_id' => $person->id, 'from' => $from?->value, 'to' => $role->value];
             Log::info('tenant_member.role_changed', ['tenant_id' => $tenant->id, 'user_id' => $by->id, ...$change]);

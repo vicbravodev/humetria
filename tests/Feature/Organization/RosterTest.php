@@ -128,7 +128,7 @@ it('pages the active people of a work center when asked for one', function (): v
     expect(array_map(fn (RosterEntry $person): string => $person->name, $page->items()))->toBe(['Ana López']);
 });
 
-it('narrows the page by name, email or number, and by area', function (): void {
+it('narrows the page by name or number, and by area', function (): void {
     $sales = Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ventas']);
     $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'email' => 'ana@acme.mx']);
     $luis = rosterEmployee($this->tenant, $this->plant, $sales, ['name' => 'Luis Mora', 'email' => 'lmora@acme.mx', 'employee_number' => 'E-77']);
@@ -138,7 +138,6 @@ it('narrows the page by name, email or number, and by area', function (): void {
     $ids = [$ana->id, $luis->id, $percent->id];
 
     expect($names(new RosterQuery(employeeIds: $ids, search: 'LÓP')))->toBe(['Ana López'])
-        ->and($names(new RosterQuery(employeeIds: $ids, search: 'lmora@')))->toBe(['Luis Mora'])
         ->and($names(new RosterQuery(employeeIds: $ids, search: 'e-77')))->toBe(['Luis Mora'])
         ->and($names(new RosterQuery(employeeIds: $ids, search: '%')))->toBe(['100% Ventas'])
         ->and($names(new RosterQuery(employeeIds: $ids, areaId: $sales->id)))->toBe(['100% Ventas', 'Luis Mora'])
@@ -215,13 +214,22 @@ it('looks people up by their employee number, whatever its case, deactivated one
     expect(resolve(Roster::class)->idsByEmployeeNumber(['A-001']))->toBe([]);
 });
 
-it('searches the roster by words in any order and by mobile', function (): void {
+it('never searches the contact data of the people: an email or a mobile finds nobody', function (): void {
+    $juan = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '5512345678']);
+    workIn($this->tenant);
+    $ids = fn (string $search): array => resolve(Roster::class)->matchingIds(new RosterQuery(search: $search));
+
+    expect($ids('jp@acme'))->toBe([])
+        ->and($ids('5512345678'))->toBe([])
+        ->and($ids('juan'))->toBe([$juan->id]);
+});
+
+it('searches the roster by words in any order', function (): void {
     $juan = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '5512345678']);
     rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Gómez', 'email' => 'jg@acme.mx', 'mobile' => '5598765432']);
     workIn($this->tenant);
     $ids = fn (string $search): array => resolve(Roster::class)->matchingIds(new RosterQuery(search: $search));
 
     expect($ids('perez juan'))->toBe([$juan->id])
-        ->and($ids('55 1234 5678'))->toBe([$juan->id])
         ->and($ids('juan lopez'))->toBe([]);
 });

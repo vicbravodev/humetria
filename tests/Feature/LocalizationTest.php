@@ -32,7 +32,7 @@ it('confirms profile and password updates in Spanish', function (string $method,
         ->{$method}(route($route), $data)
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => $toast]]);
 })->with([
-    'profile' => ['patch', 'profile.update', ['name' => 'Ana López', 'email' => 'ana@empresa.mx'], 'Perfil actualizado.'],
+    'profile' => ['patch', 'profile.update', ['name' => 'Ana López', 'email' => 'ana@empresa.mx', 'current_password' => 'password'], 'Perfil actualizado.'],
     'password' => ['put', 'user-password.update', ['current_password' => 'password', 'password' => 'new-password', 'password_confirmation' => 'new-password'], 'Contraseña actualizada.'],
 ]);
 

@@ -11,6 +11,7 @@ use App\Modules\FirstSteps\Contracts\FirstSteps;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
+use stdClass;
 
 final class HandleInertiaRequests extends Middleware
 {
@@ -47,6 +48,8 @@ final class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             // Where to write to Humetria; null while none is configured, so no notice carries an empty mail link.
             'support' => ['email' => $this->supportEmail()],
+            // The profiles configured for the landing footer: only https links, in a fixed order.
+            'social' => $this->socialLinks(),
             'auth' => [
                 'user' => $request->user(),
                 'isSuperadmin' => $request->user()?->isSuperadmin() ?? false,
@@ -63,6 +66,47 @@ final class HandleInertiaRequests extends Middleware
             'inCourse' => fn (): ?array => $this->seesNom035() ? $this->inCourse() : null,
             // The guided tour of the company's owner: nobody else is asked anything, and outside a company nothing is.
             'firstSteps' => fn (): ?array => $this->firstSteps($request),
+            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+        ];
+    }
+
+    /**
+     * @return list<array{network: string, url: string}>
+     */
+    private function socialLinks(): array
+    {
+        $links = [];
+
+        foreach (['linkedin', 'facebook', 'instagram'] as $network) {
+            $url = config("app.social.{$network}");
+
+            if (is_string($url) && str_starts_with($url, 'https://')) {
+                $links[] = ['network' => $network, 'url' => $url];
+            }
+        }
+
+        return $links;
+    }
+
+    /**
+     * What every page shares, read from nothing that can be down (no database, no session, no user): the error page
+     * falls back to it when share() is what failed.
+     *
+     * @return array<string, mixed>
+     */
+    public function safeShare(Request $request): array
+    {
+        return [
+            'errors' => new stdClass,
+            'name' => config('app.name'),
+            'support' => ['email' => $this->supportEmail()],
+            'social' => $this->socialLinks(),
+            'auth' => ['user' => null, 'isSuperadmin' => false, 'isStaff' => false],
+            'impersonator' => null,
+            'tenant' => null,
+            'tenants' => [],
+            'inCourse' => null,
+            'firstSteps' => null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

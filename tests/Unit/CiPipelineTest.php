@@ -53,7 +53,7 @@ function jobRuns(array $job): string
 }
 
 it('passes the required check when every job passed', function (): void {
-    expect(ciPasses(['changes' => 'success', 'checks' => 'success', 'tests' => 'success', 'browser' => 'success', 'ssr' => 'success'], 'true'))->toBeTrue();
+    expect(ciPasses(['changes' => 'success', 'build' => 'success', 'checks' => 'success', 'tests' => 'success', 'coverage' => 'success', 'browser' => 'success', 'ssr' => 'success'], 'true'))->toBeTrue();
 });
 
 it('passes the required check when the change was only documentation and the jobs were skipped', function (): void {
@@ -86,12 +86,37 @@ it('runs every job of tests.yml only when the change needs the pipeline', functi
     $jobs = workflowJobs('tests.yml');
     $gated = array_values(array_diff(array_keys($jobs), ['changes', 'ci']));
 
-    expect($gated)->toContain('checks', 'tests', 'browser', 'ssr');
+    expect($gated)->toContain('build', 'checks', 'tests', 'coverage', 'browser', 'ssr');
 
     foreach ($gated as $name) {
-        expect((array) ($jobs[$name]['needs'] ?? []))->toBe(['changes'], "the job {$name} does not wait for the job changes")
+        $needs = (array) ($jobs[$name]['needs'] ?? []);
+
+        // Besides changes, a job may wait only for other gated jobs (the build, the shards of the coverage).
+        expect($needs[0] ?? null)->toBe('changes', "the job {$name} does not wait for the job changes")
+            ->and(array_diff($needs, ['changes', ...$gated]))->toBe([], "the job {$name} waits for a job that is not gated")
             ->and($jobs[$name]['if'] ?? null)->toBe("needs.changes.outputs.code == 'true'", "the job {$name} runs whatever the change is");
     }
+});
+
+it('stops every job of tests.yml that hangs', function (): void {
+    foreach (workflowJobs('tests.yml') as $name => $job) {
+        expect($job['timeout-minutes'] ?? null)->toBeInt("the job {$name} has no timeout-minutes");
+    }
+});
+
+it('runs on a merge queue as well', function (): void {
+    $parsed = Yaml::parseFile(dirname(__DIR__, 2).'/.github/workflows/tests.yml');
+
+    expect(is_array($parsed) && array_key_exists('merge_group', (array) ($parsed['on'] ?? [])))->toBeTrue();
+});
+
+it('keeps the 90% minimum over the shards of Unit and Feature together', function (): void {
+    $jobs = workflowJobs('tests.yml');
+
+    expect(jobRuns($jobs['tests']))->toContain('--shard=')->toContain('--coverage-php=')
+        ->and(jobRuns($jobs['coverage']))->toContain('scripts/coverage-merge.php coverage.xml')
+        ->toContain('scripts/coverage-min.php coverage.xml 90')
+        ->and((array) $jobs['coverage']['needs'])->toContain('tests');
 });
 
 it('makes the required check wait for every job and decide with the verdict', function (): void {
@@ -109,7 +134,7 @@ it('makes the required check wait for every job and decide with the verdict', fu
 it('does not deploy a change that skipped the pipeline, and still deploys by hand', function (): void {
     $jobs = workflowJobs('deploy.yml');
 
-    expect(jobRuns($jobs['pipeline'] ?? []))->toContain('select(.name == "tests") | .conclusion')
+    expect(jobRuns($jobs['pipeline'] ?? []))->toContain('select(.name == "build") | .conclusion')
         ->and($jobs['pipeline']['permissions'] ?? null)->toBe(['actions' => 'read'])
         ->and($jobs['image']['needs'] ?? null)->toBe('pipeline')
         ->and($jobs['image']['if'] ?? null)->toBe("always() && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository && needs.pipeline.outputs.tests != 'skipped'))");

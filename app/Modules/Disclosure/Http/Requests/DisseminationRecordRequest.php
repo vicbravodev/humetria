@@ -33,7 +33,7 @@ final class DisseminationRecordRequest extends FormRequest
             'note' => ['nullable', 'string', 'max:500'],
             'signatures' => ['nullable', 'integer', 'max:100000'],
             // The size and what the content is are the action's to judge (EvidenceStore): the extension and MIME prove nothing.
-            'evidence' => ['nullable', 'file'],
+            'evidence' => ['nullable', 'file', 'max:'.config()->integer('disclosure.max_document_kb')],
         ];
     }
 

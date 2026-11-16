@@ -158,6 +158,17 @@ it('shows nothing of another company', function (): void {
     $this->get(route('tenant.vacations.balances.index', $other))->assertNotFound();
 });
 
+it('does not let a viewer find anyone by email or mobile, nor count them as elsewhere', function (): void {
+    $this->ana->update(['email' => 'ana.secreta@acme.test', 'mobile' => '5598761234']);
+    $viewer = memberOf($this->tenant, TenantRole::Viewer);
+
+    foreach (['secreta@', '5598761234'] as $q) {
+        $props = $this->actingAs($viewer)->get(route('tenant.vacations.balances.index', [$this->tenant, 'q' => $q, 'tab' => 'statements']))->assertOk()->inertiaProps();
+
+        expect($props['people']['data'])->toBe([])->and($props['elsewhere'])->toBe(0);
+    }
+});
+
 it('asks the same queries whatever the number of people on the page', function (int $more): void {
     foreach (range(1, $more) as $number) {
         $person = leaveBalancesPerson("Otra {$number}", '2022-01-01');

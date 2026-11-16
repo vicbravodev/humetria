@@ -44,7 +44,7 @@ final readonly class CloseNotice
                 return $locked;
             });
         } catch (Throwable $failure) {
-            $this->files->delete($path);
+            $this->files->discard($path);
 
             throw $failure;
         }

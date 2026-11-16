@@ -160,7 +160,7 @@ final class SummarizeComments implements ShouldQueue
         $prompt = "Lo que valoran:\n".CommentsBlock::build($comments['valued'], $redact)."\n\nLo que cambiarían:\n".CommentsBlock::build($comments['change'], $redact);
         $response = $this->ask(CommentSummarizer::make(), 'engagement_comment_summarizer', $prompt, $ai);
 
-        return SummaryGuard::clean($response->toArray(), [...$comments['valued'], ...$comments['change']], config()->integer('engagement.min_theme_support'));
+        return SummaryGuard::clean($response->toArray(), [...$comments['valued'], ...$comments['change']], config()->integer('engagement.min_theme_support'), count($comments['valued']));
     }
 
     private function ask(CommentScreener|CommentSummarizer $agent, string $name, string $prompt, AiAccess $ai): StructuredAgentResponse

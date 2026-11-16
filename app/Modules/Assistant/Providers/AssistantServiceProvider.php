@@ -8,6 +8,7 @@ use App\Modules\Assistant\Console\EvaluateAssistant;
 use App\Modules\Assistant\Contracts\AiAccess;
 use App\Modules\Assistant\Contracts\HumiActivity;
 use App\Modules\Assistant\Listeners\DeleteMemberConversations;
+use App\Modules\Assistant\Listeners\SendLlmAnalytics;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
@@ -26,6 +27,11 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Ai\Events\AgentFailed;
+use Laravel\Ai\Events\AgentPrompted;
+use Laravel\Ai\Events\AgentStreamed;
+use Laravel\Ai\Events\PromptingAgent;
+use Laravel\Ai\Events\StreamingAgent;
 
 /**
  * Humi, the AI assistant. Its routes live in routes/assistant.php, required from the company group in routes/company.php.
@@ -66,6 +72,13 @@ final class AssistantServiceProvider extends ServiceProvider
         Relation::morphMap(['assistant_participant' => ConversationParticipant::class]);
 
         Event::listen(MemberRemoved::class, DeleteMemberConversations::class);
+
+        // One instance per process: it remembers when each call to a model started, to tell PostHog how long it took.
+        $this->app->singleton(SendLlmAnalytics::class);
+        Event::listen([PromptingAgent::class, StreamingAgent::class], [SendLlmAnalytics::class, 'started']);
+        // Both by name: Laravel matches a listener to an event's interfaces, not to its parent class.
+        Event::listen([AgentPrompted::class, AgentStreamed::class], [SendLlmAnalytics::class, 'answered']);
+        Event::listen(AgentFailed::class, [SendLlmAnalytics::class, 'failed']);
 
         if ($this->app->runningInConsole()) {
             $this->commands([EvaluateAssistant::class]);

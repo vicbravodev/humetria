@@ -86,11 +86,23 @@ const ANALYTICS: PrivacySection = {
     id: 'cookies-de-analitica',
     title: 'Analítica y cookie de atribución',
     paragraphs: [
-        'Medimos las visitas de la página de inicio con PostHog, y solo ahí y solo para quien no ha iniciado sesión: las encuestas, el buzón de quejas, los portales de las personas trabajadoras y el panel no lo cargan.',
+        'Medimos las visitas de la página de inicio con PostHog, y solo ahí y solo para quien no ha iniciado sesión: en las encuestas, el buzón de quejas, los portales de las personas trabajadoras y el panel no medimos visitas.',
         'No grabamos tu sesión, no registramos lo que escribes y no creamos un perfil tuyo. Sí contamos qué botones y enlaces de la página tocas (por ejemplo, "Agendar demo"), qué secciones ves, hasta dónde bajas y en qué campo del formulario hubo un error, sin guardar nada de lo que escribiste.',
         'Como con cualquier servicio de un tercero, tu navegador se conecta con PostHog (us.i.posthog.com, en Estados Unidos) y le llegan, como mínimo, los datos técnicos de tu navegador y de tu conexión. Además, le decimos qué página de inicio abriste, con solo las etiquetas de campaña de la dirección, el sitio del que vienes si es una página nuestra y que enviaste una solicitud de demo, con el tipo de empresa y el rango de personas que elegiste. A PostHog no le enviamos tu nombre, correo, teléfono ni mensaje, ni ningún dato de la solicitud. No guardamos tu dirección IP en PostHog. PostHog no escribe cookies en tu navegador: guarda un identificador anónimo en su almacenamiento local.',
         'También registramos los errores técnicos para poder arreglarlos. Si algo falla en tu navegador en esta página, PostHog recibe el tipo de error y el lugar del código donde ocurrió, con los correos y los números largos de su texto ocultos. Si algo falla en nuestro servidor, recibe la clase del error y la ruta del código por donde pasó, nunca su texto ni datos de ninguna persona.',
         'La cookie de atribución humetria_acq solo se escribe si llegas con etiquetas de campaña o desde otro sitio. Recuerda la primera y la última de esas visitas, hasta por 90 días, para ligar tu solicitud con la campaña que te trajo. Va cifrada, solo se envía por conexión segura y solo la lee nuestro servidor.',
+        `El texto de esta sección está ${REVIEW}.`,
+    ],
+};
+
+const PLATFORM: PrivacySection = {
+    id: 'humi-y-registros',
+    title: 'Humi y los registros técnicos de la plataforma',
+    paragraphs: [
+        'Si usas Humi, el asistente de la plataforma, enviamos a PostHog (us.i.posthog.com, en Estados Unidos) lo que le escribes y lo que te responde, con las instrucciones que recibe, el modelo que contestó, cuánto tardó y si hubo un error, para mejorar el asistente. Antes de salir, tu mensaje pasa por el mismo filtro que oculta correos, teléfonos, CURP, RFC y NSS. A PostHog no le decimos quién eres: te identifica con un código que no se puede convertir en tu nombre ni en tu correo, y no crea un perfil tuyo.',
+        'Cuando la plataforma resume los comentarios de una encuesta de clima, a PostHog solo le llegan el modelo, la cantidad de texto procesado, el tiempo y si hubo un error: nunca el texto de los comentarios ni el resumen.',
+        'Los registros técnicos de nuestro servidor también se guardan en PostHog para detectar fallas y avisarnos: qué pasó, cuándo y con qué identificadores internos, nunca respuestas de encuestas ni contraseñas.',
+        'En el resto de la plataforma (el panel, las encuestas, el buzón de quejas y los portales), si algo falla en tu navegador PostHog recibe el tipo de error, el lugar del código donde ocurrió, el nombre de la pantalla y un código de la petición para encontrarla en nuestros registros, con los correos, los números largos y las direcciones de su texto ocultos: nunca la dirección de la página (puede llevar tu enlace personal), tu nombre ni tus respuestas. Ahí PostHog no guarda nada en tu navegador ni crea un perfil tuyo.',
         `El texto de esta sección está ${REVIEW}.`,
     ],
 };
@@ -123,7 +135,7 @@ const RIGHTS: PrivacySection = {
     ],
 };
 
-/** The eight sections of the notice, in the order the page shows them. */
+/** The nine sections of the notice, in the order the page shows them. */
 export function privacySections(parties: PrivacyParties): PrivacySection[] {
     return [
         controller(parties),
@@ -131,6 +143,7 @@ export function privacySections(parties: PrivacyParties): PrivacySection[] {
         ORIGIN,
         OWN_COOKIES,
         ANALYTICS,
+        PLATFORM,
         CONTROL,
         RETENTION,
         RIGHTS,
