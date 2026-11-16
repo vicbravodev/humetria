@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Modules\Organization\Actions\CreateEmployee;
 use App\Modules\Organization\Data\EmployeeData;
 use App\Modules\Organization\Enums\Gender;
+use App\Modules\Organization\Enums\StaffGroup;
 use App\Modules\Tenancy\Actions\AcceptInvitation;
 use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
@@ -100,7 +101,8 @@ final readonly class OrganizationStory implements DemoStory
             jobCategory: $person->category,
             jobLevel: $person->level,
             hiredOn: $today->subDays($person->tenureDays),
-            staffGroup: null,
+            // The rank and file are under the collective contract; everyone else is trusted staff (Compensación costs both).
+            staffGroup: $person->category === 'Operativo' ? StaffGroup::Unionized : StaffGroup::Trusted,
             state: null,
             managerId: $person->reportsTo === null ? null : DemoRoster::employeeId($person->reportsTo),
             id: DemoRoster::employeeId($person->key),
