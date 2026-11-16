@@ -23,10 +23,12 @@ export default function RoomKiosk() {
             {link === undefined ? (
                 <>
                     <p className="text-sm text-pretty text-muted-foreground">
-                        Emite un enlace nuevo y ábrelo en la tableta o el
-                        proyector: mostrará el código que el público escanea
-                        para marcar. El enlace anterior deja de servir y la
-                        pantalla queda sin activar hasta que lo abras.
+                        Emite un enlace y ábrelo en la tableta o el proyector:
+                        mostrará el código que el público escanea para marcar.
+                        Mientras no lo abras, la pantalla queda sin activar y un
+                        enlace anterior deja de servir. Si la pantalla ya
+                        muestra su código, no se emite otro hasta que reinicies
+                        la demo.
                     </p>
                     <Form
                         {...reissue.form()}

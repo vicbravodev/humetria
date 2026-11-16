@@ -38,8 +38,8 @@ export default function RoomRunButton({
             title={first ? '¿Preparar la demo?' : '¿Reiniciar la demo?'}
             description={
                 first
-                    ? 'Se crea Manufacturas Alba del Bajío con su historia en todos los módulos. Tarda unos minutos y corre en segundo plano.'
-                    : 'Se borra todo lo de la demo, también lo que el público contestó o registró, y se vuelve a contar la historia a la fecha de hoy. Los enlaces y el QR del canal de denuncias siguen sirviendo; la pantalla del checador necesita un enlace nuevo.'
+                    ? 'Se crea Manufacturas Alba del Bajío con su historia en todos los módulos. Tarda alrededor de medio minuto (unos minutos si la cola está ocupada) y corre en segundo plano.'
+                    : 'Se borra todo lo de la demo, también lo que el público contestó o registró, y se vuelve a contar la historia a la fecha de hoy. Tarda alrededor de medio minuto (unos minutos si la cola está ocupada). El QR del canal de denuncias sigue sirviendo. La puerta se cierra: ábrela otra vez; los enlaces que dio dejan de servir. La pantalla del checador necesita un enlace nuevo.'
             }
             confirmLabel={first ? 'Preparar' : 'Reiniciar'}
         />

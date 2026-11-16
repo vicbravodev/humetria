@@ -12,8 +12,13 @@ export default function RoomNotes() {
                 <li>
                     Reinicia la demo a lo más dos días antes: después, una
                     denuncia queda vencida, las solicitudes de vacaciones
-                    pendientes se escalan (a los cuatro días hábiles) y las
-                    encuestas abiertas cierran (a los nueve días).
+                    pendientes se escalan (a los tres días hábiles) y la
+                    encuesta de pulso cierra (a los nueve días).
+                </li>
+                <li>
+                    El QR del canal de denuncias no cambia: alguien de un
+                    público anterior puede seguir enviando denuncias, así que
+                    revisa el buzón antes de presentar.
                 </li>
                 <li>
                     El canal de denuncias de la demo acepta más envíos por hora

@@ -59,11 +59,11 @@ export type DemoRunState = {
 /** A link to share in the room, with its QR as a data URI. */
 export type DemoShareLink = { url: string; qr: string };
 
-export type DemoDoor = {
-    open: boolean;
-    /** «14:30», Mexico City time; null while closed. */
-    closes_at: string | null;
-    /** The workers reserved for the audience: taken, free and all. */
+/** The door, open until «14:30» (Mexico City time) or closed; and the workers reserved for the audience: taken, free and all. */
+export type DemoDoor = (
+    | { open: true; closes_at: string }
+    | { open: false; closes_at: null }
+) & {
     claimed: number;
     free: number;
     total: number;

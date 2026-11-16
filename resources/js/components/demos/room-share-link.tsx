@@ -41,7 +41,11 @@ export default function RoomShareLink({
                     ) : (
                         <Link2 aria-hidden />
                     )}
-                    {copied === link.url ? 'Enlace copiado' : 'Copiar enlace'}
+                    <span aria-live="polite">
+                        {copied === link.url
+                            ? 'Enlace copiado'
+                            : 'Copiar enlace'}
+                    </span>
                 </Button>
             </div>
         </div>

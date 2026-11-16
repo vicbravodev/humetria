@@ -24,7 +24,7 @@ export default function RoomDoor({ door }: { door: DemoDoor }) {
                     La puerta
                 </h2>
                 {door.open ? (
-                    <Badge>{`Abierta hasta las ${door.closes_at ?? ''}`}</Badge>
+                    <Badge>{`Abierta hasta las ${door.closes_at}`}</Badge>
                 ) : (
                     <Badge variant="secondary">Cerrada</Badge>
                 )}

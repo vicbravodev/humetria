@@ -49,10 +49,24 @@ it('shows the prepared demo: enter it, its door, its complaint channel and its t
         ->assertSee('Cada persona se entrega una sola vez: al acabarse, la puerta dice «La sala está llena» hasta que reinicies la demo.')
         ->assertSee('Canal de denuncias')
         ->assertSee('Pantalla del checador')
+        ->assertSee('Si la pantalla ya muestra su código, no se emite otro hasta que reinicies la demo.')
         ->assertSee('Antes de presentar')
+        ->assertSee('pendientes se escalan (a los tres días hábiles) y la encuesta de pulso cierra (a los nueve días)')
+        ->assertSee('revisa el buzón antes de presentar')
         ->assertSee('Reiniciar demo')
         ->assertDontSee('ya envejecieron');
 })->with($looks);
+
+it('says before a reset what it wipes, what keeps working and that the door closes', function (): void {
+    signInAsSuperadmin();
+    preparedDemo();
+
+    visitPage('demos/room', '/admin/demo')
+        ->click('Reiniciar demo')
+        ->assertSee('El QR del canal de denuncias sigue sirviendo.')
+        ->assertSee('La puerta se cierra: ábrela otra vez; los enlaces que dio dejan de servir.')
+        ->assertSee('Tarda alrededor de medio minuto');
+});
 
 it('warns that a demo older than two days has gone stale', function (): void {
     signInAsSuperadmin();

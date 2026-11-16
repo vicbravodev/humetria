@@ -29,12 +29,12 @@ final class DemoRoomController extends Controller
 
     public function prepare(DemoRoomRequest $request, StartDemoRun $start): RedirectResponse
     {
-        return $this->started($start->handle('prepare'), 'Preparando la demo: tarda unos minutos.');
+        return $this->started($start->handle('prepare'), 'Preparando la demo: tarda alrededor de medio minuto.');
     }
 
     public function reset(DemoRoomRequest $request, StartDemoRun $start): RedirectResponse
     {
-        return $this->started($start->handle('reset'), 'Reiniciando la demo: tarda unos minutos.');
+        return $this->started($start->handle('reset'), 'Reiniciando la demo: tarda alrededor de medio minuto.');
     }
 
     public function openDoor(DemoRoomRequest $request, DoorControl $door, QrCode $qr): RedirectResponse
