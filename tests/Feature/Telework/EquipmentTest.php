@@ -3,9 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Actions\JoinRoster;
-use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\RegisterEquipment;
 use App\Modules\Telework\Actions\RespondEquipment;
 use App\Modules\Telework\Data\AddressData;
@@ -148,7 +146,7 @@ it('shows no equipment of an ended period or another person', function (): void 
 
 it('confirms receipt once, with the time and the address', function (): void {
     $item = pendingItem();
-    $portal = resolve(OpenPortal::class)->handle(resolve(IssuePortalLink::class)->handle(test()->employee->id));
+    $portal = teleworkPortalOf(test()->employee->id);
     Log::spy();
 
     resolve(RespondEquipment::class)->handle($portal, $item->id, true, null, '203.0.113.9');
@@ -169,7 +167,7 @@ it('confirms receipt once, with the time and the address', function (): void {
 
 it('requires a reason to refuse, and keeps it without logging it', function (): void {
     $item = pendingItem();
-    $portal = resolve(OpenPortal::class)->handle(resolve(IssuePortalLink::class)->handle(test()->employee->id));
+    $portal = teleworkPortalOf(test()->employee->id);
 
     foreach ([null, '', '   '] as $blank) {
         expect(fn () => resolve(RespondEquipment::class)->handle($portal, $item->id, false, $blank, null))->toThrow(ValidationException::class);
@@ -191,7 +189,7 @@ it('requires a reason to refuse, and keeps it without logging it', function (): 
 it('ignores a reason when the person received the item', function (): void {
     $item = pendingItem();
 
-    resolve(RespondEquipment::class)->handle(resolve(OpenPortal::class)->handle(resolve(IssuePortalLink::class)->handle(test()->employee->id)), $item->id, true, 'texto suelto', null);
+    resolve(RespondEquipment::class)->handle(teleworkPortalOf(test()->employee->id), $item->id, true, 'texto suelto', null);
 
     expect($item->refresh()->refusal_reason)->toBeNull();
 });

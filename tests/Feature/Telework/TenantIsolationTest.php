@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistAnswer;
@@ -17,7 +16,6 @@ use App\Modules\Telework\Models\DocumentDraft;
 use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\EvidencePhoto;
 use App\Modules\Telework\Models\EvidenceRequest;
-use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\SafetyCommittee;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\Teleworker;
@@ -75,8 +73,6 @@ function isolationWorld(Tenant $tenant): array
     $document = TeleworkDocumentFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]);
     $training = TrainingFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]);
 
-    resolve(IssuePortalLink::class)->handle($person->employee_id);
-
     return [
         Acknowledgement::class => AcknowledgementFactory::new()->create([...$tenantId, 'document_id' => $document->id, 'employee_id' => $person->employee_id]),
         Checklist::class => $checklist,
@@ -91,7 +87,6 @@ function isolationWorld(Tenant $tenant): array
         EquipmentItem::class => EquipmentItemFactory::new()->create([...$tenantId, 'teleworker_id' => $person->id]),
         EvidencePhoto::class => EvidencePhoto::query()->create([...$tenantId, 'evidence_request_id' => $request->id, 'path' => 'evidence/'.Str::uuid().'.jpg', 'uploaded_at' => now()]),
         EvidenceRequest::class => $request,
-        PortalLink::class => PortalLink::query()->where('employee_id', $person->employee_id)->sole(),
         SafetyCommittee::class => SafetyCommitteeFactory::new()->create([...$tenantId, 'work_center_id' => $person->work_center_id]),
         TeleworkDocument::class => $document,
         Teleworker::class => $person,
@@ -188,7 +183,6 @@ function isolationRoutes(Tenant $tenant, array $b, int $reviewer): array
         EquipmentItem::class => [['POST', $portal('equipment.respond', $b[EquipmentItem::class]->id), ['received' => true]]],
         EvidencePhoto::class => [['GET', $panel('evidence-photos.show', $b[EvidencePhoto::class]->id)]],
         EvidenceRequest::class => [['POST', $portal('evidence.store', $b[EvidenceRequest::class]->id), [], ['photo_general_0' => UploadedFile::fake()->image('a.jpg')]]],
-        PortalLink::class => [],
         SafetyCommittee::class => [['GET', $panel('committee.show', $center)], ['GET', $panel('committee.act', $center)]],
         TeleworkDocument::class => [
             ['GET', $panel('documents.file', $b[TeleworkDocument::class]->id)],

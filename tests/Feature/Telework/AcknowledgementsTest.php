@@ -7,8 +7,6 @@ use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Actions\Acknowledge;
-use App\Modules\Telework\Actions\IssuePortalLink;
-use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\PublishDocument;
 use App\Modules\Telework\Actions\RequestAcknowledgements;
 use App\Modules\Telework\Data\PendingDocument;
@@ -21,7 +19,6 @@ use App\Modules\Telework\Listeners\RequestOnPublication;
 use App\Modules\Telework\Listeners\RequestPolicyFromNewStaff;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\CommitteeAssignment;
-use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Notifications\DocumentsToConfirm;
 use App\Modules\Telework\Notifications\PortalReminder;
@@ -167,7 +164,6 @@ it('mails the employee the address of their telework section, with no credential
     });
     expect($mail->actionUrl)->toBe(route('portal.telework.show', $this->tenant->slug))
         ->and(implode("\n", $mail->outroLines))->not->toContain('el anterior deja de funcionar')
-        ->and(PortalLink::query()->count())->toBe(0)
         ->and($job)->toBeInstanceOf(ShouldQueueAfterCommit::class);
 });
 
@@ -198,7 +194,6 @@ it('sends nothing when nothing is pending, the person left or the company is blo
     app()->call($job->handle(...));
 
     Notification::assertNothingSent();
-    expect(PortalLink::query()->count())->toBe(0);
 });
 
 it('asks new, reactivated and moved-in staff for the policy in force of their center', function (string $arrival): void {
@@ -265,18 +260,12 @@ it('asks the risk information when someone joins the roster', function (): void 
         ->and(resolve(RequestAcknowledgements::class)->forEmployee($person->id, $this->other->id, DocumentKind::RiskInformation))->toBe(0);
 });
 
-/** The portal token of an employee who was asked for the policy of the center. */
-function portalOf(Employee $employee): string
-{
-    return resolve(IssuePortalLink::class)->handle($employee->id);
-}
-
 it('acknowledges from the portal with the time, the address and the channel', function (): void {
     Queue::fake();
     $this->travelTo('2026-05-04 15:30:00');
     $ana = staffer($this->center);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+    $portal = teleworkPortalOf($ana->id);
 
     resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
 
@@ -291,7 +280,7 @@ it('acknowledges once: the second time is refused and nothing changes', function
     Queue::fake();
     $ana = staffer($this->center);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+    $portal = teleworkPortalOf($ana->id);
     resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
     $this->travelTo(now()->addDay());
 
@@ -306,7 +295,7 @@ it('does not let a person acknowledge what was not asked of them', function (): 
     $ana = staffer($this->center);
     $outsider = staffer($this->other);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $portal = resolve(OpenPortal::class)->handle(portalOf($outsider));
+    $portal = teleworkPortalOf($outsider->id);
 
     expect(fn () => resolve(Acknowledge::class)->handle($portal, $document->id, null))->toThrow(ModelNotFoundException::class)
         ->and(Acknowledgement::query()->whereNotNull('acknowledged_at')->count())->toBe(0)
@@ -317,7 +306,7 @@ it('logs telework.acknowledged with ids and channel, never the address', functio
     Queue::fake();
     $ana = staffer($this->center);
     [$document] = publishDocument(DocumentKind::Policy, $this->center);
-    $portal = resolve(OpenPortal::class)->handle(portalOf($ana));
+    $portal = teleworkPortalOf($ana->id);
     Log::spy();
 
     resolve(Acknowledge::class)->handle($portal, $document->id, '203.0.113.9');
@@ -452,7 +441,7 @@ it('waits two minutes and keeps one waiting email per person, listing everything
 
 it('writes the Comisión email in the panel voice and the person email in the portal voice', function (): void {
     $member = (new DocumentsToConfirm('https://x.test/docs', 'Cora', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), ['Información sobre riesgos del Teletrabajo · versión 1']))->toMail(new AnonymousNotifiable);
-    $person = (new PortalReminder('https://x.test/portal/t', 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), new PortalPendingData([], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')])))->toMail(new AnonymousNotifiable);
+    $person = (new PortalReminder('https://x.test/me/acme/telework', 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), new PortalPendingData([], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')])))->toMail(new AnonymousNotifiable);
 
     expect($member->subject)->toBe('Tienes documentos por confirmar')
         ->and(implode(' ', $member->introLines))->toContain('debes leer y confirmar en el panel')
@@ -528,7 +517,7 @@ it('adds up the Comisión members asked across documents', function (): void {
 it('keeps «Tiene pendientes en su portal» when the portal asks for more than confirming', function (): void {
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false);
     $pending = new PortalPendingData([new App\Modules\Telework\Data\PendingChecklist('w', 'Casa', 1, 'Sección I')], [], documents: [new PendingDocument('d', 'Política de Teletrabajo · versión 1', '2026-03-01')]);
-    $mail = (new PortalReminder('https://x.test/portal/t', 'Ana', $company, $pending))->toMail(new AnonymousNotifiable);
+    $mail = (new PortalReminder('https://x.test/me/acme/telework', 'Ana', $company, $pending))->toMail(new AnonymousNotifiable);
 
     expect($mail->subject)->toBe('Tiene pendientes en su portal')
         ->and($mail->actionText)->toBe('Abrir mi portal');

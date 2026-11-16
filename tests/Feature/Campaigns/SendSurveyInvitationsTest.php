@@ -100,7 +100,7 @@ it('ends each email with the person\'s entrance, which carries no credential', f
 
     Notification::assertSentOnDemand(SurveyInvitation::class, function (SurveyInvitation $mail, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable): bool {
         $html = (string) $mail->toMail($notifiable)->render();
-        expect($html)->toContain('href="'.rtrim(config()->string('app.url'), '/').'/me/'.$this->tenant->slug.'"')->not->toContain('/portal/');
+        expect($html)->toContain('href="'.rtrim(config()->string('app.url'), '/').'/me/'.$this->tenant->slug.'"');
 
         return true;
     });

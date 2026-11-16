@@ -13,7 +13,6 @@ use App\Modules\Telework\Http\Controllers\TeleworkerController;
 use App\Modules\Telework\Jobs\SendPortalInvitation;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistApplication;
-use App\Modules\Telework\Models\PortalLink;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Models\Workplace;
 use App\Modules\Telework\Notifications\PortalInvitation;
@@ -129,7 +128,7 @@ it('refuses while the work center has no published checklist', function (): void
 
     $this->post(registerUrl(), aspirantForm())->assertSessionHasErrors(['work_center' => 'La Comisión aún no publica la lista']);
 
-    expect(Teleworker::query()->count())->toBe(0)->and(PortalLink::query()->count())->toBe(0);
+    expect(Teleworker::query()->count())->toBe(0);
 });
 
 it('creates one Sección I application per workplace with the latest published version', function (): void {
@@ -172,8 +171,7 @@ it('emails a link to the person\'s telework section, with no credential in it', 
         ->toContain('Solo lo ven Recursos Humanos y la Comisión de Seguridad e Higiene. Puede contestar desde su celular.')
         ->and(implode("\n", $sent['lines']))->not->toContain('el anterior deja de funcionar')
         ->and($sent['channels'])->toBe(['mail'])
-        ->and($sent['url'])->toBe(route('portal.telework.show', $this->tenant->slug))
-        ->and(PortalLink::query()->count())->toBe(0);
+        ->and($sent['url'])->toBe(route('portal.telework.show', $this->tenant->slug));
 
     // The person enters first, and lands on their telework section with the checklist waiting.
     auth()->logout();
@@ -187,7 +185,6 @@ it('sends no email to someone without one: RH hands them a link from the page', 
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
 
     Notification::assertNothingSent();
-    expect(PortalLink::query()->count())->toBe(0);
 });
 
 it('queues only ids, and the job emails the link to the section of that person\'s company', function (): void {
@@ -205,8 +202,7 @@ it('queues only ids, and the job emails the link to the section of that person\'
     app()->call($job->handle(...));
 
     Notification::assertSentOnDemand(PortalInvitation::class, fn (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notification->toMail($notifiable)->actionUrl === route('portal.telework.show', $this->tenant->slug));
-    expect($job)->toBeInstanceOf(ShouldQueue::class)
-        ->and(PortalLink::query()->count())->toBe(0);
+    expect($job)->toBeInstanceOf(ShouldQueue::class);
 });
 
 it('sends nothing when the person left before the job runs', function (): void {
@@ -215,7 +211,6 @@ it('sends nothing when the person left before the job runs', function (): void {
     app()->call((new SendPortalInvitation($this->tenant->id, $this->employee->id))->handle(...));
 
     Notification::assertNothingSent();
-    expect(PortalLink::query()->count())->toBe(0);
 });
 
 it('sends nothing when the company may not be used by the time the job runs', function (): void {
@@ -224,8 +219,6 @@ it('sends nothing when the company may not be used by the time the job runs', fu
     app()->call((new SendPortalInvitation($this->tenant->id, $this->employee->id))->handle(...));
 
     Notification::assertNothingSent();
-    workIn(tenantOf($this->tenant->id));
-    expect(PortalLink::query()->count())->toBe(0);
 });
 
 it('answers with the pending application when the insert races, even inside a transaction', function (): void {

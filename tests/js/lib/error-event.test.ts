@@ -80,7 +80,7 @@ describe('errorOnlyEvent', () => {
                 $current_url: `${ORIGIN}/survey/SECRET`,
                 $pathname: '/survey/SECRET',
                 $host: 'humetria.com.mx',
-                $referrer: `${ORIGIN}/portal/SECRET`,
+                $referrer: `${ORIGIN}/engagement/SECRET`,
                 $referring_domain: 'humetria.com.mx',
                 $session_id: 's',
                 $window_id: 'w',

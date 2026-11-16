@@ -18,7 +18,6 @@ describe('isStandalone', () => {
         'results/shared-report',
         'attendance/kiosk',
         'attendance/punch',
-        'attendance/portal',
         'attendance/week',
         'compensation/shared-report',
         'error',

@@ -13,11 +13,6 @@ use App\Modules\WorkerAccess\Http\Middleware\RequireWorkerSession;
 use App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant;
 use Illuminate\Support\Facades\Route;
 
-// The start of the personal portal by link (no account: the link's token is the credential), while the other tools still
-// open their pages with it. Its telework section goes to the person's pages below. Throttled per link and per address
-// (TeleworkServiceProvider), so a room can open theirs at once and nobody can try links in bulk.
-Route::get('portal/{token}', [PortalController::class, 'show'])->middleware('throttle:portal-views')->name('portal.show');
-
 // The telework section of the person (NOM-037), in their pages: the company of the slug (a company without NOM-037 answers
 // 404), then their session (a visitor goes to enter, and comes back here). Throttled per session and per address; sending is throttled harder.
 // Confirming a visit, a document or the equipment takes a recent proof that it is the person (worker.proof).

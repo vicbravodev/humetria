@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
-use App\Modules\Telework\Actions\IssuePortalLink;
-use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\SubmitChecklist;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistAnswer;
@@ -49,7 +47,7 @@ beforeEach(function (): void {
     ];
     addQuestion($this->checklist, 5, 'yes', section: 2);
     $this->application = ChecklistApplicationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id, 'checklist_id' => $this->checklist->id]);
-    $this->portal = resolve(OpenPortal::class)->handle(resolve(IssuePortalLink::class)->handle($this->employee->id));
+    $this->portal = teleworkPortalOf($this->employee->id);
 });
 
 /** @return array<string, ?string> Answers that raise no flag, the sensitive one only when `$withHealth`. */
@@ -276,7 +274,7 @@ it('keeps the version the application was created with when a newer one is publi
 it('answers only the application of the person whose link it is', function (): void {
     $stranger = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
     TeleworkerFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $stranger->id, 'work_center_id' => Teleworker::query()->firstOrFail()->work_center_id]);
-    $other = resolve(OpenPortal::class)->handle(resolve(IssuePortalLink::class)->handle($stranger->id));
+    $other = teleworkPortalOf($stranger->id);
 
     expect(fn () => submit(portal: $other))->toThrow(ModelNotFoundException::class);
     expect(fn () => submit(application: (string) Str::uuid()))->toThrow(ModelNotFoundException::class);

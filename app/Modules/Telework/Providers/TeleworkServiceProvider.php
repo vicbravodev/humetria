@@ -9,7 +9,6 @@ use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Telework\Contracts\Committee;
-use App\Modules\Telework\Contracts\PortalAccess;
 use App\Modules\Telework\Contracts\TeleworkApplicability;
 use App\Modules\Telework\Contracts\TeleworkRoute;
 use App\Modules\Telework\Contracts\TeleworkStanding;
@@ -23,23 +22,18 @@ use App\Modules\Telework\Support\CompanyTeleworkApplicability;
 use App\Modules\Telework\Support\CompanyTeleworkRoute;
 use App\Modules\Telework\Support\CompanyTeleworkStanding;
 use App\Modules\Telework\Support\TeleworkWorkerSection;
-use App\Modules\Telework\Support\TokenPortalAccess;
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 /**
  * NOM-037 (teletrabajo). Its panel routes live in routes/telework.php, required from the company group in
- * routes/company.php; the public portal is routes/portal.php. The contracts and listeners of the module are bound here as they appear.
+ * routes/company.php; the person's telework pages are routes/telework-portal.php. The contracts and listeners of the module are bound here as they appear.
  */
 final class TeleworkServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->app->bind(Committee::class, CommitteeGate::class);
-        $this->app->bind(PortalAccess::class, TokenPortalAccess::class);
         $this->app->bind(TeleworkStanding::class, CompanyTeleworkStanding::class);
         $this->app->bind(TeleworkRoute::class, CompanyTeleworkRoute::class);
         $this->app->bind(TeleworkApplicability::class, CompanyTeleworkApplicability::class);
@@ -48,22 +42,6 @@ final class TeleworkServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // As the survey: per link (a person's page without one, per browser session), so a room on one Wi-Fi can use theirs
-        // at once, and a generous cap per address against bulk guessing. The link is hashed: a key never holds it.
-        $link = function (Request $request): string {
-            $token = $request->route('token');
-
-            return is_string($token) ? 'portal:'.hash('sha256', $token) : 'portal-session:'.hash('sha256', $request->session()->getId());
-        };
-        RateLimiter::for('portal-views', fn (Request $request): array => [
-            Limit::perMinute(30)->by($link($request)),
-            Limit::perMinute(600)->by('portal-address:'.$request->ip()),
-        ]);
-        RateLimiter::for('portal-actions', fn (Request $request): array => [
-            Limit::perMinute(10)->by($link($request)),
-            Limit::perMinute(300)->by('portal-actions-address:'.$request->ip()),
-        ]);
-
         Event::listen(EmployeeDeactivated::class, EndOnDeactivation::class);
         Event::listen(EmployeeMoved::class, EndOnMove::class);
         Event::listen(DocumentPublished::class, RequestOnPublication::class);

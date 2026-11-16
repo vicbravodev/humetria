@@ -38,8 +38,6 @@ function publicRouteNames(): array
         'survey.submit', // guest: submits one guide; throttled, under a lock, once per guide
         'engagement.survey.show', // guest: la persona abre la encuesta de clima o pulso desde su correo; el token del enlace es la credencial; no muestra nada de nadie; un enlace inválido, usado o cancelado no dice por qué; throttled
         'engagement.survey.submit', // guest: envía la encuesta completa una sola vez, bajo candado; el token es la credencial; throttled
-        'portal.show', // guest: el inicio del portal por enlace, mientras las demás herramientas abren sus páginas con él (hasta el paso 9 del diseño de WorkerAccess); el token es la credencial; su sección de teletrabajo lleva a las páginas de la persona, sin credencial; throttled
-        'portal.attendance.show', // guest: la persona ve sus teléfonos vinculados y el camino a marcar y a Mi semana; el token del portal es la credencial; solo lo suyo y sin llaves; un enlace no válido o una empresa sin registro de jornada da 404 sin decir nada más; throttled
         'workers.show', // guest: las personas ven los centros de su empresa y lo que la empresa decidió que todos lean; el enlace permanente (derivado, rotable, desactivable, con vencimiento) es la credencial; sin sesión, sin cookies y sin rastro de quien la abre; el mismo 404 neutro por cualquier causa; throttled por dirección y por enlace
         'workers.center', // guest: las personas ven lo que un centro publica (la política vigente); el enlace permanente es la credencial; un centro ajeno, archivado o inexistente da el mismo 404 neutro que un enlace inventado; sin sesión ni cookies; throttled por dirección y por enlace
         'complaints.public.show', // guest: la persona presenta su queja sin cuenta, sin sesión y sin cookies; el código del canal es la credencial de la empresa; un código inválido o un canal sin activar dan el mismo 404; throttled por una huella de la dirección
@@ -164,11 +162,4 @@ test('what asks for a recent proof takes the person\'s session first', function 
 
         expect(array_search(RequireWorkerSession::class, $middleware, true))->toBeInt()->toBeLessThan(array_search(App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof::class, $middleware, true));
     }
-});
-
-test('no page of the telework tool is opened with the portal link any more', function () {
-    $telework = collect(appRoutes())->filter(fn (LaravelRoute $route): bool => Str::startsWith((string) $route->getActionName(), 'App\\Modules\\Telework\\Http\\Controllers\\Portal'));
-
-    expect($telework->map(fn (LaravelRoute $route): string => $route->uri())->filter(fn (string $uri): bool => Str::contains($uri, '{token}'))->values()->all())
-        ->toBe(['portal/{token}']);
 });

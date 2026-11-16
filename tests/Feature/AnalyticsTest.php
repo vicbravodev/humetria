@@ -224,7 +224,7 @@ it('hands the browser of any other page only the token and the host for its erro
 it('has no measurement block on a page that takes a token or a code in its address, and its error block never carries the address', function (): void {
     measuring();
 
-    foreach (['/c/NO-SUCH-CODE', '/workers/NO-SUCH-TOKEN', '/survey/NO-SUCH-TOKEN', '/report/NO-SUCH-TOKEN', '/portal/NO-SUCH-TOKEN', '/engagement/NO-SUCH-TOKEN', '/admin/invitations/NO-SUCH-TOKEN'] as $uri) {
+    foreach (['/c/NO-SUCH-CODE', '/workers/NO-SUCH-TOKEN', '/survey/NO-SUCH-TOKEN', '/report/NO-SUCH-TOKEN', '/engagement/NO-SUCH-TOKEN', '/admin/invitations/NO-SUCH-TOKEN'] as $uri) {
         $html = (string) $this->get($uri)->getContent();
 
         expect($html)->not->toContain('analytics-config')

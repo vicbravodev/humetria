@@ -109,10 +109,16 @@ it('ends each email with the person\'s entrance, which carries no credential', f
 
     Notification::assertSentOnDemand(SurveyInvitation::class, function (SurveyInvitation $mail, array $channels, AnonymousNotifiable $notifiable): bool {
         $html = (string) $mail->toMail($notifiable)->render();
-        expect($html)->toContain('href="'.rtrim(config()->string('app.url'), '/').'/me/'.$this->tenant->slug.'"')->not->toContain('/portal/');
+        expect($html)->toContain('href="'.rtrim(config()->string('app.url'), '/').'/me/'.$this->tenant->slug.'"');
 
         return true;
     });
+});
+
+it('leaves the foot alone when the email was built without the person\'s entrance', function (): void {
+    $notification = new SurveyInvitation(false, 'token', 'Ana', resolve(App\Modules\Tenancy\Contracts\Companies::class)->current(), null, new CarbonImmutable('2026-11-20'), App\Modules\Engagement\Enums\SurveyKind::Climate);
+
+    expect((string) $notification->toMail(new AnonymousNotifiable)->render())->not->toContain('Todo lo suyo');
 });
 
 it('sends once even when the job runs again', function (): void {

@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
 
-it('reverses and reapplies the derived portal link migration', function (): void {
-    $migration = require database_path('migrations/2026_11_20_100000_derive_the_portal_link.php');
+it('drops the portal links, and going back makes the table again as it stood, empty', function (): void {
+    $migration = require database_path('migrations/2027_01_23_100000_drop_portal_links_table.php');
+
+    expect(Schema::hasTable('portal_links'))->toBeFalse();
 
     $migration->down();
 
-    expect(Schema::hasColumns('portal_links', ['previous_token_hash', 'previous_valid_until']))->toBeTrue()
-        ->and(Schema::hasColumn('portal_links', 'version'))->toBeFalse();
+    expect(Schema::hasColumns('portal_links', ['id', 'tenant_id', 'employee_id', 'token_hash', 'version', 'created_at', 'updated_at']))->toBeTrue()
+        ->and(Schema::hasColumns('portal_links', ['previous_token_hash']))->toBeFalse();
 
     $migration->up();
 
-    expect(Schema::hasColumns('portal_links', ['previous_token_hash']))->toBeFalse()
-        ->and(Schema::hasColumn('portal_links', 'previous_valid_until'))->toBeFalse()
-        ->and(Schema::hasColumn('portal_links', 'version'))->toBeTrue();
+    expect(Schema::hasTable('portal_links'))->toBeFalse();
 });

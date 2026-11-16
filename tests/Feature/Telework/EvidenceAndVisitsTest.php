@@ -358,7 +358,7 @@ it('keeps the other company\'s evidence out of the portal and the panel', functi
 
 it('keeps a confirmation whose address is unknown, with the address empty', function (): void {
     $authorization = VisitAuthorizationFactory::new()->create(['tenant_id' => $this->tenant->id, 'workplace_id' => $this->workplace->id]);
-    $portal = resolve(App\Modules\Telework\Actions\OpenPortal::class)->handle(resolve(App\Modules\Telework\Actions\IssuePortalLink::class)->handle($this->employee->id));
+    $portal = teleworkPortalOf($this->employee->id);
 
     resolve(ConfirmVisitAuthorization::class)->handle($portal, $authorization->id, null);
 

@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
-use App\Modules\Telework\Actions\IssuePortalLink;
-use App\Modules\Telework\Actions\OpenPortal;
 use App\Modules\Telework\Actions\ReviewNotice;
 use App\Modules\Telework\Actions\ReviewWorkplace;
 use App\Modules\Telework\Actions\SubmitNotice;
@@ -47,11 +45,6 @@ beforeEach(function (): void {
     workIn($this->tenant);
 });
 
-function noticeToken(): string
-{
-    return resolve(IssuePortalLink::class)->handle(test()->employee->id);
-}
-
 /** Enters as the teleworker and gives the slug of their company, for their pages. */
 function noticePerson(): string
 {
@@ -66,7 +59,7 @@ function noticeForm(array $overrides = []): array
 
 function noticeFor(NoticeKind $kind, array $overrides = []): WorkerNotice
 {
-    $portal = resolve(OpenPortal::class)->handle(noticeToken());
+    $portal = teleworkPortalOf(test()->employee->id);
 
     return resolve(SubmitNotice::class)->handle(
         $portal,
@@ -283,7 +276,7 @@ describe('a change of address (6.7)', function (): void {
 
     function moveNotice(bool $temporary = false): WorkerNotice
     {
-        $portal = resolve(OpenPortal::class)->handle(noticeToken());
+        $portal = teleworkPortalOf(test()->employee->id);
 
         return resolve(SubmitNotice::class)->handle($portal, NoticeKind::AddressChange, CarbonImmutable::parse('2026-02-27'), CarbonImmutable::parse('2026-03-01'), 'Me mudo.', false, new AddressData('Calle Nueva', '7', null, 'Jardines', '76100', 'Querétaro', 'QUE'), $temporary, null);
     }
@@ -329,7 +322,7 @@ describe('a change of address (6.7)', function (): void {
     });
 
     it('refuses an address change without the address in the action, and leaves nothing behind', function (): void {
-        $portal = resolve(OpenPortal::class)->handle(noticeToken());
+        $portal = teleworkPortalOf(test()->employee->id);
 
         expect(fn () => resolve(SubmitNotice::class)->handle($portal, NoticeKind::AddressChange, CarbonImmutable::parse('2026-02-27'), CarbonImmutable::parse('2026-03-01'), 'Me mudo.', false, null, false, null))->toThrow(ValidationException::class);
         expect(WorkerNotice::query()->count())->toBe(0)->and(Workplace::query()->count())->toBe(1);

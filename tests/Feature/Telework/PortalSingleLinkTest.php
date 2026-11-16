@@ -14,7 +14,6 @@ use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Engagement\Support\SurveyWorkerSection as EngagementSurveySection;
 use App\Modules\Organization\Models\Employee;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -32,19 +31,7 @@ beforeEach(function (): void {
     $this->center = WorkCenter::factory()->for($this->tenant)->create();
     workIn($this->tenant);
     $this->ana = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => 'Ana Ruiz']);
-    $this->token = resolve(IssuePortalLink::class)->handle($this->ana->id);
 });
-
-/** @return array<string, mixed> The `sections` of the home page, keyed by their key. */
-function singleLinkHomeSections(string $token): array
-{
-    $sections = [];
-    test()->get(route('portal.show', $token))->assertOk()->assertInertia(function (Assert $page) use (&$sections): void {
-        $sections = collect($page->toArray()['props']['sections'])->keyBy('key')->all();
-    });
-
-    return $sections;
-}
 
 /** An invited person of the center's campaign with a guide left, and the link of their email (its hash is stored). */
 function singleLinkEvaluationInvitation(Employee $person, Campaign $campaign, bool $guideLeft = true): Participant
@@ -211,13 +198,4 @@ describe('climate and pulse survey, in the person\'s start', function (): void {
         expect(singleLinkStartSections())->not->toHaveKey('engagement');
     });
 
-});
-
-it('lists none of them in the start by link any more: they are in the person\'s start, in their session', function (): void {
-    ComplaintChannel::factory()->forTenant($this->tenant->id)->active()->create();
-    singleLinkEvaluationInvitation($this->ana, Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]));
-    singleLinkClimateInvitation($this->ana, Survey::factory()->active()->create(['tenant_id' => $this->tenant->id]));
-
-    expect(singleLinkStartSections())->toHaveKeys(['complaints', 'survey', 'engagement'])
-        ->and(singleLinkHomeSections($this->token))->not->toHaveKeys(['complaints', 'survey', 'engagement']);
 });

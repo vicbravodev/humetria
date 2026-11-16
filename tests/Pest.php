@@ -173,6 +173,15 @@ function asPerson(string $employeeId): string
     return Tenant::query()->findOrFail(App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($employeeId)->tenant_id)->slug;
 }
 
+/** The telework portal of an employee of the current company, as their session opens it (Telework\Support\SessionPortal). */
+function teleworkPortalOf(string $employeeId): App\Modules\Telework\Support\OpenedPortal
+{
+    $person = App\Modules\Organization\Models\Employee::query()->findOrFail($employeeId);
+    $company = resolve(App\Modules\Tenancy\Contracts\Companies::class)->current();
+
+    return resolve(App\Modules\Telework\Support\SessionPortal::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($company->id, $person->id, $company->tradeName, $person->name));
+}
+
 /**
  * In the browser: the steps of a person (`$employeeId`) who opened a page of theirs without a session and was sent to enter.
  * They open a one-time link they asked for (made here), press «Continuar» and land on that page, which shows `$text`.

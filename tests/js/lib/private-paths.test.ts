@@ -18,7 +18,7 @@ describe('isPrivatePath', () => {
         '/admin/acme',
         '/campaigns',
         '/cx',
-        '/portal/c/abc',
+        '/me/c/abc',
         '/workersx',
         '/admin/acme/workers',
     ])('lets %s write its preferences', (path) => {

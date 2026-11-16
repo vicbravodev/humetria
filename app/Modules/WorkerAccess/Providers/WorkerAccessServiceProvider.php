@@ -91,5 +91,18 @@ final class WorkerAccessServiceProvider extends ServiceProvider
             Limit::perMinute(30)->by('worker-link-ip:'.$request->ip()),
             Limit::perMinute(10)->by('worker-link-token:'.hash('sha256', is_string($token = $request->route('token')) ? $token : '')),
         ]);
+
+        // The pages of every tool in the person's session (`portal.*` under `me/{slug}/...`): per browser session, so a room on
+        // one Wi-Fi can use theirs at once, never one bucket for everyone; and a generous cap per address. Sending is harder.
+        // The session id's hash names its counter.
+        $session = fn (Request $request): string => 'portal-session:'.hash('sha256', $request->session()->getId());
+        RateLimiter::for('portal-views', fn (Request $request): array => [
+            Limit::perMinute(30)->by($session($request)),
+            Limit::perMinute(600)->by('portal-address:'.$request->ip()),
+        ]);
+        RateLimiter::for('portal-actions', fn (Request $request): array => [
+            Limit::perMinute(10)->by($session($request)),
+            Limit::perMinute(300)->by('portal-actions-address:'.$request->ip()),
+        ]);
     }
 }
