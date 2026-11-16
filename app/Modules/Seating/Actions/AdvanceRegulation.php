@@ -57,7 +57,7 @@ final readonly class AdvanceRegulation
             });
         } catch (Throwable $failure) {
             if ($stored !== null) {
-                $this->files->delete($stored);
+                $this->files->discard($stored);
             }
 
             throw $failure;

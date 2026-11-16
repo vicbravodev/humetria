@@ -19,13 +19,15 @@ final readonly class RecordUsage
     /**
      * @param  list<string>  $tools  the tools the answer called, by name
      */
-    public function handle(AssistantScope $scope, ?string $conversationId, int $inputTokens, int $outputTokens, array $tools, int $latencyMs, bool $stopped): AiUsage
+    public function handle(AssistantScope $scope, ?string $conversationId, int $inputTokens, int $outputTokens, array $tools, int $latencyMs, bool $stopped, ?string $provider = null, ?string $model = null): AiUsage
     {
         $usage = AiUsage::query()->create([
             'tenant_id' => $scope->tenantId,
             'participant_id' => $scope->participantId,
             'conversation_id' => $conversationId,
             'agent' => self::AGENT,
+            'provider' => $provider,
+            'model' => $model,
             'input_tokens' => $inputTokens,
             'output_tokens' => $outputTokens,
             'tools' => $tools,

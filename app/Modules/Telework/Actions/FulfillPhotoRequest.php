@@ -25,6 +25,17 @@ final readonly class FulfillPhotoRequest
     public function __construct(private FileStore $files) {}
 
     /**
+     * The checks `handle()` makes, to run BEFORE anything is stored: a send that will be refused must not take quota.
+     *
+     * @throws ModelNotFoundException when the request is not a photo request of one of this person's workplaces.
+     * @throws ValidationException when the request was already answered.
+     */
+    public function ensureOpen(OpenedPortal $portal, string $requestId): void
+    {
+        $this->open($portal, $requestId, lock: false);
+    }
+
+    /**
      * @param  list<string>  $paths  Stored photos, at least one.
      *
      * @throws ModelNotFoundException when the request is not a photo request of one of this person's workplaces.
@@ -35,7 +46,7 @@ final readonly class FulfillPhotoRequest
         try {
             DB::transaction(fn () => $this->fulfil($portal, $requestId, $paths));
         } catch (Throwable $failure) {
-            $this->files->delete(...$paths);
+            $this->files->discard(...$paths);
 
             throw $failure;
         }
@@ -46,17 +57,8 @@ final readonly class FulfillPhotoRequest
      */
     private function fulfil(OpenedPortal $portal, string $requestId, array $paths): void
     {
-        $teleworkerId = $portal->teleworkerId ?? throw new ModelNotFoundException;
         // Locked: two sends at once cannot both pass the check below.
-        $request = EvidenceRequest::query()
-            ->where('kind', EvidenceKind::Photos)
-            ->whereIn('workplace_id', Workplace::query()->where('teleworker_id', $teleworkerId)->whereNull('retired_at')->select('id'))
-            ->lockForUpdate()
-            ->findOrFail($requestId);
-
-        if ($request->fulfilled_at !== null) {
-            throw ValidationException::withMessages(['evidence' => 'Ya envió las fotos de esta solicitud.']);
-        }
+        $request = $this->open($portal, $requestId, lock: true);
 
         $now = now();
         DB::table('evidence_photos')->insert(array_map(fn (string $path): array => [
@@ -71,5 +73,20 @@ final readonly class FulfillPhotoRequest
         $request->update(['fulfilled_at' => $now]);
 
         Log::info('telework.evidence_fulfilled', ['evidence_request_id' => $request->id, 'workplace_id' => $request->workplace_id, 'kind' => 'photos', 'photo_count' => count($paths)]);
+    }
+
+    private function open(OpenedPortal $portal, string $requestId, bool $lock): EvidenceRequest
+    {
+        $teleworkerId = $portal->teleworkerId ?? throw new ModelNotFoundException;
+        $query = EvidenceRequest::query()
+            ->where('kind', EvidenceKind::Photos)
+            ->whereIn('workplace_id', Workplace::query()->where('teleworker_id', $teleworkerId)->whereNull('retired_at')->select('id'));
+        $request = ($lock ? $query->lockForUpdate() : $query)->findOrFail($requestId);
+
+        if ($request->fulfilled_at !== null) {
+            throw ValidationException::withMessages(['evidence' => 'Ya envió las fotos de esta solicitud.']);
+        }
+
+        return $request;
     }
 }

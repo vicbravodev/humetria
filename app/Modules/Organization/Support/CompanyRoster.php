@@ -101,7 +101,9 @@ final class CompanyRoster implements Roster
             ->when($query->employeeIds !== null, fn (Builder $employees) => $employees->among('employees.id', $query->employeeIds ?? []))
             ->when($query->activeInWorkCenter !== null, fn (Builder $employees) => $employees->where('work_center_id', $query->activeInWorkCenter)->whereNull('deactivated_at'))
             ->when($query->areaId !== null, fn (Builder $employees) => $employees->where('area_id', $query->areaId))
-            ->matching(['name', 'email', 'employee_number'], $query->search, ['mobile'])
+            // Not email nor mobile: the callers are lists open to roles that cannot read contact data, and a search
+            // over it is an oracle. Contact search lives only in Empleados (manage-organization).
+            ->matching(['name', 'employee_number'], $query->search)
             ->orderBy('name')
             ->orderBy('id');
     }

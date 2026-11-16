@@ -27,6 +27,12 @@ final class SendStandingQuestions implements ShouldBeUniqueUntilProcessing, Shou
 {
     use Queueable;
 
+    /** One email read from the database when it runs: a retry sends it once, after a mail server's hiccup. */
+    public int $tries = 3;
+
+    /** @var list<int> Seconds before the second and the third try. */
+    public array $backoff = [60, 300];
+
     /** Seconds a person's waiting request blocks another one. */
     public int $uniqueFor = 600;
 

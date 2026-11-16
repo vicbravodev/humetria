@@ -11,6 +11,7 @@ use App\Modules\Tenancy\Data\NewAccountData;
 use App\Modules\Tenancy\Enums\InvitationStatus;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
+use App\Modules\Tenancy\Events\MemberRemoved;
 use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
@@ -37,7 +38,8 @@ final readonly class AcceptInvitation
     public function handle(TenantInvitation $invitation, User|NewAccountData $accepter): User
     {
         // Only the invited email joins: whoever holds the link can never hand the company to another account.
-        if ($accepter instanceof User && Str::lower($accepter->email) !== $invitation->email) {
+        // ...and only an account that proved its address: an unproven one could have claimed it without owning it.
+        if ($accepter instanceof User && (! $accepter->hasVerifiedEmail() || Str::lower($accepter->email) !== $invitation->email)) {
             throw new InvitationForAnotherAccount;
         }
 
@@ -124,6 +126,8 @@ final readonly class AcceptInvitation
             }
 
             $previous->delete();
+            // Same event as RemoveMember: their complaint cases, designation and Humi conversations end with their access.
+            event(new MemberRemoved($tenant->id, $previous->user_id));
         }
 
         $tenant->memberships()->firstOrCreate(['user_id' => $user->id]);
@@ -135,6 +139,10 @@ final readonly class AcceptInvitation
 
     private function createUser(string $email, NewAccountData $data): User
     {
+        // An account that claimed this address without proving it gives it up: the link, sent to the address, proves it.
+        User::query()->whereRaw('lower(email) = ?', [$email])->whereNull('email_verified_at')
+            ->each(fn (User $squatter): bool => $squatter->forceFill(['email' => "released-{$squatter->id}@released.invalid"])->save());
+
         // The email is verified: the person reached this point through the link sent to it.
         return User::query()->forceCreate([
             'name' => $data->name,

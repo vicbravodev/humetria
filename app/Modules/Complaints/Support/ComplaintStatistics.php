@@ -25,11 +25,11 @@ final readonly class ComplaintStatistics
         $statuses = [];
 
         foreach (ComplaintType::cases() as $type) {
-            $types[$type->value] = Complaint::query()->where('type', $type->value)->count();
+            $types[$type->value] = Complaint::query()->where('held', false)->where('type', $type->value)->count();
         }
 
         foreach (ComplaintStatus::cases() as $status) {
-            $statuses[$status->value] = Complaint::query()->where('status', $status->value)->count();
+            $statuses[$status->value] = Complaint::query()->where('held', false)->where('status', $status->value)->count();
         }
 
         $byType = MinimumGroup::apply($types, $minimum);

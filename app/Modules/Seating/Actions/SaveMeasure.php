@@ -67,7 +67,7 @@ final readonly class SaveMeasure
             });
         } catch (Throwable $failure) {
             if ($stored !== null) {
-                $this->files->delete($stored);
+                $this->files->discard($stored);
             }
 
             throw $failure;

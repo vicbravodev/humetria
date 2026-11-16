@@ -19,10 +19,10 @@ composer test:fast                                                       # Tia: 
 composer mutate -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # una clase (o un namespace), 4 procesos
 composer mutate:retry -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # lo que escapó, primero
 composer mutate:critical                                                 # las clases de lógica de negocio, un módulo a la vez; CI le pone --min=95
-composer mutate:full                                                     # las 293 de mutates(), --min=95
+composer mutate:full                                                     # todas las clases de mutates(), --min=95
 ```
 
-Cada checkout usa su propia base de pruebas (ver CLAUDE.md, "Worktrees en paralelo"): dos worktrees ya no se pisan. Dentro de un mismo checkout, no corras la mutación al mismo tiempo que `composer test`: comparten su base.
+Cada checkout usa su propia base de pruebas (ver `docs/setup.md`, "Worktrees en paralelo"): dos worktrees ya no se pisan. Dentro de un mismo checkout, no corras la mutación al mismo tiempo que `composer test`: comparten su base.
 
 ## Dónde corre
 
@@ -52,6 +52,20 @@ declaran `mutates()` de ellas. Eso fija el tamaño del filtro al de un módulo, 
 - `mutate:full` (y `mutate` sin `--class`) no se parte así: con un filtro de esa línea compartida puede caer igual. Para medir, usa `mutate:critical`.
 
 Si la corrida semanal falla, el workflow queda en rojo y GitHub avisa al correo de quien editó el cron; no toca ningún PR.
+
+### Si la corrida falla
+
+- Se reproduce con `composer mutate -- --class='App\Modules\X\Actions\Y'` y se agrega el test que mata al mutante.
+- No se baja `--min`, no se excluye la clase ni se vuelve a poner la mutación en los PR.
+- El umbral solo sube: si el score sostiene más de 2 puntos por encima, súbelo en `mutation.yml` y aquí.
+- Para dejar una clase fuera de la mutación, su test no declara `mutates()`; la lista sale de `scripts/mutation-classes.php`,
+  no hay una lista que mantener a mano.
+
+### Cobertura
+
+Unit/Feature corren en paralelo (`composer test:coverage`); como Pest no aplica `--min` en paralelo, `scripts/coverage-min.php`
+lee el clover y falla bajo 90%. Los tests de navegador no aportan cobertura de PHP. Si la cobertura baja, faltan tests: no se
+baja el umbral.
 
 El 95% es el score de las clases críticas (97,44% el 1 nov 2026) redondeado hacia abajo: detecta regresiones sin fallar hoy.
 Esa medición tuvo 7432 mutantes probados, ninguno escapó, y 195 "uncovered" (líneas que la cobertura no marca, como el
@@ -90,6 +104,11 @@ tiene que pasar con **cualquier** dato que Faker pueda dar, no solo con el de ho
    que alguna prueba pase a `not->toContain('Rosa')` o `assertDontSee`: las lee de las propias pruebas, no hay lista que mantener.
    `memberOf()` da a cada miembro un nombre fijo (`Miembro owner`).
 9. **Ninguna prueba depende de otra, del orden, del puerto ni de un id.** Cada una crea sus datos con factories.
+10. **Quien recorre `resources/js` usa `frontendSourceFiles()`** (`tests/Pest.php`), no un `RecursiveDirectoryIterator` ni
+    un `glob` propios: las sondas de lint de `FrontendArchitectureTest` crean y borran `zz-probe-*` mientras otras pruebas
+    corren en paralelo, y un recorrido a mano tropieza con la carpeta que desapareció (`UnexpectedValueException`).
+11. **Un texto no prueba que la página cambió.** Tras un clic que navega, el panel que se cierra puede decir lo mismo que la
+    página nueva: se espera la ruta con `pathBecomes()` antes de afirmar lo demás.
 
 ## Cómo se estresa
 
@@ -110,3 +129,28 @@ fechas fijas de las pruebas no es un caso real (el tiempo solo avanza) y falla p
 
 Una prueba o un archivo sospechoso se repite aislado: `for s in $(seq 1 20); do TEST_SEED=$s php artisan test --compact ruta; done`.
 Vitest: `for i in 1 2 3 4 5; do npm run test:js; done`.
+
+# CI (`.github/workflows/tests.yml`)
+
+Los jobs corren en paralelo; `ci`, el check obligatorio, espera a todos:
+
+| Job | Qué hace |
+|---|---|
+| `changes` | Decide si el cambio necesita el pipeline (`scripts/ci-code-changed.sh`). |
+| `build` | Construye el frontend una vez (`npm run build:ssr`) y lo sube como artefacto `assets`: `public/build`, `bootstrap/ssr` y los archivos de Wayfinder. |
+| `checks` | Auditoría, Pint, PHPStan, `vp check`, tsc y Vitest. No construye: genera Wayfinder con `wayfinder:generate --with-form`. |
+| `tests` (3 shards) | Unit y Feature con PCOV; cada shard guarda su cobertura (`--coverage-php`). |
+| `coverage` | Junta la cobertura de los shards (`scripts/coverage-merge.php`, con el merger de php-code-coverage) y aplica el 90 % (`scripts/coverage-min.php`). |
+| `browser` (4 shards) | Pest Browser. Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
+| `ssr` | El bundle SSR con un Node real (usa el del job `build`: `SSR_PREBUILT=true`) y la imagen `ssr` con Docker. |
+
+- Los shards se reparten por **tiempo** con `tests/.pest/shards.json` (Pest: `--shard` usa los tiempos de cada clase).
+  Un archivo de prueba nuevo sin tiempo va por turno y Pest avisa que el archivo está viejo; se regenera de vez en cuando,
+  con la suite completa en verde: `php artisan test --update-shards --parallel --processes=4 --exclude-testsuite=Ssr`
+  (con `artisan test`: el servidor de Playwright lo arranca él). Los tiempos son de una Mac; en CI cambian las magnitudes, no
+  las proporciones.
+- Postgres en CI vive en un tmpfs y con `fsync`, `synchronous_commit` y `full_page_writes` apagados (la acción `setup`):
+  la base muere con el job.
+- Los navegadores de Playwright se guardan en caché por la versión de Playwright.
+- Cada job tiene `timeout-minutes`; el flujo también corre en `merge_group`, listo para una cola de merge.
+- En local nada cambia: `composer test` mide la cobertura en una sola corrida (`test:coverage`) y `composer setup` construye.

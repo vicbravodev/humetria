@@ -82,7 +82,7 @@ final readonly class PhotoStore
                 }
             }
         } catch (Throwable $failure) {
-            $this->files->delete(...array_merge(...array_values($paths)));
+            $this->files->discard(...array_merge(...array_values($paths)));
 
             throw $failure;
         }

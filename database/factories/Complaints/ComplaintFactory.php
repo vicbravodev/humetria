@@ -41,6 +41,7 @@ final class ComplaintFactory extends Factory
             'status' => ComplaintStatus::New,
             'resolution' => null,
             'on_hold' => false,
+            'held' => false,
             'description' => 'Una compañera de turno me trata mal de forma constante.',
             'respondent_text' => null,
             'occurred_on' => null,

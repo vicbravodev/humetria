@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Logging\PostHogLogs;
 use App\Logging\StructuredLogging;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
@@ -116,6 +117,13 @@ return [
             ],
             'tap' => [StructuredLogging::class],
             'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        // PostHog Logs (App\Logging\PostHogLogs): sends nothing without POSTHOG_PROJECT_TOKEN. In production, in LOG_STACK next to stderr.
+        'posthog' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_POSTHOG_LEVEL', 'info'),
+            'handler' => PostHogLogs::class,
         ],
 
         'syslog' => [
