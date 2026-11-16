@@ -7,6 +7,7 @@ namespace App\Modules\WorkerAccess\Http\Controllers;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use App\Modules\WorkerAccess\Enums\EntryVia;
 use App\Modules\WorkerAccess\Http\Requests\EnterRequest;
+use App\Modules\WorkerAccess\Support\WorkerDestination;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +28,7 @@ final readonly class EntryController
         return response()->json($signatures->options(self::context($request)))->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(EnterRequest $request, string $tenant, WorkerSignatures $signatures): JsonResponse
+    public function store(EnterRequest $request, string $tenant, WorkerSignatures $signatures, WorkerDestination $destination): JsonResponse
     {
         $signed = $signatures->verify(self::context($request), $request->credential());
 
@@ -41,7 +42,7 @@ final readonly class EntryController
         $this->sessions->start($signed->employeeId, EntryVia::Key, $signed->credentialId);
         Log::info('worker_access.entered', ['employee_id' => $signed->employeeId, 'via' => EntryVia::Key->value, 'key_id' => $signed->credentialId]);
 
-        return response()->json(['redirect' => route('worker.home', $tenant)])->header('Cache-Control', 'no-store, private');
+        return response()->json(['redirect' => $destination->pull($tenant)])->header('Cache-Control', 'no-store, private');
     }
 
     public function leave(string $tenant): RedirectResponse

@@ -57,6 +57,7 @@ final readonly class WorkerSessionStore implements WorkerSession
         $now = self::stamp(CarbonImmutable::now());
 
         session()->regenerate();
+        request()->attributes->remove(RequestWorkerSession::ATTRIBUTE);
         session()->put(self::KEY, [
             'tenant_id' => $this->companies->current()->id,
             'employee_id' => $employeeId,
@@ -74,6 +75,7 @@ final readonly class WorkerSessionStore implements WorkerSession
     {
         session()->forget(self::KEY);
         session()->regenerate();
+        request()->attributes->remove(RequestWorkerSession::ATTRIBUTE);
     }
 
     /**

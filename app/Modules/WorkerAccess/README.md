@@ -20,6 +20,12 @@ los últimos 30 min, se abrió hace menos de 8 h, es posterior a `valid_after`, 
 bloqueada; si no, se borra. Entrar y salir regeneran el id; «Salir» borra solo esa entrada. Valores en
 `config/worker_access.php`.
 
+Una página de la persona (`/me/{slug}/...`) lleva `ResolveWorkerTenant` y `RequireWorkerSession` (no `auth:worker`, que haría
+a la persona el usuario de la petición). Sin sesión, la página lleva a la entrada de esa empresa y guarda el destino
+(`Support/WorkerDestination`: solo una página `/me/{slug}/...` de la misma empresa en este sitio, en su propia llave de
+sesión, nunca en `url.intended` del panel); al entrar con llave, con un enlace pedido o tras crear la llave de un enlace de RH,
+la persona llega ahí una vez. `WorkerSession` se lee una vez por petición (`Support/RequestWorkerSession`).
+
 ## Reglas
 
 - Crear una llave: solo con una sesión que entró con un enlace `issued` o con otra llave, hasta 3 activas. Un enlace

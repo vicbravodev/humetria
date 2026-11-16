@@ -11,6 +11,7 @@ use App\Modules\WorkerAccess\Actions\RequestAccessLink;
 use App\Modules\WorkerAccess\Enums\LinkKind;
 use App\Modules\WorkerAccess\Http\Requests\RequestLinkRequest;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
+use App\Modules\WorkerAccess\Support\WorkerDestination;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -44,7 +45,7 @@ final readonly class AccessLinkController
         ]);
     }
 
-    public function open(string $tenant, string $token, OpenAccessLink $open, WorkerSessionStore $sessions): RedirectResponse
+    public function open(string $tenant, string $token, OpenAccessLink $open, WorkerSessionStore $sessions, WorkerDestination $destination): RedirectResponse
     {
         $link = $open->handle($token);
 
@@ -55,8 +56,9 @@ final readonly class AccessLinkController
         $sessions->start($link->employee_id, $link->kind->entry());
         Log::info('worker_access.entered', ['employee_id' => $link->employee_id, 'via' => $link->kind->entry()->value]);
 
-        // A link RH issued is for registering a key; one the person asked for goes straight to their start.
-        return redirect()->route($link->kind === LinkKind::Issued ? 'worker.key.show' : 'worker.home', $tenant);
+        // A link RH issued is for registering a key first (the page they were going to waits for that); one the person asked
+        // for goes straight to that page, or to their start.
+        return $link->kind === LinkKind::Issued ? redirect()->route('worker.key.show', $tenant) : redirect()->to($destination->pull($tenant));
     }
 
     /** Whether the link would still open, without spending it: the same rule as OpenAccessLink. */

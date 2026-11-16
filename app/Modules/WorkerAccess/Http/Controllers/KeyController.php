@@ -10,6 +10,7 @@ use App\Modules\WorkerAccess\Exceptions\TooManyKeys;
 use App\Modules\WorkerAccess\Http\Requests\RegisterKeyRequest;
 use App\Modules\WorkerAccess\Support\KeyAllowance;
 use App\Modules\WorkerAccess\Support\OpenSession;
+use App\Modules\WorkerAccess\Support\WorkerDestination;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -53,7 +54,7 @@ final readonly class KeyController
             ->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(RegisterKeyRequest $request, string $tenant, WorkerKeys $keys, RegisterKey $register): JsonResponse
+    public function store(RegisterKeyRequest $request, string $tenant, WorkerKeys $keys, RegisterKey $register, WorkerDestination $destination): JsonResponse
     {
         $session = $this->allowed();
         $person = $session->identity->employeeId;
@@ -69,7 +70,7 @@ final readonly class KeyController
             return response()->json(['message' => 'No se pudo guardar la llave. Intente de nuevo.'], 422);
         }
 
-        return response()->json(['redirect' => route('worker.home', $tenant)])->header('Cache-Control', 'no-store, private');
+        return response()->json(['redirect' => $destination->pull($tenant)])->header('Cache-Control', 'no-store, private');
     }
 
     /** The open session, when it may register a key; 403 without one or when it may not, 409 with the most keys. */

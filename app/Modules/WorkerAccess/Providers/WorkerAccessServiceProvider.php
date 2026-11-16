@@ -14,6 +14,7 @@ use App\Modules\WorkerAccess\Support\CeremonyKeys;
 use App\Modules\WorkerAccess\Support\CeremonySignatures;
 use App\Modules\WorkerAccess\Support\CompanyWorkerCredentials;
 use App\Modules\WorkerAccess\Support\LinkInvitations;
+use App\Modules\WorkerAccess\Support\RequestWorkerSession;
 use App\Modules\WorkerAccess\Support\RouteWorkerLinks;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Auth\GenericUser;
@@ -33,7 +34,7 @@ final class WorkerAccessServiceProvider extends ServiceProvider
         $this->app->bind(WorkerSignatures::class, CeremonySignatures::class);
         $this->app->bind(WorkerKeys::class, CeremonyKeys::class);
         $this->app->bind(WorkerCredentials::class, CompanyWorkerCredentials::class);
-        $this->app->bind(WorkerSession::class, WorkerSessionStore::class);
+        $this->app->bind(WorkerSession::class, RequestWorkerSession::class);
         $this->app->bind(WorkerLinks::class, RouteWorkerLinks::class);
         $this->app->bind(WorkerInvitations::class, LinkInvitations::class);
     }
