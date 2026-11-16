@@ -52,9 +52,15 @@ final readonly class OrganizationStory implements DemoStory
         private CreateEmployee $createEmployee,
     ) {}
 
-    /** Creates the company, flagged as the demo and active for years: it never bills nor expires. */
+    /** The demo company, kept across resets; the first time it is created, flagged as the demo and active for years: it never bills nor expires. */
     public function company(): Tenant
     {
+        $existing = Tenant::query()->where('is_demo', true)->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
         $tenant = $this->createTenant->handle(new TenantData('Manufacturas Alba del Bajío, S.A. de C.V.', 'Alba del Bajío', self::RFC, self::SLUG));
         // Not mass assignable: only this story turns it on.
         $tenant->forceFill(['is_demo' => true])->save();
@@ -109,10 +115,13 @@ final readonly class OrganizationStory implements DemoStory
         );
     }
 
-    /** A panel account for a person of the roster: verified, with a password nobody knows (the console enters by impersonation). */
+    /**
+     * A panel account for a person of the roster: verified, with a password nobody knows (the console enters by
+     * impersonation). A reset keeps it (users belong to no company), so preparing again finds it.
+     */
     private function user(DemoPerson $person): User
     {
-        return User::query()->forceCreate([
+        return User::query()->where('email', $person->email)->first() ?? User::query()->forceCreate([
             'name' => $person->name,
             'email' => $person->email,
             'password' => Str::random(64),
