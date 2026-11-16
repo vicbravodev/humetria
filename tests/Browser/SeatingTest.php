@@ -402,7 +402,10 @@ it('confirms from the portal and says so', function (): void {
     [$url, $ana, $enter] = seatingPortal();
     RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
 
-    $enter(visit($url))->press('Confirmo que me informaron')->assertSee('Usted confirmó el')->assertNoJavaScriptErrors();
+    Illuminate\Support\Facades\Notification::fake();
+
+    // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
+    provedWithCode($enter(visit($url))->press('Confirmo que me informaron'), 'Usted confirmó el')->assertNoJavaScriptErrors();
 });
 
 it('shows the referrals of a person on their assessment, with the form to add one', function (bool $dark, bool $mobile): void {
@@ -572,10 +575,13 @@ it('walks the critical path: the Comisión assesses, the person confirms and rep
     $portal = route('portal.seating.show', Tenant::query()->findOrFail($ana->tenant_id)->slug, absolute: false);
     $enter = enteringTo($ana->id, 'Evaluamos su trabajo de pie');
 
-    $enter(visit($portal)->on()->mobile())
+    Illuminate\Support\Facades\Notification::fake();
+    $confirming = $enter(visit($portal)->on()->mobile())
         ->assertSee('Evaluamos su trabajo de pie')
-        ->press('Confirmo que me informaron')
-        ->assertSee('Usted confirmó el')
+        ->press('Confirmo que me informaron');
+
+    // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
+    provedWithCode($confirming, 'Usted confirmó el')
         ->type('description', 'El respaldo de la silla de la caja 2 está flojo.')
         ->press('Avisar del asiento dañado')
         ->assertNoJavaScriptErrors();

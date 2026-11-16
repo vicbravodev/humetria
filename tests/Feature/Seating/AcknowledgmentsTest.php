@@ -16,6 +16,8 @@ use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -147,6 +149,23 @@ it('shows the person what to confirm, and records the confirmation with date and
         ->and($row->acknowledged_at->toDateTimeString())->toBe('2026-03-01 12:00:00');
     $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null)->where('acknowledgedOn', '2026-03-01'));
 });
+
+it('takes the confirmation only after a recent proof that it is the person', function (EntryVia $via, int $minutes): void {
+    signedFor($this->ana->id);
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.seating.show', $this->slug);
+
+    $this->from($page)->post(route('portal.seating.acknowledgments.store', $this->slug))->assertRedirect($page)->assertInertiaFlash('proofRequired.mode', 'code');
+    expect(RiskAcknowledgment::query()->count())->toBe(0);
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.seating.acknowledgments.store', $this->slug))->assertRedirect($page)->assertSessionHasNoErrors();
+    expect(RiskAcknowledgment::query()->count())->toBe(1);
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
 
 it('does not ask again when the assessment is marked for reassessment, but asks again for a new signed one', function (): void {
     $first = signedFor($this->ana->id);
