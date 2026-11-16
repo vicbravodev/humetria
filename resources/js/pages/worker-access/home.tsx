@@ -8,6 +8,7 @@ export default function Home(props: {
     name: string;
     sections: WorkerSection[];
     keyUrl: string | null;
+    hasKey: boolean;
     leaveUrl: string;
 }) {
     return (

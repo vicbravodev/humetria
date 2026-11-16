@@ -33,11 +33,14 @@ final readonly class HomeController
             ]);
         }
 
+        $keys = KeyAllowance::inUse($session->identity->employeeId);
+
         return Inertia::render('worker-access/home', [
             'company' => $session->identity->companyName,
             'name' => $session->identity->personName,
             'sections' => array_map(fn (WorkerSectionLink $link): array => ['key' => $link->key, 'label' => $link->label, 'description' => $link->description, 'href' => $link->href, 'pending' => $link->pending], $sections->for($session->identity)),
-            'keyUrl' => KeyAllowance::refusal($session) === null ? route('worker.key.show', $tenant) : null,
+            'keyUrl' => KeyAllowance::refusal($session, $keys) === null ? route('worker.key.show', $tenant) : null,
+            'hasKey' => $keys > 0,
             'leaveUrl' => route('worker.leave', $tenant),
         ]);
     }

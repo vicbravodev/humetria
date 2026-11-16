@@ -8,6 +8,7 @@ use App\Modules\WorkerAccess\Contracts\WorkerSection;
 use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use App\Modules\WorkerAccess\Data\WorkerSectionLink;
 use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Support\WorkerSections;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
@@ -119,3 +120,20 @@ it('reads the start with the same queries whatever the tools offer', function (i
  * when there is something to show.
  */
 const WORKER_HOME_QUERIES = 32;
+
+it('tells the start whether the person already has a key in use, so it offers another device instead of a first key', function (string $case, bool $has): void {
+    match ($case) {
+        'none' => null,
+        'in use' => WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]),
+        'revoked' => WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'revoked_at' => now(), 'revoked_reason' => 'revoked_by_hr']),
+        'of someone else' => WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->beto->id]),
+    };
+    enteredAs($this->ana->id, EntryVia::IssuedLink);
+
+    $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->where('hasKey', $has)->etc());
+})->with([
+    'no key' => ['none', false],
+    'a key in use' => ['in use', true],
+    'only a revoked key' => ['revoked', false],
+    'a key of someone else' => ['of someone else', false],
+]);

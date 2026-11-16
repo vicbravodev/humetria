@@ -14,12 +14,14 @@ export default function HomeScreen({
     name,
     sections,
     keyUrl,
+    hasKey,
     leaveUrl,
 }: {
     company: string;
     name: string;
     sections: WorkerSection[];
     keyUrl: string | null;
+    hasKey: boolean;
     leaveUrl: string;
 }) {
     return (
@@ -33,14 +35,21 @@ export default function HomeScreen({
                 <section className="flex flex-col items-start gap-3 card p-5">
                     <ToneTile icon={KeyRound} />
                     <p className="text-xl leading-7 font-semibold">
-                        Entre más rápido la próxima vez
+                        {hasKey
+                            ? 'Agregue este dispositivo'
+                            : 'Entre más rápido la próxima vez'}
                     </p>
                     <p className="text-base text-muted-foreground">
-                        Cree una llave de acceso en este dispositivo y entre con
-                        su huella, sin esperar un correo.
+                        {hasKey
+                            ? 'Ya tiene una llave en otro dispositivo. Cree una aquí para entrar también con su huella en este.'
+                            : 'Cree una llave de acceso en este dispositivo y entre con su huella, sin esperar un correo.'}
                     </p>
                     <Button asChild variant="outline" size="lg">
-                        <Link href={keyUrl}>Crear una llave aquí</Link>
+                        <Link href={keyUrl}>
+                            {hasKey
+                                ? 'Agregar una llave aquí'
+                                : 'Crear una llave aquí'}
+                        </Link>
                     </Button>
                 </section>
             )}

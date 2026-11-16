@@ -14,14 +14,25 @@ use App\Modules\WorkerAccess\Models\WorkerCredential;
  */
 final class KeyAllowance
 {
-    /** Why the session may not register a key: `forbidden` (how it entered) or `full` (keys in use); null when it may. */
-    public static function refusal(OpenSession $session): ?string
+    /**
+     * Why the session may not register a key: `forbidden` (how it entered) or `full` (keys in use); null when it may. A caller
+     * that already counted the keys in use gives the count (`inUse`), so the start reads them once.
+     */
+    public static function refusal(OpenSession $session, ?int $inUse = null): ?string
     {
         if ($session->via === EntryVia::RequestedLink) {
             return 'forbidden';
         }
 
-        return self::full($session->identity->employeeId) ? 'full' : null;
+        $inUse ??= self::inUse($session->identity->employeeId);
+
+        return $inUse >= config()->integer('worker_access.max_keys') ? 'full' : null;
+    }
+
+    /** How many keys the person has in use (not revoked). */
+    public static function inUse(string $employeeId): int
+    {
+        return WorkerCredential::query()->where('employee_id', $employeeId)->whereNull('revoked_at')->count();
     }
 
     /** Whether the person has a key in use: then a recent proof is their key's signature, never a code. */
@@ -32,6 +43,6 @@ final class KeyAllowance
 
     public static function full(string $employeeId): bool
     {
-        return WorkerCredential::query()->where('employee_id', $employeeId)->whereNull('revoked_at')->count() >= config()->integer('worker_access.max_keys');
+        return self::inUse($employeeId) >= config()->integer('worker_access.max_keys');
     }
 }
