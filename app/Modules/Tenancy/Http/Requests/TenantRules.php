@@ -27,6 +27,7 @@ final class TenantRules
         'audit',
         'billing',
         'companies',
+        'demo',
         'demo-requests',
         'email',
         'forgot-password',
