@@ -34,12 +34,13 @@ npm run test:js        # Vitest sobre resources/js/lib, cobertura ≥ 90%
 
 y el CI en verde. En local, `composer ci:check` corre todo lo de arriba en orden: se corre al cerrar un trabajo, antes
 del "crea el PR", no tras cada turno. Mientras se trabaja basta lo acotado (abajo): los tests de la tarea, Pint y PHPStan.
-El check obligatorio de `main` es el job `ci`, que espera a los jobs `checks` (auditoría, Pint, PHPStan, frontend),
-`tests` (Unit/Feature con cobertura) y `browser` (3 shards), todos en paralelo (`.github/workflows/tests.yml`).
+El check obligatorio de `main` es el job `ci`, que espera a `build` (el frontend, una vez), `checks` (auditoría, Pint,
+PHPStan, frontend), `tests` (Unit/Feature en 3 shards), `coverage` (une los shards y aplica el 90 %), `browser` (4 shards) y
+`ssr` (`.github/workflows/tests.yml`). Los shards se reparten por tiempo con `tests/.pest/shards.json` (ver `docs/testing.md`).
 Un cambio que solo trae documentación que nadie lee (lo que hay bajo `docs/` y los `.md` de la raíz) se salta esos jobs y
 el deploy, y `ci` pasa solo: lo decide `scripts/ci-code-changed.sh`. Un documento que un test o la app leen es código
 (`docs/normas`, `docs/operations`, `CLAUDE.md`…) y va en la lista de ese script; `tests/Unit/CiCodeChangedTest.php` falla
-hasta que esté ahí, y `tests/Unit/CiPipelineTest.php` exige que todo job nuevo de `tests.yml` espere al job `changes`.
+hasta que esté ahí, y `tests/Unit/CiPipelineTest.php` exige que todo job nuevo de `tests.yml` espere primero al job `changes` y lleve `timeout-minutes`.
 
 **Mutación: semanal, fuera de los PR.** No corre en los PR ni bloquea el merge, y no forma parte de "terminado".
 `.github/workflows/mutation.yml` la corre cada domingo por la noche (y a mano, `workflow_dispatch`) con
@@ -57,7 +58,7 @@ argumentos del sistema, ver `docs/testing.md`) y con el 95 aplicado a cada módu
   `mutates()`); `composer mutate:retry` repite primero lo que escapó. `composer mutate:critical` (varios minutos) y
   `composer mutate:full` (las 293 clases, `--min=95`) son para medir, a petición del usuario. Ver `docs/testing.md`.
 - No corras la mutación al mismo tiempo que `composer test` en el mismo checkout: comparten su base de pruebas y los dos dan resultados falsos (otro worktree no estorba).
-- La cobertura (Unit/Feature) corre en paralelo (`composer test:coverage`); como Pest no aplica `--min` en paralelo,
+- La cobertura (Unit/Feature) corre en paralelo (`composer test:coverage`; en CI, 3 shards que `scripts/coverage-merge.php` une); como Pest no aplica `--min` en paralelo,
   `scripts/coverage-min.php` lee el clover y falla bajo 90%. Si la cobertura baja, faltan tests: no se baja el umbral.
 
 Para iterar, corre lo más acotado: `php artisan test --compact --filter=nombre` o la ruta del archivo, o
