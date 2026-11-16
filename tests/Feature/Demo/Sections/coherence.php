@@ -13,6 +13,7 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Models\Acknowledgment;
 use App\Modules\Disclosure\Models\Document;
@@ -22,18 +23,32 @@ use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Response;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Participation;
+use App\Modules\Engagement\Support\Results\ManagerFeedback;
+use App\Modules\Engagement\Support\Results\SurveyResults;
 use App\Modules\Leave\Models\LeaveEntitlement;
+use App\Modules\Leave\Models\LeavePolicy;
+use App\Modules\Leave\Models\LeaveStatement;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Responses\Models\AnonymousResponse;
+use App\Modules\Seating\Enums\AssessmentStatus;
+use App\Modules\Seating\Models\RiskAssessment;
+use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Telework\Enums\DocumentKind as TeleworkDocumentKind;
+use App\Modules\Telework\Enums\TeleworkerStatus;
+use App\Modules\Telework\Models\ChecklistApplication;
+use App\Modules\Telework\Models\TeleworkDocument;
+use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoRoster;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use PHPUnit\Framework\ExpectationFailedException;
 
 /**
  * @param  Collection<array-key, mixed>  $ids
@@ -45,39 +60,49 @@ function demoSorted(Collection $ids): array
 }
 
 /**
- * The company panel's GET pages the demo's members open, by name: every one that needs only the company, and one page
- * of each kind that needs a record (the offices, the plant's evaluations, the climate survey and the last pulse, the first
- * proposal). Left out, because the panel never opens them bare: the ones that answer a query the page sends (the places
- * of an address, the attendance report's export, the comparison of chosen proposals); the certificates of a center with
- * nobody standing or teleworking (the offices have both); and the downloads of a file the demo never uploads (the act of
- * the Comisión, the internal regulation).
+ * The company panel's GET pages the demo's members open, keyed by route name (and by the value of a parameter that takes
+ * several). Every route parameter needs a value in `$values` (or in `$byRoute` for that route), or the route in `$left`
+ * with its reason: a new page cannot slip out of the crawl unnoticed.
  *
- * @param  array<string, string>  $records  route parameter → id; `pulse` is the survey of the pulse pages
- * @return array<string, string> route name → url
+ * @param  array<string, list<string>>  $values  route parameter → the ids it takes
+ * @param  array<string, array<string, list<string>>>  $byRoute  route name → the parameters that differ there
+ * @param  array<string, string>  $left  route name → why the crawl does not open it
+ * @return array{array<string, string>, list<string>} the pages (key → url), and the routes with a parameter nobody gave
  */
-function demoPanelPages(Tenant $tenant, array $records): array
+function demoPanelPages(Tenant $tenant, array $values, array $byRoute, array $left): array
 {
-    $left = [
-        'tenant.attendance.places', 'tenant.attendance.report.export', 'tenant.compensation.scenarios.compare',
-        'tenant.seating.certificate', 'tenant.telework.certificate', 'tenant.telework.committee.act', 'tenant.seating.regulation.file',
-    ];
     $pages = [];
+    $unsupplied = [];
 
     foreach (app('router')->getRoutes()->getRoutes() as $route) {
         $name = (string) $route->getName();
-        $extra = array_values(array_diff($route->parameterNames(), ['tenant']));
-        $ids = str_starts_with($name, 'tenant.pulse.') ? ['survey' => $records['pulse']] + $records : $records;
 
-        if (! str_starts_with($name, 'tenant.') || in_array($name, $left, true) || ! in_array('GET', $route->methods(), true) || array_diff($extra, array_keys($ids)) !== []) {
+        if (! str_starts_with($name, 'tenant.') || ! in_array('GET', $route->methods(), true) || isset($left[$name])) {
             continue;
         }
 
-        $pages[$name] = route($name, ['tenant' => $tenant, ...array_intersect_key($ids, array_flip($extra))]);
+        $ids = ($byRoute[$name] ?? []) + $values;
+        $combinations = [[]];
+
+        foreach (array_values(array_diff($route->parameterNames(), ['tenant'])) as $parameter) {
+            if (! isset($ids[$parameter])) {
+                $unsupplied[] = "{$name} {$parameter}";
+
+                continue 2;
+            }
+
+            $combinations = array_merge(...array_map(fn (array $given): array => array_map(fn (string $id): array => [...$given, $parameter => $id], $ids[$parameter]), $combinations));
+        }
+
+        foreach ($combinations as $given) {
+            $several = array_filter($given, fn (string $parameter): bool => count($ids[$parameter]) > 1, ARRAY_FILTER_USE_KEY);
+            $pages[trim($name.' '.implode(' ', $several))] = route($name, ['tenant' => $tenant, ...$given]);
+        }
     }
 
     ksort($pages);
 
-    return $pages;
+    return [$pages, $unsupplied];
 }
 
 /*
@@ -174,46 +199,134 @@ return [
     'reaches every page the owner and HR see, with no answer of anyone in its props' => function (): void {
         $tenant = Tenant::query()->findOrFail(resolve(DemoCompanies::class)->id());
         $plant = WorkCenter::query()->where('name', DemoRoster::CENTERS['plant'])->sole();
-        $records = [
-            'workCenter' => WorkCenter::query()->where('name', DemoRoster::CENTERS['offices'])->sole()->id,
-            'campaign' => Campaign::query()->where('work_center_id', $plant->id)->where('kind', CampaignKind::Nom035Evaluation)->where('status', CampaignStatus::Closed)->sole()->id,
-            'survey' => Survey::query()->where('kind', SurveyKind::Climate)->sole()->id,
-            'pulse' => Survey::query()->where('kind', SurveyKind::Pulse)->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->firstOrFail()->id,
-            'scenario' => Scenario::query()->orderBy('created_at')->firstOrFail()->id,
+        $climate = Survey::query()->where('kind', SurveyKind::Climate)->sole();
+        $pulse = Survey::query()->where('kind', SurveyKind::Pulse)->where('status', SurveyStatus::Closed)->orderByDesc('closed_at')->firstOrFail();
+        // A manager whose results show: the first group of the survey that the minimum lets through, with answers about them.
+        $manager = fn (Survey $survey): ?string => collect(array_keys(SurveyResults::for($survey)->managerGroups()->visible))
+            ->first(fn (string $id): bool => ManagerFeedback::for($survey, $id) !== null);
+        $teleworkPolicy = TeleworkDocument::query()->where('kind', TeleworkDocumentKind::Policy)->sole()->id;
+        // One record of each kind, the richest where it matters: the offices (NOM-035, Ley Silla and NOM-037 in one center),
+        // the plant's closed evaluation, the climate survey and its first manager shown, the director (everyone reports to
+        // them), a signed assessment, a teleworker in the roster.
+        $values = [
+            'workCenter' => [WorkCenter::query()->where('name', DemoRoster::CENTERS['offices'])->sole()->id],
+            'campaign' => [Campaign::query()->where('work_center_id', $plant->id)->where('kind', CampaignKind::Nom035Evaluation)->where('status', CampaignStatus::Closed)->sole()->id],
+            'survey' => [$climate->id],
+            'manager' => [(string) $manager($climate)],
+            'scenario' => [Scenario::query()->orderBy('created_at')->firstOrFail()->id],
+            'complaint' => [Complaint::query()->orderBy('received_on')->firstOrFail()->id],
+            'employee' => [DemoRoster::employeeId(DemoRoster::OWNER)],
+            'assessment' => [RiskAssessment::query()->where('status', AssessmentStatus::Signed)->orderBy('id')->firstOrFail()->id],
+            'position' => [StandingPosition::query()->orderBy('id')->firstOrFail()->id],
+            'application' => [ChecklistApplication::query()->whereNotNull('submitted_at')->orderBy('id')->firstOrFail()->id],
+            'teleworker' => [Teleworker::query()->where('status', TeleworkerStatus::Active)->orderBy('id')->firstOrFail()->id],
+            'policy' => [LeavePolicy::query()->sole()->id],
+            'statement' => [LeaveStatement::query()->orderBy('id')->firstOrFail()->id],
+            'norm' => ['nom035', 'nom037', 'seating'],
+            'field' => ['category', 'level'],
         ];
-        $pages = demoPanelPages($tenant, $records);
+        // Where a parameter of the same name is another module's record.
+        $pulsePages = ['tenant.pulse.commitments.index', 'tenant.pulse.export', 'tenant.pulse.managers', 'tenant.pulse.results', 'tenant.pulse.results.items', 'tenant.pulse.show'];
+        $byRoute = [
+            ...array_fill_keys($pulsePages, ['survey' => [$pulse->id]]),
+            'tenant.disclosure.policy.version' => ['document' => [Document::query()->where('kind', DocumentKind::Policy)->sole()->id]],
+            'tenant.disclosure.write' => ['kind' => array_map(fn (DocumentKind $kind): string => $kind->value, DocumentKind::cases())],
+            'tenant.telework.documents.acknowledgements.index' => ['document' => [$teleworkPolicy]],
+            'tenant.telework.documents.file' => ['document' => [$teleworkPolicy]],
+            'tenant.telework.writing.show' => ['kind' => array_map(fn (TeleworkDocumentKind $kind): string => $kind->value, TeleworkDocumentKind::cases())],
+        ];
+        $noFile = 'downloads a file the demo never uploads';
+        $left = [
+            'tenant.attendance.places' => 'answers the address the page sends (a 422 bare)',
+            'tenant.attendance.report.export' => 'exports the center and dates the page sends (a 422 bare)',
+            'tenant.compensation.scenarios.compare' => 'compares the proposals the page sends (a 422 bare)',
+            'tenant.seating.certificate' => 'only for a center with nobody standing; the offices have three positions',
+            'tenant.telework.certificate' => 'only for a center with nobody teleworking; the offices have twelve',
+            'tenant.assistant.conversations.show' => 'the demo has no conversation with Humi',
+            'tenant.telework.notices.show' => 'the demo has no notice of a teleworker',
+            // ponytail: the «Por jefe» list of such a pulse still links each manager to this 404 (Engagement, not the demo).
+            'tenant.pulse.managers.show' => 'the demo\'s pulses ask nothing about the manager: no manager of theirs has results to open',
+            'tenant.telework.committee.act' => $noFile,
+            'tenant.seating.regulation.file' => $noFile,
+            'tenant.seating.documents.file' => $noFile,
+            'tenant.seating.measures.evidence' => $noFile,
+            'tenant.seating.pause-agreements.evidence' => $noFile,
+            'tenant.seating.seats.photo' => $noFile,
+            'tenant.campaigns.program.evidence' => $noFile,
+            'tenant.disclosure.dissemination.records.evidence' => $noFile,
+            'tenant.telework.evidence-photos.show' => $noFile,
+            'tenant.telework.photos.show' => $noFile,
+            'tenant.telework.visit-authorizations.document.show' => $noFile,
+            'tenant.telework.notices.evidence' => $noFile,
+            'tenant.telework.trainings.evidence' => $noFile,
+        ];
+        [$pages, $unsupplied] = demoPanelPages($tenant, $values, $byRoute, $left);
 
-        expect(count($pages))->toBeGreaterThan(100);
+        expect($unsupplied)->toBe([])
+            ->and(count($pages))->toBeGreaterThan(130);
 
-        // What a page answers when it is not 200 or a redirect, by design: the reviews of NOM-037 are the Comisión's (HR
-        // sits on it, the owner does not), and the members and the plan are the owner's.
+        $offices = $values['workCenter'][0];
+        $path = fn (string $name, array $parameters = []): string => str_replace(url('/'), '', route($name, ['tenant' => $tenant, ...$parameters]));
+        // What a page answers when it is not 200, by design, and why. A redirect names where it goes, and the crawl follows it
+        // and checks that page too.
         $expected = [
-            DemoRoster::OWNER.' tenant.telework.reviews.index' => 403,
-            DemoRoster::HR.' tenant.members.index' => 403,
-            DemoRoster::HR.' tenant.members.invitations.create' => 403,
-            DemoRoster::HR.' tenant.plan' => 403,
+            // The reviews of NOM-037 are the Comisión's: HR sits on the offices' one, the owner does not.
+            DemoRoster::OWNER.' tenant.telework.reviews.index' => '403',
+            DemoRoster::OWNER.' tenant.telework.reviews.show' => '403',
+            // The members and the plan are the owner's.
+            DemoRoster::HR.' tenant.members.index' => '403',
+            DemoRoster::HR.' tenant.members.invitations.create' => '403',
+            DemoRoster::HR.' tenant.plan' => '403',
+            // The inspection report of NOM-037 is uploaded, not written: it has no template.
+            DemoRoster::OWNER.' tenant.telework.writing.show inspection_report' => '404',
+            DemoRoster::HR.' tenant.telework.writing.show inspection_report' => '404',
         ];
-        // Every page that breaks, at once: the status it gave, and the exception if one was thrown.
+        foreach ([DemoRoster::OWNER, DemoRoster::HR] as $member) {
+            // The data-quality page opens on its first issue; a center's route of a standard is that standard's own page.
+            $expected["{$member} tenant.org-chart.quality"] = '302 '.$path('tenant.org-chart.quality', ['issue' => 'many_reports']);
+            $expected["{$member} tenant.work-centers.route nom035"] = '302 '.$path('tenant.nom035.route', ['workCenter' => $offices]);
+            $expected["{$member} tenant.work-centers.route nom037"] = '302 '.$path('tenant.telework.route', ['workCenter' => $offices]);
+            $expected["{$member} tenant.work-centers.route seating"] = '302 '.$path('tenant.seating.route', ['workCenter' => $offices]);
+        }
+        // Props that hold answers by design, none of them anonymous: what the company answered a writing assistant about its
+        // policy or contents, and the checklist of a teleworker that the Comisión reviews by name (NOM-037, criterio C-16).
+        $notAnonymous = ['tenant.telework.reviews.show' => ['review.answers']];
+        foreach (array_keys($pages) as $page) {
+            if (str_starts_with($page, 'tenant.disclosure.write ') || str_starts_with($page, 'tenant.telework.writing.show ')) {
+                $notAnonymous[$page] = ['answers'];
+            }
+        }
+        // Every page that breaks, at once: the status it gave, the exception if one was thrown, the answers it showed.
         $broken = [];
+        $visited = 0;
 
         foreach ([DemoRoster::OWNER, DemoRoster::HR] as $member) {
             $this->actingAs(User::query()->where('email', DemoRoster::person($member)->email)->sole());
 
             foreach ($pages as $name => $url) {
                 $response = $this->get($url);
+                $visited++;
+                $status = $response->getStatusCode();
+                $outcome = $status === 302 ? '302 '.str_replace(url('/'), '', (string) $response->headers->get('Location')) : (string) $status;
+
+                if (isset($expected["{$member} {$name}"])) {
+                    expect($outcome)->toBe($expected["{$member} {$name}"], "{$member} {$name}");
+
+                    if ($status !== 302) {
+                        continue;
+                    }
+
+                    $response = $this->get((string) $response->headers->get('Location'));
+                    $visited++;
+                    $status = $response->getStatusCode();
+                    $outcome = (string) $status;
+                }
+
                 // A download streams: it carries no exception of its own.
                 $exception = property_exists($response->baseResponse, 'exception') ? $response->baseResponse->exception : null;
 
-                $status = $response->getStatusCode();
-
-                if (isset($expected["{$member} {$name}"])) {
-                    expect($status)->toBe($expected["{$member} {$name}"], "{$member} {$name}");
-
-                    continue;
-                }
-
-                if ($exception !== null || ! in_array($status, [200, 302], true)) {
-                    $broken[] = "{$member} {$name}: {$status} ".($exception instanceof Throwable ? $exception::class.' '.$exception->getMessage() : '');
+                if ($exception !== null || $status !== 200) {
+                    $broken[] = "{$member} {$name} ({$url}): {$outcome} ".($exception instanceof Throwable ? $exception::class.' '.$exception->getMessage() : '');
 
                     continue;
                 }
@@ -221,16 +334,20 @@ return [
                 $view = property_exists($response->baseResponse, 'original') ? $response->baseResponse->original : null;
 
                 if ($view instanceof View && is_array($view->getData()['page'] ?? null)) {
-                    $props = $view->getData()['page']['props'];
+                    $props = Arr::except($view->getData()['page']['props'], $notAnonymous[$name] ?? []);
 
-                    section("{$member} {$name}", function () use ($props): void {
+                    // Every page that shows an answer, at once too: the failure is kept and asserted below, never dropped.
+                    try {
                         expectNoIndividualResponses($props);
                         expectNoEngagementResponses($props);
-                    });
+                    } catch (ExpectationFailedException $failure) {
+                        $broken[] = "{$member} {$name}: ".$failure->getMessage().' '.$failure->getComparisonFailure()?->getActualAsString();
+                    }
                 }
             }
         }
 
+        expect($visited)->toBe(2 * count($pages) + 8);
         expect($broken)->toBe([]);
 
         auth()->logout();
