@@ -1,5 +1,5 @@
-import { router } from '@inertiajs/react';
-import { Ellipsis, Link2, Pencil, UserCheck, UserMinus } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Ellipsis, KeyRound, Pencil, UserCheck, UserMinus } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import DeactivateEmployeeDialog from '@/components/organization/deactivate-employee-dialog';
@@ -13,12 +13,16 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { portalLink, reactivate, update } from '@/routes/tenant/employees';
+import { reactivate, update } from '@/routes/tenant/employees';
+import { index as access } from '@/routes/tenant/worker-access';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
 
 type Action = 'edit' | 'deactivate' | 'reactivate';
 
-/** An active employee is edited or deactivated (apart, in the destructive color); a deactivated one is reactivated. */
+/**
+ * An active employee is edited, their access opened in «Accesos» (invite, reissue, their keys) or deactivated (apart, in the
+ * destructive color); a deactivated one is reactivated.
+ */
 export default function EmployeeRowActions({
     employee,
     choices,
@@ -55,17 +59,15 @@ export default function EmployeeRowActions({
                                 <Pencil />
                                 Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onSelect={() =>
-                                    router.post(
-                                        portalLink.url(ids),
-                                        {},
-                                        { preserveScroll: true },
-                                    )
-                                }
-                            >
-                                <Link2 />
-                                Enviar enlace a su portal
+                            <DropdownMenuItem asChild>
+                                <Link
+                                    href={access.url(tenantSlug, {
+                                        query: { q: employee.name },
+                                    })}
+                                >
+                                    <KeyRound />
+                                    Ver su acceso
+                                </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem

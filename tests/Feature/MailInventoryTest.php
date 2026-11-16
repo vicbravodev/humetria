@@ -86,7 +86,6 @@ function inventory(): array
         'documents to confirm' => [fn () => new DocumentsToConfirm($url, 'Cora', $company, ['Política · versión 1']), true],
         'notice answered' => [fn () => new NoticeAnswered($url, 'Ana', $company), true],
         'portal invitation' => [fn () => new PortalInvitation('tok', 'Ana', $company), true],
-        'portal link' => [fn () => new App\Modules\Telework\Notifications\PortalLinkEmail('tok', 'Ana', $company), true],
         'portal reminder' => [fn () => new PortalReminder($url, 'Ana', $company, new PortalPendingData([], [])), true],
         'telework digest' => [fn () => new TeleworkDigest($company, 'Olga', ['1 lista por revisar.'], $url), true],
         'telework moved' => [fn () => new TeleworkMoved($company, 'Ana', 'A', 'B', $url), true],

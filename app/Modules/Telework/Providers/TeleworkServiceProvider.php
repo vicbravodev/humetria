@@ -10,7 +10,6 @@ use App\Modules\Organization\Events\EmployeeMoved;
 use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Telework\Contracts\Committee;
 use App\Modules\Telework\Contracts\PortalAccess;
-use App\Modules\Telework\Contracts\PortalLinks;
 use App\Modules\Telework\Contracts\TeleworkApplicability;
 use App\Modules\Telework\Contracts\TeleworkRoute;
 use App\Modules\Telework\Contracts\TeleworkStanding;
@@ -23,7 +22,6 @@ use App\Modules\Telework\Support\CommitteeGate;
 use App\Modules\Telework\Support\CompanyTeleworkApplicability;
 use App\Modules\Telework\Support\CompanyTeleworkRoute;
 use App\Modules\Telework\Support\CompanyTeleworkStanding;
-use App\Modules\Telework\Support\EmailedPortalLinks;
 use App\Modules\Telework\Support\TeleworkWorkerSection;
 use App\Modules\Telework\Support\TokenPortalAccess;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -42,7 +40,6 @@ final class TeleworkServiceProvider extends ServiceProvider
     {
         $this->app->bind(Committee::class, CommitteeGate::class);
         $this->app->bind(PortalAccess::class, TokenPortalAccess::class);
-        $this->app->bind(PortalLinks::class, EmailedPortalLinks::class);
         $this->app->bind(TeleworkStanding::class, CompanyTeleworkStanding::class);
         $this->app->bind(TeleworkRoute::class, CompanyTeleworkRoute::class);
         $this->app->bind(TeleworkApplicability::class, CompanyTeleworkApplicability::class);

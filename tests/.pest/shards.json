@@ -457,7 +457,6 @@
         "Tests\\Feature\\Organization\\EmployeeIsolationTest": 0.1719,
         "Tests\\Feature\\Organization\\EmployeeListTest": 2.8418,
         "Tests\\Feature\\Organization\\EmployeeManagerFieldTest": 1.5495,
-        "Tests\\Feature\\Organization\\EmployeePortalLinkTest": 0.6513,
         "Tests\\Feature\\Organization\\EmployeeStorageTest": 0.8628,
         "Tests\\Feature\\Organization\\JobGradeTest": 0.7134,
         "Tests\\Feature\\Organization\\OrgChartExportTest": 0.6418,
