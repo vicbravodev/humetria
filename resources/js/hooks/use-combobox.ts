@@ -40,7 +40,7 @@ export function useCombobox(
     const pick = (option: Option) => {
         setQuery('');
         setActive(0);
-        setSelected(option);
+        setSelected({ value: option.value, label: option.label });
         setOpen(false);
         onChange?.({ value: option.value, label: option.label });
     };

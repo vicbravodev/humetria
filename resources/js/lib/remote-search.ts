@@ -33,6 +33,9 @@ export function createRemoteSearch({
     let controller: AbortController | undefined;
     let shown: Option[] = [];
     let everything: ReturnType<typeof indexOptions> | undefined;
+    // The first page (the empty text) in flight, and the text typed meanwhile.
+    let opening = false;
+    let latest = '';
 
     const report = (state: SearchState) => {
         shown = state.options;
@@ -48,6 +51,7 @@ export function createRemoteSearch({
     };
 
     const ask = async (key: string, query: string) => {
+        opening = key === '';
         const current = new AbortController();
         controller = current;
         // What is still on screen is narrowed to what was typed, so Enter never picks what no longer matches.
@@ -74,6 +78,14 @@ export function createRemoteSearch({
                 report({ status: 'error', options: [] });
             }
         }
+
+        if (opening) {
+            opening = false;
+
+            if (!current.signal.aborted && fold(latest) !== '') {
+                search(latest);
+            }
+        }
     };
 
     const cancel = () => {
@@ -81,7 +93,15 @@ export function createRemoteSearch({
         controller?.abort();
     };
 
-    const search = (query: string) => {
+    function search(query: string) {
+        latest = query;
+
+        // The first page is on its way and is not aborted by typing (an aborted request costs the server as much as
+        // an answered one): when it lands, what was typed is searched in it.
+        if (opening) {
+            return;
+        }
+
         cancel();
         const key = fold(query);
         const remembered = cache.get(key);
@@ -97,9 +117,13 @@ export function createRemoteSearch({
         } else if (remembered !== undefined) {
             report({ status: 'done', options: remembered });
         } else {
-            timer = setTimeout(() => void ask(key, query.trim()), delay);
+            // The empty text is the opening of the field, not typing: nothing to wait for.
+            timer = setTimeout(
+                () => void ask(key, query.trim()),
+                key === '' ? 0 : delay,
+            );
         }
-    };
+    }
 
     return { search, cancel };
 }

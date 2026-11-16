@@ -85,6 +85,9 @@ function useRemoteSearch(
     useEffect(() => {
         if (active) {
             search.current?.search(query);
+        } else {
+            // Closed: nothing may still be asked later, or it lands on whatever the person does next.
+            search.current?.cancel();
         }
     }, [query, active]);
 
