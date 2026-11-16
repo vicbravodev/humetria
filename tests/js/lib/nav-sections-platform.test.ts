@@ -14,7 +14,7 @@ describe('navSections for the platform', () => {
             'Empresas',
             'Cuentas',
             'Solicitudes de demo',
-            'Sala de demostración',
+            'Sala de demo',
             'Usuarios',
             'Bitácora',
             'Colas',

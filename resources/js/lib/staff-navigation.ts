@@ -26,7 +26,7 @@ const staffNavItems: NavItem[] = [
 
 // The platform's people and its audit trail are the superadmin's alone: support does not see them in the menu.
 const superadminOnlyNavItems: NavItem[] = [
-    { title: 'Sala de demostración', href: demoRoom(), icon: Presentation },
+    { title: 'Sala de demo', href: demoRoom(), icon: Presentation },
     { title: 'Usuarios', href: users(), icon: UserCog },
     { title: 'Bitácora', href: audit(), icon: ScrollText },
     // Horizon's own dashboard, outside the panel: a plain address, not an Inertia visit.
