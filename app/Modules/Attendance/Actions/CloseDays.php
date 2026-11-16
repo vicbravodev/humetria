@@ -29,22 +29,23 @@ final readonly class CloseDays
     public function __construct(private Companies $companies, private Roster $roster, private CloseDay $closeDay) {}
 
     /**
+     * @param  string|null  $tenantId  only this company (the demo, prepared on its own); null for every company
      * @return int how many days were closed
      */
-    public function handle(): int
+    public function handle(?string $tenantId = null): int
     {
         $day = CarbonImmutable::now(config()->string('app.display_timezone'))->subDays(2)->startOfDay();
-        $tenantIds = array_unique([
+        $tenantIds = $tenantId !== null ? [$tenantId] : array_unique([
             ...AttendanceMark::query()->withoutGlobalScopes()->distinct()->get(['tenant_id'])->map(fn (AttendanceMark $mark): string => $mark->tenant_id),
             ...AttendanceSchedule::query()->withoutGlobalScopes()->distinct()->get(['tenant_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->tenant_id),
         ]);
         $closed = 0;
 
-        foreach ($tenantIds as $tenantId) {
+        foreach ($tenantIds as $id) {
             try {
                 // Each in its own company, as the system.
-                Context::scope(function () use ($tenantId, $day, &$closed): void {
-                    $closed += $this->close($tenantId, $day);
+                Context::scope(function () use ($id, $day, &$closed): void {
+                    $closed += $this->close($id, $day);
                 }, ['user_id' => null]);
             } catch (Throwable $failure) {
                 // One company's failure never keeps the others from being closed.
