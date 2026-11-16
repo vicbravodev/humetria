@@ -63,3 +63,40 @@ it('rejects an answer that is not the shape asked', function (array $themes): vo
     'count not a number' => [['valued' => [['theme' => 'Trato', 'count' => 'cuatro']], 'change' => []]],
     'item not a map' => [['valued' => ['Trato'], 'change' => []]],
 ]);
+
+it('rejects a theme equal to or containing a whole comment of any length', function (string $theme): void {
+    $comments = ['Mal horario', ...array_fill(0, 9, 'Todo bien')];
+
+    expect(fn () => SummaryGuard::clean(['valued' => [['theme' => $theme, 'count' => 3]], 'change' => []], $comments, 3))->toThrow(UnsafeSummary::class);
+})->with([
+    'equal' => 'Mal horario',
+    'with case and punctuation' => 'MAL, horario!',
+    'containing it' => 'Se queja del mal horario de los viernes',
+]);
+
+it('rejects a count above the comments of its own list', function (): void {
+    $themes = ['valued' => [['theme' => 'Trato respetuoso', 'count' => 4]], 'change' => []];
+
+    expect(fn () => SummaryGuard::clean($themes, guardComments(10), 3, 3))->toThrow(UnsafeSummary::class)
+        ->and(SummaryGuard::clean($themes, guardComments(10), 3, 4)['valued'])->toHaveCount(1);
+});
+
+it('caps the change themes by the comments after the valued ones', function (): void {
+    $themes = ['valued' => [], 'change' => [['theme' => 'Más comunicación', 'count' => 7]]];
+
+    expect(fn () => SummaryGuard::clean($themes, guardComments(10), 3, 5))->toThrow(UnsafeSummary::class)
+        ->and(SummaryGuard::clean($themes, guardComments(10), 3, 3)['change'])->toHaveCount(1);
+});
+
+it('drops a theme that carries a name written with a capital in the middle of a comment', function (): void {
+    $comments = ['El trato de Marta es injusto con todos', ...array_fill(0, 9, 'Todo bien')];
+    $themes = ['valued' => [['theme' => 'Marta no respeta', 'count' => 4], ['theme' => 'Trato respetuoso', 'count' => 4]], 'change' => []];
+
+    expect(SummaryGuard::clean($themes, $comments, 3)['valued'])->toBe([['theme' => 'Trato respetuoso', 'count' => 4]]);
+});
+
+it('does not take the first word of a sentence for a name', function (): void {
+    $comments = ['Horario malo. Falta personal', ...array_fill(0, 9, 'Todo bien')];
+
+    expect(SummaryGuard::clean(['valued' => [['theme' => 'Horario justo', 'count' => 4]], 'change' => []], $comments, 3)['valued'])->toHaveCount(1);
+});
