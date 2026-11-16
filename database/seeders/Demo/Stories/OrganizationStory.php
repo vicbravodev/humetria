@@ -28,6 +28,7 @@ use Database\Seeders\Demo\DemoContext;
 use Database\Seeders\Demo\DemoPerson;
 use Database\Seeders\Demo\DemoRoster;
 use Database\Seeders\Demo\DemoStory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -52,7 +53,10 @@ final readonly class OrganizationStory implements DemoStory
         private CreateEmployee $createEmployee,
     ) {}
 
-    /** The demo company, kept across resets; the first time it is created, flagged as the demo and active for years: it never bills nor expires. */
+    /**
+     * The demo company, kept across resets; the first time it is created flagged as the demo from its insert (the flag never
+     * changes afterwards) and active for years, in one transaction: it never bills nor expires.
+     */
     public function company(): Tenant
     {
         $existing = Tenant::query()->where('is_demo', true)->first();
@@ -61,11 +65,10 @@ final readonly class OrganizationStory implements DemoStory
             return $existing;
         }
 
-        $tenant = $this->createTenant->handle(new TenantData('Manufacturas Alba del Bajío, S.A. de C.V.', 'Alba del Bajío', self::RFC, self::SLUG));
-        // Not mass assignable: only this story turns it on.
-        $tenant->forceFill(['is_demo' => true])->save();
-
-        return $this->activateTenant->handle($tenant, CarbonImmutable::now()->addYears(10));
+        return DB::transaction(fn (): Tenant => $this->activateTenant->handle(
+            $this->createTenant->handle(new TenantData('Manufacturas Alba del Bajío, S.A. de C.V.', 'Alba del Bajío', self::RFC, self::SLUG), demo: true),
+            CarbonImmutable::now()->addYears(10),
+        ));
     }
 
     /** The owner and the HR member, through the invitations a real company goes through; call it inside the company. */

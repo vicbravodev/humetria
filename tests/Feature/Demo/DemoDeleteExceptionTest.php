@@ -108,7 +108,7 @@ it('still refuses to delete a row of a real company while a demo company exists'
 })->with(insertOnlyTables());
 
 it('deletes a row of the demo company, and still refuses to update it', function (string $table, string $id, string $message, ?string $set): void {
-    DB::table('tenants')->where('id', DB::table($table)->where('id', $id)->value('tenant_id'))->update(['is_demo' => true]);
+    becomeDemo(DB::table($table)->where('id', $id)->value('tenant_id'));
 
     if ($set !== null) {
         expect(refused("update {$table} set {$set} where id = ?", [$id]))->toContain($message);
@@ -119,7 +119,7 @@ it('deletes a row of the demo company, and still refuses to update it', function
 })->with(insertOnlyTables());
 
 it('still refuses to empty the table, with only demo rows in it', function (string $table, string $id, string $message): void {
-    DB::table('tenants')->where('id', DB::table($table)->where('id', $id)->value('tenant_id'))->update(['is_demo' => true]);
+    becomeDemo(DB::table($table)->where('id', $id)->value('tenant_id'));
 
     expect(refused("truncate {$table} cascade"))->toContain($message)
         ->and(DB::table($table)->where('id', $id)->exists())->toBeTrue();
@@ -127,7 +127,7 @@ it('still refuses to empty the table, with only demo rows in it', function (stri
 
 it('leaves the audit trail insert-only for the demo too', function (): void {
     $tenant = TenantFactory::new()->createOne();
-    DB::table('tenants')->where('id', $tenant->id)->update(['is_demo' => true]);
+    becomeDemo($tenant->id);
     $id = Str::uuid()->toString();
     DB::table('audit_entries')->insert(['id' => $id, 'tenant_id' => $tenant->id, 'event' => 'demo.test', 'created_at' => now()]);
 
@@ -137,7 +137,7 @@ it('leaves the audit trail insert-only for the demo too', function (): void {
 it('puts every original rule back when rolled back', function (): void {
     $migration = require database_path('migrations/2027_01_19_100000_let_the_demo_company_be_wiped.php');
     $id = AttendanceMarkFactory::new()->createOne()->id;
-    DB::table('tenants')->where('id', DB::table('attendance_marks')->where('id', $id)->value('tenant_id'))->update(['is_demo' => true]);
+    becomeDemo(DB::table('attendance_marks')->where('id', $id)->value('tenant_id'));
 
     $migration->down();
 

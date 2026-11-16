@@ -20,6 +20,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
@@ -114,6 +115,22 @@ function auditContent(AuditEntry|iterable $entries): string
     }
 
     return json_encode($content, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * Makes an existing company the demo, for a test that builds the company first (through factories of its rows). The
+ * database refuses it outside tests: whether a company is the demo is fixed when it is created (migration 2027_01_21), as
+ * Tenant::factory()->demo() and the demo's story do.
+ */
+function becomeDemo(Tenant|string $tenant): void
+{
+    DB::statement('ALTER TABLE tenants DISABLE TRIGGER tenants_is_demo_is_fixed');
+    DB::table('tenants')->where('id', $tenant instanceof Tenant ? $tenant->id : $tenant)->update(['is_demo' => true]);
+    DB::statement('ALTER TABLE tenants ENABLE TRIGGER tenants_is_demo_is_fixed');
+
+    if ($tenant instanceof Tenant) {
+        $tenant->refresh();
+    }
 }
 
 function superadmin(): User

@@ -124,8 +124,7 @@ it('counts nothing and says so when the send has no company', function (): void 
 });
 
 it('counts nothing for the demo company, whose mail never leaves', function (): void {
-    $demo = Tenant::factory()->create();
-    $demo->forceFill(['is_demo' => true])->save();
+    $demo = Tenant::factory()->demo()->create();
 
     mailSentFor($demo, new MailMeterCampaignNote);
 

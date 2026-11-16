@@ -267,7 +267,7 @@ it('stops the sixth submission of an hour from one address, and nobody else\'s',
 it('lets a whole room on one address file complaints on the demo channel, up to its own hourly limit', function (): void {
     expect(config('complaints.rate_limits.demo_submissions_per_hour'))->toBe(60);
     config(['complaints.rate_limits.demo_submissions_per_hour' => 7]);
-    $this->tenant->forceFill(['is_demo' => true])->save();
+    becomeDemo($this->tenant);
 
     foreach (range(1, 7) as $ignored) {
         $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertCreated();
@@ -290,7 +290,7 @@ it('keeps the limit of an address on a real company\'s channel while a demo exis
 it('lets a whole room on one address file complaints on the demo channel, up to its own daily limit', function (): void {
     expect(config('complaints.rate_limits.demo_submissions_per_day'))->toBe(120);
     config(['complaints.rate_limits.demo_submissions_per_hour' => 3, 'complaints.rate_limits.demo_submissions_per_day' => 5]);
-    $this->tenant->forceFill(['is_demo' => true])->save();
+    becomeDemo($this->tenant);
     $send = function () {
         $ticket = resolve(TicketSigner::class)->issue($this->channel->access_code);
         Carbon::setTestNow(now()->addSeconds(10));

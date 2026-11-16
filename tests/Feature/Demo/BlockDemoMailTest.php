@@ -66,7 +66,7 @@ it('skips the demo in the digests and reminders', function (string $action, Clos
     Queue::fake();
     $demo = $row();
     $real = $row();
-    Tenant::query()->whereKey($demo)->firstOrFail()->forceFill(['is_demo' => true])->save();
+    becomeDemo(Tenant::query()->whereKey($demo)->firstOrFail());
 
     // Every scheduled sweep enters each company it works in: the demo is never entered.
     $directory = resolve(Companies::class);

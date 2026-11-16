@@ -15,7 +15,7 @@ beforeEach(fn () => $this->travelTo('2026-12-01 10:00:00'));
 
 it('does not renew or bill the demo', function (): void {
     [$tenant] = statementCompany();
-    $tenant->forceFill(['is_demo' => true])->save();
+    becomeDemo($tenant);
 
     $summary = resolve(RenewSubscriptions::class)->handle();
 
