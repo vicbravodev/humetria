@@ -117,8 +117,8 @@ final readonly class DisclosureStory implements DemoStory
     }
 
     /**
-     * The plant's shifts sign on paper at a start-of-shift meeting; the rest confirm from their link over two weeks. Nobody
-     * kept for the door confirms.
+     * The plant's shifts sign on paper at a start-of-shift meeting; the rest confirm from their link over two weeks, and
+     * whoever joined later, days after their hire. Nobody kept for the door confirms.
      */
     private function confirm(Document $policy, int $hr): int
     {
@@ -132,10 +132,14 @@ final readonly class DisclosureStory implements DemoStory
 
             $id = DemoRoster::employeeId($person->key);
 
-            if ($this->onShift($person)) {
+            // Whoever joined after the publication confirms from their link a few days after their hire, never on paper.
+            $late = $person->tenureDays < self::PUBLISHED_DAYS_AGO;
+
+            if ($this->onShift($person) && ! $late) {
                 $shifts[] = $id;
             } else {
-                DemoClock::at('-'.(self::PUBLISHED_DAYS_AGO - 1 - $n % 14).' days', fn () => $this->acknowledge->handle($id, $policy->id), 8 * 60 + $n % 600);
+                $day = $late ? $person->tenureDays - 3 : self::PUBLISHED_DAYS_AGO - 1 - $n % 14;
+                DemoClock::at("-{$day} days", fn () => $this->acknowledge->handle($id, $policy->id), 8 * 60 + $n % 600);
                 $count++;
             }
         }

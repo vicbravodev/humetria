@@ -65,9 +65,11 @@ it('tells the disclosure story: a policy with its blocks in every center, confir
         ->and($confirmed->keys()->sort()->values()->all())->toBe($byId->reject(fn (DemoPerson $person): bool => $person->reservedForDoor)->keys()->sort()->values()->all())
         ->and($progress['active'])->toBe(180)
         ->and($progress['confirmed'])->toBe(180 - $door->count())
-        ->and($progress['percent'])->toBeGreaterThanOrEqual(75)
+        ->and($progress['percent'])->toBe(77)
         ->and($confirmed->pluck('channel')->unique()->sort()->values()->all())->toBe(['manual', 'portal'])
         ->and($confirmed->every(fn (Acknowledgment $ack): bool => $ack->acknowledged_at?->greaterThanOrEqualTo($policy->published_at->startOfDay()) === true && $ack->acknowledged_at->lessThan($today)))->toBeTrue();
+    // nobody confirms before they joined: whoever came after the policy confirms from their link days after their hire
+    expect($confirmed->every(fn (Acknowledgment $ack): bool => $ack->acknowledged_at?->greaterThan($today->subDays($byId[$ack->employee_id]->tenureDays)) === true))->toBeTrue();
 
     // a visitor of the door confirms the policy from their own portal
     $visitor = $door->keys()->first();
