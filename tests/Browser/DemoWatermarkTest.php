@@ -102,3 +102,29 @@ it('keeps the mark clear of the impersonation banner and the top bar of the demo
         ->assertSee('Estás viendo Humetría como Ana Pérez')
         ->assertScript(markOverlaps(), []);
 })->with($looks);
+
+it('prints the mark as a large, faint diagonal watermark on every sheet, not as the tab of the screen', function (bool $dark): void {
+    [$campaign] = watermarkedReport(Tenant::factory()->demo()->create(['slug' => 'acme']));
+
+    $page = visitPage('results/report', "/admin/acme/campaigns/{$campaign->id}/report", $dark);
+    emulatePrint($page)
+        ->assertScript(<<<'JS'
+            () => {
+                const mark = document.querySelector('[data-slot="demo-mark"]');
+                const style = getComputedStyle(mark);
+                const box = mark.getBoundingClientRect();
+                const centered = Math.abs(box.left + box.width / 2 - innerWidth / 2) < 2 && Math.abs(box.top + box.height / 2 - innerHeight / 2) < 2;
+
+                return {
+                    // Fixed: the printer repeats it on each sheet.
+                    position: style.position,
+                    faint: Number(style.opacity) < 0.2,
+                    diagonal: style.rotate !== 'none' && style.rotate !== '0deg',
+                    large: parseFloat(style.fontSize) >= 96,
+                    transparent: style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.borderTopWidth === '0px',
+                    centered,
+                    pointerEvents: style.pointerEvents,
+                };
+            }
+            JS, ['position' => 'fixed', 'faint' => true, 'diagonal' => true, 'large' => true, 'transparent' => true, 'centered' => true, 'pointerEvents' => 'none']);
+})->with(['light' => false, 'dark' => true]);
