@@ -155,6 +155,15 @@ it('counts the days from today in Mexico City, not in UTC', function (): void {
     expect(DemoClock::at('-1 day', fn (): string => now()->utc()->toIso8601String()))->toBe('2026-11-15T15:00:00+00:00');
 });
 
+it('tells the story at any minute of the day, past midnight too', function (): void {
+    $this->travelTo(CarbonImmutable::parse('2026-11-16 18:00:00', 'UTC'));
+
+    // A night shift: in at 22:00, out at 07:00 of the next day (31 h after the day's midnight); 06:00 is 12:00 UTC.
+    expect(DemoClock::at('-2 days', fn (): string => now()->utc()->toIso8601String(), 22 * 60))->toBe('2026-11-15T04:00:00+00:00')
+        ->and(DemoClock::at('-2 days', fn (): string => now()->utc()->toIso8601String(), 31 * 60))->toBe('2026-11-15T13:00:00+00:00')
+        ->and(DemoClock::at('-2 days', fn (): string => now()->utc()->toIso8601String(), 6 * 60 + 7))->toBe('2026-11-14T12:07:00+00:00');
+});
+
 it('creates the company flagged as demo, active and with every module', function (): void {
     resolve(DemoWorkspace::class)->prepare();
 

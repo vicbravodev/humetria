@@ -17,19 +17,20 @@ final class DemoClock
     public const string TIMEZONE = 'America/Mexico_City';
 
     /**
-     * Runs the callback at 09:00 (Mexico City) of the day the relative expression gives from today, and puts the clock
-     * back as it was, whether the callback returns or throws.
+     * Runs the callback at 09:00 (Mexico City), or at another minute, of the day the relative expression gives from today,
+     * and puts the clock back as it was, whether the callback returns or throws.
      *
      * @template T
      *
      * @param  string  $relative  a relative date such as "-180 days".
      * @param  Closure(): T  $callback
+     * @param  int  $minute  minutes after that day's midnight; past 1440 it is the next day (a night shift's end).
      * @return T
      */
-    public static function at(string $relative, Closure $callback): mixed
+    public static function at(string $relative, Closure $callback, int $minute = 9 * 60): mixed
     {
         $previous = Carbon::getTestNow();
-        Carbon::setTestNow(CarbonImmutable::now(self::TIMEZONE)->modify($relative)->setTime(9, 0)->utc());
+        Carbon::setTestNow(CarbonImmutable::now(self::TIMEZONE)->modify($relative)->startOfDay()->addMinutes($minute)->utc());
 
         try {
             return $callback();
