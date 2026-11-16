@@ -59,11 +59,30 @@ it('runs once, for up to ten minutes, on the queue', function (string $job): voi
         ->and($instance->failOnTimeout)->toBeTrue();
 })->with([PrepareDemo::class, ResetDemo::class]);
 
+it('runs on a queue whose workers wait for it longer than it may take', function (string $job, string $environment): void {
+    $instance = new $job('run');
+    // Horizon runs, in each environment, the supervisors it names there, each over its defaults.
+    $supervisors = [];
+    foreach (config()->array("horizon.environments.{$environment}") as $name => $settings) {
+        $supervisor = [...config()->array('horizon.defaults')[$name] ?? [], ...$settings];
+
+        if ($supervisor['connection'] === $instance->connection && in_array($instance->queue, $supervisor['queue'], true)) {
+            $supervisors[] = $supervisor;
+        }
+    }
+
+    // Redis hands a job to another worker once retry_after passes: a preparation still running would be told twice.
+    expect(config()->integer("queue.connections.{$instance->connection}.retry_after"))->toBeGreaterThan($instance->timeout)
+        ->and($supervisors)->toHaveCount(1)
+        ->and($supervisors[0]['timeout'])->toBeGreaterThanOrEqual($instance->timeout)
+        ->and($supervisors[0]['timeout'])->toBeLessThan(config()->integer("queue.connections.{$instance->connection}.retry_after"));
+})->with([PrepareDemo::class, ResetDemo::class])->with(['production', 'local']);
+
 it('prepares the demo step by step and finishes its run', function (): void {
     $calls = demoWorkspaceSpy();
     $run = startedRun('prepare');
 
-    PrepareDemo::dispatch($run->id);
+    PrepareDemo::dispatchSync($run->id);
 
     expect($calls->getArrayCopy())->toBe(['prepare'])
         ->and($run->fresh()?->status)->toBe('finished')
@@ -74,7 +93,7 @@ it('resets the demo, then prepares it again', function (): void {
     $calls = demoWorkspaceSpy();
     $run = startedRun('reset');
 
-    ResetDemo::dispatch($run->id);
+    ResetDemo::dispatchSync($run->id);
 
     expect($calls->getArrayCopy())->toBe(['reset', 'prepare'])
         ->and($run->fresh()?->status)->toBe('finished');
@@ -88,7 +107,7 @@ it('records the failure on its run without the message, and frees the lock', fun
     });
     $run = startedRun('prepare');
 
-    $job::dispatch($run->id);
+    $job::dispatchSync($run->id);
 
     expect($run->fresh()?->status)->toBe('failed')
         ->and($run->fresh()?->error_class)->toBe(RuntimeException::class)

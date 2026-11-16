@@ -75,6 +75,17 @@ return [
             'after_commit' => false,
         ],
 
+        // The demo company's preparation (Demos\Jobs): longer than any other job, so Redis waits longer before handing it
+        // to another worker. Its own Horizon supervisor (config/horizon.php) gives it time; retry_after stays above both.
+        'redis-long' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => 'demo',
+            'retry_after' => 660,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
         'deferred' => [
             'driver' => 'deferred',
         ],

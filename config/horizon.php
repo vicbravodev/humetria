@@ -210,6 +210,19 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+        // Prepares or resets the demo company (up to 600 s per job): one at a time, below redis-long's retry_after (660).
+        'supervisor-demo' => [
+            'connection' => 'redis-long',
+            'queue' => ['demo'],
+            'balance' => false,
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => 1,
+            'timeout' => 630,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
@@ -219,12 +232,14 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
+            'supervisor-demo' => [],
         ],
 
         'local' => [
             'supervisor-1' => [
                 'maxProcesses' => 3,
             ],
+            'supervisor-demo' => [],
         ],
     ],
 

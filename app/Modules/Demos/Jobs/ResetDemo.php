@@ -27,7 +27,11 @@ final class ResetDemo implements ShouldQueue
 
     public bool $failOnTimeout = true;
 
-    public function __construct(public readonly string $runId) {}
+    public function __construct(public readonly string $runId)
+    {
+        // Its own connection and queue: redis' retry_after (90 s) would hand a long preparation to a second worker.
+        $this->onConnection('redis-long')->onQueue('demo');
+    }
 
     public function handle(DemoWorkspace $workspace): void
     {
