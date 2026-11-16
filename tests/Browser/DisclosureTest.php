@@ -352,7 +352,7 @@ it('shows the people the policy of their center', function (bool $dark, bool $mo
         ->assertSee('Para las personas trabajadoras')
         ->assertSee('Nuestra política')
         ->assertSee('Es obligación de supervisores, gerentes y directores')
-        ->assertSee('Para confirmar que la leyó, use el enlace personal que le llegó por correo.')
+        ->assertSee('Para confirmar que la leyó, entre a su portal desde el correo que le llegó.')
         ->assertSee('no guardamos quién visita esta página')
         ->assertSee('Otro centro')
         ->click('Leer completa')
@@ -547,5 +547,5 @@ it('reviews the draft of the health effects and publishes it to the centers', fu
 // E-02: the page of the people points to the personal link for what is personal.
 it('tells the people where their personal procedures are', function (): void {
     visit(workersPageUrl())
-        ->assertSee('Sus trámites personales (vacaciones, confirmaciones) están en el enlace personal que llegó a su correo.');
+        ->assertSee('Sus trámites personales (vacaciones, confirmaciones) están en su portal: entre con su llave o desde un correo de su empresa.');
 });

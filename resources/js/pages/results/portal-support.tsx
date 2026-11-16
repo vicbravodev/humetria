@@ -54,8 +54,7 @@ export default function PortalSupport({
                         {message}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                        Solo usted ve este mensaje. Su página es personal: no
-                        comparta su enlace.
+                        Solo usted ve este mensaje, en su portal.
                     </p>
                 </section>
                 <p className="mt-auto text-center text-caption text-muted-foreground">
