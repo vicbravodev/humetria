@@ -55,8 +55,8 @@ it('records each step and when it finished', function (): void {
     $this->freezeSecond();
     $run = DemoRun::start('prepare');
 
-    $run?->step('Organización');
-    $run?->step('NOM-035');
+    $run?->reach('Organización');
+    $run?->reach('NOM-035');
     $this->travel(2)->minutes();
     $run?->finish();
 
@@ -74,7 +74,7 @@ it('records progress and failure without the exception message', function (): vo
         $logged[] = [$log->level, $log->message, $log->context];
     });
     $run = DemoRun::start('reset');
-    $run?->step('Asistencia');
+    $run?->reach('Asistencia');
 
     $run?->fail(new RuntimeException('SQLSTATE: la fila de juan@empresa.mx'));
 

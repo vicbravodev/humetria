@@ -43,9 +43,9 @@ final class ResetDemo implements ShouldQueue
         }
 
         try {
-            $run->step('Borrando la demo');
+            $run->reach('Borrando la demo');
             $workspace->reset();
-            $workspace->prepare($run->step(...));
+            $workspace->prepare($run->reach(...));
         } catch (Throwable $error) {
             $run->fail($error);
 

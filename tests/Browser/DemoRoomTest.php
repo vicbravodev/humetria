@@ -65,7 +65,7 @@ it('warns that a demo older than two days has gone stale', function (): void {
 
 it('shows the step a preparation is on and holds the buttons meanwhile', function (bool $dark): void {
     signInAsSuperadmin();
-    (DemoRun::start('prepare') ?? throw new LogicException('Not started.'))->step('Asistencia');
+    (DemoRun::start('prepare') ?? throw new LogicException('Not started.'))->reach('Asistencia');
 
     visitPage('demos/room', '/admin/demo', $dark)
         ->assertSee('Preparando')

@@ -43,7 +43,7 @@ final class PrepareDemo implements ShouldQueue
         }
 
         try {
-            $workspace->prepare($run->step(...));
+            $workspace->prepare($run->reach(...));
         } catch (Throwable $error) {
             $run->fail($error);
 

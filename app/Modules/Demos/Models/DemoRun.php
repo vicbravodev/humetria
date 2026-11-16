@@ -62,7 +62,8 @@ final class DemoRun extends Model
         return self::query()->latest('started_at')->first();
     }
 
-    public function step(string $label): void
+    /** Records the step the run reached; the step attribute keeps the name `step`. */
+    public function reach(string $label): void
     {
         $this->forceFill(['step' => $label])->save();
         Log::info('demo.run_step', ['run_id' => $this->id, 'step' => $label]);

@@ -165,7 +165,7 @@ it('dates the preparation by the last run that finished, not by one running or f
 });
 
 it('shows the step a running preparation is on', function (): void {
-    (DemoRun::start('prepare') ?? throw new LogicException('Not started.'))->step('Asistencia');
+    (DemoRun::start('prepare') ?? throw new LogicException('Not started.'))->reach('Asistencia');
 
     $this->actingAs(superadmin())
         ->get(route('demo-room.show'))
