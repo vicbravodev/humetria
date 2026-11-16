@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   # Un cambio que solo trajo documentación se saltó el pipeline (tests.yml, job `changes`) y las imágenes serían las
-  # mismas, porque .dockerignore deja fuera docs: no se despliega. Se pregunta a esa corrida si su job `tests` corrió;
+  # mismas, porque .dockerignore deja fuera docs: no se despliega. Se pregunta a esa corrida si su job `build` corrió (`tests` va en shards y su nombre lleva el número);
   # si no se puede leer la respuesta, se despliega.
   pipeline:
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
@@ -35,7 +35,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.event.workflow_run.id }}
-        run: echo "tests=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs" --jq '.jobs[] | select(.name == "tests") | .conclusion')" >> "$GITHUB_OUTPUT"
+        run: echo "tests=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs" --jq '.jobs[] | select(.name == "build") | .conclusion')" >> "$GITHUB_OUTPUT"
 
   image:
     needs: pipeline

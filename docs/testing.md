@@ -90,6 +90,11 @@ tiene que pasar con **cualquier** dato que Faker pueda dar, no solo con el de ho
    que alguna prueba pase a `not->toContain('Rosa')` o `assertDontSee`: las lee de las propias pruebas, no hay lista que mantener.
    `memberOf()` da a cada miembro un nombre fijo (`Miembro owner`).
 9. **Ninguna prueba depende de otra, del orden, del puerto ni de un id.** Cada una crea sus datos con factories.
+10. **Quien recorre `resources/js` usa `frontendSourceFiles()`** (`tests/Pest.php`), no un `RecursiveDirectoryIterator` ni
+    un `glob` propios: las sondas de lint de `FrontendArchitectureTest` crean y borran `zz-probe-*` mientras otras pruebas
+    corren en paralelo, y un recorrido a mano tropieza con la carpeta que desapareció (`UnexpectedValueException`).
+11. **Un texto no prueba que la página cambió.** Tras un clic que navega, el panel que se cierra puede decir lo mismo que la
+    página nueva: se espera la ruta con `pathBecomes()` antes de afirmar lo demás.
 
 ## Cómo se estresa
 
@@ -110,3 +115,28 @@ fechas fijas de las pruebas no es un caso real (el tiempo solo avanza) y falla p
 
 Una prueba o un archivo sospechoso se repite aislado: `for s in $(seq 1 20); do TEST_SEED=$s php artisan test --compact ruta; done`.
 Vitest: `for i in 1 2 3 4 5; do npm run test:js; done`.
+
+# CI (`.github/workflows/tests.yml`)
+
+Los jobs corren en paralelo; `ci`, el check obligatorio, espera a todos:
+
+| Job | Qué hace |
+|---|---|
+| `changes` | Decide si el cambio necesita el pipeline (`scripts/ci-code-changed.sh`). |
+| `build` | Construye el frontend una vez (`npm run build:ssr`) y lo sube como artefacto `assets`: `public/build`, `bootstrap/ssr` y los archivos de Wayfinder. |
+| `checks` | Auditoría, Pint, PHPStan, `vp check`, tsc y Vitest. No construye: genera Wayfinder con `wayfinder:generate --with-form`. |
+| `tests` (3 shards) | Unit y Feature con PCOV; cada shard guarda su cobertura (`--coverage-php`). |
+| `coverage` | Junta la cobertura de los shards (`scripts/coverage-merge.php`, con el merger de php-code-coverage) y aplica el 90 % (`scripts/coverage-min.php`). |
+| `browser` (4 shards) | Pest Browser. Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
+| `ssr` | El bundle SSR con un Node real (usa el del job `build`: `SSR_PREBUILT=true`) y la imagen `ssr` con Docker. |
+
+- Los shards se reparten por **tiempo** con `tests/.pest/shards.json` (Pest: `--shard` usa los tiempos de cada clase).
+  Un archivo de prueba nuevo sin tiempo va por turno y Pest avisa que el archivo está viejo; se regenera de vez en cuando,
+  con la suite completa en verde: `php artisan test --update-shards --parallel --processes=4 --exclude-testsuite=Ssr`
+  (con `artisan test`: el servidor de Playwright lo arranca él). Los tiempos son de una Mac; en CI cambian las magnitudes, no
+  las proporciones.
+- Postgres en CI vive en un tmpfs y con `fsync`, `synchronous_commit` y `full_page_writes` apagados (la acción `setup`):
+  la base muere con el job.
+- Los navegadores de Playwright se guardan en caché por la versión de Playwright.
+- Cada job tiene `timeout-minutes`; el flujo también corre en `merge_group`, listo para una cola de merge.
+- En local nada cambia: `composer test` mide la cobertura en una sola corrida (`test:coverage`) y `composer setup` construye.
