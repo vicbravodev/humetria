@@ -797,4 +797,48 @@ Anotadas al construir el grupo 4 («Accesos» y fin del alta de asistencia).
 - **Los tres botones del enlace del portal** (empleados, teletrabajadores, saldos de vacaciones) siguen igual hasta los
   grupos 6 y 8.
 
+Anotadas al construir el grupo 5 (inicio, `WorkerSection` y Telework como sección).
+
+- **`RequireWorkerSession` en lugar de `auth:worker`.** `Authenticate` llama a `Auth::shouldUse('worker')`: la persona se
+  volvía el usuario de la petición (las props compartidas del panel y el contexto de los logs la leían como usuario, y
+  `GenericUser` rompía `isSuperadmin()`), y además corría antes de `ResolveWorkerTenant` por la prioridad de middleware. El
+  middleware propio de WorkerAccess va después de `ResolveWorkerTenant`, nunca cambia el usuario y, sin sesión, lleva a la
+  entrada de esa empresa (JSON: 401). `RouteSecurityTest` lo cuenta como autenticación y exige que toda ruta con él viva bajo
+  `me/{tenant}/` con `ResolveWorkerTenant` antes. El guard `worker` sigue registrado; no se usa en rutas.
+- **El destino pretendido** vive en su propia llave de sesión (`worker_destination`, `Support/WorkerDestination`), no en
+  `url.intended`, para que un inicio de sesión del panel nunca caiga en una página de la persona ni al revés. Solo se guarda
+  un `GET` de `/me/{slug}/...` de la misma empresa y en este sitio, y se vuelve a revisar al usarlo (otra empresa, otro sitio,
+  `/admin`, `..` y un slug que solo empieza igual se ignoran). Lo consumen: entrar con llave, abrir un enlace `requested` y
+  registrar la llave tras un enlace `issued` (que sigue yendo primero a registrar la llave).
+- **`WorkerSession` se lee una vez por petición** (`Support/RequestWorkerSession`, memo en los atributos de la petición;
+  `WorkerSessionStore::start()`/`end()` lo olvidan): el middleware y la página no pagan dos lecturas.
+- **Una sección que falla** se reporta (`report()`) y se omite; el inicio no se cae.
+- **Interludio (pasos 5 a 9).** El inicio por enlace `portal/{token}` (`portal.show`, `Telework\PortalController::show`)
+  sigue vivo mientras Leave, Seating, Disclosure, Organization, Engagement y Results abren sus páginas con el token: lista
+  sus `PortalSection` (etiqueta `portal.sections`) y, para Telework, la `WorkerSection` de Telework, que lleva a
+  `/me/{slug}/telework` sin credencial (la persona entra primero). Ya no muestra los pendientes de teletrabajo ni recibe
+  `token`, `canNotify` ni `pending`. El inicio nuevo `/me/{slug}` lista solo las `WorkerSection` registradas: Telework y
+  Marcar. En el paso 6 cada módulo cambia su `PortalSection` por una `WorkerSection`; el inicio por enlace se borra en el 9.
+- **Telework.** Sus 9 rutas de contenido pasan a `/me/{slug}/telework/...` con los mismos nombres `portal.*`, más
+  `portal.telework.show` (página `telework/portal-section`: lo que antes mostraba el inicio sobre teletrabajo, con la tarjeta
+  de «Sus avisos por escrito» para quien tiene periodo abierto). La sección se ofrece con NOM-037 a quien teletrabaja y, a
+  cualquier otra persona, mientras tenga un documento por confirmar (antes los veía en el inicio del portal). La página la
+  abre cualquier persona con sesión (sin nada pendiente, «Nada pendiente»); los avisos siguen siendo 404 sin periodo abierto.
+  Las páginas reciben `slug` en lugar de `token`. `Support/SessionPortal` arma el `OpenedPortal` desde `WorkerIdentity`, así
+  las acciones (`SubmitChecklist`, `Acknowledge`…) no cambian. `OpenPortal`, `IssuePortalLink` y `PortalLink` quedan para el
+  inicio por enlace y los otros módulos hasta el paso 9.
+- **`RequirePortalTool`** pregunta a `Companies::current()` en las páginas de la persona y va antes de la sesión (una
+  empresa sin la herramienta da 404 sin pedir entrar). En las rutas que aún llevan `{token}` sigue preguntando al enlace
+  (`PortalAccess`) hasta que cada módulo se mude en el paso 6: la dependencia de Telework se va con la última.
+- **Limitadores** `portal-views` y `portal-actions` siguen en `TeleworkServiceProvider` (los usan todavía las rutas con
+  token): sin token cuentan por sesión del navegador (`portal-session:` + hash del id), nunca una cubeta para todos. Se mudan
+  a WorkerAccess cuando no quede token (paso 9).
+- **El correo «Su empresa respondió su aviso»** (`SendNoticeAnswer`) ya usa `WorkerLinks::to('portal.notices.show')`: su
+  ruta dejó de tener token, así que no podía esperar al paso 8.
+- **Attendance.** «Marcar» (`PunchWorkerSection`, clave `attendance`) lleva a `/a/{slug}` solo si la empresa tiene la
+  herramienta. «Mi jornada» por token (`AttendancePortalSection`, `portal.attendance.show`) sigue en el inicio por enlace
+  hasta el paso 9: es lo mínimo coherente mientras ese inicio exista, y ya no crea llaves (grupo 4). Se borra con él.
+- **`components/portal-home-link.tsx`** sigue llevando a `portal.show`: lo usan las páginas por token de los otros módulos
+  (paso 6).
+
 *Drafted with EGM*
