@@ -129,7 +129,7 @@ it('links the phone: it saves the device and the acceptance of the agreement, us
 
     $entry = AuditEntry::query()->where('event', 'worker_access.credential_registered')->sole();
     expect($entry)->subject_id->toBe($device->id)->metadata->toBe(['employee_id' => $this->ana->id]);
-    Log::shouldHaveReceived('info')->with('attendance.device_enrolled', ['credential_id' => $device->id, 'employee_id' => $this->ana->id]);
+    Log::shouldHaveReceived('info')->with('attendance.device_enrolled', ['key_id' => $device->id, 'employee_id' => $this->ana->id]);
 });
 
 it('works once: after linking, the link answers 404 everywhere', function (): void {

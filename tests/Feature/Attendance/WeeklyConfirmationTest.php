@@ -100,8 +100,8 @@ describe('confirming', function (): void {
         Event::assertDispatched(WeekConfirmed::class, fn (WeekConfirmed $event): bool => $event->confirmationId === $week->id && $event->employeeId === $this->ana->id && $event->weekStart === LAST_WEEK);
         $entry = AuditEntry::query()->where('event', 'attendance.week_confirmed')->sole();
         expect($entry->subject_id)->toBe($week->id)
-            ->and($entry->metadata)->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'credential_id' => $this->device->id, 'digest' => seenDigest($this)]);
-        Log::shouldHaveReceived('info')->with('attendance.week_confirmed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'credential_id' => $this->device->id]);
+            ->and($entry->metadata)->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'key_id' => $this->device->id, 'digest' => seenDigest($this)]);
+        Log::shouldHaveReceived('info')->with('attendance.week_confirmed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'key_id' => $this->device->id]);
     });
 
     it('takes any day of the week as the week', function (): void {
@@ -189,8 +189,8 @@ describe('disputing', function (): void {
             ->and($week->disputed_at?->equalTo(now()))->toBeTrue();
         Event::assertDispatched(WeekDisputed::class, fn (WeekDisputed $event): bool => $event->confirmationId === $week->id && $event->weekStart === LAST_WEEK);
         expect(AuditEntry::query()->where('event', 'attendance.week_disputed')->sole()->metadata)
-            ->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'credential_id' => $this->device->id, 'digest' => seenDigest($this)]);
-        Log::shouldHaveReceived('info')->with('attendance.week_disputed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'credential_id' => $this->device->id]);
+            ->toEqual(['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'key_id' => $this->device->id, 'digest' => seenDigest($this)]);
+        Log::shouldHaveReceived('info')->with('attendance.week_disputed', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'key_id' => $this->device->id]);
     });
 
     it('requires a reason of at least 10 characters', function (string $reason): void {

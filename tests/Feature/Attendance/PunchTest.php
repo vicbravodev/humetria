@@ -656,7 +656,7 @@ describe('the agreement', function (): void {
 
         $acceptance = AgreementAcceptance::query()->where('employee_id', $bob->id)->sole();
         expect($acceptance)->credential_id->toBe($bobDevice->id);
-        Log::shouldHaveReceived('info')->once()->with('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $bob->id, 'credential_id' => $bobDevice->id, 'version' => $version]);
+        Log::shouldHaveReceived('info')->once()->with('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $bob->id, 'key_id' => $bobDevice->id, 'version' => $version]);
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE])->assertOk();
     });
 

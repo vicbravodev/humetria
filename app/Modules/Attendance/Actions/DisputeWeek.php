@@ -63,7 +63,7 @@ final readonly class DisputeWeek
             }
 
             $confirmation->update(['status' => WeekStatus::Disputed, 'confirmed_at' => null, 'disputed_at' => CarbonImmutable::now()->utc(), 'reason' => $reason, 'credential_id' => $credentialId, 'digest' => $digest]);
-            $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'credential_id' => $credentialId];
+            $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'key_id' => $credentialId];
             $this->audit->handle('attendance.week_disputed', $confirmation, [...$ids, 'digest' => $digest]);
             Log::info('attendance.week_disputed', ['confirmation_id' => $confirmation->id, ...$ids]);
             event(new WeekDisputed($confirmation->id, $employeeId, $ids['week_start']));

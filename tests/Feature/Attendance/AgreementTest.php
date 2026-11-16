@@ -68,7 +68,7 @@ it('records that a person accepted the current version, on a device, and when, l
     expect($acceptance)->employee_id->toBe($ana->id)->credential_id->toBe($credentialId)->tenant_id->toBe($this->tenant->id)
         ->and($acceptance->agreement_id)->toBe(AttendanceAgreement::query()->sole()->id)
         ->and($acceptance->accepted_at->toIso8601String())->toBe('2026-11-07T15:00:00+00:00');
-    Log::shouldHaveReceived('info')->with('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $ana->id, 'credential_id' => $credentialId, 'version' => 1]);
+    Log::shouldHaveReceived('info')->with('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $ana->id, 'key_id' => $credentialId, 'version' => 1]);
 });
 
 it('does not record an acceptance of a version that is no longer the current one', function (): void {

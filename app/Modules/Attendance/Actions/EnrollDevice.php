@@ -62,7 +62,7 @@ final readonly class EnrollDevice
         });
 
         if ($credentialId !== null) {
-            Log::info('attendance.device_enrolled', ['credential_id' => $credentialId, 'employee_id' => $person->id]);
+            Log::info('attendance.device_enrolled', ['key_id' => $credentialId, 'employee_id' => $person->id]);
 
             // After the commit: the person learns of every device linked to their record, so they notice one that was not them.
             if ($person->email !== null) {

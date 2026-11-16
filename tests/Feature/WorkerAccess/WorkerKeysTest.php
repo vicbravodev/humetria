@@ -49,7 +49,7 @@ it('saves a verified key with its label, to the audit trail and the log with ids
         ->and($credential->registered_at->toIso8601String())->toBe('2026-11-07T15:00:00+00:00');
     $entry = AuditEntry::query()->where('event', 'worker_access.credential_registered')->sole();
     expect($entry)->subject_id->toBe($credential->id)->metadata->toBe(['employee_id' => $this->ana->id]);
-    Log::shouldHaveReceived('info')->once()->with('worker_access.credential_registered', ['credential_id' => $credential->id, 'employee_id' => $this->ana->id]);
+    Log::shouldHaveReceived('info')->once()->with('worker_access.credential_registered', ['key_id' => $credential->id, 'employee_id' => $this->ana->id]);
 });
 
 it('does not save the same key twice: the second answer is null and nothing is written', function (): void {

@@ -65,7 +65,7 @@ final readonly class ConfirmWeek
             }
 
             $confirmation->update(['status' => WeekStatus::Confirmed, 'confirmed_at' => CarbonImmutable::now()->utc(), 'credential_id' => $credentialId, 'digest' => $digest]);
-            $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'credential_id' => $credentialId];
+            $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'key_id' => $credentialId];
             $this->audit->handle('attendance.week_confirmed', $confirmation, [...$ids, 'digest' => $digest]);
             Log::info('attendance.week_confirmed', ['confirmation_id' => $confirmation->id, ...$ids]);
             event(new WeekConfirmed($confirmation->id, $employeeId, $ids['week_start']));

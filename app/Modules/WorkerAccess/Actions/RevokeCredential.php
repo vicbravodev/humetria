@@ -36,7 +36,7 @@ final readonly class RevokeCredential
         });
 
         if ($revoked) {
-            Log::info('worker_access.credential_revoked', ['credential_id' => $credential->id, 'employee_id' => $credential->employee_id]);
+            Log::info('worker_access.credential_revoked', ['key_id' => $credential->id, 'employee_id' => $credential->employee_id]);
         }
     }
 }

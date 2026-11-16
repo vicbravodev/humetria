@@ -42,7 +42,7 @@ final readonly class RegisterCredential
         }
 
         $this->audit->handle('worker_access.credential_registered', $credential, ['employee_id' => $employeeId]);
-        Log::info('worker_access.credential_registered', ['credential_id' => $credential->id, 'employee_id' => $employeeId]);
+        Log::info('worker_access.credential_registered', ['key_id' => $credential->id, 'employee_id' => $employeeId]);
 
         return $credential;
     }

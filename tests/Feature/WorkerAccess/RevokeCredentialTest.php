@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Actions\RevokeCredential;
 use App\Modules\WorkerAccess\Exceptions\InvalidCredential;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
-use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -38,7 +38,7 @@ it('revokes a device at once: it no longer verifies, and the revocation goes to 
         ->and(fn () => $ceremony->verifyAssertion('s', $phone->get($ceremony->assertionOptions('s'), $this->ana->id)))->toThrow(InvalidCredential::class);
     $entry = AuditEntry::query()->where('event', 'worker_access.credential_revoked')->sole();
     expect($entry)->subject_id->toBe($device->id)->metadata->toBe(['employee_id' => $this->ana->id]);
-    Log::shouldHaveReceived('info')->once()->with('worker_access.credential_revoked', ['credential_id' => $device->id, 'employee_id' => $this->ana->id]);
+    Log::shouldHaveReceived('info')->once()->with('worker_access.credential_revoked', ['key_id' => $device->id, 'employee_id' => $this->ana->id]);
 });
 
 it('keeps when a device was first revoked, writing nothing again', function (): void {

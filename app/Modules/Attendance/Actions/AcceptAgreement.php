@@ -43,7 +43,7 @@ final readonly class AcceptAgreement
             'accepted_at' => CarbonImmutable::now(),
         ]);
 
-        Log::info('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $employeeId, 'credential_id' => $credentialId, 'version' => $version]);
+        Log::info('attendance.agreement_accepted', ['acceptance_id' => $acceptance->id, 'employee_id' => $employeeId, 'key_id' => $credentialId, 'version' => $version]);
 
         return $acceptance;
     }
