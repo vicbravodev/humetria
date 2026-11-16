@@ -48,6 +48,7 @@ const LABELS: Record<string, string> = {
     'attendance.enrollments_sent':
         'Enlaces de registro de dispositivo enviados',
     'worker_access.credential_registered': 'Llave de acceso registrada',
+    'worker_access.link_issued': 'Enlace de acceso emitido',
     'worker_access.not_me_reported':
         'Llave anulada por la persona («No fui yo»)',
     'attendance.report_exported': 'Reporte de asistencia exportado',
