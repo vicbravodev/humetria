@@ -36,7 +36,7 @@ use LogicException;
  * company one policy that lets a mark out of zone through, flagged (a prospect marks from wherever the demo is shown). The
  * plant's two production shifts have six months of days, everyone else the last four weeks, all up to yesterday: a night
  * that would end today was not worked yet, and nobody has marked today. The night shift («Producción turno 2») has worked
- * overtime all along, about half since HR acted on the NOM-035 evaluation; everyone else works their schedule. The
+ * overtime all along, within the norm since HR acted on the NOM-035 evaluation; nobody marks on a holiday; everyone else works their schedule. The
  * Oficinas center marks with the QR of its kiosk, activated a month ago. Last week waits for each person's confirmation and
  * three people asked HR to correct a mark. Nobody has a linked phone, a passkey or an enrollment link: whoever marks live
  * links a real one, and the passkey is what proves who marks.
@@ -60,8 +60,20 @@ final readonly class AttendanceStory implements DemoStory
     /** The last weeks, after HR acted on the evaluation: the night shift's overtime came down by half. */
     private const int CALMER_DAYS = 21;
 
-    /** The night shift's overtime minutes by ISO weekday (Monday to Saturday), turned by the person. */
+    /**
+     * The night shift's overtime minutes by ISO weekday (Monday to Saturday), turned by the person: 10.5 h over five nights a
+     * week, beyond the norm's three times and nine hours a week (criterio jornada 2.3). The problem the evaluation found.
+     */
     private const array NIGHT_OVERTIME = [120, 150, 0, 120, 180, 60];
+
+    /** Since HR acted (CALMER_DAYS): 2 h on three nights a week, 6 h in all, within the norm. */
+    private const array CALMER_OVERTIME = [120, 0, 0, 120, 120, 0];
+
+    /** The rest days of art. 74 a calendar tells, by month and day; the Mondays apart (see holiday()). */
+    private const array STATUTORY = ['01-01', '05-01', '09-16', '12-25'];
+
+    /** The art. 74 rest days that fall on a Monday: month => which Monday. */
+    private const array STATUTORY_MONDAYS = [2 => 1, 3 => 3, 11 => 3];
 
     private const int CHUNK = 1000;
 
@@ -213,7 +225,7 @@ final readonly class AttendanceStory implements DemoStory
     /**
      * A person's working days up to yesterday, oldest first: how many days ago, the minutes after that day's midnight they
      * start and end, and the local date. A day starts at its schedule, a few minutes either side, and ends after its hours
-     * plus, on the night shift, its overtime; a night that would end today is left out.
+     * plus, on the night shift, its overtime; a night that would end today is left out, and so is a holiday.
      *
      * @return list<array{int, int, int, CarbonImmutable}>
      */
@@ -229,15 +241,27 @@ final readonly class AttendanceStory implements DemoStory
             $date = $today->subDays($daysAgo);
             $hours = $minutes[$date->isoWeekday()];
             $from = $start + ($n + $daysAgo) % 5 - 2;
-            $overtime = $night ? intdiv(self::NIGHT_OVERTIME[($date->isoWeekday() + $n) % 6], $daysAgo <= self::CALMER_DAYS ? 2 : 1) : 0;
+            $overtime = $night ? ($daysAgo <= self::CALMER_DAYS ? self::CALMER_OVERTIME : self::NIGHT_OVERTIME)[($date->isoWeekday() + $n) % 6] : 0;
             $to = $from + $hours + $overtime;
 
-            if ($hours > 0 && $date->addMinutes($to)->lessThan($today)) {
+            if ($hours > 0 && ! $this->holiday($date) && $date->addMinutes($to)->lessThan($today)) {
                 $days[] = [$daysAgo, $from, $to, $date];
             }
         }
 
         return $days;
+    }
+
+    /**
+     * A day nobody works: a holiday of the company (LeaveStory::HOLIDAYS) or of art. 74 (Leave\Support\StatutoryHolidays
+     * is the module's own; the 1 October of a change of federal executive, next in 2030, is left out).
+     */
+    private function holiday(CarbonImmutable $date): bool
+    {
+        $day = $date->format('m-d');
+
+        return isset(LeaveStory::HOLIDAYS[$day]) || in_array($day, self::STATUTORY, true)
+            || ($date->isoWeekday() === 1 && intdiv($date->day - 1, 7) + 1 === (self::STATUTORY_MONDAYS[$date->month] ?? 0));
     }
 
     /** At the plant and the other centers, inside the zone by the geofence; at Oficinas with the kiosk's QR, a third of the days with no location. */

@@ -22,12 +22,14 @@ use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Attendance\Support\WorkedDay;
+use App\Modules\Leave\Support\StatutoryHolidays;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoPerson;
 use Database\Seeders\Demo\DemoRoster;
+use Database\Seeders\Demo\Stories\LeaveStory;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -62,6 +64,42 @@ function demoOvertime(string $employeeId, WeekPeriod $week): int
  * that test.
  */
 return [
+    'has nobody marking on a holiday of art. 74 or of the company' => function (): void {
+        $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
+        $holidays = [];
+        foreach (range($today->year - 1, $today->year) as $year) {
+            array_push($holidays, ...StatutoryHolidays::for($year), ...array_map(fn (string $day): string => "{$year}-{$day}", array_keys(LeaveStory::HOLIDAYS)));
+        }
+
+        $days = AttendanceMark::query()->toBase()->selectRaw("distinct ((marked_at at time zone 'America/Mexico_City')::date)::text as day")
+            ->where('type', MarkType::Start)->pluck('day')->all();
+
+        expect(array_values(array_intersect($days, $holidays)))->toBe([]);
+    },
+
+    'keeps the night shift\'s overtime within the norm in the weeks after HR acted: three days and nine hours at most' => function (): void {
+        $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
+
+        // The whole weeks since the overtime came down (three weeks ago), up to last week.
+        for ($week = WeekPeriod::containing($today->subWeek()); $week->start()->greaterThanOrEqualTo($today->subDays(21)); $week = WeekPeriod::containing($week->start()->subWeek())) {
+            foreach (demoPlantArea('Producción turno 2') as $employeeId) {
+                $schedule = AttendanceSchedule::query()->where('employee_id', $employeeId)->firstOrFail();
+                $days = 0;
+                $minutes = 0;
+
+                foreach (EffectiveMarks::byDay($employeeId, $week) as $date => $marks) {
+                    $day = WorkedDay::hours(CarbonImmutable::parse($date, DemoClock::TIMEZONE), $marks, $schedule);
+                    $extra = max(0, $day->workedMinutes - $day->scheduledMinutes);
+                    $days += $extra > 0 ? 1 : 0;
+                    $minutes += $extra;
+                }
+
+                expect($days)->toBeLessThanOrEqual(3, "{$employeeId} worked overtime on {$days} days of the week of {$week->start()->toDateString()}")
+                    ->and($minutes)->toBeLessThanOrEqual(9 * 60);
+            }
+        }
+    },
+
     'tells the attendance story: months of marks, the night shift overtime, a kiosk and nothing to impersonate a person' => function (): void {
         $tenantId = resolve(DemoCompanies::class)->id();
         $centers = WorkCenter::query()->pluck('id', 'name');
@@ -124,10 +162,11 @@ return [
                 ->and($first->lessThan($today->subWeeks($shift ? 25 : 3)))->toBeTrue();
         }
 
-        // Yesterday back to this week's Monday, or to the last working day before it: a Sunday nobody works.
+        // Yesterday back to this week's Monday, or to the last working day before it: a Sunday or a holiday nobody works.
+        $holidays = [...StatutoryHolidays::for($today->year), ...StatutoryHolidays::for($today->year - 1)];
         $checked = 0;
         for ($date = $today->subDay(); $date->greaterThanOrEqualTo($today->startOfWeek()) || $checked === 0; $date = $date->subDay()) {
-            if ($date->isoWeekday() === 7) {
+            if ($date->isoWeekday() === 7 || in_array($date->toDateString(), $holidays, true) || isset(LeaveStory::HOLIDAYS[$date->format('m-d')])) {
                 continue;
             }
 

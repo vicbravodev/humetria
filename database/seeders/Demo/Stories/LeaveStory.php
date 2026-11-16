@@ -50,7 +50,7 @@ final readonly class LeaveStory implements DemoStory
     private const string POLICY = 'Prestaciones Alba del Bajío';
 
     /** The company's holidays besides those of art. 74, by month and day. */
-    private const array HOLIDAYS = ['11-02' => 'Día de Muertos', '12-12' => 'Día de la Virgen de Guadalupe', '12-24' => 'Nochebuena', '12-31' => 'Fin de año'];
+    public const array HOLIDAYS = ['11-02' => 'Día de Muertos', '12-12' => 'Día de la Virgen de Guadalupe', '12-24' => 'Nochebuena', '12-31' => 'Fin de año'];
 
     /** The days a history request spans from its Monday: a week (5 working days), two weeks (10) and the 12 in a row of art. 78. */
     private const array SPANS = [4, 11, 15];
