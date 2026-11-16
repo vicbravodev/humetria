@@ -6,6 +6,7 @@ namespace App\Modules\Billing\Listeners;
 
 use App\Modules\Billing\Actions\RecordUsage;
 use App\Modules\Billing\Contracts\MailBag;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +16,7 @@ final readonly class CountSentMail
 {
     public const string METER = 'email_campaign';
 
-    public function __construct(private RecordUsage $record) {}
+    public function __construct(private RecordUsage $record, private DemoCompanies $demos) {}
 
     public function handle(NotificationSent $event): void
     {
@@ -28,6 +29,11 @@ final readonly class CountSentMail
         if (! is_string($tenantId)) {
             Log::warning('usage.mail_without_company', ['notification' => $event->notification::class]);
 
+            return;
+        }
+
+        // The demo's mail is cancelled before it leaves (BlockDemoMail), yet Laravel still says it was sent: nothing to count.
+        if ($this->demos->isDemo($tenantId)) {
             return;
         }
 

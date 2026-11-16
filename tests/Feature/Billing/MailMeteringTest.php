@@ -123,6 +123,16 @@ it('counts nothing and says so when the send has no company', function (): void 
     Log::shouldHaveReceived('warning')->once()->with('usage.mail_without_company', ['notification' => MailMeterCampaignNote::class]);
 });
 
+it('counts nothing for the demo company, whose mail never leaves', function (): void {
+    $demo = Tenant::factory()->create();
+    $demo->forceFill(['is_demo' => true])->save();
+
+    mailSentFor($demo, new MailMeterCampaignNote);
+
+    expect(mailUsed($demo))->toBe(0)
+        ->and(UsageEvent::query()->where('tenant_id', $demo->id)->exists())->toBeFalse();
+});
+
 describe('the quota of campaign email', function (): void {
     it('is 8 per seat with a minimum of 500: 62 seats is 500, 63 is 504', function (int $seats, int $quota): void {
         [, $account] = paidCompany();
