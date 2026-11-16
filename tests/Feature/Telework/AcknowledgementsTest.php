@@ -150,47 +150,25 @@ it('logs telework.acknowledgement_requested with ids and counts only', function 
     expect(json_encode(Acknowledgement::query()->get()->toArray(), JSON_THROW_ON_ERROR))->toContain($ana->id);
 });
 
-it('mails the employee their portal link, derived as the job runs: the same one they had', function (): void {
+it('mails the employee the address of their telework section, with no credential in it', function (): void {
     Notification::fake();
     $ana = staffer($this->center, ['name' => 'Ana Ruiz']);
-    $old = resolve(IssuePortalLink::class)->handle($ana->id);
     publishDocument(DocumentKind::Policy, $this->center);
 
     $job = new SendPortalReminder($this->tenant->id, $ana->id, null);
     app()->call($job->handle(...));
 
-    $url = null;
-    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable) use (&$url, $ana): bool {
+    $mail = null;
+    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable) use (&$mail, $ana): bool {
         $mail = $notification->toMail($notifiable);
-        $url = $mail->actionUrl;
 
         // Board V3-Correos: a document to confirm is «Tiene algo por confirmar».
         return $mail->subject === 'Tiene algo por confirmar' && $mail->actionText === 'Ver y confirmar' && $notifiable->routes['mail'] === $ana->email && $channels === ['mail'];
     });
-    expect(basename($url))->toBe($old)
-        ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $old))
-        ->and($job)->toBeInstanceOf(ShouldQueueAfterCommit::class)
-        ->and(serialize($job))->not->toContain(basename($url));
-});
-
-it('mails the same link in every reminder, so the first email still opens the portal', function (): void {
-    Notification::fake();
-    // Only the reminders below run.
-    Queue::fake();
-    $ana = staffer($this->center);
-    publishDocument(DocumentKind::Policy, $this->center);
-    $urls = [];
-
-    app()->call((new SendPortalReminder($this->tenant->id, $ana->id, null))->handle(...));
-    app()->call((new SendPortalReminder($this->tenant->id, $ana->id, null))->handle(...));
-
-    Notification::assertSentOnDemand(PortalReminder::class, function (PortalReminder $notification, array $channels, AnonymousNotifiable $notifiable) use (&$urls): bool {
-        $urls[] = $notification->toMail($notifiable)->actionUrl;
-
-        return true;
-    });
-    expect($urls)->toHaveCount(2)->and($urls[0])->toBe($urls[1])
-        ->and(resolve(OpenPortal::class)->handle(basename($urls[0]))->employeeId)->toBe($ana->id);
+    expect($mail->actionUrl)->toBe(route('portal.telework.show', $this->tenant->slug))
+        ->and(implode("\n", $mail->outroLines))->not->toContain('el anterior deja de funcionar')
+        ->and(PortalLink::query()->count())->toBe(0)
+        ->and($job)->toBeInstanceOf(ShouldQueueAfterCommit::class);
 });
 
 it('mails a Comisión member the link to the documents page', function (): void {

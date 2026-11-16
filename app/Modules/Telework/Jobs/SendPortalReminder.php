@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Telework\Jobs;
 
 use App\Modules\Organization\Contracts\Roster;
-use App\Modules\Telework\Actions\IssuePortalLink;
 use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\TeleworkDocument;
@@ -16,6 +15,7 @@ use App\Modules\Telework\Support\OpenedPortal;
 use App\Modules\Telework\Support\PortalPending;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\Members;
+use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Notification;
 
 /**
  * Tells a person what is waiting for them. An employee gets one email listing everything pending in their portal, with
- * their portal link derived here (the same one every email carries); a Comisión member, the
+ * the address of their telework section (no credential: they enter first); a Comisión member, the
  * documents to confirm and the link to the documents page. Only ids travel in the job. The email lists everything pending
  * when it runs, and a person has at most one waiting (the lock is released when it starts, so an item that arrives while it runs queues the next). Nothing is sent when they have nothing pending any more.
  */
@@ -57,7 +57,7 @@ final class SendPortalReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
         return "{$this->tenantId}:".($this->employeeId ?? "user-{$this->userId}");
     }
 
-    public function handle(Companies $companies, Roster $roster, Members $members, IssuePortalLink $issue, PortalPending $portal): void
+    public function handle(Companies $companies, Roster $roster, Members $members, WorkerLinks $links, PortalPending $portal): void
     {
         $company = $companies->enter($this->tenantId);
 
@@ -73,7 +73,7 @@ final class SendPortalReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
                 $pending = $portal->for(new OpenedPortal($company->id, $person->id, $teleworker?->id, $company->tradeName, $person->name));
 
                 if ($pending->checklists !== [] || $pending->documents !== [] || $pending->equipment !== [] || $pending->photos !== [] || $pending->visits !== []) {
-                    Notification::route('mail', $person->email)->notify(new PortalReminder(route('portal.show', $issue->handle($person->id)), $person->name, $company, $pending));
+                    Notification::route('mail', $person->email)->notify(new PortalReminder($links->to('portal.telework.show'), $person->name, $company, $pending));
                 }
             }
 

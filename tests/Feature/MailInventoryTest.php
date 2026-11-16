@@ -85,7 +85,7 @@ function inventory(): array
         'accident reported' => [fn () => new AccidentReported($company, 'Hugo', 'Planta', '25 feb', $url), true],
         'documents to confirm' => [fn () => new DocumentsToConfirm($url, 'Cora', $company, ['Política · versión 1']), true],
         'notice answered' => [fn () => new NoticeAnswered($url, 'Ana', $company), true],
-        'portal invitation' => [fn () => new PortalInvitation('tok', 'Ana', $company), true],
+        'portal invitation' => [fn () => new PortalInvitation($url, 'Ana', $company), true],
         'portal reminder' => [fn () => new PortalReminder($url, 'Ana', $company, new PortalPendingData([], [])), true],
         'telework digest' => [fn () => new TeleworkDigest($company, 'Olga', ['1 lista por revisar.'], $url), true],
         'telework moved' => [fn () => new TeleworkMoved($company, 'Ana', 'A', 'B', $url), true],

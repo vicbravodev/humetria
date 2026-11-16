@@ -153,10 +153,9 @@ it('rejects a second open period for the same employee', function (): void {
     expect(Teleworker::query()->count())->toBe(1)->and(Workplace::query()->count())->toBe(1);
 });
 
-it('emails the portal link and stores only its hash', function (): void {
+it('emails a link to the person\'s telework section, with no credential in it', function (): void {
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
 
-    $link = PortalLink::query()->sole();
     $sent = [];
     Notification::assertSentOnDemand(PortalInvitation::class, function (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$sent): bool {
         $mail = $notification->toMail($notifiable);
@@ -164,7 +163,6 @@ it('emails the portal link and stores only its hash', function (): void {
 
         return true;
     });
-    $token = basename($sent['url']);
 
     expect($sent['to'])->toBe('ana@acme.test')
         // Board V3-Correos: the list of 10 minutes, what it asks and who sees it.
@@ -172,15 +170,15 @@ it('emails the portal link and stores only its hash', function (): void {
         ->and($sent['action'])->toBe('Contestar la lista')
         ->and($sent['lines'])->toContain('Para que pueda trabajar desde casa, necesitamos saber cómo es su espacio: luz, silla, instalación eléctrica. Son unas preguntas y, si usted quiere, unas fotos.')
         ->toContain('Solo lo ven Recursos Humanos y la Comisión de Seguridad e Higiene. Puede contestar desde su celular.')
+        ->and(implode("\n", $sent['lines']))->not->toContain('el anterior deja de funcionar')
         ->and($sent['channels'])->toBe(['mail'])
-        ->and($sent['url'])->toBe(route('portal.show', $token))
-        ->and($link->token_hash)->toBe(hash('sha256', $token))
-        ->and($link->employee_id)->toBe($this->employee->id);
-    $this->assertDatabaseMissing('portal_links', ['token_hash' => $token]);
+        ->and($sent['url'])->toBe(route('portal.telework.show', $this->tenant->slug))
+        ->and(PortalLink::query()->count())->toBe(0);
 
+    // The person enters first, and lands on their telework section with the checklist waiting.
     auth()->logout();
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false)
-        ->where('sections.0.key', 'telework')->where('sections.0.pending', 1)->etc());
+    $this->get($sent['url'])->assertRedirect(route('worker.home', $this->tenant->slug));
+    $this->get(route('portal.telework.show', asPerson($this->employee->id)))->assertInertia(fn (Assert $page) => $page->has('pending.checklists', 1)->etc());
 });
 
 it('sends no email to someone without one: RH hands them a link from the page', function (): void {
@@ -192,7 +190,7 @@ it('sends no email to someone without one: RH hands them a link from the page', 
     expect(PortalLink::query()->count())->toBe(0);
 });
 
-it('queues only ids: the plain token never reaches the queue, and the job makes a working link', function (): void {
+it('queues only ids, and the job emails the link to the section of that person\'s company', function (): void {
     Queue::fake();
 
     $this->post(registerUrl(), aspirantForm())->assertSessionHasNoErrors();
@@ -203,24 +201,12 @@ it('queues only ids: the plain token never reaches the queue, and the job makes 
 
         return $pushed->tenantId === $this->tenant->id && $pushed->employeeId === $this->employee->id;
     });
-    expect(PortalLink::query()->count())->toBe(0);
 
     app()->call($job->handle(...));
 
-    $url = null;
-    Notification::assertSentOnDemand(PortalInvitation::class, function (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable) use (&$url): bool {
-        $url = $notification->toMail($notifiable)->actionUrl;
-
-        return true;
-    });
-    $token = basename($url);
-
-    expect(serialize($job))->not->toContain($token)
-        ->and($job)->toBeInstanceOf(ShouldQueue::class)
-        ->and(new PortalInvitation($token, 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false)))->not->toBeInstanceOf(ShouldQueue::class)
-        ->and(PortalLink::query()->sole()->token_hash)->toBe(hash('sha256', $token));
-    auth()->logout();
-    $this->get(route('portal.show', $token))->assertInertia(fn (Assert $page) => $page->where('unavailable', false));
+    Notification::assertSentOnDemand(PortalInvitation::class, fn (PortalInvitation $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notification->toMail($notifiable)->actionUrl === route('portal.telework.show', $this->tenant->slug));
+    expect($job)->toBeInstanceOf(ShouldQueue::class)
+        ->and(PortalLink::query()->count())->toBe(0);
 });
 
 it('sends nothing when the person left before the job runs', function (): void {
