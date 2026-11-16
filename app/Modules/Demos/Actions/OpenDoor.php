@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Demos\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Demos\Models\DoorSession;
 use App\Modules\Demos\Support\DemoDoor;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ use LogicException;
  */
 final readonly class OpenDoor
 {
-    public function __construct(private DemoDoor $door, private CloseDoor $close) {}
+    public function __construct(private DemoDoor $door, private CloseDoor $close, private RecordAudit $audit) {}
 
     /**
      * @return array{url: string}
@@ -35,6 +36,8 @@ final readonly class OpenDoor
         });
 
         Log::info('demo.door_opened', ['session_id' => $session->id, 'minutes' => $minutes]);
+        // Who let an audience into the demo, and for how long: never the code.
+        $this->audit->handle('demo.door_opened', $session, ['minutes' => $minutes]);
 
         return ['url' => route('demo.door', ['code' => $code])];
     }

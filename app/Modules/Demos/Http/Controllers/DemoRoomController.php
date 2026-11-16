@@ -67,11 +67,14 @@ final class DemoRoomController extends Controller
         return back();
     }
 
-    private function started(bool $started, string $message): RedirectResponse
+    /** @param  'started'|'busy'|'unqueued'  $outcome */
+    private function started(string $outcome, string $message): RedirectResponse
     {
-        Inertia::flash('toast', $started
-            ? ['type' => 'success', 'message' => $message]
-            : ['type' => 'error', 'message' => 'Ya hay una preparación corriendo: espera a que termine.']);
+        Inertia::flash('toast', match ($outcome) {
+            'started' => ['type' => 'success', 'message' => $message],
+            'busy' => ['type' => 'error', 'message' => 'Ya hay una preparación corriendo: espera a que termine.'],
+            'unqueued' => ['type' => 'error', 'message' => 'No se pudo encolar la preparación: inténtalo de nuevo en unos minutos.'],
+        });
 
         return back();
     }

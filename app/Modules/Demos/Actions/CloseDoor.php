@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Demos\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Demos\Models\DoorSession;
 use App\Modules\Demos\Support\DemoDoor;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 /** Closes the door of the demo: its code stops letting anyone in. The people already in keep their portals. */
 final readonly class CloseDoor
 {
-    public function __construct(private DemoDoor $door) {}
+    public function __construct(private DemoDoor $door, private RecordAudit $audit) {}
 
     public function handle(): void
     {
@@ -22,6 +23,7 @@ final readonly class CloseDoor
         foreach (DoorSession::query()->whereNull('closed_at')->get() as $session) {
             $session->forceFill(['closed_at' => now()])->save();
             Log::info('demo.door_closed', ['session_id' => $session->id]);
+            $this->audit->handle('demo.door_closed', $session);
         }
     }
 }

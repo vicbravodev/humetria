@@ -15,6 +15,7 @@ use Carbon\CarbonInterface;
 use Database\Factories\Tenancy\WorkCenterFactory;
 use Database\Seeders\Demo\Stories\ComplaintsStory;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\PermissionRegistrar;
@@ -222,6 +223,44 @@ it('prepares the demo on the queue, once at a time', function (string $route, st
     'reset' => ['demo-room.reset', 'reset', ResetDemo::class],
 ]);
 
+it('records in the audit trail who started a run, with ids only', function (string $route, string $event): void {
+    Queue::fake();
+    $demo = demoCompany();
+    $admin = superadmin();
+
+    $this->actingAs($admin)->post(route($route))->assertRedirect();
+
+    $entry = DB::table('audit_entries')->where('event', $event)->sole();
+    expect($entry->tenant_id)->toBe($demo->id)
+        ->and($entry->actor_id)->toBe($admin->id)
+        ->and($entry->subject_id)->toBe(DemoRun::query()->sole()->id);
+})->with([
+    'prepare' => ['demo-room.prepare', 'demo.prepare_started'],
+    'reset' => ['demo-room.reset', 'demo.reset_started'],
+]);
+
+it('records the very first preparation too, before the demo company exists', function (): void {
+    Queue::fake();
+
+    $this->actingAs(superadmin())->post(route('demo-room.prepare'))->assertRedirect();
+
+    expect(DB::table('audit_entries')->where('event', 'demo.prepare_started')->sole()->tenant_id)->toBeNull();
+});
+
+it('fails the run and frees the lock when the queue cannot take the job', function (): void {
+    Queue::shouldReceive('connection')->andThrow(new RuntimeException('Connection refused [redis-long]'));
+
+    $this->actingAs(superadmin())
+        ->post(route('demo-room.prepare'))
+        ->assertRedirect()
+        ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'No se pudo encolar la preparación: inténtalo de nuevo en unos minutos.']);
+
+    $run = DemoRun::query()->sole();
+    expect($run->status)->toBe('failed')
+        ->and($run->error_class)->toBe(RuntimeException::class)
+        ->and(DemoRun::start('prepare'))->toBeInstanceOf(DemoRun::class);
+});
+
 it('opens the door for two hours and shows its link and QR this once', function (): void {
     $this->actingAs(superadmin())
         ->post(route('demo-room.door.open'))
@@ -256,6 +295,17 @@ describe('the time-clock screen', function (): void {
 
         $kiosk = KioskDevice::query()->withoutGlobalScopes()->findOrFail($this->kiosk->id);
         expect($kiosk->token_hash)->toBe(KioskDevice::hashToken($token))->and($kiosk->activated_at)->toBeNull();
+    });
+
+    it('records the new link in the demo company\'s audit trail, without the link', function (): void {
+        $admin = superadmin();
+        $this->actingAs($admin)->post(route('demo-room.kiosk.reissue'))->assertRedirect();
+
+        $entry = DB::table('audit_entries')->where('event', 'demo.kiosk_reissued')->sole();
+        expect($entry->tenant_id)->toBe($this->demo->id)
+            ->and($entry->actor_id)->toBe($admin->id)
+            ->and($entry->subject_id)->toBe($this->kiosk->id)
+            ->and((string) $entry->metadata)->not->toContain(str((string) session('inertia.flash_data.demoKioskLink.url'))->afterLast('/')->toString());
     });
 
     it('enters the demo company only to issue it: the console goes on outside it, without the demo mark', function (): void {
