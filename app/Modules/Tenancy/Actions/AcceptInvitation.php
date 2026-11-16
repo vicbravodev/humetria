@@ -11,6 +11,7 @@ use App\Modules\Tenancy\Data\NewAccountData;
 use App\Modules\Tenancy\Enums\InvitationStatus;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
+use App\Modules\Tenancy\Events\MemberRemoved;
 use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
@@ -125,6 +126,8 @@ final readonly class AcceptInvitation
             }
 
             $previous->delete();
+            // Same event as RemoveMember: their complaint cases, designation and Humi conversations end with their access.
+            event(new MemberRemoved($tenant->id, $previous->user_id));
         }
 
         $tenant->memberships()->firstOrCreate(['user_id' => $user->id]);
