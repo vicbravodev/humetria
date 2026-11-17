@@ -188,6 +188,23 @@ describe('steps', () => {
         ]);
     });
 
+    it('asks the whole of Guía I section I on one screen, as the norm writes it: one sentence with its list', () => {
+        const answers = { '1': 'yes' };
+
+        expect(steps(guideOne, answers, 1).map((step) => step.keys)).toEqual([
+            ['1', '2'],
+            ['3'],
+            ['4'],
+            ['5'],
+        ]);
+        expect(steps(guideOne, answers, 3)[0]?.keys).toEqual(['1', '2']);
+    });
+
+    it('splits every other section by the screen, Guía I past section I included', () => {
+        expect(steps(guideOne, { '1': 'yes' }, 1)[2]?.keys).toEqual(['4']);
+        expect(steps(guideTwo, {}, 1)[0]?.keys).toEqual(['1']);
+    });
+
     it('knows the section of each screen', () => {
         const [first, , gate] = steps(guideTwo, {}, 3);
 

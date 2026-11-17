@@ -94,6 +94,17 @@ export function payload(
     return sent;
 }
 
+/**
+ * Guía I's section I is one sentence of the norm with its list («…como los siguientes: …asaltos?, …amenazas?, o …»):
+ * asked whole on one screen, so its connectors read as the norm writes them.
+ */
+export function asksWhole(
+    instrument: SurveyInstrument,
+    section: number,
+): boolean {
+    return instrument.key === 'nom035.guide-i' && section === 0;
+}
+
 /** The screens of the guide: a gate on its own, then its items `perScreen` at a time, never mixing sections. */
 export function steps(
     instrument: SurveyInstrument,
@@ -123,8 +134,12 @@ export function steps(
             return screens;
         }
 
-        for (let start = 0; start < section.items.length; start += perScreen) {
-            const items = section.items.slice(start, start + perScreen);
+        const size = asksWhole(instrument, index)
+            ? section.items.length
+            : perScreen;
+
+        for (let start = 0; start < section.items.length; start += size) {
+            const items = section.items.slice(start, start + size);
             screens.push({
                 section: index,
                 gate: null,

@@ -68,6 +68,26 @@ it('orders the welcome with how long it takes and «Comenzar» stuck to the bott
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true);
 })->with(['light' => false, 'dark' => true]);
 
+// Option B of the review: section I of Guía I is one sentence of the norm with its list, so it is asked whole, word for word (C-21).
+it('asks Guía I section I on one screen: the sentence of the norm and its six events, each with Sí and No', function (bool $dark): void {
+    invitedPerson(['nom035.guide-i']);
+
+    $page = visitPage('campaigns/survey', '/survey/the-token', $dark, true, fn ($page) => $page->click('Comenzar')->click('Empezar'))
+        ->assertSee('¿Ha presenciado o sufrido alguna vez, durante o con motivo del trabajo un acontecimiento como los siguientes:')
+        ->assertSee('Accidente que tenga como consecuencia la muerte, la pérdida de un miembro o una lesión grave?')
+        ->assertSee('Amenazas?, o')
+        ->assertSee('Cualquier otro que ponga en riesgo su vida o salud, y/o la de otras personas?')
+        ->assertScript('() => document.querySelectorAll("main fieldset").length', 6)
+        // Sí and No side by side under each event, like the paper form; no «Pregunta n de 6» over each one.
+        ->assertScript('() => [...document.querySelectorAll("main fieldset")].every((set) => { const [yes, no] = set.querySelectorAll("label"); return Math.abs(yes.getBoundingClientRect().top - no.getBoundingClientRect().top) < 1; })', true)
+        ->assertDontSee('Pregunta 1 de 6')
+        ->assertScript('() => [...document.querySelectorAll("main fieldset label")].every((option) => option.getBoundingClientRect().height >= 44)', true)
+        ->assertButtonDisabled('Enviar respuestas');
+
+    $page->script(ANSWER_SCREEN);
+    $page->assertButtonEnabled('Enviar respuestas');
+})->with(['light' => false, 'dark' => true]);
+
 it('explains a link that does not work, naming no company', function (bool $dark, bool $mobile): void {
     invitedPerson();
 
@@ -124,7 +144,7 @@ it('lets the employee answer Guía I and Guía II from the phone, one question p
         ->assertSee('sí lleva su nombre')
         ->click('Empezar')
         ->assertSee('Sección 1 de 4')
-        ->assertSee('Pregunta 1 de 6');
+        ->assertSee('Amenazas?, o');
 
     answerGuide($page);
 
@@ -318,7 +338,6 @@ it('takes a submission whose session expired back to the survey with the answers
     invitedPerson(['nom035.guide-i']);
     $page = visit('/survey/the-token')->click('Comenzar')->click('Empezar');
     $page->script(ANSWER_SCREEN);
-    $page->click('Siguiente')->script(ANSWER_SCREEN);
 
     // The session runs out while the person answers. The app answers in this same process, whose session store still
     // holds the last request's data in memory: forgetting it leaves only what the expired handler gives back, as a new
@@ -345,7 +364,7 @@ it('takes a submission whose session expired back to the survey with the answers
         ->assertSee('La página se actualizó por seguridad. Sus respuestas siguen guardadas en este dispositivo: envíelas de nuevo.')
         ->assertPathIs('/survey/the-token')
         // Still on the last screen, every answer in place.
-        ->assertSee('Pregunta 6 de 6')
+        ->assertSee('Amenazas?, o')
         ->assertScript('() => [...document.querySelectorAll("fieldset")].every((fieldset) => fieldset.querySelector("input[type=radio]:checked")?.value === "no")')
         ->click('Enviar respuestas')
         ->assertSee('Gracias, terminó')
