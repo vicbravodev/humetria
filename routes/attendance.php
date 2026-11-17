@@ -6,6 +6,7 @@ declare(strict_types=1);
 // Every name starts with tenant.attendance.
 
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
+use App\Modules\Attendance\Http\Controllers\CenterModeController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\PlaceController;
@@ -27,6 +28,8 @@ Route::get('admin/{tenant:slug}/attendance/setup', [AttendanceController::class,
 Route::get('admin/{tenant:slug}/attendance/centers/{workCenter}', [AttendanceController::class, 'center'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.attendance.center');
 Route::post('admin/{tenant:slug}/attendance/centers/{workCenter}/zones', [ZoneController::class, 'store'])->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.attendance.zones.store');
 Route::put('admin/{tenant:slug}/attendance/centers/{workCenter}/zones/{zone}', [ZoneController::class, 'update'])->where('tenant', $notReserved)->whereUuid(['workCenter', 'zone'])->name('tenant.attendance.zones.update');
+// How a center's people mark: as the company's policy says, or in the field (no zone nor screen needed).
+Route::put('admin/{tenant:slug}/attendance/centers/{workCenter}/mode', CenterModeController::class)->where('tenant', $notReserved)->whereUuid('workCenter')->name('tenant.attendance.centers.mode');
 // The places that match an address, to drop a zone there from the map; a few a minute, as Nominatim asks.
 Route::get('admin/{tenant:slug}/attendance/places', PlaceController::class)->where('tenant', $notReserved)->middleware('throttle:20,1')->name('tenant.attendance.places');
 
