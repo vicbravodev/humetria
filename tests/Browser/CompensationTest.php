@@ -705,6 +705,24 @@ it('adds a benefit to change in the editor, in its own unit, and saves its new v
     expect(Scenario::query()->withoutGlobalScopes()->sole()->term_changes)->toEqual([['benefit_id' => $benefit->id, 'value' => 150000, 'tenure_table' => null]]);
 });
 
+it('lists the benefits as soon as the search opens, and not again one already added', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    Benefit::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Bono de transporte', 'kind' => 'fixed_amount', 'frequency' => 'monthly']);
+    Benefit::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Vales de despensa', 'kind' => 'fixed_amount', 'frequency' => 'monthly']);
+
+    visit("{$url}/compensation/scenarios/create")
+        ->click('#scenario-benefit-search')
+        ->assertSeeIn('#scenario-benefit-search-options', 'Bono de transporte')
+        ->assertSeeIn('#scenario-benefit-search-options', 'Vales de despensa')
+        ->click('[role="option"]:has-text("Bono de transporte")')
+        ->assertSee('Nueva en el contrato')
+        ->click('#scenario-benefit-search')
+        ->assertSeeIn('#scenario-benefit-search-options', 'Vales de despensa')
+        ->assertDontSeeIn('#scenario-benefit-search-options', 'Bono de transporte')
+        ->assertNoJavaScriptErrors();
+});
+
 it('shows what is wrong in the editor without saving', function (): void {
     $url = signInToPanel();
 

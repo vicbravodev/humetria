@@ -1,4 +1,5 @@
 import type { Option } from '@/lib/option-search';
+import { serverSource } from '@/lib/server-options';
 
 type BenefitOption = Option & { unit: string };
 
@@ -39,26 +40,34 @@ async function loadBenefitOptions(
 }
 
 /**
- * The benefits of the account that have what was typed, for a Combobox, and the unit of each one it has found (the
- * Combobox hands back only the value and the label): "pesos", or empty for one it has not found.
+ * The benefits of the account, for a Combobox: the first page as it opens, then what was typed, as `serverSource`
+ * does. Its own loader keeps the unit of each one found (the Combobox hands back only the value and the label):
+ * "pesos", or empty for one it has not found. `except` leaves out the ones already added, which would do nothing.
  */
 export function benefitOptions(url: string) {
     const units = new Map<string, string>();
+    const source = {
+        ...serverSource(url),
+        load: async (query: string, signal: AbortSignal) => {
+            const found = await loadBenefitOptions(url, query, signal);
+
+            for (const option of found) {
+                units.set(option.value, option.unit);
+            }
+
+            return found.map(({ value, label }) => ({ value, label }));
+        },
+    };
 
     return {
-        source: {
-            initial: [],
-            minLength: 1,
-            load: async (query: string, signal: AbortSignal) => {
-                const found = await loadBenefitOptions(url, query, signal);
-
-                for (const option of found) {
-                    units.set(option.value, option.unit);
-                }
-
-                return found.map(({ value, label }) => ({ value, label }));
-            },
-        },
+        source,
+        except: (added: readonly string[]) => ({
+            ...source,
+            load: async (query: string, signal: AbortSignal) =>
+                (await source.load(query, signal)).filter(
+                    (option) => !added.includes(option.value),
+                ),
+        }),
         unitOf: (value: string) => units.get(value) ?? '',
     };
 }
