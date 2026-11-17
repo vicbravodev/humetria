@@ -1,9 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Inbox } from 'lucide-react';
-import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
 import DecisionCard from '@/components/leave/decision-card';
 import PortalShell from '@/components/leave/portal-shell';
+import StateMessage from '@/components/worker-access/state-message';
+import WorkerFrame from '@/components/worker-access/worker-frame';
 import { show } from '@/routes/portal/vacations';
 import type { Paginated, TeamLeaveRequest } from '@/types';
 
@@ -21,6 +22,21 @@ export default function LeavePortalTeam({
     name: string;
     requests: Paginated<TeamLeaveRequest>;
 }) {
+    if (requests.total === 0) {
+        return (
+            <WorkerFrame company={company} centered back={show.url(slug)}>
+                <Head title="Solicitudes de mi equipo" />
+                <StateMessage
+                    icon={Inbox}
+                    title="No tiene solicitudes por responder."
+                >
+                    Cuando alguien de su equipo pida días, lo verá aquí y le
+                    avisaremos por correo.
+                </StateMessage>
+            </WorkerFrame>
+        );
+    }
+
     return (
         <PortalShell company={company}>
             <Head title="Solicitudes de mi equipo" />
@@ -41,25 +57,15 @@ export default function LeavePortalTeam({
                         recibe un aviso con lo que usted decida.
                     </p>
                 </div>
-                {requests.total === 0 ? (
-                    <EmptyState
-                        icon={Inbox}
-                        title="No tiene solicitudes por responder."
-                    >
-                        Cuando alguien de su equipo pida días, lo verá aquí y le
-                        avisaremos por correo.
-                    </EmptyState>
-                ) : (
-                    <ul className="grid gap-3">
-                        {requests.data.map((request) => (
-                            <DecisionCard
-                                key={request.id}
-                                slug={slug}
-                                request={request}
-                            />
-                        ))}
-                    </ul>
-                )}
+                <ul className="grid gap-3">
+                    {requests.data.map((request) => (
+                        <DecisionCard
+                            key={request.id}
+                            slug={slug}
+                            request={request}
+                        />
+                    ))}
+                </ul>
                 <Pagination
                     page={requests}
                     label="Solicitudes de mi equipo"

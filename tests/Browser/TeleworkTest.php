@@ -255,6 +255,21 @@ it('shows the person their telework section with what is pending and what was se
         ->assertSee('En revisión de la Comisión');
 })->with($looks);
 
+// Finding 33: nothing pending is a screen of state (centered, one action at the foot), not a dashed box over half a screen.
+it('tells the person nothing is pending in a centered screen with the way to their notices', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
+    $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Ruiz']);
+    TeleworkerFactory::new()->create(['tenant_id' => $tenant->id, 'employee_id' => $employee->id]);
+    workIn($tenant);
+
+    visitPage('telework/portal-section', "/me/{$tenant->slug}/telework", $dark, $mobile, enteringTo($employee->id, 'Nada pendiente por ahora'))
+        ->assertPresent('[data-slot="state-message"]')
+        ->assertNotPresent('[data-slot="empty-state"]')
+        ->assertSee('Atrás')
+        ->assertSee('Sus avisos por escrito')
+        ->assertNoJavaScriptErrors();
+})->with($looks);
+
 it('shows the person what the Comisión asked for and lets them authorize a visit', function (bool $dark, bool $mobile): void {
     // Authorizing the visit takes a recent proof: she proves it is her with a code after entering.
     [$address, $enter] = portalAddress(proved: true);

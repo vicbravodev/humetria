@@ -1,12 +1,10 @@
 import { Link } from '@inertiajs/react';
-import { ArrowLeft, PartyPopper } from 'lucide-react';
-import EmptyState from '@/components/humetria/empty-state';
+import { ArrowLeft } from 'lucide-react';
 import PortalNoticesLink from '@/components/telework/portal/portal-notices-link';
 import PortalEquipmentSection from '@/components/telework/portal/portal-equipment-section';
 import PortalDocuments from '@/components/telework/portal/portal-documents';
 import PortalChecklistCard from '@/components/telework/portal/portal-checklist-card';
 import PortalAsked from '@/components/telework/portal/portal-asked';
-import { nothingPending } from '@/lib/telework/portal';
 import { home } from '@/routes/worker';
 import type { PortalPending } from '@/types';
 
@@ -20,8 +18,6 @@ export default function PortalHome({
     canNotify: boolean;
     pending: PortalPending;
 }) {
-    const nothing = nothingPending(pending);
-
     return (
         <div className="flex w-full max-w-2xl flex-col gap-6">
             <Link
@@ -41,13 +37,6 @@ export default function PortalHome({
                 </p>
             </div>
             {canNotify && <PortalNoticesLink slug={slug} />}
-            {nothing && (
-                <EmptyState icon={PartyPopper} title="Nada pendiente por ahora">
-                    Cuando su empresa le pida algo, lo verá aquí y le avisaremos
-                    por correo. Si necesita algo antes, pida a Recursos Humanos
-                    de su empresa.
-                </EmptyState>
-            )}
             <PortalDocuments documents={pending.documents} slug={slug} />
             <PortalEquipmentSection equipment={pending.equipment} slug={slug} />
             <PortalAsked pending={pending} slug={slug} />

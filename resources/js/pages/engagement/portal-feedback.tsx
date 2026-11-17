@@ -1,12 +1,14 @@
 import { Head } from '@inertiajs/react';
-import { ClipboardCheck, Users } from 'lucide-react';
+import { ClipboardCheck, Hourglass, Users } from 'lucide-react';
 import HighlightsCard from '@/components/engagement/results/highlights-card';
 import ManagerItems from '@/components/engagement/results/manager-items';
 import SummaryThemes from '@/components/engagement/results/summary-themes';
-import FeedbackEmpty from '@/components/engagement/portal/feedback-empty';
 import PortalShell from '@/components/engagement/portal/portal-shell';
 import PageHeader from '@/components/humetria/page-header';
 import WorkerHomeLink from '@/components/worker-home-link';
+import StateMessage from '@/components/worker-access/state-message';
+import WorkerFrame from '@/components/worker-access/worker-frame';
+import { home } from '@/routes/worker';
 import type { ManagerFeedback } from '@/types';
 
 /**
@@ -24,40 +26,50 @@ export default function PortalFeedback({
     survey: { name: string } | null;
     feedback: ManagerFeedback | null;
 }) {
+    if (survey === null || feedback === null) {
+        // The same screen whether the survey is still open, the group was too small or the person has no team: it never says which.
+        return (
+            <WorkerFrame company={company} centered back={home.url(slug)}>
+                <Head title="Retroalimentación de su equipo" />
+                <StateMessage
+                    icon={Hourglass}
+                    title="Todavía no hay resultados para mostrar"
+                >
+                    Cuando haya resultados de su equipo los verá aquí, en este
+                    mismo enlace.
+                </StateMessage>
+            </WorkerFrame>
+        );
+    }
+
     return (
         <PortalShell company={company}>
             <Head title="Retroalimentación de su equipo" />
             <div className="flex w-full max-w-3xl flex-col gap-6">
                 <WorkerHomeLink slug={slug} />
-                {survey === null || feedback === null ? (
-                    <FeedbackEmpty />
-                ) : (
-                    <>
-                        <PageHeader
-                            caption={survey.name}
-                            title="Lo que dijo su equipo"
-                            facts={[
-                                {
-                                    icon: ClipboardCheck,
-                                    text: 'Solo se muestran resultados de grupo',
-                                },
-                                {
-                                    icon: Users,
-                                    text: feedback.line
-                                        ? 'Resultado de su equipo completo'
-                                        : 'Resultado de quienes le reportan directamente',
-                                },
-                            ]}
-                        />
-                        <ManagerItems items={feedback.items} />
-                        <HighlightsCard
-                            strengths={feedback.strengths}
-                            opportunities={feedback.opportunities}
-                        />
-                        {feedback.summary !== null && (
-                            <SummaryThemes summary={feedback.summary} />
-                        )}
-                    </>
+                <PageHeader
+                    caption={survey.name}
+                    title="Lo que dijo su equipo"
+                    facts={[
+                        {
+                            icon: ClipboardCheck,
+                            text: 'Solo se muestran resultados de grupo',
+                        },
+                        {
+                            icon: Users,
+                            text: feedback.line
+                                ? 'Resultado de su equipo completo'
+                                : 'Resultado de quienes le reportan directamente',
+                        },
+                    ]}
+                />
+                <ManagerItems items={feedback.items} />
+                <HighlightsCard
+                    strengths={feedback.strengths}
+                    opportunities={feedback.opportunities}
+                />
+                {feedback.summary !== null && (
+                    <SummaryThemes summary={feedback.summary} />
                 )}
             </div>
         </PortalShell>
