@@ -65,3 +65,38 @@ export function startersOf(
         return { text, live: fact === '' ? null : fact };
     });
 }
+
+/** Which fact of the server answers each first question: a question with no fact of its own shows alone. */
+const FACT_OF_QUESTION: Readonly<Record<string, string>> = {
+    '¿Qué me falta para estar al día?': 'pending',
+    '¿Cómo va la participación?': 'participation',
+    '¿Dónde está el riesgo más alto?': 'risk',
+    'Explícame la NOM-037': 'telework',
+};
+
+/** The live facts of the company («3 pendientes…») by the first question each one answers. */
+export function liveFactsByQuestion(
+    facts: Readonly<Record<string, string>>,
+): Record<string, string> {
+    return Object.fromEntries(
+        Object.entries(FACT_OF_QUESTION).flatMap(([question, key]) => {
+            const fact = facts[key];
+
+            return fact === undefined ? [] : [[question, fact]];
+        }),
+    );
+}
+
+/**
+ * The first questions for the page open, with the live facts of the company under the general ones: under the questions
+ * of one campaign or one center a fact of the whole company would not be exact, so those show alone.
+ */
+export function startersFor(
+    page: PageContext,
+    facts: Readonly<Record<string, string>>,
+): Starter[] {
+    return startersOf(
+        suggestionsFor(page),
+        page === null ? liveFactsByQuestion(facts) : {},
+    );
+}

@@ -270,14 +270,18 @@ it('shows the page Humi is looking at beside the box, and stops sending it once 
         ->assertMissing('[aria-label="Quitar contexto"]');
 });
 
-it('starts with what Humi does and does not see, and the first questions as a list with lines, with no made-up figure', function (): void {
+it('starts with what Humi does and does not see, and the first questions as a list with lines, each with the real fact of the company it answers', function (): void {
     visitPage('dashboard', humiPanelCompany())
         ->click('[aria-label="Abrir a Humi"]')
         ->assertSee('Hola, soy Humi')
         ->assertSee('Leo el cumplimiento de tu empresa y te explico la norma. No cambio datos.')
         ->assertSee('Humi nunca ve respuestas individuales ni la Guía I. Solo resultados de grupos de 5 personas o más.')
         ->assertScript('() => [...document.querySelectorAll(\'[role="log"] li > button\')].map((button) => `${getComputedStyle(button).borderTopWidth} ${getComputedStyle(button).borderLeftWidth}`).join(",")', '1px 0px,1px 0px,1px 0px,1px 0px')
-        ->assertScript('() => document.querySelectorAll(\'[role="log"] li > button small\').length', 0);
+        // The company has no work center yet: that is its one pending item, and no campaign runs.
+        ->assertSee('1 pendiente')
+        ->assertSee('No hay campañas en curso')
+        // «¿Qué pendientes tengo primero?» has no fact of its own: it shows alone, never a made-up one.
+        ->assertScript('() => document.querySelectorAll(\'[role="log"] li > button small\').length', 3);
 });
 
 /** An answer whose tool says where it came from and where to go next, as a tool may bring it. */

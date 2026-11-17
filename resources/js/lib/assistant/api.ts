@@ -40,6 +40,26 @@ function idOf(item: object | null): string | null {
         : null;
 }
 
+/**
+ * What is true now in the company, by fact key («pending», «invite.campaigns»…): only text, and nothing when the server
+ * does not answer, so the panel shows its questions alone.
+ */
+export async function readLiveFacts(
+    slug: string,
+): Promise<Record<string, string>> {
+    const body = await read(assistant.facts.url(slug));
+    const facts = isObject(body) && 'facts' in body ? body.facts : null;
+
+    return isObject(facts) && !Array.isArray(facts)
+        ? Object.fromEntries(
+              Object.entries(facts).filter(
+                  (entry): entry is [string, string] =>
+                      typeof entry[1] === 'string',
+              ),
+          )
+        : {};
+}
+
 /** The conversation the person was last in: how the browser learns the one a first message started. */
 export async function latestConversationId(
     slug: string,
