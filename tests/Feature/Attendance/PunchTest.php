@@ -269,7 +269,7 @@ describe('the page', function (): void {
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'mark_type' => 'break_start'], $session)
             ->assertUnprocessable()->assertExactJson(['reason' => 'day_not_open', 'name' => 'Bob Ruiz', 'next' => ['start']]);
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE], $session)
-            ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00', 'clock' => null]], 'next' => ['break_start', 'end'], 'flag' => null, 'evidence' => 'strong']);
+            ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00', 'date' => '2026-11-09', 'clock' => null]], 'next' => ['break_start', 'end'], 'flag' => null, 'evidence' => 'strong']);
 
         $this->withCookie($cookie, $session)->get(route('attendance.device.punch.home', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person.name', 'Bob Ruiz'));
@@ -299,7 +299,7 @@ describe('on site', function (): void {
     it('marks with QR and geofence: the zone, the position, its accuracy and the distance, at the server\'s time', function (): void {
         anaPunches()->assertOk()->assertExactJson([
             'name' => 'Ana López',
-            'marks' => [['type' => 'start', 'time' => '09:00', 'clock' => null]],
+            'marks' => [['type' => 'start', 'time' => '09:00', 'date' => '2026-11-09', 'clock' => null]],
             'next' => ['break_start', 'end'],
             'flag' => null,
             'evidence' => 'strong',
@@ -566,10 +566,10 @@ describe('the sequence', function (): void {
         anaPunches(['mark_type' => 'end'])->assertOk()->assertExactJson([
             'name' => 'Ana López',
             'marks' => [
-                ['type' => 'start', 'time' => '09:00', 'clock' => null],
-                ['type' => 'break_start', 'time' => '13:00', 'clock' => null],
-                ['type' => 'break_end', 'time' => '13:30', 'clock' => null],
-                ['type' => 'end', 'time' => '17:30', 'clock' => null],
+                ['type' => 'start', 'time' => '09:00', 'date' => '2026-11-09', 'clock' => null],
+                ['type' => 'break_start', 'time' => '13:00', 'date' => '2026-11-09', 'clock' => null],
+                ['type' => 'break_end', 'time' => '13:30', 'date' => '2026-11-09', 'clock' => null],
+                ['type' => 'end', 'time' => '17:30', 'date' => '2026-11-09', 'clock' => null],
             ],
             'next' => ['start'],
             'flag' => null,
@@ -581,17 +581,18 @@ describe('the sequence', function (): void {
         $this->travelTo(CarbonImmutable::parse('2026-11-09 23:59:00', 'America/Mexico_City'));
         anaPunches()->assertOk();
         $this->travelTo(CarbonImmutable::parse('2026-11-10 00:01:00', 'America/Mexico_City'));
+        // Each mark is dated by its own clock: the screen never says the day before with the hour of the new one (hallazgo 20).
 
         anaPunches(['mark_type' => 'end'])->assertOk()->assertExactJson([
             'name' => 'Ana López',
-            'marks' => [['type' => 'start', 'time' => '23:59', 'clock' => null], ['type' => 'end', 'time' => '00:01', 'clock' => null]],
+            'marks' => [['type' => 'start', 'time' => '23:59', 'date' => '2026-11-09', 'clock' => null], ['type' => 'end', 'time' => '00:01', 'date' => '2026-11-10', 'clock' => null]],
             'next' => ['start'],
             'flag' => null,
             'evidence' => 'strong',
         ]);
 
         $this->travelTo(CarbonImmutable::parse('2026-11-11 00:01:00', 'America/Mexico_City'));
-        anaPunches()->assertOk()->assertJsonPath('marks', [['type' => 'start', 'time' => '00:01', 'clock' => null]]);
+        anaPunches()->assertOk()->assertJsonPath('marks', [['type' => 'start', 'time' => '00:01', 'date' => '2026-11-11', 'clock' => null]]);
     });
 });
 
@@ -887,7 +888,7 @@ describe('the code of another center (hallazgo 26; design of time zones §3.9)',
         anaPunches(['q' => punchQr($this->tenant->id, $this->offices->id)])->assertOk()
             ->assertJsonPath('flag', 'away_center')
             // 15:00 UTC is 07:00 in Tijuana: the person reads the hour of where they marked.
-            ->assertJsonPath('marks', [['type' => 'start', 'time' => '07:00', 'clock' => 'America/Tijuana']]);
+            ->assertJsonPath('marks', [['type' => 'start', 'time' => '07:00', 'date' => '2026-11-09', 'clock' => 'America/Tijuana']]);
 
         expect(AttendanceMark::query()->sole())
             ->away_center_id->toBe($this->offices->id)
