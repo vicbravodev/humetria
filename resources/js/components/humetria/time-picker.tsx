@@ -7,7 +7,10 @@ import { cn } from '@/lib/utils';
 
 type Props = TimeFieldProps & {
     id: string;
-    /** The form field: it submits the time as HH:mm, or empty. Without it the page sends the time its own way. */
+    /**
+     * The form field, on the text itself: leaving the field (or Enter) writes it as HH:mm before the form is sent.
+     * Without it the page sends the time its own way.
+     */
     name?: string;
     invalid?: boolean;
     describedBy?: string | undefined;
@@ -28,7 +31,7 @@ export default function TimePicker({
     className,
     ...props
 }: Props) {
-    const { value, field, problem, keys } = useTimeField(props);
+    const { field, problem, keys } = useTimeField(props);
     const problemId = `${id}-problem`;
 
     return (
@@ -36,9 +39,6 @@ export default function TimePicker({
             data-slot="time-picker"
             className={cn('grid min-w-0 gap-1.5', className)}
         >
-            {name !== undefined && (
-                <input type="hidden" name={name} value={value} />
-            )}
             <InputGroup>
                 <Clock
                     aria-hidden
@@ -46,6 +46,7 @@ export default function TimePicker({
                 />
                 <PickerText
                     id={id}
+                    {...(name === undefined ? {} : { name })}
                     field={field}
                     placeholder="hh:mm"
                     inputMode="numeric"

@@ -35,6 +35,11 @@ export function useTimeField({
                 ? undefined
                 : textProblem(field.problem, { kind: 'time' }),
         keys: (event: KeyboardEvent<HTMLInputElement>) => {
+            // Enter sends the form: the text goes as HH:mm.
+            if (event.key === 'Enter') {
+                field.leave();
+            }
+
             if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
                 event.preventDefault();
                 field.pick(
