@@ -784,6 +784,41 @@ describe('the agreement', function (): void {
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE])->assertOk();
     });
 
+    it('accepts the version read and takes the mark with one signature: the acceptance first, with the key that signed (hallazgo 27)', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Bob Ruiz']);
+        $bobPhone = new SoftAuthenticator;
+        $bobDevice = punchDevice($bobPhone, $bob, accepted: false);
+        $version = resolve(CurrentAgreement::class)->get()->version;
+
+        punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'agreement_version' => $version])
+            ->assertOk()->assertJsonPath('name', 'Bob Ruiz')->assertJsonPath('marks.0.type', 'start');
+
+        $acceptance = AgreementAcceptance::query()->where('employee_id', $bob->id)->sole();
+        expect($acceptance->credential_id)->toBe($bobDevice->id)
+            ->and($acceptance->accepted_at?->lessThanOrEqualTo(AttendanceMark::query()->sole()->marked_at))->toBeTrue();
+    });
+
+    it('keeps the acceptance when the mark that came with it is refused, so only the mark is tried again', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+        $bobPhone = new SoftAuthenticator;
+        punchDevice($bobPhone, $bob, accepted: false);
+
+        punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_OUTSIDE, 'agreement_version' => resolve(CurrentAgreement::class)->get()->version])
+            ->assertUnprocessable()->assertJsonPath('reason', 'outside_zone');
+
+        expect(AgreementAcceptance::query()->where('employee_id', $bob->id)->count())->toBe(1)->and(AttendanceMark::query()->count())->toBe(0);
+    });
+
+    it('refuses with the current text a mark that came with a version no longer current, accepting nothing', function (): void {
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'retention_months' => 36]);
+        $current = resolve(CurrentAgreement::class)->get();
+
+        anaPunches(['agreement_version' => 1])->assertUnprocessable()
+            ->assertJsonPath('reason', 'agreement_not_accepted')->assertJsonPath('agreement.version', 2);
+
+        expect(AgreementAcceptance::query()->where('agreement_id', $current->id)->count())->toBe(0)->and(AttendanceMark::query()->count())->toBe(0);
+    });
+
     it('answers 409 with the current text to an acceptance of a version that is not the current one, and records nothing', function (): void {
         AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'retention_months' => 36]);
         $current = resolve(CurrentAgreement::class)->get();

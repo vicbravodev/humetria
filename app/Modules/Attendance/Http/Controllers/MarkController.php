@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Http\Controllers;
 
+use App\Modules\Attendance\Actions\AcceptAgreement;
 use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Data\Position;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\WorkMode;
+use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
@@ -131,7 +133,7 @@ final readonly class MarkController
         return response()->json($signatures->options($request->session()->getId()))->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(MarkRequest $request, WorkerSignatures $signatures, RecordMark $record, AgreementStatus $agreements, CurrentAgreement $agreement): JsonResponse
+    public function store(MarkRequest $request, WorkerSignatures $signatures, RecordMark $record, AgreementStatus $agreements, CurrentAgreement $agreement, AcceptAgreement $accept): JsonResponse
     {
         $signed = $signatures->verify($request->session()->getId(), $request->credential());
 
@@ -156,8 +158,9 @@ final readonly class MarkController
 
         try {
             // The agreement first: a person who has not accepted it is not sent to fix the code or the position for nothing.
+            // The version they read may come with the mark, accepted with this same signature before it (hallazgo 27).
             if (! $agreements->accepted($person->id)) {
-                throw new MarkRejected('agreement_not_accepted');
+                $this->accept($accept, $person->id, $signed->credentialId, $request->agreementVersion());
             }
 
             $context = $away !== null
@@ -222,6 +225,25 @@ final readonly class MarkController
         }
 
         return $person;
+    }
+
+    /**
+     * Accepts the version of the agreement read, with the key that signed the mark; refused with the current text when none
+     * came or it is not the current one.
+     *
+     * @throws MarkRejected
+     */
+    private function accept(AcceptAgreement $accept, string $employeeId, string $credentialId, ?int $version): void
+    {
+        if ($version === null) {
+            throw new MarkRejected('agreement_not_accepted');
+        }
+
+        try {
+            $accept->handle($employeeId, $credentialId, $version);
+        } catch (AgreementOutdated) {
+            throw new MarkRejected('agreement_not_accepted');
+        }
     }
 
     /** The person whose portal session is open in this browser (WorkerSession forgets one who left); null for none. */

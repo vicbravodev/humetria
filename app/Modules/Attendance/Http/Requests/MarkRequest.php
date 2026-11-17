@@ -13,7 +13,8 @@ use LogicException;
 /**
  * A person marks: what (`mark_type`), the signature of their linked device, and, as the device gave them, the code of the
  * center's screen (`q`) and its position (`lat`, `lng`, `accuracy` in meters, all three or none). The signature is the
- * credential; there is no account to authorize. The time is never read from here: the server stamps it.
+ * credential; there is no account to authorize. The time is never read from here: the server stamps it. With the mark may
+ * come the version of the agreement the person read and accepts with that same signature (`agreement_version`).
  */
 final class MarkRequest extends FormRequest
 {
@@ -34,6 +35,7 @@ final class MarkRequest extends FormRequest
             'lat' => ['nullable', 'required_with:lng,accuracy', 'numeric', 'between:-90,90'],
             'lng' => ['nullable', 'required_with:lat,accuracy', 'numeric', 'between:-180,180'],
             'accuracy' => ['nullable', 'required_with:lat,lng', 'numeric', 'min:0'],
+            'agreement_version' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -54,6 +56,11 @@ final class MarkRequest extends FormRequest
     public function qr(): ?string
     {
         return $this->filled('q') ? $this->string('q')->toString() : null;
+    }
+
+    public function agreementVersion(): ?int
+    {
+        return $this->filled('agreement_version') ? $this->integer('agreement_version') : null;
     }
 
     public function position(): ?Position
