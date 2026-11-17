@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Interventions\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Interventions\Enums\ItemOrigin;
 use App\Modules\Interventions\Enums\ItemScope;
@@ -22,7 +23,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class AddManualItem
 {
-    public function __construct(private CurrentTenant $tenant, private CampaignRecords $campaigns, private GuideCatalog $catalog) {}
+    public function __construct(private CurrentTenant $tenant, private CampaignRecords $campaigns, private GuideCatalog $catalog, private RecordAudit $audit) {}
 
     /**
      * @throws ValidationException when it is not in the catalog or already is a row.
@@ -53,6 +54,7 @@ final readonly class AddManualItem
             'origin' => ItemOrigin::Manual,
         ]);
         Log::info('intervention.item_added', ['item_id' => $item->id, 'program_id' => $program->id, 'scope' => $scope->value]);
+        $this->audit->handle('interventions.item_added', $item, ['item_id' => $item->id, 'program_id' => $program->id, 'scope' => $scope->value]);
 
         return $item;
     }

@@ -164,9 +164,9 @@ it('reads the Programa with a fixed number of queries, however many actions it h
         ProgressEntry::factory()->create(['tenant_id' => $this->tenant->id, 'action_id' => $action->id]);
     }
 
-    // The first request warms what every page loads (permissions).
+    // The first request warms what every page loads (permissions) and is the one audited: the reload within the window is not.
     $this->actingAs($this->hr)->get($url)->assertOk();
 
-    $this->expectsDatabaseQueryCount(28);
+    $this->expectsDatabaseQueryCount(27);
     $this->actingAs($this->hr)->get($url)->assertOk();
 });
