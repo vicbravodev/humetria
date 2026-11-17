@@ -28,7 +28,7 @@ export default function WeekDay({
         <li className="border-t first:border-t-0">
             <details className="group" open={dayNeedsLook(day)}>
                 <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
-                    <span className="w-14 font-semibold">
+                    <span className="w-16 shrink-0 font-semibold whitespace-nowrap">
                         {dayShort(day.date)}
                     </span>
                     <span className="flex-1 text-meta text-muted-foreground">

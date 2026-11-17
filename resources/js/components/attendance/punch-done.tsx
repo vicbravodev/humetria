@@ -92,7 +92,7 @@ export default function PunchDone({
                     Su registro no se puede borrar. Si hay un error,{' '}
                     <Link
                         href={weekUrl}
-                        className="-mx-1 inline-block px-1 py-2.5 font-medium text-primary underline underline-offset-[3px]"
+                        className="-mx-1 -my-2.5 inline-block px-1 py-2.5 font-medium text-primary underline underline-offset-[3px]"
                     >
                         pida una corrección
                     </Link>
