@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Logo from '@/components/humetria/logo';
 import ReportAnnex from '@/components/results/report-annex';
 import ReportAreas from '@/components/results/report-areas';
@@ -16,13 +17,17 @@ import type { NomReport, RiskLevelInfo } from '@/types';
 export default function ReportDocument({
     report,
     levels,
+    tabs,
 }: {
     report: NomReport;
     levels: RiskLevelInfo[];
+    /** The tabs of its parts, under the facts of the period (a shared link has no bar to hold them). */
+    tabs?: ReactNode;
 }) {
     return (
         <article className="flex flex-col gap-12">
-            <ReportHeader report={report} />
+            <ReportHeader report={report} sealOnScreen={tabs === undefined} />
+            {tabs}
             {report.results.visible && (
                 <>
                     <ReportSummary report={report} levels={levels} />

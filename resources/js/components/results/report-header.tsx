@@ -1,9 +1,17 @@
 import Logo from '@/components/humetria/logo';
 import ReportCaption from '@/components/results/report-caption';
+import { cn } from '@/lib/utils';
 import type { NomReport } from '@/types';
 
 /** The top of the report (design system: ReportHeader): what it is, of whom, and its record card. */
-export default function ReportHeader({ report }: { report: NomReport }) {
+export default function ReportHeader({
+    report,
+    sealOnScreen = true,
+}: {
+    report: NomReport;
+    /** False where the page already carries the logo on top (a shared link): the seal then shows only on paper. */
+    sealOnScreen?: boolean;
+}) {
     const facts = [
         { label: 'Periodo de aplicación', value: report.period },
         {
@@ -19,7 +27,12 @@ export default function ReportHeader({ report }: { report: NomReport }) {
 
     return (
         <header className="flex flex-col gap-8 pt-4 motion-safe:animate-report-rise">
-            <div className="flex justify-end">
+            <div
+                className={cn(
+                    'flex justify-end',
+                    !sealOnScreen && 'hidden print:flex',
+                )}
+            >
                 <Logo kind="seal" className="h-4" />
             </div>
             <div className="flex flex-col gap-2.5">
@@ -35,7 +48,7 @@ export default function ReportHeader({ report }: { report: NomReport }) {
                     {report.center.legalName} · {report.center.name}
                 </p>
             </div>
-            <dl className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] border-y">
+            <dl className="grid grid-cols-2 border-y md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
                 {facts.map((fact) => (
                     <div
                         key={fact.label}

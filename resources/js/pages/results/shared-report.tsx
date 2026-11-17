@@ -1,13 +1,18 @@
 import { Head } from '@inertiajs/react';
-import { Link2 } from 'lucide-react';
 import Logo from '@/components/humetria/logo';
-import ReportLinkUnavailable from '@/components/results/report-link-unavailable';
 import PrintButton from '@/components/humetria/print-button';
-import ReportBar from '@/components/results/report-bar';
+import ReportLinkBar from '@/components/humetria/report-link-bar';
+import ReportLinkNotice from '@/components/humetria/report-link-notice';
+import SectionTabs from '@/components/humetria/section-tabs';
 import ReportDocument from '@/components/results/report-document';
+import ReportLinkUnavailable from '@/components/results/report-link-unavailable';
 import { reportSections } from '@/lib/report';
 import type { NomReport, RiskLevelInfo } from '@/types';
 
+/**
+ * The report of num. 7.7 opened from a temporary link (board ReporteCompartido): the common bar of the reports by a link, the
+ * notice of its validity, the title first and the tabs of its parts. What is printed is the report, as everywhere.
+ */
 export default function SharedReport({
     company,
     expiresAt,
@@ -36,24 +41,28 @@ export default function SharedReport({
     return (
         <>
             <Head title={`Informe · ${company ?? ''}`} />
-            <ReportBar
-                className="md:top-0"
-                centered
-                sections={reportSections(report.results.visible)}
+            <ReportLinkBar
                 start={<Logo className="h-7" />}
+                className="max-w-[1120px] md:px-6"
             >
-                <PrintButton />
-            </ReportBar>
-            <main className="mx-auto flex min-h-svh w-full max-w-[1120px] flex-col gap-12 px-4 pt-6 pb-24 md:px-6 print:p-0">
-                <p className="flex flex-wrap items-center gap-3 rounded-[10px] border bg-card px-4 py-3 text-sm print:hidden">
-                    <Link2
-                        aria-hidden
-                        className="size-[18px] shrink-0 text-primary"
-                    />
-                    {company} compartió este informe contigo. El enlace vence el{' '}
+                <PrintButton variant="outline" label="Imprimir" />
+            </ReportLinkBar>
+            <main className="mx-auto flex min-h-svh w-full max-w-[1120px] flex-col gap-8 px-4 pt-4 pb-24 md:px-6 print:p-0">
+                <ReportLinkNotice>
+                    {company} compartió este informe contigo. Vence el{' '}
                     {expiresAt}.
-                </p>
-                <ReportDocument report={report} levels={levels} />
+                </ReportLinkNotice>
+                <ReportDocument
+                    report={report}
+                    levels={levels}
+                    tabs={
+                        <SectionTabs
+                            label="Secciones del informe"
+                            sections={reportSections(report.results.visible)}
+                            className="top-0"
+                        />
+                    }
+                />
             </main>
         </>
     );

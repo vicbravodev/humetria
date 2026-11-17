@@ -510,6 +510,11 @@ it('opens the shared report with no account, the small groups folded into Others
 
     visitPage('compensation/shared-report', '/compensation-report/'.str_repeat('a', 64), $dark, $mobile)
         ->assertSee('Acme compartió este reporte contigo')
+        // Finding 37: the common header of the reports by a link, and only one way to print.
+        ->assertSee('Vence el')
+        ->assertSeeIn('[data-slot="report-link-bar"]', 'Imprimir')
+        ->assertScript('() => Math.round(document.querySelector("[data-slot=report-link-bar]").getBoundingClientRect().height)', 60)
+        ->assertScript('() => [...document.querySelectorAll("button")].filter((button) => button.textContent.includes("Imprimir")).length', 1)
         ->assertSee('Revisión 2027')
         ->assertSee('1. De dónde sale el costo')
         ->assertSee('Operador · A')

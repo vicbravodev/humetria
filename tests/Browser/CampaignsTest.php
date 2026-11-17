@@ -789,9 +789,18 @@ it('opens a shared report, or says the link is no longer available', function (b
     $campaign = Campaign::factory()->closed()->create(['tenant_id' => $tenant->id]);
     App\Modules\Results\Models\ReportShare::factory()->create(['campaign_id' => $campaign->id, 'token_hash' => hash('sha256', str_repeat('a', 64))]);
 
+    // Finding 37: the common header of the reports by a link: a bar of 60 px (logo at the left, «Imprimir» at the right), the notice
+    // of its validity beside its icon, the title first, the facts of the period in two columns and the tabs under them.
     visitPage('results/shared-report', '/report/'.str_repeat('a', 64), $dark, $mobile)
         ->assertSee('Acme compartió este informe contigo')
-        ->assertSee('Imprimir o guardar PDF');
+        ->assertSee('Vence el')
+        ->assertSeeIn('[data-slot="report-link-bar"]', 'Imprimir')
+        ->assertDontSee('Imprimir o guardar PDF')
+        ->assertScript('() => Math.round(document.querySelector("[data-slot=report-link-bar]").getBoundingClientRect().height)', 60)
+        ->assertScript('() => document.querySelector("[data-slot=report-link-notice] svg") !== null', true)
+        ->assertScript('() => document.querySelector("h1").getBoundingClientRect().top < 300', true)
+        ->assertScript('() => document.querySelectorAll("article header dl > div").length > 1 && document.querySelectorAll("article header dl > div")[0].getBoundingClientRect().top === document.querySelectorAll("article header dl > div")[1].getBoundingClientRect().top', true)
+        ->assertPresent('nav[aria-label="Secciones del informe"]');
     visitPage('results/shared-report', '/report/'.str_repeat('b', 64), $dark, $mobile)
         ->assertSee('Este enlace ya no está disponible')
         ->assertDontSee('Acme');
