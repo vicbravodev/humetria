@@ -14,6 +14,8 @@ return [
     'qr' => [
         'window_seconds' => (int) env('ATTENDANCE_QR_WINDOW_SECONDS', 30),
         'past_windows' => (int) env('ATTENDANCE_QR_PAST_WINDOWS', 1),
+        // A code that counted when the page of Marcar opened serves that browser these minutes, to accept and mark.
+        'scan_minutes' => (int) env('ATTENDANCE_QR_SCAN_MINUTES', 3),
     ],
 
     /*

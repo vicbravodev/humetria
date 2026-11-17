@@ -364,6 +364,46 @@ describe('on site', function (): void {
         expect(AttendanceMark::query()->count())->toBe(0);
     });
 
+    it('keeps the scan of a code that counted when the page opened for 3 minutes of this browser, to accept and mark (hallazgo 27)', function (): void {
+        $code = punchQr($this->tenant->id, $this->plant->id);
+        $cookie = config()->string('session.cookie');
+        $session = $this->get(route('attendance.device.punch.show', ['acme', 'q' => $code]))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', '09:00'))
+            ->getCookie($cookie)?->getValue();
+
+        $this->travel(179)->seconds();
+        anaPunches(['q' => $code], $session)->assertOk()->assertJsonPath('evidence', 'strong');
+        expect(AttendanceMark::query()->sole()->method)->toBe(MarkMethod::QrAndGeofence);
+
+        $this->travel(2)->seconds();
+        anaPunches(['q' => $code, 'mark_type' => 'end'], $session)->assertUnprocessable()->assertJsonPath('reason', 'qr_expired');
+    });
+
+    it('gives no scan for a code that no longer counts when the page opens, nor to another browser', function (): void {
+        $code = punchQr($this->tenant->id, $this->plant->id);
+        $this->travel(61)->seconds();
+        $this->get(route('attendance.device.punch.show', ['acme', 'q' => $code]))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', null));
+        $this->get(route('attendance.device.punch.home', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', null));
+
+        $fresh = punchQr($this->tenant->id, $this->plant->id);
+        $this->get(route('attendance.device.punch.show', ['acme', 'q' => $fresh]))->assertOk();
+        $this->travel(90)->seconds();
+        // Another browser's session: the scan was not its own.
+        $this->flushSession();
+        anaPunches(['q' => $fresh])->assertUnprocessable()->assertJsonPath('reason', 'qr_expired');
+    });
+
+    it('keeps the scan of another center\'s code as that center\'s, and a scan only for the code it was of', function (): void {
+        $offices = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Oficinas']);
+        $code = punchQr($this->tenant->id, $offices->id);
+        $session = $this->get(route('attendance.device.punch.show', ['acme', 'q' => $code]))->getCookie(config()->string('session.cookie'))?->getValue();
+        $this->travel(90)->seconds();
+
+        anaPunches(['q' => $code], $session)->assertUnprocessable()->assertJsonPath('reason', 'qr_other_center')->assertJsonPath('center', 'Oficinas');
+        anaPunches(['q' => 'not-a-code'], $session)->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid');
+    });
+
     it('takes the code of the same center a few seconds later', function (): void {
         $code = punchQr($this->tenant->id, $this->plant->id);
         $this->travel(25)->seconds();
