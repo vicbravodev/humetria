@@ -69,7 +69,11 @@ export default function HumiThread({
                 )}
                 {waiting && <HumiThinking />}
                 {chat.failure !== null && (
-                    <HumiFailure failure={chat.failure} onRetry={chat.retry} />
+                    <HumiFailure
+                        failure={chat.failure}
+                        requestId={chat.requestId}
+                        onRetry={chat.retry}
+                    />
                 )}
             </div>
             {!atEnd && (

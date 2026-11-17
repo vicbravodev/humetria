@@ -321,3 +321,65 @@ it('ends an answer with its actions, and with its sources and next step only whe
     'with sources' => [true],
     'without them' => [false],
 ]);
+
+/** A browser script that waits for the entrances to end, so axe judges colors as they settle, not mid fade. */
+function humiSettled(): string
+{
+    return '() => Promise.all(document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity).map((animation) => animation.finished.catch(() => undefined))).then(() => true)';
+}
+
+/** A browser script that answers the chat request with `$response`, a JavaScript expression of a Response. */
+function humiAnswersWith(string $response): string
+{
+    return "() => { const real = window.fetch.bind(window); window.fetch = (input, init) => String(input instanceof Request ? input.url : input).endsWith('/assistant/chat') ? Promise.resolve({$response}) : real(input, init); return 'ready'; }";
+}
+
+it('shows Humi thinking with the steps it takes and a skeleton, and lets the person stop it', function (): void {
+    $parts = json_encode(implode('', array_map(fn (array $part): string => 'data: '.json_encode($part)."\n\n", [
+        ['type' => 'start', 'messageId' => 'm1'],
+        ['type' => 'tool-input-available', 'toolCallId' => 't1', 'toolName' => 'GetCampaignProgress', 'input' => []],
+    ])));
+    // A stream that never ends: Humi stays on it until the person stops it.
+    $stalled = "new Response(new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode({$parts})); } }), { headers: { 'Content-Type': 'text/event-stream' } })";
+
+    visitPage('dashboard', humiPanelCompany())
+        ->assertScript(humiAnswersWith($stalled), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->click('¿Cómo va la participación?')
+        ->assertSee('Consultando el avance de campañas')
+        ->assertScript('() => document.querySelectorAll(\'[role="log"] [data-slot="skeleton"]\').length', 2)
+        ->assertScript('() => document.querySelector(\'textarea\').placeholder', 'Humi está respondiendo')
+        ->click('[aria-label="Detener"]')
+        ->assertPresent('[aria-label="Enviar"]')
+        ->assertNoJavaScriptErrors();
+});
+
+it('says when Humi is back after too many questions, and that the page keeps working', function (): void {
+    $refusal = json_encode(json_encode(['reason' => 'rate', 'message' => 'Alcanzaste el límite de mensajes por ahora.', 'retry_after' => 240]));
+
+    visitPage('dashboard', humiPanelCompany())
+        ->assertScript(humiAnswersWith("new Response({$refusal}, { status: 429, headers: { 'Content-Type': 'application/json' } })"), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->click('¿Cómo va la participación?')
+        ->assertSee('Hiciste muchas preguntas seguidas. Humi vuelve en unos 4 minutos. La página sigue funcionando.')
+        ->assertScript('() => document.querySelector(\'textarea\').placeholder', 'Disponible en unos minutos')
+        ->assertScript(humiSettled(), true)
+        ->assertNoAccessibilityIssues(1);
+});
+
+it('says what failed with a way to retry and the code for support, with Humi listening again', function (bool $dark): void {
+    visitPage('dashboard', humiPanelCompany(), $dark)
+        ->assertScript(humiAnswersWith("new Response('Server Error', { status: 500, headers: { 'X-Request-Id': 'b3f1c2d4-0000-4000-8000-000000000001' } })"), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->click('¿Cómo va la participación?')
+        ->assertSee('No pude responder esta vez.')
+        ->assertSee('Si pasa otra vez, escribe a soporte con este código:')
+        ->assertSee('b3f1c2d4-0000-4000-8000-000000000001')
+        ->assertPresent('[role="alert"] button:has-text("Reintentar")')
+        ->assertScript('() => document.querySelectorAll(\'[role="alert"] path[d="M148 238 H172"]\').length', 1)
+        ->assertScript(humiSettled(), true)
+        ->assertNoAccessibilityIssues(1);
+})->with([
+    'light' => [false],
+    'dark' => [true],
+]);

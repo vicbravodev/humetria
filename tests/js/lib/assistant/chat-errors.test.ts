@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { chatFailure, reportableFailure } from '@/lib/assistant/chat-errors';
+import {
+    chatFailure,
+    rateWaitText,
+    reportableFailure,
+} from '@/lib/assistant/chat-errors';
 
 describe('chatFailure', () => {
     it('says what the server said when it refused with a reason', () => {
@@ -70,5 +74,28 @@ describe('reportableFailure', () => {
                 ),
             ),
         ).toBeNull();
+    });
+});
+
+describe('rateWaitText', () => {
+    it('says in about how many minutes Humi is back, and that the page keeps working', () => {
+        expect(rateWaitText(240)).toBe(
+            'Hiciste muchas preguntas seguidas. Humi vuelve en unos 4 minutos. La página sigue funcionando.',
+        );
+        expect(rateWaitText(61)).toBe(
+            'Hiciste muchas preguntas seguidas. Humi vuelve en unos 2 minutos. La página sigue funcionando.',
+        );
+    });
+
+    it('says a minute when it is a minute or less, and some minutes when the server did not say', () => {
+        expect(rateWaitText(60)).toBe(
+            'Hiciste muchas preguntas seguidas. Humi vuelve en un minuto. La página sigue funcionando.',
+        );
+        expect(rateWaitText(5)).toBe(
+            'Hiciste muchas preguntas seguidas. Humi vuelve en un minuto. La página sigue funcionando.',
+        );
+        expect(rateWaitText(null)).toBe(
+            'Hiciste muchas preguntas seguidas. Humi vuelve en unos minutos. La página sigue funcionando.',
+        );
     });
 });
