@@ -119,7 +119,8 @@ ellos no se puede calcular tiempo efectivo ni horas extra de forma defendible. S
 **3.3 Hora del servidor** · Humetría: la hora de cada marca la pone siempre el servidor, nunca el reloj del teléfono.
 
 **3.4 Ubicación** · Humetría · se guardan **las coordenadas, su precisión y la zona de la geocerca** donde se marcó, para
-poder demostrar dónde se hizo dentro de un centro grande. Es un dato personal; por eso se informa en la aceptación
+poder demostrar dónde se hizo dentro de un centro grande. En un centro que marca **en campo** (4.5) se guardan las
+coordenadas y su precisión aunque la marca caiga fuera de toda zona. Es un dato personal; por eso se informa en la aceptación
 (criterio 5.1), solo se captura **al marcar** (nunca en segundo plano ni entre marcas), solo lo ven los roles
 autorizados, y se conserva por el plazo del criterio 7. Base: LFPDPPP (copia en
 `../nom-037/fuentes/lfpdppp-extracto.txt`: arts. 3-VI, 7, 8 y 9).
@@ -127,7 +128,9 @@ autorizados, y se conserva por el plazo del criterio 7. Base: LFPDPPP (copia en
 ## 4. A quién le toca registrar, y cómo
 
 **4.1 Todas las personas empleadas, por defecto** · Interpretación (1.2). Una **política por empresa** define por grupo
-(`StaffGroup`) y por modalidad (presencial / teletrabajo) qué métodos de marcaje son válidos.
+(`StaffGroup`) y por modalidad (presencial / teletrabajo) qué métodos de marcaje son válidos. Es la base de todos los
+centros; un centro solo puede cambiar **cómo se marca** en él (4.5). La conservación, la tolerancia de retardo y el
+personal de confianza siguen siendo de la empresa.
 
 **4.2 Presencial** · el método fuerte es **QR rotativo del centro + geocerca** a la vez; solo uno de los dos es evidencia
 más débil (criterio 5.3). **Por defecto se bloquea marcar fuera de toda zona**; la empresa puede cambiar su política a
@@ -138,6 +141,13 @@ más débil (criterio 5.3). **Por defecto se bloquea marcar fuera de toda zona**
 **4.4 Personal de confianza** · son empleados (`Employee`) como todos; **no necesitan cuenta de usuario**. Registran desde
 el navegador de la computadora con el mismo dispositivo vinculado o con una llave de acceso en esa computadora. Si luego
 la STPS los exceptúa, basta cambiar la política.
+
+**4.5 Centro en campo** · Humetría · cada centro marca **igual que la empresa** (por omisión) o **en campo** (una obra,
+rutas, visitas). En campo no se pide zona ni QR: la persona marca desde su celular donde esté y se guarda su ubicación
+(3.4) sin zona que la limite. El QR sigue disponible y es opcional (uno que no verifica se rechaza). Un centro en campo
+no necesita zonas ni pantalla para que su gente marque, y una persona nueva en él hereda el modo sin tocar su horario; la
+modalidad remota por persona (4.3) queda para quien teletrabaja en un centro presencial y manda sobre el modo del
+centro. La hora sigue siendo la del servidor (3.3). Cambiar el modo de un centro va a la bitácora.
 
 ## 5. Acuerdo y evidencia
 
@@ -151,7 +161,11 @@ siguiente marca pide aceptar la versión nueva. Se guarda el texto, su versión,
 motivo. Lo confirmado es contenido «acordado» (1.3). Lo objetado queda a la vista de RH hasta resolverse.
 
 **5.3 Nivel de evidencia por marca** · Humetría · cada marca guarda cómo se hizo (QR más geocerca, solo geocerca, solo QR,
-navegador de confianza, remoto, corrección) y el reporte lo muestra.
+navegador de confianza, remoto, en campo, corrección) y el reporte lo muestra. «Fuerte» es la marca **completa para su
+modo**: QR más geocerca en un centro presencial; en un centro en campo, una ubicación con precisión dentro del máximo de
+la política (método `field`). En campo sin ubicación utilizable (ninguna, o menos precisa que el máximo, que igual se
+guarda) es «Media» (método `field_unlocated`), o «solo QR» si escaneó un QR válido. El reporte señala esos días con
+«Marcó en campo», como información y no como aviso.
 
 **5.4 Registro inalterable** · Humetría · las marcas son de **solo inserción** (trigger de Postgres, como `audit_entries`).
 Una corrección es una **marca nueva** con autor, motivo y referencia a la original; la original nunca se edita ni se
@@ -213,5 +227,12 @@ exige, pero sin esto no se puede hablar de «acuerdo».
     generarlo. En pantalla se muestra un periodo de **hasta 93 días**; uno de 94 a 366 días se ofrece solo en CSV, que
     acepta **hasta 366 días** (ambos valores en `config/attendance.php`). Ver el reporte en pantalla (su primera página,
     sin búsqueda) y cada descarga van a la bitácora; ofrecer solo el CSV no lee marcas y no se anota.
+  - **Centro en campo** (4.1, 4.5, 5.3), 2026-11-16, decisión del usuario: la política sigue siendo una por empresa y
+    cada centro solo elige su modo; «Campo» es un método propio, no «remoto» (que es teletrabajo, NOM-037). Con buena
+    ubicación cuenta como Fuerte (aprobado por el usuario); sin ubicación utilizable baja a Media (propuesta del
+    constructor, **⚠ pendiente del usuario**). Se escoge que en campo el personal de confianza también marque con su
+    ubicación en vez del navegador sin ubicación. El texto del acuerdo (5.1) se amplió para decir que en campo la ubicación
+    se guarda aunque se marque fuera de zona; por ser texto nuevo, cada persona acepta la versión nueva en su siguiente
+    marca.
   - **Conservación** (7.1): la empresa elige de 12 a **120 meses** después de terminada la relación. El tope de 120 lo
     fijó el constructor. **⚠ pendiente del usuario:** confirmar el tope (el criterio dice «ampliable», sin máximo).
