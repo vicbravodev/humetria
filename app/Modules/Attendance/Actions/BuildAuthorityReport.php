@@ -297,7 +297,25 @@ final readonly class BuildAuthorityReport
             weekDigest: $confirmed ? ($answer->digest ?? '') : '',
             flags: self::flags($marks, $day, $minutes, $minutes - $double, $week),
             lateMinutes: $day->lateMinutes,
+            timezone: self::zoneOf($first, $ended ? $last : null),
         );
+    }
+
+    /**
+     * The zone of a day with the offset of its start and, when the end has another (the repeated hour), of its end: the
+     * hour repeated by a change of time always carries its offset (design of time zones §3.8).
+     */
+    private static function zoneOf(?AttendanceMark $first, ?AttendanceMark $end): string
+    {
+        if ($first?->marked_at === null) {
+            return '';
+        }
+
+        $offset = fn (CarbonImmutable $at): string => 'UTC'.str_replace('-', '−', $at->format('P'));
+        $start = $offset($first->marked_at->setTimezone($first->timezone));
+        $last = $end?->marked_at === null ? $start : $offset($end->marked_at->setTimezone($end->timezone));
+
+        return ($last === $start ? $start : "{$start} a {$last}").' · '.$first->timezone;
     }
 
     /**

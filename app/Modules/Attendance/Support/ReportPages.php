@@ -213,6 +213,7 @@ final readonly class ReportPages
             'confirmation' => $row->confirmation,
             'flags' => $row->flags,
             'lateMinutes' => $row->lateMinutes,
+            'timezone' => $row->timezone,
         ];
     }
 }

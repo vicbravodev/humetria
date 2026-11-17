@@ -186,12 +186,13 @@ describe('the page', function (): void {
             ->where('people.data.0.days.0', [
                 'date' => '2027-01-26', 'start' => '08:00', 'end' => '18:00', 'endDate' => '2027-01-26', 'breakMinutes' => 0, 'workedMinutes' => 600,
                 'ordinaryMinutes' => 480, 'doubleMinutes' => 120, 'tripleMinutes' => 0, 'restDayMinutes' => 0, 'evidence' => 'Fuerte',
-                'corrections' => [], 'confirmation' => 'confirmado', 'flags' => [], 'lateMinutes' => null,
+                'corrections' => [], 'confirmation' => 'confirmado', 'flags' => [], 'lateMinutes' => null, 'timezone' => 'UTC−06:00 · America/Mexico_City',
             ])
             ->where('people.data.0.days.1.lateMinutes', null)
             ->where('people.data.0.days.1.corrections', ['hora corregida de 08:20 a 08:00 (por RH): El lector falló.'])
             ->where('people.data.1.days.0.flags', ['Sin marca de fin'])
             ->where('generatedAt', ['utc' => '2027-02-01 18:00', 'local' => '2027-02-01 12:00'])
+            ->where('timezone', ['value' => 'America/Mexico_City', 'label' => 'Hora del Centro, UTC−6 · Ciudad de México'])
             ->where('longPeriod', null)
             ->where('exportUrl', route('tenant.attendance.report.export', ['acme', 'center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31'])));
 

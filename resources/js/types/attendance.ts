@@ -200,7 +200,9 @@ export type AttendanceReportProps = {
     filters: { q: string; show: ReportShow };
     summary: ReportSummary | null;
     people: Paginated<ReportPerson> | null;
-    /** When the report was put together, as «Y-m-d H:i» in UTC and in the display time zone. */
+    /** The zone the center's days are read in, named with its offset: «Hora del Noroeste, UTC−8 · Tijuana». */
+    timezone: { value: string; label: string };
+    /** When the report was put together, as «Y-m-d H:i» in UTC and in the center's zone. */
     generatedAt: { utc: string; local: string } | null;
     exportUrl: string | null;
     /** A period too long for the screen: how many days it has and how many the screen shows; only its CSV is offered. */
