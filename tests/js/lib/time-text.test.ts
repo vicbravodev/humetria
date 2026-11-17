@@ -38,17 +38,16 @@ describe('parseTimeText', () => {
 });
 
 describe('maskTimeText', () => {
-    it('adds the colon after the hour as it is typed', () => {
-        expect(maskTimeText('07', '0')).toBe('07:');
+    it('writes four digits, typed or pasted, as a time', () => {
+        expect(maskTimeText('0730')).toBe('07:30');
+        expect(maskTimeText('1905')).toBe('19:05');
     });
 
-    it('leaves the text alone while deleting, and words as they were typed', () => {
-        expect(maskTimeText('07', '07:')).toBe('07');
-        expect(maskTimeText('7 p', '7 ')).toBe('7 p');
-    });
-
-    it('writes four pasted digits as a time', () => {
-        expect(maskTimeText('0730', '')).toBe('07:30');
+    it('leaves a colon typed by hand, words and deletions as they were typed', () => {
+        expect(maskTimeText('19')).toBe('19');
+        expect(maskTimeText('19:')).toBe('19:');
+        expect(maskTimeText('07')).toBe('07');
+        expect(maskTimeText('7 p')).toBe('7 p');
     });
 });
 

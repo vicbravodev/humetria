@@ -51,15 +51,16 @@ export function parseTimeText(text: string): TextReading {
     return value === undefined ? { kind: 'invalid' } : { kind: 'ok', value };
 }
 
-/** Adds the colon after the hour while it is typed in digits, and writes four pasted digits as a time. */
-export function maskTimeText(next: string, previous: string): string {
-    if (/^\d{4}$/.test(next)) {
-        return `${next.slice(0, 2)}:${next.slice(2)}`;
+/**
+ * Writes four digits, typed or pasted, as a time ("0730" → "07:30"). Nothing is added while typing: a colon typed by
+ * hand would come out doubled.
+ */
+export function maskTimeText(text: string): string {
+    if (/^\d{4}$/.test(text)) {
+        return `${text.slice(0, 2)}:${text.slice(2)}`;
     }
 
-    return next.length > previous.length && /^\d{2}$/.test(next)
-        ? `${next}:`
-        : next;
+    return text;
 }
 
 /** The time some minutes later (or earlier), around the clock; a field without a time starts at 08:00. */

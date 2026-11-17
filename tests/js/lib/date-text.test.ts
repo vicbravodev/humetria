@@ -108,23 +108,20 @@ describe('formatDateText', () => {
 });
 
 describe('maskDateText', () => {
-    it('adds the slash after the day and after the month as they are typed', () => {
-        expect(maskDateText('07', '0')).toBe('07/');
-        expect(maskDateText('07/10', '07/1')).toBe('07/10/');
-        expect(maskDateText('7/10', '7/1')).toBe('7/10/');
+    it('writes eight digits, typed or pasted, as a date', () => {
+        expect(maskDateText('07102018')).toBe('07/10/2018');
+        expect(maskDateText('07102018')).toBe('07/10/2018');
     });
 
-    it('leaves the text alone while deleting', () => {
-        expect(maskDateText('07', '07/')).toBe('07');
+    it('adds no slash while the text may still be a year being typed', () => {
+        expect(maskDateText('20')).toBe('20');
+        expect(maskDateText('2026-1')).toBe('2026-1');
     });
 
-    it('writes eight pasted digits as a date', () => {
-        expect(maskDateText('07102018', '')).toBe('07/10/2018');
-    });
-
-    it('leaves words and other shapes as they were typed', () => {
-        expect(maskDateText('7 oct', '7 oc')).toBe('7 oct');
-        expect(maskDateText('2018', '201')).toBe('2018');
+    it('leaves words, deletions and other shapes as they were typed', () => {
+        expect(maskDateText('7 oct')).toBe('7 oct');
+        expect(maskDateText('07/10')).toBe('07/10');
+        expect(maskDateText('7/10/18')).toBe('7/10/18');
     });
 });
 
@@ -211,9 +208,9 @@ describe('formatMonthText and maskMonthText', () => {
         expect(formatMonthText('2018-13')).toBe('');
     });
 
-    it('adds the slash after the month as it is typed, and writes six pasted digits', () => {
-        expect(maskMonthText('10', '1')).toBe('10/');
-        expect(maskMonthText('10', '10/')).toBe('10');
-        expect(maskMonthText('102018', '')).toBe('10/2018');
+    it('writes six digits as a month, and leaves anything else as typed', () => {
+        expect(maskMonthText('102018')).toBe('10/2018');
+        expect(maskMonthText('10')).toBe('10');
+        expect(maskMonthText('2026-1')).toBe('2026-1');
     });
 });

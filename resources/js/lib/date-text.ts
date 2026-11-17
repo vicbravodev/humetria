@@ -179,17 +179,15 @@ export function formatDateText(value: string): string {
 }
 
 /**
- * Adds the slashes while a date is typed in digits ("07" → "07/"), and writes eight pasted digits as a date. Deleting,
- * and anything typed in words, is left alone.
+ * Writes eight digits, typed or pasted, as a date ("07102018" → "07/10/2018"). Nothing is added while typing: the
+ * first digits may still be the year of a 2018-10-07.
  */
-export function maskDateText(next: string, previous: string): string {
-    if (/^\d{8}$/.test(next)) {
-        return `${next.slice(0, 2)}/${next.slice(2, 4)}/${next.slice(4)}`;
+export function maskDateText(text: string): string {
+    if (/^\d{8}$/.test(text)) {
+        return `${text.slice(0, 2)}/${text.slice(2, 4)}/${text.slice(4)}`;
     }
 
-    const growing = next.length > previous.length;
-
-    return growing && /^(\d{2}|\d{1,2}\/\d{2})$/.test(next) ? `${next}/` : next;
+    return text;
 }
 
 function monthOf(
@@ -255,13 +253,11 @@ export function formatMonthText(value: string): string {
         : `${parts[2]}/${parts[1]}`;
 }
 
-/** Adds the slash after the month while it is typed in digits, and writes six pasted digits as a month. */
-export function maskMonthText(next: string, previous: string): string {
-    if (/^\d{6}$/.test(next)) {
-        return `${next.slice(0, 2)}/${next.slice(2)}`;
+/** Writes six digits, typed or pasted, as a month ("102018" → "10/2018"). */
+export function maskMonthText(text: string): string {
+    if (/^\d{6}$/.test(text)) {
+        return `${text.slice(0, 2)}/${text.slice(2)}`;
     }
 
-    return next.length > previous.length && /^\d{2}$/.test(next)
-        ? `${next}/`
-        : next;
+    return text;
 }
