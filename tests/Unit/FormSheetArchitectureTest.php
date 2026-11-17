@@ -16,6 +16,8 @@ dataset('record forms', [
     'leave/holiday-dialog.tsx',
     'leave/type-dialog.tsx',
     'engagement/commitments/commitment-dialog.tsx',
+    'engagement/pulse/create-pulse-button.tsx',
+    'engagement/pulse/schedule-dialog.tsx',
 ]);
 
 it('keeps the form of a record, or its button, in the side panel', function (string $file): void {

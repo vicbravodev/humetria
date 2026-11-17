@@ -1,5 +1,5 @@
 import ScheduleFields from '@/components/engagement/pulse/schedule-fields';
-import FormDialog from '@/components/humetria/form-dialog';
+import FormSheet from '@/components/humetria/form-sheet';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { update } from '@/routes/tenant/pulse/schedule';
 import type { PulseModeOption, PulseSchedule } from '@/types';
@@ -21,7 +21,7 @@ export default function ScheduleDialog({
     const tenantSlug = useTenantSlug();
 
     return (
-        <FormDialog
+        <FormSheet
             open={open}
             onOpenChange={onOpenChange}
             title={
@@ -48,6 +48,6 @@ export default function ScheduleDialog({
                     />
                 </>
             )}
-        </FormDialog>
+        </FormSheet>
     );
 }
