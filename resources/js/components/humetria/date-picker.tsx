@@ -13,6 +13,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { useDateField } from '@/hooks/use-date-field';
+import { useFallbackLabel } from '@/hooks/use-fallback-label';
 import type { DateFieldProps } from '@/hooks/use-date-field';
 
 type Props = DateFieldProps & {
@@ -41,6 +42,7 @@ export default function DatePicker({
     const { value, field, sheetField, popover, mobile, problem, clear, pick } =
         useDateField(props);
     const { boxRef, textRef } = popover;
+    useFallbackLabel(textRef, prompt);
     const problemId = `${id}-problem`;
     const calendar = (
         <DayCalendar
