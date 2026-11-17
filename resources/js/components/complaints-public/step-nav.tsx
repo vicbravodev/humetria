@@ -2,8 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
 /**
- * The way forward of a step (board V4-Quejas-Form): what is missing to leave it, what the server refused, and one wide
- * button. The last step sends; none advances on its own.
+ * The way forward of a step, stuck to the bottom (board QuejaTipo): what is missing to leave it, what the server refused, and
+ * one wide button. The last step sends; none advances on its own.
  */
 export default function StepNav({
     last,
@@ -24,7 +24,7 @@ export default function StepNav({
     const said = problem === undefined ? refused : [problem, ...refused];
 
     return (
-        <div className="mt-auto flex flex-col gap-3 pt-2">
+        <>
             {said.length > 0 && (
                 <ul
                     role="alert"
@@ -37,6 +37,7 @@ export default function StepNav({
             )}
             <Button
                 type="button"
+                size="lg"
                 className="w-full"
                 disabled={processing}
                 onClick={last ? onSend : onNext}
@@ -44,6 +45,6 @@ export default function StepNav({
                 {processing && <Spinner />}
                 {last ? 'Enviar queja' : 'Continuar'}
             </Button>
-        </div>
+        </>
     );
 }
