@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Attendance\Actions\AcceptAgreement;
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -44,6 +45,18 @@ it('does not read the schedules or the policy of another company with a query', 
     workIn($b);
     expect(AttendanceSchedule::query()->count())->toBe(1)
         ->and(AttendancePolicy::query()->count())->toBe(1);
+});
+
+it('does not read the mode of a center of another company with a query', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    $modeOfB = AttendanceCenterMode::factory()->create(['tenant_id' => $b->id]);
+
+    workIn($a);
+    expect(AttendanceCenterMode::query()->find($modeOfB->id))->toBeNull();
+
+    workIn($b);
+    expect(AttendanceCenterMode::query()->count())->toBe(1);
 });
 
 it('does not read the QR screens of another company with a query', function (): void {
