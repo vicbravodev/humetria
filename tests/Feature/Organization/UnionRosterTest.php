@@ -111,7 +111,7 @@ it('never stores contact, gender or work center in a union, even when sent', fun
 
     $this->actingAs($this->owner)
         ->post(route('tenant.employees.store', $this->union), [
-            'employee_number' => 'E-001', 'email' => 'ana@acme.mx', 'mobile' => '5512345678', 'gender' => 'female', 'work_center_id' => $plant->id,
+            'employee_number' => 'E-001', 'email' => 'ana@acme.mx', 'mobile' => '+525512345678', 'gender' => 'female', 'work_center_id' => $plant->id,
         ])
         ->assertSessionHasNoErrors();
 

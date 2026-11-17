@@ -38,7 +38,7 @@ function planSeatsUsed(Tenant $tenant): int
 /** @return array<string, string> */
 function planSeatForm(WorkCenter $workCenter, string $email = 'nuevo@acme.mx'): array
 {
-    return ['name' => 'Ana López', 'email' => $email, 'mobile' => '5512345678', 'gender' => 'female', 'work_center_id' => $workCenter->id, 'area' => 'Producción', 'job_title' => 'Operadora', 'employee_number' => 'N-'.$email];
+    return ['name' => 'Ana López', 'email' => $email, 'mobile' => '+525512345678', 'gender' => 'female', 'work_center_id' => $workCenter->id, 'area' => 'Producción', 'job_title' => 'Operadora', 'employee_number' => 'N-'.$email];
 }
 
 /** @param  list<string>  $rows */

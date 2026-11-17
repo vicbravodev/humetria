@@ -29,9 +29,9 @@ function acmeWithEmployees(bool $employees = true): Tenant
     $sales = Area::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Ventas']);
 
     if ($employees) {
-        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $production->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5512345678']);
+        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $production->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '+525512345678']);
         Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $office->id, 'area_id' => $sales->id, 'name' => 'Beto Díaz', 'email' => 'beto@acme.mx']);
-        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $sales->id, 'name' => 'Carla Ruiz', 'email' => null, 'mobile' => '5587654321']);
+        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $sales->id, 'name' => 'Carla Ruiz', 'email' => null, 'mobile' => '+525587654321']);
     }
 
     return $tenant;
@@ -111,7 +111,7 @@ it('adds an employee, creating their area as it is typed', function (): void {
     visit('/admin/acme/employees')
         ->click('Dar de alta')
         ->type('name', 'Diego Luna')
-        ->type('mobile', '55 8765 4321')
+        ->type('#employee-mobile', '5587654321')
         ->click('#employee-work_center_id')
         ->type('[role="combobox"][aria-controls="employee-work_center_id-options"]', 'planta')
         ->assertSeeIn('#employee-work_center_id-options', 'Planta')
@@ -127,6 +127,8 @@ it('adds an employee, creating their area as it is typed', function (): void {
         ->assertSee('Diego Luna')
         ->assertSee('Logística')
         ->assertNoJavaScriptErrors();
+
+    expect(Employee::query()->withoutGlobalScopes()->where('name', 'Diego Luna')->sole()->mobile)->toBe('+525587654321');
 });
 
 it('sets the direct manager of an employee from their panel', function (): void {

@@ -32,7 +32,7 @@ final class EmployeeFactory extends Factory
             'area_id' => fn (array $attributes) => AreaFactory::new()->state(['tenant_id' => $attributes['tenant_id']]),
             'name' => fake()->name(),
             'email' => Str::lower(fake()->unique()->safeEmail()),
-            'mobile' => fake()->numerify('55########'),
+            'mobile' => '+52'.fake()->numerify('55########'),
             'gender' => fake()->randomElement(Gender::cases()),
             'job_title' => fake()->randomElement(['Operador', 'Supervisor', 'Analista', 'Almacenista']),
             'employee_number' => null,

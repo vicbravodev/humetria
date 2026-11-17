@@ -5,6 +5,7 @@ import EmployeeGenderField from '@/components/organization/employee-gender-field
 import EmployeePayScaleFields from '@/components/organization/employee-pay-scale-fields';
 import EmployeePlaceFields from '@/components/organization/employee-place-fields';
 import UnionEmployeeFormFields from '@/components/organization/union-employee-form-fields';
+import PhoneField from '@/components/phone-field';
 import { useIsUnion } from '@/hooks/use-is-union';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
 
@@ -23,7 +24,7 @@ export default function EmployeeFormFields({
 }) {
     const union = useIsUnion();
     const text = (
-        name: 'name' | 'email' | 'mobile' | 'job_title' | 'employee_number',
+        name: 'name' | 'email' | 'job_title' | 'employee_number',
     ) => ({
         name,
         idPrefix: 'employee',
@@ -87,12 +88,12 @@ export default function EmployeeFormFields({
                     type="email"
                     maxLength={255}
                 />
-                <FormField
-                    {...text('mobile')}
+                <PhoneField
+                    name="mobile"
+                    idPrefix="employee"
                     label="Celular"
-                    type="tel"
-                    inputMode="tel"
-                    maxLength={20}
+                    defaultValue={employee?.mobile}
+                    error={errors['mobile']}
                 />
                 <p className="-mt-2 text-caption text-muted-foreground">
                     Con al menos uno de los dos basta. Hoy el enlace de la

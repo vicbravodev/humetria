@@ -50,6 +50,22 @@ it('accepts a telework percentage over 40 and refuses 40 straight in the databas
     }
 })->with([[41, true], [100, true], [40, false], [101, false], [0, false]]);
 
+it('keeps the contact phone in E.164 in the database', function (string $phone, bool $accepted): void {
+    $create = fn (): Teleworker => TeleworkerFactory::new()->create(['contact_phone' => $phone]);
+
+    if ($accepted) {
+        expect($create()->contact_phone)->toBe($phone);
+    } else {
+        refused($create);
+    }
+})->with([
+    'Mexican' => ['+524421234567', true],
+    'of another country' => ['+14155552671', true],
+    'without its country' => ['4421234567', false],
+    'with spaces' => ['+52 442 123 4567', false],
+    'free text' => ['casa: 442 123 4567', false],
+]);
+
 it('allows one open period per employee and a new one after the last ended', function (): void {
     $first = TeleworkerFactory::new()->create();
     $again = fn () => TeleworkerFactory::new()->create(['employee_id' => $first->employee_id, 'work_center_id' => $first->work_center_id, 'tenant_id' => $first->tenant_id]);

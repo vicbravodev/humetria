@@ -120,6 +120,7 @@ return [
         'symbols' => 'El campo :attribute debe contener al menos un símbolo.',
         'uncompromised' => 'El :attribute proporcionado apareció en una filtración de datos. Elige otro :attribute.',
     ],
+    'phone' => 'Revisa el :attribute: no es un número válido para el país elegido.',
     'present' => 'El campo :attribute debe estar presente.',
     'present_if' => 'El campo :attribute debe estar presente cuando :other sea :value.',
     'present_unless' => 'El campo :attribute debe estar presente a menos que :other sea :value.',
@@ -205,9 +206,6 @@ return [
         'out_of_zone' => [
             'in' => 'Elige «Bloquear» o «Permitir y señalar».',
         ],
-        'mobile' => [
-            'regex' => 'Escribe un celular de 10 dígitos, por ejemplo 55 1234 5678.',
-        ],
         'postal_code' => [
             'regex' => 'Escribe un código postal de 5 dígitos.',
         ],
@@ -231,9 +229,6 @@ return [
         ],
         'tools' => [
             'required' => 'Elige al menos una herramienta.',
-        ],
-        'whatsapp' => [
-            'regex' => 'Escribe un WhatsApp de 10 dígitos, por ejemplo 55 1234 5678.',
         ],
     ],
 

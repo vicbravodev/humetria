@@ -72,7 +72,7 @@ it('accepts a person with only a name', function (): void {
 });
 
 it('accepts an employee with only a mobile, or only an email', function (): void {
-    DB::table('employees')->insert(rawEmployee(['email' => null, 'mobile' => '5512345678']));
+    DB::table('employees')->insert(rawEmployee(['email' => null, 'mobile' => '+525512345678']));
     DB::table('employees')->insert(rawEmployee(['email' => 'ana@acme.mx', 'mobile' => null]));
 
     expect(DB::table('employees')->count())->toBe(2);
@@ -81,8 +81,9 @@ it('accepts an employee with only a mobile, or only an email', function (): void
 it('rejects a malformed field', function (array $overrides, string $constraint): void {
     DB::table('employees')->insert(rawEmployee($overrides));
 })->throws(QueryException::class)->with([
-    'mobile with 9 digits' => [['mobile' => '551234567'], 'employees_mobile_format'],
-    'mobile with spaces' => [['mobile' => '55 1234 5678'], 'employees_mobile_format'],
+    'mobile without its country' => [['mobile' => '5512345678'], 'employees_mobile_e164'],
+    'mobile with spaces' => [['mobile' => '+52 55 1234 5678'], 'employees_mobile_e164'],
+    'mobile too long for E.164' => [['mobile' => '+5255123456789012'], 'employees_mobile_e164'],
     'uppercase email' => [['email' => 'Ana@acme.mx'], 'employees_email_lowercase'],
     'unknown gender' => [['gender' => 'x'], 'employees_gender_known'],
     'blank name' => [['name' => ' '], 'employees_name_filled'],

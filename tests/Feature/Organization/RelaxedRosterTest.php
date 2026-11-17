@@ -56,7 +56,7 @@ it('leaves out people without a center, area, gender, name or job title from the
 ]);
 
 it('keeps a person with all the data and no contact in the Roster contract', function (): void {
-    $noContact = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'area_id' => $this->area->id, 'email' => null, 'mobile' => '5512345678']);
+    $noContact = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'area_id' => $this->area->id, 'email' => null, 'mobile' => '+525512345678']);
     workIn($this->tenant);
 
     expect(resolve(Roster::class)->find($noContact->id)?->email)->toBeNull();

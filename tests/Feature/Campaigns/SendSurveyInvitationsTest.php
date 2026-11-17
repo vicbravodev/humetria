@@ -72,7 +72,7 @@ it('saves the launch and leaves the emails to a batch of jobs of 50 people each,
 });
 
 it('marks who has no email instead of queueing them', function (): void {
-    staffOf($this->tenant, $this->plant, 1)->first()->update(['email' => null, 'mobile' => '5512345678']);
+    staffOf($this->tenant, $this->plant, 1)->first()->update(['email' => null, 'mobile' => '+525512345678']);
     $campaign = queuedEvaluation($this->tenant, $this->plant, $this->hr, 19);
 
     expect(participantsOf($campaign)->countBy(fn (Participant $participant): string => $participant->invitation_status?->value ?? 'none')->all())

@@ -6,6 +6,7 @@ namespace App\Modules\Organization\Support;
 
 use App\Modules\Organization\Data\EmployeeData;
 use App\Modules\Organization\Models\Employee;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Str;
 
 /**
@@ -24,7 +25,7 @@ final class ImportChanges
         $fields = [
             ['Nombre', $person->name, $data->name, 'name'],
             ['Correo', $person->email, $data->email, null],
-            ['Celular', $person->mobile, $data->mobile, null],
+            ['Celular', PhoneNumber::readable($person->mobile), PhoneNumber::readable($data->mobile), null],
             ['Género', $person->gender?->label(), $data->gender?->label(), null],
             ['Centro de trabajo', $centers[$person->work_center_id ?? ''] ?? null, $centers[$data->workCenterId ?? ''] ?? null, null],
             ['Área', self::text($person->getAttributeValue('area_name')), $data->area, 'area_id'],

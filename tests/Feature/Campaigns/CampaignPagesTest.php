@@ -239,7 +239,7 @@ it('offers to launch a draft from tomorrow in Mexico City, suggesting two weeks'
 
 it('counts each guide of a launched campaign: answered, pending, without a link and cancelled', function (): void {
     $campaign = campaignWithAnswers($this->tenant, $this->plant, 'nom035.guide-ii', 4, 1);
-    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending], ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '5512345678']);
+    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending], ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '+525512345678']);
     personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
@@ -326,7 +326,7 @@ it('narrows the people by where they stand, counting each standing', function ()
     $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     $waiting = ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending];
     personIn($campaign, 'Pendiente', $waiting);
-    personIn($campaign, 'Sin correo', $waiting, ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '5512345678']);
+    personIn($campaign, 'Sin correo', $waiting, ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '+525512345678']);
     personIn($campaign, 'Contestó', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed]);
     personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
     personIn($campaign, 'Falló', $waiting, ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
@@ -466,7 +466,7 @@ it('dates the history of an evaluation and links its work center', function (): 
 
 it('tells a draft how many of its people the links reach, only to those who manage it', function (): void {
     $people = staffOf($this->tenant, $this->plant, 20);
-    $people[0]->update(['email' => null, 'mobile' => '5512345678']);
+    $people[0]->update(['email' => null, 'mobile' => '+525512345678']);
     staffOf($this->tenant, WorkCenter::factory()->for($this->tenant)->create(), 3);
     $draft = Campaign::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
 

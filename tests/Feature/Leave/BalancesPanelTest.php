@@ -158,7 +158,7 @@ it('shows nothing of another company', function (): void {
 });
 
 it('does not let a viewer find anyone by email or mobile, nor count them as elsewhere', function (): void {
-    $this->ana->update(['email' => 'ana.secreta@acme.test', 'mobile' => '5598761234']);
+    $this->ana->update(['email' => 'ana.secreta@acme.test', 'mobile' => '+525598761234']);
     $viewer = memberOf($this->tenant, TenantRole::Viewer);
 
     foreach (['secreta@', '5598761234'] as $q) {

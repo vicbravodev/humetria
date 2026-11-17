@@ -29,7 +29,7 @@ function rosterEmployee(Tenant $tenant, WorkCenter $workCenter, Area $area, arra
 
 it('lists the active people of a work center by name, with their area, gender and job title', function (): void {
     $zoe = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Zoé Ruiz', 'gender' => Gender::Female, 'email' => 'zoe@acme.mx', 'job_title' => 'Supervisora']);
-    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'gender' => Gender::Other, 'email' => null, 'mobile' => '5512345678', 'job_title' => 'Operadora']);
+    $ana = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López', 'gender' => Gender::Other, 'email' => null, 'mobile' => '+525512345678', 'job_title' => 'Operadora']);
     workIn($this->tenant);
 
     expect(resolve(Roster::class)->activeIn($this->plant->id))->toEqual([
@@ -215,7 +215,7 @@ it('looks people up by their employee number, whatever its case, deactivated one
 });
 
 it('never searches the contact data of the people: an email or a mobile finds nobody', function (): void {
-    $juan = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '5512345678']);
+    $juan = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '+525512345678']);
     workIn($this->tenant);
     $ids = fn (string $search): array => resolve(Roster::class)->matchingIds(new RosterQuery(search: $search));
 
@@ -225,8 +225,8 @@ it('never searches the contact data of the people: an email or a mobile finds no
 });
 
 it('searches the roster by words in any order', function (): void {
-    $juan = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '5512345678']);
-    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Gómez', 'email' => 'jg@acme.mx', 'mobile' => '5598765432']);
+    $juan = rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '+525512345678']);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Juan Gómez', 'email' => 'jg@acme.mx', 'mobile' => '+525598765432']);
     workIn($this->tenant);
     $ids = fn (string $search): array => resolve(Roster::class)->matchingIds(new RosterQuery(search: $search));
 

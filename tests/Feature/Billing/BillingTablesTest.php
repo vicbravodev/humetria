@@ -94,6 +94,22 @@ it('keeps the RFC of an account unique, in the format of the SAT, and its kind t
         ->and(fn () => DB::table('billing_accounts')->insert([...array_map(fn (mixed $value): mixed => $value instanceof BackedEnum ? $value->value : $value, BillingAccount::factory()->raw()), 'id' => (string) Str::uuid(), 'kind' => 'regalo']))->toThrow(QueryException::class);
 });
 
+it('keeps the contact phone of an account in E.164, or nothing', function (?string $phone, bool $accepted): void {
+    $create = fn (): BillingAccount => BillingAccount::factory()->create(['contact_phone' => $phone]);
+
+    if ($accepted) {
+        expect($create()->contact_phone)->toBe($phone);
+    } else {
+        expect($create)->toThrow(QueryException::class);
+    }
+})->with([
+    'Mexican' => ['+525512345678', true],
+    'of another country' => ['+14155552671', true],
+    'none' => [null, true],
+    'without its country' => ['5512345678', false],
+    'with spaces' => ['+52 55 1234 5678', false],
+]);
+
 it('refuses a charge of nothing or less, and a recurring one that ends before it starts', function (int $amount, ChargeKind $kind, string $chargeOn, ?string $endsOn): void {
     $subscription = Subscription::factory()->create();
 

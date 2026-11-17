@@ -1,4 +1,5 @@
 import AccountField from '@/components/billing/account-field';
+import PhoneField from '@/components/phone-field';
 import type { AccountDetail } from '@/types';
 
 type Errors = Partial<Record<string, string>>;
@@ -22,12 +23,11 @@ export default function AccountContactFields({
                     defaultValue={account?.contact_name}
                     error={errors['contact_name']}
                 />
-                <AccountField
+                <PhoneField
                     name="contact_phone"
+                    idPrefix="billing"
                     label="Teléfono del contacto"
-                    type="tel"
-                    maxLength={30}
-                    defaultValue={account?.contact_phone ?? ''}
+                    defaultValue={account?.contact_phone}
                     error={errors['contact_phone']}
                 />
             </div>

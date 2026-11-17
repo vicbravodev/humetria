@@ -24,7 +24,7 @@ trait SearchesText
     /**
      * @param  Builder<static>  $query
      * @param  non-empty-list<literal-string>  $columns  of the model's own table, written in the code
-     * @param  list<literal-string>  $phoneColumns  columns of digits: found by the digits typed, spaces and dashes aside
+     * @param  list<literal-string>  $phoneColumns  columns in E.164: found by the digits typed, spaces and dashes aside
      */
     public function scopeMatching(Builder $query, array $columns, string $search, array $phoneColumns = []): void
     {
@@ -34,7 +34,8 @@ trait SearchesText
             return;
         }
 
-        $digits = (string) preg_replace('/\D/', '', $search);
+        // A Mexican number typed the old way (+52 1, 044, 045) is looked for as it is stored: +52 and its 10 digits.
+        $digits = (string) preg_replace('/\A(?:521|04[45])(?=\d{10}\z)/', '52', (string) preg_replace('/\D/', '', $search));
 
         $query->where(function (Builder $match) use ($columns, $words, $phoneColumns, $digits): void {
             // Every word is somewhere...
