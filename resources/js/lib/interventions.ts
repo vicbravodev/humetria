@@ -229,3 +229,13 @@ export function byRisk<R extends { level: { value: string } | null }>(
 
     return rows.toSorted((a, b) => rank(a) - rank(b));
 }
+
+/** The errors of the last answer of the server, without those of the fields edited since: a corrected field says nothing. */
+export function unfixedErrors(
+    errors: Partial<Record<string, string>>,
+    edited: string[],
+): Partial<Record<string, string>> {
+    return Object.fromEntries(
+        Object.entries(errors).filter(([field]) => !edited.includes(field)),
+    );
+}

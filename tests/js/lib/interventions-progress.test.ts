@@ -3,6 +3,7 @@ import {
     coverageText,
     requirementText,
     rowStateVariant,
+    unfixedErrors,
 } from '@/lib/interventions';
 
 describe('rowStateVariant', () => {
@@ -59,5 +60,20 @@ describe('requirementText', () => {
                 detail: '3 de 3 filas',
             }),
         ).toBe('Hecha · 3 de 3 filas');
+    });
+});
+
+describe('unfixedErrors', () => {
+    it('drops the error of a field edited since the server answered, and keeps the rest', () => {
+        const errors = {
+            description: 'Falta',
+            due_on: 'Falta',
+            title: 'Falta',
+        };
+
+        expect(unfixedErrors(errors, ['description', 'due_on'])).toEqual({
+            title: 'Falta',
+        });
+        expect(unfixedErrors(errors, [])).toEqual(errors);
     });
 });
