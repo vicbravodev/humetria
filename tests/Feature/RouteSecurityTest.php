@@ -19,6 +19,7 @@ function publicRouteNames(): array
     return [
         'home', // landing page
         'privacy-notice', // guest: el aviso de privacidad del sitio; texto fijo, sin datos de nadie
+        'roadmap', // guest: lo que Humetría planea agregar; texto fijo, sin datos de nadie
         'films.show', // guest: the films of the landing page, served with byte ranges so a chapter can jump inside one; only files named humetria-*.mp4|webm that exist in public/video, anything else is a 404
         'demo-requests.store', // landing demo form; throttled + honeypot
         'demo.door', // guest: la puerta de una demostración en vivo (el QR que escanea el público); el código aleatorio de una sesión que abrió la consola y que vence es la credencial; solo entrega trabajadores de la empresa demo y redirige a un enlace de un solo uso de WorkerAccess (/me/{slug}/link/{token}) emitido como la jefa de RH de la demo; un código cerrado, vencido, desconocido o de otra empresa da la misma página; throttled por dirección
