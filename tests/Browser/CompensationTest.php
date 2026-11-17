@@ -603,7 +603,7 @@ it('reads the start date of a scenario in one line beside the retroactive and th
     $page = visit("{$url}/compensation/scenarios/create")->assertSee('Vigente desde');
 
     resizeTo($page, 1440)
-        ->assertScript('() => { const field = document.getElementById("scenario-effective_on"); return field.querySelector("span").getBoundingClientRect().height < field.getBoundingClientRect().height - 8; }', true)
+        ->assertScript('() => { const field = document.getElementById("scenario-effective_on"); return field.value !== "" && field.scrollWidth <= field.clientWidth; }', true)
         ->assertNoJavaScriptErrors();
 });
 
