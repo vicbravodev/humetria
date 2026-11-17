@@ -1,14 +1,17 @@
-import { Link } from '@inertiajs/react';
-import { KeyRound } from 'lucide-react';
-import HomeSections from '@/components/worker-access/home-sections';
-import LeaveButton from '@/components/worker-access/leave-button';
+import { useState } from 'react';
+import HomeAccount from '@/components/worker-access/home-account';
+import HomePending from '@/components/worker-access/home-pending';
+import HomeStart from '@/components/worker-access/home-start';
+import PortalTabBar from '@/components/worker-access/portal-tab-bar';
+import type { PortalTab } from '@/components/worker-access/portal-tab-bar';
 import WorkerFrame from '@/components/worker-access/worker-frame';
-import PersonHeading from '@/components/humetria/person-heading';
-import ToneTile from '@/components/humetria/tone-tile';
-import { Button } from '@/components/ui/button';
+import { pendingTotal, splitSections } from '@/lib/worker-access/portal';
 import type { WorkerSection } from '@/types';
 
-/** The person's start: who they are, the tools their company has for them, a key for this device when they may add one, and «Salir». */
+/**
+ * The person's portal (findings 3 and 29): three tabs, the same for everyone. Inicio, with what waits for them first; Pendientes,
+ * what waits across their tools; Cuenta, their key for this device and «Salir». Each tab fades in as it opens.
+ */
 export default function HomeScreen({
     company,
     name,
@@ -24,35 +27,45 @@ export default function HomeScreen({
     hasKey: boolean;
     leaveUrl: string;
 }) {
+    const [tab, setTab] = useState<PortalTab>('start');
+    const { waiting, tools } = splitSections(sections);
+    const pending = tab === 'pending' && waiting.length === 0;
+
     return (
-        <WorkerFrame company={company} actions={<LeaveButton url={leaveUrl} />}>
-            <PersonHeading title={`Hola, ${name}`}>
-                Este es su portal de {company}. Al terminar, toque «Salir»,
-                sobre todo en un dispositivo compartido.
-            </PersonHeading>
-            <HomeSections sections={sections} />
-            {keyUrl !== null && (
-                <section className="flex flex-col items-start gap-3 card p-5">
-                    <ToneTile icon={KeyRound} />
-                    <p className="text-xl leading-7 font-semibold">
-                        {hasKey
-                            ? 'Agregue este dispositivo'
-                            : 'Entre más rápido la próxima vez'}
-                    </p>
-                    <p className="text-base text-muted-foreground">
-                        {hasKey
-                            ? 'Ya tiene una llave en otro dispositivo. Cree una aquí para entrar también con su huella en este.'
-                            : 'Cree una llave de acceso en este dispositivo y entre con su huella, sin esperar un correo.'}
-                    </p>
-                    <Button asChild variant="outline" size="lg">
-                        <Link href={keyUrl}>
-                            {hasKey
-                                ? 'Agregar una llave aquí'
-                                : 'Crear una llave aquí'}
-                        </Link>
-                    </Button>
-                </section>
-            )}
+        <WorkerFrame
+            company={company}
+            centered={pending}
+            bar={
+                <PortalTabBar
+                    current={tab}
+                    pending={pendingTotal(sections)}
+                    onSelect={setTab}
+                />
+            }
+        >
+            <div
+                key={tab}
+                className="flex w-full animate-in flex-col gap-6 duration-200 ease-out fade-in"
+            >
+                {tab === 'start' && (
+                    <HomeStart
+                        company={company}
+                        name={name}
+                        waiting={waiting}
+                        tools={tools}
+                    />
+                )}
+                {tab === 'pending' && <HomePending waiting={waiting} />}
+                {tab === 'account' && (
+                    <HomeAccount
+                        company={company}
+                        name={name}
+                        keyUrl={keyUrl}
+                        hasKey={hasKey}
+                        leaveUrl={leaveUrl}
+                    />
+                )}
+            </div>
         </WorkerFrame>
     );
 }

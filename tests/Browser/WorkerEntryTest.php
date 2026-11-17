@@ -51,18 +51,24 @@ it('opens a link with «Continuar», and its start names the person', function (
         ->assertSee('Su enlace está listo')
         ->assertNoAccessibilityIssues(1);
 
-    $page->press('Continuar')->waitForText('Hola, Ana López')->assertSee('Salir');
+    $page->press('Continuar')->waitForText('Hola, Ana López')->assertSee('Cuenta');
 })->with([
     'light desktop' => [false, false],
     'dark mobile' => [true, true],
 ]);
 
-it('shows the start with the session open, and «Salir» leaves no name behind', function (bool $dark, bool $mobile): void {
+it('shows the start with the session open, its three tabs, and «Salir» in Cuenta leaves no name behind', function (bool $dark, bool $mobile): void {
     anaLink('home-token', requested: true);
 
     $page = visitPage('worker-access/home', '/me/acme/link/home-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('Hola, Ana López'))
+        ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Inicio')
+        ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Pendientes')
+        ->assertDontSee('Salir')
+        ->assertScript(spilledOut(), '')
         ->assertNoAccessibilityIssues(1);
 
+    $page->press('Pendientes')->waitForText('Está al día')->assertScript(settled(), true)->assertNoAccessibilityIssues(1);
+    $page->press('Cuenta')->waitForText('Su cuenta')->assertSee('Ana López')->assertScript(settled(), true)->assertNoAccessibilityIssues(1);
     $page->press('Salir')->waitForText('Entre a su portal')->assertDontSee('Ana López');
 })->with([
     'light desktop' => [false, false],
