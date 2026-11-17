@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import GuideList from '@/components/campaigns/survey/guide-list';
+import GuideSent from '@/components/campaigns/survey/guide-sent';
 import SurveyActions from '@/components/campaigns/survey/survey-actions';
 import SurveyIntro from '@/components/campaigns/survey/survey-intro';
 import SurveyRunner from '@/components/campaigns/survey/survey-runner';
@@ -10,7 +11,7 @@ import type { CampaignKind, SurveyInstrument } from '@/types';
 
 /**
  * The norm's presentation with the person's guides (sent or pending), then the next pending guide. Remounted after
- * each guide is sent, so the person sees it marked "Enviada" before going on.
+ * each guide is sent: then it opens on the confirmation of the guide just sent, never when the person comes back later.
  */
 export default function SurveyFlow({
     token,
@@ -20,6 +21,8 @@ export default function SurveyFlow({
     copy,
     instruments,
     next,
+    justSent,
+    onSent,
 }: {
     token: string;
     company: string;
@@ -28,23 +31,41 @@ export default function SurveyFlow({
     copy: IntroCopy;
     instruments: SurveyInstrument[];
     next: SurveyInstrument;
+    /** The guide the person sent on this page a moment ago, if any. */
+    justSent: string | null;
+    onSent: (instrument: string) => void;
 }) {
-    const [started, setStarted] = useState(false);
-    const answered = instruments.some(
+    const sent = instruments.filter(
         (instrument) => instrument.status === 'completed',
     );
-    const pending = instruments.filter(
-        (instrument) => instrument.status === 'pending',
-    ).length;
+    const confirmed = sent.find((instrument) => instrument.key === justSent);
+    const [view, setView] = useState<'sent' | 'intro' | 'guide'>(
+        confirmed === undefined ? 'intro' : 'sent',
+    );
+    const pending = instruments.length - sent.length;
 
-    if (started) {
+    if (view === 'guide') {
         return (
             <SurveyRunner
                 token={token}
                 instruments={instruments}
                 instrument={next}
                 noun={copy.noun}
-                onBack={() => setStarted(false)}
+                onBack={() => setView('intro')}
+                onSent={onSent}
+            />
+        );
+    }
+
+    if (view === 'sent' && confirmed !== undefined) {
+        return (
+            <GuideSent
+                sent={confirmed}
+                next={next}
+                done={sent.length}
+                total={instruments.length}
+                onContinue={() => setView('guide')}
+                onLater={() => setView('intro')}
             />
         );
     }
@@ -67,9 +88,9 @@ export default function SurveyFlow({
                 <Button
                     size="lg"
                     className="h-14 w-full rounded-[10px] text-[1.0625rem]"
-                    onClick={() => setStarted(true)}
+                    onClick={() => setView('guide')}
                 >
-                    {answered
+                    {sent.length > 0
                         ? `Continuar con la ${copy.noun === 'guía' ? next.shortTitle : copy.noun}`
                         : 'Comenzar'}
                 </Button>

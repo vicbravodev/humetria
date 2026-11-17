@@ -84,9 +84,41 @@ it('asks Guía I section I on one screen: the sentence of the norm and its six e
         ->assertScript('() => [...document.querySelectorAll("main fieldset label")].every((option) => option.getBoundingClientRect().height >= 44)', true)
         ->assertButtonDisabled('Enviar respuestas');
 
+    // The six events are long: «Anterior» and the main button stay at the foot of the screen while the person reads.
+    $page->assertScript('() => { const button = [...document.querySelectorAll("button")].find((it) => it.textContent.includes("Enviar respuestas")); const box = button.getBoundingClientRect(); return box.bottom <= window.innerHeight && box.bottom > window.innerHeight - 100; }', true);
+
     $page->script(ANSWER_SCREEN);
     $page->assertButtonEnabled('Enviar respuestas');
 })->with(['light' => false, 'dark' => true]);
+
+// Between guides: the guide just sent is confirmed, with what is left and the choice to go on or come back later.
+it('confirms a guide just sent with what is left, and goes on to the next one or back to the list', function (bool $dark): void {
+    invitedPerson(['nom035.guide-i', 'nom035.guide-iii']);
+
+    $page = visitPage('campaigns/survey', '/survey/the-token', $dark, true, function ($page): void {
+        $page->click('Comenzar')->click('Empezar');
+        answerGuide($page);
+    })
+        ->assertSee('Guía I enviada')
+        ->assertSee('Gracias. Le falta la Guía III, de unos 15 minutos. Puede seguir ahora o volver después con este mismo enlace.')
+        ->assertScript('() => document.querySelector("main [data-slot=arc-meter]").getAttribute("aria-label")', '1 de 2 guías enviadas')
+        ->assertSee('Seguir después');
+
+    $page->click('Seguir después')
+        ->assertSee('Enviada')
+        ->assertSee('Continuar con la Guía III')
+        ->click('Continuar con la Guía III')
+        ->assertSee('anónima');
+})->with(['light' => false, 'dark' => true]);
+
+it('opens the list, not the confirmation, when the person comes back with the link after sending a guide', function (): void {
+    invitedPerson(['nom035.guide-i', 'nom035.guide-iii']);
+    ParticipantInstrument::query()->withoutGlobalScopes()->where('instrument', 'nom035.guide-i')->update(['status' => 'completed', 'completed_at' => now()]);
+
+    visit('/survey/the-token')->on()->mobile()
+        ->assertSee('Continuar con la Guía III')
+        ->assertDontSee('Guía I enviada');
+});
 
 it('explains a link that does not work, naming no company', function (bool $dark, bool $mobile): void {
     invitedPerson();
@@ -148,7 +180,7 @@ it('lets the employee answer Guía I and Guía II from the phone, one question p
 
     answerGuide($page);
 
-    $page->assertSee('Enviada')
+    $page->assertSee('Guía I enviada')
         ->click('Continuar con la Guía II')
         ->assertSee('anónima')
         ->click('Empezar')

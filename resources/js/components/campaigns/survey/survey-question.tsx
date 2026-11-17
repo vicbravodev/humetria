@@ -33,7 +33,7 @@ export default function SurveyQuestion({
         <div
             className={cn(
                 'md:py-6 md:[&+&]:border-t',
-                paired && 'pt-3.5 [&+&]:border-t md:pt-5 md:pb-0',
+                paired && 'pt-3.5 md:pt-5 md:pb-0 [&+&]:border-t',
             )}
         >
             <fieldset className="flex flex-col gap-2.5 md:gap-3.5">

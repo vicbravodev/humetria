@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, IdCard, Lock } from 'lucide-react';
+import SurveyActions from '@/components/campaigns/survey/survey-actions';
 import { Button } from '@/components/ui/button';
 import type { IntroCopy } from '@/lib/survey';
 import { cn } from '@/lib/utils';
@@ -67,25 +68,27 @@ export default function GuideIntro({
                 Sus respuestas se guardan en este equipo hasta que las envíe. Si
                 el equipo es compartido, termine en una sola sesión.
             </p>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <Button
-                    variant="ghost"
-                    size="lg"
-                    className="px-3 text-[1.0625rem]"
-                    onClick={onBack}
-                >
-                    <ArrowLeft aria-hidden="true" />
-                    Anterior
-                </Button>
-                <Button
-                    size="lg"
-                    className="max-w-full min-w-40 rounded-[10px] text-[1.0625rem]"
-                    onClick={onStart}
-                >
-                    Empezar
-                    <ArrowRight aria-hidden="true" />
-                </Button>
-            </div>
+            <SurveyActions>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Button
+                        variant="ghost"
+                        size="lg"
+                        className="px-3 text-[1.0625rem]"
+                        onClick={onBack}
+                    >
+                        <ArrowLeft aria-hidden="true" />
+                        Anterior
+                    </Button>
+                    <Button
+                        size="lg"
+                        className="h-[3.25rem] max-w-full min-w-40 flex-1 rounded-[10px] text-[1.0625rem] md:h-10 md:flex-none"
+                        onClick={onStart}
+                    >
+                        Empezar
+                        <ArrowRight aria-hidden="true" />
+                    </Button>
+                </div>
+            </SurveyActions>
         </section>
     );
 }

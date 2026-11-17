@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import SurveyDone from '@/components/campaigns/survey/survey-done';
 import SurveyFlow from '@/components/campaigns/survey/survey-flow';
 import SurveyShell from '@/components/campaigns/survey/survey-shell';
@@ -31,6 +31,7 @@ export default function Survey({
         (instrument) => instrument.status === 'pending',
     );
     const copy = introCopy(kind ?? 'nom035_evaluation');
+    const [justSent, setJustSent] = useState<string | null>(null);
     const usable = unavailable === null && next !== undefined;
 
     // A link that no longer works leaves nothing of it behind on the device.
@@ -74,6 +75,8 @@ export default function Survey({
                     copy={copy}
                     instruments={instruments}
                     next={next}
+                    justSent={justSent}
+                    onSent={setJustSent}
                 />
             )}
         </SurveyShell>
