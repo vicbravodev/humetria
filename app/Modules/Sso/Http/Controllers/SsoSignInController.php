@@ -17,7 +17,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Laravel\Socialite\Two\InvalidStateException;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Sign-in with a company's own identity provider, for people who already have an account in it. Guests reach it, so every
@@ -27,11 +29,11 @@ final class SsoSignInController extends Controller
 {
     private const string GENERIC = 'No pudimos iniciar tu sesión con SSO. Si el problema sigue, pide ayuda a quien administra tu cuenta.';
 
-    public function discover(Request $request, FindSsoCompany $find): RedirectResponse
+    public function discover(Request $request, FindSsoCompany $find): RedirectResponse|Response
     {
         $slug = $find->handle($request->string('email')->toString());
 
-        return $slug === null ? $this->refused('unknown_domain', null) : to_route('sso.start', $slug);
+        return $slug === null ? $this->refused('unknown_domain', null) : Inertia::location(route('sso.start', $slug));
     }
 
     public function start(Request $request, #[RouteParameter('tenant')] string $company, CompanyRegistry $companies, OpenSsoSignIn $open, OidcProviders $providers): RedirectResponse
@@ -78,9 +80,18 @@ final class SsoSignInController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
-        $request->session()->put('sso.tenant_id', $tenantId);
+        $this->remember($request, $user->id, $tenantId);
 
         return redirect()->intended(route('tenant.dashboard', $companies->find($tenantId)->slug ?? ''));
+    }
+
+    /** Marks the company in this session, for this person only: what another person's sign-in left is dropped. */
+    private function remember(Request $request, int $userId, string $tenantId): void
+    {
+        $kept = $request->session()->get('sso.user_id') === $userId ? $request->session()->get('sso.tenants') : [];
+        $tenants = is_array($kept) ? array_values(array_filter($kept, is_string(...))) : [];
+
+        $request->session()->put(['sso.user_id' => $userId, 'sso.tenants' => array_values(array_unique([...$tenants, $tenantId]))]);
     }
 
     private function refused(string $reason, ?string $tenantId): RedirectResponse

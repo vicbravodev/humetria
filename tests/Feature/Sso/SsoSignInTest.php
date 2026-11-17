@@ -72,7 +72,7 @@ it('signs in the member of the company whose provider vouches for their email', 
     ssoCallback($tenant)->assertRedirect(route('tenant.dashboard', 'acme'));
 
     $this->assertAuthenticatedAs($member);
-    expect(session('sso.tenant_id'))->toBe($tenant->id)
+    expect(session('sso.tenants'))->toBe([$tenant->id])->and(session('sso.user_id'))->toBe($member->id)
         ->and(AuditEntry::query()->where('event', 'sso.signed_in')->where('tenant_id', $tenant->id)->where('actor_id', $member->id)->count())->toBe(1);
     Log::shouldHaveReceived('info')->withArgs(fn (string $event, array $context): bool => $event === 'sso.signed_in' && ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'rh@acme.mx'))->once();
 });
