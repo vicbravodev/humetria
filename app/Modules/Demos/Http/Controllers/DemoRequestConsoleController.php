@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Demos\Actions\ExportAdConversions;
 use App\Modules\Demos\Actions\ListDemoRequests;
 use App\Modules\Demos\Actions\UpdateDemoRequest;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Http\Requests\UpdateDemoRequestRequest;
 use App\Modules\Demos\Models\DemoRequest;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class DemoRequestConsoleController extends Controller
 {
@@ -50,6 +53,19 @@ final class DemoRequestConsoleController extends Controller
                 'received_at' => str_replace('.', '', $demoRequest->created_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY, HH:mm')),
             ]),
         ]);
+    }
+
+    /** The click conversions for Google Ads, as a CSV to upload by hand. */
+    public function adConversions(ExportAdConversions $export): StreamedResponse
+    {
+        Gate::authorize('view-demo-requests');
+
+        $csv = $export->handle();
+        $day = CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString();
+
+        return response()->streamDownload(function () use ($csv): void {
+            echo $csv;
+        }, "conversiones-google-ads-{$day}.csv", ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function update(UpdateDemoRequestRequest $request, DemoRequest $demoRequest, UpdateDemoRequest $updateDemoRequest): RedirectResponse
