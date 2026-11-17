@@ -39,11 +39,21 @@ function invitingCompany(bool $closing = true): Tenant
 
 /**
  * The browser forgets what the person declined and moves its clock `$seconds` ahead of the page's arrival. The bubble
- * counts from when it was drawn: wait for it before moving the clock.
+ * counts from when it was drawn: wait for it (`bubbleArrived()`) before moving the clock.
  */
 function aheadBy(int $seconds): string
 {
     return "() => { if (!window.humiAhead) { localStorage.clear(); sessionStorage.clear(); const real = Date.now.bind(Date); window.humiAhead = 0; Date.now = () => real() + window.humiAhead; } window.humiAhead = {$seconds} * 1000; return 'ahead'; }";
+}
+
+/**
+ * The bubble took the time of its arrival and read what it may say. React mounts it after `load` (and later on a busy
+ * runner): a clock moved before that becomes its arrival, and the minute starts over. The time is taken in the same
+ * pass of effects that asks the server for the facts, so the facts having come back proves it was taken.
+ */
+function bubbleArrived(): string
+{
+    return eventually("() => performance.getEntriesByType('resource').some((entry) => new URL(entry.name).pathname.endsWith('/assistant/facts'))");
 }
 
 function invitationShows(): string
@@ -61,6 +71,7 @@ it('invites after a minute on the page of campaigns with what is real there, wit
     invitingCompany();
 
     visitPage('campaigns/index', '/admin/acme/campaigns', $dark, $mobile, fn ($page) => $page
+        ->assertScript(bubbleArrived(), true)
         ->assertScript(aheadBy(61), 'ahead')
         ->assertScript(invitationShows(), true)
         ->assertSee('y faltan 3 cuestionarios')
@@ -82,7 +93,7 @@ it('does not invite on the page of campaigns with nothing real to say', function
     invitingCompany(closing: false);
 
     // A window to see that something does not happen: the bubble asks itself every second.
-    visit('/admin/acme/campaigns')->assertPresent('[aria-label="Abrir a Humi"]')->assertScript(aheadBy(61), 'ahead')
+    visit('/admin/acme/campaigns')->assertPresent('[aria-label="Abrir a Humi"]')->assertScript(bubbleArrived(), true)->assertScript(aheadBy(61), 'ahead')
         ->wait(2)->assertScript('() => document.querySelector(\'[data-testid="humi-invitation-timer"]\') === null', true);
 });
 
@@ -91,7 +102,7 @@ it('does not invite on a page that does not invite, nor before a minute', functi
 
     visit('/admin/acme')->assertPresent('[aria-label="Abrir a Humi"]')->assertScript(aheadBy(61), 'ahead')
         ->wait(2)->assertScript('() => document.querySelector(\'[data-testid="humi-invitation-timer"]\') === null', true);
-    visit('/admin/acme/campaigns')->assertPresent('[aria-label="Abrir a Humi"]')->assertScript(aheadBy(30), 'ahead')
+    visit('/admin/acme/campaigns')->assertPresent('[aria-label="Abrir a Humi"]')->assertScript(bubbleArrived(), true)->assertScript(aheadBy(30), 'ahead')
         ->wait(2)->assertScript('() => document.querySelector(\'[data-testid="humi-invitation-timer"]\') === null', true);
 });
 
@@ -100,6 +111,7 @@ it('opens Humi with the question of the page written and not sent, and does not 
 
     $page = visit('/admin/acme/campaigns')
         ->assertPresent('[aria-label="Abrir a Humi"]')
+        ->assertScript(bubbleArrived(), true)
         ->assertScript(aheadBy(61), 'ahead')
         ->assertScript(invitationShows(), true)
         ->click('Preguntarle a Humi')
@@ -119,6 +131,7 @@ it('closes by itself when its bar ends, stops the bar while the focus is on it, 
 
     $page = visit('/admin/acme/campaigns')
         ->assertPresent('[aria-label="Abrir a Humi"]')
+        ->assertScript(bubbleArrived(), true)
         ->assertScript(aheadBy(61), 'ahead')
         ->assertScript(invitationShows(), true)
         ->assertScript($focus, true)
@@ -141,6 +154,7 @@ it('turns the suggestions off with «No volver a sugerir», says where they turn
 
     visit('/admin/acme/campaigns')
         ->assertPresent('[aria-label="Abrir a Humi"]')
+        ->assertScript(bubbleArrived(), true)
         ->assertScript(aheadBy(61), 'ahead')
         ->assertScript(invitationShows(), true)
         ->click('No volver a sugerir')
