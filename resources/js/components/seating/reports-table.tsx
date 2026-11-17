@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import type { Paginated, SeatReportRow } from '@/types';
 
-/** The reports of damaged seats of a center: what was said, where, when, and how it was resolved (or the form to say so). */
+/** The reports of damaged seats of a center: what was said, when, and how it was resolved (or the form to say so). */
 export default function ReportsTable({
     reports,
     open,
@@ -44,7 +44,6 @@ export default function ReportsTable({
                 <TableHeader>
                     <TableRow>
                         <TableHead>Reporte</TableHead>
-                        <TableHead>Puesto</TableHead>
                         <TableHead>Fecha</TableHead>
                         <TableHead>
                             {open ? 'Resolver' : 'Resolución'}
@@ -57,7 +56,6 @@ export default function ReportsTable({
                             <TableCell className="max-w-sm whitespace-normal">
                                 {report.description}
                             </TableCell>
-                            <TableCell>{report.positionName ?? '—'}</TableCell>
                             <TableCell>
                                 {shortDate(report.reportedOn)}
                             </TableCell>

@@ -15,13 +15,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * The report of a damaged seat. From the portal it is tied to a center and a position and to nobody: the person who reports does not have to be known. Open until RH resolves it.
+ * The report of a damaged seat. From the portal it is tied to a center and to nobody: neither the person who reports nor their position is kept. Open until RH resolves it.
  *
  * @property string $id
  * @property string $tenant_id
  * @property string $work_center_id
  * @property string|null $seat_id
- * @property string|null $position_id
  * @property string $description
  * @property ReportStatus $status
  * @property string|null $resolution
@@ -30,7 +29,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'work_center_id', 'seat_id', 'position_id', 'description', 'status', 'resolution', 'resolved_at', 'reported_via_portal'])]
+#[Fillable(['tenant_id', 'work_center_id', 'seat_id', 'description', 'status', 'resolution', 'resolved_at', 'reported_via_portal'])]
 #[UseFactory(SeatReportFactory::class)]
 final class SeatReport extends Model
 {

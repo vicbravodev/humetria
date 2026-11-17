@@ -7,13 +7,9 @@ namespace App\Modules\Seating\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Instruments\Contracts\SeatingAssessment;
 use App\Modules\Seating\Actions\SubmitPersonInput;
-use App\Modules\Seating\Enums\AssessmentStatus;
-use App\Modules\Seating\Enums\MeasureStatus;
 use App\Modules\Seating\Http\Requests\PersonInputRequest;
 use App\Modules\Seating\Models\PersonInput;
-use App\Modules\Seating\Models\PreventiveMeasure;
-use App\Modules\Seating\Models\RiskAcknowledgment;
-use App\Modules\Seating\Models\RiskAssessment;
+use App\Modules\Seating\Support\PortalAssessment;
 use App\Modules\Seating\Support\PrivacyNotice;
 use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use Illuminate\Http\RedirectResponse;
@@ -22,35 +18,37 @@ use Inertia\Response;
 use LogicException;
 
 /**
- * The Ley Silla page of the person of the session, in their pages. The person sees only their own answer.
+ * The Ley Silla pages of the person of the session (finding 13): the list of their tasks, and the two questions on a page of
+ * their own. The person sees only their own answer; neither page names them.
  */
 final class PortalController extends Controller
 {
-    public function show(string $tenant, WorkerSession $session, SeatingAssessment $assessment): Response
+    public function show(string $tenant, WorkerSession $session): Response
     {
         $person = $session->current() ?? abort(404);
-        $last = PersonInput::query()->where('employee_id', $person->employeeId)->latest('submitted_at')->first(['submitted_at']);
-        $zone = config()->string('app.display_timezone');
-        $current = RiskAssessment::query()->where('employee_id', $person->employeeId)->where('status', AssessmentStatus::Signed)->latest('signed_at')->first();
-        $confirmed = $current === null ? null : RiskAcknowledgment::query()->where('assessment_id', $current->id)->first();
+        $assessment = new PortalAssessment($person->employeeId);
 
         return Inertia::render('seating/portal', [
             'slug' => $tenant,
             'company' => $person->companyName,
-            'name' => $person->personName,
+            'homeUrl' => route('worker.home', $tenant),
+            'pending' => $assessment->pending(),
+            'acknowledgedOn' => $assessment->acknowledgedOn(),
+            'sentOn' => $this->sentOn($person->employeeId),
+        ]);
+    }
+
+    public function answers(string $tenant, WorkerSession $session, SeatingAssessment $assessment): Response
+    {
+        $person = $session->current() ?? abort(404);
+
+        return Inertia::render('seating/portal-answers', [
+            'slug' => $tenant,
+            'company' => $person->companyName,
             'notice' => PrivacyNotice::text(),
             'footwear' => $this->condition($assessment, 'footwear'),
             'discomfort' => $this->condition($assessment, 'discomfort'),
-            'sentOn' => $last?->submitted_at->setTimezone($zone)->toDateString(),
-            // What the person is asked to confirm: the current signed assessment and its measures, until they do.
-            'acknowledgment' => $current === null || $confirmed !== null ? null : [
-                'assessmentId' => $current->id,
-                'level' => $current->level?->value,
-                'levelLabel' => $current->level?->label(),
-                'signedOn' => $current->signed_at?->setTimezone($zone)->toDateString(),
-                'measures' => $this->measuresOf($current),
-            ],
-            'acknowledgedOn' => $confirmed?->acknowledged_at->setTimezone($zone)->toDateString(),
+            'sentOn' => $this->sentOn($person->employeeId),
         ]);
     }
 
@@ -58,23 +56,16 @@ final class PortalController extends Controller
     {
         $person = $session->current() ?? abort(404);
         $submit->handle($person, $request->integer('footwear'), $request->integer('discomfort'), $request->note());
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Gracias. Recibimos sus respuestas.']);
 
-        return to_route('portal.seating.show', $tenant);
+        return to_route('portal.seating.answers', $tenant);
     }
 
-    /**
-     * The measures that apply to the person: those of their assessment and those of their position, without the cancelled ones.
-     *
-     * @return list<string>
-     */
-    private function measuresOf(RiskAssessment $assessment): array
+    /** The date of the person's last answer, if they ever sent one. */
+    private function sentOn(string $employeeId): ?string
     {
-        $kinds = PreventiveMeasure::query()->where('status', '!=', MeasureStatus::Cancelled)
-            ->where(fn ($query) => $query->where('assessment_id', $assessment->id)->orWhere(fn ($own) => $own->whereNull('assessment_id')->where('position_id', $assessment->position_id)))
-            ->orderBy('created_at')->get(['kind'])->map(fn (PreventiveMeasure $measure): string => $measure->kind->label());
+        $last = PersonInput::query()->where('employee_id', $employeeId)->latest('submitted_at')->first(['submitted_at']);
 
-        return array_values($kinds->unique()->all());
+        return $last?->submitted_at->setTimezone(config()->string('app.display_timezone'))->toDateString();
     }
 
     /**

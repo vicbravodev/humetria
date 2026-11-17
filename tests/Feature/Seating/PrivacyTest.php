@@ -100,4 +100,7 @@ it('keeps the tables of the survey and of the seat reports without a key to a pe
         expect($columns($table))->not->toContain('employee_id')->not->toContain('participant_id')->not->toContain('token')->not->toContain('token_hash')->not->toContain('invitation_id')
             ->and($references($table))->not->toContain('employees')->not->toContain('campaign_participants')->not->toContain('participants');
     }
+    // Nor the position of who reports a seat (finding 15): in a position of two or three people it would point at them.
+    expect($columns('seat_reports'))->not->toContain('position_id')
+        ->and($references('seat_reports'))->not->toContain('standing_positions');
 });

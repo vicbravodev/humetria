@@ -2,29 +2,32 @@ import { Form } from '@inertiajs/react';
 import type { FormComponentRef } from '@inertiajs/core';
 import { useRef, useState } from 'react';
 import InputError from '@/components/humetria/input-error';
+import PortalFrame from '@/components/seating/portal-frame';
 import PortalOffline from '@/components/seating/portal-offline';
 import PortalQuestion from '@/components/seating/portal-question';
 import PortalQuestionsNav from '@/components/seating/portal-questions-nav';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useResendWhenOnline } from '@/hooks/use-resend-when-online';
+import { show } from '@/routes/portal/seating';
 import { store } from '@/routes/portal/seating/inputs';
 import type { PortalCondition } from '@/types';
 
 /**
- * The two questions of the person's Ley Silla page (board LS-Portal), one at a time: the footwear, then the discomfort with
- * an optional note. It never moves on alone: «Siguiente» waits for an answer. The notice was accepted on the screen before.
- * Without a network, the answers stay in the page and go out when it is back.
+ * The two questions of the person's Ley Silla page (board SillaPregunta), one at a time: the footwear, then the discomfort
+ * with an optional note. It never moves on alone: «Siguiente» waits for an answer, stuck to the bottom with «Anterior». The
+ * notice was accepted on the screen before. The form wraps the whole frame, so the stuck buttons are its own. Without a network, the answers stay in the page and go out when it is back.
  */
 export default function PortalQuestions({
-    slug,
-    footwear,
-    discomfort,
+    page,
     onSent,
 }: {
-    slug: string;
-    footwear: PortalCondition;
-    discomfort: PortalCondition;
+    page: {
+        slug: string;
+        company: string;
+        footwear: PortalCondition;
+        discomfort: PortalCondition;
+    };
     onSent: () => void;
 }) {
     const [step, setStep] = useState<1 | 2>(1);
@@ -38,7 +41,7 @@ export default function PortalQuestions({
     return (
         <Form
             ref={form}
-            {...store.form(slug)}
+            {...store.form(page.slug)}
             options={{ preserveScroll: true }}
             onNetworkError={offline.failed}
             onSuccess={() => {
@@ -46,17 +49,32 @@ export default function PortalQuestions({
                 onSent();
             }}
             noValidate
-            className="flex flex-1 flex-col gap-6"
         >
             {({ processing, errors }) => (
-                <>
+                <PortalFrame
+                    company={page.company}
+                    privacy="identified"
+                    back={show.url(page.slug)}
+                    actions={
+                        <PortalQuestionsNav
+                            step={step}
+                            ready={
+                                step === 1
+                                    ? answered.footwear
+                                    : answered.discomfort
+                            }
+                            processing={processing}
+                            onStep={setStep}
+                        />
+                    }
+                >
                     <input type="hidden" name="accepted" value="1" />
                     {offline.waiting && <PortalOffline />}
                     <PortalQuestion
                         number={1}
                         question="¿Cómo es el calzado que usa para trabajar?"
                         name="footwear"
-                        condition={footwear}
+                        condition={page.footwear}
                         hidden={step !== 1}
                         error={errors['footwear']}
                         onChoose={() =>
@@ -68,7 +86,7 @@ export default function PortalQuestions({
                             number={2}
                             question="Al trabajar de pie, ¿ha sentido alguna molestia?"
                             name="discomfort"
-                            condition={discomfort}
+                            condition={page.discomfort}
                             hidden={false}
                             error={errors['discomfort']}
                             onChoose={() =>
@@ -87,15 +105,7 @@ export default function PortalQuestions({
                         </div>
                         <InputError message={errors['accepted']} />
                     </div>
-                    <PortalQuestionsNav
-                        step={step}
-                        ready={
-                            step === 1 ? answered.footwear : answered.discomfort
-                        }
-                        processing={processing}
-                        onStep={setStep}
-                    />
-                </>
+                </PortalFrame>
             )}
         </Form>
     );

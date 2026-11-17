@@ -28,7 +28,6 @@ final class SeatReportFactory extends Factory
             'tenant_id' => TenantFactory::new(),
             'work_center_id' => fn (array $attributes) => WorkCenterFactory::new()->state(['tenant_id' => $attributes['tenant_id']]),
             'seat_id' => null,
-            'position_id' => null,
             'description' => 'Una silla tiene el respaldo flojo.',
             'status' => ReportStatus::Open,
             'resolution' => null,

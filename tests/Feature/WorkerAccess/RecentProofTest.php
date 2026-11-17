@@ -96,6 +96,7 @@ it('asks for a recent proof on exactly the delicate pages and forms of the perso
         'portal.documents.acknowledge',
         'portal.equipment.respond',
         'portal.policy.acknowledge',
+        'portal.seating.acknowledgment',
         'portal.seating.acknowledgments.store',
         'portal.support.show',
         'portal.vacations.requests.store',

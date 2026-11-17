@@ -25,6 +25,14 @@ use Inertia\Response;
  */
 final class SeatReportController extends Controller
 {
+    /** The page to report a seat (finding 15): it names neither the person nor their position, only their company. */
+    public function create(string $tenant, WorkerSession $session): Response
+    {
+        $person = $session->current() ?? abort(404);
+
+        return Inertia::render('seating/portal-report', ['slug' => $tenant, 'company' => $person->companyName]);
+    }
+
     public function store(string $tenant, SeatReportRequest $request, WorkerSession $session, ReportSeat $report): RedirectResponse
     {
         $person = $session->current() ?? abort(404);

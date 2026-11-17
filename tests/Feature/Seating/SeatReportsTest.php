@@ -34,7 +34,16 @@ beforeEach(function (): void {
     CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $this->cora->id]);
 });
 
-it('takes the report of a damaged seat from the portal, tied to the center and the position and to nobody', function (): void {
+// Finding 15: the report is anonymous: its page names neither the person nor their position.
+it('opens the seat report on its own page with the company only', function (): void {
+    $response = $this->get(route('portal.seating.report', $this->slug))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('seating/portal-report')->where('slug', 'acme')->where('company', $this->tenant->trade_name));
+
+    expect(json_encode($response->viewData('page')['props']))->not->toContain('Ana Ruiz')->not->toContain('Cajera')->not->toContain($this->position->id);
+});
+
+it('takes the report of a damaged seat from the portal, tied to the center only: neither the person nor their position', function (): void {
     Log::spy();
 
     $this->post(route('portal.seating.reports.store', $this->slug), ['description' => 'Se le cayó el respaldo a la silla de la caja 2.'])
@@ -42,13 +51,13 @@ it('takes the report of a damaged seat from the portal, tied to the center and t
 
     $report = SeatReport::query()->sole();
     expect($report->work_center_id)->toBe($this->center->id)
-        ->and($report->position_id)->toBe($this->position->id)
         ->and($report->status->value)->toBe('open')
         ->and($report->reported_via_portal)->toBeTrue()
         ->and($report->resolution)->toBeNull()
-        ->and(array_keys($report->getAttributes()))->not->toContain('employee_id');
+        ->and(array_keys($report->getAttributes()))->not->toContain('employee_id')->not->toContain('position_id');
     Log::shouldHaveReceived('info')->with('seating.seat_reported', ['report_id' => $report->id, 'work_center_id' => $this->center->id])->once();
-    expect(auditContent(AuditEntry::query()->get()))->not->toContain('respaldo');
+    $audit = auditContent(AuditEntry::query()->get());
+    expect($audit)->not->toContain('respaldo')->not->toContain($this->ana->id)->not->toContain($this->position->id);
 });
 
 it('rejects an empty or too long description and a link that is not valid', function (): void {
@@ -60,13 +69,13 @@ it('rejects an empty or too long description and a link that is not valid', func
 });
 
 it('lets the committee and RH see the open reports of the center', function (TenantRole $role): void {
-    SeatReport::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'position_id' => $this->position->id, 'description' => 'Silla rota']);
+    SeatReport::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'description' => 'Silla rota']);
     SeatReport::factory()->resolved()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'description' => 'Ya arreglada']);
     $user = $role === TenantRole::Committee ? $this->cora : memberOf($this->tenant, $role);
 
     $this->actingAs($user)->get(route('tenant.seating.reports.index', [$this->tenant, $this->center->id]))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('seating/reports')->where('reports.total', 1)->where('reports.data.0.description', 'Silla rota')->where('reports.data.0.positionName', 'Cajera')
+        ->assertInertia(fn (Assert $page) => $page->component('seating/reports')->where('reports.total', 1)->where('reports.data.0.description', 'Silla rota')->missing('reports.data.0.positionName')
             ->where('status', 'open')->where('openCount', 1)->where('resolvedCount', 1));
     $this->get(route('tenant.seating.reports.index', [$this->tenant, $this->center->id, 'status' => 'resolved']))
         ->assertInertia(fn (Assert $page) => $page->where('reports.total', 1)->where('reports.data.0.description', 'Ya arreglada'));

@@ -1,28 +1,50 @@
+import { Link } from '@inertiajs/react';
 import { CircleCheck } from 'lucide-react';
+import PortalDone from '@/components/seating/portal-done';
+import PortalFrame from '@/components/seating/portal-frame';
 import { Button } from '@/components/ui/button';
-import { describeDate } from '@/lib/calendar-date';
+import { shortDate } from '@/lib/calendar-date';
+import { show } from '@/routes/portal/seating';
 
-/** After the two questions (board LS-Portal): it was sent, when, and what happens with it; the person may answer again. */
+/** After the two questions (board SillaEnviado): it was sent, when, and what happens with it; the person may change them. */
 export default function PortalSent({
+    slug,
+    company,
     sentOn,
     onAgain,
 }: {
+    slug: string;
+    company: string;
     sentOn: string;
     onAgain: () => void;
 }) {
     return (
-        <section className="flex flex-col items-start gap-3">
-            <CircleCheck aria-hidden className="size-10 text-primary" />
-            <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                Gracias, quedó enviado
-            </h1>
-            <p>
-                Nos contestó el {describeDate(sentOn) ?? sentOn}. La Comisión lo
-                tomará en cuenta en su evaluación.
-            </p>
-            <Button variant="outline" onClick={onAgain}>
-                Volver a contestar
-            </Button>
-        </section>
+        <PortalFrame
+            company={company}
+            privacy="identified"
+            centered
+            actions={
+                <>
+                    <Button
+                        className="h-14 w-full text-lg font-semibold"
+                        asChild
+                    >
+                        <Link href={show.url(slug)}>Volver a Ley Silla</Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        className="h-12 w-full text-lg font-medium text-primary"
+                        onClick={onAgain}
+                    >
+                        Cambiar mis respuestas
+                    </Button>
+                </>
+            }
+        >
+            <PortalDone icon={CircleCheck} title="Gracias, quedó enviado">
+                Nos contestó el {shortDate(sentOn)}. La Comisión lo tomará en
+                cuenta en su evaluación.
+            </PortalDone>
+        </PortalFrame>
     );
 }

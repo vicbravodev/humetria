@@ -33,6 +33,8 @@ it('says which pages carry their own frame', function (string $component, bool $
     ['privacy-notice', true],
     ['campaigns/survey', true],
     ['telework/portal', true],
+    ['seating/portal-acknowledgment', true],
+    ['seating/reports', false],
     ['telework/portal-checklist', true],
     ['leave/portal-team', true],
     ['complaints-public/form', true],
