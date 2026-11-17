@@ -26,6 +26,6 @@ final readonly class SupportWorkerSection implements WorkerSection
             return null;
         }
 
-        return new WorkerSectionLink('support', 'Apoyo', 'Un mensaje de su empresa sobre el apoyo que le ofrece. Es confidencial.', route('portal.support.show', $company->slug), 1);
+        return new WorkerSectionLink('support', 'Apoyo', 'Un mensaje confidencial', route('portal.support.show', $company->slug), 1);
     }
 }

@@ -26,6 +26,6 @@ final readonly class FeedbackWorkerSection implements WorkerSection
             return null;
         }
 
-        return new WorkerSectionLink('feedback', 'Retroalimentación de mi equipo', 'Lo que su equipo contestó sobre usted en la última encuesta.', route('portal.feedback.show', $company->slug));
+        return new WorkerSectionLink('feedback', 'Retroalimentación de mi equipo', 'Lo que su equipo dijo de usted', route('portal.feedback.show', $company->slug));
     }
 }

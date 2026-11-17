@@ -27,6 +27,6 @@ final readonly class PolicyWorkerSection implements WorkerSection
 
         $waiting = Acknowledgment::query()->where('employee_id', $person->employeeId)->whereNull('acknowledged_at')->count();
 
-        return $waiting === 0 ? null : new WorkerSectionLink('policy', 'Política por confirmar', 'Lea la política de su centro y confirme que la leyó.', route('portal.policy.show', $company->slug), $waiting);
+        return $waiting === 0 ? null : new WorkerSectionLink('policy', 'Política por confirmar', 'Léala y confirme que la leyó', route('portal.policy.show', $company->slug), $waiting);
     }
 }

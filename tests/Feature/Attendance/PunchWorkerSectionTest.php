@@ -38,7 +38,7 @@ it('offers «Marcar» to a person of a company with the registro de jornada, at 
     expect(startSections()['attendance'])->toBe([
         'key' => 'attendance',
         'label' => 'Marcar',
-        'description' => 'Marque su entrada y su salida, y vea su semana.',
+        'description' => 'Su entrada y su salida',
         'href' => route('attendance.device.punch.home', 'acme'),
         'pending' => null,
     ]);

@@ -28,6 +28,6 @@ final readonly class CenterWorkerSection implements WorkerSection
         $link = PageLink::query()->latest('version')->first();
         $url = $link === null || $link->status() !== PageLinkStatus::Active ? null : PageUrl::of($link, $this->roster->find($person->employeeId)?->workCenterId);
 
-        return $url === null ? null : new WorkerSectionLink('center', 'Avisos y resultados de su centro', 'La política, las medidas y los resultados que su empresa publica para su centro.', $url);
+        return $url === null ? null : new WorkerSectionLink('center', 'Avisos y resultados de su centro', 'Políticas, medidas y resultados', $url);
     }
 }

@@ -41,6 +41,6 @@ final readonly class SurveyWorkerSection implements WorkerSection
             return null;
         }
 
-        return new WorkerSectionLink('survey', 'Su evaluación NOM-035', 'Conteste la evaluación de su centro de trabajo. Sus respuestas sobre su trabajo son anónimas.', route('survey.show', $first->surveyToken()), $open->count());
+        return new WorkerSectionLink('survey', 'Su evaluación NOM-035', 'Es anónima', route('survey.show', $first->surveyToken()), $open->count());
     }
 }

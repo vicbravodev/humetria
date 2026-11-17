@@ -35,7 +35,7 @@ final readonly class TeleworkWorkerSection implements WorkerSection
         return new WorkerSectionLink(
             'telework',
             'Su teletrabajo',
-            $portal->teleworkerId === null ? 'Los documentos que su empresa le pidió confirmar.' : 'Sus pendientes y sus avisos: cambio de domicilio, riesgo de trabajo o alteración de sus condiciones.',
+            $portal->teleworkerId === null ? 'Documentos por confirmar' : 'Sus pendientes y sus avisos: cambio de domicilio, riesgo de trabajo o alteración de sus condiciones.',
             route('portal.telework.show', $this->companies->current()->slug),
             $waiting === 0 ? null : $waiting,
         );

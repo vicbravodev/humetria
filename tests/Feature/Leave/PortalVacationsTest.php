@@ -420,7 +420,7 @@ it('offers «Mis vacaciones» in the start of a company that uses Vacaciones, wi
         ->and($link?->href)->toBe(route('portal.vacations.show', $this->tenant->slug))
         ->and($link?->pending)->toBe(1)
         ->and(resolve(VacationsWorkerSection::class)->for($ana)?->pending)->toBeNull()
-        ->and(resolve(VacationsWorkerSection::class)->for($ana)?->description)->toBe('Su saldo de días, sus solicitudes y sus permisos.');
+        ->and(resolve(VacationsWorkerSection::class)->for($ana)?->description)->toBe('Sus días y solicitudes');
 
     LeaveSetting::query()->delete();
     expect(resolve(VacationsWorkerSection::class)->for($beto))->toBeNull();

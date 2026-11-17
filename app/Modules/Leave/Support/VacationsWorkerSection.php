@@ -30,7 +30,7 @@ final readonly class VacationsWorkerSection implements WorkerSection
         return new WorkerSectionLink(
             'vacations',
             'Mis vacaciones',
-            $waiting === 0 ? 'Su saldo de días, sus solicitudes y sus permisos.' : 'Su saldo, sus solicitudes y las de su equipo que esperan su respuesta.',
+            $waiting === 0 ? 'Sus días y solicitudes' : 'Su saldo, sus solicitudes y las de su equipo que esperan su respuesta.',
             route('portal.vacations.show', $company->slug),
             $waiting === 0 ? null : $waiting,
         );

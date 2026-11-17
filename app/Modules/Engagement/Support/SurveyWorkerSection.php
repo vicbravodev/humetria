@@ -48,6 +48,6 @@ final readonly class SurveyWorkerSection implements WorkerSection
 
         $label = $first->survey?->kind === SurveyKind::Pulse ? 'Pulso' : 'Encuesta de clima';
 
-        return new WorkerSectionLink('engagement', $label, 'Cuéntenos cómo está su trabajo. Es anónima: su empresa solo ve resultados de grupos.', route('engagement.survey.show', $first->surveyToken()), $open->count());
+        return new WorkerSectionLink('engagement', $label, 'Cuéntenos cómo está su trabajo', route('engagement.survey.show', $first->surveyToken()), $open->count());
     }
 }

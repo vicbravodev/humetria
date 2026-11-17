@@ -24,6 +24,6 @@ final readonly class TeamWorkerSection implements WorkerSection
             return null;
         }
 
-        return new WorkerSectionLink('team', 'Mi equipo', 'Su jefe directo, sus compañeros y quienes le reportan.', route('portal.team.show', $company->slug));
+        return new WorkerSectionLink('team', 'Mi equipo', 'Su jefe y sus compañeros', route('portal.team.show', $company->slug));
     }
 }
