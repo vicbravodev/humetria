@@ -137,12 +137,12 @@ it('lets only owner and RH copy, and finds no action of another company', functi
     expect(ProgramAction::query()->count())->toBe(1);
 });
 
-it('tells what the Tabla asks and what is covered, to everyone who reads the Programa', function (): void {
+it('tells what the Tabla asks and where each line stands, to everyone who reads the Programa', function (): void {
     $viewer = memberOf($this->tenant, TenantRole::Viewer);
 
     $this->actingAs($viewer)->get(route('tenant.campaigns.program', [$this->tenant, $this->campaign->id]))->assertInertia(fn (Assert $page) => $page
         ->where('program.requirements', fn ($lines) => collect($lines)->pluck('key')->all() === ['policy_review', 'policy_dissemination', 'analysis', 'awareness_campaign', 'specific_assessment']
-            && collect($lines)->firstWhere('key', 'policy_review')['status'] === 'covered'
+            && collect($lines)->firstWhere('key', 'policy_review')['status'] === 'in_progress'
             && collect($lines)->firstWhere('key', 'awareness_campaign')['status'] === 'missing'
             && collect($lines)->firstWhere('key', 'specific_assessment')['status'] === 'missing'));
 });

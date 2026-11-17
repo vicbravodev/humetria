@@ -10,7 +10,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { meterText, stateVariant } from '@/lib/interventions';
+import { coverageText, meterText, stateVariant } from '@/lib/interventions';
 import { program } from '@/routes/tenant/campaigns';
 import type { ProgramListRow } from '@/types';
 
@@ -56,10 +56,17 @@ export default function ProgramsTable({ rows }: { rows: ProgramListRow[] }) {
                                 </Badge>
                             )}
                         </TableCell>
-                        <TableCell>
-                            {row.program === null
-                                ? '—'
-                                : meterText(row.program.meter)}
+                        <TableCell className="whitespace-normal">
+                            {row.program === null ? (
+                                '—'
+                            ) : (
+                                <>
+                                    {meterText(row.program.meter)}
+                                    <p className="text-sm text-muted-foreground">
+                                        {coverageText(row.program.coverage)}
+                                    </p>
+                                </>
+                            )}
                         </TableCell>
                         <TableCell className="text-right">
                             {row.applies && (

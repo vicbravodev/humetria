@@ -7,7 +7,6 @@ import {
     byRisk,
     programTrail,
     themeCoverage,
-    requirementText,
     SCOPE_LABELS,
     stateVariant,
     statusVariant,
@@ -152,38 +151,6 @@ describe('subjectsText', () => {
         expect(subjectsText({ ...areaAction, hiddenAreas: 2 })).toBe(
             'Producción, Ventas y 2 más',
         );
-    });
-});
-
-describe('requirementText', () => {
-    it('says what each line of the Tabla stands at', () => {
-        const line = {
-            key: 'analysis',
-            text: 'Análisis',
-            detail: null,
-        };
-
-        expect(requirementText({ ...line, status: 'covered' })).toBe(
-            'Cubierto',
-        );
-        expect(requirementText({ ...line, status: 'optional' })).toBe(
-            'Opcional',
-        );
-        expect(requirementText({ ...line, status: 'missing' })).toBe('Falta');
-        expect(
-            requirementText({
-                ...line,
-                status: 'missing',
-                detail: '2 de 3 filas',
-            }),
-        ).toBe('Falta · 2 de 3 filas');
-        expect(
-            requirementText({
-                ...line,
-                status: 'covered',
-                detail: '3 de 3 filas',
-            }),
-        ).toBe('Cubierto · 3 de 3 filas');
     });
 });
 

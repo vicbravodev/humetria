@@ -14,6 +14,8 @@ final readonly class ProgramOutline
     /**
      * @param  array{done: int, total: int}  $meter  actions done of those not cancelled
      * @param  list<ProgramOutlineItem>  $items
+     * @param  array{covered: int, total: int}  $coverage  rows with an action not cancelled, of all the rows
+     * @param  int  $percent  the share of the work done: 100 only when the Programa is done
      */
     public function __construct(
         public string $state,
@@ -23,5 +25,7 @@ final readonly class ProgramOutline
         public ?string $responsible,
         public string $asOf,
         public array $items,
+        public array $coverage = ['covered' => 0, 'total' => 0],
+        public int $percent = 0,
     ) {}
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Interventions\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Interventions\Data\ActionData;
 use App\Modules\Interventions\Enums\ActionSubjects;
 use App\Modules\Interventions\Models\ActionArea;
@@ -21,7 +22,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class CopyAction
 {
-    public function __construct(private SaveAction $save) {}
+    public function __construct(private SaveAction $save, private RecordAudit $audit) {}
 
     /**
      * @param  list<string>  $itemIds  the rows to copy it to, of the same Programa and not its own
@@ -61,6 +62,7 @@ final readonly class CopyAction
                 professional: $source->professional,
             ), $userId), $itemIds);
             Log::info('intervention.action_copied', ['action_id' => $source->id, 'program_id' => $source->program_id, 'copies' => count($copies)]);
+            $this->audit->handle('interventions.action_copied', $source, ['action_id' => $source->id, 'program_id' => $source->program_id, 'copies' => array_map(fn (ProgramAction $copy): string => $copy->id, $copies)]);
 
             return $copies;
         });

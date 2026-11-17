@@ -62,20 +62,21 @@ final readonly class ResultsPages
     }
 
     /**
-     * Where the Programa de intervención stands, for the card of the results: its state and meter, or that it is asked for and
+     * Where the Programa de intervención stands, for the card of the results: its state, actions, rows with actions and share
+     * done (the numbers the page and the list read, criterio C-36), or that it is asked for and
      * not made yet. Nothing when the results ask for none (num. 8.3) or there are no figures to ask by (under the minimum).
      *
-     * @return array{exists: bool, state: array{value: string, label: string}|null, meter: array{done: int, total: int}|null}|null
+     * @return array{exists: bool, state: array{value: string, label: string}|null, meter: array{done: int, total: int}|null, coverage: array{covered: int, total: int}|null, percent: int|null}|null
      */
     private function programCard(CampaignRecord $campaign): ?array
     {
         $outline = $this->programs->forCampaign($campaign->id);
 
         if ($outline !== null) {
-            return ['exists' => true, 'state' => ['value' => $outline->stateKey, 'label' => $outline->state], 'meter' => $outline->meter];
+            return ['exists' => true, 'state' => ['value' => $outline->stateKey, 'label' => $outline->state], 'meter' => $outline->meter, 'coverage' => $outline->coverage, 'percent' => $outline->percent];
         }
 
-        return $this->risk->forCampaign($campaign)->needingProgram() === [] ? null : ['exists' => false, 'state' => null, 'meter' => null];
+        return $this->risk->forCampaign($campaign)->needingProgram() === [] ? null : ['exists' => false, 'state' => null, 'meter' => null, 'coverage' => null, 'percent' => null];
     }
 
     /**

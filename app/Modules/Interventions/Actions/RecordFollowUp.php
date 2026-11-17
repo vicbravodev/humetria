@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Interventions\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Interventions\Models\Program;
@@ -16,11 +17,12 @@ use Illuminate\Validation\ValidationException;
 /**
  * HR schedules the evaluation that follows the measures of a row and records it once done (num. 8.4 e, "en su caso"): a day,
  * what was found (text) and, if it exists, the closed evaluation of the same work center that came after this one. It is a
- * note with a date: nothing is compared automatically against the earlier evaluation.
+ * note with a date: nothing is compared automatically against the earlier evaluation. The audit trail keeps the days and
+ * the evaluation before and after; never the text of what was found.
  */
 final readonly class RecordFollowUp
 {
-    public function __construct(private CampaignRecords $campaigns) {}
+    public function __construct(private CampaignRecords $campaigns, private RecordAudit $audit) {}
 
     /**
      * @throws ValidationException
@@ -47,13 +49,19 @@ final readonly class RecordFollowUp
             throw ValidationException::withMessages($errors);
         }
 
-        $item->update([
-            'follow_up_due_on' => $dueOn,
-            'follow_up_done_on' => $doneOn,
-            'follow_up_result' => $text === '' ? null : $text,
-            'follow_up_campaign_id' => $evaluationId,
-        ]);
+        $before = ['follow_up_due_on' => $item->follow_up_due_on?->toDateString(), 'follow_up_done_on' => $item->follow_up_done_on?->toDateString(), 'follow_up_campaign_id' => $item->follow_up_campaign_id];
+        $after = ['follow_up_due_on' => $dueOn, 'follow_up_done_on' => $doneOn, 'follow_up_campaign_id' => $evaluationId];
+        $item->update([...$after, 'follow_up_result' => $text === '' ? null : $text]);
         Log::info('intervention.follow_up_recorded', ['item_id' => $item->id, 'program_id' => $program->id, 'done' => $doneOn !== null, 'with_evaluation' => $evaluationId !== null]);
+        $changes = [];
+
+        foreach ($after as $field => $value) {
+            if ($before[$field] !== $value) {
+                $changes[$field] = ['from' => $before[$field], 'to' => $value];
+            }
+        }
+
+        $this->audit->handle('interventions.follow_up_recorded', $item, ['item_id' => $item->id, 'program_id' => $program->id, 'changes' => $changes]);
 
         return $item;
     }
