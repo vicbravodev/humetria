@@ -27,6 +27,17 @@ describe('loadServerOptions', () => {
         );
     });
 
+    it('keeps the fields an option brings besides its value and label', async () => {
+        vi.stubGlobal(
+            'fetch',
+            respond([{ value: 'b1', label: 'Vales', unit: 'pesos' }]),
+        );
+
+        await expect(
+            loadServerOptions('/x', '', new AbortController().signal),
+        ).resolves.toEqual([{ value: 'b1', label: 'Vales', unit: 'pesos' }]);
+    });
+
     it('keeps the query a route already carries', async () => {
         const fetch = respond([]);
         vi.stubGlobal('fetch', fetch);
