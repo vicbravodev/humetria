@@ -1,3 +1,4 @@
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -226,4 +227,81 @@ function RangeCalendar({
   )
 }
 
-export { DayCalendar, PickerButton, PickerProblem, PickerSheet, PickerText, RangeCalendar }
+const monthShort = new Intl.DateTimeFormat("es-MX", { month: "short" })
+const monthLong = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" })
+const monthKey = (year: number, month: number) => `${year}-${String(month + 1).padStart(2, "0")}`
+
+/**
+ * The twelve months of a year to pick one from (Y-m), with buttons to go a year back or ahead. It opens on the chosen
+ * month's year, or today's; the months outside `min` and `max` are closed. The arrows move between months.
+ */
+function MonthGrid({
+  value,
+  min,
+  max,
+  onPick,
+}: {
+  value: string
+  min?: string | undefined
+  max?: string | undefined
+  onPick: (month: string) => void
+}) {
+  const [year, setYear] = React.useState(() => Number(/^\d{4}/.exec(value)?.[0] ?? new Date().getFullYear()))
+  const months = Array.from({ length: 12 }, (_, month) => monthKey(year, month))
+  const closed = (key: string) => (min !== undefined && key < min) || (max !== undefined && key > max)
+  // The month the keyboard is on takes the tab stop, so Tab comes back to it.
+  const [active, setActive] = React.useState<string | undefined>(undefined)
+  const target = [active, value].find((key) => key !== undefined && months.includes(key) && !closed(key)) ?? months.find((key) => !closed(key))
+  const move = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const steps: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 }
+    const step = steps[event.key]
+    const from = event.target instanceof HTMLElement ? event.target.dataset["pick"] : undefined
+
+    if (step === undefined || from === undefined) {
+      return
+    }
+
+    event.preventDefault()
+    const next = months[months.indexOf(from) + step]
+
+    if (next !== undefined && !closed(next)) {
+      event.currentTarget.querySelector<HTMLElement>(`[data-pick="${next}"]`)?.focus()
+    }
+  }
+
+  return (
+    <div data-slot="month-grid" className="flex w-[308px] flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <PickerButton label="Año anterior" icon={<ChevronLeftIcon aria-hidden className="size-5" />} onClick={() => setYear(year - 1)} />
+        <p aria-live="polite" className="text-base font-semibold tabular-nums">
+          {year}
+        </p>
+        <PickerButton label="Año siguiente" icon={<ChevronRightIcon aria-hidden className="size-5" />} onClick={() => setYear(year + 1)} />
+      </div>
+      <div className="grid grid-cols-3 gap-1" onKeyDown={move}>
+        {months.map((key, month) => (
+          <button
+            key={key}
+            type="button"
+            data-pick={key}
+            tabIndex={key === target ? 0 : -1}
+            disabled={closed(key)}
+            aria-pressed={key === value}
+            aria-label={monthLong.format(new Date(year, month, 1))}
+            onFocus={() => setActive(key)}
+            onClick={() => onPick(key)}
+            className={cn(
+              "h-11 rounded-md text-base transition-[color,background-color] duration-150 ease-out hover:bg-accent disabled:pointer-events-none disabled:opacity-40",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+              "aria-pressed:bg-primary aria-pressed:font-medium aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
+            )}
+          >
+            {monthShort.format(new Date(year, month, 1)).replace(".", "").replace(/^./, (letter) => letter.toUpperCase())}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export { DayCalendar, MonthGrid, PickerButton, PickerProblem, PickerSheet, PickerText, RangeCalendar }
