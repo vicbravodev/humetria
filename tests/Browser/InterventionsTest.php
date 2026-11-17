@@ -235,7 +235,7 @@ it('stacks the two dates inside the side panel, without a sideways scroll, and g
 
     $page->click('[aria-label="Opciones de Revisar la política"]')
         ->click('Editar')
-        ->assertSee('10 de marzo de 2027')
+        ->assertValue('#action-starts', '10/03/2027')
         // In a panel of 520 px the written day does not fit two to a row: the due day goes under the start.
         ->assertScript("(() => { const start = document.getElementById('action-starts').getBoundingClientRect(); const due = document.getElementById('action-due').getBoundingClientRect(); return due.top >= start.bottom && Math.abs(due.left - start.left) < 1; })()", true)
         ->assertScript("(() => { let box = document.getElementById('action-due').parentElement; while (box !== document.body && box.scrollHeight <= box.clientHeight) { box = box.parentElement; } return box.scrollWidth <= box.clientWidth; })()", true)
