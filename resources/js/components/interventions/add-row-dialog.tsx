@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Combobox from '@/components/humetria/combobox';
 import InputError from '@/components/humetria/input-error';
-import FormDialog from '@/components/interventions/form-dialog';
+import FormSheet from '@/components/humetria/form-sheet';
 import { Label } from '@/components/ui/label';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { SCOPE_LABELS } from '@/lib/interventions';
@@ -31,7 +31,7 @@ export default function AddRowDialog({
     }));
 
     return (
-        <FormDialog
+        <FormSheet
             open={open}
             onOpenChange={onOpenChange}
             title="Agregar fila"
@@ -72,6 +72,6 @@ export default function AddRowDialog({
                     />
                 </div>
             )}
-        </FormDialog>
+        </FormSheet>
     );
 }

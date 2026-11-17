@@ -6,6 +6,9 @@ use App\Modules\Interventions\Actions\CreateProgram;
 use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Interventions\Models\ProgramItem;
 use App\Modules\Tenancy\Models\Tenant;
+use Pest\Browser\Api\AwaitableWebpage;
+
+require_once __DIR__.'/form-sheet-helpers.php';
 
 $looks = [
     'light desktop' => [false, false],
@@ -120,6 +123,15 @@ it('adds an action to a row from its side panel', function (): void {
 
     expect(ProgramAction::query()->count())->toBe(1);
 });
+
+it('adds a row to the Programa in the side panel, the whole width of a phone', function (bool $mobile): void {
+    [$url, $campaign] = programEvaluation();
+    programWithActions($campaign);
+    $page = "{$url}/campaigns/{$campaign}/program";
+    $open = fn (): AwaitableWebpage => ($mobile ? visit($page)->on()->mobile() : visit($page))->assertNoJavaScriptErrors();
+
+    assertFormSheet($open()->press('Agregar fila'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('tells in the responsible fields who an action falls to when they are left empty', function (): void {
     [$url, $campaign] = programEvaluation();
