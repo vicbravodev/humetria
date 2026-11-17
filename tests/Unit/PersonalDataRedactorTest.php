@@ -19,6 +19,10 @@ it('masks each kind of personal data with its marker', function (string $text, s
     'a phone with country code' => ['+52 55 1234 5678', '[teléfono]'],
     'a phone with parentheses' => ['(55) 1234-5678', '[teléfono]'],
     'a phone without separators' => ['4421234567', '[teléfono]'],
+    'a phone as it is stored, in E.164' => ['su celular es +525512345678.', 'su celular es [teléfono].'],
+    'a phone of the United States' => ['llámale al +1 415 555 2671', 'llámale al [teléfono]'],
+    'a Spanish phone' => ['+34 612 345 678 es su número', '[teléfono] es su número'],
+    'a phone of another country in E.164' => ['+14155552671', '[teléfono]'],
     'several in one message' => ['Juan, juan@x.mx, 4421234567, PEPJ800101HDFRRN09', 'Juan, [correo], [teléfono], [CURP]'],
 ]);
 
