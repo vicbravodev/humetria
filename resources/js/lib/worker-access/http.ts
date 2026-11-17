@@ -22,6 +22,15 @@ export async function postJson(
     });
 }
 
+/** A failed answer that is not one the page expects: the server broke (5xx) or something else went wrong on the way. */
+export function answerFailure(status: number): 'server' | 'failed' {
+    return status >= 500 ? 'server' : 'failed';
+}
+
+/** What the person reads when the server broke: it is ours, not their signal. */
+export const SERVER_TROUBLE =
+    'Algo salió mal de nuestro lado. Vuelva a intentarlo en unos minutos.';
+
 /** The `redirect` of a JSON answer, or null when it has none. */
 export async function redirectOf(response: Response): Promise<string | null> {
     const json: unknown = await response.json();

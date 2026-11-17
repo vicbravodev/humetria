@@ -1,7 +1,12 @@
 import type { Method, PendingVisit, RequestPayload } from '@inertiajs/core';
 import type { EntryFailure } from '@/lib/worker-access/entry';
 import type { HttpDeps } from '@/lib/worker-access/http';
-import { postJson, redirectOf } from '@/lib/worker-access/http';
+import {
+    answerFailure,
+    postJson,
+    redirectOf,
+    SERVER_TROUBLE,
+} from '@/lib/worker-access/http';
 
 /** Why a code did not prove it: wrong, expired (or already used), too many tries, not six digits, too many asks, no signal. */
 export type CodeFailure =
@@ -10,13 +15,14 @@ export type CodeFailure =
     | 'locked'
     | 'invalid'
     | 'busy'
-    | 'failed';
+    | 'failed'
+    | 'server';
 
 /** Asks for a code by email. Never throws. */
 export async function sendProofCode(
     url: string,
     deps: HttpDeps,
-): Promise<'sent' | 'busy' | 'failed'> {
+): Promise<'sent' | 'busy' | 'failed' | 'server'> {
     try {
         const response = await postJson(url, {}, deps);
 
@@ -24,7 +30,9 @@ export async function sendProofCode(
             return 'sent';
         }
 
-        return response.status === 429 ? 'busy' : 'failed';
+        return response.status === 429
+            ? 'busy'
+            : answerFailure(response.status);
     } catch {
         return 'failed';
     }
@@ -65,7 +73,9 @@ export async function checkProofCode(
             return { redirect };
         }
 
-        return response.status === 429 ? 'busy' : 'failed';
+        return response.status === 429
+            ? 'busy'
+            : answerFailure(response.status);
     } catch {
         return 'failed';
     }
@@ -78,6 +88,7 @@ const CODE_MESSAGES: Record<CodeFailure, string> = {
     locked: 'Hubo demasiados intentos con ese código. Pida otro con «Enviarme otro código».',
     invalid: 'Escriba los seis números del código.',
     busy: 'Pidió varios códigos seguidos. Espere unos minutos y vuelva a intentarlo.',
+    server: SERVER_TROUBLE,
     failed: 'No hay conexión con el servidor. Revise su señal e intente de nuevo.',
 };
 
@@ -97,6 +108,7 @@ const KEY_MESSAGES: Record<EntryFailure, string> = {
         'No reconocimos esa llave. Use la llave que creó para este portal e intente de nuevo.',
     unsupported:
         'Este navegador no puede usar llaves de acceso. Ábralo en el dispositivo donde creó su llave.',
+    server: SERVER_TROUBLE,
     failed: 'No hay conexión con el servidor. Revise su señal e intente de nuevo.',
 };
 

@@ -95,7 +95,14 @@ describe('enterWithKey', () => {
                 getKey,
                 xsrf: null,
             }),
-        ).toBe('failed');
+        ).toBe('server');
+        expect(
+            await enterWithKey(urls, {
+                fetcher: server(json(options), json({}, 502)),
+                getKey: vi.fn().mockResolvedValue(signed),
+                xsrf: null,
+            }),
+        ).toBe('server');
         expect(
             await enterWithKey(urls, {
                 fetcher: server(json(options)),
@@ -124,6 +131,9 @@ describe('enterWithKey', () => {
         expect(entryMessage('refused')).toContain('enlace por correo');
         expect(entryMessage('unsupported')).toContain('enlace por correo');
         expect(entryMessage('failed')).toContain('señal');
+        expect(entryMessage('server')).toBe(
+            'Algo salió mal de nuestro lado. Vuelva a intentarlo en unos minutos.',
+        );
     });
 });
 
@@ -144,12 +154,13 @@ describe('requestLink', () => {
 
         expect(await ask(server(json({}, 422)))).toBe('invalid');
         expect(await ask(server(json({}, 429)))).toBe('busy');
-        expect(await ask(server(json({}, 500)))).toBe('failed');
+        expect(await ask(server(json({}, 500)))).toBe('server');
         expect(
             await ask(vi.fn<typeof fetch>().mockRejectedValue(new Error())),
         ).toBe('failed');
         expect(linkRequestMessage('invalid')).toContain('correo válido');
         expect(linkRequestMessage('busy')).toContain('Espere');
         expect(linkRequestMessage('failed')).toContain('señal');
+        expect(linkRequestMessage('server')).toContain('de nuestro lado');
     });
 });
