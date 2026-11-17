@@ -29,6 +29,15 @@ it('renders the privacy notice', function (bool $dark, bool $mobile): void {
         ->assertSee('Cómo ejercer tus derechos');
 })->with('looks');
 
+it('renders the public roadmap', function (bool $dark, bool $mobile): void {
+    visitPage('roadmap', '/roadmap', $dark, $mobile)
+        ->assertSee('Lo que viene en Humetría')
+        ->assertSee('Ahora')
+        ->assertSee('Pronto')
+        ->assertSee('Después')
+        ->assertSee('Explorando');
+})->with('looks');
+
 it('renders the forgot password page', function (bool $dark, bool $mobile): void {
     visitPage('auth/forgot-password', '/admin/forgot-password', $dark, $mobile)
         ->assertSee('¿Olvidaste tu contraseña?')

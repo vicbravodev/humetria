@@ -33,7 +33,7 @@ it('gives each indexable page its own text and path', function (string $route, s
         ->and($seo['title'])->not->toBe('')
         ->and($seo['title'])->not->toStartWith('seo.')
         ->and($seo['description'])->not->toStartWith('seo.');
-})->with([['home', '/'], ['privacy-notice', '/privacy-notice']]);
+})->with([['home', '/'], ['privacy-notice', '/privacy-notice'], ['roadmap', '/roadmap']]);
 
 it('keeps the description of the home within 160 characters and naming the nine tools', function (): void {
     $description = PageSeo::for('home')['description'];
