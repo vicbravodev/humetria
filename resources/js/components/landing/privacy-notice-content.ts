@@ -64,7 +64,8 @@ const ORIGIN: PrivacySection = {
     title: 'De dónde llegaste',
     paragraphs: [
         'Cuando llegas desde un anuncio o desde un enlace de campaña, la dirección trae etiquetas que dicen cuál fue (fuente, medio y campaña). Si pides una demo, guardamos esas etiquetas y el sitio desde el que llegaste junto con tu solicitud, para saber qué campañas funcionan.',
-        'De la página de la que vienes guardamos solo su dominio, nunca la dirección completa. No guardamos identificadores de clic de anuncios.',
+        'De la página de la que vienes guardamos solo su dominio, nunca la dirección completa.',
+        'Si llegas desde un anuncio de Google, la dirección trae además un identificador del clic (gclid, gbraid o wbraid). Si pides una demo, lo guardamos con tu solicitud y se lo enviamos a Google Ads, sin tu nombre, correo, teléfono ni empresa, para que sepa qué anuncios terminan en una solicitud. Solo lo guardamos mientras medimos el sitio, y lo borramos a los 90 días de tu solicitud.',
         'Hoy esa información viene solo de tu sesión: es la primera visita con etiquetas desde que abriste el sitio, y se pierde cuando pasa un tiempo sin que lo uses. Si llegaste sin etiquetas ni otro sitio de por medio, tu solicitud queda sin dato de procedencia, y eso no significa que hayas llegado de forma directa.',
     ],
 };
@@ -90,7 +91,7 @@ const ANALYTICS: PrivacySection = {
         'No grabamos tu sesión, no registramos lo que escribes y no creamos un perfil tuyo. Sí contamos qué botones y enlaces de la página tocas (por ejemplo, "Agendar demo"), qué secciones ves, hasta dónde bajas y en qué campo del formulario hubo un error, sin guardar nada de lo que escribiste.',
         'Como con cualquier servicio de un tercero, tu navegador se conecta con PostHog (us.i.posthog.com, en Estados Unidos) y le llegan, como mínimo, los datos técnicos de tu navegador y de tu conexión. Además, le decimos qué página de inicio abriste, con solo las etiquetas de campaña de la dirección, el sitio del que vienes si es una página nuestra y que enviaste una solicitud de demo, con el tipo de empresa y el rango de personas que elegiste. A PostHog no le enviamos tu nombre, correo, teléfono ni mensaje, ni ningún dato de la solicitud. No guardamos tu dirección IP en PostHog. PostHog no escribe cookies en tu navegador: guarda un identificador anónimo en su almacenamiento local.',
         'También registramos los errores técnicos para poder arreglarlos. Si algo falla en tu navegador en esta página, PostHog recibe el tipo de error y el lugar del código donde ocurrió, con los correos y los números largos de su texto ocultos. Si algo falla en nuestro servidor, recibe la clase del error y la ruta del código por donde pasó, nunca su texto ni datos de ninguna persona.',
-        'La cookie de atribución humetria_acq solo se escribe si llegas con etiquetas de campaña o desde otro sitio. Recuerda la primera y la última de esas visitas, hasta por 90 días, para ligar tu solicitud con la campaña que te trajo. Va cifrada, solo se envía por conexión segura y solo la lee nuestro servidor.',
+        'La cookie de atribución humetria_acq solo se escribe si llegas con etiquetas de campaña o desde otro sitio. Recuerda la primera y la última de esas visitas y el identificador del último clic en un anuncio, hasta por 90 días, para ligar tu solicitud con la campaña que te trajo. Va cifrada, solo se envía por conexión segura y solo la lee nuestro servidor.',
         `El texto de esta sección está ${REVIEW}.`,
     ],
 };

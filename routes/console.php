@@ -15,6 +15,7 @@ use App\Modules\Campaigns\Actions\SendProgressDigests;
 use App\Modules\Complaints\Actions\PurgeComplaints;
 use App\Modules\Complaints\Actions\ReleaseHeldComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
+use App\Modules\Demos\Actions\ForgetAdClicks;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Engagement\Actions\AnnounceUpcomingPulses;
 use App\Modules\Engagement\Actions\CloseExpiredSurveys;
@@ -137,6 +138,10 @@ Artisan::command('engagement:announce-pulses', function (AnnounceUpcomingPulses 
     $this->info('Avisos enviados: '.$announce->handle());
 })->purpose('Tell owner and hr, three days before, that the scheduled pulse goes out, with the commitments still open');
 
+Artisan::command('demos:forget-ad-clicks', function (ForgetAdClicks $forget): void {
+    $this->info('Identificadores de clic olvidados: '.$forget->handle());
+})->purpose('Forget the Google Ads click id of every demo request older than 90 days, as the privacy notice promises');
+
 Artisan::command('leave:route-requests', function (RouteRequests $route): void {
     $done = $route->handle();
     $this->info("Solicitudes disfrutadas: {$done['taken']}, reasignadas: {$done['reassigned']}, escaladas a RH: {$done['escalated']}");
@@ -156,6 +161,7 @@ Schedule::command('seating:remind-questions')->dailyAt('09:00')->timezone(config
 Schedule::command('seating:send-digests')->dailyAt('08:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:send-digests')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:release-held')->dailyAt('00:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Schedule::command('demos:forget-ad-clicks')->dailyAt('03:20')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // Each center shortly after its own midnight (design of time zones §4, phase 3): every 15 minutes the dispatcher queues the
 // centers whose clock passed 00:15, once per local day (local_runs); a tick missed is made up by the next one.

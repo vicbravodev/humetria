@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Demos\Enums\AdClickType;
 use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Carbon;
@@ -138,16 +139,65 @@ it('accepts a referrer host of 255 characters and drops one of 256', function ()
         ->and(session()->has('demo_attribution'))->toBeFalse();
 });
 
-it('never keeps the click ids of Google Ads, in the session or anywhere else', function (): void {
+it('keeps no click id of Google Ads while consent is denied, and keeps the touch as before', function (): void {
     $this->get('/?utm_source=anuncios&gclid=CLICK123&gbraid=BRAID456&wbraid=WBRAID789')->assertOk();
 
-    expect(json_encode(rememberedTouch()))->not->toContain('CLICK123')->not->toContain('BRAID456')->not->toContain('WBRAID789')
-        ->and(array_keys((array) rememberedTouch()))->toBe(['source', 'medium', 'campaign', 'referrer_host']);
+    expect(session()->has(RememberDemoAttribution::CLICK_KEY))->toBeFalse()
+        ->and(rememberedTouch())->toBe(touchOf('anuncios'));
+});
 
-    $this->flushSession();
+it('remembers in the session the click id of the last ad click, once consent is granted', function (): void {
+    consentGranted();
+
+    $this->get('/?utm_source=google&gclid=PRIMERO')->assertOk();
+    $this->get('/?utm_source=google&gclid=Cj0KCQ_ultimo-1')->assertOk();
+
+    expect(session(RememberDemoAttribution::CLICK_KEY))->toBe(['type' => 'gclid', 'id' => 'Cj0KCQ_ultimo-1']);
+});
+
+it('keeps the last click when a later visit brings none', function (): void {
+    consentGranted();
+
     $this->get('/?gclid=CLICK123')->assertOk();
+    $this->get('/?utm_source=boletin')->assertOk();
 
-    expect(session()->has('demo_attribution'))->toBeFalse();
+    expect(session(RememberDemoAttribution::CLICK_KEY))->toBe(['type' => 'gclid', 'id' => 'CLICK123']);
+});
+
+it('prefers the gclid, then the gbraid, then the wbraid of the same visit', function (string $query, array $click): void {
+    consentGranted();
+
+    $this->get("/?{$query}")->assertOk();
+
+    expect(session(RememberDemoAttribution::CLICK_KEY))->toBe($click);
+})->with([
+    'all three' => ['gclid=G1&gbraid=B1&wbraid=W1', ['type' => 'gclid', 'id' => 'G1']],
+    'gbraid and wbraid' => ['gbraid=B1&wbraid=W1', ['type' => 'gbraid', 'id' => 'B1']],
+    'only wbraid' => ['wbraid=W1', ['type' => 'wbraid', 'id' => 'W1']],
+    'a malformed gclid falls to the gbraid' => ['gclid=no%20vale&gbraid=B1', ['type' => 'gbraid', 'id' => 'B1']],
+]);
+
+it('accepts a click id of 255 characters and drops one of 256, an empty one or one with other characters', function (string $id, bool $kept): void {
+    consentGranted();
+
+    $this->get('/?gclid='.urlencode($id))->assertOk();
+
+    expect(session()->has(RememberDemoAttribution::CLICK_KEY))->toBe($kept);
+})->with([
+    '255 characters' => [str_repeat('a', 255), true],
+    '256 characters' => [str_repeat('a', 256), false],
+    'empty' => ['', false],
+    'a space' => ['abc def', false],
+    'a slash' => ['abc/def', false],
+    'letters, digits, dash and underscore' => ['Cj0KCQiA-_09', true],
+]);
+
+it('drops a click id that arrives as an array', function (): void {
+    consentGranted();
+
+    $this->get('/?gclid[]=CLICK123')->assertOk();
+
+    expect(session()->has(RememberDemoAttribution::CLICK_KEY))->toBeFalse();
 });
 
 it('only looks at GET requests: a HEAD leaves nothing behind', function (): void {
@@ -349,12 +399,22 @@ it('cleans every value of the cookie again before writing it back', function ():
     expect(acquisition($response)['first'])->toBe(touchOf(medium: 'correo'));
 });
 
-it('keeps the click ids of Google Ads out of the cookie too', function (): void {
+it('keeps the click id in the cookie too, and the last one wins', function (): void {
     consentGranted();
+    $cookie = json_encode([...json_decode(acquisitionCookie(touchOf('boletin'), touchOf('boletin'), now()->subDay()->getTimestamp()), true), 'ad_click' => ['type' => 'gclid', 'id' => 'VIEJO']]);
 
-    $response = $this->get('/?utm_source=anuncios&gclid=CLICK123&gbraid=BRAID456&wbraid=WBRAID789');
+    $response = $this->withCookie('humetria_acq', (string) $cookie)->get('/?utm_source=google&gbraid=NUEVO');
 
-    expect(json_encode(acquisition($response)))->not->toContain('CLICK123')->not->toContain('BRAID456')->not->toContain('WBRAID789');
+    expect(acquisition($response)['ad_click'])->toBe(['type' => 'gbraid', 'id' => 'NUEVO']);
+});
+
+it('carries the click id of the cookie forward when a visit brings none', function (): void {
+    consentGranted();
+    $cookie = json_encode([...json_decode(acquisitionCookie(touchOf('boletin'), touchOf('boletin'), now()->subDay()->getTimestamp()), true), 'ad_click' => ['type' => 'gclid', 'id' => 'VIEJO']]);
+
+    $response = $this->withCookie('humetria_acq', (string) $cookie)->get('/?utm_source=otra');
+
+    expect(acquisition($response)['ad_click'])->toBe(['type' => 'gclid', 'id' => 'VIEJO']);
 });
 
 it('sets the cookie only on the landing', function (): void {
@@ -488,12 +548,47 @@ it('survives a session value that is not what was written, keeping only what is 
     'extra keys' => [[...touchOf('anuncios'), 'gclid' => 'CLICK123'], 'anuncios'],
 ]);
 
-it('never stores the click ids of Google Ads', function (): void {
-    $this->withSession(['demo_attribution' => [...touchOf('anuncios'), 'gclid' => 'CLICK123', 'gbraid' => 'B', 'wbraid' => 'W']])
+it('stores the click id of the last ad click on the request, with consent granted', function (): void {
+    consentGranted();
+    $this->get('/?utm_source=google&utm_medium=cpc&utm_campaign=checador&gclid=CLICK123')->assertOk();
+
+    $this->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->ad_click_type)->toBe(AdClickType::Gclid)
+        ->and(storedRequest()->ad_click_id)->toBe('CLICK123');
+});
+
+it('stores the click id the cookie remembered when the session forgot it', function (): void {
+    consentGranted();
+    $cookie = json_encode([...json_decode(acquisitionCookie(touchOf('google'), touchOf('google'), now()->subDays(10)->getTimestamp()), true), 'ad_click' => ['type' => 'wbraid', 'id' => 'W1']]);
+
+    $this->withCookie('humetria_acq', (string) $cookie)->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->ad_click_type)->toBe(AdClickType::Wbraid)
+        ->and(storedRequest()->ad_click_id)->toBe('W1');
+});
+
+it('stores no click id while consent is denied, even one left in the session', function (): void {
+    $this->withSession([RememberDemoAttribution::CLICK_KEY => ['type' => 'gclid', 'id' => 'CLICK123']])
         ->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
 
-    expect(json_encode(storedRequest()->getAttributes()))->not->toContain('CLICK123');
+    expect(storedRequest()->ad_click_id)->toBeNull()
+        ->and(storedRequest()->ad_click_type)->toBeNull();
 });
+
+it('stores no click id from a session or cookie value that is not what was written', function (mixed $click): void {
+    consentGranted();
+
+    $this->withSession([RememberDemoAttribution::CLICK_KEY => $click])
+        ->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->ad_click_id)->toBeNull();
+})->with([
+    'a string' => ['CLICK123'],
+    'an unknown type' => [['type' => 'fbclid', 'id' => 'X1']],
+    'a bad id' => [['type' => 'gclid', 'id' => 'no vale']],
+    'no id' => [['type' => 'gclid']],
+]);
 
 it('keeps the attribution for a second try after a submit the form refused', function (): void {
     $this->get('/?utm_source=anuncios')->assertOk();

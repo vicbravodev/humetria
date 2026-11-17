@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Analytics;
+use App\Modules\Demos\Actions\ForgetAdClicks;
 use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
 
 /*
@@ -30,7 +31,7 @@ it('says PostHog measures the landing only, what it counts and that errors are r
     expect($text)->toContain('Medimos las visitas de la página de inicio')->toContain('PostHog')
         ->and($text)->toContain('qué botones y enlaces')->toContain('hasta dónde bajas')->toContain('errores técnicos')
         ->and($text)->not->toContain('Hoy no medimos')->not->toContain('no registramos tus clics')
-        ->and($text)->not->toContain('Google')->not->toContain('_ga')
+        ->and($text)->not->toContain('Google Analytics')->not->toContain('_ga')
         ->and($text)->not->toContain('con tu consentimiento');
 });
 
@@ -62,6 +63,15 @@ it('says browser errors of the rest of the platform go to PostHog without the pa
         ->toContain('si algo falla en tu navegador')->toContain('nunca la dirección de la página')
         ->toContain('no guarda nada en tu navegador')
         ->and($options)->toContain("persistence: 'memory'")->toContain("person_profiles: 'never'")->toContain('ip: false');
+});
+
+it('says the ad click id goes to Google Ads without who asked, only with measurement, and is erased at 90 days', function (): void {
+    $text = privacyNoticeText();
+
+    expect($text)->toContain('identificador del clic')->toContain('Google Ads')
+        ->toContain('sin tu nombre, correo, teléfono ni empresa')
+        ->toContain('a los '.ForgetAdClicks::DAYS.' días de tu solicitud')
+        ->not->toContain('No guardamos identificadores de clic');
 });
 
 it('says the theme preference lasts a year, as the appearance hook writes it', function (): void {
