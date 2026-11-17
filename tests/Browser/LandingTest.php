@@ -216,6 +216,19 @@ it('presents Humetría as an HR platform with all its tools', function (): void 
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
 
+it('gives the hero film the larger half of the desktop fold, with a headline that fits in three lines', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => parseFloat(getComputedStyle(document.querySelector("#hero-title")).fontSize) <= 64')
+        ->assertScript('() => document.querySelector("#hero-title").getBoundingClientRect().height <= 3.5 * parseFloat(getComputedStyle(document.querySelector("#hero-title")).fontSize)')
+        ->assertScript('() => document.querySelector("[data-test=hero-video]").getBoundingClientRect().width >= 0.52 * document.querySelector("#inicio > div:nth-of-type(2)").clientWidth');
+});
+
+it('tells next to the hero button what happens after asking for a demo', function (bool $mobile): void {
+    visitPage('landing', '/', mobile: $mobile)
+        ->assertSeeIn('[data-test="hero-demo-note"]', 'Te escribimos por WhatsApp o por correo para agendar la llamada.')
+        ->assertScript('() => document.querySelector("[data-test=hero-demo-note]").closest("[data-test=hero-actions]") !== null');
+})->with(['desktop' => false, 'mobile' => true]);
+
 it('plays the hero film muted and in a loop, and lets the visitor pause it', function (): void {
     $video = 'document.querySelector("[data-test=hero-video] video")';
 
