@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+    dayNeedsLook,
+    dayRange,
+    dayShort,
+    weekRange,
+} from '@/lib/attendance/week-fold';
+import {
     absenceLabel,
-    dayEvidence,
     ribbonDays,
     weekActions,
-    weekHeading,
     weekTotal,
 } from '@/lib/attendance/week-text';
 import type { WeekDay, WeekView } from '@/lib/attendance/week';
@@ -43,26 +47,20 @@ const week: WeekView = {
     nextUrl: null,
 };
 
-describe('weekHeading', () => {
-    it.each([
-        ['pending', null, 'Su semana está lista'],
-        ['pending', 'no_marks', 'Su semana por revisar'],
-        ['confirmed', null, 'Semana confirmada'],
-        ['disputed', null, 'Semana objetada'],
-        ['open', null, 'Su semana en curso'],
-    ])('titles a %s week (blocked: %s) as «%s»', (status, blocked, title) => {
-        expect(weekHeading({ ...week, status, blocked }).title).toBe(title);
-    });
-
-    it('names the person and the week under the title', () => {
-        expect(weekHeading(week).text).toBe(
-            'Ana López · Del 2 al 8 de noviembre de 2026',
+describe('weekRange', () => {
+    it('names the week in the bar between its arrows, short (hallazgo 21)', () => {
+        expect(weekRange('2026-11-09', '2026-11-15')).toBe('9 a 15 nov 2026');
+        expect(weekRange('2026-11-30', '2026-12-06')).toBe(
+            '30 nov a 6 dic 2026',
+        );
+        expect(weekRange('2026-12-28', '2027-01-03')).toBe(
+            '28 dic 2026 a 3 ene 2027',
         );
     });
 });
 
 describe('weekTotal', () => {
-    it('adds the hours worked and says how the law pays them', () => {
+    it('adds the hours worked, in ordinary and extra, and details only the kinds of extra there are', () => {
         const worked = {
             ...week,
             days: [
@@ -79,7 +77,8 @@ describe('weekTotal', () => {
 
         expect(weekTotal(worked)).toEqual({
             total: '17 h',
-            parts: '16 h ordinarias · 1 h dobles',
+            lines: ['16 h ordinarias', '1 h extra'],
+            detail: '1 h dobles',
         });
     });
 
@@ -91,14 +90,21 @@ describe('weekTotal', () => {
                 summary: {
                     ...week.summary,
                     ordinaryMinutes: 480,
+                    overtimeMinutes: 90,
                     doubleMinutes: 60,
                     tripleMinutes: 30,
                     restDayMinutes: 30,
                 },
-            }).parts,
-        ).toBe(
-            '8 h ordinarias · 1 h dobles · 30 min triples · 30 min en descanso',
-        );
+            }).detail,
+        ).toBe('1 h dobles · 30 min triples · 30 min en descanso');
+    });
+
+    it('says «0 h extra» and no detail for a week with none', () => {
+        expect(weekTotal(week)).toEqual({
+            total: '8 h',
+            lines: ['8 h ordinarias', '0 h extra'],
+            detail: null,
+        });
     });
 
     it('says there are no hours for a week without marks', () => {
@@ -106,7 +112,8 @@ describe('weekTotal', () => {
             weekTotal({ ...week, days: [{ ...day, workedMinutes: 0 }] }),
         ).toEqual({
             total: '0 h',
-            parts: 'Sin horas trabajadas',
+            lines: ['Sin horas trabajadas'],
+            detail: null,
         });
     });
 });
@@ -148,41 +155,50 @@ describe('a day away', () => {
     });
 });
 
-describe('dayEvidence', () => {
-    const marks = (...levels: (string | null)[]) =>
-        levels.map((evidence, index) => ({
-            id: `m${index}`,
-            type: 'start',
-            time: '09:00',
-            nextDay: false,
-            corrected: false,
-            reason: null,
-            evidence,
-        }));
-
-    it('is as strong as the weakest mark of the day', () => {
-        expect(dayEvidence(marks('strong', 'strong'))).toEqual({
-            dots: 3,
-            text: 'Fuerte',
-        });
-        expect(dayEvidence(marks('strong', 'medium'))).toEqual({
-            dots: 2,
-            text: 'Media',
-        });
-        expect(dayEvidence(marks('strong', 'medium', 'basic'))).toEqual({
-            dots: 1,
-            text: 'Básica',
-        });
-        expect(dayEvidence(marks('strong', 'corrected'))).toEqual({
-            dots: 1,
-            text: 'Corregida',
-        });
+describe('a day folded', () => {
+    const mark = (time: string, extra: object = {}) => ({
+        id: time,
+        type: 'start',
+        time,
+        nextDay: false,
+        corrected: false,
+        reason: null,
+        evidence: 'strong',
+        ...extra,
     });
 
-    it('says nothing of a day with no marks or with a mark whose level it does not know', () => {
-        expect(dayEvidence([])).toBeNull();
-        expect(dayEvidence(marks('strong', null))).toBeNull();
-        expect(dayEvidence(marks('x'))).toBeNull();
+    it('is named short, «Lun 9»', () => {
+        expect(dayShort('2026-11-09')).toBe('Lun 9');
+        expect(dayShort('2026-11-15')).toBe('Dom 15');
+    });
+
+    it('says the range of its marks, or why it has none', () => {
+        expect(
+            dayRange({ ...day, marks: [mark('06:00'), mark('14:00')] }),
+        ).toBe('06:00 a 14:00');
+        expect(
+            dayRange({
+                ...day,
+                marks: [mark('22:00'), mark('06:00', { nextDay: true })],
+            }),
+        ).toBe('22:00 a 06:00 del día siguiente');
+        expect(dayRange({ ...day, marks: [mark('09:00')] })).toBe('09:00');
+        expect(dayRange({ ...day, restDay: true })).toBe('Descanso');
+        expect(dayRange({ ...day, absence: 'vacation' })).toBe('Vacaciones');
+        expect(dayRange(day)).toBe('Sin marcas');
+    });
+
+    it('opens by itself only when something in it asks to be looked at: a correction, a lateness or no end', () => {
+        expect(dayNeedsLook({ ...day, marks: [mark('09:00')] })).toBe(false);
+        expect(
+            dayNeedsLook({
+                ...day,
+                marks: [mark('09:00', { corrected: true })],
+            }),
+        ).toBe(true);
+        expect(dayNeedsLook({ ...day, lateMinutes: 15 })).toBe(true);
+        expect(dayNeedsLook({ ...day, lateMinutes: 0 })).toBe(false);
+        expect(dayNeedsLook({ ...day, missingEnd: true })).toBe(true);
     });
 });
 

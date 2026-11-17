@@ -16,7 +16,14 @@ export type ProblemKind =
     | 'generic';
 
 export type ProblemAction = {
-    kind: 'retry' | 'correction' | 'howto' | 'copy-hr' | 'dismiss' | 'reload';
+    kind:
+        | 'retry'
+        | 'rescan'
+        | 'correction'
+        | 'howto'
+        | 'copy-hr'
+        | 'dismiss'
+        | 'reload';
     label: string;
 };
 
@@ -46,6 +53,8 @@ const CORRECTION: ProblemAction = {
     label: 'Pedir una corrección',
 };
 const DISMISS: ProblemAction = { kind: 'dismiss', label: 'Entendido' };
+/** Opens Marcar again without the old code in its address, for the person to scan the one on screen now. */
+const RESCAN: ProblemAction = { kind: 'rescan', label: 'Escanee de nuevo' };
 const ASK_RH =
     'Si no puede, pida a Recursos Humanos una corrección de su marca.';
 
@@ -95,12 +104,19 @@ const PROBLEMS: Record<string, Problem> = {
         text: `Escanee con la cámara de su teléfono el código de la pantalla de su centro de trabajo y marque desde ahí. ${ASK_RH}`,
         actions: [DISMISS, CORRECTION],
     },
-    qr_invalid: {
+    qr_expired: {
         kind: 'qr',
         tone: 'warning',
         title: 'Ese código ya venció',
-        text: `Cada código dura 30 segundos y solo sirve en su centro. Escanee el que se ve ahora en la pantalla. ${ASK_RH}`,
-        actions: [DISMISS, CORRECTION],
+        text: `Cada código dura 30 segundos. Escanee el que se ve ahora en la pantalla de su centro. ${ASK_RH}`,
+        actions: [RESCAN, CORRECTION],
+    },
+    qr_invalid: {
+        kind: 'qr',
+        tone: 'warning',
+        title: 'Ese código no sirve para marcar',
+        text: `Escanee el código que muestra la pantalla de su centro de trabajo. ${ASK_RH}`,
+        actions: [RESCAN, CORRECTION],
     },
     center_not_ready: {
         kind: 'zone',
@@ -150,13 +166,29 @@ const GENERIC: Problem = {
     actions: [RETRY],
 };
 
+/** A code valid at another center of the company, refused by the policy: whose it was and where to scan. */
+function otherCenter(center: string | null): Problem {
+    return {
+        kind: 'qr',
+        tone: 'warning',
+        title: 'Ese código es de otro centro',
+        text: `Es el de ${center ?? 'otro centro'}. Escanee el de la pantalla de su centro.`,
+        actions: [RESCAN, CORRECTION],
+    };
+}
+
 /** The problem a refused mark is, said for the screen; null for one that only came out of order. */
 export function punchProblem(
     reason: string,
     location: LocationError | null = null,
+    center: string | null = null,
 ): Problem | null {
     if (isSequence(reason)) {
         return null;
+    }
+
+    if (reason === 'qr_other_center') {
+        return otherCenter(center);
     }
 
     return reason === 'no_location'
@@ -170,7 +202,7 @@ export function feedbackProblem(
     location: LocationError | null,
 ): Problem | null {
     return feedback?.kind === 'error' && feedback.reason !== undefined
-        ? punchProblem(feedback.reason, location)
+        ? punchProblem(feedback.reason, location, feedback.center ?? null)
         : null;
 }
 

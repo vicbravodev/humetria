@@ -25,6 +25,33 @@ describe('punchProblem of a center that is not ready', () => {
     });
 });
 
+describe('punchProblem of a code that does not count', () => {
+    it('tells an expired code from one of another center and from one that is no code, each with «Escanee de nuevo» first (hallazgo 26)', () => {
+        expect(punchProblem('qr_expired')).toMatchObject({
+            kind: 'qr',
+            title: 'Ese código ya venció',
+        });
+        expect(punchProblem('qr_expired')?.text).toContain('30 segundos');
+        expect(
+            punchProblem('qr_other_center', null, 'Oficinas Querétaro'),
+        ).toMatchObject({
+            kind: 'qr',
+            title: 'Ese código es de otro centro',
+            text: 'Es el de Oficinas Querétaro. Escanee el de la pantalla de su centro.',
+        });
+        expect(punchProblem('qr_invalid')).toMatchObject({
+            kind: 'qr',
+            title: 'Ese código no sirve para marcar',
+        });
+        for (const reason of ['qr_expired', 'qr_other_center', 'qr_invalid']) {
+            expect(punchProblem(reason)?.actions).toEqual([
+                { kind: 'rescan', label: 'Escanee de nuevo' },
+                { kind: 'correction', label: 'Pedir una corrección' },
+            ]);
+        }
+    });
+});
+
 describe('punchProblem', () => {
     it('says what happened and what to do, for a mark outside the zone', () => {
         const problem = punchProblem('outside_zone');
@@ -85,11 +112,6 @@ describe('punchProblem', () => {
     });
 
     it('asks to scan the code of the screen again, without blame', () => {
-        expect(punchProblem('qr_invalid')).toMatchObject({
-            kind: 'qr',
-            title: 'Ese código ya venció',
-        });
-        expect(punchProblem('qr_invalid')?.text).toContain('30 segundos');
         expect(punchProblem('qr_required')).toMatchObject({
             kind: 'qr',
             title: 'Falta escanear el código',
@@ -132,6 +154,20 @@ describe('punchProblem', () => {
 });
 
 describe('feedbackProblem', () => {
+    it('names the center of a code of another one, from the answer', () => {
+        expect(
+            feedbackProblem(
+                {
+                    kind: 'error',
+                    text: 'x',
+                    reason: 'qr_other_center',
+                    center: 'Oficinas',
+                },
+                null,
+            )?.text,
+        ).toBe('Es el de Oficinas. Escanee el de la pantalla de su centro.');
+    });
+
     it('is the problem of an error with a reason, told with where the location failed', () => {
         expect(
             feedbackProblem(

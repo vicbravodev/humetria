@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Http\Controllers;
 
+use App\Modules\Attendance\Actions\AcceptAgreement;
 use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Data\Position;
 use App\Modules\Attendance\Enums\MarkMethod;
+use App\Modules\Attendance\Enums\WorkMode;
+use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
@@ -29,6 +32,7 @@ use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
+use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -58,7 +62,10 @@ final readonly class MarkController
 {
     private const string SESSION_KEY = 'attendance.person';
 
-    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones, private WorkCenters $workCenters) {}
+    /** The code this browser scanned when it opened the page, while it counted: its center and when (hallazgo 27). */
+    private const string SCAN_KEY = 'attendance.scan';
+
+    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones, private WorkCenters $workCenters, private WorkerSession $session) {}
 
     /**
      * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
@@ -67,14 +74,25 @@ final readonly class MarkController
     public function show(Request $request, string $tenant): SymfonyResponse
     {
         $person = $this->remembered($request);
-        // The day and the clock of the person who marked here, in their center's zone; the company's before anyone did.
-        $timezone = $person === null ? $this->timezones->forTenant() : $this->timezones->forCenter($person->workCenterId);
+        // Who this page speaks to, for how they mark and their clock: who marked here, or else the person of the portal's
+        // session (never shown as them: whoever taps signs).
+        $known = $person ?? $this->fromPortal();
+        // The day and the clock of that person, in their center's zone; the company's before anyone is known.
+        $timezone = $known === null ? $this->timezones->forTenant() : $this->timezones->forCenter($known->workCenterId);
         $q = $request->query('q');
         $qr = is_string($q) && $q !== '' && strlen($q) <= 128 ? $q : null;
+        // A code that counts now is kept for this browser a few minutes: accepting the agreement and marking may outlast it.
+        $scanned = $qr === null ? null : $this->centerOf($qr, null, CarbonImmutable::now());
+
+        if ($scanned !== null) {
+            $request->session()->put(self::SCAN_KEY, ['q' => $qr, 'center' => $scanned->id, 'at' => CarbonImmutable::now()->getTimestamp()]);
+        }
 
         $page = Inertia::render('attendance/punch', [
             'company' => $this->companies->current()->tradeName,
             'qr' => $qr,
+            // When the code was read, at the clock of its center: «Escaneó a las 09:00, tiene 3 minutos».
+            'scannedAt' => $scanned === null ? null : CarbonImmutable::now($this->timezones->forCenter($scanned->id))->format('H:i'),
             // Who taps next may be someone else: the position is always asked when marking (and dropped by the server when
             // the verified person does not need it).
             'person' => $person === null ? null : ['name' => $person->name, 'next' => PunchDay::of($person->id, $timezone)['next']],
@@ -90,6 +108,10 @@ final readonly class MarkController
             'agreementUrl' => route('attendance.device.agreement.accept', $tenant),
             // A mark refused is asked of RH at the time of the center's clock, whatever the phone's zone.
             'timezone' => $timezone,
+            // How they mark: a remote person is asked for no code nor zone (their position is dropped); null for nobody known.
+            'mode' => $known === null ? null : ($this->schedule($known->id)?->work_mode === WorkMode::Remote ? 'remote' : 'onsite'),
+            // The server's clock, in milliseconds: the page's clock follows it, not the phone's.
+            'now' => CarbonImmutable::now()->getTimestampMs(),
         ]);
 
         $response = $page->toResponse($request);
@@ -111,7 +133,7 @@ final readonly class MarkController
         return response()->json($signatures->options($request->session()->getId()))->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(MarkRequest $request, WorkerSignatures $signatures, RecordMark $record, AgreementStatus $agreements, CurrentAgreement $agreement): JsonResponse
+    public function store(MarkRequest $request, WorkerSignatures $signatures, RecordMark $record, AgreementStatus $agreements, CurrentAgreement $agreement, AcceptAgreement $accept): JsonResponse
     {
         $signed = $signatures->verify($request->session()->getId(), $request->credential());
 
@@ -128,15 +150,17 @@ final readonly class MarkController
 
         $qr = $request->qr();
         $now = CarbonImmutable::now();
-        $qrValid = $qr === null ? null : QrToken::verify($qr, $this->tenant->id(), $person->workCenterId, $now);
+        $scan = $qr === null ? null : $this->scan($request, $qr, $now);
+        $qrValid = $qr === null ? null : ($scan !== null ? $scan->id === $person->workCenterId : QrToken::verify($qr, $this->tenant->id(), $person->workCenterId, $now));
         // A code that is not of the person's center may be of another one of the company: a trip, not a lie (hallazgo 26).
-        $away = $qr !== null && ! $qrValid ? $this->centerOf($qr, $person->workCenterId, $now) : null;
+        $away = $qr !== null && ! $qrValid ? $scan ?? $this->centerOf($qr, $person->workCenterId, $now) : null;
         $zones = AttendanceZone::query()->where('work_center_id', $person->workCenterId)->get()->all();
 
         try {
             // The agreement first: a person who has not accepted it is not sent to fix the code or the position for nothing.
+            // The version they read may come with the mark, accepted with this same signature before it (hallazgo 27).
             if (! $agreements->accepted($person->id)) {
-                throw new MarkRejected('agreement_not_accepted');
+                $this->accept($accept, $person->id, $signed->credentialId, $request->agreementVersion());
             }
 
             $context = $away !== null
@@ -204,6 +228,33 @@ final readonly class MarkController
     }
 
     /**
+     * Accepts the version of the agreement read, with the key that signed the mark; refused with the current text when none
+     * came or it is not the current one.
+     *
+     * @throws MarkRejected
+     */
+    private function accept(AcceptAgreement $accept, string $employeeId, string $credentialId, ?int $version): void
+    {
+        if ($version === null) {
+            throw new MarkRejected('agreement_not_accepted');
+        }
+
+        try {
+            $accept->handle($employeeId, $credentialId, $version);
+        } catch (AgreementOutdated) {
+            throw new MarkRejected('agreement_not_accepted');
+        }
+    }
+
+    /** The person whose portal session is open in this browser (WorkerSession forgets one who left); null for none. */
+    private function fromPortal(): ?RosterEntry
+    {
+        $identity = $this->session->current();
+
+        return $identity === null ? null : $this->roster->find($identity->employeeId);
+    }
+
+    /**
      * How the policy takes the mark at the person's own center; a code of it that no longer counts is told apart.
      *
      * @param  array<array-key, AttendanceZone>  $zones
@@ -229,14 +280,24 @@ final readonly class MarkController
         }
     }
 
-    /** The center of the company in use, other than the person's, whose code this is now; null for none. */
-    private function centerOf(string $qr, string $ownCenterId, CarbonImmutable $now): ?WorkCenterSummary
+    /** The center of the company in use, other than `$except`, whose code this is now; null for none. */
+    private function centerOf(string $qr, ?string $except, CarbonImmutable $now): ?WorkCenterSummary
     {
         // ponytail: two HMACs per center of the company; fine for hundreds of centers, an index of codes past that.
         return array_find(
             $this->workCenters->all(),
-            fn (WorkCenterSummary $center): bool => ! $center->archived && $center->id !== $ownCenterId && QrToken::verify($qr, $this->tenant->id(), $center->id, $now),
+            fn (WorkCenterSummary $center): bool => ! $center->archived && $center->id !== $except && QrToken::verify($qr, $this->tenant->id(), $center->id, $now),
         );
+    }
+
+    /** The center of `$qr` when this browser scanned it on opening the page within the minutes of config/attendance.php; null otherwise. */
+    private function scan(Request $request, string $qr, CarbonImmutable $now): ?WorkCenterSummary
+    {
+        $scan = $request->session()->get(self::SCAN_KEY);
+        $fresh = is_array($scan) && ($scan['q'] ?? null) === $qr && is_int($scan['at'] ?? null)
+            && $now->getTimestamp() - $scan['at'] <= config()->integer('attendance.qr.scan_minutes') * 60;
+
+        return $fresh ? array_find($this->workCenters->all(), fn (WorkCenterSummary $center): bool => $center->id === $scan['center']) : null;
     }
 
     private function schedule(string $employeeId): ?AttendanceSchedule

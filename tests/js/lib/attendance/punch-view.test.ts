@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+    clockOffset,
     dayStatus,
     doneTitle,
-    evidenceText,
     firstName,
     greeting,
+    markClock,
+    markHow,
 } from '@/lib/attendance/punch-view';
 
 describe('greeting', () => {
@@ -139,40 +141,51 @@ describe('doneTitle', () => {
     });
 });
 
-describe('evidenceText', () => {
-    it('says in words how much the mark proves, with its dots', () => {
-        expect(evidenceText('strong')).toEqual({
-            dots: 3,
-            text: 'Evidencia fuerte: QR y ubicación',
-        });
-        expect(evidenceText('medium')).toEqual({
-            dots: 2,
-            text: 'Evidencia media: QR o ubicación',
-        });
-        expect(evidenceText('basic')).toEqual({
-            dots: 1,
-            text: 'Evidencia básica: solo su llave',
-        });
+describe('markHow', () => {
+    it('says in words, without a measure, how the mark was taken (hallazgos 20 y 21)', () => {
+        expect(markHow('strong')).toBe('Con QR y ubicación');
+        expect(markHow('medium')).toBe('Con QR o ubicación');
+        expect(markHow('basic')).toBe('Con su llave');
+        expect(markHow('corrected')).toBe('Corregida por RH');
     });
 
-    it('says how a mark in the field proves, where no QR nor zone is asked', () => {
-        expect(evidenceText('strong', 'field')).toEqual({
-            dots: 3,
-            text: 'Evidencia fuerte: en campo, con su ubicación',
-        });
-        expect(evidenceText('medium', 'field')).toEqual({
-            dots: 2,
-            text: 'Evidencia media: en campo, sin ubicación precisa',
-        });
-        expect(evidenceText('strong', 'outside_zone')?.text).toBe(
-            'Evidencia fuerte: QR y ubicación',
+    it('says a mark in the field was taken in the field, with or without a precise position', () => {
+        expect(markHow('strong', 'field')).toBe('En campo, con su ubicación');
+        expect(markHow('medium', 'field')).toBe(
+            'En campo, sin ubicación precisa',
         );
+        expect(markHow('strong', 'outside_zone')).toBe('Con QR y ubicación');
     });
 
     it('says nothing when the server gave none or one it does not know', () => {
-        expect(evidenceText(null)).toBeNull();
-        expect(evidenceText(null, 'field')).toBeNull();
-        expect(evidenceText('corrected')).toBeNull();
-        expect(evidenceText('x')).toBeNull();
+        expect(markHow(null)).toBeNull();
+        expect(markHow('x')).toBeNull();
+    });
+});
+
+describe('markClock', () => {
+    it("is the time alone at the person's center, and says whose hour it is when the mark was taken in another zone", () => {
+        expect(markClock({ time: '09:00' })).toBe('09:00');
+        expect(markClock({ time: '07:00', clock: 'America/Tijuana' })).toBe(
+            '07:00 · hora de Tijuana',
+        );
+        expect(markClock({ time: '10:00', clock: 'America/Cancun' })).toBe(
+            '10:00 · hora de Cancún',
+        );
+        expect(markClock({ time: '09:00', clock: 'America/Mexico_City' })).toBe(
+            '09:00 · hora de Ciudad de México',
+        );
+        expect(markClock({ time: '09:00', clock: 'Europe/Madrid' })).toBe(
+            '09:00 · hora de Madrid',
+        );
+    });
+});
+
+describe('clockOffset', () => {
+    it("is how far the phone's clock is from the server's, so the page shows the server's time", () => {
+        expect(clockOffset(1_000_000, 1_000_000)).toBe(0);
+        // The phone is 2 hours behind, or a day ahead.
+        expect(clockOffset(10_000_000, 2_800_000)).toBe(7_200_000);
+        expect(clockOffset(0, 86_400_000)).toBe(-86_400_000);
     });
 });

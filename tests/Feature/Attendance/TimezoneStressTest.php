@@ -117,8 +117,8 @@ it('orders the two marks of the repeated hour of 1 November by their instants', 
     AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->tijuana->id, 'type' => MarkType::End, 'marked_at' => CarbonImmutable::parse('2026-11-01 09:30', 'UTC'), 'timezone' => 'America/Tijuana']);
 
     expect(PunchDay::of($this->ana->id, 'America/Tijuana')['marks'])->toBe([
-        ['type' => 'start', 'time' => '01:30', 'clock' => null],
-        ['type' => 'end', 'time' => '01:30', 'clock' => null],
+        ['type' => 'start', 'time' => '01:30', 'date' => '2026-11-01', 'clock' => null],
+        ['type' => 'end', 'time' => '01:30', 'date' => '2026-11-01', 'clock' => null],
     ])->and(weekDays($this->ana, '2026-11-01', 'America/Tijuana')[6]['workedMinutes'])->toBe(60);
 });
 

@@ -46,6 +46,15 @@ describe('errorMessage', () => {
         });
     });
 
+    it('tells the time clock screen not activated or revoked to ask RH for a new link, not of a message nobody received (hallazgo 24)', () => {
+        expect(errorMessage(404, true, true)).toEqual({
+            caption: 'Error 404',
+            title: 'Esta pantalla no está activa',
+            body: 'Pida a Recursos Humanos un enlace nuevo para activarla.',
+        });
+        expect(errorMessage(429, true, true)).toEqual(errorMessage(429, true));
+    });
+
     it('treats any other status as a server error', () => {
         expect(errorMessage(502)).toEqual({
             ...errorMessage(500),

@@ -128,6 +128,12 @@ it('speaks «usted» on the error page of every page a worker opens with a link'
         ->assertInertia(fn (Assert $page) => $page->component('error')->where('survey', true));
 })->with(['portal.vacations.show', 'workers.show', 'attendance.device.kiosk.show', 'portal.team.show']);
 
+it('says which error page is of the time clock screen, for it to ask RH for a new link (hallazgo 24)', function (string $name, bool $screen): void {
+    Route::middleware('web')->get('/test/screen-gone', fn () => abort(404))->name($name);
+
+    $this->get('/test/screen-gone')->assertNotFound()->assertInertia(fn (Assert $page) => $page->where('screen', $screen));
+})->with([['attendance.device.kiosk.show', true], ['attendance.device.kiosk.activate', true], ['attendance.device.punch.home', false], ['portal.home', false]]);
+
 it('answers a throttled send from the portal with a toast in «usted»', function (): void {
     Route::middleware(['web', 'throttle:1,1'])->post('/test/portal-send', fn () => 'ok')->name('portal.test.send');
     $headers = ['X-Inertia' => 'true', 'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request())];

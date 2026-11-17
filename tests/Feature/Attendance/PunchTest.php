@@ -128,9 +128,9 @@ function acceptWith(SoftAuthenticator $phone, string $userHandle, int $version, 
  *
  * @param  array<string, mixed>  $body
  */
-function anaPunches(array $body = []): TestResponse
+function anaPunches(array $body = [], ?string $session = null): TestResponse
 {
-    return punchWith(test()->phone, test()->ana->id, ['q' => punchQr(test()->tenant->id, test()->plant->id), ...PUNCH_INSIDE, ...$body]);
+    return punchWith(test()->phone, test()->ana->id, ['q' => punchQr(test()->tenant->id, test()->plant->id), ...PUNCH_INSIDE, ...$body], $session);
 }
 
 describe('the page', function (): void {
@@ -177,6 +177,33 @@ describe('the page', function (): void {
         $this->get(route('attendance.device.punch.show', ['acme', 'q' => 'abc']))
             ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
         $this->get(route('login'))->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+    });
+
+    it('says how the person who marked here works: remote asks for no code nor zone, on site as it was, nobody known says nothing', function (): void {
+        $this->get(route('attendance.device.punch.home', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('mode', null));
+
+        $session = punchSession();
+        anaPunches([], $session)->assertOk();
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'onsite'));
+
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote'));
+    });
+
+    it('says how the person works from their portal\'s session when nobody marked here yet, in their center\'s zone', function (): void {
+        $this->plant->update(['timezone' => 'America/Tijuana']);
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
+        enteredAs($this->ana->id);
+
+        $this->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote')->where('timezone', 'America/Tijuana')->where('person', null));
+    });
+
+    it('gives the server\'s time, for the clock of the page to follow it and not the phone\'s', function (): void {
+        $this->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('now', CarbonImmutable::now()->getTimestampMs()));
     });
 
     it('answers 404 for a company that does not exist', function (): void {
@@ -242,7 +269,7 @@ describe('the page', function (): void {
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'mark_type' => 'break_start'], $session)
             ->assertUnprocessable()->assertExactJson(['reason' => 'day_not_open', 'name' => 'Bob Ruiz', 'next' => ['start']]);
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE], $session)
-            ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00', 'clock' => null]], 'next' => ['break_start', 'end'], 'flag' => null, 'evidence' => 'strong']);
+            ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00', 'date' => '2026-11-09', 'clock' => null]], 'next' => ['break_start', 'end'], 'flag' => null, 'evidence' => 'strong']);
 
         $this->withCookie($cookie, $session)->get(route('attendance.device.punch.home', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person.name', 'Bob Ruiz'));
@@ -272,7 +299,7 @@ describe('on site', function (): void {
     it('marks with QR and geofence: the zone, the position, its accuracy and the distance, at the server\'s time', function (): void {
         anaPunches()->assertOk()->assertExactJson([
             'name' => 'Ana López',
-            'marks' => [['type' => 'start', 'time' => '09:00', 'clock' => null]],
+            'marks' => [['type' => 'start', 'time' => '09:00', 'date' => '2026-11-09', 'clock' => null]],
             'next' => ['break_start', 'end'],
             'flag' => null,
             'evidence' => 'strong',
@@ -335,6 +362,46 @@ describe('on site', function (): void {
         // Hallazgo 26: the photo of the center's code is told apart, as expired.
         anaPunches(['q' => $code])->assertUnprocessable()->assertJsonPath('reason', 'qr_expired');
         expect(AttendanceMark::query()->count())->toBe(0);
+    });
+
+    it('keeps the scan of a code that counted when the page opened for 3 minutes of this browser, to accept and mark (hallazgo 27)', function (): void {
+        $code = punchQr($this->tenant->id, $this->plant->id);
+        $cookie = config()->string('session.cookie');
+        $session = $this->get(route('attendance.device.punch.show', ['acme', 'q' => $code]))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', '09:00'))
+            ->getCookie($cookie)?->getValue();
+
+        $this->travel(179)->seconds();
+        anaPunches(['q' => $code], $session)->assertOk()->assertJsonPath('evidence', 'strong');
+        expect(AttendanceMark::query()->sole()->method)->toBe(MarkMethod::QrAndGeofence);
+
+        $this->travel(2)->seconds();
+        anaPunches(['q' => $code, 'mark_type' => 'end'], $session)->assertUnprocessable()->assertJsonPath('reason', 'qr_expired');
+    });
+
+    it('gives no scan for a code that no longer counts when the page opens, nor to another browser', function (): void {
+        $code = punchQr($this->tenant->id, $this->plant->id);
+        $this->travel(61)->seconds();
+        $this->get(route('attendance.device.punch.show', ['acme', 'q' => $code]))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', null));
+        $this->get(route('attendance.device.punch.home', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', null));
+
+        $fresh = punchQr($this->tenant->id, $this->plant->id);
+        $this->get(route('attendance.device.punch.show', ['acme', 'q' => $fresh]))->assertOk();
+        $this->travel(90)->seconds();
+        // Another browser's session: the scan was not its own.
+        $this->flushSession();
+        anaPunches(['q' => $fresh])->assertUnprocessable()->assertJsonPath('reason', 'qr_expired');
+    });
+
+    it('keeps the scan of another center\'s code as that center\'s, and a scan only for the code it was of', function (): void {
+        $offices = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Oficinas']);
+        $code = punchQr($this->tenant->id, $offices->id);
+        $session = $this->get(route('attendance.device.punch.show', ['acme', 'q' => $code]))->getCookie(config()->string('session.cookie'))?->getValue();
+        $this->travel(90)->seconds();
+
+        anaPunches(['q' => $code], $session)->assertUnprocessable()->assertJsonPath('reason', 'qr_other_center')->assertJsonPath('center', 'Oficinas');
+        anaPunches(['q' => 'not-a-code'], $session)->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid');
     });
 
     it('takes the code of the same center a few seconds later', function (): void {
@@ -499,10 +566,10 @@ describe('the sequence', function (): void {
         anaPunches(['mark_type' => 'end'])->assertOk()->assertExactJson([
             'name' => 'Ana López',
             'marks' => [
-                ['type' => 'start', 'time' => '09:00', 'clock' => null],
-                ['type' => 'break_start', 'time' => '13:00', 'clock' => null],
-                ['type' => 'break_end', 'time' => '13:30', 'clock' => null],
-                ['type' => 'end', 'time' => '17:30', 'clock' => null],
+                ['type' => 'start', 'time' => '09:00', 'date' => '2026-11-09', 'clock' => null],
+                ['type' => 'break_start', 'time' => '13:00', 'date' => '2026-11-09', 'clock' => null],
+                ['type' => 'break_end', 'time' => '13:30', 'date' => '2026-11-09', 'clock' => null],
+                ['type' => 'end', 'time' => '17:30', 'date' => '2026-11-09', 'clock' => null],
             ],
             'next' => ['start'],
             'flag' => null,
@@ -514,17 +581,18 @@ describe('the sequence', function (): void {
         $this->travelTo(CarbonImmutable::parse('2026-11-09 23:59:00', 'America/Mexico_City'));
         anaPunches()->assertOk();
         $this->travelTo(CarbonImmutable::parse('2026-11-10 00:01:00', 'America/Mexico_City'));
+        // Each mark is dated by its own clock: the screen never says the day before with the hour of the new one (hallazgo 20).
 
         anaPunches(['mark_type' => 'end'])->assertOk()->assertExactJson([
             'name' => 'Ana López',
-            'marks' => [['type' => 'start', 'time' => '23:59', 'clock' => null], ['type' => 'end', 'time' => '00:01', 'clock' => null]],
+            'marks' => [['type' => 'start', 'time' => '23:59', 'date' => '2026-11-09', 'clock' => null], ['type' => 'end', 'time' => '00:01', 'date' => '2026-11-10', 'clock' => null]],
             'next' => ['start'],
             'flag' => null,
             'evidence' => 'strong',
         ]);
 
         $this->travelTo(CarbonImmutable::parse('2026-11-11 00:01:00', 'America/Mexico_City'));
-        anaPunches()->assertOk()->assertJsonPath('marks', [['type' => 'start', 'time' => '00:01', 'clock' => null]]);
+        anaPunches()->assertOk()->assertJsonPath('marks', [['type' => 'start', 'time' => '00:01', 'date' => '2026-11-11', 'clock' => null]]);
     });
 });
 
@@ -717,6 +785,41 @@ describe('the agreement', function (): void {
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE])->assertOk();
     });
 
+    it('accepts the version read and takes the mark with one signature: the acceptance first, with the key that signed (hallazgo 27)', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Bob Ruiz']);
+        $bobPhone = new SoftAuthenticator;
+        $bobDevice = punchDevice($bobPhone, $bob, accepted: false);
+        $version = resolve(CurrentAgreement::class)->get()->version;
+
+        punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'agreement_version' => $version])
+            ->assertOk()->assertJsonPath('name', 'Bob Ruiz')->assertJsonPath('marks.0.type', 'start');
+
+        $acceptance = AgreementAcceptance::query()->where('employee_id', $bob->id)->sole();
+        expect($acceptance->credential_id)->toBe($bobDevice->id)
+            ->and($acceptance->accepted_at?->lessThanOrEqualTo(AttendanceMark::query()->sole()->marked_at))->toBeTrue();
+    });
+
+    it('keeps the acceptance when the mark that came with it is refused, so only the mark is tried again', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+        $bobPhone = new SoftAuthenticator;
+        punchDevice($bobPhone, $bob, accepted: false);
+
+        punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_OUTSIDE, 'agreement_version' => resolve(CurrentAgreement::class)->get()->version])
+            ->assertUnprocessable()->assertJsonPath('reason', 'outside_zone');
+
+        expect(AgreementAcceptance::query()->where('employee_id', $bob->id)->count())->toBe(1)->and(AttendanceMark::query()->count())->toBe(0);
+    });
+
+    it('refuses with the current text a mark that came with a version no longer current, accepting nothing', function (): void {
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'retention_months' => 36]);
+        $current = resolve(CurrentAgreement::class)->get();
+
+        anaPunches(['agreement_version' => 1])->assertUnprocessable()
+            ->assertJsonPath('reason', 'agreement_not_accepted')->assertJsonPath('agreement.version', 2);
+
+        expect(AgreementAcceptance::query()->where('agreement_id', $current->id)->count())->toBe(0)->and(AttendanceMark::query()->count())->toBe(0);
+    });
+
     it('answers 409 with the current text to an acceptance of a version that is not the current one, and records nothing', function (): void {
         AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'retention_months' => 36]);
         $current = resolve(CurrentAgreement::class)->get();
@@ -785,7 +888,7 @@ describe('the code of another center (hallazgo 26; design of time zones §3.9)',
         anaPunches(['q' => punchQr($this->tenant->id, $this->offices->id)])->assertOk()
             ->assertJsonPath('flag', 'away_center')
             // 15:00 UTC is 07:00 in Tijuana: the person reads the hour of where they marked.
-            ->assertJsonPath('marks', [['type' => 'start', 'time' => '07:00', 'clock' => 'America/Tijuana']]);
+            ->assertJsonPath('marks', [['type' => 'start', 'time' => '07:00', 'date' => '2026-11-09', 'clock' => 'America/Tijuana']]);
 
         expect(AttendanceMark::query()->sole())
             ->away_center_id->toBe($this->offices->id)

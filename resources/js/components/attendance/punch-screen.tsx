@@ -4,36 +4,33 @@ import PunchProblemView from '@/components/attendance/punch-problem-view';
 import PunchProgress from '@/components/attendance/punch-progress';
 import PunchReady from '@/components/attendance/punch-ready';
 import type { usePunch } from '@/hooks/use-punch';
+import type { PunchMode } from '@/lib/attendance/punch';
 import { feedbackProblem } from '@/lib/attendance/punch-problem';
 import { feedbackAgreement } from '@/lib/attendance/punch-state';
 
 /**
  * The screen of Marcar that fits the moment: each test as it passes while a mark is checked, the mark taken, what went
- * wrong and what to do, the agreement to accept before marking, or the screen before marking (where a mark that came out of order is said).
+ * wrong and what to do, the agreement to accept and mark with, or the screen before marking (where a step that does not
+ * proceed is said).
  */
 export default function PunchScreen({
     company,
     punch,
-    scanned,
-    weekUrl,
-    enterUrl,
-    correctionOptionsUrl,
-    correctionUrl,
-    agreementOptionsUrl,
-    agreementUrl,
-    timezone,
+    page,
     now,
 }: {
     company: string;
     punch: ReturnType<typeof usePunch>;
-    scanned: boolean;
-    weekUrl: string;
-    enterUrl: string;
-    correctionOptionsUrl: string;
-    correctionUrl: string;
-    agreementOptionsUrl: string;
-    agreementUrl: string;
-    timezone: string;
+    page: {
+        mode: PunchMode;
+        scannedAt: string | null;
+        weekUrl: string;
+        enterUrl: string;
+        correctionOptionsUrl: string;
+        correctionUrl: string;
+        timezone: string;
+    };
+    /** The server's time now. */
     now: number;
 }) {
     const { feedback, phase, marks } = punch;
@@ -52,9 +49,7 @@ export default function PunchScreen({
                 evidence={feedback.evidence ?? null}
                 flag={feedback.flag ?? null}
                 marks={marks}
-                timezone={timezone}
-                now={now}
-                weekUrl={weekUrl}
+                weekUrl={page.weekUrl}
                 onDone={punch.dismiss}
             />
         );
@@ -65,9 +60,8 @@ export default function PunchScreen({
             <PunchAgreement
                 company={company}
                 agreement={agreement}
-                optionsUrl={agreementOptionsUrl}
-                url={agreementUrl}
-                onAccepted={punch.retry}
+                step={punch.step}
+                onAccept={() => punch.accept(agreement.version)}
                 onLater={punch.dismiss}
             />
         );
@@ -78,9 +72,10 @@ export default function PunchScreen({
             <PunchProblemView
                 company={company}
                 problem={problem}
-                optionsUrl={correctionOptionsUrl}
-                correctionUrl={correctionUrl}
-                timezone={timezone}
+                optionsUrl={page.correctionOptionsUrl}
+                correctionUrl={page.correctionUrl}
+                timezone={page.timezone}
+                now={now}
                 onRetry={punch.retry}
                 onDismiss={punch.dismiss}
             />
@@ -93,10 +88,11 @@ export default function PunchScreen({
             person={punch.person}
             marks={marks}
             feedback={feedback}
-            scanned={scanned}
-            weekUrl={weekUrl}
-            enterUrl={enterUrl}
-            timezone={timezone}
+            mode={page.mode}
+            scannedAt={page.scannedAt}
+            weekUrl={page.weekUrl}
+            enterUrl={page.enterUrl}
+            timezone={page.timezone}
             now={now}
             onMark={(type) => void punch.mark(type)}
             onForget={punch.forget}

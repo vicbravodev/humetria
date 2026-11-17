@@ -7,7 +7,7 @@ import type { Problem } from '@/lib/attendance/punch-problem';
 
 /**
  * A mark that was not taken (board P3): what happened in a title, what to do in a line, and the way out in the buttons at
- * the foot (try again, ask RH for a correction, how to allow the location, ask RH for the link).
+ * the foot (try again, scan again, ask RH for a correction in a sheet, how to allow the location, ask RH for the link).
  */
 export default function PunchProblemView({
     company,
@@ -15,6 +15,7 @@ export default function PunchProblemView({
     optionsUrl,
     correctionUrl,
     timezone,
+    now,
     onRetry,
     onDismiss,
 }: {
@@ -23,12 +24,15 @@ export default function PunchProblemView({
     optionsUrl: string;
     correctionUrl: string;
     timezone: string;
+    /** The server's time now. */
+    now: number;
     onRetry: () => void;
     onDismiss: () => void;
 }) {
     const { asking, howto, copied, run, close } = useProblemActions({
         company,
         timezone,
+        now,
         onRetry,
         onDismiss,
     });
@@ -37,12 +41,7 @@ export default function PunchProblemView({
         <PersonFrame
             company={company}
             actions={
-                asking === null ? (
-                    <PunchProblemActions
-                        actions={problem.actions}
-                        onAction={run}
-                    />
-                ) : undefined
+                <PunchProblemActions actions={problem.actions} onAction={run} />
             }
         >
             <div className="flex w-full max-w-md flex-col gap-6">
