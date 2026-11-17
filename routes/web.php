@@ -24,6 +24,8 @@ Route::get('/privacy-notice', function (): Response {
 
     return Inertia::render('privacy-notice', ['legalName' => $legal('name'), 'legalAddress' => $legal('address'), 'seo' => PageSeo::for('privacy-notice')]);
 })->name('privacy-notice');
+// What Humetría plans to add: fixed text in the page, nothing from the database, nothing from a person.
+Route::get('/roadmap', fn (): Response => Inertia::render('roadmap', ['seo' => PageSeo::for('roadmap')]))->name('roadmap');
 Route::get('/media/films/{film}', ToolFilmController::class)->name('films.show');
 
 require __DIR__.'/demos.php';

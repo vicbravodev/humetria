@@ -5,7 +5,7 @@ import SocialLinks from '@/components/landing/social-links';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { currentYear } from '@/lib/current-year';
 import { cn } from '@/lib/utils';
-import { dashboard, privacyNotice } from '@/routes';
+import { dashboard, privacyNotice, roadmap } from '@/routes';
 
 const links = [
     { href: '#como-funciona', label: 'Cómo funciona' },
@@ -49,6 +49,13 @@ export default function LandingFooter({
                                 {link.label}
                             </a>
                         ))}
+                        <a
+                            href={roadmap().url}
+                            data-test="footer-roadmap"
+                            className={linkClass}
+                        >
+                            Lo que viene
+                        </a>
                         <a
                             href={privacyNotice().url}
                             data-test="footer-privacy"

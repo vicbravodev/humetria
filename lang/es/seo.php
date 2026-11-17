@@ -14,4 +14,9 @@ return [
         'description' => 'Quién es el responsable de tus datos en Humetría, qué datos recabamos en el formulario de demo, para qué los usamos y cómo ejercer tus derechos.',
         'image_alt' => 'Humetría: tu gente contesta desde el celular, tú llegas listo a la STPS',
     ],
+    'roadmap' => [
+        'title' => 'Lo que viene en Humetría',
+        'description' => 'Lo que estamos construyendo para oficinas y servicios: capacitación, jornada de 40 horas, PTU, comisiones mixtas, integraciones y más.',
+        'image_alt' => 'Humetría: tu gente contesta desde el celular, tú llegas listo a la STPS',
+    ],
 ];

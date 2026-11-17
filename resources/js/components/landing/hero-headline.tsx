@@ -12,7 +12,7 @@ export default function HeroHeadline() {
     return (
         <h1
             id="hero-title"
-            className="max-w-[13ch] text-[42px] leading-[1.03] font-semibold tracking-[-0.035em] text-balance sm:text-[60px] lg:max-w-[11ch] lg:text-[72px] xl:text-[80px]"
+            className="max-w-[13ch] text-[42px] leading-[1.03] font-semibold tracking-[-0.035em] text-balance sm:text-[56px] lg:max-w-[16ch] lg:text-[56px] xl:text-[60px]"
         >
             {WORDS.map((word, index) => (
                 <span

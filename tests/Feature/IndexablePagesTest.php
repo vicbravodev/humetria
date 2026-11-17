@@ -9,7 +9,8 @@ mutates(IndexablePages::class);
 
 it('lists the pages search engines may index', function (): void {
     expect(IndexablePages::includes('home'))->toBeTrue()
-        ->and(IndexablePages::includes('privacy-notice'))->toBeTrue();
+        ->and(IndexablePages::includes('privacy-notice'))->toBeTrue()
+        ->and(IndexablePages::includes('roadmap'))->toBeTrue();
 });
 
 it('does not list a missing name, an unknown name or the login', function (?string $name): void {
