@@ -113,7 +113,9 @@ return [
             ->and(AttendanceSchedule::query()->count())->toBe(180)
             ->and(AttendanceSchedule::query()->whereIn('employee_id', $nightShift)->pluck('shift_type')->unique()->all())->toBe([ShiftType::Night])
             ->and(AttendanceSchedule::query()->whereNotIn('employee_id', $nightShift)->pluck('shift_type')->unique()->all())->toBe([ShiftType::Day])
-            ->and(AttendancePolicy::query()->count())->toBe(1);
+            ->and(AttendancePolicy::query()->count())->toBe(1)
+            // no zone smaller than the accuracy the policy accepts: the panel has nothing to warn about the setup
+            ->and(AttendanceZone::query()->where('radius_m', '<', AttendancePolicy::query()->sole()->max_accuracy_m)->pluck('name')->all())->toBe([]);
 
         foreach (AttendanceSchedule::query()->get() as $schedule) {
             // Within the 46 h a week of 2027, so no ordinary hour of the demo turns into overtime when the year changes.

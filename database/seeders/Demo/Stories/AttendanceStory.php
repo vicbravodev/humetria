@@ -84,10 +84,11 @@ final readonly class AttendanceStory implements DemoStory
      * @var array<string, list<array{string, float, float, int}>>
      */
     private const array ZONES = [
-        'plant' => [['Nave de producción', 20.706500, -100.443600, 150], ['Almacén y andenes', 20.707600, -100.442100, 80]],
+        // None smaller than the 100 m of accuracy the policy accepts, or the panel warns about the setup in front of an audience.
+        'plant' => [['Nave de producción', 20.706500, -100.443600, 150], ['Almacén y andenes', 20.707600, -100.442100, 100]],
         'distribution' => [['Patio y andenes', 20.617000, -100.293000, 120]],
-        'offices' => [['Edificio corporativo', 20.593000, -100.390000, 60]],
-        'monterrey' => [['Sucursal', 25.686600, -100.316100, 60]],
+        'offices' => [['Edificio corporativo', 20.593000, -100.390000, 100]],
+        'monterrey' => [['Sucursal', 25.686600, -100.316100, 100]],
     ];
 
     /**
