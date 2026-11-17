@@ -304,3 +304,25 @@ it('keeps the work center and the area apart and as wide as each other when the 
             JS, true)
         ->assertNoJavaScriptErrors();
 });
+
+it('keeps a long choice of a Combobox from widening its column in a row of equal columns', function (): void {
+    acmeWithEmployees();
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Editar')
+        ->assertSee('Dónde trabaja')
+        // Wherever a screen puts the trigger in a row of equal columns, a long choice must not widen its column.
+        ->assertScript(<<<'JS'
+            () => {
+                const trigger = document.querySelector('#employee-work_center_id');
+                trigger.querySelector('span').textContent = 'Centro de distribución y logística del Bajío, Querétaro Norte';
+                const row = document.createElement('div');
+                row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;width:400px';
+                trigger.parentElement.insertBefore(row, trigger);
+                row.append(trigger, document.createElement('span'));
+                const fits = trigger.getBoundingClientRect().width <= 200;
+                row.replaceWith(trigger);
+                return fits;
+            }
+            JS, true);
+});
