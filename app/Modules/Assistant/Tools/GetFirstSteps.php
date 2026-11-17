@@ -66,7 +66,21 @@ final readonly class GetFirstSteps implements Tool
             ], $steps),
             $this->links->dashboard(),
             $steps === [] ? 'No tienes primeros pasos pendientes.' : null,
+            next: $this->next($steps),
         ))->toJson();
+    }
+
+    /**
+     * The page of the first step not done yet; one that runs where the person already is (Humi's) leads nowhere.
+     *
+     * @param  list<FirstStep>  $steps
+     * @return array{label: string, link: string}|null
+     */
+    private function next(array $steps): ?array
+    {
+        $step = array_find($steps, fn (FirstStep $step): bool => ! $step->done && $step->href !== null);
+
+        return $step?->href === null ? null : ['label' => 'Ir a «'.$this->title($step).'»', 'link' => $step->href];
     }
 
     /**

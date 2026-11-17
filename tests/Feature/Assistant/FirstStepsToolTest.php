@@ -35,6 +35,15 @@ it('gives the owner each step with its state and its link', function (): void {
         ->and($card['rows'][4]['link'])->toBe("/admin/{$this->a->slug}");
 });
 
+it('leads to the first step not done yet, and nowhere once all are done or for someone who is not the owner', function (): void {
+    $owner = toolCard(GetFirstSteps::class, assistantScopeIn($this->a, TenantRole::Owner));
+    $hr = toolCard(GetFirstSteps::class, assistantScopeIn($this->a, TenantRole::Hr));
+
+    expect($owner['next'])->toBe(['label' => 'Ir a «Revisa tus centros de trabajo»', 'link' => "/admin/{$this->a->slug}/work-centers"])
+        ->and($owner['sources'])->toBe([])
+        ->and($hr['next'])->toBeNull();
+});
+
 it('marks a step done once its data is there', function (): void {
     $scope = assistantScopeIn($this->a, TenantRole::Owner);
     WorkCenter::factory()->create(['tenant_id' => $this->a->id]);
