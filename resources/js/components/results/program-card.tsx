@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ClipboardList } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { meterText } from '@/lib/interventions';
+import { programCardText } from '@/lib/interventions';
 import { program as programRoute } from '@/routes/tenant/campaigns';
 import { cn } from '@/lib/utils';
 import type { ResultsProgramCard } from '@/types';
@@ -55,9 +55,7 @@ export default function ProgramCard({
                     wide && 'lg:flex-1',
                 )}
             >
-                {program.exists && program.meter !== null
-                    ? `${meterText(program.meter)}. Qué se atiende, con qué acciones, fechas y responsables.`
-                    : 'Hay cuestionarios en riesgo medio o más: la norma pide un Programa con acciones, fechas y responsable (numeral 8.3).'}
+                {programCardText(program)}
             </p>
             <Button
                 asChild

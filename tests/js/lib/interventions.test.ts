@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     activeTab,
     meterText,
+    programCardText,
     programStartText,
     programTools,
     byRisk,
@@ -129,6 +130,34 @@ describe('meterText', () => {
 
     it('says there are no actions yet', () => {
         expect(meterText({ done: 0, total: 0 })).toBe('Aún no hay acciones');
+    });
+});
+
+describe('programCardText', () => {
+    it('reads the actions done, the themes with actions and the server share of the work', () => {
+        expect(
+            programCardText({
+                exists: true,
+                state: null,
+                meter: { done: 1, total: 1 },
+                coverage: { covered: 1, total: 15 },
+                percent: 6,
+            }),
+        ).toBe(
+            '1 de 1 acción hecha · 1 de 15 temas con acciones · 6 % de avance. Qué se atiende, con qué acciones, fechas y responsables.',
+        );
+    });
+
+    it('asks for the Programa when there is none yet', () => {
+        expect(
+            programCardText({
+                exists: false,
+                state: null,
+                meter: null,
+                coverage: null,
+                percent: null,
+            }),
+        ).toContain('la norma pide un Programa');
     });
 });
 
