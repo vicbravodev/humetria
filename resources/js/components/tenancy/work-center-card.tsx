@@ -11,7 +11,7 @@ import { create as importPeople } from '@/routes/tenant/employees/import';
 import type { MexicanStateOption, WorkCenterRow } from '@/types';
 
 /**
- * One work center (pantallas: Centros): what it does and where, its people and the guides that apply, its largest
+ * One active work center (pantallas: Centros): what it does and where, its people and the guides that apply, its largest
  * areas and where it stands with its evaluations.
  */
 export default function WorkCenterCard({
@@ -54,13 +54,7 @@ export default function WorkCenterCard({
             <WorkCenterFacts workCenter={workCenter} next={standing.next} />
             <WorkCenterAreas workCenter={workCenter} />
             <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
-                {workCenter.archived_on === null ? (
-                    <Badge variant={standing.variant}>{standing.badge}</Badge>
-                ) : (
-                    <Badge variant="secondary">
-                        Archivado el {workCenter.archived_on}
-                    </Badge>
-                )}
+                <Badge variant={standing.variant}>{standing.badge}</Badge>
                 {states !== null && (
                     <Link
                         href={

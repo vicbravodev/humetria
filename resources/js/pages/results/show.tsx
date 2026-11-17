@@ -1,10 +1,9 @@
 import { Head, setLayoutProps, usePage } from '@inertiajs/react';
 import AreaFilter from '@/components/humetria/area-filter';
-import ProgramCard from '@/components/results/program-card';
 import ResultsBody from '@/components/results/results-body';
 import ResultsHeader from '@/components/results/results-header';
 import ResultsOverview from '@/components/results/results-overview';
-import TraumaSummary from '@/components/results/trauma-summary';
+import ResultsSideCards from '@/components/results/results-side-cards';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { resultsTrail } from '@/lib/results';
 import { report, results as resultsRoute } from '@/routes/tenant/campaigns';
@@ -44,8 +43,7 @@ export default function Results({
 }) {
     const tenantSlug = useTenantSlug();
     const canSeeProgram =
-        usePage().props.tenant?.can.view_interventions === true &&
-        program !== null;
+        usePage().props.tenant?.can.view_interventions === true;
     const area = filters.area;
     setLayoutProps({
         breadcrumbs: resultsTrail(tenantSlug, campaign, 'Resultados'),
@@ -75,22 +73,11 @@ export default function Results({
                     area={area}
                     levels={levels}
                 />
-                {(trauma !== null || canSeeProgram) && (
-                    <div className="grid items-start gap-5 lg:grid-cols-2">
-                        {trauma !== null && (
-                            <TraumaSummary
-                                url={[tenantSlug, campaign.id]}
-                                counts={trauma}
-                            />
-                        )}
-                        {canSeeProgram && (
-                            <ProgramCard
-                                route={[tenantSlug, campaign.id]}
-                                program={program}
-                            />
-                        )}
-                    </div>
-                )}
+                <ResultsSideCards
+                    route={[tenantSlug, campaign.id]}
+                    trauma={trauma}
+                    program={canSeeProgram ? program : null}
+                />
                 <ResultsBody
                     results={results}
                     areas={areas}
