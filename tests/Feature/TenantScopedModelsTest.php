@@ -20,6 +20,8 @@ use App\Modules\Billing\Models\UsageReservation;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Demos\Models\DemoRun;
+use App\Modules\Sso\Models\SsoConnection;
+use App\Modules\Sso\Models\SsoDomain;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -54,6 +56,9 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     UsageEvent::class => 'read across companies by the console',
     UsageGrant::class => 'read across companies by the console',
     TenantLimit::class => 'read across companies by the console and the reconciliation',
+    // Single sign-on is read by the public sign-in routes before any company is resolved; every query of the module names its company.
+    SsoConnection::class => 'read by the sign-in routes before a company is resolved',
+    SsoDomain::class => 'read by the sign-in routes before a company is resolved',
     // Who paid a company before and why it moved is read across companies, from both accounts' pages.
     CompanyTransfer::class => 'read across companies by the billing console',
 ];

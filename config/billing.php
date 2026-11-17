@@ -12,7 +12,8 @@ declare(strict_types=1);
 | porcentaje en enteros. Los precios negociados no viven aquí: van en la suscripción.
 |
 | Tarifas y mínimos del handoff de monetización v1.0: Jornada $39 (mínimo $1,990), Cumplimiento $49 (mínimo $2,990) e
-| Integral $99 (mínimo $4,990) por persona al mes.
+| Integral $99 (mínimo $4,990) por persona al mes. Enterprise ($199, mínimo $9,990) es Integral más el inicio de sesión
+| único (SSO) de las personas de RH.
 |
 */
 
@@ -80,6 +81,13 @@ return [
                     'minimum_cents' => 499_000,
                     'included_centers' => 3,
                     'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'],
+                    'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120],
+                ],
+                'enterprise' => [
+                    'rate_cents' => 19_900,
+                    'minimum_cents' => 999_000,
+                    'included_centers' => 3,
+                    'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'sso'],
                     'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120],
                 ],
             ],
