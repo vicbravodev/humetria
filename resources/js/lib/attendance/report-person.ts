@@ -56,8 +56,12 @@ export function personHours(days: readonly ReportDay[]): {
 
 const IN_PROGRESS = 'En curso';
 
-/** A flag RH should act on: «En curso» (today's day, not over yet) only informs. */
-export const isWarning = (flag: string): boolean => flag !== IN_PROGRESS;
+/** A day marked in a field center: its mode, not a warning. */
+const FIELD = 'Marcó en campo';
+
+/** A flag RH should act on: «En curso» (today's day, not over yet) and «Marcó en campo» only inform. */
+export const isWarning = (flag: string): boolean =>
+    flag !== IN_PROGRESS && flag !== FIELD;
 
 /** What an inspector should notice about the person: each distinct warning of their days, in the order they appear. */
 export function personNotices(days: readonly ReportDay[]): string[] {

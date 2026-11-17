@@ -157,6 +157,20 @@ it('lists each correction of the day with its reason, and the day\'s evidence is
     );
 });
 
+it('names the days marked in the field: strong with a good position, medium without one', function (): void {
+    reportMark($this->ana, MarkType::Start, '2027-01-05 08:00', MarkMethod::Field);
+    reportMark($this->ana, MarkType::End, '2027-01-05 16:00', MarkMethod::Field);
+    reportMark($this->ana, MarkType::Start, '2027-01-06 08:00', MarkMethod::Field);
+    reportMark($this->ana, MarkType::End, '2027-01-06 16:00', MarkMethod::FieldUnlocated);
+    reportDay($this->ana, '2027-01-07 08:00', '2027-01-07 16:00');
+
+    expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+        fn ($row) => $row->evidence->toBe('Fuerte')->flags->toBe(['Marcó en campo']),
+        fn ($row) => $row->evidence->toBe('Media')->flags->toBe(['Marcó en campo']),
+        fn ($row) => $row->evidence->toBe('Fuerte')->flags->toBe([]),
+    );
+});
+
 describe('what was corrected', function (): void {
     it('says the time a correction replaced, in local times', function (): void {
         $start = reportMark($this->ana, MarkType::Start, '2027-01-05 08:12');

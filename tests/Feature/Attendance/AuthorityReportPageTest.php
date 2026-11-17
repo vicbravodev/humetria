@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Http\Controllers\ReportController;
 use App\Modules\Attendance\Models\AttendanceMark;
@@ -146,6 +147,21 @@ describe('the page', function (): void {
 
         $this->get(authorityReportUrl())->assertInertia(fn (AssertableInertia $page) => $page
             ->where('presets.2', ['key' => 'last-month', 'label' => 'Último mes', 'from' => '2027-02-01', 'to' => '2027-02-28']));
+    });
+
+    it('does not count a person whose days were only marked in the field as one with warnings', function (): void {
+        foreach ([[MarkType::Start, '2027-01-26 08:00'], [MarkType::End, '2027-01-26 16:00']] as [$type, $local]) {
+            AttendanceMark::factory()->create([
+                'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id, 'type' => $type, 'method' => MarkMethod::Field,
+                'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City')->utc(),
+            ]);
+        }
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('summary.flaggedPeople', 0)
+            ->where('people.data.0.days.0.flags', ['Marcó en campo'])
+            ->where('people.data.0.days.0.evidence', 'Fuerte'));
     });
 
     it('shows the center\'s period: its figures, the people page by page with their days, and the link to the CSV', function (): void {
