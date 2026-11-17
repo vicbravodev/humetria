@@ -23,6 +23,7 @@ dataset('record forms', [
     'telework/training-dialog.tsx',
     'telework/join-roster-dialog.tsx',
     'interventions/add-row-dialog.tsx',
+    'attendance/schedule-dialog.tsx',
 ]);
 
 it('keeps the form of a record, or its button, in the side panel', function (string $file): void {
