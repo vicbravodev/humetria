@@ -43,8 +43,8 @@ final readonly class ProgramList
     }
 
     /**
-     * @param  array<string, array{state: ProgramState, meter: array{done: int, total: int}, level: string|null}>  $standing  by evaluation
-     * @return LengthAwarePaginator<int, array{id: string, workCenter: string, closedOn: string|null, applies: bool, program: array{state: array{value: string, label: string}, meter: array{done: int, total: int}}|null}>
+     * @param  array<string, array{state: ProgramState, meter: array{done: int, total: int}, coverage: array{covered: int, total: int}, percent: int}>  $standing  by evaluation
+     * @return LengthAwarePaginator<int, array{id: string, workCenter: string, closedOn: string|null, applies: bool, program: array{state: array{value: string, label: string}, meter: array{done: int, total: int}, coverage: array{covered: int, total: int}, percent: int}|null}>
      */
     private function evaluations(array $standing): LengthAwarePaginator
     {
@@ -65,7 +65,7 @@ final readonly class ProgramList
                 'closedOn' => $record->closedOn,
                 // Only an evaluation that applies a Guía II or III is scored by risk level: only it has a Programa to speak of.
                 'applies' => array_any($record->instruments, fn (string $key): bool => $key !== 'nom035.guide-i'),
-                'program' => $program === null ? null : ['state' => ['value' => $program['state']->value, 'label' => $program['state']->label()], 'meter' => $program['meter']],
+                'program' => $program === null ? null : ['state' => ['value' => $program['state']->value, 'label' => $program['state']->label()], 'meter' => $program['meter'], 'coverage' => $program['coverage'], 'percent' => $program['percent']],
             ];
         });
     }
@@ -73,11 +73,11 @@ final readonly class ProgramList
     /**
      * Where each Programa stands, by the evaluation it comes from.
      *
-     * @return array<string, array{state: ProgramState, meter: array{done: int, total: int}, level: string|null}>
+     * @return array<string, array{state: ProgramState, meter: array{done: int, total: int}, coverage: array{covered: int, total: int}, percent: int}>
      */
     private function standing(): array
     {
-        $programs = Program::query()->get(['id', 'campaign_id', 'highest_level']);
+        $programs = Program::query()->get(['id', 'campaign_id']);
         $actions = ProgramAction::query()->get(['id', 'program_id', 'item_id', 'status', 'due_on']);
         $items = ProgramItem::query()->get(['id', 'program_id', 'follow_up_due_on', 'follow_up_done_on']);
         $today = ProgramClock::today();
@@ -87,7 +87,7 @@ final readonly class ProgramList
             $own = array_values($actions->where('program_id', $program->id)->all());
             $standingOf = ProgramProgress::standing(array_values($items->where('program_id', $program->id)->all()), $own, $today);
 
-            $standing[$program->campaign_id] = ['state' => $standingOf['state'], 'meter' => $standingOf['meter'], 'level' => $program->highest_level?->value];
+            $standing[$program->campaign_id] = ['state' => $standingOf['state'], 'meter' => $standingOf['meter'], 'coverage' => $standingOf['coverage'], 'percent' => $standingOf['percent']];
         }
 
         return $standing;

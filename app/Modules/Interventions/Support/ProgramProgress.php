@@ -25,14 +25,16 @@ final class ProgramProgress
 
     /**
      * @param  list<ActionStatus>  $statuses  the actions of a row
+     * @param  bool  $followUpPending  whether its follow-up evaluation (num. 8.4 e) is scheduled and not done
      */
-    public static function rowState(array $statuses): RowState
+    public static function rowState(array $statuses, bool $followUpPending = false): RowState
     {
         $counted = self::counted($statuses);
 
         return match (true) {
             $counted === [] => RowState::NoActions,
-            array_all($counted, fn (ActionStatus $status): bool => $status === ActionStatus::Done) => RowState::Done,
+            array_all($counted, fn (ActionStatus $status): bool => $status === ActionStatus::Done) => $followUpPending ? RowState::AwaitingFollowUp : RowState::Done,
+            array_all($counted, fn (ActionStatus $status): bool => $status === ActionStatus::Planned) => RowState::NotStarted,
             default => RowState::InProgress,
         };
     }
@@ -64,12 +66,13 @@ final class ProgramProgress
     }
 
     /**
-     * Where a whole Programa stands, from its rows and its actions: the state of each row, the meters, how many actions are
-     * overdue today and where the Programa is. The page, the list, the report and the reminders read it from here.
+     * Where a whole Programa stands, from its rows and its actions: the state of each row, the meters, how many rows have an
+     * action (the coverage), the share of the work done, how many actions are overdue today and where the Programa is. The
+     * page, the list, the results card, the report and the reminders read it from here (criterio C-36: the same numbers).
      *
      * @param  list<ProgramItem>  $items
      * @param  array<int, ProgramAction>  $actions  every action of the Programa
-     * @return array{state: ProgramState, meter: array{done: int, total: int}, overdue: int, rows: array<string, array{state: RowState, meter: array{done: int, total: int}, followUpPending: bool}>}
+     * @return array{state: ProgramState, meter: array{done: int, total: int}, coverage: array{covered: int, total: int}, percent: int, overdue: int, rows: array<string, array{state: RowState, meter: array{done: int, total: int}, followUpPending: bool}>}
      */
     public static function standing(array $items, array $actions, string $today): array
     {
@@ -77,14 +80,22 @@ final class ProgramProgress
 
         foreach ($items as $item) {
             $statuses = array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, array_filter($actions, fn (ProgramAction $action): bool => $action->item_id === $item->id)));
-            $rows[$item->id] = ['state' => self::rowState($statuses), 'meter' => self::meter($statuses), 'followUpPending' => $item->follow_up_due_on !== null && $item->follow_up_done_on === null];
+            $pending = $item->follow_up_due_on !== null && $item->follow_up_done_on === null;
+            $rows[$item->id] = ['state' => self::rowState($statuses, $pending), 'meter' => self::meter($statuses), 'followUpPending' => $pending];
         }
 
         $overdue = count(array_filter($actions, fn (ProgramAction $action): bool => self::isOverdue($action->status, $action->due_on->toDateString(), $today)));
+        $meter = self::meter(array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, $actions)));
+        $coverage = ['covered' => count(array_filter($rows, fn (array $row): bool => $row['meter']['total'] > 0)), 'total' => count($rows)];
+        // What is still to do counts against the share: every action not done, every row without one and every follow-up
+        // evaluation that waits. So it reads 100 % only when the Programa is done; rounded down, never up to it.
+        $work = $meter['total'] + $coverage['total'] - $coverage['covered'] + count(array_filter($rows, fn (array $row): bool => $row['followUpPending']));
 
         return [
             'state' => self::programState(array_values($rows), $overdue > 0),
-            'meter' => self::meter(array_values(array_map(fn (ProgramAction $action): ActionStatus => $action->status, $actions))),
+            'meter' => $meter,
+            'coverage' => $coverage,
+            'percent' => $work === 0 ? 0 : intdiv($meter['done'] * 100, $work),
             'overdue' => $overdue,
             'rows' => $rows,
         ];

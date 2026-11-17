@@ -20,6 +20,17 @@ export type ActionStatusValue =
 
 export type ProgramStateValue = 'none' | 'in_progress' | 'overdue' | 'done';
 
+/** Where a row stands: none, not started, running, done while its follow-up evaluation waits, or done. */
+export type ProgramRowStateValue =
+    | 'none'
+    | 'planned'
+    | 'in_progress'
+    | 'follow_up'
+    | 'done';
+
+/** Rows with an action not cancelled, of all the rows of a Programa. */
+export type ProgramCoverageCount = { covered: number; total: number };
+
 /** The evaluation that came after, to follow up the measures of a row (num. 8.4 e). */
 export type FollowUpEvaluation = { id: string; label: string };
 
@@ -41,7 +52,7 @@ export type ProgramRow = {
     /** The highest level that led to the row; null on a row HR added. */
     level: ProgramLevel | null;
     manual: boolean;
-    state: Choice<'none' | 'in_progress' | 'done'>;
+    state: Choice<ProgramRowStateValue>;
     /** The actions of the row that are done, of those not cancelled. */
     meter: { done: number; total: number };
     analysis: string | null;
@@ -63,6 +74,9 @@ export type ProgramData = {
     responsible: { name: string; userId: number | null } | null;
     state: Choice<ProgramStateValue>;
     meter: { done: number; total: number };
+    coverage: ProgramCoverageCount;
+    /** The share of the work done, 100 only when the Programa is done: what is missing (rows without actions, a follow-up that waits) counts against it. */
+    percent: number;
     /** How many actions are past their due day and not finished. */
     overdue: number;
     requirements: Requirement[];
@@ -170,6 +184,8 @@ export type ProgramListRow = {
     program: {
         state: Choice<ProgramStateValue>;
         meter: { done: number; total: number };
+        coverage: ProgramCoverageCount;
+        percent: number;
     } | null;
 };
 

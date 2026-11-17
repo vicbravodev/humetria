@@ -126,6 +126,8 @@ final readonly class ProgramPages
             'overdue' => $standing['overdue'],
             'requirements' => TableChecklist::for($program->highest_level, $kinds, $analysisRows),
             'meter' => $standing['meter'],
+            'coverage' => $standing['coverage'],
+            'percent' => $standing['percent'],
             'items' => array_map(fn (ProgramItem $item): array => [
                 'id' => $item->id,
                 'scope' => $item->scope->value,

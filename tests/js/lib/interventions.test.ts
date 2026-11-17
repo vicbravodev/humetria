@@ -5,6 +5,8 @@ import {
     programStartText,
     programTools,
     byRisk,
+    coverageText,
+    rowStateVariant,
     programTrail,
     themeCoverage,
     requirementText,
@@ -119,6 +121,25 @@ describe('variants', () => {
         expect(stateVariant('in_progress')).toBe('default');
         expect(stateVariant('overdue')).toBe('destructive');
         expect(stateVariant('done')).toBe('success');
+    });
+
+    it('tells a row not started from one running, and one waiting for its follow-up from one done', () => {
+        expect(rowStateVariant('none')).toBe('secondary');
+        expect(rowStateVariant('planned')).toBe('outline');
+        expect(rowStateVariant('in_progress')).toBe('default');
+        expect(rowStateVariant('follow_up')).toBe('warning');
+        expect(rowStateVariant('done')).toBe('success');
+    });
+});
+
+describe('coverageText', () => {
+    it('counts the themes with actions, in the singular and the plural', () => {
+        expect(coverageText({ covered: 2, total: 15 })).toBe(
+            '2 de 15 temas con acciones',
+        );
+        expect(coverageText({ covered: 0, total: 1 })).toBe(
+            '0 de 1 tema con acciones',
+        );
     });
 });
 

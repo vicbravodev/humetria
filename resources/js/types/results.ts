@@ -77,6 +77,10 @@ export type ResultsProgramCard = {
     exists: boolean;
     state: { value: string; label: string } | null;
     meter: { done: number; total: number } | null;
+    /** Rows with an action, of all the rows: the page, the list and this card read the same numbers (criterio C-36). */
+    coverage: { covered: number; total: number } | null;
+    /** The share of the work done; 100 only when the Programa is done. */
+    percent: number | null;
 };
 
 export type Participation = {

@@ -18,6 +18,8 @@ const page = (responsible: string | null): ProgramPageProps => ({
             responsible === null ? null : { name: responsible, userId: null },
         state: { value: 'none', label: 'Sin acciones' },
         meter: { done: 0, total: 0 },
+        coverage: { covered: 0, total: 0 },
+        percent: 0,
         overdue: 0,
         requirements: [],
         items: [],
