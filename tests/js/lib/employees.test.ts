@@ -139,8 +139,12 @@ describe('importStep', () => {
 });
 
 describe('formatMobile', () => {
-    it('groups a Mexican mobile as people write it', () => {
-        expect(formatMobile('5512345678')).toBe('55 1234 5678');
+    it('shows a Mexican mobile as people write it, without its +52', () => {
+        expect(formatMobile('+525512345678')).toBe('55 1234 5678');
+    });
+
+    it('shows one of another country with its code', () => {
+        expect(formatMobile('+14155552671')).toBe('+1 415 555 2671');
     });
 
     it('leaves anything else as it is', () => {

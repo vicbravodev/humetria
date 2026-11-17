@@ -56,3 +56,12 @@ it('lets a valid number through and rejects the rest with its message', function
     'impossible' => ['+52 1234', false],
     'not text' => [5512345678, false],
 ]);
+
+it('shows a stored number as people read it: a Mexican one without its country, another one with it', function (?string $stored, ?string $shown): void {
+    expect(PhoneNumber::readable($stored))->toBe($shown);
+})->with([
+    'a Mexican mobile' => ['+525512345678', '55 1234 5678'],
+    'a landline of Querétaro' => ['+524421234567', '442 123 4567'],
+    'the United States' => ['+14155552671', '+1 415-555-2671'],
+    'nothing' => [null, null],
+]);

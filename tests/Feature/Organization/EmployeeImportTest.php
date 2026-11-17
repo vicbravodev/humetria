@@ -105,7 +105,7 @@ it('imports a valid file once confirmed: adds new people and updates those it fi
 
     expect($byNumber->fresh()?->only(['name', 'job_title', 'email']))->toBe(['name' => 'Ana López', 'job_title' => 'Operadora', 'email' => 'ana@acme.mx'])
         ->and($byEmail->fresh()?->name)->toBe('Beto Díaz')
-        ->and(Employee::query()->where('employee_number', 'C-3')->sole()->mobile)->toBe('5587654321')
+        ->and(Employee::query()->where('employee_number', 'C-3')->sole()->mobile)->toBe('+525587654321')
         // "Producción" and "producción" are one area, created once.
         ->and(Area::query()->whereRaw('lower(name) in (?, ?)', ['producción', 'ventas'])->orderBy('name')->pluck('name')->all())->toBe(['Producción', 'Ventas']);
 
@@ -130,6 +130,30 @@ it('announces who the file moves to another work center, as moving them by hand 
         && $event->fromWorkCenterId === $this->plant->id
         && $event->toWorkCenterId === $office->id
         && $event->tenantId === $this->tenant->id);
+});
+
+it('reads a mobile of 10 digits as Mexican, and takes one with +52 or of another country with its +', function (): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile([
+            'Ana López,,55 1234 5678,Mujer,Planta Querétaro,Producción,Operadora,A-1',
+            'Beto Díaz,,+52 1 442 123 4567,Hombre,Planta Querétaro,Producción,Operador,B-2',
+            'Carla Ruiz,,+1 415 555 2671,Mujer,Planta Querétaro,Producción,Operadora,C-3',
+        ])])
+        ->assertRedirect(route('tenant.employees.index', $this->tenant));
+
+    expect(Employee::query()->withoutGlobalScopes()->orderBy('employee_number')->pluck('mobile')->all())
+        ->toBe(['+525512345678', '+524421234567', '+14155552671']);
+});
+
+it('says which mobile of the file is no phone number', function (): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.employees.import.store', $this->tenant), ['confirm' => '1', 'file' => csvFile([
+            'Ana López,,12 3456 7890,Mujer,Planta Querétaro,Producción,Operadora,A-1',
+        ])])
+        ->assertRedirect();
+
+    expect(importFlash()['errors'])->toBe([['row' => 2, 'messages' => ['Revisa el celular: no es un número válido para el país elegido.']]])
+        ->and(storedEmployees())->toBe([]);
 });
 
 it('reports every row with a problem and imports nothing, even when confirmed', function (): void {
@@ -239,7 +263,7 @@ it('still reads F, H, Mujer and Masculino', function (string $text): void {
 it('says, for each person who is updated, what changes with its before and after, and leaves out the columns the file does not carry', function (): void {
     $area = Area::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Producción']);
     Employee::factory()->create([
-        'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5511111111',
+        'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '+525511111111',
         'gender' => 'female', 'area_id' => $area->id, 'job_title' => 'Operadora', 'employee_number' => 'A-1', 'hired_on' => '2020-01-01',
     ]);
     $same = Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Beto Díaz', 'email' => 'beto@acme.mx', 'mobile' => null, 'gender' => 'male', 'area_id' => $area->id, 'job_title' => 'Operador', 'employee_number' => 'B-2']);
@@ -254,7 +278,7 @@ it('says, for each person who is updated, what changes with its before and after
 
     expect(importFlash()['changes'])->toBe([[
         'row' => 2, 'name' => 'Ana López', 'changes' => [
-            ['label' => 'Celular', 'before' => '5511111111', 'after' => '5522222222'],
+            ['label' => 'Celular', 'before' => '55 1111 1111', 'after' => '55 2222 2222'],
             ['label' => 'Área', 'before' => 'Producción', 'after' => 'Almacén'],
         ],
     ]])->and($same->refresh()->job_title)->toBe('Operador');

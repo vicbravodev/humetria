@@ -16,7 +16,7 @@ final readonly class EmployeeData
     /**
      * @param  string|null  $name  Only a union's people may lack it: the company ID then identifies them.
      * @param  string|null  $email  Lowercase.
-     * @param  string|null  $mobile  10 digits.
+     * @param  string|null  $mobile  E.164 (`+525512345678`): a plus, the country code and the number.
      * @param  string|null  $workCenterId  Only a union's people lack it, with their gender, contact data and (maybe) area and job title.
      * @param  string|null  $area  The area's name: an area the company does not have yet is created.
      * @param  string|null  $jobCategory  With the level, a job grade of the pay scale: one the company does not have yet is created.

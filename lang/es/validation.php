@@ -206,9 +206,6 @@ return [
         'out_of_zone' => [
             'in' => 'Elige «Bloquear» o «Permitir y señalar».',
         ],
-        'mobile' => [
-            'regex' => 'Escribe un celular de 10 dígitos, por ejemplo 55 1234 5678.',
-        ],
         'postal_code' => [
             'regex' => 'Escribe un código postal de 5 dígitos.',
         ],

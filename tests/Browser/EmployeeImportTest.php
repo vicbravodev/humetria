@@ -90,7 +90,7 @@ it('shows what changes in a person who is updated without having to open anythin
 
 it('marks in the table of changes the value that the file erases', function (): void {
     $center = WorkCenter::query()->withoutGlobalScopes()->where('name', 'Planta Norte')->sole();
-    Employee::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Alma Torres', 'email' => 'alma@acme.mx', 'mobile' => '5511111111', 'gender' => 'female', 'job_title' => 'Operador', 'employee_number' => 'A-1', 'hired_on' => null]);
+    Employee::factory()->create(['tenant_id' => $center->tenant_id, 'work_center_id' => $center->id, 'name' => 'Alma Torres', 'email' => 'alma@acme.mx', 'mobile' => '+525511111111', 'gender' => 'female', 'job_title' => 'Operador', 'employee_number' => 'A-1', 'hired_on' => null]);
     $path = csvOnDisk("nombre,correo,celular,genero,centro_de_trabajo,area,puesto,numero_de_empleado,fecha_de_ingreso,jefe\nAlma Torres,alma@acme.mx,,Mujer,Planta Norte,Producción,Operador,A-1,,\n");
 
     visit('/admin/acme/employees/import')
@@ -106,7 +106,7 @@ it('marks in the table of changes the value that the file erases', function (): 
                 const warning = getComputedStyle(probe).backgroundColor;
                 probe.remove();
                 const erased = row.cells[2].querySelector('[data-erased]');
-                return row.cells[1].textContent.includes('5511111111') && erased !== null && getComputedStyle(erased).backgroundColor === warning && erased.textContent.includes('Se borra');
+                return row.cells[1].textContent.includes('55 1111 1111') && erased !== null && getComputedStyle(erased).backgroundColor === warning && erased.textContent.includes('Se borra');
             }
             JS, true);
 });

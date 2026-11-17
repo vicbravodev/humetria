@@ -39,6 +39,19 @@ final class PhoneNumber implements ValidationRule
         return $util->isValidNumber($number) ? $util->format($number, PhoneNumberFormat::E164) : null;
     }
 
+    /** A stored number as people read it: a Mexican one as dialed inside Mexico, another one with its country. */
+    public static function readable(?string $e164): ?string
+    {
+        if ($e164 === null) {
+            return null;
+        }
+
+        $util = PhoneNumberUtil::getInstance();
+        $number = $util->parse($e164);
+
+        return $util->format($number, $util->getRegionCodeForNumber($number) === self::DEFAULT_REGION ? PhoneNumberFormat::NATIONAL : PhoneNumberFormat::INTERNATIONAL);
+    }
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_string($value) || self::e164($value) === null) {

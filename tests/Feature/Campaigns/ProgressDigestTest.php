@@ -37,7 +37,7 @@ function peopleIn(Campaign $campaign, string $name, int $answered, int $people, 
     foreach (range(1, $people) as $index) {
         $employee = Employee::factory()->create([
             'tenant_id' => $campaign->tenant_id, 'work_center_id' => $campaign->work_center_id, 'area_id' => $area->id,
-            ...($reachable ? [] : ['email' => null, 'mobile' => '5512345678']),
+            ...($reachable ? [] : ['email' => null, 'mobile' => '+525512345678']),
         ]);
         $participant = Participant::factory()->create(['campaign_id' => $campaign->id, 'employee_id' => $employee->id]);
 
