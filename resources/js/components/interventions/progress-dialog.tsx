@@ -3,7 +3,7 @@ import ChoiceField from '@/components/humetria/choice-field';
 import DatePicker from '@/components/humetria/date-picker';
 import FileDropZone from '@/components/humetria/file-drop-zone';
 import InputError from '@/components/humetria/input-error';
-import FormDialog from '@/components/interventions/form-dialog';
+import FormDialog from '@/components/humetria/form-dialog';
 import TextField from '@/components/interventions/text-field';
 import { Label } from '@/components/ui/label';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
