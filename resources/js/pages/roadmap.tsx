@@ -1,40 +1,53 @@
-import {
-    LEAD,
-    SECTION,
-    TITLE,
-    WRAP,
-} from '@/components/landing/landing-layout';
+import { domMax, LazyMotion, MotionConfig } from 'motion/react';
+import { useState } from 'react';
 import LandingFooter from '@/components/landing/landing-footer';
+import { WRAP } from '@/components/landing/landing-layout';
 import PrivacyNoticeHeader from '@/components/landing/privacy-notice-header';
 import { ROADMAP_LANES } from '@/components/landing/roadmap-content';
+import RoadmapCta from '@/components/landing/roadmap-cta';
+import RoadmapFilters from '@/components/landing/roadmap-filters';
+import RoadmapHero from '@/components/landing/roadmap-hero';
 import RoadmapLaneSection from '@/components/landing/roadmap-lane';
 import SeoHead from '@/components/landing/seo-head';
+import { useScrollReveal } from '@/hooks/use-scroll-reveal';
+import { cspNonce } from '@/lib/csp-nonce';
+import { areaCounts, filterLanes } from '@/lib/roadmap';
+import type { AreaFilter } from '@/lib/roadmap';
+import { cn } from '@/lib/utils';
 import { home } from '@/routes';
 import type { Seo } from '@/types';
-import { cn } from '@/lib/utils';
 
-/** What Humetría plans to add, in lanes without dates: fixed text, nothing from the database. */
+const COUNTS = areaCounts(ROADMAP_LANES);
+
+/** What Humetría plans to add, in stages without dates and filterable by area: fixed text, nothing from the database. */
 export default function Roadmap({ seo }: { seo: Seo }) {
+    useScrollReveal();
+    const [area, setArea] = useState<AreaFilter>('all');
+
     return (
-        <>
-            <SeoHead seo={seo} />
-            <PrivacyNoticeHeader />
-            <main className={cn(WRAP, SECTION)}>
-                <div className="flex flex-col gap-4 pb-10 lg:pb-14">
-                    <h1 className={TITLE}>Lo que viene en Humetría</h1>
-                    <p className={LEAD}>
-                        Lo que estamos construyendo para oficinas y servicios.
-                        El orden puede cambiar según lo que nos pidan; ninguna
-                        etapa es una fecha de entrega.
-                    </p>
-                </div>
-                <div className="grid max-w-[880px] gap-10">
-                    {ROADMAP_LANES.map((lane) => (
-                        <RoadmapLaneSection key={lane.id} lane={lane} />
-                    ))}
-                </div>
-            </main>
-            <LandingFooter sectionBase={home().url} />
-        </>
+        <LazyMotion features={domMax} strict>
+            <MotionConfig
+                reducedMotion="user"
+                {...(cspNonce === undefined ? {} : { nonce: cspNonce })}
+            >
+                <SeoHead seo={seo} />
+                <PrivacyNoticeHeader />
+                <main>
+                    <RoadmapHero />
+                    <RoadmapFilters
+                        area={area}
+                        counts={COUNTS}
+                        onChange={setArea}
+                    />
+                    <div className={cn(WRAP, 'grid gap-12 py-12 lg:py-16')}>
+                        {filterLanes(ROADMAP_LANES, area).map((lane) => (
+                            <RoadmapLaneSection key={lane.id} lane={lane} />
+                        ))}
+                    </div>
+                    <RoadmapCta />
+                </main>
+                <LandingFooter sectionBase={home().url} />
+            </MotionConfig>
+        </LazyMotion>
     );
 }

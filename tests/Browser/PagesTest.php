@@ -38,6 +38,17 @@ it('renders the public roadmap', function (bool $dark, bool $mobile): void {
         ->assertSee('Explorando');
 })->with('looks');
 
+it('filters the public roadmap by area and brings everything back', function (bool $dark, bool $mobile): void {
+    visitPage('roadmap', '/roadmap', $dark, $mobile, function ($page): void {
+        $page->assertSee('Jornada de 40 horas')
+            ->click('[data-test="area-evaluation"]')
+            ->assertSee('OKRs y KPIs')
+            ->assertDontSee('Jornada de 40 horas')
+            ->click('[data-test="area-all"]')
+            ->assertSee('Jornada de 40 horas');
+    });
+})->with('looks');
+
 it('renders the forgot password page', function (bool $dark, bool $mobile): void {
     visitPage('auth/forgot-password', '/admin/forgot-password', $dark, $mobile)
         ->assertSee('¿Olvidaste tu contraseña?')
