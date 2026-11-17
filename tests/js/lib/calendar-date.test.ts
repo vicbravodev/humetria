@@ -5,6 +5,8 @@ import {
     shortDate,
     fromCalendarDate,
     calendarLimits,
+    calendarSpan,
+    openingMonth,
     pickableDays,
     toCalendarDate,
 } from '@/lib/calendar-date';
@@ -89,6 +91,54 @@ describe('calendarLimits', () => {
     it('only closes the future when there is a last day and no first', () => {
         expect(calendarLimits(undefined, '2026-11-20')).toEqual({
             disabled: [{ after: new Date('2026-11-20T00:00') }],
+        });
+    });
+});
+
+describe('openingMonth', () => {
+    const today = new Date(2026, 10, 16);
+
+    it('opens on the chosen day', () => {
+        expect(openingMonth('2018-10-07', {}, today)).toEqual(
+            new Date(2018, 9, 1),
+        );
+    });
+
+    it('opens on today without a day, inside the first and last day allowed', () => {
+        expect(openingMonth('', {}, today)).toEqual(new Date(2026, 10, 1));
+        expect(openingMonth('', { min: '2027-02-03' }, today)).toEqual(
+            new Date(2027, 1, 1),
+        );
+        expect(openingMonth('', { max: '2025-05-20' }, today)).toEqual(
+            new Date(2025, 4, 1),
+        );
+        expect(
+            openingMonth('', { min: '2020-01-01', max: '2030-01-01' }, today),
+        ).toEqual(new Date(2026, 10, 1));
+    });
+});
+
+describe('calendarSpan', () => {
+    const today = new Date(2026, 10, 16);
+
+    it('lets the month and year menus go from a hundred years back to twenty ahead without limits', () => {
+        expect(calendarSpan(undefined, undefined, today)).toEqual({
+            startMonth: new Date(1926, 0, 1),
+            endMonth: new Date(2046, 11, 1),
+        });
+    });
+
+    it('keeps the menus between the first and the last day allowed', () => {
+        expect(calendarSpan('2026-11-10', '2027-02-20', today)).toEqual({
+            startMonth: new Date(2026, 10, 1),
+            endMonth: new Date(2027, 1, 1),
+        });
+    });
+
+    it('ignores a limit that is not a date', () => {
+        expect(calendarSpan('pronto', '', today)).toEqual({
+            startMonth: new Date(1926, 0, 1),
+            endMonth: new Date(2046, 11, 1),
         });
     });
 });

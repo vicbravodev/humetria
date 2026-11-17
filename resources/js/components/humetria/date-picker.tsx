@@ -1,112 +1,122 @@
-import { CalendarDays } from 'lucide-react';
-import { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
+import { CalendarDays, X } from 'lucide-react';
+import { InputGroup } from '@/components/ui/input-group';
+import {
+    DayCalendar,
+    PickerButton,
+    PickerProblem,
+    PickerSheet,
+    PickerText,
+} from '@/components/ui/picker';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { useHeldValue } from '@/hooks/use-held-value';
-import {
-    describeDate,
-    fromCalendarDate,
-    calendarLimits,
-    toCalendarDate,
-} from '@/lib/calendar-date';
-import { cn } from '@/lib/utils';
+import { useDateField } from '@/hooks/use-date-field';
+import { useFallbackLabel } from '@/hooks/use-fallback-label';
+import type { DateFieldProps } from '@/hooks/use-date-field';
 
-type Props = {
+type Props = DateFieldProps & {
     id: string;
-    /** The form field: it submits the picked day as Y-m-d. */
+    /** The form field: it submits the day as Y-m-d, or empty. */
     name: string;
-    defaultValue?: string | undefined;
-    /** The first day that can be picked, Y-m-d. */
-    min?: string | undefined;
-    /** The last day that can be picked, Y-m-d. */
-    max?: string | undefined;
     invalid?: boolean;
     describedBy?: string | undefined;
-    /** The day picked, when the page holds it (Y-m-d); without it the field keeps its own. */
-    value?: string | undefined;
-    onChange?: ((value: string) => void) | undefined;
-    /** What an empty field says; the portal, which speaks in usted, passes its own. */
+    /** Names the calendar; the portal, which speaks in usted, passes its own. */
     prompt?: string;
 };
 
 /**
- * A field that looks like Input and opens a calendar in Spanish under it. The day shows written out
- * ("30 de noviembre de 2026"); picking one closes the calendar and gives focus back to the field.
+ * A day typed as dd/mm/aaaa (or pasted in any usual Mexican way: "7 oct 2018", "7-10-18", "2018-10-07") or picked in a
+ * calendar in Spanish, with menus for the month and year. It always submits Y-m-d. On a phone the calendar comes up as a
+ * sheet from the bottom, where the day can also be typed.
  */
 export default function DatePicker({
     id,
     name,
-    defaultValue = '',
-    min,
-    max,
     invalid = false,
     describedBy,
-    value: held,
-    onChange,
     prompt = 'Elige una fecha',
+    ...props
 }: Props) {
-    const [value, setValue] = useHeldValue(defaultValue, held, onChange);
-    const [open, setOpen] = useState(false);
-    const selected = fromCalendarDate(value);
-    const limits = calendarLimits(min, max);
-    const written = describeDate(value);
-    const month = selected ?? limits.startMonth;
+    const { value, field, sheetField, popover, mobile, problem, clear, pick } =
+        useDateField(props);
+    const { boxRef, textRef } = popover;
+    useFallbackLabel(textRef, prompt);
+    const problemId = `${id}-problem`;
+    const calendar = (
+        <DayCalendar
+            value={value}
+            min={props.min}
+            max={props.max}
+            onPick={pick}
+        />
+    );
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <div data-slot="date-picker" className="grid min-w-0 gap-1.5">
             <input type="hidden" name={name} value={value} />
-            <PopoverTrigger
-                id={id}
-                data-slot="date-picker"
-                aria-invalid={invalid || undefined}
-                aria-describedby={describedBy}
-                className={cn(
-                    'flex h-11 w-full items-center gap-3 rounded-md border border-input bg-card px-4 text-left text-base transition-[color,border-color] duration-150 ease-out hover:border-foreground/60',
-                    'focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:border-ring',
-                    'aria-invalid:border-destructive aria-invalid:shadow-[inset_0_0_0_1px_var(--destructive)]',
-                )}
+            <Popover
+                open={popover.open && !mobile}
+                onOpenChange={popover.setOpen}
             >
-                <CalendarDays className="size-5 shrink-0 text-muted-foreground" />
-                <span
-                    className={cn(
-                        'min-w-0 truncate',
-                        written === undefined && 'text-muted-foreground',
+                <InputGroup ref={boxRef}>
+                    <PickerText
+                        id={id}
+                        ref={textRef}
+                        field={field}
+                        placeholder="dd/mm/aaaa"
+                        readOnly={mobile}
+                        invalid={invalid || problem !== undefined}
+                        describedBy={[describedBy, problem && problemId]
+                            .filter(Boolean)
+                            .join(' ')}
+                        onClick={popover.openFromField}
+                        onKeyDown={popover.fieldKeys}
+                    />
+                    {clear !== undefined && value !== '' && (
+                        <PickerButton
+                            label="Borrar la fecha"
+                            icon={<X aria-hidden className="size-4" />}
+                            onClick={clear}
+                        />
                     )}
+                    <PopoverTrigger asChild>
+                        <PickerButton
+                            label="Abrir el calendario"
+                            icon={
+                                <CalendarDays aria-hidden className="size-5" />
+                            }
+                            onClick={popover.openFromButton}
+                        />
+                    </PopoverTrigger>
+                </InputGroup>
+                <PopoverContent
+                    align="end"
+                    aria-label={prompt}
+                    {...popover.contentProps}
                 >
-                    {written ?? prompt}
-                </span>
-            </PopoverTrigger>
-            <PopoverContent
-                aria-label={prompt}
-                // Focus lands on the day the calendar offers to the keyboard: the chosen one, today or the first allowed.
-                onOpenAutoFocus={(event) => {
-                    event.preventDefault();
-
-                    if (event.currentTarget instanceof HTMLElement) {
-                        event.currentTarget
-                            .querySelector<HTMLElement>(
-                                '[data-day] button[tabindex="0"]',
-                            )
-                            ?.focus();
-                    }
-                }}
-            >
-                <Calendar
-                    mode="single"
-                    required
-                    selected={selected}
-                    {...(month === undefined ? {} : { defaultMonth: month })}
-                    {...limits}
-                    onSelect={(day) => {
-                        setValue(toCalendarDate(day));
-                        setOpen(false);
-                    }}
-                />
-            </PopoverContent>
-        </Popover>
+                    {calendar}
+                </PopoverContent>
+            </Popover>
+            <PickerProblem id={problemId} message={problem} />
+            {mobile && (
+                <PickerSheet
+                    open={popover.open}
+                    onOpenChange={popover.setOpen}
+                    title={prompt}
+                    hint="Escribe la fecha o tócala en el calendario."
+                    onClear={clear}
+                >
+                    <PickerText
+                        id={`${id}-typed`}
+                        field={sheetField}
+                        placeholder="dd/mm/aaaa"
+                        label="Fecha"
+                    />
+                    {calendar}
+                </PickerSheet>
+            )}
+        </div>
     );
 }

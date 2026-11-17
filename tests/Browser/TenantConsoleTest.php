@@ -243,15 +243,15 @@ it('activates a company that has not started, choosing the date', function (): v
         ->assertSee('Sin iniciar')
         ->click('@tenant-actions')->click('Activar')
         ->assertSee('Activar empresa')
-        // The date is picked in a calendar in Spanish, not typed.
-        ->assertSeeIn('#tenant-active_until', 'Elige una fecha')
+        // The date is typed as dd/mm/aaaa or picked in a calendar in Spanish, which a click in the field opens.
+        ->assertValue('#tenant-active_until', '')
         ->click('#tenant-active_until')
         ->assertVisible('[data-slot="calendar"]')
         ->click('[aria-label="Ir al mes siguiente"]')
         ->click('[aria-label="Ir al mes siguiente"]')
         ->click('[data-day="'.$until->format('Y-m-d').'"] button')
         ->assertMissing('[data-slot="calendar"]')
-        ->assertSeeIn('#tenant-active_until', $until->locale('es')->isoFormat('D [de] MMMM [de] YYYY'))
+        ->assertValue('#tenant-active_until', $until->format('d/m/Y'))
         // The row's own "Activar" button shares the text, so the dialog's submit is picked by its place.
         ->click('[role=dialog] button[type=submit]')
         ->assertSee('Empresa activa hasta')
@@ -268,7 +268,7 @@ it('lets no day before tomorrow be picked', function (): void {
 
     visit('/admin/companies')
         ->click('@tenant-actions')->click('Activar')
-        ->click('#tenant-active_until')
+        ->click('[data-slot="date-picker"]:has(#tenant-active_until) button:has-text("Abrir el calendario")')
         // It opens on the first day it allows, with today greyed out and out of reach.
         ->assertScript('() => document.activeElement.closest("[data-day]")?.dataset.day', $today->copy()->addDay()->format('Y-m-d'))
         ->assertScript('() => document.querySelector(\'[data-day="'.$today->format('Y-m-d').'"] button\')?.disabled ?? true');

@@ -752,7 +752,7 @@ it('records paper acknowledgements of the people ticked, from the page', functio
         ->click('[aria-label="Elegir a Beto Soto"]')
         ->click('button:has-text("Registrar acuses en papel")')
         // The date starts on today as the server counts it, whatever the browser's clock says.
-        ->assertSeeIn('#ack-date', CarbonImmutable::now(config()->string('app.display_timezone'))->locale('es')->isoFormat('D [de] MMMM [de] YYYY'))
+        ->assertValue('#ack-date', CarbonImmutable::now(config()->string('app.display_timezone'))->format('d/m/Y'))
         ->fill('#ack-note', 'Hoja de firmas 3')
         ->press('Registrar')
         ->assertSee('Se registraron 2 acuses.')

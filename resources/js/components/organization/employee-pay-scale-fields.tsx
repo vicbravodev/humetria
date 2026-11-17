@@ -1,9 +1,12 @@
-import FormField from '@/components/form-field';
 import EmployeeGradeFields from '@/components/organization/employee-grade-fields';
 import EmployeeChoiceField from '@/components/organization/employee-choice-field';
 import EmployeeFormSection from '@/components/organization/employee-form-section';
 import EmployeeSeniorityField from '@/components/organization/employee-seniority-field';
+import DatePicker from '@/components/humetria/date-picker';
+import InputError from '@/components/humetria/input-error';
+import { Label } from '@/components/ui/label';
 import { useIsUnion } from '@/hooks/use-is-union';
+import { useToday } from '@/hooks/use-today';
 import { catalogOption, clearableOptions } from '@/lib/employee-form';
 import type { EmployeeChoices, EmployeeRow } from '@/types';
 
@@ -21,6 +24,7 @@ export default function EmployeePayScaleFields({
     employee: EmployeeRow | undefined;
 }) {
     const union = useIsUnion();
+    const today = useToday();
 
     return (
         <EmployeeFormSection title="Tabulador y contrato">
@@ -30,14 +34,21 @@ export default function EmployeePayScaleFields({
                 employee={employee}
             />
             <div className="grid items-start gap-4 sm:grid-cols-2">
-                <FormField
-                    name="hired_on"
-                    idPrefix="employee"
-                    label="Fecha de ingreso"
-                    type="date"
-                    defaultValue={employee?.hired_on ?? undefined}
-                    error={errors['hired_on']}
-                />
+                <div className="grid min-w-0 gap-2">
+                    <Label htmlFor="employee-hired_on">Fecha de ingreso</Label>
+                    <DatePicker
+                        id="employee-hired_on"
+                        name="hired_on"
+                        defaultValue={employee?.hired_on ?? ''}
+                        max={today}
+                        invalid={errors['hired_on'] !== undefined}
+                        describedBy="employee-hired_on-error"
+                    />
+                    <InputError
+                        id="employee-hired_on-error"
+                        message={errors['hired_on']}
+                    />
+                </div>
                 <EmployeeChoiceField
                     name="staff_group"
                     label="Grupo"

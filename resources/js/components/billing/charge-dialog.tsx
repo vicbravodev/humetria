@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import DatePicker from '@/components/humetria/date-picker';
 import FormDialog from '@/components/humetria/form-dialog';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
@@ -45,16 +46,17 @@ export default function ChargeDialog({ charge }: { charge: AccountChargeRow }) {
                                 <Label htmlFor={`ends-on-${charge.id}`}>
                                     Último día
                                 </Label>
-                                <Input
+                                <DatePicker
                                     id={`ends-on-${charge.id}`}
                                     name="ends_on"
-                                    type="date"
                                     required
-                                    aria-invalid={
-                                        errors['ends_on'] !== undefined
-                                    }
+                                    invalid={errors['ends_on'] !== undefined}
+                                    describedBy={`ends-on-${charge.id}-error`}
                                 />
-                                <InputError message={errors['ends_on']} />
+                                <InputError
+                                    id={`ends-on-${charge.id}-error`}
+                                    message={errors['ends_on']}
+                                />
                             </div>
                         )}
                         <div className="grid gap-2">

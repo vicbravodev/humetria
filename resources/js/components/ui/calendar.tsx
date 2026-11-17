@@ -1,10 +1,12 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import * as React from "react"
 import { DayPicker } from "react-day-picker"
 import { es } from "react-day-picker/locale"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
+const monthName = new Intl.DateTimeFormat("es-MX", { month: "long" })
 
 /** A month grid in Mexican Spanish, weeks from Monday; react-day-picker styled with the design system tokens. */
 function Calendar({
@@ -25,7 +27,11 @@ function Calendar({
         button_previous: cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-11 text-muted-foreground hover:text-foreground aria-disabled:pointer-events-none aria-disabled:opacity-30"),
         button_next: cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-11 text-muted-foreground hover:text-foreground aria-disabled:pointer-events-none aria-disabled:opacity-30"),
         month_caption: "flex h-11 items-center justify-center",
-        caption_label: "text-base font-semibold first-letter:uppercase",
+        caption_label: "text-base font-semibold first-letter:uppercase [&_svg]:ml-1 [&_svg]:inline",
+        // With the month and year menus, each label sits over its own native select, which takes the click and the keyboard.
+        dropdowns: "relative z-10 flex items-center gap-1",
+        dropdown_root: "relative flex h-11 items-center rounded-md px-2 hover:bg-accent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring",
+        dropdown: "absolute inset-0 cursor-pointer appearance-none bg-popover text-popover-foreground opacity-0",
         month_grid: "border-collapse",
         weekdays: "flex",
         weekday: "w-11 pb-1 text-[13px] leading-[18px] font-medium text-muted-foreground first-letter:uppercase",
@@ -52,9 +58,16 @@ function Calendar({
         caption_after_exit: "calendar-caption-exit",
         ...classNames,
       }}
+      formatters={{ formatMonthDropdown: (month) => monthName.format(month).replace(/^./, (letter) => letter.toUpperCase()) }}
       components={{
         Chevron: ({ orientation }) =>
-          orientation === "left" ? <ChevronLeftIcon className="size-5" /> : <ChevronRightIcon className="size-5" />,
+          orientation === "left" ? (
+            <ChevronLeftIcon className="size-5" />
+          ) : orientation === "down" ? (
+            <ChevronDownIcon aria-hidden className="size-4 text-muted-foreground" />
+          ) : (
+            <ChevronRightIcon className="size-5" />
+          ),
       }}
       {...props}
     />
