@@ -1,16 +1,5 @@
-import { Form } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-} from '@/components/ui/sheet';
-import { Spinner } from '@/components/ui/spinner';
+import FormSheet from '@/components/humetria/form-sheet';
 
 type Props = {
     open: boolean;
@@ -29,41 +18,21 @@ export default function CompensationSheet(props: Props) {
     const { open, onOpenChange, copy, form, children, above, trigger } = props;
 
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-            {trigger}
-            <SheetContent className="w-full gap-0 bg-popover sm:inset-y-2 sm:right-2 sm:h-auto sm:max-w-[520px] sm:rounded-xl sm:border-0 sm:shadow-float">
-                <SheetHeader className="gap-0.5 border-b px-6 pt-5 pb-4">
-                    <SheetTitle className="text-lg leading-[26px]">
-                        {copy.title}
-                    </SheetTitle>
-                    <SheetDescription>{copy.description}</SheetDescription>
-                </SheetHeader>
-                <Form
-                    {...form}
-                    noValidate
-                    options={{ preserveScroll: true }}
-                    onSuccess={() => onOpenChange(false)}
-                    className="flex min-h-0 flex-1 flex-col"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid flex-1 content-start gap-7 overflow-y-auto px-6 py-5">
-                                {above}
-                                {children(errors)}
-                            </div>
-                            <SheetFooter className="flex-row justify-end gap-2 border-t px-6 py-4">
-                                <SheetClose asChild>
-                                    <Button variant="outline">Cancelar</Button>
-                                </SheetClose>
-                                <Button type="submit" disabled={processing}>
-                                    {processing && <Spinner />}
-                                    {copy.submit}
-                                </Button>
-                            </SheetFooter>
-                        </>
-                    )}
-                </Form>
-            </SheetContent>
-        </Sheet>
+        <FormSheet
+            open={open}
+            onOpenChange={onOpenChange}
+            title={copy.title}
+            description={copy.description}
+            form={form}
+            submit={copy.submit}
+            trigger={trigger}
+        >
+            {(errors) => (
+                <>
+                    {above}
+                    {children(errors)}
+                </>
+            )}
+        </FormSheet>
     );
 }
