@@ -7,6 +7,16 @@ export function toolsText(tools: string[]): string {
     return tools.length === 0 ? 'Sin indicar' : LIST.format(tools);
 }
 
+/** The size of the company as the console writes it, or that the person did not say. */
+export function workforceText(workforce: string | null): string {
+    return workforce === null ? 'Sin indicar' : `${workforce} trabajadores`;
+}
+
+/** Who the request is for, or that the person did not say. */
+export function profileText(profile: string | null): string {
+    return profile ?? 'Perfil sin indicar';
+}
+
 export const DEMO_VIEWS: { value: DemoView; label: string }[] = [
     { value: 'all', label: 'Todas' },
     { value: 'new', label: 'Nuevas' },

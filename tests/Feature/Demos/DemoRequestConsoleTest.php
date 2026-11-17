@@ -206,3 +206,15 @@ it('shows no first contact when it is the same channel, and the host when there 
             ->where('demoRequests.data.0.arrived_by', 'www.google.com')
             ->where('demoRequests.data.0.first_contact', null));
 });
+
+it('lists a request that left its profile, size and tools empty, without labels to show', function (): void {
+    DemoRequest::factory()->create(['profile' => null, 'workforce' => null, 'tools' => []]);
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-requests.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('demoRequests.data.0.profile', null)
+            ->where('demoRequests.data.0.workforce', null)
+            ->where('demoRequests.data.0.tools', []));
+});

@@ -4,8 +4,8 @@ export type DemoRequestRow = {
     email: string;
     whatsapp: string;
     company: string;
-    profile: string;
-    workforce: string;
+    profile: string | null;
+    workforce: string | null;
     tools: string[];
     message: string | null;
     received_at: string;

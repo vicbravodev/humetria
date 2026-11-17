@@ -42,8 +42,8 @@ final class SubmitDemoRequest
         // Only what the console needs to spot a trend: never who asked or how to reach them.
         Log::info('demo_request.submitted', [
             'demo_request_id' => $demoRequest->id,
-            'profile' => $data->profile->value,
-            'workforce' => $data->workforce->value,
+            'profile' => $data->profile?->value,
+            'workforce' => $data->workforce?->value,
             'tools' => array_map(fn (Tool $tool): string => $tool->value, $data->tools),
         ]);
 
