@@ -113,7 +113,11 @@ it('tells whoever has nothing to answer that nothing waits', function (bool $dar
     $team = leaveTeamPortal();
     LeaveRequest::query()->update(['approver_employee_id' => null]);
 
-    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile, enteringTo($team['boss'], 'Solicitudes de mi equipo'))
+    visitPage('leave/portal-team', $team['url'].'/team', $dark, $mobile, enteringTo($team['boss'], 'No tiene solicitudes por responder.'))
         ->assertSee('No tiene solicitudes por responder.')
+        // Finding 33: a screen of state, centered, with «Atrás» in the header and no dashed box.
+        ->assertPresent('[data-slot="state-message"]')
+        ->assertNotPresent('[data-slot="empty-state"]')
+        ->assertSee('Atrás')
         ->assertNotPresent('button:has-text("Rechazar")');
 })->with($looks);

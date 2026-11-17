@@ -1,11 +1,13 @@
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import PortalBalance from '@/components/leave/portal-balance';
 import PortalRequests from '@/components/leave/portal-requests';
-import PortalShell from '@/components/leave/portal-shell';
 import PortalStatements from '@/components/leave/portal-statements';
 import PortalTeamLink from '@/components/leave/portal-team-link';
-import RequestForm from '@/components/leave/request-form';
-import WorkerHomeLink from '@/components/worker-home-link';
+import RequestSheet from '@/components/leave/request-sheet';
+import { Button } from '@/components/ui/button';
+import WorkerFrame from '@/components/worker-access/worker-frame';
+import { home } from '@/routes/worker';
 import type {
     LeavePeriod,
     LeaveTypeOption,
@@ -15,8 +17,9 @@ import type {
 } from '@/types';
 
 /**
- * «Mis vacaciones» in the person's portal, in usted: the days they have by period, the form to ask for days, and what they have asked for. Only
- * days and dates, never an amount.
+ * «Mis vacaciones» in the person's portal, in usted: the days they have in one summary, what waits for their confirmation,
+ * what they have asked for, and «Pedir días» stuck to the foot, which opens the form in a sheet (boards VacacionesNueva and
+ * PedirDias). Only days and dates, never an amount.
  */
 export default function LeavePortal({
     slug,
@@ -46,30 +49,48 @@ export default function LeavePortal({
     requests: Paginated<PortalLeaveRequest>;
     types: LeaveTypeOption[];
 }) {
+    // The sheet is open for the number of requests it was opened at: a sent request changes it, so it closes by itself, whether
+    // the request went at once or after the person proved it was them.
+    const [openedAt, setOpenedAt] = useState<number | null>(null);
+
     return (
-        <PortalShell company={company}>
+        <WorkerFrame
+            company={company}
+            back={home.url(slug)}
+            actions={
+                <Button
+                    className="h-14 w-full text-lg font-semibold"
+                    onClick={() => setOpenedAt(requests.total)}
+                >
+                    Pedir días
+                </Button>
+            }
+        >
             <Head title="Mis vacaciones" />
-            <div className="flex w-full max-w-2xl flex-col gap-6">
-                <WorkerHomeLink slug={slug} />
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                        Mis vacaciones
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Sus días de vacaciones y lo que ha pedido, como los
-                        tiene registrados su empresa.
-                    </p>
-                </div>
-                <PortalStatements slug={slug} statements={statements} />
-                <PortalTeamLink slug={slug} pending={teamPending} />
-                <PortalBalance
-                    periods={periods}
-                    advanced={advanced}
-                    waiting={waiting}
-                />
-                <RequestForm slug={slug} today={today} types={types} />
-                <PortalRequests slug={slug} requests={requests} />
-            </div>
-        </PortalShell>
+            <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
+                Mis vacaciones
+            </h1>
+            <PortalBalance
+                periods={periods}
+                advanced={advanced}
+                waiting={waiting}
+            />
+            <PortalStatements slug={slug} statements={statements} />
+            <PortalTeamLink slug={slug} pending={teamPending} />
+            <PortalRequests slug={slug} requests={requests} />
+            <RequestSheet
+                slug={slug}
+                today={today}
+                types={types}
+                available={periods.reduce(
+                    (days, period) => days + period.available,
+                    0,
+                )}
+                open={openedAt === requests.total}
+                onOpenChange={(open) =>
+                    setOpenedAt(open ? requests.total : null)
+                }
+            />
+        </WorkerFrame>
     );
 }

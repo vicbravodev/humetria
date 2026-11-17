@@ -40,7 +40,7 @@ export default function ReportBody({
                 sections={sections}
                 className={stickyClassName}
             >
-                <PrintButton />
+                {shared ? undefined : <PrintButton />}
             </SectionTabs>
             <ReportSummary report={report} union={union} />
             <ReportCost report={report} title={title('costo')} />

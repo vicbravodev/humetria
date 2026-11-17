@@ -59,6 +59,8 @@ it('offers the statement on the vacations page while it is not confirmed', funct
     $portal = leaveStatementPortal();
 
     visitPage('leave/portal', dirname($portal['url'], 2), reach: enteringTo($portal['ana'], 'Mis vacaciones'))
+        // Finding 32: what waits for their confirmation is told apart, with its count, above their requests.
+        ->assertSee('Espera su confirmación')
         ->assertSee('Constancia de vacaciones 2026')
         ->click('Constancia de vacaciones 2026')
         ->assertSee('Constancia de vacaciones')

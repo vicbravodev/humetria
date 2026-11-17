@@ -165,16 +165,25 @@ function personalPolicyUrl(): array
     ], $draft->content));
     resolve(PublishPolicy::class)->handle($draft->id, null, ['a', 'b', 'c'], true, $hr->id);
 
-    return [route('portal.policy.show', $tenant->slug, absolute: false), enteringTo($ana->id, 'La política de prevención')];
+    return [route('portal.policy.show', $tenant->slug, absolute: false), enteringTo($ana->id, 'Política de prevención de riesgos psicosociales')];
 }
 
+// Finding 31: the whole policy in sections that fold (the first one open), the context in one line and the confirmation stuck
+// to the foot, where the thumb is, instead of at the end of 12,000 px of text.
 it('shows a person the policy of their center to read and confirm', function (bool $dark, bool $mobile): void {
     [$url, $enter] = personalPolicyUrl();
 
     visitPage('disclosure/portal-policy', $url, $dark, $mobile, $enter)
-        ->assertSee('La política de prevención, Ana Ruiz')
+        ->assertSee('Política de prevención de riesgos psicosociales')
+        ->assertSee('Política · versión 1')
         ->assertSee('Compromisos')
-        ->assertSee('Confirmo que la leí');
+        ->assertSee('Atrás')
+        // Every section is there to open, and only the first one is open.
+        ->assertScript('() => document.querySelectorAll("details").length > 3')
+        ->assertScript('() => document.querySelectorAll("details[open]").length', 1)
+        ->assertSee('Confirmar que la leí')
+        // The action is in view without scrolling: it is stuck to the bottom of the screen.
+        ->assertScript('() => { const box = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("Confirmar que la leí")).getBoundingClientRect(); return box.bottom <= window.innerHeight; }', true);
 })->with($looks);
 
 it('lets the person confirm from the phone, once', function (): void {
@@ -183,9 +192,9 @@ it('lets the person confirm from the phone, once', function (): void {
     Illuminate\Support\Facades\Notification::fake();
 
     // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
-    provedWithCode($enter(visit($url)->on()->mobile())->press('Confirmo que la leí'), 'Gracias. Quedó registrado que leyó la política.')
+    provedWithCode($enter(visit($url)->on()->mobile())->press('Confirmar que la leí'), 'Gracias. Quedó registrado que leyó la política.')
         ->assertSee('Usted confirmó el')
-        ->assertDontSee('Confirmo que la leí');
+        ->assertDontSee('Confirmar que la leí');
 });
 
 /** The company the user signed in to has a published policy and `$people` people asked to confirm it; one has confirmed. */

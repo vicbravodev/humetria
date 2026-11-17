@@ -3,20 +3,18 @@ import { cn } from '@/lib/utils';
 
 /**
  * The bar on top of the report (it stays there from tablets up): where to go back, the parts to jump to, and what to do with it. The parts show only where the bar is wide enough to hold them on one row.
- * Its row lines up with the report under it: at the left of the panel, like every page, or `centered` where the report has a page of its own (a shared link).
+ * Its row lines up with the report under it, at the left of the panel like every page.
  */
 export default function ReportBar({
     start,
     sections,
     children,
     className,
-    centered = false,
 }: {
     start: ReactNode;
     sections: { id: string; label: string }[];
     children: ReactNode;
     className?: string;
-    centered?: boolean;
 }) {
     return (
         <div
@@ -25,12 +23,7 @@ export default function ReportBar({
                 className,
             )}
         >
-            <div
-                className={cn(
-                    'flex max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-3',
-                    centered ? 'mx-auto md:px-6' : 'md:px-10',
-                )}
-            >
+            <div className="flex max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-10">
                 {start}
                 <nav
                     aria-label="Secciones del informe"

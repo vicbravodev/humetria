@@ -1,57 +1,52 @@
 import { Head } from '@inertiajs/react';
-import { FileText } from 'lucide-react';
-import PersonShell from '@/components/disclosure/person-shell';
-import PolicySections from '@/components/disclosure/policy-sections';
+import PolicyAccordion from '@/components/disclosure/policy-accordion';
 import PortalConfirm from '@/components/disclosure/portal-confirm';
-import WorkerHomeLink from '@/components/worker-home-link';
+import PortalConfirmed from '@/components/disclosure/portal-confirmed';
+import PortalPolicyIntro from '@/components/disclosure/portal-policy-intro';
+import WorkerFrame from '@/components/worker-access/worker-frame';
+import { home } from '@/routes/worker';
 import type { PortalPolicyProps } from '@/types';
 
+/**
+ * The policy of the person's center: the context in a line, the whole text folded by section and, while pending, the
+ * confirmation stuck to the foot (board Politica/PoliticaNueva).
+ */
 export default function PortalPolicy({
     slug,
     company,
-    name,
     policy,
     acknowledgment,
 }: PortalPolicyProps) {
+    const pending = acknowledgment?.state === 'pending';
+
     return (
-        <PersonShell company={company} label="Personal">
+        <WorkerFrame
+            company={company}
+            back={home.url(slug)}
+            actions={
+                policy !== null && pending ? (
+                    <PortalConfirm
+                        slug={slug}
+                        documentId={acknowledgment.documentId}
+                    />
+                ) : undefined
+            }
+        >
             <Head title="La política de prevención" />
-            <div className="flex w-full max-w-2xl flex-col gap-6">
-                <WorkerHomeLink slug={slug} />
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
-                        La política de prevención, {name}
-                    </h1>
-                    <p className="text-muted-foreground">
-                        {policy === null
-                            ? 'Su centro de trabajo todavía no publica su política de prevención de riesgos psicosociales.'
-                            : `Es la versión ${policy.version}, publicada el ${policy.publishedOn}: lo que ${company} se compromete a hacer para prevenir los riesgos psicosociales y la violencia laboral y para promover un entorno favorable.`}
-                    </p>
-                </div>
-                {policy !== null && (
-                    <>
-                        <section
-                            aria-label="La política"
-                            className="flex flex-col gap-4 card p-5"
-                        >
-                            <FileText
-                                aria-hidden
-                                className="size-6 text-primary"
-                            />
-                            <PolicySections
-                                sections={policy.sections}
-                                tone="person"
-                            />
-                        </section>
-                        {acknowledgment !== null && (
-                            <PortalConfirm
-                                slug={slug}
-                                acknowledgment={acknowledgment}
-                            />
-                        )}
-                    </>
-                )}
-            </div>
-        </PersonShell>
+            <PortalPolicyIntro
+                company={company}
+                version={policy?.version ?? null}
+                publishedOn={policy?.publishedOn}
+                pending={pending}
+            />
+            {policy !== null && (
+                <>
+                    {acknowledgment?.state === 'confirmed' && (
+                        <PortalConfirmed on={acknowledgment.on} />
+                    )}
+                    <PolicyAccordion sections={policy.sections} />
+                </>
+            )}
+        </WorkerFrame>
     );
 }
