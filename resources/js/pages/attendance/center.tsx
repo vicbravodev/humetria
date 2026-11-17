@@ -1,5 +1,11 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import { Briefcase, MapPin, MonitorSmartphone, Users } from 'lucide-react';
+import {
+    Briefcase,
+    Clock,
+    MapPin,
+    MonitorSmartphone,
+    Users,
+} from 'lucide-react';
 import CenterMode from '@/components/attendance/center-mode';
 import CenterScreens from '@/components/attendance/center-screens';
 import CenterZones from '@/components/attendance/center-zones';
@@ -15,6 +21,7 @@ import type { AttendanceCenterPageProps } from '@/types';
 export default function AttendanceCenter({
     center,
     centerAddress,
+    timezone,
     people,
     zones,
     kiosks,
@@ -49,6 +56,7 @@ export default function AttendanceCenter({
                     }
                     facts={[
                         { icon: Briefcase, text: center.mainActivity },
+                        { icon: Clock, text: timezone.label },
                         {
                             icon: Users,
                             text:

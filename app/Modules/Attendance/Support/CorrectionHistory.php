@@ -29,9 +29,9 @@ final readonly class CorrectionHistory
     ];
 
     /**
-     * @param  array<string, array{employee: string, type: string, at: CarbonImmutable|null, reason: string, corrects: string|null, originalAt: CarbonImmutable|null, originalType: string|null, originalCenter: string|null, requested: bool}>  $corrections  by id
+     * @param  array<string, array{employee: string, type: string, at: CarbonImmutable|null, reason: string, corrects: string|null, originalAt: CarbonImmutable|null, originalType: string|null, originalCenter: string|null, timezone: string, requested: bool}>  $corrections  by id
      */
-    private function __construct(private array $corrections, private string $timezone) {}
+    private function __construct(private array $corrections) {}
 
     /**
      * The corrections of these people whose time, or the time of the mark they void, falls between two instants. All of
@@ -43,7 +43,7 @@ final readonly class CorrectionHistory
     {
         $tenant = resolve(CurrentTenant::class)->id();
         $rows = DB::select(
-            'select c.id, c.employee_id, c.type, c.marked_at, c.reason, c.corrects_mark_id,
+            'select c.id, c.employee_id, c.type, c.marked_at, c.reason, c.corrects_mark_id, c.timezone,
                 o.marked_at as original_at, o.type as original_type, o.work_center_id as original_center,
                 exists (select 1 from "attendance_correction_requests" as r where r.tenant_id = ? and r.resulting_mark_id = c.id) as requested
             from "attendance_marks" as c
@@ -74,12 +74,14 @@ final readonly class CorrectionHistory
                     'originalAt' => $time('original_at'),
                     'originalType' => $text('original_type'),
                     'originalCenter' => $text('original_center'),
+                    // A correction keeps the zone of the mark it corrects: both read at the hour of where it was taken.
+                    'timezone' => $text('timezone') ?? 'UTC',
                     'requested' => $value('requested') === true,
                 ];
             }
         }
 
-        return new self($corrections, config()->string('app.display_timezone'));
+        return new self($corrections);
     }
 
     /**
@@ -105,7 +107,7 @@ final readonly class CorrectionHistory
     /**
      * A person's voided marks: when the original was, what it was, its center and the line that says so.
      *
-     * @return list<array{at: CarbonImmutable, type: string, center: string, text: string}>
+     * @return list<array{at: CarbonImmutable, type: string, center: string, timezone: string, text: string}>
      */
     public function voidsOf(string $employeeId): array
     {
@@ -117,7 +119,8 @@ final readonly class CorrectionHistory
                     'at' => $correction['originalAt'],
                     'type' => $type,
                     'center' => $correction['originalCenter'] ?? '',
-                    'text' => 'marca anulada ('.(self::TYPES[$type] ?? $type).' '.$this->local($correction['originalAt']).', '.self::author($correction['requested']).'): '.$correction['reason'],
+                    'timezone' => $correction['timezone'],
+                    'text' => 'marca anulada ('.(self::TYPES[$type] ?? $type).' '.self::local($correction['originalAt'], $correction['timezone']).', '.self::author($correction['requested']).'): '.$correction['reason'],
                 ];
             }
         }
@@ -144,7 +147,7 @@ final readonly class CorrectionHistory
         while (($correction = $this->corrections[$id] ?? null) !== null && ! isset($seen[$id])) {
             $seen[$id] = true;
             $author = self::author($correction['requested']);
-            $at = $correction['at'] === null ? '' : $this->local($correction['at']);
+            $at = $correction['at'] === null ? '' : self::local($correction['at'], $correction['timezone']);
 
             if ($correction['corrects'] === null || $correction['originalAt'] === null) {
                 array_unshift($steps, 'marca agregada ('.(self::TYPES[$correction['type']] ?? $correction['type'])." {$at}, {$author}): {$correction['reason']}");
@@ -152,7 +155,7 @@ final readonly class CorrectionHistory
                 break;
             }
 
-            array_unshift($steps, "hora corregida de {$this->local($correction['originalAt'])} a {$at} ({$author}): {$correction['reason']}");
+            array_unshift($steps, 'hora corregida de '.self::local($correction['originalAt'], $correction['timezone'])." a {$at} ({$author}): {$correction['reason']}");
             $id = $correction['corrects'];
         }
 
@@ -164,8 +167,8 @@ final readonly class CorrectionHistory
         return $requested ? 'a petición de la persona' : 'por RH';
     }
 
-    private function local(CarbonImmutable $at): string
+    private static function local(CarbonImmutable $at, string $timezone): string
     {
-        return $at->setTimezone($this->timezone)->format('H:i');
+        return $at->setTimezone($timezone)->format('H:i');
     }
 }

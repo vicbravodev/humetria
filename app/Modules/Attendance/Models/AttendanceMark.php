@@ -34,12 +34,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property float|null $accuracy_m
  * @property float|null $distance_m
  * @property string|null $credential_id
+ * @property string $timezone The IANA zone of the place it was taken: its local day and time never move.
+ * @property string|null $away_center_id Another center of the company where it was taken («fuera de su centro»).
  * @property string|null $corrects_mark_id
  * @property int|null $corrected_by
  * @property string|null $reason
  * @property CarbonImmutable $created_at
  */
-#[Fillable(['tenant_id', 'employee_id', 'work_center_id', 'type', 'marked_at', 'method', 'zone_id', 'latitude', 'longitude', 'accuracy_m', 'distance_m', 'credential_id', 'corrects_mark_id', 'corrected_by', 'reason'])]
+#[Fillable(['tenant_id', 'employee_id', 'work_center_id', 'type', 'marked_at', 'method', 'zone_id', 'latitude', 'longitude', 'accuracy_m', 'distance_m', 'credential_id', 'timezone', 'away_center_id', 'corrects_mark_id', 'corrected_by', 'reason'])]
 #[UseFactory(AttendanceMarkFactory::class)]
 final class AttendanceMark extends Model
 {

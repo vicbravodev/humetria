@@ -28,7 +28,7 @@ beforeEach(function (): void {
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López']);
     AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     // Last week: Monday 9:00 to 19:00 with an hour's break (an hour over), Tuesday 7:00 to 21:00 (14 hours).
-    $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start();
+    $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek(), 'America/Mexico_City')->start();
     foreach ([[MarkType::Start, 0, '09:00'], [MarkType::BreakStart, 0, '14:00'], [MarkType::BreakEnd, 0, '15:00'], [MarkType::End, 0, '19:00'], [MarkType::Start, 1, '07:00'], [MarkType::End, 1, '21:00']] as [$type, $day, $time]) {
         AttendanceMark::factory()->create([
             'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id,
@@ -111,7 +111,7 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('shows Ana a day of approved vacations as vacations, not as a day without marks', function (bool $dark): void {
-    $wednesday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->addDays(2)->toDateString();
+    $wednesday = WeekPeriod::containing(CarbonImmutable::now()->subWeek(), 'America/Mexico_City')->start()->addDays(2)->toDateString();
     LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => $wednesday, 'ends_on' => $wednesday, 'working_days' => 1]);
 
     anaSeesHerWeek($dark)
@@ -184,7 +184,7 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
         ->click('#approve-correction')
         ->waitForText('Solicitud aprobada');
 
-    $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek())->start()->toDateString();
+    $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek(), 'America/Mexico_City')->start()->toDateString();
     $page->navigate("/a/acme/week/{$monday}")
         ->waitForText('Ver mi semana')
         ->press('Ver mi semana')

@@ -17,15 +17,16 @@ final class TouchedWeeks
 {
     /**
      * @param  list<CarbonImmutable>  $instants  the time the mark had, if it had one, and the time it will have
+     * @param  string  $timezone  the zone of the person's center, where their weeks are read
      * @return list<string>
      */
-    public static function of(string $employeeId, array $instants): array
+    public static function of(string $employeeId, array $instants, string $timezone): array
     {
         $weeks = [];
         foreach ($instants as $at) {
-            $weeks[] = WeekPeriod::containing($at)->start()->toDateString();
+            $weeks[] = WeekPeriod::containing($at, $timezone)->start()->toDateString();
             $start = self::startBefore($employeeId, $at);
-            $weeks[] = $start === null ? null : WeekPeriod::containing($start)->start()->toDateString();
+            $weeks[] = $start === null ? null : WeekPeriod::containing($start, $timezone)->start()->toDateString();
         }
 
         return array_values(array_unique(array_filter($weeks)));

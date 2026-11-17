@@ -48,7 +48,7 @@ function awayFrom(Employee $person, string $from, string $to, array $attributes 
  */
 function weekDaysOf(Employee $person, string $week = '2026-11-02'): array
 {
-    return PersonWeek::of($person->id, 'Ana López', WeekPeriod::ofDate(CarbonImmutable::parse($week)), 'acme')['days'];
+    return PersonWeek::of($person->id, 'Ana López', WeekPeriod::ofDate(CarbonImmutable::parse($week), 'America/Mexico_City'), 'acme')['days'];
 }
 
 /**
@@ -89,7 +89,7 @@ it('says leave for any leave and never its type', function (): void {
     $maternity = LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Maternidad']);
     LeaveRequest::factory()->ofType($maternity)->approved()->create(['employee_id' => $this->ana->id, 'starts_on' => '2026-11-05', 'ends_on' => '2026-11-06', 'working_days' => 2]);
 
-    $week = PersonWeek::of($this->ana->id, 'Ana López', WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02')), 'acme');
+    $week = PersonWeek::of($this->ana->id, 'Ana López', WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'), 'America/Mexico_City'), 'acme');
 
     expect(array_column($week['days'], 'absence'))->toBe([null, null, null, 'leave', 'leave', null, null])
         ->and(json_encode($week, JSON_THROW_ON_ERROR))->not->toContain('Maternidad');

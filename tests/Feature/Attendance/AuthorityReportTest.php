@@ -97,6 +97,7 @@ it('gives one row per person-day with local times, the breaks and the hours as �
         confirmation: 'sin confirmar',
         weekDigest: '',
         flags: [],
+        timezone: 'UTC−06:00 · America/Mexico_City',
     )]);
 });
 
@@ -352,7 +353,7 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
         foreach ([[MarkType::Start, '2027-01-05 08:00'], [MarkType::End, '2027-01-05 16:00']] as [$type, $local]) {
             $rows[] = [
                 'id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'employee_id' => $person->id, 'work_center_id' => $this->plant->id,
-                'type' => $type->value, 'method' => MarkMethod::QrAndGeofence->value, 'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City')->utc(), 'created_at' => now(),
+                'type' => $type->value, 'method' => MarkMethod::QrAndGeofence->value, 'timezone' => 'America/Mexico_City', 'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City')->utc(), 'created_at' => now(),
             ];
         }
     }
@@ -363,8 +364,8 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
     $names = array_map(fn (AuthorityRow $row): string => $row->personName, authorityRows($this->plant, '2027-01-04', '2027-01-10'));
 
     expect($names)->toBe(array_map(fn (int $index): string => sprintf('Persona %03d', $index), range(0, 449)))
-        // Who has days and their order, then seven reads for each of the three chunks of 200 (the seventh: what was corrected).
-        ->and(count(DB::getQueryLog()))->toBe(2 + 3 * 7);
+        // Who has days and their order, the center's zone, then seven reads for each of the three chunks of 200 (the seventh: what was corrected).
+        ->and(count(DB::getQueryLog()))->toBe(3 + 3 * 7);
 });
 
 it('reads its people in chunks of the size of config/attendance.php (200 by default)', function (): void {
@@ -384,4 +385,45 @@ it('reads its people in chunks of the size of config/attendance.php (200 by defa
     config(['attendance.report.chunk_size' => 1]);
 
     expect($queries())->toBeGreaterThan($whole);
+});
+
+describe('in the zone of each mark (design of time zones §3.8)', function (): void {
+    /** A mark of `$person` at an instant in UTC, taken in `$zone`. */
+    function zonedReportMark(Employee $person, MarkType $type, string $utc, string $zone): AttendanceMark
+    {
+        return AttendanceMark::factory()->create([
+            'tenant_id' => $person->tenant_id, 'employee_id' => $person->id, 'work_center_id' => $person->work_center_id,
+            'type' => $type, 'marked_at' => CarbonImmutable::parse($utc, 'UTC'), 'timezone' => $zone,
+        ]);
+    }
+
+    it('names the zone of each day with its offset', function (): void {
+        $tijuana = WorkCenter::factory()->for($this->tenant)->create(['timezone' => 'America/Tijuana']);
+        $bob = reportPerson($tijuana, 'Bob Díaz');
+        zonedReportMark($bob, MarkType::Start, '2027-01-05 14:00', 'America/Tijuana');
+        zonedReportMark($bob, MarkType::End, '2027-01-05 22:00', 'America/Tijuana');
+
+        expect(authorityRows($tijuana, '2027-01-04', '2027-01-10')[0])
+            ->localDate->toBe('2027-01-05')->start->toBe('06:00')->end->toBe('14:00')
+            ->timezone->toBe('UTC−08:00 · America/Tijuana');
+    });
+
+    it('gives the two offsets of a day across the repeated hour, so two 01:30 are told apart', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-03 18:00', 'UTC'));
+        $tijuana = WorkCenter::factory()->for($this->tenant)->create(['timezone' => 'America/Tijuana']);
+        $bob = reportPerson($tijuana, 'Bob Díaz');
+        // 01:30 of summer time, then 01:30 again an hour later, of winter time.
+        zonedReportMark($bob, MarkType::Start, '2026-11-01 08:30', 'America/Tijuana');
+        zonedReportMark($bob, MarkType::End, '2026-11-01 09:30', 'America/Tijuana');
+
+        expect(authorityRows($tijuana, '2026-10-26', '2026-11-01')[0])
+            ->start->toBe('01:30')->end->toBe('01:30')->workedMinutes->toBe(60)
+            ->timezone->toBe('UTC−07:00 a UTC−08:00 · America/Tijuana');
+    });
+
+    it('says nothing of a zone for a day with no marks left', function (): void {
+        authorityReportCorrection(reportMark($this->ana, MarkType::Start, '2027-01-05 09:00'), null, 'Marcó por error.');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10')[0]->timezone)->toBe('');
+    });
 });

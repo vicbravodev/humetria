@@ -43,5 +43,7 @@ final readonly class AuthorityRow
         public string $weekDigest,
         public array $flags,
         public ?int $lateMinutes = null,
+        /** The zone of the day's marks with their offset, «UTC−07:00 a UTC−08:00 · America/Tijuana» across a change of time; empty with no marks. */
+        public string $timezone = '',
     ) {}
 }

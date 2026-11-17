@@ -34,6 +34,7 @@ final class AttendanceMarkFactory extends Factory
             'type' => MarkType::Start,
             'marked_at' => now(),
             'method' => MarkMethod::QrAndGeofence,
+            'timezone' => 'America/Mexico_City',
         ];
     }
 
@@ -45,6 +46,8 @@ final class AttendanceMarkFactory extends Factory
             'employee_id' => $original->employee_id,
             'work_center_id' => $original->work_center_id,
             'type' => $original->type,
+            'timezone' => $original->timezone,
+            'away_center_id' => $original->away_center_id,
             'marked_at' => $original->marked_at,
             'method' => MarkMethod::Correction,
             'corrects_mark_id' => $original->id,

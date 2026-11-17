@@ -23,8 +23,11 @@ const EVIDENCE = [
 /** How to read the report: what it holds, how its hours are split and what is left out. */
 export default function ReportLegend({
     generatedAt,
+    timezone,
     onlyDownload,
-}: Pick<AttendanceReportProps, 'generatedAt'> & { onlyDownload: boolean }) {
+}: Pick<AttendanceReportProps, 'generatedAt' | 'timezone'> & {
+    onlyDownload: boolean;
+}) {
     return (
         <section
             aria-labelledby="como-leer"
@@ -102,8 +105,9 @@ export default function ReportLegend({
             </ul>
             {generatedAt !== null && (
                 <p className="text-caption">
-                    Generado el {generatedAt.local} (hora de la Ciudad de
-                    México), {generatedAt.utc} UTC.
+                    Generado el {generatedAt.local} ({timezone.label}),{' '}
+                    {generatedAt.utc} UTC. Cada hora va en la zona del lugar
+                    donde se marcó.
                 </p>
             )}
         </section>

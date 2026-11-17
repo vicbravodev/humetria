@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\PersonTimezone;
 use App\Modules\Attendance\Support\TouchedWeeks;
 use Illuminate\Support\Facades\Log;
 
@@ -18,14 +19,14 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class ReopenWeeks
 {
-    public function __construct(private RecordAudit $audit) {}
+    public function __construct(private RecordAudit $audit, private PersonTimezone $timezones) {}
 
     public function handle(string $correctionId): void
     {
         $correction = AttendanceMark::query()->findOrFail($correctionId);
         // A mark added has no original: only its own weeks.
         $original = $correction->corrects_mark_id === null ? null : AttendanceMark::query()->findOrFail($correction->corrects_mark_id);
-        $weeks = TouchedWeeks::of($correction->employee_id, array_values(array_filter([$original?->marked_at, $correction->marked_at])));
+        $weeks = TouchedWeeks::of($correction->employee_id, array_values(array_filter([$original?->marked_at, $correction->marked_at])), $this->timezones->of($correction->employee_id));
         // Locked whatever their state: a confirmation holding its row (it checks the digest under that lock) is waited for and
         // then seen confirmed; one that comes after waits for this correction and counts its mark. A week with no row yet is
         // not locked: a first confirmation in flight may then keep a digest without this mark (closing it needs ConfirmWeek to

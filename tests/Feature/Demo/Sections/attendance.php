@@ -81,7 +81,7 @@ return [
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
 
         // The whole weeks since the overtime came down (three weeks ago), up to last week.
-        for ($week = WeekPeriod::containing($today->subWeek()); $week->start()->greaterThanOrEqualTo($today->subDays(21)); $week = WeekPeriod::containing($week->start()->subWeek())) {
+        for ($week = WeekPeriod::containing($today->subWeek(), 'America/Mexico_City'); $week->start()->greaterThanOrEqualTo($today->subDays(21)); $week = WeekPeriod::containing($week->start()->subWeek(), 'America/Mexico_City')) {
             foreach (demoPlantArea('Producción turno 2') as $employeeId) {
                 $schedule = AttendanceSchedule::query()->where('employee_id', $employeeId)->firstOrFail();
                 $days = 0;
@@ -104,7 +104,7 @@ return [
         $tenantId = resolve(DemoCompanies::class)->id();
         $centers = WorkCenter::query()->pluck('id', 'name');
         $today = CarbonImmutable::now(DemoClock::TIMEZONE)->startOfDay();
-        $lastWeek = WeekPeriod::containing($today->subWeek());
+        $lastWeek = WeekPeriod::containing($today->subWeek(), 'America/Mexico_City');
         $nightShift = demoPlantArea('Producción turno 2');
         $dayShift = demoPlantArea('Producción turno 1');
 
@@ -183,7 +183,7 @@ return [
 
         // Further back, before HR acted on the evaluation, the night shift as a whole worked even more overtime; the morning
         // shift still none.
-        $before = WeekPeriod::containing($today->subWeeks(20));
+        $before = WeekPeriod::containing($today->subWeeks(20), 'America/Mexico_City');
 
         expect(array_sum(array_map(fn (string $id): int => demoOvertime($id, $before), $nightShift)))->toBeGreaterThan(array_sum($night))
             ->and(array_sum(array_map(fn (string $id): int => demoOvertime($id, $before), $dayShift)))->toBe(0);

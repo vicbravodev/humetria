@@ -9,6 +9,7 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\Timezones;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -27,7 +28,7 @@ final readonly class CorrectionPages
 {
     private const int PER_PAGE = 25;
 
-    public function __construct(private Roster $roster) {}
+    public function __construct(private Roster $roster, private Timezones $zones) {}
 
     /**
      * @return array<string, mixed>
@@ -41,7 +42,7 @@ final readonly class CorrectionPages
             ->orderBy('created_at')->orderBy('id')
             ->paginate(self::PER_PAGE)->appends(['status' => $state->value, 'q' => $search]);
         $selected = $this->selected($requestId, $page->items());
-        $rows = $this->rows([...$page->items(), ...($selected === null ? [] : [$selected])]);
+        [$rows, $zones] = $this->rows([...$page->items(), ...($selected === null ? [] : [$selected])]);
 
         return [
             'status' => $state->value,
@@ -52,7 +53,7 @@ final readonly class CorrectionPages
             ),
             'requests' => $page->through(fn (CorrectionRequest $request): array => $rows[$request->id]),
             'selectedId' => $selected?->id,
-            'detail' => $selected === null ? null : [...$rows[$selected->id], ...(CorrectionPreview::of($selected) ?? ['day' => null, 'effect' => null])],
+            'detail' => $selected === null ? null : [...$rows[$selected->id], ...(CorrectionPreview::of($selected, $zones[$selected->id]) ?? ['day' => null, 'effect' => null])],
             'canResolve' => Gate::allows('manage-attendance'),
         ];
     }
@@ -75,34 +76,39 @@ final readonly class CorrectionPages
      * the people whatever the number of requests.
      *
      * @param  list<CorrectionRequest>  $requests
-     * @return array<string, array{id: string, person: array{name: string, jobTitle: string}, type: string, requestedAt: string, previousAt: string|null, reason: string|null, ageDays: int, status: string, note: string|null}>
+     * @return array{array<string, array{id: string, person: array{name: string, jobTitle: string}, type: string, requestedAt: string, previousAt: string|null, reason: string|null, ageDays: int, status: string, note: string|null}>, array<string, string>} the rows and the zone of each request's person, both by id
      */
     private function rows(array $requests): array
     {
         $people = $this->roster->findMany(array_values(array_unique(array_map(fn (CorrectionRequest $request): string => $request->employee_id, $requests))));
         $markIds = array_values(array_filter(array_map(fn (CorrectionRequest $request): ?string => $request->mark_id, $requests)));
-        $marks = AttendanceMark::query()->whereIn('id', $markIds)->get(['id', 'marked_at'])->keyBy('id');
-        $zone = config()->string('app.display_timezone');
-        $today = CarbonImmutable::now($zone)->startOfDay();
+        $marks = AttendanceMark::query()->whereIn('id', $markIds)->get(['id', 'marked_at', 'timezone'])->keyBy('id');
+        // Each person's center's zone, in one query whatever their number.
+        $zones = $this->zones->forCenters(array_values(array_unique(array_map(fn ($person): string => $person->workCenterId, $people))));
         // What a person wrote and what RH answered is free text, and may be medical: only whoever manages it reads it.
         $manage = Gate::allows('manage-attendance');
         $rows = [];
+        $requestZones = [];
 
         foreach ($requests as $request) {
+            // The person's clock, in their center's zone; the mark before it at the hour where it was taken.
+            $center = $people[$request->employee_id]->workCenterId ?? null;
+            $zone = $requestZones[$request->id] = $center === null ? $this->zones->forTenant() : $zones[$center];
+            $mark = $request->mark_id === null ? null : $marks->get($request->mark_id);
             $rows[$request->id] = [
                 'id' => $request->id,
                 'person' => ['name' => $people[$request->employee_id]->name ?? '—', 'jobTitle' => $people[$request->employee_id]->jobTitle ?? ''],
                 'type' => $request->type->value,
                 'requestedAt' => $request->proposed_at->setTimezone($zone)->format('Y-m-d H:i'),
                 // The mark's time when it was asked: after an approval, the time before the correction.
-                'previousAt' => $request->mark_id === null ? null : $marks->get($request->mark_id)?->marked_at?->setTimezone($zone)->format('Y-m-d H:i'),
+                'previousAt' => $mark === null ? null : $mark->marked_at?->setTimezone($mark->timezone)->format('Y-m-d H:i'),
                 'reason' => $manage ? $request->reason : null,
-                'ageDays' => (int) $request->created_at->setTimezone($zone)->startOfDay()->diffInDays($today),
+                'ageDays' => (int) $request->created_at->setTimezone($zone)->startOfDay()->diffInDays(CarbonImmutable::now($zone)->startOfDay()),
                 'status' => $request->status->value,
                 'note' => $manage ? $request->note : null,
             ];
         }
 
-        return $rows;
+        return [$rows, $requestZones];
     }
 }

@@ -49,7 +49,7 @@ it('inserts a new mark with who, why and the original, and leaves the original a
         ->latitude->toBeNull()
         ->and($correction->marked_at?->utc()->toDateTimeString())->toBe('2026-11-04 15:00:00')
         ->and($this->start->fresh()?->getAttributes())->toBe($before)
-        ->and(EffectiveMarks::forWeek($this->ana->id, WeekPeriod::containing($at))[0]->id)->toBe($correction->id);
+        ->and(EffectiveMarks::forWeek($this->ana->id, WeekPeriod::containing($at, 'America/Mexico_City'))[0]->id)->toBe($correction->id);
 });
 
 it('voids the original when the correction has no time, so the day is no longer open', function (): void {

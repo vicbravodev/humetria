@@ -17,7 +17,8 @@ use LogicException;
 
 /**
  * The marks that count (criterio 5.4 and the design's Correcciones): a correction replaces its original, and one with no
- * time voids it. A day belongs to the local date of its start, even when it ends after midnight.
+ * time voids it. A day belongs to the local date of its start in the zone the start was taken (each mark keeps its own),
+ * even when it ends after midnight: a center that changes zone never moves an old day.
  */
 final class EffectiveMarks
 {
@@ -70,7 +71,8 @@ final class EffectiveMarks
 
     /**
      * The same for any run of local dates, `$first` to `$last` both included (their dates only): a report's period, read
-     * as byDayOf() reads a week, in two queries whatever its length or the number of people.
+     * as byDayOf() reads a week, in two queries whatever its length or the number of people. The marks are read a day
+     * wider on each side, whatever the zone, and each day is kept by the date of its start in that start's own zone.
      *
      * @param  list<string>  $employeeIds
      * @return array<string, array<string, list<AttendanceMark>>> by employee id, every one asked for
@@ -81,9 +83,9 @@ final class EffectiveMarks
             return [];
         }
 
-        $timezone = config()->string('app.display_timezone');
-        $start = CarbonImmutable::parse($first->toDateString(), $timezone);
-        $next = CarbonImmutable::parse($last->toDateString(), $timezone)->addDay();
+        // A day on each side covers any zone of the world; the dates of each mark's own zone decide what stays.
+        $start = CarbonImmutable::parse($first->toDateString(), 'UTC')->subDay();
+        $next = CarbonImmutable::parse($last->toDateString(), 'UTC')->addDays(2);
         $windows = self::windows($employeeIds, $start, $next);
         $marks = AttendanceMark::query()
             ->select('attendance_marks.*')
@@ -108,7 +110,7 @@ final class EffectiveMarks
 
         $days = [];
         foreach ($employeeIds as $employeeId) {
-            $days[$employeeId] = self::group(array_values($marks->get($employeeId)?->all() ?? []), $start->toDateString(), $last->toDateString(), $timezone);
+            $days[$employeeId] = self::group(array_values($marks->get($employeeId)?->all() ?? []), $first->toDateString(), $last->toDateString());
         }
 
         return $days;
@@ -180,14 +182,14 @@ final class EffectiveMarks
      * @param  string  $last  its last, Y-m-d
      * @return array<string, list<AttendanceMark>>
      */
-    private static function group(array $marks, string $first, string $last, string $timezone): array
+    private static function group(array $marks, string $first, string $last): array
     {
         $days = [];
         $openDay = null;
         foreach ($marks as $mark) {
             // of() leaves the voids out; one here is a query that forgot it.
             $at = $mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time.");
-            $day = $mark->type === MarkType::Start || $openDay === null ? $at->setTimezone($timezone)->toDateString() : $openDay;
+            $day = $mark->type === MarkType::Start || $openDay === null ? $at->setTimezone($mark->timezone)->toDateString() : $openDay;
             $openDay = $mark->type === MarkType::End ? null : $day;
 
             if ($day >= $first && $day <= $last) {

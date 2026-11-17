@@ -20,8 +20,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(ScheduleController::class, ScheduleRequest::class, BulkScheduleRequest::class, SchedulePages::class, SaveSchedules::class);
 
-/** The queries of the schedules page, whatever the number of people or schedules. */
-const SCHEDULES_PAGE_QUERIES = 18;
+/** The queries of the schedules page, whatever the number of people or schedules (one: the company's zone, for the year). */
+const SCHEDULES_PAGE_QUERIES = 19;
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-11 18:00:00', 'UTC'));

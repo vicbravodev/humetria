@@ -248,3 +248,21 @@ foreach (['Actions', 'Models', 'Support'] as $layer) {
         ->expect("App\\Modules\\Disclosure\\{$layer}")
         ->toOnlyBeUsedIn(['App\\Modules\\Disclosure', 'Database\\Factories\\Disclosure', ...demoStoryMayUse("App\\Modules\\Disclosure\\{$layer}")]);
 }
+
+/*
+ * Time zones (spec 2026-11-17-timezones-design §4, phase 0): the registro de jornada measures each day in the zone of its work
+ * center or of its mark, read through Tenancy's Timezones contract; the single zone of config/app.php is never read there.
+ * The other modules still read it until their turn (phase 4); this list only shrinks.
+ */
+it('keeps the single display zone out of the modules that read zones per center', function (string $module): void {
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__."/../../app/Modules/{$module}", FilesystemIterator::SKIP_DOTS));
+    $readers = [];
+
+    foreach ($files as $file) {
+        if ($file instanceof SplFileInfo && $file->getExtension() === 'php' && str_contains(file_get_contents($file->getPathname()) ?: '', 'display_timezone')) {
+            $readers[] = $file->getFilename();
+        }
+    }
+
+    expect($readers)->toBe([]);
+})->with(['Attendance']);

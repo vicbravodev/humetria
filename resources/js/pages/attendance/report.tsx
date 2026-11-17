@@ -64,6 +64,7 @@ export default function AttendanceReport(props: AttendanceReportProps) {
                 <ReportBody {...props} />
                 <ReportLegend
                     generatedAt={props.generatedAt}
+                    timezone={props.timezone}
                     onlyDownload={longPeriod !== null}
                 />
             </div>

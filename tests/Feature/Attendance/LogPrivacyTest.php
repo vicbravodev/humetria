@@ -98,7 +98,7 @@ it('logs no position, credential, screen code, access link or kiosk token along 
 
     // A week later she reads and confirms her week, then asks to correct her start.
     $this->travelTo(CarbonImmutable::parse('2026-11-09 18:00:00', 'UTC'));
-    $week = WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'));
+    $week = WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'), 'America/Mexico_City');
     $session = $this->get(route('attendance.device.week.show', 'acme'))->assertOk()->getCookie($cookie)?->getValue() ?? '';
     privacySigned($phone, $ana->id, $session, 'attendance.device.week.options', route('attendance.device.week.read', 'acme'), ['start' => '2026-11-02'])->assertOk();
     privacySigned($phone, $ana->id, $session, 'attendance.device.week.options', route('attendance.device.week.confirm', ['acme', '2026-11-02']), ['digest' => WeekDigest::of($ana->id, $week)])->assertOk();

@@ -20,7 +20,10 @@ use LogicException;
  *
  * The lateness is informational (criterios 2.6): the minutes between the schedule's start time for the weekday and the day's
  * first start mark, once the company's tolerance (inclusive) has passed; 0 within it, null with no start time, no start
- * mark, a rest day or an approved absence. It never changes the minutes worked or scheduled.
+ * mark, a rest day or an approved absence. It never changes the minutes worked or scheduled. The start time is wall
+ * time of the person's center, read in the zone the start was taken (a center that later changes zone keeps its old
+ * days right); a start taken at another center (a trip, «fuera de su centro») is not measured against the shift: null.
+ * The minutes worked always come from the instants, never from the clock: a day of 23 or 25 hours counts what passed.
  */
 final class WorkedDay
 {
@@ -43,13 +46,13 @@ final class WorkedDay
     {
         $first = array_find($marks, fn (AttendanceMark $mark): bool => $mark->type === MarkType::Start);
 
-        if ($start === null || $first === null) {
+        if ($start === null || $first === null || $first->away_center_id !== null) {
             return null;
         }
 
         $at = $first->marked_at ?? throw new LogicException("Mark [{$first->id}] has no time.");
         // Local midnight plus the minutes: the day's own start, even when the mark falls after midnight (a night shift).
-        $due = CarbonImmutable::parse($date->toDateString(), config()->string('app.display_timezone'))->setTime(intdiv($start, 60), $start % 60);
+        $due = CarbonImmutable::parse($date->toDateString(), $first->timezone)->setTime(intdiv($start, 60), $start % 60);
         $minutes = intdiv($at->getTimestamp() - $due->getTimestamp(), 60);
 
         return $minutes > $tolerance ? $minutes : 0;

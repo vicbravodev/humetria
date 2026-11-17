@@ -18,8 +18,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(SetupProgress::class);
 
-/** The queries of the setup page, whatever the number of centers or people. */
-const SETUP_QUERIES = 22;
+/** The queries of the setup page, whatever the number of centers or people (one: the company's zone, for the days left). */
+const SETUP_QUERIES = 23;
 
 beforeEach(function (): void {
     // 8 November 2026 in Mexico City: 54 days before 1 January 2027.

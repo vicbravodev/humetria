@@ -22,8 +22,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(CorrectionController::class, CorrectionPages::class, CorrectionPreview::class, TouchedWeeks::class);
 
-/** The queries of the queue, whatever its rows: the counts, the page, its people and marks, and the request in view with its day, weeks and schedule. */
-const QUEUE_QUERIES = 25;
+/** The queries of the queue, whatever its rows: the counts, the page, its people and marks, the zones of their centers, and the request in view with its day, weeks and schedule. */
+const QUEUE_QUERIES = 26;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City.

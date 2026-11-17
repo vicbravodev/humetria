@@ -27,7 +27,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'complaints:send-digests' => '0 * * * *',
         'complaints:release-held' => '10 0 * * *',
         'complaints:purge' => '15 3 * * *',
-        'attendance:close-days' => '15 0 * * *',
+        'attendance:dispatch-close-days' => '*/15 * * * *',
         'humetria:reconcile-limits' => '30 3 * * *',
         'billing:expire-usage-reservations' => '*/10 * * * *',
         'billing:measure-storage' => '45 3 * * *',
@@ -56,10 +56,10 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         ->and($telework->every(fn (Event $event): bool => $event->timezone === 'America/Mexico_City' && $event->onOneServer && $event->withoutOverlapping))->toBeTrue();
 });
 
-it('closes the working days of the day before yesterday at 00:15 display time, once and without overlapping', function (): void {
-    $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'attendance:close-days'));
+it('dispatches the close of each center every 15 minutes in UTC, once and without overlapping: each at its own 00:15', function (): void {
+    $event = collect(app(Schedule::class)->events())->sole(fn (Event $event): bool => str_contains($event->command ?? '', 'attendance:dispatch-close-days'));
 
-    expect($event->timezone)->toBe('America/Mexico_City')
+    expect($event->timezone)->toBe('UTC')
         ->and($event->onOneServer)->toBeTrue()
         ->and($event->withoutOverlapping)->toBeTrue();
 });

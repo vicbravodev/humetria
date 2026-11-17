@@ -23,7 +23,7 @@ beforeEach(function (): void {
     $this->center = WorkCenter::factory()->for($this->tenant)->create();
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
     workIn($this->tenant);
-    $this->week = WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'));
+    $this->week = WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02'), 'America/Mexico_City');
 });
 
 function digestMark(object $test, MarkType $type, string $local, ?string $employeeId = null): AttendanceMark

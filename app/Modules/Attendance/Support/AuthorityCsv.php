@@ -15,7 +15,7 @@ use App\Modules\Attendance\Data\AuthorityRow;
 final class AuthorityCsv
 {
     public const array HEADER = [
-        'Persona', 'Puesto', 'Fecha', 'Inicio', 'Fin', 'Fecha de fin', 'Pausas (min)',
+        'Persona', 'Puesto', 'Fecha', 'Inicio', 'Fin', 'Fecha de fin', 'Zona horaria', 'Pausas (min)',
         'Trabajado (min)', 'Trabajado (h:mm)', 'Ordinarias (min)', 'Ordinarias (h:mm)',
         'Extra doble (min)', 'Extra doble (h:mm)', 'Extra triple (min)', 'Extra triple (h:mm)',
         'Día de descanso (min)', 'Día de descanso (h:mm)',
@@ -50,7 +50,7 @@ final class AuthorityCsv
         $minutes = fn (int $value): array => [(string) $value, sprintf('%d:%02d', intdiv($value, 60), $value % 60)];
 
         return [
-            $row->personName, $row->jobTitle, $row->localDate, $row->start ?? '', $row->end ?? '', $row->endDate ?? '', (string) $row->breakMinutes,
+            $row->personName, $row->jobTitle, $row->localDate, $row->start ?? '', $row->end ?? '', $row->endDate ?? '', $row->timezone, (string) $row->breakMinutes,
             ...$minutes($row->workedMinutes), ...$minutes($row->ordinaryMinutes),
             ...$minutes($row->doubleMinutes), ...$minutes($row->tripleMinutes), ...$minutes($row->restDayMinutes),
             $row->evidence, (string) count($row->corrections), implode('; ', $row->corrections), $row->confirmation, $row->weekDigest, implode('; ', $row->flags),

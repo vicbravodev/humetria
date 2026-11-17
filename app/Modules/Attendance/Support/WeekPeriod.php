@@ -7,20 +7,29 @@ namespace App\Modules\Attendance\Support;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 
-/** A week of the registro: Monday 00:00 to Sunday 23:59:59 in the display time zone, as the design fixes it (Semana y día). */
+/**
+ * A week of the registro: Monday 00:00 to Sunday 23:59:59 in the zone of a work center (the design's Semana y día; the
+ * design of time zones: a person's week is read in the zone of their center).
+ */
 final readonly class WeekPeriod
 {
     private function __construct(private CarbonImmutable $start) {}
 
-    public static function containing(CarbonImmutable $instant): self
+    public static function containing(CarbonImmutable $instant, string $timezone): self
     {
-        return new self(self::local($instant)->startOfWeek(CarbonInterface::MONDAY));
+        return new self($instant->setTimezone($timezone)->startOfWeek(CarbonInterface::MONDAY));
     }
 
     /** The week of a local calendar date, whatever time zone its Carbon carries. */
-    public static function ofDate(CarbonImmutable $date): self
+    public static function ofDate(CarbonImmutable $date, string $timezone): self
     {
-        return self::containing(CarbonImmutable::parse($date->toDateString(), config()->string('app.display_timezone')));
+        return self::containing(CarbonImmutable::parse($date->toDateString(), $timezone), $timezone);
+    }
+
+    /** The IANA zone it is read in. */
+    public function timezone(): string
+    {
+        return $this->start->getTimezone()->getName();
     }
 
     /** Whether its Sunday ended: only then can the person answer for it. */
@@ -57,11 +66,6 @@ final readonly class WeekPeriod
     /** The local day an instant falls on, at its midnight. */
     public function localDate(CarbonImmutable $instant): CarbonImmutable
     {
-        return self::local($instant)->startOfDay();
-    }
-
-    private static function local(CarbonImmutable $instant): CarbonImmutable
-    {
-        return $instant->setTimezone(config()->string('app.display_timezone'));
+        return $instant->setTimezone($this->timezone())->startOfDay();
     }
 }

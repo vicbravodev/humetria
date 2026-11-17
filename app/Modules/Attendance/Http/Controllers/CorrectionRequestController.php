@@ -11,6 +11,7 @@ use App\Modules\Attendance\Support\PersonWeek;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class CorrectionRequestController
 {
-    public function __construct(private Roster $roster, private CurrentTenant $tenant) {}
+    public function __construct(private Roster $roster, private CurrentTenant $tenant, private Timezones $timezones) {}
 
     public function options(Request $request, WorkerSignatures $signatures): JsonResponse
     {
@@ -44,7 +45,8 @@ final readonly class CorrectionRequestController
         }
 
         $person = $this->roster->find($signed->employeeId) ?? abort(404);
-        $proposedAt = $request->proposedAt();
+        $timezone = $this->timezones->forCenter($person->workCenterId);
+        $proposedAt = $request->proposedAt($timezone);
 
         try {
             $ask->handle($person->id, $request->markId(), $request->type(), $proposedAt, $request->reason(), $signed->credentialId);
@@ -55,7 +57,7 @@ final readonly class CorrectionRequestController
         }
 
         $start = $request->start();
-        $week = $start === null ? WeekPeriod::containing($proposedAt) : WeekPeriod::ofDate($start);
+        $week = $start === null ? WeekPeriod::containing($proposedAt, $timezone) : WeekPeriod::ofDate($start, $timezone);
 
         return response()->json(PersonWeek::of($person->id, $person->name, $week, $tenant))->header('Cache-Control', 'no-store, private');
     }

@@ -21,10 +21,14 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class CloseDay
 {
-    public function handle(string $employeeId, CarbonImmutable $localDate): ?DayHours
+    /**
+     * @param  CarbonImmutable  $localDate  its date only counts
+     * @param  string  $timezone  the zone of the person's center
+     */
+    public function handle(string $employeeId, CarbonImmutable $localDate, string $timezone): ?DayHours
     {
-        $date = CarbonImmutable::parse($localDate->toDateString(), config()->string('app.display_timezone'));
-        $marks = EffectiveMarks::byDay($employeeId, WeekPeriod::containing($date))[$date->toDateString()] ?? [];
+        $date = CarbonImmutable::parse($localDate->toDateString(), $timezone);
+        $marks = EffectiveMarks::byDay($employeeId, WeekPeriod::containing($date, $timezone))[$date->toDateString()] ?? [];
         $schedule = AttendanceSchedule::query()->where('employee_id', $employeeId)->first();
 
         if ($marks === [] && ($schedule?->minutes_by_weekday[$date->isoWeekday()] ?? 0) === 0) {

@@ -69,7 +69,7 @@ it('keeps the audit entry of a download cut off halfway', function (): void {
     foreach ($people as $person) {
         $marks[] = [
             'id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'employee_id' => $person->id, 'work_center_id' => $this->plant->id,
-            'type' => MarkType::Start->value, 'method' => MarkMethod::QrAndGeofence->value, 'marked_at' => CarbonImmutable::parse('2027-01-26 08:00', 'America/Mexico_City')->utc(), 'created_at' => now(),
+            'type' => MarkType::Start->value, 'method' => MarkMethod::QrAndGeofence->value, 'timezone' => 'America/Mexico_City', 'marked_at' => CarbonImmutable::parse('2027-01-26 08:00', 'America/Mexico_City')->utc(), 'created_at' => now(),
         ];
     }
     AttendanceMark::query()->insert($marks);

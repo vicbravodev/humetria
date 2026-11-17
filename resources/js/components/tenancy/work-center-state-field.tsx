@@ -8,10 +8,13 @@ export default function WorkCenterStateField({
     states,
     defaultValue,
     error,
+    onChange,
 }: {
     states: MexicanStateOption[];
     defaultValue: string | undefined;
     error: string | undefined;
+    /** Called with each state chosen, for the zone to follow it. */
+    onChange: (state: string) => void;
 }) {
     return (
         <div className="grid gap-2">
@@ -24,6 +27,7 @@ export default function WorkCenterStateField({
                     ({ value }) => value === defaultValue,
                 )}
                 placeholder="Elige un estado"
+                onChange={({ value }) => onChange(value)}
                 invalid={error !== undefined}
                 describedBy={
                     error === undefined ? undefined : 'work-center-state-error'
