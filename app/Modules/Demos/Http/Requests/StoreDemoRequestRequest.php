@@ -9,6 +9,7 @@ use App\Modules\Demos\Enums\DemoProfile;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
+use App\Support\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -30,15 +31,14 @@ final class StoreDemoRequestRequest extends FormRequest
     private const string MULTI_LINE = 'regex:/\A[^\x00-\x08\x0B\x0C\x0E-\x1F\x7F]*\z/u';
 
     /**
-     * @return array<string, list<Enum|string>>
+     * @return array<string, list<Enum|PhoneNumber|string>>
      */
     public function rules(): array
     {
         return [
             'name' => ['required', self::SINGLE_LINE, 'max:120'],
             'email' => ['required', 'email:rfc', self::SINGLE_LINE, 'max:190'],
-            // 10 digits, optionally after 52 or +52, once spaces, dashes, dots and parentheses are gone.
-            'whatsapp' => ['required', 'regex:/^(\+?52)?[0-9]{10}$/'],
+            'whatsapp' => ['required', 'string', new PhoneNumber],
             'company' => ['required', self::SINGLE_LINE, 'max:160'],
             'profile' => ['required', Rule::enum(DemoProfile::class)],
             'workforce' => ['required', Rule::enum(Workforce::class)],
@@ -58,7 +58,7 @@ final class StoreDemoRequestRequest extends FormRequest
         return new DemoRequestData(
             name: $this->string('name')->toString(),
             email: $this->string('email')->toString(),
-            whatsapp: '+52'.$this->string('whatsapp')->substr(-10)->toString(),
+            whatsapp: $this->string('whatsapp')->toString(),
             company: $this->string('company')->toString(),
             profile: DemoProfile::from($this->string('profile')->toString()),
             workforce: Workforce::from($this->string('workforce')->toString()),
@@ -72,8 +72,9 @@ final class StoreDemoRequestRequest extends FormRequest
     {
         $whatsapp = $this->input('whatsapp');
 
+        // In E.164, Mexican when it comes without a country; what is no number stays, for its rule to reject.
         if (is_string($whatsapp)) {
-            $this->merge(['whatsapp' => preg_replace('/[\s().-]+/', '', $whatsapp)]);
+            $this->merge(['whatsapp' => PhoneNumber::e164($whatsapp) ?? $whatsapp]);
         }
     }
 }

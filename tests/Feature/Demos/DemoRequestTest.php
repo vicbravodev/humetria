@@ -100,18 +100,29 @@ it('normalizes a Mexican WhatsApp number to E.164', function (string $whatsapp):
     '12 digits with 52' => '525512345678',
     '+52 and spaces' => '+52 55 1234 5678',
     '+52 and dashes' => '+52-55-1234-5678',
+    'the old 1 of mobiles' => '+52 1 55 1234 5678',
+    'the old 1 without 52' => '15512345678',
+    'the old 1 with 52 and no plus' => '5215512345678',
+    'the old 044' => '044 55 1234 5678',
 ]);
 
-it('rejects a WhatsApp number that is not a Mexican phone', function (string $whatsapp): void {
+it('takes a WhatsApp of another country, in E.164', function (): void {
+    $this->post(route('demo-requests.store'), demoRequest(['whatsapp' => '+1 415 555 2671']))
+        ->assertSessionHasNoErrors();
+
+    expect(DemoRequest::query()->sole()->whatsapp)->toBe('+14155552671');
+});
+
+it('rejects a WhatsApp number that is no phone of its country', function (string $whatsapp): void {
     $this->post(route('demo-requests.store'), demoRequest(['whatsapp' => $whatsapp]))
-        ->assertSessionHasErrors(['whatsapp' => 'Escribe un WhatsApp de 10 dígitos, por ejemplo 55 1234 5678.']);
+        ->assertSessionHasErrors(['whatsapp' => 'Revisa el WhatsApp: no es un número válido para el país elegido.']);
 
     expect(DemoRequest::query()->count())->toBe(0);
 })->with([
     '9 digits' => '551234567',
-    '11 digits' => '15512345678',
+    '11 digits' => '55123456789',
     '12 digits without 52' => '155512345678',
-    '13 digits' => '5215512345678',
+    'not a Mexican area code' => '1234567890',
     'plus without 52' => '+5512345678',
     'letters' => '55 1234 567a',
     'plus in the middle' => '55+12345678',

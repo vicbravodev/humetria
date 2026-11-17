@@ -11,7 +11,7 @@ use App\Modules\Demos\Enums\Workforce;
 final readonly class DemoRequestData
 {
     /**
-     * @param  string  $whatsapp  E.164, always a Mexican number: +52 and 10 digits.
+     * @param  string  $whatsapp  E.164 (`+525512345678`), of Mexico or of another country.
      * @param  list<Tool>  $tools  The HR tools the prospect wants to see; at least one.
      * @param  ?DemoAttribution  $attribution  Where the person came from, when it is known.
      */

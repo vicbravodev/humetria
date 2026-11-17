@@ -230,9 +230,6 @@ return [
         'tools' => [
             'required' => 'Elige al menos una herramienta.',
         ],
-        'whatsapp' => [
-            'regex' => 'Escribe un WhatsApp de 10 dígitos, por ejemplo 55 1234 5678.',
-        ],
     ],
 
     'attributes' => [

@@ -24,6 +24,12 @@ it('accepts a valid row inserted directly', function (): void {
     expect(DemoRequest::query()->count())->toBe(1);
 });
 
+it('accepts a WhatsApp of another country, of the longest E.164', function (): void {
+    DB::table('demo_requests')->insert([...DemoRequest::factory()->raw(), 'tools' => '["nom_035"]', 'id' => (string) Str::uuid(), 'whatsapp' => '+123456789012345']);
+
+    expect(DemoRequest::query()->sole()->whatsapp)->toBe('+123456789012345');
+});
+
 it('rejects a row the form would reject', function (string $column, mixed $value): void {
     $row = [...DemoRequest::factory()->raw(), 'tools' => '["nom_035"]', 'id' => (string) Str::uuid(), $column => $value];
 
@@ -36,8 +42,10 @@ it('rejects a row the form would reject', function (string $column, mixed $value
     'email too long' => ['email', str_repeat('a', 191)],
     'blank company' => ['company', ''],
     'company too long' => ['company', str_repeat('a', 161)],
-    'whatsapp without +52' => ['whatsapp', '5512345678'],
-    'whatsapp too short' => ['whatsapp', '+52551234567'],
+    'whatsapp without its +' => ['whatsapp', '5512345678'],
+    'whatsapp with spaces' => ['whatsapp', '+52 55 1234 5678'],
+    'whatsapp too short' => ['whatsapp', '+52123'],
+    'whatsapp with a country code of 0' => ['whatsapp', '+0551234567'],
     'unknown profile' => ['profile', 'employee'],
     'unknown workforce' => ['workforce', '1_50'],
     'message too long' => ['message', str_repeat('a', 2001)],
