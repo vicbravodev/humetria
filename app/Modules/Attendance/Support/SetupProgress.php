@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Support;
 
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -17,7 +18,7 @@ use Carbon\CarbonImmutable;
 /**
  * How far the company is from the first mark, for RH's «Puesta en marcha»: a person marks once their center has a zone
  * (and, when the policy asks for the QR on site, a screen that shows the code), they have a schedule and they linked their
- * phone, and the policy was reviewed. The registro is mandatory from 1 January 2027 (LFT art. 132-XXXIV). Only counts and
+ * phone, and the policy was reviewed. A center in the field needs no zone nor screen. The registro is mandatory from 1 January 2027 (LFT art. 132-XXXIV). Only counts and
  * a few names: never a position, a device or an email. Six queries, whatever the number of centers or people.
  */
 final readonly class SetupProgress
@@ -42,6 +43,7 @@ final readonly class SetupProgress
         $policy = CompanyPolicy::current();
         $zones = $this->smallestZones();
         $screens = $this->activeScreens();
+        $field = AttendanceCenterMode::fieldCenters();
         $people = array_merge([], ...array_values($byCenter));
         $scheduled = array_flip(AttendanceSchedule::query()->among('employee_id', $people)->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
         $linked = array_filter($this->credentials->countsByEmployee($people), fn (CredentialCounts $keys): bool => $keys->active > 0);
@@ -49,7 +51,8 @@ final readonly class SetupProgress
         $pending = [];
         $findings = [];
         foreach ($names as $id => $name) {
-            $needs = array_values(array_filter([
+            // A center in the field needs neither: its people mark from their phone wherever they are.
+            $needs = isset($field[$id]) ? [] : array_values(array_filter([
                 isset($zones[$id]) ? null : 'zone',
                 $policy->require_qr_onsite && ! isset($screens[$id]) ? 'screen' : null,
             ]));

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
@@ -18,7 +19,7 @@ use Inertia\Testing\AssertableInertia;
 mutates(SetupProgress::class);
 
 /** The queries of the setup page, whatever the number of centers or people. */
-const SETUP_QUERIES = 21;
+const SETUP_QUERIES = 22;
 
 beforeEach(function (): void {
     // 8 November 2026 in Mexico City: 54 days before 1 January 2027.
@@ -85,6 +86,13 @@ describe('the road to the first mark', function (): void {
         KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now()]);
 
         expect(setupProps()['centers'])->toMatchArray(['done' => 1, 'total' => 2]);
+    });
+
+    it('asks neither a zone nor a screen of a center that marks in the field', function (): void {
+        AttendanceCenterMode::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->office->id]);
+
+        expect(setupProps()['centers'])->toMatchArray(['done' => 1, 'total' => 2])
+            ->and(setupProps()['centers']['pending'])->toBe([['id' => $this->plant->id, 'name' => 'Planta Norte', 'needs' => ['zone', 'screen']]]);
     });
 
     it('asks no screen of a center when the policy does not ask for the QR on site', function (): void {

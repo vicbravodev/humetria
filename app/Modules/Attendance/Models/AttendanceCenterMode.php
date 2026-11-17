@@ -39,6 +39,21 @@ final class AttendanceCenterMode extends Model
     }
 
     /**
+     * The ids of the company's centers that mark in the field.
+     *
+     * @return array<string, true> by center id
+     */
+    public static function fieldCenters(): array
+    {
+        $field = [];
+        foreach (self::query()->where('mode', CenterMode::Field)->get(['work_center_id']) as $mode) {
+            $field[$mode->work_center_id] = true;
+        }
+
+        return $field;
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
