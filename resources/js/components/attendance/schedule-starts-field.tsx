@@ -1,5 +1,5 @@
 import InputError from '@/components/humetria/input-error';
-import { Input } from '@/components/ui/input';
+import TimePicker from '@/components/humetria/time-picker';
 import { Label } from '@/components/ui/label';
 import { WEEKDAYS, minutesOfTime } from '@/lib/attendance/schedule';
 import { sharedStart } from '@/lib/attendance/schedule-starts';
@@ -26,14 +26,13 @@ export default function ScheduleStartsField({
                 <Label htmlFor="schedule-start-weekdays">
                     Misma hora de lunes a viernes
                 </Label>
-                <Input
+                <TimePicker
                     id="schedule-start-weekdays"
-                    type="time"
                     className="w-32"
                     value={sharedStart(starts)}
-                    onChange={(event) =>
+                    onChange={(time) =>
                         WEEKDAYS.slice(0, 5).forEach(({ day }) =>
-                            onChange(day, event.target.value),
+                            onChange(day, time),
                         )
                     }
                 />
@@ -42,18 +41,11 @@ export default function ScheduleStartsField({
                 {WEEKDAYS.map(({ day, name }) => (
                     <div key={day} className="grid gap-1">
                         <Label htmlFor={`schedule-start-${day}`}>{name}</Label>
-                        <Input
+                        <TimePicker
                             id={`schedule-start-${day}`}
-                            type="time"
                             value={starts[day] ?? ''}
-                            onChange={(event) =>
-                                onChange(day, event.target.value)
-                            }
-                            aria-invalid={
-                                errors[`starts.${day}`] === undefined
-                                    ? undefined
-                                    : true
-                            }
+                            onChange={(time) => onChange(day, time)}
+                            invalid={errors[`starts.${day}`] !== undefined}
                         />
                         <input
                             type="hidden"

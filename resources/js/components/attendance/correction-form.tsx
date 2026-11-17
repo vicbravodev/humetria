@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import CorrectionReasonField from '@/components/attendance/correction-reason-field';
 import CorrectionTypeField from '@/components/attendance/correction-type-field';
+import TimePicker from '@/components/humetria/time-picker';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { correctionDay } from '@/lib/attendance/correction';
 import type { CorrectionDraft } from '@/lib/attendance/correction';
@@ -55,14 +55,12 @@ export default function CorrectionForm({
                 <Label htmlFor="correction-time" className="text-base">
                     ¿A qué hora fue?
                 </Label>
-                <Input
+                <TimePicker
                     id="correction-time"
                     name="time"
-                    type="time"
                     required
                     value={clock}
-                    onChange={(event) => setClock(event.target.value)}
-                    className="text-base"
+                    onChange={setClock}
                 />
             </div>
             <div className="flex items-start gap-3">
