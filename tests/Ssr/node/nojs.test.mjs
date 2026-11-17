@@ -57,26 +57,34 @@ void test('without JavaScript the headline and the main text are visible and the
     });
 });
 
-// The eight tool panels that are not chosen hide only when <html> has `js` (set by the inline script): without it the nine tools stack.
-void test('without JavaScript the nine tool panels are visible, stacked, each with its name', async () => {
+// Each tool is a card that links to its own page: without JavaScript the nine are there, visible, each with its name.
+void test('without JavaScript the nine tool cards are visible, each with its name and its page', async () => {
     await withContext({ javaScriptEnabled: false }, async (context) => {
         const page = await context.newPage();
         await page.goto(baseUrl);
 
-        const panels = await page.evaluate(() =>
-            [...document.querySelectorAll('[role=tabpanel]')].map((panel) => ({
-                display: getComputedStyle(panel).display,
-                height: panel.getBoundingClientRect().height,
-                title: panel.querySelector('h3')?.textContent ?? '',
-            })),
+        const cards = await page.evaluate(() =>
+            [...document.querySelectorAll('[id^=herramienta-]')].map(
+                (card) => ({
+                    display: getComputedStyle(card).display,
+                    height: card.getBoundingClientRect().height,
+                    text: card.textContent ?? '',
+                    href: card.getAttribute('href') ?? '',
+                }),
+            ),
         );
 
-        assert.equal(panels.length, 9);
-        assert.ok(panels.every(({ display }) => display !== 'none'));
-        assert.ok(panels.every(({ height }) => height > 0));
-        assert.deepEqual(
-            panels.map(({ title }) => title),
-            toolNames,
+        assert.equal(cards.length, 9);
+        assert.ok(cards.every(({ display }) => display !== 'none'));
+        assert.ok(cards.every(({ height }) => height > 0));
+        assert.ok(
+            cards.every(({ href }) => href.startsWith('/') && href.length > 1),
         );
+        for (const name of toolNames) {
+            assert.ok(
+                cards.some(({ text }) => text.includes(name)),
+                `${name} has a card`,
+            );
+        }
     });
 });

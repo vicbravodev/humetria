@@ -11,18 +11,6 @@ const LANDING_FAMILIES = [
     'operations' => ['leave', 'org_chart', 'compensation'],
 ];
 
-/** The family whose tab shows a tool's tab. */
-function landingFamilyOf(string $tool): string
-{
-    foreach (LANDING_FAMILIES as $family => $tools) {
-        if (in_array($tool, $tools, true)) {
-            return $family;
-        }
-    }
-
-    throw new InvalidArgumentException("No family has the tool {$tool}.");
-}
-
 /*
  * The landing at `/`: its health in every look lives in PagesTest; here, that its calls to action lead where they say.
  */
@@ -278,125 +266,6 @@ it('takes the header section links to how it works, confidentiality and Humi', f
     'Humi' => ['@header-humi', '#humi'],
 ]);
 
-it('shows one tool at a time on a large stage, and a family and a tab switch it', function (string $tool, string $hint, string $text): void {
-    $panel = 'document.querySelector("#herramientas [data-test=tool-panel]")';
-    $family = landingFamilyOf($tool);
-
-    visitPage('landing', '/')
-        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-panel]").length', 1)
-        ->assertScript('() => document.querySelectorAll("#herramientas [data-test^=family-tab-]").length', 3)
-        ->click("@family-tab-{$family}")
-        ->assertAttribute("@family-tab-{$family}", 'aria-selected', 'true')
-        ->assertScript("() => [...document.querySelectorAll('[data-test=tool-rail] [role=tab]')].length", count(LANDING_FAMILIES[$family]))
-        ->click("@tool-tab-{$tool}")
-        ->assertAttribute("@tool-tab-{$tool}", 'aria-selected', 'true')
-        ->assertScript('() => window.location.hash', "#herramienta-{$tool}")
-        ->assertScript("() => document.querySelector('[data-test=tool-tab-{$tool}] [data-test=tool-hint]').textContent", $hint)
-        ->assertScript("() => {$panel}.textContent.includes(".json_encode($text).')')
-        ->assertScript('() => document.getElementById("herramientas").textContent.toLowerCase().includes("próximamente")', false);
-})->with([
-    'NOM-035' => ['nom_035', 'Factores de riesgo psicosocial', 'numeral 7.7'],
-    'NOM-037' => ['nom_037', 'Teletrabajo', 'lista de verificación'],
-    'Ley Silla' => ['ley_silla', 'Asientos y descansos', 'reglamento interior'],
-    'complaints' => ['complaints', 'Quejas y denuncias', 'nunca a la persona señalada'],
-    'compensation' => ['compensation', 'Revisión salarial y contractual', 'sindicato'],
-    'attendance' => ['attendance', 'Reloj checador y registro de jornada', '1 de enero de 2027'],
-    'leave' => ['leave', 'Vacaciones, permisos y saldos', 'saldo'],
-    'org chart' => ['org_chart', 'Quién reporta a quién', 'organigrama'],
-    'engagement' => ['engagement', 'Clima laboral y pulso', 'Nadie ve una respuesta individual'],
-]);
-
-it('keeps the nine tools in the page as tab panels and shows only the chosen one', function (): void {
-    $panels = '[...document.querySelectorAll("#herramientas [role=tabpanel]")]';
-    $page = visitPage('landing', '/');
-
-    $page->assertScript("() => {$panels}.length", 9)
-        ->assertScript("() => {$panels}.filter((panel) => getComputedStyle(panel).display !== 'none').length", 1)
-        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").id', 'tool-panel-nom_035')
-        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").getAttribute("aria-labelledby")', 'tool-panel-title-nom_035')
-        ->assertScript('() => document.getElementById("tool-tab-nom_035").getAttribute("aria-controls")', 'tool-panel-nom_035')
-        ->assertScript("() => new Set({$panels}.map((panel) => panel.id)).size", 9)
-        ->assertScript("() => {$panels}.every((panel) => document.getElementById(panel.getAttribute('aria-labelledby')) !== null)")
-        ->assertNoJavaScriptErrors();
-});
-
-it('reveals the panel of each tab and hides the one before', function (string $family, string $tool, string $before): void {
-    $display = fn (string $key): string => "() => getComputedStyle(document.getElementById('tool-panel-{$key}')).display";
-
-    visitPage('landing', '/')
-        ->click("@family-tab-{$family}")
-        ->click("@tool-tab-{$tool}")
-        ->assertScript($display($tool), 'grid')
-        ->assertScript($display($before), 'none')
-        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-panel]").id', "tool-panel-{$tool}")
-        ->assertScript('() => document.querySelectorAll("#herramientas [data-test=tool-film]").length', 1)
-        ->assertScript("() => document.querySelector('#tool-panel-{$tool} [data-test=tool-film] video') !== null");
-})->with([
-    'NOM-037' => ['compliance', 'nom_037', 'nom_035'],
-    'complaints' => ['listening', 'complaints', 'nom_035'],
-]);
-
-it('opens on the tool the link names', function (): void {
-    $page = visitPage('landing', '/');
-    $page->script('() => { window.location.hash = "herramienta-engagement"; }');
-
-    $page->assertAttribute('@tool-tab-engagement', 'aria-selected', 'true')
-        ->assertSeeIn('[data-test=tool-panel]', 'Nadie ve una respuesta individual');
-});
-
-it('keeps the selected tool visible in the phone strip when the hash changes', function (): void {
-    $page = visitPage('landing', '/', mobile: true);
-    $page->script('() => { window.location.hash = "herramienta-engagement"; }');
-
-    $page->assertAttribute('@tool-tab-engagement', 'aria-selected', 'true')
-        ->assertScript('() => { const tab = document.getElementById("tool-tab-engagement").getBoundingClientRect(); const strip = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
-        ->keys('@tool-tab-engagement', 'Home')
-        ->assertAttribute('@tool-tab-complaints', 'aria-selected', 'true')
-        ->assertScript('() => { const tab = document.getElementById("tool-tab-complaints").getBoundingClientRect(); const strip = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right; }')
-        ->assertNoJavaScriptErrors();
-});
-
-it('fits every complete tool presentation below the laptop header, under its tools', function (): void {
-    $page = resizeTo(visitPage('landing', '/'), 1512, 982);
-
-    foreach (LANDING_FAMILIES as $family => $tools) {
-        $page->click("@family-tab-{$family}");
-
-        foreach ($tools as $tool) {
-            $page->click("@tool-tab-{$tool}");
-            // The family's tools just under the 64 px header, the way a visitor scrolls to them: the stage fits below them.
-            $page->script('() => { window.scrollTo({ top: document.querySelector("[data-test=tool-rail]").getBoundingClientRect().top + window.scrollY - 80, behavior: "instant" }); }');
-            $page->assertScript('() => { const panel = document.querySelector("#herramientas [data-test=tool-panel]").getBoundingClientRect(); const rail = document.querySelector("[data-test=tool-rail]").getBoundingClientRect(); return rail.top >= 64 && rail.bottom <= panel.top && panel.bottom <= window.innerHeight; }');
-        }
-    }
-
-    $page->assertNoJavaScriptErrors();
-});
-
-it('keeps the phone playback controls inside the video and respects reduced motion', function (): void {
-    $page = resizeTo(visit('/', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 375, 812);
-    $video = 'document.querySelector("[data-test=tool-film] video")';
-
-    $page->assertScript("() => {$video}.paused && ! {$video}.autoplay")
-        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Reproducir video')
-        ->assertScript('() => { const video = document.querySelector("[data-test=tool-film] video").getBoundingClientRect(); const control = document.querySelector("[data-test=tool-film-toggle]").getBoundingClientRect(); return control.left >= video.left && control.right <= video.right && control.top >= video.top && control.bottom <= video.bottom && control.width >= 44 && control.height >= 44; }')
-        ->click('@tool-film-toggle')
-        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Pausar video')
-        ->click('@tool-film-toggle')
-        ->assertScript("() => {$video}.paused")
-        ->assertNoJavaScriptErrors();
-});
-
-it('moves between tabs with the arrow keys', function (): void {
-    visitPage('landing', '/')
-        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true')
-        ->click('@tool-tab-nom_035')
-        ->keys('@tool-tab-nom_035', 'ArrowRight')
-        ->assertAttribute('@tool-tab-nom_037', 'aria-selected', 'true')
-        ->keys('@tool-tab-nom_037', 'ArrowLeft')
-        ->assertAttribute('@tool-tab-nom_035', 'aria-selected', 'true');
-});
-
 it('lists what an inspector would ask for, one line per tool', function (): void {
     $page = visitPage('landing', '/');
 
@@ -439,62 +308,6 @@ it('shows Humi at work in a looping film, with its conversation for screen reade
         ->assertScript("() => {$video}.paused");
 });
 
-it('shows each tool as a narrated film with chapters, and a chapter jumps to the moment its narration starts', function (string $tool, string $film, float $third, float $fourth): void {
-    $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
-
-    $page = visitPage('landing', '/');
-    $page->click('@family-tab-'.landingFamilyOf($tool))
-        ->click("@tool-tab-{$tool}")
-        ->assertScript("() => {$video}.muted && {$video}.loop && {$video}.playsInline")
-        ->assertScript("() => {$video}.hasAttribute('muted')")
-        ->assertScript("() => {$video}.poster.endsWith('/video/{$film}-light.jpg')")
-        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", "{$film}-light.webm,{$film}-light.mp4")
-        // Large enough to read what the film shows (at 1280 px the stage is wider than 700 px).
-        ->assertScript("() => {$video}.getBoundingClientRect().width > 700")
-        ->assertScript('() => document.querySelectorAll("#herramientas [data-test^=tool-chapter-]").length', 4)
-        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.length > 40');
-
-    $page->click('@tool-chapter-2')
-        ->assertScript("() => new Promise((resolve) => { const there = () => {$video}.currentTime >= {$third} && {$video}.currentTime < {$fourth} ? resolve(true) : requestAnimationFrame(there); there(); })")
-        ->assertAttribute('@tool-chapter-2', 'aria-current', 'true')
-        ->assertScript("() => new Promise((resolve) => { const playing = () => ! {$video}.paused ? resolve(true) : requestAnimationFrame(playing); playing(); })")
-        ->assertAttribute('@tool-film-toggle', 'aria-label', 'Pausar video')
-        // It starts muted; the visitor turns the narration on and off.
-        ->assertAttribute('@tool-film-sound', 'aria-label', 'Activar sonido')
-        ->click('@tool-film-sound')
-        ->assertScript("() => ! {$video}.muted")
-        ->assertAttribute('@tool-film-sound', 'aria-label', 'Silenciar video')
-        ->click('@tool-film-sound')
-        ->assertScript("() => {$video}.muted")
-        ->click('@tool-film-toggle')
-        ->assertScript("() => {$video}.paused");
-})->with([
-    'NOM-035' => ['nom_035', 'humetria-nom-035', 13.77, 21.47],
-    'NOM-037' => ['nom_037', 'humetria-nom-037', 12.4, 19.9],
-    'Ley Silla' => ['ley_silla', 'humetria-ley-silla', 14.2, 21.23],
-    'complaints' => ['complaints', 'humetria-complaints', 13.6, 19.93],
-    'compensation' => ['compensation', 'humetria-compensation', 15.8, 21.63],
-    'attendance' => ['attendance', 'humetria-attendance', 14.33, 20.97],
-    'leave' => ['leave', 'humetria-leave', 11.8, 17.33],
-    'org chart' => ['org_chart', 'humetria-org-chart', 11.67, 17.33],
-    'engagement' => ['engagement', 'humetria-engagement', 14.37, 21.57],
-]);
-
-it('shows the film drawn with the dark tokens in the dark theme', function (): void {
-    $video = 'document.querySelector("#herramientas [data-test=tool-film] video")';
-
-    visitPage('landing', '/', dark: true)
-        ->assertScript("() => {$video}.poster.endsWith('/video/humetria-nom-035.jpg')")
-        ->assertScript("() => [...{$video}.querySelectorAll('source')].map((source) => source.src.split('/').pop()).join()", 'humetria-nom-035.webm,humetria-nom-035.mp4');
-});
-
-it('keeps the film of the time clock on the QR and passkey flow', function (): void {
-    visitPage('landing', '/')
-        ->click('@tool-tab-attendance')
-        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.includes("código QR")')
-        ->assertScript('() => document.querySelector("#herramientas [data-test=tool-film] figcaption").textContent.includes("reporte para la autoridad")');
-});
-
 it('speaks to consultants, multi-site companies and corporate groups, and to unions after them', function (): void {
     visitPage('landing', '/')
         ->assertSeeIn('section[aria-labelledby="para-quien"]', 'varias empresas')
@@ -511,17 +324,46 @@ it('shows each audience as a card with its icon', function (): void {
         ->assertScript('() => [...document.querySelectorAll("section[aria-labelledby=para-quien] article")].map((article) => getComputedStyle(article).borderBottomWidth + "|" + article.querySelectorAll("span svg").length).join()', '1px|1,1px|1,1px|1');
 });
 
-it('opens the tools section on the first tool of the family a hero link names', function (string $family, string $tool): void {
+it('shows the nine tools as cards by family, each one to its own page', function (string $tool, string $hint, string $path): void {
+    visitPage('landing', '/')
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test^=tool-card-]").length', 9)
+        ->assertScript('() => document.querySelectorAll("#herramientas [role=tab], #herramientas [role=tabpanel]").length', 0)
+        ->assertAttribute("@tool-card-{$tool}", 'href', $path)
+        ->assertAttribute("@tool-card-{$tool}", 'id', "herramienta-{$tool}")
+        ->assertSeeIn("[data-test=tool-card-{$tool}] [data-test=tool-hint]", $hint)
+        ->assertScript('() => document.getElementById("herramientas").textContent.toLowerCase().includes("próximamente")', false);
+})->with([
+    'NOM-035' => ['nom_035', 'Factores de riesgo psicosocial', '/nom-035'],
+    'NOM-037' => ['nom_037', 'Teletrabajo', '/nom-037'],
+    'Ley Silla' => ['ley_silla', 'Asientos y descansos', '/ley-silla'],
+    'complaints' => ['complaints', 'Quejas y denuncias', '/buzon-de-quejas'],
+    'compensation' => ['compensation', 'Revisión salarial y contractual', '/compensacion'],
+    'attendance' => ['attendance', 'Reloj checador y registro de jornada', '/registro-de-jornada'],
+    'leave' => ['leave', 'Vacaciones, permisos y saldos', '/vacaciones-y-permisos'],
+    'org chart' => ['org_chart', 'Quién reporta a quién', '/organigrama'],
+    'engagement' => ['engagement', 'Clima laboral y pulso', '/clima-laboral'],
+]);
+
+it('takes a card to the page of its tool', function (): void {
+    visitPage('landing', '/')
+        ->click('@tool-card-attendance')
+        ->assertPathIs('/registro-de-jornada')
+        ->assertSee('Registro electrónico de jornada');
+});
+
+it('keeps the old links to a tool on the landing: the card they name is in the page', function (): void {
+    visit('/#herramienta-nom_035')
+        ->assertScript('() => document.getElementById("herramienta-nom_035") !== null')
+        ->assertNoJavaScriptErrors();
+});
+
+it('jumps to the cards of the family a hero link names', function (string $family): void {
     visitPage('landing', '/')
         ->click("@hero-family-{$family}")
-        ->assertAttribute("@family-tab-{$family}", 'aria-selected', 'true')
-        ->assertAttribute("@tool-tab-{$tool}", 'aria-selected', 'true')
-        ->assertScript('() => new Promise((resolve) => setTimeout(() => { const box = document.getElementById("herramientas").getBoundingClientRect(); resolve(box.top < window.innerHeight / 2 && box.bottom > 0); }, 1000))');
-})->with([
-    'compliance' => ['compliance', 'nom_035'],
-    'listening' => ['listening', 'complaints'],
-    'operations' => ['operations', 'leave'],
-]);
+        ->assertScript('() => window.location.hash', "#familia-{$family}")
+        ->assertScript("() => [...document.querySelectorAll('#familia-{$family} [data-test^=tool-card-]')].map((card) => card.id.replace('herramienta-', '')).join()", implode(',', LANDING_FAMILIES[$family]))
+        ->assertScript("() => new Promise((resolve) => setTimeout(() => { const box = document.getElementById('familia-{$family}').getBoundingClientRect(); resolve(box.top < window.innerHeight && box.bottom > 0); }, 1000))");
+})->with(['compliance', 'listening', 'operations']);
 
 it('states its four promises right under the hero', function (): void {
     $page = visitPage('landing', '/');
@@ -547,7 +389,7 @@ it('never promises anonymity for identified records', function (): void {
 
 it('states its legal and privacy claims exactly', function (): void {
     visitPage('landing', '/')
-        ->assertSee('Arma el informe que pide la norma (numeral 7.7)')
+        ->assertSee('Elige las guías según el tamaño de cada centro')
         ->assertSee('solo con 5 o más respuestas')
         ->assertSee('con la confidencialidad que requiere cada herramienta')
         ->assertSee('¿Qué herramientas te interesan? (elige al menos una)')
@@ -710,27 +552,6 @@ it('enters the headline word by word and the parts under it in a staggered fade,
 it('enters the hero without moving when the visitor asks for reduced motion', function (): void {
     visit('/', ['reducedMotion' => 'reduce'])
         ->assertScript("() => [...document.querySelectorAll('#hero-title span, #inicio .enter-after')].every((node) => getComputedStyle(node).getPropertyValue('--from-transform').trim() === 'none' && getComputedStyle(node).getPropertyValue('--from-filter').trim() !== 'blur(6px)')")
-        ->assertNoJavaScriptErrors();
-});
-
-it('plays the details of a tool again each time the tool changes', function (): void {
-    $details = "document.querySelector('#herramientas [role=tabpanel] .enter-details')";
-    // The key remounts the details with the tool: a new element, whose CSS animation starts over.
-    $replayed = <<<JS
-        () => new Promise((resolve) => {
-            const before = {$details};
-            document.querySelector('[data-test=tool-tab-ley_silla]').click();
-            const wait = () => {
-                const after = {$details};
-                after !== null && after !== before ? resolve(after.getAnimations().some((animation) => animation.animationName === 'enter')) : requestAnimationFrame(wait);
-            };
-            wait();
-        })
-        JS;
-
-    visit('/#herramientas')
-        ->assertScript("() => getComputedStyle({$details}).animationName", 'enter')
-        ->assertScript($replayed)
         ->assertNoJavaScriptErrors();
 });
 

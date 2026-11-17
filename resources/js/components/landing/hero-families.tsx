@@ -6,7 +6,7 @@ import { TOOLS } from '@/components/landing/landing-tools';
 const toolName = (key: string): string =>
     TOOLS.find((tool) => tool.key === key)?.name ?? key;
 
-/** The nine tools as three families: each link opens the tools section on the family's first tool. */
+/** The nine tools as three families: each link jumps to the family's cards in the tools section. */
 export default function HeroFamilies() {
     return (
         <nav aria-label="Herramientas por familia" data-test="hero-families">
@@ -14,25 +14,10 @@ export default function HeroFamilies() {
                 {FAMILIES.map((family) => (
                     <li key={family.key} className="border-b">
                         <a
-                            href={`#herramienta-${family.tools[0]}`}
+                            href={`#familia-${family.key}`}
                             data-test={`hero-family-${family.key}`}
                             data-track="family_click"
                             data-track-target={family.key}
-                            onClick={(event) => {
-                                event.preventDefault();
-                                // Like the tool tabs, it rewrites the address instead of navigating: a navigation would let the router reset the scroll.
-                                window.history.replaceState(
-                                    null,
-                                    '',
-                                    `#herramienta-${family.tools[0]}`,
-                                );
-                                window.dispatchEvent(
-                                    new HashChangeEvent('hashchange'),
-                                );
-                                document
-                                    .getElementById('herramientas')
-                                    ?.scrollIntoView();
-                            }}
                             className="group grid min-h-18 grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 py-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                         >
                             <span className={`${ICON_BOX} row-span-2 size-11`}>
