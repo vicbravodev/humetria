@@ -406,6 +406,22 @@ it('weighs the report against the other proposals of the account and tells each 
         ->assertNoJavaScriptErrors();
 });
 
+it('fits the report and the comparison in the page when another scenario has a long name', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $scenario = reportScenario($tenant);
+    $other = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2026: contrapropuesta de la empresa al pliego del sindicato', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
+
+    $report = visit("{$url}/compensation/scenarios/{$scenario->id}/report")->assertSee('4. Frente a las otras propuestas');
+    $compare = visit("{$url}/compensation/scenarios/compare?ids[]={$scenario->id}&ids[]={$other->id}")->assertSee('Comparar escenarios');
+
+    foreach ([$report, $compare] as $page) {
+        foreach ([375, 1440] as $width) {
+            resizeTo($page, $width)->assertScript(spilledOut(), '');
+        }
+    }
+});
+
 it('draws the report still with reduced motion, and prints it in the light theme', function (): void {
     $url = signInToPanel();
     $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
@@ -613,6 +629,29 @@ it('costs the scenario as it is moved, against the others of the account, before
     expect(Scenario::query()->withoutGlobalScopes()->count())->toBe(1);
 })->with($looks);
 
+it('keeps the cost inside its card at 1440 px when another scenario has a long name', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $operator = JobGrade::factory()->create(['tenant_id' => $tenant->id, 'category' => 'Operador', 'level' => 'A']);
+    GradeSalary::factory()->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'daily_salary_cents' => 50000, 'effective_from' => '2020-01-01']);
+    Employee::factory()->count(3)->sequence(fn ($sequence) => ['employee_number' => 'E-00'.$sequence->index])->create(['tenant_id' => $tenant->id, 'job_grade_id' => $operator->id, 'hired_on' => '2020-03-15', 'staff_group' => 'unionized', 'state' => 'JAL']);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2026: contrapropuesta de la empresa al pliego del sindicato', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
+
+    $page = visit("{$url}/compensation/scenarios/create")
+        ->click('[aria-label="Subir sindicalizados"]')
+        ->assertSee('Frente a tus otros escenarios');
+
+    resizeTo($page, 1440)
+        ->assertScript(<<<'JS'
+            () => {
+                const aside = document.querySelector('aside[aria-label="Costo del escenario"]');
+                const edge = aside.getBoundingClientRect().right - parseFloat(getComputedStyle(aside).paddingRight);
+                return Array.from(aside.querySelectorAll('*')).filter((element) => element.getBoundingClientRect().right > edge + 1).map((element) => element.textContent.trim().slice(0, 30)).join(' | ');
+            }
+            JS, '')
+        ->assertNoJavaScriptErrors();
+});
+
 it('makes a scenario from its editor and opens its report', function (): void {
     $url = signInToPanel();
 
@@ -664,6 +703,24 @@ it('adds a benefit to change in the editor, in its own unit, and saves its new v
         ->assertNoJavaScriptErrors();
 
     expect(Scenario::query()->withoutGlobalScopes()->sole()->term_changes)->toEqual([['benefit_id' => $benefit->id, 'value' => 150000, 'tenure_table' => null]]);
+});
+
+it('lists the benefits as soon as the search opens, and not again one already added', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    Benefit::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Bono de transporte', 'kind' => 'fixed_amount', 'frequency' => 'monthly']);
+    Benefit::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Vales de despensa', 'kind' => 'fixed_amount', 'frequency' => 'monthly']);
+
+    visit("{$url}/compensation/scenarios/create")
+        ->click('#scenario-benefit-search')
+        ->assertSeeIn('#scenario-benefit-search-options', 'Bono de transporte')
+        ->assertSeeIn('#scenario-benefit-search-options', 'Vales de despensa')
+        ->click('[role="option"]:has-text("Bono de transporte")')
+        ->assertSee('Nueva en el contrato')
+        ->click('#scenario-benefit-search')
+        ->assertSeeIn('#scenario-benefit-search-options', 'Vales de despensa')
+        ->assertDontSeeIn('#scenario-benefit-search-options', 'Bono de transporte')
+        ->assertNoJavaScriptErrors();
 });
 
 it('shows what is wrong in the editor without saving', function (): void {

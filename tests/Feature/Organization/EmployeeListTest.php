@@ -57,7 +57,7 @@ it('lists the active employees by name, with their center and area', function ()
             // Work centers and areas are searched on the server as they are chosen, never sent whole.
             ->missing('workCenters')
             ->missing('areas')
-            ->where('genders', [['value' => 'female', 'label' => 'Mujer'], ['value' => 'male', 'label' => 'Hombre'], ['value' => 'other', 'label' => 'Otro / prefiero no decir']]));
+            ->where('genders', [['value' => 'female', 'label' => 'Mujer'], ['value' => 'male', 'label' => 'Hombre'], ['value' => 'other', 'label' => 'Otro']]));
 });
 
 it('searches by name, email or employee number, ignoring case and accents', function (string $q, array $names): void {

@@ -73,7 +73,9 @@ export default function ScenarioBenefitsCard({
                     key={changes.length}
                     id="scenario-benefit-search"
                     name=""
-                    source={found.source}
+                    source={found.except(
+                        changes.map((item) => item.benefit_id),
+                    )}
                     placeholder="Busca la prestación por su nombre"
                     onChange={(option) =>
                         add({

@@ -29,7 +29,8 @@ export default function EmployeeChoiceField({
     const id = `employee-${name}`;
 
     return (
-        <div className="grid gap-2">
+        // One column that may shrink: a long name is cut in its field instead of widening it over the next one.
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
             <Label htmlFor={id}>{label}</Label>
             <Combobox
                 id={id}

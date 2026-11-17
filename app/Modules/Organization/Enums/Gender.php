@@ -31,7 +31,7 @@ enum Gender: string
         return match ($this) {
             self::Female => 'Mujer',
             self::Male => 'Hombre',
-            self::Other => 'Otro / prefiero no decir',
+            self::Other => 'Otro',
         };
     }
 }

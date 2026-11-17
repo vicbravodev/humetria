@@ -49,6 +49,33 @@ describe('benefitOptions', () => {
         expect(benefitOptions('/benefits').source.initial).toEqual([]);
     });
 
+    it('asks for the first page as soon as it opens, like the other server sources', () => {
+        expect(benefitOptions('/benefits').source.minLength).toBe(0);
+    });
+
+    it('does not offer again a benefit already added, and still knows the unit of the others', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({
+                ok: true,
+                json: () =>
+                    Promise.resolve([
+                        { value: 'b1', label: 'Bono', unit: 'pesos' },
+                        { value: 'b2', label: 'Vales', unit: 'pesos' },
+                    ]),
+            }),
+        );
+        const { except, unitOf } = benefitOptions('/benefits');
+        const source = except(['b1']);
+
+        expect(await source.load('', signal)).toEqual([
+            { value: 'b2', label: 'Vales' },
+        ]);
+        expect(source.minLength).toBe(0);
+        expect(source.initial).toEqual([]);
+        expect(unitOf('b2')).toBe('pesos');
+    });
+
     it('gives a body that is not a list as no options', async () => {
         vi.stubGlobal(
             'fetch',
