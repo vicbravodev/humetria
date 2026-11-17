@@ -19,6 +19,7 @@ use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoContext;
@@ -178,6 +179,8 @@ final readonly class AttendanceStory implements DemoStory
     {
         $centers = array_map(fn (string $key): string => $context->center($key), array_combine(array_keys(DemoRoster::CENTERS), array_keys(DemoRoster::CENTERS)));
         $live = array_map(fn (DemoPerson $person): string => $person->key, $this->askers());
+        // Each mark in the zone of its center, as RecordMark stamps it.
+        $timezones = WorkCenter::query()->whereIn('id', array_values($centers))->pluck('timezone', 'id')->all();
         $rows = [];
 
         foreach (DemoRoster::people() as $n => $person) {
@@ -194,7 +197,7 @@ final readonly class AttendanceStory implements DemoStory
                     }
 
                     $last = $type;
-                    $rows[] = $this->row($how, $context->tenantId, $person, $centers[$person->centerKey], $type, $date->addMinutes($minute));
+                    $rows[] = [...$this->row($how, $context->tenantId, $person, $centers[$person->centerKey], $type, $date->addMinutes($minute)), 'timezone' => $timezones[$centers[$person->centerKey]]];
                 }
             }
         }

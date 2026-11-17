@@ -20,7 +20,7 @@ use Database\Factories\Organization\EmployeeFactory;
 mutates(ReportController::class, AuthorityCsv::class);
 
 /** The CSV's header row, as a spreadsheet reads it. */
-const AUTHORITY_CSV_HEADER = 'Persona,Puesto,Fecha,Inicio,Fin,Fecha de fin,Pausas (min),Trabajado (min),Trabajado (h:mm),Ordinarias (min),Ordinarias (h:mm),'
+const AUTHORITY_CSV_HEADER = 'Persona,Puesto,Fecha,Inicio,Fin,Fecha de fin,Zona horaria,Pausas (min),Trabajado (min),Trabajado (h:mm),Ordinarias (min),Ordinarias (h:mm),'
     .'Extra doble (min),Extra doble (h:mm),Extra triple (min),Extra triple (h:mm),Día de descanso (min),Día de descanso (h:mm),'
     .'Evidencia,Correcciones,Detalle de correcciones,Conformidad,Huella de la semana confirmada,Avisos';
 
@@ -78,8 +78,8 @@ describe('the file', function (): void {
         $response = $this->get(exportUrl(plantWeek($this)))->assertOk();
 
         expect($response->streamedContent())->toBe("\u{FEFF}".AUTHORITY_CSV_HEADER."\n"
-            .'Ana López,Operadora,2027-01-06,23:50,08:20,2027-01-07,30,480,8:00,480,8:00,0,0:00,0,0:00,0,0:00,Fuerte,0,,objetada,,'."\n"
-            .'Ana López,Operadora,2027-01-08,08:00,,,0,0,0:00,0,0:00,0,0:00,0,0:00,0,0:00,Corregida,1,"hora corregida de 08:15 a 08:00 (por RH): Llegó a las 8, el lector falló.",objetada,,Sin marca de fin'."\n");
+            .'Ana López,Operadora,2027-01-06,23:50,08:20,2027-01-07,UTC−06:00 · America/Mexico_City,30,480,8:00,480,8:00,0,0:00,0,0:00,0,0:00,Fuerte,0,,objetada,,'."\n"
+            .'Ana López,Operadora,2027-01-08,08:00,,,UTC−06:00 · America/Mexico_City,0,0,0:00,0,0:00,0,0:00,0,0:00,0,0:00,Corregida,1,"hora corregida de 08:15 a 08:00 (por RH): Llegó a las 8, el lector falló.",objetada,,Sin marca de fin'."\n");
     });
 
     it('sends it as a download nobody keeps, named after the center and the period with safe characters only', function (): void {

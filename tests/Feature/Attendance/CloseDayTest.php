@@ -41,7 +41,7 @@ function closeMark(Employee $person, MarkType $type, string $local): AttendanceM
 
 function closeDay(Employee $person, string $date): ?App\Modules\Attendance\Data\DayHours
 {
-    return resolve(CloseDay::class)->handle($person->id, CarbonImmutable::parse($date, 'America/Mexico_City'));
+    return resolve(CloseDay::class)->handle($person->id, CarbonImmutable::parse($date, 'America/Mexico_City'), 'America/Mexico_City');
 }
 
 describe('a day', function (): void {

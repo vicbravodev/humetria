@@ -227,6 +227,9 @@ return [
         'state' => [
             'in' => 'Elige un estado de la lista.',
         ],
+        'timezone' => [
+            'in' => 'Elige una zona horaria de la lista.',
+        ],
         'tools' => [
             'required' => 'Elige al menos una herramienta.',
         ],
@@ -432,6 +435,7 @@ return [
         'legal_name' => 'razón social',
         'logo' => 'logo',
         'main_activity' => 'actividad principal',
+        'timezone' => 'zona horaria',
         'member_ids' => 'integrantes',
         'message' => 'mensaje',
         'mobile' => 'celular',

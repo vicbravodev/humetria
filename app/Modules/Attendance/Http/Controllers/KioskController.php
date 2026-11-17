@@ -14,6 +14,7 @@ use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Attendance\Support\QrImage;
 use App\Modules\Attendance\Support\QrToken;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Carbon\CarbonImmutable;
@@ -37,7 +38,7 @@ final class KioskController
     /** A screen stays on for years; RH ends it by revoking it, not by letting the cookie lapse. */
     private const int COOKIE_MINUTES = 60 * 24 * 365 * 5;
 
-    public function __construct(private readonly Companies $companies, private readonly WorkCenters $workCenters) {}
+    public function __construct(private readonly Companies $companies, private readonly WorkCenters $workCenters, private readonly Timezones $timezones) {}
 
     public function store(KioskRequest $request, mixed $tenant, IssueKioskDevice $issue): RedirectResponse
     {
@@ -96,8 +97,8 @@ final class KioskController
             'center' => $center->name,
             'qrUrl' => route('attendance.device.kiosk.qr', $tenant),
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
-            // The clock on the screen is the company's, whatever the tablet's zone.
-            'timezone' => config()->string('app.display_timezone'),
+            // The clock on the screen is the center's, whatever the tablet's zone.
+            'timezone' => $this->timezones->forCenter($center->id),
         ]);
     }
 

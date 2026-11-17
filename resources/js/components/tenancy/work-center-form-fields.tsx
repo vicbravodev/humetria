@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import TenantField from '@/components/tenancy/tenant-field';
 import WorkCenterStateField from '@/components/tenancy/work-center-state-field';
+import WorkCenterTimezoneField from '@/components/tenancy/work-center-timezone-field';
 import type { MexicanStateOption, WorkCenterRow } from '@/types';
 
 /** The parts of a work center its form writes as text. */
@@ -30,6 +32,11 @@ export default function WorkCenterFormFields({
         defaultValue: workCenter?.[name] ?? undefined,
         error: errors[name],
     });
+    // The address decides the zone, so the form follows both as they are typed.
+    const [state, setState] = useState(workCenter?.state);
+    const [municipality, setMunicipality] = useState(
+        workCenter?.municipality ?? '',
+    );
 
     return (
         <div className="grid gap-4">
@@ -79,13 +86,21 @@ export default function WorkCenterFormFields({
                     label="Municipio o alcaldía"
                     required
                     maxLength={120}
+                    onChange={(event) => setMunicipality(event.target.value)}
                 />
                 <WorkCenterStateField
                     states={states}
                     defaultValue={workCenter?.state}
                     error={errors['state']}
+                    onChange={setState}
                 />
             </div>
+            <WorkCenterTimezoneField
+                state={state}
+                municipality={municipality}
+                saved={workCenter?.timezone}
+                error={errors['timezone']}
+            />
             <TenantField
                 {...field('main_activity')}
                 label="Actividad principal"

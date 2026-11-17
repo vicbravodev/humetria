@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Actions\CloseDays;
+use App\Modules\Attendance\Actions\DispatchCloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
 use App\Modules\Billing\Actions\MeasureStorage;
 use App\Modules\Billing\Actions\ReleaseMailHolds;
@@ -114,7 +115,11 @@ Artisan::command('seating:remind-questions', function (RemindStandingQuestions $
 
 Artisan::command('attendance:close-days', function (CloseDays $closeDays): void {
     $this->info('Días cerrados: '.$closeDays->handle());
-})->purpose('Close the day before yesterday for every active person with a mark that day or a working day by their schedule (the registro de jornada)');
+})->purpose('Close the day before yesterday for every active person with a mark that day or a working day by their schedule (the registro de jornada), each center at its own today');
+
+Artisan::command('attendance:dispatch-close-days', function (DispatchCloseDays $dispatch): void {
+    $this->info('Cierres encolados: '.$dispatch->handle());
+})->purpose('Queue the nightly close of each work center whose own clock passed 00:15, once per local day');
 
 Artisan::command('leave:grant-entitlements', function (GrantEntitlements $grant): void {
     $this->info('Periodos otorgados: '.$grant->handle());
@@ -152,9 +157,9 @@ Schedule::command('seating:send-digests')->dailyAt('08:30')->timezone(config()->
 Schedule::command('complaints:send-digests')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:release-held')->dailyAt('00:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
-// Shortly after local midnight; it closes the day before yesterday, a whole day after it ended. Once is enough: closing a
-// day again gives the same day.
-Schedule::command('attendance:close-days')->dailyAt('00:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// Each center shortly after its own midnight (design of time zones §4, phase 3): every 15 minutes the dispatcher queues the
+// centers whose clock passed 00:15, once per local day (local_runs); a tick missed is made up by the next one.
+Schedule::command('attendance:dispatch-close-days')->everyFifteenMinutes()->onOneServer()->withoutOverlapping();
 // A restore, a manual fix or a bug can leave a counter of people or centers off: recount every night, after the day is closed.
 Schedule::command('humetria:reconcile-limits')->dailyAt('03:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Artisan::command('billing:expire-usage-reservations', function (ExpireUsageReservations $expire): void {

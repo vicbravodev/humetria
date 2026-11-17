@@ -59,7 +59,7 @@ function localDate(string $date): CarbonImmutable
 /** The digest of Ana's week as she sees it now. */
 function seenDigest(object $test, string $week = LAST_WEEK): string
 {
-    return WeekDigest::of($test->ana->id, WeekPeriod::ofDate(localDate($week)));
+    return WeekDigest::of($test->ana->id, WeekPeriod::ofDate(localDate($week), 'America/Mexico_City'));
 }
 
 function confirmWeek(object $test, string $week = LAST_WEEK, ?string $digest = null): WeeklyConfirmation

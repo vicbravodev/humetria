@@ -17,5 +17,7 @@ final readonly class MarkContext
         public ?float $accuracy,
         public ?float $distance,
         public ?string $credentialId,
+        /** Another center of the company whose code it was taken with: a trip, flagged, never a lateness. */
+        public ?string $awayCenterId = null,
     ) {}
 }

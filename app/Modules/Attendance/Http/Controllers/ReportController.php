@@ -10,6 +10,7 @@ use App\Modules\Attendance\Http\Requests\ReportRequest;
 use App\Modules\Attendance\Support\AuthorityCsv;
 use App\Modules\Attendance\Support\PanelScope;
 use App\Modules\Attendance\Support\ReportPages;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -22,7 +23,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final readonly class ReportController
 {
-    public function __construct(private WorkCenters $workCenters) {}
+    public function __construct(private WorkCenters $workCenters, private Timezones $timezones) {}
 
     /**
      * The page; a center's report on its first page goes to the audit trail (AuditReport). A period too long for the screen
@@ -30,8 +31,8 @@ final readonly class ReportController
      */
     public function show(ReportRequest $request, ReportPages $pages, AuditReport $audit): Response
     {
-        [$from, $to] = $request->hasPeriod() ? [$request->from(), $request->to()] : ReportPages::lastWeek();
         $center = PanelScope::center($this->workCenters, $request->centerId());
+        [$from, $to] = $request->hasPeriod() ? [$request->from(), $request->to()] : ReportPages::lastWeek($center === null ? $this->timezones->forTenant() : $this->timezones->forCenter($center->id));
         $onlyDownload = $request->onlyDownload();
         $page = $pages->show($request->tenantSlug(), $center, $from, $to, $request->string('q')->trim()->limit(100, '')->toString(), $onlyDownload ? $request->days() : null, $request->show());
 

@@ -67,13 +67,13 @@ describe('the weeks of several people', function (): void {
         }
         DB::enableQueryLog();
 
-        $weeks = TeamWeek::summaries([$ana->id, $bob->id, $carla->id], WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-04')));
+        $weeks = TeamWeek::summaries([$ana->id, $bob->id, $carla->id], WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-04'), 'America/Mexico_City'));
 
         expect(count(DB::getQueryLog()))->toBe(3)
             ->and(array_keys($weeks))->toBe([$ana->id, $bob->id, $carla->id])
             ->and($weeks[$ana->id])->ordinaryMinutes->toBe(480)->overtimeMinutes->toBe(120)->restDayMinutes->toBe(0)
             ->and($weeks[$bob->id])->ordinaryMinutes->toBe(0)->overtimeMinutes->toBe(0)->restDayMinutes->toBe(360)
             ->and($weeks[$carla->id])->ordinaryMinutes->toBe(0)->overtimeMinutes->toBe(0)->flags->toBe([])
-            ->and(TeamWeek::summaries([], WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-04'))))->toBe([]);
+            ->and(TeamWeek::summaries([], WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-04'), 'America/Mexico_City')))->toBe([]);
     });
 });

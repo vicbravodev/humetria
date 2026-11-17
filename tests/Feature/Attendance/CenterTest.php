@@ -54,6 +54,17 @@ function zoneInput(array $overrides = []): array
 }
 
 describe('the center', function (): void {
+    it('names the zone its days and lateness are measured in, and shows its screens at that hour', function (): void {
+        $this->actingAs($this->hr);
+        $this->plant->update(['timezone' => 'America/Tijuana']);
+        $this->travelTo(CarbonImmutable::parse('2026-12-01 18:00', 'UTC'));
+        KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'created_at' => now()]);
+
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('timezone', ['value' => 'America/Tijuana', 'label' => 'Hora del Noroeste, UTC−8 · Tijuana'])
+            ->where('kiosks.data.0.issuedAt', '2026-12-01 10:00'));
+    });
+
     it('tells RH how often the screen code changes, from config/attendance.php', function (): void {
         $this->actingAs($this->hr);
 

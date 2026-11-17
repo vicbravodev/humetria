@@ -30,7 +30,7 @@ final class CorrectionPreview
     /**
      * @return array{day: array{date: string, marks: list<array{type: string, time: string, nextDay: bool}>, asked: array{type: string, time: string, nextDay: bool}}, effect: array{sequenceOk: bool, afterApproval: string, reopensWeeks: list<string>, noSchedule: bool, restDay: bool}}|null
      */
-    public static function of(CorrectionRequest $request): ?array
+    public static function of(CorrectionRequest $request, string $timezone): ?array
     {
         if ($request->status !== CorrectionStatus::Pending) {
             return null;
@@ -39,20 +39,21 @@ final class CorrectionPreview
         $employee = $request->employee_id;
         $asked = $request->proposed_at;
         $original = $request->mark_id === null ? null : EffectiveMarks::of($employee)->whereKey($request->mark_id)->first();
-        $date = self::dayOf($employee, $original, $request->type, $asked);
+        $date = self::dayOf($employee, $original, $request->type, $asked, $timezone);
         $marks = EffectiveMarks::byDayBetween([$employee], $date, $date)[$employee][$date->toDateString()] ?? [];
         $schedule = AttendanceSchedule::query()->where('employee_id', $employee)->first(['minutes_by_weekday']);
 
         return [
             'day' => [
                 'date' => $date->toDateString(),
-                'marks' => array_map(fn (AttendanceMark $mark): array => self::point($mark->type, $mark->marked_at ?? $asked, $date), $marks),
-                'asked' => self::point($request->type, $asked, $date),
+                'marks' => array_map(fn (AttendanceMark $mark): array => self::point($mark->type, ($mark->marked_at ?? $asked)->setTimezone($mark->timezone), $date), $marks),
+                // Asked on the person's clock, in their center's zone (AskCorrectionRequest).
+                'asked' => self::point($request->type, $asked->setTimezone($timezone), $date),
             ],
             'effect' => [
                 'sequenceOk' => CorrectedSequence::follows($employee, $original, $request->type, $asked),
                 'afterApproval' => self::afterApproval($marks, $original, $request, $asked),
-                'reopensWeeks' => self::reopensWeeks($employee, $original, $asked),
+                'reopensWeeks' => self::reopensWeeks($employee, $original, $asked, $timezone),
                 'noSchedule' => $schedule === null,
                 'restDay' => WorkedDay::hours($date, [], $schedule)->restDay,
             ],
@@ -60,9 +61,8 @@ final class CorrectionPreview
     }
 
     /** The local date the mark belongs to. */
-    private static function dayOf(string $employeeId, ?AttendanceMark $original, MarkType $type, CarbonImmutable $asked): CarbonImmutable
+    private static function dayOf(string $employeeId, ?AttendanceMark $original, MarkType $type, CarbonImmutable $asked, string $zone): CarbonImmutable
     {
-        $zone = config()->string('app.display_timezone');
         $start = $type === MarkType::Start ? null : EffectiveMarks::of($employeeId)
             ->when($original, fn ($query, AttendanceMark $mark) => $query->whereKeyNot($mark->id))
             ->where('type', MarkType::Start)->where('marked_at', '<=', $asked->utc())->where('marked_at', '>', $asked->subHours(self::NIGHT_REACH_HOURS)->utc())
@@ -72,12 +72,11 @@ final class CorrectionPreview
     }
 
     /**
+     * @param  CarbonImmutable  $local  the instant in the zone it is shown in
      * @return array{type: string, time: string, nextDay: bool}
      */
-    private static function point(MarkType $type, CarbonImmutable $at, CarbonImmutable $date): array
+    private static function point(MarkType $type, CarbonImmutable $local, CarbonImmutable $date): array
     {
-        $local = $at->setTimezone(config()->string('app.display_timezone'));
-
         return ['type' => $type->value, 'time' => $local->format('H:i'), 'nextDay' => $local->toDateString() !== $date->toDateString()];
     }
 
@@ -100,9 +99,9 @@ final class CorrectionPreview
      *
      * @return list<string>
      */
-    private static function reopensWeeks(string $employeeId, ?AttendanceMark $original, CarbonImmutable $asked): array
+    private static function reopensWeeks(string $employeeId, ?AttendanceMark $original, CarbonImmutable $asked, string $timezone): array
     {
-        $weeks = TouchedWeeks::of($employeeId, array_values(array_filter([$original?->marked_at, $asked])));
+        $weeks = TouchedWeeks::of($employeeId, array_values(array_filter([$original?->marked_at, $asked])), $timezone);
 
         $confirmed = WeeklyConfirmation::query()->where('employee_id', $employeeId)->whereIn('week_start', $weeks)
             ->where('status', WeekStatus::Confirmed)->orderBy('week_start')->get(['week_start']);

@@ -41,6 +41,9 @@ final readonly class CorrectMark
                 'tenant_id' => $original->tenant_id,
                 'employee_id' => $original->employee_id,
                 'work_center_id' => $original->work_center_id,
+                // Where the original was taken: a correction never moves a mark to another zone.
+                'timezone' => $original->timezone,
+                'away_center_id' => $original->away_center_id,
                 'type' => $original->type,
                 'marked_at' => $newMarkedAt,
                 'method' => MarkMethod::Correction,

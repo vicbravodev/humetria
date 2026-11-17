@@ -10,6 +10,7 @@ use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Exceptions\WeekRejected;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\MarkLock;
+use App\Modules\Attendance\Support\PersonTimezone;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -29,7 +30,7 @@ final readonly class DisputeWeek
 {
     public const int MIN_REASON = 10;
 
-    public function __construct(private CurrentTenant $tenant, private RecordAudit $audit) {}
+    public function __construct(private CurrentTenant $tenant, private RecordAudit $audit, private PersonTimezone $timezones) {}
 
     /**
      * @throws WeekRejected
@@ -42,7 +43,7 @@ final readonly class DisputeWeek
             throw new InvalidArgumentException('A dispute needs a reason.');
         }
 
-        $week = WeekPeriod::ofDate($weekStart);
+        $week = WeekPeriod::ofDate($weekStart, $this->timezones->of($employeeId));
 
         if (! $week->isOver()) {
             throw new WeekRejected('week_not_over');

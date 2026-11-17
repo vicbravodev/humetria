@@ -9,6 +9,7 @@ use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Carbon\CarbonImmutable;
@@ -28,7 +29,7 @@ final readonly class SchedulePages
 
     private const array VIEWS = ['all', 'scheduled', 'unscheduled'];
 
-    public function __construct(private Roster $roster, private WorkCenters $workCenters) {}
+    public function __construct(private Roster $roster, private WorkCenters $workCenters, private Timezones $timezones) {}
 
     /**
      * @return array<string, mixed>
@@ -51,7 +52,8 @@ final readonly class SchedulePages
         $schedules = AttendanceSchedule::query()
             ->among('employee_id', array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())))
             ->get(['employee_id', 'shift_type', 'work_mode', 'minutes_by_weekday', 'starts_by_weekday'])->keyBy('employee_id');
-        $year = CarbonImmutable::now(config()->string('app.display_timezone'))->year;
+        // The year whose weekly overtime cap applies, today where the company is.
+        $year = CarbonImmutable::now($this->timezones->forTenant())->year;
 
         return [
             'center' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],

@@ -56,10 +56,10 @@ final class AskCorrectionRequest extends FormRequest
         return $this->enum('mark_type', MarkType::class) ?? throw new LogicException('The type was not validated.');
     }
 
-    /** The time on the person's clock, read in the display time zone. */
-    public function proposedAt(): CarbonImmutable
+    /** The time on the person's clock, read in the zone of their center (known once the signature names them). */
+    public function proposedAt(string $timezone): CarbonImmutable
     {
-        return CarbonImmutable::createFromFormat('!Y-m-d H:i', $this->string('proposed_at')->toString(), config()->string('app.display_timezone'))
+        return CarbonImmutable::createFromFormat('!Y-m-d H:i', $this->string('proposed_at')->toString(), $timezone)
             ?: throw new LogicException('The time was not validated.');
     }
 

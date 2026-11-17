@@ -21,6 +21,8 @@ use App\Modules\Tenancy\Http\Requests\WorkCenterRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\DisplayDate;
+use App\Modules\Tenancy\Support\MexicanTimezones;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -72,6 +74,8 @@ final class WorkCenterController extends Controller
                 ->sortBy('label')
                 ->values()
                 ->all(),
+            'timezones' => MexicanTimezones::options(CarbonImmutable::now()),
+            'timezoneRules' => MexicanTimezones::rules(),
         ]);
     }
 
@@ -163,6 +167,8 @@ final class WorkCenterController extends Controller
             'municipality' => $workCenter->municipality,
             'state' => $workCenter->state->value,
             'main_activity' => $workCenter->main_activity,
+            'timezone' => $workCenter->timezone,
+            'timezone_label' => MexicanTimezones::label($workCenter->timezone, CarbonImmutable::now()),
             'address' => $workCenter->address(),
             'archived_on' => $workCenter->archived_at === null ? null : DisplayDate::day($workCenter->archived_at),
             'employees' => $employees,

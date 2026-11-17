@@ -137,6 +137,10 @@ export type WorkCenterRow = {
     /** ISO 3166-2:MX code without the country, like "QUE". */
     state: string;
     main_activity: string;
+    /** The IANA zone its working day is measured in, like "America/Tijuana". */
+    timezone: string;
+    /** That zone with its offset today and its city: «Hora del Noroeste, UTC−8 · Tijuana». */
+    timezone_label: string;
     /** Street to state in one line, already written for display. */
     address: string;
     /** The day it was archived, written for display; null while active. */
@@ -278,3 +282,15 @@ export type CompanyDetail = Pick<
     | 'status_label'
     | 'restriction_reason'
 >;
+
+/** A Mexican time zone to choose for a work center, named with its offset today. */
+export type TimezoneOption = { value: string; label: string };
+
+/** How a work center's zone is suggested: by its state, or by its municipality where the state has more than one. */
+export type TimezoneRules = {
+    /** The zone of each state with one that is not the fallback, by its ISO code. */
+    states: Record<string, string>;
+    /** By state code, the municipalities (lower case, no accents) whose zone is not their state's. */
+    municipalities: Record<string, Record<string, string>>;
+    fallback: string;
+};

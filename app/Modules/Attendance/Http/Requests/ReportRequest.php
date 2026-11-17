@@ -148,7 +148,8 @@ final class ReportRequest extends FormRequest
 
     private function localDate(string $key): CarbonImmutable
     {
-        $date = CarbonImmutable::createFromFormat('!Y-m-d', $this->string($key)->toString(), config()->string('app.display_timezone'));
+        // A calendar date: the report reads it in the zone of its center.
+        $date = CarbonImmutable::createFromFormat('!Y-m-d', $this->string($key)->toString(), 'UTC');
 
         // The rules let only a Y-m-d date through.
         return $date instanceof CarbonImmutable ? $date : throw new LogicException("The {$key} date was not validated.");
