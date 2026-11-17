@@ -15,7 +15,7 @@ it('shows a solid outline on the control focused by keyboard', function (string 
         ->assertScript('() => getComputedStyle(document.activeElement.closest(\'[data-slot="input-group"]\')).outlineStyle', 'solid')
         ->keys('#remember', 'Tab')
         ->assertScript($focused, 'button:solid')
-        ->keys('button[type="submit"]', 'Shift+Tab')
+        ->keys('[data-test="login-button"]', 'Shift+Tab')
         ->assertScript($focused, 'checkbox:solid')
         ->assertScript(cspViolations(), '[]');
 })->with(['inLightMode', 'inDarkMode']);
