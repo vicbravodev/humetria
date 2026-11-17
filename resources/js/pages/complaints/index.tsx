@@ -44,7 +44,7 @@ export default function Cases(props: Props) {
     return (
         <>
             <Head title="Quejas y denuncias" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <ConfidentialBanner>
                     Solo ves los casos que te asignaron. Cada vez que abres uno
                     queda registrado en la bitácora del caso.
