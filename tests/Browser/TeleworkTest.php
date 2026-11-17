@@ -39,6 +39,9 @@ use Database\Factories\Telework\WorkerNoticeFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Database\Factories\Telework\WorkplaceReviewFactory;
 use Illuminate\Support\Facades\Storage;
+use Pest\Browser\Api\AwaitableWebpage;
+
+require_once __DIR__.'/form-sheet-helpers.php';
 
 $looks = [
     'light desktop' => [false, false],
@@ -559,6 +562,16 @@ it('shows the derived status of each workplace and the way into the roster', fun
         ->assertSee('Aún no está en el padrón')
         ->assertSee('Pasar al padrón');
 })->with($looks);
+
+it('adds a workplace, registers equipment and a training, and moves into the roster in the side panel, the whole width of a phone', function (bool $mobile): void {
+    [$url, , $teleworker] = validatedAspirant();
+    $open = fn (string $page): AwaitableWebpage => ($mobile ? visit($url.$page)->on()->mobile() : visit($url.$page))->assertNoJavaScriptErrors();
+
+    assertFormSheet($open("/telework/teleworkers/{$teleworker->id}")->press('Agregar lugar'), $mobile);
+    assertFormSheet($open("/telework/teleworkers/{$teleworker->id}")->press('Registrar equipo'), $mobile);
+    assertFormSheet($open("/telework/teleworkers/{$teleworker->id}")->press('Pasar al padrón'), $mobile);
+    assertFormSheet($open('/telework/trainings')->press('Registrar capacitación'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('tells an aspirant without a validated workplace that they cannot join yet', function (): void {
     [$url, $center, $tenant] = teleworkerCenter();

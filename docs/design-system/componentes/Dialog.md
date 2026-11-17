@@ -1,4 +1,12 @@
-Ventana modal para confirmar decisiones que no se pueden deshacer; equivale a `Dialog`/`AlertDialog` de shadcn.
+Ventana modal centrada; equivale a `Dialog`/`AlertDialog` de shadcn (`ConfirmDialog` y `FormDialog` en
+`components/humetria/`).
+
+**Cuándo sí:** confirmar una decisión (sobre todo la que no se puede deshacer), destruir algo, o una acción corta de uno
+o dos campos sobre algo que ya existe (rechazar, cerrar un caso, compartir, publicar, extender una fecha, registrar un
+pago). También la consola de superadmin y los cobros, y un formulario que necesita el ancho de un mapa (la zona de
+asistencia).
+**Cuándo no:** dar de alta o editar un registro con varios campos con una lista detrás va en el panel lateral
+(`Sheet.md`).
 
 **Recibe:** `title` (pregunta concreta), `description` (consecuencia), `footer` (acciones) e `inline` solo para la vista previa.
 

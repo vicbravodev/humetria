@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Tenancy\Models\Tenant;
+use Pest\Browser\Api\AwaitableWebpage;
+
+require_once __DIR__.'/../form-sheet-helpers.php';
 
 /** RH's panel with a closed climate survey, its priorities and two commitments for the company. */
 function commitmentsPanel(): array
@@ -54,6 +57,15 @@ it('opens the dialog to write a commitment', function (): void {
         ->assertSee('Haremos')
         ->assertSee('Responsable');
 });
+
+it('writes and edits a commitment in the side panel, the whole width of a phone', function (bool $mobile): void {
+    [$url, $survey] = commitmentsPanel();
+    $page = "{$url}/climate/{$survey}/commitments";
+    $open = fn (): AwaitableWebpage => ($mobile ? visit($page)->on()->mobile() : visit($page))->assertNoJavaScriptErrors();
+
+    assertFormSheet($open()->click('Nuevo compromiso'), $mobile);
+    assertFormSheet($open()->click('button[aria-label="Más acciones de «Reconocer por escrito cada logro del mes.»"]')->click('Editar'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('tells RH the commitments wait for the survey to close while it is open', function (): void {
     $url = signInToPanel();

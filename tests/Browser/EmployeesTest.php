@@ -9,6 +9,8 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Pest\Browser\Api\AwaitableWebpage;
 
+require_once __DIR__.'/form-sheet-helpers.php';
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -143,6 +145,13 @@ it('sets the direct manager of an employee from their panel', function (): void 
         ->assertSee('Reporta a Carla Ruiz')
         ->assertNoJavaScriptErrors();
 });
+
+it('opens the employee form in the side panel, the whole width of a phone', function (bool $mobile): void {
+    acmeWithEmployees();
+    $page = $mobile ? visit('/admin/acme/employees')->on()->mobile() : visit('/admin/acme/employees');
+
+    assertFormSheet($page->assertNoJavaScriptErrors()->click('Dar de alta'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('passes the checks with the employee panel open', function (bool $dark, bool $mobile): void {
     acmeWithEmployees();

@@ -1,17 +1,10 @@
-import { Form } from '@inertiajs/react';
 import { UserCheck } from 'lucide-react';
 import { useState } from 'react';
+import FormSheet from '@/components/humetria/form-sheet';
 import InputError from '@/components/humetria/input-error';
 import RosterFields from '@/components/telework/roster-fields';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
+import { SheetTrigger } from '@/components/ui/sheet';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { join } from '@/routes/tenant/telework/teleworkers';
 import type { TeleworkerSummary } from '@/types';
@@ -28,49 +21,34 @@ export default function JoinRosterDialog({
     const [open, setOpen] = useState(false);
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button disabled={!teleworker.canJoin}>
-                    <UserCheck aria-hidden />
-                    Pasar al padrón
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-                <DialogTitle>Pasar al padrón de teletrabajo</DialogTitle>
-                <DialogDescription>
-                    Los datos que pide el numeral 5.1 de la NOM-037.
-                </DialogDescription>
-                <Form
-                    {...join.form({
-                        tenant: tenantSlug,
-                        teleworker: teleworker.id,
-                    })}
-                    noValidate
-                    onSuccess={() => setOpen(false)}
-                    className="grid gap-6"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <RosterFields
-                                jobTitle={teleworker.jobTitle}
-                                home={teleworker.homeDefault}
-                                states={states}
-                                errors={errors}
-                            />
-                            <InputError message={errors['workplaces']} />
-                            <InputError message={errors['teleworker']} />
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="w-fit"
-                            >
-                                {processing && <Spinner />}
-                                Guardar y pasar al padrón
-                            </Button>
-                        </>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+        <FormSheet
+            open={open}
+            onOpenChange={setOpen}
+            title="Pasar al padrón de teletrabajo"
+            description="Los datos que pide el numeral 5.1 de la NOM-037."
+            form={join.form({ tenant: tenantSlug, teleworker: teleworker.id })}
+            submit="Guardar y pasar al padrón"
+            trigger={
+                <SheetTrigger asChild>
+                    <Button disabled={!teleworker.canJoin}>
+                        <UserCheck aria-hidden />
+                        Pasar al padrón
+                    </Button>
+                </SheetTrigger>
+            }
+        >
+            {(errors) => (
+                <>
+                    <RosterFields
+                        jobTitle={teleworker.jobTitle}
+                        home={teleworker.homeDefault}
+                        states={states}
+                        errors={errors}
+                    />
+                    <InputError message={errors['workplaces']} />
+                    <InputError message={errors['teleworker']} />
+                </>
+            )}
+        </FormSheet>
     );
 }

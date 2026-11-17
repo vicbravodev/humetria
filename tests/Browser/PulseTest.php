@@ -11,6 +11,9 @@ use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Pest\Browser\Api\AwaitableWebpage;
+
+require_once __DIR__.'/form-sheet-helpers.php';
 
 // Light and dark, on a desktop and on a phone.
 $pulseLooks = [
@@ -71,6 +74,18 @@ it('schedules the pulse from its home and says when the next one goes out', func
         ->assertSee('En pausa')
         ->assertNoJavaScriptErrors();
 });
+
+it('schedules the pulse and creates one now in the side panel, the whole width of a phone', function (bool $mobile): void {
+    $url = signInToPanel();
+    $open = fn (): AwaitableWebpage => ($mobile ? visit("{$url}/pulse")->on()->mobile() : visit("{$url}/pulse"))->assertNoJavaScriptErrors();
+
+    assertFormSheet($open()->click('Programar'), $mobile);
+
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    App\Modules\Engagement\Models\PulseSchedule::factory()->create(['tenant_id' => $tenant->id, 'next_run_on' => App\Modules\Engagement\Support\SurveyClock::day()->addDays(4)->toDateString()]);
+
+    assertFormSheet($open()->click('Crear un pulso ahora'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('opens on the next pulse and how the engagement moves, never on an empty pulse, once there is history', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();
