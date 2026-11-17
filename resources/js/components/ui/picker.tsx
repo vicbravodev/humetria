@@ -188,4 +188,42 @@ function PickerSheet({
   )
 }
 
-export { DayCalendar, PickerButton, PickerProblem, PickerSheet, PickerText }
+/**
+ * One month to pick the two ends of a period from, each a tap, with the days between them marked. It opens on the
+ * period's first day, or on today moved inside the limits.
+ */
+function RangeCalendar({
+  from,
+  to,
+  min,
+  max,
+  onPick,
+}: {
+  from: string
+  to: string
+  min?: string | undefined
+  max?: string | undefined
+  onPick: (day: string) => void
+}) {
+  const disabled = pickableDays(min, max)
+
+  return (
+    <Calendar
+      mode="range"
+      captionLayout="dropdown"
+      selected={{ from: fromCalendarDate(from), to: fromCalendarDate(to) }}
+      defaultMonth={openingMonth(from, { min, max })}
+      {...calendarSpan(min, max)}
+      {...(disabled === undefined ? {} : { disabled })}
+      onSelect={(_period, day) => onPick(toCalendarDate(day))}
+      classNames={{
+        range_start: "[&_button]:bg-primary [&_button]:text-primary-foreground",
+        range_end: "[&_button]:bg-primary [&_button]:text-primary-foreground",
+        // Every day of the period is also «selected»: the ones between its ends lose the solid fill.
+        range_middle: "bg-accent [&_button]:rounded-none [&_button]:bg-transparent! [&_button]:font-normal! [&_button]:text-foreground!",
+      }}
+    />
+  )
+}
+
+export { DayCalendar, PickerButton, PickerProblem, PickerSheet, PickerText, RangeCalendar }

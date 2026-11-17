@@ -9,22 +9,30 @@ type Shape = {
     write: (value: string) => string;
     /** Writes a run of digits with its separators. */
     mask: (text: string) => string;
+    /** Takes the text only when the field is left (or Enter is pressed): for a filter that asks the server. */
+    onLeave?: boolean;
 };
 
 /**
  * A text field for a value with one shape (a day, a month, a time): what the person types stays as typed while they
- * write, the value follows it as soon as it reads as one (and is empty while it does not), and leaving the field writes
- * it the field's way. Whatever is left unreadable says why once the person leaves.
+ * write, the value follows it as soon as it reads as one (and is empty while it does not; or, `onLeave`, only when the
+ * field is left), and leaving the field writes it the field's way. Whatever is left unreadable says why once the person
+ * leaves. The value is told only when it changes.
  */
 export function useTypedField(
     value: string,
     setValue: (value: string) => void,
-    { read, write, mask }: Shape,
+    { read, write, mask, onLeave = false }: Shape,
 ) {
     const [draft, setDraft] = useState<string | null>(null);
     const [editing, setEditing] = useState(false);
     const text = draft ?? write(value);
     const reading = draft === null ? undefined : read(draft);
+    const change = (next: string) => {
+        if (next !== value) {
+            setValue(next);
+        }
+    };
     const problem: TextProblem | undefined =
         editing ||
         reading === undefined ||
@@ -41,7 +49,10 @@ export function useTypedField(
             const typed = read(masked);
 
             setDraft(masked);
-            setValue(typed.kind === 'ok' ? typed.value : '');
+
+            if (!onLeave) {
+                change(typed.kind === 'ok' ? typed.value : '');
+            }
         },
         focus: () => setEditing(true),
         leave: () => {
@@ -49,12 +60,15 @@ export function useTypedField(
 
             if (reading?.kind === 'ok' || reading?.kind === 'empty') {
                 setDraft(null);
+                change(reading.kind === 'ok' ? reading.value : '');
             }
         },
+        /** Drops whatever was typed, for a value the page sets itself (both ends of a period at once). */
+        reset: () => setDraft(null),
         /** Sets a value picked elsewhere (a calendar, a shortcut, «Borrar»), dropping whatever was typed. */
         pick: (picked: string) => {
             setDraft(null);
-            setValue(picked);
+            change(picked);
         },
     };
 }

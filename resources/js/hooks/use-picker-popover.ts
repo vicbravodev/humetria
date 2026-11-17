@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { pickerFocusTarget } from '@/lib/calendar-date';
 
 /**
@@ -14,6 +14,10 @@ export function usePickerPopover() {
     const content = useRef<HTMLDivElement>(null);
     const intoCalendar = useRef(false);
     const backToField = useRef(false);
+
+    // The field the person was in: the one clicked or typed in last, else the first of the box.
+    const focusField = () =>
+        (text.current ?? box.current?.querySelector('input'))?.focus();
 
     const focusCalendar = () => {
         const target =
@@ -37,16 +41,21 @@ export function usePickerPopover() {
         close: () => {
             backToField.current = true;
             setOpen(false);
-            text.current?.focus();
+            focusField();
         },
         /** Gives the focus back to the field, after «Borrar» took it. */
-        refocus: () => text.current?.focus(),
-        openFromField: () => setOpen(true),
+        refocus: focusField,
+        openFromField: (event: MouseEvent<HTMLInputElement>) => {
+            text.current = event.currentTarget;
+            setOpen(true);
+        },
         /** The calendar button toggles it (it is the popover's trigger); opened from it, the focus goes in. */
         openFromButton: () => {
             intoCalendar.current = true;
         },
         fieldKeys: (event: KeyboardEvent<HTMLInputElement>) => {
+            text.current = event.currentTarget;
+
             if (event.key === 'ArrowDown') {
                 event.preventDefault();
                 focusCalendar();
@@ -75,7 +84,7 @@ export function usePickerPopover() {
                 event.preventDefault();
 
                 if (backToField.current) {
-                    text.current?.focus();
+                    focusField();
                 }
 
                 backToField.current = false;
