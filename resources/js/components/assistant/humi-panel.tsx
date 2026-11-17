@@ -7,8 +7,11 @@ import { useHumiMood } from '@/hooks/use-humi-mood';
 import { useHumiSeenPage } from '@/hooks/use-humi-seen-page';
 import type { PageContext } from '@/lib/assistant/chat-request';
 import { contextLabel } from '@/lib/assistant/page-context';
-import { suggestionsFor } from '@/lib/assistant/suggestions';
+import { startersOf, suggestionsFor } from '@/lib/assistant/suggestions';
 import { index as assistantPage } from '@/routes/tenant/assistant';
+
+// The live facts of the first questions do not come yet: each question shows alone until a route brings them.
+const NO_LIVE_FACTS: Readonly<Record<string, string>> = {};
 
 /** Why the person cannot write: Humi is off for the company, its budget is used, or they wrote too much for now. */
 function closedTextOf(reason: string | undefined): string | null {
@@ -71,7 +74,7 @@ export default function HumiPanel({
             />
             <HumiThread
                 chat={chat}
-                suggestions={suggestionsFor(seen)}
+                starters={startersOf(suggestionsFor(seen), NO_LIVE_FACTS)}
                 onPick={chat.send}
             />
             <HumiComposer

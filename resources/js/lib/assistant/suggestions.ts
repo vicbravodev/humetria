@@ -50,3 +50,18 @@ export function followUpsFor(renders: readonly string[]): readonly string[] {
 
     return last === undefined ? [] : (FOLLOW_UPS[last] ?? []);
 }
+
+/** A first question, with the live fact that makes it worth asking when there is one («142 de 186 respondieron»). */
+export type Starter = { text: string; live: string | null };
+
+/** The first questions with their live facts: a question with no fact (or an empty one) shows alone, never a made-up one. */
+export function startersOf(
+    questions: readonly string[],
+    live: Readonly<Record<string, string>>,
+): Starter[] {
+    return questions.map((text) => {
+        const fact = live[text]?.trim() ?? '';
+
+        return { text, live: fact === '' ? null : fact };
+    });
+}

@@ -92,7 +92,6 @@ export default function HumiMessage({
                             <HumiSuggestions
                                 suggestions={followUpsFor(view.renders)}
                                 onPick={onPick}
-                                variant="chips"
                             />
                         )}
                     </div>
