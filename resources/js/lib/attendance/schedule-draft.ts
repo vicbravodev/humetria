@@ -55,6 +55,17 @@ export function startsDiffer(week: DraftWeek): boolean {
     return new Set(working(week).map((day) => week.starts[day] ?? '')).size > 1;
 }
 
+/**
+ * The hours of a template on the week, keeping the start RH had: the one shared goes to every working day, or each
+ * day's when they differ; with none, none (RH writes it on purpose).
+ */
+export function withWeek(week: DraftWeek, minutes: WeekMinutes): DraftWeek {
+    const shared = sharedStart(week);
+    const next = { ...draftOf(minutes, null), starts: week.starts };
+
+    return shared === '' ? next : withStart(next, shared);
+}
+
 /** One start time for every working day; rest days keep none. */
 export function withStart(week: DraftWeek, time: string): DraftWeek {
     return {

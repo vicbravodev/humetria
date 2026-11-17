@@ -7,12 +7,7 @@ export type ScheduleTemplate = {
     title: string;
     shift: WorkSchedule['shiftType'];
     minutes: WeekMinutes;
-    /** The one time every working day starts, in minutes from midnight. */
-    start: number;
 };
-
-const NINE = 540;
-const TEN_PM = 1320;
 
 /** Down to the quarter hour. */
 const quarter = (minutes: number) => Math.max(0, Math.floor(minutes / 15) * 15);
@@ -27,7 +22,7 @@ const weekOf = (daily: number, days: number, saturday = 0): WeekMinutes =>
     );
 
 /**
- * Where a schedule starts from: the common weeks, each with its one start time and its shift. Their days shrink to the
+ * Where a schedule starts from: the common weeks, each with its shift; none fills a start time (RH writes it on purpose). Their days shrink to the
  * quarter hour that fits the year's weekly maximum, so none starts above it (in 2027, Monday to Saturday is 7 h 30 min);
  * the night one is at the night shift's daily limit the server sends.
  */
@@ -42,14 +37,12 @@ export function scheduleTemplates(maximum: WeeklyMaximum): ScheduleTemplate[] {
             title: 'Lunes a viernes',
             shift: 'day',
             minutes: weekOf(weekday, 5),
-            start: NINE,
         },
         {
             id: 'mon_fri_9',
             title: 'Lunes a viernes, 9 h',
             shift: 'day',
             minutes: weekOf(fit(540, 5), 5),
-            start: NINE,
         },
         {
             id: 'mon_fri_half_sat',
@@ -60,21 +53,18 @@ export function scheduleTemplates(maximum: WeeklyMaximum): ScheduleTemplate[] {
                 5,
                 Math.min(300, quarter(maximum.minutes - weekday * 5)),
             ),
-            start: NINE,
         },
         {
             id: 'mon_sat',
             title: 'Lunes a sábado',
             shift: 'day',
             minutes: weekOf(fit(480, 6), 6),
-            start: NINE,
         },
         {
             id: 'night',
             title: 'Nocturno',
             shift: 'night',
             minutes: weekOf(fit(maximum.dailyMinutes.night, 5), 5),
-            start: TEN_PM,
         },
     ];
 }

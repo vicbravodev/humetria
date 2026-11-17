@@ -1,10 +1,5 @@
 import { useState } from 'react';
-import {
-    WEEKDAYS,
-    minutesOf,
-    timeOfMinutes,
-    weekTotal,
-} from '@/lib/attendance/schedule';
+import { WEEKDAYS, minutesOf, weekTotal } from '@/lib/attendance/schedule';
 import {
     deducedShift,
     draftOf,
@@ -13,6 +8,7 @@ import {
     withHours,
     withRest,
     withStart,
+    withWeek,
 } from '@/lib/attendance/schedule-draft';
 import type { DraftWeek } from '@/lib/attendance/schedule-draft';
 import type { ScheduleTemplate } from '@/lib/attendance/schedule-templates';
@@ -27,7 +23,7 @@ const STARTING: WeekMinutes = { 1: 480, 2: 480, 3: 480, 4: 480, 5: 480 };
 /**
  * The schedule RH is writing: the week (hours as typed and start of each day), where they work and the shift. The shift is
  * the one the week's hours say (art. 60), the template's or the saved one while no day has a start, or the one RH changed
- * it to. A template or another person's schedule fills the week.
+ * it to. A template fills the days and hours and keeps the start RH had; another person's schedule fills all of the week.
  */
 export function useScheduleDraft(
     initial: WorkSchedule | null,
@@ -79,13 +75,7 @@ export function useScheduleDraft(
                 starts: { ...current.starts, [day]: time },
             })),
         apply: (template: ScheduleTemplate) =>
-            fill(
-                withStart(
-                    draftOf(template.minutes, null),
-                    timeOfMinutes(template.start),
-                ),
-                template.shift,
-            ),
+            fill(withWeek(week, template.minutes), template.shift),
         copy: (schedule: WorkSchedule) =>
             fill(
                 draftOf(schedule.minutes, schedule.starts),

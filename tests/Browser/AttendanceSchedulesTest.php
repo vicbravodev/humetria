@@ -209,7 +209,7 @@ it('shows a viewer the schedules without choosing anyone', function (): void {
         ->assertScript('() => document.querySelectorAll("[aria-label^=\'Elegir a\']").length', 0);
 });
 
-it('fills the week and its one start time from a template, and names the shift its hours say', function (): void {
+it('fills the week from a template, keeping the start time as it was, and names the shift its hours say', function (): void {
     $url = schedulesPanel();
 
     visit("{$url}/attendance/schedules")
@@ -218,13 +218,17 @@ it('fills the week and its one start time from a template, and names the shift i
         ->assertSee('L–V 8 h · S 5 h · 45 h')
         ->assertSee('Jornada diurna')
         ->click('Nocturno')
-        ->assertValue('#schedule-start', '22:00')
+        ->assertValue('#schedule-start', '')
         ->assertSee('Jornada nocturna')
         ->click('Con sábado medio')
-        ->assertValue('#schedule-start', '09:00')
+        ->assertValue('#schedule-start', '')
         ->assertSee('45 h a la semana')
+        ->assertSee('Sin hora de entrada, el día no tiene retardo; solo se muestra')
         ->fill('#schedule-start', '15:00')
         ->assertSee('Jornada mixta')
+        ->click('Lunes a sábado')
+        ->assertValue('#schedule-start', '15:00')
+        ->assertSee('48 h a la semana')
         ->click('Guardar horario')
         ->waitForText('Horario de Bob Díaz guardado.')
         ->assertNoJavaScriptErrors();
@@ -233,7 +237,7 @@ it('fills the week and its one start time from a template, and names the shift i
     workIn(Tenant::query()->where('slug', 'acme')->sole());
     expect(AttendanceSchedule::query()->where('employee_id', $bob->id)->sole())
         ->shift_type->toBe(ShiftType::Mixed)->work_mode->toBe(WorkMode::Onsite)
-        ->minutes_by_weekday->toBe([1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 300, 7 => 0])
+        ->minutes_by_weekday->toBe([1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 480, 7 => 0])
         ->starts_by_weekday->toBe([1 => 900, 2 => 900, 3 => 900, 4 => 900, 5 => 900, 6 => 900, 7 => null]);
 });
 

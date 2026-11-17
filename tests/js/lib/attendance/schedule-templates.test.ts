@@ -33,12 +33,10 @@ describe('the templates to start a schedule from', () => {
         ]);
     });
 
-    it('fill one start time: 09:00 by day, 22:00 at night, and their shift', () => {
+    it('carry their shift, and no start time', () => {
         const templates = scheduleTemplates(limits(2880));
 
-        expect(templates.map((template) => template.start)).toEqual([
-            540, 540, 540, 540, 1320,
-        ]);
+        expect(templates.some((template) => 'start' in template)).toBe(false);
         expect(templates.map((template) => template.shift)).toEqual([
             'day',
             'day',

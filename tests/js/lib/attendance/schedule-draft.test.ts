@@ -10,6 +10,7 @@ import {
     withHours,
     withRest,
     withStart,
+    withWeek,
 } from '@/lib/attendance/schedule-draft';
 
 const week = (...days: number[]) =>
@@ -182,5 +183,38 @@ describe('the shift a week is (art. 60)', () => {
         expect(
             deducedShift(draftOf(week(480, 480, 0, 0, 0, 0, 0), null)),
         ).toBeNull();
+    });
+});
+
+describe('a template chosen', () => {
+    const saturdays = week(480, 480, 480, 480, 480, 300, 0);
+
+    it('fills the hours and leaves an empty start empty', () => {
+        const chosen = withWeek(
+            draftOf(week(480, 0, 0, 0, 0, 0, 0), null),
+            saturdays,
+        );
+
+        expect(chosen.hours['6']).toBe('5');
+        expect(
+            Object.values(chosen.starts).every((start) => start === ''),
+        ).toBe(true);
+    });
+
+    it('keeps the start the week had, on every working day', () => {
+        const chosen = withWeek(officeWeek, saturdays);
+
+        expect(chosen.starts['6']).toBe('09:00');
+        expect(chosen.starts['7']).toBe('');
+    });
+
+    it('keeps the start of each day when they differ', () => {
+        const chosen = withWeek(
+            { ...officeWeek, starts: { ...officeWeek.starts, 2: '10:00' } },
+            saturdays,
+        );
+
+        expect(chosen.starts['1']).toBe('09:00');
+        expect(chosen.starts['2']).toBe('10:00');
     });
 });
