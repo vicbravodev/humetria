@@ -49,10 +49,19 @@ it('rejects a row the form would reject', function (string $column, mixed $value
     'unknown profile' => ['profile', 'employee'],
     'unknown workforce' => ['workforce', '1_50'],
     'message too long' => ['message', str_repeat('a', 2001)],
-    'no tools' => ['tools', '[]'],
     'unknown tool' => ['tools', '["nom_036"]'],
     'missing tools' => ['tools', null],
 ]);
+
+it('accepts a row that left its profile, size and tools empty', function (): void {
+    DB::table('demo_requests')->insert([...DemoRequest::factory()->raw(), 'profile' => null, 'workforce' => null, 'tools' => '[]', 'id' => (string) Str::uuid()]);
+
+    $demoRequest = DemoRequest::query()->sole();
+
+    expect($demoRequest->profile)->toBeNull()
+        ->and($demoRequest->workforce)->toBeNull()
+        ->and($demoRequest->tools->all())->toBe([]);
+});
 
 it('rejects a tools value that is not a list as a check violation', function (): void {
     $row = [...DemoRequest::factory()->raw(), 'tools' => '{"a":"nom_035"}', 'id' => (string) Str::uuid()];

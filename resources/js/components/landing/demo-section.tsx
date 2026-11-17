@@ -26,9 +26,9 @@ export default function DemoSection() {
                         Agenda una demo
                     </h2>
                     <p className={LEAD}>
-                        Cuéntanos qué herramientas te interesan y te mostramos
-                        Humetría con tu caso. La prueba gratis la vemos en la
-                        misma llamada, para que empieces con tu gente sin perder
+                        Déjanos cómo contactarte y te mostramos Humetría con un
+                        caso como el tuyo. La prueba gratis la vemos en la misma
+                        llamada, para que empieces con tu gente sin perder
                         tiempo.
                     </p>
                     <DemoNextSteps />
