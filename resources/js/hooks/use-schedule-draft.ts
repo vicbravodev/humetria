@@ -1,77 +1,96 @@
 import { useState } from 'react';
 import {
     WEEKDAYS,
-    hoursText,
     minutesOf,
     timeOfMinutes,
     weekTotal,
 } from '@/lib/attendance/schedule';
-import type { ScheduleTemplate } from '@/lib/attendance/schedule';
+import {
+    deducedShift,
+    draftOf,
+    sharedStart,
+    startsDiffer,
+    withHours,
+    withRest,
+    withStart,
+} from '@/lib/attendance/schedule-draft';
+import type { DraftWeek } from '@/lib/attendance/schedule-draft';
+import type { ScheduleTemplate } from '@/lib/attendance/schedule-templates';
+import { matchTemplate } from '@/lib/attendance/schedule-templates';
 import type { WeekMinutes, WorkSchedule } from '@/types';
 
-/** Monday to Friday 8 h: where a new schedule starts. */
-const STARTING: WeekMinutes = {
-    1: 480,
-    2: 480,
-    3: 480,
-    4: 480,
-    5: 480,
-    6: 0,
-    7: 0,
-};
+type Shift = WorkSchedule['shiftType'];
+
+/** Monday to Friday 8 h with no start time: where a new schedule starts. */
+const STARTING: WeekMinutes = { 1: 480, 2: 480, 3: 480, 4: 480, 5: 480 };
 
 /**
- * The schedule RH is writing: the shift, where they work and the hours of each day as typed (so «7,5» stays «7,5» until it is
- * read), with their minutes and the week's total; a template fills all of it. The start time of each day, if RH sets one,
- * is kept as the time a field takes, apart from the template: it is the person's, not the shift's.
+ * The schedule RH is writing: the week (hours as typed and start of each day), where they work and the shift. The shift is
+ * the one the week's hours say (art. 60), the template's or the saved one while no day has a start, or the one RH changed
+ * it to. A template or another person's schedule fills the week.
  */
-export function useScheduleDraft(initial: WorkSchedule | null) {
-    const [shift, setShift] = useState(initial?.shiftType ?? 'day');
-    const [mode, setMode] = useState(initial?.workMode ?? 'onsite');
-    const [hours, setHours] = useState<Record<string, string>>(() =>
-        Object.fromEntries(
-            WEEKDAYS.map(({ day }) => [
-                day,
-                hoursText((initial?.minutes ?? STARTING)[day] ?? 0),
-            ]),
-        ),
+export function useScheduleDraft(
+    initial: WorkSchedule | null,
+    templates: readonly ScheduleTemplate[],
+) {
+    const [week, setWeek] = useState<DraftWeek>(() =>
+        draftOf(initial?.minutes ?? STARTING, initial?.starts ?? null),
     );
-    const [starts, setStarts] = useState<Record<string, string>>(() =>
-        Object.fromEntries(
-            WEEKDAYS.map(({ day }) => [
-                day,
-                timeOfMinutes(initial?.starts?.[day]),
-            ]),
-        ),
+    const [mode, setMode] = useState(initial?.workMode ?? 'onsite');
+    const [base, setBase] = useState<Shift>(initial?.shiftType ?? 'day');
+    const [chosenShift, setChosenShift] = useState<Shift | null>(null);
+    // A saved week no template gives, or with days that start at different times, opens «Personalizar días».
+    const [customized] = useState(
+        () =>
+            initial !== null &&
+            (matchTemplate(templates, initial.minutes) === null ||
+                startsDiffer(week)),
     );
     const minutes = Object.fromEntries(
-        WEEKDAYS.map(({ day }) => [day, minutesOf(hours[day] ?? '') ?? 0]),
+        WEEKDAYS.map(({ day }) => [day, minutesOf(week.hours[day] ?? '') ?? 0]),
     );
+    const fill = (next: DraftWeek, shift: Shift) => {
+        setWeek(next);
+        setBase(shift);
+        setChosenShift(null);
+    };
 
     return {
-        shift,
-        setShift,
-        mode,
-        setMode,
-        hours,
-        setDay: (day: string, text: string) =>
-            setHours((current) => ({ ...current, [day]: text })),
-        starts,
-        setStart: (day: string, time: string) =>
-            setStarts((current) => ({ ...current, [day]: time })),
+        week,
+        customized,
+        startsDiffer: startsDiffer(week),
         minutes,
         total: weekTotal(minutes),
-        apply: (template: ScheduleTemplate) => {
-            setShift(template.shift);
-            setHours(
-                Object.fromEntries(
-                    WEEKDAYS.map(({ day }) => [
-                        day,
-                        hoursText(template.minutes[day] ?? 0),
-                    ]),
+        template: matchTemplate(templates, minutes),
+        start: sharedStart(week),
+        shift: chosenShift ?? deducedShift(week) ?? base,
+        mode,
+        setMode,
+        setShift: setChosenShift,
+        setHours: (day: string, text: string) =>
+            setWeek((current) => withHours(current, day, text)),
+        setRest: (day: string, rest: boolean) =>
+            setWeek((current) => withRest(current, day, rest)),
+        setStart: (time: string) =>
+            setWeek((current) => withStart(current, time)),
+        setDayStart: (day: string, time: string) =>
+            setWeek((current) => ({
+                ...current,
+                starts: { ...current.starts, [day]: time },
+            })),
+        apply: (template: ScheduleTemplate) =>
+            fill(
+                withStart(
+                    draftOf(template.minutes, null),
+                    timeOfMinutes(template.start),
                 ),
-            );
-        },
+                template.shift,
+            ),
+        copy: (schedule: WorkSchedule) =>
+            fill(
+                draftOf(schedule.minutes, schedule.starts),
+                schedule.shiftType,
+            ),
     };
 }
 

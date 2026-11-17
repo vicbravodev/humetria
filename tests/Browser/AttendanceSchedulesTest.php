@@ -63,8 +63,10 @@ it('opens the schedule from the row\'s «…», with time fields that are not cu
     visit("{$url}/attendance/schedules")->resize(1440, 900)
         ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
-        ->assertSee('Hora de entrada de cada día')
-        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] input[type="time"]\')].filter((input) => input.scrollWidth > input.clientWidth).length', 0);
+        ->assertSee('Entra a las')
+        ->assertPresent('[role="dialog"][data-slot="sheet-content"]')
+        ->click('Personalizar días')
+        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] [data-slot="time-picker"] input\')].filter((input) => input.scrollWidth > input.clientWidth).length', 0);
 });
 
 it('lets RH fix a schedule, with the week\'s total and a note above the year\'s maximum', function (): void {
@@ -76,9 +78,12 @@ it('lets RH fix a schedule, with the week\'s total and a note above the year\'s 
         ->assertSee('Horario de Bob Díaz')
         ->assertSee('40 h a la semana')
         ->assertDontSee('al día:')
+        ->click('[aria-label="Cambiar la jornada"]')
         ->click('Nocturna')
         ->assertSee('La jornada nocturna es de hasta 7 h al día: el lunes, el martes, el miércoles, el jueves y el viernes tienen más.')
-        ->click('Remoto')
+        ->click('Trabaja a distancia')
+        ->click('Personalizar días')
+        ->click('#schedule-rest-6')
         ->fill('#schedule-day-6', '9,5')
         ->assertSee('49 h 30 min a la semana')
         ->assertSee('Son 1 h 30 min más que el máximo ordinario')
@@ -106,8 +111,8 @@ it('lets RH set the time each day starts, optional, and keeps it', function (): 
     visit("{$url}/attendance/schedules")
         ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
-        ->assertSee('Hora de entrada de cada día (opcional)')
-        ->assertSee('Sin hora de entrada, el día no tiene retardo.')
+        ->assertSee('Opcional. Sin hora de entrada, el día no tiene retardo')
+        ->click('Personalizar días')
         ->fill('#schedule-start-1', '09:00')
         ->fill('#schedule-start-2', '09:00')
         ->fill('#schedule-start-5', '08:30')
@@ -122,16 +127,17 @@ it('lets RH set the time each day starts, optional, and keeps it', function (): 
         ->toBe([1 => 540, 2 => 540, 3 => null, 4 => null, 5 => 510, 6 => null, 7 => null]);
 });
 
-it('sets the same start time from Monday to Friday with one field, and shows it in the summary of the schedule', function (): void {
+it('sets the same start time on every working day with one field, and shows it in the summary of the schedule', function (): void {
     $url = schedulesPanel();
 
     visit("{$url}/attendance/schedules")
         ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
-        ->fill('#schedule-start-weekdays', '09:00')
+        ->fill('#schedule-start', '09:00')
+        ->click('Personalizar días')
         ->assertValue('#schedule-start-1', '09:00')
         ->assertValue('#schedule-start-5', '09:00')
-        ->assertValue('#schedule-start-6', '')
+        ->assertMissing('#schedule-start-6')
         ->click('Guardar horario')
         ->waitForText('Horario de Bob Díaz guardado.')
         ->assertSee('Entrada 09:00')
@@ -157,9 +163,9 @@ it('lets RH choose people and fix the same schedule for all of them, from a temp
         ->assertDontSee('se reemplaza')
         ->click('Lunes a sábado')
         ->assertSee('48 h a la semana')
-        ->click('Turno nocturno')
+        ->click('Nocturno')
         ->assertSee('35 h a la semana')
-        ->click('Lunes a viernes')
+        ->click('L–V 8 h · 40 h')
         ->assertSee('40 h a la semana')
         ->click('[role="dialog"] button[type="submit"]')
         ->waitForText('Horario guardado para 2 personas.')
@@ -202,3 +208,102 @@ it('shows a viewer the schedules without choosing anyone', function (): void {
         ->assertSee('Tu rol puede ver esta pantalla, pero no modificar nada. Pide al dueño o a RH que te den permiso de edición.')
         ->assertScript('() => document.querySelectorAll("[aria-label^=\'Elegir a\']").length', 0);
 });
+
+it('fills the week and its one start time from a template, and names the shift its hours say', function (): void {
+    $url = schedulesPanel();
+
+    visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Bob Díaz"]')
+        ->click('Fijar horario')
+        ->assertSee('L–V 8 h · S 5 h · 45 h')
+        ->assertSee('Jornada diurna')
+        ->click('Nocturno')
+        ->assertValue('#schedule-start', '22:00')
+        ->assertSee('Jornada nocturna')
+        ->click('Con sábado medio')
+        ->assertValue('#schedule-start', '09:00')
+        ->assertSee('45 h a la semana')
+        ->fill('#schedule-start', '15:00')
+        ->assertSee('Jornada mixta')
+        ->click('Guardar horario')
+        ->waitForText('Horario de Bob Díaz guardado.')
+        ->assertNoJavaScriptErrors();
+
+    $bob = Employee::query()->withoutGlobalScopes()->where('name', 'Bob Díaz')->sole();
+    workIn(Tenant::query()->where('slug', 'acme')->sole());
+    expect(AttendanceSchedule::query()->where('employee_id', $bob->id)->sole())
+        ->shift_type->toBe(ShiftType::Mixed)->work_mode->toBe(WorkMode::Onsite)
+        ->minutes_by_weekday->toBe([1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 300, 7 => 0])
+        ->starts_by_weekday->toBe([1 => 900, 2 => 900, 3 => 900, 4 => 900, 5 => 900, 6 => 900, 7 => null]);
+});
+
+it('copies the schedule of someone who has one', function (): void {
+    $url = schedulesPanel();
+    $ana = Employee::query()->withoutGlobalScopes()->where('name', 'Ana López')->sole();
+    AttendanceSchedule::query()->withoutGlobalScopes()->where('employee_id', $ana->id)->update([
+        'minutes_by_weekday' => [1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 420, 7 => 0],
+        'starts_by_weekday' => [1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 420, 7 => null],
+    ]);
+
+    visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Bob Díaz"]')
+        ->click('Fijar horario')
+        ->click('#schedule-copy')
+        ->click('[role="option"]')
+        ->assertSee('42 h a la semana')
+        ->assertValue('#schedule-start', '07:00')
+        ->click('Guardar horario')
+        ->waitForText('Horario de Bob Díaz guardado.')
+        ->assertNoJavaScriptErrors();
+
+    $bob = Employee::query()->withoutGlobalScopes()->where('name', 'Bob Díaz')->sole();
+    workIn(Tenant::query()->where('slug', 'acme')->sole());
+    expect(AttendanceSchedule::query()->where('employee_id', $bob->id)->sole())
+        ->minutes_by_weekday->toBe([1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 420, 7 => 0])
+        ->starts_by_weekday->toBe([1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 420, 7 => null]);
+});
+
+it('opens «Personalizar días» for a saved week no template gives, with the rest days dimmed and nothing to fill', function (): void {
+    $url = schedulesPanel();
+    $ana = Employee::query()->withoutGlobalScopes()->where('name', 'Ana López')->sole();
+    AttendanceSchedule::query()->withoutGlobalScopes()->where('employee_id', $ana->id)->update([
+        'minutes_by_weekday' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 360, 6 => 0, 7 => 0],
+    ]);
+
+    visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Ana López"]')
+        ->click('Cambiar horario')
+        ->assertValue('#schedule-day-5', '6')
+        ->assertMissing('#schedule-day-6')
+        ->assertMissing('#schedule-start-7')
+        ->assertSee('Día de descanso')
+        ->click('#schedule-rest-1')
+        ->assertMissing('#schedule-day-1')
+        ->assertSee('30 h a la semana')
+        ->assertNoJavaScriptErrors();
+});
+
+it('fixes a schedule on a phone, for one person and for several', function (bool $dark): void {
+    $url = schedulesPanel();
+
+    visitPage('attendance/schedules', "{$url}/attendance/schedules", $dark, true)
+        ->click('[aria-label="Acciones de Bob Díaz"]')
+        ->click('Fijar horario')
+        ->click('Lunes a sábado')
+        ->click('Personalizar días')
+        ->click('[aria-label="Cambiar la jornada"]')
+        ->wait(0.5)
+        ->assertNoAccessibilityIssues(1)
+        ->assertScript('() => { const panel = document.querySelector(\'[data-slot="sheet-content"]\'); const edge = panel.getBoundingClientRect().right; return panel.scrollWidth <= panel.clientWidth && [...panel.querySelectorAll("input")].every((input) => input.getBoundingClientRect().right <= edge); }', true)
+        ->click('Guardar horario')
+        ->waitForText('Horario de Bob Díaz guardado.')
+        ->click('[aria-label="Elegir a Ana López"]')
+        ->click('[aria-label="Elegir a Bob Díaz"]')
+        ->click('Fijar el mismo horario')
+        ->assertSee('2 de ellas ya tienen horario: se reemplaza.')
+        ->click('Nocturno')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->waitForText('Horario guardado para 2 personas.')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+})->with(['light' => false, 'dark' => true]);
