@@ -132,13 +132,15 @@ it('does not resend a draft', function (): void {
     Queue::assertNothingPushed();
 });
 
-it('shows the person what to confirm, and records the confirmation with date and time, once', function (): void {
+it('shows the person what to confirm on its own page, and records the confirmation with date and time, once', function (): void {
     $assessment = signedFor($this->ana->id);
 
-    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page
+    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('pending', true)->missing('acknowledgment'));
+    $this->get(route('portal.seating.acknowledgment', $this->slug))->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->component('seating/portal-acknowledgment')->where('company', 'Acme')->where('acknowledgedOn', null)
         ->where('acknowledgment.assessmentId', $assessment->id)->where('acknowledgment.levelLabel', 'Bajo')->where('acknowledgment.measures', []));
 
-    $this->post(route('portal.seating.acknowledgments.store', $this->slug))->assertRedirect(route('portal.seating.show', $this->slug))->assertSessionHasNoErrors();
+    $this->post(route('portal.seating.acknowledgments.store', $this->slug))->assertRedirect(route('portal.seating.acknowledgment', $this->slug))->assertSessionHasNoErrors();
     $this->travelTo('2026-03-01 13:00:00');
     // An hour later the session went quiet: the person enters again.
     asPerson($this->ana->id);
@@ -147,14 +149,40 @@ it('shows the person what to confirm, and records the confirmation with date and
     $row = RiskAcknowledgment::query()->sole();
     expect($row->employee_id)->toBe($this->ana->id)->and($row->assessment_id)->toBe($assessment->id)
         ->and($row->acknowledged_at->toDateTimeString())->toBe('2026-03-01 12:00:00');
-    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null)->where('acknowledgedOn', '2026-03-01'));
+    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('pending', false)->where('acknowledgedOn', '2026-03-01'));
+    $this->get(route('portal.seating.acknowledgment', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null)->where('acknowledgedOn', '2026-03-01'));
+});
+
+// Finding 34: the result is its own page behind the proof, so the proof is a whole screen and not a dialog over the page.
+it('opens the result only after a recent proof, and lets it through once proved', function (): void {
+    signedFor($this->ana->id);
+    enteredAs($this->ana->id, EntryVia::RequestedLink);
+    $url = route('portal.seating.acknowledgment', $this->slug);
+
+    $this->get($url)->assertRedirect(route('worker.proof.show', $this->slug));
+    resolve(WorkerSessionStore::class)->prove();
+    $this->get($url)->assertOk();
+    expect(Illuminate\Support\Facades\Route::getRoutes()->getByName('portal.seating.acknowledgment')?->gatherMiddleware())->toContain('throttle:portal-views')->toContain('worker.proof');
+});
+
+it('answers 404 for the result when nothing was signed for the person, and opens nothing of another company', function (): void {
+    $this->get(route('portal.seating.acknowledgment', $this->slug))->assertNotFound();
+
+    signedFor($this->ana->id);
+    $other = Tenant::factory()->create();
+    $stranger = EmployeeFactory::new()->create(['tenant_id' => $other->id]);
+    // Ana's session opens nothing of the other company: it sends her to enter there.
+    $this->get(route('portal.seating.acknowledgment', $other->slug))->assertRedirect(route('worker.home', $other->slug));
+    // The person of the other company has nothing signed: Ana's assessment is never theirs.
+    $this->get(route('portal.seating.acknowledgment', asPerson($stranger->id)))->assertNotFound();
 });
 
 it('takes the confirmation only after a recent proof that it is the person', function (EntryVia $via, int $minutes): void {
     signedFor($this->ana->id);
     enteredAs($this->ana->id, $via);
     $this->travel($minutes)->minutes();
-    $page = route('portal.seating.show', $this->slug);
+    // The page was opened with a proof that has since gone stale: the form comes back with the proof to give (the dialog).
+    $page = route('portal.seating.acknowledgment', $this->slug);
 
     $this->from($page)->post(route('portal.seating.acknowledgments.store', $this->slug))->assertRedirect($page)->assertInertiaFlash('proofRequired.mode', 'code');
     expect(RiskAcknowledgment::query()->count())->toBe(0);
@@ -172,10 +200,10 @@ it('does not ask again when the assessment is marked for reassessment, but asks 
     $this->post(route('portal.seating.acknowledgments.store', $this->slug));
     $first->forceFill(['reassessment_due' => true])->save();
 
-    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null));
+    $this->get(route('portal.seating.acknowledgment', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment', null));
 
     $second = signedFor($this->ana->id, ['signed_at' => now()->addDay()]);
-    $this->get(route('portal.seating.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment.assessmentId', $second->id));
+    $this->get(route('portal.seating.acknowledgment', $this->slug))->assertInertia(fn (Assert $page) => $page->where('acknowledgment.assessmentId', $second->id));
 });
 
 it('confirms only the current signed assessment of the person, never another one', function (): void {

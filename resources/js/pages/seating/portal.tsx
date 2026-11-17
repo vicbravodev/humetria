@@ -1,87 +1,22 @@
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
-import WorkerHomeLink from '@/components/worker-home-link';
-import PortalConfirmation from '@/components/seating/portal-confirmation';
-import PortalDeclined from '@/components/seating/portal-declined';
-import PortalIntro from '@/components/seating/portal-intro';
-import PortalQuestions from '@/components/seating/portal-questions';
-import PortalSeatReport from '@/components/seating/portal-seat-report';
-import PortalSent from '@/components/seating/portal-sent';
-import PortalShell from '@/components/seating/portal-shell';
-import type { PortalAcknowledgment as Pending, PortalCondition } from '@/types';
+import PortalTasks from '@/components/seating/portal-tasks';
 
-type Screen = 'intro' | 'questions' | 'declined' | 'sent';
-
-/**
- * Board LS-Portal: the person's own Ley Silla page, in usted. The confirmation of their assessment when one waits; the two
- * questions on footwear and discomfort, voluntary, one at a time and only after the notice; and a damaged seat to report.
- */
-export default function SeatingPortal({
-    slug,
-    company,
-    name,
-    notice,
-    footwear,
-    discomfort,
-    sentOn,
-    acknowledgment,
-    acknowledgedOn,
-}: {
+/** The person's Ley Silla page: the list of their tasks, each on its own screen (finding 13). */
+export default function SeatingPortal(page: {
     slug: string;
     company: string;
-    name: string;
-    notice: string;
-    footwear: PortalCondition;
-    discomfort: PortalCondition;
-    /** The date of the person's last answer, if they ever sent one. */
-    sentOn: string | null;
-    /** The assessment waiting for the person's confirmation, if any. */
-    acknowledgment: Pending | null;
+    homeUrl: string;
+    /** Their current signed assessment waits for their confirmation. */
+    pending: boolean;
     /** When the person confirmed their current assessment, if they did. */
     acknowledgedOn: string | null;
+    /** The date of the person's last answer, if they ever sent one. */
+    sentOn: string | null;
 }) {
-    const [shown, setScreen] = useState<Screen>(
-        sentOn === null ? 'intro' : 'sent',
-    );
-
     return (
-        <PortalShell company={company}>
+        <>
             <Head title="Su trabajo de pie" />
-            <div className="flex w-full max-w-2xl flex-col gap-6">
-                <WorkerHomeLink slug={slug} />
-                <PortalConfirmation
-                    slug={slug}
-                    acknowledgment={acknowledgment}
-                    acknowledgedOn={acknowledgedOn}
-                />
-                {shown === 'intro' && (
-                    <PortalIntro
-                        name={name}
-                        notice={notice}
-                        onAccept={() => setScreen('questions')}
-                        onDecline={() => setScreen('declined')}
-                    />
-                )}
-                {shown === 'questions' && (
-                    <PortalQuestions
-                        key={sentOn}
-                        slug={slug}
-                        footwear={footwear}
-                        discomfort={discomfort}
-                        onSent={() => setScreen('sent')}
-                    />
-                )}
-                {shown === 'declined' && (
-                    <PortalDeclined onAnswer={() => setScreen('intro')} />
-                )}
-                {shown === 'sent' && sentOn !== null && (
-                    <PortalSent
-                        sentOn={sentOn}
-                        onAgain={() => setScreen('questions')}
-                    />
-                )}
-                {shown !== 'questions' && <PortalSeatReport slug={slug} />}
-            </div>
-        </PortalShell>
+            <PortalTasks page={page} />
+        </>
     );
 }

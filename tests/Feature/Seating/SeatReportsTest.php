@@ -34,6 +34,15 @@ beforeEach(function (): void {
     CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $this->cora->id]);
 });
 
+// Finding 15: the report is anonymous: its page names neither the person nor their position.
+it('opens the seat report on its own page with the company only', function (): void {
+    $response = $this->get(route('portal.seating.report', $this->slug))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('seating/portal-report')->where('slug', 'acme')->where('company', $this->tenant->trade_name));
+
+    expect(json_encode($response->viewData('page')['props']))->not->toContain('Ana Ruiz')->not->toContain('Cajera')->not->toContain($this->position->id);
+});
+
 it('takes the report of a damaged seat from the portal, tied to the center only: neither the person nor their position', function (): void {
     Log::spy();
 

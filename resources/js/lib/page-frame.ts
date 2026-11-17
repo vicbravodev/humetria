@@ -9,7 +9,6 @@ const STANDALONE_NAMES = new Set([
     'engagement/survey',
     // The feedback a manager reads in their portal: their own link, no account.
     'engagement/portal-feedback',
-    'seating/portal',
     // «Nos dijeron / Haremos» in the person's portal: their own link, no account.
     'engagement/portal-climate',
     // «Mi equipo» in the person's portal: their own link, no account.
@@ -53,6 +52,8 @@ const STANDALONE_PREFIXES = [
     'telework/portal',
     // The vacations pages of the person's portal (theirs, their team's, a statement): their own link, no account.
     'leave/portal',
+    // The person's Ley Silla pages (their tasks, the two questions, the seat report, the result): their own link, no account.
+    'seating/portal',
     // The channel for complaints is public and keeps no trace of who came: no panel, no account.
     'complaints-public/',
     // The permanent page of the workers, opened with a link: no account, no panel.
