@@ -109,7 +109,7 @@ it('adds an employee, creating their area as it is typed', function (): void {
     visit('/admin/acme/employees')
         ->click('Dar de alta')
         ->type('name', 'Diego Luna')
-        ->type('mobile', '55 8765 4321')
+        ->type('#employee-mobile', '5587654321')
         ->click('#employee-work_center_id')
         ->type('[role="combobox"][aria-controls="employee-work_center_id-options"]', 'planta')
         ->assertSeeIn('#employee-work_center_id-options', 'Planta')
@@ -125,6 +125,8 @@ it('adds an employee, creating their area as it is typed', function (): void {
         ->assertSee('Diego Luna')
         ->assertSee('Logística')
         ->assertNoJavaScriptErrors();
+
+    expect(Employee::query()->withoutGlobalScopes()->where('name', 'Diego Luna')->sole()->mobile)->toBe('+525587654321');
 });
 
 it('sets the direct manager of an employee from their panel', function (): void {

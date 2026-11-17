@@ -1,5 +1,6 @@
 import Combobox from '@/components/humetria/combobox';
 import InputError from '@/components/humetria/input-error';
+import PhoneField from '@/components/phone-field';
 import RosterArea from '@/components/telework/roster-area';
 import RosterHome from '@/components/telework/roster-home';
 import { Input } from '@/components/ui/input';
@@ -50,21 +51,13 @@ export default function RosterFields({
                 label="Actividades que realiza"
                 errors={errors}
             />
-            <div className="grid gap-2 sm:max-w-64">
-                <Label htmlFor="roster-phone">Teléfono de contacto</Label>
-                <Input
-                    id="roster-phone"
+            <div className="sm:max-w-80">
+                <PhoneField
                     name="contact_phone"
-                    type="tel"
-                    maxLength={30}
-                    aria-invalid={
-                        errors['contact_phone'] === undefined ? undefined : true
-                    }
-                    aria-describedby="roster-phone-error"
-                />
-                <InputError
-                    id="roster-phone-error"
-                    message={errors['contact_phone']}
+                    idPrefix="roster"
+                    label="Teléfono de contacto"
+                    required
+                    error={errors['contact_phone']}
                 />
             </div>
             <RosterHome home={home} states={states} errors={errors} />

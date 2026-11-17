@@ -53,7 +53,7 @@ function fillDemoForm(mixed $page): void
 {
     $page->fill('name', 'Ana López')
         ->fill('email', 'ana@empresa.mx')
-        ->fill('whatsapp', '55 1234 5678')
+        ->fill('#demo-whatsapp', '55 1234 5678')
         ->fill('company', 'Empresa Ejemplo')
         ->radio('profile', 'consultant')
         ->check('tools[]', 'nom_035')
@@ -124,8 +124,8 @@ it('shows what to fix next to each field when the form is sent empty', function 
         'whatsapp' => 'El campo WhatsApp es obligatorio.',
         'company' => 'El campo empresa es obligatorio.',
     ] as $field => $error) {
-        $page->assertAttribute("[name=\"{$field}\"]", 'aria-invalid', 'true')
-            ->assertScript("() => document.getElementById(document.querySelector('[name=\"{$field}\"]').getAttribute('aria-describedby')).textContent", $error);
+        $page->assertAttribute("#demo-{$field}", 'aria-invalid', 'true')
+            ->assertScript("() => document.getElementById(document.getElementById('demo-{$field}').getAttribute('aria-describedby')).textContent", $error);
     }
 
     foreach ([
