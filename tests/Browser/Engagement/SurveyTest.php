@@ -178,3 +178,17 @@ it('shows the thanks when the used link is opened again', function (bool $dark, 
     visitPage('engagement/survey', '/engagement/the-token', $dark, $mobile)
         ->assertSee('Gracias. Sus respuestas ya se enviaron.');
 })->with($looks);
+
+// One closing for both surveys: the arch of the logo filled to the end with the check, centered; no word on clinical attention.
+it('closes with the same full arch as NOM-035, centered, and the pulse words', function (bool $dark): void {
+    engagementInvitee();
+    Invitation::query()->withoutGlobalScopes()->update(['answered' => true]);
+
+    visitPage('engagement/survey', '/engagement/the-token', $dark, true)
+        ->assertSee('Encuesta enviada')
+        ->assertSee('Gracias. Sus respuestas ya se enviaron.')
+        ->assertSee('Ya puede cerrar esta página.')
+        ->assertDontSee('IMSS')
+        ->assertScript('() => document.querySelector("main [data-slot=arc-meter] path:last-of-type").getAttribute("stroke-dashoffset")', '0')
+        ->assertScript('() => { const box = document.querySelector("main [data-slot=arc-meter]").getBoundingClientRect(); return box.top > window.innerHeight * 0.15; }', true);
+})->with(['light' => false, 'dark' => true]);

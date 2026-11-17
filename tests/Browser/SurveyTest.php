@@ -286,7 +286,11 @@ it('says there is nothing left when the used link is opened again', function (bo
     visitPage('campaigns/survey', '/survey/the-token', $dark, $mobile)
         ->assertSee('Gracias, terminó')
         ->assertSee('Ya contestó todo lo que le correspondía')
-        ->assertSee('Autopartes del Bajío');
+        ->assertSee('Autopartes del Bajío')
+        // The closing shared with the pulse: the arch full with its check, in the middle of the screen.
+        ->assertScript('() => document.querySelector("main [data-slot=arc-meter] path:last-of-type").getAttribute("stroke-dashoffset")', '0')
+        ->assertScript('() => document.querySelector("main [data-slot=arc-meter] svg.lucide-check") !== null', true)
+        ->assertScript('() => { const box = document.querySelector("main [data-slot=arc-meter]").getBoundingClientRect(); return box.top > window.innerHeight * 0.15; }', true);
 })->with($looks);
 
 it('shows each question as the design system asks: the instruction, the question and five large options', function (bool $dark, bool $mobile): void {
