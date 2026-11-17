@@ -94,6 +94,17 @@ export function payload(
     return sent;
 }
 
+/**
+ * Guía I's section I is one sentence of the norm with its list («…como los siguientes: …asaltos?, …amenazas?, o …»):
+ * asked whole on one screen, so its connectors read as the norm writes them.
+ */
+export function asksWhole(
+    instrument: SurveyInstrument,
+    section: number,
+): boolean {
+    return instrument.key === 'nom035.guide-i' && section === 0;
+}
+
 /** The screens of the guide: a gate on its own, then its items `perScreen` at a time, never mixing sections. */
 export function steps(
     instrument: SurveyInstrument,
@@ -123,8 +134,12 @@ export function steps(
             return screens;
         }
 
-        for (let start = 0; start < section.items.length; start += perScreen) {
-            const items = section.items.slice(start, start + perScreen);
+        const size = asksWhole(instrument, index)
+            ? section.items.length
+            : perScreen;
+
+        for (let start = 0; start < section.items.length; start += size) {
+            const items = section.items.slice(start, start + size);
             screens.push({
                 section: index,
                 gate: null,
@@ -250,6 +265,25 @@ export function introCopy(kind: CampaignKind): IntroCopy {
         period: 'los dos últimos meses',
         noun: 'guía',
     };
+}
+
+/** The line above the title of the first screen: «Evaluación NOM-035 · 2 guías»; none for Ley Silla. */
+export function introContext(
+    kind: CampaignKind,
+    guides: number,
+): string | null {
+    if (kind === 'seating_survey') {
+        return null;
+    }
+
+    return `Evaluación NOM-035 · ${guides} ${guides === 1 ? 'guía' : 'guías'}`;
+}
+
+/** About how long the guides still to answer take, together. */
+export function minutesLeft(instruments: SurveyInstrument[]): number {
+    return instruments
+        .filter((instrument) => instrument.status === 'pending')
+        .reduce((total, instrument) => total + instrument.minutes, 0);
 }
 
 /** «Pregunta 2 de 8» of a question inside its block: the gate counts, as in the progress above the screen. */

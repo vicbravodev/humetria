@@ -59,10 +59,12 @@ it('opens with the company, the deadline and each guide as the person answers it
             ->where('instruments.0.shortTitle', 'Guía I')
             ->where('instruments.0.identified', true)
             ->where('instruments.0.status', 'pending')
+            ->where('instruments.0.minutes', 5)
             ->where('instruments.0.options', [['value' => 'yes', 'label' => 'Sí'], ['value' => 'no', 'label' => 'No']])
             ->where('instruments.0.sections.0.title', 'I.- Acontecimiento traumático severo')
             ->where('instruments.0.sections.0.items.0', ['number' => 1, 'text' => 'Accidente que tenga como consecuencia la muerte, la pérdida de un miembro o una lesión grave?'])
             ->where('instruments.1.identified', false)
+            ->where('instruments.1.minutes', 10)
             ->where('instruments.1.sections.6.gate', [
                 'key' => 'serves_clients',
                 'question' => 'En mi trabajo debo brindar servicio a clientes o usuarios:',

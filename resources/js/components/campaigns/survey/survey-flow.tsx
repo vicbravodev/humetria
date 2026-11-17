@@ -1,91 +1,100 @@
-import { Check } from 'lucide-react';
 import { useState } from 'react';
+import GuideList from '@/components/campaigns/survey/guide-list';
+import GuideSent from '@/components/campaigns/survey/guide-sent';
+import SurveyActions from '@/components/campaigns/survey/survey-actions';
 import SurveyIntro from '@/components/campaigns/survey/survey-intro';
 import SurveyRunner from '@/components/campaigns/survey/survey-runner';
 import { Button } from '@/components/ui/button';
+import { introContext, minutesLeft } from '@/lib/survey';
 import type { IntroCopy } from '@/lib/survey';
-import type { SurveyInstrument } from '@/types';
+import type { CampaignKind, SurveyInstrument } from '@/types';
 
 /**
  * The norm's presentation with the person's guides (sent or pending), then the next pending guide. Remounted after
- * each guide is sent, so the person sees it marked "Enviada" before going on.
+ * each guide is sent: then it opens on the confirmation of the guide just sent, never when the person comes back later.
  */
 export default function SurveyFlow({
     token,
     company,
+    kind,
     closesOn,
     copy,
     instruments,
     next,
+    justSent,
+    onSent,
 }: {
     token: string;
     company: string;
+    kind: CampaignKind;
     closesOn: string | null;
     copy: IntroCopy;
     instruments: SurveyInstrument[];
     next: SurveyInstrument;
+    /** The guide the person sent on this page a moment ago, if any. */
+    justSent: string | null;
+    onSent: (instrument: string) => void;
 }) {
-    const [started, setStarted] = useState(false);
-    const answered = instruments.some(
+    const sent = instruments.filter(
         (instrument) => instrument.status === 'completed',
     );
+    const confirmed = sent.find((instrument) => instrument.key === justSent);
+    const [view, setView] = useState<'sent' | 'intro' | 'guide'>(
+        confirmed === undefined ? 'intro' : 'sent',
+    );
+    const pending = instruments.length - sent.length;
 
-    if (started) {
+    if (view === 'guide') {
         return (
             <SurveyRunner
                 token={token}
                 instruments={instruments}
                 instrument={next}
                 noun={copy.noun}
-                onBack={() => setStarted(false)}
+                onBack={() => setView('intro')}
+                onSent={onSent}
+            />
+        );
+    }
+
+    if (view === 'sent' && confirmed !== undefined) {
+        return (
+            <GuideSent
+                sent={confirmed}
+                next={next}
+                done={sent.length}
+                total={instruments.length}
+                onContinue={() => setView('guide')}
+                onLater={() => setView('intro')}
             />
         );
     }
 
     return (
-        <SurveyIntro company={company} closesOn={closesOn} copy={copy}>
-            <ol className="overflow-hidden rounded-lg border bg-card">
-                {instruments.map((instrument, index) => (
-                    <li
-                        key={instrument.key}
-                        className="flex items-center gap-3 border-t px-4 py-3.5 first:border-t-0"
-                    >
-                        <span
-                            aria-hidden="true"
-                            className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-secondary text-base font-medium text-muted-foreground tabular-nums"
-                        >
-                            {index + 1}
-                        </span>
-                        <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="text-[1.0625rem] font-medium">
-                                {instrument.shortTitle}
-                            </span>
-                            <span className="text-base text-muted-foreground">
-                                {instrument.title}
-                            </span>
-                        </span>
-                        {instrument.status === 'completed' ? (
-                            <span className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">
-                                <Check aria-hidden="true" className="size-4" />
-                                Enviada
-                            </span>
-                        ) : (
-                            <span className="shrink-0 text-base text-muted-foreground">
-                                Pendiente
-                            </span>
-                        )}
-                    </li>
-                ))}
-            </ol>
-            <Button
-                size="lg"
-                className="w-full rounded-[10px] text-[1.0625rem]"
-                onClick={() => setStarted(true)}
+        <div className="flex w-full max-w-2xl flex-col gap-5">
+            <SurveyIntro
+                company={company}
+                context={introContext(kind, instruments.length)}
+                closesOn={closesOn}
+                minutes={{
+                    total: minutesLeft(instruments),
+                    together: pending > 1,
+                }}
+                copy={copy}
             >
-                {answered
-                    ? `Continuar con la ${copy.noun === 'guía' ? next.shortTitle : copy.noun}`
-                    : 'Comenzar'}
-            </Button>
-        </SurveyIntro>
+                <GuideList instruments={instruments} />
+            </SurveyIntro>
+            <SurveyActions>
+                <Button
+                    size="lg"
+                    className="h-14 w-full rounded-[10px] text-[1.0625rem]"
+                    onClick={() => setView('guide')}
+                >
+                    {sent.length > 0
+                        ? `Continuar con la ${copy.noun === 'guía' ? next.shortTitle : copy.noun}`
+                        : 'Comenzar'}
+                </Button>
+            </SurveyActions>
+        </div>
     );
 }

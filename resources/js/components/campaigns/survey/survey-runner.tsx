@@ -1,6 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
-import { Lock } from 'lucide-react';
 import { useState } from 'react';
+import AnswersKeptNote from '@/components/campaigns/survey/answers-kept-note';
 import GuideIntro from '@/components/campaigns/survey/guide-intro';
 import SectionProgress from '@/components/campaigns/survey/section-progress';
 import SurveyOffline from '@/components/campaigns/survey/survey-offline';
@@ -23,12 +23,15 @@ export default function SurveyRunner({
     instrument,
     noun,
     onBack,
+    onSent,
 }: {
     token: string;
     instruments: SurveyInstrument[];
     instrument: SurveyInstrument;
     noun: IntroCopy['noun'];
     onBack: () => void;
+    /** Told as the guide goes out, so the page can confirm it once the next one is shown. */
+    onSent: (instrument: string) => void;
 }) {
     const [started, setStarted] = useState(false);
     const [sending, setSending] = useState(false);
@@ -45,7 +48,12 @@ export default function SurveyRunner({
             submit.url([token, instrument.key]),
             { answers: payload(instrument, answers) },
             {
-                onStart: () => setSending(true),
+                // The page stays mounted through the redirect, so it remembers which guide was just sent.
+                preserveState: true,
+                onStart: () => {
+                    setSending(true);
+                    onSent(instrument.key);
+                },
                 onFinish: () => setSending(false),
                 onNetworkError: offline.failed,
                 onSuccess: () => {
@@ -99,6 +107,7 @@ export default function SurveyRunner({
                         onAnswer={answer}
                     />
                 )}
+                <AnswersKeptNote identified={instrument.identified} />
                 <SurveyNavigation
                     isLast={steps.isLast}
                     canAdvance={steps.canAdvance}
@@ -108,16 +117,6 @@ export default function SurveyRunner({
                     }
                     onNext={steps.isLast ? send : steps.next}
                 />
-                <p className="pt-2 text-center text-base text-muted-foreground">
-                    <Lock
-                        aria-hidden="true"
-                        className="mr-1.5 inline size-4 align-[-2px]"
-                    />
-                    Sus respuestas se guardan en este dispositivo hasta que las
-                    envíe.
-                    {!instrument.identified &&
-                        ' Nadie de su empresa puede ver lo que contesta.'}
-                </p>
             </section>
         </div>
     );

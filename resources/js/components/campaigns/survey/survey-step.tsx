@@ -1,7 +1,7 @@
 import GateStep from '@/components/campaigns/survey/gate-step';
 import SurveyQuestion from '@/components/campaigns/survey/survey-question';
 import { focusOnMount } from '@/lib/focus';
-import { captionOf } from '@/lib/survey';
+import { asksWhole, captionOf } from '@/lib/survey';
 import type { Answers, Step } from '@/lib/survey';
 import type { SurveyInstrument } from '@/types';
 
@@ -33,6 +33,8 @@ export default function SurveyStep({
         return null;
     }
 
+    const whole = asksWhole(instrument, step.section);
+
     return (
         <div className="flex flex-col gap-5 md:gap-0">
             <div
@@ -49,7 +51,10 @@ export default function SurveyStep({
                 <SurveyQuestion
                     key={item.number}
                     name={`item-${item.number}`}
-                    caption={captionOf(section, item.number)}
+                    caption={
+                        whole ? undefined : captionOf(section, item.number)
+                    }
+                    paired={whole}
                     text={item.text}
                     options={instrument.options}
                     value={answers[String(item.number)]}

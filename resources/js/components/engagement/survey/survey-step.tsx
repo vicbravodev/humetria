@@ -1,10 +1,11 @@
+import ReadyToSend from '@/components/engagement/survey/ready-to-send';
 import SurveyIntro from '@/components/engagement/survey/survey-intro';
 import SurveyNote from '@/components/engagement/survey/survey-note';
 import SurveyQuestion from '@/components/engagement/survey/survey-question';
 import type { useEngagementSurvey } from '@/hooks/use-engagement-survey';
 import type { EngagementSurveyProps } from '@/types';
 
-/** The screen of the current step: the introduction, a section's instruction, one question, or the last word before sending. */
+/** The screen of the current step: the introduction, a section's instruction, one question, or the count before sending. */
 export default function SurveyStep({
     survey,
     flow,
@@ -33,11 +34,6 @@ export default function SurveyStep({
                 <SurveyNote title={step.title}>{step.instruction}</SurveyNote>
             );
         case 'submit':
-            return (
-                <SurveyNote title="Ya terminó la encuesta">
-                    Cuando envíe sus respuestas ya no podrá cambiarlas. Si
-                    quiere revisar algo, vuelva con «Anterior».
-                </SurveyNote>
-            );
+            return <ReadyToSend tally={flow.tally} onReview={flow.review} />;
     }
 }

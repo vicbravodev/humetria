@@ -50,7 +50,7 @@ final class ItemBank
             new BankItem('eng.pride', 'Me siento orgulloso(a) de trabajar en esta empresa.', ItemScale::Agreement, ItemBlock::Outcome, null),
             new BankItem('eng.motivation', 'Me siento motivado(a) para hacer bien mi trabajo.', ItemScale::Agreement, ItemBlock::Outcome, null),
             new BankItem('eng.connection', 'Quiero aportar a que esta empresa mejore.', ItemScale::Agreement, ItemBlock::Outcome, null),
-            new BankItem('eng.recommend', '¿Qué tan probable es que recomiende esta empresa como lugar para trabajar? (0 = nada probable, 10 = muy probable)', ItemScale::Recommend, ItemBlock::Outcome, null),
+            new BankItem('eng.recommend', '¿Qué tan probable es que recomiende esta empresa como lugar para trabajar?', ItemScale::Recommend, ItemBlock::Outcome, null),
             new BankItem('eng.stay', 'Me gustaría seguir trabajando en esta empresa durante el próximo año.', ItemScale::Agreement, ItemBlock::Outcome, null),
             new BankItem('clarity.goals', 'Conozco las principales metas que busca alcanzar esta empresa.', ItemScale::Agreement, ItemBlock::Company, Driver::Clarity),
             new BankItem('clarity.contribution', 'Sé cómo mi trabajo contribuye a los objetivos de la empresa.', ItemScale::Agreement, ItemBlock::Company, Driver::Clarity, anchor: true),
