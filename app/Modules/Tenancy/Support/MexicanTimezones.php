@@ -12,9 +12,11 @@ use Illuminate\Support\Str;
 /**
  * The time zones a work center of Mexico may have (design: docs/superpowers/specs/2026-11-17-timezones-design.md): the IANA
  * zones the system's database lists for Mexico, never a rule of our own. The suggestion comes from the state and, where a
- * state has more than one zone, from the municipality: the tables below are data, not rules. The border municipalities
- * with the seasonal time are those of the Ley de los Husos Horarios (2022) as read by the press; **to be confirmed by the
- * owner with the CENAM or the Diario Oficial** (design §6). Whatever the table says, tzdata keeps each zone's rules.
+ * state has more than one zone, from the municipality: the tables below are data, not rules. Source: the Ley de los Husos
+ * Horarios en los Estados Unidos Mexicanos (DOF 28-10-2022, last reform DOF 29-11-2022; consolidated text at
+ * https://www.diputados.gob.mx/LeyesBiblio/pdf/LHHEUM.pdf, checked 2026-11-17): art. 3 for the zones and Bahía de Banderas,
+ * art. 5 for the border municipalities with the seasonal time, the same lists tzdata gives America/Matamoros, Ojinaga and
+ * Ciudad_Juarez. Whatever the table says, tzdata keeps each zone's rules.
  */
 final class MexicanTimezones
 {
