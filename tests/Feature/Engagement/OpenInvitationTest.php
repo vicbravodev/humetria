@@ -53,7 +53,7 @@ it('opens the 44 questions in four sections with the name of the manager in his 
         ->where('kind', 'climate')
         ->where('minutes', 12)
         ->where('minGroup', 5)
-        ->where('closesOn', '20 de noviembre')
+        ->where('closesOn', '20 nov 2026')
         ->where('managerName', 'Marta Ruiz')
         ->has('sections', 4)
         ->where('sections', fn ($sections) => collect($sections)->sum(fn ($section) => count($section['items'])) === 44)

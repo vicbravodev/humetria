@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+    nextLabel,
     payload,
     progressOf,
     steps,
@@ -196,5 +197,26 @@ describe('progressOf', () => {
             total: 0,
             fraction: 0,
         });
+    });
+});
+
+describe('nextLabel', () => {
+    const list = steps([company, manager, closing]);
+    const label = (index: number) => nextLabel(list, index);
+
+    it('says «Siguiente» on the welcome, an instruction and every question but the last', () => {
+        expect(label(0)).toBe('Siguiente');
+        expect(label(1)).toBe('Siguiente');
+        expect(label(3)).toBe('Siguiente');
+        expect(label(5)).toBe('Siguiente');
+    });
+
+    it('says «Revisar y enviar» on the last question, which leads to the send step', () => {
+        expect(list[6]?.kind).toBe('question');
+        expect(label(6)).toBe('Revisar y enviar');
+    });
+
+    it('sends on the send step', () => {
+        expect(label(7)).toBe('Enviar mis respuestas');
     });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SKIPPED, closedOf, resumeIndex } from '@/lib/engagement/replies';
 import {
+    nextLabel,
     payload,
     progressOf,
     steps,
@@ -39,6 +40,7 @@ export function useEngagementSurvey(token: string, sections: SurveySection[]) {
     return {
         step,
         progress: progressOf(list, index),
+        nextLabel: nextLabel(list, index),
         answers,
         comments,
         isFirst: index === 0,

@@ -60,7 +60,8 @@ final class RespondentController extends Controller
             'token' => $token,
             'unavailable' => null,
             'company' => $opened->company,
-            'closesOn' => $opened->survey->closes_on?->isoFormat('D [de] MMMM'),
+            // As NOM-035 writes it: «25 nov 2026» (Carbon's Spanish months end in a dot).
+            'closesOn' => $opened->survey->closes_on === null ? null : str_replace('.', '', $opened->survey->closes_on->isoFormat('D MMM YYYY')),
             'kind' => $opened->survey->kind->value,
             'minutes' => $opened->survey->kind->minutes(),
             'minGroup' => config()->integer('results.min_group'),

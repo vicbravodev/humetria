@@ -107,3 +107,18 @@ export function progressOf(list: Step[], index: number): Progress {
 
     return { position: done, total, fraction: total === 0 ? 0 : done / total };
 }
+
+/** What the main button says: the last question leads to the send step, which sends. Nothing moves on by itself. */
+export function nextLabel(
+    list: Step[],
+    index: number,
+): 'Siguiente' | 'Revisar y enviar' | 'Enviar mis respuestas' {
+    if (list[index]?.kind === 'submit') {
+        return 'Enviar mis respuestas';
+    }
+
+    return list[index + 1]?.kind === 'submit' &&
+        list[index]?.kind === 'question'
+        ? 'Revisar y enviar'
+        : 'Siguiente';
+}
