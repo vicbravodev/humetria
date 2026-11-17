@@ -6,6 +6,7 @@ import RequestPreview from '@/components/leave/request-preview';
 import RequestTypeField from '@/components/leave/request-type-field';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { SheetClose } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useLeavePreview } from '@/hooks/use-leave-preview';
@@ -15,17 +16,20 @@ import { store } from '@/routes/portal/vacations/requests';
 import type { LeaveTypeOption } from '@/types';
 
 /**
- * The person asks for vacations or a leave: as soon as both days are picked it says how many working days they are and
- * whether they have them. It never sends by itself, and having no days does not stop the request.
+ * The person asks for vacations or a leave, in the sheet «Pedir días»: as soon as both days are picked it says how many
+ * working days they are and how many days would be left. It never sends by itself, its button is never off (without the
+ * dates, the server says what is missing) and having no days does not stop the request.
  */
 export default function RequestForm({
     slug,
     today,
     types,
+    available,
 }: {
     slug: string;
     today: string;
     types: LeaveTypeOption[];
+    available: number;
 }) {
     const [typeId, setTypeId] = useState('');
     const [startsOn, setStartsOn] = useState('');
@@ -34,78 +38,68 @@ export default function RequestForm({
     const answer = useLeavePreview(
         query === null ? null : preview.url(slug, { query }),
     );
-    const clear = () => {
-        setTypeId('');
-        setStartsOn('');
-        setEndsOn('');
-    };
 
     return (
-        <section aria-labelledby="leave-ask" className="grid gap-3">
-            <h2 id="leave-ask" className="text-xl font-semibold">
-                Pedir días
-            </h2>
-            <Form
-                {...store.form(slug)}
-                options={{ preserveScroll: true }}
-                resetOnSuccess
-                onSuccess={clear}
-                className="flex flex-col gap-5 card p-5"
-            >
-                {({ processing, errors }) => (
-                    <>
-                        <RequestTypeField
-                            types={types}
-                            value={typeId}
-                            onChange={setTypeId}
-                            error={errors['leave_type_id']}
+        <Form
+            {...store.form(slug)}
+            options={{ preserveScroll: true }}
+            className="flex flex-col gap-5 px-4 pb-6"
+        >
+            {({ processing, errors }) => (
+                <>
+                    <RequestTypeField
+                        types={types}
+                        value={typeId}
+                        onChange={setTypeId}
+                        error={errors['leave_type_id']}
+                    />
+                    <RequestDates
+                        today={today}
+                        first={{
+                            value: startsOn,
+                            onChange: setStartsOn,
+                            error: errors['starts_on'],
+                        }}
+                        last={{
+                            value: endsOn,
+                            onChange: setEndsOn,
+                            error: errors['ends_on'],
+                        }}
+                    />
+                    <RequestPreview answer={answer} available={available} />
+                    <div className="grid gap-2">
+                        <Label htmlFor="leave-note">Nota (opcional)</Label>
+                        <Textarea
+                            id="leave-note"
+                            name="note"
+                            rows={2}
+                            maxLength={500}
                         />
-                        <RequestDates
-                            today={today}
-                            first={{
-                                value: startsOn,
-                                onChange: setStartsOn,
-                                error: errors['starts_on'],
-                            }}
-                            last={{
-                                value: endsOn,
-                                onChange: setEndsOn,
-                                error: errors['ends_on'],
-                            }}
-                        />
-                        <RequestPreview answer={answer} />
-                        <div className="grid gap-2">
-                            <Label htmlFor="leave-note">Nota (opcional)</Label>
-                            <Textarea
-                                id="leave-note"
-                                name="note"
-                                rows={2}
-                                maxLength={500}
-                            />
-                            <p className="text-sm text-muted-foreground">
-                                La leerá quien responda su solicitud.
-                            </p>
-                            <InputError message={errors['note']} />
-                        </div>
-                        {(startsOn === '' || endsOn === '') && (
-                            <p className="text-sm text-muted-foreground">
-                                Elija el día en que empieza y el día en que
-                                termina para poder enviar la solicitud.
-                            </p>
-                        )}
+                        <p className="text-sm text-muted-foreground">
+                            La leerá quien responda su solicitud.
+                        </p>
+                        <InputError message={errors['note']} />
+                    </div>
+                    <div className="flex flex-col gap-2.5">
                         <Button
-                            size="lg"
-                            // Nothing to send until both dates are chosen: a second tap right after sending finds the form empty.
-                            disabled={
-                                processing || startsOn === '' || endsOn === ''
-                            }
+                            disabled={processing}
+                            className="h-14 w-full text-lg font-semibold"
                         >
                             {processing && <Spinner />}
                             Enviar solicitud
                         </Button>
-                    </>
-                )}
-            </Form>
-        </section>
+                        <SheetClose asChild>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                className="h-12 w-full text-lg"
+                            >
+                                Cancelar
+                            </Button>
+                        </SheetClose>
+                    </div>
+                </>
+            )}
+        </Form>
     );
 }
