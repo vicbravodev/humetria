@@ -11,8 +11,11 @@ interface DemoShowcase
     public function complaintChannelUrl(): ?string;
 
     /**
-     * A new link for the demo's time-clock screen: the one before dies and the screen waits, not activated, until the link
-     * is opened. Null when the demo has no screen to link, or its screen already shows the code.
+     * A new link for the time-clock screen of each center of the demo, by the center's name: the one before dies and the
+     * screen waits, not activated, until the link is opened. A screen that already shows the code is left out; empty when
+     * there is no demo or no screen to link.
+     *
+     * @return list<array{center: string, url: string}>
      */
-    public function kioskLink(): ?string;
+    public function kioskLinks(): array;
 }

@@ -37,7 +37,8 @@ use LogicException;
  * plant's two production shifts have six months of days, everyone else the last four weeks, all up to yesterday: a night
  * that would end today was not worked yet, and nobody has marked today. The night shift («Producción turno 2») has worked
  * overtime all along, within the norm since HR acted on the NOM-035 evaluation; nobody marks on a holiday; everyone else works their schedule. The
- * Oficinas center marks with the QR of its kiosk, activated a month ago. Last week waits for each person's confirmation and
+ * Oficinas center marks with the QR of its kiosk, activated a month ago; the other centers get theirs new, for the door's
+ * people to mark live at their own center's screen. Last week waits for each person's confirmation and
  * three people asked HR to correct a mark. Nobody has a key (WorkerAccess) nor accepted the agreement: whoever marks live
  * enters as a person, creates a real key and accepts the agreement first (criterio 5.1), and the key is what proves who marks.
  *
@@ -122,6 +123,13 @@ final readonly class AttendanceStory implements DemoStory
             // The link of the screen dies on first use; whoever shows the screen live issues it again from the panel.
             $this->activateKiosk->handle($this->issueKiosk->handle($context->center('offices')));
         });
+
+        // A new screen at every other center, waiting for the room to issue its link: each person of the door marks at the
+        // screen of their own center (with another center's code the mark would be «fuera de su centro»). They marked by
+        // the geofence until today, so the screens are new and the history stays as it was.
+        foreach (array_diff(array_keys(DemoRoster::CENTERS), ['offices']) as $center) {
+            $this->issueKiosk->handle($context->center($center));
+        }
 
         $this->history($context, $zones);
         $this->corrections();
