@@ -12,14 +12,16 @@ final class ListWorkCenters
     public const int PER_PAGE = 25;
 
     /**
-     * The current company's work centers in use, or the archived ones, by name, a page at a time.
+     * The current company's work centers in use, or the archived ones, by name, a page at a time; with a search, only
+     * those whose name or municipality has it.
      *
      * @return LengthAwarePaginator<int, WorkCenter>
      */
-    public function handle(bool $archived): LengthAwarePaginator
+    public function handle(bool $archived, string $search = ''): LengthAwarePaginator
     {
         return WorkCenter::query()
             ->when($archived, fn ($query) => $query->whereNotNull('archived_at'), fn ($query) => $query->whereNull('archived_at'))
+            ->matching(['name', 'municipality'], $search)
             ->orderBy('name')
             ->orderBy('id')
             ->paginate(self::PER_PAGE)
