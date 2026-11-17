@@ -56,7 +56,7 @@ export default function Nom035Route({
         return (
             <>
                 <Head title={`NOM-035 · ${workCenter.name}`} />
-                <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 px-4 py-6 md:px-12 md:py-10">
+                <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-10 md:py-10">
                     <RouteDone
                         norm={normOf('nom035')}
                         until={until}
@@ -71,7 +71,7 @@ export default function Nom035Route({
     return (
         <>
             <Head title={`NOM-035 · ${workCenter.name}`} />
-            <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-8 px-4 py-6 md:px-12 md:py-10">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:py-10">
                 <header className="flex max-w-[760px] flex-col gap-2">
                     <h1 className="text-3xl leading-10 font-semibold tracking-[-0.015em] text-balance">
                         Tu ruta para cumplir con la NOM-035

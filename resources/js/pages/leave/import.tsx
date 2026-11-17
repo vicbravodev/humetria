@@ -24,7 +24,7 @@ export default function LeaveImport({ maxRows }: { maxRows: number }) {
     return (
         <>
             <Head title="Cargar saldos iniciales" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full max-w-[880px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     caption="Vacaciones"
                     title="Cargar saldos iniciales"

@@ -15,7 +15,7 @@ export default function StatementSheet({
     children?: ReactNode;
 }) {
     return (
-        <article className="mx-auto flex w-full max-w-[760px] flex-col gap-7 card p-6 [page:certificate] md:p-12 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <article className="flex w-full max-w-[760px] flex-col gap-7 card p-6 [page:certificate] md:p-12 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
             <header className="flex flex-col gap-2">
                 <p className="text-sm font-semibold text-primary">
                     {sheet.company}

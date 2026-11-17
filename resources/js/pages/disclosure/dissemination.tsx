@@ -35,7 +35,7 @@ export default function Dissemination(props: DisseminationProps) {
     return (
         <>
             <Head title="Cómo pruebas que lo difundiste" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <DisclosureHeader
                     eyebrow="NOM-035 · numerales 5.7, 7.8 y 10.2"
                     title="Cómo pruebas que lo difundiste"

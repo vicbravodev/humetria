@@ -60,7 +60,7 @@ export default function Corrections({
     return (
         <>
             <Head title="Correcciones del registro" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Correcciones"
                     description="Cada una agrega una marca nueva. La original se conserva y las dos se ven en el reporte."

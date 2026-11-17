@@ -38,6 +38,7 @@ export default function SharedReport({
             <Head title={`Informe · ${company ?? ''}`} />
             <ReportBar
                 className="md:top-0"
+                centered
                 sections={reportSections(report.results.visible)}
                 start={<Logo className="h-7" />}
             >

@@ -17,7 +17,7 @@ export default function WorkerAccess(props: WorkerAccessPageProps) {
     return (
         <>
             <Head title="Accesos" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     caption={props.center?.name ?? 'Todos tus centros'}
                     title="Accesos"

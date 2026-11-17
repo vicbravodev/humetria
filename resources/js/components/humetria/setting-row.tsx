@@ -33,7 +33,7 @@ export default function SettingRow({
                         </h2>
                         {status}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="max-w-[620px] text-sm text-muted-foreground">
                         {description}
                     </p>
                 </div>

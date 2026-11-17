@@ -37,7 +37,7 @@ export default function AccessPeople({
                 filters={filters}
                 counts={counts}
             />
-            <p className="text-sm text-pretty text-muted-foreground">
+            <p className="max-w-[620px] text-sm text-pretty text-muted-foreground">
                 <strong className="font-medium text-foreground">
                     Llave sincronizada:
                 </strong>{' '}

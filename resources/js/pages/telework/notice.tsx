@@ -33,7 +33,7 @@ export default function Notice({
     return (
         <>
             <Head title={`Aviso de ${notice.person}`} />
-            <div className="mx-auto grid w-full max-w-[1180px] gap-8 px-4 py-6 min-[1240px]:grid-cols-[minmax(0,1fr)_340px] md:px-12 md:py-10">
+            <div className="grid w-full gap-8 px-4 py-6 min-[1240px]:grid-cols-[minmax(0,1fr)_340px] md:px-10 md:py-10">
                 <div className="flex min-w-0 flex-col gap-6">
                     <AccidentHeader notice={notice} />
                     <section
