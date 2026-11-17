@@ -8,6 +8,7 @@ use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use App\Modules\FirstSteps\Contracts\FirstSteps;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -66,6 +67,9 @@ final class HandleInertiaRequests extends Middleware
             'inCourse' => fn (): ?array => $this->seesNom035() ? $this->inCourse() : null,
             // The guided tour of the company's owner: nobody else is asked anything, and outside a company nothing is.
             'firstSteps' => fn (): ?array => $this->firstSteps($request),
+            // Every page of the demo company, its reports above all, carries the «DEMO» mark (DemoMark). Read when the page
+            // renders: the company routes and the report links set the company before then.
+            'demo' => fn (): bool => app(DemoCompanies::class)->isCurrent(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
@@ -107,6 +111,7 @@ final class HandleInertiaRequests extends Middleware
             'tenants' => [],
             'inCourse' => null,
             'firstSteps' => null,
+            'demo' => false,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

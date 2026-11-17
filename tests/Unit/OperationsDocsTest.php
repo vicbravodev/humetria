@@ -69,3 +69,25 @@ it('spells the bundle variable the way config/inertia.php reads it, and not the 
         expect($text)->toContain('INERTIA_SSR_ENSURE_BUNDLE')->not->toMatch('/INERTIA_SSR_ENSURE_BUNDLE_EXISTS(?!`)/');
     }
 });
+
+it('gives in the demo manual the figures the code has', function (): void {
+    // Line breaks as spaces: the manual wraps at 120 columns wherever it falls.
+    $manual = (string) preg_replace('/\s+/', ' ', repoFile('docs/operations/demo.md'));
+    $config = require dirname(__DIR__, 2).'/config/complaints.php';
+    $leave = require dirname(__DIR__, 2).'/config/leave.php';
+    $door = (new ReflectionClassConstant(App\Modules\Demos\Http\Controllers\DemoRoomController::class, 'DOOR_MINUTES'))->getValue();
+    $doorPeople = count(array_filter(Database\Seeders\Demo\DemoRoster::people(), fn ($person): bool => $person->reservedForDoor));
+
+    foreach ([
+        "acepta {$config['rate_limits']['demo_submissions_per_hour']} envíos por hora",
+        "{$config['rate_limits']['demo_submissions_per_day']} al día por dirección",
+        'a lo más **'.App\Modules\Demos\Support\DemoRoomPage::FRESH_DAYS.' días**',
+        'más de '.App\Modules\Demos\Models\DemoRun::STALE_AFTER_MINUTES.' minutos',
+        'Abrir sala ('.intdiv(is_int($door) ? $door : 0, 60).' h)',
+        "hay {$doorPeople} reservados",
+        'se corta a los '.intdiv((new App\Modules\Demos\Jobs\PrepareDemo('run'))->timeout, 60).' minutos',
+        'a los ~'.$leave['escalation_business_days'].' días hábiles',
+    ] as $figure) {
+        expect(str_contains($manual, $figure))->toBeTrue("The demo manual does not say «{$figure}»");
+    }
+});

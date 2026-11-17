@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { navSections } from '@/lib/nav-sections';
 
 describe('navSections for the platform', () => {
-    it('gives the platform users and the audit trail to the superadmin only', () => {
+    it('gives the platform users, the audit trail and the demo room to the superadmin only', () => {
         const platform = (isStaff: boolean, isSuperadmin?: boolean) =>
             navSections({ tenant: null, isStaff, isSuperadmin })
                 .find((section) => section.key === 'platform')
@@ -14,6 +14,7 @@ describe('navSections for the platform', () => {
             'Empresas',
             'Cuentas',
             'Solicitudes de demo',
+            'Sala de demo',
             'Usuarios',
             'Bitácora',
             'Colas',

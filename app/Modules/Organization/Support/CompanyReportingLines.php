@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * One query per answer. The walks name the company inside their SQL (the tenant scope does not reach a recursive
- * query) and stop on a cycle already in the data (a restore with the trigger disabled), so they always end.
+ * One query per answer. The walks stop on a cycle already in the data (a restore with the trigger disabled), so they
+ * always end; the recursive one names the company inside its SQL (the tenant scope does not reach a recursive query).
  */
 final readonly class CompanyReportingLines implements ReportingLines
 {
@@ -32,19 +32,31 @@ final readonly class CompanyReportingLines implements ReportingLines
 
     public function chainOf(string $employeeId): array
     {
-        return $this->walk(<<<'SQL'
-            WITH RECURSIVE line AS (
-                SELECT manager.id, manager.manager_id, 1 AS depth
-                FROM employees person
-                JOIN employees manager ON manager.id = person.manager_id AND manager.tenant_id = person.tenant_id
-                WHERE person.id = :person AND person.tenant_id = :tenant
-                UNION ALL
-                SELECT manager.id, manager.manager_id, line.depth + 1
-                FROM line
-                JOIN employees manager ON manager.id = line.manager_id AND manager.tenant_id = :tenant
-            ) CYCLE id SET is_cycle USING path
-            SELECT id FROM line WHERE NOT is_cycle AND id <> :person ORDER BY depth
-            SQL, $employeeId);
+        return $this->chainsOf([$employeeId])[$employeeId];
+    }
+
+    public function chainsOf(array $employeeIds): array
+    {
+        // The whole company's line at once (two columns): walking it here is cheaper than one recursive query per person.
+        $managers = array_filter(Employee::query()->pluck('manager_id', 'id')->all(), is_string(...));
+        $chains = [];
+
+        foreach ($employeeIds as $employeeId) {
+            $chain = [];
+            $seen = [$employeeId => true];
+            $manager = $managers[$employeeId] ?? null;
+
+            // Up to the top, stopping on a cycle already in the data (a restore with the trigger disabled).
+            while ($manager !== null && ! isset($seen[$manager])) {
+                $seen[$manager] = true;
+                $chain[] = $manager;
+                $manager = $managers[$manager] ?? null;
+            }
+
+            $chains[$employeeId] = $chain;
+        }
+
+        return $chains;
     }
 
     public function directReportIds(string $employeeId): array

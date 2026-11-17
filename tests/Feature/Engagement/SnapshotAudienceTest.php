@@ -10,7 +10,9 @@ use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 mutates(SnapshotAudience::class, SurveyClock::class);
 
@@ -164,4 +166,29 @@ it('uses the day in the display time zone, not the UTC one', function (): void {
     Carbon::setTestNow('2026-11-10 03:00:00');
 
     expect(SurveyClock::day()->toDateString())->toBe('2026-11-09');
+});
+
+it('reads the people and their reporting lines in as many queries for twelve people as for six', function (): void {
+    $area = engagementArea($this->tenant);
+    $readsOf = function (Survey $survey): int {
+        $reads = 0;
+        DB::listen(function (QueryExecuted $query) use (&$reads): void {
+            // Each invitation is one insert; everything else is reading.
+            $reads += str_starts_with($query->sql, 'insert') ? 0 : 1;
+        });
+        resolve(SnapshotAudience::class)->handle($survey);
+
+        return $reads;
+    };
+
+    // A manager with five people, then twice as many: a second manager with five more.
+    $boss = engagementStaff($this->tenant, $this->plant, $area, 1)->sole();
+    engagementStaff($this->tenant, $this->plant, $area, 5, ['manager_id' => $boss->id]);
+    $six = $readsOf($this->survey);
+    $other = engagementStaff($this->tenant, $this->office, $area, 1, ['manager_id' => $boss->id])->sole();
+    engagementStaff($this->tenant, $this->office, $area, 5, ['manager_id' => $other->id]);
+    $twelve = $readsOf(Survey::factory()->pulse()->create(['tenant_id' => $this->tenant->id]));
+
+    expect(invitationsOf($this->survey))->toHaveCount(6)
+        ->and($twelve)->toBe($six);
 });

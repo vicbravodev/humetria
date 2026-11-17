@@ -41,6 +41,7 @@ final readonly class PlatformOverview
     private function inactive(): int
     {
         return Tenant::query()
+            ->where('is_demo', false)
             ->where(fn ($query) => $query->whereNull('restriction')->orWhere('restriction', '<>', 'archived'))
             // One that has not started (no trial, no term) was never open to anyone: it is not one nobody enters.
             ->where(fn ($query) => $query->whereNotNull('restriction')->orWhereNotNull('active_until')->orWhereNotNull('trial_started_at'))

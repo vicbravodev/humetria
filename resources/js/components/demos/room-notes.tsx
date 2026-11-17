@@ -1,0 +1,39 @@
+/** What the presenter should know before handing the demo to an audience. */
+export default function RoomNotes() {
+    return (
+        <section
+            aria-labelledby="room-notes"
+            className="flex flex-col gap-3 card p-5 md:col-span-2"
+        >
+            <h2 id="room-notes" className="text-base font-semibold">
+                Antes de presentar
+            </h2>
+            <ul className="flex list-disc flex-col gap-2 pl-5 text-sm text-pretty text-muted-foreground">
+                <li>
+                    Reinicia la demo a lo más dos días antes: después, una
+                    denuncia queda vencida, las solicitudes de vacaciones
+                    pendientes se escalan (a los tres días hábiles) y la
+                    encuesta de pulso cierra (a los nueve días).
+                </li>
+                <li>
+                    El QR del canal de denuncias no cambia: alguien de un
+                    público anterior puede seguir enviando denuncias, así que
+                    revisa el buzón antes de presentar.
+                </li>
+                <li>
+                    El canal de denuncias de la demo acepta más envíos por hora
+                    que el de una empresa real: un salón entero comparte la
+                    misma red.
+                </li>
+                <li>
+                    Marcar asistencia y confirmar en vivo necesita un teléfono
+                    de verdad: cada quien crea su llave al entrar por la puerta.
+                </li>
+                <li>
+                    Cada enlace de encuesta sembrado sirve una sola vez por
+                    persona: quien ya contestó no puede volver a hacerlo.
+                </li>
+            </ul>
+        </section>
+    );
+}

@@ -20,6 +20,8 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Models\Conversation;
@@ -45,6 +47,14 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature', 'Browser', 'Ssr');
 
+// Preparing the demo publishes the NOM-037 documents as PDFs, and any module may store its files: every module's disk is
+// fake, so no test leaves files on a real one.
+pest()->beforeEach(function (): void {
+    foreach (config()->array('billing.storage_disks') as $key) {
+        Storage::fake(config()->string("filesystems.{$key}"));
+    }
+})->in('Feature/Demo');
+
 // Each CI runner drives four browsers at once: an action that waits for a button or a page gets 15 s instead of Pest's 5 s,
 // which a busy runner ran out of now and then (a click, a calendar day). It waits longer, it asserts nothing less.
 pest()->browser()->timeout(15_000);
@@ -59,6 +69,37 @@ pest()->browser()->timeout(15_000);
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
+
+/**
+ * Runs one named group of a test whose groups share one costly state (the demo's stories, on one prepared company). A
+ * failure stays a failure and leads with the group's name and the line of the group that failed.
+ */
+function section(string $name, Closure $group): void
+{
+    try {
+        $group();
+    } catch (PHPUnit\Framework\ExpectationFailedException $failure) {
+        throw new PHPUnit\Framework\ExpectationFailedException(sectionLabel($name, $failure).$failure->getMessage(), $failure->getComparisonFailure(), $failure);
+    } catch (PHPUnit\Framework\AssertionFailedError $failure) {
+        throw new PHPUnit\Framework\AssertionFailedError(sectionLabel($name, $failure).$failure->getMessage(), 0, $failure);
+    } catch (Throwable $error) {
+        throw new RuntimeException(sectionLabel($name, $error).$error::class.": {$error->getMessage()}", 0, $error);
+    }
+}
+
+/** «[name] (tests/…/file.php:line) »: the first line under tests/ the throwable passed through, Pest.php aside. */
+function sectionLabel(string $name, Throwable $error): string
+{
+    foreach ([['file' => $error->getFile(), 'line' => $error->getLine()], ...$error->getTrace()] as $frame) {
+        $file = $frame['file'] ?? '';
+
+        if (str_contains($file, '/tests/') && ! str_ends_with($file, '/Pest.php')) {
+            return "[{$name}] (".substr($file, strpos($file, '/tests/') + 1).':'.($frame['line'] ?? 0).') ';
+        }
+    }
+
+    return "[{$name}] ";
+}
 
 /**
  * What an audit entry says, as text, for a privacy assertion: the event, the subject and the metadata. Not its UUIDs,
@@ -76,6 +117,22 @@ function auditContent(AuditEntry|iterable $entries): string
     }
 
     return json_encode($content, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * Makes an existing company the demo, for a test that builds the company first (through factories of its rows). The
+ * database refuses it outside tests: whether a company is the demo is fixed when it is created (migration 2027_01_21), as
+ * Tenant::factory()->demo() and the demo's story do.
+ */
+function becomeDemo(Tenant|string $tenant): void
+{
+    DB::statement('ALTER TABLE tenants DISABLE TRIGGER tenants_is_demo_is_fixed');
+    DB::table('tenants')->where('id', $tenant instanceof Tenant ? $tenant->id : $tenant)->update(['is_demo' => true]);
+    DB::statement('ALTER TABLE tenants ENABLE TRIGGER tenants_is_demo_is_fixed');
+
+    if ($tenant instanceof Tenant) {
+        $tenant->refresh();
+    }
 }
 
 function superadmin(): User

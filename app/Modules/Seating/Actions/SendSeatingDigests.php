@@ -9,6 +9,7 @@ use App\Modules\Seating\Notifications\SeatingDigest;
 use App\Modules\Seating\Support\SeatingAlerts;
 use App\Modules\Telework\Contracts\Committee;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
@@ -32,7 +33,7 @@ final readonly class SendSeatingDigests
 
     private const array MEMBER = ['unassessed', 'reassessment', 'reports', 'pauses', 'signage'];
 
-    public function __construct(private Companies $companies, private Members $members, private Committee $committee, private SeatingAlerts $alerts) {}
+    public function __construct(private Companies $companies, private Members $members, private Committee $committee, private SeatingAlerts $alerts, private DemoCompanies $demos) {}
 
     /**
      * @return int how many digests were sent.
@@ -42,6 +43,10 @@ final readonly class SendSeatingDigests
         $sent = ['owner' => 0, 'committee' => 0];
 
         foreach (StandingPosition::query()->withoutGlobalScopes()->distinct()->orderBy('tenant_id')->get(['tenant_id'])->map(fn (StandingPosition $position): string => $position->tenant_id) as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, &$sent): void {

@@ -164,6 +164,28 @@ describe('every night', function (): void {
         Log::shouldHaveReceived('info')->with('attendance.days_closed', ['closed' => 3]);
     });
 
+    it('closes the days and opens the week of only the company it is given, leaving every other company untouched', function (): void {
+        Event::fake([DayClosed::class]);
+        $globex = Tenant::factory()->create();
+        $dan = EmployeeFactory::new()->create(['tenant_id' => $globex->id]);
+        foreach ([$this->ana, $dan] as $person) {
+            closeMark($person, MarkType::Start, '2026-11-09 09:00');
+            closeMark($person, MarkType::Start, '2026-11-02 09:00');
+            closeMark($person, MarkType::End, '2026-11-02 17:00');
+        }
+        workIn($this->tenant);
+
+        expect(resolve(CloseDays::class)->handle($this->tenant->id))->toBe(1);
+
+        Event::assertDispatchedTimes(DayClosed::class, 1);
+        Event::assertDispatched(DayClosed::class, fn (DayClosed $event): bool => $event->employeeId === $this->ana->id);
+        expect(App\Modules\Attendance\Models\WeeklyConfirmation::query()->withoutGlobalScopes()->pluck('employee_id')->all())->toBe([$this->ana->id]);
+
+        // Without a company, every company, as each night.
+        expect(resolve(CloseDays::class)->handle())->toBe(2)
+            ->and(App\Modules\Attendance\Models\WeeklyConfirmation::query()->withoutGlobalScopes()->count())->toBe(2);
+    });
+
     it('closes nothing for a company whose plan has no Attendance: it records no marks, so there is nothing new to close', function (): void {
         Event::fake([DayClosed::class]);
         closeMark($this->ana, MarkType::Start, '2026-11-09 09:00');

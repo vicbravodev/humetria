@@ -14,6 +14,7 @@ use App\Modules\Complaints\Notifications\ComplaintsDigest;
 use App\Modules\Complaints\Support\ActiveHandlers;
 use App\Modules\Complaints\Support\Dates;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Data\MemberSummary;
 use Illuminate\Support\Facades\Cache;
@@ -31,7 +32,7 @@ use Throwable;
  */
 final readonly class SendComplaintDigests
 {
-    public function __construct(private Companies $companies, private ActiveHandlers $active) {}
+    public function __construct(private Companies $companies, private ActiveHandlers $active, private DemoCompanies $demos) {}
 
     /**
      * @return int how many digests were sent.
@@ -42,6 +43,10 @@ final readonly class SendComplaintDigests
         $tenants = ComplaintChannel::query()->withoutGlobalScopes()->whereNotNull('enabled_at')->orderBy('tenant_id')->get(['tenant_id'])->map(fn (ComplaintChannel $channel): string => $channel->tenant_id);
 
         foreach ($tenants as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, &$sent): void {

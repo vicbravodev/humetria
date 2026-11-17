@@ -20,11 +20,15 @@ final readonly class TenantContext implements CurrentTenant
 {
     private const string KEY = 'tenant_id';
 
+    /** Whether the company is the demo, kept beside it (hidden: no log line carries it) so asking costs no query. */
+    public const string DEMO = 'tenant_is_demo';
+
     public function __construct(private PermissionRegistrar $registrar) {}
 
     public function set(Tenant $tenant): void
     {
         Context::add(self::KEY, $tenant->id);
+        Context::addHidden(self::DEMO, $tenant->is_demo);
         $this->registrar->setPermissionsTeamId($tenant->id);
     }
 

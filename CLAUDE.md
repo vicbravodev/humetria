@@ -63,6 +63,9 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - Factories en `database/factories/{Module}/` enlazadas con el atributo `#[UseFactory]`.
 - `tests/Unit/ArchitectureTest.php` hace cumplir todo esto. Si falla, se corrige el diseño, no la regla. En Pest, una
   expectativa `arch()` con varios destinos pasa en silencio si alguno no existe: una regla, un namespace destino.
+- Única excepción: la historia de la empresa demo vive en `database/seeders/Demo` y arma la empresa llamando a las Actions,
+  Models y Enums de los módulos (no a su Http, Jobs, Support ni Notifications). Nadie más puede usar `Database\Seeders\Demo`
+  salvo el proveedor del módulo `Demos`: lo exige una regla `arch()` aparte. No se amplía a otro código.
 
 ### Rutas
 
@@ -85,7 +88,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Campaigns`: evaluaciones NOM-035: campañas, participantes e invitaciones, la encuesta del empleado.
 - `Compensation`: compensación y contrato colectivo: prestaciones, salarios por nivel, escenarios y su costo.
 - `Complaints`: canal de denuncias: público, seguimiento anónimo, gestores de casos.
-- `Demos`: solicitudes de demo de la landing y su consola (el alta de empresas es solo por demo).
+- `Demos`: solicitudes de demo de la landing y su consola (el alta de empresas es solo por demo); la empresa demo: sala
+  (`/admin/demo`), puerta y reinicio (`docs/operations/demo.md`).
 - `Disclosure`: difusión: documentos y políticas, acuses, publicación de resultados, página de trabajadores.
 - `Engagement`: encuestas de clima y pulso, anónimas (ver su README).
 - `FirstSteps`: el recorrido de primeros pasos del dueño.

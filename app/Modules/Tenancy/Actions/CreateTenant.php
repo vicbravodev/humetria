@@ -14,15 +14,20 @@ final readonly class CreateTenant
 {
     public function __construct(private RecordAudit $recordAudit) {}
 
-    public function handle(TenantData $data): Tenant
+    /**
+     * @param  bool  $demo  only the demo's story says it: whether the company is the demo is fixed when its row is
+     *                      inserted (a trigger refuses changing it later), and it is not mass assignable.
+     */
+    public function handle(TenantData $data, bool $demo = false): Tenant
     {
-        return DB::transaction(function () use ($data): Tenant {
-            $tenant = Tenant::query()->create([
+        return DB::transaction(function () use ($data, $demo): Tenant {
+            $tenant = Tenant::query()->forceCreate([
                 'legal_name' => $data->legalName,
                 'trade_name' => $data->tradeName,
                 'rfc' => $data->rfc,
                 'slug' => $data->slug,
                 'type' => $data->type,
+                'is_demo' => $demo,
             ]);
 
             // Only the id: the names and the RFC (a person's, when the company is a sole proprietor) stay out of logs and audit.

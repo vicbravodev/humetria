@@ -8,12 +8,14 @@ use App\Modules\Complaints\Contracts\ComplaintChannels;
 use App\Modules\Complaints\Contracts\ComplaintsToAcknowledge;
 use App\Modules\Complaints\Listeners\EndAssignmentsOnRoleConflict;
 use App\Modules\Complaints\Listeners\EndHandlerOnMemberRemoval;
+use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Support\AddressKey;
 use App\Modules\Complaints\Support\CompanyComplaintChannels;
 use App\Modules\Complaints\Support\CompanyComplaintsToAcknowledge;
 use App\Modules\Complaints\Support\ComplaintsWorkerSection;
 use App\Modules\Complaints\Support\RandomReferenceSource;
 use App\Modules\Complaints\Support\ReferenceSource;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Events\MemberRemoved;
 use App\Modules\Tenancy\Events\MemberRoleChanged;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -45,10 +47,24 @@ final class ComplaintsServiceProvider extends ServiceProvider
         // Keyed by a hash of the address, never the address; a whole office behind one address must still be able to use it.
         RateLimiter::for('complaints-view', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.views_per_hour'))->by(AddressKey::for($request)));
         RateLimiter::for('complaints-follow-up', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.follow_ups_per_hour'))->by(AddressKey::for($request)));
-        // The daily limit keeps one address to a small share of the channel's daily cap (audit C6).
-        RateLimiter::for('complaints-submit', fn (Request $request): array => [
-            Limit::perHour(config()->integer('complaints.rate_limits.submissions_per_hour'))->by(AddressKey::for($request)),
-            Limit::perDay(config()->integer('complaints.rate_limits.submissions_per_day'))->by('day:'.AddressKey::for($request)),
-        ]);
+        // The daily limit keeps one address to a small share of the channel's daily cap (audit C6); the demo channel gets a room's worth of both.
+        RateLimiter::for('complaints-submit', function (Request $request): array {
+            $prefix = $this->isDemoChannel($request) ? 'complaints.rate_limits.demo_' : 'complaints.rate_limits.';
+
+            return [
+                Limit::perHour(config()->integer($prefix.'submissions_per_hour'))->by(AddressKey::for($request)),
+                Limit::perDay(config()->integer($prefix.'submissions_per_day'))->by('day:'.AddressKey::for($request)),
+            ];
+        });
+    }
+
+    /** Whether the code of the request is the demo company's channel, where a whole room files from one address. */
+    private function isDemoChannel(Request $request): bool
+    {
+        $demo = $this->app->make(DemoCompanies::class)->id();
+        $code = $request->route('code');
+
+        return $demo !== null && is_string($code)
+            && ComplaintChannel::query()->withoutGlobalScopes()->where('tenant_id', $demo)->where('access_code', strtoupper(trim($code)))->exists();
     }
 }

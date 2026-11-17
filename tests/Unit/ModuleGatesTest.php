@@ -11,6 +11,7 @@ use App\Modules\Tenancy\Enums\Module;
 const MAY_READ_BLOCKED = [
     'app/Modules/Compensation/Http/Controllers/SharedReportController.php' => 'the CCT calculator is the union\'s and every company\'s: it is no module',
     'app/Modules/FirstSteps/Support/CompanyFirstSteps.php' => 'the first steps guide every owner through the platform: they are no module, only a blocked company loses them',
+    'app/Modules/Demos/Support/DemoDoor.php' => 'the demo room\'s door lets visitors into the whole demo company, its personal portal included: it is no module',
     'app/Modules/WorkerAccess/Jobs/SendWorkerInvitation.php' => 'the person\'s identity is every company\'s: it is no module, only a blocked company loses it',
     'app/Modules/WorkerAccess/Jobs/SendRequestedLink.php' => 'the person\'s identity is every company\'s: it is no module, only a blocked company loses it',
     'app/Modules/WorkerAccess/Support/WorkerSessionStore.php' => 'the person\'s identity is every company\'s: it is no module, only a blocked company loses it',

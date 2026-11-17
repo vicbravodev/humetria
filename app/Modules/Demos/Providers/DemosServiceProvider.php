@@ -5,8 +5,18 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Providers;
 
 use App\Models\User;
+use App\Modules\Demos\Contracts\DemoDoorPool;
+use App\Modules\Demos\Contracts\DemoEntrance;
 use App\Modules\Demos\Contracts\DemoLeads;
+use App\Modules\Demos\Contracts\DemoShowcase;
+use App\Modules\Demos\Contracts\DemoWorkspace;
+use App\Modules\Demos\Contracts\DoorControl;
 use App\Modules\Demos\Support\DemoLeadRegistry;
+use App\Modules\Demos\Support\DoorKeeper;
+use Database\Seeders\Demo\DemoShowcaseLinks;
+use Database\Seeders\Demo\DemoWorkspaceRunner;
+use Database\Seeders\Demo\RosterDoorPool;
+use Database\Seeders\Demo\WorkerAccessEntrance;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -20,6 +30,12 @@ final class DemosServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(DemoLeads::class, DemoLeadRegistry::class);
+        // The story lives outside the modules (database/seeders/Demo, autoloaded in production too): it drives every module's actions.
+        $this->app->bind(DemoWorkspace::class, DemoWorkspaceRunner::class);
+        $this->app->bind(DemoDoorPool::class, RosterDoorPool::class);
+        $this->app->bind(DemoEntrance::class, WorkerAccessEntrance::class);
+        $this->app->bind(DemoShowcase::class, DemoShowcaseLinks::class);
+        $this->app->bind(DoorControl::class, DoorKeeper::class);
     }
 
     public function boot(): void
@@ -30,6 +46,10 @@ final class DemosServiceProvider extends ServiceProvider
 
         // Working a request (status, note, creating its company) is the superadmin's alone, through Gate::before.
         Gate::define('manage-demo-requests', fn (User $user): AccessResponse => AccessResponse::denyAsNotFound());
+
+        // The demo room (preparing, resetting and sharing the demo company) is the superadmin's alone, through Gate::before;
+        // everyone else, support included, gets a 404 that reveals nothing.
+        Gate::define('manage-demo', fn (User $user): AccessResponse => AccessResponse::denyAsNotFound());
 
         // The demo form is public: cap each address so nobody can flood the table.
         RateLimiter::for('demo-requests', function (Request $request): array {
@@ -44,5 +64,8 @@ final class DemosServiceProvider extends ServiceProvider
                 Limit::perDay(20)->by('day:'.$request->ip())->response($tooMany),
             ];
         });
+
+        // The door of a live demo: a whole room scans it from one Wi-Fi within a minute, and nobody can try codes in bulk.
+        RateLimiter::for('demo-door', fn (Request $request): Limit => Limit::perMinute(120)->by('demo-door:'.$request->ip()));
     }
 }

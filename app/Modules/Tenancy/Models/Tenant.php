@@ -12,6 +12,7 @@ use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Enums\TenantView;
 use Carbon\CarbonImmutable;
+use Closure;
 use Database\Factories\Tenancy\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -39,6 +40,7 @@ use Illuminate\Database\Query\Builder;
  * @property CarbonImmutable|null $restricted_at
  * @property string|null $logo_path
  * @property bool $has_module_rows Whether tenant_modules has any row of it; without any, it has every module that exists.
+ * @property bool $is_demo The one company prospects are shown; set only by whoever builds it, never from a request.
  * @property int|null $logo_width
  * @property int|null $logo_height
  * @property CarbonImmutable|null $last_access_at Only on the console's list: the latest sign-in of anyone who belongs to it.
@@ -122,14 +124,31 @@ final class Tenant extends Model
      */
     public function ownerMembership(): HasOne
     {
-        // The membership whose person holds the owner role in this company, in Spatie's tables.
-        return $this->hasOne(TenantMembership::class)->whereExists(fn (Builder $roles) => $roles
+        return $this->hasOne(TenantMembership::class)->whereExists($this->holding(TenantRole::Owner));
+    }
+
+    /**
+     * @return HasMany<TenantMembership, $this>
+     */
+    public function membershipsWithRole(TenantRole $role): HasMany
+    {
+        return $this->hasMany(TenantMembership::class)->whereExists($this->holding($role));
+    }
+
+    /**
+     * The memberships whose person holds the role in this company, in Spatie's tables.
+     *
+     * @return Closure(Builder): Builder
+     */
+    private function holding(TenantRole $role): Closure
+    {
+        return fn (Builder $roles): Builder => $roles
             ->from('model_has_roles')
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-            ->where('roles.name', TenantRole::Owner->value)
+            ->where('roles.name', $role->value)
             ->whereColumn('model_has_roles.tenant_id', 'tenant_memberships.tenant_id')
             ->whereColumn('model_has_roles.model_id', 'tenant_memberships.user_id')
-            ->where('model_has_roles.model_type', (new User)->getMorphClass()));
+            ->where('model_has_roles.model_type', (new User)->getMorphClass());
     }
 
     /**
@@ -170,6 +189,7 @@ final class Tenant extends Model
             'restricted_at' => 'immutable_datetime',
             'last_access_at' => 'immutable_datetime',
             'has_module_rows' => 'boolean',
+            'is_demo' => 'boolean',
             'logo_width' => 'integer',
             'logo_height' => 'integer',
         ];

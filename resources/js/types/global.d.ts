@@ -1,5 +1,6 @@
 import type { Auth } from '@/types/auth';
 import type { SalaryImportSummary } from '@/types/compensation';
+import type { DemoShareLink } from '@/types/demos';
 import type { FirstSteps } from '@/types/first-steps';
 import type { InCourse } from '@/types/navigation';
 import type { LeaveImportSummary } from '@/types/leave-policy';
@@ -41,6 +42,8 @@ declare module '@inertiajs/core' {
             inCourse: InCourse | null;
             /** The owner's guided tour of the company; null for anyone else, outside a company, once finished or when switched off. */
             firstSteps: FirstSteps | null;
+            /** Whether the company of the page is the demo: then every page, its reports above all, carries the «DEMO» mark. */
+            demo: boolean;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };
@@ -58,6 +61,10 @@ declare module '@inertiajs/core' {
             reportLink?: ReportLink;
             /** The link of a QR screen just issued, shown once: only its hash is kept, and it opens once. */
             kioskLink?: string;
+            /** The demo room's door, just opened: its address and QR, shown once (only its hash is kept). */
+            doorLink?: DemoShareLink;
+            /** The demo's time-clock screen link, just issued from the demo room, with its QR: shown once. */
+            demoKioskLink?: DemoShareLink;
             /** A person's link to enter and create their key, shown once to RH only when the person has no email; it works once, 48 h. */
             accessLink?: { name: string; url: string };
             /** A delicate form of the person was not taken: they prove it is them (this step) and it is sent again. */

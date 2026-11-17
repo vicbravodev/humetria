@@ -27,11 +27,18 @@ final readonly class CreateEmployee
             // The seat is taken in the same transaction as the person: two requests for the last one cannot both pass.
             $this->limits->reserve(CompanyLimits::SEATS, 1, 'seats');
 
-            $employee = Employee::query()->create([
+            $employee = new Employee([
                 'tenant_id' => $this->currentTenant->id(),
                 ...EmployeeAttributes::from($data, $this->findOrCreateArea->handle($data->area)),
                 ...EmployeeAttributes::payScale($data, $this->findOrCreateJobGrade->handle($data->jobCategory, $data->jobLevel)),
             ]);
+
+            // The id is not fillable: only the code chooses it, never a request.
+            if ($data->id !== null) {
+                $employee->id = $data->id;
+            }
+
+            $employee->save();
 
             // Only the id: a person's name and contact data stay out of logs.
             Log::info('employee.created', ['employee_id' => $employee->id]);

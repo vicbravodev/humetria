@@ -23,6 +23,7 @@ final readonly class EmployeeData
      * @param  string|null  $state  The code of the state where they work, for a person without a work center.
      * @param  CarbonImmutable|null  $seniorityOn  The day their seniority counts from, when it is not the day they joined.
      * @param  string|null  $managerId  Their direct manager, a person of the company.
+     * @param  string|null  $id  The id to give a new person, for whoever rebuilds the same people with the same ids (the demo); a new one when null.
      */
     public function __construct(
         public ?string $name,
@@ -40,5 +41,6 @@ final readonly class EmployeeData
         public ?string $state,
         public ?CarbonImmutable $seniorityOn = null,
         public ?string $managerId = null,
+        public ?string $id = null,
     ) {}
 }

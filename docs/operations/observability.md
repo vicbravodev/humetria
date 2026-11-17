@@ -57,6 +57,10 @@ Los jobs que mandan un solo correo reintentan 3 veces (60 s y 300 s) antes de `q
 `SendFeedbackPublished` corren una sola vez: reintentarlos no es seguro. Los jobs fallidos se guardan una semana
 (`queue:prune-failed --hours=168`, igual que `horizon.trim.failed`).
 
+Los jobs que preparan o reinician la empresa demo (`PrepareDemo`, `ResetDemo`) no relanzan su error: no llegan a
+`failed_jobs` ni a `queue.job_failed`. Su señal es el log `demo.run_failed` (nivel error, solo la clase). Operación de la
+demo: `docs/operations/demo.md`.
+
 ## 4. Alertas que hay que configurar en PostHog
 
 Todas con notificación al correo del dueño. Revisar umbrales tras las primeras semanas con clientes.

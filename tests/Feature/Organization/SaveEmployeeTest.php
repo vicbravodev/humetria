@@ -7,10 +7,12 @@ use App\Modules\Organization\Actions\CreateEmployee;
 use App\Modules\Organization\Actions\DeactivateEmployee;
 use App\Modules\Organization\Actions\ReactivateEmployee;
 use App\Modules\Organization\Actions\UpdateEmployee;
+use App\Modules\Organization\Data\EmployeeData;
 use App\Modules\Organization\Enums\Gender;
 use App\Modules\Organization\Http\Requests\EmployeeRequest;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -198,4 +200,18 @@ it('lets hr change employees and refuses a viewer', function (): void {
 
     expect(Employee::query()->withoutGlobalScopes()->count())->toBe(1)
         ->and(storedEmployee()->deactivated_at)->toBeNull();
+});
+
+it('gives the employee the id it is asked for, and a new one otherwise', function (): void {
+    resolve(Companies::class)->enter($this->tenant->id);
+    $data = fn (string $email, ?string $id): EmployeeData => new EmployeeData(
+        'Ana López', $email, null, Gender::Female, $this->plant->id, 'Producción', 'Operadora', null, null, null, null, null, null, id: $id,
+    );
+
+    $chosen = resolve(CreateEmployee::class)->handle($data('ana@acme.mx', '6f1b8f7e-4a4e-5b8c-9d2e-0a1b2c3d4e5f'));
+    $random = resolve(CreateEmployee::class)->handle($data('eva@acme.mx', null));
+
+    expect($chosen->id)->toBe('6f1b8f7e-4a4e-5b8c-9d2e-0a1b2c3d4e5f')
+        ->and($chosen->fresh()?->email)->toBe('ana@acme.mx')
+        ->and($random->id)->toBeUuid()->not->toBe($chosen->id);
 });

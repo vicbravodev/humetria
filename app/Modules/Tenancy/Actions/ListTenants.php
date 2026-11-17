@@ -49,7 +49,7 @@ final class ListTenants
             $query->selectSub($this->matching($search, $view)->toBase()->selectRaw('count(*)'), $view->value);
         }
 
-        $query->selectSub(Tenant::query()->inView(TenantView::Trial)
+        $query->selectSub($this->matching('', TenantView::Trial)
             ->where('trial_started_at', '<=', now()->subDays(Tenant::TRIAL_DAYS)->addWeek())
             ->toBase()->selectRaw('count(*)'), 'ending_soon');
 
@@ -66,10 +66,12 @@ final class ListTenants
     }
 
     /**
+     * The demo company is not a customer: it lives in its own room of the console, never in the list nor its counts.
+     *
      * @return Builder<Tenant>
      */
     private function matching(string $search, TenantView $view): Builder
     {
-        return Tenant::query()->matching(['trade_name', 'legal_name', 'rfc'], $search)->inView($view);
+        return Tenant::query()->where('is_demo', false)->matching(['trade_name', 'legal_name', 'rfc'], $search)->inView($view);
     }
 }

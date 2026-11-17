@@ -10,6 +10,7 @@ use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Carbon\CarbonImmutable;
 
 /**
@@ -18,12 +19,15 @@ use Carbon\CarbonImmutable;
  */
 final readonly class ContractedRevenue implements PlatformRevenue
 {
-    public function __construct(private Eligibility $eligibility, private SubscriptionQuoter $quoter) {}
+    public function __construct(private Eligibility $eligibility, private SubscriptionQuoter $quoter, private DemoCompanies $demos) {}
 
     public function monthlyContractedCents(): int
     {
         $paying = array_map(fn (SubscriptionStatus $status): string => $status->value, array_filter(SubscriptionStatus::cases(), fn (SubscriptionStatus $status): bool => $status->isPaying()));
-        $subscriptions = Subscription::query()->whereIn('status', $paying)->get();
+        // The demo company pays nothing, whatever it was given.
+        $subscriptions = Subscription::query()->whereIn('status', $paying)
+            ->when($this->demos->id(), fn ($query, string $demo) => $query->where('tenant_id', '<>', $demo))
+            ->get();
         $channel = [];
 
         foreach ($subscriptions as $subscription) {

@@ -151,6 +151,7 @@ it('shows its page even when what every page shares cannot be read (the database
             ->where('auth.user', null)
             ->where('tenant', null)
             ->where('inCourse', null)
+            ->where('demo', false)
             ->where('requestId', fn (?string $id): bool => is_string($id) && Str::isUuid($id)));
 });
 

@@ -11,6 +11,7 @@ use App\Modules\Campaigns\Notifications\NextEvaluationDue;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Campaigns\Support\CompanyCampaignRecords;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
@@ -29,7 +30,7 @@ final readonly class RemindNextEvaluations
 {
     public const int DAYS_BEFORE = 60;
 
-    public function __construct(private Companies $companies, private WorkCenters $workCenters) {}
+    public function __construct(private Companies $companies, private WorkCenters $workCenters, private DemoCompanies $demos) {}
 
     /**
      * @return int how many emails were sent.
@@ -39,6 +40,10 @@ final readonly class RemindNextEvaluations
         $sent = 0;
 
         foreach (Campaign::query()->withoutGlobalScopes()->where('kind', CampaignKind::Nom035Evaluation)->where('status', CampaignStatus::Closed)->distinct()->orderBy('tenant_id')->get(['tenant_id'])->map(fn (Campaign $campaign): string => $campaign->tenant_id) as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, &$sent): void {

@@ -264,6 +264,66 @@ it('stops the sixth submission of an hour from one address, and nobody else\'s',
     expect(Complaint::query()->count())->toBe(6);
 });
 
+it('lets a whole room on one address file complaints on the demo channel, up to its own hourly limit', function (): void {
+    expect(config('complaints.rate_limits.demo_submissions_per_hour'))->toBe(60);
+    config(['complaints.rate_limits.demo_submissions_per_hour' => 7]);
+    becomeDemo($this->tenant);
+
+    foreach (range(1, 7) as $ignored) {
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertCreated();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertStatus(429);
+    expect(Complaint::query()->count())->toBe(7);
+});
+
+it('keeps the limit of an address on a real company\'s channel while a demo exists', function (): void {
+    Tenant::factory()->demo()->create();
+
+    foreach (range(1, 5) as $ignored) {
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertCreated();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this))->assertStatus(429);
+});
+
+it('lets a whole room on one address file complaints on the demo channel, up to its own daily limit', function (): void {
+    expect(config('complaints.rate_limits.demo_submissions_per_day'))->toBe(120);
+    config(['complaints.rate_limits.demo_submissions_per_hour' => 3, 'complaints.rate_limits.demo_submissions_per_day' => 5]);
+    becomeDemo($this->tenant);
+    $send = function () {
+        $ticket = resolve(TicketSigner::class)->issue($this->channel->access_code);
+        Carbon::setTestNow(now()->addSeconds(10));
+
+        return $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this, ['ticket' => $ticket]));
+    };
+
+    foreach (range(1, 5) as $number) {
+        $send()->assertCreated();
+        Carbon::setTestNow(now()->addMinutes($number % 3 === 0 ? 61 : 10));
+    }
+
+    $send()->assertStatus(429);
+    expect(Complaint::query()->count())->toBe(5);
+});
+
+it('keeps the daily limit of an address on a real company\'s channel while a demo exists', function (): void {
+    Tenant::factory()->demo()->create();
+    $send = function () {
+        $ticket = resolve(TicketSigner::class)->issue($this->channel->access_code);
+        Carbon::setTestNow(now()->addSeconds(10));
+
+        return $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.1'])->postJson('/c/'.$this->channel->access_code, complaintForm($this, ['ticket' => $ticket]));
+    };
+
+    foreach (range(1, 10) as $number) {
+        $send()->assertCreated();
+        Carbon::setTestNow(now()->addMinutes($number % 5 === 0 ? 61 : 10));
+    }
+
+    $send()->assertStatus(429);
+});
+
 // Audit C6: one address must not be able to use more than a small share of the channel's daily capacity.
 it('stops the eleventh submission of a day from one address, though no hour went over, and nobody else\'s', function (): void {
     $send = function (string $address) {

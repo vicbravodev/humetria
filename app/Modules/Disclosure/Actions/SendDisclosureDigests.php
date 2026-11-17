@@ -10,6 +10,7 @@ use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Notifications\DisclosureDigest;
 use App\Modules\Disclosure\Support\Board;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
@@ -28,7 +29,7 @@ use Throwable;
  */
 final readonly class SendDisclosureDigests
 {
-    public function __construct(private Companies $companies, private WorkCenters $workCenters, private Board $board) {}
+    public function __construct(private Companies $companies, private WorkCenters $workCenters, private Board $board, private DemoCompanies $demos) {}
 
     /**
      * @return int how many emails were sent.
@@ -43,6 +44,10 @@ final readonly class SendDisclosureDigests
         sort($tenants);
 
         foreach ($tenants as $tenantId) {
+            if ($this->demos->isDemo($tenantId)) {
+                continue;
+            }
+
             try {
                 // Each in its own company, as the system.
                 Context::scope(function () use ($tenantId, &$sent): void {
