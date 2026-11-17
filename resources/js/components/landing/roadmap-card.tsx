@@ -40,7 +40,7 @@ export default function RoadmapCard({
             transition={{ duration: 0.22, ease: EASE_OUT }}
             className={cn('list-none', SM_SPANS[sm], LG_SPANS[lg])}
         >
-            <div className="flex h-full flex-col gap-3 rounded-xl border bg-card p-4 transition-[border-color,box-shadow,transform] duration-200 hover:border-primary/40 hover:shadow-raised motion-safe:hover:-translate-y-0.5">
+            <div className="card flex h-full flex-col gap-3 p-4 transition-[border-color,box-shadow,transform] duration-200 hover:border-primary/40 hover:shadow-raised motion-safe:hover:-translate-y-0.5">
                 <div className="flex items-center gap-3">
                     <IconTile icon={item.icon} />
                     <h3 className="leading-snug font-semibold text-balance">
