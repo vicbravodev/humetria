@@ -36,6 +36,7 @@ describe('parseKioskCode', () => {
         qr: 'data:image/svg+xml;base64,PHN2Zz4=',
         expiresAt: '2026-11-07T12:00:30+00:00',
         expiresIn: 20,
+        now: 1_794_484_810_000,
     };
 
     it('reads the code the server sent', () => {
@@ -43,6 +44,7 @@ describe('parseKioskCode', () => {
             url: body.url,
             qr: body.qr,
             expiresIn: 20,
+            now: 1_794_484_810_000,
         });
     });
 
@@ -52,6 +54,7 @@ describe('parseKioskCode', () => {
         expect(parseKioskCode({ ...body, qr: 1 })).toBeNull();
         expect(parseKioskCode({ ...body, url: null })).toBeNull();
         expect(parseKioskCode({ ...body, expiresIn: '20' })).toBeNull();
+        expect(parseKioskCode({ ...body, now: '1794484810000' })).toBeNull();
         expect(
             parseKioskCode({ ...body, qr: 'javascript:alert(1)' }),
         ).toBeNull();
@@ -63,6 +66,7 @@ describe('fetchKioskCode', () => {
         url: 'https://humetria.test/a/acme/punch?q=abc',
         qr: 'data:image/svg+xml;base64,PHN2Zz4=',
         expiresIn: 20,
+        now: 1_794_484_810_000,
     };
     const answering = (response: Response | Error) => (): Promise<Response> =>
         response instanceof Error
@@ -142,6 +146,7 @@ describe('kioskView', () => {
         url: 'https://humetria.test/a/acme/punch?q=abc',
         qr: 'data:image/svg+xml;base64,PHN2Zz4=',
         expiresIn: 20,
+        now: 1_794_484_810_000,
     };
 
     it('shows the code only while the screen reaches the server', () => {

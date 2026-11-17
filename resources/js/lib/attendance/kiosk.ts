@@ -1,5 +1,13 @@
-/** The code a QR screen shows: the address a phone opens, its image, and the seconds until the next one. */
-export type KioskCode = { url: string; qr: string; expiresIn: number };
+/**
+ * The code a QR screen shows: the address a phone opens, its image, the seconds until the next one and the server's time
+ * when it was made (ms).
+ */
+export type KioskCode = {
+    url: string;
+    qr: string;
+    expiresIn: number;
+    now: number;
+};
 
 const MAX_WAIT_MS = 30_000;
 
@@ -38,23 +46,18 @@ export function retryDelay(failures: number): number {
 
 /** The code in the server's answer, or null when the answer is not one (only an SVG data image is shown). */
 export function parseKioskCode(body: unknown): KioskCode | null {
-    if (
-        typeof body !== 'object' ||
-        body === null ||
-        !('url' in body) ||
-        !('qr' in body) ||
-        !('expiresIn' in body)
-    ) {
+    if (typeof body !== 'object' || body === null) {
         return null;
     }
 
-    const { url, qr, expiresIn } = body;
+    const { url, qr, expiresIn, now }: Record<string, unknown> = { ...body };
 
     return typeof url === 'string' &&
         typeof qr === 'string' &&
         qr.startsWith('data:image/svg+xml;base64,') &&
-        typeof expiresIn === 'number'
-        ? { url, qr, expiresIn }
+        typeof expiresIn === 'number' &&
+        typeof now === 'number'
+        ? { url, qr, expiresIn, now }
         : null;
 }
 

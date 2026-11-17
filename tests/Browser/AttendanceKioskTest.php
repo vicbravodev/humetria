@@ -23,10 +23,14 @@ it('shows the center\'s code, large, with the seconds it has left, the company\'
         ->assertSee('Acme')
         ->waitForText('Conectada')
         ->assertSee('Escanee para marcar')
-        ->assertSee('Cambia en')
-        ->assertSee('Un código nuevo cada 30 segundos')
-        ->assertPresent('img[alt="Código para registrar su entrada o su salida"]')
-        ->assertSee('Apunte la cámara de su teléfono al código')
+        // The three steps, numbered (board «Checador (kiosco): QR de marca»).
+        ->assertSee('Apunte la cámara de su teléfono al código.')
+        ->assertSee('Abra el enlace que aparece.')
+        ->assertSee('Confirme con su huella, su rostro o su PIN.')
+        ->assertSee('Un código nuevo cada 30 segundos.')
+        ->assertSee('Solo sirve en este centro.')
+        ->assertPresent('[data-slot="arc-meter"][aria-label^="Cambia en"]')
+        ->assertPresent('[data-kiosk-qr] img[alt="Código para registrar su entrada o su salida"]')
         ->assertScript('() => /\d{2}:\d{2}/.test(document.querySelector("header").textContent)', true)
         ->assertScript('() => window.location.pathname.endsWith("/kiosk")', true);
 })->with([
@@ -35,18 +39,42 @@ it('shows the center\'s code, large, with the seconds it has left, the company\'
     'light mobile' => [false, true],
 ]);
 
+it('shows the server\'s time in the zone of the center, whatever the tablet\'s clock says', function (): void {
+    // The server says 12:00 UTC (06:00 in Mexico City); the browser's clock is today's.
+    $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:10', 'UTC'));
+
+    visitPage('attendance/kiosk', kioskLink())
+        ->waitForText('Conectada')
+        ->assertScript('() => document.querySelector("header").textContent.includes("06:00")', true)
+        ->assertSee('Sábado 7 de noviembre')
+        ->assertSee('Hora del Centro, UTC−6 · Ciudad de México');
+});
+
 it('counts the seconds until the code turns', function (): void {
     // Frozen at 12:00:10 of a 30 s window: every answer says 20 s.
     $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:10', 'UTC'));
-    $seconds = '() => Number(document.body.innerText.match(/Cambia en (\d+) s/)?.[1] ?? -1)';
+    // The arc that empties says the seconds to whoever cannot see it.
+    $seconds = '() => Number(document.querySelector("[data-slot=arc-meter]")?.getAttribute("aria-label")?.match(/Cambia en (\d+) s/)?.[1] ?? -1)';
 
-    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Cambia en');
+    $page = visitPage('attendance/kiosk', kioskLink())->waitForText('Conectada');
     $first = $page->script($seconds);
 
     // The countdown ticks on: it must read at least a second less than at first, whenever the runner gets there.
     expect($first)->toBeGreaterThan(15)
         ->and($page->script(eventually("() => ({$seconds})() < ".($first - 1))))->toBeTrue();
 });
+
+it('fits the whole code on the screen, from a 1280 × 800 tablet to a projector', function (int $width, int $height): void {
+    $page = visitPage('attendance/kiosk', kioskLink())->resize($width, $height)->waitForText('Conectada');
+
+    // Nothing to scroll, and the code at least 400 px wide, inside the screen.
+    $page->assertScript('() => document.documentElement.scrollHeight <= window.innerHeight', true)
+        ->assertScript('() => { const box = document.querySelector("[data-kiosk-qr] img").getBoundingClientRect(); return box.width >= 400 && box.top >= 0 && box.bottom <= window.innerHeight; }', true);
+})->with([
+    'tablet' => [1280, 800],
+    'laptop' => [1366, 768],
+    'projector' => [1920, 1080],
+]);
 
 it('says when it lost the connection, shows no code at all, and keeps retrying', function (): void {
     // One second before the code turns: the screen asks again in a second and a half.

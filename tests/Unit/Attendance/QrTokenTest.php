@@ -76,8 +76,8 @@ it('takes its window and how many past windows it accepts from config/attendance
         ->and(QrToken::verify($token, QR_TENANT, QR_CENTER, qrAt(180)))->toBeFalse();
 });
 
-it('defaults to 30 s windows, one past window and a 3 minute scan receipt', function (): void {
-    expect(config('attendance.qr'))->toBe(['window_seconds' => 30, 'past_windows' => 1, 'scan_minutes' => 3]);
+it('defaults to 30 s windows, one past window, a 3 minute scan receipt and the plain code', function (): void {
+    expect(config('attendance.qr'))->toBe(['window_seconds' => 30, 'past_windows' => 1, 'scan_minutes' => 3, 'branded' => false]);
 });
 
 it('tells a code of the center that expired within the last day from one that never was its own', function (): void {
