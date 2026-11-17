@@ -120,6 +120,7 @@ return [
         'symbols' => 'El campo :attribute debe contener al menos un símbolo.',
         'uncompromised' => 'El :attribute proporcionado apareció en una filtración de datos. Elige otro :attribute.',
     ],
+    'phone' => 'Revisa el :attribute: no es un número válido para el país elegido.',
     'present' => 'El campo :attribute debe estar presente.',
     'present_if' => 'El campo :attribute debe estar presente cuando :other sea :value.',
     'present_unless' => 'El campo :attribute debe estar presente a menos que :other sea :value.',
