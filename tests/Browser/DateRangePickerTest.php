@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Str;
 
 /** Signs in the superadmin with two entries in the trail: one from twenty days ago and one from early today (the same day in UTC). */
@@ -120,3 +121,22 @@ it('opens the period as a sheet from the bottom on a phone, with its shortcuts, 
         ->assertValue('#audit-period-from', $monday->copy()->subWeek()->format('d/m/Y'))
         ->assertNoJavaScriptErrors();
 })->with(['light' => false, 'dark' => true]);
+
+it('asks for the attendance report of «Otro» period from one field with both days typed', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+
+    visit("{$url}/attendance/report?center={$plant->id}")
+        ->click('label:has-text("Otro")')
+        ->assertCount('[data-slot="date-range-picker"]', 1)
+        ->fill('#report-from', '1 ene 2026')
+        ->fill('#report-to', '31/01/2026')
+        ->keys('#report-to', 'Tab')
+        ->assertValue('#report-from', '01/01/2026')
+        ->click('button:has-text("Ver reporte")')
+        ->assertScript(queried('from'), '2026-01-01')
+        ->assertScript(queried('to'), '2026-01-31')
+        ->assertNoJavaScriptErrors();
+});
