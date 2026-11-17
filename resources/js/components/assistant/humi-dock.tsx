@@ -96,15 +96,16 @@ export default function HumiDock() {
                     open={open}
                     onOpenChange={(next) => (next ? setOpen(true) : close())}
                 >
+                    {/* The header draws its own close beside its other actions: the sheet's is not drawn. */}
                     <SheetContent
                         side="right"
-                        className="w-full gap-0 p-0 sm:max-w-[420px]"
+                        className="w-full gap-0 p-0 sm:max-w-[420px] [&>button:last-child]:hidden"
                     >
                         <SheetTitle className="sr-only">Humi</SheetTitle>
                         <SheetDescription className="sr-only">
                             Asistente de cumplimiento de tu empresa
                         </SheetDescription>
-                        {panel(null)}
+                        {panel(close)}
                     </SheetContent>
                 </Sheet>
             )}

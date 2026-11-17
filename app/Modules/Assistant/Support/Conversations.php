@@ -48,11 +48,14 @@ final readonly class Conversations
     }
 
     /**
+     * The conversations of the person, the newest first, a page at a time; with a search, those whose title has it.
+     *
      * @return LengthAwarePaginator<int, array{id: string, title: string, updated_at: string}>
      */
-    public function page(AssistantScope $scope, int $perPage): LengthAwarePaginator
+    public function page(AssistantScope $scope, int $perPage, string $search = ''): LengthAwarePaginator
     {
         return $this->ofParticipant($scope)
+            ->matching(['title'], $search)
             ->orderByDesc('updated_at')
             ->paginate($perPage)
             ->through(fn (ChatConversation $conversation): array => [
