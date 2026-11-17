@@ -1,10 +1,9 @@
-import { AnimatePresence } from 'motion/react';
 import RoadmapCard from '@/components/landing/roadmap-card';
 import RoadmapStageLabel from '@/components/landing/roadmap-stage-label';
 import { columnSpans } from '@/lib/roadmap';
 import type { RoadmapLane } from '@/types/roadmap';
 
-/** One stage of the roadmap: its head and a card for each tool, sized so every row is full; the cards glide when the filter changes. */
+/** One stage of the roadmap: its head and a card for each tool, sized so every row is full. */
 export default function RoadmapLaneSection({ lane }: { lane: RoadmapLane }) {
     const sketched = lane.items.filter((item) => item.sketch !== undefined);
     const plain = lane.items.filter((item) => item.sketch === undefined);
@@ -22,16 +21,14 @@ export default function RoadmapLaneSection({ lane }: { lane: RoadmapLane }) {
         >
             <RoadmapStageLabel lane={lane} />
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-                <AnimatePresence mode="popLayout" initial={false}>
-                    {[...sketched, ...plain].map((item, index) => (
-                        <RoadmapCard
-                            key={item.title}
-                            item={item}
-                            sm={narrow[index] ?? 3}
-                            lg={wide[index] ?? 2}
-                        />
-                    ))}
-                </AnimatePresence>
+                {[...sketched, ...plain].map((item, index) => (
+                    <RoadmapCard
+                        key={item.title}
+                        item={item}
+                        sm={narrow[index] ?? 3}
+                        lg={wide[index] ?? 2}
+                    />
+                ))}
             </ul>
         </section>
     );
