@@ -1,16 +1,9 @@
-import { Form } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import FormSheet from '@/components/humetria/form-sheet';
 import TrainingFields from '@/components/telework/training-fields';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
+import { SheetTrigger } from '@/components/ui/sheet';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { Option } from '@/lib/option-search';
 import { store } from '@/routes/tenant/telework/trainings';
@@ -33,52 +26,39 @@ export default function TrainingDialog({
     const [center, setCenter] = useState<Option | null>(filters.center);
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <Plus aria-hidden />
-                    Registrar capacitación
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-                <DialogTitle>Registrar una capacitación</DialogTitle>
-                <DialogDescription>
-                    Lo que se impartió y a quién: cada persona vuelve a
-                    capacitarse 12 meses después.
-                </DialogDescription>
-                <Form
-                    {...store.form(tenantSlug)}
-                    noValidate
-                    onSuccess={() => setOpen(false)}
-                    className="grid gap-6"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <input
-                                type="hidden"
-                                name="filter_center"
-                                value={filters.center?.value ?? ''}
-                            />
-                            <TrainingFields
-                                center={center}
-                                onCenter={setCenter}
-                                today={today}
-                                topics={topics}
-                                modalities={modalities}
-                                errors={errors}
-                            />
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="w-fit"
-                            >
-                                {processing && <Spinner />}
-                                Registrar capacitación
-                            </Button>
-                        </>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+        <FormSheet
+            open={open}
+            onOpenChange={setOpen}
+            title="Registrar una capacitación"
+            description="Lo que se impartió y a quién: cada persona vuelve a capacitarse 12 meses después."
+            form={store.form(tenantSlug)}
+            submit="Registrar capacitación"
+            trigger={
+                <SheetTrigger asChild>
+                    <Button>
+                        <Plus aria-hidden />
+                        Registrar capacitación
+                    </Button>
+                </SheetTrigger>
+            }
+        >
+            {(errors) => (
+                <>
+                    <input
+                        type="hidden"
+                        name="filter_center"
+                        value={filters.center?.value ?? ''}
+                    />
+                    <TrainingFields
+                        center={center}
+                        onCenter={setCenter}
+                        today={today}
+                        topics={topics}
+                        modalities={modalities}
+                        errors={errors}
+                    />
+                </>
+            )}
+        </FormSheet>
     );
 }
