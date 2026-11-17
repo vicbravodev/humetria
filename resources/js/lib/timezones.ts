@@ -1,12 +1,14 @@
 import type { TimezoneRules } from '@/types';
 
-/** A municipality as the rules key it: trimmed, lower case and without accents. */
+/** A municipality as the rules key it, as MexicanTimezones::normalize(): lower case, no accents, no dots, single spaces. */
 function normalize(municipality: string): string {
     return municipality
-        .trim()
         .normalize('NFD')
         .replace(/\p{Diacritic}/gu, '')
-        .toLowerCase();
+        .toLowerCase()
+        .replaceAll('.', '')
+        .replace(/\s+/gu, ' ')
+        .trim();
 }
 
 /**
