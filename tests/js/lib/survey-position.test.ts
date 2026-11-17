@@ -21,6 +21,7 @@ const guideTwo: SurveyInstrument = {
     shortTitle: 'Guía II',
     identified: false,
     status: 'pending',
+    minutes: 10,
     options: [{ value: 'never', label: 'Nunca' }],
     sections: [
         section([1, 2, 3]),

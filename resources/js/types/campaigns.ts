@@ -155,6 +155,8 @@ export type SurveyInstrument = {
     /** Guía I carries the person's name; Guías II and III never do. */
     identified: boolean;
     status: 'pending' | 'completed';
+    /** About how long it takes, told before starting. */
+    minutes: number;
     options: SurveyOption[];
     sections: SurveySection[];
 };

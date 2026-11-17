@@ -39,6 +39,7 @@ const guideTwo: SurveyInstrument = {
     shortTitle: 'Guía II',
     identified: false,
     status: 'pending',
+    minutes: 10,
     options: likert,
     sections: [
         section([1, 2, 3]),
@@ -63,6 +64,7 @@ const guideOne: SurveyInstrument = {
     shortTitle: 'Guía I',
     identified: true,
     status: 'pending',
+    minutes: 10,
     options: [
         { value: 'yes', label: 'Sí' },
         { value: 'no', label: 'No' },

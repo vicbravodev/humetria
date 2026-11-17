@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { captionOf, introCopy, progressOf, steps } from '@/lib/survey';
+import {
+    captionOf,
+    introContext,
+    introCopy,
+    minutesLeft,
+    progressOf,
+    steps,
+} from '@/lib/survey';
 import type { SurveyInstrument, SurveySection } from '@/types';
 
 const gated: SurveySection = {
@@ -27,6 +34,7 @@ const instrument: SurveyInstrument = {
     shortTitle: 'Guía II',
     identified: false,
     status: 'pending',
+    minutes: 10,
     options: [{ value: 'always', label: 'Siempre' }],
     sections: [plain, gated],
 };
@@ -49,6 +57,34 @@ describe('introCopy', () => {
         expect(JSON.stringify(copy)).not.toContain('NOM-035');
         expect(copy.period).toBeNull();
         expect(copy.noun).toBe('encuesta');
+    });
+});
+
+describe('introContext', () => {
+    it('names the evaluation and how many guides it has', () => {
+        expect(introContext('nom035_evaluation', 2)).toBe(
+            'Evaluación NOM-035 · 2 guías',
+        );
+        expect(introContext('nom035_trauma', 1)).toBe(
+            'Evaluación NOM-035 · 1 guía',
+        );
+    });
+
+    it('says nothing above the Ley Silla survey, which never speaks of NOM-035', () => {
+        expect(introContext('seating_survey', 1)).toBeNull();
+    });
+});
+
+describe('minutesLeft', () => {
+    it('adds the minutes of the guides still to answer, not of the ones sent', () => {
+        expect(
+            minutesLeft([
+                { ...instrument, minutes: 5, status: 'completed' },
+                { ...instrument, minutes: 15 },
+                { ...instrument, minutes: 10 },
+            ]),
+        ).toBe(25);
+        expect(minutesLeft([])).toBe(0);
     });
 });
 

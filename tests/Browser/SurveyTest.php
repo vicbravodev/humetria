@@ -49,6 +49,25 @@ it('opens the survey with what the norm asks to say before it', function (bool $
         ->assertSee('No hay respuestas correctas ni incorrectas.');
 })->with($looks);
 
+// C-17 says what the welcome must say; it is ordered, not cut: what it is, the confidentiality, «Antes de empezar», how long and until when, the guides.
+it('orders the welcome with how long it takes and «Comenzar» stuck to the bottom of the phone', function (bool $dark): void {
+    invitedPerson();
+
+    $page = visitPage('campaigns/survey', '/survey/the-token', $dark, true)
+        ->assertSee('Evaluación NOM-035 · 2 guías')
+        ->assertSee('Antes de empezar')
+        ->assertSee('Piense en los dos últimos meses.')
+        ->assertSee('Conteste todas las preguntas.')
+        ->assertSee('Unos 20 min en total')
+        ->assertSee('Hasta el')
+        ->assertSee('Acontecimientos traumáticos severos · 5 min')
+        ->assertSee('Factores de riesgo psicosocial y entorno organizacional · 15 min');
+
+    // Before any scroll, «Comenzar» already sits at the foot of the screen, over the guides.
+    $page->assertScript('() => { const button = [...document.querySelectorAll("button")].find((it) => it.textContent.trim() === "Comenzar"); const box = button.getBoundingClientRect(); return box.bottom <= window.innerHeight && box.bottom > window.innerHeight - 100; }', true)
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true);
+})->with(['light' => false, 'dark' => true]);
+
 it('explains a link that does not work, naming no company', function (bool $dark, bool $mobile): void {
     invitedPerson();
 

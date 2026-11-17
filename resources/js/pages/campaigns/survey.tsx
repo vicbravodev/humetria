@@ -69,6 +69,7 @@ export default function Survey({
                     key={next.key}
                     token={token}
                     company={company}
+                    kind={kind ?? 'nom035_evaluation'}
                     closesOn={closesOn}
                     copy={copy}
                     instruments={instruments}

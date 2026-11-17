@@ -1,95 +1,71 @@
-import {
-    CalendarClock,
-    CalendarRange,
-    CircleCheck,
-    ListChecks,
-    Lock,
-} from 'lucide-react';
+import { CalendarClock, Clock, Lock } from 'lucide-react';
 import type { ReactNode } from 'react';
+import BeforeStart from '@/components/campaigns/survey/before-start';
+import IntroChip from '@/components/campaigns/survey/intro-chip';
 import type { IntroCopy } from '@/lib/survey';
 
 /**
  * What the norm asks to say before the questionnaire (II.2 a, III.2 a): the objective, that it is confidential and
  * used only to improve the work environment, that there are no right or wrong answers, that every question must be
- * answered, and to think of the last two months (criterio C-17).
+ * answered, and to think of the last two months (criterio C-17). Nothing of it is left out; it is ordered: what it is,
+ * the confidentiality, «Antes de empezar», then how long and until when.
  */
 export default function SurveyIntro({
     company,
+    context,
     closesOn,
+    minutes,
     copy,
     children,
 }: {
     company: string;
+    /** The line above the title: «Evaluación NOM-035 · 2 guías». */
+    context: string | null;
     closesOn: string | null;
+    /** About how long the guides still to answer take; `together` when they are more than one. */
+    minutes: { total: number; together: boolean };
     copy: IntroCopy;
     children?: ReactNode;
 }) {
-    const points = [
-        {
-            icon: CircleCheck,
-            text: 'No hay respuestas correctas ni incorrectas.',
-        },
-        ...(copy.period === null
-            ? []
-            : [
-                  {
-                      icon: CalendarRange,
-                      text: (
-                          <>
-                              Considere las condiciones de su trabajo de{' '}
-                              <strong className="font-semibold">
-                                  {copy.period}
-                              </strong>
-                              .
-                          </>
-                      ),
-                  },
-              ]),
-        {
-            icon: ListChecks,
-            text: 'Conteste todas las preguntas, con calma y con sinceridad: su opinión es lo más importante.',
-        },
-        ...(closesOn === null
-            ? []
-            : [
-                  {
-                      icon: CalendarClock,
-                      text: `Puede contestar hasta el ${closesOn}.`,
-                  },
-              ]),
-    ];
-
     return (
-        <section className="flex w-full max-w-2xl flex-col gap-[22px]">
-            <div className="flex flex-col gap-2.5">
+        <section className="flex w-full max-w-2xl flex-col gap-5 text-base leading-6">
+            <div>
+                {context !== null && (
+                    <p className="mb-1.5 text-sm font-medium tracking-[0.02em] text-primary uppercase">
+                        {context}
+                    </p>
+                )}
                 <h1 className="text-[1.625rem] leading-[2.125rem] font-semibold tracking-[-0.01em]">
                     {copy.title}
                 </h1>
-                <p>
+                <p className="mt-2 text-muted-foreground">
                     {company} {copy.purpose}
                 </p>
             </div>
-            <div className="flex items-start gap-3 rounded-xl bg-accent p-4 text-accent-foreground">
+            <div className="flex items-start gap-3 rounded-xl bg-accent px-4 py-3.5 text-accent-foreground">
                 <Lock
                     aria-hidden="true"
-                    className="mt-1 size-5 shrink-0 text-primary"
+                    className="mt-0.5 size-5 shrink-0 text-primary"
                 />
-                <p className="text-[1.0625rem] leading-[1.625rem]">
+                <p className="font-medium">
                     Sus respuestas son confidenciales y se usan solo para
                     mejorar el ambiente de trabajo.
                 </p>
             </div>
-            <ul className="flex flex-col gap-2.5">
-                {points.map(({ icon: Icon, text }, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                        <Icon
-                            aria-hidden="true"
-                            className="mt-1 size-5 shrink-0 text-muted-foreground"
-                        />
-                        <span>{text}</span>
-                    </li>
-                ))}
-            </ul>
+            <BeforeStart period={copy.period} />
+            <div className="flex flex-wrap gap-2">
+                {minutes.total > 0 && (
+                    <IntroChip icon={Clock}>
+                        Unos {minutes.total} min
+                        {minutes.together ? ' en total' : ''}
+                    </IntroChip>
+                )}
+                {closesOn !== null && (
+                    <IntroChip icon={CalendarClock}>
+                        Hasta el {closesOn}
+                    </IntroChip>
+                )}
+            </div>
             {children}
         </section>
     );

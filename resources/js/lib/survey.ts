@@ -252,6 +252,25 @@ export function introCopy(kind: CampaignKind): IntroCopy {
     };
 }
 
+/** The line above the title of the first screen: «Evaluación NOM-035 · 2 guías»; none for Ley Silla. */
+export function introContext(
+    kind: CampaignKind,
+    guides: number,
+): string | null {
+    if (kind === 'seating_survey') {
+        return null;
+    }
+
+    return `Evaluación NOM-035 · ${guides} ${guides === 1 ? 'guía' : 'guías'}`;
+}
+
+/** About how long the guides still to answer take, together. */
+export function minutesLeft(instruments: SurveyInstrument[]): number {
+    return instruments
+        .filter((instrument) => instrument.status === 'pending')
+        .reduce((total, instrument) => total + instrument.minutes, 0);
+}
+
 /** «Pregunta 2 de 8» of a question inside its block: the gate counts, as in the progress above the screen. */
 export function captionOf(section: SurveySection, number: number): string {
     const gate = section.gate === null ? 0 : 1;
