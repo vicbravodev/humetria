@@ -54,8 +54,10 @@ describe('startersOf', () => {
     });
 
     it('leaves out a live fact with nothing to say', () => {
-        expect(startersOf(['¿Qué pendientes tengo primero?'], { '¿Qué pendientes tengo primero?': '  ' })).toEqual([
-            { text: '¿Qué pendientes tengo primero?', live: null },
-        ]);
+        expect(
+            startersOf(['¿Qué pendientes tengo primero?'], {
+                '¿Qué pendientes tengo primero?': '  ',
+            }),
+        ).toEqual([{ text: '¿Qué pendientes tengo primero?', live: null }]);
     });
 });

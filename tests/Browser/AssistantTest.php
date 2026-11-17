@@ -279,3 +279,45 @@ it('starts with what Humi does and does not see, and the first questions as a li
         ->assertScript('() => [...document.querySelectorAll(\'[role="log"] li > button\')].map((button) => `${getComputedStyle(button).borderTopWidth} ${getComputedStyle(button).borderLeftWidth}`).join(",")', '1px 0px,1px 0px,1px 0px,1px 0px')
         ->assertScript('() => document.querySelectorAll(\'[role="log"] li > button small\').length', 0);
 });
+
+/** An answer whose tool says where it came from and where to go next, as a tool may bring it. */
+function humiSourcedStream(): string
+{
+    $card = ['render' => 'progress', 'title' => 'Avance de campañas', 'rows' => [], 'link' => null, 'note' => null, 'truncated' => false,
+        'next' => ['label' => 'Ver la campaña', 'link' => '/admin/acme/campaigns'], 'sources' => ['Campaña 2026', 'Guías I y III']];
+    $parts = [
+        ['type' => 'start', 'messageId' => 'm1'],
+        ['type' => 'tool-input-available', 'toolCallId' => 't1', 'toolName' => 'GetCampaignProgress', 'input' => []],
+        ['type' => 'tool-output-available', 'toolCallId' => 't1', 'output' => json_encode($card)],
+        ['type' => 'text-start', 'id' => 'x1'],
+        ['type' => 'text-delta', 'id' => 'x1', 'delta' => 'Van 142 de 186 personas.'],
+        ['type' => 'text-end', 'id' => 'x1'],
+        ['type' => 'finish', 'finishReason' => 'stop'],
+    ];
+
+    return implode('', array_map(fn (array $part): string => 'data: '.json_encode($part)."\n\n", $parts))."data: [DONE]\n\n";
+}
+
+it('ends an answer with its actions, and with its sources and next step only when the tool brought them', function (bool $sourced): void {
+    $page = visitPage('dashboard', humiPanelCompany())
+        ->assertScript(humiServes($sourced ? humiSourcedStream() : humiStream()), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->click('¿Cómo va la participación?')
+        ->assertPresent('[aria-label="Copiar respuesta"]')
+        ->assertPresent('[aria-label="Responder de nuevo"]');
+
+    if ($sourced) {
+        $page->assertSee('Fuentes')
+            ->assertScript('() => [...document.querySelectorAll(\'[aria-label="Fuentes"] li\')].map((source) => source.innerText.replace(/\s+/g, " ")).join(",")', '1 Campaña 2026,2 Guías I y III')
+            ->assertScript('() => document.querySelector(\'a[href="/admin/acme/campaigns"]\')?.innerText', 'Ver la campaña');
+    } else {
+        $page->assertSee('El riesgo más alto está en')
+            ->assertMissing('[aria-label="Fuentes"]')
+            ->assertDontSee('Ver la campaña');
+    }
+
+    $page->assertScript(cspViolations(), '[]')->assertNoJavaScriptErrors();
+})->with([
+    'with sources' => [true],
+    'without them' => [false],
+]);
