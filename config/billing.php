@@ -87,7 +87,7 @@ return [
                     'rate_cents' => 19_900,
                     'minimum_cents' => 999_000,
                     'included_centers' => 3,
-                    'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'],
+                    'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'sso'],
                     'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120],
                 ],
             ],

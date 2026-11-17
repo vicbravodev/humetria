@@ -25,6 +25,7 @@ final class ModuleRoutes
             'org_chart' => ['tenant.org-chart.*'],
             'pulse' => ['tenant.pulse.*'],
             'climate' => ['tenant.climate.*'],
+            'sso' => ['tenant.sso.*'],
         ];
     }
 

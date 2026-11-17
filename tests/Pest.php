@@ -16,6 +16,7 @@ use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -981,6 +982,19 @@ function paidCompany(string $kind = 'direct'): array
     AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
 
     return [$tenant, $account];
+}
+
+/**
+ * A company with single sign-on switched on (the module the Enterprise plan carries) and its owner.
+ *
+ * @return array{0: Tenant, 1: User}
+ */
+function ssoCompany(string $slug = 'acme'): array
+{
+    $tenant = Tenant::factory()->create(['slug' => $slug]);
+    TenantModule::factory()->for($tenant)->create(['module' => 'sso', 'source' => 'grant', 'reason' => 'Enterprise']);
+
+    return [$tenant, memberOf($tenant, TenantRole::Owner)];
 }
 
 /**
