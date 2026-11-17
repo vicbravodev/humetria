@@ -1,14 +1,11 @@
 import { Head, usePage } from '@inertiajs/react';
-import Pagination from '@/components/humetria/pagination';
-import CountTabs from '@/components/humetria/count-tabs';
-import PlanLimitNotice from '@/components/humetria/plan-limit-notice';
 import PageHeader from '@/components/humetria/page-header';
+import Pagination from '@/components/humetria/pagination';
+import PlanLimitNotice from '@/components/humetria/plan-limit-notice';
 import CreateWorkCenterDialog from '@/components/tenancy/create-work-center-dialog';
-import WorkCentersEmpty from '@/components/tenancy/work-centers-empty';
-import WorkCentersGrid from '@/components/tenancy/work-centers-grid';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import WorkCentersList from '@/components/tenancy/work-centers-list';
+import WorkCentersToolbar from '@/components/tenancy/work-centers-toolbar';
 import { atLimit } from '@/lib/limits';
-import { index } from '@/routes/tenant/work-centers';
 import type {
     MexicanStateOption,
     Paginated,
@@ -19,12 +16,14 @@ import type {
 
 export default function WorkCenters({
     view,
+    search,
     plan_limit: planLimit,
     counts,
     workCenters,
     states,
 }: {
     view: WorkCentersView;
+    search: string;
     plan_limit: PlanLimit | null;
     counts: Record<WorkCentersView, number>;
     workCenters: Paginated<WorkCenterRow>;
@@ -32,7 +31,6 @@ export default function WorkCenters({
 }) {
     // Always set here: this page only exists inside a company.
     const { tenant } = usePage().props;
-    const tenantSlug = useTenantSlug();
     const canManage = tenant?.can.manage_organization ?? false;
 
     return (
@@ -58,40 +56,19 @@ export default function WorkCenters({
                         plural: 'centros de trabajo',
                     }}
                 />
-                {/* Only once there is something archived, or while looking at the archive. */}
-                {(counts.archived > 0 || view === 'archived') && (
-                    <div>
-                        <CountTabs
-                            label="Vistas de centros de trabajo"
-                            tabs={[
-                                {
-                                    label: 'Activos',
-                                    count: counts.active,
-                                    href: index.url(tenantSlug),
-                                    active: view === 'active',
-                                },
-                                {
-                                    label: 'Archivados',
-                                    count: counts.archived,
-                                    href: index.url(tenantSlug, {
-                                        query: { archived: 1 },
-                                    }),
-                                    active: view === 'archived',
-                                },
-                            ]}
-                        />
-                    </div>
-                )}
-                {workCenters.total === 0 ? (
-                    <WorkCentersEmpty view={view} />
-                ) : (
-                    <WorkCentersGrid
-                        view={view}
-                        workCenters={workCenters.data}
-                        states={canManage ? states : null}
-                        full={atLimit(planLimit)}
-                    />
-                )}
+                <WorkCentersToolbar
+                    view={view}
+                    search={search}
+                    counts={counts}
+                />
+                <WorkCentersList
+                    view={view}
+                    search={search}
+                    workCenters={workCenters}
+                    manage={
+                        canManage ? { states, full: atLimit(planLimit) } : null
+                    }
+                />
                 <Pagination
                     page={workCenters}
                     label="Páginas de centros de trabajo"

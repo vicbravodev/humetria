@@ -40,7 +40,25 @@ it('lists the work centers with their address, and the archived ones apart', fun
         ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers'))
         ->assertSee('Bodega Vieja')
+        ->assertSeeIn('[data-slot="table"] tbody', 'Bodega Vieja')
+        ->assertMissing('article')
         ->assertDontSee('Planta Querétaro');
+})->with($looks);
+
+it('finds a work center by typing part of its name, and says when none matches', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    WorkCenter::factory()->for(acme())->create(['name' => 'Planta Querétaro']);
+    WorkCenter::factory()->for(acme())->create(['name' => 'Bodega Sur']);
+
+    visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page
+        ->type('input[type="search"]', 'queretaro')
+        ->assertDontSee('Bodega Sur')
+        ->assertQueryStringHas('q', 'queretaro'))
+        ->assertSee('Planta Querétaro');
+
+    visitPage('tenancy/work-centers', "{$url}/work-centers?q=zzz", $dark, $mobile)
+        ->assertSee('Ningún centro coincide con «zzz»')
+        ->assertValue('input[type="search"]', 'zzz');
 })->with($looks);
 
 it('reaches the work centers from the sidebar', function (): void {
