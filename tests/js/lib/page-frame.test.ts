@@ -5,6 +5,7 @@ describe('isStandalone', () => {
     it.each([
         'landing',
         'privacy-notice',
+        'roadmap',
         'campaigns/survey',
         'engagement/survey',
         'engagement/portal-feedback',
