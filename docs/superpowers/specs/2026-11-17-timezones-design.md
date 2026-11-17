@@ -141,7 +141,8 @@ La tabla de excepciones por municipio quedó confirmada contra el texto vigente 
 ## 7. Riesgos y lo que queda fuera
 
 - La tabla de municipios es la de la ley a la fecha (§2); si la ley cambia, se actualizan la tabla y su prueba, y la tzdata del sistema las reglas.
-- El municipio se escribe a mano: quien escribe la ciudad («Ciudad Juárez», «Ciudad Acuña») en vez del municipio («Juárez», «Acuña») recibe la
-  zona del estado; la pantalla muestra la zona con «Cambiar».
+- El municipio se escribe a mano. La tabla reconoce también el nombre usual de la cabecera («Ciudad Juárez», «Cd. Acuña», «H. Matamoros»,
+  «Nuevo Vallarta»), sin importar puntos, acentos ni espacios repetidos (el servidor y el formulario normalizan igual). Un nombre que no
+  esté en la tabla recibe la zona del estado; la pantalla muestra la zona con «Cambiar».
 - No es asesoría legal; el valor probatorio de la marca lo valida el abogado de cada empresa (criterios de jornada 5.x).
 - Fuera de alcance: centros fuera de México, horarios de verano de otros países, y mostrar a la persona la hora de otro centro.

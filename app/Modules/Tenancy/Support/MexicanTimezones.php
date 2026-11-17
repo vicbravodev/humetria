@@ -37,17 +37,29 @@ final class MexicanTimezones
         'CAM' => 'America/Merida',
     ];
 
-    /** The municipalities whose zone is not their state's, by state and by name (lower case, no accents). */
+    /**
+     * The municipalities whose zone is not their state's, by state and by name (lower case, no accents, no dots), followed by
+     * the usual names of their seats («Ciudad Acuña», «Heroica Matamoros»: INEGI) so a city typed for its municipality still
+     * gets its zone.
+     */
     private const array MUNICIPALITIES = [
         'CHH' => [
             'janos' => 'America/Ciudad_Juarez',
             'ascension' => 'America/Ciudad_Juarez',
             'juarez' => 'America/Ciudad_Juarez',
-            'praxedis g. guerrero' => 'America/Ciudad_Juarez',
+            'praxedis g guerrero' => 'America/Ciudad_Juarez',
             'guadalupe' => 'America/Ciudad_Juarez',
             'coyame del sotol' => 'America/Ojinaga',
             'ojinaga' => 'America/Ojinaga',
             'manuel benavides' => 'America/Ojinaga',
+            'ciudad juarez' => 'America/Ciudad_Juarez',
+            'cd juarez' => 'America/Ciudad_Juarez',
+            'praxedis' => 'America/Ciudad_Juarez',
+            'praxedis guerrero' => 'America/Ciudad_Juarez',
+            'guadalupe db' => 'America/Ciudad_Juarez',
+            'guadalupe distrito bravos' => 'America/Ciudad_Juarez',
+            'coyame' => 'America/Ojinaga',
+            'manuel ojinaga' => 'America/Ojinaga',
         ],
         'COA' => [
             'acuna' => 'America/Matamoros',
@@ -61,6 +73,8 @@ final class MexicanTimezones
             'piedras negras' => 'America/Matamoros',
             'villa union' => 'America/Matamoros',
             'zaragoza' => 'America/Matamoros',
+            'ciudad acuna' => 'America/Matamoros',
+            'cd acuna' => 'America/Matamoros',
         ],
         'NLE' => [
             'anahuac' => 'America/Matamoros',
@@ -76,9 +90,26 @@ final class MexicanTimezones
             'rio bravo' => 'America/Matamoros',
             'valle hermoso' => 'America/Matamoros',
             'matamoros' => 'America/Matamoros',
+            'nueva ciudad guerrero' => 'America/Matamoros',
+            'ciudad mier' => 'America/Matamoros',
+            'cd mier' => 'America/Matamoros',
+            'ciudad miguel aleman' => 'America/Matamoros',
+            'cd miguel aleman' => 'America/Matamoros',
+            'ciudad camargo' => 'America/Matamoros',
+            'cd camargo' => 'America/Matamoros',
+            'ciudad gustavo diaz ordaz' => 'America/Matamoros',
+            'cd gustavo diaz ordaz' => 'America/Matamoros',
+            'ciudad rio bravo' => 'America/Matamoros',
+            'cd rio bravo' => 'America/Matamoros',
+            'ciudad valle hermoso' => 'America/Matamoros',
+            'cd valle hermoso' => 'America/Matamoros',
+            'heroica matamoros' => 'America/Matamoros',
+            'h matamoros' => 'America/Matamoros',
         ],
         'NAY' => [
             'bahia de banderas' => 'America/Bahia_Banderas',
+            'valle de banderas' => 'America/Bahia_Banderas',
+            'nuevo vallarta' => 'America/Bahia_Banderas',
         ],
     ];
 
@@ -153,6 +184,6 @@ final class MexicanTimezones
 
     private static function normalize(string $municipality): string
     {
-        return Str::lower(Str::ascii(trim($municipality)));
+        return Str::squish(str_replace('.', '', Str::lower(Str::ascii($municipality))));
     }
 }

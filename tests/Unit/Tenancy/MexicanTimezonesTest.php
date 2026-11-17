@@ -117,17 +117,76 @@ it('changes the border time at 02:00 local, as the law says', function (string $
     'Tijuana' => ['America/Tijuana', '2026-03-08 09:59', '2026-11-01 08:59', -8, -7],
 ]);
 
-it('lists exactly the municipalities of the law, no more and no fewer', function (): void {
+it('lists exactly the municipalities of the law and the common names of their seats, no more and no fewer', function (): void {
     $municipalities = array_map(fn (array $zones): array => array_keys($zones), MexicanTimezones::rules()['municipalities']);
 
     expect($municipalities)->toEqualCanonicalizing([
-        'CHH' => ['janos', 'ascension', 'juarez', 'praxedis g. guerrero', 'guadalupe', 'coyame del sotol', 'ojinaga', 'manuel benavides'],
-        'COA' => ['acuna', 'allende', 'guerrero', 'hidalgo', 'jimenez', 'morelos', 'nava', 'ocampo', 'piedras negras', 'villa union', 'zaragoza'],
+        'CHH' => [
+            'janos', 'ascension', 'juarez', 'praxedis g guerrero', 'guadalupe', 'coyame del sotol', 'ojinaga', 'manuel benavides',
+            'ciudad juarez', 'cd juarez', 'praxedis', 'praxedis guerrero', 'guadalupe db', 'guadalupe distrito bravos', 'coyame',
+            'manuel ojinaga',
+        ],
+        'COA' => [
+            'acuna', 'allende', 'guerrero', 'hidalgo', 'jimenez', 'morelos', 'nava', 'ocampo', 'piedras negras', 'villa union', 'zaragoza',
+            'ciudad acuna', 'cd acuna',
+        ],
         'NLE' => ['anahuac'],
-        'TAM' => ['nuevo laredo', 'guerrero', 'mier', 'miguel aleman', 'camargo', 'gustavo diaz ordaz', 'reynosa', 'rio bravo', 'valle hermoso', 'matamoros'],
-        'NAY' => ['bahia de banderas'],
+        'TAM' => [
+            'nuevo laredo', 'guerrero', 'mier', 'miguel aleman', 'camargo', 'gustavo diaz ordaz', 'reynosa', 'rio bravo', 'valle hermoso',
+            'matamoros', 'nueva ciudad guerrero', 'ciudad mier', 'cd mier', 'ciudad miguel aleman', 'cd miguel aleman', 'ciudad camargo',
+            'cd camargo', 'ciudad gustavo diaz ordaz', 'cd gustavo diaz ordaz', 'ciudad rio bravo', 'cd rio bravo', 'ciudad valle hermoso',
+            'cd valle hermoso', 'heroica matamoros', 'h matamoros',
+        ],
+        'NAY' => ['bahia de banderas', 'valle de banderas', 'nuevo vallarta'],
     ]);
 });
+
+it('suggests the zone of the municipality for the common name of its seat, with or without dots', function (MexicanState $state, string $city, string $zone): void {
+    expect(MexicanTimezones::suggest($state, $city))->toBe($zone);
+})->with([
+    'Ciudad Juárez' => [MexicanState::Chihuahua, 'Ciudad Juárez', 'America/Ciudad_Juarez'],
+    'Cd. Juárez' => [MexicanState::Chihuahua, 'Cd. Juárez', 'America/Ciudad_Juarez'],
+    'Cd Juarez, extra spaces' => [MexicanState::Chihuahua, ' CD  JUAREZ ', 'America/Ciudad_Juarez'],
+    'Praxedis' => [MexicanState::Chihuahua, 'Práxedis', 'America/Ciudad_Juarez'],
+    'Praxedis Guerrero' => [MexicanState::Chihuahua, 'Praxedis Guerrero', 'America/Ciudad_Juarez'],
+    'Praxedis G Guerrero, no dot' => [MexicanState::Chihuahua, 'Praxedis G Guerrero', 'America/Ciudad_Juarez'],
+    'Guadalupe D.B.' => [MexicanState::Chihuahua, 'Guadalupe D.B.', 'America/Ciudad_Juarez'],
+    'Guadalupe Distrito Bravos' => [MexicanState::Chihuahua, 'Guadalupe Distrito Bravos', 'America/Ciudad_Juarez'],
+    'Coyame' => [MexicanState::Chihuahua, 'Coyame', 'America/Ojinaga'],
+    'Manuel Ojinaga' => [MexicanState::Chihuahua, 'Manuel Ojinaga', 'America/Ojinaga'],
+    'Ciudad Acuña' => [MexicanState::Coahuila, 'Ciudad Acuña', 'America/Matamoros'],
+    'Cd. Acuña' => [MexicanState::Coahuila, 'Cd. Acuña', 'America/Matamoros'],
+    'Nueva Ciudad Guerrero' => [MexicanState::Tamaulipas, 'Nueva Ciudad Guerrero', 'America/Matamoros'],
+    'Ciudad Mier' => [MexicanState::Tamaulipas, 'Ciudad Mier', 'America/Matamoros'],
+    'Cd. Mier' => [MexicanState::Tamaulipas, 'Cd. Mier', 'America/Matamoros'],
+    'Ciudad Miguel Alemán' => [MexicanState::Tamaulipas, 'Ciudad Miguel Alemán', 'America/Matamoros'],
+    'Cd. Miguel Alemán' => [MexicanState::Tamaulipas, 'Cd. Miguel Alemán', 'America/Matamoros'],
+    'Ciudad Camargo, Tamaulipas' => [MexicanState::Tamaulipas, 'Ciudad Camargo', 'America/Matamoros'],
+    'Cd. Camargo, Tamaulipas' => [MexicanState::Tamaulipas, 'Cd. Camargo', 'America/Matamoros'],
+    'Ciudad Gustavo Díaz Ordaz' => [MexicanState::Tamaulipas, 'Ciudad Gustavo Díaz Ordaz', 'America/Matamoros'],
+    'Cd. Gustavo Díaz Ordaz' => [MexicanState::Tamaulipas, 'Cd. Gustavo Díaz Ordaz', 'America/Matamoros'],
+    'Ciudad Río Bravo' => [MexicanState::Tamaulipas, 'Ciudad Río Bravo', 'America/Matamoros'],
+    'Cd. Río Bravo' => [MexicanState::Tamaulipas, 'Cd. Río Bravo', 'America/Matamoros'],
+    'Ciudad Valle Hermoso' => [MexicanState::Tamaulipas, 'Ciudad Valle Hermoso', 'America/Matamoros'],
+    'Cd. Valle Hermoso' => [MexicanState::Tamaulipas, 'Cd. Valle Hermoso', 'America/Matamoros'],
+    'Heroica Matamoros' => [MexicanState::Tamaulipas, 'Heroica Matamoros', 'America/Matamoros'],
+    'H. Matamoros' => [MexicanState::Tamaulipas, 'H. Matamoros', 'America/Matamoros'],
+    'Valle de Banderas' => [MexicanState::Nayarit, 'Valle de Banderas', 'America/Bahia_Banderas'],
+    'Nuevo Vallarta' => [MexicanState::Nayarit, 'Nuevo Vallarta', 'America/Bahia_Banderas'],
+]);
+
+it('keeps the zone of the state for a city away from the border', function (MexicanState $state, string $city, string $zone): void {
+    expect(MexicanTimezones::suggest($state, $city))->toBe($zone);
+})->with([
+    'Ciudad Obregón, Sonora' => [MexicanState::Sonora, 'Ciudad Obregón', 'America/Hermosillo'],
+    'Ciudad Victoria, Tamaulipas' => [MexicanState::Tamaulipas, 'Ciudad Victoria', 'America/Monterrey'],
+    'Ciudad Madero, Tamaulipas' => [MexicanState::Tamaulipas, 'Cd. Madero', 'America/Monterrey'],
+    'Ciudad Camargo, Chihuahua: another Camargo' => [MexicanState::Chihuahua, 'Ciudad Camargo', 'America/Chihuahua'],
+    'Ciudad Guerrero, Chihuahua: another Guerrero' => [MexicanState::Chihuahua, 'Ciudad Guerrero', 'America/Chihuahua'],
+    'Villa Ahumada, Chihuahua: not on the border list' => [MexicanState::Chihuahua, 'Villa Ahumada', 'America/Chihuahua'],
+    'Ciudad Delicias, Chihuahua' => [MexicanState::Chihuahua, 'Cd. Delicias', 'America/Chihuahua'],
+    'Ciudad Acuña typed in Nuevo León' => [MexicanState::NuevoLeon, 'Ciudad Acuña', 'America/Monterrey'],
+]);
 
 it('keeps the zone of the state where the law makes no exception', function (MexicanState $state, string $municipality, string $zone): void {
     expect(MexicanTimezones::suggest($state, $municipality))->toBe($zone);
