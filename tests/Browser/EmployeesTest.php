@@ -247,3 +247,21 @@ it('offers no people in the ⌘K palette to whoever cannot manage the organizati
         ->type('#command-search', 'ló')
         ->assertDontSee('Ana López');
 });
+
+it('keeps the work center and the area apart and as wide as each other when the center has a long name', function (): void {
+    $tenant = acmeWithEmployees();
+    WorkCenter::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('name', 'Planta Norte')
+        ->update(['name' => 'Centro de distribución y logística del Bajío, Querétaro Norte']);
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Editar')
+        ->assertSee('Dónde trabaja')
+        ->assertScript(<<<'JS'
+            () => {
+                const center = document.querySelector('#employee-work_center_id').getBoundingClientRect();
+                const area = document.querySelector('#employee-area').getBoundingClientRect();
+                return area.left - center.right >= 15 && Math.abs(area.width - center.width) <= 1;
+            }
+            JS, true)
+        ->assertNoJavaScriptErrors();
+});
