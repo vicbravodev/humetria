@@ -26,7 +26,8 @@ it('shows the owner an empty setup without any secret', function (): void {
     $this->actingAs($owner)->get(route('tenant.sso.show', $tenant))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('sso/settings')
         ->where('connection', null)
-        ->where('domains', []));
+        ->where('domains', [])
+        ->where('redirect_uri', route('sso.callback')));
 });
 
 it('keeps the settings for the owner: anyone else is refused', function (TenantRole $role): void {

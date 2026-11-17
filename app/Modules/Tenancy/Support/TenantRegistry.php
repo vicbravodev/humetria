@@ -18,6 +18,13 @@ final class TenantRegistry implements CompanyRegistry
         return $this->many([$id])[$id] ?? null;
     }
 
+    public function findBySlug(string $slug): ?CompanyBrief
+    {
+        $tenant = Tenant::query()->where('slug', $slug)->first();
+
+        return $tenant === null ? null : $this->briefs(new Collection([$tenant]))[$tenant->id];
+    }
+
     public function many(array $ids): array
     {
         $uuids = array_values(array_filter($ids, Str::isUuid(...)));

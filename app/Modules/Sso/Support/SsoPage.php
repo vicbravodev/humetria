@@ -13,7 +13,7 @@ use App\Modules\Sso\Models\SsoDomain;
 final class SsoPage
 {
     /**
-     * @return array{connection: array{issuer: string, client_id: string, has_secret: bool, enabled: bool, enforced: bool}|null, domains: list<array{id: string, domain: string, verified: bool, record_name: string, record_value: string}>}
+     * @return array{connection: array{issuer: string, client_id: string, has_secret: bool, enabled: bool, enforced: bool}|null, domains: list<array{id: string, domain: string, verified: bool, record_name: string, record_value: string}>, redirect_uri: string}
      */
     public function handle(string $tenantId): array
     {
@@ -34,6 +34,7 @@ final class SsoPage
                 'record_name' => $domain->recordName(),
                 'record_value' => $domain->recordValue(),
             ])->all()),
+            'redirect_uri' => route('sso.callback'),
         ];
     }
 }

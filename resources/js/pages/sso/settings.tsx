@@ -11,9 +11,11 @@ import type { SsoConnection, SsoDomain } from '@/types';
 export default function Settings({
     connection,
     domains,
+    redirect_uri: redirectUri,
 }: {
     connection: SsoConnection | null;
     domains: SsoDomain[];
+    redirect_uri: string;
 }) {
     return (
         <>
@@ -26,8 +28,16 @@ export default function Settings({
                 <SettingRow
                     icon={KeyRound}
                     title="Proveedor de identidad"
-                    description="Crea una aplicación OpenID Connect en tu proveedor, y copia aquí sus datos."
+                    description="Crea una aplicación OpenID Connect en tu proveedor con esta dirección de redirección, y copia aquí sus datos."
                 >
+                    <p className="text-sm">
+                        <span className="text-muted-foreground">
+                            Dirección de redirección:{' '}
+                        </span>
+                        <code className="font-mono break-all">
+                            {redirectUri}
+                        </code>
+                    </p>
                     <ConnectionForm connection={connection} domains={domains} />
                 </SettingRow>
                 <SettingRow
