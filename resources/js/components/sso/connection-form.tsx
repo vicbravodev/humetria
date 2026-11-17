@@ -34,7 +34,7 @@ export default function ConnectionForm({
                         label="Dirección del proveedor (issuer)"
                         idPrefix="sso"
                         type="url"
-                        placeholder="https://login.microsoftonline.com/…/v2.0"
+                        placeholder="https://proveedor.tuempresa.com"
                         defaultValue={connection?.issuer ?? ''}
                         error={errors['issuer']}
                         required
