@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Assistant\Tools\GetRiskResults;
+use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Responses\Models\AnonymousResponse;
@@ -119,7 +120,32 @@ it('answers for a campaign of another company exactly as for one that does not e
         ->and($notAnId)->toBe($missing)
         ->and($noId)->toBe($missing)
         ->and($missing['rows'])->toBe([])
-        ->and($missing['note'])->toBe('No encontré esa campaña en tu empresa.');
+        ->and($missing['note'])->toBe('No encontré esa campaña en tu empresa.')
+        ->and($missing['sources'])->toBe([])
+        ->and($missing['next'])->toBeNull();
+});
+
+it('names the closed evaluation it read as its source and leads to its results', function (): void {
+    riskAnswers($this->closed, $this->production, 6);
+    $closedOn = resolve(CampaignRecords::class)->find($this->closed->id)?->closedOn;
+
+    $card = toolCard(GetRiskResults::class, $this->scope, ['campaign_id' => $this->closed->id]);
+
+    expect($card['sources'])->toBe(["Resultados de la Evaluación NOM-035 cerrada el {$closedOn}"])
+        ->and($card['next'])->toBe(['label' => 'Ver los resultados', 'link' => "/admin/{$this->a->slug}/campaigns/{$this->closed->id}/results"]);
+});
+
+it('gives no source while there are no results, and leads to an open evaluation to follow it', function (): void {
+    riskAnswers($this->closed, $this->production, 4);
+    $open = Campaign::factory()->active()->create(['tenant_id' => $this->a->id, 'work_center_id' => $this->plant->id]);
+
+    $few = toolCard(GetRiskResults::class, $this->scope, ['campaign_id' => $this->closed->id]);
+    $running = toolCard(GetRiskResults::class, $this->scope, ['campaign_id' => $open->id]);
+
+    expect($few['sources'])->toBe([])
+        ->and($few['next'])->toBeNull()
+        ->and($running['sources'])->toBe([])
+        ->and($running['next'])->toBe(['label' => 'Ver la campaña', 'link' => "/admin/{$this->a->slug}/campaigns/{$open->id}"]);
 });
 
 it('leaves a trace in the audit trail, without content, when it shows results and only then', function (): void {

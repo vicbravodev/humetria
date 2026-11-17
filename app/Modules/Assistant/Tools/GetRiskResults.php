@@ -64,7 +64,10 @@ final readonly class GetRiskResults implements Tool
         $link = $this->links->results($campaign->id);
 
         if ($risk->state !== RiskBreakdown::AVAILABLE) {
-            return (new ToolCard('risk_levels', 'Resultados por nivel de riesgo', link: $link, note: self::unavailable($risk->state), minGroup: $minimum))->toJson();
+            // An open evaluation is followed on its page; with no results there is nothing to name nor to go see.
+            $next = $risk->state === RiskBreakdown::OPEN ? ['label' => 'Ver la campaña', 'link' => $this->links->campaign($campaign->id)] : null;
+
+            return (new ToolCard('risk_levels', 'Resultados por nivel de riesgo', link: $link, note: self::unavailable($risk->state), minGroup: $minimum, next: $next))->toJson();
         }
 
         $this->recordView($campaign->id, $risk->areaLabel !== null);
@@ -78,6 +81,8 @@ final readonly class GetRiskResults implements Tool
             self::note($risk, is_string($areaId)),
             count($rows) > self::MAX_ROWS,
             $minimum,
+            ["Resultados de la {$campaign->kindLabel} cerrada el {$campaign->closedOn}"],
+            ['label' => 'Ver los resultados', 'link' => $link],
         ))->toJson();
     }
 
