@@ -5,6 +5,7 @@ import {
     payload,
     progressOf,
     steps,
+    tallyOf,
     type SurveySection,
 } from '@/lib/engagement/survey-flow';
 import { readAnswers, storageKey } from '@/lib/survey';
@@ -25,6 +26,7 @@ export function useEngagementSurvey(token: string, sections: SurveySection[]) {
     const [startedAt] = useState(() => Date.now());
     const step = list[index] ?? { kind: 'submit' as const };
     const answers = closedOf(stored);
+    const tally = tallyOf(list, { answers, comments });
 
     useEffect(() => {
         window.localStorage.setItem(key, JSON.stringify(stored));
@@ -41,6 +43,7 @@ export function useEngagementSurvey(token: string, sections: SurveySection[]) {
         step,
         progress: progressOf(list, index),
         nextLabel: nextLabel(list, index),
+        tally,
         answers,
         comments,
         isFirst: index === 0,
@@ -54,6 +57,8 @@ export function useEngagementSurvey(token: string, sections: SurveySection[]) {
             setComments((current) => ({ ...current, [question]: text })),
         next: () => moveTo(index + 1),
         back: () => moveTo(index - 1),
+        /** From the send step, back to the first question left blank. */
+        review: () => moveTo(tally.firstOmitted ?? index),
         replies: () =>
             payload(
                 sections,

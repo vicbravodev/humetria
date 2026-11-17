@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     nextLabel,
+    tallyOf,
     payload,
     progressOf,
     steps,
@@ -218,5 +219,36 @@ describe('nextLabel', () => {
 
     it('sends on the send step', () => {
         expect(label(7)).toBe('Enviar mis respuestas');
+    });
+});
+
+describe('tallyOf', () => {
+    const list = steps([company, manager, closing]);
+
+    it('counts what was answered: a closed answer, or a comment with text', () => {
+        expect(
+            tallyOf(list, {
+                answers: { 'clarity.a': 4, 'clarity.b': 2, 'eng.recommend': 9 },
+                comments: { 'manager.keep': 'Que escuche', 'open.best': '' },
+            }),
+        ).toEqual({ answered: 4, total: 5, firstOmitted: 6 });
+    });
+
+    it('points at the first question left blank, a blank comment included', () => {
+        expect(
+            tallyOf(list, {
+                answers: { 'clarity.b': 2 },
+                comments: { 'manager.keep': '   ' },
+            }),
+        ).toEqual({ answered: 1, total: 5, firstOmitted: 1 });
+    });
+
+    it('has nothing to point at when every question was answered', () => {
+        expect(
+            tallyOf(list, {
+                answers: { 'clarity.a': 1, 'clarity.b': 1, 'eng.recommend': 0 },
+                comments: { 'manager.keep': 'a', 'open.best': 'b' },
+            }),
+        ).toEqual({ answered: 5, total: 5, firstOmitted: null });
     });
 });

@@ -159,7 +159,7 @@ it('sends the whole survey once and says thanks, with the comment as the person 
 
     $page = visitPage('engagement/survey', '/engagement/the-token', $dark, $mobile, fn ($page) => $page->click('Comenzar'));
     $page->script(engagementAnswerScript('Más claridad <b>por favor</b>'));
-    $page->assertSee('Ya terminó la encuesta')
+    $page->assertSee('Listo para enviar')
         ->click('Enviar mis respuestas')
         ->assertSee('Gracias. Sus respuestas ya se enviaron.')
         ->assertNoJavaScriptErrors();
@@ -168,6 +168,26 @@ it('sends the whole survey once and says thanks, with the comment as the person 
         ->and(Comment::query()->pluck('body')->all())->toContain('Más claridad <b>por favor</b>')
         ->and($invitation->fresh()?->answered)->toBeTrue();
 })->with($looks);
+
+// The send step counts, never shows an answer: how many were answered, that it cannot change after, and the way back to what was left blank.
+it('gets ready to send with how many questions were answered, and goes back to the first one left blank', function (bool $dark): void {
+    engagementInvitee();
+
+    $page = visitPage('engagement/survey', '/engagement/the-token', $dark, true, function ($page): void {
+        $page->click('Comenzar');
+        $page->script(engagementAnswerScript('Que escuche más'));
+    })
+        ->assertSee('Listo para enviar')
+        ->assertSee('Contestó 41 de 44 preguntas. Cuando envíe sus respuestas ya no podrá cambiarlas.')
+        ->assertSee('El sistema no guarda quién contestó qué.')
+        ->assertScript('() => document.querySelector("main [data-slot=arc-meter]").getAttribute("aria-label")', '41 de 44 preguntas contestadas')
+        ->assertDontSee('Que escuche más')
+        ->assertScript('() => { const button = [...document.querySelectorAll("button")].find((it) => it.textContent.includes("Enviar mis respuestas")); const box = button.getBoundingClientRect(); return box.bottom <= window.innerHeight && box.bottom > window.innerHeight - 100; }', true);
+
+    $page->click('Revisar la pregunta que omití')
+        ->assertScript('() => document.querySelector("textarea") !== null', true)
+        ->assertDontSee('Listo para enviar');
+})->with(['light' => false, 'dark' => true]);
 
 // E-04: the answers wait on the phone; sending without signal says so and sends by itself when it is back, once.
 it('says there is no signal when sending, and sends by itself when it is back', function (): void {

@@ -122,3 +122,36 @@ export function nextLabel(
         ? 'Revisar y enviar'
         : 'Siguiente';
 }
+
+export type Tally = {
+    answered: number;
+    total: number;
+    /** The step of the first question left blank, to go back to it; none when all were answered. */
+    firstOmitted: number | null;
+};
+
+/**
+ * How many questions were answered before sending: a closed one with its answer, an open one with text. Only counts:
+ * the send step shows numbers, never an answer.
+ */
+export function tallyOf(list: Step[], replies: Replies): Tally {
+    const tally: Tally = { answered: 0, total: 0, firstOmitted: null };
+
+    list.forEach((step, index) => {
+        if (step.kind !== 'question') {
+            return;
+        }
+
+        const { key, scale } = step.item;
+        const answered =
+            scale === 'open'
+                ? (replies.comments[key] ?? '').trim() !== ''
+                : replies.answers[key] !== undefined;
+
+        tally.total += 1;
+        tally.answered += answered ? 1 : 0;
+        tally.firstOmitted ??= answered ? null : index;
+    });
+
+    return tally;
+}
