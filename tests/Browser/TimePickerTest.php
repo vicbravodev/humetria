@@ -24,7 +24,9 @@ it('takes a time typed short or pasted in 12 hours, writes it as HH:mm and saves
     $url = timePanel();
 
     visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
+        ->click('Personalizar días')
         ->assertAttribute('#schedule-start-1', 'type', 'text')
         ->type('#schedule-start-1', '730')
         ->keys('#schedule-start-1', 'Tab')
@@ -46,7 +48,9 @@ it('moves the time a quarter of an hour with the arrow keys, from 08:00 when emp
     $url = timePanel();
 
     visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
+        ->click('Personalizar días')
         ->keys('#schedule-start-3', 'ArrowUp')
         ->assertValue('#schedule-start-3', '08:00')
         ->keys('#schedule-start-3', ['ArrowUp', 'ArrowUp'])
@@ -59,7 +63,9 @@ it('says when the text is no time, once the field is left', function (): void {
     $url = timePanel();
 
     visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
+        ->click('Personalizar días')
         ->fill('#schedule-start-4', '25:00')
         ->assertDontSee('No es una hora')
         ->keys('#schedule-start-4', 'Tab')
@@ -71,7 +77,9 @@ it('fits the time fields on a phone, with a numeric keyboard and 44 px to touch'
     $url = timePanel();
 
     visitPage('attendance/schedules', "{$url}/attendance/schedules", $dark, true)
+        ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
+        ->click('Personalizar días')
         ->assertAttribute('#schedule-start-1', 'inputmode', 'numeric')
         ->assertScript('() => document.querySelector("#schedule-start-1").closest("[data-slot=input-group]").getBoundingClientRect().height >= 44', true)
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true)
