@@ -28,7 +28,7 @@ export default function AttendanceReport(props: AttendanceReportProps) {
     return (
         <>
             <Head title="Reporte para la autoridad · Asistencia" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     caption={center?.name ?? 'Registro de jornada'}
                     title="Reporte para la autoridad"
