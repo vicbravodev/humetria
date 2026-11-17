@@ -104,28 +104,60 @@ export function doneTitle(type: string): string {
     return DONE[type] ?? `${markName(type)} registrada`;
 }
 
-const EVIDENCE: Record<string, { dots: number; text: string }> = {
-    strong: { dots: 3, text: 'Evidencia fuerte: QR y ubicación' },
-    medium: { dots: 2, text: 'Evidencia media: QR o ubicación' },
-    basic: { dots: 1, text: 'Evidencia básica: solo su llave' },
+const HOW: Record<string, string> = {
+    strong: 'Con QR y ubicación',
+    medium: 'Con QR o ubicación',
+    basic: 'Con su llave',
+    corrected: 'Corregida por RH',
 };
 
 /** In a field center there is no QR nor zone to prove: the position does. */
-const FIELD_EVIDENCE: Record<string, { dots: number; text: string }> = {
-    strong: { dots: 3, text: 'Evidencia fuerte: en campo, con su ubicación' },
-    medium: {
-        dots: 2,
-        text: 'Evidencia media: en campo, sin ubicación precisa',
-    },
+const FIELD_HOW: Record<string, string> = {
+    strong: 'En campo, con su ubicación',
+    medium: 'En campo, sin ubicación precisa',
 };
 
 /**
- * How much the mark proves, in words and in dots, said for the field when its flag is «field»; null when the server named
- * no level or one the screen does not say.
+ * How the mark was taken, in words and without a measure (the dots are for the authority's report); said for the field
+ * when its flag is «field». Null when the server named no level or one the screen does not say.
  */
-export function evidenceText(
+export function markHow(
     level: string | null,
     flag: string | null = null,
-): { dots: number; text: string } | null {
-    return (flag === 'field' ? FIELD_EVIDENCE : EVIDENCE)[level ?? ''] ?? null;
+): string | null {
+    return (flag === 'field' ? FIELD_HOW : HOW)[level ?? ''] ?? null;
+}
+
+/** The city that names each zone of Mexico (Tenancy's MexicanTimezones); another zone by its own last part. */
+const CITIES: Record<string, string> = {
+    'America/Bahia_Banderas': 'Bahía de Banderas',
+    'America/Cancun': 'Cancún',
+    'America/Chihuahua': 'Chihuahua',
+    'America/Ciudad_Juarez': 'Ciudad Juárez',
+    'America/Hermosillo': 'Hermosillo',
+    'America/Matamoros': 'Matamoros',
+    'America/Mazatlan': 'Mazatlán',
+    'America/Merida': 'Mérida',
+    'America/Mexico_City': 'Ciudad de México',
+    'America/Monterrey': 'Monterrey',
+    'America/Ojinaga': 'Ojinaga',
+    'America/Tijuana': 'Tijuana',
+};
+
+/** The time of a mark, with whose hour it is when it was taken in a zone that is not the person's center's. */
+export function markClock(mark: { time: string; clock?: string }): string {
+    if (mark.clock === undefined) {
+        return mark.time;
+    }
+
+    const city =
+        CITIES[mark.clock] ??
+        (mark.clock.split('/').at(-1) ?? mark.clock).replaceAll('_', ' ');
+
+    return `${mark.time} · hora de ${city}`;
+}
+
+/** How far the phone's clock is from the server's, in milliseconds: the page adds it to show the server's time. */
+export function clockOffset(server: number, device: number): number {
+    return server - device;
 }

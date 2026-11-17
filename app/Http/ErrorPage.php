@@ -46,7 +46,7 @@ final class ErrorPage
         // failed. Only then: a value that changes on every request would tell apart two pages that must be the same
         // (an unknown link and a revoked one both answer the same 404).
         $requestId = Context::get('request_id');
-        $props = ['status' => $status, 'survey' => $request->routeIs(...self::WORKER_ROUTES), 'requestId' => $status >= 500 && is_string($requestId) ? $requestId : null];
+        $props = ['status' => $status, 'survey' => $request->routeIs(...self::WORKER_ROUTES), 'screen' => $request->routeIs('attendance.device.kiosk.*'), 'requestId' => $status >= 500 && is_string($requestId) ? $requestId : null];
 
         try {
             // An address no route answers never ran the web middleware: share here what every page gets.

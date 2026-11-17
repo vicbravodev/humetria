@@ -1,6 +1,6 @@
 import { focusOnMount } from '@/lib/focus';
 
-/** A card that says something before going on: a section's instruction or the last word before sending. It takes the focus. */
+/** A card that says something before going on: a section's instruction. It takes the focus. */
 export default function SurveyNote({
     title,
     children,

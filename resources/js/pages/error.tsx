@@ -29,15 +29,18 @@ const ICONS: Record<number, LucideIcon> = {
 export default function ErrorPage({
     status,
     survey,
+    screen,
     requestId,
 }: {
     status: number;
     survey: boolean;
+    /** The page of a time clock screen (kiosk): not found means not activated or revoked. */
+    screen: boolean;
     /** The id of this request (X-Request-Id, and every log line of it): what a person quotes to support. */
     requestId: string | null;
 }) {
     const { tenant } = usePage().props;
-    const message = errorMessage(status, survey);
+    const message = errorMessage(status, survey, screen);
     const limit = roleLimit(status, tenant);
 
     return (

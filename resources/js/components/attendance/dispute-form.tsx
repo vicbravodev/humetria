@@ -45,11 +45,10 @@ export default function DisputeForm({
                 Por ejemplo: «El jueves salí a las 20:00, no a las 18:00».
                 Recursos Humanos lo revisará.
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5 pt-1">
                 <Button
                     type="submit"
-                    size="lg"
-                    className="w-full text-base"
+                    className="h-14 w-full text-[17px] font-semibold"
                     disabled={working}
                 >
                     Enviar mi objeción
@@ -57,8 +56,7 @@ export default function DisputeForm({
                 <Button
                     type="button"
                     variant="outline"
-                    size="lg"
-                    className="w-full text-base"
+                    className="h-14 w-full text-[17px]"
                     disabled={working}
                     onClick={onCancel}
                 >

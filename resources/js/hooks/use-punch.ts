@@ -1,12 +1,13 @@
 import { router } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import { currentPosition } from '@/lib/attendance/geolocation';
 import type { LocationError } from '@/lib/attendance/geolocation';
+import { firstStepNotice, stepThatProceeds } from '@/lib/attendance/next-step';
 import type { MarkType } from '@/lib/attendance/next-step';
 import { punch, punchMessage } from '@/lib/attendance/punch';
 import type { PunchPhase } from '@/lib/attendance/punch-phase';
-import type { Signer } from '@/lib/attendance/punch';
+import type { PunchMode, Signer } from '@/lib/attendance/punch';
 import { stateAfter } from '@/lib/attendance/punch-state';
 import type { PunchState } from '@/lib/attendance/punch-state';
 import type { SignedKey } from '@/lib/webauthn';
@@ -29,12 +30,29 @@ export async function getKey(
 
 const NOBODY: PunchState = { person: null, marks: null, feedback: null };
 
+/** The position now, or why there is none; none asked of a remote person, whose position the server drops. */
+async function locate(ask: boolean) {
+    if (!ask) {
+        return { position: null, error: null };
+    }
+
+    const located = await currentPosition(
+        'geolocation' in navigator ? navigator.geolocation : undefined,
+    );
+
+    return located.ok
+        ? { position: located.position, error: null }
+        : { position: null, error: located.error };
+}
+
 /**
  * Marks from this device. The position is asked at every tap (whoever taps may not be who the screen shows) and kept
- * nowhere; the server drops it when the person does not need it. After each mark the screen shows only what the server
- * said of the person it verified. While it works it says which test it is on (position, the person's fingerprint, face or
- * PIN, the server's check); `retry` marks again what was just tried; `dismiss` closes the answer. «¿No es usted?» makes
- * the browser forget the person.
+ * nowhere, except for a remote person, whose position the server drops: theirs is not asked, unless a mark is refused
+ * for lack of one (someone else tapped). After each mark the screen shows only what the server said of the person it
+ * verified. While it works it says which test it is on (position, the person's fingerprint, face or PIN, the server's
+ * check). `accept` accepts the agreement read and marks the step that proceeds with one signature; `retry` marks again
+ * what was tried, but never spends a signature on a step that the server already said does not proceed; `dismiss` closes
+ * the answer. «¿No es usted?» makes the browser forget the person.
  */
 export function usePunch({
     optionsUrl,
@@ -42,12 +60,14 @@ export function usePunch({
     forgetUrl,
     qr,
     initial,
+    mode,
 }: {
     optionsUrl: string;
     punchUrl: string;
     forgetUrl: string;
     qr: string | null;
     initial: Signer | null;
+    mode: PunchMode;
 }) {
     const [state, setState] = useState<PunchState>({
         ...NOBODY,
@@ -55,10 +75,11 @@ export function usePunch({
     });
     const [phase, setPhase] = useState<PunchPhase | null>(null);
     const [location, setLocation] = useState<LocationError | null>(null);
-    const last = useRef<MarkType | null>(null);
+    const [asksPosition, setAsksPosition] = useState(mode !== 'remote');
+    const [tapped, setTapped] = useState<MarkType>('start');
 
-    const mark = async (type: MarkType) => {
-        last.current = type;
+    const mark = async (type: MarkType, agreementVersion?: number) => {
+        setTapped(type);
 
         if (!('PublicKeyCredential' in window)) {
             setState({
@@ -75,17 +96,16 @@ export function usePunch({
 
         setPhase('locating');
         setState({ ...state, feedback: null });
-        const located = await currentPosition(
-            'geolocation' in navigator ? navigator.geolocation : undefined,
-        );
-        setLocation(located.ok ? null : located.error);
+        const located = await locate(asksPosition);
+        setLocation(located.error);
         const outcome = await punch(
             {
                 optionsUrl,
                 punchUrl,
                 type,
                 qr,
-                position: located.ok ? located.position : null,
+                position: located.position,
+                ...(agreementVersion === undefined ? {} : { agreementVersion }),
             },
             {
                 fetcher: fetch.bind(window),
@@ -100,28 +120,37 @@ export function usePunch({
             },
         );
         setPhase(null);
+        setAsksPosition(
+            asksPosition ||
+                (outcome.kind === 'failed' && outcome.reason === 'no_location'),
+        );
         setState(stateAfter(outcome));
     };
 
-    const forget = () => {
-        router.post(
-            forgetUrl,
-            {},
-            { preserveScroll: true, onSuccess: () => setState(NOBODY) },
-        );
-    };
+    const next = state.person?.next ?? [];
 
     return {
         ...state,
         phase,
         location,
+        /** The step the agreement is accepted with: the one tapped when it proceeds. */
+        step: stepThatProceeds(tapped, next),
         mark,
-        forget,
-        retry: () => {
-            if (last.current !== null) {
-                void mark(last.current);
-            }
-        },
+        accept: (version: number) =>
+            void mark(stepThatProceeds(tapped, next), version),
+        forget: () =>
+            router.post(
+                forgetUrl,
+                {},
+                { preserveScroll: true, onSuccess: () => setState(NOBODY) },
+            ),
+        retry: () =>
+            stepThatProceeds(tapped, next) === tapped
+                ? void mark(tapped)
+                : setState({
+                      ...state,
+                      feedback: { kind: 'error', text: firstStepNotice(next) },
+                  }),
         dismiss: () => setState({ ...state, feedback: null }),
     };
 }

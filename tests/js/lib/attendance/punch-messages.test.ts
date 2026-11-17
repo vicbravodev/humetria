@@ -90,6 +90,9 @@ describe('flagNotice', () => {
         expect(flagNotice('no_location')).toBe(
             'Quedó sin ubicación y Recursos Humanos la verá señalada.',
         );
+        expect(flagNotice('away_center')).toBe(
+            'Quedó fuera de su centro y Recursos Humanos la verá señalada.',
+        );
     });
 
     it('says nothing of a flag only the panel reads, or of none', () => {

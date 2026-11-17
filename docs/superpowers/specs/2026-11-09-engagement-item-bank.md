@@ -53,7 +53,7 @@ piloto con personal operativo en su propio celular.
 | `eng.pride` | Me siento orgulloso(a) de trabajar en esta empresa. | índice |
 | `eng.motivation` | Me siento motivado(a) para hacer bien mi trabajo. | índice |
 | `eng.connection` | Quiero aportar a que esta empresa mejore. | índice |
-| `eng.recommend` | ¿Qué tan probable es que recomiende esta empresa como lugar para trabajar? (0 = nada probable, 10 = muy probable) | aparte |
+| `eng.recommend` | ¿Qué tan probable es que recomiende esta empresa como lugar para trabajar? | aparte |
 | `eng.stay` | Me gustaría seguir trabajando en esta empresa durante el próximo año. | aparte, solo en clima |
 
 - **Índice de compromiso** provisional: promedio del % favorable de los tres primeros. Si la validación muestra

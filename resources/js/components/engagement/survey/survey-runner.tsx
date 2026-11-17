@@ -58,7 +58,7 @@ export default function SurveyRunner({
             <SurveyStep survey={survey} flow={flow} />
             <SurveyNavigation
                 first={flow.isFirst}
-                last={step.kind === 'submit'}
+                next={flow.nextLabel}
                 // A closed question waits for its answer or for «Omitir pregunta»; everything else just goes on.
                 canAdvance={
                     !isClosed || flow.answers[step.item.key] !== undefined

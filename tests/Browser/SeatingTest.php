@@ -24,6 +24,7 @@ use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
+use Pest\Browser\Api\AwaitableWebpage;
 
 $looks = [
     'light desktop' => [false, false],
@@ -212,38 +213,82 @@ it('shows what a new seat still misses instead of registering it', function (): 
 });
 
 /**
- * The address of the person's Ley Silla page, the person, and the steps that take her there through the entrance (she opens
- * it without a session, enters with a link she asked for and lands back on it).
+ * The address of one of the person's Ley Silla pages (`$route`), the person, and the steps that take her there through the
+ * entrance (she opens it without a session, enters with a link she asked for and lands back on it, showing `$text`).
  *
  * @return array{string, App\Modules\Organization\Models\Employee, Closure}
  */
-function seatingPortal(): array
+function seatingPortal(string $route = 'portal.seating.show', string $text = 'Su trabajo de pie'): array
 {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme']);
     $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'name' => 'Ana Ruiz']);
     workIn($tenant);
 
-    return [route('portal.seating.show', $tenant->slug, absolute: false), $ana, enteringTo($ana->id, 'trabajo de pie')];
+    return [route($route, $tenant->slug, absolute: false), $ana, enteringTo($ana->id, $text)];
 }
 
-// Board LS-Portal: first who sees the answers and that answering is voluntary; then the two questions, one at a time.
-it('shows the person their own Ley Silla page with the voluntary notice', function (bool $dark, bool $mobile): void {
+/**
+ * Finding 14: what a Ley Silla screen of the person says about who sees it, in its header or its chip. An identified screen
+ * never says «Confidencial» nor «Anónimo»; an anonymous one never says «Solo RH y la Comisión».
+ */
+function seesPrivacy(AwaitableWebpage $page, string $label): AwaitableWebpage
+{
+    $others = array_diff(['Solo RH y la Comisión', 'Anónimo', 'Confidencial'], [$label]);
+    $page->assertSee($label);
+    foreach ($others as $other) {
+        $page->assertDontSee($other);
+    }
+
+    return $page;
+}
+
+// Finding 13, board SillaHub: the page is a list of tasks; nothing of health and no name on it.
+it('shows the person their Ley Silla tasks, each opening its own screen', function (bool $dark, bool $mobile): void {
     [$url, , $enter] = seatingPortal();
 
     visitPage('seating/portal', $url, $dark, $mobile, $enter)
+        ->assertSee('Su trabajo de pie')
+        ->assertSee('Usted decide')
+        ->assertSee('Cuéntenos de su trabajo de pie')
+        ->assertSee('Es voluntario')
+        ->assertSee('Avisar de un asiento dañado')
+        ->assertSee('Es anónimo')
+        ->assertDontSee('Espera su confirmación')
+        ->assertDontSee('Ana Ruiz')
+        ->assertDontSee('Acepto, quiero contestar');
+})->with($looks);
+
+it('puts the result that waits for the person first, with its badge', function (): void {
+    [$url, $ana, $enter] = seatingPortal();
+    RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
+
+    $enter(visit($url)->on()->mobile())
+        ->assertSee('Espera su confirmación')
+        ->assertSee('Confirme las medidas de su puesto')
+        ->assertSee('1 pendiente')
+        ->assertNoJavaScriptErrors();
+});
+
+// Board SillaConsent: first who sees the answers and that answering is voluntary; saying no costs the same as saying yes.
+it('opens the two questions with the voluntary notice and two buttons of the same size', function (bool $dark, bool $mobile): void {
+    [$url, , $enter] = seatingPortal('portal.seating.answers', 'Quién ve sus respuestas');
+
+    $page = visitPage('seating/portal-answers', $url, $dark, $mobile, $enter)
         ->assertSee('Ley Silla · 2 preguntas')
-        ->assertSee('Su trabajo de pie, Ana Ruiz')
         ->assertSee('Contestar es voluntario')
         ->assertSee('Quién ve sus respuestas')
         ->assertSee('Acepto, quiero contestar')
         ->assertSee('Prefiero no contestar')
+        ->assertDontSee('Ana Ruiz')
         ->assertDontSee('Pregunta 1 de 2');
+    seesPrivacy($page, 'Solo RH y la Comisión')
+        ->assertScript('() => { const [yes, no] = [...document.querySelectorAll("a, button")].filter((el) => ["Acepto, quiero contestar", "Prefiero no contestar"].includes(el.textContent.trim())).map((el) => el.getBoundingClientRect()); return yes.height === no.height && yes.width === no.width && yes.height >= 44; }', true);
 })->with($looks);
 
 it('asks the two questions one at a time, never moving on alone, and sends them', function (bool $dark, bool $mobile): void {
-    [$url, , $enter] = seatingPortal();
+    [$url, , $enter] = seatingPortal('portal.seating.answers', 'Quién ve sus respuestas');
 
-    visitPage('seating/portal', $url, $dark, $mobile, $enter)
+    $page = visitPage('seating/portal-answers', $url, $dark, $mobile, $enter)
         ->click('@portal-accept')
         ->assertSee('Pregunta 1 de 2')
         ->assertSee('¿Cómo es el calzado que usa para trabajar?')
@@ -255,14 +300,17 @@ it('asks the two questions one at a time, never moving on alone, and sends them'
         ->press('Enviar mis respuestas')
         ->assertSee('Gracias, quedó enviado')
         ->assertSee('La Comisión lo tomará en cuenta en su evaluación.')
+        ->assertSee('Volver a Ley Silla')
+        ->assertSee('Cambiar mis respuestas')
         ->assertNoJavaScriptErrors();
+    seesPrivacy($page, 'Solo RH y la Comisión');
 })->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
 
 // Board V3-Estados, «Portal sin conexión»: what the person answered stays on the phone and goes out when the connection is back.
 it('keeps the answers when the connection drops and sends them when it is back', function (bool $dark, bool $mobile): void {
-    [$url, $ana, $enter] = seatingPortal();
+    [$url, $ana, $enter] = seatingPortal('portal.seating.answers', 'Quién ve sus respuestas');
 
-    $page = visitPage('seating/portal', $url, $dark, $mobile, $enter)
+    $page = visitPage('seating/portal-answers', $url, $dark, $mobile, $enter)
         ->click('@portal-accept')
         ->click('input[name="footwear"][value="1"]')
         ->press('Siguiente')
@@ -284,25 +332,50 @@ it('keeps the answers when the connection drops and sends them when it is back',
         ->and(PersonInput::query()->withoutGlobalScopes()->sole()->employee_id)->toBe($ana->id);
 })->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
 
-it('tells the person when they already answered', function (): void {
-    [$url, $ana] = seatingPortal();
+it('tells the person when they already answered, and lets them change the answers', function (): void {
+    [$url, $ana] = seatingPortal('portal.seating.answers');
     PersonInput::factory()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
 
-    // Having answered, she lands on the thanks, not on the intro that names her standing work.
-    visitPage('seating/portal', $url, reach: enteringTo($ana->id, 'Gracias, quedó enviado'))->assertSee('Gracias, quedó enviado')->assertSee('Nos contestó el');
+    visitPage('seating/portal-answers', $url, reach: enteringTo($ana->id, 'Gracias, quedó enviado'))
+        ->assertSee('Nos contestó el')
+        ->press('Cambiar mis respuestas')
+        ->assertSee('Pregunta 1 de 2')
+        ->assertNoJavaScriptErrors();
 });
 
-it('lets the person decline without consequence, and change their mind', function (): void {
-    [$url, , $enter] = seatingPortal();
+it('lets the person decline: back to the tasks, nothing kept', function (): void {
+    [$url, , $enter] = seatingPortal('portal.seating.answers', 'Quién ve sus respuestas');
 
     $enter(visit($url))
         ->click('Prefiero no contestar')
-        ->assertSee('su evaluación se hace sin estos datos')
+        ->assertSee('Usted decide')
         ->assertDontSee('Pregunta 1 de 2')
-        ->click('Contestar ahora')
-        ->assertSee('Quién ve sus respuestas')
         ->assertNoJavaScriptErrors();
+
+    expect(PersonInput::query()->withoutGlobalScopes()->count())->toBe(0);
 });
+
+// Findings 13 to 15, board SillaAviso: anonymous, with no name on it; the report keeps neither who sends it nor their position.
+it('reports a damaged seat from its own anonymous screen', function (bool $dark, bool $mobile): void {
+    [$url, $ana, $enter] = seatingPortal('portal.seating.report', 'Qué asiento y qué le pasa');
+    $position = StandingPosition::factory()->create(['tenant_id' => $ana->tenant_id, 'work_center_id' => $ana->work_center_id, 'name' => 'Cajera']);
+    PositionAssignment::factory()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'position_id' => $position->id]);
+
+    $page = visitPage('seating/portal-report', $url, $dark, $mobile, $enter)
+        ->assertSee('Avisar de un asiento dañado')
+        ->assertSee('No guardamos quién avisa')
+        ->assertDontSee('Ana Ruiz')
+        ->assertDontSee('Cajera');
+    seesPrivacy($page, 'Anónimo')
+        ->type('description', 'El respaldo de la silla de la caja 2 está flojo.')
+        ->press('Avisar del asiento dañado')
+        ->assertSee('Usted decide')
+        ->assertNoJavaScriptErrors();
+
+    $report = SeatReport::query()->withoutGlobalScopes()->sole();
+    expect($report->description)->toBe('El respaldo de la silla de la caja 2 está flojo.')
+        ->and(array_keys($report->getAttributes()))->not->toContain('position_id')->not->toContain('employee_id');
+})->with(['light desktop' => [false, false], 'dark mobile' => [true, true]]);
 
 /** @return array{string, App\Modules\Organization\Models\Employee, StandingPosition, WorkCenter} The panel's address, a person in a position, the position and its center; the user sits on the center's Comisión. */
 function assessableCenter(): array
@@ -389,24 +462,54 @@ it('lists the seat reports of a center, open and resolved', function (bool $dark
         ->assertSee('Resueltos');
 })->with($looks);
 
-it('shows the person the result of their assessment to confirm, and the seat report form', function (bool $dark, bool $mobile): void {
-    [$url, $ana, $enter] = seatingPortal();
+// Finding 34, board SillaAcuse: the result on its own screen, behind the proof (a whole screen, not a dialog); the level big,
+// and «Confirmo que me informaron» stuck to the bottom at full width, the only main button.
+it('shows the person the result of their assessment to confirm, after proving it is them', function (bool $dark, bool $mobile): void {
+    [$url, $ana] = seatingPortal('portal.seating.acknowledgment');
     RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
+    Illuminate\Support\Facades\Notification::fake();
+    $reach = fn (AwaitableWebpage $page): mixed => provedWithCode(enteringTo($ana->id, 'Confirme que es usted')($page), 'Resultado de su evaluación');
 
-    visitPage('seating/portal', $url, $dark, $mobile, $enter)
-        ->assertSee('Evaluamos su trabajo de pie')
-        ->assertSee('Confirmo que me informaron')
-        ->assertSee('Avisar del asiento dañado');
+    $page = visitPage('seating/portal-acknowledgment', $url, $dark, $mobile, $reach)
+        ->assertSee('Su nivel de riesgo')
+        ->assertSee('Bajo')
+        ->assertSee('Medidas para cuidarle')
+        ->assertSee('Al confirmar, queda registrado que le informaron de este resultado.')
+        ->assertDontSee('Acepto, quiero contestar')
+        ->assertScript('() => document.querySelector("[role=dialog]") === null', true)
+        ->assertScript('() => { const button = [...document.querySelectorAll("button")].find((el) => el.textContent.includes("Confirmo que me informaron")); const bar = button.parentElement.getBoundingClientRect(); return Math.abs(button.getBoundingClientRect().width - bar.width) < 1; }', true);
+    seesPrivacy($page, 'Solo RH y la Comisión');
 })->with($looks);
 
-it('confirms from the portal and says so', function (): void {
-    [$url, $ana, $enter] = seatingPortal();
+it('confirms from the result with no dialog, and says so on a screen of its own', function (): void {
+    [$url, $ana] = seatingPortal('portal.seating.acknowledgment');
     RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
-
     Illuminate\Support\Facades\Notification::fake();
 
-    // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
-    provedWithCode($enter(visit($url))->press('Confirmo que me informaron'), 'Usted confirmó el')->assertNoJavaScriptErrors();
+    $page = provedWithCode(enteringTo($ana->id, 'Confirme que es usted')(visit($url)->on()->mobile()), 'Resultado de su evaluación')
+        ->press('Confirmo que me informaron')
+        ->assertSee('Gracias, quedó registrado')
+        ->assertSee('que le informaron del resultado de su evaluación')
+        ->assertScript('() => document.querySelector("[role=dialog]") === null', true)
+        ->assertNoJavaScriptErrors();
+    seesPrivacy($page, 'Solo RH y la Comisión');
+
+    expect(App\Modules\Seating\Models\RiskAcknowledgment::query()->withoutGlobalScopes()->count())->toBe(1);
+});
+
+// The proof lasts 5 minutes: a person who lingers on the result gets the proof as the fallback dialog, and then it goes.
+it('asks again for the proof in the dialog when the person lingers past its 5 minutes', function (): void {
+    [$url, $ana] = seatingPortal('portal.seating.acknowledgment');
+    RiskAssessment::factory()->signed()->create(['tenant_id' => $ana->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $ana->work_center_id]);
+    Illuminate\Support\Facades\Notification::fake();
+
+    $page = provedWithCode(enteringTo($ana->id, 'Confirme que es usted')(visit($url)), 'Resultado de su evaluación');
+    $this->travel(6)->minutes();
+    $page->press('Confirmo que me informaron')
+        ->assertPresent('[role=dialog]')
+        ->assertSee('Confirme que es usted');
+
+    expect(App\Modules\Seating\Models\RiskAcknowledgment::query()->withoutGlobalScopes()->count())->toBe(0);
 });
 
 it('shows the referrals of a person on their assessment, with the form to add one', function (bool $dark, bool $mobile): void {
@@ -573,16 +676,19 @@ it('walks the critical path: the Comisión assesses, the person confirms and rep
         ->assertSee('14 de 21')
         ->assertNoJavaScriptErrors();
 
-    $portal = route('portal.seating.show', Tenant::query()->findOrFail($ana->tenant_id)->slug, absolute: false);
-    $enter = enteringTo($ana->id, 'Evaluamos su trabajo de pie');
+    $slug = Tenant::query()->findOrFail($ana->tenant_id)->slug;
+    $portal = route('portal.seating.show', $slug, absolute: false);
 
     Illuminate\Support\Facades\Notification::fake();
-    $confirming = $enter(visit($portal)->on()->mobile())
-        ->assertSee('Evaluamos su trabajo de pie')
-        ->press('Confirmo que me informaron');
+    $tasks = enteringTo($ana->id, 'Espera su confirmación')(visit($portal)->on()->mobile())
+        ->click('Confirme las medidas de su puesto');
 
-    // Entered with a link: confirming asks first for a recent proof, a code by email (WorkerAccess), and then goes.
-    provedWithCode($confirming, 'Usted confirmó el')
+    // Entered with a link: the result asks first for a recent proof, a code by email (WorkerAccess), and then opens.
+    provedWithCode($tasks, 'Resultado de su evaluación')
+        ->press('Confirmo que me informaron')
+        ->assertSee('Gracias, quedó registrado')
+        ->click('Volver a Ley Silla')
+        ->click('Avisar de un asiento dañado')
         ->type('description', 'El respaldo de la silla de la caja 2 está flojo.')
         ->press('Avisar del asiento dañado')
         ->assertNoJavaScriptErrors();

@@ -51,6 +51,10 @@ it('says there is nothing to show yet, without saying why', function (bool $dark
 
     visitPage('engagement/portal-feedback', $url, $dark, $mobile, $enter)
         ->assertSee('Todavía no hay resultados para mostrar')
+        // Finding 33: a screen of state, centered, with «Atrás» in the header and no dashed box.
+        ->assertPresent('[data-slot="state-message"]')
+        ->assertNotPresent('[data-slot="empty-state"]')
+        ->assertSee('Atrás')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with([

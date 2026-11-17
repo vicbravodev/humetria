@@ -107,3 +107,51 @@ export function progressOf(list: Step[], index: number): Progress {
 
     return { position: done, total, fraction: total === 0 ? 0 : done / total };
 }
+
+/** What the main button says: the last question leads to the send step, which sends. Nothing moves on by itself. */
+export function nextLabel(
+    list: Step[],
+    index: number,
+): 'Siguiente' | 'Revisar y enviar' | 'Enviar mis respuestas' {
+    if (list[index]?.kind === 'submit') {
+        return 'Enviar mis respuestas';
+    }
+
+    return list[index + 1]?.kind === 'submit' &&
+        list[index]?.kind === 'question'
+        ? 'Revisar y enviar'
+        : 'Siguiente';
+}
+
+export type Tally = {
+    answered: number;
+    total: number;
+    /** The step of the first question left blank, to go back to it; none when all were answered. */
+    firstOmitted: number | null;
+};
+
+/**
+ * How many questions were answered before sending: a closed one with its answer, an open one with text. Only counts:
+ * the send step shows numbers, never an answer.
+ */
+export function tallyOf(list: Step[], replies: Replies): Tally {
+    const tally: Tally = { answered: 0, total: 0, firstOmitted: null };
+
+    list.forEach((step, index) => {
+        if (step.kind !== 'question') {
+            return;
+        }
+
+        const { key, scale } = step.item;
+        const answered =
+            scale === 'open'
+                ? (replies.comments[key] ?? '').trim() !== ''
+                : replies.answers[key] !== undefined;
+
+        tally.total += 1;
+        tally.answered += answered ? 1 : 0;
+        tally.firstOmitted ??= answered ? null : index;
+    });
+
+    return tally;
+}

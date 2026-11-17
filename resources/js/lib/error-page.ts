@@ -62,11 +62,25 @@ const MESSAGES: Record<number, Message> = {
     },
 };
 
+/** A time clock screen not activated or revoked: whoever looks at it received no message, RH gives a new link. */
+const SCREEN_NOT_FOUND: Message = {
+    title: 'Esta pantalla no está activa',
+    body: 'Pida a Recursos Humanos un enlace nuevo para activarla.',
+};
+
 /**
  * What the error page says for a status (pantallas: Error-403, Error-404); anything unknown reads as a server error.
- * On the survey (`survey`) it speaks "usted".
+ * On the survey (`survey`) it speaks "usted"; a time clock's `screen` that is not found asks RH for a new link.
  */
-export function errorMessage(status: number, survey = false): ErrorMessage {
+export function errorMessage(
+    status: number,
+    survey = false,
+    screen = false,
+): ErrorMessage {
+    if (screen && status === 404) {
+        return { caption: `Error ${status}`, ...SCREEN_NOT_FOUND };
+    }
+
     const message = survey
         ? (SURVEY_MESSAGES[status] ?? SURVEY_SERVER_ERROR)
         : (MESSAGES[status] ?? SERVER_ERROR);

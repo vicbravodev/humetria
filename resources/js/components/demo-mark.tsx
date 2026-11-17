@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
  * sheet, so nobody takes a demo report for a real diagnosis. Any other company, or no company, renders the page alone.
  * On screen it is a narrow tab on the right edge, halfway down: clear of the impersonation banner and the top bar, the
  * logos and titles of the standalone pages, the phone's bottom bar and the floating pills of Humi and the first steps. Its text runs top to bottom, so `px` pads its length and `py` its width.
+ * On a phone the content of the page (its `main`) keeps the tab's width clear, so the tab never covers a card or a word.
  * On paper it turns into a large, faint diagonal watermark across the middle of each sheet: the tab would sit on the text
  * of every page. It stays above the content because the report's cards are opaque and would hide anything behind them;
  * at a tenth of its opacity the text under it still reads.
@@ -15,7 +16,12 @@ export default function DemoMark({ children }: { children: ReactNode }) {
 
     return (
         <>
-            {children}
+            {demo ? (
+                // On a phone the tab would sit on the right edge of the cards and the text: the content of every page keeps its width clear.
+                <div className="contents max-md:[&_main]:pr-10">{children}</div>
+            ) : (
+                children
+            )}
             {demo && (
                 <div
                     data-slot="demo-mark"

@@ -33,6 +33,11 @@ export function normalizeCode(text: string): string {
     return text.replace(/[\s-]/g, '').toUpperCase();
 }
 
+/** What «Copiar referencia y clave» puts on the clipboard: both codes in groups of four, one per line. */
+export function copyText(reference: string, key: string): string {
+    return `Referencia: ${groupCode(reference)}\nClave: ${groupCode(key)}`;
+}
+
 /** What the person shares with themselves (a note, a message to their own phone): both codes and what they are for. */
 export function shareText(reference: string, key: string): string {
     return `Mi queja\nReferencia: ${groupCode(reference)}\nClave: ${groupCode(key)}\nGuarde su clave: sin ella no se puede ver cómo va y no se puede recuperar.`;

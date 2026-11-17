@@ -49,6 +49,77 @@ it('opens the survey with what the norm asks to say before it', function (bool $
         ->assertSee('No hay respuestas correctas ni incorrectas.');
 })->with($looks);
 
+// C-17 says what the welcome must say; it is ordered, not cut: what it is, the confidentiality, «Antes de empezar», how long and until when, the guides.
+it('orders the welcome with how long it takes and «Comenzar» stuck to the bottom of the phone', function (bool $dark): void {
+    invitedPerson();
+
+    $page = visitPage('campaigns/survey', '/survey/the-token', $dark, true)
+        ->assertSee('Evaluación NOM-035 · 2 guías')
+        ->assertSee('Antes de empezar')
+        ->assertSee('Piense en los dos últimos meses.')
+        ->assertSee('Conteste todas las preguntas.')
+        ->assertSee('Unos 20 min en total')
+        ->assertSee('Hasta el')
+        ->assertSee('Acontecimientos traumáticos severos · 5 min')
+        ->assertSee('Factores de riesgo psicosocial y entorno organizacional · 15 min');
+
+    // Before any scroll, «Comenzar» already sits at the foot of the screen, over the guides.
+    $page->assertScript('() => { const button = [...document.querySelectorAll("button")].find((it) => it.textContent.trim() === "Comenzar"); const box = button.getBoundingClientRect(); return box.bottom <= window.innerHeight && box.bottom > window.innerHeight - 100; }', true)
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true);
+})->with(['light' => false, 'dark' => true]);
+
+// Option B of the review: section I of Guía I is one sentence of the norm with its list, so it is asked whole, word for word (C-21).
+it('asks Guía I section I on one screen: the sentence of the norm and its six events, each with Sí and No', function (bool $dark): void {
+    invitedPerson(['nom035.guide-i']);
+
+    $page = visitPage('campaigns/survey', '/survey/the-token', $dark, true, fn ($page) => $page->click('Comenzar')->click('Empezar'))
+        ->assertSee('¿Ha presenciado o sufrido alguna vez, durante o con motivo del trabajo un acontecimiento como los siguientes:')
+        ->assertSee('Accidente que tenga como consecuencia la muerte, la pérdida de un miembro o una lesión grave?')
+        ->assertSee('Amenazas?, o')
+        ->assertSee('Cualquier otro que ponga en riesgo su vida o salud, y/o la de otras personas?')
+        ->assertScript('() => document.querySelectorAll("main fieldset").length', 6)
+        // Sí and No side by side under each event, like the paper form; no «Pregunta n de 6» over each one.
+        ->assertScript('() => [...document.querySelectorAll("main fieldset")].every((set) => { const [yes, no] = set.querySelectorAll("label"); return Math.abs(yes.getBoundingClientRect().top - no.getBoundingClientRect().top) < 1; })', true)
+        ->assertDontSee('Pregunta 1 de 6')
+        ->assertScript('() => [...document.querySelectorAll("main fieldset label")].every((option) => option.getBoundingClientRect().height >= 44)', true)
+        ->assertButtonDisabled('Enviar respuestas');
+
+    // The six events are long: «Anterior» and the main button stay at the foot of the screen while the person reads.
+    $page->assertScript('() => { const button = [...document.querySelectorAll("button")].find((it) => it.textContent.includes("Enviar respuestas")); const box = button.getBoundingClientRect(); return box.bottom <= window.innerHeight && box.bottom > window.innerHeight - 100; }', true);
+
+    $page->script(ANSWER_SCREEN);
+    $page->assertButtonEnabled('Enviar respuestas');
+})->with(['light' => false, 'dark' => true]);
+
+// Between guides: the guide just sent is confirmed, with what is left and the choice to go on or come back later.
+it('confirms a guide just sent with what is left, and goes on to the next one or back to the list', function (bool $dark): void {
+    invitedPerson(['nom035.guide-i', 'nom035.guide-iii']);
+
+    $page = visitPage('campaigns/survey', '/survey/the-token', $dark, true, function ($page): void {
+        $page->click('Comenzar')->click('Empezar');
+        answerGuide($page);
+    })
+        ->assertSee('Guía I enviada')
+        ->assertSee('Gracias. Le falta la Guía III, de unos 15 minutos. Puede seguir ahora o volver después con este mismo enlace.')
+        ->assertScript('() => document.querySelector("main [data-slot=arc-meter]").getAttribute("aria-label")', '1 de 2 guías enviadas')
+        ->assertSee('Seguir después');
+
+    $page->click('Seguir después')
+        ->assertSee('Enviada')
+        ->assertSee('Continuar con la Guía III')
+        ->click('Continuar con la Guía III')
+        ->assertSee('anónima');
+})->with(['light' => false, 'dark' => true]);
+
+it('opens the list, not the confirmation, when the person comes back with the link after sending a guide', function (): void {
+    invitedPerson(['nom035.guide-i', 'nom035.guide-iii']);
+    ParticipantInstrument::query()->withoutGlobalScopes()->where('instrument', 'nom035.guide-i')->update(['status' => 'completed', 'completed_at' => now()]);
+
+    visit('/survey/the-token')->on()->mobile()
+        ->assertSee('Continuar con la Guía III')
+        ->assertDontSee('Guía I enviada');
+});
+
 it('explains a link that does not work, naming no company', function (bool $dark, bool $mobile): void {
     invitedPerson();
 
@@ -105,11 +176,11 @@ it('lets the employee answer Guía I and Guía II from the phone, one question p
         ->assertSee('sí lleva su nombre')
         ->click('Empezar')
         ->assertSee('Sección 1 de 4')
-        ->assertSee('Pregunta 1 de 6');
+        ->assertSee('Amenazas?, o');
 
     answerGuide($page);
 
-    $page->assertSee('Enviada')
+    $page->assertSee('Guía I enviada')
         ->click('Continuar con la Guía II')
         ->assertSee('anónima')
         ->click('Empezar')
@@ -247,7 +318,11 @@ it('says there is nothing left when the used link is opened again', function (bo
     visitPage('campaigns/survey', '/survey/the-token', $dark, $mobile)
         ->assertSee('Gracias, terminó')
         ->assertSee('Ya contestó todo lo que le correspondía')
-        ->assertSee('Autopartes del Bajío');
+        ->assertSee('Autopartes del Bajío')
+        // The closing shared with the pulse: the arch full with its check, in the middle of the screen.
+        ->assertScript('() => document.querySelector("main [data-slot=arc-meter] path:last-of-type").getAttribute("stroke-dashoffset")', '0')
+        ->assertScript('() => document.querySelector("main [data-slot=arc-meter] svg.lucide-check") !== null', true)
+        ->assertScript('() => { const box = document.querySelector("main [data-slot=arc-meter]").getBoundingClientRect(); return box.top > window.innerHeight * 0.15; }', true);
 })->with($looks);
 
 it('shows each question as the design system asks: the instruction, the question and five large options', function (bool $dark, bool $mobile): void {
@@ -299,7 +374,6 @@ it('takes a submission whose session expired back to the survey with the answers
     invitedPerson(['nom035.guide-i']);
     $page = visit('/survey/the-token')->click('Comenzar')->click('Empezar');
     $page->script(ANSWER_SCREEN);
-    $page->click('Siguiente')->script(ANSWER_SCREEN);
 
     // The session runs out while the person answers. The app answers in this same process, whose session store still
     // holds the last request's data in memory: forgetting it leaves only what the expired handler gives back, as a new
@@ -326,7 +400,7 @@ it('takes a submission whose session expired back to the survey with the answers
         ->assertSee('La página se actualizó por seguridad. Sus respuestas siguen guardadas en este dispositivo: envíelas de nuevo.')
         ->assertPathIs('/survey/the-token')
         // Still on the last screen, every answer in place.
-        ->assertSee('Pregunta 6 de 6')
+        ->assertSee('Amenazas?, o')
         ->assertScript('() => [...document.querySelectorAll("fieldset")].every((fieldset) => fieldset.querySelector("input[type=radio]:checked")?.value === "no")')
         ->click('Enviar respuestas')
         ->assertSee('Gracias, terminó')

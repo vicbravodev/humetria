@@ -125,7 +125,7 @@ return [
         // in with the key they created at the door, which is a recent proof
         $slug = asPerson((string) $visitor?->employee_id);
         $this->get(route('portal.seating.show', $slug))->assertOk();
-        $this->post(route('portal.seating.acknowledgments.store', $slug))->assertRedirect(route('portal.seating.show', $slug));
+        $this->post(route('portal.seating.acknowledgments.store', $slug))->assertRedirect(route('portal.seating.acknowledgment', $slug));
         expect(RiskAcknowledgment::query()->where('assessment_id', $visitor?->id)->exists())->toBeTrue();
 
         // the confidential survey went to the 30 people of the offices, everyone but the door answered, and it closed

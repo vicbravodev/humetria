@@ -14,13 +14,13 @@ export default function PortalQuestionsNav({
     onStep: (step: 1 | 2) => void;
 }) {
     return (
-        <div className="mt-auto flex gap-2 pt-6">
+        <div className="flex gap-3">
             {step === 2 && (
                 <Button
                     type="button"
                     size="lg"
                     variant="outline"
-                    className="h-[52px]"
+                    className="h-14 text-lg"
                     onClick={() => onStep(1)}
                 >
                     Anterior
@@ -32,7 +32,7 @@ export default function PortalQuestionsNav({
                     key="next"
                     type="button"
                     size="lg"
-                    className="h-[52px] flex-1"
+                    className="h-14 flex-1 text-lg font-semibold"
                     disabled={!ready}
                     onClick={() => onStep(2)}
                 >
@@ -42,7 +42,7 @@ export default function PortalQuestionsNav({
                 <Button
                     key="send"
                     size="lg"
-                    className="h-[52px] flex-1"
+                    className="h-14 flex-1 text-lg font-semibold"
                     disabled={processing || !ready}
                 >
                     {processing && <Spinner />}

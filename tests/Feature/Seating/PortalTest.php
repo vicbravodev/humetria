@@ -20,24 +20,47 @@ beforeEach(function (): void {
     $this->slug = asPerson($this->ana->id);
 });
 
-it('lives at /me/{slug}/seating, in the person\'s pages, throttled like the rest of them', function (): void {
-    expect(route('portal.seating.show', 'acme', absolute: false))->toBe('/me/acme/seating');
+it('lives at /me/{slug}/seating, one task per page, in the person\'s pages, throttled like the rest of them', function (): void {
+    expect(route('portal.seating.show', 'acme', absolute: false))->toBe('/me/acme/seating')
+        ->and(route('portal.seating.answers', 'acme', absolute: false))->toBe('/me/acme/seating/answers')
+        ->and(route('portal.seating.report', 'acme', absolute: false))->toBe('/me/acme/seating/report');
 
-    $show = Route::getRoutes()->getByName('portal.seating.show');
-    $store = Route::getRoutes()->getByName('portal.seating.inputs.store');
-
-    expect($show?->gatherMiddleware())->toContain('throttle:portal-views')
-        ->and($store?->gatherMiddleware())->toContain('throttle:portal-actions');
+    foreach (['portal.seating.show', 'portal.seating.answers', 'portal.seating.report'] as $name) {
+        expect(Route::getRoutes()->getByName($name)?->gatherMiddleware())->toContain('throttle:portal-views');
+    }
+    expect(Route::getRoutes()->getByName('portal.seating.inputs.store')?->gatherMiddleware())->toContain('throttle:portal-actions');
 });
 
-it('shows the person their own page: the company, their name, the notice and the DOF options of footwear and discomfort', function (): void {
+// Finding 13: the page is a list of tasks; each one opens its own screen. Nothing of health nor the person's name is on it.
+it('shows the person the list of their Ley Silla tasks, with no answers, notice nor name', function (): void {
     $this->get(route('portal.seating.show', $this->slug))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('seating/portal')
             ->where('slug', $this->tenant->slug)
             ->where('company', 'Acme')
-            ->where('name', 'Ana Ruiz')
+            ->where('homeUrl', route('worker.home', $this->tenant->slug))
+            ->where('pending', false)
+            ->where('acknowledgedOn', null)
+            ->where('sentOn', null)
+            ->missing('notice')
+            ->missing('footwear')
+            ->missing('acknowledgment'));
+});
+
+it('names the person on none of their Ley Silla pages', function (string $name): void {
+    $response = $this->get(route($name, $this->slug))->assertOk();
+
+    expect(json_encode($response->viewData('page')['props']))->not->toContain('Ana Ruiz');
+})->with(['portal.seating.show', 'portal.seating.answers', 'portal.seating.report']);
+
+it('opens the two questions on their own page: the company, the notice and the DOF options of footwear and discomfort', function (): void {
+    $this->get(route('portal.seating.answers', $this->slug))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('seating/portal-answers')
+            ->where('slug', $this->tenant->slug)
+            ->where('company', 'Acme')
             ->where('notice', fn (string $notice) => str_contains($notice, 'voluntari'))
             ->where('footwear.options.1', 'Ergonómico, con buen soporte y amortiguación')
             ->where('footwear.options.3', 'Inadecuado (duro, sin soporte, inseguro)')
@@ -50,10 +73,12 @@ it('shows only the person own last answer date, never anything of other people',
     PersonInput::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->beto->id, 'work_center_id' => $this->beto->work_center_id, 'note' => 'Nota de Beto', 'submitted_at' => '2026-02-01 12:00:00']);
     PersonInput::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->ana->work_center_id, 'note' => 'Nota de Ana', 'submitted_at' => '2026-03-01 18:00:00']);
 
-    $response = $this->get(route('portal.seating.show', $this->slug))
-        ->assertInertia(fn (Assert $page) => $page->where('sentOn', '2026-03-01'));
+    foreach (['portal.seating.show', 'portal.seating.answers'] as $name) {
+        $response = $this->get(route($name, $this->slug))
+            ->assertInertia(fn (Assert $page) => $page->where('sentOn', '2026-03-01'));
 
-    expect(json_encode($response->viewData('page')['props']))->not->toContain('Beto')->not->toContain('Nota de');
+        expect(json_encode($response->viewData('page')['props']))->not->toContain('Beto')->not->toContain('Nota de');
+    }
 });
 
 it('sends a visitor to enter, ends the page for a person who left, and opens nothing of another company with this session', function (): void {
@@ -69,8 +94,16 @@ it('sends a visitor to enter, ends the page for a person who left, and opens not
     session()->flush();
     $this->get(route('portal.seating.show', $this->slug))->assertRedirect(route('worker.home', $this->slug));
     // The person of another company opens THAT company's page, never ours.
-    $this->get(route('portal.seating.show', asPerson($stranger->id)))->assertOk()->assertInertia(fn (Assert $page) => $page->where('name', $stranger->name)->where('company', $other->trade_name));
+    $this->get(route('portal.seating.show', asPerson($stranger->id)))->assertOk()->assertInertia(fn (Assert $page) => $page->where('company', $other->trade_name));
 });
+
+it('sends a visitor of the questions or of the seat report to enter, and opens only their own company', function (string $name): void {
+    $other = Tenant::factory()->create();
+
+    $this->get(route($name, $other->slug))->assertRedirect(route('worker.home', $other->slug));
+    session()->flush();
+    $this->get(route($name, $this->slug))->assertRedirect(route('worker.home', $this->slug));
+})->with(['portal.seating.answers', 'portal.seating.report']);
 
 // R2-employee-06: what waits for the person shows on their start, as the other tools do.
 it('counts on the person\'s start the signed assessment the person has not confirmed, at their page with no credential', function (): void {

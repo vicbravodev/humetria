@@ -9,13 +9,27 @@ import type { SignDeps } from '@/lib/attendance/signed-request';
 /** Who the server verified as signing, and what they may do next. */
 export type Signer = { name: string; next: string[] };
 
+/** How the person the page knows marks: remote (no code nor zone, their position dropped), on site, or nobody known. */
+export type PunchMode = 'remote' | 'onsite' | null;
+
+/**
+ * A mark of the day: its type and the time of where it was taken; its date there (a mark at 00:00 says its own day), and
+ * the zone of a mark taken away from the person's center («14:00 · hora de Tijuana»).
+ */
+export type DayMark = {
+    type: string;
+    time: string;
+    date?: string;
+    clock?: string;
+};
+
 /**
  * The person's day as the server tells it: who signed, their marks (type and local time), what may come next and a
  * flag.
  */
 export type PunchDay = {
     name: string;
-    marks: { type: string; time: string }[];
+    marks: DayMark[];
     next: string[];
     flag: string | null;
     /** How much the mark proves (`strong`, `medium` or `basic`); null when the server named none. */
@@ -30,6 +44,8 @@ export type PunchOutcome =
           person: Signer | null;
           /** The agreement to accept, when that is why the mark was refused. */
           agreement?: Agreement;
+          /** The center whose code it was, when it was another center's. */
+          center?: string;
       };
 
 export type PunchRequest = {
@@ -38,6 +54,8 @@ export type PunchRequest = {
     type: MarkType;
     qr: string | null;
     position: Reading | null;
+    /** The version of the agreement the person read, accepted with the same signature as the mark. */
+    agreementVersion?: number;
 };
 
 export type PunchDeps = SignDeps;
@@ -53,6 +71,28 @@ const BY_STATUS: Partial<Record<number, string>> = {
     429: 'throttled',
 };
 
+/** A mark of the day in a server's answer; none when it cannot be read. */
+function dayMark(mark: unknown): DayMark[] {
+    if (
+        !isJson(mark) ||
+        typeof mark['type'] !== 'string' ||
+        typeof mark['time'] !== 'string'
+    ) {
+        return [];
+    }
+
+    const { date, clock } = mark;
+
+    return [
+        {
+            type: mark['type'],
+            time: mark['time'],
+            ...(typeof date === 'string' ? { date } : {}),
+            ...(typeof clock === 'string' ? { clock } : {}),
+        },
+    ];
+}
+
 /** The day in a server's answer; marks or steps it cannot read are left out. Null when it is not a day. */
 export function punchDay(json: unknown): PunchDay | null {
     if (
@@ -66,13 +106,7 @@ export function punchDay(json: unknown): PunchDay | null {
 
     return {
         name: json['name'],
-        marks: json['marks'].flatMap((mark: unknown) =>
-            isJson(mark) &&
-            typeof mark['type'] === 'string' &&
-            typeof mark['time'] === 'string'
-                ? [{ type: mark['type'], time: mark['time'] }]
-                : [],
-        ),
+        marks: json['marks'].flatMap(dayMark),
         next: json['next'].filter((step: unknown) => typeof step === 'string'),
         flag: typeof json['flag'] === 'string' ? json['flag'] : null,
         evidence:
@@ -92,12 +126,14 @@ async function failure(response: Response): Promise<PunchOutcome> {
             : known;
 
     const agreement = agreementOf(body);
+    const center = isJson(body) ? body['center'] : null;
 
     return {
         kind: 'failed',
         reason: reason ?? 'failed',
         person: signer(body),
         ...(agreement === null ? {} : { agreement }),
+        ...(typeof center === 'string' ? { center } : {}),
     };
 }
 
@@ -133,6 +169,9 @@ export async function punch(
                     mark_type: request.type,
                     ...(request.qr === null ? {} : { q: request.qr }),
                     ...request.position,
+                    ...(request.agreementVersion === undefined
+                        ? {}
+                        : { agreement_version: request.agreementVersion }),
                 },
             },
             deps,
@@ -164,7 +203,9 @@ const MESSAGES: Record<string, string> = {
     accuracy_too_low: `Su ubicación no es lo bastante precisa. Active la ubicación precisa o salga a un lugar abierto e intente de nuevo. ${ASK_RH}`,
     no_location: `Para marcar se necesita su ubicación en este momento. Permita el acceso a la ubicación e intente de nuevo. ${ASK_RH}`,
     qr_required: `Escanee con la cámara el código QR de la pantalla de su centro de trabajo para marcar. ${ASK_RH}`,
-    qr_invalid: `El código QR ya venció o no es de su centro de trabajo. Escanee el código que muestra la pantalla ahora. ${ASK_RH}`,
+    qr_invalid: `Ese código no sirve para marcar. Escanee el código que muestra la pantalla de su centro. ${ASK_RH}`,
+    qr_expired: `Ese código ya venció. Escanee el que muestra la pantalla ahora. ${ASK_RH}`,
+    qr_other_center: `Ese código es de otro centro. Escanee el de la pantalla de su centro. ${ASK_RH}`,
     center_not_ready:
         'Su centro aún no está listo para marcar. Avise a Recursos Humanos; mientras tanto puede pedir una corrección.',
     day_already_open: 'Ya marcó su entrada.',
@@ -191,6 +232,7 @@ export function punchMessage(reason: string): string {
 const FLAGGED: Record<string, string> = {
     outside_zone: 'Quedó fuera de zona',
     no_location: 'Quedó sin ubicación',
+    away_center: 'Quedó fuera de su centro',
 };
 
 /** What the person is told of a flag on their mark: that RH will see it; null for a flag only the panel reads, or none. */

@@ -25,6 +25,6 @@ final readonly class PunchWorkerSection implements WorkerSection
             return null;
         }
 
-        return new WorkerSectionLink('attendance', 'Marcar', 'Marque su entrada y su salida, y vea su semana.', route('attendance.device.punch.home', $company->slug));
+        return new WorkerSectionLink('attendance', 'Marcar', 'Su entrada y su salida', route('attendance.device.punch.home', $company->slug));
     }
 }

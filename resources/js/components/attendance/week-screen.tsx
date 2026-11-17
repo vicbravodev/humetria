@@ -1,29 +1,20 @@
-import { Link } from '@inertiajs/react';
-import { CircleCheck, Clock } from 'lucide-react';
 import { useState } from 'react';
+import CorrectionSheet from '@/components/attendance/correction-sheet';
 import PersonFrame from '@/components/attendance/person-frame';
-import PersonHeading from '@/components/humetria/person-heading';
 import PunchFeedback from '@/components/attendance/punch-feedback';
-import ToneTile from '@/components/humetria/tone-tile';
 import WeekActions from '@/components/attendance/week-actions';
-import WeekAnswer from '@/components/attendance/week-answer';
-import WeekDays from '@/components/attendance/week-days';
+import WeekDisputeSheet from '@/components/attendance/week-dispute-sheet';
 import WeekGate from '@/components/attendance/week-gate';
-import WeekHours from '@/components/attendance/week-hours';
-import WeekNav from '@/components/attendance/week-nav';
-import WeekRequests from '@/components/attendance/week-requests';
-import WeekTotal from '@/components/attendance/week-total';
-import { Button } from '@/components/ui/button';
+import WeekRead from '@/components/attendance/week-read';
 import type { useWeek } from '@/hooks/use-week';
-import {
-    weekActions,
-    weekFeedback,
-    weekHeading,
-} from '@/lib/attendance/week-text';
+import { correctionTarget } from '@/lib/attendance/correction';
+import type { CorrectionAsk } from '@/lib/attendance/correction';
+import { weekActions, weekFeedback } from '@/lib/attendance/week-text';
 
 /**
- * «Mi semana» (board P4): the total and the shape of the week first, then where it stands, the hours as the law pays them and
- * every day; deciding goes at the foot, where the thumb is. Before the device verifies the person, only the way to open it.
+ * «Mi semana» (hallazgos 17, 21 y 22). Before the device verifies the person, a state screen centered with the way to open
+ * it; after, the week, with «Confirmar mi semana» and «No estoy de acuerdo» at the foot. «Atrás» goes back to Marcar. A
+ * correction and a dispute are asked in a sheet from the bottom, one at a time.
  */
 export default function WeekScreen({
     company,
@@ -34,20 +25,20 @@ export default function WeekScreen({
     punchUrl: string;
     state: ReturnType<typeof useWeek>;
 }) {
+    const [asking, setAsking] = useState<CorrectionAsk | null>(null);
     const [disputing, setDisputing] = useState(false);
     const { week, working } = state;
-    const open = weekActions(week, disputing).length > 0;
-    const heading =
-        week === null ? { title: 'Mi semana', text: null } : weekHeading(week);
+    const disputeUrl = week?.disputeUrl ?? null;
 
     return (
         <PersonFrame
             company={company}
+            back={punchUrl}
+            centered={week === null}
             actions={
-                open ? (
+                weekActions(week, false).length > 0 ? (
                     <WeekActions
                         week={week}
-                        disputing={disputing}
                         working={working}
                         onRead={() => void state.read()}
                         onConfirm={(url) => void state.confirm(url)}
@@ -56,54 +47,50 @@ export default function WeekScreen({
                 ) : undefined
             }
         >
-            <div className="flex w-full max-w-md flex-col gap-5">
-                {week?.status === 'confirmed' && (
-                    <ToneTile icon={CircleCheck} tone="ok" large />
-                )}
-                <PersonHeading title={heading.title}>
-                    {heading.text}
-                </PersonHeading>
+            <div className="flex w-full max-w-md flex-col items-center gap-4">
                 {week === null ? (
                     <WeekGate />
                 ) : (
-                    <>
-                        <WeekTotal week={week} />
-                        <WeekAnswer
+                    <div className="flex w-full flex-col gap-4">
+                        <WeekRead
                             week={week}
-                            disputing={disputing}
-                            working={working !== null}
-                            onCloseDispute={() => setDisputing(false)}
-                            onDispute={state.dispute}
+                            onAsk={(date, mark) =>
+                                setAsking({ ...correctionTarget(mark), date })
+                            }
                         />
-                        <WeekHours week={week} />
-                        <WeekDays
-                            days={week.days}
-                            requests={week.requests}
-                            working={working !== null}
-                            onCorrect={state.correct}
-                        />
-                        <WeekRequests requests={week.requests} />
-                        <WeekNav
-                            previousUrl={week.previousUrl}
-                            nextUrl={week.nextUrl}
-                        />
-                    </>
+                    </div>
                 )}
-                <PunchFeedback
-                    feedback={weekFeedback(state.error, state.notice)}
-                />
-                <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="text-base"
-                >
-                    <Link href={punchUrl}>
-                        <Clock aria-hidden className="size-5" />
-                        Volver a Marcar
-                    </Link>
-                </Button>
+                <div className="w-full empty:hidden">
+                    <PunchFeedback
+                        feedback={weekFeedback(state.error, state.notice)}
+                    />
+                </div>
             </div>
+            <CorrectionSheet
+                ask={asking}
+                working={working !== null}
+                onSend={(draft) =>
+                    void state.correct(draft).then((sent) => {
+                        if (sent) {
+                            setAsking(null);
+                        }
+                    })
+                }
+                onClose={() => setAsking(null)}
+            />
+            <WeekDisputeSheet
+                open={disputing && disputeUrl !== null}
+                working={working !== null}
+                onSend={(reason) =>
+                    disputeUrl !== null &&
+                    void state.dispute(disputeUrl, reason).then((done) => {
+                        if (done) {
+                            setDisputing(false);
+                        }
+                    })
+                }
+                onClose={() => setDisputing(false)}
+            />
         </PersonFrame>
     );
 }

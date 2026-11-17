@@ -1,10 +1,14 @@
 import { CalendarClock } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PeriodBalanceCard from '@/components/leave/period-balance-card';
+import PortalBalanceNote from '@/components/leave/portal-balance-note';
 import { countOf } from '@/lib/plural';
 import type { LeavePeriod } from '@/types';
 
-/** The days the person has, by period from the oldest (the first to be used), and the ones given to them in advance. */
+/**
+ * The days the person has: one summary with the total and, only when there is more than one period, the periods from the
+ * oldest (the first to be used) below it, so no figure is said twice. And the ones given to them in advance.
+ */
 export default function PortalBalance({
     periods,
     advanced,
@@ -21,40 +25,46 @@ export default function PortalBalance({
 
     return (
         <section aria-labelledby="leave-balance" className="grid gap-3">
-            <h2 id="leave-balance" className="text-xl font-semibold">
-                Sus días
-            </h2>
             {periods.length === 0 ? (
-                <EmptyState
-                    icon={CalendarClock}
-                    title="Aún no tiene días disponibles"
-                >
-                    Sus días de vacaciones aparecerán aquí en su aniversario en
-                    la empresa.
-                </EmptyState>
+                <>
+                    <h2 id="leave-balance" className="sr-only">
+                        Sus días
+                    </h2>
+                    <EmptyState
+                        icon={CalendarClock}
+                        title="Aún no tiene días disponibles"
+                    >
+                        Sus días de vacaciones aparecerán aquí en su aniversario
+                        en la empresa.
+                    </EmptyState>
+                </>
             ) : (
                 <>
-                    <p className="rounded-xl bg-accent px-4 py-3 text-accent-foreground">
-                        Tiene{' '}
-                        <strong className="font-semibold">
-                            {countOf(
-                                available,
-                                'día disponible',
-                                'días disponibles',
-                            )}
-                        </strong>
-                        . Se usan primero los del periodo más antiguo.
-                        {waiting > 0 &&
-                            ` ${countOf(waiting, 'día', 'días')} en espera de respuesta: todavía no se descuentan.`}
-                    </p>
-                    <ul className="divide-y card">
-                        {periods.map((period) => (
-                            <PeriodBalanceCard
-                                key={`${period.year}-${period.enjoyBy}`}
-                                period={period}
-                            />
-                        ))}
-                    </ul>
+                    <div className="grid gap-1 card p-5">
+                        <h2
+                            id="leave-balance"
+                            className="text-sm font-medium tracking-wide text-muted-foreground uppercase"
+                        >
+                            Días disponibles
+                        </h2>
+                        <p className="text-[40px] leading-[44px] font-semibold tracking-[-0.02em] tabular-nums">
+                            {countOf(available, 'día', 'días')}
+                        </p>
+                        <PortalBalanceNote
+                            periods={periods}
+                            waiting={waiting}
+                        />
+                    </div>
+                    {periods.length > 1 && (
+                        <ul className="divide-y card">
+                            {periods.map((period) => (
+                                <PeriodBalanceCard
+                                    key={`${period.year}-${period.enjoyBy}`}
+                                    period={period}
+                                />
+                            ))}
+                        </ul>
+                    )}
                 </>
             )}
             {advanced > 0 && (

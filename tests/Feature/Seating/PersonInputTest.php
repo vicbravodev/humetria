@@ -36,7 +36,7 @@ function sendInput(array $overrides = []): Illuminate\Testing\TestResponse
 it('stores footwear and discomfort only after the privacy notice is accepted', function (): void {
     Event::fake([PersonInputSubmitted::class]);
 
-    sendInput()->assertRedirect(route('portal.seating.show', $this->slug))->assertSessionHasNoErrors();
+    sendInput()->assertRedirect(route('portal.seating.answers', $this->slug))->assertSessionHasNoErrors();
 
     $input = PersonInput::query()->sole();
     expect($input->employee_id)->toBe($this->ana->id)

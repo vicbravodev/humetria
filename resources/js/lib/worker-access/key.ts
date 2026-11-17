@@ -1,5 +1,10 @@
 import type { HttpDeps } from '@/lib/worker-access/http';
-import { postJson, promptFailure, redirectOf } from '@/lib/worker-access/http';
+import {
+    answerFailure,
+    postJson,
+    promptFailure,
+    redirectOf,
+} from '@/lib/worker-access/http';
 import type { CreatedKey } from '@/lib/webauthn';
 import { creationOptions, registrationPayload } from '@/lib/webauthn';
 
@@ -10,6 +15,7 @@ export type KeyFailure =
     | 'full'
     | 'forbidden'
     | 'failed'
+    | 'server'
     | 'unsupported';
 
 /** The key was saved (and where to go), or why not. */
@@ -46,7 +52,7 @@ async function askOptions(
     const response = await postJson(url, {}, deps);
 
     if (!response.ok) {
-        return BY_STATUS[response.status] ?? 'failed';
+        return BY_STATUS[response.status] ?? answerFailure(response.status);
     }
 
     return creationOptions(await response.json()) ?? 'failed';
@@ -80,7 +86,7 @@ export async function registerKey(
         );
 
         if (!response.ok) {
-            return BY_STATUS[response.status] ?? 'failed';
+            return BY_STATUS[response.status] ?? answerFailure(response.status);
         }
 
         const redirect = await redirectOf(response);
@@ -111,6 +117,10 @@ const MESSAGES: Record<KeyFailure, { title: string; text: string }> = {
     unsupported: {
         title: 'Este navegador no puede crear llaves',
         text: 'Abra el enlace en Safari o Chrome de su teléfono.',
+    },
+    server: {
+        title: 'Algo salió mal de nuestro lado',
+        text: 'Si ya ve su llave en el dispositivo, intente entrar con ella; si no, vuelva a intentarlo en unos minutos.',
     },
     failed: {
         title: 'No hay conexión con el servidor',

@@ -16,6 +16,8 @@ export type WeekMark = {
     reason: string | null;
     /** How much the mark proves (`strong`, `medium`, `basic` or `corrected`); null when the server named none. */
     evidence: string | null;
+    /** The zone of a mark taken away from the person's center: «07:00 · hora de Tijuana». */
+    clock?: string;
 };
 
 export type WeekDay = {
@@ -90,6 +92,9 @@ function mark(json: unknown): WeekMark[] {
                   corrected: json['corrected'] === true,
                   reason: text(json['reason']),
                   evidence: text(json['evidence']),
+                  ...(typeof json['clock'] === 'string'
+                      ? { clock: json['clock'] }
+                      : {}),
               },
           ]
         : [];

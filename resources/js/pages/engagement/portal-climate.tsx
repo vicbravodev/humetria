@@ -21,7 +21,7 @@ export default function PortalClimatePage({
     commitments,
 }: PortalClimate) {
     return (
-        <SurveyShell company={company} label="Personal">
+        <SurveyShell company={company} label={null}>
             <Head title="Lo que dijeron y lo que haremos" />
             <div className="flex w-full max-w-2xl flex-col gap-6">
                 <WorkerHomeLink slug={slug} />

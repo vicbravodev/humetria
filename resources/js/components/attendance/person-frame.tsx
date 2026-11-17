@@ -8,15 +8,27 @@ const AREA = { icon: Clock, label: 'Registro de jornada' };
 export default function AttendancePersonFrame({
     company,
     actions,
+    centered = false,
+    back,
     children,
 }: {
     company: string;
     /** The buttons of the screen, stuck to the bottom: the main one first. */
     actions?: ReactNode;
+    /** A screen of state: centered in the free space (see `PersonFrame`). */
+    centered?: boolean;
+    /** «Atrás» at the top left, where it goes: the portal from Marcar, Marcar from «Mi semana». */
+    back?: string | undefined;
     children: ReactNode;
 }) {
     return (
-        <PersonFrame company={company} area={AREA} actions={actions}>
+        <PersonFrame
+            company={company}
+            area={AREA}
+            actions={actions}
+            centered={centered}
+            back={back}
+        >
             {children}
         </PersonFrame>
     );

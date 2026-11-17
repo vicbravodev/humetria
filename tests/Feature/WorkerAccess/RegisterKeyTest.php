@@ -11,6 +11,7 @@ use App\Modules\WorkerAccess\Notifications\KeyRegistered;
 use App\Modules\WorkerAccess\Support\KeyAllowance;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
@@ -60,6 +61,17 @@ it('lets a session opened with RH\'s link register the first key, to the audit t
 
         return true;
     });
+});
+
+it('keeps the saved key and answers 200 when the email to the person cannot be queued, reporting the failure', function (): void {
+    enteredAs($this->ana->id, EntryVia::IssuedLink);
+    Exceptions::fake();
+    Notification::shouldReceive('send')->andThrow(new RuntimeException('queue down'));
+
+    registerWith($this->phone)->assertOk()->assertJson(['redirect' => route('worker.home', 'acme')]);
+
+    expect(WorkerCredential::query()->sole()->employee_id)->toBe($this->ana->id);
+    Exceptions::assertReported(fn (RuntimeException $e): bool => $e->getMessage() === 'queue down');
 });
 
 it('lets a session opened with a key add another one, registered via the session', function (): void {

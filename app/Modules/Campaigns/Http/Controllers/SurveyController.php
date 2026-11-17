@@ -96,6 +96,7 @@ final class SurveyController extends Controller
             'shortTitle' => $definition->shortTitle,
             'identified' => $definition->identified,
             'status' => $status,
+            'minutes' => $definition->minutes,
             'options' => $definition->options,
             'sections' => array_map(fn (SectionDefinition $section): array => [
                 'title' => $section->title,

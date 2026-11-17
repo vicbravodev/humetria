@@ -43,6 +43,7 @@ describe('sendProofCode', () => {
 
         expect(await sendProofCode('/c', deps(json({}, 429)))).toBe('busy');
         expect(await sendProofCode('/c', deps(json({}, 403)))).toBe('failed');
+        expect(await sendProofCode('/c', deps(json({}, 500)))).toBe('server');
         expect(
             await sendProofCode('/c', {
                 fetcher: vi.fn<typeof fetch>().mockRejectedValue(new Error()),
@@ -83,6 +84,7 @@ describe('checkProofCode', () => {
         );
         expect(await check(json({}, 429))).toBe('busy');
         expect(await check(json({}, 403))).toBe('failed');
+        expect(await check(json({}, 500))).toBe('server');
         expect(await check(json({}))).toBe('failed');
     });
 
@@ -104,6 +106,7 @@ describe('messages', () => {
         expect(codeMessage('invalid')).toContain('seis números');
         expect(codeMessage('busy')).toContain('Espere');
         expect(codeMessage('failed')).toContain('señal');
+        expect(codeMessage('server')).toContain('de nuestro lado');
     });
 
     it('says what to do when the key did not prove it, never to ask for a link', () => {
@@ -111,6 +114,7 @@ describe('messages', () => {
         expect(proofKeyMessage('refused')).toContain('No reconocimos');
         expect(proofKeyMessage('unsupported')).toContain('donde creó su llave');
         expect(proofKeyMessage('failed')).toContain('señal');
+        expect(proofKeyMessage('server')).toContain('de nuestro lado');
     });
 
     it('says how long a code lasts', () => {

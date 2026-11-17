@@ -1,6 +1,6 @@
 import type { PunchFeedback } from '@/lib/attendance/punch-state';
 import type { RibbonDay } from '@/lib/attendance/week-ribbon';
-import type { WeekDay, WeekMark, WeekView } from '@/lib/attendance/week';
+import type { WeekDay, WeekView } from '@/lib/attendance/week';
 
 const MONTHS = [
     'enero',
@@ -170,47 +170,38 @@ export function weekFeedback(
     return notice === null ? null : { kind: 'done', text: notice };
 }
 
-/** What the page says first (board P4): where the week stands as a title, and under it whose week it is. */
-export function weekHeading(
-    view: Pick<WeekView, 'name' | 'week' | 'status' | 'blocked'>,
-): { title: string; text: string } {
-    const titles: Record<string, string> = {
-        confirmed: 'Semana confirmada',
-        disputed: 'Semana objetada',
-        open: 'Su semana en curso',
-    };
-    const pending =
-        view.blocked === null
-            ? 'Su semana está lista'
-            : 'Su semana por revisar';
-
-    return {
-        title: titles[view.status] ?? pending,
-        text: `${view.name} · ${weekTitle(view.week.start, view.week.end)}`,
-    };
-}
-
-/** The hours of the week: the total, and how they are paid, apart only what there is (doubles, triples, the rest day). */
+/**
+ * The hours of the week (hallazgo 21): the total, then ordinary and extra in a line each, and only the kinds of extra
+ * there are (doubles, triples, the rest day) detailed under them.
+ */
 export function weekTotal(view: Pick<WeekView, 'days' | 'summary'>): {
     total: string;
-    parts: string;
+    lines: string[];
+    detail: string | null;
 } {
     const { summary } = view;
     const worked = view.days.reduce((sum, day) => sum + day.workedMinutes, 0);
-    const parts = [
-        [summary.ordinaryMinutes, 'ordinarias', true],
-        [summary.doubleMinutes, 'dobles', false],
-        [summary.tripleMinutes, 'triples', false],
-        [summary.restDayMinutes, 'en descanso', false],
-    ].flatMap(([minutes, label, always]) =>
-        typeof minutes === 'number' && (minutes > 0 || always === true)
-            ? [`${duration(minutes)} ${label}`]
-            : [],
+    const detail = (
+        [
+            [summary.doubleMinutes, 'dobles'],
+            [summary.tripleMinutes, 'triples'],
+            [summary.restDayMinutes, 'en descanso'],
+        ] as const
+    ).flatMap(([minutes, label]) =>
+        minutes > 0 ? [`${duration(minutes)} ${label}`] : [],
     );
+
+    if (worked === 0) {
+        return { total: '0 h', lines: ['Sin horas trabajadas'], detail: null };
+    }
 
     return {
         total: duration(worked),
-        parts: worked === 0 ? 'Sin horas trabajadas' : parts.join(' · '),
+        lines: [
+            `${duration(summary.ordinaryMinutes)} ordinarias`,
+            `${duration(summary.overtimeMinutes)} extra`,
+        ],
+        detail: detail.length === 0 ? null : detail.join(' · '),
     };
 }
 
@@ -230,33 +221,6 @@ export function absenceLabel(absence: WeekDay['absence']): string | null {
     }
 
     return absence === 'leave' ? 'Permiso' : null;
-}
-
-const EVIDENCE: Record<string, { dots: number; text: string; rank: number }> = {
-    strong: { dots: 3, text: 'Fuerte', rank: 0 },
-    medium: { dots: 2, text: 'Media', rank: 1 },
-    basic: { dots: 1, text: 'Básica', rank: 2 },
-    corrected: { dots: 1, text: 'Corregida', rank: 3 },
-};
-
-/** How much a day proves, in a word and in dots: as much as its weakest mark (criterio 5.3); null with no marks or an unknown level. */
-export function dayEvidence(
-    marks: readonly WeekMark[],
-): { dots: number; text: string } | null {
-    const levels = marks.map((mark) => EVIDENCE[mark.evidence ?? '']);
-    const weakest = levels.reduce(
-        (found, level) =>
-            level === undefined || found === undefined
-                ? undefined
-                : level.rank > found.rank
-                  ? level
-                  : found,
-        levels[0],
-    );
-
-    return weakest === undefined
-        ? null
-        : { dots: weakest.dots, text: weakest.text };
 }
 
 /** The buttons at the foot of «Mi semana»: read it, then confirm it or say what is not right; none while the person writes. */

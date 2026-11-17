@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { clockNow } from '@/lib/attendance/correction';
 import type { ProblemAction } from '@/lib/attendance/punch-problem';
@@ -5,17 +6,21 @@ import { hrLinkMessage, LOCATION_HOWTO } from '@/lib/attendance/punch-problem';
 import { useCopyMessage } from '@/hooks/use-copy-message';
 
 /**
- * What the buttons of a problem do: mark again, close it, open the form of a correction (at the time on the company's
- * clock now), say how to allow the location, or copy the message that asks RH for the link of the phone.
+ * What the buttons of a problem do: mark again, open Marcar again without the old code in its address (to scan the one on
+ * screen now), close it, open the form of a correction (at the time of the center's clock now, by the server's time),
+ * say how to allow the location, or copy the message that asks RH for the link of the phone.
  */
 export function useProblemActions({
     company,
     timezone,
+    now,
     onRetry,
     onDismiss,
 }: {
     company: string;
     timezone: string;
+    /** The server's time now. */
+    now: number;
     onRetry: () => void;
     onDismiss: () => void;
 }) {
@@ -30,11 +35,14 @@ export function useProblemActions({
             case 'retry':
                 onRetry();
                 break;
+            case 'rescan':
+                router.get(window.location.pathname);
+                break;
             case 'dismiss':
                 onDismiss();
                 break;
             case 'correction':
-                setAsking(clockNow(new Date(), timezone));
+                setAsking(clockNow(new Date(now), timezone));
                 break;
             case 'howto':
                 setHowto(LOCATION_HOWTO);

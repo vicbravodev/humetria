@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { ANY_STEP } from '@/lib/attendance/next-step';
 import { feedbackAgreement, stateAfter } from '@/lib/attendance/punch-state';
 
 const day = {
@@ -9,6 +8,19 @@ const day = {
     flag: null,
     evidence: 'strong',
 };
+
+describe('stateAfter, a code of another center', () => {
+    it('keeps the center whose code it was, for the problem to name it', () => {
+        expect(
+            stateAfter({
+                kind: 'failed',
+                reason: 'qr_other_center',
+                person: { name: 'Ana', next: ['start'] },
+                center: 'Oficinas',
+            }).feedback,
+        ).toMatchObject({ reason: 'qr_other_center', center: 'Oficinas' });
+    });
+});
 
 describe('stateAfter', () => {
     it('shows the person who just signed, their day and their next steps', () => {
@@ -24,14 +36,14 @@ describe('stateAfter', () => {
         });
     });
 
-    it('offers every step after a mark out of sequence, so nobody is stuck, and shows no marks', () => {
+    it('offers only the steps that proceed after a mark out of sequence, said, and shows no marks (hallazgo 27)', () => {
         const state = stateAfter({
             kind: 'failed',
             reason: 'day_not_open',
             person: { name: 'Bob Ruiz', next: ['start'] },
         });
 
-        expect(state.person).toEqual({ name: 'Bob Ruiz', next: ANY_STEP });
+        expect(state.person).toEqual({ name: 'Bob Ruiz', next: ['start'] });
         expect(state.marks).toBeNull();
         expect(state.feedback).toEqual({
             kind: 'error',
@@ -41,15 +53,15 @@ describe('stateAfter', () => {
     });
 
     it.each(['day_already_open', 'already_on_break', 'not_on_break'])(
-        'offers every step after %s',
+        'offers the steps of the person who signed after %s',
         (reason) => {
             expect(
                 stateAfter({
                     kind: 'failed',
                     reason,
-                    person: { name: 'Bob', next: ['start'] },
+                    person: { name: 'Bob', next: ['break_end'] },
                 }).person?.next,
-            ).toEqual(ANY_STEP);
+            ).toEqual(['break_end']);
         },
     );
 

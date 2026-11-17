@@ -1,42 +1,59 @@
 import { Fingerprint } from 'lucide-react';
+import PunchEveryStep from '@/components/attendance/punch-every-step';
 import { Button } from '@/components/ui/button';
-import type { MarkType, Step } from '@/lib/attendance/next-step';
+import { nextSteps } from '@/lib/attendance/next-step';
+import type { MarkType } from '@/lib/attendance/next-step';
+import type { Signer } from '@/lib/attendance/punch';
+import { cn } from '@/lib/utils';
 
 /**
- * The big button of the next step, and the other steps that may follow, smaller (board P2). Each asks the device for the
- * person's fingerprint, face or PIN; the page never advances on its own.
+ * The steps at the foot of Marcar, compact so the content is seen (hallazgo 16). Nobody known: the four in two rows. A
+ * person known: the big button of their next step and the others smaller, two per row. Each asks for their fingerprint,
+ * face or PIN; the page never advances on its own.
  */
 export default function PunchButton({
-    primary,
-    others,
+    person,
     onMark,
 }: {
-    primary: Step | null;
-    others: Step[];
+    person: Signer | null;
     onMark: (type: MarkType) => void;
 }) {
+    if (person === null) {
+        return <PunchEveryStep onMark={onMark} />;
+    }
+
+    const { primary, others } = nextSteps(person.next);
+
     return (
         <>
             {primary !== null && (
                 <Button
-                    className="h-14 w-full text-lg font-semibold"
+                    className="h-14 w-full text-[17px] font-semibold"
                     onClick={() => onMark(primary.type)}
                 >
-                    <Fingerprint aria-hidden className="size-6" />
+                    <Fingerprint aria-hidden className="size-5" />
                     {primary.label}
                 </Button>
             )}
-            {others.map((step) => (
-                <Button
-                    key={step.type}
-                    variant="outline"
-                    size="lg"
-                    className="w-full text-base"
-                    onClick={() => onMark(step.type)}
+            {others.length > 0 && (
+                <div
+                    className={cn(
+                        'grid gap-2.5',
+                        others.length > 1 && 'grid-cols-2',
+                    )}
                 >
-                    {step.label}
-                </Button>
-            ))}
+                    {others.map((step) => (
+                        <Button
+                            key={step.type}
+                            variant="outline"
+                            className="h-12 text-base"
+                            onClick={() => onMark(step.type)}
+                        >
+                            {step.label}
+                        </Button>
+                    ))}
+                </div>
+            )}
         </>
     );
 }

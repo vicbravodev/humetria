@@ -18,7 +18,6 @@ final class PageFrame
         'campaigns/survey',
         'engagement/survey',
         'engagement/portal-feedback',
-        'seating/portal',
         'engagement/portal-climate',
         'organization/portal-team',
         'disclosure/portal-policy',
@@ -44,7 +43,7 @@ final class PageFrame
     ];
 
     /** The families that share a prefix. */
-    public const array STANDALONE_PREFIXES = ['telework/portal', 'leave/portal', 'complaints-public/', 'disclosure-public/'];
+    public const array STANDALONE_PREFIXES = ['telework/portal', 'leave/portal', 'seating/portal', 'complaints-public/', 'disclosure-public/'];
 
     public static function isStandalone(string $component): bool
     {
