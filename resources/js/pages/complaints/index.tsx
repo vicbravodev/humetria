@@ -103,7 +103,7 @@ export default function Cases(props: Props) {
                     label="Páginas de casos"
                     pinned={false}
                 />
-                <p className="text-caption text-muted-foreground">
+                <p className="max-w-[620px] text-caption text-muted-foreground">
                     Cuando tienes casos nuevos o una persona te escribe, te
                     avisamos por correo cuántos son, a lo más una vez por hora.
                     El correo nunca incluye el contenido.

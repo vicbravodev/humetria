@@ -21,12 +21,16 @@ it('starts the content of every module at the same column, with no sideways scro
         }
         JS;
     $scrolls = '() => document.documentElement.scrollWidth > document.documentElement.clientWidth';
+    // A page that fills the frame keeps its running text readable: no paragraph of more than a line runs past 48 em
+    // (≈ 620 px of body text, the `max-w` of running text; a lead in a bigger size may run a little wider).
+    $longLines = '() => [...document.querySelectorAll(\'[data-slot="page-body"] p\')].filter((p) => p.textContent.length > 120 && p.getBoundingClientRect().width / parseFloat(getComputedStyle(p).fontSize) > 48).map((p) => p.textContent.slice(0, 40)).join(" | ")';
     $edges = [];
 
-    foreach (['employees', 'attendance', 'vacations', 'complaints', 'compensation', 'disclosure', 'telework', 'seating', 'telework/settings'] as $path) {
+    foreach (['employees', 'attendance', 'attendance/policy', 'vacations', 'complaints', 'complaints/channel', 'compensation', 'disclosure', 'telework', 'seating', 'access', 'telework/settings'] as $path) {
         $page = visit("{$url}/{$path}")->resize($width, 900)->assertNoJavaScriptErrors();
         $edges[$path] = $page->script($edge);
-        expect($page->script($scrolls))->toBeFalse("{$path} scrolls sideways at {$width} px");
+        expect($page->script($scrolls))->toBeFalse("{$path} scrolls sideways at {$width} px")
+            ->and($page->script($longLines))->toBe('', "{$path} runs its text too long at {$width} px");
     }
 
     expect(array_unique($edges))->toHaveCount(1, json_encode($edges, JSON_THROW_ON_ERROR));
