@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Assistant\Support\LiveFacts;
+use App\Modules\Assistant\Tools\GetCampaignProgress;
+use App\Modules\Assistant\Tools\GetRiskResults;
+use App\Modules\Assistant\Tools\ListPendingActions;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
@@ -19,7 +22,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 
-mutates(LiveFacts::class);
+mutates(LiveFacts::class, ListPendingActions::class, GetCampaignProgress::class, GetRiskResults::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();
@@ -33,10 +36,10 @@ function factsUrl(Tenant $tenant): string
     return route('tenant.assistant.facts', $tenant->slug);
 }
 
-/** A Guía III campaign of `$tenant` closing in three days, with `$invited` people given the guide and `$answered` of them done. */
-function closingCampaign(Tenant $tenant, WorkCenter $center, int $invited, int $answered): Campaign
+/** A Guía III campaign of `$tenant` closing in `$days` days, with `$invited` people given the guide and `$answered` of them done. */
+function closingCampaign(Tenant $tenant, WorkCenter $center, int $invited, int $answered, int $days = 3): Campaign
 {
-    $campaign = Campaign::factory()->active(now()->addDays(3)->toDateString())->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'instruments' => ['nom035.guide-i', 'nom035.guide-iii'], 'workers' => 60]);
+    $campaign = Campaign::factory()->active(now()->addDays($days)->toDateString())->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'instruments' => ['nom035.guide-i', 'nom035.guide-iii'], 'workers' => 60]);
 
     foreach (range(1, $invited) as $number) {
         ParticipantInstrument::factory()->create([
@@ -164,4 +167,43 @@ it('never tells the facts of another company, and keeps them apart', function ()
 it('is closed to a guest and to a role that may not use Humi', function (): void {
     $this->getJson(factsUrl($this->a))->assertUnauthorized();
     $this->actingAs(memberOf($this->a, TenantRole::Committee))->getJson(factsUrl($this->a))->assertForbidden();
+});
+
+it('says one or many as it is: campaigns, questionnaires, centers and Programas', function (): void {
+    $south = WorkCenter::factory()->create(['tenant_id' => $this->a->id, 'name' => 'Planta Sur']);
+    $first = recordOf(closingCampaign($this->a, $this->plant, 2, 1));
+    closingCampaign($this->a, $south, 3, 1, 5);
+    foreach ([$this->plant, $south] as $center) {
+        $late = Program::factory()->create(['tenant_id' => $this->a->id, 'campaign_id' => evaluatedCenter($this->a, $center)->id]);
+        ProgramAction::factory()->create(['tenant_id' => $this->a->id, 'program_id' => $late->id, 'due_on' => now()->subDays(2)->toDateString()]);
+        Teleworker::factory()->active()->create(['tenant_id' => $this->a->id, 'employee_id' => Employee::factory()->create(['tenant_id' => $this->a->id, 'work_center_id' => $center->id])->id]);
+    }
+
+    $this->actingAs($this->hr)->getJson(factsUrl($this->a))
+        ->assertJsonPath('facts.participation', 'En 2 campañas: 2 de 5 cuestionarios contestados (40 %)')
+        ->assertJson(['facts' => [
+            'invite.campaigns' => "Cierra el {$first->closesOn} y falta 1 cuestionario. ¿Te cuento cómo va?",
+            'invite.interventions' => '2 programas de intervención tienen acciones vencidas. ¿Los repasamos?',
+            'invite.work_centers' => 'A 2 centros les falta algo de su lista de NOM-037. ¿Te explico qué falta?',
+        ]])
+        ->assertJsonPath('facts.telework', 'Teletrabajo: 0 de 2 centros con su lista completa');
+});
+
+it('does not invite to results once they are a month old', function (): void {
+    $this->travelTo(now()->subDays(31));
+    evaluatedCenter($this->a, $this->plant);
+    $this->travelBack();
+
+    $this->actingAs($this->hr)->getJson(factsUrl($this->a))
+        ->assertJsonPath('facts.risk', fn (string $risk): bool => str_starts_with($risk, 'Resultados de la evaluación cerrada el '))
+        ->assertJsonCount(4, 'facts');
+});
+
+it('says why the latest closed evaluation has no results instead of inviting to them', function (): void {
+    $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->a->id, 'work_center_id' => $this->plant->id, 'workers' => 30]);
+    AnonymousResponse::factory()->count(4)->create(['campaign_id' => $closed->id, 'area_id' => Area::factory()->create(['tenant_id' => $this->a->id])->id, 'instrument' => 'nom035.guide-ii', 'answers' => nom035Answers('nom035.guide-ii', 'never')]);
+
+    $this->actingAs($this->hr)->getJson(factsUrl($this->a))
+        ->assertJsonPath('facts.risk', 'Todavía no hay suficientes respuestas en este grupo para mostrar resultados.')
+        ->assertJsonCount(4, 'facts');
 });
