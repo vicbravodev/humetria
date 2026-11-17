@@ -8,6 +8,7 @@ use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Data\Position;
 use App\Modules\Attendance\Enums\MarkMethod;
+use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
@@ -29,6 +30,7 @@ use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
+use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -58,7 +60,7 @@ final readonly class MarkController
 {
     private const string SESSION_KEY = 'attendance.person';
 
-    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones, private WorkCenters $workCenters) {}
+    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones, private WorkCenters $workCenters, private WorkerSession $session) {}
 
     /**
      * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
@@ -67,8 +69,11 @@ final readonly class MarkController
     public function show(Request $request, string $tenant): SymfonyResponse
     {
         $person = $this->remembered($request);
-        // The day and the clock of the person who marked here, in their center's zone; the company's before anyone did.
-        $timezone = $person === null ? $this->timezones->forTenant() : $this->timezones->forCenter($person->workCenterId);
+        // Who this page speaks to, for how they mark and their clock: who marked here, or else the person of the portal's
+        // session (never shown as them: whoever taps signs).
+        $known = $person ?? $this->fromPortal();
+        // The day and the clock of that person, in their center's zone; the company's before anyone is known.
+        $timezone = $known === null ? $this->timezones->forTenant() : $this->timezones->forCenter($known->workCenterId);
         $q = $request->query('q');
         $qr = is_string($q) && $q !== '' && strlen($q) <= 128 ? $q : null;
 
@@ -90,6 +95,10 @@ final readonly class MarkController
             'agreementUrl' => route('attendance.device.agreement.accept', $tenant),
             // A mark refused is asked of RH at the time of the center's clock, whatever the phone's zone.
             'timezone' => $timezone,
+            // How they mark: a remote person is asked for no code nor zone (their position is dropped); null for nobody known.
+            'mode' => $known === null ? null : ($this->schedule($known->id)?->work_mode === WorkMode::Remote ? 'remote' : 'onsite'),
+            // The server's clock, in milliseconds: the page's clock follows it, not the phone's.
+            'now' => CarbonImmutable::now()->getTimestampMs(),
         ]);
 
         $response = $page->toResponse($request);
@@ -201,6 +210,14 @@ final readonly class MarkController
         }
 
         return $person;
+    }
+
+    /** The person whose portal session is open in this browser (WorkerSession forgets one who left); null for none. */
+    private function fromPortal(): ?RosterEntry
+    {
+        $identity = $this->session->current();
+
+        return $identity === null ? null : $this->roster->find($identity->employeeId);
     }
 
     /**

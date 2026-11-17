@@ -128,9 +128,9 @@ function acceptWith(SoftAuthenticator $phone, string $userHandle, int $version, 
  *
  * @param  array<string, mixed>  $body
  */
-function anaPunches(array $body = []): TestResponse
+function anaPunches(array $body = [], ?string $session = null): TestResponse
 {
-    return punchWith(test()->phone, test()->ana->id, ['q' => punchQr(test()->tenant->id, test()->plant->id), ...PUNCH_INSIDE, ...$body]);
+    return punchWith(test()->phone, test()->ana->id, ['q' => punchQr(test()->tenant->id, test()->plant->id), ...PUNCH_INSIDE, ...$body], $session);
 }
 
 describe('the page', function (): void {
@@ -177,6 +177,33 @@ describe('the page', function (): void {
         $this->get(route('attendance.device.punch.show', ['acme', 'q' => 'abc']))
             ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
         $this->get(route('login'))->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+    });
+
+    it('says how the person who marked here works: remote asks for no code nor zone, on site as it was, nobody known says nothing', function (): void {
+        $this->get(route('attendance.device.punch.home', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('mode', null));
+
+        $session = punchSession();
+        anaPunches([], $session)->assertOk();
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'onsite'));
+
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote'));
+    });
+
+    it('says how the person works from their portal\'s session when nobody marked here yet, in their center\'s zone', function (): void {
+        $this->plant->update(['timezone' => 'America/Tijuana']);
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
+        enteredAs($this->ana->id);
+
+        $this->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote')->where('timezone', 'America/Tijuana')->where('person', null));
+    });
+
+    it('gives the server\'s time, for the clock of the page to follow it and not the phone\'s', function (): void {
+        $this->get(route('attendance.device.punch.home', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('now', CarbonImmutable::now()->getTimestampMs()));
     });
 
     it('answers 404 for a company that does not exist', function (): void {
