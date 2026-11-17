@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Assistant\Models;
 
+use App\Concerns\SearchesText;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class ChatConversation extends Model
 {
+    use SearchesText;
+
     public $incrementing = false;
 
     protected $keyType = 'string';

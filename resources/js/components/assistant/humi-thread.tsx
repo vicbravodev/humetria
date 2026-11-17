@@ -43,7 +43,7 @@ export default function HumiThread({
                 onScroll={onScroll}
                 role="log"
                 aria-label="Conversación con Humi"
-                className="flex h-full flex-col gap-5 overflow-y-auto px-5 py-4"
+                className="flex h-full flex-col gap-5 overflow-y-auto px-5 py-4 group-data-[full=true]/humi:px-[max(1.25rem,calc((100%-720px)/2))]"
             >
                 {shown.length === 0 && !waiting ? (
                     <HumiEmptyState starters={starters} onPick={onPick} />

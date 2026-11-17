@@ -53,7 +53,7 @@ export default function HumiComposer({
     }
 
     return (
-        <div className="flex flex-col gap-2 border-t p-4">
+        <div className="flex flex-col gap-2 border-t p-4 group-data-[full=true]/humi:border-t-0 group-data-[full=true]/humi:px-[max(1rem,calc((100%-720px)/2))]">
             {context !== null && (
                 <HumiContextChip label={context} onRemove={onDropContext} />
             )}

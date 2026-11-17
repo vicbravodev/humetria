@@ -64,7 +64,10 @@ export default function HumiPanel({
     }, [failure, dismiss]);
 
     return (
-        <div className="flex h-full min-h-0 flex-col bg-background">
+        <div
+            data-full={fullPage}
+            className="group/humi flex h-full min-h-0 flex-col bg-background"
+        >
             <HumiHeader
                 expression={expression}
                 context={contextLabel(seen)}

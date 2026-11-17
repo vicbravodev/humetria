@@ -1,21 +1,26 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { dayLabel, groupByDay, uiMessagesFrom } from '@/lib/assistant/history';
+import {
+    dayLabel,
+    groupByDay,
+    historyQuery,
+    uiMessagesFrom,
+} from '@/lib/assistant/history';
 
 // 18 Nov 2026, noon in Mexico City (UTC-6).
 const NOW = new Date('2026-11-18T18:00:00Z');
 
 describe('dayLabel', () => {
-    it('says today and yesterday by the day in Mexico City, not in UTC', () => {
+    it('says today by the day in Mexico City, not in UTC; yesterday is already this week', () => {
         expect(dayLabel('2026-11-18T06:30:00Z', NOW)).toBe('Hoy');
         expect(dayLabel('2026-11-18T06:00:00Z', NOW)).toBe('Hoy');
-        expect(dayLabel('2026-11-18T05:59:00Z', NOW)).toBe('Ayer');
-        expect(dayLabel('2026-11-17T12:00:00Z', NOW)).toBe('Ayer');
+        expect(dayLabel('2026-11-18T05:59:00Z', NOW)).toBe('Esta semana');
+        expect(dayLabel('2026-11-17T12:00:00Z', NOW)).toBe('Esta semana');
     });
 
-    it('says the last week as «Esta semana» and anything older as «Anteriores»', () => {
-        expect(dayLabel('2026-11-14T12:00:00Z', NOW)).toBe('Esta semana');
-        expect(dayLabel('2026-11-11T12:00:00Z', NOW)).toBe('Anteriores');
-        expect(dayLabel('2025-01-01T12:00:00Z', NOW)).toBe('Anteriores');
+    it('says the last week as «Esta semana» and anything older as «Antes»', () => {
+        expect(dayLabel('2026-11-12T12:00:00Z', NOW)).toBe('Esta semana');
+        expect(dayLabel('2026-11-11T12:00:00Z', NOW)).toBe('Antes');
+        expect(dayLabel('2025-01-01T12:00:00Z', NOW)).toBe('Antes');
     });
 });
 
@@ -29,7 +34,7 @@ describe('groupByDay', () => {
 
         expect(groupByDay(rows, NOW)).toEqual([
             { label: 'Hoy', rows: [rows[0], rows[1]] },
-            { label: 'Ayer', rows: [rows[2]] },
+            { label: 'Esta semana', rows: [rows[2]] },
         ]);
         expect(groupByDay([], NOW)).toEqual([]);
     });
@@ -70,5 +75,12 @@ describe('uiMessagesFrom', () => {
         ).toEqual([]);
         expect(uiMessagesFrom(null)).toEqual([]);
         expect(uiMessagesFrom({ messages: 'no' })).toEqual([]);
+    });
+});
+
+describe('historyQuery', () => {
+    it('carries the search only when there is one', () => {
+        expect(historyQuery({ q: 'silla' })).toEqual({ q: 'silla' });
+        expect(historyQuery({ q: '' })).toEqual({});
     });
 });

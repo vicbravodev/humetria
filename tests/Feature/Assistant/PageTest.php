@@ -57,3 +57,44 @@ it('is closed like the rest of Humi: to a guest, a non member and the committee'
     $this->actingAs(memberOf($this->b, TenantRole::Owner))->get(route('tenant.assistant.index', $this->a))->assertNotFound();
     $this->actingAs(memberOf($this->a, TenantRole::Committee))->get(route('tenant.assistant.index', $this->a))->assertForbidden();
 });
+
+it('searches the history on the server, ignoring case and accents, a page at a time and keeping the search', function (): void {
+    foreach (range(1, 16) as $number) {
+        assistantConversation($this->mine, "Riesgo por área {$number}");
+    }
+    assistantConversation($this->mine, 'Explícame la Ley Silla');
+
+    $this->actingAs($this->hr)->get(route('tenant.assistant.index', $this->a).'?q=RIESGO+AREA')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.q', 'RIESGO AREA')
+            ->where('conversations.total', 16)
+            ->has('conversations.data', 15)
+            ->where('conversations.next_page_url', fn (?string $url): bool => str_contains((string) $url, 'q=RIESGO'))
+        );
+
+    $this->actingAs($this->hr)->get(route('tenant.assistant.index', $this->a).'?q=silla')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('conversations.total', 1)
+            ->where('conversations.data.0.title', 'Explícame la Ley Silla'));
+
+    $this->actingAs($this->hr)->get(route('tenant.assistant.index', $this->a))
+        ->assertInertia(fn (Assert $page) => $page->where('filters.q', '')->where('conversations.total', 17));
+});
+
+it('finds only the conversations of the person in this company, never a colleague\'s nor another company\'s', function (): void {
+    assistantConversation($this->mine, 'Avance de campañas');
+    assistantConversation($this->mine, 'Explícame la Ley Silla');
+    $colleague = ConversationParticipant::factory()->for(memberOf($this->a, TenantRole::Hr))->create(['tenant_id' => $this->a->id]);
+    assistantConversation($colleague, 'Avance de mi colega');
+    $elsewhere = ConversationParticipant::factory()->for($this->hr)->create(['tenant_id' => $this->b->id]);
+    assistantConversation($elsewhere, 'Avance en otra empresa');
+
+    $this->actingAs($this->hr)->get(route('tenant.assistant.index', $this->a).'?q=avance')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('conversations.total', 1)
+            ->where('conversations.data.0.title', 'Avance de campañas'));
+
+    // Searching from another company is the same 404 as any page of it.
+    $this->actingAs(memberOf($this->b, TenantRole::Owner))->get(route('tenant.assistant.index', $this->a).'?q=avance')->assertNotFound();
+});

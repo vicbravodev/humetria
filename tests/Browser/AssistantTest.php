@@ -426,3 +426,25 @@ it('keeps Humi still with reduced motion', function (): void {
         ->assertScript('() => [...document.querySelectorAll(\'aside[aria-label="Humi"] .humi-bob, aside[aria-label="Humi"] .humi-blink, aside[aria-label="Humi"] .humi-look\')].map((element) => getComputedStyle(element).animationName).filter((name) => name !== "none").length', 0)
         ->assertScript('() => document.querySelectorAll(\'aside[aria-label="Humi"] .humi-bob\').length > 0', true);
 });
+
+it('reads as a page of its own: the history by day with a search on the server, a column of 720 px and the box at the bottom', function (): void {
+    $panel = humiPanelCompany();
+    $participant = ConversationParticipant::query()->withoutGlobalScopes()->sole();
+    assistantConversation($participant, 'Explícame la Ley Silla');
+
+    visitPage('assistant/index', $panel.'/assistant')
+        ->assertSee('Hoy')
+        ->assertSee('Explícame la Ley Silla')
+        ->assertPresent('button:has-text("Nueva conversación")')
+        // Not a box inside a page: the conversation reaches the bottom of the window, its box there.
+        ->assertScript('() => Math.abs(window.innerHeight - document.querySelector(\'textarea\').closest(\'div.border-t\').getBoundingClientRect().bottom) < 24', true)
+        ->assertScript('() => Math.round(document.querySelector(\'[role="log"] > div\').getBoundingClientRect().width) <= 720', true)
+        ->assertScript('() => document.querySelector(\'[role="log"]\').getBoundingClientRect().width > 720', true)
+        ->type('[aria-label="Buscar conversaciones"]', 'silla')
+        ->assertQueryStringHas('q', 'silla')
+        ->assertSee('Explícame la Ley Silla')
+        ->assertDontSee('Avance de mis campañas')
+        ->type('[aria-label="Buscar conversaciones"]', 'nada parecido')
+        ->assertSee('Ninguna conversación tiene «nada parecido».')
+        ->assertNoJavaScriptErrors();
+});
