@@ -23,7 +23,7 @@ export default function SurveyIntro({
     return (
         <section className="flex w-full flex-col gap-5 text-base leading-6">
             <div>
-                <p className="mb-1.5 text-sm font-medium tracking-[0.02em] text-primary uppercase">
+                <p className="mb-1.5 text-caption font-medium tracking-[0.02em] text-primary uppercase">
                     {pulse ? 'Pulso' : 'Clima'} · {questions} preguntas
                 </p>
                 <h1 className="text-[1.625rem] leading-[2.125rem] font-semibold tracking-[-0.01em]">

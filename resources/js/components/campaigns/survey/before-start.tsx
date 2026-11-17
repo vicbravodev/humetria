@@ -29,7 +29,7 @@ export default function BeforeStart({ period }: { period: string | null }) {
 
     return (
         <section className="rounded-lg border bg-card px-4 pt-4 pb-1">
-            <h2 className="mb-1 text-sm font-medium tracking-[0.02em] text-muted-foreground uppercase">
+            <h2 className="mb-1 text-caption font-medium tracking-[0.02em] text-muted-foreground uppercase">
                 Antes de empezar
             </h2>
             <ul>

@@ -18,7 +18,7 @@ export default function SurveyDone() {
                 />
             </SurveyArc>
             <div className="flex flex-col gap-1.5">
-                <p className="text-sm font-medium tracking-[0.02em] text-primary uppercase">
+                <p className="text-caption font-medium tracking-[0.02em] text-primary uppercase">
                     Encuesta enviada
                 </p>
                 <h1 className="text-[1.625rem] leading-[2.125rem] font-semibold tracking-[-0.01em] text-balance">

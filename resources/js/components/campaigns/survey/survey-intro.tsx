@@ -31,7 +31,7 @@ export default function SurveyIntro({
         <section className="flex w-full max-w-2xl flex-col gap-5 text-base leading-6">
             <div>
                 {context !== null && (
-                    <p className="mb-1.5 text-sm font-medium tracking-[0.02em] text-primary uppercase">
+                    <p className="mb-1.5 text-caption font-medium tracking-[0.02em] text-primary uppercase">
                         {context}
                     </p>
                 )}

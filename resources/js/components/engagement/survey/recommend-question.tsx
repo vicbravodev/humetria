@@ -31,7 +31,7 @@ export default function RecommendQuestion({
             >
                 <QuestionHeading topic={topic} title={text} hint={null} />
             </div>
-            <fieldset className="flex flex-col gap-3 text-[15px] leading-[22px] text-muted-foreground">
+            <fieldset className="flex flex-col gap-3 text-meta text-muted-foreground">
                 <legend className="sr-only">Elija un número del 0 al 10</legend>
                 <p>
                     <strong className="font-semibold text-foreground">0</strong>{' '}
