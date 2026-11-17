@@ -110,9 +110,22 @@ const EVIDENCE: Record<string, { dots: number; text: string }> = {
     basic: { dots: 1, text: 'Evidencia básica: solo su llave' },
 };
 
-/** How much the mark proves, in words and in dots; null when the server named no level or one the screen does not say. */
+/** In a field center there is no QR nor zone to prove: the position does. */
+const FIELD_EVIDENCE: Record<string, { dots: number; text: string }> = {
+    strong: { dots: 3, text: 'Evidencia fuerte: en campo, con su ubicación' },
+    medium: {
+        dots: 2,
+        text: 'Evidencia media: en campo, sin ubicación precisa',
+    },
+};
+
+/**
+ * How much the mark proves, in words and in dots, said for the field when its flag is «field»; null when the server named
+ * no level or one the screen does not say.
+ */
 export function evidenceText(
     level: string | null,
+    flag: string | null = null,
 ): { dots: number; text: string } | null {
-    return EVIDENCE[level ?? ''] ?? null;
+    return (flag === 'field' ? FIELD_EVIDENCE : EVIDENCE)[level ?? ''] ?? null;
 }

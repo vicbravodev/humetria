@@ -9,6 +9,7 @@ use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -135,6 +136,7 @@ final readonly class MarkController
                 $request->position(),
                 $signed->credentialId,
                 KioskDevice::inUseIn($person->workCenterId),
+                AttendanceCenterMode::isField($person->workCenterId),
             );
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {
@@ -157,8 +159,10 @@ final readonly class MarkController
         return response()->json([
             'name' => $person->name,
             ...PunchDay::of($person->id),
-            // For the screen now and the panel later: a center with no zones, a mark taken with no position, or outside every zone.
+            // For the screen now and the panel later: a mark in a field center (the person is not told: it is their mode), a
+            // center with no zones, a mark taken with no position, or outside every zone.
             'flag' => match (true) {
+                in_array($context->method, [MarkMethod::Field, MarkMethod::FieldUnlocated], true) => 'field',
                 ! $onsite => null,
                 $zones === [] => 'center_without_zones',
                 $context->latitude === null => 'no_location',

@@ -19,6 +19,10 @@ use App\Modules\Attendance\Models\AttendanceZone;
  * the zones are read by whoever calls.
  *
  * - Remote work (a schedule in `remote`; no schedule is on site): `Remote`, no geofence, and no position is kept.
+ * - A field center (CenterMode::Field), for everyone else there: no zone nor screen is needed and the position is kept
+ *   wherever it was taken. A QR that does not verify is `qr_invalid`; a position within the policy's accuracy is `Field`
+ *   (strong: complete for its mode); without one, a valid QR is `Qr`, and otherwise `FieldUnlocated` (medium), keeping
+ *   the inaccurate position if one came.
  * - Trusted staff, when the policy lets them use the browser, with no QR: `TrustedBrowser`, no position kept. With a QR
  *   (they are at the center) the on-site rules give stronger evidence.
  * - On site, in this order: a QR that does not verify is `qr_invalid`; no QR where it is required (or where the center has
@@ -36,13 +40,18 @@ final class MarkPolicyCheck
      * @param  array<array-key, AttendanceZone>  $zones  the zones of the person's current work center
      * @param  ?Position  $position  null when the device gave no location
      * @param  int  $screens  the center's QR screens in use
+     * @param  bool  $field  whether the center marks in the field
      *
      * @throws MarkRejected
      */
-    public static function decide(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, ?bool $qrValid, array $zones, ?Position $position, string $credentialId, int $screens): MarkContext
+    public static function decide(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, ?bool $qrValid, array $zones, ?Position $position, string $credentialId, int $screens, bool $field = false): MarkContext
     {
         if ($schedule?->work_mode === WorkMode::Remote) {
             return new MarkContext(MarkMethod::Remote, null, null, null, null, null, $credentialId);
+        }
+
+        if ($field) {
+            return self::field($policy, $qrValid, $position, $credentialId);
         }
 
         if ($trusted && $policy->trusted_may_use_browser && $qrValid === null) {
@@ -89,5 +98,21 @@ final class MarkPolicyCheck
         };
 
         return new MarkContext($method, $inZone ? $reading->zoneId : null, $position->latitude, $position->longitude, $position->accuracyM, $reading->distanceM, $credentialId);
+    }
+
+    /** @throws MarkRejected */
+    private static function field(AttendancePolicy $policy, ?bool $qrValid, ?Position $position, string $credentialId): MarkContext
+    {
+        if ($qrValid === false) {
+            throw new MarkRejected('qr_invalid');
+        }
+
+        $method = match (true) {
+            $position !== null && $position->accuracyM <= $policy->max_accuracy_m => MarkMethod::Field,
+            $qrValid === true => MarkMethod::Qr,
+            default => MarkMethod::FieldUnlocated,
+        };
+
+        return new MarkContext($method, null, $position?->latitude, $position?->longitude, $position?->accuracyM, null, $credentialId);
     }
 }

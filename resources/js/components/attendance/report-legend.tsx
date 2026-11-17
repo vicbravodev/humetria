@@ -2,8 +2,14 @@ import ReportEvidence from '@/components/attendance/report-evidence';
 import type { AttendanceReportProps } from '@/types';
 
 const EVIDENCE = [
-    { level: 'Fuerte', text: 'Marcó con el QR y estaba dentro de una zona.' },
-    { level: 'Media', text: 'Solo cumplió una de las dos pruebas.' },
+    {
+        level: 'Fuerte',
+        text: 'Completa para su modo: marcó con el QR dentro de una zona o, en un centro en campo, con su ubicación dentro de la precisión de la política.',
+    },
+    {
+        level: 'Media',
+        text: 'Solo cumplió una de las dos pruebas, o marcó en campo sin una ubicación precisa.',
+    },
     {
         level: 'Básica',
         text: 'Marcó en remoto o desde un navegador de confianza.',
@@ -69,6 +75,11 @@ export default function ReportLegend({
                     «marca anulada», con la hora en que estaba), su motivo y si
                     la pidió la persona o la hizo RH; la marca original queda
                     guardada.
+                </li>
+                <li>
+                    «Marcó en campo» es un día de un centro que marca en campo:
+                    ahí no se pide zona ni QR y se guarda la ubicación de cada
+                    marca. Informa; no es un aviso.
                 </li>
                 <li>
                     Las horas se reparten con el horario vigente de cada persona

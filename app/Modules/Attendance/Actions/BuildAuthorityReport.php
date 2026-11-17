@@ -8,6 +8,7 @@ use App\Modules\Attendance\Data\AuthorityRow;
 use App\Modules\Attendance\Data\DayHours;
 use App\Modules\Attendance\Data\WeekSummary;
 use App\Modules\Attendance\Enums\EvidenceLevel;
+use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\ShiftType;
@@ -46,6 +47,9 @@ final readonly class BuildAuthorityReport
 {
     /** The flag of a day that started and never ended; the page counts them. */
     public const string MISSING_END = 'Sin marca de fin';
+
+    /** A day with a mark taken in a field center. */
+    public const string FIELD = 'Marcó en campo';
 
     /** The flag of today's day with its start and no end yet: information, not a warning. */
     public const string IN_PROGRESS = 'En curso';
@@ -325,6 +329,8 @@ final readonly class BuildAuthorityReport
         $open = WorkedDay::missingEnd($marks) && $marks[0]->type === MarkType::Start && $day->date->toDateString() === $today;
 
         return array_keys(array_filter([
+            // Its own method (criterio 4.5): no zone nor QR was asked, the position proves where.
+            self::FIELD => array_filter($marks, fn (AttendanceMark $mark): bool => in_array($mark->method, [MarkMethod::Field, MarkMethod::FieldUnlocated], true)) !== [],
             'Sin marca de inicio' => $marks[0]->type !== MarkType::Start,
             self::IN_PROGRESS => $open,
             self::MISSING_END => WorkedDay::missingEnd($marks) && ! $open,

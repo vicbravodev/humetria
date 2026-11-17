@@ -65,4 +65,10 @@ it('grades the evidence of each method (criterio 5.3)', function (MarkMethod $me
     [MarkMethod::Remote, EvidenceLevel::Basic],
     [MarkMethod::TrustedBrowser, EvidenceLevel::Basic],
     [MarkMethod::Correction, EvidenceLevel::Corrected],
+    [MarkMethod::Field, EvidenceLevel::Strong],
+    [MarkMethod::FieldUnlocated, EvidenceLevel::Medium],
 ]);
+
+it('keeps the marks taken in a field center', function (MarkMethod $method): void {
+    expect(AttendanceMark::factory()->create(['method' => $method])->refresh()->method)->toBe($method);
+})->with([MarkMethod::Field, MarkMethod::FieldUnlocated]);

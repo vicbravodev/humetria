@@ -8,6 +8,7 @@ use App\Modules\Attendance\Data\WeekSummary;
 use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\WeekStatus;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
@@ -59,6 +60,8 @@ final readonly class AttendancePages
         }
         $atRisk = array_keys(array_filter($summaries, fn ($summary): bool => TeamWeek::atRisk($summary, $period->start()->year)));
         $zones = AttendanceZone::query()->toBase()->selectRaw('work_center_id, count(*) as total')->groupBy('work_center_id')->pluck('total', 'work_center_id')->all();
+        // A center in the field needs no zone.
+        $field = AttendanceCenterMode::fieldCenters();
         $view = in_array($view, self::VIEWS, true) ? $view : 'all';
         $page = $this->roster->page(new RosterQuery(employeeIds: match ($view) {
             'all' => $people,
@@ -91,7 +94,7 @@ final readonly class AttendancePages
                 'at_risk' => count($atRisk),
             ],
             'pendingCorrections' => CorrectionRequest::query()->where('status', CorrectionStatus::Pending)->count(),
-            'centersWithoutZones' => count(array_diff($scope, array_keys($zones))),
+            'centersWithoutZones' => count(array_diff($scope, array_keys($zones), array_keys($field))),
             'people' => $page->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,
                 'name' => $person->name,
@@ -106,7 +109,7 @@ final readonly class AttendancePages
                 'days' => $this->ribbon($worked[$person->id] ?? [], $summaries[$person->id]->overtimeByDay ?? [], $period),
                 'absentDays' => array_keys($away[$person->id] ?? []),
             ]),
-            'centers' => $this->centers($panel->byCenter, $zones),
+            'centers' => $this->centers($panel->byCenter, $zones, $field),
             'setup' => $this->setup->of($names, $panel->byCenter),
             'hours' => [
                 'ordinaryMinutes' => array_sum(array_map(fn (WeekSummary $summary): int => $summary->ordinaryMinutes, $summaries)),
@@ -156,6 +159,7 @@ final readonly class AttendancePages
 
         return [
             'center' => ['id' => $center->id, 'name' => $center->name, 'mainActivity' => $center->mainActivity],
+            'mode' => AttendanceCenterMode::isField($center->id) ? 'field' : 'company',
             // Where the map of a new zone opens; only whoever may add one needs it.
             'centerAddress' => $manage ? $this->workCenters->profile($center->id)?->address : null,
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
@@ -204,13 +208,14 @@ final readonly class AttendancePages
     }
 
     /**
-     * The centers in use, 25 at a time: their active people, their zones and the screens that show their code.
+     * The centers in use, 25 at a time: their active people, their zones, the screens that show their code and how they mark.
      *
      * @param  array<string, list<string>>  $byCenter
      * @param  array<array-key, mixed>  $zones
-     * @return LengthAwarePaginator<int, array{id: string, name: string, people: int, zones: int, screens: int}>
+     * @param  array<string, true>  $field  the centers that mark in the field
+     * @return LengthAwarePaginator<int, array{id: string, name: string, people: int, zones: int, screens: int, mode: string}>
      */
-    private function centers(array $byCenter, array $zones): LengthAwarePaginator
+    private function centers(array $byCenter, array $zones, array $field): LengthAwarePaginator
     {
         $page = $this->workCenters->activePage(self::PER_PAGE, 'centers');
         $ids = array_map(fn (WorkCenterSummary $summary): string => $summary->id, $page->items());
@@ -223,6 +228,7 @@ final readonly class AttendancePages
             'people' => count($byCenter[$summary->id] ?? []),
             'zones' => is_int($zones[$summary->id] ?? null) ? $zones[$summary->id] : 0,
             'screens' => is_int($screens[$summary->id] ?? null) ? $screens[$summary->id] : 0,
+            'mode' => isset($field[$summary->id]) ? 'field' : 'company',
         ]);
     }
 

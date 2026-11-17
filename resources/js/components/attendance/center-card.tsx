@@ -6,7 +6,7 @@ import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { centerFacts, centerState } from '@/lib/attendance/center-state';
 import { overviewQuery } from '@/lib/attendance/overview';
 import { center as show, index } from '@/routes/tenant/attendance';
-import type { OverviewCenter } from '@/types';
+import type { ModedCenter } from '@/types';
 
 /**
  * A center in use (board A1 «Centros y zonas»): its people, zones and active screens, whether its people can mark in it and,
@@ -17,7 +17,7 @@ export default function CenterCard({
     week,
     requiresQr,
 }: {
-    center: OverviewCenter;
+    center: ModedCenter;
     week: string;
     requiresQr: boolean;
 }) {

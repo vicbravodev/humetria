@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
@@ -23,7 +24,7 @@ use Inertia\Testing\AssertableInertia;
 mutates(AttendanceController::class, AttendancePages::class, PanelScope::class);
 
 /** The queries of the overview, whatever the number of people, centers or marks (35: the page's schedules, for «Sin horario», the road to the first mark, and one for the absences of the page's people). */
-const OVERVIEW_QUERIES = 35;
+const OVERVIEW_QUERIES = 37;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City: the last week that ended is 2 to 8 November.
@@ -108,8 +109,8 @@ describe('the summary', function (): void {
                 'days' => array_fill(0, 7, ['worked' => 0, 'overtime' => 0]), 'absentDays' => [],
             ])
             ->where('centers.total', 2)
-            ->where('centers.data.0', ['id' => $this->office->id, 'name' => 'Oficinas', 'people' => 2, 'zones' => 0, 'screens' => 0])
-            ->where('centers.data.1', ['id' => $this->plant->id, 'name' => 'Planta Norte', 'people' => 2, 'zones' => 1, 'screens' => 0]));
+            ->where('centers.data.0', ['id' => $this->office->id, 'name' => 'Oficinas', 'people' => 2, 'zones' => 0, 'screens' => 0, 'mode' => 'company'])
+            ->where('centers.data.1', ['id' => $this->plant->id, 'name' => 'Planta Norte', 'people' => 2, 'zones' => 1, 'screens' => 0, 'mode' => 'company']));
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('longitude')
             ->not->toContain('accuracy')->not->toContain('distance')->not->toContain('credential_id')->not->toContain('credentialId');
@@ -159,6 +160,16 @@ describe('the summary', function (): void {
         $this->actingAs($this->hr);
 
         $this->get(overviewUrl())->assertInertia(fn (AssertableInertia $page) => $page->where('centers.data.1.screens', 1));
+    });
+
+    it('says which centers mark in the field, and does not count one without zones as missing them', function (): void {
+        AttendanceCenterMode::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->office->id]);
+        $this->actingAs($this->hr);
+
+        $this->get(overviewUrl())->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('centersWithoutZones', 0)
+            ->where('centers.data.0.mode', 'field')
+            ->where('centers.data.1.mode', 'company'));
     });
 
     it('narrows everything to one center', function (): void {

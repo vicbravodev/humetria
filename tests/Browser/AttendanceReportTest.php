@@ -57,6 +57,8 @@ it('shows RH the report of a center\'s week: its figures, each person\'s days an
         ->assertSee('1 día sin marca de fin')
         ->assertSee('1 día de una semana que nadie respondió')
         ->assertSee('La evidencia de un día es la de su marca más débil')
+        ->assertSee('en un centro en campo, con su ubicación dentro de la precisión de la política')
+        ->assertSee('marcó en campo sin una ubicación precisa')
         ->assertScript('() => document.querySelectorAll(\'[role="img"][aria-label^="Horas por día"]\').length', 2);
 })->with([
     'light, desktop' => [false, false],

@@ -37,7 +37,7 @@ export default function PunchDone({
     onDone: () => void;
 }) {
     const last = marks.at(-1);
-    const proof = evidenceText(evidence);
+    const proof = evidenceText(evidence, flag);
     const notice = flagNotice(flag);
 
     return (

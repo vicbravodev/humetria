@@ -1,4 +1,4 @@
-import type { OverviewCenter } from '@/types';
+import type { CenterMarkMode, OverviewCenter } from '@/types';
 
 /** Where a center stands for marking: what it lacks, how it is called, and what to tell RH about it. */
 export type CenterState = {
@@ -13,12 +13,25 @@ export type CenterState = {
 
 /**
  * Whether the people of a center can mark in it (board A1): they need a zone for their phone and, when the policy asks
- * for the QR on site, a screen that already shows the code. The zone comes first: without it nobody marks.
+ * for the QR on site, a screen that already shows the code. The zone comes first: without it nobody marks. A center in
+ * the field needs neither.
  */
 export function centerState(
-    center: Pick<OverviewCenter, 'zones' | 'screens'>,
+    center: Pick<OverviewCenter, 'zones' | 'screens'> & {
+        mode?: CenterMarkMode;
+    },
     requiresQr: boolean,
 ): CenterState {
+    if (center.mode === 'field') {
+        return {
+            ready: true,
+            label: 'En campo',
+            variant: 'success',
+            problem: null,
+            action: null,
+        };
+    }
+
     if (center.zones === 0) {
         return {
             ready: false,
@@ -62,4 +75,15 @@ export function centerFacts(
         count(center.zones, 'zona', 'zonas'),
         count(center.screens, 'pantalla activa', 'pantallas activas'),
     ].join(' · ');
+}
+
+/** The policy page's line on the centers that mark in the field instead of by it; the rest of the policy applies to them too. */
+export function fieldCentersLine(count: number): string {
+    if (count === 0) {
+        return 'Todos tus centros marcan igual que la empresa.';
+    }
+
+    return count === 1
+        ? '1 centro marca en campo: ahí no se piden zonas ni QR, y lo demás de esta política le aplica igual.'
+        : `${count} centros marcan en campo: ahí no se piden zonas ni QR, y lo demás de esta política les aplica igual.`;
 }

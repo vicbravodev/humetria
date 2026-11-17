@@ -117,7 +117,8 @@ final readonly class ReportPages
             $totals['overTwelve'] += $row->workedMinutes > LegalLimits::DAY_TOTAL_MAX ? 1 : 0;
             $totals['withoutEnd'] += in_array(BuildAuthorityReport::MISSING_END, $row->flags, true) ? 1 : 0;
 
-            if (array_diff($row->flags, [BuildAuthorityReport::IN_PROGRESS]) !== []) {
+            // A day still going and one marked in the field only inform.
+            if (array_diff($row->flags, [BuildAuthorityReport::IN_PROGRESS, BuildAuthorityReport::FIELD]) !== []) {
                 $flagged[$row->employeeId] = true;
             }
             if ($row->confirmation === 'sin confirmar') {
