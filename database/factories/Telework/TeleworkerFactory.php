@@ -44,7 +44,7 @@ final class TeleworkerFactory extends Factory
             'marital_status' => MaritalStatus::Single,
             'activities' => 'Atención de clientes.',
             'job_profile' => 'Analista',
-            'contact_phone' => '4421234567',
+            'contact_phone' => '+524421234567',
             'street' => 'Calle Reforma',
             'exterior_number' => '12',
             'neighborhood' => 'Centro',

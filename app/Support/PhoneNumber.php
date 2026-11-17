@@ -19,15 +19,16 @@ final class PhoneNumber implements ValidationRule
     /** The country of a number written without one; the form's selector starts on it too. */
     public const string DEFAULT_REGION = 'MX';
 
-    /** E.164: a plus, the country code and up to 15 digits. The database checks the same. */
-    public const string E164 = '/\A\+[1-9][0-9]{6,14}\z/';
-
     /**
      * The number in E.164, or null when it is none. Since 2019 Mexico dials 10 digits for mobiles and landlines alike:
      * the 1 of mobiles after +52, and the 044/045 before them, are dropped, since people still type them.
      */
-    public static function e164(string $typed): ?string
+    public static function e164(?string $typed): ?string
     {
+        if ($typed === null) {
+            return null;
+        }
+
         $util = PhoneNumberUtil::getInstance();
 
         try {

@@ -72,7 +72,7 @@ function rosterForm(array $overrides = []): array
     return [
         'marital_status' => 'single',
         'activities' => 'Atención de clientes por correo y llamadas.',
-        'contact_phone' => '4421234567',
+        'contact_phone' => '442 123 4567',
         'street' => 'Calle Reforma',
         'exterior_number' => '12',
         'interior_number' => '',
@@ -124,7 +124,7 @@ it('joins the roster with the eleven data of 5.1 once a workplace is in force', 
         ->and($teleworker->marital_status)->toBe(MaritalStatus::Single)
         ->and($teleworker->activities)->toBe('Atención de clientes por correo y llamadas.')
         ->and($teleworker->job_profile)->toBe('Analista')
-        ->and($teleworker->contact_phone)->toBe('4421234567')
+        ->and($teleworker->contact_phone)->toBe('+524421234567')
         ->and([$teleworker->street, $teleworker->exterior_number, $teleworker->interior_number, $teleworker->neighborhood, $teleworker->postal_code, $teleworker->municipality, $teleworker->state])
         ->toBe(['Calle Reforma', '12', null, 'Centro', '76000', 'Querétaro', 'QUE'])
         ->and($teleworker->no_equipment_reason)->toBe('La persona usa su propio equipo.');
@@ -183,6 +183,42 @@ it('reports the missing data on the form', function (string $field): void {
 
     expect(joined()->status)->toBe(TeleworkerStatus::Aspirant);
 })->with(['marital_status', 'activities', 'contact_phone', 'street', 'exterior_number', 'neighborhood', 'postal_code', 'municipality', 'state', 'no_equipment_reason']);
+
+it('takes a contact phone of another country, and refuses one that is no phone', function (string $phone, ?string $stored): void {
+    rosterReview();
+
+    $response = $this->post(joinUrl(), rosterForm(['contact_phone' => $phone]));
+
+    if ($stored === null) {
+        $response->assertSessionHasErrors(['contact_phone' => 'Revisa el teléfono del contacto: no es un número válido para el país elegido.']);
+        expect(joined()->status)->toBe(TeleworkerStatus::Aspirant);
+    } else {
+        $response->assertSessionHasNoErrors();
+        expect(joined()->contact_phone)->toBe($stored);
+    }
+})->with([
+    'the United States' => ['+1 415 555 2671', '+14155552671'],
+    'with the old 044' => ['044 442 123 4567', '+524421234567'],
+    'too short' => ['442 123', null],
+    'free text' => ['en la oficina', null],
+]);
+
+it('keeps the contact phone in E.164 whoever joins the person, and refuses one that is no phone', function (): void {
+    rosterReview();
+    workIn($this->tenant);
+    $join = resolve(JoinRoster::class);
+
+    try {
+        $join->handle($this->teleworker->refresh(), rosterData(['contactPhone' => 'no tiene']), $this->hr->id);
+        $this->fail('A contact phone that is no phone should have been refused.');
+    } catch (ValidationException $e) {
+        expect($e->errors())->toBe(['contact_phone' => ['Revisa el teléfono del contacto: no es un número válido para el país elegido.']]);
+    }
+
+    $join->handle($this->teleworker->refresh(), rosterData(['contactPhone' => '55 0000 0001']), $this->hr->id);
+
+    expect(joined()->contact_phone)->toBe('+525500000001');
+});
 
 it('names the marital status field in Spanish when it is missing', function (): void {
     rosterReview();

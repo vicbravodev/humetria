@@ -65,3 +65,7 @@ it('shows a stored number as people read it: a Mexican one without its country, 
     'the United States' => ['+14155552671', '+1 415-555-2671'],
     'nothing' => [null, null],
 ]);
+
+it('gives nothing for no number at all', function (): void {
+    expect(PhoneNumber::e164(null))->toBeNull();
+});

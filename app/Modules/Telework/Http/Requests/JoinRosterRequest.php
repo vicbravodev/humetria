@@ -6,6 +6,7 @@ namespace App\Modules\Telework\Http\Requests;
 
 use App\Modules\Telework\Data\AddressData;
 use App\Modules\Telework\Enums\MaritalStatus;
+use App\Support\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,10 +29,20 @@ final class JoinRosterRequest extends FormRequest
         return [
             'marital_status' => ['required', Rule::enum(MaritalStatus::class)],
             'activities' => ['required', 'string', 'max:2000'],
-            'contact_phone' => ['required', 'string', 'max:30', 'regex:/\A[^\x00-\x1F\x7F]*\z/u'],
+            'contact_phone' => ['required', 'string', new PhoneNumber],
             'no_equipment_reason' => ['nullable', 'string', 'max:1000'],
             ...AddressRules::for(),
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $phone = $this->input('contact_phone');
+
+        // In E.164, Mexican when it comes without a country; what is no number stays, for its rule to reject.
+        if (is_string($phone)) {
+            $this->merge(['contact_phone' => PhoneNumber::e164($phone) ?? $phone]);
+        }
     }
 
     public function maritalStatus(): MaritalStatus

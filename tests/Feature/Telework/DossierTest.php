@@ -137,7 +137,7 @@ it('gives the full 5.1 data of the roster to owner and hr, and to the committee 
 
     foreach (['owner', 'hr'] as $who) {
         $this->actingAs($this->{$who})->get(dossierUrl())->assertInertia(fn (Assert $page) => $page
-            ->where('roster.0', fn ($person) => $person['name'] === 'Ana Ruiz' && $person['maritalStatus'] !== null && $person['contactPhone'] === '4421234567' && str_contains($person['homeAddress'], 'Calle Reforma')));
+            ->where('roster.0', fn ($person) => $person['name'] === 'Ana Ruiz' && $person['maritalStatus'] !== null && $person['contactPhone'] === '+524421234567' && str_contains($person['homeAddress'], 'Calle Reforma')));
     }
 
     $response = $this->actingAs($this->cora)->get(dossierUrl())->assertOk();
@@ -322,8 +322,8 @@ it('sends the evidence of each row in full', function (): void {
             && str_contains($header['address'], $this->center->street) && $header['generatedOn'] === '2026-03-01' && $header['generatedBy'] === 'Alma Recursos')
         ->where('rows.0', ['numeral' => '5.1', 'label' => 'Listado de personas teletrabajadoras', 'state' => 'done', 'stateLabel' => 'Cumple', 'detail' => '2 personas en el padrón.'])
         ->where('roster', [
-            ['name' => 'Ana Ruiz', 'jobTitle' => 'Analista', 'percentage' => 50, 'startedOn' => '2026-03-01', 'maritalStatus' => 'single', 'contactPhone' => '4421234567', 'homeAddress' => $address],
-            ['name' => 'Beto Soto', 'jobTitle' => 'Analista', 'percentage' => 50, 'startedOn' => '2025-01-10', 'maritalStatus' => 'single', 'contactPhone' => '4421234567', 'homeAddress' => $address],
+            ['name' => 'Ana Ruiz', 'jobTitle' => 'Analista', 'percentage' => 50, 'startedOn' => '2026-03-01', 'maritalStatus' => 'single', 'contactPhone' => '+524421234567', 'homeAddress' => $address],
+            ['name' => 'Beto Soto', 'jobTitle' => 'Analista', 'percentage' => 50, 'startedOn' => '2025-01-10', 'maritalStatus' => 'single', 'contactPhone' => '+524421234567', 'homeAddress' => $address],
         ])
         ->where('workplaces', [
             ['person' => 'Ana Ruiz', 'status' => 'valid', 'statusLabel' => 'Validado', 'review' => ['decidedOn' => $review['decidedOn'], 'decision' => 'Validado', 'method' => $review['method'], 'validUntil' => '2027-02-28', 'unfavorable' => null, 'note' => 'NOTA-PRIVADA']],
