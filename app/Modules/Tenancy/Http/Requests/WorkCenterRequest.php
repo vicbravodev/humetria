@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Http\Requests;
 use App\Modules\Tenancy\Data\WorkCenterData;
 use App\Modules\Tenancy\Enums\MexicanState;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\Tenancy\Support\MexicanTimezones;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -40,6 +41,8 @@ final class WorkCenterRequest extends FormRequest
             'municipality' => ['required', 'string', 'max:120', TenantRules::SINGLE_LINE],
             'state' => ['required', 'string', Rule::in(array_column(MexicanState::cases(), 'value'))],
             'main_activity' => ['required', 'string', 'max:200', TenantRules::SINGLE_LINE],
+            // Empty: the zone the state and the municipality suggest (MexicanTimezones).
+            'timezone' => ['nullable', 'string', Rule::in(MexicanTimezones::all())],
         ];
     }
 
@@ -57,6 +60,7 @@ final class WorkCenterRequest extends FormRequest
             municipality: $this->string('municipality')->toString(),
             state: MexicanState::from($this->string('state')->toString()),
             mainActivity: $this->string('main_activity')->toString(),
+            timezone: $this->filled('timezone') ? $this->string('timezone')->toString() : null,
         );
     }
 

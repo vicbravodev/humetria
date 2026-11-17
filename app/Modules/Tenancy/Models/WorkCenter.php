@@ -31,11 +31,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $municipality
  * @property MexicanState $state
  * @property string $main_activity
+ * @property string $timezone The IANA zone its working day is measured in (MexicanTimezones).
  * @property CarbonImmutable|null $archived_at
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'name', 'street', 'exterior_number', 'interior_number', 'neighborhood', 'postal_code', 'municipality', 'state', 'main_activity', 'archived_at'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'name', 'street', 'exterior_number', 'interior_number', 'neighborhood', 'postal_code', 'municipality', 'state', 'main_activity', 'timezone', 'archived_at'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(WorkCenterFactory::class)]
 final class WorkCenter extends Model
 {

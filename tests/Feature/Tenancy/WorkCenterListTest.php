@@ -52,6 +52,9 @@ it('lists the active work centers of the company by name, with their address in 
                 'municipality' => 'Querétaro',
                 'state' => 'QUE',
                 'main_activity' => 'Manufactura de autopartes',
+                // The zone its day is measured in (design of time zones), named with its offset.
+                'timezone' => 'America/Mexico_City',
+                'timezone_label' => 'Hora del Centro, UTC−6 · Ciudad de México',
                 'address' => 'Av. 5 de Febrero 1200 int. Nave 3, col. Zona Industrial, C.P. 76120, Querétaro, Querétaro',
                 'archived_on' => null,
                 'employees' => 0,
