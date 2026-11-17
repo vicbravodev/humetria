@@ -1,19 +1,14 @@
 import { Link } from '@inertiajs/react';
-import { Ellipsis, Maximize2, Plus, X } from 'lucide-react';
+import { Maximize2, SquarePen, X } from 'lucide-react';
 import HumiAvatar from '@/components/assistant/humi-avatar';
 import type { HumiExpression } from '@/lib/assistant/humi-expressions';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+
+const ACTION = 'size-11 text-muted-foreground xl:size-10';
 
 /**
- * Humi's name and what it is looking at, with the menu (new conversation, open in full page) and the button to close.
- * Inside a sheet the sheet brings its own close button, so none is drawn here and the header leaves room for it.
+ * Humi's name and what it is looking at, with its actions together at the right: a new conversation, open in full page
+ * (not on a phone) and close. It keeps its height whichever of them it shows.
  */
 export default function HumiHeader({
     expression,
@@ -21,36 +16,39 @@ export default function HumiHeader({
     fullPageHref,
     onNew,
     onClose,
-    sheetCloses = false,
 }: {
     expression: HumiExpression;
     context: string;
     fullPageHref: string | null;
-    onNew: () => void;
+    onNew: (() => void) | null;
     onClose: (() => void) | null;
-    /** The sheet draws its close button over the header's right end. */
-    sheetCloses?: boolean;
 }) {
     return (
-        <header
-            className={cn(
-                'flex items-center gap-3 border-b px-4 py-3',
-                sheetCloses && 'pr-14',
-            )}
-        >
+        <header className="flex h-[68px] shrink-0 items-center gap-1 border-b px-4">
             <HumiAvatar size={40} expression={expression} animated />
-            <div className="min-w-0 flex-1">
+            <div className="ml-2 min-w-0 flex-1">
                 <h2 className="text-base leading-5 font-semibold">Humi</h2>
                 <p className="truncate text-sm text-muted-foreground">
                     {context}
                 </p>
             </div>
+            {onNew !== null && (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Nueva conversación"
+                    onClick={onNew}
+                    className={ACTION}
+                >
+                    <SquarePen aria-hidden />
+                </Button>
+            )}
             {fullPageHref !== null && (
                 <Button
                     asChild
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground xl:size-9"
+                    className={`${ACTION} hidden sm:inline-flex`}
                 >
                     <Link
                         href={fullPageHref}
@@ -60,31 +58,13 @@ export default function HumiHeader({
                     </Link>
                 </Button>
             )}
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Más opciones"
-                        className="text-muted-foreground xl:size-9"
-                    >
-                        <Ellipsis aria-hidden />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={onNew}>
-                        <Plus aria-hidden />
-                        Nueva conversación
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
             {onClose !== null && (
                 <Button
                     variant="ghost"
                     size="icon"
                     aria-label="Cerrar"
                     onClick={onClose}
-                    className="text-muted-foreground xl:size-9"
+                    className={ACTION}
                 >
                     <X aria-hidden />
                 </Button>

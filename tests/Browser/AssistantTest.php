@@ -207,23 +207,31 @@ it('passes the accessibility and CSP checks with the Humi dialog of the console 
     'a phone' => [false, true],
 ]);
 
-/** A browser script that reads the room the header of Humi leaves at its right. */
-function humiHeaderPaddingRight(): string
+/** A browser script that reads the header of Humi: the room at its right, its height and the actions it shows, in order. */
+function humiHeader(): string
 {
-    return '() => getComputedStyle(document.querySelector(\'header:has(+ div > [role="log"])\')).paddingRight';
+    return <<<'JS'
+        () => {
+            const header = document.querySelector('header:has(+ div > [role="log"])');
+            const actions = [...header.querySelectorAll('a, button')].filter((action) => action.offsetParent !== null).map((action) => action.getAttribute('aria-label'));
+            const closes = [...document.querySelectorAll('[aria-label="Cerrar"], button:has(> .sr-only)')].filter((action) => action.offsetParent !== null && (action.getAttribute('aria-label') ?? action.textContent.trim()) === 'Cerrar').length;
+            return `${getComputedStyle(header).paddingRight} ${header.getBoundingClientRect().height} ${actions.join(', ')} | ${closes}`;
+        }
+        JS;
 }
 
-it('reserves room at the right of the header only for the close button the sheet brings', function (): void {
+it('keeps the actions of the header together at 16 px from the edge, the same height with or without the close button', function (): void {
     $panel = humiPanelCompany();
 
     visitPage('dashboard', $panel)
         ->click('[aria-label="Abrir a Humi"]')
-        ->assertScript(humiHeaderPaddingRight(), '16px');
+        ->assertScript(humiHeader(), '16px 68 Nueva conversación, Abrir en página completa, Cerrar | 1');
 
     visitPage('assistant/index', $panel.'/assistant')
-        ->assertScript(humiHeaderPaddingRight(), '16px');
+        ->assertScript(humiHeader(), '16px 68  | 0');
 
+    // On a phone the sheet's own close is not drawn: the header's, of 44 px like the rest, is the only one.
     visitPage('dashboard', $panel, mobile: true)
         ->click('[aria-label="Abrir a Humi"]')
-        ->assertScript(humiHeaderPaddingRight(), '56px');
+        ->assertScript(humiHeader(), '16px 68 Nueva conversación, Cerrar | 1');
 });
