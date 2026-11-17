@@ -6,7 +6,6 @@ namespace App\Modules\Seating\Actions;
 
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Seating\Enums\ReportStatus;
-use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\SeatReport;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\WorkerAccess\Data\WorkerIdentity;
@@ -14,8 +13,9 @@ use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 /**
- * Takes the report of a damaged seat from a person's portal. It is tied to their center and their current position and to
- * nobody else: who reports is not recorded, so nobody holds back from reporting.
+ * Takes the report of a damaged seat from a person's portal. It is tied to their center and to nothing else: neither who
+ * reports nor their position is recorded (in a position of two or three people the position would point at them), so
+ * nobody holds back from reporting. Fixing the seat needs only the center and what the person wrote.
  */
 final readonly class ReportSeat
 {
@@ -29,7 +29,6 @@ final readonly class ReportSeat
         $report = SeatReport::query()->create([
             'tenant_id' => $this->tenant->id(),
             'work_center_id' => $workCenterId,
-            'position_id' => PositionAssignment::query()->where('employee_id', $person->employeeId)->whereNull('ends_on')->first()?->position_id,
             'description' => $description,
             'status' => ReportStatus::Open,
             'reported_via_portal' => true,

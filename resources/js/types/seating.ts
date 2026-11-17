@@ -204,11 +204,10 @@ export type PortalAcknowledgment = {
     measures: string[];
 };
 
-/** A report of a damaged seat; none names the person who sent it. */
+/** A report of a damaged seat; none names the person who sent it nor their position. */
 export type SeatReportRow = {
     id: string;
     description: string;
-    positionName: string | null;
     reportedOn: string;
     resolution: string | null;
     resolvedOn: string | null;
