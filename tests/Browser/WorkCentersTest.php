@@ -107,6 +107,34 @@ it('adds a work center from the dialog, finding its state by typing it without a
     expect(WorkCenter::query()->sole()->state)->toBe(MexicanState::Queretaro);
 });
 
+it('shows the zone the address gives before saving, and lets it be changed', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/work-centers")
+        ->click('Dar de alta centro')
+        ->assertSee('Hora del Centro')
+        ->type('name', 'Planta Tijuana')
+        ->type('street', 'Blvd. Agua Caliente')
+        ->type('exterior_number', '10')
+        ->type('neighborhood', 'Centro')
+        ->type('postal_code', '22000')
+        ->type('municipality', 'Tijuana')
+        ->click('#work-center-state')
+        ->type(STATE_SEARCH, 'baja california')
+        ->keys(STATE_SEARCH, 'Enter')
+        ->assertSee('Hora del Noroeste')
+        ->type('main_activity', 'Ensamble')
+        ->press('Cambiar')
+        ->assertSeeIn('#work-center-timezone', 'Tijuana')
+        ->press('Dar de alta')
+        ->assertSee('Centro de trabajo dado de alta.')
+        ->assertNoJavaScriptErrors();
+
+    workIn(acme());
+
+    expect(WorkCenter::query()->sole()->timezone)->toBe('America/Tijuana');
+});
+
 it('shows what is wrong in the dialog and keeps it open', function (): void {
     $url = signInToPanel();
     WorkCenter::factory()->for(acme())->create(['name' => 'Planta Querétaro']);
