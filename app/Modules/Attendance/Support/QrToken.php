@@ -22,10 +22,27 @@ final class QrToken
 
     public static function verify(string $token, string $tenantId, string $workCenterId, CarbonImmutable $now): bool
     {
-        $window = self::window($now);
+        return self::signedWithin($token, $tenantId, $workCenterId, self::window($now), max(0, config()->integer('attendance.qr.past_windows')));
+    }
 
-        foreach (range($window, $window - max(0, config()->integer('attendance.qr.past_windows'))) as $accepted) {
-            if (hash_equals(self::sign($tenantId, $workCenterId, $accepted), $token)) {
+    /**
+     * Whether a code that no longer verifies was the center's within the last day: a photo or an address opened again, not
+     * a code of another center nor anything else (hallazgo 26 of docs/ui-polish-workers.md).
+     */
+    public static function expired(string $token, string $tenantId, string $workCenterId, CarbonImmutable $now): bool
+    {
+        $accepted = max(0, config()->integer('attendance.qr.past_windows'));
+        $oldest = self::window($now) - $accepted - 1;
+
+        return ! self::verify($token, $tenantId, $workCenterId, $now)
+            && self::signedWithin($token, $tenantId, $workCenterId, $oldest, max(0, intdiv(86400, self::seconds()) - $accepted - 1));
+    }
+
+    /** Whether the code is the center's of `$window` or of one of the `$back` windows before it. */
+    private static function signedWithin(string $token, string $tenantId, string $workCenterId, int $window, int $back): bool
+    {
+        foreach (range($window, $window - $back) as $candidate) {
+            if (hash_equals(self::sign($tenantId, $workCenterId, $candidate), $token)) {
                 return true;
             }
         }

@@ -100,6 +100,27 @@ final class MarkPolicyCheck
         return new MarkContext($method, $inZone ? $reading->zoneId : null, $position->latitude, $position->longitude, $position->accuracyM, $reading->distanceM, $credentialId);
     }
 
+    /**
+     * A code of another center of the company, valid now (a trip; design of time zones §3.9, hallazgo 26): where the policy
+     * allows and flags, the mark is taken with that center, by the code, with no zone and the position kept as it came; it
+     * is «fuera de su centro», read at that center's hour and never a lateness. Where the policy blocks, `qr_other_center`.
+     * Someone working remotely marks as always.
+     *
+     * @throws MarkRejected
+     */
+    public static function away(?AttendanceSchedule $schedule, AttendancePolicy $policy, string $centerId, ?Position $position, string $credentialId): MarkContext
+    {
+        if ($schedule?->work_mode === WorkMode::Remote) {
+            return new MarkContext(MarkMethod::Remote, null, null, null, null, null, $credentialId);
+        }
+
+        if ($policy->out_of_zone !== OutOfZoneRule::AllowAndFlag) {
+            throw new MarkRejected('qr_other_center');
+        }
+
+        return new MarkContext(MarkMethod::Qr, null, $position?->latitude, $position?->longitude, $position?->accuracyM, null, $credentialId, $centerId);
+    }
+
     /** @throws MarkRejected */
     private static function field(AttendancePolicy $policy, ?bool $qrValid, ?Position $position, string $credentialId): MarkContext
     {

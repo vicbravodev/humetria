@@ -271,3 +271,25 @@ describe('in a field center', function (): void {
         expect(decideMark(trusted: true, qrValid: null, position: northOf(10), field: true)->method)->toBe(MarkMethod::Field);
     });
 });
+
+describe('a code of another center of the company (a trip; design of time zones §3.9)', function (): void {
+    it('is taken where the policy allows and flags, with that center and no zone, keeping the position', function (): void {
+        $context = MarkPolicyCheck::away(null, markPolicy(OutOfZoneRule::AllowAndFlag), 'center-b', northOf(5000), 'device-1');
+
+        expect($context->method)->toBe(MarkMethod::Qr)
+            ->and($context->awayCenterId)->toBe('center-b')
+            ->and($context->zoneId)->toBeNull()
+            ->and($context->accuracy)->toBe(10.0)
+            ->and($context->credentialId)->toBe('device-1');
+    });
+
+    it('is refused where the policy blocks', function (): void {
+        expect(markRejection(fn () => MarkPolicyCheck::away(null, markPolicy(), 'center-b', null, 'device-1')))->toBe('qr_other_center');
+    });
+
+    it('does not matter to someone working remotely', function (): void {
+        $context = MarkPolicyCheck::away(markSchedule(WorkMode::Remote), markPolicy(), 'center-b', northOf(10), 'device-1');
+
+        expect($context->method)->toBe(MarkMethod::Remote)->and($context->awayCenterId)->toBeNull()->and($context->latitude)->toBeNull();
+    });
+});

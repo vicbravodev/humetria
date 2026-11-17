@@ -79,3 +79,16 @@ it('takes its window and how many past windows it accepts from config/attendance
 it('defaults to 30 s windows and one past window', function (): void {
     expect(config('attendance.qr'))->toBe(['window_seconds' => 30, 'past_windows' => 1]);
 });
+
+it('tells a code of the center that expired within the last day from one that never was its own', function (): void {
+    $old = QrToken::issue(QR_TENANT, QR_CENTER, qrAt(0));
+
+    expect(QrToken::expired($old, QR_TENANT, QR_CENTER, qrAt(60)))->toBeTrue()
+        ->and(QrToken::expired($old, QR_TENANT, QR_CENTER, qrAt(86399)))->toBeTrue()
+        // Still valid: not expired.
+        ->and(QrToken::expired($old, QR_TENANT, QR_CENTER, qrAt(59)))->toBeFalse()
+        // Older than a day, of another center, or anything else: not a code that expired.
+        ->and(QrToken::expired($old, QR_TENANT, QR_CENTER, qrAt(86400 + 60)))->toBeFalse()
+        ->and(QrToken::expired($old, QR_TENANT, '11111111-2222-4333-8444-555555555555', qrAt(60)))->toBeFalse()
+        ->and(QrToken::expired('nonsense', QR_TENANT, QR_CENTER, qrAt(60)))->toBeFalse();
+});

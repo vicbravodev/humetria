@@ -332,7 +332,8 @@ describe('on site', function (): void {
         anaPunches(['q' => 'not-a-code'])->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid');
 
         $this->travel(61)->seconds();
-        anaPunches(['q' => $code])->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid');
+        // Hallazgo 26: the photo of the center's code is told apart, as expired.
+        anaPunches(['q' => $code])->assertUnprocessable()->assertJsonPath('reason', 'qr_expired');
         expect(AttendanceMark::query()->count())->toBe(0);
     });
 
@@ -348,8 +349,8 @@ describe('on site', function (): void {
         AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $warehouse->id, 'latitude' => 20.0, 'longitude' => -100.0]);
         $this->ana->update(['work_center_id' => $warehouse->id]);
 
-        // The old center's code and zone no longer count.
-        anaPunches()->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid');
+        // The old center's code and zone no longer count: its code is another center's now (hallazgo 26).
+        anaPunches()->assertUnprocessable()->assertJsonPath('reason', 'qr_other_center');
         anaPunches(['q' => punchQr($this->tenant->id, $warehouse->id)])->assertUnprocessable()->assertJsonPath('reason', 'outside_zone');
         anaPunches(['q' => punchQr($this->tenant->id, $warehouse->id), 'lat' => 20.0, 'lng' => -100.0])->assertOk();
 
@@ -771,4 +772,48 @@ it('never writes the position, the code or the key to a log line', function (): 
     expect($log)->toContain('attendance.mark_recorded')->toContain('attendance.mark_rejected')
         ->not->toContain('19.4327')->not->toContain('19.4336')->not->toContain('99.1332')
         ->not->toContain($code)->not->toContain($this->device->credential_id);
+});
+
+describe('the code of another center (hallazgo 26; design of time zones §3.9)', function (): void {
+    beforeEach(function (): void {
+        $this->offices = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Oficinas Tijuana', 'timezone' => 'America/Tijuana']);
+    });
+
+    it('takes it where the policy allows and flags, at that center\'s hour, «fuera de su centro»', function (): void {
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'out_of_zone' => OutOfZoneRule::AllowAndFlag]);
+
+        anaPunches(['q' => punchQr($this->tenant->id, $this->offices->id)])->assertOk()
+            ->assertJsonPath('flag', 'away_center')
+            // 15:00 UTC is 07:00 in Tijuana: the person reads the hour of where they marked.
+            ->assertJsonPath('marks', [['type' => 'start', 'time' => '07:00', 'clock' => 'America/Tijuana']]);
+
+        expect(AttendanceMark::query()->sole())
+            ->away_center_id->toBe($this->offices->id)
+            ->timezone->toBe('America/Tijuana')
+            ->work_center_id->toBe($this->plant->id)
+            ->zone_id->toBeNull()
+            ->method->toBe(MarkMethod::Qr);
+    });
+
+    it('refuses it where the policy blocks, naming the center whose code it is', function (): void {
+        anaPunches(['q' => punchQr($this->tenant->id, $this->offices->id)])->assertUnprocessable()
+            ->assertJsonPath('reason', 'qr_other_center')
+            ->assertJsonPath('center', 'Oficinas Tijuana');
+
+        expect(AttendanceMark::query()->count())->toBe(0);
+    });
+
+    it('tells a code of the person\'s center that expired, and gives no name for anything else', function (): void {
+        $code = punchQr($this->tenant->id, $this->plant->id);
+        $theirs = punchQr($this->tenant->id, $this->offices->id);
+        $elsewhere = punchQr(Tenant::factory()->create()->id, WorkCenter::factory()->create()->id);
+        $archived = WorkCenter::factory()->for($this->tenant)->archived()->create();
+        $this->travel(2)->minutes();
+
+        anaPunches(['q' => $code])->assertUnprocessable()->assertJsonPath('reason', 'qr_expired');
+        // An old code of another center, another company's, or an archived center's: not one the person can use.
+        anaPunches(['q' => $theirs])->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid')->assertJsonMissingPath('center');
+        anaPunches(['q' => $elsewhere])->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid');
+        anaPunches(['q' => punchQr($this->tenant->id, $archived->id)])->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid');
+    });
 });

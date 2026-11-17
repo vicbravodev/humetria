@@ -7,8 +7,9 @@ namespace App\Modules\Attendance\Exceptions;
 use RuntimeException;
 
 /**
- * A mark the company's policy does not take (criterios 4.2 to 4.4): `qr_invalid`, `qr_required`, `no_location`,
- * `accuracy_too_low`, `outside_zone` or `center_not_ready`; or the person has not accepted the current agreement
+ * A mark the company's policy does not take (criterios 4.2 to 4.4): `qr_invalid`, `qr_expired` (a code of the person's
+ * center that no longer counts), `qr_other_center` (valid at another center, where the policy blocks), `qr_required`,
+ * `no_location`, `accuracy_too_low`, `outside_zone` or `center_not_ready`; or the person has not accepted the current agreement
  * (`agreement_not_accepted`, criterio 5.1). The reason is a stable code; the screen words it.
  */
 final class MarkRejected extends RuntimeException

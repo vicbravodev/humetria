@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\RecordMark;
+use App\Modules\Attendance\Data\MarkContext;
+use App\Modules\Attendance\Data\Position;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
@@ -24,6 +26,8 @@ use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\Timezones;
+use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Modules\Tenancy\Data\WorkCenterSummary;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use Carbon\CarbonImmutable;
@@ -54,7 +58,7 @@ final readonly class MarkController
 {
     private const string SESSION_KEY = 'attendance.person';
 
-    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones) {}
+    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones, private WorkCenters $workCenters) {}
 
     /**
      * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
@@ -123,6 +127,10 @@ final readonly class MarkController
         $request->session()->put(self::SESSION_KEY, ['id' => $person->id, 'at' => CarbonImmutable::now()->getTimestamp()]);
 
         $qr = $request->qr();
+        $now = CarbonImmutable::now();
+        $qrValid = $qr === null ? null : QrToken::verify($qr, $this->tenant->id(), $person->workCenterId, $now);
+        // A code that is not of the person's center may be of another one of the company: a trip, not a lie (hallazgo 26).
+        $away = $qr !== null && ! $qrValid ? $this->centerOf($qr, $person->workCenterId, $now) : null;
         $zones = AttendanceZone::query()->where('work_center_id', $person->workCenterId)->get()->all();
 
         try {
@@ -131,17 +139,9 @@ final readonly class MarkController
                 throw new MarkRejected('agreement_not_accepted');
             }
 
-            $context = MarkPolicyCheck::decide(
-                $this->schedule($person->id),
-                CompanyPolicy::current(),
-                $person->trusted,
-                $qr === null ? null : QrToken::verify($qr, $this->tenant->id(), $person->workCenterId, CarbonImmutable::now()),
-                $zones,
-                $request->position(),
-                $signed->credentialId,
-                KioskDevice::inUseIn($person->workCenterId),
-                AttendanceCenterMode::isField($person->workCenterId),
-            );
+            $context = $away !== null
+                ? MarkPolicyCheck::away($this->schedule($person->id), CompanyPolicy::current(), $away->id, $request->position(), $signed->credentialId)
+                : $this->decide($person, $qrValid, $qr !== null && $qrValid === false && QrToken::expired($qr, $this->tenant->id(), $person->workCenterId, $now), $zones, $request->position(), $signed->credentialId);
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {
             Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'key_id' => $signed->credentialId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
@@ -155,6 +155,8 @@ final readonly class MarkController
                 'next' => PunchDay::of($person->id, $timezone)['next'],
                 // What to read and accept, for the screen to show it.
                 ...($current === null ? [] : ['agreement' => ['version' => $current->version, 'body' => $current->body]]),
+                // Whose code it was, for the screen to send the person to the one of their center.
+                ...($rejected->reason === 'qr_other_center' && $away !== null ? ['center' => $away->name] : []),
             ], 422);
         }
 
@@ -166,6 +168,8 @@ final readonly class MarkController
             // For the screen now and the panel later: a mark in a field center (the person is not told: it is their mode), a
             // center with no zones, a mark taken with no position, or outside every zone.
             'flag' => match (true) {
+                // Taken at another center of the company: flagged «fuera de su centro», never a lateness.
+                $context->awayCenterId !== null => 'away_center',
                 in_array($context->method, [MarkMethod::Field, MarkMethod::FieldUnlocated], true) => 'field',
                 ! $onsite => null,
                 $zones === [] => 'center_without_zones',
@@ -197,6 +201,42 @@ final readonly class MarkController
         }
 
         return $person;
+    }
+
+    /**
+     * How the policy takes the mark at the person's own center; a code of it that no longer counts is told apart.
+     *
+     * @param  array<array-key, AttendanceZone>  $zones
+     *
+     * @throws MarkRejected
+     */
+    private function decide(RosterEntry $person, ?bool $qrValid, bool $expired, array $zones, ?Position $position, string $credentialId): MarkContext
+    {
+        try {
+            return MarkPolicyCheck::decide(
+                $this->schedule($person->id),
+                CompanyPolicy::current(),
+                $person->trusted,
+                $qrValid,
+                $zones,
+                $position,
+                $credentialId,
+                KioskDevice::inUseIn($person->workCenterId),
+                AttendanceCenterMode::isField($person->workCenterId),
+            );
+        } catch (MarkRejected $rejected) {
+            throw $rejected->reason === 'qr_invalid' && $expired ? new MarkRejected('qr_expired') : $rejected;
+        }
+    }
+
+    /** The center of the company in use, other than the person's, whose code this is now; null for none. */
+    private function centerOf(string $qr, string $ownCenterId, CarbonImmutable $now): ?WorkCenterSummary
+    {
+        // ponytail: two HMACs per center of the company; fine for hundreds of centers, an index of codes past that.
+        return array_find(
+            $this->workCenters->all(),
+            fn (WorkCenterSummary $center): bool => ! $center->archived && $center->id !== $ownCenterId && QrToken::verify($qr, $this->tenant->id(), $center->id, $now),
+        );
     }
 
     private function schedule(string $employeeId): ?AttendanceSchedule
