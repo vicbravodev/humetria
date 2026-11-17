@@ -38,6 +38,18 @@ final readonly class ScheduleController
         ));
     }
 
+    /**
+     * The people who have a schedule, by name, each with it: what RH copies into another person's («Igual que …»).
+     *
+     * @return list<array{value: string, label: string, schedule: array<string, mixed>}>
+     */
+    public function options(Request $request, SchedulePages $pages): array
+    {
+        Gate::authorize('manage-attendance');
+
+        return $pages->copies($request->string('q')->trim()->limit(100, '')->toString());
+    }
+
     public function update(ScheduleRequest $request, mixed $tenant, string $employee, SaveSchedule $save): RedirectResponse
     {
         $person = $this->roster->find($employee) ?? abort(404);

@@ -50,6 +50,8 @@ Route::put('admin/{tenant:slug}/attendance/policy', [PolicyController::class, 'u
 
 // The people's agreed weekly schedules (criterio 2.6). {employee} is a person of the company's roster, by id.
 Route::get('admin/{tenant:slug}/attendance/schedules', [ScheduleController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.schedules.index');
+// The people who have a schedule, searched by name, each with it: to copy one in RH's form («Igual que …»).
+Route::get('admin/{tenant:slug}/attendance/schedules/options', [ScheduleController::class, 'options'])->where('tenant', $notReserved)->name('tenant.attendance.schedules.options');
 Route::put('admin/{tenant:slug}/attendance/schedules', [ScheduleController::class, 'bulk'])->where('tenant', $notReserved)->name('tenant.attendance.schedules.bulk');
 Route::put('admin/{tenant:slug}/attendance/schedules/{employee}', [ScheduleController::class, 'update'])->where('tenant', $notReserved)->whereUuid('employee')->name('tenant.attendance.schedules.update');
 
