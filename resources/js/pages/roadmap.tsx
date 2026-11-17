@@ -39,7 +39,7 @@ export default function Roadmap({ seo }: { seo: Seo }) {
                         counts={COUNTS}
                         onChange={setArea}
                     />
-                    <div className={cn(WRAP, 'grid gap-12 py-12 lg:py-16')}>
+                    <div className={cn(WRAP, 'grid gap-9 py-9 lg:py-12')}>
                         {filterLanes(ROADMAP_LANES, area).map((lane) => (
                             <RoadmapLaneSection key={lane.id} lane={lane} />
                         ))}

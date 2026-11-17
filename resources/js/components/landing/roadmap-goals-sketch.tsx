@@ -23,6 +23,9 @@ export default function RoadmapGoalsSketch() {
                     <StepBar value={goal.value} delay={0.2 + index * 0.12} />
                 </div>
             ))}
+            <p className="text-meta text-muted-foreground">
+                Avance de los objetivos de este trimestre.
+            </p>
         </div>
     );
 }

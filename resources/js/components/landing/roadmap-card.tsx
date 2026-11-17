@@ -1,13 +1,36 @@
 import { m } from 'motion/react';
+import IconTile from '@/components/humetria/icon-tile';
 import { EASE_OUT } from '@/components/landing/landing-motion';
 import { AREA_LABELS } from '@/components/landing/roadmap-content';
 import RoadmapFeedbackSketch from '@/components/landing/roadmap-feedback-sketch';
 import RoadmapGoalsSketch from '@/components/landing/roadmap-goals-sketch';
-import IconTile from '@/components/humetria/icon-tile';
+import { cn } from '@/lib/utils';
 import type { RoadmapItem } from '@/types/roadmap';
 
-/** One tool: its icon, its area, what it does and, for the ones coming first, a made-up view of how it will look. */
-export default function RoadmapCard({ item }: { item: RoadmapItem }) {
+/** The classes are written out so Tailwind finds them: how many of the six columns a card takes, by screen. */
+const SM_SPANS: Record<number, string> = {
+    3: 'sm:col-span-3',
+    6: 'sm:col-span-6',
+};
+const LG_SPANS: Record<number, string> = {
+    2: 'lg:col-span-2',
+    3: 'lg:col-span-3',
+    6: 'lg:col-span-6',
+};
+
+/**
+ * One tool: its icon and name, what it does and, for the ones coming first, a made-up view of how it will look; its area sits
+ * at the foot so the tags of a row line up. `sm` and `lg` are the columns it takes, so every row is full.
+ */
+export default function RoadmapCard({
+    item,
+    sm,
+    lg,
+}: {
+    item: RoadmapItem;
+    sm: number;
+    lg: number;
+}) {
     return (
         <m.li
             layout
@@ -15,23 +38,23 @@ export default function RoadmapCard({ item }: { item: RoadmapItem }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.22, ease: EASE_OUT }}
-            className="list-none"
+            className={cn('list-none', SM_SPANS[sm], LG_SPANS[lg])}
         >
-            <div className="grid h-full content-start gap-4 rounded-xl border bg-card p-5 transition-[border-color,box-shadow,transform] duration-200 hover:border-primary/40 hover:shadow-raised motion-safe:hover:-translate-y-0.5">
-                <div className="flex items-start justify-between gap-3">
+            <div className="flex h-full flex-col gap-3 rounded-xl border bg-card p-4 transition-[border-color,box-shadow,transform] duration-200 hover:border-primary/40 hover:shadow-raised motion-safe:hover:-translate-y-0.5">
+                <div className="flex items-center gap-3">
                     <IconTile icon={item.icon} />
-                    <span className="rounded-full border px-2.5 py-0.5 text-meta text-muted-foreground">
-                        {AREA_LABELS[item.area]}
-                    </span>
+                    <h3 className="leading-snug font-semibold text-balance">
+                        {item.title}
+                    </h3>
                 </div>
                 {item.sketch === 'goals' && <RoadmapGoalsSketch />}
                 {item.sketch === 'feedback' && <RoadmapFeedbackSketch />}
-                <div className="grid gap-1.5">
-                    <h3 className="font-semibold">{item.title}</h3>
-                    <p className="leading-6 text-pretty text-muted-foreground">
-                        {item.text}
-                    </p>
-                </div>
+                <p className="leading-6 text-pretty text-muted-foreground">
+                    {item.text}
+                </p>
+                <span className="mt-auto w-fit rounded-full border px-2.5 py-0.5 text-meta text-muted-foreground">
+                    {AREA_LABELS[item.area]}
+                </span>
             </div>
         </m.li>
     );
