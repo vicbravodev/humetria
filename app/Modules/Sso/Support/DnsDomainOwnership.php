@@ -13,7 +13,7 @@ final class DnsDomainOwnership implements DomainOwnership
         $records = @dns_get_record("_humetria-sso.{$domain}", DNS_TXT);
 
         foreach ($records === false ? [] : $records as $record) {
-            if (($record['txt'] ?? null) === "humetria-sso-verification={$token}") {
+            if (($record['txt'] ?? null) === "humetria-sso={$token}") {
                 return true;
             }
         }

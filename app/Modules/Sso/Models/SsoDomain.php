@@ -37,7 +37,7 @@ final class SsoDomain extends Model
     /** What that TXT record must say. */
     public function recordValue(): string
     {
-        return "humetria-sso-verification={$this->token}";
+        return "humetria-sso={$this->token}";
     }
 
     /**

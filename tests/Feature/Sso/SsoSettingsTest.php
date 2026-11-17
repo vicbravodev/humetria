@@ -75,7 +75,7 @@ it('saves the connection, stores the secret encrypted and never sends it back', 
         ->where('domains.0.domain', 'acme.com.mx')
         ->where('domains.0.verified', false)
         ->where('domains.0.record_name', '_humetria-sso.acme.com.mx')
-        ->where('domains.0.record_value', fn (string $value) => str_starts_with($value, 'humetria-sso-verification=')));
+        ->where('domains.0.record_value', fn (string $value) => str_starts_with($value, 'humetria-sso=')));
 });
 
 it('keeps the secret when the form leaves it blank', function (): void {
