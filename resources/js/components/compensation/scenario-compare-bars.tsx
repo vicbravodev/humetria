@@ -13,17 +13,19 @@ export default function ScenarioCompareBars({ bars }: { bars: CompareBar[] }) {
             </h3>
             <ul className="grid gap-3">
                 {bars.map((bar) => (
-                    <li key={bar.key} className="grid gap-1.5">
+                    <li key={bar.key} className="grid min-w-0 gap-1.5">
                         <span
                             className={cn(
-                                'flex justify-between gap-3 text-sm',
+                                'flex min-w-0 justify-between gap-3 text-sm',
                                 bar.current
                                     ? 'font-semibold'
                                     : 'text-muted-foreground',
                             )}
                         >
                             <span className="min-w-0 truncate">{bar.name}</span>
-                            <span className="tabular-nums">{bar.text}</span>
+                            <span className="shrink-0 tabular-nums">
+                                {bar.text}
+                            </span>
                         </span>
                         <span
                             aria-hidden
