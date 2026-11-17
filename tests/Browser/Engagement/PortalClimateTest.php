@@ -44,6 +44,9 @@ it('shows the person what the company heard and will do, in their own frame, on 
         ->assertSee('Toda la empresa')
         ->assertSee('Su área')
         ->assertNotPresent('[data-sidebar="sidebar"]')
+        // Hallazgo 33: «Personal» with a lock said nothing on a page of group results; the header carries only the company.
+        ->assertDontSeeIn('header[class]', 'Personal')
+        ->assertDontSeeIn('header[class]', 'Confidencial')
         ->assertDontSee('Net Promoter');
 })->with([
     'light, phone' => [false, true],
