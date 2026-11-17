@@ -99,6 +99,8 @@ final class KioskController
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
             // The clock on the screen is the center's, whatever the tablet's zone.
             'timezone' => $this->timezones->forCenter($center->id),
+            // The server's time, in milliseconds: the clock never comes from the tablet.
+            'now' => CarbonImmutable::now()->getTimestampMs(),
         ]);
     }
 
@@ -123,6 +125,8 @@ final class KioskController
             'expiresAt' => $expiresAt->toIso8601String(),
             // Seconds, so the screen's own clock does not matter.
             'expiresIn' => $expiresAt->getTimestamp() - $now->getTimestamp(),
+            // The server's time again with each code, so a screen on for months keeps to it.
+            'now' => $now->getTimestampMs(),
         ])->header('Cache-Control', 'no-store, private');
     }
 

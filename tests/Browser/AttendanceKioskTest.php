@@ -35,6 +35,16 @@ it('shows the center\'s code, large, with the seconds it has left, the company\'
     'light mobile' => [false, true],
 ]);
 
+it('shows the server\'s time in the zone of the center, whatever the tablet\'s clock says', function (): void {
+    // The server says 12:00 UTC (06:00 in Mexico City); the browser's clock is today's.
+    $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:10', 'UTC'));
+
+    visitPage('attendance/kiosk', kioskLink())
+        ->waitForText('Conectada')
+        ->assertScript('() => document.querySelector("header").textContent.includes("06:00")', true)
+        ->assertSee('Sábado 7 de noviembre');
+});
+
 it('counts the seconds until the code turns', function (): void {
     // Frozen at 12:00:10 of a 30 s window: every answer says 20 s.
     $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:10', 'UTC'));

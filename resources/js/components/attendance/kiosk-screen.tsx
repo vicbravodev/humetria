@@ -21,6 +21,7 @@ export default function KioskScreen({
     qrSeconds,
     timezone,
     now,
+    clock,
     onRetry,
 }: {
     company: string;
@@ -31,7 +32,10 @@ export default function KioskScreen({
     lastValidAt: number | null;
     qrSeconds: number;
     timezone: string;
+    /** This device's time, for the countdown. */
     now: number;
+    /** The server's time, for the clock on the screen. */
+    clock: number;
     onRetry: () => void;
 }) {
     const view = kioskView(code, online);
@@ -46,7 +50,7 @@ export default function KioskScreen({
                 company={company}
                 center={center}
                 online={online}
-                now={now}
+                now={clock}
                 timezone={timezone}
             />
             <section className="flex flex-1 items-center">
