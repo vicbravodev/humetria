@@ -226,6 +226,47 @@ const TO_OPEN_QUESTION = <<<'JS'
     }
     JS;
 
+/** A script that leaves every question blank until the 0 to 10 one shows. */
+const TO_RECOMMEND_QUESTION = <<<'JS'
+    async () => {
+        for (let step = 0; step < 60 && document.querySelector('input[type=radio][value="10"]') === null; step++) {
+            const buttons = [...document.querySelectorAll('button')];
+            (buttons.find((it) => it.textContent.trim() === 'Omitir pregunta') ?? buttons.find((it) => it.textContent.includes('Siguiente')))?.click();
+            await new Promise((done) => setTimeout(done, 25));
+        }
+        return true;
+    }
+    JS;
+
+// Option A of the review: 0 to 5 and 6 to 10 in two equal rows on a phone, the anchors on the scale and an echo of the choice.
+it('asks the 0 to 10 question in two equal rows with its anchors, and echoes the number chosen', function (bool $dark): void {
+    engagementInvitee();
+
+    $page = visitPage('engagement/survey', '/engagement/the-token', $dark, true, function ($page): void {
+        $page->click('Comenzar');
+        $page->script(TO_RECOMMEND_QUESTION);
+    })
+        ->assertSee('¿Qué tan probable es que recomiende esta empresa como lugar para trabajar?')
+        ->assertDontSee('(0 = nada probable')
+        ->assertSee('Nada probable')
+        ->assertSee('Muy probable')
+        // Six numbers on the first row, five on the second, every one as wide and at least 44 px.
+        ->assertScript('() => { const boxes = [...document.querySelectorAll("main input[type=radio]")].map((input) => input.closest("label").getBoundingClientRect()); const rows = [...new Set(boxes.map((box) => Math.round(box.top)))]; return rows.length === 2 && boxes.filter((box) => Math.round(box.top) === rows[0]).length === 6 && boxes.every((box) => box.height >= 44 && Math.abs(box.width - boxes[0].width) < 1); }', true)
+        ->assertDontSee('Su respuesta:');
+
+    $page->script("() => { document.querySelector('input[type=radio][value=\"9\"]').click(); return true; }");
+    $page->assertSee('Su respuesta: 9 de 10');
+})->with(['light' => false, 'dark' => true]);
+
+it('lays the 0 to 10 question in one row on a computer', function (): void {
+    engagementInvitee();
+
+    $page = visit('/engagement/the-token')->click('Comenzar');
+    $page->script(TO_RECOMMEND_QUESTION);
+
+    $page->assertScript('() => new Set([...document.querySelectorAll("main input[type=radio]")].map((input) => Math.round(input.closest("label").getBoundingClientRect().top))).size', 1);
+});
+
 // The comments still go to an AI provider to be summarized: it is said where the person writes, not in the welcome.
 it('says at the open question that an AI provider summarizes the comments, and not to write a name', function (bool $dark): void {
     engagementInvitee();
