@@ -620,6 +620,41 @@ html:has([data-smooth-scroll]) {
     animation: humi-pop 200ms var(--ease-out) both;
 }
 
+/* The invitation of the closed bubble rises in softly; its bar counts its 8 seconds and stops while the cursor or the focus is on it. */
+@keyframes humi-invite {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.97);
+    }
+}
+
+@keyframes humi-countdown {
+    to {
+        transform: scaleX(0);
+    }
+}
+
+.humi-invite {
+    animation: humi-invite 250ms var(--ease-out) both;
+}
+
+.humi-countdown {
+    transform-origin: left;
+    animation: humi-countdown 8s linear forwards;
+}
+
+.humi-invite:hover .humi-countdown,
+.humi-invite:focus-within .humi-countdown {
+    animation-play-state: paused;
+}
+
+/* With reduced motion the invitation only appears; the bar still counts, since it is what closes it. */
+@media (prefers-reduced-motion: reduce) {
+    .humi-invite {
+        animation: none;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .humi-enter,
     .humi-slide-in,

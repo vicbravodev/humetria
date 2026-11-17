@@ -44,6 +44,18 @@ export function invitationPageOf(path: string): string | null {
     return INVITING.find(([pattern]) => pattern.test(clean))?.[1] ?? null;
 }
 
+const INVITATION_QUESTIONS: Readonly<Record<string, string>> = {
+    campaigns: '¿Cómo va la participación?',
+    results: '¿Dónde está el riesgo más alto?',
+    work_centers: '¿Qué le falta a mis centros en la NOM-037?',
+    interventions: '¿Qué pendientes tengo primero?',
+};
+
+/** The question «Preguntarle a Humi» leaves written in the box, by the page that invited: never sent by itself. */
+export function invitationQuestion(page: string): string | null {
+    return INVITATION_QUESTIONS[page] ?? null;
+}
+
 /** What the header says Humi is looking at. */
 export function contextLabel(page: PageContext): string {
     switch (page?.kind) {

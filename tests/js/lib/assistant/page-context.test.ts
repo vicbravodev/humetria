@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
     contextLabel,
     invitationPageOf,
+    invitationQuestion,
     pageContextOf,
 } from '@/lib/assistant/page-context';
 
@@ -85,5 +86,23 @@ describe('invitationPageOf', () => {
         expect(invitationPageOf('/admin/acme/employees')).toBeNull();
         expect(invitationPageOf('/admin/acme/assistant')).toBeNull();
         expect(invitationPageOf('/campaigns')).toBeNull();
+    });
+});
+
+describe('invitationQuestion', () => {
+    it('leaves in the box the question the invitation offered, for the person to send', () => {
+        expect(invitationQuestion('campaigns')).toBe(
+            '¿Cómo va la participación?',
+        );
+        expect(invitationQuestion('results')).toBe(
+            '¿Dónde está el riesgo más alto?',
+        );
+        expect(invitationQuestion('work_centers')).toBe(
+            '¿Qué le falta a mis centros en la NOM-037?',
+        );
+        expect(invitationQuestion('interventions')).toBe(
+            '¿Qué pendientes tengo primero?',
+        );
+        expect(invitationQuestion('otra')).toBeNull();
     });
 });
