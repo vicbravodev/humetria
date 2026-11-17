@@ -1076,6 +1076,19 @@ it('shows the printable dossier of a center with the evidence of each row or Fal
         ->assertScript('() => [...document.querySelectorAll("section")].filter((section) => section.textContent.includes("Cumple")).length > 2', true);
 })->with($looks);
 
+it('shows the contact phone of a person on the roster as people read it, not in E.164', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'contact_phone' => '+524421234567']);
+
+    visit("{$url}/telework/centers/{$center->id}")
+        ->assertSee('442 123 4567')
+        ->assertDontSee('+524421234567');
+    visit("{$url}/telework/centers/{$center->id}/dossier")
+        ->assertSee('442 123 4567')
+        ->assertDontSee('+524421234567');
+});
+
 it('puts the letterhead on the NOM-037 dossier when it is printed', function (): void {
     [$url, $center] = teleworkerCenter();
 

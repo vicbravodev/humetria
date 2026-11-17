@@ -44,6 +44,15 @@ it('shows the superadmin every demo request with its contact links', function (b
         ->assertAttribute('a[href="https://wa.me/525512345678"]', 'href', 'https://wa.me/525512345678');
 })->with($looks);
 
+it('shows the WhatsApp of a request as people read it, not in E.164', function (): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->create(['name' => 'Ana López', 'company' => 'Empresa Ejemplo', 'whatsapp' => '+525512345678']);
+
+    visit('/admin/demo-requests')
+        ->assertSee('55 1234 5678')
+        ->assertDontSee('+525512345678');
+});
+
 it('says so when nobody has asked for a demo yet', function (bool $dark): void {
     signInAsSuperadmin();
 

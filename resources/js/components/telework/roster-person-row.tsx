@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import WorkplaceStatusBadge from '@/components/telework/workplace-status-badge';
 import { maritalText } from '@/lib/telework/center';
 import type { CenterPerson } from '@/types';
+import { readablePhone } from '@/lib/phone';
 
 /** A person of the roster with where each of their workplaces stands; RH also reads their 5.1 personal data. */
 export default function CenterPersonRow({ person }: { person: CenterPerson }) {
@@ -10,7 +11,9 @@ export default function CenterPersonRow({ person }: { person: CenterPerson }) {
         person.maritalStatus === undefined
             ? null
             : maritalText(person.maritalStatus),
-        person.contactPhone,
+        person.contactPhone === null || person.contactPhone === undefined
+            ? null
+            : readablePhone(person.contactPhone),
         person.homeAddress,
     ].filter((line) => line !== null && line !== undefined);
 
