@@ -35,6 +35,8 @@ it('lists the work centers with their address, and the archived ones apart', fun
     visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile)
         ->assertSee('Planta Querétaro')
         ->assertSee('Av. 5 de Febrero 1200, col. Zona Industrial, C.P. 76120, Querétaro, Querétaro')
+        // The zone its day is measured in, always in view.
+        ->assertSee('Hora del Centro')
         ->assertDontSee('Bodega Vieja');
 
     visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { MapPin } from 'lucide-react';
+import { Clock, MapPin } from 'lucide-react';
 import WorkCenterAreas from '@/components/tenancy/work-center-areas';
 import WorkCenterFacts from '@/components/tenancy/work-center-facts';
 import WorkCenterRowActions from '@/components/tenancy/work-center-row-actions';
@@ -50,6 +50,10 @@ export default function WorkCenterCard({
             <p className="flex items-start gap-2 text-sm text-muted-foreground">
                 <MapPin aria-hidden className="mt-0.5 size-4 shrink-0" />
                 {workCenter.address}
+            </p>
+            <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Clock aria-hidden className="mt-0.5 size-4 shrink-0" />
+                {workCenter.timezone_label}
             </p>
             <WorkCenterFacts workCenter={workCenter} next={standing.next} />
             <WorkCenterAreas workCenter={workCenter} />
