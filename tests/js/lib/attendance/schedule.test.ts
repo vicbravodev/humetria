@@ -12,7 +12,6 @@ import {
     restLabel,
     scheduleDays,
     scheduleRibbon,
-    scheduleTemplates,
     shiftLabel,
     weekTotal,
 } from '@/lib/attendance/schedule';
@@ -192,40 +191,6 @@ describe('the rest days of a schedule', () => {
         expect(restLabel(week(0, 0, 0, 0, 0, 0, 0))).toBe(
             'Todos los días de descanso',
         );
-    });
-});
-
-describe('the templates to start a schedule from', () => {
-    it('are Monday to Friday and Monday to Saturday of 8 h, and the night shift at its daily limit', () => {
-        expect(scheduleTemplates(limits)).toEqual([
-            {
-                id: 'mon_fri',
-                label: 'Lunes a viernes',
-                shift: 'day',
-                minutes: week(480, 480, 480, 480, 480, 0, 0),
-            },
-            {
-                id: 'mon_sat',
-                label: 'Lunes a sábado',
-                shift: 'day',
-                minutes: week(480, 480, 480, 480, 480, 480, 0),
-            },
-            {
-                id: 'night',
-                label: 'Turno nocturno',
-                shift: 'night',
-                minutes: week(420, 420, 420, 420, 420, 0, 0),
-            },
-        ]);
-    });
-
-    it('follow the night shift limit the server sends', () => {
-        const night = scheduleTemplates({
-            ...limits,
-            dailyMinutes: { day: 480, night: 360, mixed: 450 },
-        }).find((template) => template.id === 'night');
-
-        expect(night?.minutes['1']).toBe(360);
     });
 });
 

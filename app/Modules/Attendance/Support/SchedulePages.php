@@ -24,6 +24,8 @@ final readonly class SchedulePages
 {
     private const int PER_PAGE = 25;
 
+    private const int COPIES = 20;
+
     private const array VIEWS = ['all', 'scheduled', 'unscheduled'];
 
     public function __construct(private Roster $roster, private WorkCenters $workCenters) {}
@@ -69,14 +71,41 @@ final readonly class SchedulePages
                 'name' => $person->name,
                 'jobTitle' => $person->jobTitle,
                 'center' => $scope->names[$person->workCenterId] ?? '—',
-                'schedule' => ($schedule = $schedules->get($person->id)) === null ? null : [
-                    'shiftType' => $schedule->shift_type->value,
-                    'workMode' => $schedule->work_mode->value,
-                    'minutes' => $schedule->minutes_by_weekday,
-                    'starts' => $schedule->starts_by_weekday,
-                ],
+                'schedule' => ($schedule = $schedules->get($person->id)) === null ? null : self::schedule($schedule),
             ]),
             'canManage' => Gate::allows('manage-attendance'),
+        ];
+    }
+
+    /**
+     * The people active in the centers in use who have a schedule, searched by name, the first 20, each with it.
+     *
+     * @return list<array{value: string, label: string, schedule: array<string, mixed>}>
+     */
+    public function copies(string $search): array
+    {
+        $scope = PanelScope::of($this->workCenters, $this->roster, null);
+        $schedules = AttendanceSchedule::query()->among('employee_id', $scope->people)
+            ->get(['employee_id', 'shift_type', 'work_mode', 'minutes_by_weekday', 'starts_by_weekday'])->keyBy('employee_id');
+        $found = $this->roster->page(new RosterQuery(employeeIds: array_values(array_map(strval(...), $schedules->keys()->all())), search: $search), self::COPIES)->items();
+
+        return array_values(array_filter(array_map(fn (RosterEntry $person): ?array => ($schedule = $schedules->get($person->id)) === null ? null : [
+            'value' => $person->id,
+            'label' => $person->name,
+            'schedule' => self::schedule($schedule),
+        ], $found)));
+    }
+
+    /**
+     * @return array{shiftType: string, workMode: string, minutes: array<int, int>, starts: array<int, int|null>|null}
+     */
+    private static function schedule(AttendanceSchedule $schedule): array
+    {
+        return [
+            'shiftType' => $schedule->shift_type->value,
+            'workMode' => $schedule->work_mode->value,
+            'minutes' => $schedule->minutes_by_weekday,
+            'starts' => $schedule->starts_by_weekday,
         ];
     }
 }
