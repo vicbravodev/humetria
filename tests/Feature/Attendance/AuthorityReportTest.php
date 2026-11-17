@@ -352,7 +352,7 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
         foreach ([[MarkType::Start, '2027-01-05 08:00'], [MarkType::End, '2027-01-05 16:00']] as [$type, $local]) {
             $rows[] = [
                 'id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'employee_id' => $person->id, 'work_center_id' => $this->plant->id,
-                'type' => $type->value, 'method' => MarkMethod::QrAndGeofence->value, 'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City')->utc(), 'created_at' => now(),
+                'type' => $type->value, 'method' => MarkMethod::QrAndGeofence->value, 'timezone' => 'America/Mexico_City', 'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City')->utc(), 'created_at' => now(),
             ];
         }
     }

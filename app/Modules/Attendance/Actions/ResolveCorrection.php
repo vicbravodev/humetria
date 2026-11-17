@@ -16,6 +16,7 @@ use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Attendance\Support\MarkLock;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Members;
+use App\Modules\Tenancy\Contracts\Timezones;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +33,7 @@ final readonly class ResolveCorrection
 {
     public const int MIN_NOTE = 5;
 
-    public function __construct(private Members $members, private Roster $roster, private CorrectMark $correct, private RecordAudit $audit) {}
+    public function __construct(private Members $members, private Roster $roster, private CorrectMark $correct, private RecordAudit $audit, private Timezones $timezones) {}
 
     /**
      * @throws CorrectionRejected
@@ -98,6 +99,7 @@ final readonly class ResolveCorrection
             'tenant_id' => $request->tenant_id,
             'employee_id' => $person->id,
             'work_center_id' => $person->workCenterId,
+            'timezone' => $this->timezones->forCenter($person->workCenterId),
             'type' => $request->type,
             'marked_at' => $request->proposed_at->utc(),
             'method' => MarkMethod::Correction,

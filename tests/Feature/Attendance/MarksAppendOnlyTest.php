@@ -36,8 +36,8 @@ it('rejects a type the database does not know', function (): void {
     $mark = AttendanceMark::factory()->create();
 
     expect(fn () => DB::insert(
-        "insert into attendance_marks (id, tenant_id, employee_id, work_center_id, type, marked_at, method)
-            select gen_random_uuid(), tenant_id, employee_id, work_center_id, 'lunch', now(), method from attendance_marks where id = ?",
+        "insert into attendance_marks (id, tenant_id, employee_id, work_center_id, type, marked_at, method, timezone)
+            select gen_random_uuid(), tenant_id, employee_id, work_center_id, 'lunch', now(), method, timezone from attendance_marks where id = ?",
         [$mark->id],
     ))->toThrow(QueryException::class, 'attendance_marks_type_known');
 });

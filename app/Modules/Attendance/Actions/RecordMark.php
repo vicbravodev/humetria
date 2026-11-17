@@ -14,6 +14,7 @@ use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Attendance\Support\MarkLock;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\Timezones;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -25,7 +26,7 @@ use InvalidArgumentException;
  */
 final readonly class RecordMark
 {
-    public function __construct(private CurrentTenant $tenant, private Roster $roster, private AgreementStatus $agreements) {}
+    public function __construct(private CurrentTenant $tenant, private Roster $roster, private AgreementStatus $agreements, private Timezones $timezones) {}
 
     /** @throws MarkRejected `agreement_not_accepted` */
     public function handle(string $employeeId, MarkType $type, MarkContext $context): AttendanceMark
@@ -57,6 +58,9 @@ final readonly class RecordMark
                 'accuracy_m' => $context->accuracy,
                 'distance_m' => $context->distance,
                 'credential_id' => $context->credentialId,
+                // The zone of where it was taken: the other center's on a trip, the person's own otherwise.
+                'timezone' => $this->timezones->forCenter($context->awayCenterId ?? $person->workCenterId),
+                'away_center_id' => $context->awayCenterId,
             ]);
         });
 
