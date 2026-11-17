@@ -113,6 +113,8 @@ tiene que pasar con **cualquier** dato que Faker pueda dar, no solo con el de ho
     `assertScript()` y lo vuelve a mandar mientras el anterior sigue corriendo en la página (uno de 2.5 s corrió 16 veces):
     un script que contesta la encuesta la contestaba varias veces a la vez y escribía el comentario en tres preguntas.
     Uno que solo lee (`eventually()`) no lo necesita.
+13. **La página se pinta después de `load`.** React monta el componente un momento después de que `visit()` regresa: antes de
+    medir algo de la página se espera a que exista (`eventually()`), o la medida da `null` en un runner ocupado.
 
 ## Cómo se estresa
 
