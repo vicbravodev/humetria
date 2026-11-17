@@ -641,6 +641,18 @@ function eventually(string $condition): string
         JS;
 }
 
+/**
+ * A script (the source of an arrow function) that runs once in the page however many times Pest sends it. Pest gives every
+ * attempt of `script()` and `assertScript()` 1 s and sends it again until it answers, while the first one keeps running:
+ * a script that clicks or types for longer would do it several times at once. Every attempt waits on the same run.
+ */
+function runOnce(string $script): string
+{
+    $run = json_encode('pest-run-'.bin2hex(random_bytes(8)), JSON_THROW_ON_ERROR);
+
+    return "() => (window[{$run}] ??= ({$script})())";
+}
+
 /** A script that resolves true once nothing finite is animating or in transition (a toast fading in, a menu closing). */
 function settled(): string
 {
