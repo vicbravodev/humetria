@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Assistant\Tools;
 
+use App\Modules\Assistant\Contracts\TellsLiveFacts;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\ToolCard;
 use App\Modules\Assistant\Support\PanelLinks;
@@ -17,7 +18,6 @@ use App\Modules\Telework\Contracts\TeleworkStanding;
 use App\Modules\Telework\Data\TeleworkRow;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\WorkCenters;
-use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Ai\Contracts\Tool;
@@ -27,7 +27,7 @@ use Laravel\Ai\Tools\Request;
  * What the company still has to do, most urgent first: a first work center, evaluations overdue or never made, campaigns
  * to launch or about to close, Programas de intervención with overdue actions, and the rows of NOM-037 that are missing or partial. Each item says where to do it.
  */
-final readonly class ListPendingActions implements Tool
+final readonly class ListPendingActions implements TellsLiveFacts, Tool
 {
     private const int MAX_ITEMS = 15;
 
@@ -81,17 +81,103 @@ final readonly class ListPendingActions implements Tool
     }
 
     /**
+     * How many things are pending and when the first was due, how the centers with telework stand with their list, and
+     * what to invite to on the pages of campaigns, centers and Programas: counts only.
+     */
+    public function facts(): array
+    {
+        $this->guard->check($this->scope);
+        $names = $this->centerNames();
+        $facts = ['pending' => self::pendingLine($this->items())];
+
+        if ($this->modules->enabled($this->scope->tenantId, 'nom035')) {
+            $closing = array_find($this->closing(), fn (CampaignRecord $campaign): bool => self::missing($campaign) > 0);
+            $programs = count($this->overduePrograms($names));
+            $facts += array_filter([
+                'invite.campaigns' => $closing === null ? null : "Cierra el {$closing->closesOn} y ".(self::missing($closing) === 1 ? 'falta 1 cuestionario' : 'faltan '.self::missing($closing).' cuestionarios').'. ¿Te cuento cómo va?',
+                'invite.interventions' => match (true) {
+                    $programs === 0 => null,
+                    $programs === 1 => '1 programa de intervención tiene acciones vencidas. ¿Lo repasamos?',
+                    default => "{$programs} programas de intervención tienen acciones vencidas. ¿Los repasamos?",
+                },
+            ]);
+        }
+
+        return $this->modules->enabled($this->scope->tenantId, 'nom037') ? $facts + self::teleworkFacts($this->teleworkStanding($names)) : $facts;
+    }
+
+    /**
+     * @param  list<array{priority: int, kind: string, title: string, detail: string|null, due: string|null, link: string}>  $items
+     */
+    private static function pendingLine(array $items): string
+    {
+        $count = count($items);
+        $first = $items[0] ?? null;
+
+        if ($first === null) {
+            return 'Nada pendiente por ahora';
+        }
+
+        $head = $count === 1 ? '1 pendiente' : "{$count} pendientes";
+        $verb = $first['kind'] === 'evaluation_overdue' ? 'venció' : 'vence';
+
+        return match (true) {
+            $first['due'] === null => $head,
+            $count === 1 => "{$head}; {$verb} el {$first['due']}",
+            default => "{$head}; el primero {$verb} el {$first['due']}",
+        };
+    }
+
+    /**
+     * @param  array<string, list<TeleworkRow>>  $standing
+     * @return array<string, string>
+     */
+    private static function teleworkFacts(array $standing): array
+    {
+        if ($standing === []) {
+            return ['telework' => 'Nadie teletrabaja todavía en tus centros'];
+        }
+
+        $centers = count($standing);
+        $lacking = count(array_filter($standing, fn (array $gaps): bool => $gaps !== []));
+
+        return array_filter([
+            'telework' => 'Teletrabajo: '.($centers - $lacking)." de {$centers} ".($centers === 1 ? 'centro' : 'centros').' con su lista completa',
+            'invite.work_centers' => match ($lacking) {
+                0 => null,
+                1 => 'A 1 centro le falta algo de su lista de NOM-037. ¿Te explico qué falta?',
+                default => "A {$lacking} centros les falta algo de su lista de NOM-037. ¿Te explico qué falta?",
+            },
+        ]);
+    }
+
+    /**
+     * @return array<string, string> the name of each work center not archived, by id
+     */
+    private function centerNames(): array
+    {
+        $names = [];
+
+        foreach ($this->workCenters->all() as $center) {
+            if (! $center->archived) {
+                $names[$center->id] = $center->name;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
      * @return list<array{priority: int, kind: string, title: string, detail: string|null, due: string|null, link: string}>
      */
     private function items(): array
     {
-        $centers = array_values(array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived));
+        $names = $this->centerNames();
 
-        if ($centers === []) {
+        if ($names === []) {
             return [['priority' => 0, 'kind' => 'register_work_center', 'title' => 'Registrar tu primer centro de trabajo', 'detail' => 'Las normas se aplican por centro de trabajo.', 'due' => null, 'link' => $this->links->workCenters()]];
         }
 
-        $names = array_column(array_map(fn (WorkCenterSummary $center): array => ['id' => $center->id, 'name' => $center->name], $centers), 'name', 'id');
         $nom035 = $this->modules->enabled($this->scope->tenantId, 'nom035');
         $items = [
             ...($nom035 ? $this->evaluations($names) : []),
@@ -141,12 +227,30 @@ final readonly class ListPendingActions implements Tool
 
             if (! $campaign->closed && $campaign->launchedOn === null) {
                 $items[] = ['priority' => 4, 'kind' => 'launch_campaign', 'title' => "Lanzar la campaña de {$label}", 'detail' => null, 'due' => null, 'link' => $this->links->campaign($campaign->id)];
-            } elseif (! $campaign->closed && $campaign->daysLeft !== null && $campaign->daysLeft <= self::CLOSING_DAYS) {
+            } elseif (self::isClosing($campaign)) {
                 $items[] = ['priority' => 3, 'kind' => 'campaign_closing', 'title' => "Cierra pronto: {$label}", 'detail' => self::closingDetail($campaign), 'due' => $campaign->closesOn, 'link' => $this->links->campaign($campaign->id)];
             }
         }
 
         return $items;
+    }
+
+    private static function isClosing(CampaignRecord $campaign): bool
+    {
+        return ! $campaign->closed && $campaign->daysLeft !== null && $campaign->daysLeft <= self::CLOSING_DAYS;
+    }
+
+    /**
+     * @return list<CampaignRecord> the campaigns running that close within a week, the soonest first
+     */
+    private function closing(): array
+    {
+        return array_values(array_filter($this->campaigns->current(), self::isClosing(...)));
+    }
+
+    private static function missing(CampaignRecord $campaign): int
+    {
+        return array_sum($campaign->invited) - array_sum($campaign->answered);
     }
 
     /**
@@ -172,7 +276,7 @@ final readonly class ListPendingActions implements Tool
 
     private static function closingDetail(CampaignRecord $campaign): string
     {
-        $missing = array_sum($campaign->invited) - array_sum($campaign->answered);
+        $missing = self::missing($campaign);
 
         return "Cierra el {$campaign->closesOn}.".($missing > 0 ? " Faltan {$missing} cuestionarios por contestar." : '');
     }
@@ -185,19 +289,32 @@ final readonly class ListPendingActions implements Tool
     {
         $items = [];
 
-        foreach ($this->telework->forCenters(array_keys($names)) as $centerId => $rows) {
-            // Only where someone teleworks or is about to (row 5.1 applies).
-            if (! array_any($rows, fn (TeleworkRow $row): bool => $row->numeral === '5.1' && $row->state !== 'not_applicable')) {
-                continue;
-            }
-
-            foreach ($rows as $row) {
-                if (in_array($row->state, ['missing', 'partial'], true)) {
-                    $items[] = ['priority' => 5, 'kind' => 'telework_gap', 'title' => "NOM-037 {$row->numeral} {$row->label} · ".UntrustedText::line($names[$centerId] ?? ''), 'detail' => $row->detail, 'due' => null, 'link' => $this->links->teleworkCenter($centerId)];
-                }
+        foreach ($this->teleworkStanding($names) as $centerId => $gaps) {
+            foreach ($gaps as $row) {
+                $items[] = ['priority' => 5, 'kind' => 'telework_gap', 'title' => "NOM-037 {$row->numeral} {$row->label} · ".UntrustedText::line($names[$centerId] ?? ''), 'detail' => $row->detail, 'due' => null, 'link' => $this->links->teleworkCenter($centerId)];
             }
         }
 
         return $items;
+    }
+
+    /**
+     * The rows missing or partial of each center where someone teleworks or is about to (row 5.1 applies); a center
+     * without telework is left out, one up to date has none.
+     *
+     * @param  array<string, string>  $names
+     * @return array<string, list<TeleworkRow>> by work center id
+     */
+    private function teleworkStanding(array $names): array
+    {
+        $standing = [];
+
+        foreach ($this->telework->forCenters(array_keys($names)) as $centerId => $rows) {
+            if (array_any($rows, fn (TeleworkRow $row): bool => $row->numeral === '5.1' && $row->state !== 'not_applicable')) {
+                $standing[$centerId] = array_values(array_filter($rows, fn (TeleworkRow $row): bool => in_array($row->state, ['missing', 'partial'], true)));
+            }
+        }
+
+        return $standing;
     }
 }

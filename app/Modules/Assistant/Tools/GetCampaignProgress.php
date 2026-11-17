@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Assistant\Tools;
 
+use App\Modules\Assistant\Contracts\TellsLiveFacts;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\ToolCard;
 use App\Modules\Assistant\Support\PanelLinks;
@@ -22,7 +23,7 @@ use Laravel\Ai\Tools\Request;
 /**
  * How the company's campaigns are going: who was given each guide and how many answered. Counts only, never a name.
  */
-final readonly class GetCampaignProgress implements Tool
+final readonly class GetCampaignProgress implements TellsLiveFacts, Tool
 {
     private const int MAX_ROWS = 10;
 
@@ -61,6 +62,27 @@ final readonly class GetCampaignProgress implements Tool
         $link = $this->links->campaign($campaign->id);
 
         return (new ToolCard('progress', 'Avance de la campaña', [$this->row($campaign, $names)], $link, sources: ['Campaña '.self::label($campaign, $names)], next: ['label' => 'Ver la campaña', 'link' => $link]))->toJson();
+    }
+
+    /** How many questionnaires of the campaigns running are answered, in total. */
+    public function facts(): array
+    {
+        $this->guard->check($this->scope);
+        $running = array_values(array_filter($this->campaigns->current(), fn (CampaignRecord $campaign): bool => ! $campaign->closed && $campaign->launchedOn !== null));
+        $invited = array_sum(array_map(fn (CampaignRecord $campaign): int => array_sum($campaign->invited), $running));
+        $answered = array_sum(array_map(fn (CampaignRecord $campaign): int => array_sum($campaign->answered), $running));
+
+        if ($running === []) {
+            return ['participation' => 'No hay campañas en curso'];
+        }
+
+        if ($invited === 0) {
+            return [];
+        }
+
+        $line = "{$answered} de {$invited} cuestionarios contestados (".number_format(100 * $answered / $invited).' %)';
+
+        return ['participation' => count($running) === 1 ? $line : 'En '.count($running).' campañas: '.$line];
     }
 
     /**
