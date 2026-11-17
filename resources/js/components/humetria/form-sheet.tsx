@@ -1,4 +1,5 @@
 import { Form } from '@inertiajs/react';
+import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,10 +40,35 @@ export default function FormSheet({
     trigger?: ReactNode;
     children: (errors: Errors) => ReactNode;
 }) {
+    // Opened from a menu or a row, not from its own trigger: Escape gives the focus back to what had it (the menu's
+    // button), not to the page.
+    const returnTo = useRef<HTMLElement | null>(null);
+
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             {trigger}
-            <SheetContent className="w-full gap-0 bg-popover sm:inset-y-2 sm:right-2 sm:h-auto sm:max-w-[520px] sm:rounded-xl sm:border-0 sm:shadow-float">
+            <SheetContent
+                onOpenAutoFocus={() => {
+                    // An item of a menu goes away with the menu: the button that opened the menu takes its place.
+                    const active = document.activeElement;
+                    const menu = active?.closest('[role="menu"]');
+                    const origin = menu
+                        ? document.querySelector(`[aria-controls="${menu.id}"]`)
+                        : active;
+                    returnTo.current =
+                        origin instanceof HTMLElement ? origin : null;
+                }}
+                onCloseAutoFocus={(event) => {
+                    if (
+                        trigger === undefined &&
+                        returnTo.current?.isConnected === true
+                    ) {
+                        event.preventDefault();
+                        returnTo.current.focus();
+                    }
+                }}
+                className="w-full gap-0 bg-popover sm:inset-y-2 sm:right-2 sm:h-auto sm:max-w-[520px] sm:rounded-xl sm:border-0 sm:shadow-float"
+            >
                 <SheetHeader className="gap-0.5 border-b px-6 pt-5 pb-4">
                     <SheetTitle className="text-lg leading-[26px]">
                         {title}

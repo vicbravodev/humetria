@@ -11,14 +11,16 @@ dataset('record forms', [
     'organization/employee-sheet.tsx',
     'compensation/compensation-sheet.tsx',
     'interventions/action-sheet.tsx',
+    'tenancy/work-center-dialog.tsx',
+    'tenancy/create-work-center-dialog.tsx',
 ]);
 
-it('keeps the form of a record in the side panel', function (string $file): void {
+it('keeps the form of a record, or its button, in the side panel', function (string $file): void {
     $source = file_get_contents(__DIR__.'/../../resources/js/components/'.$file);
 
     expect($source)
         ->toBeString()
-        ->toContain("@/components/humetria/form-sheet'")
+        ->toMatch("~@/components/(humetria/form-sheet|ui/sheet)'~")
         ->not->toContain('@/components/humetria/form-dialog')
         ->not->toContain('@/components/ui/dialog');
 })->with('record forms');
