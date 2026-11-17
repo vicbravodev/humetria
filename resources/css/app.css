@@ -410,6 +410,25 @@ html:has([data-smooth-scroll]) {
     animation: 150ms var(--ease-out) both calendar-fade-out;
 }
 
+/* «Verificando» of Marcar: a stretch of the arch of the logo runs along it while the mark is checked; still with reduced motion. */
+@keyframes arc-chase {
+    from {
+        stroke-dashoffset: 100;
+    }
+    to {
+        stroke-dashoffset: -100;
+    }
+}
+
+.arc-chase {
+    stroke-dasharray: 30 70;
+    animation: arc-chase 1.4s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
 @keyframes calendar-from-right {
     from {
         opacity: 0;

@@ -1,10 +1,21 @@
-/** Under the main button: how the center's code gets to the mark, said by whether this page came from a scan. */
-export default function PunchHint({ scanned }: { scanned: boolean }) {
-    return (
-        <p className="text-center text-base text-muted-foreground">
-            {scanned
-                ? 'Código de la pantalla leído. Al marcar, el teléfono le pedirá su huella, su rostro o su PIN.'
-                : 'Si su centro tiene una pantalla QR, escanee su código con la cámara de su teléfono antes de marcar.'}
-        </p>
-    );
+/**
+ * Under the buttons, in a line: how this person marks. A remote one is asked for no code nor zone; one who opened the page
+ * from the center's screen has a few minutes to mark with that scan; anyone else is told how the code gets to the mark.
+ */
+export default function PunchHint({
+    mode,
+    scannedAt,
+}: {
+    mode: 'remote' | 'onsite' | null;
+    /** When the code of the screen was read, at its center's clock; null when the page did not open from one that counted. */
+    scannedAt: string | null;
+}) {
+    const hint =
+        mode === 'remote'
+            ? 'Marque desde donde esté: no se le pedirá un QR ni estar en una zona.'
+            : scannedAt !== null
+              ? `Escaneó a las ${scannedAt}, tiene 3 minutos para marcar.`
+              : 'Si su centro tiene una pantalla QR, escanee su código con la cámara antes de marcar.';
+
+    return <p className="text-center text-sm text-muted-foreground">{hint}</p>;
 }

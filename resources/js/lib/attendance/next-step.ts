@@ -23,9 +23,6 @@ const NAMES: Record<MarkType, string> = {
 
 const TYPES: readonly MarkType[] = ['start', 'break_start', 'break_end', 'end'];
 
-/** Every step, for a person not known yet in this browser: the server tells which one follows. */
-export const ANY_STEP: readonly string[] = TYPES;
-
 export function isMarkType(value: unknown): value is MarkType {
     return TYPES.some((type) => type === value);
 }
@@ -45,4 +42,24 @@ export function nextSteps(next: readonly string[]): {
 /** A mark of the day, by name. */
 export function markName(type: string): string {
     return isMarkType(type) ? NAMES[type] : 'Marca';
+}
+
+/**
+ * The step to mark for one tapped: itself when it proceeds, or else the first one the server offers, so no signature is
+ * spent on a step that would be refused; the one tapped when the server offered none.
+ */
+export function stepThatProceeds(
+    tapped: MarkType,
+    next: readonly string[],
+): MarkType {
+    return next.includes(tapped) ? tapped : (next.find(isMarkType) ?? tapped);
+}
+
+/** What goes first, when the step tapped does not proceed: «Primero marque su entrada.» */
+export function firstStepNotice(next: readonly string[]): string {
+    const first = next.find(isMarkType);
+
+    return first === undefined
+        ? 'Ese paso no corresponde ahora.'
+        : `Primero marque su ${NAMES[first].toLowerCase()}.`;
 }

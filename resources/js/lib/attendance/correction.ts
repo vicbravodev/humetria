@@ -15,6 +15,18 @@ export type CorrectionDraft = {
     reason: string;
 };
 
+/**
+ * What a correction is asked about, before the person says the rest: its title, the mark (none for one that is missing),
+ * its type when it is known, the local day (Y-m-d) and the time to propose.
+ */
+export type CorrectionAsk = {
+    title: string;
+    markId: string | null;
+    type: MarkType | null;
+    date: string;
+    time: string;
+};
+
 /** The calendar day after a date (Y-m-d), whatever the browser's time zone. */
 export function dayAfter(date: string): string {
     const [year = 0, month = 1, day = 1] = date.split('-').map(Number);

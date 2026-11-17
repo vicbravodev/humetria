@@ -1,94 +1,82 @@
-import { useState } from 'react';
-import DayCorrection from '@/components/attendance/day-correction';
+import { ChevronRight, Plus } from 'lucide-react';
 import WeekMark from '@/components/attendance/week-mark';
-import EvidenceDots from '@/components/attendance/evidence-dots';
 import { Badge } from '@/components/ui/badge';
 import { lateLabel } from '@/lib/attendance/late';
-import type { CorrectionDraft } from '@/lib/attendance/correction';
 import type { WeekDay as Day, WeekMark as Mark } from '@/lib/attendance/week';
-import {
-    absenceLabel,
-    dayEvidence,
-    dayTitle,
-    duration,
-} from '@/lib/attendance/week-text';
+import { dayNeedsLook, dayRange, dayShort } from '@/lib/attendance/week-fold';
+import { duration } from '@/lib/attendance/week-text';
 
 /**
- * One day of the week: its marks with their local time, what it worked against what was scheduled, its flags, and the
- * ways to ask RH for a correction (a mark that is wrong, a mark missing). A day of approved vacations or a leave says so
- * instead of «Sin marcas.»; if it has marks, they still show.
+ * One day of the week, folded (board «Asistencia: su semana»): its name, the range of its marks and its hours; open, its
+ * marks on a line of time with the pencil that asks for each correction, its flags, and one «Me faltó una marca». It opens
+ * by itself only when something in it asks to be looked at.
  */
 export default function WeekDay({
     day,
     pending,
-    working,
-    onCorrect,
+    onAsk,
 }: {
     day: Day;
     /** The marks with a request waiting for RH: none more of them. */
     pending: string[];
-    working: boolean;
-    onCorrect: (draft: CorrectionDraft) => Promise<boolean>;
+    /** Asks for the correction of a mark of this day, or of one missing (null). */
+    onAsk: (mark: Mark | null) => void;
 }) {
-    const [asking, setAsking] = useState<Mark | 'missing' | null>(null);
-    const evidence = dayEvidence(day.marks);
-    const away = absenceLabel(day.absence);
     const late = lateLabel(day.lateMinutes);
-    const scheduled = day.restDay
-        ? 'Descanso'
-        : `de ${duration(day.scheduledMinutes)}`;
 
     return (
-        <li className="flex flex-col gap-2 py-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-base font-semibold">
-                    {dayTitle(day.date)}
-                </h3>
-                <p className="text-base tabular-nums">
-                    <span className="font-semibold">
+        <li className="border-t first:border-t-0">
+            <details className="group" open={dayNeedsLook(day)}>
+                <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+                    <span className="w-14 font-semibold">
+                        {dayShort(day.date)}
+                    </span>
+                    <span className="flex-1 text-meta text-muted-foreground">
+                        {dayRange(day)}
+                    </span>
+                    <span className="font-semibold tabular-nums">
                         {duration(day.workedMinutes)}
-                    </span>{' '}
-                    <span className="text-muted-foreground">{scheduled}</span>
-                </p>
-            </div>
-            {evidence !== null && (
-                <p className="flex items-center gap-2 text-base text-muted-foreground">
-                    <EvidenceDots dots={evidence.dots} />
-                    <span className="sr-only">Evidencia </span>
-                    {evidence.text}
-                </p>
-            )}
-            {away !== null && <Badge variant="secondary">{away}</Badge>}
-            {late !== null && <Badge variant="warning">{late}</Badge>}
-            {day.marks.length === 0 ? (
-                away === null && (
-                    <p className="text-base text-muted-foreground">
-                        Sin marcas.
-                    </p>
-                )
-            ) : (
-                <ul className="flex flex-col gap-1">
-                    {day.marks.map((mark) => (
-                        <WeekMark
-                            key={mark.id}
-                            mark={mark}
-                            asked={pending.includes(mark.id)}
-                            onAsk={() => setAsking(mark)}
-                        />
-                    ))}
-                </ul>
-            )}
-            {day.missingEnd && (
-                <Badge variant="warning">Sin salida marcada</Badge>
-            )}
-            <DayCorrection
-                date={day.date}
-                asking={asking}
-                working={working}
-                onMissing={() => setAsking('missing')}
-                onClose={() => setAsking(null)}
-                onCorrect={onCorrect}
-            />
+                    </span>
+                    <ChevronRight
+                        aria-hidden
+                        className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-open:rotate-90 motion-reduce:transition-none"
+                    />
+                </summary>
+                <div className="flex flex-col gap-0.5 pt-1 pb-3.5 pl-1">
+                    {(late !== null || day.missingEnd) && (
+                        <div className="flex flex-wrap gap-2 pb-1 pl-[22px]">
+                            {late !== null && (
+                                <Badge variant="warning">{late}</Badge>
+                            )}
+                            {day.missingEnd && (
+                                <Badge variant="warning">
+                                    Sin salida marcada
+                                </Badge>
+                            )}
+                        </div>
+                    )}
+                    {day.marks.length > 0 && (
+                        <ul className="flex flex-col">
+                            {day.marks.map((mark) => (
+                                <WeekMark
+                                    key={mark.id}
+                                    mark={mark}
+                                    asked={pending.includes(mark.id)}
+                                    onAsk={() => onAsk(mark)}
+                                />
+                            ))}
+                        </ul>
+                    )}
+                    <button
+                        type="button"
+                        className="mt-1.5 ml-[22px] inline-flex min-h-11 items-center gap-2 self-start rounded-lg border border-input bg-card px-3.5 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        onClick={() => onAsk(null)}
+                    >
+                        <Plus aria-hidden className="size-5 text-primary" />
+                        Me faltó una marca
+                    </button>
+                </div>
+            </details>
         </li>
     );
 }

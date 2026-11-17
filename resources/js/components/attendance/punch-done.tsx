@@ -1,18 +1,17 @@
 import { Link } from '@inertiajs/react';
-import { CalendarDays, CircleCheck } from 'lucide-react';
+import { CircleCheck, TriangleAlert } from 'lucide-react';
 import DayMarks from '@/components/attendance/day-marks';
-import EvidenceDots from '@/components/attendance/evidence-dots';
 import PersonFrame from '@/components/attendance/person-frame';
-import ToneTile from '@/components/humetria/tone-tile';
 import { Button } from '@/components/ui/button';
-import { clockNow } from '@/lib/attendance/correction';
 import { flagNotice } from '@/lib/attendance/punch';
-import { doneTitle, evidenceText } from '@/lib/attendance/punch-view';
+import type { DayMark } from '@/lib/attendance/punch';
+import { doneTitle, markClock, markHow } from '@/lib/attendance/punch-view';
 import { dayTitle } from '@/lib/attendance/week-text';
 
 /**
- * The mark was taken (board P2, «Registrada»): its name, its time large, what it proves in words, that it cannot be erased
- * and how to ask for a correction; the full sentence for a screen reader, and the day below. «Listo» brings the next step.
+ * The mark was taken (board «Asistencia: marca registrada»): its name, its time large and its own date in one group; one
+ * notice at most (what RH will see flagged); the day in a card with how the mark was taken; that it cannot be erased, with
+ * the way to a correction. «Listo» is the one action; «Ver mi semana» a link. The full sentence for a screen reader.
  */
 export default function PunchDone({
     company,
@@ -20,8 +19,6 @@ export default function PunchDone({
     evidence,
     flag,
     marks,
-    timezone,
-    now,
     weekUrl,
     onDone,
 }: {
@@ -29,15 +26,11 @@ export default function PunchDone({
     text: string;
     evidence: string | null;
     flag: string | null;
-    marks: { type: string; time: string }[];
-    timezone: string;
-    /** The time of this device's clock: the date and the greeting are the company's at that moment. */
-    now: number;
+    marks: DayMark[];
     weekUrl: string;
     onDone: () => void;
 }) {
     const last = marks.at(-1);
-    const proof = evidenceText(evidence, flag);
     const notice = flagNotice(flag);
 
     return (
@@ -46,57 +39,65 @@ export default function PunchDone({
             actions={
                 <>
                     <Button
-                        className="h-14 w-full text-lg font-semibold"
+                        className="h-14 w-full text-[17px] font-semibold"
                         onClick={onDone}
                     >
                         Listo
                     </Button>
-                    <Button
-                        asChild
-                        variant="outline"
-                        size="lg"
-                        className="w-full text-base"
+                    <Link
+                        href={weekUrl}
+                        className="flex min-h-12 items-center justify-center rounded-md text-[17px] font-medium text-primary focus-visible:outline-2 focus-visible:outline-ring"
                     >
-                        <Link href={weekUrl}>
-                            <CalendarDays aria-hidden className="size-5" />
-                            Ver mi semana
-                        </Link>
-                    </Button>
+                        Ver mi semana
+                    </Link>
                 </>
             }
         >
-            <div className="flex w-full max-w-md flex-col gap-6">
-                <section className="flex flex-col items-start gap-3">
-                    <p role="status" className="sr-only">
-                        {text}
-                    </p>
-                    <ToneTile icon={CircleCheck} tone="ok" large />
-                    <h1 className="text-2xl leading-8 font-semibold">
+            <div className="flex w-full max-w-md flex-col items-center gap-5 text-center">
+                <p role="status" className="sr-only">
+                    {text}
+                </p>
+                <div className="flex animate-in flex-col items-center gap-1.5 duration-200 ease-out fade-in slide-in-from-bottom-1">
+                    <span
+                        aria-hidden
+                        className="flex size-14 animate-in items-center justify-center rounded-[14px] bg-accent text-primary duration-200 ease-out zoom-in-96"
+                    >
+                        <CircleCheck className="size-7" />
+                    </span>
+                    <h1 className="mt-2 text-[26px] leading-[34px] font-semibold tracking-[-0.01em]">
                         {doneTitle(last?.type ?? '')}
                     </h1>
-                    <p className="text-5xl font-semibold tabular-nums">
-                        {last?.time}
+                    <p className="text-5xl leading-[52px] font-semibold tracking-[-0.03em] tabular-nums">
+                        {last === undefined ? '' : markClock(last)}
                     </p>
-                    <p className="text-muted-foreground">
-                        {dayTitle(clockNow(new Date(now), timezone).date)}
-                    </p>
-                    {proof !== null && (
-                        <p className="flex items-center gap-2 text-base font-medium">
-                            <EvidenceDots dots={proof.dots} />
-                            {proof.text}
+                    {last?.date !== undefined && (
+                        <p className="text-muted-foreground">
+                            {dayTitle(last.date)}
                         </p>
                     )}
-                    {notice !== null && (
-                        <p className="rounded-xl bg-warning px-4 py-3 text-base text-warning-foreground">
-                            {notice}
-                        </p>
-                    )}
-                </section>
-                <p className="card p-5 text-base text-muted-foreground">
-                    Su registro no se puede borrar. Si hay un error, puede pedir
-                    una corrección.
+                </div>
+                {notice !== null && (
+                    <p className="flex w-full items-start gap-2.5 rounded-xl bg-warning px-3.5 py-3 text-left text-base text-warning-foreground">
+                        <TriangleAlert
+                            aria-hidden
+                            className="mt-0.5 size-5 shrink-0"
+                        />
+                        {notice}
+                    </p>
+                )}
+                <div className="w-full text-left">
+                    <DayMarks marks={marks} how={markHow(evidence, flag)} />
+                </div>
+                <p className="text-meta text-muted-foreground">
+                    Su registro no se puede borrar. Si hay un error,{' '}
+                    <Link
+                        href={weekUrl}
+                        className="-mx-1 inline-block px-1 py-2.5 font-medium text-primary underline underline-offset-[3px]"
+                    >
+                        pida una corrección
+                    </Link>
+                    .
                 </p>
-                <DayMarks marks={marks} />
             </div>
         </PersonFrame>
     );

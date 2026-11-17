@@ -1,19 +1,22 @@
 import { Head } from '@inertiajs/react';
 import PunchScreen from '@/components/attendance/punch-screen';
-import { useNow } from '@/hooks/use-now';
 import { usePunch } from '@/hooks/use-punch';
-import type { Signer } from '@/lib/attendance/punch';
+import { useServerNow } from '@/hooks/use-server-now';
+import type { PunchMode, Signer } from '@/lib/attendance/punch';
 
 /**
- * A person marks their working day from their linked device (no account), screen by screen (board P2): before marking, each
- * test as it passes, the mark taken, or what went wrong and what to do (board P3). When nobody is known in this browser,
- * every step is offered. A mark refused can be asked of RH from here, and the agreement, when it was not accepted, is
- * accepted here.
+ * A person marks their working day from their linked device (no account), screen by screen: before marking, each test as
+ * it passes, the mark taken, or what went wrong and what to do. When nobody is known in this browser, every step is
+ * offered. The clock is the server's, in the zone of the person's center. A mark refused can be asked of RH from here, and
+ * the agreement, when it was not accepted, is accepted here with the mark.
  */
 export default function Punch({
     company,
     qr,
     person,
+    mode,
+    scannedAt,
+    now,
     optionsUrl,
     punchUrl,
     forgetUrl,
@@ -21,23 +24,23 @@ export default function Punch({
     enterUrl,
     correctionOptionsUrl,
     correctionUrl,
-    agreementOptionsUrl,
-    agreementUrl,
     timezone,
 }: {
     company: string;
     qr: string | null;
     person: Signer | null;
+    mode: PunchMode;
+    scannedAt: string | null;
+    /** The server's time when the page was made, in milliseconds. */
+    now: number;
     optionsUrl: string;
     punchUrl: string;
     forgetUrl: string;
     weekUrl: string;
-    /** Where a person without a key here adds one, from a session: their entrance. */
+    /** The person's portal: where a person without a key here adds one, and where «Atrás» goes. */
     enterUrl: string;
     correctionOptionsUrl: string;
     correctionUrl: string;
-    agreementOptionsUrl: string;
-    agreementUrl: string;
     timezone: string;
 }) {
     const punch = usePunch({
@@ -46,8 +49,9 @@ export default function Punch({
         forgetUrl,
         qr,
         initial: person,
+        mode,
     });
-    const now = useNow(30_000);
+    const serverNow = useServerNow(now, 30_000);
 
     return (
         <>
@@ -55,15 +59,16 @@ export default function Punch({
             <PunchScreen
                 company={company}
                 punch={punch}
-                scanned={qr !== null}
-                weekUrl={weekUrl}
-                enterUrl={enterUrl}
-                correctionOptionsUrl={correctionOptionsUrl}
-                correctionUrl={correctionUrl}
-                agreementOptionsUrl={agreementOptionsUrl}
-                agreementUrl={agreementUrl}
-                timezone={timezone}
-                now={now}
+                page={{
+                    mode,
+                    scannedAt,
+                    weekUrl,
+                    enterUrl,
+                    correctionOptionsUrl,
+                    correctionUrl,
+                    timezone,
+                }}
+                now={serverNow}
             />
         </>
     );

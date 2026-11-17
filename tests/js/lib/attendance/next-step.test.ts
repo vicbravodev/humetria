@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ANY_STEP, markName, nextSteps } from '@/lib/attendance/next-step';
+import {
+    firstStepNotice,
+    markName,
+    nextSteps,
+    stepThatProceeds,
+} from '@/lib/attendance/next-step';
 
 describe('nextSteps', () => {
     it.each([
@@ -54,13 +59,26 @@ describe('markName', () => {
     });
 });
 
-describe('ANY_STEP', () => {
-    it('offers every step, the start first, to someone not known yet', () => {
-        expect(nextSteps(ANY_STEP).primary?.type).toBe('start');
-        expect(nextSteps(ANY_STEP).others.map((step) => step.type)).toEqual([
+describe('stepThatProceeds', () => {
+    it('is the step tapped when it proceeds, or else the first one the server offers: no signature is spent on one that does not (hallazgo 27)', () => {
+        expect(stepThatProceeds('break_start', ['break_start', 'end'])).toBe(
             'break_start',
-            'break_end',
-            'end',
-        ]);
+        );
+        expect(stepThatProceeds('break_start', ['start'])).toBe('start');
+        expect(stepThatProceeds('end', ['x', 'break_end'])).toBe('break_end');
+    });
+
+    it('is the step tapped when the server offered none it knows', () => {
+        expect(stepThatProceeds('end', [])).toBe('end');
+    });
+});
+
+describe('firstStepNotice', () => {
+    it('says which step goes first', () => {
+        expect(firstStepNotice(['start'])).toBe('Primero marque su entrada.');
+        expect(firstStepNotice(['break_end', 'end'])).toBe(
+            'Primero marque su regreso de comer.',
+        );
+        expect(firstStepNotice([])).toBe('Ese paso no corresponde ahora.');
     });
 });
