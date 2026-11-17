@@ -51,7 +51,8 @@ final readonly class RegisterKey
 
         if ($credential !== null) {
             Log::info('worker_access.key_registered', ['key_id' => $credential->id, 'employee_id' => $employeeId, 'via' => $via->value]);
-            $this->tell($credential);
+            // The key is saved: an email that cannot be queued (the queue down) is reported, never failed back to the person.
+            rescue(fn () => $this->tell($credential));
         }
 
         return $credential;
