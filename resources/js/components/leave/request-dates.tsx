@@ -30,6 +30,7 @@ export default function RequestDates({
                     onChange={first.onChange}
                     invalid={first.error !== undefined}
                     prompt="Elija una fecha"
+                    voice="usted"
                 />
                 <InputError message={first.error} />
             </div>
@@ -43,6 +44,7 @@ export default function RequestDates({
                     onChange={last.onChange}
                     invalid={last.error !== undefined}
                     prompt="Elija una fecha"
+                    voice="usted"
                 />
                 <InputError message={last.error} />
             </div>

@@ -289,6 +289,23 @@ it('sends a confidential complaint with the name that only its handlers read', f
     expect($complaint->reporter_name)->toBe('Rosa Aguilar')->and($complaint->reporter_email)->toBe('rosa.privada@ejemplo.mx');
 });
 
+it('tells the person in usted when the typed day of what happened is no date', function (): void {
+    config(['complaints.ticket.min_seconds' => 0]);
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")
+        ->click('Presentar una queja')
+        ->click('Aviso de un acontecimiento traumático severo')
+        ->press('Continuar')
+        ->press('Continuar')
+        ->fill('#complaint-description', 'Presencié un accidente en el que un compañero perdió la mano en la prensa.')
+        ->press('Continuar')
+        ->fill('#complaint-date', '31/02/2018')
+        ->keys('#complaint-date', 'Tab')
+        ->assertSee('No es una fecha: escríbala como 07/10/2018.')
+        ->assertDontSee('escríbela');
+});
+
 it('asks for the day and the name of the notice of a traumatic event, and sends it', function (): void {
     config(['complaints.ticket.min_seconds' => 0]);
     $channel = openChannelWithHandler();

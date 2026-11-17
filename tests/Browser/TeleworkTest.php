@@ -943,6 +943,18 @@ it('shows the person their three written notices', function (bool $dark, bool $m
         ->assertSee('Riesgo de trabajo');
 })->with($looks);
 
+it('tells the person in usted when a typed day of a notice is no date', function (): void {
+    [$address, $enter] = portalAddress('/notices', 'Sus avisos por escrito');
+    $page = visit($address);
+    $enter($page);
+
+    $page->click('ul > li:nth-child(3) button')
+        ->fill('#work_risk-occurred_on', '31/02/2018')
+        ->keys('#work_risk-occurred_on', 'Tab')
+        ->assertSee('No es una fecha: escríbala como 07/10/2018.')
+        ->assertDontSee('escríbela');
+});
+
 it('lets the person write a work risk notice, and shows it received', function (): void {
     [$address, $enter] = portalAddress('/notices', 'Sus avisos por escrito');
     $page = visit($address);
