@@ -383,3 +383,46 @@ it('says what failed with a way to retry and the code for support, with Humi lis
     'light' => [false],
     'dark' => [true],
 ]);
+
+/** A browser script that says which of its four faces Humi shows in `$where`, by its mouth. */
+function humiFaceIn(string $where): string
+{
+    return "() => { const mouths = { 'M140 234 Q160 252 180 234': 'hola', 'M148 238 H172': 'escucha', 'M146 240 Q160 232 178 236': 'calcula', 'M134 228 Q160 258 186 228': 'listo' }; return [...document.querySelectorAll('{$where} path')].map((path) => mouths[path.getAttribute('d')]).find(Boolean) ?? 'ninguna'; }";
+}
+
+it('uses its four faces: hola at rest, calcula while it answers, listo when it finishes and beside each answer, then hola again', function (): void {
+    visitPage('dashboard', humiPanelCompany())
+        ->assertScript(humiServes(humiStream()), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertScript(humiFaceIn('header'), 'hola')
+        ->assertScript(humiFaceIn('[role="log"] > div:first-child'), 'hola')
+        ->click('¿Cómo va la participación?')
+        ->assertSee('El riesgo más alto está en')
+        ->assertScript(humiFaceIn('header'), 'listo')
+        ->assertScript(humiFaceIn('[role="log"] > div:last-child'), 'listo')
+        ->assertScript('() => new Promise((done) => setTimeout(() => done(true), 2700))', true)
+        ->assertScript(humiFaceIn('header'), 'hola')
+        ->assertScript(humiFaceIn('[role="log"] > div:last-child'), 'listo');
+});
+
+it('keeps Humi calculating while the answer comes', function (): void {
+    $parts = json_encode('data: '.json_encode(['type' => 'start', 'messageId' => 'm1'])."\n\n");
+    $stalled = "new Response(new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode({$parts})); } }), { headers: { 'Content-Type': 'text/event-stream' } })";
+
+    visitPage('dashboard', humiPanelCompany())
+        ->assertScript(humiAnswersWith($stalled), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->click('¿Cómo va la participación?')
+        ->assertSee('Pensando')
+        ->assertScript(humiFaceIn('header'), 'calcula')
+        ->assertScript(humiFaceIn('[role="log"] [role="status"]'), 'calcula')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[role="log"] [role="status"] .humi-look\')).animationName', 'humi-look');
+});
+
+it('keeps Humi still with reduced motion', function (): void {
+    visit(humiPanelCompany(), ['reducedMotion' => 'reduce'])
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertSee('Hola, soy Humi')
+        ->assertScript('() => [...document.querySelectorAll(\'aside[aria-label="Humi"] .humi-bob, aside[aria-label="Humi"] .humi-blink, aside[aria-label="Humi"] .humi-look\')].map((element) => getComputedStyle(element).animationName).filter((name) => name !== "none").length', 0)
+        ->assertScript('() => document.querySelectorAll(\'aside[aria-label="Humi"] .humi-bob\').length > 0', true);
+});
