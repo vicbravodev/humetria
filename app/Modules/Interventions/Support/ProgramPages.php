@@ -109,7 +109,7 @@ final readonly class ProgramPages
         usort($items, fn (ProgramItem $a, ProgramItem $b): int => [$a->scope->position(), $a->label] <=> [$b->scope->position(), $b->label]);
         $standing = ProgramProgress::standing($items, $actions, ProgramClock::today());
 
-        $kinds = array_values(array_map(fn (ProgramAction $action): ActionKind => $action->kind, array_filter($actions, fn (ProgramAction $action): bool => $action->status !== ActionStatus::Cancelled)));
+        $kinds = array_values(array_map(fn (ProgramAction $action): array => ['kind' => $action->kind, 'status' => $action->status], $actions));
         $analysisRows = [];
 
         foreach ($items as $item) {

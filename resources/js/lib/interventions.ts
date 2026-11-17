@@ -152,18 +152,21 @@ export function subjectsText(action: ProgramAction): string {
     return `${names}${hidden}`;
 }
 
-/** The icon-less sentence for a line of «Lo que pide la Tabla». */
+const REQUIREMENT_WORDS: Record<Requirement['status'], string> = {
+    planned: 'Planeada',
+    in_progress: 'En curso',
+    done: 'Hecha',
+    optional: 'Opcional',
+    missing: 'Falta',
+};
+
+/** The icon-less sentence for a line of «Lo que pide la Tabla»: where it stands, and how many rows when it counts them. */
 export function requirementText(line: Requirement): string {
-    switch (line.status) {
-        case 'covered':
-            return line.detail === null
-                ? 'Cubierto'
-                : `Cubierto · ${line.detail}`;
-        case 'optional':
-            return 'Opcional';
-        case 'missing':
-            return line.detail === null ? 'Falta' : `Falta · ${line.detail}`;
-    }
+    const word = REQUIREMENT_WORDS[line.status];
+
+    return line.detail === null || line.status === 'optional'
+        ? word
+        : `${word} · ${line.detail}`;
 }
 
 /** The tools of whoever writes the Programa, or null for who only reads it: the server sends them to the former only. */

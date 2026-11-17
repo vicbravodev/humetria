@@ -60,11 +60,11 @@ export type ProgramRow = {
     followUp: ProgramFollowUpState;
 };
 
-/** A line of «Lo que pide la Tabla»: covered or missing, never a verdict. */
+/** A line of «Lo que pide la Tabla»: planned, running, done, missing or optional, never a verdict (C-34). */
 export type Requirement = {
     key: string;
     text: string;
-    status: 'covered' | 'missing' | 'optional';
+    status: 'planned' | 'in_progress' | 'done' | 'missing' | 'optional';
     detail: string | null;
 };
 

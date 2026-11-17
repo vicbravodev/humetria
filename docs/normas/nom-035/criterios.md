@@ -482,16 +482,24 @@ ligaría con su respuesta (C-22).
 
 ### C-34. Qué pide la Tabla según el nivel más alto · Norma (II.4, III.4) + Interpretación
 
-**Qué hacemos.** Con el nivel más alto del resultado, la página muestra la lista **«Lo que pide la Tabla»** con Cubierto,
-Falta u Opcional:
+**Qué hacemos.** Con el nivel más alto del resultado, la página muestra la lista **«Lo que pide la Tabla»** con Planeada,
+En curso, Hecha, Falta u Opcional:
 
 - desde Medio: revisar la política de prevención y los programas, y reforzar su aplicación y difusión (dos líneas);
-- desde Alto: el análisis de cada categoría y dominio (cubierto cuando cada fila en Alto o Muy alto lo tiene escrito) y una
+- desde Alto: el análisis de cada categoría y dominio (hecho cuando cada fila en Alto o Muy alto lo tiene escrito) y una
   campaña de sensibilización;
 - en Muy alto: evaluaciones específicas; en Alto, la Tabla dice que el Programa «podrá incluir» una, así que se muestra
   como opcional.
 
-«Cubierto» solo dice que hay una acción no cancelada de ese tipo: no juzga si basta, no bloquea nada y no es un «apto».
+Una línea de un tipo de acción dice dónde va su acción no cancelada más avanzada: Planeada, En curso o Hecha. No juzga si
+basta, no bloquea nada y no es un «apto».
+
+**Por qué (cambio del 2026-11-16).** Antes bastaba una acción Planeada para marcar la línea «Cubierto», en verde, y se leía
+como hecho aunque nada hubiera empezado. La Tabla pide que el Programa *incluya* esas acciones y el numeral 8.4 d pide el
+control de su avance: decir en qué estado va cada una da el avance real por exigencia de la Tabla sin pretender un
+veredicto. Del mismo modo, el avance del Programa se mide con sus acciones **y** con sus filas: una fila sin acciones o con
+la evaluación posterior pendiente (8.4 e) cuenta como trabajo por hacer, así que el Programa nunca se pinta al 100 % mientras
+falte algo, y la fila con todas sus acciones hechas dice «Hecha, falta la evaluación posterior» hasta que esta se registre.
 
 **Qué dice la norma.** Tablas 4 y 7, columna «Acción».
 
