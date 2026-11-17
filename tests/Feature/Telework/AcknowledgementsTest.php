@@ -327,7 +327,7 @@ it('lists what is pending in the portal, newest versions only, and shows it gone
     $this->get(route('worker.home', $slug))->assertInertia(fn (Assert $page) => $page
         ->where('sections.0.key', 'telework')
         ->where('sections.0.href', route('portal.telework.show', $slug))
-        ->where('sections.0.description', 'Los documentos que su empresa le pidió confirmar.')
+        ->where('sections.0.description', 'Documentos por confirmar')
         ->where('sections.0.pending', 1)
         ->etc());
     $this->get(route('portal.telework.show', $slug))->assertInertia(fn (Assert $page) => $page

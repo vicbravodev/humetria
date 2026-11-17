@@ -28,6 +28,6 @@ final readonly class ComplaintsWorkerSection implements WorkerSection
             return null;
         }
 
-        return new WorkerSectionLink('complaints', 'Quejas y denuncias', 'Cuéntenos de forma confidencial lo que no está bien en su trabajo. Puede hacerlo sin dar su nombre.', $url);
+        return new WorkerSectionLink('complaints', 'Quejas y denuncias', 'Con confidencialidad', $url);
     }
 }

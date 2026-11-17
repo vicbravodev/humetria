@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Str;
 use Pest\Browser\Api\AwaitableWebpage;
 
@@ -127,4 +128,24 @@ it('prints the mark as a large, faint diagonal watermark on every sheet, not as 
                 };
             }
             JS, ['position' => 'fixed', 'faint' => true, 'diagonal' => true, 'large' => true, 'transparent' => true, 'centered' => true, 'pointerEvents' => 'none']);
+})->with(['light' => false, 'dark' => true]);
+
+it('keeps the mark clear of the cards and the text of the person\'s pages on a phone', function (bool $dark): void {
+    $demo = Tenant::factory()->demo()->create(['slug' => 'acme']);
+    workIn($demo);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $demo->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx']);
+
+    visitPage('worker-access/home', '/me/acme', $dark, true, enteringTo($ana->id, 'Hola, Ana López'))
+        ->assertSeeIn('[data-slot="demo-mark"]', 'DEMO')
+        ->assertScript(<<<'JS'
+            () => {
+                const mark = document.querySelector('[data-slot="demo-mark"]').getBoundingClientRect();
+
+                return Array.from(document.querySelectorAll('main *')).filter((element) => {
+                    const box = element.getBoundingClientRect();
+
+                    return box.width > 0 && mark.left < box.right && box.left < mark.right && mark.top < box.bottom && box.top < mark.bottom;
+                }).map((element) => element.textContent.trim().slice(0, 30));
+            }
+            JS, []);
 })->with(['light' => false, 'dark' => true]);

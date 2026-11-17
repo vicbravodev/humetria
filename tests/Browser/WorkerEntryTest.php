@@ -17,6 +17,28 @@ beforeEach(function (): void {
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx']);
 });
 
+/**
+ * A script that says how a screen of state sits (finding 4): its group centered between the top bar and the action (a
+ * little above the middle, never far from it), with an 80 px icon and its text centered.
+ */
+function stateCentered(): string
+{
+    return <<<'JS'
+        () => {
+            const group = document.querySelector('[data-slot="state-message"]');
+            const top = document.querySelector('header').getBoundingClientRect().bottom;
+            const actions = document.querySelector('.sticky.bottom-0');
+            const bottom = actions === null ? innerHeight : actions.getBoundingClientRect().top;
+            const box = group.getBoundingClientRect();
+            const above = box.top - top;
+            const below = bottom - box.bottom;
+            const icon = group.querySelector('[aria-hidden]').getBoundingClientRect();
+
+            return { balanced: above > 24 && below >= above && below - above < (bottom - top) / 3, icon: icon.width, align: getComputedStyle(group).textAlign };
+        }
+        JS;
+}
+
 /** A one-time link of Ana that still opens, of the kind given. */
 function anaLink(string $token, bool $requested = false): void
 {
@@ -49,20 +71,27 @@ it('opens a link with «Continuar», and its start names the person', function (
 
     $page = visitPage('worker-access/link', '/me/acme/link/browser-token', $dark, $mobile)
         ->assertSee('Su enlace está listo')
+        ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center'])
         ->assertNoAccessibilityIssues(1);
 
-    $page->press('Continuar')->waitForText('Hola, Ana López')->assertSee('Salir');
+    $page->press('Continuar')->waitForText('Hola, Ana López')->assertSee('Cuenta');
 })->with([
     'light desktop' => [false, false],
     'dark mobile' => [true, true],
 ]);
 
-it('shows the start with the session open, and «Salir» leaves no name behind', function (bool $dark, bool $mobile): void {
+it('shows the start with the session open, its three tabs, and «Salir» in Cuenta leaves no name behind', function (bool $dark, bool $mobile): void {
     anaLink('home-token', requested: true);
 
     $page = visitPage('worker-access/home', '/me/acme/link/home-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('Hola, Ana López'))
+        ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Inicio')
+        ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Pendientes')
+        ->assertDontSee('Salir')
+        ->assertScript(spilledOut(), '')
         ->assertNoAccessibilityIssues(1);
 
+    $page->press('Pendientes')->waitForText('Está al día')->assertScript(settled(), true)->assertNoAccessibilityIssues(1);
+    $page->press('Cuenta')->waitForText('Su cuenta')->assertSee('Ana López')->assertScript(settled(), true)->assertNoAccessibilityIssues(1);
     $page->press('Salir')->waitForText('Entre a su portal')->assertDontSee('Ana López');
 })->with([
     'light desktop' => [false, false],
@@ -71,8 +100,9 @@ it('shows the start with the session open, and «Salir» leaves no name behind',
 ]);
 
 it('shows one screen for a link that does not work', function (): void {
-    visitPage('worker-access/link', '/me/acme/link/unknown')
+    visitPage('worker-access/link', '/me/acme/link/unknown', mobile: true)
         ->assertSee('Este enlace ya no sirve')
+        ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center'])
         ->assertSee('Pedir un enlace nuevo')
         ->assertNoAccessibilityIssues(1);
 });
@@ -97,9 +127,11 @@ it('asks before «No fui yo» revokes a key, then says it is done', function (bo
 
     $page = visitPage('worker-access/not-me', $url, $dark, $mobile)
         ->assertSee('¿No creó usted la llave «iPhone»?')
+        ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center'])
         ->assertNoAccessibilityIssues(1);
 
-    $page->press('Anular esa llave')->waitForText('La llave quedó anulada');
+    $page->press('Anular esa llave')->waitForText('La llave quedó anulada')
+        ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center']);
 })->with([
     'light desktop' => [false, false],
     'dark mobile' => [true, true],

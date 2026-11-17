@@ -67,8 +67,9 @@ describe('registerKey', () => {
         expect(await register(server(json(options), json({}, 422)))).toBe(
             'refused',
         );
+        expect(await register(server(json({}, 503)))).toBe('server');
         expect(await register(server(json(options), json({}, 500)))).toBe(
-            'failed',
+            'server',
         );
         expect(await register(server(json(options), json({})))).toBe('failed');
         expect(await register(server(json({ nope: 1 })))).toBe('failed');
@@ -102,5 +103,9 @@ describe('registerKey', () => {
         expect(keyProblem('cancelled').text).toContain('huella');
         expect(keyProblem('refused').title).toContain('guardar');
         expect(keyProblem('failed').text).toContain('señal');
+        expect(keyProblem('server')).toEqual({
+            title: 'Algo salió mal de nuestro lado',
+            text: 'Si ya ve su llave en el dispositivo, intente entrar con ella; si no, vuelva a intentarlo en unos minutos.',
+        });
     });
 });

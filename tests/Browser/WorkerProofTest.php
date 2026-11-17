@@ -35,3 +35,17 @@ it('tells a person without a key or an email to ask RH for their access', functi
         ->assertSee('Pida su acceso a Recursos Humanos')
         ->assertDontSee('Enviarme un código');
 });
+
+it('asks a person with a key to confirm it is them with the fingerprint as the one action at the foot, and «Atrás» on top', function (bool $dark, bool $mobile): void {
+    App\Modules\WorkerAccess\Models\WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+
+    visitPage('worker-access/proof', '/me/acme/proof', $dark, $mobile, enteringTo($this->ana->id, 'Confirme que es usted'))
+        ->assertSeeIn('.sticky.bottom-0', 'Confirmar con mi huella')
+        ->assertDontSee('Volver a mi portal')
+        ->assertSeeIn('header a[href$="/me/acme"]', 'Atrás')
+        ->assertPresent('[data-slot="state-message"]')
+        ->assertNoAccessibilityIssues(1);
+})->with([
+    'light mobile' => [false, true],
+    'dark mobile' => [true, true],
+]);

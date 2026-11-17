@@ -24,6 +24,6 @@ final readonly class ClimateWorkerSection implements WorkerSection
             return null;
         }
 
-        return new WorkerSectionLink('climate', 'Nos dijeron / Haremos', 'Lo que su empresa escuchó en la encuesta de clima y lo que hará.', route('portal.climate.show', $company->slug));
+        return new WorkerSectionLink('climate', 'Nos dijeron / Haremos', 'Lo que escuchó y lo que hará', route('portal.climate.show', $company->slug));
     }
 }

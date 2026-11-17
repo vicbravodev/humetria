@@ -2,7 +2,7 @@ import { router } from '@inertiajs/react';
 import { ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 import WorkerFrame from '@/components/worker-access/worker-frame';
-import ToneTile from '@/components/humetria/tone-tile';
+import StateMessage from '@/components/worker-access/state-message';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -30,6 +30,7 @@ export default function NotMeConfirm({
     return (
         <WorkerFrame
             company={company}
+            centered
             actions={
                 <Button
                     variant="destructive"
@@ -42,17 +43,14 @@ export default function NotMeConfirm({
                 </Button>
             }
         >
-            <section className="flex flex-col items-start gap-3">
-                <ToneTile icon={ShieldAlert} tone="warning" large />
-                <h1 className="text-2xl leading-8 font-semibold text-balance">
-                    ¿No creó usted la llave «{label}»?
-                </h1>
-                <p className="text-muted-foreground">
-                    Al anularla se cierran todas sus sesiones y avisamos a
-                    Recursos Humanos. Para volver a entrar, pídales un enlace
-                    nuevo.
-                </p>
-            </section>
+            <StateMessage
+                icon={ShieldAlert}
+                tone="warning"
+                title={`¿No creó usted la llave «${label}»?`}
+            >
+                Al anularla se cierran todas sus sesiones y avisamos a Recursos
+                Humanos. Para volver a entrar, pídales un enlace nuevo.
+            </StateMessage>
         </WorkerFrame>
     );
 }

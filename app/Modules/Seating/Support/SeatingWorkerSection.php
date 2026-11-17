@@ -32,6 +32,6 @@ final readonly class SeatingWorkerSection implements WorkerSection
         $current = RiskAssessment::query()->where('employee_id', $person->employeeId)->where('status', AssessmentStatus::Signed)->latest('signed_at')->first(['id']);
         $waiting = $current !== null && ! RiskAcknowledgment::query()->where('assessment_id', $current->id)->exists();
 
-        return new WorkerSectionLink('seating', 'Mi puesto de pie', 'Cuéntenos cómo es su trabajo de pie y confirme las medidas para cuidarlo.', route('portal.seating.show', $company->slug), $waiting ? 1 : null);
+        return new WorkerSectionLink('seating', 'Mi puesto de pie', 'Su evaluación y sus preguntas', route('portal.seating.show', $company->slug), $waiting ? 1 : null);
     }
 }

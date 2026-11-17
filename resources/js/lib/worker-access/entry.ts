@@ -1,10 +1,21 @@
 import type { HttpDeps } from '@/lib/worker-access/http';
-import { postJson, promptFailure, redirectOf } from '@/lib/worker-access/http';
+import {
+    answerFailure,
+    postJson,
+    promptFailure,
+    redirectOf,
+    SERVER_TROUBLE,
+} from '@/lib/worker-access/http';
 import type { SignedKey } from '@/lib/webauthn';
 import { assertionPayload, requestOptions } from '@/lib/webauthn';
 
 /** Why entering with the key did not open the session. */
-export type EntryFailure = 'cancelled' | 'refused' | 'failed' | 'unsupported';
+export type EntryFailure =
+    | 'cancelled'
+    | 'refused'
+    | 'failed'
+    | 'server'
+    | 'unsupported';
 
 /** The session opened (and where to go), or why not. */
 export type EntryOutcome = { redirect: string } | EntryFailure;
@@ -37,9 +48,12 @@ export async function enterWithKey(
 ): Promise<EntryOutcome> {
     try {
         const response = await postJson(urls.optionsUrl, {}, deps);
-        const options = response.ok
-            ? requestOptions(await response.json())
-            : null;
+
+        if (!response.ok) {
+            return answerFailure(response.status);
+        }
+
+        const options = requestOptions(await response.json());
 
         if (options === null) {
             return 'failed';
@@ -61,7 +75,11 @@ export async function enterWithKey(
             return 'refused';
         }
 
-        const redirect = entered.ok ? await redirectOf(entered) : null;
+        if (!entered.ok) {
+            return answerFailure(entered.status);
+        }
+
+        const redirect = await redirectOf(entered);
 
         return redirect === null ? 'failed' : { redirect };
     } catch {
@@ -78,13 +96,20 @@ export function entryMessage(failure: EntryFailure): string {
             return 'No reconocimos esa llave. Intente de nuevo o pida un enlace por correo.';
         case 'unsupported':
             return 'Este navegador no puede usar llaves de acceso. Pida un enlace por correo.';
+        case 'server':
+            return SERVER_TROUBLE;
         default:
             return 'No hay conexión con el servidor. Revise su señal e intente de nuevo.';
     }
 }
 
 /** How asking for a link by email went: the same `sent` whether the email is anyone's or not. */
-export type LinkRequestOutcome = 'sent' | 'invalid' | 'busy' | 'failed';
+export type LinkRequestOutcome =
+    | 'sent'
+    | 'invalid'
+    | 'busy'
+    | 'failed'
+    | 'server';
 
 /** Asks for a one-time link to `email`. Never throws. */
 export async function requestLink(
@@ -103,7 +128,7 @@ export async function requestLink(
             ? 'invalid'
             : response.status === 429
               ? 'busy'
-              : 'failed';
+              : answerFailure(response.status);
     } catch {
         return 'failed';
     }
@@ -113,6 +138,7 @@ const LINK_MESSAGES: Record<LinkRequestOutcome, string> = {
     sent: 'Si ese correo es de una persona de la empresa, le llegará un enlace en unos minutos. Sirve una vez y vence en 30 minutos.',
     invalid: 'Escriba un correo válido.',
     busy: 'Demasiados intentos. Espere un minuto y vuelva a intentarlo.',
+    server: SERVER_TROUBLE,
     failed: 'No hay conexión con el servidor. Revise su señal e intente de nuevo.',
 };
 
