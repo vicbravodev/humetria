@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { Route } from 'lucide-react';
 import { useState } from 'react';
 import ChoiceField from '@/components/humetria/choice-field';
+import IconTile from '@/components/humetria/icon-tile';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { mode as saveMode } from '@/routes/tenant/attendance/centers';
 import type { CenterMarkMode } from '@/types';
@@ -43,9 +44,7 @@ export default function CenterMode({
             className="flex flex-col gap-4 card p-5 md:p-6"
         >
             <div className="flex items-start gap-4">
-                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                    <Route aria-hidden className="size-5" />
-                </span>
+                <IconTile icon={Route} />
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <h2
                         id="como-marcan"

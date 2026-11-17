@@ -1,7 +1,7 @@
 import Combobox from '@/components/humetria/combobox';
 import DatePicker from '@/components/humetria/date-picker';
 import InputError from '@/components/humetria/input-error';
-import FormDialog from '@/components/interventions/form-dialog';
+import FormDialog from '@/components/humetria/form-dialog';
 import TextField from '@/components/interventions/text-field';
 import { Label } from '@/components/ui/label';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';

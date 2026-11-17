@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toolsText } from '@/lib/demo-requests';
 import { whatsappUrl } from '@/lib/whatsapp-url';
 import type { DemoRequestRow } from '@/types';
+import { readablePhone } from '@/lib/phone';
 
 /** One request in full: who asked, how to reach them, what they want and what they wrote. */
 export default function DemoRequestDetail({
@@ -77,7 +78,7 @@ export default function DemoRequestDetail({
                         WhatsApp
                     </dt>
                     <dd className="text-sm font-medium tabular-nums">
-                        {request.whatsapp}
+                        {readablePhone(request.whatsapp)}
                     </dd>
                 </div>
                 <DemoRequestChannels request={request} />

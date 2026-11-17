@@ -77,6 +77,17 @@ it('tells a person with no days yet when they will have them', function (): void
         ->assertSee('Aún no ha pedido días.');
 });
 
+it('tells the person in usted when a typed day is no date', function (): void {
+    $portal = leaveVacationsPortal();
+    $page = visit($portal['url']);
+    $portal['enter']($page);
+
+    $page->fill('#leave-starts-on', '31/02/2018')
+        ->keys('#leave-starts-on', 'Tab')
+        ->assertSee('No es una fecha: escríbala como 07/10/2018.')
+        ->assertDontSee('escríbela');
+});
+
 it('lets a person ask for days and see the request waiting', function (bool $dark, bool $mobile): void {
     $portal = leaveVacationsPortal();
 

@@ -58,6 +58,7 @@ export default function StoryStep({
                     name="occurred_on"
                     value={draft.occurredOn}
                     prompt="Elija una fecha"
+                    voice="usted"
                     onChange={(occurredOn) => onChange({ occurredOn })}
                     max={today}
                 />

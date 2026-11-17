@@ -209,6 +209,16 @@ it('shows on the results where the Programa stands, with the way to it', functio
         ->assertScript('() => [...document.querySelectorAll("main section")].every((section) => section.getBoundingClientRect().right <= window.innerWidth)', true);
 })->with($looks);
 
+it('says on the results card how many themes have actions, without 100 % while one has none', function (): void {
+    [$url, $campaign] = programEvaluation();
+    programWithActions($campaign);
+
+    visitPage('results/show', "{$url}/campaigns/{$campaign}/results")
+        ->assertSeeIn('[aria-labelledby="program-title"]', '1 de 2 acciones hechas · 2 de ')
+        ->assertSeeIn('[aria-labelledby="program-title"]', 'temas con acciones')
+        ->assertDontSeeIn('[aria-labelledby="program-title"]', '100 %');
+});
+
 /** The Programa with an action of the final score that starts on 10 Mar 2027 and is due on 20 Mar 2027. */
 function programWithDatedAction(string $campaignId): void
 {
@@ -225,7 +235,7 @@ it('stacks the two dates inside the side panel, without a sideways scroll, and g
 
     $page->click('[aria-label="Opciones de Revisar la política"]')
         ->click('Editar')
-        ->assertSee('10 de marzo de 2027')
+        ->assertValue('#action-starts', '10/03/2027')
         // In a panel of 520 px the written day does not fit two to a row: the due day goes under the start.
         ->assertScript("(() => { const start = document.getElementById('action-starts').getBoundingClientRect(); const due = document.getElementById('action-due').getBoundingClientRect(); return due.top >= start.bottom && Math.abs(due.left - start.left) < 1; })()", true)
         ->assertScript("(() => { let box = document.getElementById('action-due').parentElement; while (box !== document.body && box.scrollHeight <= box.clientHeight) { box = box.parentElement; } return box.scrollWidth <= box.clientWidth; })()", true)

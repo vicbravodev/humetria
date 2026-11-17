@@ -7,6 +7,8 @@ use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
 use App\Modules\Tenancy\Models\Tenant;
 
+require_once __DIR__.'/poster-helpers.php';
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -287,6 +289,23 @@ it('sends a confidential complaint with the name that only its handlers read', f
 
     $complaint = Complaint::query()->withoutGlobalScopes()->sole();
     expect($complaint->reporter_name)->toBe('Rosa Aguilar')->and($complaint->reporter_email)->toBe('rosa.privada@ejemplo.mx');
+});
+
+it('tells the person in usted when the typed day of what happened is no date', function (): void {
+    config(['complaints.ticket.min_seconds' => 0]);
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")
+        ->click('Presentar una queja')
+        ->click('Aviso de un acontecimiento traumático severo')
+        ->press('Continuar')
+        ->press('Continuar')
+        ->fill('#complaint-description', 'Presencié un accidente en el que un compañero perdió la mano en la prensa.')
+        ->press('Continuar')
+        ->fill('#complaint-date', '31/02/2018')
+        ->keys('#complaint-date', 'Tab')
+        ->assertSee('No es una fecha: escríbala como 07/10/2018.')
+        ->assertDontSee('escríbela');
 });
 
 it('asks for the day and the name of the notice of a traumatic event, and sends it', function (): void {
@@ -637,17 +656,7 @@ it('shows the poster with a QR that draws, ready to print', function (bool $dark
         ->assertScript('() => { const image = document.querySelector("img[alt^=\"Código QR\"]"); return image !== null && image.complete && image.naturalWidth > 0; }', true)
         ->assertSee('Un solo cartel sirve para todos tus centros')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth')
-        ->assertScript(<<<'JS'
-            () => {
-                const sheet = document.querySelector('[data-slot="poster-sheet"]');
-                const box = sheet.getBoundingClientRect();
-
-                return getComputedStyle(sheet).backgroundColor === 'rgb(255, 255, 255)'
-                    && Math.abs(box.width / box.height - 8.5 / 11) < 0.01
-                    && box.left >= 0 && box.right <= window.innerWidth
-                    && (window.innerWidth < 1024 || box.bottom <= window.innerHeight);
-            }
-            JS, true);
+        ->assertScript(posterSheetIsPaper(), true);
 })->with($looks);
 
 it('prints the poster of the channel alone, at the full size of the sheet', function (): void {
@@ -656,15 +665,7 @@ it('prints the poster of the channel alone, at the full size of the sheet', func
 
     $page = visit("{$url}/complaints/poster")->inDarkMode()->assertSee('¿Algo no está bien en su trabajo?');
 
-    emulatePrint($page)->assertScript(<<<'JS'
-        () => {
-            const sheet = document.querySelector('[data-slot="poster-sheet"]');
-
-            return getComputedStyle(document.querySelector('[data-slot="poster-controls"]')).display === 'none'
-                && getComputedStyle(sheet).zoom === '1'
-                && getComputedStyle(sheet).backgroundColor === 'rgb(255, 255, 255)';
-        }
-        JS, true);
+    emulatePrint($page)->assertScript(posterPrintsAlone(), true);
 });
 
 it('opens the poster from the channel page', function (): void {

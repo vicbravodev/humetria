@@ -13,7 +13,7 @@ function isOption(value: unknown): value is Option {
 
 /**
  * The options a server route finds for what was typed (`?q=`), for a Combobox whose options live on the server. Only
- * what has the shape of an option is kept.
+ * what has the shape of an option is kept, with any other field it brings (the unit of a benefit).
  */
 export async function loadServerOptions(
     url: string,
@@ -32,11 +32,7 @@ export async function loadServerOptions(
 
     const body: unknown = await response.json();
 
-    return Array.isArray(body)
-        ? body
-              .filter(isOption)
-              .map((option) => ({ value: option.value, label: option.label }))
-        : [];
+    return Array.isArray(body) ? body.filter(isOption) : [];
 }
 
 /**

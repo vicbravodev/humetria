@@ -943,6 +943,18 @@ it('shows the person their three written notices', function (bool $dark, bool $m
         ->assertSee('Riesgo de trabajo');
 })->with($looks);
 
+it('tells the person in usted when a typed day of a notice is no date', function (): void {
+    [$address, $enter] = portalAddress('/notices', 'Sus avisos por escrito');
+    $page = visit($address);
+    $enter($page);
+
+    $page->click('ul > li:nth-child(3) button')
+        ->fill('#work_risk-occurred_on', '31/02/2018')
+        ->keys('#work_risk-occurred_on', 'Tab')
+        ->assertSee('No es una fecha: escríbala como 07/10/2018.')
+        ->assertDontSee('escríbela');
+});
+
 it('lets the person write a work risk notice, and shows it received', function (): void {
     [$address, $enter] = portalAddress('/notices', 'Sus avisos por escrito');
     $page = visit($address);
@@ -1075,6 +1087,19 @@ it('shows the printable dossier of a center with the evidence of each row or Fal
         ->assertScript('() => document.querySelector(\'section[aria-label="Numeral 5.1.2"]\').textContent.includes("Ana Ruiz")', true)
         ->assertScript('() => [...document.querySelectorAll("section")].filter((section) => section.textContent.includes("Cumple")).length > 2', true);
 })->with($looks);
+
+it('shows the contact phone of a person on the roster as people read it, not in E.164', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'contact_phone' => '+524421234567']);
+
+    visit("{$url}/telework/centers/{$center->id}")
+        ->assertSee('442 123 4567')
+        ->assertDontSee('+524421234567');
+    visit("{$url}/telework/centers/{$center->id}/dossier")
+        ->assertSee('442 123 4567')
+        ->assertDontSee('+524421234567');
+});
 
 it('puts the letterhead on the NOM-037 dossier when it is printed', function (): void {
     [$url, $center] = teleworkerCenter();

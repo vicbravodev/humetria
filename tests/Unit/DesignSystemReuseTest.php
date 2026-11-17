@@ -33,3 +33,7 @@ it('draws an icon in its tile with IconTile', function (): void {
 it('draws a card with the card utility of app.css, as pantallas does with .card', function (): void {
     expect(filesCopying('/rounded-xl border bg-card/'))->toBe([]);
 });
+
+it('holds a form in a dialog with the FormDialog of the design system, not a copy of it', function (): void {
+    expect(filesCopying('/export default function FormDialog\\b/'))->toBe([]);
+});

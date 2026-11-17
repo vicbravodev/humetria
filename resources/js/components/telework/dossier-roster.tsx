@@ -4,6 +4,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { shortDate } from '@/lib/calendar-date';
 import { maritalText } from '@/lib/telework/center';
 import type { DossierPerson } from '@/types';
+import { readablePhone } from '@/lib/phone';
 
 /** 5.1: the people who telework now. Estado civil, teléfono and domicilio appear only when the server sent them. */
 export default function DossierRoster({ people }: { people: DossierPerson[] }) {
@@ -42,7 +43,12 @@ export default function DossierRoster({ people }: { people: DossierPerson[] }) {
                             <TableCell>
                                 {maritalText(person.maritalStatus)}
                             </TableCell>
-                            <TableCell>{person.contactPhone ?? '—'}</TableCell>
+                            <TableCell>
+                                {person.contactPhone === null ||
+                                person.contactPhone === undefined
+                                    ? '—'
+                                    : readablePhone(person.contactPhone)}
+                            </TableCell>
                             <TableCell>{person.homeAddress ?? '—'}</TableCell>
                         </>
                     )}

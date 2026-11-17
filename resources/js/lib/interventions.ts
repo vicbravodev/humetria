@@ -12,6 +12,7 @@ import type {
     ProgramScope,
     ProgramStateValue,
     Requirement,
+    ResultsProgramCard,
     ProgramRowStateValue,
 } from '@/types';
 
@@ -137,6 +138,25 @@ export function meterText(meter: { done: number; total: number }): string {
     return meter.total === 0
         ? 'Aún no hay acciones'
         : `${meter.done} de ${meter.total} ${meter.total === 1 ? 'acción hecha' : 'acciones hechas'}`;
+}
+
+/**
+ * What the Programa card of the results says: the actions done, the themes with actions and the server's share of the
+ * work (never 100 % while a theme has no action), or that the norm asks for a Programa not made yet.
+ */
+export function programCardText(program: ResultsProgramCard): string {
+    const { meter, coverage, percent } = program;
+
+    if (
+        !program.exists ||
+        meter === null ||
+        coverage === null ||
+        percent === null
+    ) {
+        return 'Hay cuestionarios en riesgo medio o más: la norma pide un Programa con acciones, fechas y responsable (numeral 8.3).';
+    }
+
+    return `${meterText(meter)} · ${coverageText(coverage)} · ${percent} % de avance. Qué se atiende, con qué acciones, fechas y responsables.`;
 }
 
 /** Who an action is for: the whole center, or the areas shown (and how many more stay hidden). */
