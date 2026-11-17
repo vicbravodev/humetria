@@ -11,3 +11,5 @@ use Illuminate\Support\Facades\Route;
 /** @var string $notReserved */
 Route::get('admin/{tenant:slug}/sso', [SsoSettingsController::class, 'show'])->where('tenant', $notReserved)->name('tenant.sso.show');
 Route::put('admin/{tenant:slug}/sso', [SsoSettingsController::class, 'update'])->where('tenant', $notReserved)->name('tenant.sso.update');
+Route::post('admin/{tenant:slug}/sso/domains/{domain}/verify', [SsoSettingsController::class, 'verify'])->where('tenant', $notReserved)->whereUuid('domain')->name('tenant.sso.domains.verify');
+Route::put('admin/{tenant:slug}/sso/state', [SsoSettingsController::class, 'state'])->where('tenant', $notReserved)->name('tenant.sso.state');

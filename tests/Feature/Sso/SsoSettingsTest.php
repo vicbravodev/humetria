@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
-use App\Modules\Sso\Contracts\DomainOwnership;
 use App\Modules\Sso\Models\SsoConnection;
 use App\Modules\Sso\Models\SsoDomain;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -11,33 +10,6 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
-
-/** @param array<string, mixed> $overrides */
-function ssoForm(array $overrides = []): array
-{
-    return [
-        'issuer' => 'https://idp.acme.test',
-        'client_id' => 'humetria-acme',
-        'client_secret' => 'super-secret-value',
-        'domains' => ['acme.mx', 'acme.com.mx'],
-        ...$overrides,
-    ];
-}
-
-/** Makes the DNS say that these domains published their record. */
-function dnsProves(string ...$domains): void
-{
-    app()->instance(DomainOwnership::class, new class($domains) implements DomainOwnership
-    {
-        /** @param list<string> $domains */
-        public function __construct(private array $domains) {}
-
-        public function proves(string $domain, string $token): bool
-        {
-            return in_array($domain, $this->domains, true);
-        }
-    });
-}
 
 function ssoOf(Tenant $tenant): SsoConnection
 {

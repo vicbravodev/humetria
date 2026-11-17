@@ -1,9 +1,10 @@
-import { Head } from '@inertiajs/react';
-import { KeyRound } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
+import { Globe, KeyRound, ShieldCheck } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
 import SettingRow from '@/components/humetria/setting-row';
 import ConnectionForm from '@/components/sso/connection-form';
 import DomainList from '@/components/sso/domain-list';
+import StateForm from '@/components/sso/state-form';
 import type { SsoConnection, SsoDomain } from '@/types';
 
 /** «Inicio de sesión único» (the owner's): the company's identity provider, its domains and who must use it. */
@@ -30,12 +31,27 @@ export default function Settings({
                     <ConnectionForm connection={connection} domains={domains} />
                 </SettingRow>
                 <SettingRow
-                    icon={KeyRound}
+                    icon={Globe}
                     title="Dominios"
                     description="Publica el registro TXT de cada dominio en su DNS: así sabemos que es de tu empresa."
                 >
-                    <DomainList domains={domains} />
+                    <DomainList
+                        domains={domains}
+                        error={usePage().props.errors['domain']}
+                    />
                 </SettingRow>
+                {connection !== null && (
+                    <SettingRow
+                        icon={ShieldCheck}
+                        title="Estado"
+                        description="Actívalo cuando un dominio esté verificado. Exigirlo cierra la contraseña, la verificación en dos pasos y las llaves de acceso para todos menos el owner."
+                    >
+                        <StateForm
+                            enabled={connection.enabled}
+                            enforced={connection.enforced}
+                        />
+                    </SettingRow>
+                )}
             </div>
         </>
     );

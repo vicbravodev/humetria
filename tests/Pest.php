@@ -13,6 +13,7 @@ use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Instruments\Contracts\Instruments;
+use App\Modules\Sso\Contracts\DomainOwnership;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -995,6 +996,33 @@ function ssoCompany(string $slug = 'acme'): array
     TenantModule::factory()->for($tenant)->create(['module' => 'sso', 'source' => 'grant', 'reason' => 'Enterprise']);
 
     return [$tenant, memberOf($tenant, TenantRole::Owner)];
+}
+
+/** @param array<string, mixed> $overrides */
+function ssoForm(array $overrides = []): array
+{
+    return [
+        'issuer' => 'https://idp.acme.test',
+        'client_id' => 'humetria-acme',
+        'client_secret' => 'super-secret-value',
+        'domains' => ['acme.mx', 'acme.com.mx'],
+        ...$overrides,
+    ];
+}
+
+/** Makes the DNS say that these domains published their record. */
+function dnsProves(string ...$domains): void
+{
+    app()->instance(DomainOwnership::class, new class($domains) implements DomainOwnership
+    {
+        /** @param list<string> $domains */
+        public function __construct(private array $domains) {}
+
+        public function proves(string $domain, string $token): bool
+        {
+            return in_array($domain, $this->domains, true);
+        }
+    });
 }
 
 /**
