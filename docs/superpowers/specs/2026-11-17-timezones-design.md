@@ -31,12 +31,25 @@ Efectos más graves, porque la jornada es un registro con valor probatorio (art.
   10:00 en Cancún). Las encuestas que «cierran el 4 de diciembre» terminan a las 22:00 de ese día en Tijuana.
 - **Fechas sin hora** (cierre de campaña, vacaciones, plazos de denuncias): «cierra el 4 de diciembre» no dice en qué zona termina el día.
 
-## 2. Lo que dice la ley (verificado el 2026-11-17 en fuentes de prensa; **confirmar con el CENAM o el Diario Oficial**)
+## 2. Lo que dice la ley (verificado el 2026-11-17 en el texto vigente de la ley y en tzdata)
 
-- Desde la **Ley de los Husos Horarios de 2022** ya no hay horario de verano general en México; subsiste un **horario estacional en la franja
-  fronteriza norte**. En 2026 el reloj se adelantó el 8 de marzo y se atrasa el **1 de noviembre**. Las fuentes **no coinciden** en qué
-  municipios aplica (33 municipios de la frontera, o todo Baja California).
-- Quintana Roo (Zona Sureste, UTC−5) y Sonora no cambian de horario. Chihuahua: las fuentes no coinciden.
+- Fuente: **Ley de los Husos Horarios en los Estados Unidos Mexicanos** (DOF 28-10-2022, en vigor el 30-10-2022; única reforma DOF
+  29-11-2022), texto vigente de la Cámara de Diputados: <https://www.diputados.gob.mx/LeyesBiblio/pdf/LHHEUM.pdf> (reformas:
+  <https://www.diputados.gob.mx/LeyesBiblio/ref/lhheum.htm>). La tzdata (archivo `northamerica`, <https://github.com/eggert/tz>) da las
+  mismas listas para `America/Matamoros`, `America/Ojinaga` y `America/Ciudad_Juarez`.
+- Ya no hay horario de verano general; el **horario estacional** solo aplica en la frontera norte (art. 5), de las 2:00 del segundo domingo
+  de marzo a las 2:00 del primer domingo de noviembre (en 2026: 8 de marzo y 1 de noviembre):
+  - Coahuila: Acuña, Allende, Guerrero, Hidalgo, Jiménez, Morelos, Nava, Ocampo, Piedras Negras, Villa Unión y Zaragoza; Nuevo León:
+    Anáhuac; Tamaulipas: Nuevo Laredo, Guerrero, Mier, Miguel Alemán, Camargo, Gustavo Díaz Ordaz, Reynosa, Río Bravo, Valle Hermoso y
+    Matamoros → `America/Matamoros` (UTC−6, en verano UTC−5).
+  - Chihuahua: Coyame del Sotol, Ojinaga y Manuel Benavides → `America/Ojinaga` (UTC−6 / UTC−5).
+  - Chihuahua: Janos, Ascensión, Juárez, Praxedis G. Guerrero y Guadalupe → `America/Ciudad_Juarez` (UTC−7 / UTC−6).
+  - Todo Baja California → `America/Tijuana` (UTC−8 / UTC−7).
+- Sin horario estacional: Quintana Roo (Zona Sureste, UTC−5), Sonora y el resto del Pacífico (UTC−7), el resto de Chihuahua (Zona Centro,
+  `America/Chihuahua`) y Bahía de Banderas, que la ley deja en la Zona Centro aunque Nayarit esté en el Pacífico (art. 3, fr. II).
+- La ley nombra los meridianos de forma dispareja (75° para Coahuila en verano, 90° y 105° para Chihuahua, que son los de su hora normal);
+  se lee con su propio texto, «acorde a sus correlativos a su franja fronteriza»: cada municipio sigue a la ciudad de EE. UU. de enfrente,
+  que es como lo lee la tzdata.
 - **Conclusión de diseño:** no escribimos reglas de horario de verano ni listas de municipios en nuestro código. Guardamos el **identificador IANA**
   de la zona (`America/Tijuana`) y dejamos que la base de datos de zonas horarias del sistema (tzdata/ICU) conozca sus reglas y sus cambios.
 
@@ -123,10 +136,13 @@ Efectos más graves, porque la jornada es un registro con valor probatorio (art.
 5. **Se hace antes** de construir el pulido de asistencia, para que lo nuevo se construya sobre la base correcta. ✅
 
 **Orden de trabajo:** primero esta base (fases 0 a 3 y Attendance), en su propio PR con TDD; después el pulido de las pantallas de asistencia.
-Pendiente de decidir (no bloquea): la tabla de excepciones por municipio (frontera) la confirma el dueño con el CENAM o el Diario Oficial.
+La tabla de excepciones por municipio quedó confirmada contra el texto vigente de la ley (§2) el 2026-11-17.
 
 ## 7. Riesgos y lo que queda fuera
 
-- Las fuentes sobre qué municipios aplican el horario de verano fronterizo no coinciden: no se codifica; si el sistema no sabe, la zona IANA decide.
+- La tabla de municipios es la de la ley a la fecha (§2); si la ley cambia, se actualizan la tabla y su prueba, y la tzdata del sistema las reglas.
+- El municipio se escribe a mano. La tabla reconoce también el nombre usual de la cabecera («Ciudad Juárez», «Cd. Acuña», «H. Matamoros»,
+  «Nuevo Vallarta»), sin importar puntos, acentos ni espacios repetidos (el servidor y el formulario normalizan igual). Un nombre que no
+  esté en la tabla recibe la zona del estado; la pantalla muestra la zona con «Cambiar».
 - No es asesoría legal; el valor probatorio de la marca lo valida el abogado de cada empresa (criterios de jornada 5.x).
 - Fuera de alcance: centros fuera de México, horarios de verano de otros países, y mostrar a la persona la hora de otro centro.

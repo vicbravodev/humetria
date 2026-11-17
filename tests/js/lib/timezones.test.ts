@@ -4,7 +4,13 @@ import type { TimezoneRules } from '@/types';
 
 const rules: TimezoneRules = {
     states: { BCN: 'America/Tijuana', CHH: 'America/Chihuahua' },
-    municipalities: { CHH: { juarez: 'America/Ciudad_Juarez' } },
+    municipalities: {
+        CHH: {
+            juarez: 'America/Ciudad_Juarez',
+            'cd juarez': 'America/Ciudad_Juarez',
+            'praxedis g guerrero': 'America/Ciudad_Juarez',
+        },
+    },
     fallback: 'America/Mexico_City',
 };
 
@@ -21,6 +27,15 @@ describe('suggestTimezone', () => {
         );
         expect(suggestTimezone(rules, 'CHH', 'Chihuahua')).toBe(
             'America/Chihuahua',
+        );
+    });
+
+    it('ignores dots and repeated spaces, as the server does', () => {
+        expect(suggestTimezone(rules, 'CHH', 'Cd.  Juárez')).toBe(
+            'America/Ciudad_Juarez',
+        );
+        expect(suggestTimezone(rules, 'CHH', 'Práxedis G. Guerrero')).toBe(
+            'America/Ciudad_Juarez',
         );
     });
 

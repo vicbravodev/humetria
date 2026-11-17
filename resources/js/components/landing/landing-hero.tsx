@@ -24,7 +24,7 @@ export default function LandingHero() {
             <div
                 className={cn(
                     WRAP,
-                    'relative grid gap-10 pt-8 pb-10 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] lg:items-center lg:gap-x-16 lg:gap-y-14 lg:pt-14 lg:pb-16',
+                    'relative grid gap-10 pt-8 pb-10 sm:pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:items-center lg:gap-x-12 lg:gap-y-14 lg:pt-14 lg:pb-16',
                 )}
             >
                 <div className="flex flex-col gap-6">
@@ -40,39 +40,46 @@ export default function LandingHero() {
                         deja listos los reportes que te pide la STPS.
                     </p>
                     <div
-                        className={cn(
-                            after(0.65),
-                            'grid gap-3 min-[520px]:flex min-[520px]:flex-wrap',
-                        )}
+                        data-test="hero-actions"
+                        className={cn(after(0.65), 'grid gap-3')}
                     >
-                        <Button
-                            asChild
-                            size="lg"
-                            className="h-13 px-6 text-base"
-                        >
-                            <a
-                                data-track="cta_click"
-                                data-track-target="hero_demo"
-                                href="#agenda-una-demo"
-                                data-test="hero-demo"
+                        <div className="grid gap-3 min-[520px]:flex min-[520px]:flex-wrap">
+                            <Button
+                                asChild
+                                size="lg"
+                                className="h-13 px-6 text-base"
                             >
-                                Agenda una demo
-                            </a>
-                        </Button>
-                        <Button
-                            asChild
-                            size="lg"
-                            variant="outline"
-                            className="h-13 px-6 text-base"
-                        >
-                            <a
-                                data-track="cta_click"
-                                data-track-target="hero_how_it_works"
-                                href="#como-funciona"
+                                <a
+                                    data-track="cta_click"
+                                    data-track-target="hero_demo"
+                                    href="#agenda-una-demo"
+                                    data-test="hero-demo"
+                                >
+                                    Agenda una demo
+                                </a>
+                            </Button>
+                            <Button
+                                asChild
+                                size="lg"
+                                variant="outline"
+                                className="h-13 px-6 text-base"
                             >
-                                Ver cómo funciona
-                            </a>
-                        </Button>
+                                <a
+                                    data-track="cta_click"
+                                    data-track-target="hero_how_it_works"
+                                    href="#como-funciona"
+                                >
+                                    Ver cómo funciona
+                                </a>
+                            </Button>
+                        </div>
+                        <p
+                            data-test="hero-demo-note"
+                            className="text-meta text-muted-foreground"
+                        >
+                            Te escribimos por WhatsApp o por correo para agendar
+                            la llamada.
+                        </p>
                     </div>
                 </div>
                 <div className={after(0.2)}>
