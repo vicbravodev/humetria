@@ -109,6 +109,12 @@ tiene que pasar con **cualquier** dato que Faker pueda dar, no solo con el de ho
     corren en paralelo, y un recorrido a mano tropieza con la carpeta que desapareció (`UnexpectedValueException`).
 11. **Un texto no prueba que la página cambió.** Tras un clic que navega, el panel que se cierra puede decir lo mismo que la
     página nueva: se espera la ruta con `pathBecomes()` antes de afirmar lo demás.
+12. **Un script que hace algo y tarda más de 1 s va en `runOnce()`.** Pest da 1 s a cada intento de `script()` y
+    `assertScript()` y lo vuelve a mandar mientras el anterior sigue corriendo en la página (uno de 2.5 s corrió 16 veces):
+    un script que contesta la encuesta la contestaba varias veces a la vez y escribía el comentario en tres preguntas.
+    Uno que solo lee (`eventually()`) no lo necesita.
+13. **La página se pinta después de `load`.** React monta el componente un momento después de que `visit()` regresa: antes de
+    medir algo de la página se espera a que exista (`eventually()`), o la medida da `null` en un runner ocupado.
 
 ## Cómo se estresa
 

@@ -277,38 +277,47 @@ it('closes the door', function (): void {
     expect($this->door->getArrayCopy())->toBe(['close']);
 });
 
-describe('the time-clock screen', function (): void {
+describe('the time-clock screens', function (): void {
     beforeEach(function (): void {
         $this->demo = demoCompany();
         $this->other = Tenant::factory()->create();
-        $this->kiosk = KioskDevice::factory()->create(['tenant_id' => $this->demo->id, 'activated_at' => now()]);
+        $plant = WorkCenterFactory::new()->createOne(['tenant_id' => $this->demo->id, 'name' => 'Planta Querétaro']);
+        $offices = WorkCenterFactory::new()->createOne(['tenant_id' => $this->demo->id, 'name' => 'Oficinas Querétaro']);
+        $this->kiosk = KioskDevice::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $offices->id, 'activated_at' => now()]);
+        $this->plantKiosk = KioskDevice::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $plant->id]);
         $this->otherKiosk = KioskDevice::factory()->create(['tenant_id' => $this->other->id, 'activated_at' => now()]);
     });
 
-    it('issues a new link for the demo screen, shown once with its QR, and leaves it waiting to be opened', function (): void {
+    it('issues a new link for the screen of every center, by its center\'s name, shown once with its QR, each left waiting to be opened', function (): void {
         $this->actingAs(superadmin())->post(route('demo-room.kiosk.reissue'))->assertRedirect();
 
-        $link = session('inertia.flash_data.demoKioskLink.url');
-        $token = str($link)->afterLast('/')->toString();
-        expect($link)->toBe(route('attendance.device.kiosk.activate', ['alba-demo', $token]))
-            ->and(session('inertia.flash_data.demoKioskLink.qr'))->toStartWith('data:image/svg+xml;base64,');
+        $links = session('inertia.flash_data.demoKioskLinks');
+        expect(array_column($links, 'center'))->toBe(['Oficinas Querétaro', 'Planta Querétaro']);
 
-        $kiosk = KioskDevice::query()->withoutGlobalScopes()->findOrFail($this->kiosk->id);
-        expect($kiosk->token_hash)->toBe(KioskDevice::hashToken($token))->and($kiosk->activated_at)->toBeNull();
+        foreach ([$this->kiosk, $this->plantKiosk] as $i => $screen) {
+            $token = str($links[$i]['url'])->afterLast('/')->toString();
+            expect($links[$i]['url'])->toBe(route('attendance.device.kiosk.activate', ['alba-demo', $token]))
+                ->and($links[$i]['qr'])->toStartWith('data:image/svg+xml;base64,');
+
+            $kiosk = KioskDevice::query()->withoutGlobalScopes()->findOrFail($screen->id);
+            expect($kiosk->token_hash)->toBe(KioskDevice::hashToken($token))->and($kiosk->activated_at)->toBeNull();
+        }
     });
 
-    it('records the new link in the demo company\'s audit trail, without the link', function (): void {
+    it('records each new link in the demo company\'s audit trail, without the link', function (): void {
         $admin = superadmin();
         $this->actingAs($admin)->post(route('demo-room.kiosk.reissue'))->assertRedirect();
 
-        $entry = DB::table('audit_entries')->where('event', 'demo.kiosk_reissued')->sole();
-        expect($entry->tenant_id)->toBe($this->demo->id)
-            ->and($entry->actor_id)->toBe($admin->id)
-            ->and($entry->subject_id)->toBe($this->kiosk->id)
-            ->and((string) $entry->metadata)->not->toContain(str((string) session('inertia.flash_data.demoKioskLink.url'))->afterLast('/')->toString());
+        $entries = DB::table('audit_entries')->where('event', 'demo.kiosk_reissued')->get();
+        $tokens = array_map(fn (array $link): string => str($link['url'])->afterLast('/')->toString(), session('inertia.flash_data.demoKioskLinks'));
+        expect($entries->pluck('subject_id')->sort()->values()->all())->toBe(collect([$this->kiosk->id, $this->plantKiosk->id])->sort()->values()->all())
+            ->and($entries->pluck('tenant_id')->unique()->all())->toBe([$this->demo->id])
+            ->and($entries->pluck('actor_id')->unique()->all())->toBe([$admin->id])
+            ->and($entries->pluck('metadata')->implode(' '))->not->toContain($tokens[0])
+            ->and($entries->pluck('metadata')->implode(' '))->not->toContain($tokens[1]);
     });
 
-    it('enters the demo company only to issue it: the console goes on outside it, without the demo mark', function (): void {
+    it('enters the demo company only to issue them: the console goes on outside it, without the demo mark', function (): void {
         $this->actingAs(superadmin())->post(route('demo-room.kiosk.reissue'))->assertRedirect();
 
         expect(Context::has('tenant_id'))->toBeFalse()
@@ -324,12 +333,20 @@ describe('the time-clock screen', function (): void {
         expect(KioskDevice::query()->withoutGlobalScopes()->findOrFail($this->otherKiosk->id)->token_hash)->toBe($before);
     });
 
-    it('says so when the screen already shows the code', function (): void {
+    it('leaves out a screen that already shows the code', function (): void {
         $this->kiosk->forceFill(['last_seen_at' => now()])->save();
+
+        $this->actingAs(superadmin())->post(route('demo-room.kiosk.reissue'))->assertRedirect();
+
+        expect(array_column(session('inertia.flash_data.demoKioskLinks'), 'center'))->toBe(['Planta Querétaro']);
+    });
+
+    it('says so when every screen already shows the code', function (): void {
+        KioskDevice::query()->withoutGlobalScopes()->where('tenant_id', $this->demo->id)->update(['last_seen_at' => now()]);
 
         $this->actingAs(superadmin())
             ->post(route('demo-room.kiosk.reissue'))
-            ->assertSessionMissing('inertia.flash_data.demoKioskLink')
+            ->assertSessionMissing('inertia.flash_data.demoKioskLinks')
             ->assertSessionHas('inertia.flash_data.toast.type', 'error');
     });
 });

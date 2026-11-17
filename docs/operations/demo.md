@@ -62,10 +62,15 @@ Se maneja desde la **sala de demostración**, `/admin/demo` («Sala de demostrac
      al día por dirección (un salón comparte la Wi-Fi); el tope del canal, 200 al día, sigue (lo que pase de ahí se
      recibe y se retiene al día siguiente);
    - **marcar asistencia en vivo**: la demo no trae llaves ni aceptaciones del acuerdo sembradas. Cada quien marca con la
-     llave que creó al entrar, acepta el acuerdo la primera vez y marca frente a la pantalla del checador de Oficinas
-     Querétaro. El enlace de esa pantalla se emite en
-     la sala, se muestra una vez y deja el checador sin activar hasta que se abre en la tableta o el proyector. Una vez
-     que la pantalla muestra su código no se emite otro: para otro enlace, reiniciar.
+     llave que creó al entrar, acepta el acuerdo la primera vez y escanea la pantalla del checador de **su** centro: cada
+     uno de los 4 centros tiene la suya (la de Oficinas Querétaro activa desde hace un mes; las otras tres, nuevas). Para
+     cada persona, muestre la pantalla de SU centro: el botón «Emitir enlaces de las pantallas» de la sala emite las 4,
+     cada una con el nombre de su centro; ábralas en tabletas o lado a lado en el proyector (cada pantalla dice su centro
+     arriba; la persona ve el suyo en su portal, en «Avisos y resultados de su centro»). Quien escanee otra pantalla queda «fuera de su centro» (la política de la demo permite y señala): no es un
+     error, y también es un buen momento para mostrar esa función. La marca también queda «fuera de zona» o «sin
+     ubicación», porque el público no está en el centro: es lo que la política permite y señala. Cada enlace se muestra
+     una vez y deja su pantalla sin activar hasta que se abre; una pantalla que ya muestra su código no recibe otro
+     enlace (la sala solo emite los de las demás): para otro, reiniciar.
 5. **Seguimiento de una denuncia:** las claves de las denuncias sembradas no se guardan; para enseñar el seguimiento,
    poner una en vivo y usar su clave.
 
@@ -79,6 +84,8 @@ Se maneja desde la **sala de demostración**, `/admin/demo` («Sala de demostrac
   R12 (diagnóstico y programa de seguridad y salud). R7 (medida para cada evaluación Media o Alta) queda en aviso.
 - **Humi está vivo:** cada pregunta es una llamada real al modelo, cuesta y llega a PostHog como `$ai_generation`.
 - **Acuses de la política: 77 %.** No es un error: las 40 personas de la puerta quedan pendientes.
+- **Asistencia, «Teléfonos vinculados 0 de 180».** No es un error: una llave no se puede sembrar (la crea cada teléfono),
+  así que la puesta en marcha queda en 3 de 4 pasos y sube con cada persona del público que crea la suya.
 
 ## 5. Lo que nunca sale
 
@@ -135,7 +142,8 @@ solo con ids.
 | La puerta dice «La sala está llena» | Se entregaron los 40 trabajadores | Reiniciar demo y abrir la sala otra vez |
 | El QR de la puerta no deja entrar | Sala cerrada, vencida (2 h) o reabierta | Abrir sala y proyectar el QR nuevo |
 | El QR de denuncias da error | `APP_KEY` rotada o código rotado en la demo | Reiniciar demo |
-| No se puede emitir el enlace del checador | La pantalla ya muestra su código | Usar esa pantalla, o reiniciar demo |
+| No se pueden emitir los enlaces del checador, o falta el de un centro | Esa pantalla ya muestra su código | Usar esa pantalla, o reiniciar demo |
+| Una marca sale «fuera de su centro» | La persona escaneó la pantalla de otro centro | Nada: la marca se tomó. Que escanee la de su centro la siguiente vez |
 | «Por jefe» da 404 | Bug conocido (§4) | No abrirlo en la sesión |
 | Demasiadas solicitudes (429) al abrir el enlace o crear la llave | Límites de WorkerAccess por dirección: abrir el enlace 30 por minuto, crear la llave 30 por minuto, dar la prueba 60 por minuto. Un salón de ~40 personas detrás de una sola Wi-Fi los alcanza | Pedir que escaneen en tandas de ~10 o con datos móviles. La puerta permite 120 por minuto y el canal de denuncias se subió para la demo; los límites de WorkerAccess no se subieron (son los de seguridad del producto): subirlos es decisión del dueño |
 | Pide una prueba o no puede confirmar | El visitante aún no tiene llave | Que cree su llave en su teléfono (§3) |

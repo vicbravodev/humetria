@@ -113,7 +113,9 @@ return [
             ->and(AttendanceSchedule::query()->count())->toBe(180)
             ->and(AttendanceSchedule::query()->whereIn('employee_id', $nightShift)->pluck('shift_type')->unique()->all())->toBe([ShiftType::Night])
             ->and(AttendanceSchedule::query()->whereNotIn('employee_id', $nightShift)->pluck('shift_type')->unique()->all())->toBe([ShiftType::Day])
-            ->and(AttendancePolicy::query()->count())->toBe(1);
+            ->and(AttendancePolicy::query()->count())->toBe(1)
+            // no zone smaller than the accuracy the policy accepts: the panel has nothing to warn about the setup
+            ->and(AttendanceZone::query()->where('radius_m', '<', AttendancePolicy::query()->sole()->max_accuracy_m)->pluck('name')->all())->toBe([]);
 
         foreach (AttendanceSchedule::query()->get() as $schedule) {
             // Within the 46 h a week of 2027, so no ordinary hour of the demo turns into overtime when the year changes.
@@ -188,12 +190,15 @@ return [
         expect(array_sum(array_map(fn (string $id): int => demoOvertime($id, $before), $nightShift)))->toBeGreaterThan(array_sum($night))
             ->and(array_sum(array_map(fn (string $id): int => demoOvertime($id, $before), $dayShift)))->toBe(0);
 
-        // an activated kiosk in the Oficinas center
-        $kiosk = KioskDevice::query()->sole();
+        // a screen in every center, for each person of the door to mark at their own: Oficinas' activated a month ago, the
+        // other three new, waiting for the room to issue their links
+        $screens = KioskDevice::query()->get()->keyBy('work_center_id');
+        $kiosk = $screens[$centers[DemoRoster::CENTERS['offices']]];
 
-        expect($kiosk->work_center_id)->toBe($centers[DemoRoster::CENTERS['offices']])
-            ->and($kiosk->activated_at)->not->toBeNull()
-            ->and($kiosk->revoked_at)->toBeNull();
+        expect($screens->keys()->sort()->values()->all())->toBe($centers->values()->sort()->values()->all())
+            ->and($screens->whereNotNull('revoked_at'))->toBeEmpty()
+            ->and($kiosk->activated_at?->lessThan($today->subDays(29)))->toBeTrue()
+            ->and($screens->where('id', '!=', $kiosk->id)->whereNotNull('activated_at'))->toBeEmpty();
 
         // Oficinas marks with the kiosk's QR: inside the zone, or with no location.
         $offices = AttendanceMark::query()->where('work_center_id', $centers[DemoRoster::CENTERS['offices']]);
