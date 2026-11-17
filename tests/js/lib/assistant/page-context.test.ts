@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { contextLabel, pageContextOf } from '@/lib/assistant/page-context';
+import {
+    contextLabel,
+    invitationPageOf,
+    pageContextOf,
+} from '@/lib/assistant/page-context';
 
 const ID = '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c';
 
@@ -52,5 +56,34 @@ describe('contextLabel', () => {
         expect(contextLabel({ kind: 'work_center', id: ID })).toBe(
             'Este centro de trabajo',
         );
+    });
+});
+
+describe('invitationPageOf', () => {
+    const id = '0f8fad5b-d9cb-469f-a165-70867728950e';
+
+    it('names the four pages where the bubble may invite', () => {
+        expect(invitationPageOf('/admin/acme/campaigns')).toBe('campaigns');
+        expect(invitationPageOf('/admin/acme/campaigns/?page=2')).toBe(
+            'campaigns',
+        );
+        expect(invitationPageOf(`/admin/acme/campaigns/${id}/results`)).toBe(
+            'results',
+        );
+        expect(invitationPageOf('/admin/acme/work-centers#top')).toBe(
+            'work_centers',
+        );
+        expect(invitationPageOf('/admin/acme/programs')).toBe('interventions');
+        expect(invitationPageOf(`/admin/acme/campaigns/${id}/program`)).toBe(
+            'interventions',
+        );
+    });
+
+    it('names no other page', () => {
+        expect(invitationPageOf('/admin/acme')).toBeNull();
+        expect(invitationPageOf(`/admin/acme/campaigns/${id}`)).toBeNull();
+        expect(invitationPageOf('/admin/acme/employees')).toBeNull();
+        expect(invitationPageOf('/admin/acme/assistant')).toBeNull();
+        expect(invitationPageOf('/campaigns')).toBeNull();
     });
 });
