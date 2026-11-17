@@ -248,6 +248,34 @@ it('offers no people in the ⌘K palette to whoever cannot manage the organizati
         ->assertDontSee('Ana López');
 });
 
+it('marks the chosen gender with the accent, in one line per choice', function (bool $dark): void {
+    acmeWithEmployees(employees: false);
+
+    visitPage('organization/employees', '/admin/acme/employees', $dark, reach: fn (AwaitableWebpage $page) => $page
+        ->click('Dar de alta')
+        ->click('Hombre')
+        ->assertSee('Elige «Otro» si prefieres no decirlo.')
+        ->assertScript(<<<'JS'
+            () => {
+                const probe = document.createElement('span');
+                probe.style.color = 'var(--primary)';
+                document.body.append(probe);
+                const primary = getComputedStyle(probe).color;
+                probe.remove();
+                const choices = Array.from(document.querySelectorAll('fieldset:has(input[name="gender"]) label'));
+                const chosen = choices.find((label) => label.querySelector('input').checked);
+                const style = getComputedStyle(chosen);
+
+                return choices.length === 3
+                    && style.borderTopColor === primary
+                    && style.borderTopWidth === '2px'
+                    && Number(style.fontWeight) >= 500
+                    && new Set(choices.map((label) => Math.round(label.getBoundingClientRect().height))).size === 1
+                    && choices.every((label) => label.getBoundingClientRect().height <= 46);
+            }
+            JS, true));
+})->with(['light' => false, 'dark' => true]);
+
 it('keeps the work center and the area apart and as wide as each other when the center has a long name', function (): void {
     $tenant = acmeWithEmployees();
     WorkCenter::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('name', 'Planta Norte')

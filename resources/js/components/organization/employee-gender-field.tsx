@@ -25,16 +25,17 @@ export default function EmployeeGenderField({
             <legend className="mb-2 text-sm leading-5 font-medium">
                 Género
             </legend>
-            <div
-                className={cn(
-                    'grid grid-cols-3 gap-0.5 rounded-[10px] border bg-muted p-[3px]',
-                    error !== undefined && 'border-destructive',
-                )}
-            >
+            {/* The chosen one speaks PillChoice's language (accent, primary border, medium weight), in three equal columns. */}
+            <div className="grid grid-cols-3 gap-2">
                 {genders.map((gender) => (
                     <label
                         key={gender.value}
-                        className="flex min-h-[38px] cursor-pointer items-center justify-center rounded-lg px-2 text-center text-sm leading-[18px] font-medium text-muted-foreground transition-colors duration-150 ease-out hover:text-foreground has-checked:bg-card has-checked:text-foreground has-checked:shadow-raised has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring"
+                        className={cn(
+                            'flex min-h-11 min-w-0 cursor-pointer items-center justify-center rounded-lg border border-input bg-card px-2 text-center transition-colors duration-100 ease-out hover:bg-muted',
+                            'has-checked:border-2 has-checked:border-primary has-checked:bg-accent has-checked:px-[7px] has-checked:font-medium',
+                            'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring',
+                            error !== undefined && 'border-destructive',
+                        )}
                     >
                         <input
                             type="radio"
@@ -51,7 +52,8 @@ export default function EmployeeGenderField({
                 id="employee-gender-help"
                 className="text-caption text-muted-foreground"
             >
-                La norma lo usa para sortear la muestra.
+                Elige «Otro» si prefieres no decirlo. La norma lo usa para
+                sortear la muestra.
             </p>
             <InputError id="employee-gender-error" message={error} />
         </fieldset>
