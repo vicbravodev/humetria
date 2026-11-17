@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Assistant\Tools;
 
+use App\Modules\Assistant\Contracts\TellsLiveFacts;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\ToolCard;
 use App\Modules\Assistant\Support\PanelLinks;
@@ -22,7 +23,7 @@ use Laravel\Ai\Tools\Request;
 /**
  * How the company's campaigns are going: who was given each guide and how many answered. Counts only, never a name.
  */
-final readonly class GetCampaignProgress implements Tool
+final readonly class GetCampaignProgress implements TellsLiveFacts, Tool
 {
     private const int MAX_ROWS = 10;
 
@@ -52,11 +53,36 @@ final readonly class GetCampaignProgress implements Tool
 
         $campaign = is_string($id) && Str::isUuid($id) ? $this->campaigns->find($id) : null;
 
-        // A campaign of another company, one that does not exist and a value that is no id all answer the same.
-        return ($campaign === null
-            ? new ToolCard('progress', 'Avance de la campaña', note: 'No encontré esa campaña en tu empresa.')
-            : new ToolCard('progress', 'Avance de la campaña', [$this->row($campaign, $this->centerNames())], $this->links->campaign($campaign->id))
-        )->toJson();
+        if ($campaign === null) {
+            // A campaign of another company, one that does not exist and a value that is no id all answer the same.
+            return (new ToolCard('progress', 'Avance de la campaña', note: 'No encontré esa campaña en tu empresa.'))->toJson();
+        }
+
+        $names = $this->centerNames();
+        $link = $this->links->campaign($campaign->id);
+
+        return (new ToolCard('progress', 'Avance de la campaña', [$this->row($campaign, $names)], $link, sources: ['Campaña '.self::label($campaign, $names)], next: ['label' => 'Ver la campaña', 'link' => $link]))->toJson();
+    }
+
+    /** How many questionnaires of the campaigns running are answered, in total. */
+    public function facts(): array
+    {
+        $this->guard->check($this->scope);
+        $running = array_values(array_filter($this->campaigns->current(), fn (CampaignRecord $campaign): bool => ! $campaign->closed && $campaign->launchedOn !== null));
+        $invited = array_sum(array_map(fn (CampaignRecord $campaign): int => array_sum($campaign->invited), $running));
+        $answered = array_sum(array_map(fn (CampaignRecord $campaign): int => array_sum($campaign->answered), $running));
+
+        if ($running === []) {
+            return ['participation' => 'No hay campañas en curso'];
+        }
+
+        if ($invited === 0) {
+            return [];
+        }
+
+        $line = "{$answered} de {$invited} cuestionarios contestados (".number_format(100 * $answered / $invited).' %)';
+
+        return ['participation' => count($running) === 1 ? $line : 'En '.count($running).' campañas: '.$line];
     }
 
     /**
@@ -87,6 +113,7 @@ final readonly class GetCampaignProgress implements Tool
                 default => null,
             },
             $truncated,
+            next: ['label' => 'Ver las campañas', 'link' => $this->links->campaigns()],
         );
     }
 
@@ -106,6 +133,14 @@ final readonly class GetCampaignProgress implements Tool
 
     /**
      * @param  array<string, string>  $names
+     */
+    private static function label(CampaignRecord $campaign, array $names): string
+    {
+        return UntrustedText::line(($names[$campaign->workCenterId] ?? '').' · '.$campaign->kindLabel);
+    }
+
+    /**
+     * @param  array<string, string>  $names
      * @return array<string, mixed>
      */
     private function row(CampaignRecord $campaign, array $names): array
@@ -119,7 +154,7 @@ final readonly class GetCampaignProgress implements Tool
         }
 
         return [
-            'label' => UntrustedText::line(($names[$campaign->workCenterId] ?? '').' · '.$campaign->kindLabel),
+            'label' => self::label($campaign, $names),
             'status' => match (true) {
                 $campaign->closed => 'closed',
                 $campaign->launchedOn === null => 'draft',

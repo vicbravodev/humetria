@@ -23,6 +23,39 @@ export function pageContextOf(path: string): PageContext {
     return center === undefined ? null : { kind: 'work_center', id: center };
 }
 
+const INVITING: ReadonlyArray<[RegExp, string]> = [
+    [/^\/admin\/[^/]+\/campaigns\/?$/, 'campaigns'],
+    [new RegExp(`^/admin/[^/]+/campaigns/${UUID}/results/?$`, 'i'), 'results'],
+    [/^\/admin\/[^/]+\/work-centers\/?$/, 'work_centers'],
+    [/^\/admin\/[^/]+\/programs\/?$/, 'interventions'],
+    [
+        new RegExp(`^/admin/[^/]+/campaigns/${UUID}/program/?$`, 'i'),
+        'interventions',
+    ],
+];
+
+/**
+ * The page where the closed bubble may invite, read from its address: campaigns, results, work centers or the Programas
+ * de intervención; null on any other. Its message is the fact `invite.{page}` of the server.
+ */
+export function invitationPageOf(path: string): string | null {
+    const clean = path.split(/[?#]/)[0] ?? '';
+
+    return INVITING.find(([pattern]) => pattern.test(clean))?.[1] ?? null;
+}
+
+const INVITATION_QUESTIONS: Readonly<Record<string, string>> = {
+    campaigns: '¿Cómo va la participación?',
+    results: '¿Dónde está el riesgo más alto?',
+    work_centers: '¿Qué le falta a mis centros en la NOM-037?',
+    interventions: '¿Qué pendientes tengo primero?',
+};
+
+/** The question «Preguntarle a Humi» leaves written in the box, by the page that invited: never sent by itself. */
+export function invitationQuestion(page: string): string | null {
+    return INVITATION_QUESTIONS[page] ?? null;
+}
+
 /** What the header says Humi is looking at. */
 export function contextLabel(page: PageContext): string {
     switch (page?.kind) {

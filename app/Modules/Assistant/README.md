@@ -6,20 +6,33 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 
 ## Cómo está hecho
 
-| Pieza                             | Dónde                                                                                                                                                                                                |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agente (SDK `laravel/ai`)         | `Agents/HumiAssistant.php` + `resources/ai/humi.system.md` (instrucciones versionadas)                                                                                                               |
-| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`, `GetFirstSteps`                                                               |
-| Quién es la persona en la empresa | `Data/AssistantScope` (empresa, participante, permisos), armado en el servidor por `Support/AssistantScopeFactory`                                                                                   |
-| Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                                                                        |
-| Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                                                                            |
-| Cuota del plan (libro de Billing) | `Support/HumiTokens` reserva 9,000 tokens (`humi.reservation_tokens`) por el contrato `UsageMeter` antes de llamar, liquida con el conteo real del SDK y libera si falla; sin cuota, 403 sin llamada |
-| Datos personales                  | `Support/PersonalDataRedactor` (correo, CURP, RFC, NSS, teléfono) antes de enviar y de guardar                                                                                                       |
-| Rutas                             | `routes/assistant.php` bajo `admin/{empresa}/assistant/*` (nombre `tenant.assistant.*`); consola del superadmin en `routes/assistant_console.php`                                                    |
-| Front                             | `resources/js/components/assistant/*`, `hooks/use-humi-chat.ts`, `lib/assistant/*`, `pages/assistant/index.tsx`                                                                                      |
+| Pieza                             | Dónde                                                                                                                                                                                                                                         |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agente (SDK `laravel/ai`)         | `Agents/HumiAssistant.php` + `resources/ai/humi.system.md` (instrucciones versionadas)                                                                                                                                                        |
+| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`, `GetFirstSteps`                                                                                                        |
+| Quién es la persona en la empresa | `Data/AssistantScope` (empresa, participante, permisos), armado en el servidor por `Support/AssistantScopeFactory`                                                                                                                            |
+| Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                                                                                                                 |
+| Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                                                                                                                     |
+| Cuota del plan (libro de Billing) | `Support/HumiTokens` reserva 9,000 tokens (`humi.reservation_tokens`) por el contrato `UsageMeter` antes de llamar, liquida con el conteo real del SDK y libera si falla; sin cuota, 403 sin llamada                                          |
+| Datos personales                  | `Support/PersonalDataRedactor` (correo, CURP, RFC, NSS, teléfono) antes de enviar y de guardar                                                                                                                                                |
+| Datos vivos                       | `Support/LiveFacts`: cada herramienta que implementa `Contracts\TellsLiveFacts` da frases cortas por llave (`pending`, `participation`, `risk`, `telework`, `invite.{página}`); un minuto en caché por empresa; ruta `tenant.assistant.facts` |
+| Rutas                             | `routes/assistant.php` bajo `admin/{empresa}/assistant/*` (nombre `tenant.assistant.*`); consola del superadmin en `routes/assistant_console.php`                                                                                             |
+| Front                             | `resources/js/components/assistant/*`, `hooks/use-humi-chat.ts`, `lib/assistant/*`, `pages/assistant/index.tsx`                                                                                                                               |
 
 Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{CampaignRecords,EvaluationSchedule}`,
-`Results\Contracts\RiskResults`, `Telework\Contracts\TeleworkStanding`, `Tenancy\Contracts\{Companies,Members,WorkCenters}`.
+`Results\Contracts\RiskResults`, `Telework\Contracts\TeleworkStanding`, `Interventions\Contracts\ProgramStandings`,
+`Tenancy\Contracts\{Companies,Members,WorkCenters}`.
+
+**Fuentes, paso siguiente y datos vivos.** Una herramienta pone en su `ToolCard` `sources` (de dónde salió la cifra:
+«Campaña Planta Apodaca · Evaluación NOM-035», «NOM-035 · C-23. …») y `next` (la pantalla exacta del panel, una ruta de
+la misma empresa) **solo cuando es exacto**; si no, no los da (`AnswerLinksTest` prueba que nunca salen de otra empresa).
+Las herramientas que implementan `TellsLiveFacts` dan, con los mismos contratos, las frases del inicio del panel y de la
+invitación de la burbuja (`GET admin/{empresa}/assistant/facts`): conteos y estados, nunca algo de una persona.
+
+**La burbuja invita** (`components/assistant/humi-invitation*.tsx`, reglas en `lib/assistant/invitation-rules.ts`, ficha
+en `docs/design-system/componentes/HumiInvitation.md`): solo con un dato `invite.{página}` real; lo que la persona
+descartó vive en su navegador (por persona y empresa) y se reactiva en «Sugerencias de la burbuja», en la página de Humi.
+No se mide: PostHog solo mide la landing; medir aceptadas y descartadas sería una decisión nueva.
 
 **Lo que Assistant expone.** `Contracts\AiAccess` (`available()`, `redact()`, `record()`): otro módulo que llama al proveedor de IA
 (p. ej. `Engagement` al resumir comentarios) pregunta primero `available()` (Humi no apagado para la empresa y presupuesto
@@ -101,6 +114,7 @@ reglas. Termina con error si algún intento pasa; no guarda conversaciones ni us
 ## Pendiente o fuera de alcance
 
 - **Ayuda en la encuesta del trabajador:** aparte (necesita decisiones externas y toca la ruta anónima; ver el spec).
-- **Aviso proactivo** (punto en el lanzador), **búsqueda por similitud** (pgvector) y **tablas** en el markdown: no están.
+- **Medir la invitación** (cuántas se aceptan o descartan): no hay medición en el panel; decidirla aparte.
+- **Búsqueda por similitud** (pgvector) y **tablas** en el markdown: no están.
 - **Verificar a mano:** el streaming token a token detrás de un proxy real (el servidor de las pruebas de navegador entrega
   un cuerpo en streaming vacío; el stream se prueba contra el servidor en `ChatTest` y el panel dibuja un stream de muestra).

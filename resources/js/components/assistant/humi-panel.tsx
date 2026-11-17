@@ -3,15 +3,13 @@ import HumiComposer from '@/components/assistant/humi-composer';
 import HumiHeader from '@/components/assistant/humi-header';
 import HumiThread from '@/components/assistant/humi-thread';
 import { useHumiChat } from '@/hooks/use-humi-chat';
+import { useHumiLiveFacts } from '@/hooks/use-humi-live-facts';
 import { useHumiMood } from '@/hooks/use-humi-mood';
 import { useHumiSeenPage } from '@/hooks/use-humi-seen-page';
 import type { PageContext } from '@/lib/assistant/chat-request';
 import { contextLabel } from '@/lib/assistant/page-context';
-import { startersOf, suggestionsFor } from '@/lib/assistant/suggestions';
+import { startersFor } from '@/lib/assistant/suggestions';
 import { index as assistantPage } from '@/routes/tenant/assistant';
-
-// The live facts of the first questions do not come yet: each question shows alone until a route brings them.
-const NO_LIVE_FACTS: Readonly<Record<string, string>> = {};
 
 /** Why the person cannot write: Humi is off for the company, its budget is used, or they wrote too much for now. */
 function closedTextOf(reason: string | undefined): string | null {
@@ -51,6 +49,7 @@ export default function HumiPanel({
     const streaming =
         chat.status === 'streaming' || chat.status === 'submitted';
     const [writing, setWriting] = useState(false);
+    const facts = useHumiLiveFacts(slug);
     const expression = useHumiMood(streaming, failure !== null, writing);
 
     useEffect(() => {
@@ -77,7 +76,7 @@ export default function HumiPanel({
             />
             <HumiThread
                 chat={chat}
-                starters={startersOf(suggestionsFor(seen), NO_LIVE_FACTS)}
+                starters={startersFor(seen, facts)}
                 onPick={chat.send}
             />
             <HumiComposer

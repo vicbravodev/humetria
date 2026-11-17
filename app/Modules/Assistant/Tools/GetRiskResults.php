@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace App\Modules\Assistant\Tools;
 
 use App\Actions\RecordAudit;
+use App\Modules\Assistant\Contracts\TellsLiveFacts;
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\ToolCard;
 use App\Modules\Assistant\Support\PanelLinks;
 use App\Modules\Assistant\Support\ScopeGuard;
 use App\Modules\Assistant\Support\UntrustedText;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
+use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Instruments\Data\RiskLevel;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\AreaResult;
 use App\Modules\Results\Data\RiskBreakdown;
 use App\Modules\Results\Data\RiskGroup;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\Log;
@@ -27,9 +30,11 @@ use Laravel\Ai\Tools\Request;
  * The risk results of a closed NOM-035 evaluation as people in each level (never an average), and only for a group of
  * at least the minimum. Below it the card has no figure, not even how many answered.
  */
-final readonly class GetRiskResults implements Tool
+final readonly class GetRiskResults implements TellsLiveFacts, Tool
 {
     private const int MAX_ROWS = 40;
+
+    private const int NEW_RESULTS_DAYS = 30;
 
     public function __construct(
         private AssistantScope $scope,
@@ -64,7 +69,10 @@ final readonly class GetRiskResults implements Tool
         $link = $this->links->results($campaign->id);
 
         if ($risk->state !== RiskBreakdown::AVAILABLE) {
-            return (new ToolCard('risk_levels', 'Resultados por nivel de riesgo', link: $link, note: self::unavailable($risk->state), minGroup: $minimum))->toJson();
+            // An open evaluation is followed on its page; with no results there is nothing to name nor to go see.
+            $next = $risk->state === RiskBreakdown::OPEN ? ['label' => 'Ver la campaña', 'link' => $this->links->campaign($campaign->id)] : null;
+
+            return (new ToolCard('risk_levels', 'Resultados por nivel de riesgo', link: $link, note: self::unavailable($risk->state), minGroup: $minimum, next: $next))->toJson();
         }
 
         $this->recordView($campaign->id, $risk->areaLabel !== null);
@@ -78,7 +86,38 @@ final readonly class GetRiskResults implements Tool
             self::note($risk, is_string($areaId)),
             count($rows) > self::MAX_ROWS,
             $minimum,
+            ["Resultados de la {$campaign->kindLabel} cerrada el {$campaign->closedOn}"],
+            ['label' => 'Ver los resultados', 'link' => $link],
         ))->toJson();
+    }
+
+    /**
+     * Whether the latest closed evaluation has results, or why not yet; and, while they are new, an invitation to read
+     * them. It looks at no figure: nothing is shown, so nothing goes to the audit trail.
+     */
+    public function facts(): array
+    {
+        $this->guard->check($this->scope);
+        $latest = $this->campaigns->closedEvaluations(1)->getCollection()->first();
+
+        if ($latest === null) {
+            $running = array_any($this->campaigns->current(), fn (CampaignRecord $campaign): bool => ! $campaign->closed && $campaign->launchedOn !== null);
+
+            return ['risk' => $running ? 'Se puede ver cuando cierre la campaña' : 'Se puede ver cuando cierres una evaluación'];
+        }
+
+        $state = $this->results->forCampaign($latest, null)->state;
+
+        if ($state !== RiskBreakdown::AVAILABLE) {
+            return ['risk' => self::unavailable($state)];
+        }
+
+        $recent = $latest->closedDate !== null && $latest->closedDate >= CarbonImmutable::now(config()->string('app.display_timezone'))->subDays(self::NEW_RESULTS_DAYS)->toDateString();
+
+        return array_filter([
+            'risk' => "Resultados de la evaluación cerrada el {$latest->closedOn}",
+            'invite.results' => $recent ? "Ya hay resultados del {$latest->closedOn}. ¿Te digo dónde está el riesgo más alto?" : null,
+        ]);
     }
 
     /**

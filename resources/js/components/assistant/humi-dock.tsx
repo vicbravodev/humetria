@@ -6,6 +6,7 @@ import {
     useCallback,
     useState,
 } from 'react';
+import HumiInvitationSlot from '@/components/assistant/humi-invitation-slot';
 import HumiLauncher from '@/components/assistant/humi-launcher';
 import {
     Sheet,
@@ -76,6 +77,13 @@ export default function HumiDock() {
 
     return (
         <>
+            <HumiInvitationSlot
+                slug={tenant.slug}
+                userId={props.auth.user.id}
+                path={url}
+                humiOpen={open}
+                onAsk={openNow}
+            />
             {!open && (
                 <HumiLauncher
                     takeFocus={closedOnce}

@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { SquarePen } from 'lucide-react';
 import { useState } from 'react';
+import HumiSuggestionsToggle from '@/components/assistant/humi-suggestions-toggle';
 import HumiHistoryList from '@/components/assistant/humi-history-list';
 import Pagination from '@/components/humetria/pagination';
 import SearchField from '@/components/humetria/search-field';
@@ -76,10 +77,13 @@ export default function HumiHistory({
                 next="Ver más antiguas"
                 pinned={false}
             />
-            <p className="mt-auto text-caption text-muted-foreground">
-                Pregúntale por el cumplimiento de tu empresa. Solo tú ves tus
-                conversaciones y puedes borrarlas cuando quieras.
-            </p>
+            <div className="mt-auto flex flex-col gap-4 border-t pt-4">
+                <HumiSuggestionsToggle slug={slug} />
+                <p className="text-caption text-muted-foreground">
+                    Pregúntale por el cumplimiento de tu empresa. Solo tú ves
+                    tus conversaciones y puedes borrarlas cuando quieras.
+                </p>
+            </div>
         </nav>
     );
 }
