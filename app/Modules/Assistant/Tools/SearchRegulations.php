@@ -45,6 +45,7 @@ final readonly class SearchRegulations implements Tool
             'Normativa',
             array_map(fn (RegulationChunk $chunk): array => ['norm' => $chunk->norm, 'id' => $chunk->id, 'title' => $chunk->title, 'source' => $chunk->source, 'text' => mb_strimwidth($chunk->text, 0, self::MAX_TEXT, '…')], $found),
             note: $found === [] ? 'No encontré nada en los criterios de Humetría sobre eso. Puede ser un tema que aún no cubro.' : null,
+            sources: array_map(fn (RegulationChunk $chunk): string => "{$chunk->norm} · {$chunk->id}. {$chunk->title}", $found),
         ))->toJson();
     }
 
