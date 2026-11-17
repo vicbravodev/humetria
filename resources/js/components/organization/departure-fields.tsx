@@ -1,4 +1,4 @@
-import { Input } from '@/components/ui/input';
+import DatePicker from '@/components/humetria/date-picker';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -27,15 +27,16 @@ export default function DepartureFields({
 }) {
     return (
         <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
+            <div className="grid min-w-0 gap-2">
                 <Label htmlFor="terminated-on">Último día de trabajo</Label>
-                <Input
+                <DatePicker
                     id="terminated-on"
-                    type="date"
+                    name="terminated_on"
                     value={date}
                     max={max}
                     {...(min === null ? {} : { min })}
-                    onChange={(event) => onDate(event.target.value)}
+                    onChange={onDate}
+                    required
                 />
             </div>
             <div className="grid gap-2">

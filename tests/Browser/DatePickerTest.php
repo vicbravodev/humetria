@@ -153,3 +153,19 @@ it('keeps the calendar day cells at 44 px on a phone', function (): void {
         ->click('#employee-hired_on')
         ->assertScript('() => [...document.querySelectorAll("[data-slot=sheet-content] [data-day] button")].every((day) => day.getBoundingClientRect().height >= 44)', true);
 });
+
+it('closes the days after today for the last day of work, and offers no «Borrar» on a day that is required', function (): void {
+    pickerEmployee('2026-01-10');
+    $today = now('America/Mexico_City');
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Dar de baja')
+        ->type('#terminated-on', $today->format('dmY'))
+        ->assertMissing('[data-slot="date-picker"]:has(#terminated-on) button:has-text("Borrar la fecha")')
+        ->click('[data-slot="date-picker"]:has(#terminated-on) button:has-text("Abrir el calendario")')
+        ->assertScript('() => document.querySelector(\'[data-day="'.$today->copy()->addDay()->toDateString().'"] button\')?.disabled ?? true', true)
+        ->keys('[data-slot="popover-content"]', 'Escape')
+        ->fill('#terminated-on', '09/01/2026')
+        ->keys('#terminated-on', 'Tab')
+        ->assertSee('Elige una fecha desde el 10/01/2026.');
+});
