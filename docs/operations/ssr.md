@@ -144,13 +144,14 @@ código 1 para que `restart: unless-stopped` lo levante. Sus líneas (`ssr probe
 
 Con `POSTHOG_PROJECT_TOKEN` (`phc_…`) y `POSTHOG_CONSENT_DEFAULT=granted` la landing mide a quien no ha iniciado sesión; con
 `denied` (el valor por omisión) el documento no lleva el bloque `analytics-config`, `posthog-js` no se descarga, la CSP no abre el
-origen de PostHog y no se escribe la cookie `humetria_acq`. Solo la landing: el panel, las encuestas y los portales no cargan PostHog.
+origen de PostHog y no se escribe la cookie `humetria_acq`. Solo las páginas públicas medidas (la landing, la página de cada
+herramienta y la guía de jornada: `Analytics::measuredRoutes()`): el panel, las encuestas y los portales no cargan PostHog.
 El servidor reporta sus errores con solo el token (ver "Errores").
 
 ### Reglas de privacidad de la medición
 
 - PostHog (nube US, `posthog-js` en su build, sin scripts externos) arranca solo en el documento de la landing
-  (`App\Http\Analytics`: ruta `home`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
+  (`App\Http\Analytics::measuredRoutes()`: `home`, `tools.*` y `guides.workday-2027`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
 - Sin autocapture, sin grabación de sesión, sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento
   local) y sin IP. A PostHog no se le manda nada de la persona: la dirección sin más query que las `utm_*` y, de un referente de
   este sitio, solo su origen (`resources/js/lib/analytics.ts` lo impone en `before_send`).
@@ -172,11 +173,11 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 | Evento | Propiedad | Cuándo |
 |--------|-----------|--------|
 | `$pageview` | `$current_url` limpia | Al abrir la landing |
-| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works` | Clic en un llamado a la demo o a "cómo funciona" |
+| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works`, `guide_tool`, `guide_demo` | Clic en un llamado a la demo o a "cómo funciona" |
+| `tool_page_click` | `target`: herramienta | Clic en la tarjeta de una herramienta (landing) o en otra herramienta (su página) |
 | `nav_click` | `target`: id de la sección | Clic en el menú de la cabecera |
 | `sign_in_click` | `target`: `header` | Clic en "Iniciar sesión" |
-| `family_click`, `family_selected` | `target`: familia | Familia en el héroe, o pestaña de familia |
-| `tool_selected` | `target`: herramienta | Pestaña de una herramienta |
+| `family_click` | `target`: familia | Familia en el héroe |
 | `film_control`, `film_chapter`, `video_control` | `target` | Controles de los videos |
 | `privacy_area_selected` | `target`: área | Demo de privacidad |
 | `privacy_notice_click` | `target`: `footer`, `compliance`, `demo_form` | Clic hacia el aviso de privacidad |
@@ -190,6 +191,14 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 
 `generate_lead` y `demo_request_stored` cuentan lo mismo; la diferencia entre ambos es lo que bloquean los navegadores. La conversión
 principal del embudo es `demo_request_stored`. No se guardan `gclid`, `gbraid` ni `wbraid`.
+
+### Páginas por herramienta
+
+Cada herramienta tiene su página (`App\Http\ToolPages`: `/registro-de-jornada`, `/nom-035`, `/nom-037`, `/ley-silla`, `/buzon-de-quejas`,
+`/compensacion`, `/vacaciones-y-permisos`, `/organigrama`, `/clima-laboral`) y hay una guía, `/guias/registro-de-jornada-2027`. Su texto
+vive en `App\Http\ToolContent\*` y lo legal sale de `docs/normas/`. Se renderizan en Node, son indexables, están en `sitemap.xml`,
+guardan la procedencia como la landing y se miden con los mismos eventos. Su JSON-LD: `SoftwareApplication`, `FAQPage`, `VideoObject`
+y `BreadcrumbList` (la guía, `Article`). El formulario de demo de cada una vuelve a la misma página (campo `page`).
 
 ### Errores
 

@@ -4,10 +4,12 @@ import { FAMILIES, familyTools } from '@/components/landing/landing-families';
 
 type Props = {
     error?: string | undefined;
+    /** The tool of the page the form is on, already chosen. */
+    preselected?: string | undefined;
 };
 
 /** The tools to show in the demo, grouped by family as the tools section shows them. */
-export default function DemoToolsField({ error }: Props) {
+export default function DemoToolsField({ error, preselected }: Props) {
     return (
         <fieldset
             aria-invalid={error === undefined ? undefined : true}
@@ -37,6 +39,7 @@ export default function DemoToolsField({ error }: Props) {
                                     name="tools[]"
                                     value={tool.key}
                                     label={tool.name}
+                                    defaultChecked={tool.key === preselected}
                                 />
                             ))}
                         </div>

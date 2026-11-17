@@ -29,7 +29,32 @@ const WORKFORCE: readonly DemoChoice[] = [
     { value: '501_plus', label: 'Más de 500' },
 ];
 
-export default function DemoRequestForm() {
+/** Counts the refused fields and puts the focus on the first one, as the visitor reads the form. */
+function focusFirstError(errors: Record<string, string>) {
+    trackFormErrors(errors);
+    const fields = document
+        .getElementById('demo-request-form')
+        ?.querySelectorAll<HTMLInputElement>('[name]');
+
+    const field = firstInvalidField(fields ?? [], errors);
+
+    // A phone sends a hidden field: what takes the focus is the box it is typed in.
+    (field?.type === 'hidden'
+        ? field.parentElement?.querySelector<HTMLInputElement>(
+              'input[type=tel]',
+          )
+        : field
+    )?.focus();
+}
+
+type Props = {
+    /** The route of the page the form is on: the server sends whoever asked back to it. */
+    page?: string | undefined;
+    /** The tool of that page, already chosen. */
+    tool?: string | undefined;
+};
+
+export default function DemoRequestForm({ page = 'home', tool }: Props) {
     return (
         <Form
             {...store.form()}
@@ -38,22 +63,7 @@ export default function DemoRequestForm() {
             id="demo-request-form"
             onBefore={() => track('demo_form_submitted')}
             onSuccess={(page) => trackLead(sessionStorage, page.flash.lead?.id)}
-            onError={(errors) => {
-                trackFormErrors(errors);
-                const fields = document
-                    .getElementById('demo-request-form')
-                    ?.querySelectorAll<HTMLInputElement>('[name]');
-
-                const field = firstInvalidField(fields ?? [], errors);
-
-                // A phone sends a hidden field: what takes the focus is the box it is typed in.
-                (field?.type === 'hidden'
-                    ? field.parentElement?.querySelector<HTMLInputElement>(
-                          'input[type=tel]',
-                      )
-                    : field
-                )?.focus();
-            }}
+            onError={focusFirstError}
             onHttpException={(response) => {
                 const message = httpErrorMessage(response);
 
@@ -109,7 +119,10 @@ export default function DemoRequestForm() {
                         options={PROFILES}
                         error={errors['profile']}
                     />
-                    <DemoToolsField error={errors['tools']} />
+                    <DemoToolsField
+                        error={errors['tools']}
+                        preselected={tool}
+                    />
                     <DemoChoiceField
                         name="workforce"
                         legend="¿Cuántas personas trabajan en la empresa?"
@@ -118,6 +131,7 @@ export default function DemoRequestForm() {
                     />
                     <DemoMessageField error={errors['message']} />
                     <DemoHoneypot />
+                    <input type="hidden" name="page" value={page} />
                     <Button
                         type="submit"
                         size="lg"
