@@ -2,8 +2,7 @@ import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { MailCheck } from 'lucide-react';
 import WorkerFrame from '@/components/worker-access/worker-frame';
-import PersonHeading from '@/components/humetria/person-heading';
-import ToneTile from '@/components/humetria/tone-tile';
+import StateMessage from '@/components/worker-access/state-message';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -24,6 +23,7 @@ export default function LinkContinue({ company }: { company: string }) {
     return (
         <WorkerFrame
             company={company}
+            centered
             actions={
                 <Button
                     className="h-14 w-full text-lg font-semibold"
@@ -35,10 +35,9 @@ export default function LinkContinue({ company }: { company: string }) {
                 </Button>
             }
         >
-            <ToneTile icon={MailCheck} large />
-            <PersonHeading title="Su enlace está listo">
+            <StateMessage icon={MailCheck} title="Su enlace está listo">
                 Toque «Continuar» para entrar. El enlace sirve una sola vez.
-            </PersonHeading>
+            </StateMessage>
         </WorkerFrame>
     );
 }

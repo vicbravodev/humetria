@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { KeyRound } from 'lucide-react';
 import WorkerFrame from '@/components/worker-access/worker-frame';
-import ToneTile from '@/components/humetria/tone-tile';
+import StateMessage from '@/components/worker-access/state-message';
 import { Button } from '@/components/ui/button';
 import { keyProblem } from '@/lib/worker-access/key';
 
@@ -20,19 +20,16 @@ export default function KeyBlocked({
     return (
         <WorkerFrame
             company={company}
+            centered
             actions={
                 <Button asChild className="h-14 w-full text-lg font-semibold">
                     <Link href={homeUrl}>Volver a mi portal</Link>
                 </Button>
             }
         >
-            <section className="flex flex-col items-start gap-3">
-                <ToneTile icon={KeyRound} tone="warning" large />
-                <h1 className="text-2xl leading-8 font-semibold text-balance">
-                    {title}
-                </h1>
-                <p className="text-muted-foreground">{text}</p>
-            </section>
+            <StateMessage icon={KeyRound} tone="warning" title={title}>
+                {text}
+            </StateMessage>
         </WorkerFrame>
     );
 }
