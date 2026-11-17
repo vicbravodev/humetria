@@ -288,7 +288,7 @@ it('lays the 0 to 10 question in one row on a computer', function (): void {
 });
 
 // The comments still go to an AI provider to be summarized: it is said where the person writes, not in the welcome.
-it('says at the open question that an AI provider summarizes the comments, and not to write a name', function (bool $dark): void {
+it('says at the open question that an AI provider summarizes the comments, and the not-a-name warning only once', function (bool $dark): void {
     engagementInvitee();
 
     visitPage('engagement/survey', '/engagement/the-token', $dark, true, function ($page): void {
@@ -296,5 +296,6 @@ it('says at the open question that an AI provider summarizes the comments, and n
         $page->script(TO_OPEN_QUESTION);
     })
         ->assertSee('Un proveedor de inteligencia artificial resume los comentarios.')
-        ->assertSee('Por eso, no escriba su nombre ni datos que lo identifiquen.');
+        ->assertSee('No escriba nombres ni datos que permitan identificarle')
+        ->assertDontSee('no escriba su nombre');
 })->with(['light' => false, 'dark' => true]);

@@ -57,12 +57,9 @@ export default function OpenQuestion({
                     aria-hidden="true"
                     className="mt-0.5 size-5 shrink-0 text-primary"
                 />
-                <p>
-                    <strong className="block font-semibold">
-                        Un proveedor de inteligencia artificial resume los
-                        comentarios.
-                    </strong>
-                    Por eso, no escriba su nombre ni datos que lo identifiquen.
+                <p className="font-semibold">
+                    Un proveedor de inteligencia artificial resume los
+                    comentarios.
                 </p>
             </div>
         </div>
