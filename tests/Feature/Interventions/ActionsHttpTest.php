@@ -211,3 +211,20 @@ it('never carries an individual response in its props', function (): void {
     $this->actingAs($this->hr)->get(route('tenant.campaigns.program', [$this->tenant, $this->campaign->id]))
         ->assertInertia(fn (Assert $page) => expectNoIndividualResponses($page->toArray()['props']));
 });
+
+it('names each field in an error with the label the form shows', function (string $field, string $message): void {
+    $this->actingAs($this->hr)->post(storeActionUrl($this), actionForm([$field => '']))
+        ->assertSessionHasErrors([$field => $message]);
+})->with([
+    'the kind' => ['kind', 'El campo tipo de acción es obligatorio.'],
+    'the level' => ['level', 'El campo nivel es obligatorio.'],
+    'the title' => ['title', 'El campo título es obligatorio.'],
+    'what will be done' => ['description', 'El campo qué se hará es obligatorio.'],
+    'for whom' => ['subjects', 'El campo a quién va dirigida es obligatorio.'],
+    'the due day' => ['due_on', 'El campo fecha límite es obligatorio.'],
+]);
+
+it('says a day that is not a date in words, never with the format of the database', function (): void {
+    $this->actingAs($this->hr)->post(storeActionUrl($this), actionForm(['starts_on' => 'mañana', 'due_on' => '15/12/2026']))
+        ->assertSessionHasErrors(['starts_on' => 'Elige una fecha de inicio válida.', 'due_on' => 'Elige una fecha límite válida.']);
+});

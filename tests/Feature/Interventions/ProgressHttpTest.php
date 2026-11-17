@@ -140,3 +140,10 @@ it('says a Programa with nothing planned has no actions, and one with all done i
 
     $this->actingAs($this->hr)->get($url)->assertInertia(fn (Assert $page) => $page->where('program.state.value', 'done'));
 });
+
+it('says the latest day a step can take as people read it, not as the database writes it', function (): void {
+    $this->actingAs($this->hr)->post(progressUrl($this), ['status' => 'done', 'recorded_on' => '2026-11-21'])
+        ->assertSessionHasErrors(['recorded_on' => 'La fecha no puede ser posterior a hoy, 20 nov 2026.']);
+    $this->actingAs($this->hr)->post(progressUrl($this), ['status' => 'done', 'recorded_on' => 'ayer'])
+        ->assertSessionHasErrors(['recorded_on' => 'Elige una fecha válida.']);
+});
