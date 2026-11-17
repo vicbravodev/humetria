@@ -6,6 +6,9 @@ use App\Modules\Leave\Models\LeaveHoliday;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Tenancy\Models\Tenant;
+use Pest\Browser\Api\AwaitableWebpage;
+
+require_once __DIR__.'/form-sheet-helpers.php';
 
 // Light and dark, on a desktop and on a phone.
 $looks = [
@@ -53,6 +56,15 @@ it('shows since which day the periods are granted and the working week', functio
         ->assertSee('De lunes a viernes')
         ->assertNoJavaScriptErrors();
 });
+
+it('adds and changes a leave type and adds a holiday in the side panel, the whole width of a phone', function (bool $mobile): void {
+    $url = leaveSettingsBrowserSetup();
+    $open = fn (string $tab = ''): AwaitableWebpage => ($mobile ? visit($url.$tab)->on()->mobile() : visit($url.$tab))->assertNoJavaScriptErrors();
+
+    assertFormSheet($open()->press('Nuevo tipo de permiso'), $mobile);
+    assertFormSheet($open()->press('Cambiar'), $mobile);
+    assertFormSheet($open('?tab=holidays')->press('Nuevo día festivo'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('adds a leave type from its dialog', function (): void {
     visitPage('leave/settings', leaveSettingsBrowserSetup())

@@ -13,6 +13,8 @@ dataset('record forms', [
     'interventions/action-sheet.tsx',
     'tenancy/work-center-dialog.tsx',
     'tenancy/create-work-center-dialog.tsx',
+    'leave/holiday-dialog.tsx',
+    'leave/type-dialog.tsx',
 ]);
 
 it('keeps the form of a record, or its button, in the side panel', function (string $file): void {

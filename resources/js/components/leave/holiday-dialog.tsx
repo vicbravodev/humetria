@@ -1,5 +1,5 @@
 import DatePicker from '@/components/humetria/date-picker';
-import FormDialog from '@/components/humetria/form-dialog';
+import FormSheet from '@/components/humetria/form-sheet';
 import InputError from '@/components/humetria/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +17,7 @@ export default function HolidayDialog({
     const tenantSlug = useTenantSlug();
 
     return (
-        <FormDialog
+        <FormSheet
             open={open}
             onOpenChange={onOpenChange}
             title="Nuevo día festivo"
@@ -50,6 +50,6 @@ export default function HolidayDialog({
                     </div>
                 </div>
             )}
-        </FormDialog>
+        </FormSheet>
     );
 }

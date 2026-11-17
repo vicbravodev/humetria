@@ -1,4 +1,4 @@
-import FormDialog from '@/components/humetria/form-dialog';
+import FormSheet from '@/components/humetria/form-sheet';
 import InputError from '@/components/humetria/input-error';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ export default function TypeDialog({
     const tenantSlug = useTenantSlug();
 
     return (
-        <FormDialog
+        <FormSheet
             open={open}
             onOpenChange={onOpenChange}
             title={
@@ -61,6 +61,6 @@ export default function TypeDialog({
                     </div>
                 </div>
             )}
-        </FormDialog>
+        </FormSheet>
     );
 }
