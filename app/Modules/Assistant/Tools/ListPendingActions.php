@@ -12,6 +12,7 @@ use App\Modules\Assistant\Support\UntrustedText;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Contracts\EvaluationSchedule;
 use App\Modules\Campaigns\Data\CampaignRecord;
+use App\Modules\Interventions\Contracts\ProgramStandings;
 use App\Modules\Telework\Contracts\TeleworkStanding;
 use App\Modules\Telework\Data\TeleworkRow;
 use App\Modules\Tenancy\Contracts\CompanyModules;
@@ -24,7 +25,7 @@ use Laravel\Ai\Tools\Request;
 
 /**
  * What the company still has to do, most urgent first: a first work center, evaluations overdue or never made, campaigns
- * to launch or about to close, and the rows of NOM-037 that are missing or partial. Each item says where to do it.
+ * to launch or about to close, Programas de intervención with overdue actions, and the rows of NOM-037 that are missing or partial. Each item says where to do it.
  */
 final readonly class ListPendingActions implements Tool
 {
@@ -38,6 +39,7 @@ final readonly class ListPendingActions implements Tool
         private CampaignRecords $campaigns,
         private EvaluationSchedule $schedule,
         private TeleworkStanding $telework,
+        private ProgramStandings $programs,
         private CompanyModules $modules,
         private PanelLinks $links,
         private ScopeGuard $guard,
@@ -45,7 +47,7 @@ final readonly class ListPendingActions implements Tool
 
     public function description(): string
     {
-        return 'Pendientes de la empresa, del más urgente al menos: evaluaciones NOM-035 vencidas o sin hacer, campañas por lanzar o por cerrar y los puntos de la tabla 10.3 de NOM-037 que faltan, cada uno con su enlace. No recibe argumentos.';
+        return 'Pendientes de la empresa, del más urgente al menos: evaluaciones NOM-035 vencidas o sin hacer, campañas por lanzar o por cerrar, programas de intervención con acciones vencidas y los puntos de la tabla 10.3 de NOM-037 que faltan, cada uno con su enlace. No recibe argumentos.';
     }
 
     public function handle(Request $request): string
@@ -66,6 +68,7 @@ final readonly class ListPendingActions implements Tool
                 default => null,
             },
             $truncated,
+            next: $items === [] ? null : ['label' => 'Ir al primer pendiente', 'link' => $items[0]['link']],
         ))->toJson();
     }
 
@@ -93,6 +96,7 @@ final readonly class ListPendingActions implements Tool
         $items = [
             ...($nom035 ? $this->evaluations($names) : []),
             ...($nom035 ? $this->campaignItems($names) : []),
+            ...($nom035 ? $this->overduePrograms($names) : []),
             ...($this->modules->enabled($this->scope->tenantId, 'nom037') ? $this->teleworkGaps($names) : []),
         ];
         // Stable: items of the same urgency stay in the order they were found.
@@ -139,6 +143,27 @@ final readonly class ListPendingActions implements Tool
                 $items[] = ['priority' => 4, 'kind' => 'launch_campaign', 'title' => "Lanzar la campaña de {$label}", 'detail' => null, 'due' => null, 'link' => $this->links->campaign($campaign->id)];
             } elseif (! $campaign->closed && $campaign->daysLeft !== null && $campaign->daysLeft <= self::CLOSING_DAYS) {
                 $items[] = ['priority' => 3, 'kind' => 'campaign_closing', 'title' => "Cierra pronto: {$label}", 'detail' => self::closingDetail($campaign), 'due' => $campaign->closesOn, 'link' => $this->links->campaign($campaign->id)];
+            }
+        }
+
+        return $items;
+    }
+
+    /**
+     * The Programa de intervención of the latest evaluation of each center, when it has actions past their day.
+     *
+     * @param  array<string, string>  $names
+     * @return list<array{priority: int, kind: string, title: string, detail: string|null, due: string|null, link: string}>
+     */
+    private function overduePrograms(array $names): array
+    {
+        $latest = $this->campaigns->latestClosedEvaluations(array_keys($names));
+        $standings = $this->programs->forEvaluations(array_values(array_map(fn (CampaignRecord $campaign): string => $campaign->id, $latest)));
+        $items = [];
+
+        foreach ($latest as $centerId => $campaign) {
+            if (($standings[$campaign->id] ?? null) === 'overdue') {
+                $items[] = ['priority' => 3, 'kind' => 'program_overdue', 'title' => 'Programa de intervención con acciones vencidas · '.UntrustedText::line($names[$centerId] ?? ''), 'detail' => null, 'due' => null, 'link' => $this->links->program($campaign->id)];
             }
         }
 
