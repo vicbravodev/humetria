@@ -2,7 +2,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import { InputGroupInput } from "@/components/ui/input-group"
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { calendarSpan, fromCalendarDate, openingMonth, pickableDays, pickerFocusTarget, toCalendarDate } from "@/lib/calendar-date"
@@ -58,9 +58,7 @@ function PickerText({
   return (
     <div className="grid w-full gap-2">
       <Label htmlFor={props.id}>{label}</Label>
-      <div className="flex h-11 items-center rounded-md border border-input bg-card has-[input:focus-visible]:border-ring has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ring has-[input[aria-invalid=true]]:border-destructive">
-        {input}
-      </div>
+      <InputGroup>{input}</InputGroup>
     </div>
   )
 }

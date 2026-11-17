@@ -52,13 +52,13 @@ export default function DatePicker({
     );
 
     return (
-        <div className="grid min-w-0 gap-1.5">
+        <div data-slot="date-picker" className="grid min-w-0 gap-1.5">
             <input type="hidden" name={name} value={value} />
             <Popover
                 open={popover.open && !mobile}
                 onOpenChange={popover.setOpen}
             >
-                <InputGroup data-slot="date-picker" ref={boxRef}>
+                <InputGroup ref={boxRef}>
                     <PickerText
                         id={id}
                         ref={textRef}
