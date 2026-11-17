@@ -8,6 +8,7 @@ import {
     parseDateText,
     parseMonthText,
 } from '@/lib/date-text';
+import { textProblem } from '@/lib/text-problem';
 
 const today = new Date(2026, 10, 16);
 
@@ -167,6 +168,40 @@ describe('parseMonthText', () => {
         expect(parseMonthText('11/2026', limits, today)).toEqual({
             kind: 'late',
         });
+    });
+});
+
+describe('textProblem', () => {
+    const limits = { min: '2026-11-10', max: '2026-11-20' };
+
+    it('says how to write a day, a month or a time that is not one, in tú or in usted', () => {
+        expect(textProblem('invalid', { kind: 'date', limits })).toBe(
+            'No es una fecha: escríbela como 07/10/2018.',
+        );
+        expect(
+            textProblem('invalid', { kind: 'date', limits, voice: 'usted' }),
+        ).toBe('No es una fecha: escríbala como 07/10/2018.');
+        expect(textProblem('invalid', { kind: 'month' })).toBe(
+            'No es un mes: escríbelo como 10/2026.',
+        );
+        expect(textProblem('invalid', { kind: 'time' })).toBe(
+            'No es una hora: escríbela como 07:30.',
+        );
+    });
+
+    it('names the first or last day allowed', () => {
+        expect(textProblem('early', { kind: 'date', limits })).toBe(
+            'Elige una fecha desde el 10/11/2026.',
+        );
+        expect(
+            textProblem('late', { kind: 'date', limits, voice: 'usted' }),
+        ).toBe('Elija una fecha hasta el 20/11/2026.');
+        expect(
+            textProblem('late', {
+                kind: 'month',
+                limits: { min: '2026-03', max: '2026-10' },
+            }),
+        ).toBe('Elige un mes hasta 10/2026.');
     });
 });
 

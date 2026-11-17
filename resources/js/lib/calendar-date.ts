@@ -5,6 +5,10 @@
 
 const pattern = /^\d{4}-\d{2}-\d{2}$/;
 
+/** What a picker's calendar offers to the keyboard first: the day (or month) it lands on. */
+export const pickerFocusTarget =
+    '[data-day] button[tabindex="0"], [data-pick][tabindex="0"]';
+
 export function fromCalendarDate(text: string): Date | undefined {
     if (!pattern.test(text)) {
         return undefined;
@@ -54,6 +58,57 @@ export function pickableDays(
     ];
 
     return closed.length === 0 ? undefined : closed;
+}
+
+/** The month a calendar opens on: the chosen day's, or today's moved inside the first and last day allowed. */
+export function openingMonth(
+    value: string,
+    limits: { min?: string | undefined; max?: string | undefined },
+    today: Date = new Date(),
+): Date {
+    const day =
+        fromCalendarDate(value) ?? withinLimits(today, limits.min, limits.max);
+
+    return new Date(day.getFullYear(), day.getMonth(), 1);
+}
+
+function withinLimits(
+    day: Date,
+    min: string | undefined,
+    max: string | undefined,
+): Date {
+    const first = fromCalendarDate(min ?? '');
+    const last = fromCalendarDate(max ?? '');
+
+    if (first !== undefined && day < first) {
+        return first;
+    }
+
+    return last !== undefined && day > last ? last : day;
+}
+
+/**
+ * The months a calendar's month and year menus offer: from the first day allowed (or a hundred years back, for a day
+ * someone joined) to the last one (or twenty years ahead, for a deadline).
+ */
+export function calendarSpan(
+    min: string | undefined,
+    max: string | undefined,
+    today: Date = new Date(),
+): { startMonth: Date; endMonth: Date } {
+    const first = min === undefined ? undefined : fromCalendarDate(min);
+    const last = max === undefined ? undefined : fromCalendarDate(max);
+
+    return {
+        startMonth:
+            first === undefined
+                ? new Date(today.getFullYear() - 100, 0, 1)
+                : new Date(first.getFullYear(), first.getMonth(), 1),
+        endMonth:
+            last === undefined
+                ? new Date(today.getFullYear() + 20, 11, 1)
+                : new Date(last.getFullYear(), last.getMonth(), 1),
+    };
 }
 
 /** What a calendar needs to respect a first and a last day: where it starts, and the days it closes. */
