@@ -51,7 +51,16 @@ it('waits for what a browser test asserts, not a fixed number of seconds', funct
     $waits = testLinesMatching('/->wait\(/');
 
     // Observation windows: «this search never goes out» has nothing to wait for, only a time in which it must not happen.
-    expect(array_values(array_diff($waits, ['tests/Browser/TenantConsoleTest.php:654', 'tests/Browser/TenantConsoleTest.php:672'])))->toBe([]);
+    // The same for the invitation of Humi: it asks itself every second whether to appear, so «it does not appear» is a
+    // window of two ticks after the page clock jumps, not a state the page reaches.
+    expect(array_values(array_diff($waits, [
+        'tests/Browser/TenantConsoleTest.php:654',
+        'tests/Browser/TenantConsoleTest.php:672',
+        'tests/Browser/AssistantInvitationTest.php:86',
+        'tests/Browser/AssistantInvitationTest.php:93',
+        'tests/Browser/AssistantInvitationTest.php:95',
+        'tests/Browser/AssistantInvitationTest.php:112',
+    ])))->toBe([]);
 });
 
 it('does not look for a short number in text that carries ids or dates (a UUID or a timestamp has «50000» by chance)', function (): void {
