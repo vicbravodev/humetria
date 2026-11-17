@@ -165,6 +165,7 @@ it('closes the days after today for the last day of work, and offers no «Borrar
         ->click('[data-slot="date-picker"]:has(#terminated-on) button:has-text("Abrir el calendario")')
         ->assertScript('() => document.querySelector(\'[data-day="'.$today->copy()->addDay()->toDateString().'"] button\')?.disabled ?? true', true)
         ->keys('[data-slot="popover-content"]', 'Escape')
+        ->assertScript(calendarClosed(), true)
         ->fill('#terminated-on', '09/01/2026')
         ->keys('#terminated-on', 'Tab')
         ->assertSee('Elige una fecha desde el 10/01/2026.');
