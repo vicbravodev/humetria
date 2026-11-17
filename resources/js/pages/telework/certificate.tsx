@@ -29,7 +29,7 @@ export default function TeleworkCertificate(props: Props) {
     return (
         <>
             <Head title={`Constancia NOM-037 · ${props.workCenter.name}`} />
-            <div className="mx-auto flex w-full max-w-[880px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8 print:max-w-none print:p-0">
+            <div className="flex w-full max-w-[880px] flex-col gap-6 px-4 py-6 md:px-10 md:py-8 print:max-w-none print:p-0">
                 <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
                     <Button variant="outline" asChild>
                         <Link href={dashboard(tenantSlug)}>
