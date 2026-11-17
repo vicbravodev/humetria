@@ -206,3 +206,24 @@ it('passes the accessibility and CSP checks with the Humi dialog of the console 
     'dark' => [true, false],
     'a phone' => [false, true],
 ]);
+
+/** A browser script that reads the room the header of Humi leaves at its right. */
+function humiHeaderPaddingRight(): string
+{
+    return '() => getComputedStyle(document.querySelector(\'header:has(+ div > [role="log"])\')).paddingRight';
+}
+
+it('reserves room at the right of the header only for the close button the sheet brings', function (): void {
+    $panel = humiPanelCompany();
+
+    visitPage('dashboard', $panel)
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertScript(humiHeaderPaddingRight(), '16px');
+
+    visitPage('assistant/index', $panel.'/assistant')
+        ->assertScript(humiHeaderPaddingRight(), '16px');
+
+    visitPage('dashboard', $panel, mobile: true)
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertScript(humiHeaderPaddingRight(), '56px');
+});

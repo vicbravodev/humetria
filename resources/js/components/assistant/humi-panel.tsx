@@ -66,6 +66,7 @@ export default function HumiPanel({
                 fullPageHref={fullPage ? null : assistantPage.url(slug)}
                 onNew={chat.reset}
                 onClose={onClose}
+                sheetCloses={onClose === null && !fullPage}
             />
             <HumiThread
                 chat={chat}
