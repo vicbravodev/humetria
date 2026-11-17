@@ -125,3 +125,23 @@ it('reads nothing when it was built for another company than the one of the requ
 
     expect(fn () => toolCard(GetCampaignProgress::class, $scopeOfB))->toThrow(ScopeMismatch::class);
 });
+
+it('names the campaign it read as its source and leads to its page, only for one campaign of the company', function (): void {
+    $campaign = runningCampaign($this->a, $this->plant, 4, 2);
+
+    $one = toolCard(GetCampaignProgress::class, $this->scope, ['campaign_id' => $campaign->id]);
+    $all = toolCard(GetCampaignProgress::class, $this->scope);
+
+    expect($one['sources'])->toBe(['Campaña Planta Apodaca · Evaluación NOM-035'])
+        ->and($one['next'])->toBe(['label' => 'Ver la campaña', 'link' => "/admin/{$this->a->slug}/campaigns/{$campaign->id}"])
+        ->and($all['sources'])->toBe([])
+        ->and($all['next'])->toBe(['label' => 'Ver las campañas', 'link' => "/admin/{$this->a->slug}/campaigns"]);
+});
+
+it('gives no source and no next step for a campaign of another company', function (): void {
+    $foreign = runningCampaign($this->b, WorkCenter::factory()->create(['tenant_id' => $this->b->id]), 3, 1);
+
+    $card = toolCard(GetCampaignProgress::class, $this->scope, ['campaign_id' => $foreign->id]);
+
+    expect($card['sources'])->toBe([])->and($card['next'])->toBeNull();
+});

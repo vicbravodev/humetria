@@ -52,11 +52,15 @@ final readonly class GetCampaignProgress implements Tool
 
         $campaign = is_string($id) && Str::isUuid($id) ? $this->campaigns->find($id) : null;
 
-        // A campaign of another company, one that does not exist and a value that is no id all answer the same.
-        return ($campaign === null
-            ? new ToolCard('progress', 'Avance de la campaña', note: 'No encontré esa campaña en tu empresa.')
-            : new ToolCard('progress', 'Avance de la campaña', [$this->row($campaign, $this->centerNames())], $this->links->campaign($campaign->id))
-        )->toJson();
+        if ($campaign === null) {
+            // A campaign of another company, one that does not exist and a value that is no id all answer the same.
+            return (new ToolCard('progress', 'Avance de la campaña', note: 'No encontré esa campaña en tu empresa.'))->toJson();
+        }
+
+        $names = $this->centerNames();
+        $link = $this->links->campaign($campaign->id);
+
+        return (new ToolCard('progress', 'Avance de la campaña', [$this->row($campaign, $names)], $link, sources: ['Campaña '.self::label($campaign, $names)], next: ['label' => 'Ver la campaña', 'link' => $link]))->toJson();
     }
 
     /**
@@ -87,6 +91,7 @@ final readonly class GetCampaignProgress implements Tool
                 default => null,
             },
             $truncated,
+            next: ['label' => 'Ver las campañas', 'link' => $this->links->campaigns()],
         );
     }
 
@@ -106,6 +111,14 @@ final readonly class GetCampaignProgress implements Tool
 
     /**
      * @param  array<string, string>  $names
+     */
+    private static function label(CampaignRecord $campaign, array $names): string
+    {
+        return UntrustedText::line(($names[$campaign->workCenterId] ?? '').' · '.$campaign->kindLabel);
+    }
+
+    /**
+     * @param  array<string, string>  $names
      * @return array<string, mixed>
      */
     private function row(CampaignRecord $campaign, array $names): array
@@ -119,7 +132,7 @@ final readonly class GetCampaignProgress implements Tool
         }
 
         return [
-            'label' => UntrustedText::line(($names[$campaign->workCenterId] ?? '').' · '.$campaign->kindLabel),
+            'label' => self::label($campaign, $names),
             'status' => match (true) {
                 $campaign->closed => 'closed',
                 $campaign->launchedOn === null => 'draft',
