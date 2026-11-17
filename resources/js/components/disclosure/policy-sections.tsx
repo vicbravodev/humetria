@@ -1,15 +1,11 @@
+import PolicySectionBody from '@/components/disclosure/policy-section-body';
 import { cn } from '@/lib/utils';
 import type { PolicyTextSection } from '@/types';
 
-const LIST_CLASS = {
-    numbers: 'list-decimal',
-    letters: 'list-[lower-alpha]',
-} as const;
-
 /**
  * The words of a policy, as plain text: the paragraphs (split by a blank line) and the items of each section. The one piece
- * that paints it in the panel, in the personal page and in the public page; React escapes the text, so nothing in it can
- * become markup (criterio C-51).
+ * that paints it in the panel and in the public page; React escapes the text, so nothing in it can become markup (criterio
+ * C-51). The person reads it folded, in `PolicyAccordion`.
  */
 export default function PolicySections({
     sections,
@@ -43,35 +39,7 @@ export default function PolicySections({
                         >
                             {section.heading}
                         </h3>
-                        {section.text
-                            .split(/\n{2,}/)
-                            .filter((paragraph) => paragraph !== '')
-                            .map((paragraph) => (
-                                <p
-                                    key={paragraph}
-                                    className="text-pretty whitespace-pre-line"
-                                >
-                                    {paragraph}
-                                </p>
-                            ))}
-                        {section.listStyle !== null &&
-                            section.items.length > 0 && (
-                                <ol
-                                    className={cn(
-                                        'ml-6 grid gap-1.5 marker:text-muted-foreground',
-                                        LIST_CLASS[section.listStyle],
-                                    )}
-                                >
-                                    {section.items.map((item) => (
-                                        <li
-                                            key={item}
-                                            className="pl-1 text-pretty"
-                                        >
-                                            {item}
-                                        </li>
-                                    ))}
-                                </ol>
-                            )}
+                        <PolicySectionBody section={section} />
                     </section>
                 ))}
         </div>
