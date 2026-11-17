@@ -448,3 +448,15 @@ it('reads as a page of its own: the history by day with a search on the server, 
         ->assertSee('Ninguna conversación tiene «nada parecido».')
         ->assertNoJavaScriptErrors();
 });
+
+it('takes the whole screen of a phone, with buttons of 44 px and the questions to follow in one row', function (): void {
+    visitPage('dashboard', humiPanelCompany(), mobile: true)
+        ->assertScript(humiServes(humiStream()), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertScript('() => { const sheet = document.querySelector(\'[role="dialog"]\').getBoundingClientRect(); return sheet.width === window.innerWidth && sheet.height === window.innerHeight; }', true)
+        ->click('¿Cómo va la participación?')
+        ->assertSee('El riesgo más alto está en')
+        ->assertScript(humiSettled(), true)
+        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] button, [role="dialog"] a\')].filter((control) => control.offsetParent !== null && control.getBoundingClientRect().height < 44 && control.getAttribute("aria-label") !== "Quitar contexto").map((control) => control.getAttribute("aria-label") ?? control.innerText).join(" | ")', '')
+        ->assertScript('() => new Set([...document.querySelectorAll(\'[role="log"] button\')].filter((button) => button.innerText.startsWith("¿")).map((button) => button.getBoundingClientRect().top)).size', 1);
+});

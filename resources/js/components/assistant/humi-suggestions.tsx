@@ -1,4 +1,4 @@
-/** Questions to follow an answer, as chips. */
+/** Questions to follow an answer, as chips: in one row that scrolls sideways on a phone. */
 export default function HumiSuggestions({
     suggestions,
     onPick,
@@ -7,13 +7,13 @@ export default function HumiSuggestions({
     onPick: (text: string) => void;
 }) {
     return (
-        <div className="flex flex-wrap gap-2">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
             {suggestions.map((text) => (
                 <button
                     key={text}
                     type="button"
                     onClick={() => onPick(text)}
-                    className="inline-flex min-h-9 items-center rounded-full border border-input bg-card px-3 text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-input bg-card px-3 text-sm whitespace-nowrap hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:min-h-9"
                 >
                     {text}
                 </button>
