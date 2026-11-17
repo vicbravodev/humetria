@@ -16,7 +16,7 @@ export default function Companies({
     return (
         <>
             <Head title={title} />
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-9 px-4 py-6 md:px-12 md:py-10">
+            <div className="flex w-full max-w-[880px] flex-col gap-9 px-4 py-6 md:px-10 md:py-10">
                 <PageHeader
                     title={title}
                     description={

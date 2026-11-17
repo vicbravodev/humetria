@@ -25,7 +25,7 @@ export default function InviteMember({
     return (
         <>
             <Head title="Invitar a alguien" />
-            <div className="mx-auto grid w-full max-w-[1440px] items-start gap-8 px-4 py-6 min-[1240px]:grid-cols-[minmax(0,560px)_minmax(0,1fr)] md:px-10 md:py-8">
+            <div className="grid w-full items-start gap-8 px-4 py-6 min-[1240px]:grid-cols-[minmax(0,560px)_minmax(0,1fr)] md:px-10 md:py-8">
                 <div className="flex flex-col gap-6">
                     <PageHeader title="Invitar a alguien" />
                     <InviteMemberForm roles={roles} />
