@@ -37,8 +37,11 @@ function isReadingWidth(string $className): bool
     return array_intersect(['max-w-[880px]', 'max-w-[960px]'], $tokens) !== [] && ! in_array('mx-auto', $tokens, true);
 }
 
-/** Pages that keep their own width, each with its reason: all of them render outside the frame of the app. */
+/** Pages that keep their own width, each with its reason: all but one render outside the frame of the app. */
 const PAGES_WITH_THEIR_OWN_WIDTH = [
+    // Inside the frame, the NOM-035 report is the document RH prints and presents: it keeps the width of its sheet
+    // (1120 px, the same as its bar and its shared link), aligned to the left like every page.
+    'results/report.tsx' => 'printed report, aligned to the left',
     // The NOM-035 survey: SurveyShell, one column a person reads on a phone.
     'campaigns/survey.tsx' => 'survey on a phone',
     // The person's portal (PortalShell), opened with their own link: one column for a phone.

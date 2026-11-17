@@ -50,7 +50,7 @@ export default function Screenings({
     return (
         <>
             <Head title={`Canalización · ${campaign.workCenter}`} />
-            <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-7 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-7 px-4 py-6 md:px-10 md:py-8">
                 <ConfidentialBanner />
                 <header className="flex flex-wrap items-end justify-between gap-6">
                     <div className="flex max-w-[760px] flex-col gap-2">
