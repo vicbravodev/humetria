@@ -22,7 +22,7 @@ it('offers the Programa on the results of an evaluation that asks for one and ha
     $campaign = closedEvaluationWith($this->tenant, nom035Answers('nom035.guide-ii', 'always'));
 
     $this->actingAs($this->hr)->get(route('tenant.campaigns.results', [$this->tenant, $campaign->id]))
-        ->assertInertia(fn (Assert $page) => $page->where('program', ['exists' => false, 'state' => null, 'meter' => null]));
+        ->assertInertia(fn (Assert $page) => $page->where('program', ['exists' => false, 'state' => null, 'meter' => null, 'coverage' => null, 'percent' => null]));
 });
 
 it('shows where the Programa stands on the results', function (): void {
@@ -34,7 +34,7 @@ it('shows where the Programa stands on the results', function (): void {
     ProgramAction::factory()->create(['tenant_id' => $this->tenant->id, 'program_id' => $program?->id, 'item_id' => $row->id, 'due_on' => '2020-01-01']);
 
     $this->actingAs($this->hr)->get(route('tenant.campaigns.results', [$this->tenant, $campaign->id]))
-        ->assertInertia(fn (Assert $page) => $page->where('program', ['exists' => true, 'state' => ['value' => 'overdue', 'label' => 'Con acciones vencidas'], 'meter' => ['done' => 1, 'total' => 2]]));
+        ->assertInertia(fn (Assert $page) => $page->where('program', ['exists' => true, 'state' => ['value' => 'overdue', 'label' => 'Con acciones vencidas'], 'meter' => ['done' => 1, 'total' => 2], 'coverage' => ['covered' => 1, 'total' => $program?->items()->count()], 'percent' => intdiv(100, 2 + $program?->items()->count() - 1)]));
 });
 
 it('shows no Programa card when the norm asks for none, while it is open or for a Guía I campaign', function (Closure $campaign): void {

@@ -45,13 +45,38 @@ final class ActionRequest extends FormRequest
     }
 
     /**
-     * The screen calls it «fecha límite» (the word of the column and the form), so the error does too.
+     * Each field by the label the form shows («Qué se hará», «Fecha límite»…), so an error names what the person sees.
      *
      * @return array<string, string>
      */
     public function attributes(): array
     {
-        return ['due_on' => 'fecha límite'];
+        return [
+            'kind' => 'tipo de acción',
+            'level' => 'nivel',
+            'title' => 'título',
+            'description' => 'qué se hará',
+            'subjects' => 'a quién va dirigida',
+            'area_ids' => 'áreas',
+            'starts_on' => 'fecha de inicio',
+            'due_on' => 'fecha límite',
+            'responsible_name' => 'nombre de alguien externo',
+            'responsible_user_id' => 'persona de la empresa',
+            'professional' => 'quién la da',
+        ];
+    }
+
+    /**
+     * A day that is not one is told in words, never with the format the database reads.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'starts_on.date_format' => 'Elige una fecha de inicio válida.',
+            'due_on.date_format' => 'Elige una fecha límite válida.',
+        ];
     }
 
     public function toData(?string $id, ?string $itemId): ActionData

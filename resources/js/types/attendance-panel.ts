@@ -1,4 +1,26 @@
+import type {
+    AttendanceCenterProps,
+    AttendanceOverviewProps,
+    OverviewCenter,
+} from './attendance';
 import type { Paginated } from './demos';
+
+/** How the people of a center mark: as the company's policy says, or in the field, from their phone wherever they are. */
+export type CenterMarkMode = 'company' | 'field';
+
+/** A center of the overview with how its people mark. */
+export type ModedCenter = OverviewCenter & { mode: CenterMarkMode };
+
+/** RH's overview, its centers with how their people mark. */
+export type AttendanceOverviewPageProps = Omit<
+    AttendanceOverviewProps,
+    'centers'
+> & { centers: Paginated<ModedCenter> };
+
+/** A center of the registro with how its people mark. */
+export type AttendanceCenterPageProps = AttendanceCenterProps & {
+    mode: CenterMarkMode;
+};
 
 /** The company's policy of the registro, as saved or the defaults it starts with. */
 export type AttendancePolicy = {
@@ -16,6 +38,8 @@ export type AttendancePolicyProps = {
     /** False while RH has not saved one: the page shows the defaults. */
     saved: boolean;
     canManage: boolean;
+    /** The centers in use that mark in the field instead of by this policy. */
+    fieldCenters: number;
 };
 
 /** The tabs of the schedules page: everyone, with an agreed schedule, and without one. */

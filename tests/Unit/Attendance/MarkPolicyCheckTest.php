@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Data\Position;
+use App\Modules\Attendance\Enums\EvidenceLevel;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Enums\WorkMode;
@@ -41,11 +42,11 @@ function northOf(float $meters, float $accuracy = 10.0): Position
  *
  * @param  ?list<AttendanceZone>  $zones  null for the plant's one zone
  */
-function decideMark(?AttendanceSchedule $schedule = null, ?AttendancePolicy $policy = null, bool $trusted = false, ?bool $qrValid = true, ?array $zones = null, ?Position $position = new Position(19.0 + 10 / MPC_METERS_PER_DEGREE, -99.0, 10.0), int $screens = 1): MarkContext
+function decideMark(?AttendanceSchedule $schedule = null, ?AttendancePolicy $policy = null, bool $trusted = false, ?bool $qrValid = true, ?array $zones = null, ?Position $position = new Position(19.0 + 10 / MPC_METERS_PER_DEGREE, -99.0, 10.0), int $screens = 1, bool $field = false): MarkContext
 {
     $plant = [(new AttendanceZone)->forceFill(['id' => 'zone-a', 'latitude' => 19.0, 'longitude' => -99.0, 'radius_m' => 50])];
 
-    return MarkPolicyCheck::decide($schedule, $policy ?? markPolicy(), $trusted, $qrValid, $zones ?? $plant, $position, 'device-1', $screens);
+    return MarkPolicyCheck::decide($schedule, $policy ?? markPolicy(), $trusted, $qrValid, $zones ?? $plant, $position, 'device-1', $screens, $field);
 }
 
 /**
@@ -214,5 +215,59 @@ describe('trusted staff', function (): void {
 
     it('is on site when they are not trusted, even with the browser allowed', function (): void {
         expect(markRejection(fn () => decideMark(trusted: false, qrValid: null)))->toBe('qr_required');
+    });
+});
+
+describe('in a field center', function (): void {
+    it('is field, the strong method of its mode, keeping the position given anywhere, with no zone nor distance', function (): void {
+        $context = decideMark(qrValid: null, position: northOf(5000), field: true);
+
+        expect($context->method)->toBe(MarkMethod::Field)
+            ->and($context->method->evidence())->toBe(EvidenceLevel::Strong)
+            ->and($context->zoneId)->toBeNull()
+            ->and($context->distance)->toBeNull()
+            ->and($context->latitude)->toBe(19.0 + 5000 / MPC_METERS_PER_DEGREE)
+            ->and($context->longitude)->toBe(-99.0)
+            ->and($context->accuracy)->toBe(10.0)
+            ->and($context->credentialId)->toBe('device-1');
+    });
+
+    it('needs neither a zone nor a screen: never center_not_ready nor qr_required', function (): void {
+        expect(decideMark(qrValid: null, zones: [], position: northOf(10), screens: 0, field: true)->method)->toBe(MarkMethod::Field);
+    });
+
+    it('is field at the maximum accuracy, and field without a usable location (medium) past it, keeping the position', function (): void {
+        expect(decideMark(qrValid: null, position: northOf(10, 100.0), field: true)->method)->toBe(MarkMethod::Field);
+
+        $context = decideMark(qrValid: null, position: northOf(10, 100.1), field: true);
+
+        expect($context->method)->toBe(MarkMethod::FieldUnlocated)
+            ->and($context->method->evidence())->toBe(EvidenceLevel::Medium)
+            ->and($context->accuracy)->toBe(100.1)
+            ->and($context->zoneId)->toBeNull();
+    });
+
+    it('takes a mark with no location, as field without a usable location', function (): void {
+        $context = decideMark(qrValid: null, position: null, field: true);
+
+        expect($context->method)->toBe(MarkMethod::FieldUnlocated)
+            ->and($context->latitude)->toBeNull();
+    });
+
+    it('takes a valid QR, optional: with a good reading it is field, without one it is the QR alone', function (): void {
+        expect(decideMark(qrValid: true, position: northOf(10), field: true)->method)->toBe(MarkMethod::Field)
+            ->and(decideMark(qrValid: true, position: null, field: true)->method)->toBe(MarkMethod::Qr);
+    });
+
+    it('still rejects a QR that does not verify', function (): void {
+        expect(markRejection(fn () => decideMark(qrValid: false, field: true)))->toBe('qr_invalid');
+    });
+
+    it('is remote for a person whose schedule is remote, the exception that stays per person', function (): void {
+        expect(decideMark(markSchedule(WorkMode::Remote), field: true)->method)->toBe(MarkMethod::Remote);
+    });
+
+    it('records trusted staff by their position too, not as the browser with nothing kept', function (): void {
+        expect(decideMark(trusted: true, qrValid: null, position: northOf(10), field: true)->method)->toBe(MarkMethod::Field);
     });
 });

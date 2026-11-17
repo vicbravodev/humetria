@@ -35,7 +35,7 @@ it('lives at /admin/{slug}/employees', function (): void {
 
 it('lists the active employees by name, with their center and area', function (): void {
     employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Zoe Ruiz']);
-    $ana = employeeIn($this->tenant, $this->office, $this->sales, ['name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5512345678', 'gender' => Gender::Female, 'job_title' => 'Vendedora', 'employee_number' => 'A-1']);
+    $ana = employeeIn($this->tenant, $this->office, $this->sales, ['name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '+525512345678', 'gender' => Gender::Female, 'job_title' => 'Vendedora', 'employee_number' => 'A-1']);
     employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Baja Dada'])->update(['deactivated_at' => now()]);
     Employee::factory()->create(['name' => 'De Otra Empresa']);
 
@@ -47,7 +47,7 @@ it('lists the active employees by name, with their center and area', function ()
             ->where('employees.total', 2)
             ->where('employees.data', fn ($rows): bool => collect($rows)->pluck('name')->all() === ['Ana López', 'Zoe Ruiz'])
             ->where('employees.data.0', [
-                'id' => $ana->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5512345678',
+                'id' => $ana->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '+525512345678',
                 'gender' => 'female', 'gender_label' => 'Mujer', 'work_center_id' => $this->office->id, 'work_center' => 'Oficinas',
                 'area' => 'Ventas', 'job_title' => 'Vendedora', 'employee_number' => 'A-1', 'deactivated_on' => null, 'deactivation_reason' => null,
                 'job_category' => '', 'job_level' => '', 'hired_on' => null, 'staff_group' => '', 'state' => '',
@@ -57,7 +57,7 @@ it('lists the active employees by name, with their center and area', function ()
             // Work centers and areas are searched on the server as they are chosen, never sent whole.
             ->missing('workCenters')
             ->missing('areas')
-            ->where('genders', [['value' => 'female', 'label' => 'Mujer'], ['value' => 'male', 'label' => 'Hombre'], ['value' => 'other', 'label' => 'Otro / prefiero no decir']]));
+            ->where('genders', [['value' => 'female', 'label' => 'Mujer'], ['value' => 'male', 'label' => 'Hombre'], ['value' => 'other', 'label' => 'Otro']]));
 });
 
 it('searches by name, email or employee number, ignoring case and accents', function (string $q, array $names): void {
@@ -102,10 +102,10 @@ it('filters by work center, area and status, together', function (): void {
 
 it('counts the active and deactivated people, the active ones without email and the centers they work in', function (): void {
     employeeIn($this->tenant, $this->plant, $this->production, ['email' => 'a@acme.mx']);
-    employeeIn($this->tenant, $this->plant, $this->sales, ['email' => null, 'mobile' => '5512345678']);
+    employeeIn($this->tenant, $this->plant, $this->sales, ['email' => null, 'mobile' => '+525512345678']);
     employeeIn($this->tenant, $this->office, $this->sales, ['email' => 'c@acme.mx']);
-    employeeIn($this->tenant, $this->office, $this->sales, ['email' => null, 'mobile' => '5587654321', 'deactivated_at' => now()]);
-    Employee::factory()->create(['email' => null, 'mobile' => '5511112222']);
+    employeeIn($this->tenant, $this->office, $this->sales, ['email' => null, 'mobile' => '+525587654321', 'deactivated_at' => now()]);
+    Employee::factory()->create(['email' => null, 'mobile' => '+525511112222']);
 
     // The counts are of the whole company: the filters narrow the list, never the tabs or the sentence above it.
     $this->actingAs($this->owner)
@@ -123,8 +123,8 @@ it('counts nothing in a company without employees', function (): void {
 
 it('lists only the people without email when asked, since the surveys go out by email', function (): void {
     employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Con Correo', 'email' => 'a@acme.mx']);
-    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Sin Correo', 'email' => null, 'mobile' => '5512345678']);
-    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Baja Sin Correo', 'email' => null, 'mobile' => '5587654321', 'deactivated_at' => now()]);
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Sin Correo', 'email' => null, 'mobile' => '+525512345678']);
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Baja Sin Correo', 'email' => null, 'mobile' => '+525587654321', 'deactivated_at' => now()]);
 
     $this->actingAs($this->owner)
         ->get(route('tenant.employees.index', ['tenant' => $this->tenant, 'without_email' => '1']))
@@ -172,8 +172,8 @@ it('answers 404 outside the company', function (): void {
 });
 
 it('finds a person by their words in any order, and by their mobile with or without spaces', function (string $q, array $names): void {
-    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '5512345678', 'employee_number' => 'N-1']);
-    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Juan Gómez', 'email' => 'jg@acme.mx', 'mobile' => '5598765432', 'employee_number' => 'N-2']);
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Juan Pérez', 'email' => 'jp@acme.mx', 'mobile' => '+525512345678', 'employee_number' => 'N-1']);
+    employeeIn($this->tenant, $this->plant, $this->production, ['name' => 'Juan Gómez', 'email' => 'jg@acme.mx', 'mobile' => '+525598765432', 'employee_number' => 'N-2']);
 
     $this->actingAs($this->owner)
         ->get(route('tenant.employees.index', ['tenant' => $this->tenant, 'q' => $q]))
@@ -185,6 +185,9 @@ it('finds a person by their words in any order, and by their mobile with or with
     'accents' => ['Pérez', ['Juan Pérez']],
     'mobile with spaces' => ['55 1234 5678', ['Juan Pérez']],
     'mobile without spaces' => ['5512345678', ['Juan Pérez']],
+    'mobile with its +52' => ['+52 55 1234 5678', ['Juan Pérez']],
+    'mobile with the old 1 of mobiles' => ['+52 1 55 1234 5678', ['Juan Pérez']],
+    'mobile with the old 044' => ['044 55 1234 5678', ['Juan Pérez']],
     'a piece of the mobile, four digits at least' => ['2345', ['Juan Pérez']],
     'too few digits are not a mobile' => ['123', []],
     'only spaces filters nothing' => ['   ', ['Juan Gómez', 'Juan Pérez']],

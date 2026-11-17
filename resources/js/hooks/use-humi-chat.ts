@@ -9,20 +9,16 @@ import {
     type Rating,
     type Thumb,
 } from '@/lib/assistant/api';
-import { DefaultChatTransport, useChat } from '@/lib/assistant/ai-client';
+import { useChat } from '@/lib/assistant/ai-client';
 import {
     chatFailure,
     reportableFailure,
     type ChatFailure,
 } from '@/lib/assistant/chat-errors';
-import {
-    chatContext,
-    lastUserText,
-    type PageContext,
-} from '@/lib/assistant/chat-request';
+import { chatContext, type PageContext } from '@/lib/assistant/chat-request';
 import { uiMessagesFrom } from '@/lib/assistant/history';
 import { reportError } from '@/lib/error-tracking';
-import { xsrfToken } from '@/lib/assistant/xsrf';
+import { humiTransport } from '@/lib/assistant/transport';
 import assistant from '@/routes/tenant/assistant';
 
 export type HumiChat = {
@@ -30,6 +26,8 @@ export type HumiChat = {
     /** submitted and streaming while an answer comes; ready and error otherwise. */
     status: 'submitted' | 'streaming' | 'ready' | 'error';
     failure: ChatFailure | null;
+    /** The id of the last response of the server, to quote to support when an answer failed. */
+    requestId: string | null;
     ratings: Record<string, Rating>;
     /** Whether the server already knows this answer, so a thumb can name it. */
     canRate: (messageId: string) => boolean;
@@ -56,19 +54,9 @@ export function useHumiChat(
     const [answerIds, setAnswerIds] = useState<Record<string, string>>({});
     const [ratings, setRatings] = useState<Record<string, Rating>>({});
 
+    const [requestId, setRequestId] = useState<string | null>(null);
     const transport = useMemo(
-        () =>
-            new DefaultChatTransport<UIMessage>({
-                api: assistant.chat.url(slug),
-                credentials: 'same-origin',
-                headers: () => ({
-                    'X-XSRF-TOKEN': xsrfToken(document.cookie) ?? '',
-                }),
-                // Only the last message goes: the conversation and the page come with each send, the history stays on the server.
-                prepareSendMessagesRequest: ({ messages, body }) => ({
-                    body: { ...body, message: lastUserText(messages) },
-                }),
-            }),
+        () => humiTransport(assistant.chat.url(slug), setRequestId),
         [slug],
     );
 
@@ -129,6 +117,7 @@ export function useHumiChat(
         messages: chat.messages,
         status: chat.status,
         failure: chat.error === undefined ? null : chatFailure(chat.error),
+        requestId,
         ratings,
         canRate: (messageId) => answerIds[messageId] !== undefined,
         send: (text) => void chat.sendMessage({ text }, { body: context }),

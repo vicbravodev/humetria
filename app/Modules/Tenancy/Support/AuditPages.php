@@ -253,6 +253,12 @@ final class AuditPages
         'quantity' => 'Cantidad',
         'period_start' => 'Inicio del periodo',
         'account_id' => 'Cuenta de cobro',
+        'mode' => 'Modo',
+        'recorded_on' => 'Fecha del avance',
+        'with_evidence' => 'Con evidencia',
+        'item_id' => 'Fila del programa',
+        'changes' => 'Cambios',
+        'copies' => 'Copias',
         'starts_on' => 'Empieza el',
         'ends_on' => 'Termina el',
         'profile_before' => 'Perfil antes',
@@ -364,8 +370,8 @@ final class AuditPages
                 ->orWhere(fn (Builder $query) => $query->whereNull('tenant_id')->where(fn (Builder $query) => $query
                     ->whereRaw("metadata->>'tenant_id' = ?", [$filters['company']])
                     ->orWhere(fn (Builder $query) => $query->where('subject_type', (new Tenant)->getMorphClass())->where('subject_id', $filters['company']))))))
-            ->when($filters['from'] !== '', fn (Builder $query) => $query->where('created_at', '>=', CarbonImmutable::parse($filters['from'], $timezone)->startOfDay()))
-            ->when($filters['to'] !== '', fn (Builder $query) => $query->where('created_at', '<=', CarbonImmutable::parse($filters['to'], $timezone)->endOfDay()))
+            ->when($filters['from'] !== '', fn (Builder $query) => $query->where('created_at', '>=', CarbonImmutable::parse($filters['from'], $timezone)->startOfDay()->utc()))
+            ->when($filters['to'] !== '', fn (Builder $query) => $query->where('created_at', '<=', CarbonImmutable::parse($filters['to'], $timezone)->endOfDay()->utc()))
             ->when($filters['q'] !== '', fn (Builder $query) => $query->whereIn('actor_id', User::query()
                 ->select('id')
                 ->where('email', 'ilike', '%'.addcslashes($filters['q'], '\\%_').'%')));

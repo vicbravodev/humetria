@@ -5,7 +5,7 @@ import type { Rating } from '@/lib/assistant/api';
 import { cn } from '@/lib/utils';
 
 const BUTTON =
-    'flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring';
+    'flex size-11 items-center justify-center rounded-md xl:size-8 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring';
 
 /** What can be done with a finished answer: copy it, give it a thumb up or down, or ask again. */
 export default function HumiMessageActions({
@@ -25,7 +25,7 @@ export default function HumiMessageActions({
     const [copied, setCopied] = useState(false);
 
     return (
-        <div className="-ml-2 flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5">
             <button
                 type="button"
                 aria-label={copied ? 'Copiado' : 'Copiar respuesta'}
@@ -42,7 +42,7 @@ export default function HumiMessageActions({
                 <>
                     <button
                         type="button"
-                        aria-label="Respuesta útil"
+                        aria-label="Me sirvió"
                         aria-pressed={rating === 'up'}
                         className={cn(
                             BUTTON,
@@ -54,7 +54,7 @@ export default function HumiMessageActions({
                     </button>
                     <button
                         type="button"
-                        aria-label="Respuesta no útil"
+                        aria-label="No me sirvió"
                         aria-pressed={rating === 'down'}
                         className={cn(
                             BUTTON,
@@ -69,7 +69,7 @@ export default function HumiMessageActions({
             {onRegenerate !== null && (
                 <button
                     type="button"
-                    aria-label="Volver a responder"
+                    aria-label="Responder de nuevo"
                     className={BUTTON}
                     onClick={onRegenerate}
                 >

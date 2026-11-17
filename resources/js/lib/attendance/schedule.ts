@@ -190,42 +190,6 @@ export function restLabel(minutes: WeekMinutes): string {
         : `${rest.slice(0, -1).join(', ')} y ${rest.at(-1) ?? ''} de descanso`;
 }
 
-export type ScheduleTemplate = {
-    id: string;
-    label: string;
-    shift: WorkSchedule['shiftType'];
-    minutes: WeekMinutes;
-};
-
-const weekOf = (daily: number, days: number): WeekMinutes =>
-    Object.fromEntries(
-        WEEKDAYS.map(({ day }, index) => [day, index < days ? daily : 0]),
-    );
-
-/** Where a new schedule can start from: the common weeks, the night one at the daily limit the server sends. */
-export function scheduleTemplates(maximum: WeeklyMaximum): ScheduleTemplate[] {
-    return [
-        {
-            id: 'mon_fri',
-            label: 'Lunes a viernes',
-            shift: 'day',
-            minutes: weekOf(480, 5),
-        },
-        {
-            id: 'mon_sat',
-            label: 'Lunes a sábado',
-            shift: 'day',
-            minutes: weekOf(480, 6),
-        },
-        {
-            id: 'night',
-            label: 'Turno nocturno',
-            shift: 'night',
-            minutes: weekOf(maximum.dailyMinutes.night, 5),
-        },
-    ];
-}
-
 export function chosenText(count: number): string {
     return count === 1 ? '1 persona elegida' : `${count} personas elegidas`;
 }

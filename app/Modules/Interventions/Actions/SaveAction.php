@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Interventions\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Interventions\Data\ActionData;
 use App\Modules\Interventions\Enums\ActionKind;
@@ -16,6 +17,7 @@ use App\Modules\Interventions\Models\ProgramItem;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\Members;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,11 +27,15 @@ use Illuminate\Validation\ValidationException;
  * HR adds an action to a row of the Programa or edits one (num. 8.4 and 8.5). It is for the whole work center or for areas
  * Results shows (criterio C-33): an area that is hidden, unknown or another company's is refused with one message, so it
  * reveals nothing. The third level is clinical care and names the professional who gives it (criterio C-32). A cancelled
- * action is not edited (criterio C-35). What HR wrote never reaches the log.
+ * action is not edited (criterio C-35). What HR wrote never reaches the log; the audit trail keeps what an edit changed of
+ * the dates, the responsible and the words, so moving the due day of an overdue action leaves a trace.
  */
 final readonly class SaveAction
 {
-    public function __construct(private CurrentTenant $tenant, private Members $members, private CampaignRecords $campaigns, private RiskResults $results) {}
+    /** What an edit keeps in the audit trail, before and after. */
+    private const array TRACKED = ['title', 'description', 'starts_on', 'due_on', 'responsible_name', 'responsible_user_id'];
+
+    public function __construct(private CurrentTenant $tenant, private Members $members, private CampaignRecords $campaigns, private RiskResults $results, private RecordAudit $audit) {}
 
     /**
      * @throws ValidationException
@@ -54,6 +60,7 @@ final readonly class SaveAction
 
         return DB::transaction(function () use ($data, $existing, $item, $program, $userId, $responsibleName, $responsibleUserId): ProgramAction {
             $action = $existing ?? new ProgramAction;
+            $before = self::tracked($action);
 
             if ($existing === null) {
                 $action->fill(['tenant_id' => $this->tenant->id(), 'program_id' => $program->id, 'item_id' => $item->id, 'status' => ActionStatus::Planned, 'created_by' => $userId]);
@@ -90,9 +97,50 @@ final readonly class SaveAction
                 'subjects' => $data->subjects->value,
                 'created' => $existing === null,
             ]);
+            $this->audit->handle('interventions.action_saved', $action, [
+                'action_id' => $action->id,
+                'program_id' => $program->id,
+                'created' => $existing === null,
+                'changes' => $existing === null ? [] : self::changes($before, self::tracked($action)),
+            ]);
 
             return $action;
         });
+    }
+
+    /**
+     * The tracked fields of an action as the trail writes them: days as Y-m-d.
+     *
+     * @return array<string, string|int|null>
+     */
+    private static function tracked(ProgramAction $action): array
+    {
+        $values = [];
+
+        foreach (self::TRACKED as $field) {
+            $value = $action->getAttribute($field);
+            $values[$field] = $value instanceof CarbonInterface ? $value->toDateString() : (is_string($value) || is_int($value) ? $value : null);
+        }
+
+        return $values;
+    }
+
+    /**
+     * @param  array<string, string|int|null>  $before
+     * @param  array<string, string|int|null>  $after
+     * @return array<string, array{from: string|int|null, to: string|int|null}>
+     */
+    private static function changes(array $before, array $after): array
+    {
+        $changes = [];
+
+        foreach ($after as $field => $value) {
+            if ($before[$field] !== $value) {
+                $changes[$field] = ['from' => $before[$field], 'to' => $value];
+            }
+        }
+
+        return $changes;
     }
 
     /**

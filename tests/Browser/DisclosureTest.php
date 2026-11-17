@@ -8,6 +8,8 @@ use App\Modules\Disclosure\Actions\StartPolicyDraft;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 
+require_once __DIR__.'/poster-helpers.php';
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -492,8 +494,53 @@ it('shows the poster of a center with the address and its QR', function (bool $d
         ->assertDontSee('También ahí puede presentar una queja')
         ->assertSee('Imprimir el de Planta Querétaro')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth')
-        ->assertScript('() => document.querySelector("img[alt^=\'Código QR\']").naturalWidth > 0', true);
+        ->assertScript('() => document.querySelector("img[alt^=\'Código QR\']").naturalWidth > 0', true)
+        ->assertScript(posterSheetIsPaper(), true)
+        ->assertScript(posterAddressIsWhole(), true);
 })->with($looks);
+
+// Sección 10 del pulido: the selector says what «all the centers» prints and what choosing one does.
+it('says what the poster of all the centers prints and what choosing a center changes', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id);
+
+    visit("{$url}/disclosure/page/poster")
+        ->assertSee('Sin centro elegido, el cartel sale sin nombre de centro y su QR lleva a la lista de tus centros.')
+        ->assertSee('Al elegir uno, lleva su nombre y su QR abre directo su página.')
+        ->assertSee('Imprime en tamaño carta, al 100 %')
+        ->assertScript(posterSheetIsPaper(), true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('changes the center of the poster without reloading the whole page', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro']);
+    workIn($tenant);
+    resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id);
+
+    visit("{$url}/disclosure/page/poster")
+        ->assertScript('() => { window.posterKept = true; return true; }', true)
+        ->click('#poster-center')
+        ->type('[role="combobox"][aria-controls="poster-center-options"]', 'Querétaro')
+        ->assertSee('Planta Querétaro')
+        ->keys('[role="combobox"][aria-controls="poster-center-options"]', 'Enter')
+        ->assertSee('Imprimir el de Planta Querétaro')
+        ->assertScript('() => window.posterKept === true', true);
+});
+
+it('prints the poster alone, at the full size of the sheet', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    workIn($tenant);
+    resolve(App\Modules\Disclosure\Actions\IssuePageLink::class)->handle(App\Models\User::query()->firstOrFail()->id);
+
+    $page = visit("{$url}/disclosure/page/poster")->inDarkMode()->assertSee('Lo que la empresa le informa sobre su bienestar');
+
+    emulatePrint($page)->assertScript(posterPrintsAlone(), true);
+});
 
 it('prints the dossier of the disclosure of a center', function (bool $dark, bool $mobile): void {
     $url = signInToPanel();

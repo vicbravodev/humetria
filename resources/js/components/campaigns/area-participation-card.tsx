@@ -7,7 +7,8 @@ import type { AreaParticipation } from '@/types';
 
 /**
  * How many answered in each area, never what (pantalla Eval-Activa), and a reminder only to the area that lags most:
- * the same reminder as the list's, narrowed to that area.
+ * the same reminder as the list's, narrowed to that area. Top to bottom (Card.md): the heading, the bars as wide as the
+ * card, the reminder at the foot.
  */
 export default function AreaParticipationCard({
     route,
@@ -25,7 +26,7 @@ export default function AreaParticipationCard({
     return (
         <section
             aria-labelledby="areas-title"
-            className="grid gap-x-10 gap-y-6 card p-6 lg:grid-cols-3"
+            className="flex flex-col gap-6 card p-6"
         >
             <div className="flex flex-col gap-2">
                 <h2
@@ -40,31 +41,8 @@ export default function AreaParticipationCard({
                     {lagging !== null &&
                         ` ${lagging.name} es el área que más falta.`}
                 </p>
-                {lagging !== null && (
-                    <ResendFilteredDialog
-                        campaignId={route[1]}
-                        filters={{
-                            status: 'pending',
-                            guide,
-                            area: { value: lagging.id, label: lagging.name },
-                            q: '',
-                        }}
-                        count={lagging.pending}
-                        trigger={
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="mt-1 w-fit"
-                            >
-                                <Send aria-hidden="true" />
-                                Recordar solo a {lagging.name} ·{' '}
-                                {lagging.pending}
-                            </Button>
-                        }
-                    />
-                )}
             </div>
-            <ul className="flex flex-col gap-4 lg:col-span-2">
+            <ul className="flex flex-col gap-4">
                 {areas.map((area) => (
                     <li key={area.id} className="flex flex-col gap-1.5">
                         <div className="flex justify-between gap-3 text-sm">
@@ -87,6 +65,24 @@ export default function AreaParticipationCard({
                     </li>
                 ))}
             </ul>
+            {lagging !== null && (
+                <ResendFilteredDialog
+                    campaignId={route[1]}
+                    filters={{
+                        status: 'pending',
+                        guide,
+                        area: { value: lagging.id, label: lagging.name },
+                        q: '',
+                    }}
+                    count={lagging.pending}
+                    trigger={
+                        <Button variant="outline" size="sm" className="w-fit">
+                            <Send aria-hidden="true" />
+                            Recordar solo a {lagging.name} · {lagging.pending}
+                        </Button>
+                    }
+                />
+            )}
         </section>
     );
 }

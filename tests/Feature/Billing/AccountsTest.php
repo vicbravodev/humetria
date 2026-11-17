@@ -70,7 +70,7 @@ it('creates an account, logs it and audits it without personal data', function (
         ->and($account->cfdi_use)->toBe('G03')
         ->and($account->contact_name)->toBe('Laura Pérez')
         ->and($account->contact_email)->toBe('laura@consultores.mx')
-        ->and($account->contact_phone)->toBe('55 1234 5678')
+        ->and($account->contact_phone)->toBe('+525512345678')
         ->and($account->notes)->toBe('Paga por SPEI los primeros cinco días.');
 
     Log::shouldHaveReceived('info')->once()->with('billing.account_created', ['account_id' => $account->id, 'kind' => 'consultant']);
@@ -85,6 +85,21 @@ it('normalizes the RFC and trims the text before checking it', function (): void
         ->assertSessionHasNoErrors();
 
     expect(BillingAccount::query()->sole())->rfc->toBe('CAS010101AB1')->legal_name->toBe('Consultores')->contact_name->toBe('Laura');
+});
+
+it('keeps the contact phone in E.164, of Mexico or of another country', function (string $typed, string $stored): void {
+    $this->actingAs(superadmin())->post(route('billing.accounts.store'), accountInput(['contact_phone' => $typed]))
+        ->assertSessionHasNoErrors();
+
+    expect(BillingAccount::query()->sole()->contact_phone)->toBe($stored);
+})->with([
+    'Mexican, as typed' => ['(55) 1234-5678', '+525512345678'],
+    'of another country' => ['+34 612 345 678', '+34612345678'],
+]);
+
+it('says what is wrong with a contact phone that is no phone', function (): void {
+    $this->actingAs(superadmin())->post(route('billing.accounts.store'), accountInput(['contact_phone' => '55 1234']))
+        ->assertSessionHasErrors(['contact_phone' => 'Revisa el teléfono del contacto: no es un número válido para el país elegido.']);
 });
 
 it('keeps empty optional fields as nothing', function (): void {
@@ -118,6 +133,8 @@ it('refuses what the database would refuse, with a message', function (array $ov
     'a CFDI use that is not in the SAT catalog' => [['cfdi_use' => 'X99'], 'cfdi_use'],
     'a CFDI use in lowercase' => [['cfdi_use' => 'g03'], 'cfdi_use'],
     'notes that are too long' => [['notes' => str_repeat('a', 2001)], 'notes'],
+    'a contact phone that is no phone' => [['contact_phone' => 'oficina 12'], 'contact_phone'],
+    'a contact phone too short' => [['contact_phone' => '55 1234'], 'contact_phone'],
 ]);
 
 it('refuses an RFC another account has, and lets an account keep its own on edit', function (): void {

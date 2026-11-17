@@ -31,7 +31,7 @@ export default function SeatingIndex({
     return (
         <>
             <Head title="Ley Silla" />
-            <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-10 px-4 py-6 md:px-12 md:py-10">
+            <div className="flex w-full flex-col gap-10 px-4 py-6 md:px-10 md:py-10">
                 <header className="flex flex-wrap items-end justify-between gap-4">
                     <div className="flex max-w-[760px] flex-col gap-2">
                         <h1 className="text-3xl leading-10 font-semibold tracking-[-0.015em]">

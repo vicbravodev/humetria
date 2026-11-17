@@ -9,6 +9,8 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Pest\Browser\Api\AwaitableWebpage;
 
+require_once __DIR__.'/form-sheet-helpers.php';
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -27,9 +29,9 @@ function acmeWithEmployees(bool $employees = true): Tenant
     $sales = Area::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Ventas']);
 
     if ($employees) {
-        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $production->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '5512345678']);
+        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $production->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx', 'mobile' => '+525512345678']);
         Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $office->id, 'area_id' => $sales->id, 'name' => 'Beto Díaz', 'email' => 'beto@acme.mx']);
-        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $sales->id, 'name' => 'Carla Ruiz', 'email' => null, 'mobile' => '5587654321']);
+        Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'area_id' => $sales->id, 'name' => 'Carla Ruiz', 'email' => null, 'mobile' => '+525587654321']);
     }
 
     return $tenant;
@@ -109,7 +111,7 @@ it('adds an employee, creating their area as it is typed', function (): void {
     visit('/admin/acme/employees')
         ->click('Dar de alta')
         ->type('name', 'Diego Luna')
-        ->type('mobile', '55 8765 4321')
+        ->type('#employee-mobile', '5587654321')
         ->click('#employee-work_center_id')
         ->type('[role="combobox"][aria-controls="employee-work_center_id-options"]', 'planta')
         ->assertSeeIn('#employee-work_center_id-options', 'Planta')
@@ -125,6 +127,8 @@ it('adds an employee, creating their area as it is typed', function (): void {
         ->assertSee('Diego Luna')
         ->assertSee('Logística')
         ->assertNoJavaScriptErrors();
+
+    expect(Employee::query()->withoutGlobalScopes()->where('name', 'Diego Luna')->sole()->mobile)->toBe('+525587654321');
 });
 
 it('sets the direct manager of an employee from their panel', function (): void {
@@ -143,6 +147,13 @@ it('sets the direct manager of an employee from their panel', function (): void 
         ->assertSee('Reporta a Carla Ruiz')
         ->assertNoJavaScriptErrors();
 });
+
+it('opens the employee form in the side panel, the whole width of a phone', function (bool $mobile): void {
+    acmeWithEmployees();
+    $page = $mobile ? visit('/admin/acme/employees')->on()->mobile() : visit('/admin/acme/employees');
+
+    assertFormSheet($page->assertNoJavaScriptErrors()->click('Dar de alta'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('passes the checks with the employee panel open', function (bool $dark, bool $mobile): void {
     acmeWithEmployees();
@@ -246,4 +257,72 @@ it('offers no people in the ⌘K palette to whoever cannot manage the organizati
         ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
         ->type('#command-search', 'ló')
         ->assertDontSee('Ana López');
+});
+
+it('marks the chosen gender with the accent, in one line per choice', function (bool $dark): void {
+    acmeWithEmployees(employees: false);
+
+    visitPage('organization/employees', '/admin/acme/employees', $dark, reach: fn (AwaitableWebpage $page) => $page
+        ->click('Dar de alta')
+        ->click('Hombre')
+        ->assertSee('Elige «Otro» si prefieres no decirlo.')
+        ->assertScript(<<<'JS'
+            () => {
+                const probe = document.createElement('span');
+                probe.style.color = 'var(--primary)';
+                document.body.append(probe);
+                const primary = getComputedStyle(probe).color;
+                probe.remove();
+                const choices = Array.from(document.querySelectorAll('fieldset:has(input[name="gender"]) label'));
+                const chosen = choices.find((label) => label.querySelector('input').checked);
+                const style = getComputedStyle(chosen);
+
+                return choices.length === 3
+                    && style.borderTopColor === primary
+                    && style.borderTopWidth === '2px'
+                    && Number(style.fontWeight) >= 500
+                    && new Set(choices.map((label) => Math.round(label.getBoundingClientRect().height))).size === 1
+                    && choices.every((label) => label.getBoundingClientRect().height <= 46);
+            }
+            JS, true));
+})->with(['light' => false, 'dark' => true]);
+
+it('keeps the work center and the area apart and as wide as each other when the center has a long name', function (): void {
+    $tenant = acmeWithEmployees();
+    WorkCenter::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('name', 'Planta Norte')
+        ->update(['name' => 'Centro de distribución y logística del Bajío, Querétaro Norte']);
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Editar')
+        ->assertSee('Dónde trabaja')
+        ->assertScript(<<<'JS'
+            () => {
+                const center = document.querySelector('#employee-work_center_id').getBoundingClientRect();
+                const area = document.querySelector('#employee-area').getBoundingClientRect();
+                return area.left - center.right >= 15 && Math.abs(area.width - center.width) <= 1;
+            }
+            JS, true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps a long choice of a Combobox from widening its column in a row of equal columns', function (): void {
+    acmeWithEmployees();
+
+    visit('/admin/acme/employees')
+        ->click('[aria-label="Acciones de Ana López"]')->click('Editar')
+        ->assertSee('Dónde trabaja')
+        // Wherever a screen puts the trigger in a row of equal columns, a long choice must not widen its column.
+        ->assertScript(<<<'JS'
+            () => {
+                const trigger = document.querySelector('#employee-work_center_id');
+                trigger.querySelector('span').textContent = 'Centro de distribución y logística del Bajío, Querétaro Norte';
+                const row = document.createElement('div');
+                row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;width:400px';
+                trigger.parentElement.insertBefore(row, trigger);
+                row.append(trigger, document.createElement('span'));
+                const fits = trigger.getBoundingClientRect().width <= 200;
+                row.replaceWith(trigger);
+                return fits;
+            }
+            JS, true);
 });

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { centerFacts, centerState } from '@/lib/attendance/center-state';
+import {
+    centerFacts,
+    centerState,
+    fieldCentersLine,
+} from '@/lib/attendance/center-state';
 
 describe('centerState', () => {
     it('is not ready without a zone, whatever its screens: nobody marks with their location', () => {
@@ -32,7 +36,22 @@ describe('centerState', () => {
         });
     });
 
+    it('is ready in the field with neither a zone nor a screen: its people mark from their phone', () => {
+        expect(
+            centerState({ zones: 0, screens: 0, mode: 'field' }, true),
+        ).toEqual({
+            ready: true,
+            label: 'En campo',
+            variant: 'success',
+            problem: null,
+            action: null,
+        });
+    });
+
     it('is ready with a zone and a screen', () => {
+        expect(
+            centerState({ zones: 1, screens: 1, mode: 'company' }, true).label,
+        ).toBe('Listo para marcar');
         expect(centerState({ zones: 3, screens: 1 }, true).ready).toBe(true);
     });
 });
@@ -44,6 +63,20 @@ describe('centerFacts', () => {
         );
         expect(centerFacts({ people: 1, zones: 1, screens: 1 })).toBe(
             '1 persona · 1 zona · 1 pantalla activa',
+        );
+    });
+});
+
+describe('fieldCentersLine', () => {
+    it('says how many centers mark in the field instead of by the policy, in the singular when it is one', () => {
+        expect(fieldCentersLine(0)).toBe(
+            'Todos tus centros marcan igual que la empresa.',
+        );
+        expect(fieldCentersLine(1)).toBe(
+            '1 centro marca en campo: ahí no se piden zonas ni QR, y lo demás de esta política le aplica igual.',
+        );
+        expect(fieldCentersLine(3)).toBe(
+            '3 centros marcan en campo: ahí no se piden zonas ni QR, y lo demás de esta política les aplica igual.',
         );
     });
 });

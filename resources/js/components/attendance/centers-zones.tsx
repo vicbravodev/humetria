@@ -1,6 +1,6 @@
 import CenterCard from '@/components/attendance/center-card';
 import Pagination from '@/components/humetria/pagination';
-import type { OverviewCenter, Paginated } from '@/types';
+import type { ModedCenter, Paginated } from '@/types';
 
 /** The centers in use, a page at a time, each with whether its people can mark in it and what it lacks. */
 export default function CentersZones({
@@ -8,7 +8,7 @@ export default function CentersZones({
     week,
     requiresQr,
 }: {
-    centers: Paginated<OverviewCenter>;
+    centers: Paginated<ModedCenter>;
     week: string;
     requiresQr: boolean;
 }) {
@@ -27,7 +27,8 @@ export default function CentersZones({
                 </h2>
                 <p className="text-sm text-muted-foreground">
                     Las personas marcan dentro de una zona de su centro o con el
-                    código de su pantalla.
+                    código de su pantalla; en un centro en campo, desde su
+                    celular donde estén.
                 </p>
             </div>
             <div className="grid gap-4 min-[1100px]:grid-cols-2">

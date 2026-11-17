@@ -37,7 +37,7 @@ export default function Procedure({
     return (
         <>
             <Head title="Cómo se atiende" />
-            <div className="mx-auto flex w-full max-w-[880px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full max-w-[880px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <ComplaintsHeader
                     eyebrow="NOM-035 · numeral 8.1 b"
                     title="Cómo se atiende"

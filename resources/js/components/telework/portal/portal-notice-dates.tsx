@@ -23,6 +23,8 @@ export default function PortalNoticeDates({
                     id={`${kind}-written_on`}
                     name="written_on"
                     defaultValue={today}
+                    prompt="Elija una fecha"
+                    voice="usted"
                     invalid={errors['written_on'] !== undefined}
                     describedBy={`${kind}-written_on-error`}
                 />
@@ -39,6 +41,8 @@ export default function PortalNoticeDates({
                     id={`${kind}-occurred_on`}
                     name="occurred_on"
                     defaultValue={today}
+                    prompt="Elija una fecha"
+                    voice="usted"
                     invalid={errors['occurred_on'] !== undefined}
                     describedBy={`${kind}-occurred_on-error`}
                 />

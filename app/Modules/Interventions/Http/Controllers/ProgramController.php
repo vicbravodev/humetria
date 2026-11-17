@@ -15,6 +15,7 @@ use App\Modules\Interventions\Models\Program;
 use App\Modules\Interventions\Support\ProgramPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,6 +26,13 @@ use Inertia\Response;
  */
 final class ProgramController extends Controller
 {
+    /**
+     * Opening the Programa is audited once per person and Programa in this window: every change reloads the page, and the
+     * trail should hold the changes, not the reloads. Half an hour still tells a visit of the morning from one of the
+     * afternoon.
+     */
+    private const int VIEW_WINDOW_MINUTES = 30;
+
     public function __construct(private readonly CampaignRecords $campaigns) {}
 
     public function show(Request $request, mixed $tenant, string $campaign, ProgramPages $pages, RecordAudit $audit): Response
@@ -32,7 +40,9 @@ final class ProgramController extends Controller
         Gate::authorize('view-interventions');
         $found = $this->find($campaign);
         $program = Program::query()->where('campaign_id', $found->id)->first();
-        $audit->handle('interventions.program_viewed', metadata: ['campaign_id' => $found->id]);
+        if (Cache::add("interventions.program_viewed:{$request->user()?->id}:{$found->id}", true, now()->addMinutes(self::VIEW_WINDOW_MINUTES))) {
+            $audit->handle('interventions.program_viewed', metadata: ['campaign_id' => $found->id]);
+        }
 
         $item = $request->query('item');
         $status = $request->query('status');

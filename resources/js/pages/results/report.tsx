@@ -50,7 +50,7 @@ export default function Report({
                 form={form}
                 durations={durations}
             />
-            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-12 px-4 pt-6 pb-24 md:px-6 print:p-0">
+            <div className="flex w-full max-w-[1120px] flex-col gap-12 px-4 pt-6 pb-24 md:px-10 print:p-0">
                 <ReportPending report={report}>
                     {form === null ? (
                         <span className="text-sm">

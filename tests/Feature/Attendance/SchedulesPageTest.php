@@ -287,3 +287,32 @@ describe('saving the same schedule for several people', function (): void {
         expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->exists())->toBeFalse();
     });
 });
+
+describe('copying the schedule of another person', function (): void {
+    it('finds, by name, the people who have a schedule, each with it', function (): void {
+        $this->actingAs($this->hr);
+        AttendanceSchedule::query()->where('employee_id', $this->ana->id)->update(['starts_by_weekday' => [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => null, 7 => null]]);
+
+        $this->getJson(route('tenant.attendance.schedules.options', ['acme']))->assertOk()->assertExactJson([
+            ['value' => $this->ana->id, 'label' => 'Ana López', 'schedule' => ['shiftType' => 'day', 'workMode' => 'onsite', 'minutes' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0], 'starts' => [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => null, 7 => null]]],
+            ['value' => $this->carla->id, 'label' => 'Carla Ruiz', 'schedule' => ['shiftType' => 'night', 'workMode' => 'remote', 'minutes' => [1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 420, 7 => 0], 'starts' => null]],
+        ]);
+        $this->getJson(route('tenant.attendance.schedules.options', ['acme', 'q' => 'carla']))->assertOk()->assertJsonPath('*.label', ['Carla Ruiz']);
+    });
+
+    it('leaves out whoever has no schedule, and the people of another company', function (): void {
+        $this->actingAs($this->hr);
+        $other = Tenant::factory()->create();
+        $stranger = EmployeeFactory::new()->create(['tenant_id' => $other->id, 'work_center_id' => WorkCenter::factory()->for($other)->create()->id, 'name' => 'Ana Extraña']);
+        AttendanceSchedule::factory()->create(['tenant_id' => $other->id, 'employee_id' => $stranger->id]);
+
+        $this->getJson(route('tenant.attendance.schedules.options', ['acme', 'q' => 'ana']))->assertOk()->assertJsonPath('*.label', ['Ana López']);
+        $this->getJson(route('tenant.attendance.schedules.options', ['acme', 'q' => 'bob']))->assertOk()->assertExactJson([]);
+    });
+
+    it('is only for whoever sets schedules', function (): void {
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+
+        $this->getJson(route('tenant.attendance.schedules.options', ['acme']))->assertForbidden();
+    });
+});

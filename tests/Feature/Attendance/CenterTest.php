@@ -8,6 +8,7 @@ use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use App\Modules\Attendance\Http\Requests\ZoneRequest;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
@@ -136,6 +137,14 @@ describe('the center', function (): void {
 
         $this->get(attendanceCenterUrl($this->plant), $within)->assertOk()->assertJsonPath('component', 'attendance/center')->assertJsonPath('flash.toast.message', 'Zona guardada.');
         $this->get(attendanceCenterUrl($this->plant), $within)->assertOk()->assertJsonMissingPath('flash.toast');
+    });
+
+    it('tells how its people mark: as the company says, or in the field', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'company'));
+        AttendanceCenterMode::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+        $this->get(attendanceCenterUrl($this->plant))->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'field'));
     });
 
     it('shows a center without zones as such', function (): void {

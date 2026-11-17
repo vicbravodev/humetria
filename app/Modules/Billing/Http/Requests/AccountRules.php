@@ -7,6 +7,7 @@ namespace App\Modules\Billing\Http\Requests;
 use App\Modules\Billing\Enums\AccountKind;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Support\SatCatalogs;
+use App\Support\PhoneNumber;
 use Illuminate\Validation\Rule;
 
 /**
@@ -32,13 +33,14 @@ final class AccountRules
             'cfdi_use' => ['nullable', 'string', Rule::in(SatCatalogs::codes(SatCatalogs::CFDI_USES))],
             'contact_name' => ['required', 'string', 'max:120', self::SINGLE_LINE],
             'contact_email' => ['required', 'string', 'email', 'max:255'],
-            'contact_phone' => ['nullable', 'string', 'max:30', self::SINGLE_LINE],
+            'contact_phone' => ['nullable', 'string', new PhoneNumber],
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
     /**
-     * What to validate: the RFC without spaces and in capitals, the text trimmed, and an empty optional field as null.
+     * What to validate: the RFC without spaces and in capitals, the phone in E.164 (as typed when it is none, for its
+     * rule to reject), the text trimmed, and an empty optional field as null.
      *
      * @param  array<array-key, mixed>  $input
      * @return array<array-key, mixed>
@@ -54,6 +56,10 @@ final class AccountRules
 
         if (is_string($normalized['rfc'] ?? null)) {
             $normalized['rfc'] = mb_strtoupper(preg_replace('/\s+/u', '', $normalized['rfc']) ?? '');
+        }
+
+        if (is_string($normalized['contact_phone'] ?? null)) {
+            $normalized['contact_phone'] = PhoneNumber::e164($normalized['contact_phone']) ?? $normalized['contact_phone'];
         }
 
         return $normalized;

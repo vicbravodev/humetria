@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import Initials from '@/components/humetria/initials';
+import PosterQr from '@/components/humetria/poster-qr';
 
 /**
  * The letter sheet that is printed and hung (board V4-Carteles; decisiones A16 y D6: print CSS, never a PDF): who informs and
@@ -26,7 +27,7 @@ export default function PosterSheet({
     ];
 
     return (
-        <article className="mx-auto flex w-full max-w-[640px] flex-col gap-7 card p-8 text-card-foreground [page:certificate] md:p-11 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <>
             <header className="flex items-center justify-between gap-3">
                 <span className="flex min-w-0 items-center gap-3 font-semibold">
                     <Initials name={company} className="size-8 text-caption" />
@@ -50,19 +51,11 @@ export default function PosterSheet({
                     en su celular.
                 </p>
             </div>
-            <div className="flex flex-wrap items-center gap-6">
-                <img
-                    src={qr}
-                    alt={`Código QR de la página de ${center ?? company}`}
-                    className="size-[200px] rounded-xl border-2 border-foreground p-2"
-                />
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <p className="font-semibold">Escanee con su celular</p>
-                    <p className="font-mono text-sm break-all">
-                        {url.replace(/^https?:\/\//u, '')}
-                    </p>
-                </div>
-            </div>
+            <PosterQr
+                qr={qr}
+                alt={`Código QR de la página de ${center ?? company}`}
+                url={url}
+            />
             <ul className="flex flex-col gap-3">
                 {promises.map((promise) => (
                     <li
@@ -83,6 +76,6 @@ export default function PosterSheet({
                 hecho con{' '}
                 <span className="font-semibold text-foreground">humetría</span>
             </p>
-        </article>
+        </>
     );
 }

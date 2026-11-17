@@ -23,7 +23,7 @@ export default function TeleworkQueue({
     return (
         <>
             <Head title="Mis pendientes de la Comisión" />
-            <div className="mx-auto grid w-full max-w-[1180px] gap-8 px-4 py-6 min-[1240px]:grid-cols-[minmax(0,1fr)_320px] md:px-12 md:py-10">
+            <div className="grid w-full gap-8 px-4 py-6 min-[1240px]:grid-cols-[minmax(0,1fr)_320px] md:px-10 md:py-10">
                 <div className="flex min-w-0 flex-col gap-6">
                     <header className="flex flex-col gap-2">
                         <h1 className="text-3xl leading-10 font-semibold tracking-[-0.015em]">

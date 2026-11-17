@@ -41,7 +41,7 @@ export default function SeatingPosition({
     return (
         <>
             <Head title={`${title} · Ley Silla`} />
-            <div className="flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title={title}
                     facts={[

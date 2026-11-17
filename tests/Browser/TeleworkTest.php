@@ -39,6 +39,9 @@ use Database\Factories\Telework\WorkerNoticeFactory;
 use Database\Factories\Telework\WorkplaceFactory;
 use Database\Factories\Telework\WorkplaceReviewFactory;
 use Illuminate\Support\Facades\Storage;
+use Pest\Browser\Api\AwaitableWebpage;
+
+require_once __DIR__.'/form-sheet-helpers.php';
 
 $looks = [
     'light desktop' => [false, false],
@@ -560,6 +563,16 @@ it('shows the derived status of each workplace and the way into the roster', fun
         ->assertSee('Pasar al padrón');
 })->with($looks);
 
+it('adds a workplace, registers equipment and a training, and moves into the roster in the side panel, the whole width of a phone', function (bool $mobile): void {
+    [$url, , $teleworker] = validatedAspirant();
+    $open = fn (string $page): AwaitableWebpage => ($mobile ? visit($url.$page)->on()->mobile() : visit($url.$page))->assertNoJavaScriptErrors();
+
+    assertFormSheet($open("/telework/teleworkers/{$teleworker->id}")->press('Agregar lugar'), $mobile);
+    assertFormSheet($open("/telework/teleworkers/{$teleworker->id}")->press('Registrar equipo'), $mobile);
+    assertFormSheet($open("/telework/teleworkers/{$teleworker->id}")->press('Pasar al padrón'), $mobile);
+    assertFormSheet($open('/telework/trainings')->press('Registrar capacitación'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
+
 it('tells an aspirant without a validated workplace that they cannot join yet', function (): void {
     [$url, $center, $tenant] = teleworkerCenter();
     $employee = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id]);
@@ -582,7 +595,7 @@ it('moves an aspirant into the roster and then ends their telework', function ()
         ->type('[role="combobox"][aria-controls="roster-marital-options"]', 'solt')
         ->keys('[role="combobox"][aria-controls="roster-marital-options"]', 'Enter')
         ->fill('#roster-activities', 'Atención de clientes.')
-        ->fill('#roster-phone', '4421234567')
+        ->fill('#roster-contact_phone', '442 123 4567')
         // The home starts from the validated workplace; here it is another one.
         ->click('#roster-home-same')
         ->fill('#workplace-new-street', 'Calle Reforma')
@@ -620,7 +633,7 @@ it('takes the home from the validated workplace when the person says it is the s
         ->type('[role="combobox"][aria-controls="roster-marital-options"]', 'solt')
         ->keys('[role="combobox"][aria-controls="roster-marital-options"]', 'Enter')
         ->fill('#roster-activities', 'Atención de clientes.')
-        ->fill('#roster-phone', '4421234567')
+        ->fill('#roster-contact_phone', '442 123 4567')
         ->fill('#roster-no_equipment_reason', 'Usa su propio equipo.')
         ->press('Guardar y pasar al padrón')
         ->assertSee('En el padrón de teletrabajo')
@@ -739,7 +752,7 @@ it('records paper acknowledgements of the people ticked, from the page', functio
         ->click('[aria-label="Elegir a Beto Soto"]')
         ->click('button:has-text("Registrar acuses en papel")')
         // The date starts on today as the server counts it, whatever the browser's clock says.
-        ->assertSeeIn('#ack-date', CarbonImmutable::now(config()->string('app.display_timezone'))->locale('es')->isoFormat('D [de] MMMM [de] YYYY'))
+        ->assertValue('#ack-date', CarbonImmutable::now(config()->string('app.display_timezone'))->format('d/m/Y'))
         ->fill('#ack-note', 'Hoja de firmas 3')
         ->press('Registrar')
         ->assertSee('Se registraron 2 acuses.')
@@ -930,6 +943,18 @@ it('shows the person their three written notices', function (bool $dark, bool $m
         ->assertSee('Riesgo de trabajo');
 })->with($looks);
 
+it('tells the person in usted when a typed day of a notice is no date', function (): void {
+    [$address, $enter] = portalAddress('/notices', 'Sus avisos por escrito');
+    $page = visit($address);
+    $enter($page);
+
+    $page->click('ul > li:nth-child(3) button')
+        ->fill('#work_risk-occurred_on', '31/02/2018')
+        ->keys('#work_risk-occurred_on', 'Tab')
+        ->assertSee('No es una fecha: escríbala como 07/10/2018.')
+        ->assertDontSee('escríbela');
+});
+
 it('lets the person write a work risk notice, and shows it received', function (): void {
     [$address, $enter] = portalAddress('/notices', 'Sus avisos por escrito');
     $page = visit($address);
@@ -1062,6 +1087,19 @@ it('shows the printable dossier of a center with the evidence of each row or Fal
         ->assertScript('() => document.querySelector(\'section[aria-label="Numeral 5.1.2"]\').textContent.includes("Ana Ruiz")', true)
         ->assertScript('() => [...document.querySelectorAll("section")].filter((section) => section.textContent.includes("Cumple")).length > 2', true);
 })->with($looks);
+
+it('shows the contact phone of a person on the roster as people read it, not in E.164', function (): void {
+    [$url, $center, $tenant] = teleworkerCenter();
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'contact_phone' => '+524421234567']);
+
+    visit("{$url}/telework/centers/{$center->id}")
+        ->assertSee('442 123 4567')
+        ->assertDontSee('+524421234567');
+    visit("{$url}/telework/centers/{$center->id}/dossier")
+        ->assertSee('442 123 4567')
+        ->assertDontSee('+524421234567');
+});
 
 it('puts the letterhead on the NOM-037 dossier when it is printed', function (): void {
     [$url, $center] = teleworkerCenter();

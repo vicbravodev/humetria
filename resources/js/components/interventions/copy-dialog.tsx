@@ -1,5 +1,5 @@
 import InputError from '@/components/humetria/input-error';
-import FormDialog from '@/components/interventions/form-dialog';
+import FormDialog from '@/components/humetria/form-dialog';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { copy } from '@/routes/tenant/campaigns/program/actions';
 import type { ProgramAction, ProgramRow } from '@/types';

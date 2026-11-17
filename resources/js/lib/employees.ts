@@ -1,4 +1,6 @@
 import { countOf } from '@/lib/plural';
+import { readablePhone } from '@/lib/phone';
+
 /** How the employees list is narrowed, as the server sends it back: a chosen center or area with its name. */
 export type EmployeeFilters = {
     q: string;
@@ -55,11 +57,9 @@ export function employeeQuery(
     };
 }
 
-/** A 10-digit mobile as people write it in Mexico: "55 1234 5678". */
+/** A stored mobile as people read it: "55 1234 5678", or "+1 415 555 2671" abroad. */
 export function formatMobile(mobile: string): string {
-    const parts = /^(\d{2})(\d{4})(\d{4})$/.exec(mobile);
-
-    return parts === null ? mobile : `${parts[1]} ${parts[2]} ${parts[3]}`;
+    return readablePhone(mobile);
 }
 
 /** "90 personas activas en 2 centros de trabajo." */

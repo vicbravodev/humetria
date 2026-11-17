@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import Initials from '@/components/humetria/initials';
+import PosterQr from '@/components/humetria/poster-qr';
 
 const KINDS = [
     'Mal ambiente de trabajo',
@@ -23,7 +24,7 @@ export default function PosterSheet({
     resolveWithinDays: number;
 }) {
     return (
-        <article className="mx-auto flex w-full max-w-[640px] flex-col gap-7 card p-8 text-card-foreground [page:certificate] md:p-11 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <>
             <header className="flex min-w-0 items-center gap-3 font-semibold">
                 <Initials
                     name={company}
@@ -44,17 +45,11 @@ export default function PosterSheet({
                     {resolveWithinDays} días.
                 </p>
             </div>
-            <div className="flex flex-wrap items-center gap-6">
-                <img
-                    src={qr}
-                    alt={`Código QR del canal de quejas de ${company}`}
-                    className="size-[200px] rounded-xl border-2 border-foreground p-2"
-                />
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <p className="font-semibold">Escanee con su celular</p>
-                    <p className="font-mono text-sm break-all">{shortUrl}</p>
-                </div>
-            </div>
+            <PosterQr
+                qr={qr}
+                alt={`Código QR del canal de quejas de ${company}`}
+                url={shortUrl}
+            />
             <ul className="flex flex-col gap-3">
                 {KINDS.map((kind) => (
                     <li key={kind} className="flex items-center gap-3 text-lg">
@@ -72,6 +67,6 @@ export default function PosterSheet({
                 hecho con{' '}
                 <span className="font-semibold text-foreground">humetría</span>
             </p>
-        </article>
+        </>
     );
 }

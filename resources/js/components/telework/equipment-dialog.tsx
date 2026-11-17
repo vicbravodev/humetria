@@ -1,16 +1,9 @@
-import { Form } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import FormSheet from '@/components/humetria/form-sheet';
 import EquipmentFields from '@/components/telework/equipment-fields';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
+import { SheetTrigger } from '@/components/ui/sheet';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/teleworkers/equipment';
 
@@ -26,43 +19,23 @@ export default function EquipmentDialog({
     const [open, setOpen] = useState(false);
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline">
-                    <Plus aria-hidden />
-                    Registrar equipo
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogTitle>Registrar equipo entregado</DialogTitle>
-                <DialogDescription>
-                    La persona lo confirma desde su portal, o lo rechaza
-                    explicando por qué.
-                </DialogDescription>
-                <Form
-                    {...store.form({
-                        tenant: tenantSlug,
-                        teleworker: teleworkerId,
-                    })}
-                    noValidate
-                    onSuccess={() => setOpen(false)}
-                    className="grid gap-5"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <EquipmentFields today={today} errors={errors} />
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="w-fit"
-                            >
-                                {processing && <Spinner />}
-                                Registrar equipo
-                            </Button>
-                        </>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+        <FormSheet
+            open={open}
+            onOpenChange={setOpen}
+            title="Registrar equipo entregado"
+            description="La persona lo confirma desde su portal, o lo rechaza explicando por qué."
+            form={store.form({ tenant: tenantSlug, teleworker: teleworkerId })}
+            submit="Registrar equipo"
+            trigger={
+                <SheetTrigger asChild>
+                    <Button variant="outline">
+                        <Plus aria-hidden />
+                        Registrar equipo
+                    </Button>
+                </SheetTrigger>
+            }
+        >
+            {(errors) => <EquipmentFields today={today} errors={errors} />}
+        </FormSheet>
     );
 }

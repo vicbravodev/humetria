@@ -12,6 +12,7 @@ use App\Modules\Organization\Support\ManagerRules;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
+use App\Support\PhoneNumber;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -34,8 +35,8 @@ final class EmployeeRequest extends FormRequest
     private const string SINGLE_LINE = 'regex:/\A[^\x00-\x1F\x7F]*\z/u';
 
     /**
-     * What a person types is not what is stored: the email is lowercase and the mobile only its 10 digits, without
-     * the country code (+52, and the old 1 after it) that people sometimes add.
+     * What a person types is not what is stored: the email is lowercase and the mobile in E.164, Mexican when it
+     * comes without a country. A mobile that is no number is left as typed, for its rule to reject.
      *
      * @param  array<array-key, mixed>  $input
      * @return array<array-key, mixed>
@@ -48,7 +49,7 @@ final class EmployeeRequest extends FormRequest
         return [
             ...$input,
             'email' => is_string($email) && $email !== '' ? Str::lower($email) : null,
-            'mobile' => is_string($mobile) && $mobile !== '' ? (string) preg_replace('/\A(?:52)?1?(?=\d{10}\z)/', '', (string) preg_replace('/\D+/', '', $mobile)) : null,
+            'mobile' => is_string($mobile) && $mobile !== '' ? PhoneNumber::e164($mobile) ?? $mobile : null,
         ];
     }
 
@@ -77,7 +78,7 @@ final class EmployeeRequest extends FormRequest
      * A union's people: only the company ID is required, and what the form does not ask (contact, gender, work center)
      * is left out. Whether it is a union is up to the caller, who knows the account.
      *
-     * @return array<string, list<In|string>>
+     * @return array<string, list<In|PhoneNumber|string>>
      */
     public static function unionFieldRules(): array
     {
@@ -97,7 +98,7 @@ final class EmployeeRequest extends FormRequest
     }
 
     /**
-     * @return array<string, list<In|string>>
+     * @return array<string, list<In|PhoneNumber|string>>
      */
     public static function fieldRules(): array
     {
@@ -107,7 +108,7 @@ final class EmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:200', self::SINGLE_LINE],
             'email' => ['nullable', 'required_without:mobile', 'string', 'email', 'max:255'],
-            'mobile' => ['nullable', 'string', 'regex:/\A[0-9]{10}\z/'],
+            'mobile' => ['nullable', 'string', new PhoneNumber],
             'gender' => ['required', 'string', Rule::in(array_column(Gender::cases(), 'value'))],
             'work_center_id' => ['required', 'string'],
             'area' => ['required', 'string', 'max:120', self::SINGLE_LINE],
@@ -124,7 +125,7 @@ final class EmployeeRequest extends FormRequest
     }
 
     /**
-     * @return array<string, list<In|string>>
+     * @return array<string, list<In|PhoneNumber|string>>
      */
     public function rules(): array
     {

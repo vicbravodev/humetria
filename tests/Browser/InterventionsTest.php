@@ -6,6 +6,9 @@ use App\Modules\Interventions\Actions\CreateProgram;
 use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Interventions\Models\ProgramItem;
 use App\Modules\Tenancy\Models\Tenant;
+use Pest\Browser\Api\AwaitableWebpage;
+
+require_once __DIR__.'/form-sheet-helpers.php';
 
 $looks = [
     'light desktop' => [false, false],
@@ -121,6 +124,15 @@ it('adds an action to a row from its side panel', function (): void {
     expect(ProgramAction::query()->count())->toBe(1);
 });
 
+it('adds a row to the Programa in the side panel, the whole width of a phone', function (bool $mobile): void {
+    [$url, $campaign] = programEvaluation();
+    programWithActions($campaign);
+    $page = "{$url}/campaigns/{$campaign}/program";
+    $open = fn (): AwaitableWebpage => ($mobile ? visit($page)->on()->mobile() : visit($page))->assertNoJavaScriptErrors();
+
+    assertFormSheet($open()->press('Agregar fila'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
+
 it('tells in the responsible fields who an action falls to when they are left empty', function (): void {
     [$url, $campaign] = programEvaluation();
     resolve(CreateProgram::class)->handle($campaign, null)?->update(['responsible_name' => 'Ing. Carlos Ruiz']);
@@ -196,3 +208,64 @@ it('shows on the results where the Programa stands, with the way to it', functio
         // On a phone the state goes under the title instead of pushing the card past the edge.
         ->assertScript('() => [...document.querySelectorAll("main section")].every((section) => section.getBoundingClientRect().right <= window.innerWidth)', true);
 })->with($looks);
+
+it('says on the results card how many themes have actions, without 100 % while one has none', function (): void {
+    [$url, $campaign] = programEvaluation();
+    programWithActions($campaign);
+
+    visitPage('results/show', "{$url}/campaigns/{$campaign}/results")
+        ->assertSeeIn('[aria-labelledby="program-title"]', '1 de 2 acciones hechas · 2 de ')
+        ->assertSeeIn('[aria-labelledby="program-title"]', 'temas con acciones')
+        ->assertDontSeeIn('[aria-labelledby="program-title"]', '100 %');
+});
+
+/** The Programa with an action of the final score that starts on 10 Mar 2027 and is due on 20 Mar 2027. */
+function programWithDatedAction(string $campaignId): void
+{
+    $program = resolve(CreateProgram::class)->handle($campaignId, null);
+    $row = ProgramItem::query()->where('program_id', $program?->id)->where('scope', 'final')->sole();
+    ProgramAction::factory()->create(['tenant_id' => $program?->tenant_id, 'program_id' => $program?->id, 'item_id' => $row->id, 'title' => 'Revisar la política', 'starts_on' => '2027-03-10', 'due_on' => '2027-03-20']);
+}
+
+it('stacks the two dates inside the side panel, without a sideways scroll, and greys the due days before the start', function (bool $dark): void {
+    [$url, $campaign] = programEvaluation();
+    programWithDatedAction($campaign);
+    $page = visit("{$url}/campaigns/{$campaign}/program?tab=actions");
+    $page = $dark ? $page->inDarkMode() : $page->inLightMode();
+
+    $page->click('[aria-label="Opciones de Revisar la política"]')
+        ->click('Editar')
+        ->assertValue('#action-starts', '10/03/2027')
+        // In a panel of 520 px the written day does not fit two to a row: the due day goes under the start.
+        ->assertScript("(() => { const start = document.getElementById('action-starts').getBoundingClientRect(); const due = document.getElementById('action-due').getBoundingClientRect(); return due.top >= start.bottom && Math.abs(due.left - start.left) < 1; })()", true)
+        ->assertScript("(() => { let box = document.getElementById('action-due').parentElement; while (box !== document.body && box.scrollHeight <= box.clientHeight) { box = box.parentElement; } return box.scrollWidth <= box.clientWidth; })()", true)
+        ->click('#action-due')
+        ->assertScript("document.querySelector('[data-day=\"2027-03-09\"] button').disabled", true)
+        ->assertScript("document.querySelector('[data-day=\"2027-03-10\"] button').disabled", false)
+        ->assertNoJavaScriptErrors();
+})->with(['light' => false, 'dark' => true]);
+
+it('keeps the dates of an action inside a phone screen', function (): void {
+    [$url, $campaign] = programEvaluation();
+    programWithDatedAction($campaign);
+
+    visit("{$url}/campaigns/{$campaign}/program?tab=actions")->on()->mobile()
+        ->click('[aria-label="Opciones de Revisar la política"]')
+        ->click('Editar')
+        ->assertScript("(() => { const due = document.getElementById('action-due').getBoundingClientRect(); return due.left >= 0 && due.right <= window.innerWidth; })()", true);
+});
+
+it('clears the error of a field as soon as it is edited', function (): void {
+    [$url, $campaign] = programEvaluation();
+    resolve(CreateProgram::class)->handle($campaign, null);
+
+    visit("{$url}/campaigns/{$campaign}/program")
+        ->click('[aria-label="Acciones de Calificación final"]')
+        ->click('Agregar acción')
+        ->press('Guardar acción')
+        ->assertSee('El campo qué se hará es obligatorio.')
+        ->assertSee('El campo título es obligatorio.')
+        ->fill('description', 'Difundir la política entre todos los turnos.')
+        ->assertDontSee('El campo qué se hará es obligatorio.')
+        ->assertSee('El campo título es obligatorio.');
+});

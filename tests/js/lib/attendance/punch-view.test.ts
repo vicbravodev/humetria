@@ -155,8 +155,23 @@ describe('evidenceText', () => {
         });
     });
 
+    it('says how a mark in the field proves, where no QR nor zone is asked', () => {
+        expect(evidenceText('strong', 'field')).toEqual({
+            dots: 3,
+            text: 'Evidencia fuerte: en campo, con su ubicación',
+        });
+        expect(evidenceText('medium', 'field')).toEqual({
+            dots: 2,
+            text: 'Evidencia media: en campo, sin ubicación precisa',
+        });
+        expect(evidenceText('strong', 'outside_zone')?.text).toBe(
+            'Evidencia fuerte: QR y ubicación',
+        );
+    });
+
     it('says nothing when the server gave none or one it does not know', () => {
         expect(evidenceText(null)).toBeNull();
+        expect(evidenceText(null, 'field')).toBeNull();
         expect(evidenceText('corrected')).toBeNull();
         expect(evidenceText('x')).toBeNull();
     });

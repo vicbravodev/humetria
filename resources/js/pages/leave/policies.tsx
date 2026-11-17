@@ -53,7 +53,7 @@ export default function LeavePolicies({
     return (
         <>
             <Head title="Políticas de vacaciones" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Políticas"
                     facts={[

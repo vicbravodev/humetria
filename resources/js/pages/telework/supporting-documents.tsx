@@ -29,7 +29,7 @@ export default function TeleworkSupportingDocuments({
     return (
         <>
             <Head title="Documentos de apoyo" />
-            <div className="mx-auto flex w-full max-w-[1080px] flex-col gap-7 px-4 py-6 md:px-12 md:py-10">
+            <div className="flex w-full flex-col gap-7 px-4 py-6 md:px-10 md:py-10">
                 <header className="flex flex-wrap items-end gap-5">
                     <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-2">
                         <h1 className="text-3xl leading-10 font-semibold tracking-[-0.015em]">

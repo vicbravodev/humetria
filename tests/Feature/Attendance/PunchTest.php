@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Enums\CenterMode;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Http\Controllers\MarkController;
 use App\Modules\Attendance\Models\AgreementAcceptance;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -395,6 +397,55 @@ describe('on site', function (): void {
     });
 
     it('keeps the QR message for a center with a zone and no screen', function (): void {
+        anaPunches(['q' => null])->assertUnprocessable()->assertJsonPath('reason', 'qr_required');
+    });
+});
+
+describe('in a field center', function (): void {
+    beforeEach(function (): void {
+        AttendanceCenterMode::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'mode' => CenterMode::Field]);
+    });
+
+    it('marks from anywhere with no QR, keeping the position, as strong evidence', function (): void {
+        punchWith($this->phone, $this->ana->id, PUNCH_OUTSIDE)->assertOk()->assertJsonPath('flag', 'field')->assertJsonPath('evidence', 'strong');
+
+        expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::Field)->zone_id->toBeNull()
+            ->latitude->toBe('19.433600')->longitude->toBe('-99.133200')->accuracy_m->toBe(12.0);
+    });
+
+    it('marks in a center with neither a zone nor a screen: never center_not_ready', function (): void {
+        $this->zone->delete();
+
+        punchWith($this->phone, $this->ana->id, PUNCH_INSIDE)->assertOk()->assertJsonPath('evidence', 'strong');
+    });
+
+    it('takes a mark with no location or a poor one as medium, keeping what came', function (): void {
+        punchWith($this->phone, $this->ana->id, ['lat' => null, 'lng' => null, 'accuracy' => null])->assertOk()->assertJsonPath('evidence', 'medium');
+        $this->travel(1)->hours();
+        punchWith($this->phone, $this->ana->id, ['mark_type' => 'end', ...PUNCH_OUTSIDE, 'accuracy' => 900])->assertOk()->assertJsonPath('evidence', 'medium');
+
+        expect(AttendanceMark::query()->orderBy('marked_at')->get()->map(fn (AttendanceMark $mark): array => [$mark->method, $mark->accuracy_m])->all())
+            ->toEqual([[MarkMethod::FieldUnlocated, null], [MarkMethod::FieldUnlocated, 900.0]]);
+    });
+
+    it('still takes the center\'s QR, optional, and refuses one that does not verify', function (): void {
+        anaPunches()->assertOk()->assertJsonPath('evidence', 'strong');
+        $this->travel(1)->hours();
+        anaPunches(['mark_type' => 'end', 'q' => 'not-a-code'])->assertUnprocessable()->assertJsonPath('reason', 'qr_invalid');
+    });
+
+    it('lets a person new to the center mark with no schedule', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Bob Ruiz']);
+        $phone = new SoftAuthenticator;
+        punchDevice($phone, $bob);
+
+        punchWith($phone, $bob->id, PUNCH_OUTSIDE)->assertOk()->assertJsonPath('evidence', 'strong');
+        expect(AttendanceSchedule::query()->where('employee_id', $bob->id)->exists())->toBeFalse();
+    });
+
+    it('leaves a center on the company\'s mode as it was', function (): void {
+        AttendanceCenterMode::query()->update(['mode' => CenterMode::Company]);
+
         anaPunches(['q' => null])->assertUnprocessable()->assertJsonPath('reason', 'qr_required');
     });
 });

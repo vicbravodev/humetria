@@ -1,15 +1,15 @@
 import type { UIMessage } from 'ai';
+import HumiAnswerFooter from '@/components/assistant/humi-answer-footer';
 import HumiAvatar from '@/components/assistant/humi-avatar';
 import HumiMarkdown from '@/components/assistant/humi-markdown';
-import HumiMessageActions from '@/components/assistant/humi-message-actions';
 import HumiResultCard from '@/components/assistant/humi-result-card';
-import HumiSuggestions from '@/components/assistant/humi-suggestions';
-import HumiToolStep from '@/components/assistant/humi-tool-step';
+import HumiToolSteps from '@/components/assistant/humi-tool-steps';
 import HumiUserMessage from '@/components/assistant/humi-user-message';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { Rating } from '@/lib/assistant/api';
+import { answerLinksOf } from '@/lib/assistant/answer-links';
 import { viewOf } from '@/lib/assistant/message-view';
 import { followUpsFor } from '@/lib/assistant/suggestions';
-import { minGroupStep, stepLabel } from '@/lib/assistant/tool-steps';
 
 /**
  * One message of the conversation. Humi's has its face at the side, the lines of what it looked at, its text and cards in
@@ -40,14 +40,6 @@ export default function HumiMessage({
 
     const view = viewOf(message);
     const finished = !(streaming && last);
-    const minimum = view.items.flatMap((item) =>
-        item.kind === 'card' &&
-        item.card.render === 'risk_levels' &&
-        item.card.minGroup !== null
-            ? item.card.minGroup
-            : [],
-    )[0];
-
     return (
         <div className="flex gap-2.5">
             <div className="humi-pop h-fit">
@@ -58,19 +50,12 @@ export default function HumiMessage({
                 />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-3">
-                {view.steps.length > 0 && (
-                    <ul className="flex flex-col gap-1">
-                        {view.steps.map((step) => (
-                            <HumiToolStep
-                                key={step.id}
-                                label={stepLabel(step.tool, step.done)}
-                                done={step.done}
-                            />
-                        ))}
-                        {minimum !== undefined && (
-                            <HumiToolStep label={minGroupStep(minimum)} done />
-                        )}
-                    </ul>
+                <HumiToolSteps view={view} />
+                {!finished && view.items.length === 0 && (
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-3 w-11/12" />
+                        <Skeleton className="h-3 w-3/4" />
+                    </div>
                 )}
                 {view.items.map((item, index) =>
                     item.kind === 'text' ? (
@@ -80,22 +65,16 @@ export default function HumiMessage({
                     ),
                 )}
                 {finished && view.text !== '' && (
-                    <div className="humi-enter flex flex-col gap-3">
-                        <HumiMessageActions
-                            text={view.text}
-                            rating={rating}
-                            canRate={canRate}
-                            onRate={onRate}
-                            onRegenerate={last ? onRegenerate : null}
-                        />
-                        {last && (
-                            <HumiSuggestions
-                                suggestions={followUpsFor(view.renders)}
-                                onPick={onPick}
-                                variant="chips"
-                            />
-                        )}
-                    </div>
+                    <HumiAnswerFooter
+                        text={view.text}
+                        links={answerLinksOf(message)}
+                        followUps={last ? followUpsFor(view.renders) : []}
+                        rating={rating}
+                        canRate={canRate}
+                        onRate={onRate}
+                        onRegenerate={last ? onRegenerate : null}
+                        onPick={onPick}
+                    />
                 )}
             </div>
         </div>

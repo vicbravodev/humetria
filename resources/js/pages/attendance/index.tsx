@@ -9,14 +9,14 @@ import WeekSwitch from '@/components/attendance/week-switch';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { weekTitle } from '@/lib/attendance/week-text';
-import type { AttendanceOverviewProps } from '@/types';
+import type { AttendanceOverviewPageProps } from '@/types';
 
 /**
  * RH's overview of the registro de jornada (board A1 of the Asistencia redesign): first what needs RH, then the week
  * of the company, or of one center, person by person, and its centers with their zones. While the registro is not ready,
  * a line takes RH to the puesta en marcha.
  */
-export default function AttendanceIndex(props: AttendanceOverviewProps) {
+export default function AttendanceIndex(props: AttendanceOverviewPageProps) {
     const { week, center, counts, centers } = props;
     setLayoutProps({
         breadcrumbs: [
@@ -29,7 +29,7 @@ export default function AttendanceIndex(props: AttendanceOverviewProps) {
     return (
         <>
             <Head title="Asistencia" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     caption={center?.name ?? 'Todos tus centros'}
                     title="Asistencia"

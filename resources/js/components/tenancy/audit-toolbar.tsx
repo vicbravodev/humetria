@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { X } from 'lucide-react';
+import DateRangePicker from '@/components/humetria/date-range-picker';
 import SearchField from '@/components/humetria/search-field';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { auditQuery } from '@/lib/audit';
+import { periodShortcuts } from '@/lib/date-range';
 import { index } from '@/routes/audit';
 import type { AuditFamily, AuditFilters } from '@/types';
 
@@ -72,28 +73,13 @@ export default function AuditToolbar({
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="grid gap-1.5">
-                    <Label htmlFor="audit-from">Desde</Label>
-                    <Input
-                        id="audit-from"
-                        type="date"
-                        value={filters.from}
-                        max={filters.to === '' ? undefined : filters.to}
-                        onChange={(event) =>
-                            filter({ from: event.target.value })
-                        }
-                    />
-                </div>
-                <div className="grid gap-1.5">
-                    <Label htmlFor="audit-to">Hasta</Label>
-                    <Input
-                        id="audit-to"
-                        type="date"
-                        value={filters.to}
-                        min={filters.from === '' ? undefined : filters.from}
-                        onChange={(event) => filter({ to: event.target.value })}
-                    />
-                </div>
+                <DateRangePicker
+                    id="audit-period"
+                    label="Periodo"
+                    value={{ from: filters.from, to: filters.to }}
+                    onChange={(period) => filter(period)}
+                    shortcuts={periodShortcuts()}
+                />
             </div>
             {company !== null && (
                 <p className="flex flex-wrap items-center gap-2 text-meta text-muted-foreground">

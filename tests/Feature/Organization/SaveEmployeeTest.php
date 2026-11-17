@@ -62,7 +62,7 @@ it('adds an employee, creating the area the first time it is named', function ()
 
     expect($employee->only(['tenant_id', 'work_center_id', 'area_id', 'name', 'email', 'mobile', 'job_title', 'employee_number']))->toBe([
         'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'area_id' => $area->id, 'name' => 'Ana López',
-        'email' => 'ana@acme.mx', 'mobile' => '5512345678', 'job_title' => 'Operadora', 'employee_number' => 'A-001',
+        'email' => 'ana@acme.mx', 'mobile' => '+525512345678', 'job_title' => 'Operadora', 'employee_number' => 'A-001',
     ])->and($employee->gender)->toBe(Gender::Female)
         ->and($area->only(['tenant_id', 'name']))->toBe(['tenant_id' => $this->tenant->id, 'name' => 'Producción'])
         ->and(AuditEntry::query()->count())->toBe(0);
@@ -90,10 +90,12 @@ it('takes a mobile without an email, or an email without a mobile', function (ar
 
     expect(storedEmployee()->only(['email', 'mobile']))->toBe([
         'email' => $contact['email'] === '' ? null : 'ana@acme.mx',
-        'mobile' => $contact['mobile'] === '' ? null : '5512345678',
+        'mobile' => $contact['mobile'] === '' ? null : $contact['stored'],
     ]);
 })->with([
-    'mobile only' => [['email' => '', 'mobile' => '+52 55 1234 5678']],
+    'mobile only' => [['email' => '', 'mobile' => '+52 55 1234 5678', 'stored' => '+525512345678']],
+    'a mobile with the old 044' => [['email' => '', 'mobile' => '044 55 1234 5678', 'stored' => '+525512345678']],
+    'a mobile of another country' => [['email' => '', 'mobile' => '+1 415 555 2671', 'stored' => '+14155552671']],
     'email only' => [['email' => 'ana@acme.mx', 'mobile' => '']],
 ]);
 
@@ -105,7 +107,8 @@ it('validates the employee', function (array $overrides, string $field, string $
     expect(Employee::query()->withoutGlobalScopes()->count())->toBe(0);
 })->with([
     'no contact' => [['email' => '', 'mobile' => ''], 'email', 'Escribe un correo o un celular.'],
-    'short mobile' => [['mobile' => '55 1234'], 'mobile', 'Escribe un celular de 10 dígitos, por ejemplo 55 1234 5678.'],
+    'short mobile' => [['mobile' => '55 1234'], 'mobile', 'Revisa el celular: no es un número válido para el país elegido.'],
+    'impossible mobile' => [['mobile' => '12 3456 7890'], 'mobile', 'Revisa el celular: no es un número válido para el país elegido.'],
     'bad email' => [['email' => 'ana'], 'email', 'El campo correo electrónico debe ser un correo electrónico válido.'],
     'gender' => [['gender' => 'x'], 'gender', 'Elige una opción de la lista.'],
     'no name' => [['name' => ''], 'name', 'El campo nombre es obligatorio.'],

@@ -1,17 +1,18 @@
+import { CalendarClock } from 'lucide-react';
 import { useState } from 'react';
 import ChooseBox from '@/components/humetria/choose-box';
 import ScheduleDialog from '@/components/attendance/schedule-dialog';
 import ScheduleHoursCell from '@/components/attendance/schedule-hours-cell';
 import ScheduleWeekCell from '@/components/attendance/schedule-week-cell';
 import Initials from '@/components/humetria/initials';
-import { Button } from '@/components/ui/button';
+import RowMenu from '@/components/humetria/row-menu';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { modeLabel, shiftLabel } from '@/lib/attendance/schedule';
 import type { SchedulePerson, WeeklyMaximum } from '@/types';
 
 /**
- * A person: who, their week agreed as the ribbon with its days and rests, the hours against the year's maximum, their shift
- * and mode, or that they have no schedule (held to 8 h a day with no rest day). Whoever RH may change has a tick.
+ * A person: who, their week agreed as the ribbon with its days and rests, the hours against the year's maximum with their
+ * shift and mode below, or that they have no schedule (held to 8 h a day with no rest day). Whoever RH may change has a
+ * tick and «…» to open their schedule.
  */
 export default function ScheduleRow({
     person,
@@ -28,7 +29,6 @@ export default function ScheduleRow({
 }) {
     const [editing, setEditing] = useState(false);
     const { schedule } = person;
-    const none = schedule === null;
 
     return (
         <TableRow data-state={chosen ? 'selected' : undefined}>
@@ -41,7 +41,7 @@ export default function ScheduleRow({
                     />
                 </TableCell>
             )}
-            <TableCell className="max-md:flex-1 max-md:basis-40">
+            <TableCell className="whitespace-normal max-md:flex-1 max-md:basis-40">
                 <div className="flex items-center gap-3">
                     <Initials name={person.name} />
                     <div className="flex min-w-0 flex-col">
@@ -52,7 +52,7 @@ export default function ScheduleRow({
                     </div>
                 </div>
             </TableCell>
-            <TableCell>
+            <TableCell className="whitespace-normal">
                 <ScheduleWeekCell schedule={schedule} />
             </TableCell>
             <TableCell className="min-w-36">
@@ -62,20 +62,21 @@ export default function ScheduleRow({
                     weeklyMaximum={weeklyMaximum}
                 />
             </TableCell>
-            <TableCell className="text-muted-foreground">
-                {none
-                    ? '—'
-                    : `${shiftLabel(schedule.shiftType)} · ${modeLabel(schedule.workMode)}`}
-            </TableCell>
             {canManage && (
-                <TableCell className="text-right">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditing(true)}
-                    >
-                        {none ? 'Fijar horario' : 'Cambiar'}
-                    </Button>
+                <TableCell className="w-14 text-right">
+                    <RowMenu
+                        label={`Acciones de ${person.name}`}
+                        items={[
+                            {
+                                label:
+                                    schedule === null
+                                        ? 'Fijar horario'
+                                        : 'Cambiar horario',
+                                icon: CalendarClock,
+                                onSelect: () => setEditing(true),
+                            },
+                        ]}
+                    />
                     {editing && (
                         <ScheduleDialog
                             open={editing}

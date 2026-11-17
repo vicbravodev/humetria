@@ -1,7 +1,7 @@
 import CommitmentGroupField from '@/components/engagement/commitments/commitment-group-field';
 import CommitmentTextFields from '@/components/engagement/commitments/commitment-text-fields';
 import Combobox from '@/components/humetria/combobox';
-import FormDialog from '@/components/humetria/form-dialog';
+import FormSheet from '@/components/humetria/form-sheet';
 import InputError from '@/components/humetria/input-error';
 import { Label } from '@/components/ui/label';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -36,7 +36,7 @@ export default function CommitmentDialog({
     const driver = drivers.find((option) => option.value === editing?.driver);
 
     return (
-        <FormDialog
+        <FormSheet
             key={editing?.id ?? 'new'}
             open={open}
             onOpenChange={onOpenChange}
@@ -97,6 +97,6 @@ export default function CommitmentDialog({
                     <InputError message={errors['survey']} />
                 </>
             )}
-        </FormDialog>
+        </FormSheet>
     );
 }

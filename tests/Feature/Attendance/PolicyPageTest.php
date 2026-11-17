@@ -3,12 +3,15 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Attendance\Enums\CenterMode;
 use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
 use App\Modules\Attendance\Http\Requests\PolicyRequest;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia;
 
 mutates(PolicyController::class, PolicyRequest::class);
@@ -50,6 +53,19 @@ describe('the page', function (): void {
             ->where('policy', ['outOfZone' => 'allow_and_flag', 'maxAccuracyM' => 50, 'requireQrOnsite' => false, 'trustedMayUseBrowser' => false, 'retentionMonths' => 36, 'lateToleranceMinutes' => 25])
             ->where('saved', true)
             ->where('canManage', false));
+    });
+
+    it('counts the centers in use that mark in the field, not an archived one nor one of another company', function (): void {
+        $this->actingAs($this->hr);
+        $this->get(route('tenant.attendance.policy.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('fieldCenters', 0));
+
+        AttendanceCenterMode::factory()->count(2)->create(['tenant_id' => $this->tenant->id]);
+        AttendanceCenterMode::factory()->create(['tenant_id' => $this->tenant->id, 'mode' => CenterMode::Company]);
+        AttendanceCenterMode::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => WorkCenter::factory()->for($this->tenant)->archived()->create()->id]);
+        AttendanceCenterMode::factory()->create(['tenant_id' => Tenant::factory()->create()->id]);
+        workIn($this->tenant);
+
+        $this->get(route('tenant.attendance.policy.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('fieldCenters', 2));
     });
 
     it('does not show another company\'s policy', function (): void {

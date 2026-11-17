@@ -18,7 +18,7 @@ export default function ChannelActivate({
                 <h2 id="activate" className="text-xl leading-7 font-semibold">
                     Activa el canal
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="max-w-[620px] text-muted-foreground">
                     Revisa cómo se atiende y los plazos. Al activarlo quedas
                     designada o designado para atender las quejas; después
                     puedes sumar a otras personas.

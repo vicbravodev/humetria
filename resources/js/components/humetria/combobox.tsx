@@ -24,7 +24,7 @@ type Props = {
 };
 
 const TRIGGER =
-    'flex h-11 w-full items-center justify-between gap-2 rounded-md border border-input bg-card px-4 text-left text-base transition-[color,border-color] duration-150 ease-out hover:border-foreground/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:border-ring aria-invalid:border-destructive [&[data-state=open]>svg]:rotate-180';
+    'flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-input bg-card px-4 text-left text-base transition-[color,border-color] duration-150 ease-out hover:border-foreground/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:border-ring aria-invalid:border-destructive [&[data-state=open]>svg]:rotate-180';
 
 /**
  * A field that looks like Select and opens a search over its options: for long lists, or ones that live on the

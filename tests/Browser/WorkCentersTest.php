@@ -9,6 +9,8 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Pest\Browser\Api\AwaitableWebpage;
 
+require_once __DIR__.'/form-sheet-helpers.php';
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -40,7 +42,25 @@ it('lists the work centers with their address, and the archived ones apart', fun
         ->assertScript(pathBecomes('/admin/acme/work-centers'), true)
         ->assertPathIs('/admin/acme/work-centers'))
         ->assertSee('Bodega Vieja')
+        ->assertSeeIn('[data-slot="table"] tbody', 'Bodega Vieja')
+        ->assertMissing('article')
         ->assertDontSee('Planta Querétaro');
+})->with($looks);
+
+it('finds a work center by typing part of its name, and says when none matches', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    WorkCenter::factory()->for(acme())->create(['name' => 'Planta Querétaro']);
+    WorkCenter::factory()->for(acme())->create(['name' => 'Bodega Sur']);
+
+    visitPage('tenancy/work-centers', "{$url}/work-centers", $dark, $mobile, fn (AwaitableWebpage $page) => $page
+        ->type('input[type="search"]', 'queretaro')
+        ->assertDontSee('Bodega Sur')
+        ->assertQueryStringHas('q', 'queretaro'))
+        ->assertSee('Planta Querétaro');
+
+    visitPage('tenancy/work-centers', "{$url}/work-centers?q=zzz", $dark, $mobile)
+        ->assertSee('Ningún centro coincide con «zzz»')
+        ->assertValue('input[type="search"]', 'zzz');
 })->with($looks);
 
 it('reaches the work centers from the sidebar', function (): void {
@@ -109,6 +129,15 @@ it('passes the accessibility and CSP checks with the dialog open', function (boo
         ->click('Dar de alta centro')
         ->assertSee('Actividad principal'));
 })->with($looks);
+
+it('adds and edits a work center in the side panel, the whole width of a phone', function (bool $mobile): void {
+    $url = signInToPanel();
+    WorkCenter::factory()->for(acme())->create(['name' => 'Planta Querétaro']);
+    $open = fn (): AwaitableWebpage => ($mobile ? visit("{$url}/work-centers")->on()->mobile() : visit("{$url}/work-centers"))->assertNoJavaScriptErrors();
+
+    assertFormSheet($open()->click('Dar de alta centro'), $mobile);
+    assertFormSheet($open()->click('@work-center-actions')->click('Editar'), $mobile);
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('moves through the states with the arrows and says when none matches', function (): void {
     $url = signInToPanel();

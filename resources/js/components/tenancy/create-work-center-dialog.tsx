@@ -2,7 +2,7 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import WorkCenterDialog from '@/components/tenancy/work-center-dialog';
 import { Button } from '@/components/ui/button';
-import { DialogTrigger } from '@/components/ui/dialog';
+import { SheetTrigger } from '@/components/ui/sheet';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/work-centers';
 import type { MexicanStateOption } from '@/types';
@@ -39,7 +39,7 @@ export default function CreateWorkCenterDialog({
             form={store.form(tenantSlug)}
             states={states}
             trigger={
-                <DialogTrigger asChild>
+                <SheetTrigger asChild>
                     {tile ? (
                         <button
                             type="button"
@@ -68,7 +68,7 @@ export default function CreateWorkCenterDialog({
                             Dar de alta centro
                         </Button>
                     )}
-                </DialogTrigger>
+                </SheetTrigger>
             }
         />
     );

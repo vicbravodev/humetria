@@ -75,6 +75,16 @@ it('reads the same for every company: it holds nothing of any of them', function
     expect($other)->toBe($first);
 });
 
+it('names each criterion it found as a source, with its norm and number, and none when it found nothing', function (): void {
+    $found = toolCard(SearchRegulations::class, $this->scope, ['query' => '¿Cuál es el mínimo de personas por grupo en los resultados?']);
+    $nothing = toolCard(SearchRegulations::class, $this->scope, ['query' => 'receta de mole poblano']);
+
+    expect($found['sources'])->toHaveCount(count($found['rows']))
+        ->and($found['sources'][0])->toBe('NOM-035 · C-23. Mínimo de personas por grupo en los resultados')
+        ->and($found['next'])->toBeNull()
+        ->and($nothing['sources'])->toBe([]);
+});
+
 it('takes only a query from the model', function (): void {
     expect(array_keys(resolve(SearchRegulations::class, ['scope' => $this->scope])->schema(new JsonSchemaTypeFactory)))->toBe(['query']);
 });

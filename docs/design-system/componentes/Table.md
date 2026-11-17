@@ -1,4 +1,9 @@
-Tabla de datos para listas comparables (áreas, campañas cerradas, personal); equivale a `Table` de shadcn.
+Tabla de datos para listas comparables (áreas, campañas cerradas, centros archivados, personal); equivale a `Table` de
+shadcn.
+
+**Tabla o tarjeta.** La tabla es para **muchas entidades parecidas que se buscan y se comparan**; la tarjeta, para pocas
+con su estado y su acción propia (ver `Card.md`). Lo terminado o archivado va en tabla aunque lo vivo de la misma
+pantalla vaya en tarjetas.
 
 **Recibe:** `columns` (`{key, label, align, render}`), `rows` y `caption` (para lectores de pantalla).
 

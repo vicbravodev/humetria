@@ -4,9 +4,20 @@ declare(strict_types=1);
 
 use App\Modules\Instruments\Data\RiskLevel;
 use App\Modules\Interventions\Enums\ActionKind;
+use App\Modules\Interventions\Enums\ActionStatus;
 use App\Modules\Interventions\Support\TableChecklist;
 
 mutates(TableChecklist::class);
+
+/**
+ * Actions of these kinds, all in one state (planned unless said).
+ *
+ * @return list<array{kind: ActionKind, status: ActionStatus}>
+ */
+function actionsOf(array $kinds, ActionStatus $status = ActionStatus::Planned): array
+{
+    return array_map(fn (ActionKind $kind): array => ['kind' => $kind, 'status' => $status], $kinds);
+}
 
 /**
  * The lines as [key, status] pairs.
@@ -26,18 +37,18 @@ it('asks nothing of a Programa with no level: nothing was derived to ask for', f
 it('asks for the policy to be reviewed and reinforced from Medio up', function (): void {
     expect(statuses(TableChecklist::for(RiskLevel::Medium, [], [])))->toBe([['policy_review', 'missing'], ['policy_dissemination', 'missing']]);
 
-    expect(statuses(TableChecklist::for(RiskLevel::Medium, [ActionKind::PolicyReview], [])))->toBe([['policy_review', 'covered'], ['policy_dissemination', 'missing']])
-        ->and(statuses(TableChecklist::for(RiskLevel::Medium, [ActionKind::PolicyReview, ActionKind::PolicyDissemination], [])))->toBe([['policy_review', 'covered'], ['policy_dissemination', 'covered']]);
+    expect(statuses(TableChecklist::for(RiskLevel::Medium, actionsOf([ActionKind::PolicyReview]), [])))->toBe([['policy_review', 'planned'], ['policy_dissemination', 'missing']])
+        ->and(statuses(TableChecklist::for(RiskLevel::Medium, actionsOf([ActionKind::PolicyReview, ActionKind::PolicyDissemination], ActionStatus::Done), [])))->toBe([['policy_review', 'done'], ['policy_dissemination', 'done']]);
 });
 
 it('asks for an analysis, a campaign and, at Muy alto, specific evaluations from Alto up', function (RiskLevel $level, array $kinds, array $expected): void {
-    expect(statuses(TableChecklist::for($level, $kinds, [['level' => RiskLevel::High, 'written' => true]])))->toBe($expected);
+    expect(statuses(TableChecklist::for($level, actionsOf($kinds), [['level' => RiskLevel::High, 'written' => true]])))->toBe($expected);
 })->with([
-    'Alto, nothing yet' => [RiskLevel::High, [], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'covered'], ['awareness_campaign', 'missing'], ['specific_assessment', 'optional']]],
-    'Alto with a campaign' => [RiskLevel::High, [ActionKind::AwarenessCampaign], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'covered'], ['awareness_campaign', 'covered'], ['specific_assessment', 'optional']]],
-    'Alto with an evaluation, which it only may include' => [RiskLevel::High, [ActionKind::SpecificAssessment], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'covered'], ['awareness_campaign', 'missing'], ['specific_assessment', 'covered']]],
-    'Muy alto, nothing yet' => [RiskLevel::VeryHigh, [], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'covered'], ['awareness_campaign', 'missing'], ['specific_assessment', 'missing']]],
-    'Muy alto with evaluations' => [RiskLevel::VeryHigh, [ActionKind::SpecificAssessment], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'covered'], ['awareness_campaign', 'missing'], ['specific_assessment', 'covered']]],
+    'Alto, nothing yet' => [RiskLevel::High, [], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'done'], ['awareness_campaign', 'missing'], ['specific_assessment', 'optional']]],
+    'Alto with a campaign' => [RiskLevel::High, [ActionKind::AwarenessCampaign], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'done'], ['awareness_campaign', 'planned'], ['specific_assessment', 'optional']]],
+    'Alto with an evaluation, which it only may include' => [RiskLevel::High, [ActionKind::SpecificAssessment], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'done'], ['awareness_campaign', 'missing'], ['specific_assessment', 'planned']]],
+    'Muy alto, nothing yet' => [RiskLevel::VeryHigh, [], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'done'], ['awareness_campaign', 'missing'], ['specific_assessment', 'missing']]],
+    'Muy alto with evaluations' => [RiskLevel::VeryHigh, [ActionKind::SpecificAssessment], [['policy_review', 'missing'], ['policy_dissemination', 'missing'], ['analysis', 'done'], ['awareness_campaign', 'missing'], ['specific_assessment', 'planned']]],
 ]);
 
 it('asks for no analysis, campaign or evaluation at Medio', function (): void {
@@ -64,4 +75,20 @@ it('has the words of the Tabla for each line', function (): void {
         'awareness_campaign' => 'Campaña de sensibilización',
         'specific_assessment' => 'Evaluaciones específicas',
     ]);
+});
+
+it('tells a line planned from one running and one done: the most advanced action of its kind says where it stands (C-34)', function (array $states, string $expected): void {
+    $actions = array_map(fn (ActionStatus $status): array => ['kind' => ActionKind::PolicyReview, 'status' => $status], $states);
+
+    expect(TableChecklist::for(RiskLevel::Medium, $actions, [])[0]['status'])->toBe($expected);
+})->with([
+    'only planned' => [[ActionStatus::Planned, ActionStatus::Planned], 'planned'],
+    'one running' => [[ActionStatus::Planned, ActionStatus::InProgress], 'in_progress'],
+    'one done' => [[ActionStatus::Planned, ActionStatus::InProgress, ActionStatus::Done], 'done'],
+]);
+
+it('reads each line from its own kind, leaving a cancelled action out should one reach it', function (): void {
+    $actions = [['kind' => ActionKind::PolicyReview, 'status' => ActionStatus::Cancelled], ['kind' => ActionKind::PolicyDissemination, 'status' => ActionStatus::Done]];
+
+    expect(statuses(TableChecklist::for(RiskLevel::Medium, $actions, [])))->toBe([['policy_review', 'missing'], ['policy_dissemination', 'done']]);
 });

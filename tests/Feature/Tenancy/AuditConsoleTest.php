@@ -7,6 +7,7 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\AuditPages;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -120,6 +121,18 @@ it('filters by a range of local days, both edges included', function (): void {
             ->where('entries.total', 2)
             ->where('filters.from', '2026-11-10')
             ->where('filters.to', '2026-11-11'));
+});
+
+it('counts an entry of tonight, Mexico time, in a range that ends today', function (): void {
+    // 20:00 on the 16th in Mexico City is 02:00 UTC on the 17th; 23:00 UTC on the 15th is still the 15th in Mexico.
+    $this->travelTo(CarbonImmutable::parse('2026-11-16 21:00:00', 'America/Mexico_City'));
+    auditRow('tenant.updated', ['created_at' => '2026-11-17 02:00:00+00']);
+    auditRow('tenant.created', ['created_at' => '2026-11-15 23:00:00+00']);
+
+    $this->actingAs(superadmin())->get(route('audit.index', ['from' => '2026-11-16', 'to' => '2026-11-16']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('entries.total', 1)
+            ->where('entries.data.0.event', 'tenant.updated'));
 });
 
 it('ignores a date that is not a date', function (): void {

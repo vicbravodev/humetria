@@ -1,9 +1,10 @@
-import { Head, setLayoutProps } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import PolicyForm from '@/components/attendance/policy-form';
 import PageHeader from '@/components/humetria/page-header';
 import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { fieldCentersLine } from '@/lib/attendance/center-state';
 import { index } from '@/routes/tenant/attendance';
 import type { AttendancePolicyProps } from '@/types';
 
@@ -12,6 +13,7 @@ export default function AttendancePolicyPage({
     policy,
     saved,
     canManage,
+    fieldCenters,
 }: AttendancePolicyProps) {
     const tenantSlug = useTenantSlug();
     setLayoutProps({
@@ -24,7 +26,7 @@ export default function AttendancePolicyPage({
     return (
         <>
             <Head title="Política · Asistencia" />
-            <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     caption="Toda la empresa"
                     title="Política"
@@ -35,10 +37,19 @@ export default function AttendancePolicyPage({
                     }
                     description={
                         canManage
-                            ? 'Cómo marcan las personas de todos tus centros y cuánto se conserva su registro. Cada cambio queda en la bitácora.'
-                            : 'Cómo marcan las personas de todos los centros y cuánto se conserva su registro. Solo el dueño y RH la cambian.'
+                            ? 'La base de cómo marcan las personas de tus centros y cuánto se conserva su registro. Cada cambio queda en la bitácora.'
+                            : 'La base de cómo marcan las personas de los centros y cuánto se conserva su registro. Solo el dueño y RH la cambian.'
                     }
                 />
+                <p className="-mt-4 text-sm text-pretty text-muted-foreground">
+                    {fieldCentersLine(fieldCenters)}{' '}
+                    <Link
+                        href={`${index.url(tenantSlug)}#centros`}
+                        className="font-medium text-primary underline underline-offset-4"
+                    >
+                        Cómo marca cada centro
+                    </Link>
+                </p>
                 {!canManage && <ReadOnlyNotice />}
                 <PolicyForm
                     key={JSON.stringify(policy)}

@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
     activeTab,
     meterText,
+    programCardText,
     programStartText,
     programTools,
     byRisk,
     programTrail,
     themeCoverage,
-    requirementText,
     SCOPE_LABELS,
     stateVariant,
     statusVariant,
@@ -133,6 +133,34 @@ describe('meterText', () => {
     });
 });
 
+describe('programCardText', () => {
+    it('reads the actions done, the themes with actions and the server share of the work', () => {
+        expect(
+            programCardText({
+                exists: true,
+                state: null,
+                meter: { done: 1, total: 1 },
+                coverage: { covered: 1, total: 15 },
+                percent: 6,
+            }),
+        ).toBe(
+            '1 de 1 acción hecha · 1 de 15 temas con acciones · 6 % de avance. Qué se atiende, con qué acciones, fechas y responsables.',
+        );
+    });
+
+    it('asks for the Programa when there is none yet', () => {
+        expect(
+            programCardText({
+                exists: false,
+                state: null,
+                meter: null,
+                coverage: null,
+                percent: null,
+            }),
+        ).toContain('la norma pide un Programa');
+    });
+});
+
 describe('subjectsText', () => {
     it('says the whole center', () => {
         expect(subjectsText(action())).toBe('Todo el centro de trabajo');
@@ -152,38 +180,6 @@ describe('subjectsText', () => {
         expect(subjectsText({ ...areaAction, hiddenAreas: 2 })).toBe(
             'Producción, Ventas y 2 más',
         );
-    });
-});
-
-describe('requirementText', () => {
-    it('says what each line of the Tabla stands at', () => {
-        const line = {
-            key: 'analysis',
-            text: 'Análisis',
-            detail: null,
-        };
-
-        expect(requirementText({ ...line, status: 'covered' })).toBe(
-            'Cubierto',
-        );
-        expect(requirementText({ ...line, status: 'optional' })).toBe(
-            'Opcional',
-        );
-        expect(requirementText({ ...line, status: 'missing' })).toBe('Falta');
-        expect(
-            requirementText({
-                ...line,
-                status: 'missing',
-                detail: '2 de 3 filas',
-            }),
-        ).toBe('Falta · 2 de 3 filas');
-        expect(
-            requirementText({
-                ...line,
-                status: 'covered',
-                detail: '3 de 3 filas',
-            }),
-        ).toBe('Cubierto · 3 de 3 filas');
     });
 });
 

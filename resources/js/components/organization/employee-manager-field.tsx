@@ -23,7 +23,7 @@ export default function EmployeeManagerField({
             : `${choices.managersUrl}?${new URLSearchParams({ except }).toString()}`;
 
     return (
-        <div className="grid gap-2">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
             <EmployeeChoiceField
                 name="manager_id"
                 label="Jefe directo"

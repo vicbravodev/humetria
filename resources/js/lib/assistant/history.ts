@@ -16,7 +16,7 @@ function dayNumber(instant: Date): number {
     return Math.floor(Date.UTC(year, month - 1, day) / 86_400_000);
 }
 
-/** Hoy, Ayer, Esta semana (the last six days) or Anteriores, by the day in Mexico City. */
+/** Hoy, Esta semana (the six days before) or Antes, by the day in Mexico City. */
 export function dayLabel(updatedAt: string, now: Date): string {
     const age = dayNumber(now) - dayNumber(new Date(updatedAt));
 
@@ -24,11 +24,12 @@ export function dayLabel(updatedAt: string, now: Date): string {
         return 'Hoy';
     }
 
-    if (age === 1) {
-        return 'Ayer';
-    }
+    return age < 7 ? 'Esta semana' : 'Antes';
+}
 
-    return age < 7 ? 'Esta semana' : 'Anteriores';
+/** The query of the history page: the search only when there is one, so a plain page keeps a plain address. */
+export function historyQuery(filters: { q: string }): { q?: string } {
+    return filters.q === '' ? {} : { q: filters.q };
 }
 
 export type DayGroup = { label: string; rows: ConversationRow[] };

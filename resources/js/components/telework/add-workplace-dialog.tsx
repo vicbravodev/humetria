@@ -1,16 +1,9 @@
-import { Form } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import FormSheet from '@/components/humetria/form-sheet';
 import WorkplaceFields from '@/components/telework/workplace-fields';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
+import { SheetTrigger } from '@/components/ui/sheet';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { store } from '@/routes/tenant/telework/teleworkers/workplaces';
 
@@ -26,46 +19,25 @@ export default function AddWorkplaceDialog({
     const [open, setOpen] = useState(false);
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline">
-                    <Plus aria-hidden />
-                    Agregar lugar
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogTitle>Agregar un lugar de trabajo</DialogTitle>
-                <DialogDescription>
-                    Se le pedirá la lista de verificación de este lugar.
-                </DialogDescription>
-                <Form
-                    {...store.form({
-                        tenant: tenantSlug,
-                        teleworker: teleworkerId,
-                    })}
-                    noValidate
-                    onSuccess={() => setOpen(false)}
-                    className="grid gap-6"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <WorkplaceFields
-                                index={null}
-                                states={states}
-                                errors={errors}
-                            />
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="w-fit"
-                            >
-                                {processing && <Spinner />}
-                                Agregar lugar
-                            </Button>
-                        </>
-                    )}
-                </Form>
-            </DialogContent>
-        </Dialog>
+        <FormSheet
+            open={open}
+            onOpenChange={setOpen}
+            title="Agregar un lugar de trabajo"
+            description="Se le pedirá la lista de verificación de este lugar."
+            form={store.form({ tenant: tenantSlug, teleworker: teleworkerId })}
+            submit="Agregar lugar"
+            trigger={
+                <SheetTrigger asChild>
+                    <Button variant="outline">
+                        <Plus aria-hidden />
+                        Agregar lugar
+                    </Button>
+                </SheetTrigger>
+            }
+        >
+            {(errors) => (
+                <WorkplaceFields index={null} states={states} errors={errors} />
+            )}
+        </FormSheet>
     );
 }

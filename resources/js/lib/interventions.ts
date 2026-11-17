@@ -12,6 +12,8 @@ import type {
     ProgramScope,
     ProgramStateValue,
     Requirement,
+    ResultsProgramCard,
+    ProgramRowStateValue,
 } from '@/types';
 
 /** What an evaluation without a Programa tells: the title and the sentence (num. 8.3). */
@@ -104,11 +106,57 @@ export function stateVariant(state: ProgramStateValue): BadgeVariant {
     }
 }
 
+/**
+ * How the state of a row reads: not started (only planned actions) apart from running, and done while its follow-up
+ * evaluation (num. 8.4 e) waits apart from done.
+ */
+export function rowStateVariant(state: ProgramRowStateValue): BadgeVariant {
+    switch (state) {
+        case 'none':
+            return 'secondary';
+        case 'planned':
+            return 'outline';
+        case 'in_progress':
+            return 'default';
+        case 'follow_up':
+            return 'warning';
+        case 'done':
+            return 'success';
+    }
+}
+
+/** «2 de 15 temas con acciones»: the rows with an action not cancelled, of all the rows. */
+export function coverageText(coverage: {
+    covered: number;
+    total: number;
+}): string {
+    return `${coverage.covered} de ${coverage.total} ${coverage.total === 1 ? 'tema' : 'temas'} con acciones`;
+}
+
 /** What the meter counts: "3 de 8 acciones hechas"; nothing yet reads as such. */
 export function meterText(meter: { done: number; total: number }): string {
     return meter.total === 0
         ? 'Aún no hay acciones'
         : `${meter.done} de ${meter.total} ${meter.total === 1 ? 'acción hecha' : 'acciones hechas'}`;
+}
+
+/**
+ * What the Programa card of the results says: the actions done, the themes with actions and the server's share of the
+ * work (never 100 % while a theme has no action), or that the norm asks for a Programa not made yet.
+ */
+export function programCardText(program: ResultsProgramCard): string {
+    const { meter, coverage, percent } = program;
+
+    if (
+        !program.exists ||
+        meter === null ||
+        coverage === null ||
+        percent === null
+    ) {
+        return 'Hay cuestionarios en riesgo medio o más: la norma pide un Programa con acciones, fechas y responsable (numeral 8.3).';
+    }
+
+    return `${meterText(meter)} · ${coverageText(coverage)} · ${percent} % de avance. Qué se atiende, con qué acciones, fechas y responsables.`;
 }
 
 /** Who an action is for: the whole center, or the areas shown (and how many more stay hidden). */
@@ -124,18 +172,21 @@ export function subjectsText(action: ProgramAction): string {
     return `${names}${hidden}`;
 }
 
-/** The icon-less sentence for a line of «Lo que pide la Tabla». */
+const REQUIREMENT_WORDS: Record<Requirement['status'], string> = {
+    planned: 'Planeada',
+    in_progress: 'En curso',
+    done: 'Hecha',
+    optional: 'Opcional',
+    missing: 'Falta',
+};
+
+/** The icon-less sentence for a line of «Lo que pide la Tabla»: where it stands, and how many rows when it counts them. */
 export function requirementText(line: Requirement): string {
-    switch (line.status) {
-        case 'covered':
-            return line.detail === null
-                ? 'Cubierto'
-                : `Cubierto · ${line.detail}`;
-        case 'optional':
-            return 'Opcional';
-        case 'missing':
-            return line.detail === null ? 'Falta' : `Falta · ${line.detail}`;
-    }
+    const word = REQUIREMENT_WORDS[line.status];
+
+    return line.detail === null || line.status === 'optional'
+        ? word
+        : `${word} · ${line.detail}`;
 }
 
 /** The tools of whoever writes the Programa, or null for who only reads it: the server sends them to the former only. */
@@ -181,7 +232,7 @@ export function themeCoverage(rows: { meter: { total: number } }[]): {
         covered,
         total: rows.length,
         actions: rows.reduce((sum, row) => sum + row.meter.total, 0),
-        text: `${covered} de ${rows.length} ${rows.length === 1 ? 'tema' : 'temas'} con acciones`,
+        text: coverageText({ covered, total: rows.length }),
     };
 }
 
@@ -197,4 +248,14 @@ export function byRisk<R extends { level: { value: string } | null }>(
             : RISK_ORDER.indexOf(row.level.value);
 
     return rows.toSorted((a, b) => rank(a) - rank(b));
+}
+
+/** The errors of the last answer of the server, without those of the fields edited since: a corrected field says nothing. */
+export function unfixedErrors(
+    errors: Partial<Record<string, string>>,
+    edited: string[],
+): Partial<Record<string, string>> {
+    return Object.fromEntries(
+        Object.entries(errors).filter(([field]) => !edited.includes(field)),
+    );
 }

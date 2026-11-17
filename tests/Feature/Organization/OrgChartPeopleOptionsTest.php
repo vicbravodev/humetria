@@ -94,8 +94,8 @@ it('can leave out the person alone, to choose who takes their place among those 
 });
 
 it('searches like the Empleados list: words in any order, email, and a mobile written however', function (string $typed): void {
-    $ana = person($this->tenant, 'Ána López Pérez', ['email' => 'ana.lopez@acme.mx', 'mobile' => '5512345678']);
-    person($this->tenant, 'Beto Ruiz', ['email' => 'beto@acme.mx', 'mobile' => '5599998888']);
+    $ana = person($this->tenant, 'Ána López Pérez', ['email' => 'ana.lopez@acme.mx', 'mobile' => '+525512345678']);
+    person($this->tenant, 'Beto Ruiz', ['email' => 'beto@acme.mx', 'mobile' => '+525599998888']);
 
     $this->actingAs($this->hr)
         ->getJson(route('tenant.org-chart.people.options', [$this->tenant, 'q' => $typed]))

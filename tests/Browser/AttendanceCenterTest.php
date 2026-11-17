@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Attendance\Enums\CenterMode;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -49,6 +51,22 @@ it('shows RH a center with its zones and where each is', function (bool $dark, b
     'light, phone' => [false, true],
     'dark, phone' => [true, true],
 ]);
+
+it('lets RH put a center without zones nor screens in the field, on the phone', function (bool $dark): void {
+    [$url, $plant] = centerPanel(withZone: false);
+
+    visitPage('attendance/center', $url, $dark, mobile: true)
+        ->assertSee('Cómo marcan aquí')
+        ->assertSee('Sin zonas')
+        ->radio('mode', 'field')
+        ->waitForText('Este centro marca en campo desde la siguiente marca.')
+        ->assertSee('En campo: cada persona marca desde su celular donde esté.')
+        ->assertDontSee('Sin zonas')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(AttendanceCenterMode::query()->where('work_center_id', $plant->id)->sole()->mode)->toBe(CenterMode::Field);
+})->with(['light' => false, 'dark' => true]);
 
 it('lets RH touch the plan of the zones to see whether a mark there would count', function (): void {
     [$url] = centerPanel();

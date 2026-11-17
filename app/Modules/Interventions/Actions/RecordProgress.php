@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Interventions\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Interventions\Enums\ActionStatus;
 use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Interventions\Models\ProgressEntry;
@@ -21,11 +22,12 @@ use Throwable;
  * HR records a step of an action (num. 8.4 d): the day, the state it moves to and a note. The log is insert-only: a step is
  * never edited, and the entry and the action's new state are written together. The moves are planned to running, planned or
  * running to done, done back to running (reopened) and running to running (a note); a cancellation has its own action. The
- * day cannot be in the future.
+ * day cannot be in the future. Each step goes to the audit trail too, which names who impersonated the person who recorded
+ * it; its note and its file do not.
  */
 final readonly class RecordProgress
 {
-    public function __construct(private CurrentTenant $tenant, private EvidenceStore $evidence, private InterventionFiles $files) {}
+    public function __construct(private CurrentTenant $tenant, private EvidenceStore $evidence, private InterventionFiles $files, private RecordAudit $audit) {}
 
     /**
      * @param  string|null  $evidenceFile  Path of the uploaded file of evidence (a PDF or an image), if one came.
@@ -68,6 +70,7 @@ final readonly class RecordProgress
                 ]);
                 $action->update(['status' => $to, 'completed_on' => $to === ActionStatus::Done ? $recordedOn : null]);
                 Log::info('intervention.progress_recorded', ['action_id' => $action->id, 'program_id' => $action->program_id, 'from' => $from->value, 'to' => $to->value, 'with_evidence' => $stored !== null]);
+                $this->audit->handle('interventions.progress_recorded', $action, ['action_id' => $action->id, 'program_id' => $action->program_id, 'entry_id' => $entry->id, 'from' => $from->value, 'to' => $to->value, 'recorded_on' => $recordedOn, 'with_evidence' => $stored !== null]);
 
                 return $entry;
             });

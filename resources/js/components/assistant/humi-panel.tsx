@@ -3,10 +3,12 @@ import HumiComposer from '@/components/assistant/humi-composer';
 import HumiHeader from '@/components/assistant/humi-header';
 import HumiThread from '@/components/assistant/humi-thread';
 import { useHumiChat } from '@/hooks/use-humi-chat';
+import { useHumiLiveFacts } from '@/hooks/use-humi-live-facts';
 import { useHumiMood } from '@/hooks/use-humi-mood';
+import { useHumiSeenPage } from '@/hooks/use-humi-seen-page';
 import type { PageContext } from '@/lib/assistant/chat-request';
 import { contextLabel } from '@/lib/assistant/page-context';
-import { suggestionsFor } from '@/lib/assistant/suggestions';
+import { startersFor } from '@/lib/assistant/suggestions';
 import { index as assistantPage } from '@/routes/tenant/assistant';
 
 /** Why the person cannot write: Humi is off for the company, its budget is used, or they wrote too much for now. */
@@ -41,11 +43,13 @@ export default function HumiPanel({
     /** A question to leave written in the box, for the person to send. */
     initialText?: string | null;
 }) {
-    const chat = useHumiChat(slug, page, openId);
+    const { seen, drop } = useHumiSeenPage(page);
+    const chat = useHumiChat(slug, seen, openId);
     const { failure, dismiss } = chat;
     const streaming =
         chat.status === 'streaming' || chat.status === 'submitted';
     const [writing, setWriting] = useState(false);
+    const facts = useHumiLiveFacts(slug);
     const expression = useHumiMood(streaming, failure !== null, writing);
 
     useEffect(() => {
@@ -59,17 +63,20 @@ export default function HumiPanel({
     }, [failure, dismiss]);
 
     return (
-        <div className="flex h-full min-h-0 flex-col bg-background">
+        <div
+            data-full={fullPage}
+            className="group/humi flex h-full min-h-0 flex-col bg-background"
+        >
             <HumiHeader
                 expression={expression}
-                context={contextLabel(page)}
+                context={contextLabel(seen)}
                 fullPageHref={fullPage ? null : assistantPage.url(slug)}
-                onNew={chat.reset}
+                onNew={fullPage ? null : chat.reset}
                 onClose={onClose}
             />
             <HumiThread
                 chat={chat}
-                suggestions={suggestionsFor(page)}
+                starters={startersFor(seen, facts)}
                 onPick={chat.send}
             />
             <HumiComposer
@@ -80,6 +87,8 @@ export default function HumiPanel({
                 onSend={chat.send}
                 onStop={chat.stop}
                 onWriting={setWriting}
+                context={seen === null ? null : contextLabel(seen)}
+                onDropContext={drop}
             />
         </div>
     );

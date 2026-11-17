@@ -1,5 +1,6 @@
 import { ArrowUp, Square } from 'lucide-react';
 import { useState, type KeyboardEvent } from 'react';
+import HumiContextChip from '@/components/assistant/humi-context-chip';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -14,6 +15,8 @@ export default function HumiComposer({
     onStop,
     onWriting,
     initialText = '',
+    context = null,
+    onDropContext = () => undefined,
 }: {
     streaming: boolean;
     /** Why the person cannot write now; null while they can. */
@@ -24,6 +27,9 @@ export default function HumiComposer({
     onWriting: (writing: boolean) => void;
     /** What the box starts with: a question left written, never sent. */
     initialText?: string;
+    /** The page Humi is looking at, shown beside the box; null when none goes with the questions. */
+    context?: string | null;
+    onDropContext?: () => void;
 }) {
     const [text, setText] = useState(initialText);
     const closed = closedText !== null;
@@ -47,7 +53,10 @@ export default function HumiComposer({
     }
 
     return (
-        <div className="flex flex-col gap-2 border-t p-4">
+        <div className="flex flex-col gap-2 border-t p-4 group-data-[full=true]/humi:border-t-0 group-data-[full=true]/humi:px-[max(1rem,calc((100%-720px)/2))]">
+            {context !== null && (
+                <HumiContextChip label={context} onRemove={onDropContext} />
+            )}
             <div className="flex items-end gap-2 rounded-lg border border-input bg-card p-1.5 pl-3.5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring">
                 <Textarea
                     value={text}

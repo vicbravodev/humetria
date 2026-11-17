@@ -7,6 +7,7 @@ import DemoMessageField from '@/components/landing/demo-message-field';
 import DemoPrivacyNote from '@/components/landing/demo-privacy-note';
 import DemoTextField from '@/components/landing/demo-text-field';
 import DemoToolsField from '@/components/landing/demo-tools-field';
+import PhoneField from '@/components/phone-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { track, trackFormErrors, trackLead } from '@/lib/analytics';
@@ -43,7 +44,15 @@ export default function DemoRequestForm() {
                     .getElementById('demo-request-form')
                     ?.querySelectorAll<HTMLInputElement>('[name]');
 
-                firstInvalidField(fields ?? [], errors)?.focus();
+                const field = firstInvalidField(fields ?? [], errors);
+
+                // A phone sends a hidden field: what takes the focus is the box it is typed in.
+                (field?.type === 'hidden'
+                    ? field.parentElement?.querySelector<HTMLInputElement>(
+                          'input[type=tel]',
+                      )
+                    : field
+                )?.focus();
             }}
             onHttpException={(response) => {
                 const message = httpErrorMessage(response);
@@ -85,14 +94,12 @@ export default function DemoRequestForm() {
                             maxLength={160}
                             error={errors['company']}
                         />
-                        <DemoTextField
+                        <PhoneField
                             name="whatsapp"
-                            type="tel"
+                            idPrefix="demo"
                             label="WhatsApp"
-                            autoComplete="tel-national"
-                            inputMode="tel"
-                            placeholder="55 1234 5678"
                             required
+                            className="h-13 bg-background"
                             error={errors['whatsapp']}
                         />
                     </div>

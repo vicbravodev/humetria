@@ -1,7 +1,7 @@
 import { Calculator } from 'lucide-react';
 import StatementPreviewLines from '@/components/billing/statement-preview-lines';
 import InputError from '@/components/humetria/input-error';
-import { Input } from '@/components/ui/input';
+import MonthPicker from '@/components/humetria/month-picker';
 import { Label } from '@/components/ui/label';
 import { useLivePreview } from '@/hooks/use-live-preview';
 import { parseStatementPreview } from '@/lib/billing-statements';
@@ -29,16 +29,16 @@ export default function GenerateStatementForm({
     return (
         <div ref={anchorRef} onChange={() => schedule()} className="grid gap-4">
             <div className="grid gap-2">
-                <Label htmlFor="statement-period">Mes</Label>
-                <Input
-                    id="statement-period"
+                <Label htmlFor="period">Mes</Label>
+                <MonthPicker
+                    id="period"
                     name="period"
-                    type="month"
                     defaultValue={defaultPeriod}
-                    aria-invalid={problem === undefined ? undefined : true}
-                    aria-describedby="statement-period-error"
+                    onChange={() => schedule()}
+                    invalid={problem !== undefined}
+                    describedBy="period-error"
                 />
-                <InputError id="statement-period-error" message={problem} />
+                <InputError id="period-error" message={problem} />
             </div>
             <aside
                 aria-label="Lo que dirá el estado de cuenta"

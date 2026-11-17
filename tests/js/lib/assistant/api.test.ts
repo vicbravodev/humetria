@@ -10,6 +10,7 @@ import {
     latestAnswerId,
     deleteConversation,
     latestConversationId,
+    readLiveFacts,
     readConversation,
     requestStop,
     sendFeedback,
@@ -197,5 +198,42 @@ describe('assistant api: reading and deleting a conversation', () => {
 
         fetcher.mockRejectedValueOnce(new Error('offline'));
         expect(await deleteConversation('acme', 'c-1')).toBe(false);
+    });
+});
+
+describe('assistant api: live facts', () => {
+    const fetcher = vi.fn();
+
+    beforeEach(() => {
+        vi.stubGlobal('fetch', fetcher);
+        vi.stubGlobal('document', { cookie: '' });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        fetcher.mockReset();
+    });
+
+    it('reads the facts of the company, only those that are text', async () => {
+        fetcher.mockResolvedValue(
+            respond({
+                facts: { pending: '1 pendiente', risk: 3, telework: null },
+            }),
+        );
+
+        expect(await readLiveFacts('acme')).toEqual({ pending: '1 pendiente' });
+        expect(String(fetcher.mock.calls[0]?.[0])).toBe(
+            '/admin/acme/assistant/facts',
+        );
+    });
+
+    it('has no facts when the server fails or answers something else', async () => {
+        fetcher.mockResolvedValueOnce(respond({}, false));
+        fetcher.mockResolvedValueOnce(respond({ facts: ['a'] }));
+        fetcher.mockRejectedValueOnce(new Error('offline'));
+
+        expect(await readLiveFacts('acme')).toEqual({});
+        expect(await readLiveFacts('acme')).toEqual({});
+        expect(await readLiveFacts('acme')).toEqual({});
     });
 });

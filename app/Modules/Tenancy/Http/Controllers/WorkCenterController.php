@@ -49,13 +49,15 @@ final class WorkCenterController extends Controller
 
         $showArchived = $request->boolean('archived');
         $archived = WorkCenter::query()->whereNotNull('archived_at')->count();
-        $workCenters = $listWorkCenters->handle($showArchived);
+        $search = $request->string('q')->trim()->limit(100, '')->toString();
+        $workCenters = $listWorkCenters->handle($showArchived, $search);
         $ids = array_values(array_map(fn (WorkCenter $workCenter): string => $workCenter->id, $workCenters->items()));
         $areas = $this->headcount->areasByWorkCenter($ids);
         $standings = $this->schedule->forWorkCenters($ids, withAnswers: true);
 
         return Inertia::render('tenancy/work-centers', [
             'view' => $showArchived ? 'archived' : 'active',
+            'search' => $search,
             // What the plan covers and how much of it the company uses; null for a company without a plan.
             'plan_limit' => $this->limits->limit($this->currentTenant->id(), CompanyLimits::CENTERS)?->toArray(),
             'counts' => ['active' => WorkCenter::query()->count() - $archived, 'archived' => $archived],

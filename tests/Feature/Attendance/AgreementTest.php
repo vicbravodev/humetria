@@ -38,6 +38,12 @@ it('writes version 1 of the agreement on first use, in plain words, with what is
         ->and(AttendanceAgreement::query()->count())->toBe(1);
 });
 
+it('tells that in a center in the field the location is kept even outside every zone, and only when marking', function (): void {
+    expect(resolve(CurrentAgreement::class)->get()->body)
+        ->toContain('Si su centro de trabajo marca en campo, la ubicación se guarda aunque usted marque fuera de las zonas del centro')
+        ->toContain('Nunca se toma su ubicación en otro momento ni en segundo plano');
+});
+
 it('says the retention of the company\'s policy, and writes a new version when it changes, keeping the old one', function (): void {
     AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'retention_months' => 24]);
     $first = resolve(CurrentAgreement::class)->get();

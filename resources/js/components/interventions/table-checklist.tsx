@@ -1,17 +1,26 @@
-import { CircleCheck, CircleDashed, Minus } from 'lucide-react';
+import {
+    Circle,
+    CircleCheck,
+    CircleDashed,
+    CircleDot,
+    Minus,
+} from 'lucide-react';
 import { requirementText } from '@/lib/interventions';
 import { cn } from '@/lib/utils';
 import type { Requirement } from '@/types';
 
 const ICONS = {
-    covered: CircleCheck,
+    planned: Circle,
+    in_progress: CircleDot,
+    done: CircleCheck,
     missing: CircleDashed,
     optional: Minus,
 };
 
 /**
  * «Lo que pide la Tabla» (II.4 and III.4; criterio C-34): what the norm asks the Programa to include at the highest level of
- * the evaluation, with what is covered and what is missing. «Cubierto» only says something of that kind is recorded.
+ * the evaluation, and where each line stands: planned, running or done (its most advanced action), or missing. It only says
+ * what is recorded, never whether it is enough.
  */
 export default function TableChecklist({
     requirements,
@@ -31,8 +40,8 @@ export default function TableChecklist({
                 Lo que pide la Tabla
             </h2>
             <p className="text-sm text-muted-foreground">
-                Según el nivel más alto del resultado. «Cubierto» solo dice que
-                hay algo registrado: no juzga si basta.
+                Según el nivel más alto del resultado. Cada línea dice cómo va
+                su acción más avanzada: no juzga si basta.
             </p>
             <ul className="grid gap-2.5">
                 {requirements.map((line) => {
@@ -44,7 +53,7 @@ export default function TableChecklist({
                                 aria-hidden
                                 className={cn(
                                     'mt-0.5 size-5 shrink-0',
-                                    line.status === 'covered'
+                                    line.status === 'done'
                                         ? 'text-primary'
                                         : 'text-muted-foreground',
                                 )}

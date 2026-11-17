@@ -43,7 +43,7 @@ export default function ScenarioCostAside({
         <aside
             aria-label="Costo del escenario"
             aria-busy={loading}
-            className="grid content-start gap-5 card p-6 shadow-raised min-[1240px]:sticky min-[1240px]:top-6"
+            className="grid grid-cols-[minmax(0,1fr)] content-start gap-5 card p-6 shadow-raised min-[1240px]:sticky min-[1240px]:top-6"
         >
             <div className="grid gap-1.5" aria-live="polite">
                 <p className="text-muted-foreground">Costo del primer año</p>

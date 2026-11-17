@@ -67,3 +67,16 @@ export function reportableFailure(error: Error): Error | null {
 
     return reported;
 }
+
+/** What the panel says when the person wrote too much for now: about when Humi is back, and that the rest still works. */
+export function rateWaitText(retryAfter: number | null): string {
+    const minutes = retryAfter === null ? null : Math.ceil(retryAfter / 60);
+    const when =
+        minutes === null
+            ? 'en unos minutos'
+            : minutes <= 1
+              ? 'en un minuto'
+              : `en unos ${minutes} minutos`;
+
+    return `Hiciste muchas preguntas seguidas. Humi vuelve ${when}. La página sigue funcionando.`;
+}

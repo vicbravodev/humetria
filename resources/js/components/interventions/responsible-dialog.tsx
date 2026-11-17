@@ -1,4 +1,4 @@
-import FormDialog from '@/components/interventions/form-dialog';
+import FormDialog from '@/components/humetria/form-dialog';
 import ResponsibleFields from '@/components/interventions/responsible-fields';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { responsible } from '@/routes/tenant/campaigns/program';

@@ -63,6 +63,8 @@ final readonly class CompanyProgramOutlines implements ProgramOutlines
                 followUp: self::followUp($item),
                 actions: array_values(array_map(fn (ProgramAction $action): ProgramOutlineAction => self::action($action, $shown), array_filter($actions, fn (ProgramAction $action): bool => $action->item_id === $item->id))),
             ), $items),
+            coverage: $standing['coverage'],
+            percent: $standing['percent'],
         );
     }
 

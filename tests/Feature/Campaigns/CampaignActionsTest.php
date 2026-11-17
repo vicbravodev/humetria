@@ -219,7 +219,7 @@ it('cannot resend to someone with nothing pending or no email', function (string
     $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->firstOrFail();
     $case === 'done'
         ? ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $participant->id)->update(['status' => InstrumentStatus::Completed, 'completed_at' => now()])
-        : Employee::query()->withoutGlobalScopes()->whereKey($participant->employee_id)->update(['email' => null, 'mobile' => '5512345678']);
+        : Employee::query()->withoutGlobalScopes()->whereKey($participant->employee_id)->update(['email' => null, 'mobile' => '+525512345678']);
 
     $this->actingAs($this->hr)->post(route('tenant.campaigns.participants.resend', [$this->tenant, $campaign->id, $participant->id]))->assertStatus(409);
 
@@ -252,7 +252,7 @@ it('gives a newcomer Guía III when everyone takes it, never when a sample does'
 
 it('invites someone who got an email after the launch, and gives back the guides of someone who returned', function (): void {
     $people = staffOf($this->tenant, $this->plant, 18)->values();
-    $people[0]->update(['email' => null, 'mobile' => '5512345678']);
+    $people[0]->update(['email' => null, 'mobile' => '+525512345678']);
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => null);
     $returned = participantOf($campaign, $people[1]);
     ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $returned->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
@@ -273,7 +273,7 @@ it('keeps the link of someone who returned without an email: it works again, so 
     $returned = participantOf($campaign, $people[1]);
     $link = $returned->token_hash;
     ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', $returned->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
-    $people[1]->update(['email' => null, 'mobile' => '5512345678']);
+    $people[1]->update(['email' => null, 'mobile' => '+525512345678']);
 
     $this->actingAs($this->hr)
         ->post(route('tenant.campaigns.invite-missing', [$this->tenant, $campaign->id]))
@@ -289,7 +289,7 @@ it('keeps the link of someone who returned without an email: it works again, so 
 it('says who was brought up to date and who of them got a link, when someone has no email', function (): void {
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr);
     staffOf($this->tenant, $this->plant, 2);
-    staffOf($this->tenant, $this->plant, 1)->first()?->update(['email' => null, 'mobile' => '5512345678']);
+    staffOf($this->tenant, $this->plant, 1)->first()?->update(['email' => null, 'mobile' => '+525512345678']);
 
     $this->actingAs($this->hr)
         ->post(route('tenant.campaigns.invite-missing', [$this->tenant, $campaign->id]))
@@ -306,7 +306,7 @@ it('says when there is nobody to invite', function (): void {
 
 it('tells the page how many people inviting the missing brings up to date and how many get a link, exactly as it then does', function (Closure $change, int $updated, int $links): void {
     $people = staffOf($this->tenant, $this->plant, 18)->values();
-    $people[0]->update(['email' => null, 'mobile' => '5512345678']);
+    $people[0]->update(['email' => null, 'mobile' => '+525512345678']);
     $campaign = launchedEvaluation($this->tenant, $this->plant, $this->hr, staff: fn () => null);
     $change->call($this, $campaign, $people);
     $show = fn () => $this->actingAs($this->hr)->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]));
@@ -318,12 +318,12 @@ it('tells the page how many people inviting the missing brings up to date and ho
 })->with([
     'nobody' => [fn (Campaign $campaign) => null, 0, 0],
     'hired, with an email' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 2), 2, 2],
-    'hired, without one' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 1)->first()?->update(['email' => null, 'mobile' => '5512345678']), 1, 0],
+    'hired, without one' => [fn (Campaign $campaign) => staffOf($this->tenant, $this->plant, 1)->first()?->update(['email' => null, 'mobile' => '+525512345678']), 1, 0],
     'got an email after the launch' => [fn (Campaign $campaign, $people) => $people[0]->update(['email' => 'ana@acme.mx']), 1, 1],
     'returned, with an email' => [fn (Campaign $campaign, $people) => ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', participantOf($campaign, $people[1])->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]), 1, 1],
     'returned, with a link but no email now' => [function (Campaign $campaign, $people): void {
         ParticipantInstrument::query()->withoutGlobalScopes()->where('participant_id', participantOf($campaign, $people[1])->id)->update(['status' => InstrumentStatus::Cancelled, 'cancelled_at' => now()]);
-        $people[1]->update(['email' => null, 'mobile' => '5512345678']);
+        $people[1]->update(['email' => null, 'mobile' => '+525512345678']);
     }, 1, 0],
 ]);
 

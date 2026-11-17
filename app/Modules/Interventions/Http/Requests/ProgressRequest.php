@@ -6,6 +6,7 @@ namespace App\Modules\Interventions\Http\Requests;
 
 use App\Modules\Interventions\Enums\ActionStatus;
 use App\Modules\Interventions\Support\ProgramClock;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,19 @@ final class ProgressRequest extends FormRequest
             'note' => ['nullable', 'string', 'max:2000'],
             // mimetypes reads the file's content, not its extension.
             'evidence' => ['nullable', 'file', 'mimetypes:application/pdf,image/jpeg,image/png', 'max:'.config()->integer('interventions.max_document_kb')],
+        ];
+    }
+
+    /**
+     * The days as people read them («20 nov 2026»), never as the database writes them.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'recorded_on.date_format' => 'Elige una fecha válida.',
+            'recorded_on.before_or_equal' => 'La fecha no puede ser posterior a hoy, '.ProgramClock::day(CarbonImmutable::parse(ProgramClock::today())).'.',
         ];
     }
 

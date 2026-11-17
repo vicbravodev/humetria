@@ -29,7 +29,7 @@ export default function HumiCardFrame({
             {link !== null && (
                 <Link
                     href={link}
-                    className="inline-flex items-center gap-1 border-t pt-3 text-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                    className="inline-flex min-h-11 items-center gap-1 border-t pt-3 text-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring xl:min-h-0"
                 >
                     Ver en el panel
                     <ArrowRight aria-hidden className="size-4" />

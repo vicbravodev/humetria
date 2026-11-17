@@ -106,6 +106,34 @@ it('pages the work centers 25 at a time, keeping the view', function (): void {
             ->where('workCenters.prev_page_url', fn (string $url): bool => str_contains($url, 'archived=1')));
 });
 
+it('searches the work centers by name or municipality, ignoring accents, and keeps the counts of each view', function (): void {
+    $tenant = Tenant::factory()->create();
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Querétaro', 'municipality' => 'El Marqués']);
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Sucursal Centro', 'municipality' => 'Querétaro']);
+    WorkCenter::factory()->for($tenant)->create(['name' => 'Oficinas Centrales', 'municipality' => 'Cuauhtémoc']);
+    WorkCenter::factory()->for($tenant)->archived()->create(['name' => 'Bodega Querétaro', 'municipality' => 'Corregidora']);
+    $this->actingAs(ownerOf($tenant));
+
+    $this->get(route('tenant.work-centers.index', ['tenant' => $tenant, 'q' => '  queretaro ']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('search', 'queretaro')
+            ->where('counts', ['active' => 3, 'archived' => 1])
+            ->where('workCenters.data', fn ($rows): bool => collect($rows)->pluck('name')->all() === ['Planta Querétaro', 'Sucursal Centro'])
+            ->where('workCenters.first_page_url', fn (string $url): bool => str_contains($url, 'q=')));
+
+    $this->get(route('tenant.work-centers.index', ['tenant' => $tenant, 'archived' => 1, 'q' => 'queretaro']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('workCenters.data', fn ($rows): bool => collect($rows)->pluck('name')->all() === ['Bodega Querétaro']));
+});
+
+it('sends an empty search when nothing was typed', function (): void {
+    $tenant = Tenant::factory()->create();
+
+    $this->actingAs(ownerOf($tenant))
+        ->get(route('tenant.work-centers.index', $tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('search', ''));
+});
+
 it('never shows the work centers of another company', function (): void {
     $tenant = Tenant::factory()->create();
     WorkCenter::factory()->create(['name' => 'Ajeno']);

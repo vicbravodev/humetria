@@ -8,6 +8,7 @@ import { useStickToBottom } from '@/hooks/use-stick-to-bottom';
 import type { HumiChat } from '@/hooks/use-humi-chat';
 import { plainText } from '@/lib/assistant/markdown';
 import { isWaiting, shownMessages, viewOf } from '@/lib/assistant/message-view';
+import type { Starter } from '@/lib/assistant/suggestions';
 
 /**
  * The conversation: messages one under another, anchored to the end while Humi writes unless the person scrolled up, and
@@ -15,11 +16,11 @@ import { isWaiting, shownMessages, viewOf } from '@/lib/assistant/message-view';
  */
 export default function HumiThread({
     chat,
-    suggestions,
+    starters,
     onPick,
 }: {
     chat: HumiChat;
-    suggestions: readonly string[];
+    starters: readonly Starter[];
     onPick: (text: string) => void;
 }) {
     const list = useRef<HTMLDivElement>(null);
@@ -42,10 +43,10 @@ export default function HumiThread({
                 onScroll={onScroll}
                 role="log"
                 aria-label="Conversación con Humi"
-                className="flex h-full flex-col gap-5 overflow-y-auto px-5 py-4"
+                className="flex h-full flex-col gap-5 overflow-y-auto px-5 py-4 group-data-[full=true]/humi:px-[max(1.25rem,calc((100%-720px)/2))]"
             >
                 {shown.length === 0 && !waiting ? (
-                    <HumiEmptyState suggestions={suggestions} onPick={onPick} />
+                    <HumiEmptyState starters={starters} onPick={onPick} />
                 ) : (
                     shown.map((message, index) => (
                         <HumiMessage
@@ -68,7 +69,11 @@ export default function HumiThread({
                 )}
                 {waiting && <HumiThinking />}
                 {chat.failure !== null && (
-                    <HumiFailure failure={chat.failure} onRetry={chat.retry} />
+                    <HumiFailure
+                        failure={chat.failure}
+                        requestId={chat.requestId}
+                        onRetry={chat.retry}
+                    />
                 )}
             </div>
             {!atEnd && (

@@ -1,24 +1,42 @@
 import { router } from '@inertiajs/react';
-import { Trash2 } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 import { useState } from 'react';
+import HumiSuggestionsToggle from '@/components/assistant/humi-suggestions-toggle';
+import HumiHistoryList from '@/components/assistant/humi-history-list';
 import Pagination from '@/components/humetria/pagination';
+import SearchField from '@/components/humetria/search-field';
+import { Button } from '@/components/ui/button';
+import { useQueryFilters } from '@/hooks/use-query-filters';
 import { deleteConversation } from '@/lib/assistant/api';
-import { groupByDay } from '@/lib/assistant/history';
+import { groupByDay, historyQuery } from '@/lib/assistant/history';
+import { index as assistantPage } from '@/routes/tenant/assistant';
 import type { ConversationRow, Paginated } from '@/types';
 
-/** The conversations of the person grouped by day, a page at a time: open one, or delete it. */
+/**
+ * The column of the conversations of the person: a new one, a search by title (on the server, a page at a time) and the
+ * history grouped by day, to open or delete.
+ */
 export default function HumiHistory({
     slug,
     conversations,
+    filters,
     openId,
     onOpen,
+    onNew,
 }: {
     slug: string;
     conversations: Paginated<ConversationRow>;
+    filters: { q: string };
     openId: string | null;
     onOpen: (id: string) => void;
+    onNew: () => void;
 }) {
     const [now] = useState(() => new Date());
+    const { text, type } = useQueryFilters(
+        assistantPage.url(slug),
+        filters,
+        historyQuery,
+    );
     const groups = groupByDay(conversations.data, now);
 
     async function remove(id: string) {
@@ -27,50 +45,31 @@ export default function HumiHistory({
         }
     }
 
-    if (groups.length === 0) {
-        return (
-            <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
-                Todavía no tienes conversaciones con Humi.
-            </p>
-        );
-    }
-
     return (
         <nav aria-label="Historial con Humi" className="flex flex-col gap-4">
-            {groups.map((group) => (
-                <section key={group.label} className="flex flex-col gap-1">
-                    <h2 className="px-2 text-caption font-medium tracking-wide text-muted-foreground uppercase">
-                        {group.label}
-                    </h2>
-                    <ul className="flex flex-col">
-                        {group.rows.map((row) => (
-                            <li
-                                key={row.id}
-                                className="group flex items-center rounded-md hover:bg-accent"
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => onOpen(row.id)}
-                                    aria-current={
-                                        row.id === openId ? 'true' : undefined
-                                    }
-                                    className="min-h-11 min-w-0 flex-1 truncate px-2 text-left text-base focus-visible:outline-2 focus-visible:outline-ring aria-[current=true]:font-semibold"
-                                >
-                                    {row.title}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => void remove(row.id)}
-                                    aria-label={`Borrar la conversación ${row.title}`}
-                                    className="flex size-11 shrink-0 items-center justify-center text-muted-foreground hover:text-destructive focus-visible:outline-2 focus-visible:outline-ring"
-                                >
-                                    <Trash2 aria-hidden className="size-4" />
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </section>
-            ))}
+            <Button onClick={onNew} className="h-11">
+                <SquarePen aria-hidden />
+                Nueva conversación
+            </Button>
+            <SearchField
+                label="Buscar conversaciones"
+                value={text}
+                onChange={type}
+            />
+            {groups.length === 0 ? (
+                <p className="px-3 text-sm text-muted-foreground">
+                    {filters.q === ''
+                        ? 'Todavía no tienes conversaciones con Humi.'
+                        : `Ninguna conversación tiene «${filters.q}».`}
+                </p>
+            ) : (
+                <HumiHistoryList
+                    groups={groups}
+                    openId={openId}
+                    onOpen={onOpen}
+                    onRemove={(id) => void remove(id)}
+                />
+            )}
             <Pagination
                 page={conversations}
                 label="Páginas del historial"
@@ -78,6 +77,13 @@ export default function HumiHistory({
                 next="Ver más antiguas"
                 pinned={false}
             />
+            <div className="mt-auto flex flex-col gap-4 border-t pt-4">
+                <HumiSuggestionsToggle slug={slug} />
+                <p className="text-caption text-muted-foreground">
+                    Pregúntale por el cumplimiento de tu empresa. Solo tú ves
+                    tus conversaciones y puedes borrarlas cuando quieras.
+                </p>
+            </div>
         </nav>
     );
 }

@@ -11,6 +11,7 @@ use App\Modules\Telework\Enums\TeleworkerStatus;
 use App\Modules\Telework\Models\EquipmentItem;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Telework\Support\WorkplaceStanding;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -52,7 +53,7 @@ final readonly class JoinRoster
                 'marital_status' => $data->maritalStatus,
                 'activities' => $data->activities,
                 'job_profile' => $data->jobProfile,
-                'contact_phone' => $data->contactPhone,
+                'contact_phone' => PhoneNumber::e164($data->contactPhone),
                 'no_equipment_reason' => $data->noEquipmentReason === null || trim($data->noEquipmentReason) === '' ? null : trim($data->noEquipmentReason),
                 ...($home?->attributes() ?? []),
             ]);
@@ -83,6 +84,12 @@ final readonly class JoinRoster
             'no_equipment_reason' => ! $hasEquipment && $blank($data->noEquipmentReason),
         ];
 
-        return array_map(fn (): string => 'Este dato es obligatorio.', array_filter($required));
+        $errors = array_map(fn (): string => 'Este dato es obligatorio.', array_filter($required));
+
+        if (! $blank($data->contactPhone) && PhoneNumber::e164($data->contactPhone) === null) {
+            $errors['contact_phone'] = __('validation.phone', ['attribute' => __('validation.attributes.contact_phone')]);
+        }
+
+        return $errors;
     }
 }

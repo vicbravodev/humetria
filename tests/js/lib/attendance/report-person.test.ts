@@ -108,6 +108,15 @@ describe('personNotices', () => {
         expect(personNotices([day()])).toEqual([]);
     });
 
+    it("leaves out «Marcó en campo»: marking in the field is the center's mode, not a warning", () => {
+        expect(isWarning('Marcó en campo')).toBe(false);
+        expect(
+            personNotices([
+                day({ flags: ['Marcó en campo', 'Sin marca de fin'] }),
+            ]),
+        ).toEqual(['Sin marca de fin']);
+    });
+
     it('leaves out «En curso»: a day still going is not a warning, but keeps the real ones beside it', () => {
         expect(personNotices([day({ flags: ['En curso'] })])).toEqual([]);
         expect(

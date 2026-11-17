@@ -124,7 +124,7 @@ it('lists the roster with the derived state of each workplace and, for RH, the 5
         ->where('people.data.0.workplaces.0.status', 'valid')
         ->where('people.data.0.workplaces.1.status', 'pending')
         ->where('people.data.0.maritalStatus', 'single')
-        ->where('people.data.0.contactPhone', '4421234567')
+        ->where('people.data.0.contactPhone', '+524421234567')
         ->where('people.data.0.homeAddress', 'Calle Reforma 12, Centro, 76000 Querétaro, Querétaro')
         ->where('people.data.0.href', route('tenant.telework.teleworkers.show', [$this->tenant, $person->id])));
 });
@@ -416,8 +416,8 @@ it('lists the aspirants after the active people, each with every field and their
         ->where('teleworkers', 2)
         ->where('aspirants', 1)
         ->where('people.data', [
-            $person($ana, 'Ana Ruiz', 'Analista', 'active', [['id' => $anaPlace->id, 'status' => 'valid', 'statusLabel' => 'Validado']], 'single', '4421234567', $address),
-            $person($beto, 'Beto Gil', 'Analista', 'active', [['id' => $betoPlace->id, 'status' => 'pending', 'statusLabel' => 'Pendiente de validar']], 'single', '4421234567', $address),
+            $person($ana, 'Ana Ruiz', 'Analista', 'active', [['id' => $anaPlace->id, 'status' => 'valid', 'statusLabel' => 'Validado']], 'single', '+524421234567', $address),
+            $person($beto, 'Beto Gil', 'Analista', 'active', [['id' => $betoPlace->id, 'status' => 'pending', 'statusLabel' => 'Pendiente de validar']], 'single', '+524421234567', $address),
             $person($aspirant, 'Ciro Paz', 'Diseñador', 'aspirant', [], null, null, null),
         ]));
 });
