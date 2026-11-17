@@ -62,7 +62,7 @@ function evaluatedCenter(Tenant $tenant, WorkCenter $center): Campaign
     return $closed;
 }
 
-function recordOf(Campaign $campaign): App\Modules\Campaigns\Data\CampaignRecord
+function liveFactsRecordOf(Campaign $campaign): App\Modules\Campaigns\Data\CampaignRecord
 {
     workIn(Tenant::query()->findOrFail($campaign->tenant_id));
 
@@ -70,8 +70,8 @@ function recordOf(Campaign $campaign): App\Modules\Campaigns\Data\CampaignRecord
 }
 
 it('gives a short real fact for each first question and each page that may invite, from the same tools Humi uses', function (): void {
-    $closed = recordOf(evaluatedCenter($this->a, $this->plant));
-    $running = recordOf(closingCampaign($this->a, $this->plant, 8, 3));
+    $closed = liveFactsRecordOf(evaluatedCenter($this->a, $this->plant));
+    $running = liveFactsRecordOf(closingCampaign($this->a, $this->plant, 8, 3));
 
     $this->actingAs($this->hr)->getJson(factsUrl($this->a))
         ->assertOk()
@@ -171,7 +171,7 @@ it('is closed to a guest and to a role that may not use Humi', function (): void
 
 it('says one or many as it is: campaigns, questionnaires, centers and Programas', function (): void {
     $south = WorkCenter::factory()->create(['tenant_id' => $this->a->id, 'name' => 'Planta Sur']);
-    $first = recordOf(closingCampaign($this->a, $this->plant, 2, 1));
+    $first = liveFactsRecordOf(closingCampaign($this->a, $this->plant, 2, 1));
     closingCampaign($this->a, $south, 3, 1, 5);
     foreach ([$this->plant, $south] as $center) {
         $late = Program::factory()->create(['tenant_id' => $this->a->id, 'campaign_id' => evaluatedCenter($this->a, $center)->id]);
