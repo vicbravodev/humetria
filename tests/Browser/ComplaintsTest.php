@@ -237,6 +237,40 @@ it('walks the four steps of the form and hands back a reference and a key once',
         ->and(Complaint::query()->withoutGlobalScopes()->first()?->description)->toContain('me grita');
 })->with([[false], [true]]);
 
+// Rediseño de las páginas de la persona (hallazgo 35): the action stuck to the bottom, «Atrás» in the header and the bar under it.
+it('keeps the way forward stuck to the bottom and the way back and the progress at the top', function (): void {
+    $stuck = "(label) => { let e = [...document.querySelectorAll('button, a')].find((b) => b.textContent.trim() === label); while (e && getComputedStyle(e).position !== 'sticky') { e = e.parentElement; } return e !== null; }";
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")->on()->mobile()
+        ->assertScript("() => ({$stuck})('Presentar una queja')", true)
+        ->click('Presentar una queja')
+        ->assertScript("() => ({$stuck})('Continuar')", true)
+        ->assertScript("() => document.querySelector('header').textContent.includes('Atrás')", true)
+        ->assertScript('() => document.querySelector(\'[role="progressbar"]\') !== null', true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('gives the receipt one main action that copies the reference and the key, and the follow-up as a link', function (): void {
+    config(['complaints.ticket.min_seconds' => 0]);
+    $channel = openChannelWithHandler();
+
+    visit("/c/{$channel->access_code}")->on()->mobile()
+        ->click('Presentar una queja')
+        ->click('Denuncia de violencia laboral')
+        ->press('Continuar')
+        ->press('Continuar')
+        ->click('Mi jefa o jefe inmediato')
+        ->press('Continuar')
+        ->fill('#complaint-description', 'Mi jefe me grita todos los días frente a mis compañeros y me amenaza.')
+        ->press('Continuar')
+        ->press('Enviar queja')
+        ->assertSee('Copiar referencia y clave')
+        ->assertScript("() => document.querySelector('main').textContent.indexOf('Su referencia') < document.querySelector('main').textContent.indexOf('Guárdela ahora')", true)
+        ->assertPresent('a[href$="/follow-up"]')
+        ->assertNoJavaScriptErrors();
+});
+
 it('goes back a step without losing what was written', function (): void {
     $channel = openChannelWithHandler();
 

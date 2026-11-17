@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    copyText,
     groupCode,
     keyNote,
     normalizeCode,
@@ -63,5 +64,13 @@ describe('keyNote', () => {
         expect(keyNote(false)).toContain('no sabemos quién es');
         expect(keyNote(true)).not.toContain('no sabemos quién es');
         expect(keyNote(true)).toContain('tiene su contacto');
+    });
+});
+
+describe('copyText', () => {
+    it('hands over both codes, grouped, one per line', () => {
+        expect(copyText('ABCD2345', 'KEYK1234KEYK5678KEYK')).toBe(
+            'Referencia: ABCD 2345\nClave: KEYK 1234 KEYK 5678 KEYK',
+        );
     });
 });

@@ -1,28 +1,22 @@
 import { Clock, ShieldCheck } from 'lucide-react';
 import IntroDetails from '@/components/complaints-public/intro-details';
-import { Button } from '@/components/ui/button';
 import { countOf } from '@/lib/plural';
-import { show } from '@/routes/complaints/follow-up';
 import type { ExternalAlternative } from '@/types';
 
 /**
  * Before writing (board V4-Quejas-Form): what the channel is for, when it is acknowledged and answered, what it protects and
- * what may still identify the person, the procedure the company wrote, and the two ways in — or the federal inspection.
+ * what may still identify the person, the procedure the company wrote, and the federal inspection.
  */
 export default function FormIntro({
-    code,
     procedure,
     acknowledgeWithinDays,
     resolveWithinDays,
     alternative,
-    onStart,
 }: {
-    code: string;
     procedure: string;
     acknowledgeWithinDays: number;
     resolveWithinDays: number;
     alternative: ExternalAlternative;
-    onStart: () => void;
 }) {
     return (
         <div className="flex flex-1 flex-col gap-5">
@@ -66,16 +60,6 @@ export default function FormIntro({
                 </p>
                 <IntroDetails procedure={procedure} />
             </section>
-            <div className="mt-auto flex flex-col gap-2 pt-2">
-                <Button className="w-full" onClick={onStart}>
-                    Presentar una queja
-                </Button>
-                <Button variant="outline" className="w-full" asChild>
-                    <a href={show.url({ code })}>
-                        Ya presenté una: ver cómo va
-                    </a>
-                </Button>
-            </div>
             <p className="text-sm text-muted-foreground">
                 También puede acudir a la {alternative.name}:{' '}
                 {alternative.email} · {alternative.phone}.
