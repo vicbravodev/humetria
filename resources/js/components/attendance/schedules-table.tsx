@@ -79,9 +79,8 @@ export default function SchedulesTable({
                         <TableHead>Persona</TableHead>
                         <TableHead>Semana acordada</TableHead>
                         <TableHead>A la semana</TableHead>
-                        <TableHead>Jornada</TableHead>
                         {canManage && (
-                            <TableHead>
+                            <TableHead className="w-14">
                                 <span className="sr-only">Acciones</span>
                             </TableHead>
                         )}

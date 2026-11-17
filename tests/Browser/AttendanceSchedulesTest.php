@@ -44,22 +44,24 @@ it('shows RH each person\'s schedule and who has none', function (bool $dark, bo
     'dark, phone' => [true, true],
 ]);
 
-it('offers «Fijar horario» in the rows as an outline button, and opens a dialog whose time fields are not cut off', function (): void {
+it('fits the table in the window without scrolling sideways, and opens a person\'s schedule from «…»', function (int $width): void {
+    $url = schedulesPanel();
+
+    visit("{$url}/attendance/schedules")->resize($width, 900)
+        ->assertSee('Diurna · Presencial')
+        ->assertScript('() => { const frame = document.querySelector(\'[data-slot="table-container"]\'); return frame.scrollWidth <= frame.clientWidth; }', true)
+        ->assertScript('() => document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
+        ->click('[aria-label="Acciones de Bob Díaz"]')
+        ->click('Fijar horario')
+        ->assertSee('Horario de Bob Díaz')
+        ->assertNoJavaScriptErrors();
+})->with([1024, 1440, 1920]);
+
+it('opens the schedule from the row\'s «…», with time fields that are not cut off', function (): void {
     $url = schedulesPanel();
 
     visit("{$url}/attendance/schedules")->resize(1440, 900)
-        ->assertSee('Fijar horario')
-        ->assertScript(<<<'JS'
-            () => {
-                const probe = document.createElement('div');
-                probe.style.backgroundColor = 'var(--primary)';
-                document.body.append(probe);
-                const primary = getComputedStyle(probe).backgroundColor;
-                probe.remove();
-                const buttons = [...document.querySelectorAll('tbody button')].filter((button) => button.textContent.trim() === 'Fijar horario');
-                return buttons.length > 0 && buttons.every((button) => getComputedStyle(button).backgroundColor !== primary);
-            }
-            JS, true)
+        ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
         ->assertSee('Hora de entrada de cada día')
         ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] input[type="time"]\')].filter((input) => input.scrollWidth > input.clientWidth).length', 0);
@@ -69,6 +71,7 @@ it('lets RH fix a schedule, with the week\'s total and a note above the year\'s 
     $url = schedulesPanel();
 
     visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
         ->assertSee('Horario de Bob Díaz')
         ->assertSee('40 h a la semana')
@@ -101,6 +104,7 @@ it('lets RH set the time each day starts, optional, and keeps it', function (): 
     $url = schedulesPanel();
 
     visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
         ->assertSee('Hora de entrada de cada día (opcional)')
         ->assertSee('Sin hora de entrada, el día no tiene retardo.')
@@ -122,6 +126,7 @@ it('sets the same start time from Monday to Friday with one field, and shows it 
     $url = schedulesPanel();
 
     visit("{$url}/attendance/schedules")
+        ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
         ->fill('#schedule-start-weekdays', '09:00')
         ->assertValue('#schedule-start-1', '09:00')
