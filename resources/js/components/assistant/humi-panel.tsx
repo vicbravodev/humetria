@@ -4,6 +4,7 @@ import HumiHeader from '@/components/assistant/humi-header';
 import HumiThread from '@/components/assistant/humi-thread';
 import { useHumiChat } from '@/hooks/use-humi-chat';
 import { useHumiMood } from '@/hooks/use-humi-mood';
+import { useHumiSeenPage } from '@/hooks/use-humi-seen-page';
 import type { PageContext } from '@/lib/assistant/chat-request';
 import { contextLabel } from '@/lib/assistant/page-context';
 import { suggestionsFor } from '@/lib/assistant/suggestions';
@@ -41,7 +42,8 @@ export default function HumiPanel({
     /** A question to leave written in the box, for the person to send. */
     initialText?: string | null;
 }) {
-    const chat = useHumiChat(slug, page, openId);
+    const { seen, drop } = useHumiSeenPage(page);
+    const chat = useHumiChat(slug, seen, openId);
     const { failure, dismiss } = chat;
     const streaming =
         chat.status === 'streaming' || chat.status === 'submitted';
@@ -62,14 +64,14 @@ export default function HumiPanel({
         <div className="flex h-full min-h-0 flex-col bg-background">
             <HumiHeader
                 expression={expression}
-                context={contextLabel(page)}
+                context={contextLabel(seen)}
                 fullPageHref={fullPage ? null : assistantPage.url(slug)}
                 onNew={fullPage ? null : chat.reset}
                 onClose={onClose}
             />
             <HumiThread
                 chat={chat}
-                suggestions={suggestionsFor(page)}
+                suggestions={suggestionsFor(seen)}
                 onPick={chat.send}
             />
             <HumiComposer
@@ -80,6 +82,8 @@ export default function HumiPanel({
                 onSend={chat.send}
                 onStop={chat.stop}
                 onWriting={setWriting}
+                context={seen === null ? null : contextLabel(seen)}
+                onDropContext={drop}
             />
         </div>
     );

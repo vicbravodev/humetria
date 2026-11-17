@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Models\TenantAiSettings;
+use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Cache;
@@ -234,4 +235,37 @@ it('keeps the actions of the header together at 16 px from the edge, the same he
     visitPage('dashboard', $panel, mobile: true)
         ->click('[aria-label="Abrir a Humi"]')
         ->assertScript(humiHeader(), '16px 68 Nueva conversación, Cerrar | 1');
+});
+
+/** Like humiServes(), and keeps the body of each chat request in window.humiSent for the test to read. */
+function humiRecords(string $body): string
+{
+    $body = json_encode($body, JSON_THROW_ON_ERROR);
+
+    return "() => { window.humiSent = []; const real = window.fetch.bind(window); window.fetch = (input, init) => { if (String(input instanceof Request ? input.url : input).endsWith('/assistant/chat')) { window.humiSent.push(JSON.parse(init.body)); return Promise.resolve(new Response({$body}, { headers: { 'Content-Type': 'text/event-stream' } })); } return real(input, init); }; return 'ready'; }";
+}
+
+it('shows the page Humi is looking at beside the box, and stops sending it once the person removes it', function (): void {
+    $panel = humiPanelCompany();
+    $campaign = Campaign::factory()->active(now()->addDays(10)->toDateString())->create(['tenant_id' => Tenant::query()->where('slug', 'acme')->sole()->id]);
+    $sentPage = '() => window.humiSent.map((body) => body.pageContext?.kind ?? "ninguna").join(",")';
+
+    visitPage('campaigns/show', "{$panel}/campaigns/{$campaign->id}")
+        ->assertScript(humiRecords(humiStream()), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertSee('Viendo: Esta campaña')
+        ->click('¿Cómo va la participación?')
+        ->assertSee('El riesgo más alto está en')
+        ->assertScript($sentPage, 'campaign')
+        ->click('[aria-label="Quitar contexto"]')
+        ->assertDontSee('Viendo: Esta campaña')
+        ->click('¿Qué dice la norma que debo hacer?')
+        ->assertScript('() => new Promise((done) => setTimeout(() => done(window.humiSent.length), 300))', 2)
+        ->assertScript($sentPage, 'campaign,ninguna')
+        ->assertNoJavaScriptErrors();
+
+    visitPage('dashboard', $panel)
+        ->click('[aria-label="Abrir a Humi"]')
+        ->assertDontSee('Viendo:')
+        ->assertMissing('[aria-label="Quitar contexto"]');
 });
