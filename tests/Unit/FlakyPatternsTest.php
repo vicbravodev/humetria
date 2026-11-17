@@ -56,10 +56,10 @@ it('waits for what a browser test asserts, not a fixed number of seconds', funct
     expect(array_values(array_diff($waits, [
         'tests/Browser/TenantConsoleTest.php:654',
         'tests/Browser/TenantConsoleTest.php:672',
-        'tests/Browser/AssistantInvitationTest.php:86',
-        'tests/Browser/AssistantInvitationTest.php:93',
-        'tests/Browser/AssistantInvitationTest.php:95',
-        'tests/Browser/AssistantInvitationTest.php:112',
+        'tests/Browser/AssistantInvitationTest.php:97',
+        'tests/Browser/AssistantInvitationTest.php:104',
+        'tests/Browser/AssistantInvitationTest.php:106',
+        'tests/Browser/AssistantInvitationTest.php:124',
     ])))->toBe([]);
 });
 
