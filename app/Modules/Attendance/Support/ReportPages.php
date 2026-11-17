@@ -9,6 +9,7 @@ use App\Modules\Attendance\Data\AuthorityRow;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Carbon\CarbonImmutable;
 
@@ -22,34 +23,34 @@ final readonly class ReportPages
 {
     private const int PER_PAGE = 25;
 
-    public function __construct(private BuildAuthorityReport $report, private Roster $roster) {}
+    public function __construct(private BuildAuthorityReport $report, private Roster $roster, private Timezones $timezones) {}
 
     /**
-     * The period of the page when none was asked for: the last week that ended.
+     * The period of the page when none was asked for: the last week that ended in the zone given (the center's).
      *
      * @return array{CarbonImmutable, CarbonImmutable}
      */
-    public static function lastWeek(): array
+    public static function lastWeek(string $timezone): array
     {
-        $week = WeekPeriod::ofDate(WeekPeriod::containing(CarbonImmutable::now())->start()->subWeek());
+        $week = WeekPeriod::ofDate(WeekPeriod::containing(CarbonImmutable::now(), $timezone)->start()->subWeek(), $timezone);
 
         return [$week->start(), $week->end()->startOfDay()];
     }
 
     /**
-     * The periods RH asks for most, in the display time zone: this week up to today, the last week that ended and the last
-     * calendar month.
+     * The periods RH asks for most, in the zone given (the center's): this week up to today, the last week that ended and the
+     * last calendar month.
      *
      * @return list<array{key: string, label: string, from: string, to: string}>
      */
-    public static function presets(): array
+    public static function presets(string $timezone): array
     {
-        $today = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfDay();
-        [$weekFrom, $weekTo] = self::lastWeek();
+        $today = CarbonImmutable::now($timezone)->startOfDay();
+        [$weekFrom, $weekTo] = self::lastWeek($timezone);
         $month = $today->startOfMonth()->subMonthNoOverflow();
 
         return [
-            ['key' => 'this-week', 'label' => 'Esta semana', 'from' => WeekPeriod::containing($today)->start()->toDateString(), 'to' => $today->toDateString()],
+            ['key' => 'this-week', 'label' => 'Esta semana', 'from' => WeekPeriod::containing($today, $timezone)->start()->toDateString(), 'to' => $today->toDateString()],
             ['key' => 'last-week', 'label' => 'Semana pasada', 'from' => $weekFrom->toDateString(), 'to' => $weekTo->toDateString()],
             ['key' => 'last-month', 'label' => 'Último mes', 'from' => $month->toDateString(), 'to' => $month->endOfMonth()->toDateString()],
         ];
@@ -61,10 +62,13 @@ final readonly class ReportPages
      */
     public function show(string $slug, ?WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search, ?int $longPeriod = null, string $show = 'all'): array
     {
+        $timezone = $center === null ? $this->timezones->forTenant() : $this->timezones->forCenter($center->id);
         $page = [
             'center' => $center === null ? null : ['id' => $center->id, 'name' => $center->name],
             'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
-            'presets' => self::presets(),
+            // The days of the report are the center's, in its zone, named with its offset.
+            'timezone' => ['value' => $timezone, 'label' => $this->timezones->label($timezone)],
+            'presets' => self::presets($timezone),
             'limits' => ['screenDays' => config()->integer('attendance.report.page_max_days'), 'exportDays' => config()->integer('attendance.report.export_max_days')],
             'filters' => ['q' => $search, 'show' => $show],
             'summary' => null,
@@ -160,7 +164,7 @@ final readonly class ReportPages
             ]),
             'generatedAt' => [
                 'utc' => $now->utc()->format('Y-m-d H:i'),
-                'local' => $now->setTimezone(config()->string('app.display_timezone'))->format('Y-m-d H:i'),
+                'local' => $now->setTimezone($this->timezones->forCenter($center->id))->format('Y-m-d H:i'),
             ],
             'exportUrl' => self::exportUrl($slug, $center, $from, $to),
         ];

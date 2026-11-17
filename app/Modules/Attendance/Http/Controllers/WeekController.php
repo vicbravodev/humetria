@@ -15,6 +15,7 @@ use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use App\Modules\WorkerAccess\Data\SignedBy;
 use Carbon\CarbonImmutable;
@@ -35,7 +36,7 @@ use Inertia\Response;
  */
 final readonly class WeekController
 {
-    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant) {}
+    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private Timezones $timezones) {}
 
     public function show(string $tenant, ?string $start = null): Response
     {
@@ -62,10 +63,9 @@ final readonly class WeekController
     public function read(WeekRequest $request, WorkerSignatures $signatures, string $tenant): JsonResponse
     {
         $signed = $this->verified($request, $signatures, $request->credential());
-        $start = $request->start();
 
         // None asked for: the last week that is over, the one to answer.
-        return $this->week($signed, $start === null ? WeekPeriod::containing(CarbonImmutable::now()->subWeek()) : WeekPeriod::ofDate($start), $tenant);
+        return $this->week($signed, $request->start(), $tenant);
     }
 
     public function confirm(ConfirmRequest $request, WorkerSignatures $signatures, ConfirmWeek $confirm, string $tenant, string $start): JsonResponse
@@ -74,7 +74,7 @@ final readonly class WeekController
         $signed = $this->verified($request, $signatures, $request->credential());
 
         try {
-            $confirm->handle($signed->employeeId, $week->start(), $signed->credentialId, $request->digest());
+            $confirm->handle($signed->employeeId, $week, $signed->credentialId, $request->digest());
         } catch (WeekRejected $rejected) {
             return $this->rejected($rejected, $signed, $week, $tenant);
         }
@@ -88,7 +88,7 @@ final readonly class WeekController
         $signed = $this->verified($request, $signatures, $request->credential());
 
         try {
-            $dispute->handle($signed->employeeId, $week->start(), $request->reason(), $signed->credentialId, $request->digest());
+            $dispute->handle($signed->employeeId, $week, $request->reason(), $signed->credentialId, $request->digest());
         } catch (WeekRejected $rejected) {
             return $this->rejected($rejected, $signed, $week, $tenant);
         }
@@ -112,13 +112,14 @@ final readonly class WeekController
         return $signed;
     }
 
-    private function week(SignedBy $signed, WeekPeriod $week, string $tenant): JsonResponse
+    /** @param  CarbonImmutable|null  $week  a date of the week, in the person's zone; null for the last one that is over */
+    private function week(SignedBy $signed, ?CarbonImmutable $week, string $tenant): JsonResponse
     {
         return response()->json($this->view($signed, $week, $tenant))->header('Cache-Control', 'no-store, private');
     }
 
     /** Why the answer was refused; a week that changed since it was read goes back as it is now, to be read again. */
-    private function rejected(WeekRejected $rejected, SignedBy $signed, WeekPeriod $week, string $tenant): JsonResponse
+    private function rejected(WeekRejected $rejected, SignedBy $signed, ?CarbonImmutable $week, string $tenant): JsonResponse
     {
         $body = ['reason' => $rejected->reason, ...($rejected->reason === 'week_changed' ? ['week' => $this->view($signed, $week, $tenant)] : [])];
 
@@ -128,11 +129,14 @@ final readonly class WeekController
     /**
      * @return array<string, mixed>
      */
-    private function view(SignedBy $signed, WeekPeriod $week, string $tenant): array
+    private function view(SignedBy $signed, ?CarbonImmutable $week, string $tenant): array
     {
         $person = $this->roster->find($signed->employeeId) ?? abort(404);
+        // The person's week is read in the zone of their center.
+        $timezone = $this->timezones->forCenter($person->workCenterId);
+        $period = $week === null ? WeekPeriod::containing(CarbonImmutable::now()->subWeek(), $timezone) : WeekPeriod::ofDate($week, $timezone);
 
-        return PersonWeek::of($person->id, $person->name, $week, $tenant);
+        return PersonWeek::of($person->id, $person->name, $period, $tenant);
     }
 
     /** The week's challenges are apart from those to mark. */
@@ -141,12 +145,12 @@ final readonly class WeekController
         return 'week:'.$request->session()->getId();
     }
 
-    /** The week of a date in the URL (Y-m-d, by the route); a date that does not exist is a 404. */
-    private static function period(string $date): WeekPeriod
+    /** The date in the URL (Y-m-d, by the route), a day of the week asked for; a date that does not exist is a 404. */
+    private static function period(string $date): CarbonImmutable
     {
         [$year, $month, $day] = array_map(intval(...), explode('-', $date));
         abort_unless(checkdate($month, $day, $year), 404);
 
-        return WeekPeriod::ofDate(CarbonImmutable::create($year, $month, $day) ?? abort(404));
+        return CarbonImmutable::create($year, $month, $day) ?? abort(404);
     }
 }

@@ -11,6 +11,7 @@ use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use App\Modules\WorkerAccess\Data\CredentialCounts;
 use Carbon\CarbonImmutable;
@@ -31,7 +32,7 @@ final readonly class SetupProgress
 
     private const int LISTED = 5;
 
-    public function __construct(private Roster $roster, private WorkerCredentials $credentials) {}
+    public function __construct(private Roster $roster, private WorkerCredentials $credentials, private Timezones $timezones) {}
 
     /**
      * @param  array<string, string>  $names  the centers in use, by id, by name
@@ -83,7 +84,7 @@ final readonly class SetupProgress
     /** Whole days from today (in the company's time zone) to the deadline; none once it has come. */
     private function daysLeft(): int
     {
-        $zone = config()->string('app.display_timezone');
+        $zone = $this->timezones->forTenant();
 
         return max(0, (int) CarbonImmutable::now($zone)->startOfDay()->diffInDays(CarbonImmutable::parse(self::DEADLINE, $zone)));
     }

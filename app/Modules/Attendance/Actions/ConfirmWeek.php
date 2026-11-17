@@ -13,6 +13,7 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Attendance\Support\MarkLock;
+use App\Modules\Attendance\Support\PersonTimezone;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -30,14 +31,14 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class ConfirmWeek
 {
-    public function __construct(private CurrentTenant $tenant, private RecordAudit $audit) {}
+    public function __construct(private CurrentTenant $tenant, private RecordAudit $audit, private PersonTimezone $timezones) {}
 
     /**
      * @throws WeekRejected
      */
     public function handle(string $employeeId, CarbonImmutable $weekStart, string $credentialId, string $digest): WeeklyConfirmation
     {
-        $week = WeekPeriod::ofDate($weekStart);
+        $week = WeekPeriod::ofDate($weekStart, $this->timezones->of($employeeId));
 
         if (! $week->isOver()) {
             throw new WeekRejected('week_not_over');

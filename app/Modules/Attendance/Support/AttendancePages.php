@@ -18,6 +18,7 @@ use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Carbon\CarbonImmutable;
@@ -39,14 +40,15 @@ final readonly class AttendancePages
     /** The tabs of the list: every person, each answer, and the weeks at risk. */
     private const array VIEWS = ['all', 'pending', 'disputed', 'confirmed', 'at_risk'];
 
-    public function __construct(private Roster $roster, private WorkCenters $workCenters, private SetupProgress $setup, private Absences $absences) {}
+    public function __construct(private Roster $roster, private WorkCenters $workCenters, private SetupProgress $setup, private Absences $absences, private Timezones $timezones) {}
 
     /**
      * @return array<string, mixed>
      */
     public function index(?WorkCenterSummary $center, string $week, string $view, string $search): array
     {
-        $period = $this->week($week);
+        // The week of the center asked for, in its zone; of the whole company, in the company's.
+        $period = $this->week($week, $center === null ? $this->timezones->forTenant() : $this->timezones->forCenter($center->id));
         $panel = PanelScope::of($this->workCenters, $this->roster, $center);
         $names = $panel->names;
         $people = $panel->people;
@@ -156,9 +158,12 @@ final readonly class AttendancePages
     {
         $manage = Gate::allows('manage-attendance');
         $policy = CompanyPolicy::current();
+        $timezone = $this->timezones->forCenter($center->id);
 
         return [
             'center' => ['id' => $center->id, 'name' => $center->name, 'mainActivity' => $center->mainActivity],
+            // The zone its days, shifts and lateness are measured in, always in view (design of time zones, §3.2).
+            'timezone' => ['value' => $timezone, 'label' => $this->timezones->label($timezone)],
             'mode' => AttendanceCenterMode::isField($center->id) ? 'field' : 'company',
             // Where the map of a new zone opens; only whoever may add one needs it.
             'centerAddress' => $manage ? $this->workCenters->profile($center->id)?->address : null,
@@ -175,7 +180,7 @@ final readonly class AttendancePages
                     'radius' => $zone->radius_m,
                     ...($manage ? ['latitude' => $zone->latitude, 'longitude' => $zone->longitude] : []),
                 ]),
-            'kiosks' => $this->kiosks($center->id),
+            'kiosks' => $this->kiosks($center->id, $timezone),
             'canManage' => $manage,
         ];
     }
@@ -186,9 +191,8 @@ final readonly class AttendancePages
      *
      * @return LengthAwarePaginator<int, array{id: string, state: string, issuedAt: string, lastSeenAt: string|null, revokedAt: string|null}>
      */
-    private function kiosks(string $centerId): LengthAwarePaginator
+    private function kiosks(string $centerId, string $zone): LengthAwarePaginator
     {
-        $zone = config()->string('app.display_timezone');
         $local = fn (?CarbonImmutable $at): ?string => $at?->setTimezone($zone)->format('Y-m-d H:i');
 
         return KioskDevice::query()->where('work_center_id', $centerId)
@@ -233,17 +237,17 @@ final readonly class AttendancePages
     }
 
     /** The week asked for by any of its days, the last one that ended by default; one to come is the week in course. */
-    private function week(string $day): WeekPeriod
+    private function week(string $day, string $timezone): WeekPeriod
     {
-        $current = WeekPeriod::containing(CarbonImmutable::now());
-        $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1 ? CarbonImmutable::createFromFormat('!Y-m-d', $day, config()->string('app.display_timezone')) : null;
+        $current = WeekPeriod::containing(CarbonImmutable::now(), $timezone);
+        $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $day) === 1 ? CarbonImmutable::createFromFormat('!Y-m-d', $day, $timezone) : null;
 
         // createFromFormat rolls 2026-02-30 over to March: only a date that reads back the same is one.
         if (! $date instanceof CarbonImmutable || $date->format('Y-m-d') !== $day) {
-            return WeekPeriod::ofDate($current->start()->subWeek());
+            return WeekPeriod::ofDate($current->start()->subWeek(), $timezone);
         }
 
-        $asked = WeekPeriod::ofDate($date);
+        $asked = WeekPeriod::ofDate($date, $timezone);
 
         return $asked->start()->greaterThan($current->start()) ? $current : $asked;
     }

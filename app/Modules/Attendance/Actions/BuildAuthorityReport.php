@@ -26,6 +26,7 @@ use App\Modules\Attendance\Support\WorkedDay;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\Timezones;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -72,7 +73,7 @@ final readonly class BuildAuthorityReport
         EvidenceLevel::Corrected->value => 3,
     ];
 
-    public function __construct(private Roster $roster) {}
+    public function __construct(private Roster $roster, private Timezones $timezones) {}
 
     /**
      * @return LazyCollection<int, AuthorityRow> by person (by name) and date
@@ -90,12 +91,13 @@ final readonly class BuildAuthorityReport
      */
     public function people(string $workCenterId, CarbonImmutable $from, CarbonImmutable $to): array
     {
-        $timezone = config()->string('app.display_timezone');
         $ids = AttendanceMark::query()
             ->where('work_center_id', $workCenterId)
             ->where('type', MarkType::Start)
-            ->where('marked_at', '>=', CarbonImmutable::parse($from->toDateString(), $timezone)->utc())
-            ->where('marked_at', '<', CarbonImmutable::parse($to->toDateString(), $timezone)->addDay()->utc())
+            // A day wider on each side for the index, then the date each start had in its own zone.
+            ->where('marked_at', '>=', CarbonImmutable::parse($from->toDateString(), 'UTC')->subDay())
+            ->where('marked_at', '<', CarbonImmutable::parse($to->toDateString(), 'UTC')->addDays(2))
+            ->whereRaw('(marked_at at time zone timezone)::date between ?::date and ?::date', [$from->toDateString(), $to->toDateString()])
             // A start corrected to another time counts at that time; a voided one still brings its person, with the void.
             ->whereNotExists(fn (QueryBuilder $query) => $query->from('attendance_marks', 'corrections')
                 ->whereColumn('corrections.tenant_id', 'attendance_marks.tenant_id')
@@ -118,7 +120,8 @@ final readonly class BuildAuthorityReport
     public function rowsOf(array $employeeIds, string $workCenterId, CarbonImmutable $from, CarbonImmutable $to): LazyCollection
     {
         $period = [$from->toDateString(), $to->toDateString()];
-        $weeks = [WeekPeriod::ofDate($from), WeekPeriod::ofDate($to)];
+        $timezone = $this->timezones->forCenter($workCenterId);
+        $weeks = [WeekPeriod::ofDate($from, $timezone), WeekPeriod::ofDate($to, $timezone)];
         // A day of slack: a change of clock inside the period never loses a week.
         $count = intdiv($weeks[1]->start()->getTimestamp() - $weeks[0]->start()->getTimestamp() + 86400, 7 * 86400) + 1;
         $size = max(1, min(config()->integer('attendance.report.chunk_size'), intdiv(self::PERSON_WEEKS, $count)));
@@ -199,12 +202,11 @@ final readonly class BuildAuthorityReport
      * voided stays one day.
      *
      * @param  array<string, list<AttendanceMark>>  $days
-     * @param  list<array{at: CarbonImmutable, type: string, center: string, text: string}>  $voids
-     * @return array{array<string, list<AttendanceMark>>, array<string, list<array{at: CarbonImmutable, type: string, center: string, text: string}>>}
+     * @param  list<array{at: CarbonImmutable, type: string, center: string, timezone: string, text: string}>  $voids
+     * @return array{array<string, list<AttendanceMark>>, array<string, list<array{at: CarbonImmutable, type: string, center: string, timezone: string, text: string}>>}
      */
     private static function withVoids(array $days, array $voids): array
     {
-        $timezone = config()->string('app.display_timezone');
         $opens = [];
 
         foreach ($days as $day => $marks) {
@@ -214,7 +216,7 @@ final readonly class BuildAuthorityReport
         }
         foreach ($voids as $void) {
             if (CorrectionHistory::beginsDay($void['type'])) {
-                $day = $void['at']->setTimezone($timezone)->toDateString();
+                $day = $void['at']->setTimezone($void['timezone'])->toDateString();
                 $opens[$day] = isset($opens[$day]) ? $opens[$day]->min($void['at']) : $void['at'];
             }
         }
@@ -222,7 +224,7 @@ final readonly class BuildAuthorityReport
         $byDate = [];
 
         foreach ($voids as $void) {
-            $original = $void['at']->setTimezone($timezone);
+            $original = $void['at']->setTimezone($void['timezone']);
             $date = $original->toDateString();
 
             if (! CorrectionHistory::beginsDay($void['type'])) {
@@ -263,10 +265,10 @@ final readonly class BuildAuthorityReport
      */
     private static function row(RosterEntry $person, array $marks, DayHours $day, array $overtime, WeekSummary $week, ?WeeklyConfirmation $answer, array $corrections): AuthorityRow
     {
-        $timezone = config()->string('app.display_timezone');
         $first = $marks[0] ?? null;
         $last = $marks === [] ? null : $marks[count($marks) - 1];
-        $local = fn (AttendanceMark $mark): CarbonImmutable => ($mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time."))->setTimezone($timezone);
+        // Each mark at the hour of the place it was taken.
+        $local = fn (AttendanceMark $mark): CarbonImmutable => ($mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time."))->setTimezone($mark->timezone);
         $ended = $last?->type === MarkType::End;
         [$minutes, $double] = $overtime;
         $confirmed = $answer?->status === WeekStatus::Confirmed;
@@ -324,8 +326,8 @@ final readonly class BuildAuthorityReport
             return ['Sin marcas vigentes'];
         }
 
-        // A day that started today is still being worked (as «Mi semana» says): not missing its end yet.
-        $today = CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString();
+        // A day that started today, where it started, is still being worked (as «Mi semana» says): not missing its end yet.
+        $today = CarbonImmutable::now($marks[0]->timezone)->toDateString();
         $open = WorkedDay::missingEnd($marks) && $marks[0]->type === MarkType::Start && $day->date->toDateString() === $today;
 
         return array_keys(array_filter([

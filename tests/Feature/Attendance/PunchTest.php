@@ -242,7 +242,7 @@ describe('the page', function (): void {
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE, 'mark_type' => 'break_start'], $session)
             ->assertUnprocessable()->assertExactJson(['reason' => 'day_not_open', 'name' => 'Bob Ruiz', 'next' => ['start']]);
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE], $session)
-            ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00']], 'next' => ['break_start', 'end'], 'flag' => null, 'evidence' => 'strong']);
+            ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00', 'clock' => null]], 'next' => ['break_start', 'end'], 'flag' => null, 'evidence' => 'strong']);
 
         $this->withCookie($cookie, $session)->get(route('attendance.device.punch.home', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person.name', 'Bob Ruiz'));
@@ -272,7 +272,7 @@ describe('on site', function (): void {
     it('marks with QR and geofence: the zone, the position, its accuracy and the distance, at the server\'s time', function (): void {
         anaPunches()->assertOk()->assertExactJson([
             'name' => 'Ana López',
-            'marks' => [['type' => 'start', 'time' => '09:00']],
+            'marks' => [['type' => 'start', 'time' => '09:00', 'clock' => null]],
             'next' => ['break_start', 'end'],
             'flag' => null,
             'evidence' => 'strong',
@@ -498,10 +498,10 @@ describe('the sequence', function (): void {
         anaPunches(['mark_type' => 'end'])->assertOk()->assertExactJson([
             'name' => 'Ana López',
             'marks' => [
-                ['type' => 'start', 'time' => '09:00'],
-                ['type' => 'break_start', 'time' => '13:00'],
-                ['type' => 'break_end', 'time' => '13:30'],
-                ['type' => 'end', 'time' => '17:30'],
+                ['type' => 'start', 'time' => '09:00', 'clock' => null],
+                ['type' => 'break_start', 'time' => '13:00', 'clock' => null],
+                ['type' => 'break_end', 'time' => '13:30', 'clock' => null],
+                ['type' => 'end', 'time' => '17:30', 'clock' => null],
             ],
             'next' => ['start'],
             'flag' => null,
@@ -516,14 +516,14 @@ describe('the sequence', function (): void {
 
         anaPunches(['mark_type' => 'end'])->assertOk()->assertExactJson([
             'name' => 'Ana López',
-            'marks' => [['type' => 'start', 'time' => '23:59'], ['type' => 'end', 'time' => '00:01']],
+            'marks' => [['type' => 'start', 'time' => '23:59', 'clock' => null], ['type' => 'end', 'time' => '00:01', 'clock' => null]],
             'next' => ['start'],
             'flag' => null,
             'evidence' => 'strong',
         ]);
 
         $this->travelTo(CarbonImmutable::parse('2026-11-11 00:01:00', 'America/Mexico_City'));
-        anaPunches()->assertOk()->assertJsonPath('marks', [['type' => 'start', 'time' => '00:01']]);
+        anaPunches()->assertOk()->assertJsonPath('marks', [['type' => 'start', 'time' => '00:01', 'clock' => null]]);
     });
 });
 

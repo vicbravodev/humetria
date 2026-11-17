@@ -363,8 +363,8 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
     $names = array_map(fn (AuthorityRow $row): string => $row->personName, authorityRows($this->plant, '2027-01-04', '2027-01-10'));
 
     expect($names)->toBe(array_map(fn (int $index): string => sprintf('Persona %03d', $index), range(0, 449)))
-        // Who has days and their order, then seven reads for each of the three chunks of 200 (the seventh: what was corrected).
-        ->and(count(DB::getQueryLog()))->toBe(2 + 3 * 7);
+        // Who has days and their order, the center's zone, then seven reads for each of the three chunks of 200 (the seventh: what was corrected).
+        ->and(count(DB::getQueryLog()))->toBe(3 + 3 * 7);
 });
 
 it('reads its people in chunks of the size of config/attendance.php (200 by default)', function (): void {

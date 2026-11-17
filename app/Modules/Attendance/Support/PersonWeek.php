@@ -23,7 +23,9 @@ use LogicException;
  * leave (never its type), the minutes of each day and of the week as criterio 2.9 splits
  * them, the limits broken, a day left with no end (unless it is the one still open now), their answer, the version of the
  * week they read (`digest`, sent back with their answer) and why it cannot be confirmed yet (`blocked`: no marks, or its
- * last day still open). Never where a mark was taken, nor the device. Counted from the marks every time.
+ * last day still open). Never where a mark was taken, nor the device. Counted from the marks every time. The week is
+ * read in the zone of the person's center (the week's own); each mark shows the time of the place it was taken, with
+ * that zone when it is another, and whether it was taken at another center (a trip: no lateness that day).
  */
 final class PersonWeek
 {
@@ -32,7 +34,7 @@ final class PersonWeek
      */
     public static function of(string $employeeId, string $name, WeekPeriod $week, string $slug): array
     {
-        $timezone = config()->string('app.display_timezone');
+        $timezone = $week->timezone();
         $byDay = EffectiveMarks::byDay($employeeId, $week);
         $schedule = AttendanceSchedule::query()->where('employee_id', $employeeId)->first();
         $latest = EffectiveMarks::of($employeeId)->latest('marked_at')->first(['id'])?->id;
@@ -98,18 +100,21 @@ final class PersonWeek
     }
 
     /**
-     * @return array{id: string, type: string, time: string, nextDay: bool, corrected: bool, reason: string|null, evidence: string}
+     * @return array{id: string, type: string, time: string, clock: string|null, away: bool, nextDay: bool, corrected: bool, reason: string|null, evidence: string}
      */
     private static function mark(AttendanceMark $mark, CarbonImmutable $date, string $timezone): array
     {
-        $at = ($mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time."))->setTimezone($timezone);
+        $at = ($mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time."))->setTimezone($mark->timezone);
         $corrected = $mark->method === MarkMethod::Correction;
 
         return [
             'id' => $mark->id,
             'type' => $mark->type->value,
             'time' => $at->format('H:i'),
-            'nextDay' => ! $at->isSameDay($date),
+            // Whose hour it is, when not the week's own zone: «14:00 · hora de Tijuana».
+            'clock' => $mark->timezone === $timezone ? null : $mark->timezone,
+            'away' => $mark->away_center_id !== null,
+            'nextDay' => $at->toDateString() !== $date->toDateString(),
             'corrected' => $corrected,
             // Why it was corrected (criterio 8.1): the person sees the reason of every correction of their record.
             'reason' => $corrected ? $mark->reason : null,

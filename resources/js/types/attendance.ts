@@ -104,6 +104,8 @@ export type AttendanceZone = {
 
 export type AttendanceCenterProps = {
     center: { id: string; name: string; mainActivity: string };
+    /** The zone its days, shifts and lateness are measured in, named with its offset: «Hora del Noroeste, UTC−8 · Tijuana». */
+    timezone: { value: string; label: string };
     /** Its address in one line, where the map of a new zone opens; null for whoever cannot add zones. */
     centerAddress: string | null;
     /** Its active people. */

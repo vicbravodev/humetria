@@ -23,6 +23,7 @@ use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use Carbon\CarbonImmutable;
@@ -53,7 +54,7 @@ final readonly class MarkController
 {
     private const string SESSION_KEY = 'attendance.person';
 
-    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials) {}
+    public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones) {}
 
     /**
      * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
@@ -62,6 +63,8 @@ final readonly class MarkController
     public function show(Request $request, string $tenant): SymfonyResponse
     {
         $person = $this->remembered($request);
+        // The day and the clock of the person who marked here, in their center's zone; the company's before anyone did.
+        $timezone = $person === null ? $this->timezones->forTenant() : $this->timezones->forCenter($person->workCenterId);
         $q = $request->query('q');
         $qr = is_string($q) && $q !== '' && strlen($q) <= 128 ? $q : null;
 
@@ -70,7 +73,7 @@ final readonly class MarkController
             'qr' => $qr,
             // Who taps next may be someone else: the position is always asked when marking (and dropped by the server when
             // the verified person does not need it).
-            'person' => $person === null ? null : ['name' => $person->name, 'next' => PunchDay::of($person->id)['next']],
+            'person' => $person === null ? null : ['name' => $person->name, 'next' => PunchDay::of($person->id, $timezone)['next']],
             'optionsUrl' => route('attendance.device.punch.options', $tenant),
             'punchUrl' => route('attendance.device.punch.store', $tenant),
             'forgetUrl' => route('attendance.device.punch.forget', $tenant),
@@ -81,8 +84,8 @@ final readonly class MarkController
             'correctionUrl' => route('attendance.device.correction.store', $tenant),
             'agreementOptionsUrl' => route('attendance.device.agreement.options', $tenant),
             'agreementUrl' => route('attendance.device.agreement.accept', $tenant),
-            // A mark refused is asked of RH at the time of the company's clock, whatever the phone's zone.
-            'timezone' => config()->string('app.display_timezone'),
+            // A mark refused is asked of RH at the time of the center's clock, whatever the phone's zone.
+            'timezone' => $timezone,
         ]);
 
         $response = $page->toResponse($request);
@@ -116,6 +119,7 @@ final readonly class MarkController
 
         $person = $this->roster->find($signed->employeeId);
         abort_if($person === null || ! $person->active, 404);
+        $timezone = $this->timezones->forCenter($person->workCenterId);
         $request->session()->put(self::SESSION_KEY, ['id' => $person->id, 'at' => CarbonImmutable::now()->getTimestamp()]);
 
         $qr = $request->qr();
@@ -148,7 +152,7 @@ final readonly class MarkController
             return response()->json([
                 'reason' => $rejected->reason,
                 'name' => $person->name,
-                'next' => PunchDay::of($person->id)['next'],
+                'next' => PunchDay::of($person->id, $timezone)['next'],
                 // What to read and accept, for the screen to show it.
                 ...($current === null ? [] : ['agreement' => ['version' => $current->version, 'body' => $current->body]]),
             ], 422);
@@ -158,7 +162,7 @@ final readonly class MarkController
 
         return response()->json([
             'name' => $person->name,
-            ...PunchDay::of($person->id),
+            ...PunchDay::of($person->id, $timezone),
             // For the screen now and the panel later: a mark in a field center (the person is not told: it is their mode), a
             // center with no zones, a mark taken with no position, or outside every zone.
             'flag' => match (true) {

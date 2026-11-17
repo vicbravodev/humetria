@@ -24,4 +24,7 @@ interface Timezones
 
     /** The company's own zone. */
     public function forTenant(): string;
+
+    /** How a zone is named, with its offset now: «Hora del Noroeste, UTC−8 · Tijuana». */
+    public function label(string $timezone): string;
 }

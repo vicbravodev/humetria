@@ -39,7 +39,8 @@ final class TenancyServiceProvider extends ServiceProvider
         // ResolveTenant fills it in, everyone else reads it through the contract.
         $this->app->bind(CurrentTenant::class, TenantContext::class);
         $this->app->bind(WorkCenters::class, CompanyWorkCenters::class);
-        $this->app->bind(Timezones::class, CompanyTimezones::class);
+        // One instance per request or job: a zone asked for many times is read once.
+        $this->app->scoped(Timezones::class, CompanyTimezones::class);
         // One instance per request, and the contract points at it, so a role change can drop its memo.
         $this->app->scoped(CompanyMembers::class);
         $this->app->scoped(Members::class, fn (Application $app): CompanyMembers => $app->make(CompanyMembers::class));

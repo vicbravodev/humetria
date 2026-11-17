@@ -119,6 +119,10 @@ it('gives other modules the zone of a work center, archived ones included, and t
             $other->id => 'America/Monterrey',
         ])
         ->and($zones->forCenters([]))->toBe([]);
+
+    $this->travelTo('2026-07-01 12:00:00');
+
+    expect($zones->label('America/Tijuana'))->toBe('Hora del Noroeste, UTC−7 · Tijuana');
 });
 
 it('reads the zones of many centers in one query', function (): void {

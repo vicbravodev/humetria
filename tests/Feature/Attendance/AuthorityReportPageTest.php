@@ -22,8 +22,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(ReportController::class, ReportPages::class);
 
-/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included; the pass over everyone for the figures and the one for the days of the page (seven each: 25 before the second). */
-const REPORT_PAGE_QUERIES = 32;
+/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included; the pass over everyone for the figures and the one for the days of the page (seven each: 25 before the second), and the zone of the center, read once. */
+const REPORT_PAGE_QUERIES = 33;
 
 beforeEach(function (): void {
     // Monday 1 February 2027, 12:00 in Mexico City: the last week that ended is 25 to 31 January.

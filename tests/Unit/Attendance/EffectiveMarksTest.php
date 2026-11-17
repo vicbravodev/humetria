@@ -37,7 +37,7 @@ function anaMarks(object $test, MarkType $type, string $local): AttendanceMark
 
 function weekOf(string $local): WeekPeriod
 {
-    return WeekPeriod::containing(CarbonImmutable::parse($local, 'America/Mexico_City'));
+    return WeekPeriod::containing(CarbonImmutable::parse($local, 'America/Mexico_City'), 'America/Mexico_City');
 }
 
 /**
