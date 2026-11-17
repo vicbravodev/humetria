@@ -1,5 +1,6 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import { Briefcase, MapPin, MonitorSmartphone, Users } from 'lucide-react';
+import CenterMode from '@/components/attendance/center-mode';
 import CenterScreens from '@/components/attendance/center-screens';
 import CenterZones from '@/components/attendance/center-zones';
 import PageHeader from '@/components/humetria/page-header';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { centerState } from '@/lib/attendance/center-state';
 import { index } from '@/routes/tenant/attendance';
-import type { AttendanceCenterProps } from '@/types';
+import type { AttendanceCenterPageProps } from '@/types';
 
 /** A center of the registro (pantalla Eval-Activa: header with its facts, then its parts): its zones and its QR screens. */
 export default function AttendanceCenter({
@@ -22,9 +23,13 @@ export default function AttendanceCenter({
     requiresQr,
     screens,
     tolerance,
-}: AttendanceCenterProps) {
+    mode,
+}: AttendanceCenterPageProps) {
     const tenantSlug = useTenantSlug();
-    const state = centerState({ zones: zones.total, screens }, requiresQr);
+    const state = centerState(
+        { zones: zones.total, screens, mode },
+        requiresQr,
+    );
     setLayoutProps({
         breadcrumbs: [
             { title: 'Asistencia', href: index(tenantSlug) },
@@ -68,6 +73,11 @@ export default function AttendanceCenter({
                     ]}
                 />
                 {!canManage && <ReadOnlyNotice />}
+                <CenterMode
+                    centerId={center.id}
+                    mode={mode}
+                    canManage={canManage}
+                />
                 <CenterZones
                     zones={zones}
                     centerId={center.id}
