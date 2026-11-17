@@ -74,6 +74,7 @@ final class AuditPages
         'jornada' => 'Jornada',
         'cumplimiento' => 'Cumplimiento',
         'integral' => 'Integral',
+        'enterprise' => 'Enterprise',
         'direct' => 'Directo',
         'consultant' => 'Consultor',
         'channel_compliance' => 'Canal Cumplimiento',
