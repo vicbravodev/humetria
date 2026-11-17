@@ -67,18 +67,21 @@ final readonly class CloseDays
     }
 
     /**
-     * One work center's night, at its own today; the company is entered here, so a job of the dispatcher can call it alone.
+     * One work center's night; the company is entered here, so a job of the dispatcher can call it alone.
      *
+     * @param  CarbonImmutable|null  $today  the center's local date the night belongs to (its date only); null for today there,
+     *                                       so a job that runs late still closes the day it was queued for
      * @return int how many days were closed
      */
-    public function center(string $tenantId, string $workCenterId): int
+    public function center(string $tenantId, string $workCenterId, ?CarbonImmutable $today = null): int
     {
         if ($this->companies->enter($tenantId)->stopped('attendance')) {
             return 0;
         }
 
         $timezone = $this->timezones->forCenter($workCenterId);
-        $day = CarbonImmutable::now($timezone)->subDays(2)->startOfDay();
+        $today = $today === null ? CarbonImmutable::now($timezone)->startOfDay() : CarbonImmutable::parse($today->toDateString(), $timezone);
+        $day = $today->subDays(2);
         // Bound in UTC: a Carbon binding loses its offset and the database session is UTC.
         $marked = AttendanceMark::query()->where('marked_at', '>=', $day->utc())->where('marked_at', '<', $day->addDay()->utc())->distinct()->get(['employee_id'])
             ->map(fn (AttendanceMark $mark): string => $mark->employee_id);
@@ -93,7 +96,7 @@ final readonly class CloseDays
             }
         }
 
-        $this->openWeek($tenantId, $workCenterId, WeekPeriod::containing(CarbonImmutable::now()->subWeek(), $timezone));
+        $this->openWeek($tenantId, $workCenterId, WeekPeriod::containing($today->subWeek(), $timezone));
 
         return $closed;
     }
