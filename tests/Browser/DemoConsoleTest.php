@@ -106,7 +106,7 @@ it('takes a phone to the request chosen, below the list', function (): void {
         ->click('Rosa Medina')
         ->assertSeeIn('@demo-request-detail', 'Rosa Medina')
         ->assertScript('() => document.activeElement.getAttribute("data-test")', 'demo-request-detail')
-        ->assertScript('() => { const box = document.querySelector(\'[data-test="demo-request-detail"]\').getBoundingClientRect(); return box.top >= 0 && box.top < window.innerHeight; }')
+        ->assertScript(eventually('() => { const box = document.querySelector(\'[data-test="demo-request-detail"]\').getBoundingClientRect(); return box.top >= 0 && box.top < window.innerHeight; }'), true)
         ->assertNoJavaScriptErrors();
 });
 
