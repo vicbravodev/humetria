@@ -128,6 +128,17 @@ describe('the screen', function (): void {
         $show()->assertInertia(fn (AssertableInertia $page) => $page->where('qrSeconds', 45));
     });
 
+    it('names the zone of the clock: the center\'s, not the company\'s', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:00', 'UTC'));
+        $this->center->update(['timezone' => 'America/Tijuana']);
+        $token = kioskToken();
+
+        $this->withCookie('attendance_kiosk', $token)->get(route('attendance.device.kiosk.show', $this->tenant->slug))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('timezone', 'America/Tijuana')
+                ->where('timezoneLabel', 'Hora del Noroeste, UTC−8 · Tijuana'));
+    });
+
     it('shows the page of the QR to a screen with its token', function (): void {
         $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:10.250', 'UTC'));
         $token = kioskToken();

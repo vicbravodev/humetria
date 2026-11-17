@@ -20,6 +20,7 @@ export default function KioskScreen({
     lastValidAt,
     qrSeconds,
     timezone,
+    timezoneLabel,
     now,
     clock,
     onRetry,
@@ -32,6 +33,7 @@ export default function KioskScreen({
     lastValidAt: number | null;
     qrSeconds: number;
     timezone: string;
+    timezoneLabel: string;
     /** This device's time, for the countdown. */
     now: number;
     /** The server's time, for the clock on the screen. */
@@ -52,6 +54,7 @@ export default function KioskScreen({
                 online={online}
                 now={clock}
                 timezone={timezone}
+                timezoneLabel={timezoneLabel}
             />
             <section className="flex flex-1 items-center">
                 {view === 'offline' ? (

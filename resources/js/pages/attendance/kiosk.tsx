@@ -17,6 +17,7 @@ export default function Kiosk({
     qrUrl,
     qrSeconds,
     timezone,
+    timezoneLabel,
     now: serverNow,
 }: {
     company: string;
@@ -24,6 +25,8 @@ export default function Kiosk({
     qrUrl: string;
     qrSeconds: number;
     timezone: string;
+    /** The zone named with its offset: «Hora del Noroeste, UTC−8 · Tijuana». */
+    timezoneLabel: string;
     /** The server's time when the page was made, in milliseconds. */
     now: number;
 }) {
@@ -45,6 +48,7 @@ export default function Kiosk({
                 lastValidAt={lastValidAt === null ? null : lastValidAt + offset}
                 qrSeconds={qrSeconds}
                 timezone={timezone}
+                timezoneLabel={timezoneLabel}
                 now={now}
                 clock={now + offset}
                 onRetry={retry}

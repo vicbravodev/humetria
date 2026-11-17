@@ -42,7 +42,8 @@ it('shows the server\'s time in the zone of the center, whatever the tablet\'s c
     visitPage('attendance/kiosk', kioskLink())
         ->waitForText('Conectada')
         ->assertScript('() => document.querySelector("header").textContent.includes("06:00")', true)
-        ->assertSee('Sábado 7 de noviembre');
+        ->assertSee('Sábado 7 de noviembre')
+        ->assertSee('Hora del Centro, UTC−6 · Ciudad de México');
 });
 
 it('counts the seconds until the code turns', function (): void {

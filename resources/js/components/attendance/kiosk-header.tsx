@@ -3,19 +3,24 @@ import KioskStatus from '@/components/attendance/kiosk-status';
 import { clockNow } from '@/lib/attendance/correction';
 import { dayTitle } from '@/lib/attendance/week-text';
 
-/** The top of the screen: whose center it is, and the company's clock; a chip says so when the connection is lost. */
+/**
+ * The top of the screen: whose center it is, and the center's clock with its zone named; a chip says so when the
+ * connection is lost.
+ */
 export default function KioskHeader({
     company,
     center,
     online,
     now,
     timezone,
+    timezoneLabel,
 }: {
     company: string;
     center: string;
     online: boolean;
     now: number;
     timezone: string;
+    timezoneLabel: string;
 }) {
     const { date, time } = clockNow(new Date(now), timezone);
 
@@ -40,7 +45,7 @@ export default function KioskHeader({
                         {time}
                     </p>
                     <p className="text-lg text-muted-foreground">
-                        {dayTitle(date)}
+                        {dayTitle(date)} · {timezoneLabel}
                     </p>
                 </div>
             </div>

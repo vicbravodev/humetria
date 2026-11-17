@@ -91,6 +91,7 @@ final class KioskController
     public function show(Request $request, string $tenant): Response
     {
         [, $center] = $this->screen($request->cookie(self::COOKIE));
+        $timezone = $this->timezones->forCenter($center->id);
 
         return Inertia::render('attendance/kiosk', [
             'company' => $this->companies->current()->tradeName,
@@ -98,7 +99,8 @@ final class KioskController
             'qrUrl' => route('attendance.device.kiosk.qr', $tenant),
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
             // The clock on the screen is the center's, whatever the tablet's zone.
-            'timezone' => $this->timezones->forCenter($center->id),
+            'timezone' => $timezone,
+            'timezoneLabel' => $this->timezones->label($timezone),
             // The server's time, in milliseconds: the clock never comes from the tablet.
             'now' => CarbonImmutable::now()->getTimestampMs(),
         ]);
