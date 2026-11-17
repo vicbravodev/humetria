@@ -16,6 +16,9 @@ return [
         'past_windows' => (int) env('ATTENDANCE_QR_PAST_WINDOWS', 1),
         // A code that counted when the page of Marcar opened serves that browser these minutes, to accept and mark.
         'scan_minutes' => (int) env('ATTENDANCE_QR_SCAN_MINUTES', 3),
+        // Humetría's code on the screens (rounded modules in the brand ink, level H, the arch at the center) instead of
+        // the plain one. Off until it is scanned with a low-end Android at 1 to 2 m and low brightness.
+        'branded' => (bool) env('ATTENDANCE_QR_BRANDED', false),
     ],
 
     /*
