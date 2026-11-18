@@ -94,10 +94,10 @@ it('names Meta and Resend as who delivers the messages, what each receives, the 
         ->toContain('nunca publicidad');
 });
 
-it('only has WhatsApp templates that are UTILITY, which is what the notice promises: invitations, never advertising', function (): void {
+it('only has WhatsApp templates that are UTILITY, plus the authentication code, which is what the notice promises: never advertising', function (): void {
     $categories = array_map(fn ($template): string => $template->category->value, (new App\Modules\Messaging\Support\TemplateRegistry)->all());
 
-    expect($categories)->not->toBe([])->and(array_values(array_unique($categories)))->toBe(['UTILITY']);
+    expect($categories)->not->toBe([])->and(array_values(array_unique($categories)))->toEqualCanonicalizing(['UTILITY', 'AUTHENTICATION']);
 });
 
 it('keeps the legal items marked as pending review', function (): void {

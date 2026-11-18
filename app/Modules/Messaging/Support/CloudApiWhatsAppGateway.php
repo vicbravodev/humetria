@@ -11,6 +11,7 @@ use App\Modules\Messaging\Data\SendOutcome;
 use App\Modules\Messaging\Enums\TemplateButtonType;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use InvalidArgumentException;
 
 /**
  * Sends the template through Meta's Cloud API. The message id travels in `biz_opaque_callback_data`, which Meta hands back in
@@ -78,8 +79,15 @@ final class CloudApiWhatsAppGateway implements WhatsAppGateway
      *
      * @return list<array<string, mixed>>
      */
-    private function components(TemplateDefinition $template, OutboundMessage $message): array
+    private function components(TemplateDefinition|AuthenticationTemplate $template, OutboundMessage $message): array
     {
+        // The code goes in the body and in the button that copies it; Meta's library text takes no named variables.
+        if ($template instanceof AuthenticationTemplate) {
+            $code = ['type' => 'text', 'text' => $message->bodyParameters[0] ?? throw new InvalidArgumentException('An authentication message carries its code.')];
+
+            return [['type' => 'body', 'parameters' => [$code]], ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [$code]]];
+        }
+
         $named = $template->namedParameters($message->bodyParameters);
         $parameter = fn (string $name): array => ['type' => 'text', 'parameter_name' => $name, 'text' => $named[$name]];
         $components = [];

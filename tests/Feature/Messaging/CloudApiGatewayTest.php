@@ -93,6 +93,17 @@ it('refuses a message whose parameters do not match its template, and sends noth
     Http::assertNothingSent();
 });
 
+it('sends the verification code of the authentication template in the body and in the copy-code button', function (): void {
+    Http::fake(['*' => Http::response(['messages' => [['id' => 'wamid.ABC']]], 200)]);
+
+    cloudGateway()->send(new OutboundMessage('+528112345678', 'proof_code_v1', 'es_MX', ['123456'], '123456', 'delivery-uuid'));
+
+    Http::assertSent(fn (Request $request): bool => $request->data()['template']['components'] === [
+        ['type' => 'body', 'parameters' => [['type' => 'text', 'text' => '123456']]],
+        ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [['type' => 'text', 'text' => '123456']]],
+    ]);
+});
+
 it('does not put the token anywhere but the button', function (): void {
     Http::fake(['*' => Http::response(['messages' => [['id' => 'wamid.ABC']]], 200)]);
 
