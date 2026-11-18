@@ -14,6 +14,7 @@ use App\Modules\Assistant\Support\ComplianceReaders;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
 use App\Modules\Assistant\Support\Readers\Nom037Reader;
 use App\Modules\Assistant\Support\Readers\SeatingReader;
+use App\Modules\Assistant\Support\Readers\VacationsReader;
 use App\Modules\Assistant\Support\TenantAiAccess;
 use App\Modules\Assistant\Support\TenantHumiActivity;
 use App\Modules\Assistant\Support\ToolRegistry;
@@ -49,7 +50,8 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(Nom035Reader::class),
             $app->make(Nom037Reader::class),
             $app->make(SeatingReader::class),
-        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating']));
+            $app->make(VacationsReader::class),
+        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations']));
 
         // The tools of Humi: a new module adds its own here.
         $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [
@@ -61,7 +63,7 @@ final class AssistantServiceProvider extends ServiceProvider
             GetFirstSteps::class,
         ], [
             // Regulations are not a module of the company: Humi always has them. A tool that reads two norms stays with either.
-            GetComplianceOverview::class => ['nom035', 'nom037', 'seating'],
+            GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations'],
             GetCampaignProgress::class => ['nom035'],
             GetRiskResults::class => ['nom035'],
             ListPendingActions::class => ['nom035', 'nom037'],

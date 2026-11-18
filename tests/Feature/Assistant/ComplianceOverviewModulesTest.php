@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Assistant\Support\Readers\SeatingReader;
+use App\Modules\Assistant\Support\Readers\VacationsReader;
 use App\Modules\Assistant\Tools\GetComplianceOverview;
+use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Seating\Contracts\SeatingRoute;
 use App\Modules\Seating\Models\PositionAssignment;
@@ -17,7 +19,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 
-mutates(SeatingReader::class);
+mutates(SeatingReader::class, VacationsReader::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();
@@ -140,4 +142,41 @@ it('does not tell Ley Silla to a company without it, and offers the overview to 
 
     expect(toolCard(GetComplianceOverview::class, $this->scope)['rows'])->toHaveCount(1)
         ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
+});
+
+it('tells vacations are up to date while no request waits for RH', function (): void {
+    // Still with the manager or already answered: none of them waits for RH.
+    LeaveRequest::factory()->create(['tenant_id' => $this->a->id]);
+    LeaveRequest::factory()->approved()->escalated()->create(['tenant_id' => $this->a->id]);
+
+    expect(overviewLine($this, 'vacations'))->toBe([
+        'key' => 'vacations',
+        'label' => 'Vacaciones',
+        'state' => 'up_to_date',
+        'stateLabel' => 'Al día',
+        'summary' => 'No hay solicitudes de vacaciones por atender.',
+        'link' => "/admin/{$this->a->slug}/vacations/requests",
+    ]);
+});
+
+it('counts the vacation requests that wait for RH, never those of another company nor who asked', function (): void {
+    LeaveRequest::factory()->escalated()->create(['tenant_id' => $this->a->id]);
+    LeaveRequest::factory()->escalated()->count(3)->create(['tenant_id' => $this->b->id]);
+    workIn($this->a);
+
+    expect(overviewLine($this, 'vacations'))->toMatchArray(['state' => 'pending', 'stateLabel' => 'Pendiente', 'summary' => 'Hay 1 solicitud de vacaciones por atender.']);
+
+    LeaveRequest::factory()->escalated()->create(['tenant_id' => $this->a->id]);
+
+    expect(overviewLine($this, 'vacations')['summary'])->toBe('Hay 2 solicitudes de vacaciones por atender.');
+});
+
+it('does not tell vacations to a company without them, and offers the overview to a company with only vacations', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(overviewLine($this, 'vacations'))->toBeNull();
+
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 });
