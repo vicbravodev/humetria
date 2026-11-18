@@ -16,9 +16,14 @@ final class DeliveryFailures
 {
     public function __construct(private readonly RecordDeliveryEvent $record) {}
 
-    public function fail(Delivery $delivery, FailureCause $cause, DeliveryStatus $status = DeliveryStatus::Failed): void
+    /** @param bool $announce false when the message had already ended and whoever listens has been told. */
+    public function fail(Delivery $delivery, FailureCause $cause, DeliveryStatus $status = DeliveryStatus::Failed, ?CarbonImmutable $occurredAt = null, bool $announce = true): void
     {
-        $this->record->handle($delivery, $status, CarbonImmutable::now(), $cause);
+        $this->record->handle($delivery, $status, $occurredAt ?? CarbonImmutable::now(), $cause);
+
+        if (! $announce) {
+            return;
+        }
 
         event(new WhatsAppMessageFailed(
             $delivery->id,

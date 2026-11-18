@@ -25,6 +25,7 @@ use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Leave\Actions\GrantEntitlements;
 use App\Modules\Leave\Actions\RouteRequests;
 use App\Modules\Messaging\Actions\ReconcileUnknown;
+use App\Modules\Messaging\Actions\ReplayOrphanEvents;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -214,6 +215,11 @@ Artisan::command('messaging:reconcile-unknown', function (ReconcileUnknown $reco
 })->purpose('Settle as used the WhatsApp messages that stayed unknown for a day with no status from Meta');
 
 Schedule::command('messaging:reconcile-unknown')->hourly()->onOneServer()->withoutOverlapping();
+Artisan::command('messaging:replay-orphans', function (ReplayOrphanEvents $replay): void {
+    $this->info('Estados aplicados: '.$replay->handle());
+})->purpose('Apply the WhatsApp statuses that arrived before their message had its id, and drop the ones that stayed alone for an hour');
+
+Schedule::command('messaging:replay-orphans')->everyMinute()->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('schedule:heartbeat')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
