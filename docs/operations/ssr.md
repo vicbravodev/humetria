@@ -153,11 +153,21 @@ El servidor reporta sus errores con solo el token (ver "Errores").
 
 - PostHog (nube US, `posthog-js` en su build, sin scripts externos) arranca solo en el documento de la landing
   (`App\Http\Analytics::measuredRoutes()`: `home`, `tools.*` y `guides.workday-2027`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
-- Sin autocapture, sin grabación de sesión, sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento
+- Sin autocapture, sin grabación de sesión (salvo `POSTHOG_LANDING_REPLAY`, abajo), sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento
   local) y sin IP. A PostHog no se le manda nada de la persona: la dirección sin más query que las `utm_*` y, de un referente de
   este sitio, solo su origen (`resources/js/lib/analytics.ts` lo impone en `before_send`).
 - Solo los eventos del catálogo de abajo; uno nuevo se agrega aquí. Un solo escucha de clics (`use-landing-measurement`).
   Medir el panel (`/admin`), las encuestas o los portales es un trabajo aparte con su revisión de privacidad.
+- Excepción: la grabación de la visita a la landing y la medición de su velocidad, solo con `POSTHOG_LANDING_REPLAY=true` (el
+  proyecto necesita Session Replay encendido). El servidor lo avisa con `replay: true` en el bloque `analytics-config`, que ya solo
+  existe con token, consentimiento `granted` y sin sesión (nadie con cuenta se graba en la landing), y abre `us-assets.i.posthog.com`
+  en `connect-src` para leer la configuración de replay del proyecto. Con la bandera encendida la landing descarga, **después del evento
+  `load`** para no competir con el primer pintado, la build `posthog-js/full/no-external` (trae el grabador y `web-vitals`; la ligera
+  no trae ninguno), con una sola instancia y un solo `$session_id` para que cada grabación se ligue a sus eventos. Graba anónimo
+  (`person_profiles: 'never'`, sin IP, sin consola, sin cabeceras ni cuerpos de red, `maskAllInputs: true`: lo escrito en el formulario
+  de demo sale enmascarado) y manda `$web_vitals` (LCP, INP, CLS, FCP) sin `network_timing`. El texto de la landing es público y no se
+  enmascara; un bloque que no deba verse lleva la clase `ph-no-capture`. Cambiar esto exige actualizar el aviso de privacidad
+  (`tests/Feature/PrivacyNoticeMatchesCodeTest.php`).
 - Excepción: la grabación anónima del panel de una empresa (`resources/js/lib/session-recording.ts`), solo con
   `POSTHOG_SESSION_RECORDING=true`. Una segunda instancia de PostHog (`posthog-js/full/no-external`, el grabador dentro del
   bundle) que se descarga en la primera pantalla grabable: hay empresa, sesión propia y nadie suplanta, y la pantalla no está
@@ -185,7 +195,7 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 | Evento | Propiedad | Cuándo |
 |--------|-----------|--------|
 | `$pageview` | `$current_url` limpia | Al abrir la landing |
-| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works`, `sticky_demo`, `guide_tool`, `guide_demo` | Clic en un llamado a la demo o a "cómo funciona" |
+| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works`, `sticky_demo`, `guide_tool`, `guide_demo`, `pricing_demo` | Clic en un llamado a la demo o a "cómo funciona" |
 | `tool_page_click` | `target`: herramienta | Clic en la tarjeta de una herramienta (landing) o en otra herramienta (su página) |
 | `nav_click` | `target`: id de la sección | Clic en el menú de la cabecera |
 | `sign_in_click` | `target`: `header` | Clic en "Iniciar sesión" |
@@ -201,8 +211,20 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 | `generate_lead` | — | La solicitud quedó guardada (navegador, una vez por solicitud) |
 | `demo_request_stored` | `profile`, `workforce`, `tools_count`, `utm_*`, `referrer_host` | Lo mismo, dicho por el servidor: no lo frena un bloqueador |
 
+Con `POSTHOG_LANDING_REPLAY` también salen `$snapshot` (la grabación) y `$web_vitals` (`$web_vitals_LCP_value`, `INP`, `CLS`, `FCP`);
+ninguno lleva datos de la persona. Para ver dónde se cae la gente: en PostHog, el embudo «Landing → demo» (`$pageview` → `scroll_depth`
+25 % → `demo_form_started` → `demo_request_stored`) y, para el primer pintado, `$web_vitals_LCP_value` por dispositivo.
+
 `generate_lead` y `demo_request_stored` cuentan lo mismo; la diferencia entre ambos es lo que bloquean los navegadores. La conversión
 principal del embudo es `demo_request_stored`.
+
+### Enlaces con campaña (UTM)
+
+Sin UTM, PostHog ve la visita como directa y no hay forma de saber qué anuncio o publicación trajo cada demo. Todo enlace a la
+landing que se difunda (anuncios, correos, publicaciones, firma) lleva `utm_source` (dónde: `google`, `linkedin`, `correo`),
+`utm_medium` (cómo: `cpc`, `social`, `email`) y `utm_campaign` (qué: `nom-035`, `registro-de-jornada-2027`), en minúsculas y con
+guiones; `utm_term` y `utm_content` los pone Google Ads con su sufijo de URL final. Solo esas llegan a PostHog
+(`Analytics::pageLocation`). Una solicitud de prueba lleva `utm_medium=test` para poder excluirla de los números.
 
 ### Conversiones para Google Ads
 

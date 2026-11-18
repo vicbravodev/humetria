@@ -97,3 +97,15 @@ it('says the panel of a company may be recorded, anonymous and masked, and what 
         ->toContain("'complaints/'")->toContain("'campaigns/trauma'")->toContain("'results/screenings'")->toContain("'assistant/'")->toContain("'settings/'")
         ->toContain("prop(props, 'impersonator') == null");
 });
+
+it('says a visit to the landing may be recorded, anonymous and with what is typed hidden, and that how fast it loads is measured', function (): void {
+    $text = privacyNoticeText();
+    $options = (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/analytics.ts');
+
+    expect($text)->toContain('puede guardar una grabación anónima de tu visita')
+        ->toContain('Lo que escribes en el formulario aparece oculto')
+        ->toContain('cuánto tarda en cargar la página')
+        ->not->toContain('No grabamos tu sesión')
+        ->and($options)->toContain('maskAllInputs: true')->toContain('web_vitals: true')->toContain('network_timing: false')
+        ->toContain('recordHeaders: false')->toContain('recordBody: false')->toContain("person_profiles: 'never'");
+});

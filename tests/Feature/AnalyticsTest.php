@@ -292,3 +292,32 @@ it('lets the page fetch the recording settings of PostHog only while recording i
     expect(str_contains($connect[0] ?? '', 'https://us-assets.i.posthog.com'))->toBe($on)
         ->and($script[0] ?? '')->not->toContain('posthog');
 })->with(['on' => true, 'off' => false]);
+
+it('tells the landing it may replay the visit and measure its speed only when the owner switched landing replay on', function (bool $on): void {
+    measuring();
+    config(['services.posthog.landing_replay' => $on]);
+
+    expect(analyticsConfigIn(landingHtml()))
+        ->toBe(['token' => PH_TOKEN, 'host' => PH_HOST, 'page_location' => 'http://localhost/', ...($on ? ['replay' => true] : [])]);
+})->with(['on' => true, 'off' => false]);
+
+it('lets the landing fetch the replay settings of PostHog only while landing replay is on, with consent and without a session', function (bool $on, string $consent, bool $signedIn, bool $expected): void {
+    measuring(consent: $consent);
+    config(['services.posthog.landing_replay' => $on]);
+
+    if ($signedIn) {
+        $this->actingAs(User::factory()->create());
+    }
+
+    $policy = (string) $this->get('/')->assertOk()->headers->get('Content-Security-Policy');
+    preg_match('/script-src [^;]*/', $policy, $script);
+    preg_match('/connect-src [^;]*/', $policy, $connect);
+
+    expect(str_contains($connect[0] ?? '', 'https://us-assets.i.posthog.com'))->toBe($expected)
+        ->and($script[0] ?? '')->not->toContain('posthog');
+})->with([
+    'on, with consent' => [true, 'granted', false, true],
+    'off, with consent' => [false, 'granted', false, false],
+    'on, without consent' => [true, 'denied', false, false],
+    'on, signed in' => [true, 'granted', true, false],
+]);

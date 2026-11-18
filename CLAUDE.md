@@ -145,6 +145,7 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   la página responde 200 y React la pinta: nunca 5xx por Node.
 - PostHog mide solo las páginas públicas (landing, página de cada herramienta y guía: `Analytics::measuredRoutes()`): lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
   medición. Ningún dato de la persona va a PostHog. Todo enlace que sale de la landing o llega a ella es un `<a href>`.
+- La visita a la landing se graba (anónima, lo escrito enmascarado) y se mide su velocidad solo con `POSTHOG_LANDING_REPLAY=true` y consentimiento `granted`; la build completa se descarga tras el `load` (`docs/operations/ssr.md`).
 - El panel de una empresa se graba solo con `POSTHOG_SESSION_RECORDING=true`, anónimo y enmascarado (`lib/session-recording.ts`):
   se ve la interfaz y se oculta todo dato de la empresa (`lib/recording-mask.ts`: lo que viene en las props, datos con forma
   personal, opciones de búsqueda, `ph-mask`), campos y atributos; sin persona, empresa ni dirección; nunca quejas, Guía I,
