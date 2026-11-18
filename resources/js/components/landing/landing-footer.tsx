@@ -7,6 +7,7 @@ import { ThemeSwitch } from '@/components/theme-switch';
 import { currentYear } from '@/lib/current-year';
 import { cn } from '@/lib/utils';
 import { dashboard, privacyNotice, roadmap } from '@/routes';
+import { index as blog } from '@/routes/blog';
 
 const links = [
     { href: '#como-funciona', label: 'Cómo funciona' },
@@ -51,6 +52,13 @@ export default function LandingFooter({
                                 {link.label}
                             </a>
                         ))}
+                        <a
+                            href={blog().url}
+                            data-test="footer-blog"
+                            className={linkClass}
+                        >
+                            Blog
+                        </a>
                         <a
                             href={roadmap().url}
                             data-test="footer-roadmap"

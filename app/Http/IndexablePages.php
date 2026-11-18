@@ -25,10 +25,14 @@ final class IndexablePages
         'tools.org_chart',
         'tools.engagement',
         'guides.workday-2027',
+        'blog.index',
     ];
+
+    /** Routes with a parameter, so they cannot be listed in the static sitemap: the blog lists its articles in its own. */
+    public const array WITH_PARAMETERS = ['blog.show'];
 
     public static function includes(?string $routeName): bool
     {
-        return $routeName !== null && in_array($routeName, self::ROUTES, true);
+        return $routeName !== null && (in_array($routeName, self::ROUTES, true) || in_array($routeName, self::WITH_PARAMETERS, true));
     }
 }
