@@ -43,6 +43,7 @@ void test('without JavaScript the headline and the main text are visible and the
         assert.ok(
             (await page.locator('a[href="/privacy-notice"]').count()) > 0,
         );
+        assert.ok((await page.locator('a[href="/blog"]').count()) > 0);
         assert.ok(
             (await page.locator('a[href="#agenda-una-demo"]').count()) > 0,
         );
