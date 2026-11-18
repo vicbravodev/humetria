@@ -233,6 +233,14 @@
     --shadow-float: var(--elevation-float);
 }
 
+/*
+ * A toast slides in at full contrast instead of fading in: read mid-fade (by a person or by axe) its text falls to 2.5:1.
+ * Outside any layer, like sonner's own styles, so the more specific selector wins.
+ */
+li[data-sonner-toast] {
+    transition-property: transform, height, box-shadow;
+}
+
 @layer base {
     * {
         @apply border-border outline-ring;
