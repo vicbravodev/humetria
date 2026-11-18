@@ -77,7 +77,7 @@ function seatingRouteAnswers(Tenant $tenant, RouteProgress ...$progress): void
     });
 }
 
-function routeOf(int $done): RouteProgress
+function humiRouteOf(int $done): RouteProgress
 {
     return new RouteProgress(true, array_map(fn (int $stage): bool => $stage < $done, range(0, RouteProgress::STAGES - 1)), 'sigue');
 }
@@ -117,7 +117,7 @@ it('leaves out the archived centers', function (): void {
 });
 
 it('puts Ley Silla up to date when every center finished its route', function (): void {
-    seatingRouteAnswers($this->a, routeOf(6), routeOf(6), RouteProgress::notApplicable('Nadie trabaja de pie'));
+    seatingRouteAnswers($this->a, humiRouteOf(6), humiRouteOf(6), RouteProgress::notApplicable('Nadie trabaja de pie'));
 
     expect(overviewLine($this, 'seating'))->toMatchArray([
         'state' => 'up_to_date',
@@ -127,13 +127,13 @@ it('puts Ley Silla up to date when every center finished its route', function ()
 });
 
 it('puts Ley Silla pending while a center has not started its route', function (): void {
-    seatingRouteAnswers($this->a, routeOf(6), routeOf(0));
+    seatingRouteAnswers($this->a, humiRouteOf(6), humiRouteOf(0));
 
     expect(overviewLine($this, 'seating'))->toMatchArray(['state' => 'pending', 'stateLabel' => 'Pendiente']);
 });
 
 it('puts Ley Silla pending while a center has not said whether it applies there', function (): void {
-    seatingRouteAnswers($this->a, routeOf(6), RouteProgress::unanswered(), RouteProgress::unanswered());
+    seatingRouteAnswers($this->a, humiRouteOf(6), RouteProgress::unanswered(), RouteProgress::unanswered());
 
     expect(overviewLine($this, 'seating'))->toMatchArray([
         'state' => 'pending',
@@ -263,7 +263,7 @@ it('does not tell complaints to a company without them, and offers the overview 
 });
 
 /** `$answered` people of the company of `$survey` answered it, and one more was invited and did not. */
-function answeredBy(Survey $survey, int $answered): Survey
+function humiSurveyAnsweredBy(Survey $survey, int $answered): Survey
 {
     Invitation::factory()->answered()->count($answered)->create(['survey_id' => $survey->id]);
     Invitation::factory()->create(['survey_id' => $survey->id]);
@@ -298,9 +298,9 @@ it('tells a draft waits to be launched', function (): void {
 
 it('tells until when the open survey takes answers and how many answered, never of another company nor what they said', function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');
-    $survey = answeredBy(Survey::factory()->active('2026-11-30')->create(['tenant_id' => $this->a->id, 'invited' => 80]), 34);
+    $survey = humiSurveyAnsweredBy(Survey::factory()->active('2026-11-30')->create(['tenant_id' => $this->a->id, 'invited' => 80]), 34);
     Comment::factory()->create(['tenant_id' => $this->a->id, 'survey_id' => $survey->id, 'body' => 'Mi jefe Zafiro no escucha']);
-    answeredBy(Survey::factory()->active('2026-12-15')->create(['tenant_id' => $this->b->id, 'invited' => 9]), 6);
+    humiSurveyAnsweredBy(Survey::factory()->active('2026-12-15')->create(['tenant_id' => $this->b->id, 'invited' => 9]), 6);
     workIn($this->a);
 
     $line = overviewLine($this, 'climate');
@@ -317,8 +317,8 @@ it('tells until when the open survey takes answers and how many answered, never 
 });
 
 it('tells the results of the last closed survey are ready, together with the one open', function (): void {
-    answeredBy(Survey::factory()->pulse()->closed()->create(['tenant_id' => $this->a->id, 'closed_at' => '2026-11-10 18:00:00']), 5);
-    answeredBy(Survey::factory()->pulse()->active('2026-11-30')->create(['tenant_id' => $this->a->id, 'invited' => 12]), 0);
+    humiSurveyAnsweredBy(Survey::factory()->pulse()->closed()->create(['tenant_id' => $this->a->id, 'closed_at' => '2026-11-10 18:00:00']), 5);
+    humiSurveyAnsweredBy(Survey::factory()->pulse()->active('2026-11-30')->create(['tenant_id' => $this->a->id, 'invited' => 12]), 0);
     workIn($this->a);
 
     expect(overviewLine($this, 'pulse'))->toMatchArray([
@@ -328,7 +328,7 @@ it('tells the results of the last closed survey are ready, together with the one
 });
 
 it('puts the survey up to date once the last one closed, and says its results are not shown below the minimum of respondents', function (): void {
-    answeredBy(Survey::factory()->closed()->create(['tenant_id' => $this->a->id, 'closed_at' => '2026-11-10 18:00:00']), 4);
+    humiSurveyAnsweredBy(Survey::factory()->closed()->create(['tenant_id' => $this->a->id, 'closed_at' => '2026-11-10 18:00:00']), 4);
     workIn($this->a);
 
     expect(overviewLine($this, 'climate'))->toMatchArray([
@@ -487,7 +487,9 @@ it('counts the people the cost covers, the categories without a salary and the s
         'state' => 'in_progress',
         'stateLabel' => 'En curso',
         'summary' => 'El costo cubre a 2 de 3 personas; 1 categoría no tiene salario. Aún no armas ningún escenario.',
-    ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro')->not->toContain('987');
+    ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro');
+    // The summary carries no ids, so a salary cannot hide in it by chance.
+    expect($line['summary'])->not->toContain('987');
 
     Employee::query()->whereNull('job_grade_id')->delete();
     App\Modules\Compensation\Models\GradeSalary::factory()->create(['tenant_id' => $this->a->id, 'job_grade_id' => App\Modules\Organization\Models\JobGrade::query()->whereKeyNot($grade->id)->value('id'), 'daily_salary_cents' => 60_000, 'effective_from' => '2026-01-01']);
@@ -521,7 +523,7 @@ it('tells someone who may not see compensation nothing of it', function (): void
 });
 
 /** A published policy of prevention of `$tenant` that reached `$center`. */
-function policyReaching(Tenant $tenant, WorkCenter $center): App\Modules\Disclosure\Models\Document
+function humiPolicyReaching(Tenant $tenant, WorkCenter $center): App\Modules\Disclosure\Models\Document
 {
     $policy = App\Modules\Disclosure\Models\Document::factory()->published()->create(['tenant_id' => $tenant->id]);
     App\Modules\Disclosure\Models\DocumentCenter::factory()->create(['tenant_id' => $tenant->id, 'document_id' => $policy->id, 'work_center_id' => $center->id]);
@@ -544,8 +546,8 @@ it('counts the centers in use the policy reached, never those of another company
     $plant = WorkCenter::factory()->for($this->a)->create();
     $offices = WorkCenter::factory()->for($this->a)->create();
     WorkCenter::factory()->for($this->a)->create(['archived_at' => now()]);
-    $policy = policyReaching($this->a, $plant);
-    policyReaching($this->b, WorkCenter::factory()->for($this->b)->create());
+    $policy = humiPolicyReaching($this->a, $plant);
+    humiPolicyReaching($this->b, WorkCenter::factory()->for($this->b)->create());
     workIn($this->a);
 
     expect(overviewLine($this, 'disclosure'))->toMatchArray(['state' => 'pending', 'summary' => 'Tu política de prevención está publicada en 1 de 2 centros de trabajo.']);
