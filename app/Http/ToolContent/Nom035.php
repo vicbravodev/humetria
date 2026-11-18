@@ -26,8 +26,6 @@ final class Nom035
             'h1' => 'Del cuestionario al informe para la STPS, sin capturar una sola respuesta',
             'lead' => 'Humetría elige las guías que le tocan a cada centro, sortea la muestra e invita a tu gente a contestar desde su celular. Las respuestas de las Guías II y III son anónimas, y al cerrar tienes los resultados, el informe del numeral 7.7 y el borrador del Programa de intervención.',
             'proof' => 'Las preguntas van tal como están en el DOF. RH ve quién contestó las Guías II y III, nunca qué, y ningún grupo de menos de 5 respuestas se muestra.',
-            'heroPhone' => 'nom-035-10-survey-intro-mobile',
-            'phoneAlt' => 'Inicio de la encuesta NOM-035 en el celular',
             'norm' => [
                 'title' => 'Qué pide la norma',
                 'lead' => 'La NOM-035 pide identificar y prevenir los factores de riesgo psicosocial en cada centro de trabajo. Lo que te toca depende de cuántas personas trabajan ahí.',
@@ -95,14 +93,20 @@ final class Nom035
                 [
                     'title' => 'Lanzas la evaluación de un centro',
                     'text' => 'Humetría cuenta a las personas activas y fija las guías. Si eliges muestra para la Guía III, la calcula con la ecuación de la norma y la sortea por género.',
+                    'shot' => 'nom-035-08-launch',
+                    'alt' => 'El lanzamiento de una evaluación: las guías que le tocan al centro y la muestra',
                 ],
                 [
                     'title' => 'Tu gente contesta desde su celular',
                     'text' => 'Cada persona recibe un enlace de un solo uso. Ves el avance por área y recuerdas a quien falta, sin ver qué contestó nadie.',
+                    'shot' => 'nom-035-10-survey-intro-mobile',
+                    'alt' => 'El inicio de la encuesta NOM-035 en el celular',
                 ],
                 [
                     'title' => 'Cierras y tienes el informe',
                     'text' => 'Resultados por categoría y dominio, el informe del numeral 7.7 y, si hay riesgo Medio o más, el borrador del Programa.',
+                    'shot' => 'nom-035-03-results',
+                    'alt' => 'Los resultados de la evaluación por nivel de riesgo',
                 ],
             ],
             'features' => [

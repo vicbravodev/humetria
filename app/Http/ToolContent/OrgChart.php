@@ -26,8 +26,6 @@ final class OrgChart
             'h1' => 'Tu organigrama cambió ayer. Aquí ya está al día',
             'lead' => 'El organigrama sale de quién reporta a quién: lo cargas desde tu archivo de personal y se dibuja solo. Cuando un jefe se va, te pide reasignar a su equipo, y cada jefe ve en su portal solo a quienes le reportan.',
             'proof' => 'Se dibuja solo a partir de tu archivo, nadie queda sin jefe y las aprobaciones de todas las herramientas salen de aquí.',
-            'heroPhone' => null,
-            'phoneAlt' => null,
             'norm' => null,
             'guideLink' => false,
             'pick' => null,
@@ -35,14 +33,20 @@ final class OrgChart
                 [
                     'title' => 'Cargas tu archivo',
                     'text' => 'Un CSV con cada persona y su jefe directo. Antes de guardar ves qué se va a crear y qué se va a cambiar.',
+                    'shot' => 'org-chart-03-import',
+                    'alt' => 'La carga de empleados con lo que se va a crear y cambiar',
                 ],
                 [
                     'title' => 'Se dibuja el organigrama',
                     'text' => 'Con puestos, áreas y centros, sin límite de niveles y sin dibujar a mano.',
+                    'shot' => 'org-chart-01-chart',
+                    'alt' => 'El organigrama que se dibuja solo',
                 ],
                 [
                     'title' => 'Se mantiene al día',
                     'text' => 'Cada alta, baja o cambio de jefe lo actualiza. Si un jefe se va, te pide reasignar a su equipo.',
+                    'shot' => 'org-chart-02-team',
+                    'alt' => 'El equipo de un jefe en el organigrama',
                 ],
             ],
             'features' => [

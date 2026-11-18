@@ -28,12 +28,12 @@ use InvalidArgumentException;
  * @phpstan-type Film array{name: string, title: string, description: string, duration: int, uploaded: string}
  * @phpstan-type Norm array{title: string, lead: string, facts: list<Fact>, rules: list<Rule>, note: string|null}
  * @phpstan-type Pick array{title: string, lead: string, question: string, options: list<array{label: string, answer: string, detail: string}>}
- * @phpstan-type Step array{title: string, text: string}
+ * @phpstan-type Step array{title: string, text: string, shot: string, alt: string}
  * @phpstan-type BeforeAfter array{before: string, after: string}
  * @phpstan-type Audience array{who: string, title: string, text: string}
  * @phpstan-type Privacy array{title: string, items: list<array{title: string, text: string}>}
  * @phpstan-type Related array{key: string, why: string}
- * @phpstan-type Page array{title: string, description: string, name: string, family: string, chip: string, h1: string, lead: string, proof: string, heroPhone: string|null, phoneAlt: string|null, norm: Norm|null, guideLink: bool, pick: Pick|null, steps: list<Step>, features: list<Feature>, beforeAfterTitle: string, beforeAfter: list<BeforeAfter>, audience: list<Audience>, privacy: Privacy|null, faqs: list<Faq>, related: list<Related>, film: Film}
+ * @phpstan-type Page array{title: string, description: string, name: string, family: string, chip: string, h1: string, lead: string, proof: string, norm: Norm|null, guideLink: bool, pick: Pick|null, steps: list<Step>, features: list<Feature>, beforeAfterTitle: string, beforeAfter: list<BeforeAfter>, audience: list<Audience>, privacy: Privacy|null, faqs: list<Faq>, related: list<Related>, film: Film}
  * @phpstan-type GuideSection array{heading: string, paragraphs: list<string>, sources: list<string>}
  * @phpstan-type Guide array{title: string, description: string, h1: string, lead: string, updated: string, sections: list<GuideSection>}
  */

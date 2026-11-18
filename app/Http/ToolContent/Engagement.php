@@ -26,23 +26,27 @@ final class Engagement
             'h1' => 'Entérate de qué pasa con tu gente antes de que alguien renuncie',
             'lead' => 'Una encuesta de clima que te dice qué atender primero y pulsos cortos para ver si tus acciones funcionan. Tu gente contesta desde su enlace; tú ves resultados por área y la tendencia, sin ver nunca una respuesta individual.',
             'proof' => 'Preguntas probadas, respuestas sin nombre ni hora, y ningún grupo de menos de 5 respuestas a la vista.',
-            'heroPhone' => 'engagement-11-survey-question-mobile',
-            'phoneAlt' => 'Una pregunta del pulso en el celular',
             'norm' => null,
             'guideLink' => false,
             'pick' => null,
             'steps' => [
                 [
                     'title' => 'Lanzas la encuesta de clima',
-                    'text' => 'Con preguntas probadas sobre compromiso, liderazgo, crecimiento y más. Cada persona recibe su enlace.',
+                    'text' => 'Con preguntas probadas sobre compromiso, liderazgo, crecimiento y más, para toda la plantilla o un centro. Los pulsos se lanzan solos en la fecha que elijas.',
+                    'shot' => 'engagement-08-launch',
+                    'alt' => 'Una encuesta de clima lista para lanzar',
+                ],
+                [
+                    'title' => 'Tu gente contesta desde su enlace',
+                    'text' => 'Desde su celular, sin cuenta y sin que su respuesta lleve su nombre ni la hora en que contestó.',
+                    'shot' => 'engagement-11-survey-question-mobile',
+                    'alt' => 'Una pregunta del pulso en el celular',
                 ],
                 [
                     'title' => 'Ves qué atender primero',
-                    'text' => 'Los temas que más mueven el compromiso de tu gente, por centro, área, antigüedad o jefe.',
-                ],
-                [
-                    'title' => 'Mides con pulsos',
-                    'text' => 'Hasta 11 preguntas rápidas cada mes o trimestre, que se lanzan solas, para ver si las acciones funcionan.',
+                    'text' => 'Los temas que más mueven el compromiso de tu gente, por centro, área, antigüedad o jefe, con los grupos de menos de 5 ocultos.',
+                    'shot' => 'engagement-02-climate-drivers',
+                    'alt' => 'Los temas que atender primero',
                 ],
             ],
             'features' => [

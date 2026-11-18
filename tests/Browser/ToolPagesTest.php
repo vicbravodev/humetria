@@ -150,19 +150,16 @@ it('wears the same header pill as the landing, with its sections pointing back t
         ->assertAttribute('header a[data-test=header-how]', 'href', '/#como-funciona');
 });
 
-it('leaves the film whole and plays the steps on the phone beside them', function (): void {
+it('leaves the film whole and shows each step on its own real screen', function (): void {
     visitPage('tool', '/registro-de-jornada')
-        ->assertScript('() => document.querySelector("#inicio [data-test=phone-demo]") === null')
-        ->assertVisible('#como-funciona [data-test=phone-demo]')
+        ->assertScript('() => document.querySelector("#inicio img[src*=\'-mobile\']") === null')
+        ->assertVisible('#como-funciona [data-test=step-stage]')
+        ->click('@step-1')
+        ->assertAttribute('@step-1', 'aria-pressed', 'true')
+        ->assertScript('() => new Promise((resolve) => { const shown = () => document.querySelector("[data-test=step-stage] img[src=\'/images/tools/attendance-10-punch-mobile.webp\']") ? resolve(true) : requestAnimationFrame(shown); shown(); })')
         ->click('@step-2')
-        ->assertAttribute('@step-2', 'aria-pressed', 'true')
-        ->assertSeeIn('[data-test=phone-demo]', 'Paso 3');
-});
-
-it('shows the steps without a phone when the tool has none', function (): void {
-    visitPage('tool', '/organigrama')
-        ->assertScript('() => document.querySelector("[data-test=phone-demo]") === null')
-        ->assertScript('() => document.querySelectorAll("#como-funciona ol li").length', 3);
+        ->assertScript('() => new Promise((resolve) => { const shown = () => document.querySelector("[data-test=step-stage] img[src^=\'/images/tools/attendance-03-report\']") ? resolve(true) : requestAnimationFrame(shown); shown(); })')
+        ->assertSeeIn('[data-test=step-stage]', 'Paso 3');
 });
 
 it('dresses each tool page in the color of its family', function (string $path, string $family): void {
@@ -173,4 +170,3 @@ it('dresses each tool page in the color of its family', function (string $path, 
     'listening' => ['/clima-laboral', 'family-listening'],
     'operations' => ['/compensacion', 'family-operations'],
 ]);
-

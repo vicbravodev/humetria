@@ -26,8 +26,6 @@ final class Nom037
             'h1' => 'El teletrabajo en orden: listado, lugares validados y política',
             'lead' => 'Llevas el listado de quien teletrabaja, cada persona revisa su lugar de trabajo desde el celular y la Comisión de Seguridad e Higiene lo valida. La política se arma contestando preguntas y Humetría te avisa cuando toca la siguiente verificación.',
             'proof' => 'Parte de las preguntas literales del Apéndice 3, la Comisión de Seguridad e Higiene valida cada lugar y el expediente se ordena como la tabla 10.3 de la norma.',
-            'heroPhone' => 'nom-037-10-portal-mobile',
-            'phoneAlt' => 'La sección de teletrabajo del portal en el celular',
             'norm' => [
                 'title' => 'Qué pide la norma',
                 'lead' => 'Si alguien trabaja más del 40 % de su tiempo desde su casa o el lugar que elija, la NOM-037 pide condiciones de seguridad y salud también ahí.',
@@ -74,14 +72,20 @@ final class Nom037
                 [
                     'title' => 'Agregas a quien teletrabaja',
                     'text' => 'Según el porcentaje de su jornada, con los datos que pide la norma. El listado guarda cada alta y baja.',
+                    'shot' => 'nom-037-02-center',
+                    'alt' => 'El teletrabajo de un centro, con su listado',
                 ],
                 [
                     'title' => 'Cada persona revisa su lugar',
                     'text' => 'Contesta la lista de verificación desde su celular, por cada lugar donde trabaja, con foto si hay un riesgo.',
+                    'shot' => 'nom-037-10-portal-mobile',
+                    'alt' => 'La sección de teletrabajo del portal en el celular',
                 ],
                 [
                     'title' => 'La Comisión valida',
                     'text' => 'Valida el lugar, lo valida con un plan de acción o no lo valida. Humetría avisa cuando la validación está por vencer.',
+                    'shot' => 'nom-037-04-checklist-review',
+                    'alt' => 'La revisión de la Comisión de una lista de verificación',
                 ],
             ],
             'features' => [

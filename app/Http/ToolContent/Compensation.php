@@ -26,8 +26,6 @@ final class Compensation
             'h1' => 'Sabe cuánto cuesta un aumento antes de sentarte a negociarlo',
             'lead' => 'Elige un aumento y ve lo que cuesta de verdad: salario, prestaciones, cuotas del IMSS, Infonavit e impuesto sobre nómina. Compara la propuesta de la empresa con la del sindicato, proyecta los años siguientes y lleva a la mesa un reporte de solo lectura.',
             'proof' => 'El costo completo y no solo el porcentaje, cada tasa con su fuente y su vigencia, y la empresa y el sindicato cada uno con sus datos.',
-            'heroPhone' => null,
-            'phoneAlt' => null,
             'norm' => [
                 'title' => 'Qué toma en cuenta el cálculo',
                 'lead' => 'Un aumento sube el salario base de cotización y, con él, todo lo que se paga sobre él. Cada tasa sale de la ley, con su vigencia.',
@@ -74,14 +72,20 @@ final class Compensation
                 [
                     'title' => 'Cargas tu contrato',
                     'text' => 'Salarios por nivel, prestaciones y plantilla, con el estado donde se trabaja.',
+                    'shot' => 'compensation-06-contract',
+                    'alt' => 'El tabulador del contrato por categoría y nivel',
                 ],
                 [
                     'title' => 'Armas escenarios',
                     'text' => 'Un aumento por persona o por nivel, para sindicalizados y personal de confianza.',
+                    'shot' => 'compensation-02-scenario',
+                    'alt' => 'El costo de un escenario en vivo',
                 ],
                 [
                     'title' => 'Llevas el reporte a la mesa',
                     'text' => 'Comparas propuestas, proyectas los años siguientes y compartes un enlace de solo lectura.',
+                    'shot' => 'compensation-04-report',
+                    'alt' => 'El reporte del escenario para la mesa',
                 ],
             ],
             'features' => [

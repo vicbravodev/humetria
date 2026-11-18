@@ -26,8 +26,6 @@ final class Attendance
             'h1' => 'El registro de jornada que pide la ley, desde el celular de tu gente',
             'lead' => 'Desde 2027 la ley pide registrar de forma electrónica el inicio y el fin de la jornada de cada persona. Tu gente marca desde su teléfono, sin reloj checador; tú tienes un registro que no se puede alterar y el reporte para la autoridad con un botón.',
             'proof' => 'La hora la pone el servidor, ninguna marca se edita ni se borra, y cada persona confirma su semana.',
-            'heroPhone' => 'attendance-10-punch-mobile',
-            'phoneAlt' => 'La pantalla Marcar en el celular de una persona trabajadora',
             'norm' => [
                 'title' => 'Qué pide la ley',
                 'lead' => 'La reforma a la Ley Federal del Trabajo del 1 de mayo de 2026 obliga a registrar la jornada y reduce la jornada semanal año con año.',
@@ -105,14 +103,20 @@ final class Attendance
                 [
                     'title' => 'Configura centros y horarios',
                     'text' => 'Cada centro con su código QR y su zona en el mapa, o en campo para obras y rutas. Cada persona con su horario acordado.',
+                    'shot' => 'attendance-05-schedules',
+                    'alt' => 'Los horarios de cada persona, con su jornada de la semana',
                 ],
                 [
                     'title' => 'Cada persona vincula su teléfono',
                     'text' => 'Recibe su enlace, acepta el acuerdo de registro y crea su llave de acceso. Desde ahí marca en segundos.',
+                    'shot' => 'attendance-10-punch-mobile',
+                    'alt' => 'La pantalla Marcar en el celular de una persona',
                 ],
                 [
                     'title' => 'Revisas y entregas',
                     'text' => 'Cada semana la persona confirma su registro, tú resuelves las correcciones y descargas el reporte del centro.',
+                    'shot' => 'attendance-03-report',
+                    'alt' => 'El reporte para la autoridad de un centro',
                 ],
             ],
             'features' => [

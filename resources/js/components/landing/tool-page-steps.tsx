@@ -2,28 +2,24 @@ import { useReducedMotion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { WRAP } from '@/components/landing/landing-layout';
 import Reveal from '@/components/landing/reveal';
-import ToolPagePhoneDemo from '@/components/landing/tool-page-phone-demo';
 import ToolPageStep, { STEP_MS } from '@/components/landing/tool-page-step';
+import ToolPageStepStage from '@/components/landing/tool-page-step-stage';
 import { cn } from '@/lib/utils';
-
-type Props = {
-    steps: { title: string; text: string }[];
-    /** The phone screen of the person, when the tool has one: it plays the steps beside them. */
-    phone: string | null;
-    phoneAlt: string | null;
-};
+import type { ToolPageStep as Step } from '@/types';
 
 /**
- * How the tool runs, in three steps. With a phone, the steps play one after another beside it (a bar fills under the one
- * playing) until the visitor picks one; with reduced motion they wait to be picked.
+ * How the tool runs, in three steps, each with its real screen beside it: where RH does it, the person's phone, the result.
+ * They play one after another (a bar fills under the one playing) until the visitor picks one; with reduced motion they
+ * wait to be picked.
  */
-export default function ToolPageSteps({ steps, phone, phoneAlt }: Props) {
+export default function ToolPageSteps({ steps }: { steps: Step[] }) {
     const still = useReducedMotion() === true;
     const [active, setActive] = useState(0);
     const [picked, setPicked] = useState(false);
+    const shown = steps[active] ?? steps[0];
 
     useEffect(() => {
-        if (phone === null || still || picked) {
+        if (still || picked) {
             return;
         }
 
@@ -33,7 +29,7 @@ export default function ToolPageSteps({ steps, phone, phoneAlt }: Props) {
         );
 
         return () => window.clearInterval(timer);
-    }, [phone, still, picked, steps.length]);
+    }, [still, picked, steps.length]);
 
     return (
         <section
@@ -49,32 +45,19 @@ export default function ToolPageSteps({ steps, phone, phoneAlt }: Props) {
                     Cómo funciona
                 </h2>
             </Reveal>
-            <div
-                className={cn(
-                    'grid gap-10',
-                    phone !== null &&
-                        'lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-center',
-                )}
-            >
-                <ol
-                    className={cn(
-                        'grid gap-3',
-                        phone === null && 'gap-8 md:grid-cols-3',
-                    )}
-                >
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-12">
+                <ol className="grid gap-3">
                     {steps.map((step, index) => (
                         <ToolPageStep
                             key={step.title}
                             step={step}
                             index={index}
                             state={
-                                phone === null
-                                    ? 'static'
-                                    : index === active
-                                      ? still || picked
-                                          ? 'chosen'
-                                          : 'playing'
-                                      : 'idle'
+                                index === active
+                                    ? still || picked
+                                        ? 'chosen'
+                                        : 'playing'
+                                    : 'idle'
                             }
                             onPick={() => {
                                 setActive(index);
@@ -83,17 +66,9 @@ export default function ToolPageSteps({ steps, phone, phoneAlt }: Props) {
                         />
                     ))}
                 </ol>
-                {phone === null ? null : (
-                    <Reveal delay={0.15} className="grid gap-3">
-                        <ToolPagePhoneDemo
-                            shot={phone}
-                            alt={phoneAlt ?? ''}
-                            step={active}
-                            title={steps[active]?.title ?? ''}
-                        />
-                        <p className="text-center text-caption text-muted-foreground">
-                            Así lo ve tu gente en su celular
-                        </p>
+                {shown === undefined ? null : (
+                    <Reveal delay={0.15}>
+                        <ToolPageStepStage step={shown} index={active} />
                     </Reveal>
                 )}
             </div>

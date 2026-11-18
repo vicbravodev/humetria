@@ -26,6 +26,13 @@ export type ToolPageNorm = {
     note: string | null;
 };
 
+export type ToolPageStep = {
+    title: string;
+    text: string;
+    shot: string;
+    alt: string;
+};
+
 /** The piece of the page that answers one question by choice: which guides, how many days, how many hours. */
 export type ToolPagePick = {
     title: string;
@@ -50,12 +57,11 @@ export type ToolPageContent = {
     h1: string;
     lead: string;
     proof: string;
-    heroPhone: string | null;
-    phoneAlt: string | null;
     norm: ToolPageNorm | null;
     guideLink: boolean;
     pick: ToolPagePick | null;
-    steps: { title: string; text: string }[];
+    /** Each step with the screen that shows it: the panel, or the phone of the person (a shot ending in `-mobile`). */
+    steps: ToolPageStep[];
     features: ToolPageFeature[];
     beforeAfterTitle: string;
     beforeAfter: { before: string; after: string }[];

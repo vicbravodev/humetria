@@ -1,3 +1,4 @@
+import { WhenMounted } from '@inertiajs/react';
 import { AnimatePresence, m } from 'motion/react';
 import { useState } from 'react';
 import { EASE_OUT } from '@/components/landing/landing-motion';
@@ -9,6 +10,16 @@ import type { ToolPagePick } from '@/types';
 export default function ToolPagePickSection({ pick }: { pick: ToolPagePick }) {
     const [selected, setSelected] = useState(0);
     const answer = pick.options[selected] ?? pick.options[0];
+    const body =
+        answer === undefined ? null : (
+            <>
+                <b className="text-3xl tracking-[-0.02em]">{answer.answer}</b>
+                <span className="leading-relaxed text-background/80">
+                    {answer.detail}
+                </span>
+            </>
+        );
+    const plain = <p className="grid gap-1">{body}</p>;
 
     return (
         <section
@@ -60,36 +71,34 @@ export default function ToolPagePickSection({ pick }: { pick: ToolPagePick }) {
                         className="border-t border-background/20 pt-5"
                         data-test="pick-answer"
                     >
-                        <AnimatePresence mode="wait" initial={false}>
-                            {answer === undefined ? null : (
-                                <m.p
-                                    key={answer.label}
-                                    initial={{
-                                        opacity: 0,
-                                        y: 8,
-                                        filter: 'blur(2px)',
-                                    }}
-                                    animate={{
-                                        opacity: 1,
-                                        y: 0,
-                                        filter: 'blur(0px)',
-                                    }}
-                                    exit={{ opacity: 0, y: -4 }}
-                                    transition={{
-                                        duration: 0.25,
-                                        ease: EASE_OUT,
-                                    }}
-                                    className="grid gap-1"
-                                >
-                                    <b className="text-3xl tracking-[-0.02em]">
-                                        {answer.answer}
-                                    </b>
-                                    <span className="leading-relaxed text-background/80">
-                                        {answer.detail}
-                                    </span>
-                                </m.p>
-                            )}
-                        </AnimatePresence>
+                        {/* The swap is motion, which writes a style the server must not print: Node prints the answer as it stands. */}
+                        <WhenMounted fallback={plain}>
+                            <AnimatePresence mode="wait" initial={false}>
+                                {answer === undefined ? null : (
+                                    <m.p
+                                        key={answer.label}
+                                        initial={{
+                                            opacity: 0,
+                                            y: 8,
+                                            filter: 'blur(2px)',
+                                        }}
+                                        animate={{
+                                            opacity: 1,
+                                            y: 0,
+                                            filter: 'blur(0px)',
+                                        }}
+                                        exit={{ opacity: 0, y: -4 }}
+                                        transition={{
+                                            duration: 0.25,
+                                            ease: EASE_OUT,
+                                        }}
+                                        className="grid gap-1"
+                                    >
+                                        {body}
+                                    </m.p>
+                                )}
+                            </AnimatePresence>
+                        </WhenMounted>
                     </div>
                 </div>
             </div>

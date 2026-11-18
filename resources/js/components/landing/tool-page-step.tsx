@@ -1,3 +1,4 @@
+import { WhenMounted } from '@inertiajs/react';
 import { m } from 'motion/react';
 import { cn } from '@/lib/utils';
 
@@ -7,8 +8,8 @@ export const STEP_MS = 3500;
 type Props = {
     step: { title: string; text: string };
     index: number;
-    /** `static`: no phone to play; `playing`: shown now, with its bar filling; `chosen`: shown now, picked or still; `idle`. */
-    state: 'static' | 'playing' | 'chosen' | 'idle';
+    /** `playing`: shown now, with its bar filling; `chosen`: shown now, picked or still; `idle`: not shown. */
+    state: 'playing' | 'chosen' | 'idle';
     onPick: () => void;
 };
 
@@ -23,12 +24,11 @@ export default function ToolPageStep({ step, index, state, onPick }: Props) {
         >
             <button
                 type="button"
-                aria-pressed={state === 'static' ? undefined : shown}
-                disabled={state === 'static'}
+                aria-pressed={shown}
                 onClick={onPick}
                 data-test={`step-${index}`}
                 className={cn(
-                    'relative grid w-full gap-2 overflow-hidden rounded-2xl border p-5 text-left transition-[background-color,border-color,box-shadow] duration-200 ease-out disabled:cursor-default',
+                    'relative grid w-full gap-2 overflow-hidden rounded-2xl border p-5 text-left transition-[background-color,border-color,box-shadow] duration-200 ease-out',
                     shown
                         ? 'border-border bg-card shadow-raised'
                         : 'border-transparent',
@@ -44,17 +44,20 @@ export default function ToolPageStep({ step, index, state, onPick }: Props) {
                 <span className="leading-relaxed text-muted-foreground">
                     {step.text}
                 </span>
+                {/* Motion writes a style the server must not print: the bar fills only in the browser. */}
                 {state === 'playing' && (
-                    <m.span
-                        aria-hidden
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{
-                            duration: STEP_MS / 1000,
-                            ease: 'linear',
-                        }}
-                        className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-family"
-                    />
+                    <WhenMounted>
+                        <m.span
+                            aria-hidden
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            transition={{
+                                duration: STEP_MS / 1000,
+                                ease: 'linear',
+                            }}
+                            className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-family"
+                        />
+                    </WhenMounted>
                 )}
             </button>
         </li>

@@ -116,7 +116,7 @@ it('promises privacy only as far as the system keeps it', function (string $key)
 
 it('shows real screenshots of the product, in light and dark, that exist in public/images/tools', function (string $key): void {
     $page = ToolPages::page($key);
-    $shots = array_column($page['features'], 'shot');
+    $shots = [...array_column($page['features'], 'shot'), ...array_column($page['steps'], 'shot')];
 
     foreach ($shots as $shot) {
         if (str_ends_with($shot, '-mobile')) {
@@ -127,12 +127,22 @@ it('shows real screenshots of the product, in light and dark, that exist in publ
         }
     }
 
-    if ($page['heroPhone'] !== null) {
-        expect(public_path("images/tools/{$page['heroPhone']}.webp"))->toBeFile();
+    foreach ($page['steps'] as $step) {
+        expect(trim($step['alt']))->not->toBe('');
     }
 
     foreach ($page['features'] as $feature) {
         expect(trim($feature['alt']))->not->toBe('')->and(trim($feature['caption']))->not->toBe('');
+    }
+})->with(array_keys(ToolPages::SLUGS));
+
+it('shows the steps on three different screens, and the person on the phone in one of them', function (string $key): void {
+    $shots = array_column(ToolPages::page($key)['steps'], 'shot');
+
+    expect(array_unique($shots))->toHaveCount(3);
+
+    if (! in_array($key, ['ley_silla', 'org_chart', 'compensation'], true)) {
+        expect(array_filter($shots, fn (string $shot): bool => str_ends_with($shot, '-mobile')))->toHaveCount(1);
     }
 })->with(array_keys(ToolPages::SLUGS));
 

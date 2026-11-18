@@ -26,8 +26,6 @@ final class Leave
             'h1' => 'Los días de vacaciones por ley, calculados solos y pedidos desde el celular',
             'lead' => 'Cada persona ve su saldo conforme a la ley, o a tu política si da más, y pide sus días desde su portal. Su jefe aprueba, el calendario del equipo muestra quién falta y el expediente guarda la solicitud y la constancia anual.',
             'proof' => 'Aplica sola la tabla del artículo 76. Tu política puede dar más días, nunca menos, y cada año queda la constancia con acuse.',
-            'heroPhone' => 'leave-10-portal-mobile',
-            'phoneAlt' => 'Mis vacaciones en el portal, con 17 días disponibles',
             'norm' => [
                 'title' => 'Qué pide la ley',
                 'lead' => 'Desde 2023 la Ley Federal del Trabajo da al menos 12 días de vacaciones desde el primer año, y pide constancia de cada periodo.',
@@ -105,14 +103,20 @@ final class Leave
                 [
                     'title' => 'Eliges la política',
                     'text' => 'La de la ley o una que dé más días o más prima. Los festivos de tu empresa, también.',
+                    'shot' => 'leave-05-policy',
+                    'alt' => 'La política de vacaciones de la empresa contra la ley',
                 ],
                 [
                     'title' => 'La persona pide desde su portal',
                     'text' => 'Elige sus días en el calendario y solo se descuentan los laborables.',
+                    'shot' => 'leave-11-portal-request-mobile',
+                    'alt' => 'Pedir días desde el portal en el celular',
                 ],
                 [
                     'title' => 'El jefe aprueba',
                     'text' => 'Si no responde en 3 días hábiles, la solicitud pasa a RH. Todo queda en el expediente.',
+                    'shot' => 'leave-04-requests',
+                    'alt' => 'Las solicitudes por aprobar',
                 ],
             ],
             'features' => [

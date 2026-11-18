@@ -57,11 +57,7 @@ export default function Tool({
                     {tool.pick === null ? null : (
                         <ToolPagePickSection pick={tool.pick} />
                     )}
-                    <ToolPageSteps
-                        steps={tool.steps}
-                        phone={tool.heroPhone}
-                        phoneAlt={tool.phoneAlt}
-                    />
+                    <ToolPageSteps steps={tool.steps} />
                     <ToolPageFeatures features={tool.features} />
                     <ToolPageBeforeAfter page={tool} />
                     <ToolPageAudience page={tool} />

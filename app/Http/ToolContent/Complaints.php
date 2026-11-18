@@ -26,8 +26,6 @@ final class Complaints
             'h1' => 'Un buzón de quejas al que tu gente sí se atreve a escribir',
             'lead' => 'Tu gente escanea el cartel del centro y presenta su queja desde el celular, sin crear una cuenta y anónima si quiere. La queja llega solo a quien le toca atenderla, nunca a la persona señalada, y quien la presentó sigue el avance con su referencia.',
             'proof' => 'No pide cuenta ni guarda la dirección de internet de quien escribe. La queja nunca llega a la persona señalada y el aviso por correo no dice de qué trata.',
-            'heroPhone' => 'complaints-10-public-form-mobile',
-            'phoneAlt' => 'El formulario público del canal en el celular',
             'norm' => [
                 'title' => 'Qué pide la norma',
                 'lead' => 'La NOM-035 pide mecanismos seguros y confidenciales para recibir quejas y denuncias de violencia laboral. No exige que sea en línea ni anónimo: eso lo pone Humetría.',
@@ -74,14 +72,20 @@ final class Complaints
                 [
                     'title' => 'Pegas el cartel del centro',
                     'text' => 'Cada centro tiene su enlace y su cartel con código QR. Defines quién atiende el canal y sus plazos.',
+                    'shot' => 'complaints-04-poster',
+                    'alt' => 'El cartel con código QR para imprimir',
                 ],
                 [
                     'title' => 'La persona presenta su queja',
                     'text' => 'Desde su celular, anónima o confidencial. Dice contra quién es por rol, nunca por nombre, y recibe una referencia y una clave.',
+                    'shot' => 'complaints-10-public-form-mobile',
+                    'alt' => 'El formulario del canal en el celular',
                 ],
                 [
                     'title' => 'Quien le toca la atiende',
                     'text' => 'La pasa a revisión, conversa con la persona por el canal y la resuelve dentro de los plazos.',
+                    'shot' => 'complaints-02-case',
+                    'alt' => 'Un caso en revisión con sus plazos',
                 ],
             ],
             'features' => [

@@ -26,8 +26,6 @@ final class LeySilla
             'h1' => 'Ley Silla: asientos, pausas y reglamento, con la evidencia a la mano',
             'lead' => 'Registras qué puestos se hacen de pie y dónde va su asiento, preguntas al personal de forma confidencial y Humetría te sugiere qué escribir en tu reglamento interior. Cada medida del plan guarda su responsable, su fecha y su evidencia.',
             'proof' => 'Sigue el flujograma de la STPS para ubicar cada asiento, pregunta al personal de forma confidencial y no borra nada del plan de acción.',
-            'heroPhone' => null,
-            'phoneAlt' => null,
             'norm' => [
                 'title' => 'Qué pide la ley',
                 'lead' => 'La reforma a la Ley Federal del Trabajo obliga a dar asientos y descansos a quien trabaja de pie, y la STPS publicó cómo evaluarlo.',
@@ -74,14 +72,20 @@ final class LeySilla
                 [
                     'title' => 'Registras los puestos de pie',
                     'text' => 'Por centro, con dónde va su asiento según el flujograma de la Figura 1 de la STPS.',
+                    'shot' => 'ley-silla-07-standing-post',
+                    'alt' => 'Un puesto de pie y dónde va su asiento, según la Figura 1',
                 ],
                 [
                     'title' => 'Preguntas y evalúas',
                     'text' => 'El personal contesta una encuesta confidencial y la Comisión evalúa a cada persona con las siete condicionantes.',
+                    'shot' => 'ley-silla-04-survey',
+                    'alt' => 'Los resultados de la encuesta confidencial por pregunta',
                 ],
                 [
                     'title' => 'Actúas con evidencia',
                     'text' => 'El plan de medidas y pausas, el texto para tu reglamento y lo que falta por cumplir, en un solo lugar.',
+                    'shot' => 'ley-silla-05-plan',
+                    'alt' => 'El plan de medidas y pausas',
                 ],
             ],
             'features' => [
