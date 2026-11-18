@@ -650,3 +650,13 @@ it('shows no social list in the footer while none is configured', function (): v
     visit('/')
         ->assertScript("() => document.querySelector('footer [aria-label=\"Redes sociales\"]') === null");
 });
+
+it('keeps the logo, the two ways in and the tools menu in the header of a 375 px phone', function (string $url): void {
+    // Reduced motion: the steps play on their own, and the resize waits for nothing to be moving.
+    resizeTo(visit($url, ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 375, 812)
+        ->assertScript('() => document.querySelector("header a[href=\'/\'], header a[aria-label=\'Humetría, inicio\']").getBoundingClientRect().width >= 32', true)
+        ->assertScript('() => document.documentElement.scrollWidth', 375)
+        ->assertVisible('@sign-in')
+        ->assertVisible('@header-demo')
+        ->assertVisible('@tools-menu-mobile');
+})->with(['home' => '/', 'tool page' => '/nom-035']);

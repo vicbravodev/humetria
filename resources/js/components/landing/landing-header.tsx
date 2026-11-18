@@ -95,7 +95,11 @@ export default function LandingHeader({
                             href="#agenda-una-demo"
                             data-test="header-demo"
                         >
-                            Agenda una demo
+                            {/* On a phone the short label leaves room for the logo beside the sign in and the menu. */}
+                            <span className="sm:hidden">Demo</span>
+                            <span className="hidden sm:inline">
+                                Agenda una demo
+                            </span>
                         </a>
                     </Button>
                     <ToolsMenu variant="icon" className="ml-1 md:hidden" />
