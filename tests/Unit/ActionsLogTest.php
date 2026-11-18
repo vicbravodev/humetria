@@ -46,6 +46,8 @@ const ACTIONS_WITHOUT_OWN_LOG = [
     'app/Modules/FirstSteps/Actions/BuildFirstSteps.php' => 'reads the steps of a company; changes nothing',
     'app/Modules/Demos/Actions/ReadDoorState.php' => 'reads the door of the demo room; opening, closing and admitting log',
     'app/Modules/Telework/Actions/OpenPortal.php' => 'reads the portal of a person known by id; each action on it logs what changes',
+    'app/Modules/Sso/Actions/OpenSsoSignIn.php' => 'reads whether a company can use single sign-on now; the sign-in itself logs',
+    'app/Modules/Sso/Actions/FindSsoCompany.php' => 'reads the company a work email belongs to; the sign-in itself logs',
     // Steps of a logged action: the action that calls them writes the line, with the counts.
     'app/Modules/Complaints/Actions/AssignComplaint.php' => 'at receipt the system assigns with no line (a line with the case would tie it to the hour it came); RouteUnassignedComplaints logs the assignments made by a person',
     'app/Modules/Campaigns/Actions/CloseExpiredCampaigns.php' => 'each close is logged by CloseCampaign',

@@ -4,6 +4,8 @@ const STANDALONE_NAMES = new Set([
     'landing',
     // The notice of privacy is part of the public site: the landing's header and footer, not the panel.
     'privacy-notice',
+    // The public roadmap: the landing's header and footer, not the panel.
+    'roadmap',
     'campaigns/survey',
     // The climate and pulse survey of the person's emailed link: the same frame, no account.
     'engagement/survey',

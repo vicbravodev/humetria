@@ -13,14 +13,19 @@ use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Instruments\Contracts\Instruments;
+use App\Modules\Sso\Contracts\DomainOwnership;
+use App\Modules\Sso\Models\SsoConnection;
+use App\Modules\Sso\Models\SsoDomain;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\Tool;
@@ -641,6 +646,18 @@ function eventually(string $condition): string
         JS;
 }
 
+/**
+ * A script (the source of an arrow function) that runs once in the page however many times Pest sends it. Pest gives every
+ * attempt of `script()` and `assertScript()` 1 s and sends it again until it answers, while the first one keeps running:
+ * a script that clicks or types for longer would do it several times at once. Every attempt waits on the same run.
+ */
+function runOnce(string $script): string
+{
+    $run = json_encode('pest-run-'.bin2hex(random_bytes(8)), JSON_THROW_ON_ERROR);
+
+    return "() => (window[{$run}] ??= ({$script})())";
+}
+
 /** A script that resolves true once nothing finite is animating or in transition (a toast fading in, a menu closing). */
 function settled(): string
 {
@@ -981,6 +998,90 @@ function paidCompany(string $kind = 'direct'): array
     AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $tenant->id]);
 
     return [$tenant, $account];
+}
+
+/**
+ * A company with single sign-on switched on (the module the Enterprise plan carries) and its owner.
+ *
+ * @return array{0: Tenant, 1: User}
+ */
+function ssoCompany(string $slug = 'acme'): array
+{
+    $tenant = Tenant::factory()->create(['slug' => $slug]);
+    TenantModule::factory()->for($tenant)->create(['module' => 'sso', 'source' => 'grant', 'reason' => 'Enterprise']);
+
+    return [$tenant, memberOf($tenant, TenantRole::Owner)];
+}
+
+/** @param array<string, mixed> $overrides */
+function ssoForm(array $overrides = []): array
+{
+    return [
+        'issuer' => 'https://idp.acme.test',
+        'client_id' => 'humetria-acme',
+        'client_secret' => 'super-secret-value',
+        'domains' => ['acme.mx', 'acme.com.mx'],
+        ...$overrides,
+    ];
+}
+
+/** Makes the DNS say that these domains published their record. */
+function dnsProves(string ...$domains): void
+{
+    app()->instance(DomainOwnership::class, new class($domains) implements DomainOwnership
+    {
+        /** @param list<string> $domains */
+        public function __construct(private array $domains) {}
+
+        public function proves(string $domain, string $token): bool
+        {
+            return in_array($domain, $this->domains, true);
+        }
+    });
+}
+
+/**
+ * A company with single sign-on switched on and a proven domain (acme.mx), its owner, and an HR member who signs in with it.
+ *
+ * @return array{0: Tenant, 1: User, 2: User}
+ */
+function ssoReady(string $slug = 'acme', string $domain = 'acme.mx', string $issuer = 'https://idp.acme.test'): array
+{
+    [$tenant, $owner] = ssoCompany($slug);
+    SsoConnection::factory()->enabled()->create(['tenant_id' => $tenant->id, 'issuer' => $issuer]);
+    SsoDomain::factory()->verified()->create(['tenant_id' => $tenant->id, 'domain' => $domain]);
+    $member = memberOf($tenant, TenantRole::Hr);
+    $member->forceFill(['email' => "rh@{$domain}"])->save();
+
+    return [$tenant, $owner, $member];
+}
+
+/**
+ * A fake identity provider: its discovery document and its token endpoint, which hands out an ID token with these claims.
+ *
+ * @param  array<string, mixed>  $claims  over the defaults of a good token.
+ * @param  array<string, mixed>  $discovery  over the defaults of its discovery document.
+ */
+function idpAnswers(array $claims = [], int $tokenStatus = 200, array $discovery = [], string $issuer = 'https://idp.acme.test'): void
+{
+    $encode = fn (array $part): string => rtrim(strtr(base64_encode(json_encode($part, JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
+    $token = $encode(['alg' => 'RS256']).'.'.$encode([
+        'iss' => $issuer, 'aud' => 'humetria-acme', 'sub' => 'u-1', 'nonce' => 'n-1', 'exp' => now()->addMinutes(5)->timestamp, 'iat' => now()->timestamp,
+        'email' => 'rh@acme.mx', 'email_verified' => true,
+        ...$claims,
+    ]).'.firma';
+
+    Http::fake([
+        "{$issuer}/.well-known/openid-configuration" => Http::response(['issuer' => $issuer, 'authorization_endpoint' => "{$issuer}/authorize", 'token_endpoint' => "{$issuer}/token", ...$discovery]),
+        "{$issuer}/token" => $tokenStatus === 200 ? Http::response(['id_token' => $token, 'access_token' => 'a', 'token_type' => 'Bearer']) : Http::response(['error' => 'invalid_grant'], $tokenStatus),
+    ]);
+}
+
+/** The callback of the identity provider, with the session that the start of the sign-in leaves. */
+function ssoCallback(Tenant $tenant, array $query = [], array $session = []): Illuminate\Testing\TestResponse
+{
+    return test()->withSession(['sso.tenant_id' => $tenant->id, 'sso.nonce' => 'n-1', 'state' => 'st-1', 'code_verifier' => 'v-1', ...$session])
+        ->get(route('sso.callback', ['code' => 'c-1', 'state' => 'st-1', ...$query]));
 }
 
 /**

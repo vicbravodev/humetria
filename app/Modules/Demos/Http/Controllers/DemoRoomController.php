@@ -56,12 +56,12 @@ final class DemoRoomController extends Controller
     public function reissueKiosk(DemoRoomRequest $request, DemoCompanies $demos, DemoShowcase $showcase, QrCode $qr): RedirectResponse
     {
         abort_if($demos->id() === null, 404);
-        $link = $showcase->kioskLink();
+        $links = $showcase->kioskLinks();
 
-        if ($link === null) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => 'La pantalla del checador ya muestra el código. Para tener otro enlace, reinicia la demo.']);
+        if ($links === []) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Las pantallas del checador ya muestran el código. Para tener otros enlaces, reinicia la demo.']);
         } else {
-            Inertia::flash('demoKioskLink', ['url' => $link, 'qr' => $qr->dataUri($link)]);
+            Inertia::flash('demoKioskLinks', array_map(fn (array $link): array => [...$link, 'qr' => $qr->dataUri($link['url'])], $links));
         }
 
         return back();

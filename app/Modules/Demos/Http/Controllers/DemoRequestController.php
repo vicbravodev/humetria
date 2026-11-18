@@ -39,13 +39,16 @@ final class DemoRequestController extends Controller
         $touch = $data->attribution?->credited();
 
         Analytics::capture($request, 'demo_request_stored', [
-            'profile' => $data->profile->value,
-            'workforce' => $data->workforce->value,
+            'profile' => $data->profile?->value,
+            'workforce' => $data->workforce?->value,
             'tools_count' => count($data->tools),
             'utm_source' => $touch?->source,
             'utm_medium' => $touch?->medium,
             'utm_campaign' => $touch?->campaign,
             'referrer_host' => $touch?->referrerHost,
+            'utm_term' => $data->attribution?->keyword?->term,
+            'utm_content' => $data->attribution?->keyword?->content,
+            'matchtype' => $data->attribution?->keyword?->matchType,
         ]);
     }
 }

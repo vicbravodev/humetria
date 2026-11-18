@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import AdConversionsDownload from '@/components/demos/ad-conversions-download';
 import DemoRequestsEmpty from '@/components/demos/demo-requests-empty';
 import DemoRequestsInbox from '@/components/demos/demo-requests-inbox';
 import DemoRequestsToolbar from '@/components/demos/demo-requests-toolbar';
@@ -28,7 +29,9 @@ export default function DemoRequests({
                             ? '1 solicitud nueva por atender.'
                             : `${counts.new} solicitudes nuevas por atender.`
                     }
-                />
+                >
+                    <AdConversionsDownload />
+                </PageHeader>
                 {counts.all > 0 && (
                     <DemoRequestsToolbar filters={filters} counts={counts} />
                 )}

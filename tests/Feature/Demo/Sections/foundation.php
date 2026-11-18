@@ -117,7 +117,7 @@ return [
     'creates the company flagged as demo, active and with every module' => function (): void {
         $tenant = Tenant::query()->findOrFail(resolve(DemoCompanies::class)->id());
         $members = collect(resolve(Members::class)->all());
-        $everyModule = array_values(array_map(fn (Module $module): string => $module->value, array_filter(Module::cases(), fn (Module $module): bool => $module->existsInCode())));
+        $everyModule = array_values(array_map(fn (Module $module): string => $module->value, array_filter(Module::cases(), fn (Module $module): bool => $module->keptWithoutPlan())));
 
         expect($tenant->is_demo)->toBeTrue()
             ->and($tenant->legal_name)->toBe('Manufacturas Alba del Bajío, S.A. de C.V.')

@@ -44,6 +44,11 @@ return [
     | The host is not configurable on purpose: it is one constant of App\Http\Analytics, the one the CSP opens.
     */
 
+    // The offline import of demo requests into Google Ads: the name must be the conversion action's, letter by letter.
+    'google_ads' => [
+        'conversion_name' => env('GOOGLE_ADS_CONVERSION_NAME', 'Humetría · Solicitud de demo'),
+    ],
+
     'posthog' => [
         'project_token' => env('POSTHOG_PROJECT_TOKEN', ''),
         'consent_default' => env('POSTHOG_CONSENT_DEFAULT', 'denied'),

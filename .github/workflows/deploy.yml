@@ -47,9 +47,9 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -57,7 +57,7 @@ jobs:
 
       # El mismo commit y el mismo GIT_SHA en las dos imágenes: la comprobación de abajo compara las metas de revisión
       # (build-revision, de Node; app-revision, de PHP). Cada una con su caché, para que no se pisen.
-      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           target: app
@@ -69,7 +69,7 @@ jobs:
           cache-from: type=gha,scope=app
           cache-to: type=gha,mode=max,scope=app
 
-      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           target: ssr
@@ -85,8 +85,14 @@ jobs:
       - name: Redeploy en Dokploy
         env:
           DOKPLOY_WEBHOOK_URL: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         if: env.DOKPLOY_WEBHOOK_URL != ''
-        run: curl -fsS -X POST "$DOKPLOY_WEBHOOK_URL"
+        # Dokploy ignores an empty POST («Branch Not Match», 301, which curl -f lets pass): it wants a GitHub push to its branch.
+        run: |
+          response=$(curl -sS -X POST "$DOKPLOY_WEBHOOK_URL" -H 'Content-Type: application/json' -H 'X-GitHub-Event: push' \
+            -d "{\"ref\":\"refs/heads/main\",\"head_commit\":{\"id\":\"$DEPLOY_SHA\",\"message\":\"deploy\"},\"repository\":{\"full_name\":\"$GITHUB_REPOSITORY\"}}")
+          echo "$response"
+          echo "$response" | grep -q 'Compose deployed successfully'
 
       # Espera a que Dokploy termine de reemplazar los contenedores (hasta 10 min) y falla si el sitio no sirve la landing
       # renderizada por Node con el commit recién publicado. Mismo criterio que synthetic.yml. Sin setup-node: el script no tiene

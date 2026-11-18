@@ -50,8 +50,8 @@ it('shows the prepared demo: enter it, its door, its complaint channel and its t
         ->assertSee('Abrir sala (2 h)')
         ->assertSee('Cada persona se entrega una sola vez: al acabarse, la puerta dice «La sala está llena» hasta que reinicies la demo.')
         ->assertSee('Canal de denuncias')
-        ->assertSee('Pantalla del checador')
-        ->assertSee('Si la pantalla ya muestra su código, no se emite otro hasta que reinicies la demo.')
+        ->assertSee('Pantallas del checador')
+        ->assertSee('cada persona marca con la de su centro')
         ->assertSee('Antes de presentar')
         ->assertSee('pendientes se escalan (a los tres días hábiles) y la encuesta de pulso cierra (a los nueve días)')
         ->assertSee('revisa el buzón antes de presentar')
@@ -122,14 +122,14 @@ it('brings the door up to date when the preparation it was waiting on ends', fun
         ->assertNoJavaScriptErrors();
 });
 
-it('issues the link of the time-clock screen once, with its QR', function (): void {
+it('issues the links of the time-clock screens once, each by its center with its QR', function (): void {
     signInAsSuperadmin();
     preparedDemo();
 
     visitPage('demos/room', '/admin/demo', mobile: true)
-        ->click('Emitir enlace de la pantalla')
+        ->click('Emitir enlaces de las pantallas')
         ->assertSee('funciona una sola vez')
         ->assertSee('/a/alba-demo/kiosk/')
-        ->assertPresent('img[alt="Código QR del enlace de la pantalla del checador"]')
+        ->assertPresent('img[alt="Código QR del enlace de la pantalla del checador de Oficinas Querétaro"]')
         ->assertNoJavaScriptErrors();
 });

@@ -27,7 +27,9 @@ it('starts the content of every module at the same column, with no sideways scro
     $edges = [];
 
     foreach (['employees', 'attendance', 'attendance/policy', 'vacations', 'complaints', 'complaints/channel', 'compensation', 'disclosure', 'telework', 'seating', 'access', 'telework/settings'] as $path) {
-        $page = visit("{$url}/{$path}")->resize($width, 900)->assertNoJavaScriptErrors();
+        // React mounts the page a moment after the document loads: on a busy runner its title was not there yet (null).
+        $page = visit("{$url}/{$path}")->resize($width, 900)->assertNoJavaScriptErrors()
+            ->assertScript(eventually('() => document.querySelector(\'[data-slot="page-body"] h1\') !== null'), true);
         $edges[$path] = $page->script($edge);
         expect($page->script($scrolls))->toBeFalse("{$path} scrolls sideways at {$width} px")
             ->and($page->script($longLines))->toBe('', "{$path} runs its text too long at {$width} px");

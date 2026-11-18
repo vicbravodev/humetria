@@ -206,6 +206,16 @@ describe('workflows', function (): void {
         expect(array_search('Redeploy en Dokploy', $names, true))->toBeGreaterThan(array_search($builds[1]['uses'], $names, true));
     });
 
+    it('calls the Dokploy webhook as a push to main and fails when Dokploy does not deploy', function (): void {
+        $redeploy = collect(deploySteps())->firstWhere('name', 'Redeploy en Dokploy');
+
+        // An empty POST gets «Branch Not Match» with a 301, which curl -f lets pass: nothing was deployed and the step was green.
+        expect($redeploy['run'])->toContain('X-GitHub-Event: push')
+            ->toContain('refs/heads/main')
+            ->toContain('Compose deployed successfully')
+            ->and($redeploy['env']['DEPLOY_SHA'])->toBe('${{ github.event.workflow_run.head_sha || github.sha }}');
+    });
+
     it('checks the site from outside after the webhook, against the commit just published', function (): void {
         $steps = deploySteps();
         $check = end($steps);

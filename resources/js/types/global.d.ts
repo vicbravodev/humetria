@@ -63,8 +63,8 @@ declare module '@inertiajs/core' {
             kioskLink?: string;
             /** The demo room's door, just opened: its address and QR, shown once (only its hash is kept). */
             doorLink?: DemoShareLink;
-            /** The demo's time-clock screen link, just issued from the demo room, with its QR: shown once. */
-            demoKioskLink?: DemoShareLink;
+            /** The links of the demo's time-clock screens, one per center, just issued from the demo room, with their QR: shown once. */
+            demoKioskLinks?: (DemoShareLink & { center: string })[];
             /** A person's link to enter and create their key, shown once to RH only when the person has no email; it works once, 48 h. */
             accessLink?: { name: string; url: string };
             /** A delicate form of the person was not taken: they prove it is them (this step) and it is sent again. */

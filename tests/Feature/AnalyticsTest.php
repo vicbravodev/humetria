@@ -108,6 +108,7 @@ it('tells PostHog the page without its personal query: only the utm parameters s
     'a value of 101 characters' => ['/?utm_source='.str_repeat('a', 101), 'http://localhost/'],
     'a value of 100 characters' => ['/?utm_source='.str_repeat('a', 100), 'http://localhost/?utm_source='.str_repeat('a', 100)],
     'the click id of an ad' => ['/?gclid=abc&utm_term=empresa', 'http://localhost/?utm_term=empresa'],
+    'the keyword suffix of Google Ads' => ['/?utm_source=google&utm_term=checador+digital&utm_content=123&matchtype=p', 'http://localhost/?utm_source=google&utm_term=checador+digital&utm_content=123&matchtype=p'],
 ]);
 
 function landingHtml(string $uri = '/', ?string $referer = null): string
