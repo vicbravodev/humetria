@@ -173,7 +173,7 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 | Evento | Propiedad | Cuándo |
 |--------|-----------|--------|
 | `$pageview` | `$current_url` limpia | Al abrir la landing |
-| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works`, `guide_tool`, `guide_demo` | Clic en un llamado a la demo o a "cómo funciona" |
+| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works`, `sticky_demo`, `guide_tool`, `guide_demo` | Clic en un llamado a la demo o a "cómo funciona" |
 | `tool_page_click` | `target`: herramienta | Clic en la tarjeta de una herramienta (landing) o en otra herramienta (su página) |
 | `nav_click` | `target`: id de la sección | Clic en el menú de la cabecera |
 | `sign_in_click` | `target`: `header` | Clic en "Iniciar sesión" |
@@ -199,6 +199,10 @@ Cada herramienta tiene su página (`App\Http\ToolPages`: `/registro-de-jornada`,
 vive en `App\Http\ToolContent\*` y lo legal sale de `docs/normas/`. Se renderizan en Node, son indexables, están en `sitemap.xml`,
 guardan la procedencia como la landing y se miden con los mismos eventos. Su JSON-LD: `SoftwareApplication`, `FAQPage`, `VideoObject`
 y `BreadcrumbList` (la guía, `Article`). El formulario de demo de cada una vuelve a la misma página (campo `page`).
+
+Cada página lleva capturas reales de la empresa demo en `public/images/tools` (`{captura}-light.webp` y `-dark.webp`; las del
+celular, `{captura}-mobile.webp`), 1520×1100 recortadas al área de contenido. Para refrescarlas: prepara la demo dentro de una prueba
+de navegador temporal, toma las pantallas a 1440×900 en claro y oscuro, recórtalas sin la barra lateral y conviértelas a WebP.
 
 ### Errores
 

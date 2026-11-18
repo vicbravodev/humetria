@@ -90,14 +90,80 @@ it('gives each page a title of at most 60 characters and a description of at mos
         ->and(array_unique($descriptions))->toHaveCount(count($descriptions));
 });
 
-it('describes each tool with three to five blocks and four to six questions, and promises nothing it cannot', function (string $key): void {
+it('describes each tool with three steps, three to five blocks, a before and after and four to six questions, and promises nothing it cannot', function (string $key): void {
     $page = ToolPages::page($key);
     $text = mb_strtolower(json_encode($page, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
 
-    expect(count($page['features']))->toBeGreaterThanOrEqual(3)->toBeLessThanOrEqual(5)
+    expect($page['steps'])->toHaveCount(3)
+        ->and(count($page['features']))->toBeGreaterThanOrEqual(3)->toBeLessThanOrEqual(5)
+        ->and(count($page['beforeAfter']))->toBeGreaterThanOrEqual(3)
+        ->and(count($page['audience']))->toBe(3)
         ->and(count($page['faqs']))->toBeGreaterThanOrEqual(4)->toBeLessThanOrEqual(6)
         ->and($text)->not->toContain('garantiza')->not->toContain('el mejor')->not->toContain('la mejor')
         ->not->toContain('100 %')->not->toContain('100%');
+})->with(array_keys(ToolPages::SLUGS));
+
+it('promises privacy only as far as the system keeps it', function (string $key): void {
+    $text = mb_strtolower(json_encode(ToolPages::page($key), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+
+    expect($text)->not->toContain('de nadie')->not->toContain('nadie puede saber')->not->toContain('anónima de verdad')
+        ->not->toContain('sin ip');
+
+    if (str_contains($text, 'huella')) {
+        expect($text)->toContain('nunca la recibe');
+    }
+})->with(array_keys(ToolPages::SLUGS));
+
+it('shows real screenshots of the product, in light and dark, that exist in public/images/tools', function (string $key): void {
+    $page = ToolPages::page($key);
+    $shots = array_column($page['features'], 'shot');
+
+    foreach ($shots as $shot) {
+        if (str_ends_with($shot, '-mobile')) {
+            expect(public_path("images/tools/{$shot}.webp"))->toBeFile();
+        } else {
+            expect(public_path("images/tools/{$shot}-light.webp"))->toBeFile()
+                ->and(public_path("images/tools/{$shot}-dark.webp"))->toBeFile();
+        }
+    }
+
+    if ($page['heroPhone'] !== null) {
+        expect(public_path("images/tools/{$page['heroPhone']}.webp"))->toBeFile();
+    }
+
+    foreach ($page['features'] as $feature) {
+        expect(trim($feature['alt']))->not->toBe('')->and(trim($feature['caption']))->not->toBe('');
+    }
+})->with(array_keys(ToolPages::SLUGS));
+
+it('links each page to three other tools, with the reason', function (string $key): void {
+    $related = ToolPages::page($key)['related'];
+    $keys = array_column($related, 'key');
+
+    expect($keys)->toHaveCount(3)
+        ->and(array_unique($keys))->toHaveCount(3)
+        ->and($keys)->not->toContain($key);
+
+    foreach ($related as $item) {
+        expect(ToolPages::SLUGS)->toHaveKey($item['key'])
+            ->and(trim($item['why']))->not->toBe('');
+    }
+})->with(array_keys(ToolPages::SLUGS));
+
+it('gives every choice of the interactive piece its answer', function (string $key): void {
+    $pick = ToolPages::page($key)['pick'];
+
+    if ($pick === null) {
+        expect(true)->toBeTrue();
+
+        return;
+    }
+
+    expect(count($pick['options']))->toBeGreaterThanOrEqual(2);
+
+    foreach ($pick['options'] as $option) {
+        expect(trim($option['label']))->not->toBe('')->and(trim($option['answer']))->not->toBe('')->and(trim($option['detail']))->not->toBe('');
+    }
 })->with(array_keys(ToolPages::SLUGS));
 
 it('cites a source for every rule it says the law sets', function (string $key): void {

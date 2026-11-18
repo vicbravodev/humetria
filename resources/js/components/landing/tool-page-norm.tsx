@@ -1,16 +1,17 @@
-import { Scale } from 'lucide-react';
 import {
-    ICON_BOX,
     LEAD,
     SECTION,
     TITLE,
     WRAP,
 } from '@/components/landing/landing-layout';
 import { cn } from '@/lib/utils';
+import { workday2027 } from '@/routes/guides';
 import type { ToolPageNorm } from '@/types';
 
-/** What the law asks, each rule with the article it comes from, and its key figures: when, to whom, the fine. */
-export default function ToolPageNormSection({ norm }: { norm: ToolPageNorm }) {
+type Props = { norm: ToolPageNorm; guideLink: boolean };
+
+/** What the law asks: its figures in one row, each rule with the article it comes from, and what the law leaves open. */
+export default function ToolPageNormSection({ norm, guideLink }: Props) {
     return (
         <section
             id="que-pide-la-norma"
@@ -24,44 +25,52 @@ export default function ToolPageNormSection({ norm }: { norm: ToolPageNorm }) {
                     </h2>
                     <p className={LEAD}>{norm.lead}</p>
                 </div>
-                <dl className="grid gap-3 sm:grid-cols-3">
+                <dl className="grid border-t sm:grid-cols-3">
                     {norm.facts.map((fact) => (
                         <div
                             key={fact.label}
-                            className="grid content-start gap-1.5 rounded-2xl border bg-card p-5"
+                            className="grid content-start gap-1 border-b py-5 sm:border-b-0 sm:pr-6 sm:not-first:pl-6 sm:not-last:border-r"
                         >
-                            <dt className="text-caption text-muted-foreground">
+                            <dt className="text-meta text-muted-foreground">
                                 {fact.label}
                             </dt>
-                            <dd className="text-lg leading-snug font-semibold text-pretty">
+                            <dd className="text-2xl leading-tight font-semibold tracking-[-0.015em]">
                                 {fact.value}
+                            </dd>
+                            <dd className="text-caption text-muted-foreground">
+                                {fact.note}
                             </dd>
                         </div>
                     ))}
                 </dl>
-                <ul className="grid gap-4 lg:grid-cols-2">
+                <ul className="grid gap-x-12 lg:grid-cols-2">
                     {norm.rules.map((rule) => (
                         <li
                             key={rule.text}
-                            className="grid grid-cols-[40px_minmax(0,1fr)] gap-4 rounded-2xl border bg-card p-5"
+                            className="grid gap-1.5 border-t py-4"
                         >
-                            <span
-                                aria-hidden
-                                className={cn(ICON_BOX, 'size-10')}
-                            >
-                                <Scale className="size-5" />
+                            <span className="text-lg leading-relaxed text-pretty">
+                                {rule.text}
                             </span>
-                            <span className="grid gap-2">
-                                <span className="leading-7 text-pretty">
-                                    {rule.text}
-                                </span>
-                                <span className="text-caption text-muted-foreground">
-                                    Fuente: {rule.source}
-                                </span>
+                            <span className="text-caption text-muted-foreground">
+                                {rule.source}
                             </span>
                         </li>
                     ))}
                 </ul>
+                {norm.note === null ? null : (
+                    <p className="max-w-[75ch] text-meta leading-relaxed text-muted-foreground">
+                        {norm.note}
+                    </p>
+                )}
+                {guideLink && (
+                    <a
+                        href={workday2027().url}
+                        className="inline-flex min-h-11 items-center justify-self-start font-semibold text-primary"
+                    >
+                        Lee la guía: qué cambia en 2027
+                    </a>
+                )}
             </div>
         </section>
     );

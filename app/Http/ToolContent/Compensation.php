@@ -7,8 +7,8 @@ namespace App\Http\ToolContent;
 use App\Http\ToolPages;
 
 /**
- * The page of the compensation calculator (/compensacion). What it says of the law and its rates comes from
- * docs/normas/compensation/criterios.md.
+ * The public page of Compensación (/compensacion). What it says of the law comes from docs/normas/compensation/criterios.md; its
+ * screenshots are the demo company's, in public/images/tools.
  *
  * @phpstan-import-type Page from ToolPages
  */
@@ -21,41 +21,182 @@ final class Compensation
             'title' => 'Costo de un aumento salarial y revisión del contrato',
             'description' => 'Calcula cuánto cuesta un aumento con prestaciones, IMSS, Infonavit e impuesto sobre nómina, y compara propuestas en la revisión del contrato colectivo.',
             'name' => 'Compensación',
-            'h1' => 'Revisión salarial y de contrato colectivo, con el costo real de cada propuesta',
+            'family' => 'Personas y sueldos',
+            'chip' => 'Revisión salarial y de contrato colectivo',
+            'h1' => 'Sabe cuánto cuesta un aumento antes de sentarte a negociarlo',
             'lead' => 'Elige un aumento y ve lo que cuesta de verdad: salario, prestaciones, cuotas del IMSS, Infonavit e impuesto sobre nómina. Compara la propuesta de la empresa con la del sindicato, proyecta los años siguientes y lleva a la mesa un reporte de solo lectura.',
+            'proof' => 'El costo completo y no solo el porcentaje, cada tasa con su fuente y su vigencia, y la empresa y el sindicato cada uno con sus datos.',
+            'heroPhone' => null,
+            'phoneAlt' => null,
             'norm' => [
                 'title' => 'Qué toma en cuenta el cálculo',
-                'lead' => 'Las tasas salen de la ley y de fuentes oficiales, cada una con su vigencia. Con la UMA y el salario mínimo de 2026:',
-                'rules' => [
-                    ['text' => 'El salario base de cotización integra el aguinaldo y la prima vacacional, con piso en el salario mínimo y tope de 25 UMA.', 'source' => 'Ley del Seguro Social, arts. 27 y 28'],
-                    ['text' => 'La cuota patronal de cesantía en edad avanzada y vejez sube cada 1 de enero según el rango de salario, de 2023 a 2030.', 'source' => 'Ley del Seguro Social, art. 168, fracción II; decreto DOF 16/12/2020, transitorio segundo'],
-                    ['text' => 'El patrón aporta al Infonavit el 5 % del salario, con el mismo tope de 25 UMA.', 'source' => 'Ley del Infonavit, art. 29, fracción II'],
-                    ['text' => 'Mínimos de ley: 15 días de aguinaldo, 25 % de prima vacacional y vacaciones desde 12 días al año.', 'source' => 'Ley Federal del Trabajo, arts. 76, 80 y 87'],
-                    ['text' => 'El impuesto sobre nómina es estatal: cada estado fija su tasa (3 % en la mayoría en 2026) y la que aplica es la del estado donde se trabaja.', 'source' => 'Ley de Hacienda, Código Fiscal o Financiero de cada estado'],
-                ],
+                'lead' => 'Un aumento sube el salario base de cotización y, con él, todo lo que se paga sobre él. Cada tasa sale de la ley, con su vigencia.',
                 'facts' => [
-                    ['label' => 'UMA diaria 2026', 'value' => '$117.31'],
-                    ['label' => 'Salario mínimo general 2026', 'value' => '$315.04 diarios'],
-                    ['label' => 'Tope del salario base de cotización', 'value' => '25 UMA ($2,932.75 diarios en 2026)'],
+                    [
+                        'label' => 'Tope del salario base',
+                        'value' => '25 UMA',
+                        'note' => 'LSS, art. 28',
+                    ],
+                    [
+                        'label' => 'Infonavit',
+                        'value' => '5 % del salario',
+                        'note' => 'Ley del Infonavit, art. 29',
+                    ],
+                    [
+                        'label' => 'Cesantía y vejez',
+                        'value' => 'Sube cada 1 de enero',
+                        'note' => 'Hasta 2030 · decreto DOF 16-12-2020',
+                    ],
+                ],
+                'rules' => [
+                    [
+                        'text' => 'El salario base de cotización integra el aguinaldo y la prima vacacional, con piso en el salario mínimo y tope de 25 UMA.',
+                        'source' => 'Ley del Seguro Social, arts. 27 y 28',
+                    ],
+                    [
+                        'text' => 'La cuota patronal de cesantía en edad avanzada y vejez sube cada año según el rango de salario, de 2023 a 2030.',
+                        'source' => 'LSS, art. 168, fr. II; DOF 16-12-2020',
+                    ],
+                    [
+                        'text' => 'Mínimos de ley: 15 días de aguinaldo, 25 % de prima vacacional y vacaciones desde 12 días al año.',
+                        'source' => 'LFT, arts. 76, 80 y 87',
+                    ],
+                    [
+                        'text' => 'El impuesto sobre nómina es estatal: aplica la tasa del estado donde se trabaja.',
+                        'source' => 'Ley de hacienda de cada estado',
+                    ],
+                ],
+                'note' => 'Las cifras de UMA y salario mínimo se actualizan cada año en la calculadora.',
+            ],
+            'guideLink' => false,
+            'pick' => null,
+            'steps' => [
+                [
+                    'title' => 'Cargas tu contrato',
+                    'text' => 'Salarios por nivel, prestaciones y plantilla, con el estado donde se trabaja.',
+                ],
+                [
+                    'title' => 'Armas escenarios',
+                    'text' => 'Un aumento por persona o por nivel, para sindicalizados y personal de confianza.',
+                ],
+                [
+                    'title' => 'Llevas el reporte a la mesa',
+                    'text' => 'Comparas propuestas, proyectas los años siguientes y compartes un enlace de solo lectura.',
                 ],
             ],
             'features' => [
-                ['title' => 'El costo de un aumento, completo', 'text' => 'Costea un aumento con salario, prestaciones, cuotas del IMSS, Infonavit e impuesto sobre nómina del estado, por persona o por nivel de puesto con tu tabulador.'],
-                ['title' => 'Compara escenarios', 'text' => 'Pon lado a lado la propuesta de la empresa y la del sindicato, con la distancia entre ellas, para sindicalizados y personal de confianza.'],
-                ['title' => 'Proyecta los años siguientes', 'text' => 'Ve el costo del primer año y cómo crece en los siguientes, con los supuestos de inflación, revisiones y plantilla declarados en el reporte.'],
-                ['title' => 'Un reporte para la mesa', 'text' => 'Comparte el reporte de un escenario con un enlace de solo lectura que dura de 1 a 7 días y que puedes revocar antes.'],
+                [
+                    'kicker' => 'Costeo',
+                    'title' => 'El costo de un aumento, completo y en vivo',
+                    'text' => 'Mueve el porcentaje y ve el costo del primer año con salario, prestaciones, IMSS, Infonavit e impuesto sobre nómina.',
+                    'bullets' => [
+                        'Por persona o por nivel de puesto, con tu tabulador',
+                        'Con las tasas del año y del estado',
+                        'Cada supuesto queda declarado',
+                    ],
+                    'shot' => 'compensation-02-scenario',
+                    'alt' => 'Editor de escenario con el costo en vivo',
+                    'caption' => 'Costo del primer año, en vivo. Cada concepto por separado.',
+                ],
+                [
+                    'kicker' => 'Comparación',
+                    'title' => 'La distancia entre la empresa y el sindicato',
+                    'text' => 'Pon lado a lado la contraoferta de la empresa y la propuesta del sindicato, y ve qué mueve la diferencia.',
+                    'bullets' => [
+                        'La brecha en pesos del primer año',
+                        'Qué conceptos explican la diferencia',
+                        'Para sindicalizados y personal de confianza',
+                    ],
+                    'shot' => 'compensation-03-compare',
+                    'alt' => 'Comparación de dos propuestas con su diferencia',
+                    'caption' => 'La brecha entre propuestas. Qué la mueve.',
+                ],
+                [
+                    'kicker' => 'Proyección',
+                    'title' => 'Lo que cuesta este año y los siguientes',
+                    'text' => 'El costo crece con la inflación, las revisiones y la plantilla: la proyección lo muestra con sus supuestos.',
+                    'bullets' => [
+                        'Supuestos declarados en el reporte',
+                        'Comparación contra la otra propuesta',
+                        'Un enlace de solo lectura que vence solo',
+                    ],
+                    'shot' => 'compensation-05-projection',
+                    'alt' => 'Proyección de los próximos años con sus supuestos',
+                    'caption' => 'Próximos años. Supuestos a la vista.',
+                ],
+            ],
+            'beforeAfterTitle' => 'De la hoja de cálculo que nadie entiende al reporte para la mesa',
+            'beforeAfter' => [
+                [
+                    'before' => 'Un Excel con fórmulas que solo entiende quien lo hizo',
+                    'after' => 'El costo completo, con cada concepto separado',
+                ],
+                [
+                    'before' => 'Negociar con el porcentaje, sin saber el costo real',
+                    'after' => 'El costo en pesos de cada propuesta',
+                ],
+                [
+                    'before' => 'Tasas del IMSS desactualizadas',
+                    'after' => 'Tasas del año, con su fuente',
+                ],
+                [
+                    'before' => 'Mandar el archivo por correo a la mesa',
+                    'after' => 'Un enlace de solo lectura que vence solo',
+                ],
             ],
             'audience' => [
-                'company' => 'La empresa costea su revisión salarial y contractual con su plantilla, su tabulador y sus prestaciones. El sindicato puede tener su propia cuenta, con sus datos aparte.',
-                'consultant' => 'Si asesoras a varias empresas en sus revisiones, llevas los escenarios de cada una por separado desde la misma cuenta.',
+                [
+                    'who' => 'RH y finanzas',
+                    'title' => 'Costean antes de negociar',
+                    'text' => 'Escenarios, comparación y proyección con los datos de la empresa.',
+                ],
+                [
+                    'who' => 'Sindicatos',
+                    'title' => 'Su propia cuenta, sus propios datos',
+                    'text' => 'Arman su propuesta aparte de la empresa, con la misma calculadora.',
+                ],
+                [
+                    'who' => 'Consultores',
+                    'title' => 'Asesoran la revisión de cada cliente',
+                    'text' => 'Cada empresa o sindicato con sus datos aparte.',
+                ],
             ],
-            'privacy' => 'La empresa y el sindicato trabajan cada uno con sus datos aparte, y el enlace del reporte es de solo lectura y vence solo.',
+            'privacy' => null,
             'faqs' => [
-                ['question' => '¿Cuánto le cuesta a la empresa un aumento salarial?', 'answer' => 'Más que el aumento mismo: sube el salario base de cotización y, con él, las cuotas del IMSS, el Infonavit y el impuesto sobre nómina. La calculadora suma cada concepto con las tasas vigentes y su fuente.'],
-                ['question' => '¿Qué cuotas patronales incluye el cálculo?', 'answer' => 'Las del IMSS (enfermedad y maternidad, invalidez y vida, guarderías, retiro, cesantía y vejez), el 5 % del Infonavit y el impuesto sobre nómina del estado. La prima de riesgo de trabajo la fija el IMSS por empresa, así que la capturas tú.'],
-                ['question' => '¿Toma en cuenta el aumento de la cuota de cesantía y vejez?', 'answer' => 'Sí. Aplica la tasa de cada año y rango de salario que fija el decreto publicado en el DOF el 16 de diciembre de 2020, que sube cada 1 de enero hasta 2030.'],
-                ['question' => '¿Qué impuesto sobre nómina usa?', 'answer' => 'El del estado donde se trabaja, con la tasa de su ley vigente. En 2026 la mayoría de los estados cobra 3 %; Ciudad de México y Chihuahua, 4 %, y Aguascalientes, 2.5 %. Sinaloa tiene una tarifa progresiva que la calculadora marca como no calculada.'],
-                ['question' => '¿El sindicato puede usar la calculadora?', 'answer' => 'Sí. El sindicato tiene su propia cuenta, con sus datos aparte de los de la empresa, y arma sus escenarios para la revisión.'],
+                [
+                    'question' => '¿Cuánto le cuesta a la empresa un aumento salarial?',
+                    'answer' => 'Más que el aumento mismo: sube el salario base de cotización y, con él, las cuotas del IMSS, el Infonavit y el impuesto sobre nómina.',
+                ],
+                [
+                    'question' => '¿Qué cuotas patronales incluye el cálculo?',
+                    'answer' => 'Las del IMSS, el 5 % del Infonavit y el impuesto sobre nómina del estado.',
+                ],
+                [
+                    'question' => '¿Toma en cuenta el aumento de cesantía y vejez?',
+                    'answer' => 'Sí. Aplica la tasa de cada año y rango de salario del decreto del 16 de diciembre de 2020.',
+                ],
+                [
+                    'question' => '¿Qué impuesto sobre nómina usa?',
+                    'answer' => 'El del estado donde se trabaja, con la tasa de su ley vigente.',
+                ],
+                [
+                    'question' => '¿El sindicato puede usar la calculadora?',
+                    'answer' => 'Sí. Tiene su propia cuenta, con sus datos aparte de los de la empresa.',
+                ],
+            ],
+            'related' => [
+                [
+                    'key' => 'leave',
+                    'why' => 'La prima vacacional entra en el costo.',
+                ],
+                [
+                    'key' => 'org_chart',
+                    'why' => 'Los niveles de puesto de tu tabulador.',
+                ],
+                [
+                    'key' => 'attendance',
+                    'why' => 'Las horas extra que también cuestan.',
+                ],
             ],
             'film' => [
                 'name' => 'humetria-compensation',

@@ -1,47 +1,36 @@
-import { ChevronRight } from 'lucide-react';
 import { LEAD, TITLE, WRAP } from '@/components/landing/landing-layout';
 import type { LandingTool } from '@/components/landing/landing-tools';
-import ToolFilmPlayer from '@/components/landing/tool-film-player';
+import ToolPageCrumbs from '@/components/landing/tool-page-crumbs';
+import ToolPageStage from '@/components/landing/tool-page-stage';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { home } from '@/routes';
 import type { ToolPageContent } from '@/types';
 
 type Props = { page: ToolPageContent; tool: LandingTool | undefined };
 
-/** Where the page sits, what the tool solves in one line, the two ways on, and its film. */
+/** Where the page sits, what the tool solves, the two ways on and what proves it; beside it, its film and the phone of the person. */
 export default function ToolPageHero({ page, tool }: Props) {
+    const urgent = page.key === 'attendance';
+
     return (
         <section
             id="inicio"
             aria-labelledby="tool-title"
-            className={cn(WRAP, 'grid gap-8 pt-8 pb-12 sm:pt-10 lg:pb-16')}
+            className={cn(WRAP, 'grid gap-6 pt-4 pb-14 lg:pb-20')}
         >
-            <nav aria-label="Migas de pan">
-                <ol className="flex items-center gap-1.5 text-meta text-muted-foreground">
-                    <li>
-                        <a
-                            href={home().url}
-                            className="inline-flex min-h-11 items-center rounded-sm hover:text-foreground"
-                        >
-                            Inicio
-                        </a>
-                    </li>
-                    <li aria-hidden>
-                        <ChevronRight className="size-3.5" />
-                    </li>
-                    <li aria-current="page" className="text-foreground">
-                        {page.name}
-                    </li>
-                </ol>
-            </nav>
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-12">
+            <ToolPageCrumbs page={page} />
+            <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-14">
                 <div className="grid content-start gap-5">
-                    {tool === undefined ? null : (
-                        <p className="text-meta font-medium text-primary">
-                            {tool.hint}
-                        </p>
-                    )}
+                    <p
+                        className={cn(
+                            'justify-self-start rounded-full px-3 py-1 text-meta font-semibold',
+                            urgent
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-accent text-primary',
+                        )}
+                    >
+                        {page.chip}
+                    </p>
                     <h1 id="tool-title" className={TITLE}>
                         {page.h1}
                     </h1>
@@ -71,20 +60,11 @@ export default function ToolPageHero({ page, tool }: Props) {
                             </a>
                         </Button>
                     </div>
-                    {tool === undefined ? null : (
-                        <p className="grid gap-1 rounded-xl bg-sidebar p-4 text-meta">
-                            <small className="text-caption text-muted-foreground">
-                                Aplica a
-                            </small>
-                            <b className="leading-snug font-semibold">
-                                {tool.appliesTo}
-                            </b>
-                        </p>
-                    )}
+                    <p className="max-w-[60ch] text-meta leading-relaxed text-muted-foreground">
+                        {page.proof}
+                    </p>
                 </div>
-                {tool === undefined ? null : (
-                    <ToolFilmPlayer film={tool.film} />
-                )}
+                <ToolPageStage page={page} tool={tool} />
             </div>
         </section>
     );

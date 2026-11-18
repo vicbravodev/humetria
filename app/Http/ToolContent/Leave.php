@@ -7,8 +7,8 @@ namespace App\Http\ToolContent;
 use App\Http\ToolPages;
 
 /**
- * The page of vacaciones y permisos (/vacaciones-y-permisos). What it says of the law comes from
- * docs/normas/vacaciones/criterios.md and docs/normas/vacaciones/texto-de-referencia.md.
+ * The public page of Vacaciones y permisos (/vacaciones-y-permisos). What it says of the law comes from docs/normas/vacaciones/; its
+ * screenshots are the demo company's, in public/images/tools.
  *
  * @phpstan-import-type Page from ToolPages
  */
@@ -21,43 +21,237 @@ final class Leave
             'title' => 'Días de vacaciones por ley: saldos, solicitudes y permisos',
             'description' => 'Calcula los días de vacaciones por ley de cada persona, 12 desde el primer año, con solicitudes que aprueba su jefe y la constancia anual de la LFT.',
             'name' => 'Vacaciones y permisos',
-            'h1' => 'Vacaciones y permisos conforme a la Ley Federal del Trabajo',
-            'lead' => 'Cada persona ve su saldo de vacaciones conforme a la ley o a la política de tu empresa, si da más, y lo solicita desde su portal. Su jefe aprueba, el calendario del equipo muestra quién falta y el expediente guarda la solicitud y la constancia anual.',
+            'family' => 'Personas y sueldos',
+            'chip' => 'Vacaciones dignas · LFT, art. 76',
+            'h1' => 'Los días de vacaciones por ley, calculados solos y pedidos desde el celular',
+            'lead' => 'Cada persona ve su saldo conforme a la ley, o a tu política si da más, y pide sus días desde su portal. Su jefe aprueba, el calendario del equipo muestra quién falta y el expediente guarda la solicitud y la constancia anual.',
+            'proof' => 'Aplica sola la tabla del artículo 76. Tu política puede dar más días, nunca menos, y cada año queda la constancia con acuse.',
+            'heroPhone' => 'leave-10-portal-mobile',
+            'phoneAlt' => 'Mis vacaciones en el portal, con 17 días disponibles',
             'norm' => [
                 'title' => 'Qué pide la ley',
-                'lead' => 'Desde el 1 de enero de 2023, la reforma a los artículos 76 y 78 de la Ley Federal del Trabajo da al menos 12 días de vacaciones al cumplir el primer año de servicio.',
-                'rules' => [
-                    ['text' => 'Al cumplir un año de servicio, al menos 12 días laborables de vacaciones pagadas, y 2 más por cada año hasta llegar a 20. A partir del sexto año, 2 días más por cada cinco de servicio.', 'source' => 'LFT, art. 76'],
-                    ['text' => 'La persona disfruta al menos 12 días continuos, y puede distribuir el resto como lo requiera.', 'source' => 'LFT, art. 78'],
-                    ['text' => 'Las vacaciones no se pueden cambiar por dinero. Si la relación termina antes de cumplir el año, la persona tiene derecho a una remuneración proporcional.', 'source' => 'LFT, art. 79'],
-                    ['text' => 'La prima vacacional es de al menos 25 % sobre los salarios del periodo de vacaciones.', 'source' => 'LFT, art. 80'],
-                    ['text' => 'Las vacaciones se conceden dentro de los seis meses siguientes al aniversario, y cada año el patrón entrega una constancia con la antigüedad, el periodo que corresponde y la fecha en que debe disfrutarse.', 'source' => 'LFT, art. 81'],
-                ],
+                'lead' => 'Desde 2023 la Ley Federal del Trabajo da al menos 12 días de vacaciones desde el primer año, y pide constancia de cada periodo.',
                 'facts' => [
-                    ['label' => 'En vigor desde', 'value' => '1 de enero de 2023'],
-                    ['label' => 'Primer año de servicio', 'value' => '12 días laborables'],
-                    ['label' => 'Prima vacacional', 'value' => 'Al menos 25 % (art. 80)'],
+                    [
+                        'label' => 'Primer año de servicio',
+                        'value' => '12 días laborables',
+                        'note' => 'LFT, art. 76',
+                    ],
+                    [
+                        'label' => 'Prima vacacional',
+                        'value' => 'Al menos 25 %',
+                        'note' => 'LFT, art. 80',
+                    ],
+                    [
+                        'label' => 'Plazo para darlas',
+                        'value' => '6 meses',
+                        'note' => 'Después del aniversario · art. 81',
+                    ],
+                ],
+                'rules' => [
+                    [
+                        'text' => 'Al cumplir un año, al menos 12 días laborables pagados, y 2 más por cada año hasta 20. Desde el sexto año, 2 días más por cada cinco de servicio.',
+                        'source' => 'LFT, art. 76',
+                    ],
+                    [
+                        'text' => 'La persona disfruta al menos 12 días continuos y puede distribuir el resto como lo requiera.',
+                        'source' => 'LFT, art. 78',
+                    ],
+                    [
+                        'text' => 'Las vacaciones no se cambian por dinero; si la relación termina antes del año, corresponde la parte proporcional.',
+                        'source' => 'LFT, art. 79',
+                    ],
+                    [
+                        'text' => 'Cada año el patrón entrega una constancia con la antigüedad, el periodo que corresponde y la fecha en que debe disfrutarse.',
+                        'source' => 'LFT, art. 81',
+                    ],
+                ],
+                'note' => 'En vigor desde el 1 de enero de 2023.',
+            ],
+            'guideLink' => false,
+            'pick' => [
+                'title' => '¿Cuántos días le tocan?',
+                'lead' => 'Cada periodo nace completo en el aniversario, con la tabla del artículo 76. Tu política puede dar más, nunca menos.',
+                'question' => 'Años de servicio cumplidos',
+                'options' => [
+                    [
+                        'label' => '1 año',
+                        'answer' => '12 días',
+                        'detail' => 'Laborables, pagados, con prima vacacional de al menos 25 %.',
+                    ],
+                    [
+                        'label' => '2 años',
+                        'answer' => '14 días',
+                        'detail' => 'Dos días más por cada año, hasta llegar a 20.',
+                    ],
+                    [
+                        'label' => '3 años',
+                        'answer' => '16 días',
+                        'detail' => 'Dos días más por cada año, hasta llegar a 20.',
+                    ],
+                    [
+                        'label' => '4 años',
+                        'answer' => '18 días',
+                        'detail' => 'Dos días más por cada año, hasta llegar a 20.',
+                    ],
+                    [
+                        'label' => '5 años',
+                        'answer' => '20 días',
+                        'detail' => 'Desde el sexto año, dos días más por cada cinco de servicio.',
+                    ],
+                ],
+            ],
+            'steps' => [
+                [
+                    'title' => 'Eliges la política',
+                    'text' => 'La de la ley o una que dé más días o más prima. Los festivos de tu empresa, también.',
+                ],
+                [
+                    'title' => 'La persona pide desde su portal',
+                    'text' => 'Elige sus días en el calendario y solo se descuentan los laborables.',
+                ],
+                [
+                    'title' => 'El jefe aprueba',
+                    'text' => 'Si no responde en 3 días hábiles, la solicitud pasa a RH. Todo queda en el expediente.',
                 ],
             ],
             'features' => [
-                ['title' => 'El saldo por ley o por tu política', 'text' => 'Cada periodo nace completo en el aniversario, con la tabla del artículo 76. Tu política puede dar más días o más prima, nunca menos que la ley.'],
-                ['title' => 'Se solicita desde el portal y aprueba el jefe', 'text' => 'La persona elige sus días en el calendario y solo se descuentan los laborables, sin los días de descanso obligatorio ni tus festivos. Si el jefe no responde en 3 días hábiles, la solicitud pasa a RH.'],
-                ['title' => 'Quién falta y cuándo', 'text' => 'El calendario del equipo muestra las ausencias para planear la cobertura, y RH ve los periodos que están por pasar los seis meses del artículo 81.'],
-                ['title' => 'Permisos que no consumen saldo', 'text' => 'Paternidad, maternidad, adopción y permisos especiales con o sin goce vienen listos, y puedes agregar los tuyos. Queda quién, cuándo, cuántos días y quién aprobó.'],
-                ['title' => 'La evidencia que la empresa debe poder mostrar', 'text' => 'La constancia anual con el acuse de la persona, cada solicitud con quién la aprobó y cada movimiento del saldo. Nada se borra.'],
+                [
+                    'kicker' => 'Calendario del equipo',
+                    'title' => 'Quién falta y cuándo, para planear la cobertura',
+                    'text' => 'El calendario muestra las vacaciones aprobadas y las solicitudes pendientes de todo el equipo.',
+                    'bullets' => [
+                        'Las ausencias del mes de un vistazo',
+                        'Solicitudes pendientes en el mismo lugar',
+                        'Solo dice vacaciones o permiso, nunca el motivo',
+                    ],
+                    'shot' => 'leave-02-calendar',
+                    'alt' => 'Calendario de vacaciones del equipo',
+                    'caption' => 'Vacaciones aprobadas. Solicitudes por aprobar.',
+                ],
+                [
+                    'kicker' => 'Aprobaciones',
+                    'title' => 'El jefe aprueba en un clic, con el saldo a la vista',
+                    'text' => 'Cada solicitud muestra los días pedidos y el saldo de la persona, junto al calendario del equipo.',
+                    'bullets' => [
+                        'Aprobar o rechazar con motivo',
+                        'Pasa a RH si el jefe no responde',
+                        'Queda quién aprobó y cuándo',
+                    ],
+                    'shot' => 'leave-04-requests',
+                    'alt' => 'Solicitudes por aprobar con el detalle de una',
+                    'caption' => 'Detalle de la solicitud. Aprobar o rechazar.',
+                ],
+                [
+                    'kicker' => 'Portal de la persona',
+                    'title' => 'Su saldo y sus días, en su celular',
+                    'text' => 'La persona ve cuántos días tiene, cuándo vencen y pide los suyos sin llenar formatos.',
+                    'bullets' => [
+                        'Saldo por ley o por tu política',
+                        'Avisa si no cumple los 12 días continuos',
+                        'Permisos de paternidad, maternidad y más, listos',
+                    ],
+                    'shot' => 'leave-10-portal-mobile',
+                    'alt' => 'Mis vacaciones en el celular',
+                    'caption' => '17 días disponibles. Pedir días.',
+                ],
+            ],
+            'beforeAfterTitle' => 'Del formato en papel al saldo que se calcula solo',
+            'beforeAfter' => [
+                [
+                    'before' => 'Formatos de solicitud y firmas en papel',
+                    'after' => 'Solicitud desde el celular y aprobación del jefe',
+                ],
+                [
+                    'before' => 'Saldos en Excel que nadie cuadra',
+                    'after' => 'Saldo por ley o por tu política, calculado solo',
+                ],
+                [
+                    'before' => 'Ausencias que se descubren el mismo día',
+                    'after' => 'El calendario del equipo',
+                ],
+                [
+                    'before' => 'Sin constancia anual',
+                    'after' => 'Constancia con acuse de la persona',
+                ],
             ],
             'audience' => [
-                'company' => 'RH define las políticas y los festivos, y resuelve lo que un jefe no atiende. Cada jefe aprueba a su gente y cada persona ve su saldo desde su portal.',
-                'consultant' => 'Si asesoras a varias empresas, configuras las políticas de vacaciones de cada una por separado desde la misma cuenta.',
+                [
+                    'who' => 'RH',
+                    'title' => 'Saldos al día sin cuadrar Excel',
+                    'text' => 'Políticas, festivos, periodos por vencer y la evidencia de cada movimiento.',
+                ],
+                [
+                    'who' => 'Jefes',
+                    'title' => 'Aprueban y planean la cobertura',
+                    'text' => 'Ven solo a su gente, con el calendario del equipo.',
+                ],
+                [
+                    'who' => 'La persona trabajadora',
+                    'title' => 'Sabe cuántos días tiene',
+                    'text' => 'Y los pide desde su celular, sin formatos.',
+                ],
             ],
-            'privacy' => 'El tipo de permiso, como una maternidad o una adopción, solo lo ven RH y quien aprueba. El calendario del equipo solo dice si la persona está de vacaciones o con permiso.',
+            'privacy' => [
+                'title' => 'El motivo de un permiso no es asunto del equipo',
+                'items' => [
+                    [
+                        'title' => 'El tipo, solo a quien debe',
+                        'text' => 'Una maternidad o una adopción solo la ven RH y quien aprueba.',
+                    ],
+                    [
+                        'title' => 'Calendario discreto',
+                        'text' => 'El equipo solo ve si la persona está de vacaciones o con permiso.',
+                    ],
+                    [
+                        'title' => 'Cada movimiento queda',
+                        'text' => 'Solicitudes, aprobaciones y ajustes del saldo, sin borrar nada.',
+                    ],
+                    [
+                        'title' => 'Cada jefe, su gente',
+                        'text' => 'Un jefe no ve el saldo de quien no le reporta.',
+                    ],
+                ],
+            ],
             'faqs' => [
-                ['question' => '¿Cuántos días de vacaciones me tocan por ley?', 'answer' => 'Al cumplir el primer año, 12 días laborables; 14 al segundo, 16 al tercero, 18 al cuarto y 20 al quinto. Del sexto al décimo año son 22, y a partir de ahí suben 2 días por cada cinco años de servicio (LFT, art. 76).'],
-                ['question' => '¿Desde cuándo aplican los 12 días de vacaciones?', 'answer' => 'Desde el 1 de enero de 2023, cuando entró en vigor el decreto que reformó los artículos 76 y 78 de la Ley Federal del Trabajo, publicado en el DOF el 27 de diciembre de 2022.'],
-                ['question' => '¿Se pueden dividir las vacaciones?', 'answer' => 'Sí, pero la persona disfruta al menos 12 días continuos, y el resto lo distribuye como lo requiera (LFT, art. 78). Humetría le avisa al pedir si todavía no tiene un bloque de 12 días seguidos, sin impedirle pedir menos.'],
-                ['question' => '¿Se pueden pagar las vacaciones en lugar de tomarlas?', 'answer' => 'No: las vacaciones no se compensan con dinero mientras dura la relación. Si termina antes de cumplir el año, la persona tiene derecho a la parte proporcional (LFT, art. 79). Humetría la calcula en días; el importe lo calcula tu nómina.'],
-                ['question' => '¿Cuánto es la prima vacacional?', 'answer' => 'Al menos 25 % sobre los salarios del periodo de vacaciones (LFT, art. 80). Tu política puede fijar un porcentaje mayor, nunca uno menor.'],
-                ['question' => '¿En qué plazo deben darse las vacaciones?', 'answer' => 'Dentro de los seis meses siguientes a cumplir el año de servicio, y cada año el patrón entrega una constancia con la antigüedad, los días y la fecha en que deben disfrutarse (LFT, art. 81).'],
+                [
+                    'question' => '¿Cuántos días de vacaciones me tocan por ley?',
+                    'answer' => 'Al cumplir el primer año, 12 días laborables; 14 al segundo, 16 al tercero, 18 al cuarto y 20 al quinto. Después siguen subiendo con la antigüedad (LFT, art. 76).',
+                ],
+                [
+                    'question' => '¿Desde cuándo aplican los 12 días?',
+                    'answer' => 'Desde el 1 de enero de 2023, cuando entró en vigor la reforma a los artículos 76 y 78.',
+                ],
+                [
+                    'question' => '¿Se pueden dividir las vacaciones?',
+                    'answer' => 'Sí, pero la persona disfruta al menos 12 días continuos (LFT, art. 78).',
+                ],
+                [
+                    'question' => '¿Se pueden pagar en lugar de tomarlas?',
+                    'answer' => 'No mientras dura la relación. Si termina antes del año, corresponde la parte proporcional (LFT, art. 79).',
+                ],
+                [
+                    'question' => '¿Cuánto es la prima vacacional?',
+                    'answer' => 'Al menos 25 % sobre los salarios del periodo de vacaciones (LFT, art. 80).',
+                ],
+                [
+                    'question' => '¿En qué plazo deben darse?',
+                    'answer' => 'Dentro de los seis meses siguientes al aniversario, con una constancia anual (LFT, art. 81).',
+                ],
+            ],
+            'related' => [
+                [
+                    'key' => 'attendance',
+                    'why' => 'Las vacaciones no cuentan como faltas.',
+                ],
+                [
+                    'key' => 'org_chart',
+                    'why' => 'Cada solicitud llega a su jefe directo.',
+                ],
+                [
+                    'key' => 'compensation',
+                    'why' => 'La prima vacacional entra en el costo de un aumento.',
+                ],
             ],
             'film' => [
                 'name' => 'humetria-leave',

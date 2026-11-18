@@ -26,19 +26,50 @@ it('shows every tool page healthy, with its h1, its questions and its form', fun
         ->assertScript('() => document.querySelectorAll("h1").length', 1)
         ->assertScript("() => document.querySelector('[data-test=tools-group] input[value={$key}]').checked")
         ->assertScript('() => document.querySelector("#demo-request-form input[name=page]").value', ToolPages::route($key))
-        ->assertScript('() => document.querySelectorAll("#otras-herramientas a").length', 8);
+        ->assertScript('() => document.querySelectorAll("#otras-herramientas a").length', 3);
 })->with(fn (): array => array_map(fn (string $key): array => [$key, ToolPages::SLUGS[$key]], array_combine(array_keys(ToolPages::SLUGS), array_keys(ToolPages::SLUGS))));
 
 it('looks right in light, dark and on a phone', function (bool $dark, bool $mobile): void {
     visitPage('tool', '/registro-de-jornada', $dark, $mobile)
         ->assertSee('Qué pide la ley')
-        ->assertSee('Cómo lo resuelve Humetría')
+        ->assertSee('Cómo funciona')
+        ->assertSee('Del reloj checador al registro que pide la ley')
         ->assertSee('Para quién es')
+        ->assertSee('Lo que se registra, y lo que no')
         ->assertSee('Preguntas frecuentes');
 })->with($looks);
 
+it('shows each screenshot in the theme of the page', function (bool $dark, string $theme): void {
+    visitPage('tool', '/registro-de-jornada', $dark)
+        ->assertScript("() => [...document.querySelectorAll('main figure img[src^=\"/images/tools/attendance-02-people\"]')].filter((img) => img.offsetParent !== null).map((img) => img.getAttribute('src')).join()", "/images/tools/attendance-02-people-{$theme}.webp");
+})->with([
+    'light' => [false, 'light'],
+    'dark' => [true, 'dark'],
+]);
+
+it('answers the question of the page by choice', function (): void {
+    visitPage('tool', '/nom-035')
+        ->assertSeeIn('@pick-answer', 'Solo la Guía I')
+        ->click('@pick-2')
+        ->assertAttribute('@pick-2', 'aria-pressed', 'true')
+        ->assertSeeIn('@pick-answer', 'Guías I y III');
+});
+
+it('says the fingerprint of the person never reaches Humetría', function (): void {
+    visitPage('tool', '/registro-de-jornada')
+        ->assertSee('Humetría nunca la recibe ni la guarda.');
+});
+
+it('opens the tools from the header and goes to another tool', function (): void {
+    visitPage('tool', '/registro-de-jornada')
+        ->click('@tools-menu')
+        ->assertAttribute('@tools-menu', 'aria-expanded', 'true')
+        ->click('#tools-menu a[href="/vacaciones-y-permisos"]')
+        ->assertPathIs('/vacaciones-y-permisos');
+});
+
 it('opens an answer when its question is clicked', function (): void {
-    $faq = ToolPages::page('attendance')['faqs'][0];
+    $faq = ToolPages::page('attendance')['faqs'][1];
 
     visitPage('tool', '/registro-de-jornada')
         ->assertDontSee($faq['answer'])

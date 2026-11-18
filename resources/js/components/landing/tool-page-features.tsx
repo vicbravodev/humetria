@@ -1,14 +1,9 @@
-import { Check } from 'lucide-react';
-import {
-    ICON_BOX,
-    SECTION,
-    TITLE,
-    WRAP,
-} from '@/components/landing/landing-layout';
+import { WRAP } from '@/components/landing/landing-layout';
+import ToolPageShot from '@/components/landing/tool-page-shot';
 import { cn } from '@/lib/utils';
 import type { ToolPageFeature } from '@/types';
 
-/** How Humetría solves it: three to five blocks. */
+/** What the tool does, one block per row, text and a real screenshot alternating sides. */
 export default function ToolPageFeatures({
     features,
 }: {
@@ -16,36 +11,43 @@ export default function ToolPageFeatures({
 }) {
     return (
         <section
-            id="como-funciona"
-            aria-labelledby="como-funciona-title"
-            className={cn('scroll-mt-16', SECTION)}
+            aria-label="Lo que hace"
+            className={cn(WRAP, 'grid gap-20 pt-14 pb-20 lg:gap-28 lg:pb-24')}
         >
-            <div className={cn(WRAP, 'grid gap-10')}>
-                <h2 id="como-funciona-title" className={TITLE}>
-                    Cómo lo resuelve Humetría
-                </h2>
-                <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {features.map((feature) => (
-                        <li
-                            key={feature.title}
-                            className="grid content-start gap-3 rounded-2xl border bg-card p-6 shadow-raised"
-                        >
-                            <span
-                                aria-hidden
-                                className={cn(ICON_BOX, 'size-10')}
-                            >
-                                <Check className="size-5" />
-                            </span>
-                            <h3 className="text-lg leading-snug font-semibold">
-                                {feature.title}
-                            </h3>
-                            <p className="leading-7 text-pretty text-muted-foreground">
-                                {feature.text}
-                            </p>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            {features.map((feature, index) => (
+                <div
+                    key={feature.title}
+                    className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-14"
+                >
+                    <div className="grid content-start gap-4">
+                        <p className="text-meta font-semibold text-primary">
+                            {feature.kicker}
+                        </p>
+                        <h3 className="text-[26px] leading-tight font-semibold tracking-[-0.025em] text-balance sm:text-[32px]">
+                            {feature.title}
+                        </h3>
+                        <p className="max-w-[60ch] text-lg leading-relaxed text-pretty text-muted-foreground">
+                            {feature.text}
+                        </p>
+                        <ul className="grid list-disc gap-2 pl-5 leading-relaxed marker:text-primary">
+                            {feature.bullets.map((bullet) => (
+                                <li key={bullet}>{bullet}</li>
+                            ))}
+                        </ul>
+                    </div>
+                    <figure
+                        className={cn(
+                            'm-0 grid gap-3',
+                            index % 2 === 1 && 'lg:-order-1',
+                        )}
+                    >
+                        <ToolPageShot feature={feature} />
+                        <figcaption className="text-meta leading-snug text-muted-foreground">
+                            {feature.caption}
+                        </figcaption>
+                    </figure>
+                </div>
+            ))}
         </section>
     );
 }

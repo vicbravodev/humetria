@@ -5,15 +5,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { dashboard, home } from '@/routes';
 
-/**
- * The landing's header without its sections: the logo, the theme, the way in and the way back to the home page. A page
- * with its own demo form (a tool's page, the guide) asks for the demo instead of going back.
- */
-export default function PrivacyNoticeHeader({
-    demo = false,
-}: {
-    demo?: boolean;
-}) {
+/** The landing's header without its sections: the logo, the theme, the way in and the way back to the home page. */
+export default function PrivacyNoticeHeader() {
     return (
         <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-xl backdrop-saturate-150">
             <div
@@ -51,20 +44,9 @@ export default function PrivacyNoticeHeader({
                         size="sm"
                         className="ml-1 rounded-full px-4"
                     >
-                        {demo ? (
-                            <a
-                                href="#agenda-una-demo"
-                                data-track="cta_click"
-                                data-track-target="header_demo"
-                                data-test="header-demo"
-                            >
-                                Agenda una demo
-                            </a>
-                        ) : (
-                            <a href={home().url} data-test="notice-home">
-                                Ir al inicio
-                            </a>
-                        )}
+                        <a href={home().url} data-test="notice-home">
+                            Ir al inicio
+                        </a>
                     </Button>
                 </div>
             </div>

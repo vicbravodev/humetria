@@ -3,7 +3,7 @@ import GuideArticle from '@/components/landing/guide-article';
 import GuideCta from '@/components/landing/guide-cta';
 import GuideHero from '@/components/landing/guide-hero';
 import LandingFooter from '@/components/landing/landing-footer';
-import PrivacyNoticeHeader from '@/components/landing/privacy-notice-header';
+import ToolPageHeader from '@/components/landing/tool-page-header';
 import SeoHead from '@/components/landing/seo-head';
 import { useLandingMeasurement } from '@/hooks/use-landing-measurement';
 import { home } from '@/routes';
@@ -22,7 +22,7 @@ export default function Guide({
     return (
         <>
             <SeoHead seo={seo} />
-            <PrivacyNoticeHeader demo />
+            <ToolPageHeader />
             <main>
                 <GuideHero guide={guide} />
                 <GuideArticle guide={guide} />
