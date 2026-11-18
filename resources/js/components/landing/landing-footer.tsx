@@ -1,5 +1,6 @@
 import { WhenMounted } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
+import FooterTools from '@/components/landing/footer-tools';
 import { WRAP } from '@/components/landing/landing-layout';
 import SocialLinks from '@/components/landing/social-links';
 import { ThemeSwitch } from '@/components/theme-switch';
@@ -28,10 +29,11 @@ export default function LandingFooter({
 }) {
     return (
         <footer className="border-t pt-10 pb-8">
+            <FooterTools />
             <div
                 className={cn(
                     WRAP,
-                    'grid gap-7 md:grid-cols-[1fr_auto] md:items-center',
+                    'grid gap-7 pt-8 md:grid-cols-[1fr_auto] md:items-center',
                 )}
             >
                 <div className="grid content-start gap-3">

@@ -28,7 +28,7 @@ it('names the attribution cookie and its 90 days', function (): void {
 it('says PostHog measures the landing only, what it counts and that errors are reported, not that the visitor consents', function (): void {
     $text = privacyNoticeText();
 
-    expect($text)->toContain('Medimos las visitas de la página de inicio')->toContain('PostHog')
+    expect($text)->toContain('Medimos las visitas de la página de inicio, de la página de cada herramienta y de la guía de jornada')->toContain('PostHog')
         ->and($text)->toContain('qué botones y enlaces')->toContain('hasta dónde bajas')->toContain('errores técnicos')
         ->and($text)->not->toContain('Hoy no medimos')->not->toContain('no registramos tus clics')
         ->and($text)->not->toContain('Google Analytics')->not->toContain('_ga')
@@ -71,7 +71,9 @@ it('says the ad click id goes to Google Ads without who asked, only with measure
     expect($text)->toContain('identificador del clic')->toContain('Google Ads')
         ->toContain('sin tu nombre, correo, teléfono ni empresa')
         ->toContain('a los '.ForgetAdClicks::DAYS.' días de tu solicitud')
-        ->not->toContain('No guardamos identificadores de clic');
+        ->not->toContain('No guardamos identificadores de clic')
+        // In plain words, as the other notices say it: the names of Google's parameters tell a reader nothing.
+        ->not->toContain('gclid')->not->toContain('gbraid')->not->toContain('wbraid');
 });
 
 it('says the theme preference lasts a year, as the appearance hook writes it', function (): void {

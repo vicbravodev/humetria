@@ -10,6 +10,9 @@ se actualiza este documento con su justificación.
 > **Estado: aprobado** por el usuario el 2026-11-07 (incluidos 2.8 y 7.1). Falta que la STPS publique las
 > disposiciones generales del art. 132-XXXIV (ámbito de aplicación y excepciones). Hasta entonces el sistema **supone que todas las personas
 > trabajadoras deben registrar su jornada** (la lectura más estricta) y guarda las reglas como datos configurables.
+> Las páginas públicas dicen la fecha como «entra en vigor» y que la STPS definirá a qué empresas aplica y si será gradual
+> (la prensa reporta una adopción gradual, empezando por grandes y medianas); la multa del art. 994-IV Bis aplica a quien
+> la STPS determine como obligado. Aprobado por el usuario el 2026-11-17.
 
 Cada criterio indica su **tipo**: **Norma** (lo dice la ley), **Interpretación** (la ley no lo resuelve y Humetría
 adopta la lectura más apegada al texto) o **Humetría** (va más allá de la ley para que el registro sea defendible).
