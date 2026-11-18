@@ -13,6 +13,7 @@ use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
 use App\Modules\Assistant\Support\Readers\AttendanceReader;
 use App\Modules\Assistant\Support\Readers\ClimateReader;
+use App\Modules\Assistant\Support\Readers\CompensationReader;
 use App\Modules\Assistant\Support\Readers\ComplaintsReader;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
 use App\Modules\Assistant\Support\Readers\Nom037Reader;
@@ -61,6 +62,8 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(ClimateReader::class),
             $app->make(AttendanceReader::class),
             $app->make(OrgChartReader::class),
+            // Every company has Compensación: it is in no module of the company, so it is told to all.
+            $app->make(CompensationReader::class),
         ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart']));
 
         // The tools of Humi: a new module adds its own here.

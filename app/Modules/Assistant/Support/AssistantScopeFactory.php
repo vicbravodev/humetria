@@ -21,6 +21,7 @@ final readonly class AssistantScopeFactory
         'review-workplaces',
         'view-trauma-screenings',
         'handle-complaints',
+        'view-compensation',
     ];
 
     public function __construct(private CurrentTenant $tenant, private ResolveParticipant $participants) {}

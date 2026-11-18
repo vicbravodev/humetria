@@ -81,6 +81,11 @@ final readonly class PanelLinks
         return $this->path('tenant.org-chart.quality');
     }
 
+    public function compensation(): string
+    {
+        return $this->path('tenant.compensation.index');
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');

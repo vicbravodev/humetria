@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Assistant\Support\Readers\AttendanceReader;
 use App\Modules\Assistant\Support\Readers\ClimateReader;
+use App\Modules\Assistant\Support\Readers\CompensationReader;
 use App\Modules\Assistant\Support\Readers\ComplaintsReader;
 use App\Modules\Assistant\Support\Readers\OrgChartReader;
 use App\Modules\Assistant\Support\Readers\PulseReader;
@@ -31,7 +32,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
-mutates(AttendanceReader::class, OrgChartReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
+mutates(AttendanceReader::class, CompensationReader::class, OrgChartReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();
@@ -152,7 +153,8 @@ it('does not tell Ley Silla to a company without it, and offers the overview to 
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
 
-    expect(toolCard(GetComplianceOverview::class, $this->scope)['rows'])->toHaveCount(1)
+    // Ley Silla and Compensación, which every company has.
+    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe(['seating', 'compensation'])
         ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 });
 
@@ -342,7 +344,7 @@ it('does not tell pulse nor climate to a company without them, and offers the ov
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, [$module], CarbonImmutable::now(config('app.display_timezone')));
 
-    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe([$module])
+    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe([$module, 'compensation'])
         ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 })->with(['pulse', 'climate']);
 
@@ -453,4 +455,66 @@ it('does not tell the org chart to a company without it, and offers the overview
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['org_chart'], CarbonImmutable::now(config('app.display_timezone')));
 
     expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
+});
+
+it('tells every company where its collective contract stands, without anything loaded yet', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(overviewLine($this, 'compensation'))->toBe([
+        'key' => 'compensation',
+        'label' => 'Compensación',
+        'state' => 'pending',
+        'stateLabel' => 'Pendiente',
+        'summary' => 'Aún no cargas a tu gente para costear el contrato colectivo.',
+        'link' => "/admin/{$this->a->slug}/compensation",
+    ]);
+});
+
+it('counts the people the cost covers, the categories without a salary and the scenarios, never a salary nor a person of any company', function (): void {
+    Carbon::setTestNow('2026-11-04 10:00:00');
+    $grade = App\Modules\Organization\Models\JobGrade::factory()->create(['tenant_id' => $this->a->id]);
+    App\Modules\Compensation\Models\GradeSalary::factory()->create(['tenant_id' => $this->a->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 98_765, 'effective_from' => '2026-01-01']);
+    Employee::factory()->count(2)->create(['tenant_id' => $this->a->id, 'name' => 'Zafiro Luna', 'job_grade_id' => $grade->id, 'hired_on' => '2025-01-01', 'staff_group' => 'unionized', 'state' => 'JAL']);
+    Employee::factory()->create(['tenant_id' => $this->a->id, 'job_grade_id' => null]);
+    App\Modules\Organization\Models\JobGrade::factory()->create(['tenant_id' => $this->a->id]);
+    App\Modules\Compensation\Models\Scenario::factory()->count(2)->create(['tenant_id' => $this->b->id]);
+    workIn($this->a);
+
+    $line = overviewLine($this, 'compensation');
+
+    expect($line)->toMatchArray([
+        'state' => 'in_progress',
+        'stateLabel' => 'En curso',
+        'summary' => 'El costo cubre a 2 de 3 personas; 1 categoría no tiene salario. Aún no armas ningún escenario.',
+    ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro')->not->toContain('987');
+
+    Employee::query()->whereNull('job_grade_id')->delete();
+    App\Modules\Compensation\Models\GradeSalary::factory()->create(['tenant_id' => $this->a->id, 'job_grade_id' => App\Modules\Organization\Models\JobGrade::query()->whereKeyNot($grade->id)->value('id'), 'daily_salary_cents' => 60_000, 'effective_from' => '2026-01-01']);
+    App\Modules\Compensation\Models\Scenario::factory()->create(['tenant_id' => $this->a->id]);
+
+    expect(overviewLine($this, 'compensation'))->toMatchArray([
+        'state' => 'up_to_date',
+        'stateLabel' => 'Al día',
+        'summary' => 'El costo cubre a las 2 personas. Tienes 1 escenario activo.',
+    ]);
+
+    App\Modules\Compensation\Models\Scenario::factory()->create(['tenant_id' => $this->a->id]);
+    App\Modules\Compensation\Models\GradeSalary::query()->delete();
+    App\Modules\Organization\Models\JobGrade::factory()->create(['tenant_id' => $this->a->id]);
+
+    expect(overviewLine($this, 'compensation')['summary'])->toBe('El costo cubre a las 2 personas; 3 categorías no tienen salario. Tienes 2 escenarios activos.');
+});
+
+it('tells someone who may not see compensation nothing of it', function (): void {
+    App\Modules\Compensation\Models\Scenario::factory()->create(['tenant_id' => $this->a->id]);
+    $this->scope = assistantScopeIn($this->a, TenantRole::Viewer);
+
+    expect(overviewLine($this, 'compensation'))->toBe([
+        'key' => 'compensation',
+        'label' => 'Compensación',
+        'state' => 'not_applicable',
+        'stateLabel' => 'No aplica',
+        'summary' => 'Compensación solo la ven el dueño y RH.',
+        'link' => "/admin/{$this->a->slug}",
+    ]);
 });
