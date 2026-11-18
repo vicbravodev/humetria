@@ -58,6 +58,13 @@ const KEPT_ATTRIBUTES = new Set([
     'rowspan',
 ]);
 
+/**
+ * The rest that only says how the page looks: rrweb's own (`_cssText` is the page's CSS inlined, without which the player
+ * paints it unstyled; `rr_*` keeps scroll, sizes and media), the ARIA states (not its labels) and Radix's data states.
+ */
+const LOOK_ATTRIBUTE =
+    /^(_csstext|rr_[a-z]+|aria-(?!label|description|valuetext)[a-z]+|data-(state|slot|side|align|orientation|disabled|selected|highlighted))$/;
+
 /** Our own static files (styles, images of the product): the player needs them to paint the page as it was. */
 const OWN_ASSET = /^\/(build|images|fonts)\//;
 
@@ -120,27 +127,12 @@ export function recordable(page: unknown): boolean {
 /** Every attribute that could carry a name, an address or a value becomes `*`; the look stays. */
 export function maskAttribute(name: string, value: string): string {
     const lower = name.toLowerCase();
-
-    if (
+    const kept =
         KEPT_ATTRIBUTES.has(lower) ||
-        (lower.startsWith('aria-') &&
-            !/label|description|valuetext/.test(lower))
-    ) {
-        return value;
-    }
+        LOOK_ATTRIBUTE.test(lower) ||
+        ((lower === 'href' || lower === 'src') && OWN_ASSET.test(value));
 
-    if (
-        lower.startsWith('data-') &&
-        /^(data-(state|slot|side|align|orientation|disabled|selected|highlighted))$/.test(
-            lower,
-        )
-    ) {
-        return value;
-    }
-
-    return (lower === 'href' || lower === 'src') && OWN_ASSET.test(value)
-        ? value
-        : '*';
+    return kept ? value : '*';
 }
 
 /** The address the player shows: the page's component, never the path with the company and the ids. */
