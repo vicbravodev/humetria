@@ -205,7 +205,7 @@ final class Nom037
                 ],
                 [
                     'question' => '¿Qué equipo debe dar la empresa?',
-                    'answer' => 'Equipo de cómputo, una silla ergonómica u otra apropiada, insumos y aditamentos (numeral 5.7).',
+                    'answer' => 'Equipo de cómputo, una silla ergonómica u otra apropiada, insumos y aditamentos (numeral 5.7 y LFT, art. 330-E).',
                 ],
                 [
                     'question' => '¿Cada cuánto hay que capacitar?',

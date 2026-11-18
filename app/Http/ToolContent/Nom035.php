@@ -210,7 +210,7 @@ final class Nom035
             'faqs' => [
                 [
                     'question' => '¿Qué guías de la NOM-035 le tocan a mi empresa?',
-                    'answer' => 'Depende de cuántas personas trabajan en cada centro: hasta 15, solo la Guía I; de 16 a 50, las Guías I y II; más de 50, las Guías I y III (numerales 2 y 7.1).',
+                    'answer' => 'Depende de cuántas personas trabajan en cada centro: hasta 15, solo la Guía I; de 16 a 50, las Guías I y II; más de 50, las Guías I y III (numerales 2, 5.5 y 7.1).',
                 ],
                 [
                     'question' => '¿Cada cuánto se aplica la NOM-035?',

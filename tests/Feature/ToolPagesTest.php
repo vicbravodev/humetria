@@ -298,3 +298,16 @@ it('sends whoever asked for a demo from a tool page back to that page, and anyth
 it('answers 404 to a tool that does not exist', function (): void {
     $this->get('/registro-de-asistencia')->assertNotFound();
 });
+
+it('answers the questions of the law with the sources docs/normas gives them', function (string $key, string $question, string $quote): void {
+    $answer = collect(ToolPages::page($key)['faqs'])->firstWhere('question', $question)['answer'] ?? '';
+
+    expect($answer)->toContain($quote);
+})->with([
+    // docs/normas/ley-silla/criterios.md, C-15.
+    'ley silla fine' => ['ley_silla', '¿Cuál es la multa?', 'van de 50 a 5,000 UMA por persona afectada, y se duplican si reinciden'],
+    // The computer is the LFT's, art. 330-E; the chair, supplies and accessories, the norm's 5.7.
+    'nom-037 equipment' => ['nom_037', '¿Qué equipo debe dar la empresa?', 'numeral 5.7 y LFT, art. 330-E'],
+    // Guía I for every center comes from 5.5; the thresholds of II and III, from 2 and 7.1.
+    'nom-035 guides' => ['nom_035', '¿Qué guías de la NOM-035 le tocan a mi empresa?', 'numerales 2, 5.5 y 7.1'],
+]);

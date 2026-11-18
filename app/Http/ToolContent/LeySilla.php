@@ -209,7 +209,7 @@ final class LeySilla
                 ],
                 [
                     'question' => '¿Cuál es la multa?',
-                    'answer' => 'La ley no fija una multa propia para esta obligación. Revisa con tu abogado las sanciones generales de la LFT que aplicarían.',
+                    'answer' => 'La LFT no fija una multa propia para esta obligación; las multas aplicables van de 50 a 5,000 UMA por persona afectada, y se duplican si reinciden (arts. 992, 994 V y 1002).',
                 ],
             ],
             'related' => [
