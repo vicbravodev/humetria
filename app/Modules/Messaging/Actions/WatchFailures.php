@@ -11,6 +11,7 @@ use App\Modules\Messaging\Models\Pause;
 use App\Modules\Messaging\Support\WhatsAppSwitch;
 use DateTimeInterface;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The automatic pause (rule 15). One company's blocks and spam reports lower the quality of the number for all, so when the share
@@ -45,6 +46,7 @@ final class WatchFailures
             return false;
         }
 
+        Log::warning('whatsapp.failure_rate_exceeded', ['sent' => $sent, 'blocked' => $blocked]);
         $this->switch->pause('failure_rate');
 
         return true;

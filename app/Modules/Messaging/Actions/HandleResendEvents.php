@@ -11,6 +11,7 @@ use App\Modules\Messaging\Support\WebhookInbox;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -64,6 +65,7 @@ final class HandleResendEvents
         }
 
         $this->record->handle($delivery, $status, $this->occurredAt($payload['created_at'] ?? null));
+        Log::info('mail.event_applied', ['delivery_id' => $delivery->id, 'status' => $status->value]);
     }
 
     /**

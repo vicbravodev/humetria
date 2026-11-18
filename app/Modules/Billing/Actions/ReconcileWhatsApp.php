@@ -9,6 +9,7 @@ use App\Modules\Billing\Models\UsageEvent;
 use App\Modules\Billing\Support\UsagePeriod;
 use App\Modules\Messaging\Contracts\DeliveryOutcomes;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The monthly check of WhatsApp against what Meta bills (rule 11): per company, the messages charged, those that were never
@@ -53,6 +54,8 @@ final readonly class ReconcileWhatsApp
                 $companies[$tenantId]['creditMicros'] += is_numeric($event->unit_price_micros) ? (int) $event->unit_price_micros : 0;
             }
         }
+
+        Log::info('billing.whatsapp_reconciled', ['companies' => count($companies), 'messages' => $events->count()]);
 
         return [
             'companies' => array_values(array_map(fn (array $row): array => ['tenantId' => $row['tenantId'], 'charged' => $row['charged'], 'undelivered' => $row['undelivered'], 'creditCents' => (int) round($row['creditMicros'] / 10_000)], $companies)),

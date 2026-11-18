@@ -11,6 +11,7 @@ use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Support\RecordDeliveryEvent;
 use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Meta cannot be asked for the state of a message: an `unknown` is settled when a status webhook brings its id (commit 9a). After
@@ -36,6 +37,7 @@ final class ReconcileUnknown
             // Settled as used, so it counts as accepted for the daily and platform caps, which read `accepted_at`.
             $delivery->update(['accepted_at' => CarbonImmutable::now()]);
             event(new WhatsAppMessageAccepted($delivery->id, $delivery->tenant_id));
+            Log::info('messaging.unknown_settled', ['delivery_id' => $delivery->id]);
         }
 
         return $stale->count();

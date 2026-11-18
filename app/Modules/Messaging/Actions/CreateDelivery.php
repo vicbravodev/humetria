@@ -11,6 +11,7 @@ use App\Modules\Messaging\Support\RecipientHash;
 use App\Modules\Messaging\Support\RecordDeliveryEvent;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The row of a message, made BEFORE the provider is called, so a retried job finds it (idempotence). In the current company, in
@@ -42,6 +43,8 @@ final class CreateDelivery
         ]);
 
         $this->record->handle($delivery, DeliveryStatus::Created, CarbonImmutable::now());
+
+        Log::info('messaging.delivery_created', ['delivery_id' => $delivery->id, 'channel' => $channel]);
 
         return $delivery;
     }
