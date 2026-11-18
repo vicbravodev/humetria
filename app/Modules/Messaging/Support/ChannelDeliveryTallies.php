@@ -16,6 +16,12 @@ final readonly class ChannelDeliveryTallies implements DeliverySummary
 {
     private const array ORDER = ['mail', 'whatsapp'];
 
+    /**
+     * What counts as not delivered: the messages that ended badly. What is still on its way (created, sent, delayed, unknown) is not
+     * a failure: right after a launch nothing has arrived yet and nothing has failed.
+     */
+    private const array FAILED = ['failed', 'bounced', 'complained', 'paused'];
+
     public function __construct(private CurrentTenant $tenant, private CompanyChannels $channels) {}
 
     public function forSource(string $sourceType, string $sourceId): array
@@ -33,7 +39,10 @@ final readonly class ChannelDeliveryTallies implements DeliverySummary
             ->where('source_id', $sourceId)
             ->whereIn('channel', $active)
             ->groupBy('channel')
-            ->selectRaw('channel, count(*) as total, count(*) filter (where status in (?, ?)) as delivered', [DeliveryStatus::Delivered->value, DeliveryStatus::Read->value])
+            ->selectRaw(
+                'channel, count(*) as total, count(*) filter (where status in (?, ?)) as delivered, count(*) filter (where status in (?, ?, ?, ?)) as undelivered',
+                [DeliveryStatus::Delivered->value, DeliveryStatus::Read->value, ...self::FAILED],
+            )
             ->get()
             ->keyBy('channel');
 
@@ -44,20 +53,18 @@ final readonly class ChannelDeliveryTallies implements DeliverySummary
             $row = $rows->get($channel);
 
             if ($row !== null) {
-                $tallies[] = $this->tally($channel, self::count($row->total), self::count($row->delivered), $minimum);
+                $tallies[] = $this->tally($channel, self::count($row->total), self::count($row->delivered), self::count($row->undelivered), $minimum);
             }
         }
 
         return $tallies;
     }
 
-    private function tally(string $channel, int $total, int $delivered, int $minimum): ChannelDeliveryTally
+    private function tally(string $channel, int $total, int $delivered, int $undelivered, int $minimum): ChannelDeliveryTally
     {
         if ($total < $minimum) {
             return new ChannelDeliveryTally($channel, null, null, null, false);
         }
-
-        $undelivered = $total - $delivered;
 
         return $undelivered < $minimum
             ? new ChannelDeliveryTally($channel, $total, null, null, true)

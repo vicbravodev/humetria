@@ -161,3 +161,26 @@ it('never puts a name, a phone or a status in the props of the reach', function 
     expect($json)->not->toContain('recipient')->not->toContain('provider_message')->not->toContain('occurred_at')->not->toContain('employee')
         ->and(collect(json_decode($json, true)['channels'])->every(fn (array $row): bool => array_keys($row) === ['channel', 'total', 'delivered', 'undelivered', 'undeliveredBelowMinimum']))->toBeTrue();
 });
+
+it('does not count as undelivered what is still on its way: created, sent, delayed and unknown', function (): void {
+    foreach ([DeliveryStatus::Created, DeliveryStatus::Sent, DeliveryStatus::Delayed, DeliveryStatus::Unknown, DeliveryStatus::Sent, DeliveryStatus::Created] as $status) {
+        DeliveryFactory::new()->create(['tenant_id' => $this->tenant->id, 'source_type' => 'campaign', 'source_id' => $this->campaign->id, 'channel' => 'whatsapp', 'status' => $status]);
+    }
+    foreach (range(1, 4) as $_) {
+        DeliveryFactory::new()->create(['tenant_id' => $this->tenant->id, 'source_type' => 'campaign', 'source_id' => $this->campaign->id, 'channel' => 'whatsapp', 'status' => DeliveryStatus::Read]);
+    }
+
+    // Right after a launch nothing has failed: ten messages, none of them "sin entregar".
+    expect(reachOf($this)['channels'])->toBe([['channel' => 'whatsapp', 'total' => 10, 'delivered' => null, 'undelivered' => null, 'undeliveredBelowMinimum' => true]]);
+});
+
+it('counts as undelivered the messages that failed, bounced, were reported as spam or were paused', function (): void {
+    foreach ([DeliveryStatus::Failed, DeliveryStatus::Bounced, DeliveryStatus::Complained, DeliveryStatus::Paused, DeliveryStatus::Failed] as $status) {
+        DeliveryFactory::new()->create(['tenant_id' => $this->tenant->id, 'source_type' => 'campaign', 'source_id' => $this->campaign->id, 'channel' => 'whatsapp', 'status' => $status]);
+    }
+    foreach ([DeliveryStatus::Sent, DeliveryStatus::Delivered, DeliveryStatus::Read] as $status) {
+        DeliveryFactory::new()->create(['tenant_id' => $this->tenant->id, 'source_type' => 'campaign', 'source_id' => $this->campaign->id, 'channel' => 'whatsapp', 'status' => $status]);
+    }
+
+    expect(reachOf($this)['channels'])->toBe([['channel' => 'whatsapp', 'total' => 8, 'delivered' => 2, 'undelivered' => 5, 'undeliveredBelowMinimum' => false]]);
+});
