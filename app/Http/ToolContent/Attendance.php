@@ -22,7 +22,7 @@ final class Attendance
             'description' => 'Desde el 1 de enero de 2027 la LFT pide registrar de forma electrónica la jornada de cada persona. Tu gente marca desde su celular y tú tienes el reporte.',
             'name' => 'Registro de jornada',
             'family' => 'Cumple la norma',
-            'chip' => 'Obligatorio desde el 1 de enero de 2027 · LFT, art. 132, fr. XXXIV',
+            'chip' => 'Desde el 1 de enero de 2027 · LFT, art. 132, fr. XXXIV',
             'h1' => 'El registro de jornada que pide la ley, desde el celular de tu gente',
             'lead' => 'Desde 2027 la ley pide registrar de forma electrónica el inicio y el fin de la jornada de cada persona. Tu gente marca desde su teléfono, sin reloj checador; tú tienes un registro que no se puede alterar y el reporte para la autoridad con un botón.',
             'proof' => 'La hora la pone el servidor, ninguna marca se edita ni se borra, y cada persona confirma su semana.',
@@ -31,9 +31,9 @@ final class Attendance
                 'lead' => 'La reforma a la Ley Federal del Trabajo del 1 de mayo de 2026 obliga a registrar la jornada y reduce la jornada semanal año con año.',
                 'facts' => [
                     [
-                        'label' => 'Obligatorio desde',
+                        'label' => 'Entra en vigor',
                         'value' => '1 de enero de 2027',
-                        'note' => 'Transitorio quinto',
+                        'note' => 'Transitorio quinto; la STPS define a quién aplica',
                     ],
                     [
                         'label' => 'Jornada semanal máxima en 2027',
@@ -220,7 +220,7 @@ final class Attendance
             'faqs' => [
                 [
                     'question' => '¿Desde cuándo es obligatorio el registro electrónico de jornada?',
-                    'answer' => 'Desde el 1 de enero de 2027, según el transitorio quinto de la reforma a la Ley Federal del Trabajo publicada en el DOF el 1 de mayo de 2026.',
+                    'answer' => 'Desde el 1 de enero de 2027, según el transitorio quinto de la reforma a la Ley Federal del Trabajo publicada en el DOF el 1 de mayo de 2026. La STPS definirá a qué empresas aplica y si será gradual; mientras no lo publique, la ley no excluye a nadie, así que conviene llegar con el registro listo.',
                 ],
                 [
                     'question' => '¿A quién le toca registrar su jornada?',
@@ -240,7 +240,7 @@ final class Attendance
                 ],
                 [
                     'question' => '¿Cuánto es la multa por no registrar la jornada?',
-                    'answer' => 'De 250 a 5,000 veces la UMA, según el artículo 994, fracción IV Bis de la Ley Federal del Trabajo.',
+                    'answer' => 'De 250 a 5,000 veces la UMA, según el artículo 994, fracción IV Bis de la Ley Federal del Trabajo. Aplica a quien la STPS determine como obligado.',
                 ],
             ],
             'related' => [

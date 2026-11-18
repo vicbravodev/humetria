@@ -25,10 +25,10 @@ final class WorkdayGuide
             'updated' => '2026-11-17',
             'sections' => [
                 [
-                    'heading' => 'El registro electrónico es obligatorio desde el 1 de enero de 2027',
+                    'heading' => 'El registro electrónico entra en vigor el 1 de enero de 2027',
                     'paragraphs' => [
                         'La reforma agrega al artículo 132 la obligación de registrar de manera electrónica la jornada laboral de cada persona trabajadora, incluyendo su hora de inicio y de fin, y de entregarlo a la autoridad cuando lo pida.',
-                        'La obligación entra en vigor el 1 de enero de 2027. La STPS expedirá disposiciones generales sobre su ámbito de aplicación y sus excepciones; mientras no lo haga, la ley no excluye al personal de confianza, a quien trabaja a distancia ni a las empresas pequeñas.',
+                        'La obligación entra en vigor el 1 de enero de 2027. La STPS expedirá disposiciones generales sobre su ámbito de aplicación y sus excepciones, y definirá a qué empresas aplica y si será gradual; mientras no lo haga, la ley no excluye al personal de confianza, a quien trabaja a distancia ni a las empresas pequeñas.',
                     ],
                     'sources' => ['LFT, art. 132, fracción XXXIV', 'Transitorio quinto del decreto del DOF del 1 de mayo de 2026'],
                 ],
@@ -59,7 +59,7 @@ final class WorkdayGuide
                 [
                     'heading' => 'La multa por no registrar',
                     'paragraphs' => [
-                        'A la persona empleadora que no cumpla con el registro electrónico de jornada se le impone una multa de 250 a 5,000 veces la Unidad de Medida y Actualización (UMA).',
+                        'A la persona empleadora que no cumpla con el registro electrónico de jornada se le impone una multa de 250 a 5,000 veces la Unidad de Medida y Actualización (UMA). Aplica a quien la STPS determine como obligado.',
                     ],
                     'sources' => ['LFT, art. 994, fracción IV Bis'],
                 ],

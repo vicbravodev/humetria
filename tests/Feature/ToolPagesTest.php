@@ -311,3 +311,16 @@ it('answers the questions of the law with the sources docs/normas gives them', f
     // Guía I for every center comes from 5.5; the thresholds of II and III, from 2 and 7.1.
     'nom-035 guides' => ['nom_035', '¿Qué guías de la NOM-035 le tocan a mi empresa?', 'numerales 2, 5.5 y 7.1'],
 ]);
+
+it('says the electronic workday record starts in 2027 for whom the STPS sets, which it has not published yet', function (): void {
+    $attendance = ToolPages::page('attendance');
+    $answer = fn (string $question): string => collect($attendance['faqs'])->firstWhere('question', $question)['answer'] ?? '';
+    $guide = json_encode(ToolPages::guide(), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+
+    // docs/normas/jornada: the date is the law's; to whom it applies, and whether gradually, the STPS decides (transitorio quinto).
+    expect($attendance['chip'])->not->toContain('Obligatorio')
+        ->and($answer('¿Desde cuándo es obligatorio el registro electrónico de jornada?'))->toContain('La STPS definirá a qué empresas aplica y si será gradual')
+        ->and($answer('¿Cuánto es la multa por no registrar la jornada?'))->toContain('a quien la STPS determine como obligado')
+        ->and($guide)->not->toContain('es obligatorio desde el 1 de enero de 2027')
+        ->toContain('si será gradual')->toContain('a quien la STPS determine como obligado');
+});
