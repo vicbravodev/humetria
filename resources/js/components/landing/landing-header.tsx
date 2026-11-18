@@ -3,6 +3,7 @@ import Logo from '@/components/humetria/logo';
 import HeaderNav from '@/components/landing/header-nav';
 import { WRAP } from '@/components/landing/landing-layout';
 import LandingThemeMenu from '@/components/landing/landing-theme-menu';
+import ToolsMenu from '@/components/landing/tools-menu';
 import { Button } from '@/components/ui/button';
 import { useScrolled } from '@/hooks/use-scrolled';
 import { cn } from '@/lib/utils';
@@ -12,7 +13,11 @@ import { dashboard, home } from '@/routes';
  * Logo, the sections in a pill at the center and the two ways in at the right. Over the hero it has no edge; once the
  * page moves under it, it takes the background, a line and a soft shadow.
  */
-export default function LandingHeader() {
+export default function LandingHeader({
+    sectionBase = '',
+}: {
+    sectionBase?: string;
+}) {
     const scrolled = useScrolled();
 
     return (
@@ -31,18 +36,34 @@ export default function LandingHeader() {
                     'grid h-16 grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-[1fr_auto_1fr]',
                 )}
             >
-                <Link
-                    href={home()}
-                    className="flex min-h-11 items-center justify-self-start rounded-md"
-                >
-                    <span className="sm:hidden">
-                        <Logo kind="symbol" className="size-8" />
-                    </span>
-                    <span className="hidden sm:block">
-                        <Logo className="h-7" />
-                    </span>
-                </Link>
-                <HeaderNav />
+                {/* On the landing the logo stays in the document; from any other page it is a link out, so PostHog and the CSP load with the landing. */}
+                {sectionBase === '' ? (
+                    <Link
+                        href={home()}
+                        className="flex min-h-11 items-center justify-self-start rounded-md"
+                    >
+                        <span className="sm:hidden">
+                            <Logo kind="symbol" className="size-8" />
+                        </span>
+                        <span className="hidden sm:block">
+                            <Logo className="h-7" />
+                        </span>
+                    </Link>
+                ) : (
+                    <a
+                        href={home().url}
+                        aria-label="Humetría, inicio"
+                        className="flex min-h-11 items-center justify-self-start rounded-md"
+                    >
+                        <span className="sm:hidden">
+                            <Logo kind="symbol" className="size-8" />
+                        </span>
+                        <span className="hidden sm:block">
+                            <Logo className="h-7" />
+                        </span>
+                    </a>
+                )}
+                <HeaderNav sectionBase={sectionBase} />
                 <div className="flex items-center gap-1 justify-self-end">
                     {/* On a phone the theme lives in the footer: the header only fits the logo and the two ways in. */}
                     <span className="hidden sm:block">
@@ -74,9 +95,14 @@ export default function LandingHeader() {
                             href="#agenda-una-demo"
                             data-test="header-demo"
                         >
-                            Agenda una demo
+                            {/* On a phone the short label leaves room for the logo beside the sign in and the menu. */}
+                            <span className="sm:hidden">Demo</span>
+                            <span className="hidden sm:inline">
+                                Agenda una demo
+                            </span>
                         </a>
                     </Button>
+                    <ToolsMenu variant="icon" className="ml-1 md:hidden" />
                 </div>
             </div>
         </header>

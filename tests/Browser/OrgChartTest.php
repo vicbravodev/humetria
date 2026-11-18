@@ -777,3 +777,12 @@ it('keeps the bar on one line and the panel beside the canvas, not over it, whil
         JS), true)
         ->assertNoJavaScriptErrors();
 });
+
+it('shows a toast at full contrast from its first frame: it slides in, it does not fade in', function (): void {
+    acmeOrgChart();
+
+    // A toast that fades in is read mid-fade at 2.5:1 by whoever (or whatever, axe) looks at it right away. A toast lives
+    // for seconds, so the check builds one on the page and reads the transition sonner's CSS gives it.
+    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality')
+        ->assertScript('() => { const toast = document.createElement("li"); toast.setAttribute("data-sonner-toast", ""); toast.setAttribute("data-mounted", "true"); document.body.appendChild(toast); const property = getComputedStyle(toast).transitionProperty; toast.remove(); return property; }', 'transform, height, box-shadow');
+});

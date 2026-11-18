@@ -28,7 +28,7 @@ it('names the attribution cookie and its 90 days', function (): void {
 it('says PostHog measures the landing only, what it counts and that errors are reported, not that the visitor consents', function (): void {
     $text = privacyNoticeText();
 
-    expect($text)->toContain('Medimos las visitas de la página de inicio')->toContain('PostHog')
+    expect($text)->toContain('Medimos las visitas de la página de inicio, de la página de cada herramienta y de la guía de jornada')->toContain('PostHog')
         ->and($text)->toContain('qué botones y enlaces')->toContain('hasta dónde bajas')->toContain('errores técnicos')
         ->and($text)->not->toContain('Hoy no medimos')->not->toContain('no registramos tus clics')
         ->and($text)->not->toContain('Google Analytics')->not->toContain('_ga')
