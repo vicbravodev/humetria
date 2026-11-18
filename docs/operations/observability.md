@@ -42,6 +42,7 @@ Notas:
 | `LOG_STACK` | `LOG_STACK=stderr,posthog` | stderr para Docker/Dokploy, posthog para guardar y alertar |
 | `LOG_POSTHOG_LEVEL` | `info` | nivel mínimo que se manda a PostHog Logs |
 | `POSTHOG_SESSION_RECORDING` | `true` cuando el proyecto tenga Session Replay encendido | grabación anónima y enmascarada del panel de una empresa (`docs/operations/ssr.md`) |
+| `POSTHOG_LANDING_REPLAY` | `true` cuando el proyecto tenga Session Replay encendido y el aviso de privacidad esté revisado | grabación anónima de la visita a la landing (lo escrito va enmascarado) y su velocidad de carga (`docs/operations/ssr.md`, «Reglas de privacidad de la medición») |
 
 ## 3. Nombres de los logs que leen las alertas
 

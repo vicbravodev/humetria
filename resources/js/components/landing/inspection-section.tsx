@@ -47,9 +47,13 @@ const items = [
     },
 ];
 
-const ready = items.filter((item) => item.done).length;
+const done = items.filter((item) => item.done);
+const missing = items.filter((item) => !item.done);
 
-/** The moment the whole page leads to: an inspector asks, and the file is already there, with what it still lacks. */
+/**
+ * The moment the whole page leads to: an inspector asks, and the file is already there, with what it still lacks. The
+ * ready pieces and the missing ones sit in two columns, so what is left reads at a glance.
+ */
 export default function InspectionSection() {
     return (
         <section
@@ -58,13 +62,8 @@ export default function InspectionSection() {
             aria-labelledby="inspeccion-title"
             className={SECTION}
         >
-            <div
-                className={cn(
-                    WRAP,
-                    'grid gap-8 sm:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start lg:gap-14',
-                )}
-            >
-                <Reveal className="flex flex-col gap-5 lg:sticky lg:top-28">
+            <div className={cn(WRAP, 'flex flex-col gap-8 lg:gap-12')}>
+                <Reveal className="flex max-w-[820px] flex-col gap-5">
                     <h2 id="inspeccion-title" className={TITLE}>
                         Si mañana llega un inspector, ya sabes qué enseñarle
                     </h2>
@@ -72,7 +71,7 @@ export default function InspectionSection() {
                         Humetría va juntando los documentos de cada centro y te
                         avisa qué falta antes de que alguien lo pida.
                     </p>
-                    <p className="max-w-[52ch] border-l-2 pl-3.5 text-meta text-muted-foreground">
+                    <p className="max-w-[52ch] text-meta text-muted-foreground">
                         Te ayudamos a reunir tus comprobantes. No sustituimos a
                         la STPS ni certificamos que cumples con una norma.
                     </p>
@@ -85,22 +84,36 @@ export default function InspectionSection() {
                             </b>
                             <span className="text-meta text-muted-foreground tabular-nums">
                                 <b className="font-semibold text-foreground">
-                                    {ready}
+                                    {done.length}
                                 </b>{' '}
                                 de {items.length}
                             </span>
                         </p>
-                        <StepBar value={ready / items.length} delay={0.2} />
+                        <StepBar
+                            value={done.length / items.length}
+                            delay={0.2}
+                        />
                     </div>
-                    <ul>
-                        {items.map((item, index) => (
-                            <InspectionLine
-                                key={item.text}
-                                {...item}
-                                index={index}
-                            />
-                        ))}
-                    </ul>
+                    <div className="grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:divide-x">
+                        <ul>
+                            {done.map((item, index) => (
+                                <InspectionLine
+                                    key={item.text}
+                                    {...item}
+                                    index={index}
+                                />
+                            ))}
+                        </ul>
+                        <ul className="border-t lg:border-t-0">
+                            {missing.map((item, index) => (
+                                <InspectionLine
+                                    key={item.text}
+                                    {...item}
+                                    index={done.length + index}
+                                />
+                            ))}
+                        </ul>
+                    </div>
                     <p className="border-t bg-sidebar px-5 py-3.5 text-caption text-muted-foreground">
                         Datos de ejemplo
                     </p>

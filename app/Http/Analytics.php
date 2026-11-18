@@ -122,6 +122,12 @@ final class Analytics
         ]);
     }
 
+    /** Whether the owner switched on the landing's replay (and speed): the block that tells the browser only exists with consent. */
+    private static function landingReplays(): bool
+    {
+        return config()->boolean('services.posthog.landing_replay');
+    }
+
     /** Whether the document talks to PostHog at all: the landing's measurement or the error reports of any other page. */
     public static function opensPostHog(Request $request): bool
     {
@@ -129,9 +135,9 @@ final class Analytics
     }
 
     /**
-     * The origins the page connects to for PostHog: where the events go and, while the panel's recording is switched on
-     * (any page but the landing: Inertia moves into the panel without a new policy), where the project's replay settings
-     * come from as JSON. Never a script: the recorder ships in our own bundle.
+     * The origins the page connects to for PostHog: where the events go and, while a recording is switched on (the panel's,
+     * on any page but the landing since Inertia moves into the panel without a new policy; or the landing's own), where
+     * the project's replay settings come from as JSON. Never a script: the recorder ships in our own bundle.
      *
      * @return list<string>
      */
@@ -141,14 +147,17 @@ final class Analytics
             return [];
         }
 
-        $records = self::errorToken($request) !== null && config()->boolean('services.posthog.session_recording');
+        $records = self::errorToken($request) !== null
+            ? config()->boolean('services.posthog.session_recording')
+            : self::landingReplays();
 
         return $records ? [self::HOST, self::ASSETS_HOST] : [self::HOST];
     }
 
     /**
-     * What the landing's JSON block carries for the browser: the token, the host, the page without its personal query
-     * and, only for a page of this site, the referrer as an origin. A JS-safe literal that cannot close the script tag.
+     * What the landing's JSON block carries for the browser: the token, the host, the page without its personal query,
+     * only for a page of this site the referrer as an origin and, when the owner switched it on, that the visit may be
+     * replayed and its speed measured. A JS-safe literal that cannot close the script tag.
      */
     public static function configuration(Request $request, string $token): string
     {
@@ -159,6 +168,7 @@ final class Analytics
             'host' => self::HOST,
             'page_location' => self::pageLocation($request),
             ...($referrer === null ? [] : ['page_referrer' => $referrer]),
+            ...(self::landingReplays() ? ['replay' => true] : []),
         ]);
     }
 

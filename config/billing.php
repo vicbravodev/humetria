@@ -13,7 +13,9 @@ declare(strict_types=1);
 |
 | Tarifas y mínimos del handoff de monetización v1.0: Jornada $39 (mínimo $1,990), Cumplimiento $49 (mínimo $2,990) e
 | Integral $99 (mínimo $4,990) por persona al mes. Enterprise ($199, mínimo $9,990) es Integral más el inicio de sesión
-| único (SSO) de las personas de RH.
+| único (SSO) de las personas de RH, y la landing promete además, sin cargo aparte, la implementación asistida y el acompañamiento
+| mensual: se pactan a mano como cargos de la suscripción (AddCharge), sin tarifa publicada. Compensación es un módulo de Integral y de
+| Enterprise; también se contrata sola, por cotización: se concede a la empresa como módulo (GrantModule) con su cargo recurrente.
 |
 */
 
@@ -91,14 +93,14 @@ return [
                     'rate_cents' => 9_900,
                     'minimum_cents' => 499_000,
                     'included_centers' => 3,
-                    'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'],
+                    'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation'],
                     'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
                 ],
                 'enterprise' => [
                     'rate_cents' => 19_900,
                     'minimum_cents' => 999_000,
                     'included_centers' => 3,
-                    'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'sso'],
+                    'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation', 'sso'],
                     'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
                 ],
             ],

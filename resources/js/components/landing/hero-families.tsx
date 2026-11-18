@@ -20,14 +20,8 @@ export default function HeroFamilies() {
                             data-test={`hero-family-${family.key}`}
                             data-track="family_click"
                             data-track-target={family.key}
-                            className="group grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 py-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                            className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                         >
-                            <span className="row-span-2 flex size-11 shrink-0 items-center justify-center rounded-xl bg-family-soft text-family">
-                                <family.icon
-                                    aria-hidden
-                                    className="size-[22px]"
-                                />
-                            </span>
                             <b className="text-[17px] leading-tight font-semibold transition-colors group-hover:text-family">
                                 {family.name}
                             </b>
@@ -38,7 +32,7 @@ export default function HeroFamilies() {
                                     className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
                                 />
                             </span>
-                            <small className="col-start-2 line-clamp-2 min-h-[2lh] text-sm leading-snug text-muted-foreground">
+                            <small className="line-clamp-2 min-h-[2lh] text-sm leading-snug text-muted-foreground">
                                 {family.tools.map(toolName).join(' · ')}
                             </small>
                         </a>

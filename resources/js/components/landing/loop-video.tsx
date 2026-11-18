@@ -17,7 +17,7 @@ type Props = {
 };
 
 /**
- * A narrated film rendered with Remotion: it starts muted, loops and plays inline, with a button to pause it (WCAG 2.2.2),
+ * A narrated film rendered with Remotion: it starts muted, loops and plays inline once it is in view (never before, so a film nobody scrolls to is not downloaded), with a button to pause it (WCAG 2.2.2),
  * another to turn the voice on and one to watch it again from the start. WebM first for
  * Chromium, MP4 for Safari. With reduced motion it stays on its poster until the visitor plays it.
  */
@@ -38,7 +38,7 @@ export default function LoopVideo({
         toggleSound,
         onPlay,
         onPause,
-    } = useLoopVideo();
+    } = useLoopVideo(still);
     const { resolvedAppearance } = useAppearance();
     const film = resolvedAppearance === 'light' ? `${name}-light` : name;
 
@@ -63,11 +63,10 @@ export default function LoopVideo({
                     <video
                         key={film}
                         ref={attach}
-                        autoPlay={!still}
                         muted
                         loop
                         playsInline
-                        preload="metadata"
+                        preload="none"
                         poster={`/video/${film}.jpg`}
                         onPlay={onPlay}
                         onPause={onPause}

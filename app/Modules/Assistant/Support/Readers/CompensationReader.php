@@ -11,7 +11,7 @@ use App\Modules\Assistant\Support\PanelLinks;
 use App\Modules\Compensation\Contracts\CompensationStanding;
 
 /**
- * Compensación, which every company has: how many people the cost of the contract covers, the categories without a salary
+ * Compensación, for the company that has the module: how many people the cost of the contract covers, the categories without a salary
  * and the scenarios. Pending with nobody loaded, in progress while something cannot be costed, up to date otherwise.
  * Never a salary, an amount nor a person; and nothing at all to whoever may not see compensation.
  */

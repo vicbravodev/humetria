@@ -154,8 +154,7 @@ it('does not tell Ley Silla to a company without it, and offers the overview to 
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
 
-    // Ley Silla and Compensación, which every company has.
-    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe(['seating', 'compensation'])
+    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe(['seating'])
         ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 });
 
@@ -345,7 +344,7 @@ it('does not tell pulse nor climate to a company without them, and offers the ov
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, [$module], CarbonImmutable::now(config('app.display_timezone')));
 
-    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe([$module, 'compensation'])
+    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe([$module])
         ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 })->with(['pulse', 'climate']);
 
@@ -458,8 +457,8 @@ it('does not tell the org chart to a company without it, and offers the overview
     expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 });
 
-it('tells every company where its collective contract stands, without anything loaded yet', function (): void {
-    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
+it('tells a company that has Compensación where its collective contract stands, without anything loaded yet', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035', 'compensation'], CarbonImmutable::now(config('app.display_timezone')));
 
     expect(overviewLine($this, 'compensation'))->toBe([
         'key' => 'compensation',
@@ -469,6 +468,16 @@ it('tells every company where its collective contract stands, without anything l
         'summary' => 'Aún no cargas a tu gente para costear el contrato colectivo.',
         'link' => "/admin/{$this->a->slug}/compensation",
     ]);
+});
+
+it('does not tell Compensación to a company whose plan does not include it, and tells it once the module is granted', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(overviewLine($this, 'compensation'))->toBeNull();
+
+    resolve(App\Modules\Tenancy\Actions\GrantModule::class)->handle($this->a, 'compensation', 'Contratado por separado', null, superadmin());
+
+    expect(overviewLine($this, 'compensation'))->not->toBeNull();
 });
 
 it('counts the people the cost covers, the categories without a salary and the scenarios, never a salary nor a person of any company', function (): void {

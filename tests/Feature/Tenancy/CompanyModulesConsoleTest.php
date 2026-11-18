@@ -52,7 +52,7 @@ it('shows the staff the company with each module, whether it has it and where it
             ->where('company.trade_name', $tenant->trade_name)
             ->where('company.rfc', $tenant->rfc)
             ->where('can_manage', $user->isSuperadmin())
-            ->has('modules', 10)
+            ->has('modules', 11)
             ->where('modules.3', ['key' => 'nom035', 'label' => 'NOM-035', 'enabled' => true, 'source' => 'plan', 'source_label' => 'Plan', 'reason' => null, 'ends_on' => null, 'exists_in_code' => true])
             ->where('modules.5.source', 'grant')
             ->where('modules.5.reason', 'Piloto')
@@ -76,6 +76,7 @@ it('names every tool in the console as the menu does', function (): void {
             'complaints' => 'Quejas',
             'pulse' => 'Pulso',
             'climate' => 'Clima',
+            'compensation' => 'Compensación',
             'sso' => 'Inicio de sesión único',
         ]));
 });
@@ -152,7 +153,7 @@ it('takes a module away by hand with a reason, from a company that has no plan o
         ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Módulo quitado.']]);
     $this->post(route('companies.modules.revoke', $planned), ['module' => 'seating', 'reason' => 'Falta de pago'])->assertSessionHasNoErrors();
 
-    expect(consoleModules($legacy))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate'])
+    expect(consoleModules($legacy))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate', 'compensation'])
         ->and(consoleModules($planned))->toBe(['nom035']);
     Log::shouldHaveReceived('info')->with('tenant.module_revoked', ['tenant_id' => $legacy->id, 'module' => 'seating']);
     expect(AuditEntry::query()->where('event', 'tenant.module_revoked')->where('metadata->tenant_id', $legacy->id)->sole()->metadata)->toEqualCanonicalizing(['tenant_id' => $legacy->id, 'module' => 'seating', 'reason' => 'Pidió pausar Ley Silla']);

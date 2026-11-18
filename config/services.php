@@ -57,6 +57,8 @@ return [
         'consent_default' => env('POSTHOG_CONSENT_DEFAULT', 'denied'),
         // Anonymous, masked recording of a company's panel (resources/js/lib/session-recording.ts). Off unless switched on.
         'session_recording' => (bool) env('POSTHOG_SESSION_RECORDING', false),
+        // Anonymous replay of the landing's visits (inputs masked) and how fast its pages load (resources/js/lib/analytics.ts). Off unless switched on.
+        'landing_replay' => (bool) env('POSTHOG_LANDING_REPLAY', false),
     ],
 
     'slack' => [

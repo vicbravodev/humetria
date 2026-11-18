@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Tenancy\Actions\GrantModule;
+use App\Modules\Tenancy\Actions\RevokeModule;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -27,6 +29,7 @@ const MODULE_PAGES = [
     'org_chart' => 'tenant.org-chart.index',
     'pulse' => 'tenant.pulse.index',
     'climate' => 'tenant.climate.index',
+    'compensation' => 'tenant.compensation.index',
     'sso' => 'tenant.sso.show',
 ];
 
@@ -152,7 +155,7 @@ it('shares the modules the company has so the menu hides the rest', function ():
 
     $legacy = Tenant::factory()->create();
     $this->actingAs(ownerOf($legacy))->get(route('tenant.dashboard', $legacy))
-        ->assertInertia(fn (Assert $page) => $page->where('tenant.modules', ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate']));
+        ->assertInertia(fn (Assert $page) => $page->where('tenant.modules', ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation']));
 });
 
 it('costs a company with no module rows no query for its modules, and one with rows a single one', function (): void {
@@ -171,4 +174,24 @@ it('costs a company with no module rows no query for its modules, and one with r
     };
 
     expect($count($legacy))->toBe(0)->and($count($planned))->toBe(1);
+});
+
+it('lets a company on a plan without Compensación hire it on its own: a grant opens it and revoking the grant closes it again', function (): void {
+    $tenant = companyWithOnly(['attendance']);
+    $owner = ownerOf($tenant);
+
+    $this->actingAs($owner)->get(route('tenant.compensation.index', $tenant))->assertNotFound();
+
+    resolve(GrantModule::class)->handle($tenant, 'compensation', 'Contratado por separado', null, superadmin());
+    $this->actingAs($owner)->get(route('tenant.compensation.index', $tenant))->assertOk();
+
+    resolve(RevokeModule::class)->handle($tenant, 'compensation', 'Dejó de pagarlo', superadmin());
+    $this->actingAs($owner)->get(route('tenant.compensation.index', $tenant))->assertNotFound();
+});
+
+it('keeps Compensación for a company that never had a plan, as it keeps every module that exists', function (): void {
+    $legacy = Tenant::factory()->create();
+
+    expect(resolve(CompanyModules::class)->enabled($legacy->id, 'compensation'))->toBeTrue();
+    $this->actingAs(ownerOf($legacy))->get(route('tenant.compensation.index', $legacy))->assertOk();
 });
