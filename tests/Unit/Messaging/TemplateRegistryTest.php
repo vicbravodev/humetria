@@ -8,6 +8,7 @@ use App\Modules\Messaging\Support\AuthenticationTemplate;
 use App\Modules\Messaging\Support\TemplateButton;
 use App\Modules\Messaging\Support\TemplateDefinition;
 use App\Modules\Messaging\Support\TemplateRegistry;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -177,6 +178,21 @@ it('has no phone button in any template: «Llamar a RH» was dropped', function 
     foreach ((new TemplateRegistry)->all() as $template) {
         if ($template instanceof TemplateDefinition) {
             expect(array_map(fn (TemplateButton $button): TemplateButtonType => $button->type, $template->buttons))->not->toContain(TemplateButtonType::Phone);
+        }
+    }
+});
+
+it('points every button URL at https, with the variable only at the end, as Meta asks', function (): void {
+    URL::forceRootUrl('https://humetria.test');
+    URL::forceHttps();
+
+    foreach ((new TemplateRegistry)->all() as $template) {
+        foreach ($template instanceof TemplateDefinition ? $template->buttons : [] as $button) {
+            if ($button->url !== null) {
+                expect($button->url)->toStartWith('https://')
+                    ->and(substr_count($button->url, '{{'))->toBe($button->variable ? 1 : 0)
+                    ->and(str_ends_with($button->url, '{{1}}'))->toBe($button->variable);
+            }
         }
     }
 });

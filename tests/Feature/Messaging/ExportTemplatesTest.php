@@ -7,6 +7,7 @@ use App\Modules\Messaging\Support\TemplateRegistry;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 
 mutates(ExportTemplates::class);
 
@@ -20,6 +21,8 @@ function exported(): array
 }
 
 beforeEach(function (): void {
+    URL::forceRootUrl('https://humetria.test');
+    URL::forceHttps();
     Http::preventStrayRequests();
     Http::fake();
     config(['whatsapp.access_token' => 'the-secret-token', 'whatsapp.phone_number_id' => '999']);
@@ -100,6 +103,34 @@ it('never reads the credentials', function (): void {
     expect(json_encode(exported()))->not->toContain('the-secret-token')->not->toContain('999');
 });
 
+it('exports every URL button with https and the variable at the end', function (): void {
+    foreach (exported() as $template) {
+        foreach ($template['components'] as $component) {
+            foreach ($component['buttons'] ?? [] as $button) {
+                if (isset($button['url'])) {
+                    expect($button['url'])->toStartWith('https://');
+                    expect(str_ends_with($button['url'], '{{1}}'))->toBe(isset($button['example']));
+                    expect(substr_count($button['url'], '{{'))->toBe(isset($button['example']) ? 1 : 0);
+                }
+            }
+        }
+    }
+});
+
 it('exports no phone button', function (): void {
     expect(json_encode(exported()))->not->toContain('PHONE_NUMBER')->not->toContain('Llamar a RH');
+});
+
+it('fails, writing nothing, when a URL is not https: Meta would reject it', function (): void {
+    URL::forceRootUrl('http://humetria.test');
+    URL::forceScheme('http');
+    $directory = sys_get_temp_dir().'/templates-'.bin2hex(random_bytes(4));
+
+    try {
+        $exit = Artisan::call('messaging:export-templates', ['--path' => $directory]);
+
+        expect($exit)->toBe(1)->and(Artisan::output())->toContain('https')->and(is_dir($directory))->toBeFalse();
+    } finally {
+        File::deleteDirectory($directory);
+    }
 });
