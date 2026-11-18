@@ -11,6 +11,7 @@ use App\Modules\Assistant\Listeners\DeleteMemberConversations;
 use App\Modules\Assistant\Listeners\SendLlmAnalytics;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
+use App\Modules\Assistant\Support\Readers\ComplaintsReader;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
 use App\Modules\Assistant\Support\Readers\Nom037Reader;
 use App\Modules\Assistant\Support\Readers\SeatingReader;
@@ -51,7 +52,8 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(Nom037Reader::class),
             $app->make(SeatingReader::class),
             $app->make(VacationsReader::class),
-        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations']));
+            $app->make(ComplaintsReader::class),
+        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints']));
 
         // The tools of Humi: a new module adds its own here.
         $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [
@@ -63,7 +65,7 @@ final class AssistantServiceProvider extends ServiceProvider
             GetFirstSteps::class,
         ], [
             // Regulations are not a module of the company: Humi always has them. A tool that reads two norms stays with either.
-            GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations'],
+            GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations', 'complaints'],
             GetCampaignProgress::class => ['nom035'],
             GetRiskResults::class => ['nom035'],
             ListPendingActions::class => ['nom035', 'nom037'],

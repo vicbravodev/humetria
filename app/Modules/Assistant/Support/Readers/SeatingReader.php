@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Assistant\Support\Readers;
 
 use App\Modules\Assistant\Contracts\ComplianceReader;
+use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\ComplianceStatus;
 use App\Modules\Assistant\Support\PanelLinks;
 use App\Modules\Seating\Contracts\SeatingRoute;
@@ -21,7 +22,7 @@ final readonly class SeatingReader implements ComplianceReader
 {
     public function __construct(private WorkCenters $workCenters, private SeatingRoute $route, private PanelLinks $links) {}
 
-    public function status(): ComplianceStatus
+    public function status(AssistantScope $scope): ComplianceStatus
     {
         $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)));
         $progress = $this->route->progress($ids);

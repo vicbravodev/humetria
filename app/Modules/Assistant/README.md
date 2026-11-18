@@ -90,8 +90,9 @@ el proveedor y el modelo se piden al agente (`provider()` y `model()`), nunca es
    `AssistantScope` y `ScopeGuard` por constructor, llama `$this->guard->check($this->scope)` y lee **solo por contratos**) y
    agrégala a la lista de `ToolRegistry` en `AssistantServiceProvider`. Si el módulo no tiene contrato de lectura, créalo en
    su módulo (como `RiskResults`). Su prueba: otra empresa = id inexistente, esquema sin empresa ni persona, mínimo por grupo.
-2. **Una norma en el resumen de cumplimiento:** un `ComplianceReader` en `Support/Readers/` y su alta en `ComplianceReaders`
-   (mismo provider). `GetComplianceOverview` no cambia.
+2. **Una norma o módulo en el resumen de cumplimiento:** un `ComplianceReader` en `Support/Readers/` y su alta en
+   `ComplianceReaders` con la llave de su módulo, más esa llave en el mapa de `GetComplianceOverview` (mismo provider).
+   `status()` recibe el `AssistantScope`: lo que el rol no puede ver no se cuenta (quejas: el conteo solo a quien las atiende).
 3. **Una norma en la búsqueda normativa:** su `criterios.md` (con encabezados `### C-NN. Título · Fuente`) en
    `config/humi.php` → `regulations`.
 

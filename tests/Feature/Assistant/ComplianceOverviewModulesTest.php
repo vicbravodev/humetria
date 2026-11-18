@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Modules\Assistant\Support\Readers\ComplaintsReader;
 use App\Modules\Assistant\Support\Readers\SeatingReader;
 use App\Modules\Assistant\Support\Readers\VacationsReader;
 use App\Modules\Assistant\Tools\GetComplianceOverview;
+use App\Modules\Complaints\Models\Complaint;
+use App\Modules\Complaints\Models\ComplaintAssignment;
+use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Seating\Contracts\SeatingRoute;
@@ -18,8 +22,9 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Carbon;
 
-mutates(SeatingReader::class, VacationsReader::class);
+mutates(SeatingReader::class, VacationsReader::class, ComplaintsReader::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();
@@ -177,6 +182,72 @@ it('does not tell vacations to a company without them, and offers the overview t
     expect(overviewLine($this, 'vacations'))->toBeNull();
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
+});
+
+/** A complaint of `$tenant` that waits for `$userId` to acknowledge it, received on `$receivedOn`. */
+function complaintWaitingFor(Tenant $tenant, ComplaintChannel $channel, int $userId, string $receivedOn): void
+{
+    $complaint = Complaint::factory()->create(['tenant_id' => $tenant->id, 'channel_id' => $channel->id, 'received_on' => $receivedOn, 'description' => 'Mi jefe Zafiro me grita']);
+    ComplaintAssignment::factory()->create(['tenant_id' => $tenant->id, 'complaint_id' => $complaint->id, 'user_id' => $userId]);
+}
+
+it('tells whoever handles complaints how many wait for their acknowledgment and when the first falls due, never what they say', function (): void {
+    Carbon::setTestNow('2026-11-20 18:00:00');
+    $channel = ComplaintChannel::factory()->forTenant($this->a->id)->active()->create(['acknowledge_within_days' => 3]);
+    complaintWaitingFor($this->a, $channel, $this->scope->userId, '2026-11-19');
+    complaintWaitingFor($this->a, $channel, $this->scope->userId, '2026-11-18');
+    // Someone else's, and one of another company held by the same person: neither is theirs here.
+    complaintWaitingFor($this->a, $channel, memberOf($this->a, TenantRole::Owner)->id, '2026-11-10');
+    complaintWaitingFor($this->b, ComplaintChannel::factory()->forTenant($this->b->id)->active()->create(), $this->scope->userId, '2026-11-10');
+    workIn($this->a);
+
+    $line = overviewLine($this, 'complaints');
+
+    expect($line)->toBe([
+        'key' => 'complaints',
+        'label' => 'Quejas',
+        'state' => 'pending',
+        'stateLabel' => 'Pendiente',
+        'summary' => 'Tienes 2 casos por acusar de recibo; el primero vence el 21 de noviembre.',
+        'link' => "/admin/{$this->a->slug}/complaints",
+    ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro');
+});
+
+it('tells whoever handles complaints they are up to date with none waiting, and that a channel not open takes nothing', function (): void {
+    $channel = ComplaintChannel::factory()->forTenant($this->a->id)->active()->create();
+
+    expect(overviewLine($this, 'complaints'))->toMatchArray(['state' => 'up_to_date', 'stateLabel' => 'Al día', 'summary' => 'No tienes casos por acusar de recibo.']);
+
+    $channel->delete();
+
+    expect(overviewLine($this, 'complaints'))->toMatchArray(['state' => 'pending', 'summary' => 'Tu canal de quejas aún no recibe casos.']);
+});
+
+it('tells someone who does not handle complaints only whether the channel takes them, never how many there are', function (): void {
+    $channel = ComplaintChannel::factory()->forTenant($this->a->id)->active()->create();
+    $viewer = memberOf($this->a, TenantRole::Viewer);
+    complaintWaitingFor($this->a, $channel, $viewer->id, now()->toDateString());
+    workIn($this->a);
+    $this->scope = resolve(App\Modules\Assistant\Support\AssistantScopeFactory::class)->make($viewer);
+
+    expect(overviewLine($this, 'complaints'))->toBe([
+        'key' => 'complaints',
+        'label' => 'Quejas',
+        'state' => 'up_to_date',
+        'stateLabel' => 'Al día',
+        'summary' => 'Tu canal de quejas recibe casos; cuántos hay solo lo ven quienes los atienden.',
+        'link' => "/admin/{$this->a->slug}",
+    ]);
+});
+
+it('does not tell complaints to a company without them, and offers the overview to a company with only complaints', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(overviewLine($this, 'complaints'))->toBeNull();
+
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['complaints'], CarbonImmutable::now(config('app.display_timezone')));
 
     expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 });

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Assistant\Contracts\ComplianceReader;
+use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\ComplianceStatus;
 use App\Modules\Assistant\Support\ComplianceReaders;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
@@ -39,7 +40,7 @@ it('says a company without work centers has nothing evaluated yet and no telewor
 
     expect($card['render'])->toBe('status_list')
         ->and($card['link'])->toBe("/admin/{$this->a->slug}")
-        ->and(array_column($card['rows'], 'key'))->toBe(['nom035', 'nom037', 'seating', 'vacations'])
+        ->and(array_column($card['rows'], 'key'))->toBe(['nom035', 'nom037', 'seating', 'vacations', 'complaints'])
         ->and(normRow($card, 'nom035'))->toMatchArray(['label' => 'NOM-035', 'state' => 'pending', 'stateLabel' => 'Pendiente', 'summary' => 'Aún no registras centros de trabajo.'])
         ->and(normRow($card, 'nom037'))->toMatchArray(['label' => 'NOM-037', 'state' => 'not_applicable', 'stateLabel' => 'No aplica']);
 });
@@ -98,7 +99,7 @@ it('tells where NOM-037 stands from the rows of the inspection table of the cent
 it('lists a new norm as soon as its reader is registered, without touching the tool', function (): void {
     $reader = new class implements ComplianceReader
     {
-        public function status(): ComplianceStatus
+        public function status(AssistantScope $scope): ComplianceStatus
         {
             return new ComplianceStatus('ley_silla', 'Ley Silla', 'pending', 'Pendiente', 'Aún no empiezas.', '/admin/acme/seating');
         }

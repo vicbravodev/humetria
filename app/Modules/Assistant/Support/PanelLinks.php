@@ -41,6 +41,11 @@ final readonly class PanelLinks
         return $this->path('tenant.vacations.requests.index');
     }
 
+    public function complaints(): string
+    {
+        return $this->path('tenant.complaints.index');
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');
