@@ -16,6 +16,7 @@ export const PLANS: Choice<Plan>[] = [
     { value: 'jornada', label: 'Jornada' },
     { value: 'cumplimiento', label: 'Cumplimiento' },
     { value: 'integral', label: 'Integral' },
+    { value: 'enterprise', label: 'Enterprise' },
 ];
 
 export const STATUSES: Choice<SubscriptionStatus>[] = [

@@ -6,8 +6,11 @@ namespace App\Modules\Demos\Http\Middleware;
 
 use App\Http\Consent;
 use App\Http\SiteHost;
+use App\Modules\Demos\Data\AdClick;
 use App\Modules\Demos\Data\DemoAttribution;
+use App\Modules\Demos\Data\DemoKeyword;
 use App\Modules\Demos\Data\DemoTouch;
+use App\Modules\Demos\Enums\AdClickType;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
@@ -18,8 +21,9 @@ use Symfony\Component\HttpFoundation\Response;
  * says so): never on a page with a token. A visit with no signal writes nothing: no data is not direct traffic.
  *
  * What is kept is the campaign's own utm_* and the HOST of an external referrer, never a URL (inside this very site it
- * can be a link with a token) and never the click ids of Google Ads. Anything that is not a line of text of the right
- * size is dropped, one value at a time, without an error.
+ * can be a link with a token). Anything that is not a line of text of the right size is dropped, one value at a time,
+ * without an error. The click id of the last ad click (gclid, gbraid or wbraid, so the conversion can be imported into
+ * Google Ads) is kept only while Consent allows it, in the session and in the cookie.
  *
  * Two levels. The session always keeps the first visit with a signal (the session the site already uses, 120 minutes of
  * inactivity). The cookie `humetria_acq` (encrypted, 90 days, first touch written once, last touch overwritten by each
@@ -28,6 +32,14 @@ use Symfony\Component\HttpFoundation\Response;
 final class RememberDemoAttribution
 {
     public const string SESSION_KEY = 'demo_attribution';
+
+    /** The last ad click, apart from the touch: a later visit without one does not erase it. */
+    public const string CLICK_KEY = 'demo_ad_click';
+
+    /** The keyword of the last visit that brought one (term, content, match type), apart from the touch like the click. */
+    public const string KEYWORD_KEY = 'demo_ad_keyword';
+
+    private const int MAX_MATCH_TYPE = 20;
 
     private const int MAX_UTM = 100;
 
@@ -53,20 +65,35 @@ final class RememberDemoAttribution
      */
     public static function recall(Request $request): DemoAttribution
     {
-        $stored = Consent::analyticsAllowed($request) ? self::fromCookie($request) : null;
+        $allowed = Consent::analyticsAllowed($request);
+        $stored = $allowed ? self::fromCookie($request) : null;
+        $click = $allowed ? self::clickFrom($request->session()->get(self::CLICK_KEY)) : null;
+        $keyword = self::keywordFrom($request->session()->get(self::KEYWORD_KEY));
 
         if ($stored !== null) {
-            return new DemoAttribution($stored['first'], $stored['last']);
+            return new DemoAttribution($stored['first'], $stored['last'], $click ?? $stored['ad_click'], $keyword ?? $stored['keyword']);
         }
 
         $touch = self::touchFrom($request->session()->get(self::SESSION_KEY));
 
-        return new DemoAttribution($touch, $touch);
+        return new DemoAttribution($touch, $touch, $click, $keyword);
     }
 
     private function remember(Request $request): void
     {
         $touch = self::visit($request);
+        $allowed = Consent::analyticsAllowed($request);
+        $click = $allowed ? self::clickOf($request) : null;
+
+        $keyword = self::keywordOf($request);
+
+        if ($click !== null) {
+            $request->session()->put(self::CLICK_KEY, self::clickArray($click));
+        }
+
+        if ($keyword !== null) {
+            $request->session()->put(self::KEYWORD_KEY, self::keywordArray($keyword));
+        }
 
         if ($touch->isEmpty()) {
             return;
@@ -76,15 +103,17 @@ final class RememberDemoAttribution
             $request->session()->put(self::SESSION_KEY, self::toArray($touch));
         }
 
-        if (Consent::analyticsAllowed($request)) {
-            $this->writeCookie($request, $touch);
+        if ($allowed) {
+            $this->writeCookie($request, $touch, $click, $keyword);
         }
     }
 
-    /** The first touch stays (and the day it was first seen); the last one is this visit's. */
-    private function writeCookie(Request $request, DemoTouch $touch): void
+    /** The first touch stays (and the day it was first seen); the last one is this visit's, and so is a new ad click. */
+    private function writeCookie(Request $request, DemoTouch $touch, ?AdClick $click, ?DemoKeyword $keyword): void
     {
         $stored = self::fromCookie($request);
+        $click ??= $stored['ad_click'] ?? null;
+        $keyword ??= $stored['keyword'] ?? null;
 
         Cookie::queue(Cookie::make(
             self::COOKIE,
@@ -92,6 +121,8 @@ final class RememberDemoAttribution
                 'first' => self::toArray($stored['first'] ?? $touch),
                 'last' => self::toArray($touch),
                 'first_seen_at' => $stored['first_seen_at'] ?? now()->getTimestamp(),
+                ...($click === null ? [] : ['ad_click' => self::clickArray($click)]),
+                ...($keyword === null ? [] : ['keyword' => self::keywordArray($keyword)]),
             ], JSON_THROW_ON_ERROR),
             self::COOKIE_DAYS * 24 * 60,
             '/',
@@ -107,7 +138,7 @@ final class RememberDemoAttribution
      * The cookie as the browser sent it, or null when there is none, it is not what was written (it does not decrypt,
      * is not JSON of the right shape, has no first touch) or it is older than 90 days or from the future.
      *
-     * @return array{first: DemoTouch, last: DemoTouch, first_seen_at: int}|null
+     * @return array{first: DemoTouch, last: DemoTouch, first_seen_at: int, ad_click: ?AdClick, keyword: ?DemoKeyword}|null
      */
     private static function fromCookie(Request $request): ?array
     {
@@ -125,7 +156,80 @@ final class RememberDemoAttribution
             return null;
         }
 
-        return ['first' => $first, 'last' => self::touchFrom($stored['last'] ?? null), 'first_seen_at' => $seen];
+        return [
+            'first' => $first,
+            'last' => self::touchFrom($stored['last'] ?? null),
+            'first_seen_at' => $seen,
+            'ad_click' => self::clickFrom($stored['ad_click'] ?? null),
+            'keyword' => self::keywordFrom($stored['keyword'] ?? null),
+        ];
+    }
+
+    /** The keyword this visit carries, from the final URL suffix of Google Ads; null when it carries none. */
+    private static function keywordOf(Request $request): ?DemoKeyword
+    {
+        return self::keywordFrom(['term' => $request->query('utm_term'), 'content' => $request->query('utm_content'), 'match_type' => $request->query('matchtype')]);
+    }
+
+    /** Reads a keyword from whatever was stored or sent, trusting none of it: each value a short line, or nothing. */
+    private static function keywordFrom(mixed $stored): ?DemoKeyword
+    {
+        if (! is_array($stored)) {
+            return null;
+        }
+
+        $keyword = new DemoKeyword(
+            term: self::line($stored['term'] ?? null, self::MAX_UTM),
+            content: self::line($stored['content'] ?? null, self::MAX_UTM),
+            matchType: self::line($stored['match_type'] ?? null, self::MAX_MATCH_TYPE),
+        );
+
+        return $keyword->isEmpty() ? null : $keyword;
+    }
+
+    /** @return array{term: ?string, content: ?string, match_type: ?string} */
+    private static function keywordArray(DemoKeyword $keyword): array
+    {
+        return ['term' => $keyword->term, 'content' => $keyword->content, 'match_type' => $keyword->matchType];
+    }
+
+    /** The click id this visit carries, in the order of AdClickType: a malformed one gives way to the next. */
+    private static function clickOf(Request $request): ?AdClick
+    {
+        foreach (AdClickType::cases() as $type) {
+            $id = self::clickId($request->query($type->value));
+
+            if ($id !== null) {
+                return new AdClick($type, $id);
+            }
+        }
+
+        return null;
+    }
+
+    /** Reads a click from whatever was stored, trusting none of it. */
+    private static function clickFrom(mixed $stored): ?AdClick
+    {
+        if (! is_array($stored) || ! is_string($stored['type'] ?? null)) {
+            return null;
+        }
+
+        $type = AdClickType::tryFrom($stored['type']);
+        $id = self::clickId($stored['id'] ?? null);
+
+        return $type === null || $id === null ? null : new AdClick($type, $id);
+    }
+
+    /** @return array{type: string, id: string} */
+    private static function clickArray(AdClick $click): array
+    {
+        return ['type' => $click->type->value, 'id' => $click->id];
+    }
+
+    /** A click id as Google writes it: 1 to 255 letters, digits, dashes and underscores. */
+    private static function clickId(mixed $value): ?string
+    {
+        return is_string($value) && preg_match('/\A[A-Za-z0-9_-]{1,255}\z/', $value) === 1 ? $value : null;
     }
 
     /** The signal this visit carries. */

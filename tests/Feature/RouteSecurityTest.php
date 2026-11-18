@@ -19,6 +19,10 @@ function publicRouteNames(): array
     return [
         'home', // landing page
         'privacy-notice', // guest: el aviso de privacidad del sitio; texto fijo, sin datos de nadie
+        'roadmap', // guest: lo que Humetría planea agregar; texto fijo, sin datos de nadie
+        'tools.nom_035', 'tools.nom_037', 'tools.ley_silla', 'tools.complaints', 'tools.compensation', 'tools.attendance',
+        'tools.leave', 'tools.org_chart', 'tools.engagement', // guest: la página pública de cada herramienta (ToolPages); texto fijo, sin datos de nadie
+        'guides.workday-2027', // guest: la guía de la reforma de jornada; texto fijo, sin datos de nadie
         'films.show', // guest: the films of the landing page, served with byte ranges so a chapter can jump inside one; only files named humetria-*.mp4|webm that exist in public/video, anything else is a 404
         'demo-requests.store', // landing demo form; throttled + honeypot
         'demo.door', // guest: la puerta de una demostración en vivo (el QR que escanea el público); el código aleatorio de una sesión que abrió la consola y que vence es la credencial; solo entrega trabajadores de la empresa demo y redirige a un enlace de un solo uso de WorkerAccess (/me/{slug}/link/{token}) emitido como la jefa de RH de la demo; un código cerrado, vencido, desconocido o de otra empresa da la misma página; throttled por dirección
@@ -77,6 +81,9 @@ function publicRouteNames(): array
         'worker.key.store', // guest: guarda la llave verificada de la persona de la sesión (mismas reglas que las opciones, el límite contado bajo candado); bitácora, log y aviso con «No fui yo»; throttled por IP
         'worker.not-me.show', // guest: «No fui yo» desde el correo de una llave nueva; la dirección firmada por la app (30 días) es la credencial: sin firma o alterada 403, llave de otra empresa 404; solo muestra la confirmación; throttled por IP
         'worker.not-me.confirm', // guest: confirma «No fui yo» con la misma dirección firmada: anula la llave, cierra las sesiones de la persona (valid_after), anula sus enlaces, avisa al contacto de la empresa y queda en la bitácora; una vez; throttled por IP
+        'sso.start', // guest: starts the sign-in with the identity provider of the company in the address; the same 404 for a company that does not exist, has no SSO in its plan, switched it off or proved no domain; state, nonce and PKCE in the session; throttled per address
+        'sso.callback', // guest: the identity provider comes back here with a code; the session of the start (state, nonce, PKCE verifier, company) is the credential, the ID token must name our issuer, client and nonce, and its email must be a verified one at a domain the company proved, of someone who is already a member; never creates an account; the same generic refusal for everything else; throttled per address
+        'sso.discover', // guest: finds the company whose proven domain is the one after the @ of a work email and sends there; the same generic refusal when none has it or SSO is not available; throttled per address
         'report.shared', // guest: a report from a temporary link (48 h at most, revocable); the token is the credential; throttled
         'compensation.report.shared', // guest: the report of a contract scenario from a temporary link (7 days at most, revocable); groups under the minimum folded into Otros, no annex, nobody named; the token is the credential; throttled
     ];

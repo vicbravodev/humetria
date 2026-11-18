@@ -28,6 +28,9 @@ resultados agregados. Este módulo existe sobre una promesa: **nadie en la empre
   mensajes de todos los canales, la bitácora y el contenido de todas las demás tablas.
 - **Props de Inertia.** Ninguna página de RH, de jefe ni del portal recibe respuestas individuales; `PagesPrivacyTest`
   recorre todas las páginas con 12 respuestas y 12 comentarios.
+- **Humi.** Lee solo `Contracts\EngagementStanding`: si hay una encuesta abierta, hasta cuándo y cuántas personas de la
+  empresa contestaron (lo que RH ya ve), y si la última cerrada llegó al mínimo para mostrar resultados. Nunca respuestas,
+  comentarios, puntajes ni grupos; `ArchitectureTest` le prohíbe todo lo demás del módulo.
 - **Lo que la encuesta no promete.** No dice que "nadie sabrá": dice qué se guarda y qué no.
 
 La métrica de recomendación se llama siempre «índice de recomendación».

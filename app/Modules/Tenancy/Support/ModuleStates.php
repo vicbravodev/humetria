@@ -115,7 +115,7 @@ final class ModuleStates
         }
 
         // No plan has spoken: the company keeps what it can use today.
-        return $module->existsInCode() && ! $planned
+        return $module->keptWithoutPlan() && ! $planned
             ? $this->row($module, true, ModuleSource::Legacy, null)
             : $this->row($module, false, null, null);
     }

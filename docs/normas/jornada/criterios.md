@@ -10,6 +10,9 @@ se actualiza este documento con su justificación.
 > **Estado: aprobado** por el usuario el 2026-11-07 (incluidos 2.8 y 7.1). Falta que la STPS publique las
 > disposiciones generales del art. 132-XXXIV (ámbito de aplicación y excepciones). Hasta entonces el sistema **supone que todas las personas
 > trabajadoras deben registrar su jornada** (la lectura más estricta) y guarda las reglas como datos configurables.
+> Las páginas públicas dicen la fecha como «entra en vigor» y que la STPS definirá a qué empresas aplica y si será gradual
+> (la prensa reporta una adopción gradual, empezando por grandes y medianas); la multa del art. 994-IV Bis aplica a quien
+> la STPS determine como obligado. Aprobado por el usuario el 2026-11-17.
 
 Cada criterio indica su **tipo**: **Norma** (lo dice la ley), **Interpretación** (la ley no lo resuelve y Humetría
 adopta la lectura más apegada al texto) o **Humetría** (va más allá de la ley para que el registro sea defendible).
@@ -59,7 +62,9 @@ Es una **tabla por año**, no una constante.
 
 Tope semanal de horas extra por año (transitorio cuarto): 9 en 2026 y 2027, 10 en 2028, 11 en 2029, 12 en 2030. Humetría
 avisa cuando una persona se acerca o rebasa: el tope semanal del año, 4 horas extra en un día, 4 días con extras en la
-semana.
+semana. Los topes son de la ley y no se configuran por empresa ni por centro: rebasarlos no se bloquea, se registra, se
+paga y se avisa. Rebasar el tope semanal del año enciende su propia bandera desde el primer minuto, no solo cuando el
+triple pasa de 4 h (2.4).
 
 **2.4 Tiempo extra que rebasa el tope: triple** · Norma · art. 68
 

@@ -40,6 +40,9 @@ describe('flagLabel', () => {
         expect(flagLabel('overtime_days_over_4')).toBe(
             'Horas extra en más de 4 días',
         );
+        expect(flagLabel('weekly_overtime_over_cap')).toBe(
+            'Rebasó el tope semanal de horas extra',
+        );
         expect(flagLabel('triple_cap_exceeded')).toBe(
             'Más de 4 h al triple en la semana',
         );

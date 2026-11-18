@@ -15,6 +15,9 @@ final class PageFrame
     public const array STANDALONE_NAMES = [
         'landing',
         'privacy-notice',
+        'roadmap',
+        'tool',
+        'guide',
         'campaigns/survey',
         'engagement/survey',
         'engagement/portal-feedback',

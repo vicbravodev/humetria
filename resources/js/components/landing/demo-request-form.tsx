@@ -1,12 +1,9 @@
 import { Form } from '@inertiajs/react';
 import { toast } from 'sonner';
-import type { DemoChoice } from '@/components/landing/demo-choice-field';
-import DemoChoiceField from '@/components/landing/demo-choice-field';
+import DemoCaseDetails from '@/components/landing/demo-case-details';
 import DemoHoneypot from '@/components/landing/demo-honeypot';
-import DemoMessageField from '@/components/landing/demo-message-field';
 import DemoPrivacyNote from '@/components/landing/demo-privacy-note';
 import DemoTextField from '@/components/landing/demo-text-field';
-import DemoToolsField from '@/components/landing/demo-tools-field';
 import PhoneField from '@/components/phone-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -15,21 +12,14 @@ import { firstInvalidField } from '@/lib/first-invalid-field';
 import { httpErrorMessage } from '@/lib/http-error-message';
 import { store } from '@/routes/demo-requests';
 
-const PROFILES: readonly DemoChoice[] = [
-    { value: 'company', label: 'Para mi empresa o grupo de empresas' },
-    { value: 'consultant', label: 'Soy consultor y atiendo a varias empresas' },
-    { value: 'union', label: 'Represento a un sindicato' },
-];
+type Props = {
+    /** The route of the page the form is on: the server sends whoever asked back to it. */
+    page?: string | undefined;
+    /** The tool of that page, already chosen. */
+    tool?: string | undefined;
+};
 
-const WORKFORCE: readonly DemoChoice[] = [
-    { value: '1_15', label: '1–15' },
-    { value: '16_50', label: '16–50' },
-    { value: '51_100', label: '51–100' },
-    { value: '101_500', label: '101–500' },
-    { value: '501_plus', label: 'Más de 500' },
-];
-
-export default function DemoRequestForm() {
+export default function DemoRequestForm({ page = 'home', tool }: Props) {
     return (
         <Form
             {...store.form()}
@@ -103,21 +93,9 @@ export default function DemoRequestForm() {
                             error={errors['whatsapp']}
                         />
                     </div>
-                    <DemoChoiceField
-                        name="profile"
-                        legend="¿Para quién es Humetría?"
-                        options={PROFILES}
-                        error={errors['profile']}
-                    />
-                    <DemoToolsField error={errors['tools']} />
-                    <DemoChoiceField
-                        name="workforce"
-                        legend="¿Cuántas personas trabajan en la empresa?"
-                        options={WORKFORCE}
-                        error={errors['workforce']}
-                    />
-                    <DemoMessageField error={errors['message']} />
+                    <DemoCaseDetails errors={errors} tool={tool} />
                     <DemoHoneypot />
+                    <input type="hidden" name="page" value={page} />
                     <Button
                         type="submit"
                         size="lg"
@@ -126,7 +104,7 @@ export default function DemoRequestForm() {
                         data-test="demo-request-submit"
                     >
                         {processing && <Spinner />}
-                        Agendar demo
+                        Pedir mi demo
                     </Button>
                     <DemoPrivacyNote />
                 </>

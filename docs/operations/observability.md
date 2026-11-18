@@ -41,6 +41,7 @@ Notas:
 | `LOG_CHANNEL` | `stack` | |
 | `LOG_STACK` | `LOG_STACK=stderr,posthog` | stderr para Docker/Dokploy, posthog para guardar y alertar |
 | `LOG_POSTHOG_LEVEL` | `info` | nivel mínimo que se manda a PostHog Logs |
+| `POSTHOG_SESSION_RECORDING` | `true` cuando el proyecto tenga Session Replay encendido | grabación anónima y enmascarada del panel de una empresa (`docs/operations/ssr.md`) |
 
 ## 3. Nombres de los logs que leen las alertas
 

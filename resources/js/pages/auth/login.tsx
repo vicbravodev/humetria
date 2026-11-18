@@ -3,6 +3,7 @@ import AuthHeading from '@/components/auth-heading';
 import InputError from '@/components/humetria/input-error';
 import PasskeyVerify from '@/components/passkeys/passkey-verify';
 import PasswordInput from '@/components/humetria/password-input';
+import SsoEntry from '@/components/sso/sso-entry';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -93,6 +94,8 @@ export default function Login({ status, canResetPassword }: Props) {
                     </>
                 )}
             </Form>
+
+            <SsoEntry />
 
             <p className="text-sm text-muted-foreground">
                 ¿Tu empresa aún no usa Humetría?{' '}

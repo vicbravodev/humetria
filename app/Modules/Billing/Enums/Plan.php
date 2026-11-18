@@ -10,6 +10,7 @@ enum Plan: string
     case Jornada = 'jornada';
     case Cumplimiento = 'cumplimiento';
     case Integral = 'integral';
+    case Enterprise = 'enterprise';
 
     public function label(): string
     {
@@ -17,6 +18,7 @@ enum Plan: string
             self::Jornada => 'Jornada',
             self::Cumplimiento => 'Cumplimiento',
             self::Integral => 'Integral',
+            self::Enterprise => 'Enterprise',
         };
     }
 }

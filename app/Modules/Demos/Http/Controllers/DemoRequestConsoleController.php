@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Demos\Actions\ExportAdConversions;
 use App\Modules\Demos\Actions\ListDemoRequests;
 use App\Modules\Demos\Actions\UpdateDemoRequest;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Http\Requests\UpdateDemoRequestRequest;
 use App\Modules\Demos\Models\DemoRequest;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class DemoRequestConsoleController extends Controller
 {
@@ -35,8 +38,8 @@ final class DemoRequestConsoleController extends Controller
                 'email' => $demoRequest->email,
                 'whatsapp' => $demoRequest->whatsapp,
                 'company' => $demoRequest->company,
-                'profile' => $demoRequest->profile->label(),
-                'workforce' => $demoRequest->workforce->label(),
+                'profile' => $demoRequest->profile?->label(),
+                'workforce' => $demoRequest->workforce?->label(),
                 'tools' => $demoRequest->tools->map(fn (Tool $tool): string => $tool->label())->values()->all(),
                 'message' => $demoRequest->message,
                 'status' => $demoRequest->status->value,
@@ -50,6 +53,31 @@ final class DemoRequestConsoleController extends Controller
                 'received_at' => str_replace('.', '', $demoRequest->created_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY, HH:mm')),
             ]),
         ]);
+    }
+
+    /** The click conversions for Google Ads, as a CSV to upload by hand. */
+    public function adConversions(ExportAdConversions $export): StreamedResponse
+    {
+        Gate::authorize('view-demo-requests');
+
+        return $this->download($export->handle(), 'conversiones-google-ads');
+    }
+
+    /** The same for the clicks of iOS, which Google identifies by gbraid or wbraid instead of gclid. */
+    public function adConversionsIos(ExportAdConversions $export): StreamedResponse
+    {
+        Gate::authorize('view-demo-requests');
+
+        return $this->download($export->handleIos(), 'conversiones-google-ads-ios');
+    }
+
+    private function download(string $csv, string $name): StreamedResponse
+    {
+        $day = CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString();
+
+        return response()->streamDownload(function () use ($csv): void {
+            echo $csv;
+        }, "{$name}-{$day}.csv", ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function update(UpdateDemoRequestRequest $request, DemoRequest $demoRequest, UpdateDemoRequest $updateDemoRequest): RedirectResponse

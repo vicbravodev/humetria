@@ -5,7 +5,9 @@ import {
     DEMO_VIEWS,
     demoEmptyText,
     demoQuery,
+    profileText,
     toolsText,
+    workforceText,
 } from '@/lib/demo-requests';
 
 describe('toolsText', () => {
@@ -16,6 +18,18 @@ describe('toolsText', () => {
         expect(toolsText(['NOM-035', 'Ley Silla', 'NOM-037'])).toBe(
             'NOM-035, Ley Silla y NOM-037',
         );
+    });
+});
+
+describe('workforceText and profileText', () => {
+    it('writes the size of the company, or says it was not given', () => {
+        expect(workforceText('51–100')).toBe('51–100 trabajadores');
+        expect(workforceText(null)).toBe('Sin indicar');
+    });
+
+    it('writes who the request is for, or says it was not given', () => {
+        expect(profileText('Consultor')).toBe('Consultor');
+        expect(profileText(null)).toBe('Perfil sin indicar');
     });
 });
 

@@ -27,6 +27,7 @@ const MODULE_PAGES = [
     'org_chart' => 'tenant.org-chart.index',
     'pulse' => 'tenant.pulse.index',
     'climate' => 'tenant.climate.index',
+    'sso' => 'tenant.sso.show',
 ];
 
 /** Pages that answer 404 on their own until something exists, so they cannot prove the module is what opens them. */

@@ -14,10 +14,7 @@ function demoFormButThePhone(mixed $page): mixed
 {
     return $page->fill('name', 'Ana López')
         ->fill('email', 'ana@empresa.mx')
-        ->fill('company', 'Empresa Ejemplo')
-        ->radio('profile', 'consultant')
-        ->check('tools[]', 'nom_035')
-        ->radio('workforce', '51_100');
+        ->fill('company', 'Empresa Ejemplo');
 }
 
 /** What the phone sends: its hidden field. */

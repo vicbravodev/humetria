@@ -4,7 +4,7 @@ import Initials from '@/components/humetria/initials';
 import DemoRequestChannels from '@/components/demos/demo-request-channels';
 import DemoRequestHandling from '@/components/demos/demo-request-handling';
 import { Button } from '@/components/ui/button';
-import { toolsText } from '@/lib/demo-requests';
+import { profileText, toolsText, workforceText } from '@/lib/demo-requests';
 import { whatsappUrl } from '@/lib/whatsapp-url';
 import type { DemoRequestRow } from '@/types';
 import { readablePhone } from '@/lib/phone';
@@ -22,7 +22,7 @@ export default function DemoRequestDetail({
 }) {
     const facts = [
         { term: 'Empresa', value: request.company },
-        { term: 'Tamaño', value: `${request.workforce} trabajadores` },
+        { term: 'Tamaño', value: workforceText(request.workforce) },
         { term: 'Le interesa', value: toolsText(request.tools) },
     ];
 
@@ -41,7 +41,8 @@ export default function DemoRequestDetail({
                             {request.name}
                         </h2>
                         <p className="text-sm text-muted-foreground">
-                            {request.profile} · llegó el {request.received_at}
+                            {profileText(request.profile)} · llegó el{' '}
+                            {request.received_at}
                         </p>
                     </div>
                 </div>

@@ -9,6 +9,7 @@ use App\Modules\Billing\Data\PlanSummary;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Data\ModuleRow;
+use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 
@@ -35,7 +36,7 @@ final readonly class PlanPage
                 'centers' => $tenant->isUnion() ? null : $this->use($tenant->id, CompanyLimits::CENTERS),
                 'people' => $this->use($tenant->id, CompanyLimits::SEATS),
             ],
-            'tools' => $tenant->isUnion() ? [] : array_map(fn (ModuleRow $row): array => ['label' => $row->label, 'active' => $row->enabled, 'endsOn' => $row->endsOn], array_values(array_filter($this->modules->list($tenant->id), fn (ModuleRow $row): bool => $row->existsInCode))),
+            'tools' => $tenant->isUnion() ? [] : array_map(fn (ModuleRow $row): array => ['label' => $row->label, 'active' => $row->enabled, 'endsOn' => $row->endsOn], array_values(array_filter($this->modules->list($tenant->id), fn (ModuleRow $row): bool => $row->existsInCode && ($row->enabled || $row->key !== Module::Sso->value)))),
             'support' => ['email' => $this->supportEmail()],
         ];
     }

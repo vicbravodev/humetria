@@ -31,6 +31,9 @@ it('says which pages carry their own frame', function (string $component, bool $
     expect(PageFrame::isStandalone($component))->toBe($standalone);
 })->with([
     ['privacy-notice', true],
+    ['roadmap', true],
+    ['tool', true],
+    ['guide', true],
     ['campaigns/survey', true],
     ['telework/portal', true],
     ['seating/portal-acknowledgment', true],

@@ -34,6 +34,7 @@ final class ComplianceRoutes
             'tenant.pulse.*',
             'tenant.worker-access.*',
             'tenant.privacy.*',
+            'tenant.sso.*',
         ];
     }
 }

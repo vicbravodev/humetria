@@ -58,28 +58,28 @@ it('lets no tool take a company, a tenant, a person or a participant from the mo
 });
 
 it('never lets a tool of a company reach the data of another, even asking for its ids by name', function (): void {
-    $plantB = WorkCenter::factory()->create(['tenant_id' => $this->b->id, 'name' => 'Planta Secreta de B']);
-    $areaB = Area::factory()->create(['tenant_id' => $this->b->id, 'name' => 'Área Secreta de B']);
+    $plantB = WorkCenter::factory()->create(['tenant_id' => $this->b->id, 'name' => 'Planta Zafiro de B']);
+    $areaB = Area::factory()->create(['tenant_id' => $this->b->id, 'name' => 'Área Zafiro de B']);
     $campaignB = Campaign::factory()->closed()->create(['tenant_id' => $this->b->id, 'work_center_id' => $plantB->id]);
     AnonymousResponse::factory()->count(8)->create(['campaign_id' => $campaignB->id, 'area_id' => $areaB->id, 'instrument' => 'nom035.guide-ii', 'answers' => nom035Answers('nom035.guide-ii', 'never')]);
     workIn($this->a);
 
     foreach (resolve(ToolRegistry::class)->for($this->scope) as $tool) {
-        $answer = (string) $tool->handle(new ToolRequest(['campaign_id' => $campaignB->id, 'area_id' => $areaB->id, 'query' => 'Planta Secreta de B', 'tenant_id' => $this->b->id]));
+        $answer = (string) $tool->handle(new ToolRequest(['campaign_id' => $campaignB->id, 'area_id' => $areaB->id, 'query' => 'Planta Zafiro de B', 'tenant_id' => $this->b->id]));
 
-        expect($answer)->not->toContain('Secreta')->not->toContain($campaignB->id)->not->toContain($areaB->id)->not->toContain($this->b->id);
+        expect($answer)->not->toContain('Zafiro')->not->toContain($campaignB->id)->not->toContain($areaB->id)->not->toContain($this->b->id);
     }
 });
 
 it('does not offer a tool of a module the company does not have, and offers it again when it does', function (): void {
-    resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['sso'], CarbonImmutable::now(config('app.display_timezone')));
 
     $offered = fn (): array => array_map(fn (Tool $tool): string => $tool::class, resolve(ToolRegistry::class)->for($this->scope));
 
     // Regulations and the first steps are not a company's module: Humi always has them.
     expect($offered())->toBe([SearchRegulations::class, GetFirstSteps::class]);
 
-    resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance', 'nom037'], CarbonImmutable::now(config('app.display_timezone')));
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['sso', 'nom037'], CarbonImmutable::now(config('app.display_timezone')));
 
     // A tool that reads two norms stays while the company has either; the one only of NOM-035 does not come back.
     expect($offered())->toBe([GetComplianceOverview::class, ListPendingActions::class, SearchRegulations::class, GetFirstSteps::class]);
@@ -89,7 +89,7 @@ it('tells only the norms the company has in the compliance overview and the pend
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom037'], CarbonImmutable::now(config('app.display_timezone')));
     $overview = toolCard(GetComplianceOverview::class, $this->scope);
 
-    expect(array_map(fn (array $row): string => (string) $row['key'], $overview['rows']))->toBe(['nom037']);
+    expect(array_map(fn (array $row): string => (string) $row['key'], $overview['rows']))->toBe(['nom037', 'compensation']);
 
     $pending = json_encode(toolCard(ListPendingActions::class, $this->scope), JSON_THROW_ON_ERROR);
 

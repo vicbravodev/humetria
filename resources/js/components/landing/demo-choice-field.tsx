@@ -26,7 +26,6 @@ export default function DemoChoiceField({
         <fieldset
             role="radiogroup"
             aria-labelledby={legendId}
-            aria-required
             aria-invalid={error === undefined ? undefined : true}
             aria-describedby={error === undefined ? undefined : errorId}
             data-test={`${name}-group`}

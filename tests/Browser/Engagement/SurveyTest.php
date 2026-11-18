@@ -40,10 +40,11 @@ function engagementInvitee(): Invitation
 /**
  * A script that answers 4 to every closed question as a person would, by clicking, writes `$comment` in the first open
  * one and goes on with «Siguiente» (on the last question «Revisar y enviar») until the screen that sends (or `$limit` screens), and says which came first.
+ * It takes seconds: `runOnce()` keeps the retries of Pest from answering, and writing the comment, again at the same time.
  */
 function engagementAnswerScript(string $comment = '', int $limit = 80): string
 {
-    return <<<JS
+    return runOnce(<<<JS
         async () => {
             const wait = () => new Promise((done) => setTimeout(done, 25));
             const write = (box, text) => {
@@ -64,8 +65,18 @@ function engagementAnswerScript(string $comment = '', int $limit = 80): string
             }
             return 'lost';
         }
-        JS;
+        JS);
 }
+
+// Pest re-sends a script that has not answered within 1 s; one that clicks through the survey would run several times at once.
+it('runs a script that outlasts the retry of Pest only once', function (): void {
+    engagementInvitee();
+
+    $page = visit('/engagement/the-token');
+    $page->script(runOnce('async () => { window.runs = (window.runs ?? 0) + 1; await new Promise((done) => setTimeout(done, 2500)); return true; }'));
+
+    $page->assertScript('() => window.runs', 1);
+});
 
 it('opens with what the system keeps and shows, in «usted», and no promise of secrecy', function (bool $dark, bool $mobile): void {
     engagementInvitee();
@@ -264,7 +275,7 @@ it('asks the 0 to 10 question in two equal rows with its anchors, and echoes the
 
     $page = visitPage('engagement/survey', '/engagement/the-token', $dark, true, function ($page): void {
         $page->click('Comenzar');
-        $page->script(TO_RECOMMEND_QUESTION);
+        $page->script(runOnce(TO_RECOMMEND_QUESTION));
     })
         ->assertSee('¿Qué tan probable es que recomiende esta empresa como lugar para trabajar?')
         ->assertDontSee('(0 = nada probable')
@@ -282,19 +293,20 @@ it('lays the 0 to 10 question in one row on a computer', function (): void {
     engagementInvitee();
 
     $page = visit('/engagement/the-token')->click('Comenzar');
-    $page->script(TO_RECOMMEND_QUESTION);
+    $page->script(runOnce(TO_RECOMMEND_QUESTION));
 
     $page->assertScript('() => new Set([...document.querySelectorAll("main input[type=radio]")].map((input) => Math.round(input.closest("label").getBoundingClientRect().top))).size', 1);
 });
 
 // The comments still go to an AI provider to be summarized: it is said where the person writes, not in the welcome.
-it('says at the open question that an AI provider summarizes the comments, and not to write a name', function (bool $dark): void {
+it('says at the open question that an AI provider summarizes the comments, and the not-a-name warning only once', function (bool $dark): void {
     engagementInvitee();
 
     visitPage('engagement/survey', '/engagement/the-token', $dark, true, function ($page): void {
         $page->click('Comenzar');
-        $page->script(TO_OPEN_QUESTION);
+        $page->script(runOnce(TO_OPEN_QUESTION));
     })
         ->assertSee('Un proveedor de inteligencia artificial resume los comentarios.')
-        ->assertSee('Por eso, no escriba su nombre ni datos que lo identifiquen.');
+        ->assertSee('No escriba nombres ni datos que permitan identificarle')
+        ->assertDontSee('no escriba su nombre');
 })->with(['light' => false, 'dark' => true]);

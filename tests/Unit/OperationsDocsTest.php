@@ -85,6 +85,9 @@ it('gives in the demo manual the figures the code has', function (): void {
         'más de '.App\Modules\Demos\Models\DemoRun::STALE_AFTER_MINUTES.' minutos',
         'Abrir sala ('.intdiv(is_int($door) ? $door : 0, 60).' h)',
         "hay {$doorPeople} reservados",
+        // a time-clock screen in every center of the demo (AttendanceStory), all issued by the room's one button
+        'cada uno de los '.count(Database\Seeders\Demo\DemoRoster::CENTERS).' centros tiene la suya',
+        'emite las '.count(Database\Seeders\Demo\DemoRoster::CENTERS),
         'se corta a los '.intdiv((new App\Modules\Demos\Jobs\PrepareDemo('run'))->timeout, 60).' minutos',
         'a los ~'.$leave['escalation_business_days'].' días hábiles',
     ] as $figure) {

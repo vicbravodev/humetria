@@ -15,10 +15,11 @@ export default function Initials({
     className?: string;
 }) {
     return (
+        // `ph-mask`: the panel's recording hides the initials, worked out here and so not in the page's data.
         <span
             aria-hidden
             className={cn(
-                'inline-flex size-8 shrink-0 items-center justify-center text-xs font-semibold',
+                'ph-mask inline-flex size-8 shrink-0 items-center justify-center text-xs font-semibold',
                 kind === 'person'
                     ? 'rounded-full bg-secondary text-foreground'
                     : 'rounded-lg bg-accent text-primary',

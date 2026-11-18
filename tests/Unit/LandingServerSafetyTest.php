@@ -40,6 +40,12 @@ it('writes no inline style or motion entrance in a landing component the server 
     $exceptions = [
         // AnimatePresence swaps the result of the filter: it sits inside WhenMounted, whose fallback is the result without motion.
         'privacy-demo.tsx',
+        // The pick's answer, the step stage and the bar of the step playing swap with motion inside WhenMounted.
+        'tool-page-pick.tsx',
+        'tool-page-step-stage.tsx',
+        'tool-page-step.tsx',
+        // The tools menu mounts only when a click opens it: the server never renders it.
+        'tools-menu-panel.tsx',
     ];
 
     $offenders = collect(glob(__DIR__.'/../../resources/js/components/landing/*.tsx'))
@@ -51,6 +57,6 @@ it('writes no inline style or motion entrance in a landing component the server 
     expect($offenders)->toBe($exceptions);
 });
 
-it('keeps the motion exceptions inside WhenMounted', function (): void {
-    expect(sourceOf('components/landing/privacy-demo.tsx'))->toContain('<WhenMounted');
-});
+it('keeps the motion exceptions inside WhenMounted', function (string $file): void {
+    expect(sourceOf('components/landing/'.$file))->toContain('<WhenMounted');
+})->with(['privacy-demo.tsx', 'tool-page-pick.tsx', 'tool-page-step-stage.tsx', 'tool-page-step.tsx']);

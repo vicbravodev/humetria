@@ -30,7 +30,10 @@ final class DemoRequestController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Recibimos tu solicitud · te escribiremos para agendar la demo.']);
 
-        return redirect()->to(route('home').'#agenda-una-demo');
+        // Back to the page the form was on (the landing, a tool's page or the guide); anything else goes to the landing.
+        $page = $request->string('page')->toString();
+
+        return redirect()->to(route(in_array($page, Analytics::measuredRoutes(), true) ? $page : 'home').'#agenda-una-demo');
     }
 
     /** The request stored, as the server sees it: the kind of company and the channel, never who asked (no name, no contact). */
@@ -39,13 +42,16 @@ final class DemoRequestController extends Controller
         $touch = $data->attribution?->credited();
 
         Analytics::capture($request, 'demo_request_stored', [
-            'profile' => $data->profile->value,
-            'workforce' => $data->workforce->value,
+            'profile' => $data->profile?->value,
+            'workforce' => $data->workforce?->value,
             'tools_count' => count($data->tools),
             'utm_source' => $touch?->source,
             'utm_medium' => $touch?->medium,
             'utm_campaign' => $touch?->campaign,
             'referrer_host' => $touch?->referrerHost,
+            'utm_term' => $data->attribution?->keyword?->term,
+            'utm_content' => $data->attribution?->keyword?->content,
+            'matchtype' => $data->attribution?->keyword?->matchType,
         ]);
     }
 }

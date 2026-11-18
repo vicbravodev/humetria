@@ -35,6 +35,12 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
 - Un cambio que solo trae documentación que nadie lee (`docs/`, `.md` de la raíz) se salta el CI y el deploy
   (`scripts/ci-code-changed.sh`). Un documento que un test o la app leen es código (`docs/normas`, `docs/operations`,
   `CLAUDE.md`…) y va en ese script (`tests/Unit/CiCodeChangedTest.php`); todo job nuevo de `tests.yml` espera a `changes`.
+- **Humi está al corriente.** Un módulo o una función que cambia lo que la empresa tiene, debe o puede consultar no está
+  terminado hasta que Humi lo sabe; es parte del entregable, en el mismo PR. Se conecta por los contratos públicos del
+  módulo: un lector en `Assistant/Support/Readers` (lo cuenta `GetComplianceOverview`), una herramienta si hace falta
+  detalle, sus datos vivos si los hay, y sus criterios en `docs/normas/*/criterios.md` (entran solos al buscador). Mismas
+  reglas de privacidad: conteos y estados, nunca respuestas ni personas. `tests/Feature/Assistant/ModuleCoverageTest.php`
+  falla con un módulo nuevo sin conexión; eximir uno exige su razón en ese test.
 - **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra sola la clase cuyo test declara
   `mutates(Clase::class)`. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
   `--min`; si falla, falta el test que mata al mutante. Detalle: `docs/testing.md`.
@@ -77,7 +83,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   (`worker-access.php`: entra con su llave o con un enlace de un solo uso); ninguna dirección suya lleva una credencial que
   sirva más de una vez (`RouteSecurityTest`). El token del enlace es la credencial (con throttle por enlace y por
   dirección) en `survey.php` y `engagement-survey.php`, las encuestas; `complaints-public.php`, el canal de denuncias;
-  `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `workers.php`, la página de trabajadores;
+  `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `sso.php`, el inicio de sesión con el proveedor de la empresa (callback con `state`, `nonce` y PKCE); `workers.php`, la página de trabajadores;
   `attendance-device.php`, los checadores.
 
 ### Módulos
@@ -100,6 +106,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
 - `Seating`: Ley Silla: asientos, evaluación de riesgo, medidas, encuesta.
+- `Sso`: inicio de sesión único (OIDC) de las personas con cuenta, solo plan Enterprise (ver su README).
 - `Telework`: NOM-037: teletrabajadores, lista de verificación, documentos, comité, su sección del portal.
 - `Tenancy`: empresas, centros de trabajo, miembros y roles, módulos y límites por empresa (`CompanyModules`).
 - `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso, sesión y prueba reciente;
@@ -134,8 +141,13 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   `tests/Feature/IndexablePagesTest.php`) que responden 200 en producción; staging y local nunca se indexan.
 - Solo las páginas de `App\Http\SsrPages` pasan por Node, y solo sin sesión; una ruta nueva no activa SSR. Si Node falla
   la página responde 200 y React la pinta: nunca 5xx por Node.
-- PostHog mide solo la landing: lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
+- PostHog mide solo las páginas públicas (landing, página de cada herramienta y guía: `Analytics::measuredRoutes()`): lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
   medición. Ningún dato de la persona va a PostHog. Todo enlace que sale de la landing o llega a ella es un `<a href>`.
+- El panel de una empresa se graba solo con `POSTHOG_SESSION_RECORDING=true`, anónimo y enmascarado (`lib/session-recording.ts`):
+  se ve la interfaz y se oculta todo dato de la empresa (`lib/recording-mask.ts`: lo que viene en las props, datos con forma
+  personal, opciones de búsqueda, `ph-mask`), campos y atributos; sin persona, empresa ni dirección; nunca quejas, Guía I,
+  Humi (`ph-no-capture`), la cuenta personal ni al suplantar. Una pantalla sensible nueva entra en `UNRECORDED` con su test;
+  un dato calculado en el navegador que no venga en las props lleva `ph-mask`.
 - Reglas y operación de SSR, medición, eventos y errores a PostHog: `docs/operations/ssr.md` (se actualiza en el mismo PR).
 - Errores: el navegador de toda página manda a PostHog `$exception` con el mensaje enmascarado (`lib/error-tracking.ts`,
   solo errores, sin persona ni persistencia); `AppErrorBoundary` muestra «Algo salió mal» con el código de soporte. El servidor
@@ -185,7 +197,7 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   reusa sus piezas (marco con migas, encabezado con estado, tarjetas, tablas `muted`, pestañas con conteo, estados vacíos
   con siguiente paso); una que se vea como un formulario sin diseñar no está terminada. Antes de cerrar un trabajo con UI,
   se revisa en el navegador en claro, oscuro y a 375 px.
-- Un solo acento (`primary`; `brand-*` solo en el logo); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
+- Un solo acento (`primary`; `brand-*` solo en el logo), salvo el color de cada familia de herramientas en el sitio público (`family-*`); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
   a shadcn tras cada `npx shadcn add` (`DesignTokensOnlyTest`, `DesignSystemTest`, `ShadcnAdjustmentsTest`).
 - El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.
 

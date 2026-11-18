@@ -125,7 +125,20 @@ it('sends to Node only the pages on the list, for a visitor: every GET route', f
         }
     }
 
-    expect($rendered)->toBe(['/' => 1, 'privacy-notice' => 1]);
+    expect($rendered)->toBe([
+        '/' => 1,
+        'privacy-notice' => 1,
+        'nom-035' => 1,
+        'nom-037' => 1,
+        'ley-silla' => 1,
+        'buzon-de-quejas' => 1,
+        'compensacion' => 1,
+        'registro-de-jornada' => 1,
+        'vacaciones-y-permisos' => 1,
+        'organigrama' => 1,
+        'clima-laboral' => 1,
+        'guias/registro-de-jornada-2027' => 1,
+    ]);
 });
 
 it('sends nothing to Node for anyone signed in, on any GET route', function (): void {

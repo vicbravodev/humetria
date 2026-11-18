@@ -6,11 +6,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { reissue } from '@/routes/demo-room/kiosk';
 
 /**
- * The time clock's screen at Oficinas Querétaro: a new link, shown once, to open on the tablet (or the projector) that
- * will show the code. Until it is opened the screen stays waiting.
+ * The time clock's screens, one per center: a new link for each, shown once, to open on the tablets (or side by side on the
+ * projector) that will show the codes. Each person marks at the screen of their own center; until a link is opened its
+ * screen stays waiting.
  */
 export default function RoomKiosk() {
-    const link = usePage().flash.demoKioskLink;
+    const links = usePage().flash.demoKioskLinks;
 
     return (
         <section
@@ -18,17 +19,18 @@ export default function RoomKiosk() {
             className="flex flex-col gap-3 card p-5"
         >
             <h2 id="room-kiosk" className="text-base font-semibold">
-                Pantalla del checador
+                Pantallas del checador
             </h2>
-            {link === undefined ? (
+            {links === undefined ? (
                 <>
                     <p className="text-sm text-pretty text-muted-foreground">
-                        Emite un enlace y ábrelo en la tableta o el proyector:
-                        mostrará el código que el público escanea para marcar.
-                        Mientras no lo abras, la pantalla queda sin activar y un
-                        enlace anterior deja de servir. Si la pantalla ya
-                        muestra su código, no se emite otro hasta que reinicies
-                        la demo.
+                        Emite los enlaces y abre cada uno en su tableta o, lado
+                        a lado, en el proyector: cada centro tiene su pantalla y
+                        cada persona marca con la de su centro. Mientras no
+                        abras un enlace, su pantalla queda sin activar y un
+                        enlace anterior deja de servir. Una pantalla que ya
+                        muestra su código no recibe otro hasta que reinicies la
+                        demo.
                     </p>
                     <Form
                         {...reissue.form()}
@@ -45,19 +47,29 @@ export default function RoomKiosk() {
                                 ) : (
                                     <MonitorSmartphone aria-hidden />
                                 )}
-                                Emitir enlace de la pantalla
+                                Emitir enlaces de las pantallas
                             </Button>
                         )}
                     </Form>
                 </>
             ) : (
-                <RoomShareLink
-                    link={link}
-                    alt="Código QR del enlace de la pantalla del checador"
-                >
-                    Ábrelo en la pantalla ahora: funciona una sola vez y no se
-                    vuelve a mostrar.
-                </RoomShareLink>
+                <>
+                    <p className="text-sm text-pretty text-muted-foreground">
+                        Ábrelos en las pantallas ahora: cada uno funciona una
+                        sola vez y no se vuelve a mostrar.
+                    </p>
+                    {links.map((link) => (
+                        <div key={link.url} className="flex flex-col gap-2">
+                            <h3 className="text-sm font-medium">
+                                {link.center}
+                            </h3>
+                            <RoomShareLink
+                                link={link}
+                                alt={`Código QR del enlace de la pantalla del checador de ${link.center}`}
+                            />
+                        </div>
+                    ))}
+                </>
             )}
         </section>
     );

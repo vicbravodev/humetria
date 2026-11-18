@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Sso\Http\Middleware\RequireSsoWhenEnforced;
 use App\Modules\Tenancy\Http\Controllers\GroupMinimumController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\Nom035DossierController;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 // A reserved word can never be a company, so it never matches: /admin/register stays a plain 404 for guests too.
 $notReserved = '(?!(?:'.implode('|', array_map(preg_quote(...), TenantRules::RESERVED_SLUGS)).')$)[^/]+';
 
-Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class, LimitUnionToCompensation::class, LimitToEnabledModules::class])->group(function () use ($notReserved): void {
+Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnforced::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class, LimitUnionToCompensation::class, LimitToEnabledModules::class])->group(function () use ($notReserved): void {
     Route::get('admin/{tenant:slug}', TenantDashboardController::class)->where('tenant', $notReserved)->name('tenant.dashboard');
 
     Route::get('admin/{tenant:slug}/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.work-centers.options');
@@ -76,5 +77,6 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, BlockSuspendedTenan
     require __DIR__.'/interventions.php';
     require __DIR__.'/disclosure.php';
     require __DIR__.'/first_steps.php';
+    require __DIR__.'/sso-panel.php';
     require __DIR__.'/assistant.php';
 });

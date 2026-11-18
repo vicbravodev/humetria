@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Assistant\Data\RegulationChunk;
 use App\Modules\Assistant\Support\RegulationIndex;
 use App\Modules\Assistant\Tools\SearchRegulations;
 use App\Modules\Tenancy\Models\Tenant;
@@ -13,15 +14,57 @@ beforeEach(function (): void {
     $this->scope = assistantScopeIn(Tenant::factory()->create());
 });
 
-it('indexes every criterion of the norms it covers', function (): void {
+it('indexes every criterion of the norms written as numbered criteria', function (): void {
     $expected = 0;
 
     foreach (config()->array('humi.regulations') as $path) {
-        $expected += preg_match_all('/^### C-\d+\./m', (string) file_get_contents(base_path((string) $path)));
+        $expected += preg_match_all('/^(### |\*\*)C-\d+\./m', (string) file_get_contents(base_path((string) $path)));
     }
 
-    expect(resolve(RegulationIndex::class)->all())->toHaveCount($expected)
-        ->and($expected)->toBeGreaterThan(40);
+    $criteria = array_filter(resolve(RegulationIndex::class)->all(), fn (RegulationChunk $chunk): bool => str_starts_with($chunk->id, 'C-'));
+
+    expect($criteria)->toHaveCount($expected)
+        ->and($expected)->toBeGreaterThan(60);
+});
+
+it('reads every criteria document of docs/normas, so a new norm reaches Humi with its criteria', function (): void {
+    $indexed = config()->array('humi.regulations');
+    $norms = array_count_values(array_map(fn (RegulationChunk $chunk): string => $chunk->norm, resolve(RegulationIndex::class)->all()));
+
+    foreach (glob(base_path('docs/normas/*/criterios.md')) ?: [] as $document) {
+        $path = str_replace(base_path().'/', '', $document);
+
+        expect($indexed)->toContain($path);
+        expect($norms[array_search($path, $indexed, true)] ?? 0)->toBeGreaterThan(3, "{$path} gives Humi almost nothing to read");
+    }
+});
+
+it('reads the Ley Silla criteria, written as bold paragraphs', function (): void {
+    $chunk = resolve(RegulationIndex::class)->search('asientos suficientes con respaldo', 1)[0];
+
+    expect($chunk->norm)->toBe('Ley Silla')
+        ->and($chunk->id)->toBe('C-01')
+        ->and($chunk->title)->toBe('Asientos suficientes, a disposición de todas las personas')
+        ->and($chunk->text)->toContain('asientos o sillas con respaldo');
+});
+
+it('reads the working time criteria by their numbered points, with their origin', function (): void {
+    $chunk = resolve(RegulationIndex::class)->search('horas extra trabajo extraordinario', 1)[0];
+
+    expect($chunk->norm)->toBe('Jornada')
+        ->and($chunk->id)->toBe('2.3')
+        ->and($chunk->title)->toBe('Horas extra')
+        ->and($chunk->source)->toBe('Norma')
+        ->and($chunk->text)->toContain('doce horas en una semana');
+});
+
+it('reads the compensation criteria by their numbered sections', function (): void {
+    $chunk = resolve(RegulationIndex::class)->search('cesantía y vejez cuota patronal', 1)[0];
+
+    expect($chunk->norm)->toBe('Compensación')
+        ->and($chunk->id)->toBe('2.1')
+        ->and($chunk->title)->toBe('Cesantía y vejez, cuota patronal (% del SBC)')
+        ->and($chunk->text)->toContain('3.150');
 });
 
 it('finds the criterion that answers a question, with its norm and its source', function (): void {
@@ -87,4 +130,12 @@ it('names each criterion it found as a source, with its norm and number, and non
 
 it('takes only a query from the model', function (): void {
     expect(array_keys(resolve(SearchRegulations::class, ['scope' => $this->scope])->schema(new JsonSchemaTypeFactory)))->toBe(['query']);
+});
+
+it('tells the model every norm it can look up, so it reaches for it on any of them', function (): void {
+    $description = (string) resolve(SearchRegulations::class, ['scope' => $this->scope])->description();
+
+    foreach (array_keys(config()->array('humi.regulations')) as $norm) {
+        expect($description)->toContain((string) $norm);
+    }
 });

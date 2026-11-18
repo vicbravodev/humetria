@@ -258,6 +258,7 @@ return [
             'tenant.seating.certificate' => 'only for a center with nobody standing; the offices have three positions',
             'tenant.telework.certificate' => 'only for a center with nobody teleworking; the offices have twelve',
             'tenant.assistant.conversations.show' => 'the demo has no conversation with Humi',
+            'tenant.sso.show' => 'single sign-on is an Enterprise module: the demo has no plan, so the page is a 404',
             'tenant.telework.notices.show' => 'the demo has no notice of a teleworker',
             // ponytail: the «Por jefe» list of such a pulse still links each manager to this 404 (Engagement, not the demo).
             'tenant.pulse.managers.show' => 'the demo\'s pulses ask nothing about the manager: no manager of theirs has results to open',

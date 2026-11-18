@@ -8,7 +8,13 @@ import {
 } from '@/components/landing/landing-layout';
 import { cn } from '@/lib/utils';
 
-export default function DemoSection() {
+type Props = {
+    /** The route of the page the section is on, and its tool: the form starts with it chosen. */
+    page?: string | undefined;
+    tool?: string | undefined;
+};
+
+export default function DemoSection({ page, tool }: Props) {
     return (
         <section
             id="agenda-una-demo"
@@ -26,15 +32,15 @@ export default function DemoSection() {
                         Agenda una demo
                     </h2>
                     <p className={LEAD}>
-                        Cuéntanos qué herramientas te interesan y te mostramos
-                        Humetría con tu caso. La prueba gratis la vemos en la
-                        misma llamada, para que empieces con tu gente sin perder
+                        Déjanos cómo contactarte y te mostramos Humetría con un
+                        caso como el tuyo. La prueba gratis la vemos en la misma
+                        llamada, para que empieces con tu gente sin perder
                         tiempo.
                     </p>
                     <DemoNextSteps />
                 </div>
                 <div className="min-w-0">
-                    <DemoRequestForm />
+                    <DemoRequestForm page={page} tool={tool} />
                 </div>
             </div>
         </section>

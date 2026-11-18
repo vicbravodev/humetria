@@ -43,6 +43,7 @@ final class TenantRules
         'register',
         'reset-password',
         'settings',
+        'sso',
         'superadmin',
         'two-factor-challenge',
         'user',

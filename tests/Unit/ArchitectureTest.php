@@ -47,10 +47,12 @@ it('has the Engagement module registered in the architecture rules', function ()
     expect(modules())->toContain('Engagement');
 });
 
-// Humi never reads the comments of a climate survey: Engagement is not something Assistant may use.
-arch('Assistant does not use Engagement')
+// Humi never reads the comments of a climate survey: of Engagement, Assistant uses only the standing of each survey
+// (states and counts of the whole company), never anything else of the module.
+arch('Assistant uses of Engagement only its standing')
     ->expect('App\Modules\Assistant')
-    ->not->toUse('App\Modules\Engagement');
+    ->not->toUse('App\Modules\Engagement')
+    ->ignoring(['App\Modules\Engagement\Contracts\EngagementStanding', 'App\Modules\Engagement\Data\SurveyStanding']);
 
 arch()->preset()->php();
 

@@ -1,17 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import {
-    Activity,
-    Armchair,
-    CalendarDays,
-    CircleDollarSign,
-    Clock,
-    EyeOff,
-    Laptop,
-    Layers,
-    MessageSquareText,
-    Network,
-    ShieldCheck,
-} from 'lucide-react';
+import { EyeOff, Layers, ShieldCheck } from 'lucide-react';
 import {
     TOOLS,
     type LandingTool,
@@ -52,13 +40,20 @@ export const FAMILIES: readonly LandingFamily[] = [
     },
     {
         key: 'operations',
-        name: 'Lleva el día a día',
+        name: 'Personas y sueldos',
         short: 'Operación',
-        hint: 'Personas, vacaciones y sueldos',
+        hint: 'Vacaciones, estructura y compensación',
         icon: Layers,
         tools: ['leave', 'org_chart', 'compensation'],
     },
 ];
+
+/** The class that dresses a family's things in its color (`.family-*` in app.css: `text-family`, `bg-family-soft`). */
+export const FAMILY_CLASS: Record<FamilyKey, string> = {
+    compliance: 'family-compliance',
+    listening: 'family-listening',
+    operations: 'family-operations',
+};
 
 /** The family's tools, in the family's order. */
 export function familyTools(family: LandingFamily): LandingTool[] {
@@ -71,15 +66,3 @@ export function familyTools(family: LandingFamily): LandingTool[] {
 export function familyOf(tool: ToolKey): LandingFamily {
     return FAMILIES.find((family) => family.tools.includes(tool)) ?? COMPLIANCE;
 }
-
-export const TOOL_ICONS: Record<ToolKey, LucideIcon> = {
-    nom_035: ShieldCheck,
-    nom_037: Laptop,
-    ley_silla: Armchair,
-    attendance: Clock,
-    complaints: MessageSquareText,
-    engagement: Activity,
-    leave: CalendarDays,
-    org_chart: Network,
-    compensation: CircleDollarSign,
-};

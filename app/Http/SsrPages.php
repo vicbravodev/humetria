@@ -15,7 +15,20 @@ use Illuminate\Support\Facades\Cache;
 final class SsrPages
 {
     /** @var array<string, string> route name => component */
-    public const array ALLOWED = ['home' => 'landing', 'privacy-notice' => 'privacy-notice'];
+    public const array ALLOWED = [
+        'home' => 'landing',
+        'privacy-notice' => 'privacy-notice',
+        'tools.nom_035' => 'tool',
+        'tools.nom_037' => 'tool',
+        'tools.ley_silla' => 'tool',
+        'tools.complaints' => 'tool',
+        'tools.compensation' => 'tool',
+        'tools.attendance' => 'tool',
+        'tools.leave' => 'tool',
+        'tools.org_chart' => 'tool',
+        'tools.engagement' => 'tool',
+        'guides.workday-2027' => 'guide',
+    ];
 
     /** Set for a few seconds after Node could not be reached, so a stuck Node does not cost every visit its timeout. */
     public const string CIRCUIT_KEY = 'ssr:circuit-open';

@@ -61,6 +61,7 @@ final class HoursCalculator
             OverLimit::DayOver12Hours->value => $dayOver12Hours,
             OverLimit::DailyOvertimeOver4->value => $overtimeByDay !== [] && max($overtimeByDay) > LegalLimits::DAILY_OVERTIME_MAX,
             OverLimit::OvertimeDaysOver4->value => count($overtimeByDay) > LegalLimits::OVERTIME_DAYS_MAX,
+            OverLimit::WeeklyOvertimeOverCap->value => $triple > 0,
             OverLimit::TripleCapExceeded->value => $triple > LegalLimits::TRIPLE_WEEKLY_MAX,
         ]));
 

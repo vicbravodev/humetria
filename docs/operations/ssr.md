@@ -53,7 +53,8 @@ Ojo con el nombre: el paquete de Inertia lee `INERTIA_SSR_ENSURE_BUNDLE_EXISTS`,
 
 Variables que no son de este servicio pero intervienen: `APP_URL` (Q12 del diseño: sigue sin confirmar el valor en Dokploy; solo
 bloquea la redirección de `www`) y el secreto de GitHub `DOKPLOY_WEBHOOK_URL`, el webhook "Deploy" de Dokploy: sin él, `deploy.yml`
-publica las imágenes pero no redespliega ni comprueba el sitio.
+publica las imágenes pero no redespliega ni comprueba el sitio. El paso lo llama como un push de GitHub a `main` y falla si Dokploy
+no responde «Compose deployed successfully»: un POST vacío recibe «Branch Not Match» y no despliega nada.
 
 ## 3. Primer encendido, en orden
 
@@ -144,20 +145,32 @@ código 1 para que `restart: unless-stopped` lo levante. Sus líneas (`ssr probe
 
 Con `POSTHOG_PROJECT_TOKEN` (`phc_…`) y `POSTHOG_CONSENT_DEFAULT=granted` la landing mide a quien no ha iniciado sesión; con
 `denied` (el valor por omisión) el documento no lleva el bloque `analytics-config`, `posthog-js` no se descarga, la CSP no abre el
-origen de PostHog y no se escribe la cookie `humetria_acq`. Solo la landing: el panel, las encuestas y los portales no cargan PostHog.
+origen de PostHog y no se escribe la cookie `humetria_acq`. Solo las páginas públicas medidas (la landing, la página de cada
+herramienta y la guía de jornada: `Analytics::measuredRoutes()`): el panel, las encuestas y los portales no cargan PostHog.
 El servidor reporta sus errores con solo el token (ver "Errores").
 
 ### Reglas de privacidad de la medición
 
 - PostHog (nube US, `posthog-js` en su build, sin scripts externos) arranca solo en el documento de la landing
-  (`App\Http\Analytics`: ruta `home`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
+  (`App\Http\Analytics::measuredRoutes()`: `home`, `tools.*` y `guides.workday-2027`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
 - Sin autocapture, sin grabación de sesión, sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento
   local) y sin IP. A PostHog no se le manda nada de la persona: la dirección sin más query que las `utm_*` y, de un referente de
   este sitio, solo su origen (`resources/js/lib/analytics.ts` lo impone en `before_send`).
 - Solo los eventos del catálogo de abajo; uno nuevo se agrega aquí. Un solo escucha de clics (`use-landing-measurement`).
   Medir el panel (`/admin`), las encuestas o los portales es un trabajo aparte con su revisión de privacidad.
+- Excepción: la grabación anónima del panel de una empresa (`resources/js/lib/session-recording.ts`), solo con
+  `POSTHOG_SESSION_RECORDING=true`. Una segunda instancia de PostHog (`posthog-js/full/no-external`, el grabador dentro del
+  bundle) que se descarga en la primera pantalla grabable: hay empresa, sesión propia y nadie suplanta, y la pantalla no está
+  en `UNRECORDED` (quejas, Guía I por acontecimiento, lista de Guía I, Humi, cuenta personal); el dock de Humi lleva
+  `ph-no-capture`. Muestra la interfaz y oculta los datos de la empresa (`resources/js/lib/recording-mask.ts`): todo texto que
+  contenga un valor de las props de la página (nombres, empresa, quien inició sesión), lo que tenga forma de correo, teléfono,
+  CURP, RFC o monto, las opciones de búsqueda y lo marcado `ph-mask` (las iniciales); además todos los campos y todo atributo
+  que no sea de forma (`maskAttribute`); el reproductor
+  ve la pantalla por su componente, no por su dirección; solo sale `$snapshot`, con id aleatorio en memoria, sin perfil ni
+  IP. La CSP abre en `connect-src` `us-assets.i.posthog.com` para leer la configuración de replay del proyecto (JSON).
 - La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente externo,
-  nunca una URL ni identificadores de clic). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
+  nunca una URL). Con consentimiento `granted` también el identificador del último clic en un anuncio (`gclid`, `gbraid` o
+  `wbraid`), que va a la solicitud y se borra a los 90 días (`demos:forget-ad-clicks`, cada noche). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
   consentimiento `granted`. Lo que diga el aviso de privacidad sobre cookies coincide con el código
   (`tests/Feature/PrivacyNoticeMatchesCodeTest.php`).
 - Todo enlace que sale de la landing o llega a ella es un `<a href>`, no un `<Link>` de Inertia (salvo el logo de la cabecera,
@@ -172,11 +185,11 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 | Evento | Propiedad | Cuándo |
 |--------|-----------|--------|
 | `$pageview` | `$current_url` limpia | Al abrir la landing |
-| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works` | Clic en un llamado a la demo o a "cómo funciona" |
+| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works`, `sticky_demo`, `guide_tool`, `guide_demo` | Clic en un llamado a la demo o a "cómo funciona" |
+| `tool_page_click` | `target`: herramienta | Clic en la tarjeta de una herramienta (landing) o en otra herramienta (su página) |
 | `nav_click` | `target`: id de la sección | Clic en el menú de la cabecera |
 | `sign_in_click` | `target`: `header` | Clic en "Iniciar sesión" |
-| `family_click`, `family_selected` | `target`: familia | Familia en el héroe, o pestaña de familia |
-| `tool_selected` | `target`: herramienta | Pestaña de una herramienta |
+| `family_click` | `target`: familia | Familia en el héroe |
 | `film_control`, `film_chapter`, `video_control` | `target` | Controles de los videos |
 | `privacy_area_selected` | `target`: área | Demo de privacidad |
 | `privacy_notice_click` | `target`: `footer`, `compliance`, `demo_form` | Clic hacia el aviso de privacidad |
@@ -189,7 +202,35 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 | `demo_request_stored` | `profile`, `workforce`, `tools_count`, `utm_*`, `referrer_host` | Lo mismo, dicho por el servidor: no lo frena un bloqueador |
 
 `generate_lead` y `demo_request_stored` cuentan lo mismo; la diferencia entre ambos es lo que bloquean los navegadores. La conversión
-principal del embudo es `demo_request_stored`. No se guardan `gclid`, `gbraid` ni `wbraid`.
+principal del embudo es `demo_request_stored`.
+
+### Conversiones para Google Ads
+
+Google Ads aprende de las demos por importación de clics fuera de línea, sin etiqueta de Google en la landing:
+
+1. La solicitud guarda el identificador del último clic (ver arriba); el `gclid` solo llega con el etiquetado automático de la cuenta.
+2. En la consola de demos, **Conversiones para Google Ads (CSV)** descarga todas las solicitudes con `gclid` de los últimos 90 días,
+   con la hora de la Ciudad de México y el nombre de `GOOGLE_ADS_CONVERSION_NAME` (debe ser idéntico al de la acción de conversión).
+3. Se sube en Google Ads → Objetivos → Conversiones → Cargas. Subir el archivo entero cada semana no duplica: Google descarta la
+   conversión con el mismo clic, nombre y hora.
+4. Los clics de iOS que llegan con `gbraid` o `wbraid` y sin `gclid` (frecuentes en Demand Gen) salen en otro archivo,
+   **Conversiones de iOS (CSV)**, con las columnas `GBRAID` y `WBRAID` y un solo identificador por fila. Confirma en la primera carga
+   que Google lo acepta; si no, súbelo por Data Manager, que sí toma esas columnas.
+5. Una solicitud de prueba con un `gclid` inventado se borra antes de exportar: Google la rechaza, pero ensucia el archivo.
+6. La solicitud guarda además la palabra clave del sufijo de URL final (`utm_term`, `utm_content` y `matchtype`), y el evento
+   `demo_request_stored` la lleva, para saber qué palabra trajo cada demo. PostHog conserva `matchtype` en la dirección del pageview.
+
+### Páginas por herramienta
+
+Cada herramienta tiene su página (`App\Http\ToolPages`: `/registro-de-jornada`, `/nom-035`, `/nom-037`, `/ley-silla`, `/buzon-de-quejas`,
+`/compensacion`, `/vacaciones-y-permisos`, `/organigrama`, `/clima-laboral`) y hay una guía, `/guias/registro-de-jornada-2027`. Su texto
+vive en `App\Http\ToolContent\*` y lo legal sale de `docs/normas/`. Se renderizan en Node, son indexables, están en `sitemap.xml`,
+guardan la procedencia como la landing y se miden con los mismos eventos. Su JSON-LD: `SoftwareApplication`, `FAQPage`, `VideoObject`
+y `BreadcrumbList` (la guía, `Article`). El formulario de demo de cada una vuelve a la misma página (campo `page`).
+
+Cada página lleva capturas reales de la empresa demo en `public/images/tools` (`{captura}-light.webp` y `-dark.webp`; las del
+celular, `{captura}-mobile.webp`), 1520×1100 recortadas al área de contenido. Para refrescarlas: prepara la demo dentro de una prueba
+de navegador temporal, toma las pantallas a 1440×900 en claro y oscuro, recórtalas sin la barra lateral y conviértelas a WebP.
 
 ### Errores
 

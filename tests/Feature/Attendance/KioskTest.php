@@ -128,7 +128,19 @@ describe('the screen', function (): void {
         $show()->assertInertia(fn (AssertableInertia $page) => $page->where('qrSeconds', 45));
     });
 
+    it('names the zone of the clock: the center\'s, not the company\'s', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:00', 'UTC'));
+        $this->center->update(['timezone' => 'America/Tijuana']);
+        $token = kioskToken();
+
+        $this->withCookie('attendance_kiosk', $token)->get(route('attendance.device.kiosk.show', $this->tenant->slug))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('timezone', 'America/Tijuana')
+                ->where('timezoneLabel', 'Hora del Noroeste, UTC−8 · Tijuana'));
+    });
+
     it('shows the page of the QR to a screen with its token', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:10.250', 'UTC'));
         $token = kioskToken();
 
         $this->withCookie('attendance_kiosk', $token)->get(route('attendance.device.kiosk.show', $this->tenant->slug))
@@ -139,6 +151,8 @@ describe('the screen', function (): void {
                 ->where('qrUrl', route('attendance.device.kiosk.qr', $this->tenant->slug))
                 // The clock on the screen is read on the company's clock, whatever the tablet's zone.
                 ->where('timezone', 'America/Mexico_City')
+                // The server's time, so a tablet with the wrong time still shows the time the marks are taken at.
+                ->where('now', CarbonImmutable::now()->getTimestampMs())
                 ->missing('token'));
     });
 
@@ -157,6 +171,8 @@ describe('the screen', function (): void {
                 'qr' => $response->json('qr'),
                 'expiresAt' => '2026-11-07T12:00:30+00:00',
                 'expiresIn' => 20,
+                // Each code brings the server's time again: a screen on for months follows it, not the tablet's clock.
+                'now' => CarbonImmutable::parse('2026-11-07 12:00:10', 'UTC')->getTimestampMs(),
             ]);
         expect($response->json('qr'))->toStartWith('data:image/svg+xml;base64,')
             ->and(KioskDevice::query()->sole()->last_seen_at?->toIso8601String())->toBe('2026-11-07T12:00:10+00:00');
