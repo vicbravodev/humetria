@@ -71,7 +71,9 @@ it('says the ad click id goes to Google Ads without who asked, only with measure
     expect($text)->toContain('identificador del clic')->toContain('Google Ads')
         ->toContain('sin tu nombre, correo, teléfono ni empresa')
         ->toContain('a los '.ForgetAdClicks::DAYS.' días de tu solicitud')
-        ->not->toContain('No guardamos identificadores de clic');
+        ->not->toContain('No guardamos identificadores de clic')
+        // In plain words, as the other notices say it: the names of Google's parameters tell a reader nothing.
+        ->not->toContain('gclid')->not->toContain('gbraid')->not->toContain('wbraid');
 });
 
 it('says the theme preference lasts a year, as the appearance hook writes it', function (): void {
