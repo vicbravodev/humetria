@@ -150,8 +150,10 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
 - Las respuestas anónimas (Guías II/III, Ley Silla, clima y pulso) viven en tablas **sin ninguna llave** hacia empleado,
   invitación ni token. La invitación solo registra "ya contestó". El enlace es de un solo uso.
 - IDs de respuestas: UUID v4 aleatorio (nunca ordenable por tiempo). RH nunca ve la hora exacta de cada respuesta.
-- Todo resultado agregado aplica el **mínimo de respondentes por grupo**: 5, y `RESULTS_MIN_GROUP` solo puede subirlo
-  (`config/results.php`). Debajo del mínimo el grupo no se muestra; el mínimo se aplica después de cada filtro.
+- Todo resultado agregado aplica el **mínimo de respondentes por grupo** de la empresa (`Tenancy\Contracts\GroupMinimums`):
+  5 por omisión, de 1 a 50, solo el dueño lo cambia, y cada campaña o encuesta lo congela al lanzarse; `RESULTS_MIN_GROUP`
+  es solo el default de la plataforma. Debajo del mínimo el grupo no se muestra; se aplica después de cada filtro. Con 1
+  (sin mínimo) ningún texto promete ocultar: advierte con honestidad que un grupo muy pequeño podría identificar respuestas.
 - La Guía I sí es identificada (obligación de canalizar, numeral 5.5) y solo la ven roles autorizados.
 - Toda página que ve RH tiene un test que afirma que sus props de Inertia no contienen respuestas individuales.
 - El modelo de amenaza es RH y la aplicación, no el operador con acceso a la base de datos.

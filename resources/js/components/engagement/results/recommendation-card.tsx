@@ -3,17 +3,21 @@ import RecommendationScale from '@/components/engagement/results/recommendation-
 import ProtectedCell from '@/components/humetria/protected-cell';
 import { subtractionText } from '@/lib/engagement/results';
 import { signedText } from '@/lib/engagement/trend';
+import { tooFewText } from '@/lib/group-minimum';
 import type { EngagementRecommendation } from '@/types';
 
 /**
  * The recommendation index with its scale drawn and how it is calculated: how many would recommend the company as a
- * place to work against how many would not. The three shares show from five answers; the index only from thirty,
+ * place to work against how many would not. The three shares show from the minimum per group; the index only from thirty,
  * because one person changes it too much below.
  */
 export default function RecommendationCard({
     recommendation,
+    minGroup,
 }: {
     recommendation: EngagementRecommendation;
+    /** The minimum per group the survey froze. */
+    minGroup: number;
 }) {
     const { bands, index, shown } = recommendation;
     const subtraction = subtractionText(bands, index);
@@ -30,7 +34,7 @@ export default function RecommendationCard({
                 <div className="flex flex-col gap-2">
                     <ProtectedCell />
                     <p className="text-sm text-muted-foreground">
-                        Menos de 5 respuestas: no se muestra.
+                        {tooFewText(minGroup, 'respuestas')}: no se muestra.
                     </p>
                 </div>
             ) : (

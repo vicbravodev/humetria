@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { peopleResultsText } from '@/lib/share-results';
 import { share } from '@/routes/tenant/disclosure/results';
 import type { EvidenceCenter } from '@/types';
 
@@ -65,11 +66,11 @@ export default function PeopleResultsCard({
                             </Button>
                         )}
                     </div>
-                    <p className="text-sm">
-                        Verán cuántas personas contestaron y los temas que más
-                        atención necesitan. Nunca datos de áreas o grupos con
-                        menos de 5 personas.
-                    </p>
+                    {center.results.minimum !== null && (
+                        <p className="text-sm">
+                            {peopleResultsText(center.results.minimum)}
+                        </p>
+                    )}
                 </div>
             ))}
             <ul className="flex flex-col gap-2.5">

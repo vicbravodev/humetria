@@ -18,4 +18,7 @@ interface AnswerDistributions
      * after the filter. A question counts only the people who answered it: whoever said «no» to the gate answered none.
      */
     public function of(string $campaignId, ?string $areaId = null): SurveyDistribution;
+
+    /** The same counts with the minimum the survey froze when it launched, instead of the company's now. */
+    public function at(int $minimum): self;
 }

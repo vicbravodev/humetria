@@ -7,20 +7,24 @@ namespace App\Modules\Complaints\Support;
 use App\Modules\Complaints\Enums\ComplaintStatus;
 use App\Modules\Complaints\Enums\ComplaintType;
 use App\Modules\Complaints\Models\Complaint;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 
 /**
  * The summary of the channel for who manages it (criterio C-47): totals by type and by status, every cell under the minimum of
  * people hidden with the complementary suppression, and never a breakdown by center, category, who it is against or day: the
- * numbers say that the channel operates, not who used it. The cases already purged count, through their skeleton.
+ * numbers say that the channel operates, not who used it. The cases already purged count, through their skeleton. The channel
+ * has no launch, so the minimum is the company's as it is now: with 1 (none) every exact count shows.
  */
 final readonly class ComplaintStatistics
 {
+    public function __construct(private GroupMinimums $minimums) {}
+
     /**
      * @return array{minimum: int, total: int|null, byType: list<array{value: string, label: string, count: int|null}>, byStatus: list<array{value: string, label: string, count: int|null}>}
      */
     public function summary(): array
     {
-        $minimum = config()->integer('complaints.min_group');
+        $minimum = $this->minimums->current();
         $types = [];
         $statuses = [];
 

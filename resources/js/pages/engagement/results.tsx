@@ -35,10 +35,12 @@ export default function Results(props: EngagementResults) {
                         }
                     />
                 )}
-                {participation === null || participation.responses < 5 ? (
+                {participation === null ||
+                participation.responses < props.minGroup ? (
                     <ResultsWaiting
                         surveyId={survey.id}
                         open={participation === null}
+                        minGroup={props.minGroup}
                     />
                 ) : (
                     <ResultsBody results={props} />

@@ -1,3 +1,4 @@
+import { hidesSmallGroups } from '@/lib/group-minimum';
 const WHAT: Record<string, string> = {
     GetComplianceOverview: 'el estado de cumplimiento',
     GetCampaignProgress: 'el avance de campañas',
@@ -16,5 +17,7 @@ export function stepLabel(tool: string, done: boolean): string {
 
 /** The line that says the minimum of people per group was applied to results. */
 export function minGroupStep(minGroup: number): string {
-    return `Apliqué el mínimo de ${minGroup} personas por grupo`;
+    return hidesSmallGroups(minGroup)
+        ? `Apliqué el mínimo de ${minGroup} personas por grupo`
+        : 'Sin mínimo de personas por grupo';
 }

@@ -1,6 +1,7 @@
 import { Lock } from 'lucide-react';
 import AreaFilter from '@/components/humetria/area-filter';
 import SurveyQuestionRow from '@/components/seating/survey-question-row';
+import { hidesSmallGroups } from '@/lib/group-minimum';
 import { countOf } from '@/lib/plural';
 import type { SurveyResults as Results } from '@/types';
 
@@ -26,9 +27,10 @@ export default function SurveyResults({
                 </h2>
                 <p className="mt-2 text-muted-foreground">
                     Contestaron{' '}
-                    {countOf(results.answered, 'persona', 'personas')}. Con
-                    menos de {minGroup} respuestas no se muestra nada, para que
-                    nadie pueda saber quién contestó qué.
+                    {countOf(results.answered, 'persona', 'personas')}.{' '}
+                    {hidesSmallGroups(minGroup)
+                        ? `Con menos de ${minGroup} respuestas no se muestra nada, para que nadie pueda saber quién contestó qué.`
+                        : 'Todavía no hay respuestas que mostrar.'}
                 </p>
             </section>
         );

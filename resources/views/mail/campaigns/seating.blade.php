@@ -5,7 +5,7 @@
 <p>Hola, {{ $name }}:</p>
 <p>{{ $company->tradeName }} quiere saber si en {{ $workCenter }} hay asientos disponibles, si puede usarlos y si las pausas se respetan. Es parte del cumplimiento de la Ley Silla.</p>
 @include('mail.partials.callout', ['tone' => 'accent', 'icon' => 'lock', 'lines' => [
-    e("Sus respuestas son anónimas: nadie de su empresa puede ver lo que contesta. Recursos Humanos solo recibe resultados de grupos de {$minGroup} o más personas."),
+    e('Sus respuestas son anónimas: nadie de su empresa puede ver lo que contesta. '.$groupNotice),
 ]])
 @include('mail.partials.facts', ['facts' => ['Tiempo' => "Unos {$minutes} minutos", 'Desde' => 'Su celular o computadora', 'Hasta el' => $lastDay]])
 <x-mail::action>

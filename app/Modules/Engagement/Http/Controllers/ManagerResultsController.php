@@ -46,6 +46,7 @@ final class ManagerResultsController extends Controller
             'kind' => $kind->value,
             'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value],
             'available' => $results->available(),
+            'minGroup' => $survey->groupMinimum(),
             // ponytail: one read of the names of every shown group; a company with thousands of managers wants a page query in Roster.
             'managers' => (new LengthAwarePaginator(array_slice($rows, ($page - 1) * self::PER_PAGE, self::PER_PAGE), count($rows), self::PER_PAGE, $page, ['path' => LengthAwarePaginator::resolveCurrentPath()]))->withQueryString(),
             'hasHidden' => $groups->hasHidden ?? false,
@@ -71,6 +72,7 @@ final class ManagerResultsController extends Controller
         return Inertia::render('engagement/manager', [
             'kind' => $kind->value,
             'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value],
+            'minGroup' => $survey->groupMinimum(),
             'manager' => ['id' => $manager, 'name' => $this->roster->find($manager)->name ?? 'Sin nombre'],
             'feedback' => [
                 'items' => $feedback->items,
@@ -100,7 +102,7 @@ final class ManagerResultsController extends Controller
         // By id, a random UUID: neither the order of arrival nor of the people shows. Only the text is read.
         $query = Comment::query()->where('survey_id', $survey->id)->where('comment_group_id', $manager)->whereIn('item_key', ['manager.keep', 'manager.change'])->orderBy('id');
 
-        if (! $this->thresholds->comments($query->count())) {
+        if (! $this->thresholds->of($survey)->comments($query->count())) {
             return ['state' => 'few', 'page' => null];
         }
 

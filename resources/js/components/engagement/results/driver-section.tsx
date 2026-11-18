@@ -5,8 +5,10 @@ import type { EngagementItemSection } from '@/types';
 /** The questions of one theme from the least favorable, each against the figure of the theme (its vertical mark). */
 export default function DriverSection({
     section,
+    minGroup,
 }: {
     section: EngagementItemSection;
+    minGroup: number;
 }) {
     const score = sectionScore(section);
 
@@ -31,7 +33,12 @@ export default function DriverSection({
             </div>
             <ol className="flex flex-col divide-y">
                 {lowestFirst(section.items).map((item) => (
-                    <ItemRow key={item.key} item={item} reference={score} />
+                    <ItemRow
+                        key={item.key}
+                        item={item}
+                        reference={score}
+                        minGroup={minGroup}
+                    />
                 ))}
             </ol>
         </section>

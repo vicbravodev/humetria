@@ -41,7 +41,8 @@ export default function HumiEmptyState({
                     className="mt-0.5 size-4 shrink-0 text-primary"
                 />
                 Humi nunca ve respuestas individuales ni la Guía I. Solo
-                resultados de grupos de 5 personas o más.
+                resultados de grupos, con el mínimo de personas que fijó cada
+                evaluación.
             </p>
         </div>
     );

@@ -33,14 +33,14 @@ final class PortalFeedbackController extends Controller
             'slug' => $tenant,
             'company' => $identity->companyName,
             'survey' => $survey === null || $feedback === null ? null : ['name' => $survey->name],
-            'feedback' => $feedback === null ? null : $this->props($feedback),
+            'feedback' => $survey === null || $feedback === null ? null : $this->props($feedback, $survey->groupMinimum()),
         ]);
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function props(ManagerFeedbackData $feedback): array
+    private function props(ManagerFeedbackData $feedback, int $minGroup): array
     {
         // Only a summary that is ready, or on its way, is told; any other reason it is missing stays unsaid.
         $summary = in_array($feedback->summaryStatus, [SummaryStatus::Ready, SummaryStatus::Pending], true)
@@ -53,6 +53,7 @@ final class PortalFeedbackController extends Controller
             'opportunities' => $feedback->opportunities,
             'line' => $feedback->line,
             'summary' => $summary,
+            'minGroup' => $minGroup,
         ];
     }
 }

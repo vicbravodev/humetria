@@ -5,7 +5,7 @@
 <p>Hola, {{ $name }}:</p>
 <p>{{ $company->tradeName }} aplica la evaluación de factores de riesgo psicosocial que pide la NOM-035-STPS-2018. Sirve para identificar y prevenir lo que en el trabajo le puede causar estrés.</p>
 @include('mail.partials.callout', ['tone' => 'accent', 'icon' => 'lock', 'lines' => [
-    e("Nadie de su empresa puede ver lo que contesta sobre su trabajo. Recursos Humanos solo recibe resultados de grupos de {$minGroup} o más personas."),
+    e('Nadie de su empresa puede ver lo que contesta sobre su trabajo. '.$groupNotice),
     // Guía I is identified (criterio C-07): the email says so.
     'La parte sobre acontecimientos traumáticos sí lleva su nombre, para que la empresa pueda ofrecerle atención si la necesita.',
 ]])

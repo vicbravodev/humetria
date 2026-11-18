@@ -44,7 +44,7 @@ final readonly class SendClosingSummary implements ShouldQueue
 
         $guide = ResultsPages::riskGuide($campaign);
         $measured = $guide ?? 'nom035.guide-i';
-        $risk = $guide === null ? null : $this->distribution->of($guide, $this->responses->anonymous($campaign->id, $guide));
+        $risk = $guide === null ? null : $this->distribution->at($campaign->minGroup)->of($guide, $this->responses->anonymous($campaign->id, $guide));
 
         Notification::route('mail', $owner)->notify(new ClosingSummary(
             company: $company,
@@ -55,6 +55,7 @@ final readonly class SendClosingSummary implements ShouldQueue
             domain: $risk !== null && $risk['visible'] ? self::heaviest($risk['domains']) : null,
             hasRisk: $guide !== null,
             requiringAssessment: $this->responses->screeningCounts($campaign->id)['requiring'],
+            minGroup: $campaign->minGroup,
             url: route('tenant.campaigns.results', [$company->slug, $campaign->id]),
             // The Programa de intervención is the next step only when the results ask for one (num. 8.3).
             programUrl: $this->results->forCampaign($campaign)->needingProgram() === [] ? null : route('tenant.campaigns.program', [$company->slug, $campaign->id]),

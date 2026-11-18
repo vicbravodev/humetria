@@ -10,6 +10,7 @@ use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Exceptions\SurveyStateChanged;
 use App\Modules\Engagement\Policies\SurveyPolicy;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use Carbon\CarbonImmutable;
 use Database\Factories\Engagement\SurveyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -39,11 +40,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property list<array{driver: string, level: string}>|null $priorities
  * @property bool $sensitive_mentions
  * @property CarbonImmutable|null $results_published_at
+ * @property int|null $min_group the minimum of people per group frozen at launch; null in a draft
  * @property int $created_by
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'kind', 'pulse_mode', 'status', 'name', 'bank_version', 'items', 'closes_on', 'launched_at', 'closed_at', 'invited', 'priorities', 'sensitive_mentions', 'results_published_at', 'created_by'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'kind', 'pulse_mode', 'status', 'name', 'bank_version', 'items', 'closes_on', 'launched_at', 'closed_at', 'invited', 'priorities', 'sensitive_mentions', 'results_published_at', 'created_by', 'min_group'])] // @pest-mutate-ignore: RemoveArrayItem
 #[Table('engagement_surveys')]
 #[UseFactory(SurveyFactory::class)]
 #[UsePolicy(SurveyPolicy::class)]
@@ -70,6 +72,18 @@ final class Survey extends Model
     }
 
     /**
+     * The fewest people a group of its results needs (criterio C-23): the one frozen when it launched, which the
+     * invitation promised; a draft follows the company's until then. One launched before surveys kept it applied the
+     * platform's, as everyone did then.
+     */
+    public function groupMinimum(): int
+    {
+        $minimums = resolve(GroupMinimums::class);
+
+        return $this->min_group ?? ($this->status === SurveyStatus::Draft ? $minimums->current() : $minimums->platformDefault());
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -85,6 +99,7 @@ final class Survey extends Model
             'launched_at' => 'immutable_datetime',
             'closed_at' => 'immutable_datetime',
             'results_published_at' => 'immutable_datetime',
+            'min_group' => 'integer',
         ];
     }
 }

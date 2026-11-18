@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\CompanyGroupMinimums;
 use App\Modules\Tenancy\Support\CompanyMembers;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\ModuleStates;
@@ -67,6 +68,7 @@ final class ResolveTenant
         $this->tenantContext->set($tenant);
         // A company with no module rows has every module, and the page need not ask.
         resolve(ModuleStates::class)->prime($tenant);
+        resolve(CompanyGroupMinimums::class)->prime($tenant);
         // Roles read before (as the superadmin's, with no team) must be read again inside the company.
         $user->unsetRelation('roles')->unsetRelation('permissions');
         $role = $this->companyRoles->of($user, $tenant);

@@ -4,17 +4,20 @@ import EmptyState from '@/components/humetria/empty-state';
 import { Button } from '@/components/ui/button';
 import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { withheldText } from '@/lib/group-minimum';
 
 /**
  * Results that cannot show yet: a survey still open (each new answer would tell what its author said), or one that
- * closed with fewer than 5 answers in all. Never how many are missing; the way to its progress.
+ * closed with fewer answers in all than the minimum it froze. Never how many are missing; the way to its progress.
  */
 export default function ResultsWaiting({
     surveyId,
     open,
+    minGroup,
 }: {
     surveyId: string;
     open: boolean;
+    minGroup: number;
 }) {
     const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
@@ -37,7 +40,10 @@ export default function ResultsWaiting({
         >
             {open
                 ? 'Mientras sigue abierta, cada respuesta nueva diría qué contestó quien acaba de contestar. Al cerrar se calculan una sola vez.'
-                : 'Se muestran a partir de 5 respuestas, para proteger a quien contestó.'}
+                : withheldText(
+                      minGroup,
+                      `Se muestran a partir de ${minGroup} respuestas, para proteger a quien contestó.`,
+                  )}
         </EmptyState>
     );
 }

@@ -16,5 +16,7 @@ final readonly class CenterSurvey
         public ?string $closesOn,
         public int $participants,
         public int $answered,
+        /** The fewest answers a group of its results needs, frozen when it launched. */
+        public int $minGroup,
     ) {}
 }

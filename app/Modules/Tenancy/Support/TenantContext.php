@@ -30,6 +30,8 @@ final readonly class TenantContext implements CurrentTenant
         Context::add(self::KEY, $tenant->id);
         Context::addHidden(self::DEMO, $tenant->is_demo);
         $this->registrar->setPermissionsTeamId($tenant->id);
+        // The company's minimum comes with the company already read, so asking for it costs no query of its own.
+        resolve(CompanyGroupMinimums::class)->prime($tenant);
     }
 
     public function id(): string

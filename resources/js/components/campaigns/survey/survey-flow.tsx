@@ -20,6 +20,7 @@ export default function SurveyFlow({
     closesOn,
     copy,
     instruments,
+    minGroup,
     next,
     justSent,
     onSent,
@@ -30,6 +31,7 @@ export default function SurveyFlow({
     closesOn: string | null;
     copy: IntroCopy;
     instruments: SurveyInstrument[];
+    minGroup: number | null;
     next: SurveyInstrument;
     /** The guide the person sent on this page a moment ago, if any. */
     justSent: string | null;
@@ -51,6 +53,7 @@ export default function SurveyFlow({
                 instruments={instruments}
                 instrument={next}
                 noun={copy.noun}
+                minGroup={minGroup}
                 onBack={() => setView('intro')}
                 onSent={onSent}
             />

@@ -10,6 +10,7 @@ const LABELS: Record<string, string> = {
     'tenant.module_granted': 'Herramienta concedida',
     'tenant.module_revoked': 'Herramienta quitada',
     'tenant.modules_synced': 'Herramientas del plan aplicadas',
+    'tenant.group_minimum_changed': 'Mínimo por grupo cambiado',
     'tenant_invitation.sent': 'Invitación enviada',
     'tenant_invitation.resent': 'Invitación reenviada',
     'tenant_invitation.cancelled': 'Invitación cancelada',

@@ -33,4 +33,8 @@ describe('minGroupStep', () => {
             'Apliqué el mínimo de 5 personas por grupo',
         );
     });
+
+    it('says there was no minimum to apply when the evaluation has none', () => {
+        expect(minGroupStep(1)).toBe('Sin mínimo de personas por grupo');
+    });
 });

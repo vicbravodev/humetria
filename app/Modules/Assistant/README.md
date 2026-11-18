@@ -50,7 +50,7 @@ preguntó. Implementación: `Support/TenantHumiActivity`.
 - **La conversación es de una persona en una empresa** (`ConversationParticipant`, único por empresa y usuario). El mismo
   usuario en dos empresas tiene dos historias. Lo ajeno, lo de otra empresa y lo inexistente dan el mismo 404.
 - **Anonimato.** Los resultados de riesgo pasan por `Results` (`RiskResults` → `RiskDistribution`): personas por nivel,
-  nunca promedios, solo con la evaluación cerrada (C-27) y con el mínimo por grupo `results.min_group` aplicado después de
+  nunca promedios, solo con la evaluación cerrada (C-27) y con el mínimo por grupo que la evaluación fijó al lanzarse aplicado después de
   filtrar (C-23). Bajo el mínimo no sale ni cuántas respondieron. Humi nunca ve la Guía I ni respuestas individuales.
 - **Historia autoritativa en el servidor.** El navegador manda el último mensaje, la conversación que continúa y la página
   abierta; todo lo demás (`messages`, roles) se ignora. La página se valida contra la empresa.

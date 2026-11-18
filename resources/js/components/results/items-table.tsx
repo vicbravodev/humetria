@@ -7,6 +7,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { tooFewText } from '@/lib/group-minimum';
 import type { ItemSection } from '@/types';
 
 const OPTIONS = [
@@ -18,10 +19,16 @@ const OPTIONS = [
 ];
 
 /**
- * How each question of a section was answered, counted by option. A question answered by fewer than five (those behind
+ * How each question of a section was answered, counted by option. A question answered by fewer than the minimum (those behind
  * a yes/no gate are answered by some) shows no counts.
  */
-export default function ItemsTable({ section }: { section: ItemSection }) {
+export default function ItemsTable({
+    section,
+    minGroup,
+}: {
+    section: ItemSection;
+    minGroup: number;
+}) {
     return (
         <Table>
             <TableCaption className="sr-only">
@@ -51,7 +58,8 @@ export default function ItemsTable({ section }: { section: ItemSection }) {
                                 colSpan={OPTIONS.length}
                                 className="text-right text-sm text-muted-foreground"
                             >
-                                Menos de 5 respuestas: no se muestra
+                                {tooFewText(minGroup, 'respuestas')}: no se
+                                muestra
                             </TableCell>
                         ) : (
                             item.counts.map((count, option) => (

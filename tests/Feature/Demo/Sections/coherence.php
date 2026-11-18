@@ -292,6 +292,7 @@ return [
             DemoRoster::HR.' tenant.members.index' => '403',
             DemoRoster::HR.' tenant.members.invitations.create' => '403',
             DemoRoster::HR.' tenant.plan' => '403',
+            DemoRoster::HR.' tenant.privacy.edit' => '403',
             // The inspection report of NOM-037 is uploaded, not written: it has no template.
             DemoRoster::OWNER.' tenant.telework.writing.show inspection_report' => '404',
             DemoRoster::HR.' tenant.telework.writing.show inspection_report' => '404',

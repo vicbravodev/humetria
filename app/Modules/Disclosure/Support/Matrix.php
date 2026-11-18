@@ -9,6 +9,7 @@ use App\Modules\Disclosure\Enums\DocumentStatus;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Support\Writing\Templates;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -56,7 +57,7 @@ final readonly class Matrix
         'f' => ['Revisa el borrador de las alteraciones a la salud', 'Es un borrador de Humetría. Revísalo con un médico antes de publicarlo en %s.'],
     ];
 
-    public function __construct(private Templates $templates, private ComplaintChannelFeed $channel, private Companies $companies) {}
+    public function __construct(private Templates $templates, private ComplaintChannelFeed $channel, private Companies $companies, private GroupMinimums $minimums) {}
 
     /**
      * Where each thing stands in a center: done, missing, published but not in front of the people («undelivered»), and for
@@ -236,7 +237,7 @@ final readonly class Matrix
 
         return match (true) {
             $has('undelivered') => ['item' => $item, 'title' => 'Pon a la vista de tus personas lo que publicaste', 'text' => 'Aún no lo pueden consultar: activa la página de las personas o registra un cartel, boletín o folleto que lo cubra.', 'action' => ['label' => 'Activar su página', 'href' => route('tenant.disclosure.page', $tenantSlug)]],
-            $item === 'e' && $has('ready') => ['item' => 'e', 'title' => 'Publica los resultados para tus personas', 'text' => 'Verán cuántas personas contestaron y los temas que más atención necesitan; nunca datos de áreas o grupos con menos de 5 personas.', 'action' => ['label' => 'Publicar', 'href' => route('tenant.disclosure.dissemination', $tenantSlug)]],
+            $item === 'e' && $has('ready') => ['item' => 'e', 'title' => 'Publica los resultados para tus personas', 'text' => trans_choice('group-minimum.publish', $this->minimums->current(), ['minimum' => $this->minimums->current()]), 'action' => ['label' => 'Publicar', 'href' => route('tenant.disclosure.dissemination', $tenantSlug)]],
             default => null,
         };
     }

@@ -1,6 +1,7 @@
 import HumiCardFrame from '@/components/assistant/humi-card-frame';
 import LevelBar from '@/components/humetria/level-bar';
 import type { RiskRow, ToolCard } from '@/lib/assistant/tool-cards';
+import { hidesSmallGroups, NO_GROUP_MINIMUM } from '@/lib/group-minimum';
 import { RISK_LEVELS } from '@/lib/results';
 
 const SHOWN = 8;
@@ -53,8 +54,9 @@ export default function HumiRiskCard({
             )}
             {card.minGroup !== null && (
                 <p className="text-caption text-muted-foreground">
-                    Solo se muestran grupos de al menos {card.minGroup}{' '}
-                    personas.
+                    {hidesSmallGroups(card.minGroup)
+                        ? `Solo se muestran grupos de al menos ${card.minGroup} personas.`
+                        : NO_GROUP_MINIMUM}
                 </p>
             )}
         </HumiCardFrame>

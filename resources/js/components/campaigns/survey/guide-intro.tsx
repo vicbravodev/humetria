@@ -1,21 +1,25 @@
 import { ArrowLeft, ArrowRight, IdCard, Lock } from 'lucide-react';
 import SurveyActions from '@/components/campaigns/survey/survey-actions';
 import { Button } from '@/components/ui/button';
+import { groupNoticeText } from '@/lib/group-minimum';
 import type { IntroCopy } from '@/lib/survey';
 import { cn } from '@/lib/utils';
 import type { SurveyInstrument } from '@/types';
 
 /**
- * What the person should know before a guide: Guía I carries their name, and why; Guías II and III are anonymous.
+ * What the person should know before a guide: Guía I carries their name, and why; Guías II and III are anonymous, with the
+ * minimum of people per group the evaluation froze (with none, the warning instead of a promise).
  */
 export default function GuideIntro({
     instrument,
     noun,
+    minGroup,
     onBack,
     onStart,
 }: {
     instrument: SurveyInstrument;
     noun: IntroCopy['noun'];
+    minGroup: number | null;
     onBack: () => void;
     onStart: () => void;
 }) {
@@ -59,8 +63,8 @@ export default function GuideIntro({
                         Esta {noun} es{' '}
                         <strong className="font-semibold">anónima</strong>: sus
                         respuestas no llevan su nombre y nadie de su empresa
-                        puede ver lo que contesta. Los resultados se presentan
-                        solo por grupos.
+                        puede ver lo que contesta.
+                        {minGroup !== null && ` ${groupNoticeText(minGroup)}`}
                     </p>
                 )}
             </div>

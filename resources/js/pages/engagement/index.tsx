@@ -21,6 +21,7 @@ export default function EngagementIndex(props: {
     current: ClimateSurveyCard | null;
     surveys: Paginated<ClimateSurveyHistoryRow>;
     canManage: boolean;
+    minGroup: number;
     modes: PulseModeOption[] | null;
     schedule: PulseSchedule | null;
     frequencies: PulseModeOption[] | null;

@@ -33,6 +33,7 @@ final class ComplianceRoutes
             'tenant.climate.*',
             'tenant.pulse.*',
             'tenant.worker-access.*',
+            'tenant.privacy.*',
         ];
     }
 }

@@ -31,5 +31,7 @@ export type ManagerComment = { body: string };
 export type ManagerResults = {
     survey: { id: string; name: string; status: 'draft' | 'active' | 'closed' };
     available: boolean;
+    /** The minimum per group the survey froze when it launched (criterio C-23); 1 is none. */
+    minGroup: number;
     hasHidden: boolean;
 };

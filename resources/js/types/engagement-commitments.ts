@@ -47,6 +47,8 @@ export type CommitmentOption = { value: string; label: string };
 export type EngagementCommitments = {
     survey: { id: string; name: string; status: string };
     available: boolean;
+    /** The minimum per group the survey froze when it launched (criterio C-23); 1 is none. */
+    minGroup: number;
     canManage: boolean;
     /** The commitments already reached the portal of the people. */
     published: boolean;

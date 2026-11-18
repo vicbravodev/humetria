@@ -127,7 +127,7 @@ it('gives each center who confirmed the policy in force there and where its resu
     $this->get(route('tenant.disclosure.dissemination', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page->component('disclosure/dissemination')
             ->where('centers.total', 2)
-            ->where('centers.data.0', ['id' => $this->north->id, 'name' => 'Planta Norte', 'acks' => ['confirmed' => 1, 'active' => 3], 'results' => ['state' => 'not_applicable', 'closedOn' => null, 'campaignId' => null]])
+            ->where('centers.data.0', ['id' => $this->north->id, 'name' => 'Planta Norte', 'acks' => ['confirmed' => 1, 'active' => 3], 'results' => ['state' => 'not_applicable', 'closedOn' => null, 'campaignId' => null, 'minimum' => null]])
             ->where('centers.data.1.acks', null)
             ->where('records.data.0.mediumLabel', 'Lista de firmas')
             ->where('records.data.0.signatures', 2)
@@ -142,7 +142,7 @@ it('says which center has results ready to publish', function (): void {
 
     $this->get(route('tenant.disclosure.dissemination', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('centers.data', fn ($centers): bool => collect($centers)->firstWhere('id', $this->north->id)['results'] === ['state' => 'ready', 'closedOn' => '10 nov 2026', 'campaignId' => $campaign->id]));
+            ->where('centers.data', fn ($centers): bool => collect($centers)->firstWhere('id', $this->north->id)['results'] === ['state' => 'ready', 'closedOn' => '10 nov 2026', 'campaignId' => $campaign->id, 'minimum' => 5]));
 });
 
 it('keeps a list of signatures with how many signed and its sheet, and no other means with a count, in the database', function (array $attributes): void {
