@@ -11,7 +11,7 @@ export default function Profile({
 }) {
     return (
         <>
-            <Head title="Perfil" />
+            <Head title="Perfil · Ajustes" />
             <ProfileForm mustVerifyEmail={mustVerifyEmail} status={status} />
             <DeleteUser />
         </>

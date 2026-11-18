@@ -48,7 +48,7 @@ export default function SeatingRoute({
 
     return (
         <>
-            <Head title={`Ley Silla · ${workCenter.name}`} />
+            <Head title={`Ruta Ley Silla · ${workCenter.name}`} />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:py-10">
                 <header className="flex max-w-[760px] flex-col gap-2">
                     <h1 className="text-3xl leading-10 font-semibold tracking-[-0.015em] text-balance">

@@ -25,7 +25,7 @@ export default function BenefitCreate(props: {
 
     return (
         <>
-            <Head title="Nueva prestación" />
+            <Head title="Nueva prestación · Compensación" />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <CompensationHeader
                     eyebrow="Compensación · datos del contrato"

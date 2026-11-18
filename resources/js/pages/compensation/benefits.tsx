@@ -60,7 +60,7 @@ export default function Benefits({
 
     return (
         <>
-            <Head title="Prestaciones" />
+            <Head title="Prestaciones · Compensación" />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <ContractDataFrame
                     status={status}

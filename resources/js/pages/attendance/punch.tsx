@@ -55,7 +55,7 @@ export default function Punch({
 
     return (
         <>
-            <Head title="Marcar" />
+            <Head title="Marcar asistencia" />
             <PunchScreen
                 company={company}
                 punch={punch}

@@ -4,7 +4,7 @@ import ThemeChoice from '@/components/settings/theme-choice';
 export default function Appearance() {
     return (
         <>
-            <Head title="Apariencia" />
+            <Head title="Apariencia · Ajustes" />
             <ThemeChoice />
         </>
     );
