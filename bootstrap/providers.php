@@ -15,6 +15,7 @@ use App\Modules\FirstSteps\Providers\FirstStepsServiceProvider;
 use App\Modules\Instruments\Providers\InstrumentsServiceProvider;
 use App\Modules\Interventions\Providers\InterventionsServiceProvider;
 use App\Modules\Leave\Providers\LeaveServiceProvider;
+use App\Modules\Messaging\Providers\MailTrackingServiceProvider;
 use App\Modules\Messaging\Providers\MessagingServiceProvider;
 use App\Modules\Organization\Providers\OrganizationServiceProvider;
 use App\Modules\Responses\Providers\ResponsesServiceProvider;
@@ -54,4 +55,5 @@ return [
     FirstStepsServiceProvider::class,
     SsoServiceProvider::class,
     MessagingServiceProvider::class,
+    MailTrackingServiceProvider::class,
 ];
