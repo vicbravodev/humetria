@@ -79,6 +79,8 @@ const LABELS: Record<string, string> = {
     'sso.domain_verified': 'Dominio de correo verificado',
     'sso.enabled': 'Inicio de sesión único activado',
     'sso.disabled': 'Inicio de sesión único desactivado',
+    'tenancy.channel_enabled': 'WhatsApp activado',
+    'tenancy.channel_disabled': 'WhatsApp desactivado',
     'sso.enforced': 'Inicio de sesión único exigido',
     'sso.enforcement_lifted': 'Inicio de sesión único ya no se exige',
     'sso.signed_in': 'Inicio de sesión con SSO',
