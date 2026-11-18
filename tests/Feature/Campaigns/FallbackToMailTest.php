@@ -165,6 +165,37 @@ it('rolls everything back when there is no mail quota left', function (): void {
     Log::shouldHaveReceived('info')->withArgs(fn (string $event): bool => $event === 'campaign.fallback_without_quota')->once();
 });
 
+it('reuses the rotated link and the hold when the queue retries it: one rotation, one hold, the same link in the mail', function (): void {
+    $reservedBefore = mailReserved($this->tenant);
+    $event = waFailure($this->participant, $this->campaign);
+
+    (new FallBackToMail)->handle($event);
+    $linkAfterFirst = $this->participant->refresh()->surveyToken();
+    (new FallBackToMail)->handle($event);
+
+    expect($this->participant->refresh()->token_version)->toBe(1)
+        ->and($this->participant->surveyToken())->toBe($linkAfterFirst)
+        ->and(mailReserved($this->tenant))->toBe($reservedBefore + 1);
+    Notification::assertSentOnDemand(SurveyInvitation::class, fn (SurveyInvitation $mail, array $channels, AnonymousNotifiable $notifiable): bool => str_contains((string) $mail->toMail($notifiable)->actionUrl, $linkAfterFirst));
+});
+
+it('leaves the person as failed, for RH to resend, when the mail never goes out and the tries run out', function (): void {
+    Log::spy();
+    event(waFailure($this->participant, $this->campaign));
+    $this->participant->update(['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Sent]);
+
+    (new FallBackToMail)->failed(waFailure($this->participant, $this->campaign), new RuntimeException('smtp down'));
+
+    expect($this->participant->refresh()->invitation_status)->toBe(App\Modules\Campaigns\Enums\InvitationStatus::Failed);
+    Log::shouldHaveReceived('warning')->withArgs(fn (string $event, array $context = []): bool => $event === 'campaign.fallback_failed' && $context['exception'] === RuntimeException::class)->once();
+});
+
+it('does not touch an invitation of the other module when its tries run out', function (): void {
+    (new FallBackToMail)->failed(waFailure($this->participant, $this->campaign, type: InvitationReference::ENGAGEMENT_INVITATION), new RuntimeException('x'));
+
+    expect($this->participant->refresh()->invitation_status)->not->toBe(App\Modules\Campaigns\Enums\InvitationStatus::Failed);
+});
+
 it('is a queued listener with three tries and the design backoff', function (): void {
     $listener = new FallBackToMail;
 

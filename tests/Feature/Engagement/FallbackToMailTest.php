@@ -138,6 +138,31 @@ it('rolls everything back when there is no mail quota left', function (): void {
     Log::shouldHaveReceived('info')->withArgs(fn (string $event): bool => $event === 'engagement.fallback_without_quota')->once();
 });
 
+it('reuses the rotated link and the hold when the queue retries it: one rotation, one hold, the same link in the mail', function (): void {
+    $reserved = fn (): int => (int) UsageCounter::query()->where('tenant_id', $this->tenant->id)->where('meter', 'email_campaign')->sum('reserved');
+    $before = $reserved();
+    $event = surveyWaFailure($this->invitation, $this->survey);
+
+    (new FallBackToMail)->handle($event);
+    $link = $this->invitation->refresh()->surveyToken();
+    (new FallBackToMail)->handle($event);
+
+    expect($this->invitation->refresh()->token_version)->toBe(1)
+        ->and($this->invitation->surveyToken())->toBe($link)
+        ->and($reserved())->toBe($before + 1);
+});
+
+it('leaves the person as failed, for RH to resend, when the mail never goes out and the tries run out', function (): void {
+    Log::spy();
+    event(surveyWaFailure($this->invitation, $this->survey));
+    $this->invitation->update(['invitation_status' => App\Modules\Engagement\Enums\InvitationStatus::Sent]);
+
+    (new FallBackToMail)->failed(surveyWaFailure($this->invitation, $this->survey), new RuntimeException('smtp down'));
+
+    expect($this->invitation->refresh()->invitation_status)->toBe(App\Modules\Engagement\Enums\InvitationStatus::Failed);
+    Log::shouldHaveReceived('warning')->withArgs(fn (string $event, array $context = []): bool => $event === 'engagement.fallback_failed' && $context['exception'] === RuntimeException::class)->once();
+});
+
 it('is a queued listener with three tries and the design backoff', function (): void {
     $listener = new FallBackToMail;
 

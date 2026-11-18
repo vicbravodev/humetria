@@ -7,6 +7,7 @@ namespace App\Modules\Campaigns\Listeners;
 use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
+use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Campaigns\Support\InvitationComposer;
@@ -19,6 +20,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 /**
  * When WhatsApp fails for good (rule 9) the person gets their link by mail, if the company has mail on, the person has an address
@@ -61,8 +63,13 @@ final class FallBackToMail implements ShouldQueue
 
         $participant->load(['instruments' => fn ($guides) => $guides->where('status', InstrumentStatus::Pending)]);
 
+        // A retry of the queue (the mail failed after this already held, rotated and marked): the state says it was done, so it
+        // reuses the link and the hold instead of taking another of each. The WhatsApp link never reached the person (that is why
+        // the mail takes over), so rotating it loses nothing.
+        $done = $participant->invited_via === 'mail' && $participant->token_version > 0;
+
         // The hold goes first: if the mail does not fit nothing was written, and the person keeps the link that went by WhatsApp.
-        $token = DB::transaction(function () use ($participant): ?string {
+        $token = $done ? $participant->surveyToken() : DB::transaction(function () use ($participant): ?string {
             if (! resolve(MailQuota::class)->tryReserve(1)) {
                 return null;
             }
@@ -83,6 +90,20 @@ final class FallBackToMail implements ShouldQueue
             resolve(InvitationComposer::class)->compose($campaign, $participant, $person, $token, InvitationComposer::emailFor($campaign, false)),
         );
         Log::info('campaign.fallback_sent', ['participant_id' => $participant->id, 'cause' => $event->cause->value]);
+    }
+
+    /** The tries ran out and the mail never went out: the person is left as failed, which RH sees and can resend by mail. */
+    public function failed(WhatsAppMessageFailed $event, Throwable $exception): void
+    {
+        if (! $event->fallsBackToMail() || $event->invitation->type !== InvitationReference::CAMPAIGN_PARTICIPANT) {
+            return;
+        }
+
+        resolve(Companies::class)->enter($event->tenantId);
+        Participant::query()->whereKey($event->invitation->id)->update(['invitation_status' => InvitationStatus::Failed]);
+
+        // The class only: a mail error's message can carry the address.
+        Log::warning('campaign.fallback_failed', ['participant_id' => $event->invitation->id, 'exception' => $exception::class]);
     }
 
     private function waits(Participant $participant, CampaignStatus $status, ?\Carbon\CarbonImmutable $closesOn): bool
