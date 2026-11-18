@@ -102,3 +102,16 @@ it('processes the retry of a Resend event that failed while it was applied', fun
         ->and($delivery->refresh()->status)->toBe(DeliveryStatus::Bounced)
         ->and(WebhookEvent::query()->count())->toBe(1);
 });
+
+it('processes the retry of a tap on «Dejar de recibir» that failed while the opt-out was written', function (): void {
+    $label = App\Modules\Messaging\Support\TemplateButton::OPT_OUT_LABEL;
+    $payload = ['entry' => [['changes' => [['field' => 'messages', 'value' => ['messages' => [['from' => '5218186875767', 'id' => 'wamid.BTN1', 'timestamp' => '1795000000', 'type' => 'button', 'button' => ['payload' => $label, 'text' => $label]]]]]]]]];
+    failNextCreate(OptOut::class);
+
+    expect(retryMeta($payload)->getStatusCode())->toBe(500)
+        ->and(OptOut::query()->count())->toBe(0)
+        ->and(WebhookEvent::query()->count())->toBe(0);
+
+    expect(retryMeta($payload)->getStatusCode())->toBe(200)
+        ->and(OptOut::query()->count())->toBe(1);
+});
