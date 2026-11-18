@@ -1,6 +1,6 @@
 {
     "seo": {
-        "title": "Título de prueba",
+        "title": "Humetría: título de prueba",
         "description": "Descripción de prueba & más.",
         "canonical": "https://humetria.example/",
         "image": {
@@ -17,7 +17,7 @@
         {
             "tag": "title",
             "attrs": { "data-inertia": "" },
-            "text": "Título de prueba - Humetría"
+            "text": "Humetría: título de prueba"
         },
         {
             "tag": "meta",
@@ -64,7 +64,7 @@
             "attrs": {
                 "data-inertia": "og-title",
                 "property": "og:title",
-                "content": "Título de prueba"
+                "content": "Humetría: título de prueba"
             }
         },
         {
@@ -128,7 +128,7 @@
             "attrs": {
                 "data-inertia": "twitter-title",
                 "name": "twitter:title",
-                "content": "Título de prueba"
+                "content": "Humetría: título de prueba"
             }
         },
         {

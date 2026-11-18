@@ -1,5 +1,6 @@
 import { createInertiaApp, router } from '@inertiajs/react';
 import AppErrorBoundary from '@/components/app-error-boundary';
+import { documentTitle } from '@/lib/document-title';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import RecentProofDialog from '@/components/worker-access/recent-proof-dialog';
@@ -54,7 +55,7 @@ if (typeof document !== 'undefined') {
 }
 
 void createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => documentTitle(title, appName),
     layout: frameFor,
     strictMode: true,
     defaults: {

@@ -27,7 +27,7 @@ export default function TenancyOnboarding({ company, centers }: Props) {
                 </span>
             }
         >
-            <Head title="Primera vez" />
+            <Head title="Primeros pasos" />
             <FirstStepsTour />
             <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-7">
                 <header className="flex max-w-[760px] flex-col gap-2.5">

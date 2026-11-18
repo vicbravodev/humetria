@@ -7,7 +7,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-        <title>{{ $title }} - {{ config('app.name') }}</title>
+        <title>{{ App\Http\DocumentTitle::for($title, config('app.name')) }}</title>
         <meta name="description" content="{{ $description }}">
         <link rel="canonical" href="{{ $canonical }}">
         @yield('head')

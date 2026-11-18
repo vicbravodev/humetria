@@ -14,7 +14,7 @@ type Props = {
 export default function Security(props: Props) {
     return (
         <>
-            <Head title="Seguridad" />
+            <Head title="Seguridad · Ajustes" />
 
             <UpdatePasswordForm passwordRules={props.passwordRules} />
 

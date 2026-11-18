@@ -33,7 +33,7 @@ export default function Accounts({
 
     return (
         <>
-            <Head title="Cuentas" />
+            <Head title="Cuentas de facturación" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     caption="Cobranza"

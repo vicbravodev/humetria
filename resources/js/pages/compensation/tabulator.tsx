@@ -37,7 +37,7 @@ export default function Tabulator({
 
     return (
         <>
-            <Head title="Tabulador" />
+            <Head title="Tabulador · Compensación" />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <ContractDataFrame
                     status={status}
