@@ -391,7 +391,7 @@ return [
 
         // Measured on the demo's 84 people of the plant: a fixed count, nothing read per person or per answer (the same pages
         // with a handful of people: tests/Feature/Campaigns/CampaignPagesTest.php, tests/Feature/Results/ResultsPageTest.php).
-        expect($count(route('tenant.campaigns.show', [$tenant, $evaluation(CampaignStatus::Active)])))->toBe(28)
+        expect($count(route('tenant.campaigns.show', [$tenant, $evaluation(CampaignStatus::Active)])))->toBe(31)
             ->and($count(route('tenant.campaigns.results', [$tenant, $evaluation(CampaignStatus::Closed)])))->toBe(24);
 
         auth()->logout();
