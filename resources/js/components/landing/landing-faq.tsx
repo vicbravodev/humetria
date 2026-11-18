@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { SECTION, TITLE, WRAP } from '@/components/landing/landing-layout';
+import Reveal from '@/components/landing/reveal';
 import { cn } from '@/lib/utils';
 import { workday2027 } from '@/routes/guides';
 
@@ -44,7 +45,7 @@ export default function LandingFaq() {
                     'grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14',
                 )}
             >
-                <div className="grid content-start gap-5">
+                <Reveal className="grid content-start gap-5">
                     <h2 id="preguntas-title" className={TITLE}>
                         Preguntas frecuentes
                     </h2>
@@ -64,8 +65,11 @@ export default function LandingFaq() {
                             antes de enero.
                         </span>
                     </a>
-                </div>
-                <div className="border-t">
+                </Reveal>
+                <div
+                    data-reveal="idle"
+                    className="border-t reveal-rise enter-delay-100"
+                >
                     {FAQS.map((faq, index) => (
                         <details
                             key={faq.question}
@@ -79,7 +83,7 @@ export default function LandingFaq() {
                                     className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-open:rotate-180 motion-reduce:transition-none"
                                 />
                             </summary>
-                            <p className="max-w-[70ch] pb-5 leading-relaxed text-pretty text-muted-foreground">
+                            <p className="max-w-[70ch] enter-details pb-5 leading-relaxed text-pretty text-muted-foreground">
                                 {faq.answer}
                             </p>
                         </details>

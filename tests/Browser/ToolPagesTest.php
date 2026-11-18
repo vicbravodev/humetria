@@ -143,3 +143,34 @@ it('keeps the phone playback controls inside the video and respects reduced moti
         ->assertScript('() => { const video = document.querySelector("[data-test=tool-film] video").getBoundingClientRect(); const control = document.querySelector("[data-test=tool-film-toggle]").getBoundingClientRect(); return control.left >= video.left && control.right <= video.right && control.top >= video.top && control.bottom <= video.bottom && control.width >= 44 && control.height >= 44; }')
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth');
 });
+
+it('wears the same header pill as the landing, with its sections pointing back to it', function (): void {
+    visitPage('tool', '/nom-035')
+        ->assertVisible('header nav[aria-label=Secciones]')
+        ->assertAttribute('header a[data-test=header-how]', 'href', '/#como-funciona');
+});
+
+it('leaves the film whole and plays the steps on the phone beside them', function (): void {
+    visitPage('tool', '/registro-de-jornada')
+        ->assertScript('() => document.querySelector("#inicio [data-test=phone-demo]") === null')
+        ->assertVisible('#como-funciona [data-test=phone-demo]')
+        ->click('@step-2')
+        ->assertAttribute('@step-2', 'aria-pressed', 'true')
+        ->assertSeeIn('[data-test=phone-demo]', 'Paso 3');
+});
+
+it('shows the steps without a phone when the tool has none', function (): void {
+    visitPage('tool', '/organigrama')
+        ->assertScript('() => document.querySelector("[data-test=phone-demo]") === null')
+        ->assertScript('() => document.querySelectorAll("#como-funciona ol li").length', 3);
+});
+
+it('dresses each tool page in the color of its family', function (string $path, string $family): void {
+    visitPage('tool', $path)
+        ->assertScript("() => document.querySelector('main').classList.contains('{$family}')");
+})->with([
+    'compliance' => ['/registro-de-jornada', 'family-compliance'],
+    'listening' => ['/clima-laboral', 'family-listening'],
+    'operations' => ['/compensacion', 'family-operations'],
+]);
+

@@ -1,6 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import { ICON_BOX } from '@/components/landing/landing-layout';
-import { FAMILIES } from '@/components/landing/landing-families';
+import { FAMILIES, FAMILY_CLASS } from '@/components/landing/landing-families';
 import { TOOLS } from '@/components/landing/landing-tools';
 
 const toolName = (key: string): string =>
@@ -12,7 +11,10 @@ export default function HeroFamilies() {
         <nav aria-label="Herramientas por familia" data-test="hero-families">
             <ul className="grid border-t lg:grid-cols-3 lg:gap-x-10">
                 {FAMILIES.map((family) => (
-                    <li key={family.key} className="border-b">
+                    <li
+                        key={family.key}
+                        className={`border-b ${FAMILY_CLASS[family.key]}`}
+                    >
                         <a
                             href={`#familia-${family.key}`}
                             data-test={`hero-family-${family.key}`}
@@ -20,13 +22,13 @@ export default function HeroFamilies() {
                             data-track-target={family.key}
                             className="group grid min-h-18 grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 py-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                         >
-                            <span className={`${ICON_BOX} row-span-2 size-11`}>
+                            <span className="row-span-2 flex size-11 shrink-0 items-center justify-center rounded-xl bg-family-soft text-family">
                                 <family.icon
                                     aria-hidden
                                     className="size-[22px]"
                                 />
                             </span>
-                            <b className="text-[17px] leading-tight font-semibold transition-colors group-hover:text-primary">
+                            <b className="text-[17px] leading-tight font-semibold transition-colors group-hover:text-family">
                                 {family.name}
                             </b>
                             <span className="row-span-2 flex items-center gap-1.5 text-sm text-muted-foreground tabular-nums">

@@ -1,4 +1,5 @@
 import { SECTION, TITLE, WRAP } from '@/components/landing/landing-layout';
+import Reveal from '@/components/landing/reveal';
 import { cn } from '@/lib/utils';
 import type { ToolPageContent } from '@/types';
 
@@ -14,14 +15,17 @@ export default function ToolPageBeforeAfter({
             className={cn('border-y bg-band', SECTION)}
         >
             <div className={cn(WRAP, 'grid gap-8')}>
-                <h2 id="antes-title" className={TITLE}>
-                    {page.beforeAfterTitle}
-                </h2>
+                <Reveal>
+                    <h2 id="antes-title" className={TITLE}>
+                        {page.beforeAfterTitle}
+                    </h2>
+                </Reveal>
                 <div
                     role="region"
                     aria-labelledby="antes-title"
                     tabIndex={0}
-                    className="overflow-x-auto rounded-2xl border bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    data-reveal="idle"
+                    className="overflow-x-auto rounded-2xl border bg-card reveal-rise enter-delay-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                     <table className="w-full min-w-[560px] border-collapse text-left">
                         <thead>
@@ -34,7 +38,7 @@ export default function ToolPageBeforeAfter({
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-6 py-3.5 font-semibold text-primary"
+                                    className="px-6 py-3.5 font-semibold text-family"
                                 >
                                     Con Humetría
                                 </th>

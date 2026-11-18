@@ -1,8 +1,7 @@
 import { WhenMounted } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
-import { FAMILIES, familyTools } from '@/components/landing/landing-families';
+import FooterTools from '@/components/landing/footer-tools';
 import { WRAP } from '@/components/landing/landing-layout';
-import { toolPageUrl } from '@/components/landing/tool-page-links';
 import SocialLinks from '@/components/landing/social-links';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { currentYear } from '@/lib/current-year';
@@ -30,27 +29,7 @@ export default function LandingFooter({
 }) {
     return (
         <footer className="border-t pt-10 pb-8">
-            <nav
-                aria-label="Herramientas"
-                className={cn(WRAP, 'grid gap-6 border-b pb-8 sm:grid-cols-3')}
-            >
-                {FAMILIES.map((family) => (
-                    <div key={family.key} className="grid content-start gap-1">
-                        <p className="pb-1 text-meta font-semibold">
-                            {family.name}
-                        </p>
-                        {familyTools(family).map((tool) => (
-                            <a
-                                key={tool.key}
-                                href={toolPageUrl(tool.key)}
-                                className={linkClass}
-                            >
-                                {tool.name}
-                            </a>
-                        ))}
-                    </div>
-                ))}
-            </nav>
+            <FooterTools />
             <div
                 className={cn(
                     WRAP,

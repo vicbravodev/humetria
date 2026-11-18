@@ -1,9 +1,10 @@
 import { ChevronDown } from 'lucide-react';
 import { SECTION, TITLE, WRAP } from '@/components/landing/landing-layout';
+import Reveal from '@/components/landing/reveal';
 import { cn } from '@/lib/utils';
 import type { ToolPageFaq } from '@/types';
 
-/** The questions people ask before a demo, each open on demand; the same ones the head declares as FAQPage. */
+/** The questions people ask before a demo, each open on demand (the answer rises in); the same ones the head declares as FAQPage. */
 export default function ToolPageFaqSection({ faqs }: { faqs: ToolPageFaq[] }) {
     return (
         <section
@@ -17,10 +18,15 @@ export default function ToolPageFaqSection({ faqs }: { faqs: ToolPageFaq[] }) {
                     'grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-14',
                 )}
             >
-                <h2 id="preguntas-title" className={TITLE}>
-                    Preguntas frecuentes
-                </h2>
-                <div className="border-t">
+                <Reveal>
+                    <h2 id="preguntas-title" className={TITLE}>
+                        Preguntas frecuentes
+                    </h2>
+                </Reveal>
+                <div
+                    data-reveal="idle"
+                    className="border-t reveal-rise enter-delay-100"
+                >
                     {faqs.map((faq, index) => (
                         <details
                             key={faq.question}
@@ -34,7 +40,7 @@ export default function ToolPageFaqSection({ faqs }: { faqs: ToolPageFaq[] }) {
                                     className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-open:rotate-180 motion-reduce:transition-none"
                                 />
                             </summary>
-                            <p className="max-w-[70ch] pb-5 leading-relaxed text-pretty text-muted-foreground">
+                            <p className="max-w-[70ch] enter-details pb-5 leading-relaxed text-pretty text-muted-foreground">
                                 {faq.answer}
                             </p>
                         </details>

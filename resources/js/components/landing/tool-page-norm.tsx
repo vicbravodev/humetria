@@ -4,6 +4,7 @@ import {
     TITLE,
     WRAP,
 } from '@/components/landing/landing-layout';
+import Reveal from '@/components/landing/reveal';
 import { cn } from '@/lib/utils';
 import { workday2027 } from '@/routes/guides';
 import type { ToolPageNorm } from '@/types';
@@ -19,17 +20,21 @@ export default function ToolPageNormSection({ norm, guideLink }: Props) {
             className={cn('scroll-mt-16 border-y bg-band', SECTION)}
         >
             <div className={cn(WRAP, 'grid gap-10')}>
-                <div className="grid max-w-[760px] gap-4">
+                <Reveal className="grid max-w-[760px] gap-4">
                     <h2 id="que-pide-la-norma-title" className={TITLE}>
                         {norm.title}
                     </h2>
                     <p className={LEAD}>{norm.lead}</p>
-                </div>
+                </Reveal>
                 <dl className="grid border-t sm:grid-cols-3">
-                    {norm.facts.map((fact) => (
+                    {norm.facts.map((fact, index) => (
                         <div
                             key={fact.label}
-                            className="grid content-start gap-1 border-b py-5 sm:border-b-0 sm:pr-6 sm:not-first:pl-6 sm:not-last:border-r"
+                            data-reveal="idle"
+                            className={cn(
+                                'grid content-start gap-1 border-b py-5 reveal-rise sm:border-b-0 sm:pr-6 sm:not-first:pl-6 sm:not-last:border-r',
+                                `enter-delay-${index * 80}`,
+                            )}
                         >
                             <dt className="text-meta text-muted-foreground">
                                 {fact.label}
@@ -44,10 +49,14 @@ export default function ToolPageNormSection({ norm, guideLink }: Props) {
                     ))}
                 </dl>
                 <ul className="grid gap-x-12 lg:grid-cols-2">
-                    {norm.rules.map((rule) => (
+                    {norm.rules.map((rule, index) => (
                         <li
                             key={rule.text}
-                            className="grid gap-1.5 border-t py-4"
+                            data-reveal="idle"
+                            className={cn(
+                                'grid gap-1.5 border-t py-4 reveal-rise',
+                                `enter-delay-${(index % 2) * 80}`,
+                            )}
                         >
                             <span className="text-lg leading-relaxed text-pretty">
                                 {rule.text}

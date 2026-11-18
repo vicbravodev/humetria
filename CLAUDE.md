@@ -184,7 +184,7 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   reusa sus piezas (marco con migas, encabezado con estado, tarjetas, tablas `muted`, pestañas con conteo, estados vacíos
   con siguiente paso); una que se vea como un formulario sin diseñar no está terminada. Antes de cerrar un trabajo con UI,
   se revisa en el navegador en claro, oscuro y a 375 px.
-- Un solo acento (`primary`; `brand-*` solo en el logo); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
+- Un solo acento (`primary`; `brand-*` solo en el logo), salvo el color de cada familia de herramientas en el sitio público (`family-*`); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
   a shadcn tras cada `npx shadcn add` (`DesignTokensOnlyTest`, `DesignSystemTest`, `ShadcnAdjustmentsTest`).
 - El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.
 

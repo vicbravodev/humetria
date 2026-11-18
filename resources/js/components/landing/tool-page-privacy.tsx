@@ -13,7 +13,10 @@ export default function ToolPagePrivacy({ privacy }: Props) {
             aria-labelledby="confidencialidad-title"
             className={cn(WRAP, 'scroll-mt-16 pb-20 lg:pb-24')}
         >
-            <div className="grid gap-6 rounded-[28px] bg-foreground p-7 text-background sm:p-12">
+            <div
+                data-reveal="idle"
+                className="grid gap-6 rounded-[28px] bg-foreground p-7 text-background reveal-scale sm:p-12"
+            >
                 <h2
                     id="confidencialidad-title"
                     className="max-w-[26ch] text-3xl leading-tight font-semibold tracking-[-0.025em] text-balance"
@@ -21,10 +24,14 @@ export default function ToolPagePrivacy({ privacy }: Props) {
                     {privacy.title}
                 </h2>
                 <ul className="grid gap-x-12 md:grid-cols-2">
-                    {privacy.items.map((item) => (
+                    {privacy.items.map((item, index) => (
                         <li
                             key={item.title}
-                            className="grid gap-1.5 border-t border-background/20 py-4"
+                            data-reveal="idle"
+                            className={cn(
+                                'grid gap-1.5 border-t border-background/20 py-4 reveal-rise',
+                                `enter-delay-${100 + index * 60}`,
+                            )}
                         >
                             <b className="text-lg">{item.title}</b>
                             <span className="leading-relaxed text-background/80">

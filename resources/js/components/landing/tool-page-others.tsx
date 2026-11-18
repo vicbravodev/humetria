@@ -1,4 +1,5 @@
 import { WRAP } from '@/components/landing/landing-layout';
+import Reveal from '@/components/landing/reveal';
 import { cn } from '@/lib/utils';
 import type { ToolPageRelated } from '@/types';
 
@@ -15,20 +16,29 @@ export default function ToolPageOthers({
             className="scroll-mt-16 border-t py-16"
         >
             <div className={cn(WRAP, 'grid gap-6')}>
-                <h2
-                    id="otras-herramientas-title"
-                    className="text-2xl font-semibold tracking-[-0.02em]"
-                >
-                    Se usa junto con
-                </h2>
+                <Reveal>
+                    <h2
+                        id="otras-herramientas-title"
+                        className="text-2xl font-semibold tracking-[-0.02em]"
+                    >
+                        Se usa junto con
+                    </h2>
+                </Reveal>
                 <ul className="grid gap-x-8 md:grid-cols-3">
-                    {related.map((tool) => (
-                        <li key={tool.key}>
+                    {related.map((tool, index) => (
+                        <li
+                            key={tool.key}
+                            data-reveal="idle"
+                            className={cn(
+                                'reveal-rise',
+                                `enter-delay-${index * 80}`,
+                            )}
+                        >
                             <a
                                 href={tool.href}
                                 data-track="tool_page_click"
                                 data-track-target={tool.key}
-                                className="grid gap-1 border-t py-4 hover:text-primary"
+                                className="group grid gap-1 border-t py-4 transition-colors duration-150 ease-out hover:text-primary"
                             >
                                 <b className="text-lg">{tool.name}</b>
                                 <span className="text-meta leading-relaxed text-muted-foreground">
@@ -36,6 +46,12 @@ export default function ToolPageOthers({
                                 </span>
                                 <span className="pt-1 text-meta font-semibold text-primary">
                                     Ver {tool.name}
+                                    <span
+                                        aria-hidden
+                                        className="ml-1 inline-block transition-transform duration-200 ease-out group-hover:translate-x-0.5 motion-reduce:transition-none"
+                                    >
+                                        →
+                                    </span>
                                 </span>
                             </a>
                         </li>

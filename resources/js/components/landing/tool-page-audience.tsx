@@ -1,4 +1,5 @@
 import { SECTION, TITLE, WRAP } from '@/components/landing/landing-layout';
+import Reveal from '@/components/landing/reveal';
 import { cn } from '@/lib/utils';
 import type { ToolPageContent } from '@/types';
 
@@ -10,16 +11,22 @@ export default function ToolPageAudience({ page }: { page: ToolPageContent }) {
             aria-labelledby="para-quien-title"
             className={cn(WRAP, 'grid scroll-mt-16 gap-9', SECTION)}
         >
-            <h2 id="para-quien-title" className={TITLE}>
-                Para quién es
-            </h2>
+            <Reveal>
+                <h2 id="para-quien-title" className={TITLE}>
+                    Para quién es
+                </h2>
+            </Reveal>
             <ul className="grid gap-10 md:grid-cols-3">
-                {page.audience.map((reader) => (
+                {page.audience.map((reader, index) => (
                     <li
                         key={reader.who}
-                        className="grid content-start gap-2 border-t-2 border-foreground pt-4"
+                        data-reveal="idle"
+                        className={cn(
+                            'grid content-start gap-2 border-t-2 border-family pt-4 reveal-rise',
+                            `enter-delay-${index * 80}`,
+                        )}
                     >
-                        <p className="text-meta font-semibold text-primary">
+                        <p className="text-meta font-semibold text-family">
                             {reader.who}
                         </p>
                         <b className="text-xl leading-snug">{reader.title}</b>

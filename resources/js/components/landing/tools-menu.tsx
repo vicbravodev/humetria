@@ -1,4 +1,5 @@
 import { ChevronDown, Menu, X } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
 import { useCallback, useRef, useState } from 'react';
 import ToolsMenuPanel from '@/components/landing/tools-menu-panel';
 import { Button } from '@/components/ui/button';
@@ -6,16 +7,20 @@ import { useDismiss } from '@/hooks/use-dismiss';
 import { cn } from '@/lib/utils';
 
 type Props = {
-    /** `bar`: the word «Herramientas» in a wide header; `icon`: the menu button of a phone. */
+    /** `bar`: «Herramientas» inside the header's pill (styled by `triggerClassName`); `icon`: the menu button of a phone. */
     variant: 'bar' | 'icon';
     className?: string;
+    triggerClassName?: string;
 };
 
-/** The nine tools by family, each to its own page, and the guide: a disclosure that closes with Escape or a click outside. */
-export default function ToolsMenu({ variant, className }: Props) {
+/** The nine tools by family, each to its own page: a disclosure that glides in, and closes with Escape or a click outside. */
+export default function ToolsMenu({
+    variant,
+    className,
+    triggerClassName,
+}: Props) {
     const [open, setOpen] = useState(false);
     const root = useRef<HTMLDivElement>(null);
-
     const close = useCallback(() => setOpen(false), []);
     useDismiss(open, root, close);
 
@@ -28,13 +33,13 @@ export default function ToolsMenu({ variant, className }: Props) {
                     aria-controls="tools-menu"
                     onClick={() => setOpen(!open)}
                     data-test="tools-menu"
-                    className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold"
+                    className={cn('gap-1.5', triggerClassName)}
                 >
                     Herramientas
                     <ChevronDown
                         aria-hidden
                         className={cn(
-                            'size-3.5 transition-transform duration-150 ease-out',
+                            'size-3.5 transition-transform duration-200 ease-out motion-reduce:transition-none',
                             open && 'rotate-180',
                         )}
                     />
@@ -54,7 +59,15 @@ export default function ToolsMenu({ variant, className }: Props) {
                     {open ? <X aria-hidden /> : <Menu aria-hidden />}
                 </Button>
             )}
-            {open && <ToolsMenuPanel floating={variant === 'bar'} />}
+            <AnimatePresence>
+                {open && (
+                    <ToolsMenuPanel
+                        key="panel"
+                        floating={variant === 'bar'}
+                        onPick={close}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }

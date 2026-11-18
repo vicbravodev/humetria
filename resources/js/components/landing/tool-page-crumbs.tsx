@@ -18,7 +18,7 @@ export default function ToolPageCrumbs({ page }: { page: ToolPageContent }) {
                 <li aria-hidden>
                     <ChevronRight className="size-3.5" />
                 </li>
-                <li>{page.family}</li>
+                <li className="font-medium text-family">{page.family}</li>
                 <li aria-hidden>
                     <ChevronRight className="size-3.5" />
                 </li>

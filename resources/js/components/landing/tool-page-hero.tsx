@@ -3,7 +3,11 @@ import type { LandingTool } from '@/components/landing/landing-tools';
 import ToolPageCrumbs from '@/components/landing/tool-page-crumbs';
 import ToolPageStage from '@/components/landing/tool-page-stage';
 import { Button } from '@/components/ui/button';
+import { enterDelay } from '@/lib/enter-delay';
 import { cn } from '@/lib/utils';
+
+/** Each part of the hero rises in after the one before, as the landing's does (CSS, `enter-after`). */
+const after = (delay: number) => cn('enter-after', enterDelay(delay));
 import type { ToolPageContent } from '@/types';
 
 type Props = { page: ToolPageContent; tool: LandingTool | undefined };
@@ -24,18 +28,21 @@ export default function ToolPageHero({ page, tool }: Props) {
                     <p
                         className={cn(
                             'justify-self-start rounded-full px-3 py-1 text-meta font-semibold',
+                            after(0.05),
                             urgent
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-accent text-primary',
+                                ? 'bg-family text-background'
+                                : 'bg-family-soft text-family',
                         )}
                     >
                         {page.chip}
                     </p>
-                    <h1 id="tool-title" className={TITLE}>
+                    <h1 id="tool-title" className={cn(TITLE, after(0.1))}>
                         {page.h1}
                     </h1>
-                    <p className={LEAD}>{page.lead}</p>
-                    <div className="flex flex-wrap gap-3 pt-1">
+                    <p className={cn(LEAD, after(0.2))}>{page.lead}</p>
+                    <div
+                        className={cn('flex flex-wrap gap-3 pt-1', after(0.3))}
+                    >
                         <Button asChild size="lg" className="rounded-full">
                             <a
                                 href="#agenda-una-demo"
@@ -60,11 +67,16 @@ export default function ToolPageHero({ page, tool }: Props) {
                             </a>
                         </Button>
                     </div>
-                    <p className="max-w-[60ch] text-meta leading-relaxed text-muted-foreground">
+                    <p
+                        className={cn(
+                            'max-w-[60ch] text-meta leading-relaxed text-muted-foreground',
+                            after(0.4),
+                        )}
+                    >
                         {page.proof}
                     </p>
                 </div>
-                <ToolPageStage page={page} tool={tool} />
+                <ToolPageStage tool={tool} />
             </div>
         </section>
     );

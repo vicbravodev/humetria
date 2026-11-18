@@ -3,9 +3,12 @@ import GuideArticle from '@/components/landing/guide-article';
 import GuideCta from '@/components/landing/guide-cta';
 import GuideHero from '@/components/landing/guide-hero';
 import LandingFooter from '@/components/landing/landing-footer';
-import ToolPageHeader from '@/components/landing/tool-page-header';
+import LandingHeader from '@/components/landing/landing-header';
 import SeoHead from '@/components/landing/seo-head';
+import { domMax, LazyMotion, MotionConfig } from 'motion/react';
 import { useLandingMeasurement } from '@/hooks/use-landing-measurement';
+import { useScrollReveal } from '@/hooks/use-scroll-reveal';
+import { cspNonce } from '@/lib/csp-nonce';
 import { home } from '@/routes';
 import type { GuideContent, Seo } from '@/types';
 
@@ -18,18 +21,24 @@ export default function Guide({
     guide: GuideContent;
 }) {
     useLandingMeasurement();
+    useScrollReveal();
 
     return (
-        <>
-            <SeoHead seo={seo} />
-            <ToolPageHeader />
-            <main>
-                <GuideHero guide={guide} />
-                <GuideArticle guide={guide} />
-                <GuideCta />
-                <DemoSection page="guides.workday-2027" tool="attendance" />
-            </main>
-            <LandingFooter sectionBase={home().url} />
-        </>
+        <LazyMotion features={domMax} strict>
+            <MotionConfig
+                reducedMotion="user"
+                {...(cspNonce === undefined ? {} : { nonce: cspNonce })}
+            >
+                <SeoHead seo={seo} />
+                <LandingHeader sectionBase={home().url} />
+                <main>
+                    <GuideHero guide={guide} />
+                    <GuideArticle guide={guide} />
+                    <GuideCta />
+                    <DemoSection page="guides.workday-2027" tool="attendance" />
+                </main>
+                <LandingFooter sectionBase={home().url} />
+            </MotionConfig>
+        </LazyMotion>
     );
 }

@@ -38,8 +38,8 @@ function contrastRatio(string $hexA, string $hexB): float
 
 dataset('themes', [':root', '.dark']);
 
-it('defines the same 53 color tokens in light and dark', function (): void {
-    expect(array_keys(themeTokens(':root')))->toHaveCount(53)
+it('defines the same 59 color tokens in light and dark', function (): void {
+    expect(array_keys(themeTokens(':root')))->toHaveCount(59)
         ->toEqualCanonicalizing(array_keys(themeTokens('.dark')));
 });
 
@@ -57,6 +57,10 @@ it('keeps text at 4.5:1 or more', function (string $theme, string $text, string 
     ['risk-alto-fg', 'risk-alto-bg'], ['risk-muy-alto-fg', 'risk-muy-alto-bg'],
     ['warning-foreground', 'warning'], ['muted-foreground', 'sidebar'],
     ['foreground', 'band'], ['muted-foreground', 'band'], ['primary', 'band'],
+    // Each family of tools has its color (the landing, the tool pages, the menu): as text on every surface and on its soft tint.
+    ['family-compliance', 'background'], ['family-compliance', 'card'], ['family-compliance', 'band'], ['family-compliance', 'family-compliance-soft'],
+    ['family-listening', 'background'], ['family-listening', 'card'], ['family-listening', 'band'], ['family-listening', 'family-listening-soft'],
+    ['family-operations', 'background'], ['family-operations', 'card'], ['family-operations', 'band'], ['family-operations', 'family-operations-soft'],
 ]);
 
 it('keeps control borders, focus and data marks at 3:1 or more', function (string $theme, string $mark, string $surface): void {

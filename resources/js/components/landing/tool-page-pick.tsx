@@ -1,4 +1,6 @@
+import { AnimatePresence, m } from 'motion/react';
 import { useState } from 'react';
+import { EASE_OUT } from '@/components/landing/landing-motion';
 import { WRAP } from '@/components/landing/landing-layout';
 import { cn } from '@/lib/utils';
 import type { ToolPagePick } from '@/types';
@@ -13,7 +15,10 @@ export default function ToolPagePickSection({ pick }: { pick: ToolPagePick }) {
             aria-labelledby="pick-title"
             className={cn(WRAP, 'pt-14 lg:pt-20')}
         >
-            <div className="grid gap-8 rounded-[28px] bg-foreground p-7 text-background sm:p-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-12">
+            <div
+                data-reveal="idle"
+                className="grid gap-8 rounded-[28px] bg-foreground p-7 text-background reveal-rise sm:p-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-12"
+            >
                 <div className="grid gap-3">
                     <h2
                         id="pick-title"
@@ -50,20 +55,42 @@ export default function ToolPagePickSection({ pick }: { pick: ToolPagePick }) {
                             ))}
                         </div>
                     </fieldset>
-                    {answer === undefined ? null : (
-                        <p
-                            aria-live="polite"
-                            className="grid gap-1 border-t border-background/20 pt-5"
-                            data-test="pick-answer"
-                        >
-                            <b className="text-3xl tracking-[-0.02em]">
-                                {answer.answer}
-                            </b>
-                            <span className="leading-relaxed text-background/80">
-                                {answer.detail}
-                            </span>
-                        </p>
-                    )}
+                    <div
+                        aria-live="polite"
+                        className="border-t border-background/20 pt-5"
+                        data-test="pick-answer"
+                    >
+                        <AnimatePresence mode="wait" initial={false}>
+                            {answer === undefined ? null : (
+                                <m.p
+                                    key={answer.label}
+                                    initial={{
+                                        opacity: 0,
+                                        y: 8,
+                                        filter: 'blur(2px)',
+                                    }}
+                                    animate={{
+                                        opacity: 1,
+                                        y: 0,
+                                        filter: 'blur(0px)',
+                                    }}
+                                    exit={{ opacity: 0, y: -4 }}
+                                    transition={{
+                                        duration: 0.25,
+                                        ease: EASE_OUT,
+                                    }}
+                                    className="grid gap-1"
+                                >
+                                    <b className="text-3xl tracking-[-0.02em]">
+                                        {answer.answer}
+                                    </b>
+                                    <span className="leading-relaxed text-background/80">
+                                        {answer.detail}
+                                    </span>
+                                </m.p>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             </div>
         </section>

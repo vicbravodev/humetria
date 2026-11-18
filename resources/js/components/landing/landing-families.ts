@@ -60,6 +60,13 @@ export const FAMILIES: readonly LandingFamily[] = [
     },
 ];
 
+/** The class that dresses a family's things in its color (`.family-*` in app.css: `text-family`, `bg-family-soft`). */
+export const FAMILY_CLASS: Record<FamilyKey, string> = {
+    compliance: 'family-compliance',
+    listening: 'family-listening',
+    operations: 'family-operations',
+};
+
 /** The family's tools, in the family's order. */
 export function familyTools(family: LandingFamily): LandingTool[] {
     return family.tools.flatMap((key) =>

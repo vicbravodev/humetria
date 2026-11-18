@@ -272,7 +272,7 @@ it('keeps the hero film still when the visitor asks for reduced motion', functio
         ->assertNoJavaScriptErrors();
 });
 
-it('takes the header tools link to the tools section', function (): void {
+it('opens the tools from the header pill and takes «Ver las nueve herramientas» to the tools section', function (): void {
     // The link shows from the md breakpoint up: on a phone the header only fits the logo and the two calls to action.
     // The page glides until the section lands right under the 64 px sticky header (`scroll-mt-16`).
     $sectionTop = '() => Math.abs(document.getElementById("herramientas").getBoundingClientRect().top - 64) < 2';
@@ -280,7 +280,10 @@ it('takes the header tools link to the tools section', function (): void {
 
     visitPage('landing', '/')
         ->assertScript($sectionTop, false)
-        ->click('@header-tools')
+        ->click('@tools-menu')
+        ->assertAttribute('@tools-menu', 'aria-expanded', 'true')
+        ->assertVisible('#tools-menu')
+        ->click('@tools-menu-all')
         ->assertScript('() => window.location.hash', '#herramientas')
         ->assertScript('() => getComputedStyle(document.documentElement).scrollBehavior', 'smooth')
         ->assertScript($landed);

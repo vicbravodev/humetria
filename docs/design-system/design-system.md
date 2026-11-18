@@ -27,6 +27,7 @@ Se implementa con **Tailwind CSS v4 + shadcn/ui (Radix)**. Los nombres de los to
 ## Color
 
 - **Un solo acento:** `primary` (`#0B7A6F` claro / `#3CCFBD` oscuro). Va en la acción principal, la opción elegida, el avance, los enlaces y el foco. No hay un segundo color de marca.
+- **Color por familia de herramientas** (sitio público): «Cumple la norma» `family-compliance` (azul cobalto), «Escucha a tu gente» `family-listening` (frambuesa) y «Personas y sueldos» `family-operations` (violeta), cada uno con su `-soft` de fondo. La clase `.family-*` fija `text-family` y `bg-family-soft` en la página de la herramienta, sus tarjetas, el menú y sus etiquetas. Las acciones (botones, enlaces, foco) siguen en `primary`.
 - Sobre `primary` el texto es `primary-foreground`: blanco en claro y `#0F1716` en oscuro, porque el jade de oscuro es luminoso.
 - Los neutros llevan un tinte jade muy leve derivado del texto del logo (`#14211F`). Fondo de página `background` casi blanco; superficies `card` blancas con borde `border`.
 - Texto principal en `foreground`; secundario en `muted-foreground`, que pasa 4.5:1 sobre `background`, `card`, `muted`, `secondary`, `accent` y `sidebar`.
