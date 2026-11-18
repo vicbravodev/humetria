@@ -28,6 +28,7 @@ const FLAGS: Record<string, string> = {
     day_over_12_hours: 'Un día de más de 12 h',
     daily_overtime_over_4: 'Más de 4 h extra en un día',
     overtime_days_over_4: 'Horas extra en más de 4 días',
+    weekly_overtime_over_cap: 'Rebasó el tope semanal de horas extra',
     triple_cap_exceeded: 'Más de 4 h al triple en la semana',
 };
 
