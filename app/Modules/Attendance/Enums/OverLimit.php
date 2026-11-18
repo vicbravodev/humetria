@@ -16,6 +16,9 @@ enum OverLimit: string
     /** Overtime on more than 4 days of the week (art. 66). */
     case OvertimeDaysOver4 = 'overtime_days_over_4';
 
+    /** Overtime above the year's weekly cap (art. 66, transitorio cuarto): the excess is paid triple. */
+    case WeeklyOvertimeOverCap = 'weekly_overtime_over_cap';
+
     /** More than 4 hours a week beyond the year's overtime cap (art. 68). */
     case TripleCapExceeded = 'triple_cap_exceeded';
 }

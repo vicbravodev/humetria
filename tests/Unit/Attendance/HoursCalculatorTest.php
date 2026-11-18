@@ -58,16 +58,16 @@ it('does not offset a short day with another day\'s overtime', function (): void
         ->and($summary->overtimeMinutes)->toBe(60);
 });
 
-it('pays double up to the year\'s cap and triple the first minute above it', function (int $lastDay, int $double, int $triple): void {
+it('pays double up to the year\'s cap and triple the first minute above it', function (int $lastDay, int $double, int $triple, array $flags): void {
     $summary = HoursCalculator::week(attendanceWeek([[660, 480], [660, 480], [480 + $lastDay, 480]]), ShiftType::Day, 2027);
 
     expect($summary->overtimeMinutes)->toBe(360 + $lastDay)
         ->and($summary->doubleMinutes)->toBe($double)
         ->and($summary->tripleMinutes)->toBe($triple)
-        ->and($summary->flags)->toBe([]);
+        ->and($summary->flags)->toBe($flags);
 })->with([
-    'exactly 540' => [180, 540, 0],
-    '541' => [181, 540, 1],
+    'exactly 540' => [180, 540, 0, []],
+    '541' => [181, 540, 1, [OverLimit::WeeklyOvertimeOverCap]],
 ]);
 
 it('uses the cap of the year it is given', function (): void {
@@ -116,8 +116,20 @@ it('flags triple time above 4 hours a week', function (int $lastDay, array $flag
         ->and($summary->doubleMinutes)->toBe(540)
         ->and($summary->flags)->toBe($flags);
 })->with([
-    'exactly 4 h of triple' => [60, []],
-    '4 h of triple and 1 min' => [61, [OverLimit::TripleCapExceeded]],
+    'exactly 4 h of triple' => [60, [OverLimit::WeeklyOvertimeOverCap]],
+    '4 h of triple and 1 min' => [61, [OverLimit::WeeklyOvertimeOverCap, OverLimit::TripleCapExceeded]],
+]);
+
+it('flags overtime above the year\'s weekly cap from the first minute, with no other limit broken', function (int $year, int $capMinutes): void {
+    $perDay = intdiv($capMinutes, 4);
+    $week = fn (int $extra): array => attendanceWeek([[480 + $perDay + $extra, 480], [480 + $perDay, 480], [480 + $perDay, 480], [480 + $perDay, 480], [480, 480]]);
+
+    expect(HoursCalculator::week($week(0), ShiftType::Day, $year)->flags)->toBe([])
+        ->and(HoursCalculator::week($week(1), ShiftType::Day, $year)->flags)->toBe([OverLimit::WeeklyOvertimeOverCap]);
+})->with([
+    '2026: 9 h' => [2026, 540],
+    '2028: 10 h' => [2028, 600],
+    '2030: 12 h' => [2030, 720],
 ]);
 
 it('counts a worked rest day apart, not as overtime', function (): void {
@@ -176,6 +188,7 @@ it('lists every flag a week breaks, once each', function (): void {
         OverLimit::DayOver12Hours,
         OverLimit::DailyOvertimeOver4,
         OverLimit::OvertimeDaysOver4,
+        OverLimit::WeeklyOvertimeOverCap,
         OverLimit::TripleCapExceeded,
     ]);
 });
