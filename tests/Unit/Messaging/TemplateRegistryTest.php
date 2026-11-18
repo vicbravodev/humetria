@@ -75,8 +75,8 @@ function catalog(): array
         'survey_invite_v1' => ['Su evaluación de la NOM-035', "{$hello} Como parte de la NOM-035, tiene pendiente contestar una evaluación sobre su trabajo. Es confidencial y puede hacerlo hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", ['Contestar ahora', 'Aviso de privacidad', $stop]],
         'seating_invite_v1' => ['Encuesta sobre su puesto de trabajo', "{$hello} Como parte de la Ley Silla, queremos saber cómo son los asientos y las pausas en su trabajo. Son unos minutos y puede contestar hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", ['Contestar ahora', 'Aviso de privacidad', $stop]],
         'engagement_invite_v1' => ['Encuesta anónima de {{empresa}}', "{$hello} Queremos saber cómo le va en su trabajo con esta encuesta anónima: nadie verá sus respuestas individuales. Tiene hasta el {{fecha_limite}} para contestarla y su enlace es personal.", ['Contestar ahora', 'Aviso de privacidad', $stop]],
-        'survey_reminder_v1' => [null, 'Hola, buen día. Le recordamos que su evaluación de parte de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}.', ['Continuar', $stop]],
-        'engagement_reminder_v1' => [null, 'Hola, buen día. Le recordamos que su evaluación de parte de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}.', ['Continuar', $stop]],
+        'survey_reminder_v1' => [null, 'Hola, buen día. Le recordamos que su evaluación de parte de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.', ['Continuar', $stop]],
+        'engagement_reminder_v1' => [null, 'Hola, buen día. Le recordamos que su evaluación de parte de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.', ['Continuar', $stop]],
         'leave_decision_v1' => [null, 'Hola, buen día. {{empresa}} ya respondió su solicitud del {{fecha}}. Puede verla en su portal.', ['Ver respuesta', 'Llamar a RH', $stop]],
         'leave_to_decide_v1' => [null, 'Hola, buen día. Tiene una solicitud de su equipo en {{empresa}} que le toca responder. Puede hacerlo en su portal.', ['Responder', $stop]],
         'policy_to_confirm_v1' => [null, 'Hola, buen día. {{empresa}} publicó su política de prevención y necesita que confirme que la leyó. Puede leerla y dar su acuse en su página.', ['Leer y confirmar', $stop]],
@@ -167,3 +167,9 @@ it('asks for the seating invite only by its name: it has no invitation type yet'
     expect((new TemplateRegistry)->get('seating_invite_v1')->bodyVariables())->toBe(['empresa', 'fecha_limite']);
     (new TemplateRegistry)->forInvitation('seating_participant');
 })->throws(InvalidArgumentException::class);
+
+it('never starts or ends a body with a variable, which Meta rejects (confirmed against the real API)', function (): void {
+    foreach (catalog() as $key => [, $body]) {
+        expect($body)->not->toMatch('/\A\W*\{\{/', $key)->not->toMatch('/\{\{\w+\}\}\W*\z/', $key);
+    }
+});

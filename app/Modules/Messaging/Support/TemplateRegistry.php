@@ -56,7 +56,7 @@ final class TemplateRegistry
         $stop = TemplateButton::quickReply(TemplateButton::OPT_OUT_LABEL);
         $link = fn (string $text, string $route): TemplateButton => TemplateButton::urlWithVariable($text, $this->base($route), 'abc123');
         $invite = fn (string $route): array => [$link('Contestar ahora', $route), $privacy, $stop];
-        $reminder = 'Hola, buen día. Le recordamos que su evaluación de parte de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}.';
+        $reminder = 'Hola, buen día. Le recordamos que su evaluación de parte de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.';
 
         return [
             $this->template('survey_invite_v1', $language, "{$greeting} Como parte de la NOM-035, tiene pendiente contestar una evaluación sobre su trabajo. Es confidencial y puede hacerlo hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", 'Su evaluación de la NOM-035', $invite('survey.show')),
