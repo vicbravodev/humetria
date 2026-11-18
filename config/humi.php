@@ -54,6 +54,9 @@ return [
         'NOM-035' => 'docs/normas/nom-035/criterios.md',
         'NOM-037' => 'docs/normas/nom-037/criterios.md',
         'Vacaciones' => 'docs/normas/vacaciones/criterios.md',
+        'Ley Silla' => 'docs/normas/ley-silla/criterios.md',
+        'Jornada' => 'docs/normas/jornada/criterios.md',
+        'Compensación' => 'docs/normas/compensation/criterios.md',
     ],
 
 ];

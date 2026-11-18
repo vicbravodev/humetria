@@ -34,11 +34,52 @@ final class RegulationIndex
                 continue;
             }
 
-            $document = (string) file_get_contents(base_path($path));
-            preg_match_all('/^### (C-\d+)\. (.+?)(?: · (.+))?\R((?s:.*?))(?=^#{2,3} |\z)/m', $document, $matches, PREG_SET_ORDER);
+            $chunks = [...$chunks, ...$this->chunks((string) $norm, (string) file_get_contents(base_path($path)))];
+        }
 
-            foreach ($matches as $match) {
-                $chunks[] = new RegulationChunk((string) $norm, $match[1], $match[2], $match[3], trim($match[4]));
+        return $chunks;
+    }
+
+    /**
+     * One chunk per criterion, however the document numbers them: `### C-01. Title · Origin`, `**C-01. Title.** text`,
+     * `**1.1 Title** · Origin · text` or `### 2.1 Title`. A criterion runs until the next one or the next heading; one
+     * with no text (a heading over others) is left out.
+     *
+     * @return list<RegulationChunk>
+     */
+    private function chunks(string $norm, string $document): array
+    {
+        $starts = [
+            '/^### (C-\d+)\. (.+?)(?: · (.+))?()$/u',
+            '/^\*\*(C-\d+)\. (.+?)\.\*\*()\s*(.*)$/u',
+            '/^\*\*(\d+\.\d+) (.+?)\*\*(?: · ([^·]+?))?(?: · (.*))?$/u',
+            '/^#{2,3} (\d+(?:\.\d+)?)\.? (.+?)()()$/u',
+        ];
+        $chunks = [];
+        $current = null;
+
+        foreach ([...preg_split('/\R/', $document) ?: [], '## '] as $line) {
+            $match = null;
+
+            foreach ($starts as $pattern) {
+                if (preg_match($pattern, $line, $found) === 1) {
+                    $match = $found;
+                    break;
+                }
+            }
+
+            if ($match !== null || str_starts_with($line, '#')) {
+                if ($current !== null && trim($current['text']) !== '') {
+                    $chunks[] = new RegulationChunk($norm, $current['id'], $current['title'], $current['source'], trim($current['text']));
+                }
+
+                $current = $match === null ? null : ['id' => $match[1], 'title' => $match[2], 'source' => trim($match[3] ?? ''), 'text' => ($match[4] ?? '')."\n"];
+
+                continue;
+            }
+
+            if ($current !== null) {
+                $current['text'] .= $line."\n";
             }
         }
 
