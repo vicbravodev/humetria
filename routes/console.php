@@ -6,6 +6,7 @@ use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Attendance\Actions\DispatchCloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
 use App\Modules\Billing\Actions\MeasureStorage;
+use App\Modules\Billing\Actions\ReconcileWhatsApp;
 use App\Modules\Billing\Actions\ReleaseBulkHolds;
 use App\Modules\Billing\Actions\RenewSubscriptions;
 use App\Modules\Billing\Actions\SendBillingNotices;
@@ -33,6 +34,10 @@ use App\Modules\Seating\Actions\SendSeatingDigests;
 use App\Modules\Telework\Actions\RemindUnansweredAccidents;
 use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
+use App\Modules\Tenancy\Contracts\CompanyRegistry;
+use Carbon\CarbonImmutable;
+use Carbon\Exceptions\InvalidFormatException;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
@@ -194,6 +199,34 @@ Artisan::command('billing:notify', function (SendBillingNotices $notices): void 
 })->purpose('Email each account the next amount and the loss of the channel discount before the cut, and a balance past due; once each');
 
 Schedule::command('billing:notify')->dailyAt('09:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// By hand, once a month, when Meta's invoice is in: it writes nothing, it says what to credit and what the platform spent.
+Artisan::command('billing:whatsapp-reconcile {month : El mes, como 2026-11}', function (ReconcileWhatsApp $reconcile, CompanyRegistry $companies): int {
+    $argument = $this->argument('month');
+
+    try {
+        $month = CarbonImmutable::createFromFormat('!Y-m', is_string($argument) ? $argument : '', config()->string('app.display_timezone'));
+    } catch (InvalidFormatException) {
+        $month = null;
+    }
+
+    if ($month === null) {
+        $this->error('El mes se escribe como 2026-11.');
+
+        return Command::FAILURE;
+    }
+
+    $report = $reconcile->handle($month);
+    $names = $companies->many(array_column($report['companies'], 'tenantId'));
+
+    foreach ($report['companies'] as $row) {
+        $this->line(($names[$row['tenantId']]->tradeName ?? $row['tenantId']).": {$row['charged']} cobrados, {$row['undelivered']} sin entregar, crédito sugerido {$row['creditCents']} centavos");
+    }
+
+    $this->info("Costo de Meta del mes: {$report['platformCostCents']} centavos");
+
+    return Command::SUCCESS;
+})->purpose('For a month, per company: WhatsApp messages charged, the ones never delivered and the credit that suggests; and the platform cost to compare with Meta\'s invoice');
+
 Artisan::command('billing:release-holds', function (ReleaseBulkHolds $release): void {
     $this->info('Reservas liberadas: '.$release->handle());
 })->purpose('Give back the campaign mail and WhatsApp messages a bulk send held and nobody used');

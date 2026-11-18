@@ -6,11 +6,13 @@ namespace App\Modules\Messaging\Providers;
 
 use App\Modules\Messaging\Contracts\ChannelConsent;
 use App\Modules\Messaging\Contracts\ChannelPicker;
+use App\Modules\Messaging\Contracts\DeliveryOutcomes;
 use App\Modules\Messaging\Contracts\DeliverySummary;
 use App\Modules\Messaging\Contracts\WhatsAppGateway;
 use App\Modules\Messaging\Support\ChannelDeliveryTallies;
 use App\Modules\Messaging\Support\ChannelRules;
 use App\Modules\Messaging\Support\CloudApiWhatsAppGateway;
+use App\Modules\Messaging\Support\DeliveryLedger;
 use App\Modules\Messaging\Support\NullWhatsAppGateway;
 use App\Modules\Messaging\Support\WhatsAppChannel;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -30,6 +32,7 @@ final class MessagingServiceProvider extends ServiceProvider
     {
         $this->app->scoped(ChannelRules::class);
         $this->app->bind(DeliverySummary::class, ChannelDeliveryTallies::class);
+        $this->app->bind(DeliveryOutcomes::class, DeliveryLedger::class);
         $this->app->bind(ChannelConsent::class, fn (Application $app): ChannelRules => $app->make(ChannelRules::class));
         $this->app->bind(ChannelPicker::class, fn (Application $app): ChannelRules => $app->make(ChannelRules::class));
         $this->app->bind(WhatsAppGateway::class, config()->boolean('whatsapp.enabled') ? CloudApiWhatsAppGateway::class : NullWhatsAppGateway::class);

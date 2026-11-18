@@ -227,3 +227,36 @@ it('does not change the company: no access, no dates, no restriction', function 
     expect($tenant->refresh()->getAttributes())->toBe($before)
         ->and(AuditEntry::query()->count())->toBe(0);
 });
+
+it('adds a line of WhatsApp messages, before the VAT, at the price charged and with the count', function (): void {
+    [$tenant] = statementCompany();
+    foreach ([221_000, 221_000, 221_000] as $index => $price) {
+        Illuminate\Support\Facades\DB::table('usage_events')->insert(['id' => (string) Illuminate\Support\Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-12-01', 'quantity' => 1, 'idempotency_key' => "wamid-{$index}", 'occurred_at' => '2026-12-10 12:00:00', 'unit_cost_micros' => 170_000, 'unit_price_micros' => $price, 'cost_currency' => 'MXN']);
+    }
+    // Another month and another meter are not this statement's.
+    Illuminate\Support\Facades\DB::table('usage_events')->insert(['id' => (string) Illuminate\Support\Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-11-01', 'quantity' => 1, 'idempotency_key' => 'old', 'occurred_at' => '2026-11-10 12:00:00', 'unit_cost_micros' => 170_000, 'unit_price_micros' => 221_000, 'cost_currency' => 'MXN']);
+
+    $draft = resolve(BuildStatement::class)->handle($tenant->id, statementMonth());
+
+    $codes = array_map(fn ($line): string => $line->code, $draft->lines);
+    $whatsApp = $draft->lines[array_search('whatsapp', $codes, true)];
+    expect($codes)->toBe(['plan', 'whatsapp', 'vat'])
+        ->and([$whatsApp->label, $whatsApp->amountCents, $whatsApp->explanation])->toBe(['Mensajes de WhatsApp', 66, '3 mensajes'])
+        ->and($draft->subtotalCents)->toBe(490_066)
+        ->and($draft->vatCents)->toBe((int) round(490_066 * 16 / 100));
+});
+
+it('adds no WhatsApp line when the company sent no messages this month', function (): void {
+    [$tenant] = statementCompany();
+
+    $draft = resolve(BuildStatement::class)->handle($tenant->id, statementMonth());
+
+    expect(array_map(fn ($line): string => $line->code, $draft->lines))->toBe(['plan', 'vat']);
+});
+
+it('refuses a statement whose WhatsApp lines are in another currency', function (): void {
+    [$tenant] = statementCompany();
+    Illuminate\Support\Facades\DB::table('usage_events')->insert(['id' => (string) Illuminate\Support\Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-12-01', 'quantity' => 1, 'idempotency_key' => 'usd', 'occurred_at' => '2026-12-10 12:00:00', 'unit_cost_micros' => 10_000, 'unit_price_micros' => 13_000, 'cost_currency' => 'USD']);
+
+    resolve(BuildStatement::class)->handle($tenant->id, statementMonth());
+})->throws(InvalidStatement::class);

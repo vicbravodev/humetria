@@ -3,7 +3,7 @@ import PageHeader from '@/components/humetria/page-header';
 import OverviewBreakdown from '@/components/tenancy/overview-breakdown';
 import OverviewCard from '@/components/tenancy/overview-card';
 import { DEMO_VIEWS, demoQuery } from '@/lib/demo-requests';
-import { demosLine, pesos, quietLine } from '@/lib/overview';
+import { demosLine, pesos, quietLine, whatsAppLine } from '@/lib/overview';
 import { companiesQuery } from '@/lib/tenant-status';
 import { index as accounts } from '@/routes/billing/accounts';
 import { index as companies } from '@/routes/companies';
@@ -19,12 +19,13 @@ const STATUSES: { value: TenantView; label: string }[] = [
     { value: 'archived', label: 'Archivadas' },
 ];
 
-/** «Resumen»: the platform in four figures, each one a way into its list. */
+/** «Resumen»: the platform in five figures, each one a way into its list. */
 export default function Overview({
     companies: counts,
     revenueCents,
     demos,
     inactive,
+    whatsApp,
 }: PlatformOverviewData) {
     return (
         <>
@@ -60,6 +61,13 @@ export default function Overview({
                         title="Ingreso mensual contratado"
                         figure={pesos(revenueCents)}
                         caption="Antes de IVA, de las suscripciones que pagan hoy."
+                        href={accounts()}
+                        action="Ver cuentas"
+                    />
+                    <OverviewCard
+                        title="WhatsApp del mes"
+                        figure={`${whatsApp.messages} mensajes`}
+                        caption={whatsAppLine(whatsApp)}
                         href={accounts()}
                         action="Ver cuentas"
                     />
