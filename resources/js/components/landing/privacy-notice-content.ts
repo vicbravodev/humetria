@@ -108,6 +108,19 @@ const PLATFORM: PrivacySection = {
     ],
 };
 
+const MESSAGING: PrivacySection = {
+    id: 'whatsapp-y-correo',
+    title: 'Mensajes por WhatsApp y por correo',
+    paragraphs: [
+        'Las empresas que usan Humetría pueden mandarte por correo electrónico o por WhatsApp el enlace de una encuesta. Tu empresa nos da tu correo o tu celular, y solo los usamos para mandarte ese mensaje: son invitaciones, nunca publicidad.',
+        'Los mensajes de WhatsApp salen del número de Humetría y los entrega Meta (WhatsApp), en Estados Unidos. A Meta le llegan tu número de celular y la plantilla del mensaje con tu enlace, y nos avisa si el mensaje salió, llegó o se leyó.',
+        'Los correos los entrega Resend, también en Estados Unidos. A Resend le llegan tu correo y el mensaje, y nos avisa si el correo llegó, se retrasó o rebotó.',
+        'De cada mensaje guardamos cómo le fue (enviado, entregado, leído o fallido) y cuándo, no su contenido, y de tu celular solo una huella que no se puede convertir en tu número. Tu empresa nunca ve esos datos de cada persona: solo cuántos mensajes llegaron en total, y solo cuando son suficientes para que nadie pueda identificarse. Tus respuestas a una encuesta anónima nunca se ligan con el canal, con tu celular ni con tu correo.',
+        'Si no quieres recibir mensajes por WhatsApp, respóndenos STOP (o BAJA, ALTO o CANCELAR): dejamos de escribirte las empresas que te han mandado mensajes, sin contestarte nada.',
+        `El texto de esta sección está ${REVIEW}.`,
+    ],
+};
+
 const CONTROL: PrivacySection = {
     id: 'borrar-o-rechazar-cookies',
     title: 'Cómo borrar o rechazar las cookies',
@@ -136,7 +149,7 @@ const RIGHTS: PrivacySection = {
     ],
 };
 
-/** The nine sections of the notice, in the order the page shows them. */
+/** The ten sections of the notice, in the order the page shows them. */
 export function privacySections(parties: PrivacyParties): PrivacySection[] {
     return [
         controller(parties),
@@ -145,6 +158,7 @@ export function privacySections(parties: PrivacyParties): PrivacySection[] {
         OWN_COOKIES,
         ANALYTICS,
         PLATFORM,
+        MESSAGING,
         CONTROL,
         RETENTION,
         RIGHTS,
