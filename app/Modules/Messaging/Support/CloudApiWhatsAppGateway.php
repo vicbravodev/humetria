@@ -9,6 +9,7 @@ use App\Modules\Messaging\Data\FailureCause;
 use App\Modules\Messaging\Data\OutboundMessage;
 use App\Modules\Messaging\Data\SendOutcome;
 use App\Modules\Messaging\Enums\TemplateButtonType;
+use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
@@ -26,7 +27,18 @@ final class CloudApiWhatsAppGateway implements WhatsAppGateway
 
     public function send(OutboundMessage $message): SendOutcome
     {
-        $to = $this->phones->toMeta($message->to);
+        return $this->post($message->to, fn (string $to): array => $this->payload($message, $to));
+    }
+
+    public function sendText(string $to, string $body): SendOutcome
+    {
+        return $this->post($to, fn (string $meta): array => ['messaging_product' => 'whatsapp', 'to' => $meta, 'type' => 'text', 'text' => ['body' => $body]]);
+    }
+
+    /** @param Closure(string): array<string, mixed> $payload the body to send, given the phone as Meta writes it */
+    private function post(string $phone, Closure $payload): SendOutcome
+    {
+        $to = $this->phones->toMeta($phone);
 
         // Not a Mexican mobile: there is no WhatsApp account to reach, and nothing leaves.
         if ($to === null) {
@@ -40,7 +52,7 @@ final class CloudApiWhatsAppGateway implements WhatsAppGateway
                 ->withToken(config()->string('whatsapp.access_token'))
                 ->acceptJson()
                 ->asJson()
-                ->post($url, $this->payload($message, $to));
+                ->post($url, $payload($to));
         } catch (ConnectionException) {
             // It is not known whether the message left.
             return SendOutcome::failed(FailureCause::TimedOut);

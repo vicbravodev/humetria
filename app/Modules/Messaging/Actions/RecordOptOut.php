@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * A STOP (rule 6): the phone asked not to be written to. It is recorded for every company that ever wrote to it (while the
- * deliveries are kept) or, when none did, for all. Nothing is answered and neither the phone nor its hash is logged.
+ * deliveries are kept) or, when none did, for all. Neither the phone nor its hash is logged. The confirmation text is queued by the caller (HandleMetaEvents).
  */
 final class RecordOptOut
 {

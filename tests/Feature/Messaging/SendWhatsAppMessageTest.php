@@ -358,6 +358,11 @@ it('marks the message as in transit while Meta is called, and gives it back to c
 
             return SendOutcome::failed(FailureCause::ServerError);
         }
+
+        public function sendText(string $to, string $body): SendOutcome
+        {
+            return SendOutcome::failed(FailureCause::ServerError);
+        }
     });
 
     expect(fn () => runSend($delivery))->toThrow(RetryableWhatsAppFailure::class);

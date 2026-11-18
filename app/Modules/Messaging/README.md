@@ -9,7 +9,7 @@ mensaje. El módulo que manda un aviso (Campaigns, Engagement…) sigue eligiend
 
 | Contrato           | Para qué                                                                                              |
 | ------------------ | ----------------------------------------------------------------------------------------------------- |
-| `WhatsAppGateway`  | `send(OutboundMessage): SendOutcome` (Cloud API, nulo con `WHATSAPP_ENABLED=false`, falso en pruebas) |
+| `WhatsAppGateway`  | `send(OutboundMessage)` y `sendText(to, body)`: `SendOutcome` (Cloud API, nulo con `WHATSAPP_ENABLED=false`, falso en pruebas) |
 | `ChannelConsent`   | `canSend(tenantId, channel, phone)`: canal activo con opt-in vigente y sin baja                       |
 | `ChannelPicker`    | un solo canal por persona (el de menor preferencia entre los activos con dato de contacto)            |
 | `TracksDelivery`   | la notificación dice a qué invitación pertenece, para seguir su entrega                               |
@@ -24,6 +24,15 @@ Los contratos se agregan en el commit que los usa; el diseño fija sus firmas.
 `GET|POST /webhooks/whatsapp` y `POST /webhooks/resend`. El proveedor no tiene cuenta: la **firma del cuerpo crudo** es la
 credencial (se verifica antes de procesar nada). Sin sesión ni cookies, con throttle por dirección (`messaging-webhooks`) y
 tamaño máximo (`LimitWebhookBody`).
+
+## Baja y alta por mensaje (decisión de Victor, 2026-11-18)
+
+La persona escribe al número de Humetria: **STOP/BAJA/ALTO/CANCELAR** (o toca «Dejar de recibir») crea su baja (`RecordOptOut`);
+**ALTA/START** la elimina (`LiftOptOut`, mismo alcance: cada empresa que cubrió el STOP, o la global). Solo la persona se da de
+alta; RH nunca reactiva. Sin baja previa, ALTA no cambia nada. Cada una recibe un texto de confirmación (`whatsapp.replies.*`,
+texto libre dentro de la ventana de 24 h que abre su mensaje) por `SendWhatsAppServiceReply`: cola `whatsapp`, 3 intentos, payload
+cifrado (lleva el teléfono), sin medidor ni cobro, y con la pausa y `WHATSAPP_ENABLED`. Un mensaje se procesa una sola vez
+(`message:{id}`). El alta deja `messaging.opt_out_lifted` en logs y en la bitácora, sin teléfono ni hash.
 
 ## Privacidad (invariante)
 

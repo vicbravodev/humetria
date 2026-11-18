@@ -66,3 +66,17 @@ it('boots with the function on and a recipient key', function (): void {
 
     expect(config('whatsapp.enabled'))->toBeTrue();
 });
+
+it('sends no service text either, and logs neither the phone nor the text', function (): void {
+    Http::preventStrayRequests();
+    Http::fake();
+    Log::spy();
+
+    $outcome = app(WhatsAppGateway::class)->sendText('+528112345678', 'Un texto');
+
+    expect($outcome->cause)->toBe(FailureCause::Disabled);
+    Http::assertNothingSent();
+    Log::shouldHaveReceived('info')->withArgs(fn (string $event, array $context = []): bool => $event === 'whatsapp.send_skipped'
+        && ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), '8112345678')
+        && ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'Un texto'))->once();
+});
