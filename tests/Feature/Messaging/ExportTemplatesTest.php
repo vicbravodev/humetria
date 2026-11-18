@@ -64,8 +64,7 @@ it('marks a button without a destination as pending, with its reason, and does n
     $buttons = exported()['leave_decision_v1']['components'][2]['buttons'];
 
     expect($buttons[0])->toHaveKey('_pending')->not->toHaveKey('url')
-        ->and($buttons[1])->toHaveKey('_pending')->not->toHaveKey('phone_number')
-        ->and($buttons[2])->toBe(['type' => 'QUICK_REPLY', 'text' => 'Dejar de recibir']);
+        ->and($buttons[1])->toBe(['type' => 'QUICK_REPLY', 'text' => 'Dejar de recibir']);
 });
 
 it('exports the proof code as a template of the authentication library, with no text of ours', function (): void {
@@ -99,4 +98,8 @@ it('writes one JSON file per template into a directory, and still sends nothing'
 
 it('never reads the credentials', function (): void {
     expect(json_encode(exported()))->not->toContain('the-secret-token')->not->toContain('999');
+});
+
+it('exports no phone button', function (): void {
+    expect(json_encode(exported()))->not->toContain('PHONE_NUMBER')->not->toContain('Llamar a RH');
 });
