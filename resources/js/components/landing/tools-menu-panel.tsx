@@ -1,4 +1,5 @@
 import { m } from 'motion/react';
+import ToolIcon from '@/components/humetria/tool-icon';
 import {
     FAMILIES,
     FAMILY_CLASS,
@@ -47,19 +48,31 @@ export default function ToolsMenuPanel({ floating, onPick }: Props) {
                         FAMILY_CLASS[family.key],
                     )}
                 >
-                    <p className="flex items-center gap-2 px-2.5 pb-1 text-caption font-semibold text-family">
-                        <family.icon aria-hidden className="size-4" />
-                        {family.name}
-                    </p>
+                    <div className="grid gap-0.5 px-2.5 pb-2">
+                        <p className="flex items-center gap-2 text-caption font-semibold text-family">
+                            <family.icon aria-hidden className="size-4" />
+                            {family.name}
+                        </p>
+                        <p className="text-caption text-muted-foreground">
+                            {family.hint}
+                        </p>
+                    </div>
                     {familyTools(family).map((tool) => (
                         <a
                             key={tool.key}
                             href={toolPageUrl(tool.key)}
-                            className="grid min-h-11 gap-0.5 rounded-xl px-2.5 py-2 transition-colors duration-150 ease-out hover:bg-family-soft"
+                            className="group grid min-h-11 grid-cols-[40px_minmax(0,1fr)] items-center gap-3 rounded-xl px-2.5 py-2 transition-colors duration-150 ease-out hover:bg-muted"
                         >
-                            <span className="font-semibold">{tool.name}</span>
-                            <span className="text-caption text-muted-foreground">
-                                {tool.hint}
+                            <span className="grid size-10 place-items-center rounded-xl bg-family-soft text-family transition-transform duration-200 ease-out group-hover:scale-105 motion-reduce:transition-none">
+                                <ToolIcon tool={tool.key} className="size-5" />
+                            </span>
+                            <span className="grid gap-0.5">
+                                <span className="font-semibold">
+                                    {tool.name}
+                                </span>
+                                <span className="text-caption text-muted-foreground">
+                                    {tool.hint}
+                                </span>
                             </span>
                         </a>
                     ))}

@@ -1,3 +1,4 @@
+import ToolIcon from '@/components/humetria/tool-icon';
 import {
     FAMILIES,
     FAMILY_CLASS,
@@ -32,8 +33,12 @@ export default function FooterTools() {
                         <a
                             key={tool.key}
                             href={toolPageUrl(tool.key)}
-                            className={linkClass}
+                            className={cn(linkClass, 'gap-2')}
                         >
+                            <ToolIcon
+                                tool={tool.key}
+                                className="size-4 text-family"
+                            />
                             {tool.name}
                         </a>
                     ))}

@@ -1,17 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import {
-    Activity,
-    Armchair,
-    CalendarDays,
-    CircleDollarSign,
-    Clock,
-    EyeOff,
-    Laptop,
-    Layers,
-    MessageSquareText,
-    Network,
-    ShieldCheck,
-} from 'lucide-react';
+import { EyeOff, Layers, ShieldCheck } from 'lucide-react';
 import {
     TOOLS,
     type LandingTool,
@@ -78,15 +66,3 @@ export function familyTools(family: LandingFamily): LandingTool[] {
 export function familyOf(tool: ToolKey): LandingFamily {
     return FAMILIES.find((family) => family.tools.includes(tool)) ?? COMPLIANCE;
 }
-
-export const TOOL_ICONS: Record<ToolKey, LucideIcon> = {
-    nom_035: ShieldCheck,
-    nom_037: Laptop,
-    ley_silla: Armchair,
-    attendance: Clock,
-    complaints: MessageSquareText,
-    engagement: Activity,
-    leave: CalendarDays,
-    org_chart: Network,
-    compensation: CircleDollarSign,
-};
