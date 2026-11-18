@@ -67,11 +67,13 @@ export default function PasskeyVerify({
                 )}
             </div>
 
-            <div className="flex items-center gap-3 text-caption text-muted-foreground">
-                <span aria-hidden className="h-px flex-1 bg-border" />
-                {copy.separator}
-                <span aria-hidden className="h-px flex-1 bg-border" />
-            </div>
+            {copy.separator !== '' && (
+                <div className="flex items-center gap-3 text-caption text-muted-foreground">
+                    <span aria-hidden className="h-px flex-1 bg-border" />
+                    {copy.separator}
+                    <span aria-hidden className="h-px flex-1 bg-border" />
+                </div>
+            )}
         </>
     );
 }
