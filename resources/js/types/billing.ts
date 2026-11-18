@@ -51,7 +51,7 @@ export type AccountCompanyRow = {
     previous_payer: string | null;
 };
 
-export type Plan = 'jornada' | 'cumplimiento' | 'integral';
+export type Plan = 'jornada' | 'cumplimiento' | 'integral' | 'enterprise';
 
 export type PriceProfile =
     | 'direct'

@@ -55,7 +55,10 @@ function fillDemoForm(mixed $page): void
         ->fill('email', 'ana@empresa.mx')
         ->fill('#demo-whatsapp', '55 1234 5678')
         ->fill('company', 'Empresa Ejemplo')
-        ->radio('profile', 'consultant')
+        // Opens the folded case details once: the form keeps them open after a request, so a second fill must not close them.
+        ->script('() => { const toggle = document.querySelector(\'[data-test="demo-case-toggle"]\'); if (! toggle.parentElement.open) toggle.click(); }');
+
+    $page->radio('profile', 'consultant')
         ->check('tools[]', 'nom_035')
         ->check('tools[]', 'nom_037')
         ->radio('workforce', '51_100')
@@ -82,6 +85,25 @@ it('stores a demo request and confirms it', function (bool $mobile): void {
         ->and($demoRequest->workforce->value)->toBe('51_100')
         ->and($demoRequest->tools->map->value->all())->toBe(['nom_035', 'nom_037']);
 })->with(['desktop' => false, 'mobile' => true]);
+
+it('stores a demo request from only the four contact fields, leaving the case details empty', function (): void {
+    $page = visitPage('landing', '/', reach: function ($page): void {
+        $page->fill('name', 'Ana López')
+            ->fill('email', 'ana@empresa.mx')
+            ->fill('#demo-whatsapp', '55 1234 5678')
+            ->fill('company', 'Empresa Ejemplo')
+            ->press('@demo-request-submit')
+            ->waitForText('Recibimos tu solicitud · te escribiremos para agendar la demo.');
+    });
+
+    $page->assertNoJavaScriptErrors();
+
+    $demoRequest = DemoRequest::query()->sole();
+
+    expect($demoRequest->profile)->toBeNull()
+        ->and($demoRequest->workforce)->toBeNull()
+        ->and($demoRequest->tools->all())->toBe([]);
+});
 
 it('reports nothing and remembers no lead while PostHog is off: no token, no consent', function (): void {
     $page = visitPage('landing', '/', reach: function ($page): void {
@@ -128,24 +150,19 @@ it('shows what to fix next to each field when the form is sent empty', function 
             ->assertScript("() => document.getElementById(document.getElementById('demo-{$field}').getAttribute('aria-describedby')).textContent", $error);
     }
 
-    foreach ([
-        'profile' => 'Elige para quién es Humetría.',
-        'tools' => 'Elige al menos una herramienta.',
-        'workforce' => 'El campo número de trabajadores es obligatorio.',
-    ] as $group => $error) {
-        $page->assertAttribute("[data-test=\"{$group}-group\"]", 'aria-invalid', 'true')
-            ->assertScript("() => document.getElementById(document.querySelector('[data-test=\"{$group}-group\"]').getAttribute('aria-describedby')).textContent", $error);
-    }
-
-    $page->assertAttributeMissing('[name="message"]', 'aria-invalid')
+    // The case details are optional: they stay folded and nothing in them is flagged.
+    $page->assertScript('() => document.querySelector(\'[data-test="demo-case"]\').open', false)
+        ->assertScript('() => document.querySelectorAll(\'#agenda-una-demo [data-test$="-group"][aria-invalid]\').length', 0)
+        ->assertAttributeMissing('[name="message"]', 'aria-invalid')
         ->assertScript('() => document.activeElement.name', 'name')
         ->assertScript('() => [...document.querySelectorAll("#agenda-una-demo [id$=\'-error\']")].every((error) => error.getAttribute("role") === "alert")');
 
     expect(DemoRequest::query()->count())->toBe(0);
 })->with(['desktop' => false, 'mobile' => true]);
 
-it('asks who Humetría is for, unions included', function (): void {
+it('asks who Humetría is for, unions included, once the visitor opens their case', function (): void {
     visit('/')
+        ->click('@demo-case-toggle')
         ->assertSee('¿Para quién es Humetría?')
         ->assertSee('Para mi empresa o grupo de empresas')
         ->assertSee('Soy consultor y atiendo a varias empresas')
@@ -198,6 +215,19 @@ it('presents Humetría as an HR platform with all its tools', function (): void 
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "Registro de jornada", "Buzón de quejas", "Clima y pulso", "Vacaciones y permisos", "Organigrama", "Compensación"].every((tool) => document.querySelector("[data-test=hero-families]").textContent.includes(tool))')
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
+
+it('gives the hero film the larger half of the desktop fold, with a headline that fits in three lines', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => parseFloat(getComputedStyle(document.querySelector("#hero-title")).fontSize) <= 64')
+        ->assertScript('() => document.querySelector("#hero-title").getBoundingClientRect().height <= 3.5 * parseFloat(getComputedStyle(document.querySelector("#hero-title")).fontSize)')
+        ->assertScript('() => document.querySelector("[data-test=hero-video]").getBoundingClientRect().width >= 0.52 * document.querySelector("#inicio > div:nth-of-type(2)").clientWidth');
+});
+
+it('tells next to the hero button what happens after asking for a demo', function (bool $mobile): void {
+    visitPage('landing', '/', mobile: $mobile)
+        ->assertSeeIn('[data-test="hero-demo-note"]', 'Te escribimos por WhatsApp o por correo para agendar la llamada.')
+        ->assertScript('() => document.querySelector("[data-test=hero-demo-note]").closest("[data-test=hero-actions]") !== null');
+})->with(['desktop' => false, 'mobile' => true]);
 
 it('plays the hero film muted and in a loop, and lets the visitor pause it', function (): void {
     $video = 'document.querySelector("[data-test=hero-video] video")';
@@ -550,7 +580,7 @@ it('states its legal and privacy claims exactly', function (): void {
         ->assertSee('Arma el informe que pide la norma (numeral 7.7)')
         ->assertSee('solo con 5 o más respuestas')
         ->assertSee('con la confidencialidad que requiere cada herramienta')
-        ->assertSee('¿Qué herramientas te interesan? (elige al menos una)')
+        ->assertDontSee('(elige al menos una)')
         ->assertDontSee('confidencialidad que pide cada norma');
 });
 

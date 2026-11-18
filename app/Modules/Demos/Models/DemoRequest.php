@@ -27,8 +27,8 @@ use Illuminate\Support\Collection;
  * @property string $email
  * @property string $whatsapp
  * @property string $company
- * @property DemoProfile $profile
- * @property Workforce $workforce
+ * @property ?DemoProfile $profile
+ * @property ?Workforce $workforce
  * @property Collection<int, Tool> $tools
  * @property string|null $message
  * @property DemoStatus $status

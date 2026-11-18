@@ -52,7 +52,7 @@ it('shows the staff the company with each module, whether it has it and where it
             ->where('company.trade_name', $tenant->trade_name)
             ->where('company.rfc', $tenant->rfc)
             ->where('can_manage', $user->isSuperadmin())
-            ->has('modules', 9)
+            ->has('modules', 10)
             ->where('modules.3', ['key' => 'nom035', 'label' => 'NOM-035', 'enabled' => true, 'source' => 'plan', 'source_label' => 'Plan', 'reason' => null, 'ends_on' => null, 'exists_in_code' => true])
             ->where('modules.5.source', 'grant')
             ->where('modules.5.reason', 'Piloto')
@@ -76,6 +76,7 @@ it('names every tool in the console as the menu does', function (): void {
             'complaints' => 'Quejas',
             'pulse' => 'Pulso',
             'climate' => 'Clima',
+            'sso' => 'Inicio de sesión único',
         ]));
 });
 

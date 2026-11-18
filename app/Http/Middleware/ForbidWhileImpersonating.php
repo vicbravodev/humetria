@@ -41,6 +41,8 @@ final class ForbidWhileImpersonating
             'audit.*', 'platform-users.*', 'overview.*',
             // The owner's own preferences about the guided tour: whoever works as them changes none of it.
             'tenant.first-steps.*',
+            // How a company's people sign in is the owner's alone: whoever works as them never changes it.
+            'tenant.sso.*',
         ];
     }
 

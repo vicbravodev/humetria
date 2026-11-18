@@ -99,7 +99,7 @@ final readonly class SyncCompanyModules
         );
 
         // A company no plan has spoken for has every module that exists.
-        $implicit = $planned ? [] : array_map(fn (Module $module): string => $module->value, array_filter(Module::cases(), fn (Module $module): bool => $module->existsInCode()));
+        $implicit = $planned ? [] : array_map(fn (Module $module): string => $module->value, array_filter(Module::cases(), fn (Module $module): bool => $module->keptWithoutPlan()));
 
         return array_values(array_unique([...$active, ...$implicit]));
     }

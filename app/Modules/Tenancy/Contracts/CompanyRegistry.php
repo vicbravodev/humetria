@@ -15,6 +15,9 @@ interface CompanyRegistry
     /** A company by id; null when there is none (or the id is not one). */
     public function find(string $id): ?CompanyBrief;
 
+    /** A company by the slug of its address; null when there is none. */
+    public function findBySlug(string $slug): ?CompanyBrief;
+
     /**
      * The companies with those ids; an id that is not a company is left out.
      *

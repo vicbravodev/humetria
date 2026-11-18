@@ -2,6 +2,7 @@ export type * from './assistant';
 export type * from './audit';
 export type * from './auth';
 export type * from './billing';
+export type * from './sso';
 export type * from './billing-parts';
 export type * from './campaigns';
 export type * from './compensation';
