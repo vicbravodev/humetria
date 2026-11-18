@@ -27,6 +27,7 @@ export type * from './organization';
 export type * from './overview';
 export type * from './plan';
 export type * from './seo';
+export type * from './tool-page';
 export type * from './platform-users';
 export type * from './tenancy';
 export type * from './nom035-dossier';

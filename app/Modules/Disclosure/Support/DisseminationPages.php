@@ -78,9 +78,10 @@ final readonly class DisseminationPages
     /**
      * The centers in use a page at a time (board V4-Difusion-Registro): how many of their people confirmed the policy in force
      * there (null without one; the acknowledgment is of reading the policy, never a survey answer) and where the results for
-     * their people stand (criterio C-54): ready to publish, published, waiting for a closed evaluation or not applicable.
+     * their people stand (criterio C-54): ready to publish, published, waiting for a closed evaluation or not applicable, with the
+     * minimum of people per group that evaluation froze.
      *
-     * @return LengthAwarePaginator<int, array{id: string, name: string, acks: array{confirmed: int, active: int}|null, results: array{state: string, closedOn: string|null, campaignId: string|null}}>
+     * @return LengthAwarePaginator<int, array{id: string, name: string, acks: array{confirmed: int, active: int}|null, results: array{state: string, closedOn: string|null, campaignId: string|null, minimum: int|null}}>
      */
     private function centers(): LengthAwarePaginator
     {
@@ -98,7 +99,7 @@ final readonly class DisseminationPages
                 'id' => $center->id,
                 'name' => $center->name,
                 'acks' => isset($acks[$center->id]) ? ['confirmed' => $acks[$center->id]['confirmed'], 'active' => $acks[$center->id]['active']] : null,
-                'results' => ['state' => $state, 'closedOn' => $closed?->closedOn, 'campaignId' => $closed?->id],
+                'results' => ['state' => $state, 'closedOn' => $closed?->closedOn, 'campaignId' => $closed?->id, 'minimum' => $closed?->minGroup],
             ];
         });
     }

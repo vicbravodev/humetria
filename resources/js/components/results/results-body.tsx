@@ -10,19 +10,21 @@ import type {
 
 /**
  * The detail of the Guía II or III results of a closed evaluation, under its final score: where to act first, the
- * worst-answered questions and what the norm asks at each level. Nothing under the minimum of five questionnaires.
+ * worst-answered questions and what the norm asks at each level. Nothing under the minimum of questionnaires.
  */
 export default function ResultsBody({
     results,
     areas,
     items,
     levels,
+    minGroup,
 }: {
     /** Null, with the areas and the questions, while the evaluation runs or when it applies no Guía II or III. */
     results: RiskResults | null;
     areas: AreaResults | null;
     items: ItemSection[] | null;
     levels: RiskLevelInfo[];
+    minGroup: number;
 }) {
     if (
         results === null ||
@@ -39,8 +41,9 @@ export default function ResultsBody({
                 results={results}
                 areas={areas}
                 levels={levels}
+                minGroup={minGroup}
             />
-            <ItemsResults sections={items} />
+            <ItemsResults sections={items} minGroup={minGroup} />
             <section className="flex flex-col gap-4">
                 <h2 className="text-lg font-semibold">
                     Qué pide la norma en cada nivel

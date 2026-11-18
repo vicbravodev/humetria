@@ -1,5 +1,6 @@
 import { createInertiaApp, router } from '@inertiajs/react';
 import AppErrorBoundary from '@/components/app-error-boundary';
+import { documentTitle } from '@/lib/document-title';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import RecentProofDialog from '@/components/worker-access/recent-proof-dialog';
@@ -14,6 +15,12 @@ import {
     watchErrors,
 } from '@/lib/error-tracking';
 import { initialPageName } from '@/lib/page-frame';
+import { rememberData } from '@/lib/recording-mask';
+import {
+    followPage,
+    startSessionRecording,
+    type RecordingEngine,
+} from '@/lib/session-recording';
 import { pageTransition } from '@/lib/page-transition';
 import { frameFor, preloadFrame } from '@/layouts/frames';
 
@@ -21,6 +28,9 @@ import { frameFor, preloadFrame } from '@/layouts/frames';
 globalThis.__webpack_nonce__ = cspNonce;
 
 const appName = import.meta.env['VITE_APP_NAME'] || 'Humetría';
+
+/** The page the server rendered first (its Inertia object): where the recording decides whether to start. */
+let firstPage: unknown = null;
 
 // Node renders this file too (SSR) and has no document: the frame is only preloaded in the browser.
 if (typeof document !== 'undefined') {
@@ -32,14 +42,20 @@ if (typeof document !== 'undefined') {
     )?.textContent;
 
     // What an error report says about where it happened: the page and its request id, kept up to date on every visit.
-    setErrorContext(initialPage ? JSON.parse(initialPage) : null);
-    router.on('navigate', (event) => setErrorContext(event.detail.page));
+    firstPage = initialPage ? JSON.parse(initialPage) : null;
+    setErrorContext(firstPage);
+    router.on('navigate', (event) => {
+        setErrorContext(event.detail.page);
+        void followPage(event.detail.page);
+    });
+    // A partial reload brings more data without a new page: the recording hides it too.
+    router.on('success', (event) => rememberData(event.detail.page));
 
     await preloadFrame(initialPageName(initialPage));
 }
 
 void createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => documentTitle(title, appName),
     layout: frameFor,
     strictMode: true,
     defaults: {
@@ -64,6 +80,13 @@ void createInertiaApp({
 // Applies the saved theme before the first paint.
 initializeTheme();
 
+// The recording instance: PostHog's build with its recorder inside (never a script from outside), only in a company's panel.
+async function loadRecorder(): Promise<RecordingEngine> {
+    const { default: posthog } = await import('posthog-js/full/no-external');
+
+    return posthog;
+}
+
 async function loadPostHog(): Promise<AnalyticsEngine> {
     const { default: posthog } = await import('posthog-js/no-external');
 
@@ -78,4 +101,8 @@ if (typeof document !== 'undefined') {
     void startErrorTracking(document, loadPostHog, window.location.origin).then(
         (started) => started && watchErrors(window, reportError),
     );
+    void startSessionRecording(document, firstPage, {
+        load: loadRecorder,
+        origin: window.location.origin,
+    });
 }

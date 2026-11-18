@@ -29,7 +29,7 @@ export default function Overview({
 }: PlatformOverviewData) {
     return (
         <>
-            <Head title="Resumen" />
+            <Head title="Resumen de la empresa" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     title="Resumen"

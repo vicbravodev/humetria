@@ -22,6 +22,7 @@ use App\Modules\Engagement\Support\Pulse\SchedulePage;
 use App\Modules\Engagement\Support\Pulse\TrendPage;
 use App\Modules\Engagement\Support\Results\SurveyResults;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -45,10 +46,10 @@ final readonly class SurveyPages
     /** The waves the home of the pulse draws in «Cómo vamos». */
     private const int HOME_WAVES = 4;
 
-    public function __construct(private SnapshotAudience $snapshot, private Participation $participation, private TrendPage $trend) {}
+    public function __construct(private SnapshotAudience $snapshot, private Participation $participation, private TrendPage $trend, private GroupMinimums $groupMinimums) {}
 
     /**
-     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string, latest: array{id: string, name: string, index: int|null, recommendation: int|null, commitments: array{open: int, in_progress: int, done: int}}|null, howWeAre: list<array{surveyId: string, label: string, value: int, direction: string|null}>|null, modes: list<array{value: string, label: string}>|null, schedule: array<string, mixed>|null, frequencies: list<array{value: string, label: string}>|null}
+     * @return array{current: Card|null, surveys: LengthAwarePaginator<int, HistoryRow>, canManage: bool, kind: string, minGroup: int, latest: array{id: string, name: string, index: int|null, recommendation: int|null, commitments: array{open: int, in_progress: int, done: int}}|null, howWeAre: list<array{surveyId: string, label: string, value: int, direction: string|null}>|null, modes: list<array{value: string, label: string}>|null, schedule: array<string, mixed>|null, frequencies: list<array{value: string, label: string}>|null}
      */
     public function index(SurveyKind $kind, bool $canManage): array
     {
@@ -69,6 +70,8 @@ final readonly class SurveyPages
             ]),
             'canManage' => $canManage,
             'kind' => $kind->value,
+            // What the next survey will promise: the company's minimum now (each survey keeps its own once launched).
+            'minGroup' => $this->groupMinimums->current(),
             'latest' => $kind === SurveyKind::Climate ? self::latest() : null,
             'howWeAre' => $kind === SurveyKind::Pulse ? $this->trend->index($this->trend->waves(self::HOME_WAVES)) : null,
             'schedule' => $kind === SurveyKind::Pulse ? SchedulePage::props() : null,
@@ -98,7 +101,7 @@ final readonly class SurveyPages
                 'people' => count($people),
                 'withoutEmail' => count($unreached),
                 'companyOnly' => $this->snapshot->companyOnly(),
-                'minGroup' => config()->integer('results.min_group'),
+                'minGroup' => $survey->groupMinimum(),
                 'canLaunch' => $canManage,
                 'limits' => self::limits(),
             ] : null,

@@ -12,6 +12,7 @@ use App\Modules\Results\Contracts\AnswerDistributions;
 use App\Modules\Results\Data\AreaCount;
 use App\Modules\Results\Data\QuestionDistribution;
 use App\Modules\Results\Data\SurveyDistribution;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 
 /**
@@ -27,6 +28,7 @@ final readonly class SurveyPages
         private AnswerDistributions $distributions,
         private Instruments $instruments,
         private Areas $areas,
+        private GroupMinimums $groupMinimums,
     ) {}
 
     /**
@@ -40,9 +42,10 @@ final readonly class SurveyPages
         return [
             'workCenter' => ['id' => $center->id, 'name' => $center->name],
             'survey' => $survey === null ? null : $this->survey($survey),
-            'results' => $survey !== null && $closed ? $this->results($this->distributions->of($survey->id, $areaId)) : null,
+            'results' => $survey !== null && $closed ? $this->results($this->distributions->at($survey->minGroup)->of($survey->id, $areaId)) : null,
             'canLaunch' => $survey === null || $closed,
-            'minGroup' => config()->integer('results.min_group'),
+            // The survey's, frozen when it launched; the company's now for the one a launch from here would make.
+            'minGroup' => $survey->minGroup ?? $this->groupMinimums->current(),
         ];
     }
 

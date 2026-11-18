@@ -2,6 +2,7 @@ import { Lock } from 'lucide-react';
 import ShareBands from '@/components/engagement/results/share-bands';
 import TrendBadge from '@/components/engagement/results/trend-badge';
 import BarMeter from '@/components/humetria/bar-meter';
+import { tooFewText } from '@/lib/group-minimum';
 import type { EngagementItemDetail } from '@/types';
 
 /**
@@ -11,9 +12,12 @@ import type { EngagementItemDetail } from '@/types';
 export default function ItemRow({
     item,
     reference,
+    minGroup,
 }: {
     item: EngagementItemDetail;
     reference: number | null;
+    /** The minimum per group the survey froze. */
+    minGroup: number;
 }) {
     return (
         <li className="flex flex-col gap-2.5 py-5 first:pt-0 last:pb-0">
@@ -31,7 +35,7 @@ export default function ItemRow({
             {item.favorable === null || item.answered === null ? (
                 <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Lock aria-hidden className="size-4" />
-                    Menos de 5 respuestas: no se muestra.
+                    {tooFewText(minGroup, 'respuestas')}: no se muestra.
                 </p>
             ) : (
                 <>

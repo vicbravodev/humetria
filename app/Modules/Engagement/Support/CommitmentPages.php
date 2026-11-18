@@ -37,6 +37,7 @@ final readonly class CommitmentPages
         $base = [
             'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value],
             'available' => $available,
+            'minGroup' => $survey->groupMinimum(),
             'canManage' => $canManage,
             'published' => $survey->results_published_at !== null,
             'status' => $status?->value,

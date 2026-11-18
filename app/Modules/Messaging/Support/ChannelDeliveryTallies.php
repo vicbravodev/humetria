@@ -24,7 +24,7 @@ final readonly class ChannelDeliveryTallies implements DeliverySummary
 
     public function __construct(private CurrentTenant $tenant, private CompanyChannels $channels) {}
 
-    public function forSource(string $sourceType, string $sourceId): array
+    public function forSource(string $sourceType, string $sourceId, int $minimum): array
     {
         $tenantId = $this->tenant->id();
         $active = array_values(array_map(
@@ -46,7 +46,6 @@ final readonly class ChannelDeliveryTallies implements DeliverySummary
             ->get()
             ->keyBy('channel');
 
-        $minimum = config()->integer('results.min_group');
         $tallies = [];
 
         foreach (self::ORDER as $channel) {

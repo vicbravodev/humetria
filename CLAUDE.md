@@ -35,6 +35,12 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
 - Un cambio que solo trae documentación que nadie lee (`docs/`, `.md` de la raíz) se salta el CI y el deploy
   (`scripts/ci-code-changed.sh`). Un documento que un test o la app leen es código (`docs/normas`, `docs/operations`,
   `CLAUDE.md`…) y va en ese script (`tests/Unit/CiCodeChangedTest.php`); todo job nuevo de `tests.yml` espera a `changes`.
+- **Humi está al corriente.** Un módulo o una función que cambia lo que la empresa tiene, debe o puede consultar no está
+  terminado hasta que Humi lo sabe; es parte del entregable, en el mismo PR. Se conecta por los contratos públicos del
+  módulo: un lector en `Assistant/Support/Readers` (lo cuenta `GetComplianceOverview`), una herramienta si hace falta
+  detalle, sus datos vivos si los hay, y sus criterios en `docs/normas/*/criterios.md` (entran solos al buscador). Mismas
+  reglas de privacidad: conteos y estados, nunca respuestas ni personas. `tests/Feature/Assistant/ModuleCoverageTest.php`
+  falla con un módulo nuevo sin conexión; eximir uno exige su razón en ese test.
 - **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra sola la clase cuyo test declara
   `mutates(Clase::class)`. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
   `--min`; si falla, falta el test que mata al mutante. Detalle: `docs/testing.md`.
@@ -87,6 +93,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Assistant`: Humi, el asistente de IA (ver su README).
 - `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones.
 - `Billing`: cuentas, suscripciones, cargos, estados de cuenta y pagos.
+- `Blog`: blog público para SEO: artículos en `content/blog/*.md`, validados en CI y publicados solo con el visto bueno del dueño
+  (`reviewed_at`); HTML del servidor, sin base de datos (ver `docs/blog/README.md`).
 - `Campaigns`: evaluaciones NOM-035: campañas, participantes e invitaciones, la encuesta del empleado.
 - `Compensation`: compensación y contrato colectivo: prestaciones, salarios por nivel, escenarios y su costo.
 - `Complaints`: canal de denuncias: público, seguimiento anónimo, gestores de casos.
@@ -139,8 +147,13 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   `tests/Feature/IndexablePagesTest.php`) que responden 200 en producción; staging y local nunca se indexan.
 - Solo las páginas de `App\Http\SsrPages` pasan por Node, y solo sin sesión; una ruta nueva no activa SSR. Si Node falla
   la página responde 200 y React la pinta: nunca 5xx por Node.
-- PostHog mide solo la landing: lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
+- PostHog mide solo las páginas públicas (landing, página de cada herramienta y guía: `Analytics::measuredRoutes()`): lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
   medición. Ningún dato de la persona va a PostHog. Todo enlace que sale de la landing o llega a ella es un `<a href>`.
+- El panel de una empresa se graba solo con `POSTHOG_SESSION_RECORDING=true`, anónimo y enmascarado (`lib/session-recording.ts`):
+  se ve la interfaz y se oculta todo dato de la empresa (`lib/recording-mask.ts`: lo que viene en las props, datos con forma
+  personal, opciones de búsqueda, `ph-mask`), campos y atributos; sin persona, empresa ni dirección; nunca quejas, Guía I,
+  Humi (`ph-no-capture`), la cuenta personal ni al suplantar. Una pantalla sensible nueva entra en `UNRECORDED` con su test;
+  un dato calculado en el navegador que no venga en las props lleva `ph-mask`.
 - Reglas y operación de SSR, medición, eventos y errores a PostHog: `docs/operations/ssr.md` (se actualiza en el mismo PR).
 - Errores: el navegador de toda página manda a PostHog `$exception` con el mensaje enmascarado (`lib/error-tracking.ts`,
   solo errores, sin persona ni persistencia); `AppErrorBoundary` muestra «Algo salió mal» con el código de soporte. El servidor
@@ -155,8 +168,10 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
 - Las respuestas anónimas (Guías II/III, Ley Silla, clima y pulso) viven en tablas **sin ninguna llave** hacia empleado,
   invitación ni token. La invitación solo registra "ya contestó". El enlace es de un solo uso.
 - IDs de respuestas: UUID v4 aleatorio (nunca ordenable por tiempo). RH nunca ve la hora exacta de cada respuesta.
-- Todo resultado agregado aplica el **mínimo de respondentes por grupo**: 5, y `RESULTS_MIN_GROUP` solo puede subirlo
-  (`config/results.php`). Debajo del mínimo el grupo no se muestra; el mínimo se aplica después de cada filtro.
+- Todo resultado agregado aplica el **mínimo de respondentes por grupo** de la empresa (`Tenancy\Contracts\GroupMinimums`):
+  5 por omisión, de 1 a 50, solo el dueño lo cambia, y cada campaña o encuesta lo congela al lanzarse; `RESULTS_MIN_GROUP`
+  es solo el default de la plataforma. Debajo del mínimo el grupo no se muestra; se aplica después de cada filtro. Con 1
+  (sin mínimo) ningún texto promete ocultar: advierte con honestidad que un grupo muy pequeño podría identificar respuestas.
 - La Guía I sí es identificada (obligación de canalizar, numeral 5.5) y solo la ven roles autorizados.
 - Toda página que ve RH tiene un test que afirma que sus props de Inertia no contienen respuestas individuales.
 - El modelo de amenaza es RH y la aplicación, no el operador con acceso a la base de datos.
@@ -188,7 +203,7 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   reusa sus piezas (marco con migas, encabezado con estado, tarjetas, tablas `muted`, pestañas con conteo, estados vacíos
   con siguiente paso); una que se vea como un formulario sin diseñar no está terminada. Antes de cerrar un trabajo con UI,
   se revisa en el navegador en claro, oscuro y a 375 px.
-- Un solo acento (`primary`; `brand-*` solo en el logo); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
+- Un solo acento (`primary`; `brand-*` solo en el logo), salvo el color de cada familia de herramientas en el sitio público (`family-*`); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
   a shadcn tras cada `npx shadcn add` (`DesignTokensOnlyTest`, `DesignSystemTest`, `ShadcnAdjustmentsTest`).
 - El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.
 

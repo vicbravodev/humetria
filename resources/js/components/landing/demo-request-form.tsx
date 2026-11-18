@@ -12,7 +12,14 @@ import { firstInvalidField } from '@/lib/first-invalid-field';
 import { httpErrorMessage } from '@/lib/http-error-message';
 import { store } from '@/routes/demo-requests';
 
-export default function DemoRequestForm() {
+type Props = {
+    /** The route of the page the form is on: the server sends whoever asked back to it. */
+    page?: string | undefined;
+    /** The tool of that page, already chosen. */
+    tool?: string | undefined;
+};
+
+export default function DemoRequestForm({ page = 'home', tool }: Props) {
     return (
         <Form
             {...store.form()}
@@ -86,8 +93,9 @@ export default function DemoRequestForm() {
                             error={errors['whatsapp']}
                         />
                     </div>
-                    <DemoCaseDetails errors={errors} />
+                    <DemoCaseDetails errors={errors} tool={tool} />
                     <DemoHoneypot />
+                    <input type="hidden" name="page" value={page} />
                     <Button
                         type="submit"
                         size="lg"

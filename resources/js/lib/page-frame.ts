@@ -6,6 +6,9 @@ const STANDALONE_NAMES = new Set([
     'privacy-notice',
     // The public roadmap: the landing's header and footer, not the panel.
     'roadmap',
+    // The page of each tool and the guide to the workday of 2027: the landing's header and footer.
+    'tool',
+    'guide',
     'campaigns/survey',
     // The climate and pulse survey of the person's emailed link: the same frame, no account.
     'engagement/survey',

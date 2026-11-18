@@ -21,7 +21,14 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 
 Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{CampaignRecords,EvaluationSchedule}`,
 `Results\Contracts\RiskResults`, `Telework\Contracts\TeleworkStanding`, `Interventions\Contracts\ProgramStandings`,
+`Disclosure\Contracts\DisclosureStanding`, `Seating\Contracts\SeatingRoute`, `Leave\Contracts\PendingRequests`,
+`Complaints\Contracts\{ComplaintChannels,ComplaintsToAcknowledge}`, `Engagement\Contracts\EngagementStanding`,
+`Attendance\Contracts\AttendanceStanding`, `Organization\Contracts\Headcount`, `Compensation\Contracts\CompensationStanding`,
 `Tenancy\Contracts\{Companies,Members,WorkCenters}`.
+
+**Todo módulo de la empresa le llega.** Cada uno tiene su lector en `Support/Readers` (una línea en el estado de
+cumplimiento) y sus criterios de `docs/normas` entran solos al buscador. `ModuleCoverageTest` falla si un módulo nuevo no
+se conecta; eximir uno exige su razón ahí (hoy: Sso, Demos, Responses, WorkerAccess).
 
 **Fuentes, paso siguiente y datos vivos.** Una herramienta pone en su `ToolCard` `sources` (de dónde salió la cifra:
 «Campaña Planta Apodaca · Evaluación NOM-035», «NOM-035 · C-23. …») y `next` (la pantalla exacta del panel, una ruta de
@@ -50,7 +57,7 @@ preguntó. Implementación: `Support/TenantHumiActivity`.
 - **La conversación es de una persona en una empresa** (`ConversationParticipant`, único por empresa y usuario). El mismo
   usuario en dos empresas tiene dos historias. Lo ajeno, lo de otra empresa y lo inexistente dan el mismo 404.
 - **Anonimato.** Los resultados de riesgo pasan por `Results` (`RiskResults` → `RiskDistribution`): personas por nivel,
-  nunca promedios, solo con la evaluación cerrada (C-27) y con el mínimo por grupo `results.min_group` aplicado después de
+  nunca promedios, solo con la evaluación cerrada (C-27) y con el mínimo por grupo que la evaluación fijó al lanzarse aplicado después de
   filtrar (C-23). Bajo el mínimo no sale ni cuántas respondieron. Humi nunca ve la Guía I ni respuestas individuales.
 - **Historia autoritativa en el servidor.** El navegador manda el último mensaje, la conversación que continúa y la página
   abierta; todo lo demás (`messages`, roles) se ignora. La página se valida contra la empresa.
@@ -90,8 +97,9 @@ el proveedor y el modelo se piden al agente (`provider()` y `model()`), nunca es
    `AssistantScope` y `ScopeGuard` por constructor, llama `$this->guard->check($this->scope)` y lee **solo por contratos**) y
    agrégala a la lista de `ToolRegistry` en `AssistantServiceProvider`. Si el módulo no tiene contrato de lectura, créalo en
    su módulo (como `RiskResults`). Su prueba: otra empresa = id inexistente, esquema sin empresa ni persona, mínimo por grupo.
-2. **Una norma en el resumen de cumplimiento:** un `ComplianceReader` en `Support/Readers/` y su alta en `ComplianceReaders`
-   (mismo provider). `GetComplianceOverview` no cambia.
+2. **Una norma o módulo en el resumen de cumplimiento:** un `ComplianceReader` en `Support/Readers/` y su alta en
+   `ComplianceReaders` con la llave de su módulo, más esa llave en el mapa de `GetComplianceOverview` (mismo provider).
+   `status()` recibe el `AssistantScope`: lo que el rol no puede ver no se cuenta (quejas: el conteo solo a quien las atiende).
 3. **Una norma en la búsqueda normativa:** su `criterios.md` (con encabezados `### C-NN. Título · Fuente`) en
    `config/humi.php` → `regulations`.
 

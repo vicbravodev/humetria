@@ -31,6 +31,66 @@ final readonly class PanelLinks
         return $this->path('tenant.telework.center', ['workCenter' => $workCenterId]);
     }
 
+    public function seating(): string
+    {
+        return $this->path('tenant.seating.index');
+    }
+
+    public function vacationRequests(): string
+    {
+        return $this->path('tenant.vacations.requests.index');
+    }
+
+    public function complaints(): string
+    {
+        return $this->path('tenant.complaints.index');
+    }
+
+    public function pulse(): string
+    {
+        return $this->path('tenant.pulse.index');
+    }
+
+    public function climate(): string
+    {
+        return $this->path('tenant.climate.index');
+    }
+
+    public function attendance(): string
+    {
+        return $this->path('tenant.attendance.index');
+    }
+
+    public function attendanceSetup(): string
+    {
+        return $this->path('tenant.attendance.setup');
+    }
+
+    public function attendanceCorrections(): string
+    {
+        return $this->path('tenant.attendance.corrections.index');
+    }
+
+    public function orgChart(): string
+    {
+        return $this->path('tenant.org-chart.index');
+    }
+
+    public function orgChartQuality(): string
+    {
+        return $this->path('tenant.org-chart.quality');
+    }
+
+    public function compensation(): string
+    {
+        return $this->path('tenant.compensation.index');
+    }
+
+    public function policy(): string
+    {
+        return $this->path('tenant.disclosure.policy');
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');

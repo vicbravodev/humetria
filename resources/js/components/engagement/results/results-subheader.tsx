@@ -1,4 +1,3 @@
-import { Lock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ResultsNav from '@/components/engagement/results/results-nav';
 import type { ResultsView } from '@/components/engagement/results/results-nav';
@@ -12,11 +11,12 @@ import { Badge } from '@/components/ui/badge';
 export default function ResultsSubheader({
     survey,
     view,
-    privacy = { icon: Lock, text: 'Grupos de 5 o más' },
+    privacy,
 }: {
     survey: { id: string; name: string; status: string };
     view: ResultsView;
-    privacy?: { icon: LucideIcon; text: string };
+    /** What protects the figures of this view: the minimum per group the survey froze, or the minimum of comments. */
+    privacy: { icon: LucideIcon; text: string };
 }) {
     return (
         <>

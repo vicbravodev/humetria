@@ -9,13 +9,21 @@ import {
     columnsOf,
 } from '@/lib/engagement/trend';
 import { trend } from '@/routes/tenant/pulse';
+import { hidesSmallGroups } from '@/lib/group-minimum';
 import type { TrendPoint } from '@/types';
 
 /**
  * «Cómo vamos» beside the next pulse: the engagement index of the latest waves as columns from zero, how far it moved
  * since the first of them, and the way to the whole trend. Company level only.
  */
-export default function HowWeAreCard({ points }: { points: TrendPoint[] }) {
+export default function HowWeAreCard({
+    points,
+    minGroup,
+}: {
+    points: TrendPoint[];
+    /** The company's minimum per group now. */
+    minGroup: number;
+}) {
     const tenantSlug = useTenantSlug();
     const baseline = baselineOf(points);
 
@@ -34,7 +42,10 @@ export default function HowWeAreCard({ points }: { points: TrendPoint[] }) {
             </div>
             {points.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                    Aparece cuando una encuesta cierra con al menos 5 respuestas
+                    Aparece cuando una encuesta cierra con
+                    {hidesSmallGroups(minGroup)
+                        ? ` al menos ${minGroup} respuestas`
+                        : ' respuestas'}{' '}
                     en cada pregunta del índice.
                 </p>
             ) : (

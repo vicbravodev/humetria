@@ -12,11 +12,13 @@ use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use App\Modules\Tenancy\Contracts\MemberLookup;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Support\CompanyDirectory;
+use App\Modules\Tenancy\Support\CompanyGroupMinimums;
 use App\Modules\Tenancy\Support\CompanyLimitCounters;
 use App\Modules\Tenancy\Support\CompanyMemberLookup;
 use App\Modules\Tenancy\Support\CompanyMembers;
@@ -45,6 +47,9 @@ final class TenancyServiceProvider extends ServiceProvider
         $this->app->bind(WorkCenters::class, CompanyWorkCenters::class);
         // One instance per request or job: a zone asked for many times is read once.
         $this->app->scoped(Timezones::class, CompanyTimezones::class);
+        // One instance per request or job, and the contract points at it, so a change of the minimum can drop its memo.
+        $this->app->scoped(CompanyGroupMinimums::class);
+        $this->app->scoped(GroupMinimums::class, fn (Application $app): CompanyGroupMinimums => $app->make(CompanyGroupMinimums::class));
         // One instance per request, and the contract points at it, so a role change can drop its memo.
         $this->app->scoped(CompanyMembers::class);
         $this->app->scoped(Members::class, fn (Application $app): CompanyMembers => $app->make(CompanyMembers::class));

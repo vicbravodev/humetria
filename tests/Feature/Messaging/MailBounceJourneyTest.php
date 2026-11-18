@@ -80,7 +80,7 @@ it('records the bounce, counts it as not delivered in the mail gauge, writes not
             ->and(DeliveryEvent::query()->where('delivery_id', $delivery->id)->where('status', 'bounced')->exists())->toBeTrue();
     }
     resolve(Companies::class)->enter($this->tenant->id);
-    $tally = collect(resolve(DeliverySummary::class)->forSource('campaign', $this->campaign->id))->firstWhere('channel', 'mail');
+    $tally = collect(resolve(DeliverySummary::class)->forSource('campaign', $this->campaign->id, 5))->firstWhere('channel', 'mail');
     expect($tally?->total)->toBe(20)->and($tally->delivered)->toBe(15)->and($tally->undelivered)->toBe(5)->and($tally->undeliveredBelowMinimum)->toBeFalse()
         ->and(Delivery::query()->where('channel', 'whatsapp')->count())->toBe(0)
         ->and($this->gateway->sent())->toBe([]);

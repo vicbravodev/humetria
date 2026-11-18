@@ -49,4 +49,9 @@ final class CompanyHeadcount implements Headcount
 
         return $areas;
     }
+
+    public function unplaced(): int
+    {
+        return (new ReportingGaps)->counts()['without_manager'];
+    }
 }

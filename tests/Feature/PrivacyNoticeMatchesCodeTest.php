@@ -28,7 +28,7 @@ it('names the attribution cookie and its 90 days', function (): void {
 it('says PostHog measures the landing only, what it counts and that errors are reported, not that the visitor consents', function (): void {
     $text = privacyNoticeText();
 
-    expect($text)->toContain('Medimos las visitas de la página de inicio')->toContain('PostHog')
+    expect($text)->toContain('Medimos las visitas de la página de inicio, de la página de cada herramienta y de la guía de jornada')->toContain('PostHog')
         ->and($text)->toContain('qué botones y enlaces')->toContain('hasta dónde bajas')->toContain('errores técnicos')
         ->and($text)->not->toContain('Hoy no medimos')->not->toContain('no registramos tus clics')
         ->and($text)->not->toContain('Google Analytics')->not->toContain('_ga')
@@ -103,4 +103,16 @@ it('only has WhatsApp templates that are UTILITY, plus the authentication code, 
 it('keeps the legal items marked as pending review', function (): void {
     expect(substr_count(privacyNoticeText(), 'pendiente de revisión legal'))->toBe(1)
         ->and(privacyNoticeText())->toContain('${REVIEW}');
+});
+
+it('says the panel of a company may be recorded, anonymous and masked, and what is never recorded', function (): void {
+    $text = privacyNoticeText();
+    $recording = (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/session-recording.ts')
+        .file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/recording-mask.ts');
+
+    expect($text)->toContain('grabación anónima de la pantalla')->toContain('los nombres, los correos, las cifras y todo dato de tu empresa, y lo que escribes, aparecen ocultos')
+        ->toContain('el buzón de quejas, la Guía I, Humi ni tu cuenta personal')->toContain('mientras alguien de soporte entra como tú')
+        ->and($recording)->toContain("maskTextSelector: '*'")->toContain('maskTextFn: maskText')->toContain('rememberData(page)')->toContain('maskAllInputs: true')->toContain("person_profiles: 'never'")
+        ->toContain("'complaints/'")->toContain("'campaigns/trauma'")->toContain("'results/screenings'")->toContain("'assistant/'")->toContain("'settings/'")
+        ->toContain("prop(props, 'impersonator') == null");
 });

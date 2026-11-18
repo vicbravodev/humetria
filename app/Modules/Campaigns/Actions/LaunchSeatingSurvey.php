@@ -13,6 +13,7 @@ use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Carbon\CarbonImmutable;
@@ -33,6 +34,7 @@ final readonly class LaunchSeatingSurvey
         private Roster $roster,
         private QueueSurveyInvitations $queueInvitations,
         private RecordAudit $recordAudit,
+        private GroupMinimums $groupMinimums,
     ) {}
 
     /**
@@ -67,6 +69,7 @@ final readonly class LaunchSeatingSurvey
             'instruments' => ['seating.survey'],
             'closes_on' => $closesOn,
             'launched_at' => now(),
+            'min_group' => $this->groupMinimums->current(),
             'created_by' => $createdBy,
         ]);
         $participants = CampaignInstruments::enroll($campaign, array_fill_keys(array_map(fn (RosterEntry $person): string => $person->id, $people), false));

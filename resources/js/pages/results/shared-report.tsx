@@ -40,7 +40,9 @@ export default function SharedReport({
 
     return (
         <>
-            <Head title={`Informe · ${company ?? ''}`} />
+            <Head
+                title={company === null ? 'Informe' : `Informe · ${company}`}
+            />
             <ReportLinkBar
                 start={<Logo className="h-7" />}
                 className="max-w-[1120px] md:px-6"

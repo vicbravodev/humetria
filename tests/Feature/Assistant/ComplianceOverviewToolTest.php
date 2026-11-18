@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Assistant\Contracts\ComplianceReader;
+use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\ComplianceStatus;
 use App\Modules\Assistant\Support\ComplianceReaders;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
@@ -11,6 +12,7 @@ use App\Modules\Assistant\Tools\GetComplianceOverview;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Models\Teleworker;
+use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
@@ -39,7 +41,7 @@ it('says a company without work centers has nothing evaluated yet and no telewor
 
     expect($card['render'])->toBe('status_list')
         ->and($card['link'])->toBe("/admin/{$this->a->slug}")
-        ->and(array_column($card['rows'], 'key'))->toBe(['nom035', 'nom037'])
+        ->and(array_column($card['rows'], 'key'))->toBe(['nom035', 'disclosure', 'nom037', 'seating', 'vacations', 'complaints', 'pulse', 'climate', 'attendance', 'org_chart', 'compensation'])
         ->and(normRow($card, 'nom035'))->toMatchArray(['label' => 'NOM-035', 'state' => 'pending', 'stateLabel' => 'Pendiente', 'summary' => 'Aún no registras centros de trabajo.'])
         ->and(normRow($card, 'nom037'))->toMatchArray(['label' => 'NOM-037', 'state' => 'not_applicable', 'stateLabel' => 'No aplica']);
 });
@@ -98,7 +100,7 @@ it('tells where NOM-037 stands from the rows of the inspection table of the cent
 it('lists a new norm as soon as its reader is registered, without touching the tool', function (): void {
     $reader = new class implements ComplianceReader
     {
-        public function status(): ComplianceStatus
+        public function status(AssistantScope $scope): ComplianceStatus
         {
             return new ComplianceStatus('ley_silla', 'Ley Silla', 'pending', 'Pendiente', 'Aún no empiezas.', '/admin/acme/seating');
         }
@@ -112,4 +114,12 @@ it('lists a new norm as soon as its reader is registered, without touching the t
 
 it('asks the model for nothing', function (): void {
     expect(resolve(GetComplianceOverview::class, ['scope' => $this->scope])->schema(new JsonSchemaTypeFactory))->toBe([]);
+});
+
+it('tells the model every module it reports on, so it reaches for it on any of them', function (): void {
+    $description = mb_strtolower((string) resolve(GetComplianceOverview::class, ['scope' => $this->scope])->description());
+
+    foreach ([...array_map(fn (Module $module): string => $module->label(), array_filter(Module::cases(), fn (Module $module): bool => $module !== Module::Sso)), 'Compensación', 'Difusión'] as $label) {
+        expect($description)->toContain(mb_strtolower($label));
+    }
 });

@@ -3,6 +3,7 @@ import ReportProgram from '@/components/results/report-program';
 import ReportSection from '@/components/results/report-section';
 import ReportSignature from '@/components/results/report-signature';
 import ReportWritten from '@/components/results/report-written';
+import { withheldText } from '@/lib/group-minimum';
 import type { NomReport } from '@/types';
 
 /** The report as num. 7.7 asks for it (section 4): its eight incises, in their order. */
@@ -50,7 +51,10 @@ export default function ReportIncises({ report }: { report: NomReport }) {
                     <p>
                         {report.results.visible
                             ? 'Resumen ejecutivo y secciones 1 a 3 de este informe; detalle completo en el Anexo A.'
-                            : `Se recibieron ${report.results.answered} cuestionarios: menos de 5, así que no se muestran resultados para no revelar respuestas.`}
+                            : withheldText(
+                                  report.minGroup,
+                                  `Se recibieron ${report.results.answered} cuestionarios: menos de ${report.minGroup}, así que no se muestran resultados para no revelar respuestas.`,
+                              )}
                     </p>
                 </ReportIncise>
                 <ReportIncise

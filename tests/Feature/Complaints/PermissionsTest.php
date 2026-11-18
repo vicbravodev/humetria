@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Complaints\Support\ComplaintStatistics;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Gate;
@@ -20,8 +21,11 @@ it('gives each role the complaint permissions of the design', function (TenantRo
     'committee' => [TenantRole::Committee, false, true],
 ]);
 
-it('reads its settings from config/complaints.php', function (): void {
-    expect(config('complaints.min_group'))->toBe(5)
+it('reads its settings from config/complaints.php, and the minimum of its summary from the company (5 by default)', function (): void {
+    workIn(Tenant::factory()->create());
+
+    expect(config('complaints'))->not->toHaveKey('min_group')
+        ->and(resolve(ComplaintStatistics::class)->summary()['minimum'])->toBe(5)
         ->and(config('complaints.description.min'))->toBe(20)
         ->and(config('complaints.description.max'))->toBe(5000)
         ->and(config('complaints.retention.default_months'))->toBe(24)

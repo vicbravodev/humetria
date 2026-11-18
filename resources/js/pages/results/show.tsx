@@ -29,6 +29,7 @@ export default function Results({
     levels,
     trauma,
     program,
+    minGroup,
 }: {
     campaign: ResultsCampaign;
     guide: { key: string; title: string } | null;
@@ -40,6 +41,8 @@ export default function Results({
     levels: RiskLevelInfo[];
     trauma: ScreeningCounts | null;
     program: ResultsProgramCard | null;
+    /** The minimum of people per group the evaluation froze when it launched; 1 is none. */
+    minGroup: number;
 }) {
     const tenantSlug = useTenantSlug();
     const canSeeProgram =
@@ -51,7 +54,7 @@ export default function Results({
 
     return (
         <>
-            <Head title={`Resultados · ${campaign.workCenter}`} />
+            <Head title={`Resultados NOM-035 · ${campaign.workCenter}`} />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <ResultsHeader
                     campaign={campaign}
@@ -72,6 +75,7 @@ export default function Results({
                     results={results}
                     area={area}
                     levels={levels}
+                    minGroup={minGroup}
                 />
                 <ResultsSideCards
                     route={[tenantSlug, campaign.id]}
@@ -83,6 +87,7 @@ export default function Results({
                     areas={areas}
                     items={items}
                     levels={levels}
+                    minGroup={minGroup}
                 />
             </div>
         </>

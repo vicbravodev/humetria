@@ -8,7 +8,13 @@ import {
 } from '@/components/landing/landing-layout';
 import { cn } from '@/lib/utils';
 
-export default function DemoSection() {
+type Props = {
+    /** The route of the page the section is on, and its tool: the form starts with it chosen. */
+    page?: string | undefined;
+    tool?: string | undefined;
+};
+
+export default function DemoSection({ page, tool }: Props) {
     return (
         <section
             id="agenda-una-demo"
@@ -34,7 +40,7 @@ export default function DemoSection() {
                     <DemoNextSteps />
                 </div>
                 <div className="min-w-0">
-                    <DemoRequestForm />
+                    <DemoRequestForm page={page} tool={tool} />
                 </div>
             </div>
         </section>

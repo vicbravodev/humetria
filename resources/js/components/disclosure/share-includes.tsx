@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import { themesLine } from '@/lib/share-results';
+import { answeredDetail, themesLine } from '@/lib/share-results';
 import type { ShareResultsProps } from '@/types';
 
 /**
@@ -18,10 +18,7 @@ export default function ShareIncludes({
     const rows = [
         {
             title: 'Cuántas personas contestaron',
-            detail:
-                props.answered === null
-                    ? `Menos de ${props.minimum}`
-                    : `${props.answered}`,
+            detail: answeredDetail(props.answered, props.minimum),
         },
         {
             title: 'Los temas que más atención necesitan',

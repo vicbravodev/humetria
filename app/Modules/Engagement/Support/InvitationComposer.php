@@ -42,6 +42,7 @@ final class InvitationComposer
             $this->contact,
             $survey->closes_on ?? throw new LogicException("Survey [{$survey->id}] has no last day."),
             $survey->kind,
+            $survey->groupMinimum(),
             $this->home,
             new InvitationReference(InvitationReference::ENGAGEMENT_INVITATION, $invitation->id, InvitationReference::ENGAGEMENT_SURVEY, $survey->id),
         );

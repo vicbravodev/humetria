@@ -6,6 +6,7 @@ use App\Http\Analytics;
 use App\Http\Controllers\StopImpersonationController;
 use App\Http\Controllers\ToolFilmController;
 use App\Http\PageSeo;
+use App\Http\ToolPages;
 use App\Modules\Demos\Http\Middleware\RememberDemoAttribution;
 use App\Modules\Tenancy\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -26,9 +27,23 @@ Route::get('/privacy-notice', function (): Response {
 })->name('privacy-notice');
 // What Humetría plans to add: fixed text in the page, nothing from the database, nothing from a person.
 Route::get('/roadmap', fn (): Response => Inertia::render('roadmap', ['seo' => PageSeo::for('roadmap')]))->name('roadmap');
+// One page per tool and the guide to the workday of 2027: fixed text from ToolPages, measured and remembered like the landing.
+foreach (ToolPages::SLUGS as $key => $slug) {
+    Route::get($slug, function () use ($key): Response {
+        Analytics::flashLead();
+
+        return Inertia::render('tool', ['seo' => PageSeo::tool($key), 'tool' => ToolPages::props($key)]);
+    })->middleware(RememberDemoAttribution::class)->name(ToolPages::route($key));
+}
+Route::get(ToolPages::GUIDE_PATH, function (): Response {
+    Analytics::flashLead();
+
+    return Inertia::render('guide', ['seo' => PageSeo::guide(), 'guide' => ToolPages::guide()]);
+})->middleware(RememberDemoAttribution::class)->name(ToolPages::GUIDE_ROUTE);
 Route::get('/media/films/{film}', ToolFilmController::class)->name('films.show');
 
 require __DIR__.'/demos.php';
+require __DIR__.'/blog.php';
 require __DIR__.'/tenancy.php';
 require __DIR__.'/sso.php';
 require __DIR__.'/billing.php';

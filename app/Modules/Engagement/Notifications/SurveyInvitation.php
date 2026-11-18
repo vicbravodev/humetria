@@ -31,6 +31,8 @@ final class SurveyInvitation extends Notification implements MailBag, TracksDeli
         private readonly ?string $contact,
         private readonly CarbonImmutable $closesOn,
         private readonly SurveyKind $kind,
+        /** The minimum of people per group the survey froze when it launched: the number promised to whoever answers. */
+        private readonly int $minGroup,
         private readonly ?string $portalUrl = null,
         private readonly ?InvitationReference $reference = null,
     ) {}
@@ -82,7 +84,8 @@ final class SurveyInvitation extends Notification implements MailBag, TracksDeli
                 'portalUrl' => $this->portalUrl,
                 'contact' => $this->contact,
                 'minutes' => $this->kind->minutes(),
-                'minGroup' => config()->integer('results.min_group'),
+                // With no minimum (1) nothing is promised: the warning of every tool instead.
+                'groupNotice' => $this->minGroup > 1 ? "El sistema no guarda quién contestó qué y solo muestra resultados de grupos de {$this->minGroup} personas o más." : 'El sistema no guarda quién contestó qué. '.trans_choice('group-minimum.notice', 1),
                 'title' => $title,
                 'lastDay' => $lastDay,
             ]);

@@ -11,8 +11,10 @@ import type { EngagementItemSection } from '@/types';
  */
 export default function ItemsBody({
     sections,
+    minGroup,
 }: {
     sections: EngagementItemSection[];
+    minGroup: number;
 }) {
     const [selected, setSelected] = useState(sections[0]?.key ?? null);
     const [all, setAll] = useState(false);
@@ -42,7 +44,11 @@ export default function ItemsBody({
                     </Button>
                 </div>
                 {shown.map((section) => (
-                    <DriverSection key={section.key} section={section} />
+                    <DriverSection
+                        key={section.key}
+                        section={section}
+                        minGroup={minGroup}
+                    />
                 ))}
             </div>
         </div>

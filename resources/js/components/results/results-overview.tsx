@@ -1,5 +1,6 @@
 import ArcMeter from '@/components/humetria/arc-meter';
 import RiskSummary from '@/components/results/risk-summary';
+import { withheldText } from '@/lib/group-minimum';
 import { percentText } from '@/lib/results';
 import type { Participation, RiskLevelInfo, RiskResults } from '@/types';
 
@@ -13,6 +14,7 @@ export default function ResultsOverview({
     results,
     area,
     levels,
+    minGroup,
 }: {
     /** The Guía II or III; null when the campaign applies only the Guía I, and then nothing shows. */
     guide: { title: string } | null;
@@ -22,6 +24,7 @@ export default function ResultsOverview({
     /** The area the results are narrowed to; null for the whole center. */
     area: { label: string } | null;
     levels: RiskLevelInfo[];
+    minGroup: number;
 }) {
     if (guide === null || participation === null) {
         return null;
@@ -43,7 +46,10 @@ export default function ResultsOverview({
                     <p className="max-w-[520px] text-[17px] leading-[26px] text-muted-foreground">
                         {results === null
                             ? `Los resultados de la ${guide.title} se muestran al cerrar la evaluación: mientras sigue abierta, cada respuesta nueva diría qué contestó quien acaba de contestar.`
-                            : `Sin resultados que mostrar: hay ${results.answered} cuestionarios y se necesitan al menos 5 para mostrarlos sin revelar respuestas.`}
+                            : withheldText(
+                                  minGroup,
+                                  `Sin resultados que mostrar: hay ${results.answered} cuestionarios y se necesitan al menos ${minGroup} para mostrarlos sin revelar respuestas.`,
+                              )}
                     </p>
                 )}
             </div>

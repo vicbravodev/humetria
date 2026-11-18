@@ -1,11 +1,13 @@
 import { WhenMounted } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
+import FooterTools from '@/components/landing/footer-tools';
 import { WRAP } from '@/components/landing/landing-layout';
 import SocialLinks from '@/components/landing/social-links';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { currentYear } from '@/lib/current-year';
 import { cn } from '@/lib/utils';
 import { dashboard, privacyNotice, roadmap } from '@/routes';
+import { index as blog } from '@/routes/blog';
 
 const links = [
     { href: '#como-funciona', label: 'Cómo funciona' },
@@ -28,10 +30,11 @@ export default function LandingFooter({
 }) {
     return (
         <footer className="border-t pt-10 pb-8">
+            <FooterTools />
             <div
                 className={cn(
                     WRAP,
-                    'grid gap-7 md:grid-cols-[1fr_auto] md:items-center',
+                    'grid gap-7 pt-8 md:grid-cols-[1fr_auto] md:items-center',
                 )}
             >
                 <div className="grid content-start gap-3">
@@ -49,6 +52,13 @@ export default function LandingFooter({
                                 {link.label}
                             </a>
                         ))}
+                        <a
+                            href={blog().url}
+                            data-test="footer-blog"
+                            className={linkClass}
+                        >
+                            Blog
+                        </a>
                         <a
                             href={roadmap().url}
                             data-test="footer-roadmap"

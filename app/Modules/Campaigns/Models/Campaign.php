@@ -9,6 +9,7 @@ use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Exceptions\CampaignStateChanged;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use Carbon\CarbonImmutable;
 use Database\Factories\Campaigns\CampaignFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -38,10 +39,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $created_by
  * @property string|null $invitation_batch
  * @property CarbonImmutable|null $last_resent_at
+ * @property int|null $min_group the minimum of people per group frozen at launch; null in a draft
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'work_center_id', 'kind', 'status', 'instruments', 'workers', 'population', 'sample_size', 'quotas', 'closes_on', 'launched_at', 'closed_at', 'created_by', 'invitation_batch', 'last_resent_at'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'work_center_id', 'kind', 'status', 'instruments', 'workers', 'population', 'sample_size', 'quotas', 'closes_on', 'launched_at', 'closed_at', 'created_by', 'invitation_batch', 'last_resent_at', 'min_group'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(CampaignFactory::class)]
 final class Campaign extends Model
 {
@@ -81,6 +83,18 @@ final class Campaign extends Model
     }
 
     /**
+     * The fewest answers a group of its results needs (criterio C-23): the one frozen when it launched, which the
+     * invitation promised; a draft follows the company's until then. One launched before campaigns kept it applied
+     * the platform's, as everyone did then.
+     */
+    public function groupMinimum(): int
+    {
+        $minimums = resolve(GroupMinimums::class);
+
+        return $this->min_group ?? ($this->status === CampaignStatus::Draft ? $minimums->current() : $minimums->platformDefault());
+    }
+
+    /**
      * @return HasMany<Participant, $this>
      */
     public function participants(): HasMany
@@ -103,6 +117,7 @@ final class Campaign extends Model
             'launched_at' => 'immutable_datetime',
             'closed_at' => 'immutable_datetime',
             'last_resent_at' => 'immutable_datetime',
+            'min_group' => 'integer',
         ];
     }
 }

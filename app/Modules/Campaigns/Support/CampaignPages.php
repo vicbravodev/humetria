@@ -24,6 +24,7 @@ use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Closure;
@@ -58,6 +59,7 @@ final readonly class CampaignPages
         private InviteMissing $inviteMissing,
         private DeliverySummary $deliveries,
         private ChannelAnswers $channelAnswers,
+        private GroupMinimums $groupMinimums,
     ) {}
 
     /**
@@ -89,7 +91,8 @@ final readonly class CampaignPages
                 $workCenter, $headcount[$workCenter->id] ?? 0, $evaluations->where('work_center_id', $workCenter->id), $card,
             )),
             'centersBySize' => $this->centersBySize($all, $headcount),
-            'minGroup' => config()->integer('results.min_group'),
+            // The company's now: what an evaluation launched from here would freeze.
+            'minGroup' => $this->groupMinimums->current(),
         ];
     }
 
@@ -152,9 +155,9 @@ final readonly class CampaignPages
             'sending' => $campaign->status === CampaignStatus::Active ? $this->sending($campaign) : null,
             // How the messages went and who answered, by channel: aggregates under the minimum of 5, never a person.
             'reach' => $campaign->status === CampaignStatus::Draft ? null : [
-                'channels' => array_map(fn ($tally): array => $tally->toArray(), $this->deliveries->forSource(InvitationReference::CAMPAIGN, $campaign->id)),
+                'channels' => array_map(fn ($tally): array => $tally->toArray(), $this->deliveries->forSource(InvitationReference::CAMPAIGN, $campaign->id, $campaign->groupMinimum())),
                 'answeredByChannel' => $this->channelAnswers->handle($campaign),
-                'minGroup' => config()->integer('results.min_group'),
+                'minGroup' => $campaign->groupMinimum(),
             ],
             'filters' => [
                 'status' => $filter->standing->value ?? 'all',

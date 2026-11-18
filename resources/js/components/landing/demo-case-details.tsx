@@ -22,8 +22,11 @@ const WORKFORCE: readonly DemoChoice[] = [
 /** The case details are optional: folded away, so the form is four fields until the visitor wants to say more. */
 export default function DemoCaseDetails({
     errors,
+    tool,
 }: {
     errors: Record<string, string>;
+    /** The tool of the page the form is on, already chosen. */
+    tool?: string | undefined;
 }) {
     const [open, setOpen] = useState(false);
     const failed = ['profile', 'workforce', 'tools', 'message'].some(
@@ -59,7 +62,7 @@ export default function DemoCaseDetails({
                     options={PROFILES}
                     error={errors['profile']}
                 />
-                <DemoToolsField error={errors['tools']} />
+                <DemoToolsField error={errors['tools']} preselected={tool} />
                 <DemoChoiceField
                     name="workforce"
                     legend="¿Cuántas personas trabajan en la empresa?"

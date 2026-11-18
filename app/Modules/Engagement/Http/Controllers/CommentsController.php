@@ -80,7 +80,7 @@ final class CommentsController extends Controller
         // By id, a random UUID: neither the order of arrival nor of the people shows. Only the text is read.
         $query = Comment::query()->where('survey_id', $survey->id)->whereNull('comment_group_id')->where('item_key', $item)->orderBy('id');
 
-        if (! $this->thresholds->comments($query->count())) {
+        if (! $this->thresholds->of($survey)->comments($query->count())) {
             return ['state' => 'few', 'page' => null];
         }
 

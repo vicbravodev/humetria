@@ -29,12 +29,13 @@ final readonly class CompanyRiskResults implements RiskResults
             return RiskBreakdown::open();
         }
 
+        $distribution = $this->distribution->at($campaign->minGroup);
         $records = $this->responses->anonymous($campaign->id, $guide);
-        $areas = $this->distribution->areas($guide, $records);
+        $areas = $distribution->areas($guide, $records);
         $names = $this->areas->names(array_column($areas['visible'], 'areaId'));
         // An area that is not shown is not applied: the figures are the center's, which areaLabel tells by being null.
         $filtered = $areaId !== null && isset($names[$areaId]) ? $areaId : null;
-        $result = $this->distribution->of($guide, $records, $filtered);
+        $result = $distribution->of($guide, $records, $filtered);
 
         if (! $result['visible']) {
             return RiskBreakdown::belowMinimum();
@@ -60,17 +61,18 @@ final readonly class CompanyRiskResults implements RiskResults
             return [];
         }
 
+        $distribution = $this->distribution->at($campaign->minGroup);
         $records = $this->responses->anonymous($campaign->id, $guide);
 
-        if (! $this->distribution->of($guide, $records)['visible']) {
+        if (! $distribution->of($guide, $records)['visible']) {
             return [];
         }
 
-        $visible = $this->distribution->areas($guide, $records)['visible'];
+        $visible = $distribution->areas($guide, $records)['visible'];
         $names = $this->areas->names(array_column($visible, 'areaId'));
 
-        return array_map(function (array $area) use ($guide, $records, $names): AreaRisk {
-            $result = $this->distribution->of($guide, $records, $area['areaId']);
+        return array_map(function (array $area) use ($distribution, $guide, $records, $names): AreaRisk {
+            $result = $distribution->of($guide, $records, $area['areaId']);
 
             return new AreaRisk($area['areaId'], $names[$area['areaId']] ?? '', $area['answered'], $result['final'], array_map(self::group(...), $result['categories']), array_map(self::group(...), $result['domains']));
         }, $visible);

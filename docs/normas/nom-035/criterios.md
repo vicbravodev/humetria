@@ -1,6 +1,6 @@
 # Criterios de aplicación de la NOM-035-STPS-2018 en Humetría
 
-Versión 1.7 · 5 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
+Versión 1.9 · 18 de noviembre de 2026 · Norma base: NOM-035-STPS-2018, DOF del 23 de octubre de 2018 (versión del
 instrumento en el sistema: `dof-2018-10-23`).
 
 Este documento explica **cómo aplica Humetría la NOM-035 y por qué**. Cada criterio dice qué hace la plataforma, qué
@@ -320,19 +320,30 @@ cada persona.
 
 ### C-23. Mínimo de personas por grupo en los resultados · Humetría
 
-**Qué hacemos.** Ningún resultado se muestra para un grupo (área, filtro) con menos de 5 respuestas. El mínimo se
-aplica después de cada filtro.
+**Qué hacemos.** Ningún resultado se muestra para un grupo (área, filtro) con menos respuestas que el mínimo de la
+empresa. El mínimo se aplica después de cada filtro.
 
-**Por qué.** Con grupos muy pequeños, un resultado "agregado" revela la respuesta de una persona. La norma no lo exige;
-es protección adicional de Humetría, coherente con C-22.
+- **Es de la empresa.** Por omisión es 5; el **dueño** lo cambia de 1 a 50 en «Privacidad de los resultados»
+  (`/admin/{empresa}/privacy`), y cada cambio queda en la bitácora. `RESULTS_MIN_GROUP` es solo el valor por omisión de
+  la plataforma, para la empresa que no ha elegido.
+- **Se congela al lanzar.** Cada evaluación, encuesta de Ley Silla y encuesta de clima o pulso guarda el mínimo con el
+  que salió, porque la invitación se lo prometió a quien contesta. Cambiarlo no altera lo ya lanzado; solo lo que se
+  lance después. El canal de denuncias (C-47) no se lanza: usa el mínimo vigente de la empresa.
+- **Con 1 no hay mínimo, y se dice.** Ningún texto promete ocultar un grupo pequeño: la encuesta, el informe y la
+  pantalla de RH advierten que el resultado de un grupo muy pequeño podría permitir identificar respuestas, y al
+  elegirlo el dueño lee que el resultado de un grupo de una persona mostrará su respuesta.
+
+**Por qué.** Con grupos muy pequeños, un resultado «agregado» revela la respuesta de una persona. Ni la NOM-035 ni la
+LFT fijan un mínimo: es una decisión de Humetría, coherente con C-22, para proteger a quien responde de ser
+identificado. Proponemos 5 y dejamos que la empresa decida, con la advertencia honesta de lo que cuesta bajarlo.
 
 Cómo se aplica en los resultados:
 
-- **Áreas, con supresión complementaria.** Un área se muestra si tiene al menos 5 cuestionarios **y** lo que queda
-  oculto suma 0 o al menos 5; si no, se ocultan también las áreas visibles más chicas hasta cumplirlo. Sin esto, «el
-  centro menos las áreas visibles» revelaría al grupo pequeño.
-- **Preguntas.** Cada pregunta se muestra solo si la contestaron al menos 5 (las de los bloques filtro las contesta una
-  parte), y solo para el centro completo: por área, la resta entre el centro y el área revelaría a los demás.
+- **Áreas, con supresión complementaria.** Un área se muestra si tiene al menos el mínimo de cuestionarios **y** lo que
+  queda oculto suma 0 o al menos el mínimo; si no, se ocultan también las áreas visibles más chicas hasta cumplirlo. Sin
+  esto, «el centro menos las áreas visibles» revelaría al grupo pequeño.
+- **Preguntas.** Cada pregunta se muestra solo si la contestaron al menos el mínimo (las de los bloques filtro las
+  contesta una parte), y solo para el centro completo: por área, la resta entre el centro y el área revelaría a los demás.
 - **Dimensiones.** No se muestran: la norma no les da niveles, y sumarlas es lo que la STPS prohíbe (C-14).
 
 ### C-27. Los resultados de las Guías II y III solo existen con la evaluación cerrada · Humetría
@@ -622,8 +633,9 @@ acotan el grupo, y la red de la empresa o el proveedor de internet pueden ver qu
 
 ### C-47. Estadísticas con mínimo por grupo · Humetría (como C-23)
 
-**Qué hacemos.** Quien administra el canal sin ser encargada ve totales por tipo y por estatus, con el mínimo de 5 en cada
-celda y supresión complementaria: si lo oculto sumara menos de 5, se oculta también la celda visible más pequeña. Nunca por
+**Qué hacemos.** Quien administra el canal sin ser encargada ve totales por tipo y por estatus, con el mínimo vigente de la
+empresa (C-23; 5 por omisión) en cada celda y supresión complementaria: si lo oculto sumara menos que el mínimo, se oculta
+también la celda visible más pequeña. Nunca por
 centro, categoría, contra quién ni día. Los casos ya purgados cuentan por su esqueleto.
 
 ### C-48. Retención y purga · Humetría (por analogía con 10.4)
@@ -866,3 +878,4 @@ un centro certificado puede publicar el texto de 5.7 d y listo.
 | 1.6 | 2026-11-03 | Nueva sección I, política de prevención y difusión: C-50 a C-56 (política por escrito con versiones inmutables; la Guía IV como plantilla; qué es difundir y con qué medios; acuse de lectura; resultados para las personas; la página permanente y su enlace; revisar la política con riesgo Medio o más). 5.1, 5.7 y la consulta de resultados (7.8) salen de lo que no se cubre. |
 | 1.7 | 2026-11-05 | C-28: la canalización registra a dónde (lista cerrada, con «No quiso atenderse»), cómo se le dijo (en persona o aviso en su portal), una nota corta sin detalle clínico y un recordatorio a 30 días (rediseño v2, decisión A7). |
 | 1.8 | 2026-11-12 | Nuevo C-57, participación y vigencia: el cierre con faltantes se confirma y se audita, y «vigente» siempre dice con cuántas respuestas (plan de lanzamiento F1, decisión 1). |
+| 1.9 | 2026-11-18 | C-23 (y C-47): el mínimo por grupo es decisión de Humetría, no de la norma ni de la LFT. Decisión del dueño de Humetría: 5 por omisión, configurable por empresa de 1 a 50 solo por su dueño, congelado al lanzar cada evaluación o encuesta; con 1 los textos advierten que un grupo muy pequeño podría permitir identificar respuestas. La supresión complementaria no cambia. |

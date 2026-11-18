@@ -1,5 +1,6 @@
 import { describeDate } from '@/lib/calendar-date';
 import { signedText } from '@/lib/engagement/trend';
+import { hidesSmallGroups } from '@/lib/group-minimum';
 import type {
     EngagementBands,
     EngagementDriver,
@@ -163,4 +164,25 @@ export function mostMentions(themes: {
         1,
         ...[...themes.valued, ...themes.change].map((theme) => theme.count),
     );
+}
+
+/** The promise on the home of Clima or Pulso: the minimum per group the next survey will keep, or that there is none. */
+export function anonymityText(minimum: number): string {
+    return hidesSmallGroups(minimum)
+        ? `Respuestas anónimas · resultados por grupos de ${minimum} o más`
+        : 'Respuestas anónimas · sin mínimo por grupo';
+}
+
+/** Why a column of strengths or opportunities is empty: its questions are under the minimum, or (with none) unanswered. */
+export function hiddenQuestionsText(minimum: number): string {
+    return hidesSmallGroups(minimum)
+        ? `Las preguntas con menos de ${minimum} respuestas no se muestran.`
+        : 'Ninguna pregunta recibió respuestas.';
+}
+
+/** What whoever answers is told (in usted) about the minimum the survey promised; with none, the warning, never a promise. */
+export function surveyPrivacyText(minimum: number): string {
+    return hidesSmallGroups(minimum)
+        ? `El sistema no guarda quién contestó qué y solo muestra resultados de grupos de ${minimum} personas o más.`
+        : 'El sistema no guarda quién contestó qué. Su empresa no fijó un mínimo de personas por grupo: el resultado de un grupo muy pequeño podría permitir identificar sus respuestas.';
 }

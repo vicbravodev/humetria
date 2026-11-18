@@ -241,6 +241,7 @@ return [
         'preferred' => 'canal preferido',
         'whatsapp_monthly_cap' => 'tope mensual de WhatsApp',
         'consent_accepted' => 'aceptación del aviso',
+        'min_group' => 'mínimo de personas por grupo',
         'plan' => 'plan',
         'seats' => 'personas contratadas',
         'negotiated_price' => 'precio negociado',

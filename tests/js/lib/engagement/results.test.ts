@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import {
+    anonymityText,
     closedText,
+    hiddenQuestionsText,
+    surveyPrivacyText,
     mostMentions,
     lowestFirst,
     sectionScore,
@@ -193,5 +196,37 @@ describe('mostMentions', () => {
             }),
         ).toBe(31);
         expect(mostMentions({ valued: [], change: [] })).toBe(1);
+    });
+});
+
+describe('the minimum per group in the texts of Clima y pulso', () => {
+    it('promises on the home the minimum of the next survey, and with none promises no hiding', () => {
+        expect(anonymityText(5)).toBe(
+            'Respuestas anónimas · resultados por grupos de 5 o más',
+        );
+        expect(anonymityText(3)).toBe(
+            'Respuestas anónimas · resultados por grupos de 3 o más',
+        );
+        expect(anonymityText(1)).toBe(
+            'Respuestas anónimas · sin mínimo por grupo',
+        );
+    });
+
+    it('says why no question is ranked: under the minimum, or with none that nothing was answered', () => {
+        expect(hiddenQuestionsText(5)).toBe(
+            'Las preguntas con menos de 5 respuestas no se muestran.',
+        );
+        expect(hiddenQuestionsText(1)).toBe(
+            'Ninguna pregunta recibió respuestas.',
+        );
+    });
+
+    it('tells whoever answers, in usted, the minimum the survey promised, or warns that there is none', () => {
+        expect(surveyPrivacyText(5)).toBe(
+            'El sistema no guarda quién contestó qué y solo muestra resultados de grupos de 5 personas o más.',
+        );
+        expect(surveyPrivacyText(1)).toBe(
+            'El sistema no guarda quién contestó qué. Su empresa no fijó un mínimo de personas por grupo: el resultado de un grupo muy pequeño podría permitir identificar sus respuestas.',
+        );
     });
 });

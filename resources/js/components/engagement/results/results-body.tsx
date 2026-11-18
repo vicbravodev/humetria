@@ -40,14 +40,19 @@ export default function ResultsBody({
                     delta={results.indexDelta}
                     stay={results.stay?.favorable ?? null}
                     previousName={results.comparison?.name ?? null}
+                    minGroup={results.minGroup}
                 />
                 {results.recommendation !== null && (
                     <RecommendationCard
                         recommendation={results.recommendation}
+                        minGroup={results.minGroup}
                     />
                 )}
                 {results.loopAction !== null && (
-                    <LoopActionCard loopAction={results.loopAction} />
+                    <LoopActionCard
+                        loopAction={results.loopAction}
+                        minGroup={results.minGroup}
+                    />
                 )}
             </div>
             <DriverList
@@ -60,6 +65,7 @@ export default function ResultsBody({
                     strengths={results.highlights.strengths}
                     opportunities={results.highlights.opportunities}
                     reference={results.index}
+                    minGroup={results.minGroup}
                 />
             )}
             <GroupMap results={results} />

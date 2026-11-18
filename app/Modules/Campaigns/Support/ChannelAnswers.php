@@ -38,6 +38,6 @@ final class ChannelAnswers
             }
         }
 
-        return SmallCells::answeredByChannel($cells, config()->integer('results.min_group'));
+        return SmallCells::answeredByChannel($cells, $campaign->groupMinimum());
     }
 }

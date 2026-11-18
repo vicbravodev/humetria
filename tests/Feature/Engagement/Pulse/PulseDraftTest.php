@@ -148,7 +148,7 @@ it('leaves the questions of a pulse draft with no route to edit them', function 
 
 it('tells the people the pulse takes about two minutes', function (): void {
     $company = new CompanySummary('t', 'Autopartes', 'autopartes', false);
-    $html = (string) (new SurveyInvitation(false, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-12-20'), SurveyKind::Pulse))->toMail(new AnonymousNotifiable)->render();
+    $html = (string) (new SurveyInvitation(false, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-12-20'), SurveyKind::Pulse, 5))->toMail(new AnonymousNotifiable)->render();
 
     expect($html)->toContain('Unos 2 minutos');
 });

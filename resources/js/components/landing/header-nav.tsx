@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import GlideChips from '@/components/humetria/glide-chips';
+import ToolsMenu from '@/components/landing/tools-menu';
 import { useActiveSection } from '@/hooks/use-active-section';
 import { cn } from '@/lib/utils';
 
@@ -29,8 +30,18 @@ const sections = [
 // The hero comes first so nothing is marked until the page reaches a section.
 const watched = ['inicio', ...sections.map((section) => section.section)];
 
-/** The sections of the page in one pill: a chip slides under the one being read. Wide screens only. */
-export default function HeaderNav() {
+const ITEM =
+    'relative flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-1 before:content-[""]';
+
+/**
+ * The sections of the landing in one pill: a chip slides under the one being read. «Herramientas» opens the tools menu.
+ * Wide screens only. `sectionBase` is the page the sections live on, for a page that is not the landing.
+ */
+export default function HeaderNav({
+    sectionBase = '',
+}: {
+    sectionBase?: string;
+}) {
     const active = useActiveSection(watched);
     const [hovered, setHovered] = useState<string | null>(null);
 
@@ -42,6 +53,14 @@ export default function HeaderNav() {
             >
                 {sections.map((section) => {
                     const current = active === section.section;
+                    const tone = current
+                        ? 'text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground';
+                    const pointer = {
+                        onMouseEnter: () => setHovered(section.id),
+                        onFocus: () => setHovered(section.id),
+                        onBlur: () => setHovered(null),
+                    };
 
                     return (
                         <li key={section.id} className="relative">
@@ -51,24 +70,26 @@ export default function HeaderNav() {
                                 hovered={hovered === section.id}
                                 className="rounded-full"
                             />
-                            <a
-                                href={`#${section.id}`}
-                                data-test={section.test}
-                                data-track="nav_click"
-                                data-track-target={section.id}
-                                aria-current={current ? 'true' : undefined}
-                                onMouseEnter={() => setHovered(section.id)}
-                                onFocus={() => setHovered(section.id)}
-                                onBlur={() => setHovered(null)}
-                                className={cn(
-                                    'relative flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-1 before:content-[""]',
-                                    current
-                                        ? 'text-primary-foreground'
-                                        : 'text-muted-foreground hover:text-foreground',
-                                )}
-                            >
-                                {section.label}
-                            </a>
+                            {section.id === 'herramientas' ? (
+                                <div {...pointer} data-test={section.test}>
+                                    <ToolsMenu
+                                        variant="bar"
+                                        triggerClassName={cn(ITEM, tone)}
+                                    />
+                                </div>
+                            ) : (
+                                <a
+                                    href={`${sectionBase}#${section.id}`}
+                                    data-test={section.test}
+                                    data-track="nav_click"
+                                    data-track-target={section.id}
+                                    aria-current={current ? 'true' : undefined}
+                                    {...pointer}
+                                    className={cn(ITEM, tone)}
+                                >
+                                    {section.label}
+                                </a>
+                            )}
                         </li>
                     );
                 })}

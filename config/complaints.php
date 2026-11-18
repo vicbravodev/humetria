@@ -6,18 +6,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Minimum group
-    |--------------------------------------------------------------------------
-    |
-    | The fewest complaints a cell of the channel's summary needs before its number is shown (criterio C-47, as C-23). Applied
-    | to every cell and with complementary suppression. Never below 5.
-    |
-    */
-
-    'min_group' => max(5, (int) env('COMPLAINTS_MIN_GROUP', 5)),
-
-    /*
-    |--------------------------------------------------------------------------
     | Text lengths
     |--------------------------------------------------------------------------
     */

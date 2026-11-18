@@ -19,7 +19,7 @@ export default function Form({
 }) {
     return (
         <>
-            <Head title="Quejas y denuncias" />
+            <Head title="Presentar una queja o denuncia" />
             <ComplaintForm
                 form={form}
                 words={{

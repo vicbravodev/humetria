@@ -116,7 +116,7 @@ it('ends each email with the person\'s entrance, which carries no credential', f
 });
 
 it('leaves the foot alone when the email was built without the person\'s entrance', function (): void {
-    $notification = new SurveyInvitation(false, 'token', 'Ana', resolve(App\Modules\Tenancy\Contracts\Companies::class)->current(), null, new CarbonImmutable('2026-11-20'), App\Modules\Engagement\Enums\SurveyKind::Climate);
+    $notification = new SurveyInvitation(false, 'token', 'Ana', resolve(App\Modules\Tenancy\Contracts\Companies::class)->current(), null, new CarbonImmutable('2026-11-20'), App\Modules\Engagement\Enums\SurveyKind::Climate, 5);
 
     expect((string) $notification->toMail(new AnonymousNotifiable)->render())->not->toContain('Todo lo suyo');
 });
@@ -239,7 +239,7 @@ it('never writes the token, its hash or an address in a log line', function (): 
 
 it('writes the invitation and the reminder in «usted», with the minimum of the group and no promise of secrecy', function (bool $reminder): void {
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes del Bajío', 'autopartes', false);
-    $mail = new SurveyInvitation($reminder, 'tok', 'Ana', $company, 'rh@acme.mx', CarbonImmutable::parse('2026-11-12'), App\Modules\Engagement\Enums\SurveyKind::Climate);
+    $mail = new SurveyInvitation($reminder, 'tok', 'Ana', $company, 'rh@acme.mx', CarbonImmutable::parse('2026-11-12'), App\Modules\Engagement\Enums\SurveyKind::Climate, 5);
     $message = $mail->toMail(new AnonymousNotifiable);
     $html = (string) $message->render();
 
@@ -254,7 +254,7 @@ it('writes the invitation and the reminder in «usted», with the minimum of the
 it('names the last day instead of counting the days, as the evaluations of NOM-035 do', function (): void {
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes', 'autopartes', false);
 
-    $message = (new SurveyInvitation(true, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-11-12'), App\Modules\Engagement\Enums\SurveyKind::Climate))->toMail(new AnonymousNotifiable);
+    $message = (new SurveyInvitation(true, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-11-12'), App\Modules\Engagement\Enums\SurveyKind::Climate, 5))->toMail(new AnonymousNotifiable);
 
     expect($message->subject)->not->toContain('Le quedan')
         ->and((string) $message->render())->toContain('Tiene hasta el jueves 12 de noviembre para dar su opinión')->not->toContain('Le quedan');
@@ -263,7 +263,7 @@ it('names the last day instead of counting the days, as the evaluations of NOM-0
 it('says today is the last day on the last day', function (): void {
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes', 'autopartes', false);
 
-    $subject = (new SurveyInvitation(true, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-11-09'), App\Modules\Engagement\Enums\SurveyKind::Climate))->toMail(new AnonymousNotifiable)->subject;
+    $subject = (new SurveyInvitation(true, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-11-09'), App\Modules\Engagement\Enums\SurveyKind::Climate, 5))->toMail(new AnonymousNotifiable)->subject;
 
     expect($subject)->toBe('Hoy es su último día para dar su opinión');
 });
@@ -278,7 +278,7 @@ it('counts the days to answer by the local calendar, today included', function (
 });
 
 it('reaches only by email', function (): void {
-    $notification = new SurveyInvitation(false, 'tok', 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'A', 'a', false), null, CarbonImmutable::parse('2026-11-12'), App\Modules\Engagement\Enums\SurveyKind::Climate);
+    $notification = new SurveyInvitation(false, 'tok', 'Ana', new App\Modules\Tenancy\Data\CompanySummary('t', 'A', 'a', false), null, CarbonImmutable::parse('2026-11-12'), App\Modules\Engagement\Enums\SurveyKind::Climate, 5);
 
     expect($notification->via(Notification::route('mail', 'a@b.mx')))->toBe(['mail'])
         ->and($notification->via(new User))->toBe([]);

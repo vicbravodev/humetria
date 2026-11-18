@@ -11,8 +11,10 @@ import type { ItemSection } from '@/types';
  */
 export default function ItemsResults({
     sections,
+    minGroup,
 }: {
     sections: ItemSection[];
+    minGroup: number;
 }) {
     return (
         <section className="grid gap-4">
@@ -27,7 +29,7 @@ export default function ItemsResults({
                     resta con el centro revelaría a grupos pequeños.
                 </p>
             </div>
-            <ItemRank sections={sections} />
+            <ItemRank sections={sections} minGroup={minGroup} />
             {sections.map((section, index) => (
                 <details
                     key={index}
@@ -45,7 +47,11 @@ export default function ItemsResults({
                     </summary>
                     <ol className="@container mt-4 divide-y border-t pt-3">
                         {rankItems(section.items).map((item) => (
-                            <ItemRow key={item.number} item={item} />
+                            <ItemRow
+                                key={item.number}
+                                item={item}
+                                minGroup={minGroup}
+                            />
                         ))}
                     </ol>
                     <details className="group/table mt-4">
@@ -58,7 +64,7 @@ export default function ItemsResults({
                             </span>
                         </summary>
                         <div className="mt-3">
-                            <ItemsTable section={section} />
+                            <ItemsTable section={section} minGroup={minGroup} />
                         </div>
                     </details>
                 </details>

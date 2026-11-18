@@ -5,7 +5,7 @@ declare(strict_types=1);
 // The text of the head of each indexable page (title, description, alt of the share image), by route name.
 return [
     'home' => [
-        'title' => 'NOM-035, NOM-037 y Ley Silla en un solo lugar',
+        'title' => 'Humetría: NOM-035, NOM-037 y Ley Silla en un solo lugar',
         'description' => 'Aplica NOM-035, NOM-037 y Ley Silla desde el celular, y suma quejas, Compensación, jornada, Vacaciones, Organigrama y Clima. Reúne lo que pide la STPS.',
         'image_alt' => 'Humetría: tu gente contesta desde el celular, tú llegas listo a la STPS',
     ],

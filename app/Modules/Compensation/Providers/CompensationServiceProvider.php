@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Compensation\Providers;
 
+use App\Modules\Compensation\Contracts\CompensationStanding;
+use App\Modules\Compensation\Support\CompanyCompensationStanding;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -17,6 +19,11 @@ final class CompensationServiceProvider extends ServiceProvider
 {
     /** Previews a person may ask for a minute: the editor asks once the typing stops, so this is a lot of typing. */
     private const int PREVIEWS_PER_MINUTE = 120;
+
+    public function register(): void
+    {
+        $this->app->bind(CompensationStanding::class, CompanyCompensationStanding::class);
+    }
 
     public function boot(): void
     {

@@ -14,7 +14,7 @@ export default function SeatingPortalAnswers(page: {
 }) {
     return (
         <>
-            <Head title="Su trabajo de pie" />
+            <Head title="Sus respuestas · Trabajo de pie" />
             <PortalAnswers page={page} />
         </>
     );

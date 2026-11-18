@@ -5,9 +5,11 @@ import DemoSection from '@/components/landing/demo-section';
 import HowItWorksSection from '@/components/landing/how-it-works-section';
 import HumiSection from '@/components/landing/humi-section';
 import InspectionSection from '@/components/landing/inspection-section';
+import LandingFaq from '@/components/landing/landing-faq';
 import LandingFooter from '@/components/landing/landing-footer';
 import LandingHeader from '@/components/landing/landing-header';
 import LandingHero from '@/components/landing/landing-hero';
+import LegalCalendar from '@/components/landing/legal-calendar';
 import SeoHead from '@/components/landing/seo-head';
 import ToolsSection from '@/components/landing/tools-section';
 import TrustStrip from '@/components/landing/trust-strip';
@@ -31,12 +33,14 @@ export default function Landing({ seo }: { seo: Seo }) {
                 <main data-smooth-scroll>
                     <LandingHero />
                     <TrustStrip />
-                    <HowItWorksSection />
+                    <LegalCalendar />
                     <ToolsSection />
+                    <HowItWorksSection />
                     <InspectionSection />
                     <ComplianceSection />
                     <HumiSection />
                     <AudienceSection />
+                    <LandingFaq />
                     <DemoSection />
                 </main>
                 <LandingFooter />

@@ -66,6 +66,7 @@ final class InvitationComposer
             $center,
             $closesOn,
             $this->minutes($participant),
+            $campaign->groupMinimum(),
             $this->home,
             new InvitationReference(InvitationReference::CAMPAIGN_PARTICIPANT, $participant->id, InvitationReference::CAMPAIGN, $campaign->id),
         );

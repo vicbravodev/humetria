@@ -18,6 +18,11 @@ final readonly class AnswerDistribution implements AnswerDistributions
 
     public function __construct(private ResponseReader $responses, private Instruments $instruments, private GroupMinimum $minimum) {}
 
+    public function at(int $minimum): self
+    {
+        return new self($this->responses, $this->instruments, $this->minimum->at($minimum));
+    }
+
     public function of(string $campaignId, ?string $areaId = null): SurveyDistribution
     {
         $records = $this->responses->anonymous($campaignId, self::INSTRUMENT);

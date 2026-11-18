@@ -10,7 +10,9 @@ mutates(IndexablePages::class);
 it('lists the pages search engines may index', function (): void {
     expect(IndexablePages::includes('home'))->toBeTrue()
         ->and(IndexablePages::includes('privacy-notice'))->toBeTrue()
-        ->and(IndexablePages::includes('roadmap'))->toBeTrue();
+        ->and(IndexablePages::includes('roadmap'))->toBeTrue()
+        ->and(IndexablePages::includes('tools.attendance'))->toBeTrue()
+        ->and(IndexablePages::includes('guides.workday-2027'))->toBeTrue();
 });
 
 it('does not list a missing name, an unknown name or the login', function (?string $name): void {
@@ -53,4 +55,17 @@ it('points robots.txt at the sitemap and blocks no path, so a crawler can read t
         ->toContain('Disallow:')
         ->toContain('Sitemap: https://humetria.com.mx/sitemap.xml')
         ->and(array_filter($lines, fn (string $line): bool => preg_match('/^Disallow:\s*\S/', $line) === 1))->toBe([]);
+});
+
+it('lists the blog article page, which has a parameter and so is not in the static sitemap', function (): void {
+    expect(IndexablePages::includes('blog.show'))->toBeTrue()
+        ->and(IndexablePages::ROUTES)->not->toContain('blog.show');
+
+    foreach (IndexablePages::WITH_PARAMETERS as $name) {
+        $route = Route::getRoutes()->getRoutesByName()[$name];
+
+        expect($route->methods())->toContain('GET')
+            ->and($route->parameterNames())->toBe(['slug'])
+            ->and($route->gatherMiddleware())->not->toContain('auth');
+    }
 });

@@ -24,7 +24,8 @@ export default function PortalFeedback({
     slug: string;
     company: string;
     survey: { name: string } | null;
-    feedback: ManagerFeedback | null;
+    /** With the minimum per group the survey froze. */
+    feedback: (ManagerFeedback & { minGroup: number }) | null;
 }) {
     if (survey === null || feedback === null) {
         // The same screen whether the survey is still open, the group was too small or the person has no team: it never says which.
@@ -67,6 +68,7 @@ export default function PortalFeedback({
                 <HighlightsCard
                     strengths={feedback.strengths}
                     opportunities={feedback.opportunities}
+                    minGroup={feedback.minGroup}
                 />
                 {feedback.summary !== null && (
                     <SummaryThemes summary={feedback.summary} />
