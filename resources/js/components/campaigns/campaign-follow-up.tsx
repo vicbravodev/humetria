@@ -3,6 +3,7 @@ import AreaParticipationCard from '@/components/campaigns/area-participation-car
 import CampaignPeopleSection from '@/components/campaigns/campaign-people-section';
 import ProgressCard from '@/components/campaigns/progress-card';
 import SendingProgress from '@/components/campaigns/sending-progress';
+import ChannelReachCard from '@/components/humetria/channel-reach-card';
 import Notice from '@/components/humetria/notice';
 import { measuringGuide, progressNote } from '@/lib/campaigns';
 import type {
@@ -10,6 +11,7 @@ import type {
     AreaParticipation,
     CampaignDetail,
     CampaignSending,
+    ChannelReach,
     InstrumentProgress,
     PeoplePage,
 } from '@/types';
@@ -26,6 +28,7 @@ export default function CampaignFollowUp({
     sending,
     areas,
     answersByDay,
+    reach,
 }: {
     /** The company's slug and the campaign's id. */
     route: [string, string];
@@ -35,6 +38,7 @@ export default function CampaignFollowUp({
     sending: CampaignSending | null;
     areas: AreaParticipation[] | null;
     answersByDay: AnswersByDay | null;
+    reach: ChannelReach | null;
 }) {
     const progress = campaign.progress;
     const sampleShort =
@@ -64,6 +68,7 @@ export default function CampaignFollowUp({
                     <AnswersByDayCard answers={answersByDay} />
                 )}
             </section>
+            <ChannelReachCard reach={reach} />
             {areas !== null && areas.length > 0 && (
                 <AreaParticipationCard
                     route={route}

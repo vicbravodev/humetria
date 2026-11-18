@@ -387,7 +387,7 @@ it('reads the progress of a campaign of any size in a fixed number of queries', 
     $this->get($url);
 
     // The same with 3 or 30 people: nothing is read person by person. Four of them count who «Invitar a quien falte» reaches.
-    $this->expectsDatabaseQueryCount(27);
+    $this->expectsDatabaseQueryCount(30);
 
     $this->get($url)->assertOk();
 })->with([3, 30]);

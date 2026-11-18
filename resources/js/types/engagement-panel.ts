@@ -1,4 +1,5 @@
 import type { Paginated } from '@/types/demos';
+import type { ChannelReach } from '@/types/messaging';
 
 export type ClimateSurveyStatus = 'draft' | 'active' | 'closed';
 
@@ -91,6 +92,7 @@ export type ClimateParticipation = {
     canRemind: boolean;
     minGroup: number;
     cuts: ClimateCut[];
+    reach: ChannelReach;
 };
 
 /** The arrow of a point against the one before it; null when either wave was too small for it. */

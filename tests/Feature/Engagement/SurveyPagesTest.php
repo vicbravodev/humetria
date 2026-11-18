@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Bus;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** The queries of a survey in progress, whatever the number of people or groups (the session and the panel frame included). */
-const CLIMATE_SHOW_QUERIES = 18;
+const CLIMATE_SHOW_QUERIES = 21;
 
 mutates(SurveyController::class, SurveyPages::class, SnapshotAudience::class);
 
