@@ -37,7 +37,7 @@ const MILESTONES: readonly Milestone[] = [
     },
 ];
 
-/** What the law already asks and what comes next, in order, with the registro de jornada of 2027 marked. */
+/** What the law already asks and what comes next, on a timeline: a dot per rule in its family's color, the next one pulsing. */
 export default function LegalCalendar() {
     return (
         <section
@@ -45,11 +45,11 @@ export default function LegalCalendar() {
             data-test="legal-calendar"
             className="border-b bg-band"
         >
-            <div className={cn(WRAP, 'grid gap-4 py-8')}>
+            <div className={cn(WRAP, 'grid gap-6 py-10')}>
                 <h2 id="calendario-title" className="text-lg font-semibold">
                     Lo que la ley ya pide, y lo que viene
                 </h2>
-                <ol className="grid grid-cols-2 gap-y-2 md:grid-cols-3 xl:grid-cols-6">
+                <ol className="relative grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 xl:grid-cols-6 xl:before:absolute xl:before:inset-x-0 xl:before:top-[7px] xl:before:h-px xl:before:bg-border">
                     {MILESTONES.map((milestone, index) => (
                         <li
                             key={milestone.name}
@@ -58,37 +58,32 @@ export default function LegalCalendar() {
                                 milestone.next === true ? 'step' : undefined
                             }
                             className={cn(
-                                'grid content-start gap-1 border-l border-family px-4 py-3 reveal-slide-8',
+                                'relative grid content-start gap-1 reveal-rise',
                                 FAMILY_CLASS[milestone.family ?? 'compliance'],
-                                `enter-delay-${index * 60}`,
-                                milestone.next === true &&
-                                    'rounded-xl border-transparent bg-family text-background',
+                                `enter-delay-${index * 70}`,
                             )}
                         >
                             <span
-                                className={cn(
-                                    'text-caption',
-                                    milestone.next !== true &&
-                                        'text-muted-foreground',
-                                )}
+                                aria-hidden
+                                className="relative mb-2 flex size-[15px]"
                             >
-                                {milestone.date}
+                                {milestone.next === true && (
+                                    <span className="absolute inset-0 rounded-full bg-family opacity-60 motion-safe:animate-ping" />
+                                )}
+                                <span className="relative size-[15px] rounded-full border-[3px] border-band bg-family" />
                             </span>
-                            <span
-                                className={cn(
-                                    'font-semibold',
-                                    milestone.next !== true && 'text-family',
+                            <span className="flex flex-wrap items-center gap-2 text-caption text-muted-foreground">
+                                {milestone.date}
+                                {milestone.next === true && (
+                                    <span className="rounded-full bg-family px-2 py-0.5 font-semibold text-background">
+                                        Próximo
+                                    </span>
                                 )}
-                            >
+                            </span>
+                            <span className="font-semibold text-family">
                                 {milestone.name}
                             </span>
-                            <span
-                                className={cn(
-                                    'text-caption',
-                                    milestone.next !== true &&
-                                        'text-muted-foreground',
-                                )}
-                            >
+                            <span className="text-caption text-muted-foreground">
                                 {milestone.source}
                             </span>
                         </li>
