@@ -1,13 +1,24 @@
 import { Button } from '@/components/ui/button';
-import { adConversions } from '@/routes/demo-requests';
+import { adConversions, adConversionsIos } from '@/routes/demo-requests';
 
-/** The CSV of click conversions that is uploaded by hand in Google Ads (Goals → Conversions → Uploads). */
+/** The CSVs of click conversions uploaded by hand in Google Ads (Goals → Conversions → Uploads): gclid, and iOS apart. */
 export default function AdConversionsDownload() {
     return (
-        <Button variant="outline" asChild>
-            <a href={adConversions.url()} download>
-                Conversiones para Google Ads (CSV)
-            </a>
-        </Button>
+        <div
+            role="group"
+            aria-label="Conversiones para Google Ads"
+            className="flex flex-wrap gap-2"
+        >
+            <Button variant="outline" asChild>
+                <a href={adConversions.url()} download>
+                    Conversiones para Google Ads (CSV)
+                </a>
+            </Button>
+            <Button variant="outline" asChild>
+                <a href={adConversionsIos.url()} download>
+                    Conversiones de iOS (CSV)
+                </a>
+            </Button>
+        </div>
     );
 }

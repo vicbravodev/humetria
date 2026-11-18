@@ -60,12 +60,24 @@ final class DemoRequestConsoleController extends Controller
     {
         Gate::authorize('view-demo-requests');
 
-        $csv = $export->handle();
+        return $this->download($export->handle(), 'conversiones-google-ads');
+    }
+
+    /** The same for the clicks of iOS, which Google identifies by gbraid or wbraid instead of gclid. */
+    public function adConversionsIos(ExportAdConversions $export): StreamedResponse
+    {
+        Gate::authorize('view-demo-requests');
+
+        return $this->download($export->handleIos(), 'conversiones-google-ads-ios');
+    }
+
+    private function download(string $csv, string $name): StreamedResponse
+    {
         $day = CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString();
 
         return response()->streamDownload(function () use ($csv): void {
             echo $csv;
-        }, "conversiones-google-ads-{$day}.csv", ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }, "{$name}-{$day}.csv", ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function update(UpdateDemoRequestRequest $request, DemoRequest $demoRequest, UpdateDemoRequest $updateDemoRequest): RedirectResponse

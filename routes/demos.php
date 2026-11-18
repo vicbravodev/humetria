@@ -20,6 +20,10 @@ Route::get('admin/demo-requests/ad-conversions', [DemoRequestConsoleController::
     ->middleware(['auth', 'verified'])
     ->name('demo-requests.ad-conversions');
 
+Route::get('admin/demo-requests/ad-conversions/ios', [DemoRequestConsoleController::class, 'adConversionsIos'])
+    ->middleware(['auth', 'verified'])
+    ->name('demo-requests.ad-conversions-ios');
+
 Route::put('admin/demo-requests/{demoRequest}', [DemoRequestConsoleController::class, 'update'])
     ->middleware(['auth', 'verified'])
     ->name('demo-requests.update');

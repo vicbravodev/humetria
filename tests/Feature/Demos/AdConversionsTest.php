@@ -69,6 +69,30 @@ it('leaves out requests without a click id, and the ones of iOS (gbraid, wbraid)
     expect(adConversionsCsv())->toBe("Parameters:TimeZone=America/Mexico_City\nGoogle Click ID,Conversion Name,Conversion Time\n");
 });
 
+it('downloads the clicks of iOS (gbraid, wbraid) in a file of their own, one identifier per row', function (): void {
+    Carbon::setTestNow('2026-11-17 18:30:05');
+    DemoRequest::factory()->withAdClick(AdClickType::Gbraid, 'B1-app')->create(['created_at' => '2026-11-10 16:00:00']);
+    DemoRequest::factory()->withAdClick(AdClickType::Wbraid, 'W1-web')->create(['created_at' => '2026-11-12 20:15:00']);
+    DemoRequest::factory()->withAdClick(AdClickType::Gclid, 'G1')->create();
+    DemoRequest::factory()->create();
+
+    $response = $this->actingAs(superadmin())->get(route('demo-requests.ad-conversions-ios'))->assertOk()
+        ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
+        ->assertDownload('conversiones-google-ads-ios-2026-11-17.csv');
+
+    expect((string) $response->streamedContent())->toBe(implode("\n", [
+        'Parameters:TimeZone=America/Mexico_City',
+        'GBRAID,WBRAID,Conversion Name,Conversion Time',
+        'B1-app,,Humetría · Solicitud de demo,2026-11-10 10:00:00',
+        ',W1-web,Humetría · Solicitud de demo,2026-11-12 14:15:00',
+        '',
+    ]));
+});
+
+it('answers 404 to anyone who is not staff for the file of iOS too', function (): void {
+    $this->actingAs(User::factory()->create())->get(route('demo-requests.ad-conversions-ios'))->assertNotFound();
+});
+
 it('carries no name, email, phone or company of whoever asked', function (): void {
     DemoRequest::factory()->withAdClick(AdClickType::Gclid, 'G1')->create([
         'name' => 'Ana Prueba', 'email' => 'ana@empresa.mx', 'whatsapp' => '+525512345678', 'company' => 'Empresa Ejemplo',
