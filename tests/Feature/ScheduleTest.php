@@ -42,6 +42,8 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'engagement:announce-pulses' => '10 8 * * *',
         'messaging:reconcile-unknown' => '0 * * * *',
         'messaging:replay-orphans' => '* * * * *',
+        'messaging:watch-failures' => '*/5 * * * *',
+        'messaging:purge' => '25 3 * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'schedule:heartbeat' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',

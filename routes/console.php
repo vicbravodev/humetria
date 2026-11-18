@@ -25,8 +25,12 @@ use App\Modules\Engagement\Support\Results\ItemStatisticsReport;
 use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Leave\Actions\GrantEntitlements;
 use App\Modules\Leave\Actions\RouteRequests;
+use App\Modules\Messaging\Actions\ForgetRecipient;
+use App\Modules\Messaging\Actions\PurgeMessaging;
 use App\Modules\Messaging\Actions\ReconcileUnknown;
 use App\Modules\Messaging\Actions\ReplayOrphanEvents;
+use App\Modules\Messaging\Actions\ResumeWhatsApp;
+use App\Modules\Messaging\Actions\WatchFailures;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -35,6 +39,7 @@ use App\Modules\Telework\Actions\RemindUnansweredAccidents;
 use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
+use App\Support\PhoneNumber;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Console\Command;
@@ -253,6 +258,44 @@ Artisan::command('messaging:replay-orphans', function (ReplayOrphanEvents $repla
 })->purpose('Apply the WhatsApp statuses that arrived before their message had its id, and drop the ones that stayed alone for an hour');
 
 Schedule::command('messaging:replay-orphans')->everyMinute()->onOneServer()->withoutOverlapping();
+
+Artisan::command('messaging:watch-failures', function (WatchFailures $watch): void {
+    $this->info($watch->handle() ? 'WhatsApp en pausa: demasiados bloqueos.' : 'Sin cambios.');
+})->purpose('Pause every WhatsApp send when blocks and spam reports reach the threshold of the window; only messaging:resume lifts it');
+
+Schedule::command('messaging:watch-failures')->everyFiveMinutes()->onOneServer()->withoutOverlapping();
+
+Artisan::command('messaging:purge', function (PurgeMessaging $purge): void {
+    $deleted = $purge->handle();
+
+    $this->info("Mensajes borrados: {$deleted['deliveries']}; eventos de proveedor borrados: {$deleted['webhook_events']}");
+})->purpose('Delete the WhatsApp and mail messages older than the retention, with their history, and the provider events past their window');
+
+// After the day's mail and the nightly holds, in the quiet of the display time.
+Schedule::command('messaging:purge')->dailyAt('03:25')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+
+// A data request of a person (ARCO): by hand, with the phone asked for on a hidden prompt so it stays out of the terminal history.
+Artisan::command('messaging:forget', function (ForgetRecipient $forget): int {
+    $answer = $this->secret('Teléfono de la persona');
+    $phone = PhoneNumber::e164(is_string($answer) ? $answer : null);
+
+    if ($phone === null) {
+        $this->error('Ese teléfono no es válido.');
+
+        return Command::FAILURE;
+    }
+
+    $this->info('Mensajes borrados: '.$forget->handle($phone));
+
+    return Command::SUCCESS;
+})->purpose('Delete every message written to a phone, in every company (ARCO); the opt-out stays');
+
+// By hand, after looking at why it paused: closes the open pause and sends nothing by itself.
+Artisan::command('messaging:resume', function (ResumeWhatsApp $resume): void {
+    $closed = $resume->handle();
+
+    $this->info($closed > 0 ? 'Pausa cerrada: WhatsApp vuelve a enviar.' : 'No había ninguna pausa abierta.');
+})->purpose('Close the open pause of WhatsApp (after checking why it paused); nothing unsent is resent');
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('schedule:heartbeat')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.
