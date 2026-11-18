@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Assistant\Support\Readers\AttendanceReader;
 use App\Modules\Assistant\Support\Readers\ClimateReader;
 use App\Modules\Assistant\Support\Readers\ComplaintsReader;
 use App\Modules\Assistant\Support\Readers\PulseReader;
@@ -29,7 +30,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
-mutates(SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
+mutates(AttendanceReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();
@@ -343,3 +344,63 @@ it('does not tell pulse nor climate to a company without them, and offers the ov
     expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe([$module])
         ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 })->with(['pulse', 'climate']);
+
+it('tells a company that has not started with attendance to review its policy', function (): void {
+    expect(overviewLine($this, 'attendance'))->toBe([
+        'key' => 'attendance',
+        'label' => 'Asistencia',
+        'state' => 'pending',
+        'stateLabel' => 'Pendiente',
+        'summary' => 'Aún no revisas la política del registro de jornada.',
+        'link' => "/admin/{$this->a->slug}/attendance/setup",
+    ]);
+});
+
+it('counts the people without a schedule and the corrections waiting for RH, never of another company nor whose they are', function (): void {
+    App\Modules\Attendance\Models\AttendancePolicy::factory()->create(['tenant_id' => $this->a->id]);
+    $center = WorkCenter::factory()->for($this->a)->create();
+    $zafiro = Employee::factory()->create(['tenant_id' => $this->a->id, 'work_center_id' => $center->id, 'name' => 'Zafiro Luna']);
+    App\Modules\Attendance\Models\CorrectionRequest::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $zafiro->id, 'reason' => 'Cita médica Zafiro']);
+    App\Modules\Attendance\Models\CorrectionRequest::factory()->count(3)->create(['tenant_id' => $this->b->id]);
+    workIn($this->a);
+
+    $line = overviewLine($this, 'attendance');
+
+    expect($line)->toMatchArray([
+        'state' => 'pending',
+        'summary' => '1 persona no tiene horario. Hay 1 solicitud de corrección por atender.',
+        'link' => "/admin/{$this->a->slug}/attendance/corrections",
+    ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro');
+
+    Employee::factory()->create(['tenant_id' => $this->a->id, 'work_center_id' => $center->id]);
+    App\Modules\Attendance\Models\CorrectionRequest::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $zafiro->id]);
+
+    expect(overviewLine($this, 'attendance')['summary'])->toBe('2 personas no tienen horario. Hay 2 solicitudes de corrección por atender.');
+});
+
+it('sends to the setup while someone lacks a schedule, and puts attendance up to date once everyone has one and nothing waits', function (): void {
+    App\Modules\Attendance\Models\AttendancePolicy::factory()->create(['tenant_id' => $this->a->id]);
+    $person = Employee::factory()->create(['tenant_id' => $this->a->id]);
+    workIn($this->a);
+
+    expect(overviewLine($this, 'attendance'))->toMatchArray(['state' => 'pending', 'summary' => '1 persona no tiene horario.', 'link' => "/admin/{$this->a->slug}/attendance/setup"]);
+
+    App\Modules\Attendance\Models\AttendanceSchedule::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $person->id]);
+
+    expect(overviewLine($this, 'attendance'))->toMatchArray([
+        'state' => 'up_to_date',
+        'stateLabel' => 'Al día',
+        'summary' => 'Tu política está revisada, todas las personas tienen horario y no hay correcciones por atender.',
+        'link' => "/admin/{$this->a->slug}/attendance",
+    ]);
+});
+
+it('does not tell attendance to a company without it, and offers the overview to a company with only attendance', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(overviewLine($this, 'attendance'))->toBeNull();
+
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
+});

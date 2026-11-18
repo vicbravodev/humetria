@@ -72,14 +72,14 @@ it('never lets a tool of a company reach the data of another, even asking for it
 });
 
 it('does not offer a tool of a module the company does not have, and offers it again when it does', function (): void {
-    resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['sso'], CarbonImmutable::now(config('app.display_timezone')));
 
     $offered = fn (): array => array_map(fn (Tool $tool): string => $tool::class, resolve(ToolRegistry::class)->for($this->scope));
 
     // Regulations and the first steps are not a company's module: Humi always has them.
     expect($offered())->toBe([SearchRegulations::class, GetFirstSteps::class]);
 
-    resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance', 'nom037'], CarbonImmutable::now(config('app.display_timezone')));
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['sso', 'nom037'], CarbonImmutable::now(config('app.display_timezone')));
 
     // A tool that reads two norms stays while the company has either; the one only of NOM-035 does not come back.
     expect($offered())->toBe([GetComplianceOverview::class, ListPendingActions::class, SearchRegulations::class, GetFirstSteps::class]);

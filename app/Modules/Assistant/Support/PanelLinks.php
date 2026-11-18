@@ -56,6 +56,21 @@ final readonly class PanelLinks
         return $this->path('tenant.climate.index');
     }
 
+    public function attendance(): string
+    {
+        return $this->path('tenant.attendance.index');
+    }
+
+    public function attendanceSetup(): string
+    {
+        return $this->path('tenant.attendance.setup');
+    }
+
+    public function attendanceCorrections(): string
+    {
+        return $this->path('tenant.attendance.corrections.index');
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');
