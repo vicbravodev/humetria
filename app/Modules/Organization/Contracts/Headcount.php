@@ -26,4 +26,9 @@ interface Headcount
      * @return array<string, list<array{name: string, employees: int}>> by work center id; one with nobody is left out.
      */
     public function areasByWorkCenter(array $workCenterIds): array;
+
+    /**
+     * The active people with no manager who lead nobody: the chart does not draw them («Sin jefe» of its quality list).
+     */
+    public function unplaced(): int;
 }
