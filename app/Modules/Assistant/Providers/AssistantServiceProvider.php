@@ -64,9 +64,9 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(ClimateReader::class),
             $app->make(AttendanceReader::class),
             $app->make(OrgChartReader::class),
-            // Every company has Compensación: it is in no module of the company, so it is told to all.
+            // Compensación is a module of Integral and Enterprise (or hired alone): told only to a company that has it.
             $app->make(CompensationReader::class),
-        ], [Nom035Reader::class => 'nom035', DisclosureReader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart']));
+        ], [Nom035Reader::class => 'nom035', DisclosureReader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart', CompensationReader::class => 'compensation']));
 
         // The tools of Humi: a new module adds its own here.
         $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [
@@ -78,7 +78,7 @@ final class AssistantServiceProvider extends ServiceProvider
             GetFirstSteps::class,
         ], [
             // Regulations are not a module of the company: Humi always has them. A tool that reads two norms stays with either.
-            GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations', 'complaints', 'pulse', 'climate', 'attendance', 'org_chart'],
+            GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations', 'complaints', 'pulse', 'climate', 'attendance', 'org_chart', 'compensation'],
             GetCampaignProgress::class => ['nom035'],
             GetRiskResults::class => ['nom035'],
             ListPendingActions::class => ['nom035', 'nom037'],

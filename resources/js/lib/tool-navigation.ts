@@ -19,7 +19,7 @@ const companyStaff = (tenant: NavTenant): boolean =>
 /** A union's roster has no hierarchy, no climate and no pulse: those are a company's only. */
 const inCompany = (tenant: NavTenant): boolean => tenant.type !== 'union';
 
-/** A tool of a menu: the module it needs (none for Compensación), whether the role may open it, and its entries. */
+/** A tool of a menu: the module it needs, whether the role may open it, and its entries. */
 type Tool = [module: string | null, visible: boolean, items: () => NavItem[]];
 
 /** Whoever may open the tool, in a company that has its module. */
@@ -79,8 +79,8 @@ export const listeningNavItems = (tenant: NavTenant | null): NavItem[] =>
           ]);
 
 /**
- * "Ordena tu operación": the vacations, the org chart and Compensación. Compensación is a union's too, for its side of
- * the table, and has no module; the rest are a company's and need theirs.
+ * "Ordena tu operación": the vacations, the org chart and Compensación, each in a company that has its module.
+ * Compensación is a union's too, for its side of the table: a union has every module, so it keeps it.
  */
 export const operationsNavItems = (tenant: NavTenant | null): NavItem[] =>
     tenant === null
@@ -97,7 +97,7 @@ export const operationsNavItems = (tenant: NavTenant | null): NavItem[] =>
                   () => [orgChartItem(tenant)],
               ],
               [
-                  null,
+                  'compensation',
                   tenant.can.view_compensation,
                   () => [
                       {
