@@ -132,6 +132,11 @@ final class RedactSensitiveData implements ProcessorInterface
             'user_message',
             // Vacaciones: why a request was turned down is written by a person, about a person.
             'rejection_reason',
+            // Inicio de sesión único: the secret of a company's identity provider and what it hands back are credentials.
+            'client_secret',
+            'id_token',
+            'access_token',
+            'code_verifier',
         ];
 
         foreach ($data as $key => $value) {

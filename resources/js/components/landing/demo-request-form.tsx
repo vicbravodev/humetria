@@ -1,12 +1,9 @@
 import { Form } from '@inertiajs/react';
 import { toast } from 'sonner';
-import type { DemoChoice } from '@/components/landing/demo-choice-field';
-import DemoChoiceField from '@/components/landing/demo-choice-field';
+import DemoCaseDetails from '@/components/landing/demo-case-details';
 import DemoHoneypot from '@/components/landing/demo-honeypot';
-import DemoMessageField from '@/components/landing/demo-message-field';
 import DemoPrivacyNote from '@/components/landing/demo-privacy-note';
 import DemoTextField from '@/components/landing/demo-text-field';
-import DemoToolsField from '@/components/landing/demo-tools-field';
 import PhoneField from '@/components/phone-field';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -14,38 +11,6 @@ import { track, trackFormErrors, trackLead } from '@/lib/analytics';
 import { firstInvalidField } from '@/lib/first-invalid-field';
 import { httpErrorMessage } from '@/lib/http-error-message';
 import { store } from '@/routes/demo-requests';
-
-const PROFILES: readonly DemoChoice[] = [
-    { value: 'company', label: 'Para mi empresa o grupo de empresas' },
-    { value: 'consultant', label: 'Soy consultor y atiendo a varias empresas' },
-    { value: 'union', label: 'Represento a un sindicato' },
-];
-
-const WORKFORCE: readonly DemoChoice[] = [
-    { value: '1_15', label: '1–15' },
-    { value: '16_50', label: '16–50' },
-    { value: '51_100', label: '51–100' },
-    { value: '101_500', label: '101–500' },
-    { value: '501_plus', label: 'Más de 500' },
-];
-
-/** Counts the refused fields and puts the focus on the first one, as the visitor reads the form. */
-function focusFirstError(errors: Record<string, string>) {
-    trackFormErrors(errors);
-    const fields = document
-        .getElementById('demo-request-form')
-        ?.querySelectorAll<HTMLInputElement>('[name]');
-
-    const field = firstInvalidField(fields ?? [], errors);
-
-    // A phone sends a hidden field: what takes the focus is the box it is typed in.
-    (field?.type === 'hidden'
-        ? field.parentElement?.querySelector<HTMLInputElement>(
-              'input[type=tel]',
-          )
-        : field
-    )?.focus();
-}
 
 type Props = {
     /** The route of the page the form is on: the server sends whoever asked back to it. */
@@ -63,7 +28,22 @@ export default function DemoRequestForm({ page = 'home', tool }: Props) {
             id="demo-request-form"
             onBefore={() => track('demo_form_submitted')}
             onSuccess={(page) => trackLead(sessionStorage, page.flash.lead?.id)}
-            onError={focusFirstError}
+            onError={(errors) => {
+                trackFormErrors(errors);
+                const fields = document
+                    .getElementById('demo-request-form')
+                    ?.querySelectorAll<HTMLInputElement>('[name]');
+
+                const field = firstInvalidField(fields ?? [], errors);
+
+                // A phone sends a hidden field: what takes the focus is the box it is typed in.
+                (field?.type === 'hidden'
+                    ? field.parentElement?.querySelector<HTMLInputElement>(
+                          'input[type=tel]',
+                      )
+                    : field
+                )?.focus();
+            }}
             onHttpException={(response) => {
                 const message = httpErrorMessage(response);
 
@@ -113,23 +93,7 @@ export default function DemoRequestForm({ page = 'home', tool }: Props) {
                             error={errors['whatsapp']}
                         />
                     </div>
-                    <DemoChoiceField
-                        name="profile"
-                        legend="¿Para quién es Humetría?"
-                        options={PROFILES}
-                        error={errors['profile']}
-                    />
-                    <DemoToolsField
-                        error={errors['tools']}
-                        preselected={tool}
-                    />
-                    <DemoChoiceField
-                        name="workforce"
-                        legend="¿Cuántas personas trabajan en la empresa?"
-                        options={WORKFORCE}
-                        error={errors['workforce']}
-                    />
-                    <DemoMessageField error={errors['message']} />
+                    <DemoCaseDetails errors={errors} tool={tool} />
                     <DemoHoneypot />
                     <input type="hidden" name="page" value={page} />
                     <Button
@@ -140,7 +104,7 @@ export default function DemoRequestForm({ page = 'home', tool }: Props) {
                         data-test="demo-request-submit"
                     >
                         {processing && <Spinner />}
-                        Agendar demo
+                        Pedir mi demo
                     </Button>
                     <DemoPrivacyNote />
                 </>

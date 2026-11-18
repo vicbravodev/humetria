@@ -52,6 +52,7 @@ final class AuditPages
         'compensation' => 'Compensación',
         'employee' => 'Personas',
         'assistant' => 'Humi',
+        'sso' => 'Inicio de sesión único',
     ];
 
     /**
@@ -74,6 +75,7 @@ final class AuditPages
         'jornada' => 'Jornada',
         'cumplimiento' => 'Cumplimiento',
         'integral' => 'Integral',
+        'enterprise' => 'Enterprise',
         'direct' => 'Directo',
         'consultant' => 'Consultor',
         'channel_compliance' => 'Canal Cumplimiento',
@@ -97,6 +99,7 @@ final class AuditPages
         'seating' => 'Ley Silla',
         'pulse' => 'Pulso',
         'climate' => 'Clima',
+        'sso' => 'Inicio de sesión único',
     ];
 
     /**
@@ -197,6 +200,10 @@ final class AuditPages
         'commitments' => 'Compromisos',
         'published_by' => 'Publicó',
         'invited' => 'Invitados',
+        'domain' => 'Dominio',
+        'domains' => 'Dominios',
+        'issuer' => 'Proveedor (issuer)',
+        'client_id' => 'Client ID',
         'frequency' => 'Frecuencia',
         'day_of_month' => 'Día del mes',
         'open_days' => 'Días abierta',

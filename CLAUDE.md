@@ -77,7 +77,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   (`worker-access.php`: entra con su llave o con un enlace de un solo uso); ninguna dirección suya lleva una credencial que
   sirva más de una vez (`RouteSecurityTest`). El token del enlace es la credencial (con throttle por enlace y por
   dirección) en `survey.php` y `engagement-survey.php`, las encuestas; `complaints-public.php`, el canal de denuncias;
-  `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `workers.php`, la página de trabajadores;
+  `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `sso.php`, el inicio de sesión con el proveedor de la empresa (callback con `state`, `nonce` y PKCE); `workers.php`, la página de trabajadores;
   `attendance-device.php`, los checadores.
 
 ### Módulos
@@ -100,6 +100,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
 - `Seating`: Ley Silla: asientos, evaluación de riesgo, medidas, encuesta.
+- `Sso`: inicio de sesión único (OIDC) de las personas con cuenta, solo plan Enterprise (ver su README).
 - `Telework`: NOM-037: teletrabajadores, lista de verificación, documentos, comité, su sección del portal.
 - `Tenancy`: empresas, centros de trabajo, miembros y roles, módulos y límites por empresa (`CompanyModules`).
 - `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso, sesión y prueba reciente;

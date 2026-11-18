@@ -5,16 +5,14 @@ import { cn } from '@/lib/utils';
 const NBSP = '\u00A0';
 
 const WORDS =
-    'Tu gente contesta desde el celular. Tú tienes la evidencia lista para la STPS.'.split(
-        ' ',
-    );
+    'Tu gente contesta desde el celular. Tú llegas listo a la STPS.'.split(' ');
 
 /** The promise, word by word: each one rises out of a blur 50 ms after the last, as the page opens (CSS, `enter-word`). */
 export default function HeroHeadline() {
     return (
         <h1
             id="hero-title"
-            className="max-w-[13ch] text-[42px] leading-[1.03] font-semibold tracking-[-0.035em] text-balance sm:text-[60px] lg:max-w-[11ch] lg:text-[72px] xl:text-[80px]"
+            className="max-w-[13ch] text-[42px] leading-[1.03] font-semibold tracking-[-0.035em] text-balance sm:text-[56px] lg:max-w-[16ch] lg:text-[56px] xl:text-[60px]"
         >
             {WORDS.map((word, index) => (
                 <span

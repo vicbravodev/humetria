@@ -1,3 +1,4 @@
+import { workforceText } from '@/lib/demo-requests';
 import { cn } from '@/lib/utils';
 import type { DemoRequestRow } from '@/types';
 
@@ -29,7 +30,7 @@ export default function DemoRequestItem({
                     </span>
                 </span>
                 <span className="text-sm text-muted-foreground">
-                    {request.company} · {request.workforce} trabajadores
+                    {request.company} · {workforceText(request.workforce)}
                 </span>
                 {request.status !== 'new' && (
                     <span className="text-caption text-muted-foreground">

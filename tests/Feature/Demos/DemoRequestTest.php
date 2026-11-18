@@ -87,6 +87,22 @@ it('accepts a demo request without a message', function (?string $message): void
     expect(DemoRequest::query()->sole()->message)->toBeNull();
 })->with(['missing' => null, 'empty' => '']);
 
+it('stores a request with only the four contact fields, leaving the case details empty', function (array $left): void {
+    $this->post(route('demo-requests.store'), demoRequest($left))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('home').'#agenda-una-demo');
+
+    $demoRequest = DemoRequest::query()->sole();
+
+    expect($demoRequest->profile)->toBeNull()
+        ->and($demoRequest->workforce)->toBeNull()
+        ->and($demoRequest->tools->all())->toBe([])
+        ->and($demoRequest->message)->toBeNull();
+})->with([
+    'sent empty' => [['profile' => '', 'workforce' => '', 'tools' => [], 'message' => '']],
+    'not sent' => [['profile' => null, 'workforce' => null, 'tools' => null, 'message' => null]],
+]);
+
 it('normalizes a Mexican WhatsApp number to E.164', function (string $whatsapp): void {
     $this->post(route('demo-requests.store'), demoRequest(['whatsapp' => $whatsapp]))
         ->assertSessionHasNoErrors();
@@ -138,8 +154,6 @@ it('requires every field but the message', function (string $field, string $erro
     ['email', 'El campo correo electrónico es obligatorio.'],
     ['whatsapp', 'El campo WhatsApp es obligatorio.'],
     ['company', 'El campo empresa es obligatorio.'],
-    ['profile', 'Elige para quién es Humetría.'],
-    ['workforce', 'El campo número de trabajadores es obligatorio.'],
 ]);
 
 it('accepts each field at its maximum length', function (): void {
@@ -225,14 +239,12 @@ it('rejects a value outside the options', function (string $field, mixed $value,
     ['workforce', ['51_100'], 'El número de trabajadores seleccionado no es válido.'],
 ]);
 
-it('rejects tools that are missing, empty, unknown, repeated or not a list', function (mixed $tools, string $key, ?string $error): void {
+it('rejects tools that are unknown, repeated or not a list', function (mixed $tools, string $key, ?string $error): void {
     $this->post(route('demo-requests.store'), demoRequest(['tools' => $tools]))
         ->assertSessionHasErrors($error === null ? [$key] : [$key => $error]);
 
     expect(DemoRequest::query()->count())->toBe(0);
 })->with([
-    'missing' => [null, 'tools', 'Elige al menos una herramienta.'],
-    'empty' => [[], 'tools', 'Elige al menos una herramienta.'],
     'string' => ['nom_035', 'tools', 'El campo herramientas debe ser un arreglo.'],
     'unknown' => [['nom_036'], 'tools.0', null],
     'repeated' => [['nom_035', 'nom_035'], 'tools.1', null],

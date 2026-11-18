@@ -20,10 +20,7 @@ export default function DemoToolsField({ error, preselected }: Props) {
             className="grid gap-2"
         >
             <legend className="mb-2.5 text-meta leading-snug font-medium">
-                ¿Qué herramientas te interesan?{' '}
-                <span className="font-normal text-muted-foreground">
-                    (elige al menos una)
-                </span>
+                ¿Qué herramientas te interesan?
             </legend>
             <div className="grid gap-3.5">
                 {FAMILIES.map((family) => (

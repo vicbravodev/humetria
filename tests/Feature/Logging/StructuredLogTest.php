@@ -104,6 +104,8 @@ it('redacts each sensitive key', function (string $key): void {
     'credential', 'lat', 'lng', 'q', 'token_hash',
     // Vacaciones: why a request was turned down is written by a person, about a person.
     'rejection_reason',
+    // Inicio de sesión único: the secret of a company's identity provider and what it hands back are credentials.
+    'client_secret', 'id_token', 'access_token', 'code_verifier',
 ]);
 
 it('redacts every salary key at any depth', function (): void {

@@ -90,8 +90,6 @@ it('takes a demo asked from a tool page back to that page, with the request stor
         ->type('#demo-email', 'ana@empresa.mx')
         ->type('#demo-company', 'Empresa Ejemplo')
         ->type('#demo-whatsapp', '5512345678')
-        ->click('Para mi empresa o grupo de empresas')
-        ->click('51–100')
         ->click('@demo-request-submit')
         ->assertSee('Recibimos tu solicitud')
         ->assertPathIs('/registro-de-jornada');
