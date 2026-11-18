@@ -79,6 +79,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   dirección) en `survey.php` y `engagement-survey.php`, las encuestas; `complaints-public.php`, el canal de denuncias;
   `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `sso.php`, el inicio de sesión con el proveedor de la empresa (callback con `state`, `nonce` y PKCE); `workers.php`, la página de trabajadores;
   `attendance-device.php`, los checadores.
+  En `messaging.php` la credencial es la firma del proveedor (Meta, Resend) sobre el cuerpo crudo, con throttle por dirección y
+  tamaño máximo.
 
 ### Módulos
 
@@ -96,6 +98,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Instruments`: catálogo y calificación de instrumentos (Guías I/II/III, lista de NOM-037, Ley Silla); sin tablas.
 - `Interventions`: programa de intervención: acciones, avance, evidencia.
 - `Leave`: vacaciones y permisos: políticas, saldos, solicitudes, días festivos.
+- `Messaging`: transporte de WhatsApp y de eventos de correo: gateway, webhooks, plantillas, consentimiento, historial de
+  estados (ver su README).
 - `Organization`: áreas, empleados, niveles de puesto, líneas de reporte (organigrama).
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
@@ -106,7 +110,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso, sesión y prueba reciente;
   el inicio de su portal en `/me/{slug}` (ver su README).
 
-No hay módulo de notificaciones: cada módulo manda sus correos con `Notifications/`. No hay SMS ni WhatsApp.
+No hay módulo de notificaciones: cada módulo manda sus correos con `Notifications/`. No hay SMS. WhatsApp sale solo por `Messaging`.
 
 ## Arquitectura del frontend
 
