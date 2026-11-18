@@ -14,6 +14,7 @@ import {
     watchErrors,
 } from '@/lib/error-tracking';
 import { initialPageName } from '@/lib/page-frame';
+import { rememberData } from '@/lib/recording-mask';
 import {
     followPage,
     startSessionRecording,
@@ -46,6 +47,8 @@ if (typeof document !== 'undefined') {
         setErrorContext(event.detail.page);
         void followPage(event.detail.page);
     });
+    // A partial reload brings more data without a new page: the recording hides it too.
+    router.on('success', (event) => rememberData(event.detail.page));
 
     await preloadFrame(initialPageName(initialPage));
 }

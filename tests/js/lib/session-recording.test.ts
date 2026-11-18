@@ -2,7 +2,6 @@ import type { CaptureResult } from 'posthog-js';
 import { describe, expect, it, vi } from 'vitest';
 import {
     followPage,
-    maskAttribute,
     readRecordingConfig,
     recordable,
     recordingOptions,
@@ -10,6 +9,7 @@ import {
     snapshotOnly,
     startSessionRecording,
 } from '@/lib/session-recording';
+import { maskAttribute, maskText } from '@/lib/recording-mask';
 import { HOST, TOKEN } from '../support/analytics';
 
 const ORIGIN = 'https://humetria.com.mx';
@@ -98,42 +98,6 @@ describe('recordable', () => {
             expect(recordable(page)).toBe(false);
         },
     );
-});
-
-describe('maskAttribute', () => {
-    it.each([
-        ['href', '/admin/acme/employees/42'],
-        ['action', '/admin/acme/org-chart'],
-        ['aria-label', 'Asignar jefe a Ana López'],
-        ['title', 'Ana López'],
-        ['alt', 'Foto de Ana López'],
-        ['placeholder', 'ana@acme.mx'],
-        ['value', 'Ana López'],
-        ['data-name', 'Ana López'],
-        ['src', 'https://cdn.example.com/avatar.png'],
-    ])('masks %s', (name, value) => {
-        expect(maskAttribute(name, value)).toBe('*');
-    });
-
-    it.each([
-        ['class', 'flex gap-2'],
-        ['style', 'width: 40px'],
-        ['role', 'button'],
-        ['type', 'button'],
-        ['data-state', 'open'],
-        ['aria-expanded', 'true'],
-        ['viewBox', '0 0 24 24'],
-        ['d', 'M3 3h18'],
-        ['href', '/build/assets/app-1a2b.css'],
-        ['src', '/images/tools/nom-035-01-campaigns-light.webp'],
-        ['src', '/brand/logo-dark.svg'],
-        // rrweb's own: the page's CSS inlined (without it the player paints the page unstyled), scroll, sizes, media.
-        ['_cssText', '.flex{display:flex}'],
-        ['rr_scrollTop', '120'],
-        ['rr_width', '320px'],
-    ])('keeps %s, which says how it looks and not who', (name, value) => {
-        expect(maskAttribute(name, value)).toBe(value);
-    });
 });
 
 describe('replayUrl', () => {
@@ -228,7 +192,7 @@ describe('recordingOptions', () => {
         });
     });
 
-    it('masks every text and input, records no network and blocks what is marked ph-no-capture', () => {
+    it('passes every text through maskText, masks every input, records no network and blocks what is marked ph-no-capture', () => {
         expect(options.session_recording).toMatchObject({
             maskAllInputs: true,
             maskTextSelector: '*',
@@ -237,6 +201,7 @@ describe('recordingOptions', () => {
             recordBody: false,
             recordCrossOriginIframes: false,
             maskAttributeFn: maskAttribute,
+            maskTextFn: maskText,
         });
     });
 });

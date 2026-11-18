@@ -1,6 +1,13 @@
 import type { CaptureResult, PostHogConfig } from 'posthog-js';
 import { field, readBlock, type ConfigSource } from '@/lib/analytics';
 import type { ErrorTrackingConfig } from '@/lib/error-tracking';
+import {
+    isObject,
+    maskAttribute,
+    maskText,
+    prop,
+    rememberData,
+} from '@/lib/recording-mask';
 
 /** What records: PostHog's build with its recorder inside, so no script is ever loaded from outside. */
 export type RecordingEngine = {
@@ -23,51 +30,6 @@ const UNRECORDED = [
     'settings/',
 ];
 
-/** Attributes that say how the page looks, not who or what is on it: everything else is masked. */
-const KEPT_ATTRIBUTES = new Set([
-    'class',
-    'style',
-    'id',
-    'role',
-    'type',
-    'rel',
-    'tabindex',
-    'disabled',
-    'hidden',
-    'width',
-    'height',
-    'viewbox',
-    'd',
-    'fill',
-    'stroke',
-    'xmlns',
-    'points',
-    'cx',
-    'cy',
-    'r',
-    'x',
-    'y',
-    'rx',
-    'ry',
-    'x1',
-    'x2',
-    'y1',
-    'y2',
-    'transform',
-    'colspan',
-    'rowspan',
-]);
-
-/**
- * The rest that only says how the page looks: rrweb's own (`_cssText` is the page's CSS inlined, without which the player
- * paints it unstyled; `rr_*` keeps scroll, sizes and media), the ARIA states (not its labels) and Radix's data states.
- */
-const LOOK_ATTRIBUTE =
-    /^(_csstext|rr_[a-z]+|aria-(?!label|description|valuetext)[a-z]+|data-(state|slot|side|align|orientation|disabled|selected|highlighted))$/;
-
-/** Our own static files (styles, the logo, images of the product): the player needs them to paint the page as it was. */
-const OWN_ASSET = /^\/(build|images|fonts|brand)\//;
-
 /** What the recording carries to PostHog: the frames and their session, nothing about the page or the person. */
 const KEPT_PROPERTIES = new Set([
     'token',
@@ -85,14 +47,6 @@ let start: Start | null = null;
 let config: ErrorTrackingConfig | null = null;
 let engine: RecordingEngine | null = null;
 let current: string | null = null;
-
-function isObject(value: unknown): value is object {
-    return typeof value === 'object' && value !== null;
-}
-
-function prop(value: unknown, name: string): unknown {
-    return isObject(value) ? Reflect.get(value, name) : undefined;
-}
 
 /** The token and host of the error block, only when the server switched recording on (App\Http\Analytics). */
 export function readRecordingConfig(
@@ -122,17 +76,6 @@ export function recordable(page: unknown): boolean {
         prop(props, 'impersonator') == null &&
         !UNRECORDED.some((prefix) => component.startsWith(prefix))
     );
-}
-
-/** Every attribute that could carry a name, an address or a value becomes `*`; the look stays. */
-export function maskAttribute(name: string, value: string): string {
-    const lower = name.toLowerCase();
-    const kept =
-        KEPT_ATTRIBUTES.has(lower) ||
-        LOOK_ATTRIBUTE.test(lower) ||
-        ((lower === 'href' || lower === 'src') && OWN_ASSET.test(value));
-
-    return kept ? value : '*';
 }
 
 /** The address the player shows: the page's component, never the path with the company and the ids. */
@@ -195,6 +138,7 @@ export function recordingOptions(
             recordBody: false,
             recordCrossOriginIframes: false,
             maskAttributeFn: maskAttribute,
+            maskTextFn: maskText,
             maskCapturedNetworkRequestFn: replayUrl(origin, page),
         },
         before_send: snapshotOnly,
@@ -206,6 +150,7 @@ export async function followPage(page: unknown): Promise<void> {
     const component = prop(page, 'component');
 
     current = typeof component === 'string' ? component : null;
+    rememberData(page);
 
     if (!recordable(page)) {
         engine?.stopSessionRecording();

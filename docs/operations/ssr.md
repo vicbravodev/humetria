@@ -161,7 +161,10 @@ El servidor reporta sus errores con solo el token (ver "Errores").
   `POSTHOG_SESSION_RECORDING=true`. Una segunda instancia de PostHog (`posthog-js/full/no-external`, el grabador dentro del
   bundle) que se descarga en la primera pantalla grabable: hay empresa, sesión propia y nadie suplanta, y la pantalla no está
   en `UNRECORDED` (quejas, Guía I por acontecimiento, lista de Guía I, Humi, cuenta personal); el dock de Humi lleva
-  `ph-no-capture`. Enmascara todo el texto, los campos y todo atributo que no sea de forma (`maskAttribute`); el reproductor
+  `ph-no-capture`. Muestra la interfaz y oculta los datos de la empresa (`resources/js/lib/recording-mask.ts`): todo texto que
+  contenga un valor de las props de la página (nombres, empresa, quien inició sesión), lo que tenga forma de correo, teléfono,
+  CURP, RFC o monto, las opciones de búsqueda y lo marcado `ph-mask` (las iniciales); además todos los campos y todo atributo
+  que no sea de forma (`maskAttribute`); el reproductor
   ve la pantalla por su componente, no por su dirección; solo sale `$snapshot`, con id aleatorio en memoria, sin perfil ni
   IP. La CSP abre en `connect-src` `us-assets.i.posthog.com` para leer la configuración de replay del proyecto (JSON).
 - La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente externo,
