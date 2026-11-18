@@ -64,7 +64,7 @@ final class RespondentController extends Controller
             'closesOn' => $opened->survey->closes_on === null ? null : str_replace('.', '', $opened->survey->closes_on->isoFormat('D MMM YYYY')),
             'kind' => $opened->survey->kind->value,
             'minutes' => $opened->survey->kind->minutes(),
-            'minGroup' => config()->integer('results.min_group'),
+            'minGroup' => $opened->survey->groupMinimum(),
             'managerName' => $opened->managerName,
             'agreementLabels' => array_values(ItemBank::AGREEMENT_LABELS),
             'openNotice' => ItemBank::OPEN_NOTICE,

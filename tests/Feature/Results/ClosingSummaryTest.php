@@ -187,7 +187,7 @@ it('sends nothing to a company with no owner', function (): void {
 });
 
 it('caps participation at 100 %, so the ring always has its image', function (int $answered, int $invited, int $participation): void {
-    $mail = (new ClosingSummary(new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false), 'Planta', $answered, $invited, null, null, false, 0, 'https://humetria.test'))
+    $mail = (new ClosingSummary(new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false), 'Planta', $answered, $invited, null, null, false, 0, 5, 'https://humetria.test'))
         ->toMail(new AnonymousNotifiable);
 
     expect((string) $mail->render())

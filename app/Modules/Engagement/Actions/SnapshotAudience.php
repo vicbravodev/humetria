@@ -16,6 +16,7 @@ use App\Modules\Organization\Contracts\ReportingLines;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Contracts\Seniority;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -34,6 +35,7 @@ final readonly class SnapshotAudience
         private Seniority $seniority,
         private ReportingLines $lines,
         private Thresholds $thresholds,
+        private GroupMinimums $groupMinimums,
     ) {}
 
     /** How many people the survey was sent to; running it again changes nothing. */
@@ -114,7 +116,7 @@ final readonly class SnapshotAudience
             }
         }
 
-        $managerGroups = ManagerGroups::partition($managerOf, $ids, config()->integer('results.min_group'));
+        $managerGroups = ManagerGroups::partition($managerOf, $ids, $this->groupMinimums->current());
         $commentGroups = ManagerGroups::partition($managerOf, $ids, config()->integer('engagement.min_comments'));
 
         $segments = [];

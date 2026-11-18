@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Results\Support;
 
 use App\Modules\Results\Contracts\SmallGroups;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 
 /**
  * The one place the minimum of respondents per group lives (criterio C-23), for every tool that reports a group. A group
@@ -13,6 +14,20 @@ use App\Modules\Results\Contracts\SmallGroups;
  */
 final readonly class GroupMinimum implements SmallGroups
 {
+    /** @param  int|null  $fixed  the minimum a campaign or survey froze when it launched; null follows the company's */
+    public function __construct(private GroupMinimums $company, private ?int $fixed = null) {}
+
+    public function at(int $minimum): self
+    {
+        return new self($this->company, $minimum);
+    }
+
+    /** The minimum applied now: the one frozen for the thing at hand, or else the company's (the platform's default outside a company). */
+    public function minimum(): int
+    {
+        return $this->fixed ?? $this->company->current();
+    }
+
     public function visibleKeys(array $headcountByGroup): array
     {
         return $this->suppress($headcountByGroup)->visible;
@@ -20,7 +35,7 @@ final readonly class GroupMinimum implements SmallGroups
 
     public function isShown(int $answered): bool
     {
-        return $answered >= config()->integer('results.min_group');
+        return $answered >= $this->minimum();
     }
 
     /**

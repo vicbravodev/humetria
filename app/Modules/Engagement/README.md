@@ -13,8 +13,11 @@ resultados agregados. Este módulo existe sobre una promesa: **nadie en la empre
 - **Solo inserción.** Un trigger de Postgres rechaza UPDATE, DELETE y TRUNCATE de ambas tablas.
 - **Instantánea gruesa.** Al lanzar, cada respuesta lleva solo su grupo: centro de trabajo, área, rango de antigüedad
   (<1, 1–3, 3–6, 6+ años) y grupo de jefe. Los grupos de jefe no se traslapan.
-- **Mínimos de respondentes.** Todo agregado pasa por `Results\Contracts\SmallGroups` (mínimo 5 para puntajes), con un
-  solo atributo de corte a la vez y supresión complementaria. Los comentarios exigen 10 (`ENGAGEMENT_MIN_COMMENTS`) y el
+- **Mínimos de respondentes.** Todo agregado pasa por `Results\Contracts\SmallGroups` con el mínimo por grupo de la
+  encuesta (`Thresholds::of($survey)`), con un solo atributo de corte a la vez y supresión complementaria. Ese mínimo es
+  el de la empresa (`Tenancy\Contracts\GroupMinimums`: 5 por omisión, de 1 —sin mínimo— a 50) y **se congela al lanzar**
+  en `engagement_surveys.min_group`, porque la invitación se lo prometió a quien contesta; un borrador sigue el vivo. Con 1
+  ningún texto promete ocultar: avisa que el resultado de un grupo muy pequeño podría permitir identificar respuestas. Los comentarios exigen 10 (`ENGAGEMENT_MIN_COMMENTS`) y el
   índice de recomendación y las tendencias 30 (`ENGAGEMENT_MIN_TREND`); esas dos llaves no pueden bajar de su piso.
   Nunca se muestra el conteo exacto de un grupo oculto, y los resultados solo existen con la encuesta cerrada.
 - **El jefe nunca lee comentarios.** Recibe únicamente el resumen de IA, generado una vez al cierre. Si la IA falla o
@@ -71,22 +74,23 @@ calendario. Sus rutas son `tenant.pulse.*` y sus permisos `view-pulse` (owner, h
 - **Calendario:** mensual o trimestral, nunca «siempre abierto» (con anonimato real no se controlan duplicados). El
   comando `engagement:launch-pulses` corre a las 08:00 de `app.display_timezone`, lanza el pulso del día y deja la
   siguiente fecha en el futuro; los días 29 a 31 se limitan al 28. Se omite el ciclo, con su log, si hay un clima
-  activo, otro pulso abierto, la empresa está suspendida o tiene menos de 5 personas. Tres días antes, `engagement:announce-pulses`
+  activo, otro pulso abierto, la empresa está suspendida o tiene menos personas que su mínimo por grupo. Tres días antes, `engagement:announce-pulses`
   avisa a owner y hr con los compromisos que siguen abiertos.
 - **Resultados y portal:** la pantalla de resultados de un pulso solo muestra los temas que preguntó y la tarjeta
-  «Mejoras vistas» (desde 5 respuestas). En la modalidad jefe, el jefe ve en su portal solo las preguntas del jefe que el
+  «Mejoras vistas» (desde el mínimo por grupo de la ola). En la modalidad jefe, el jefe ve en su portal solo las preguntas del jefe que el
   pulso hizo, contra la empresa; sin fortalezas ni oportunidades (con menos de 8 preguntas no hay cuáles elegir) y sin
   resumen de comentarios, porque un pulso no tiene comentarios y no se encola ningún resumen. Un pulso que no preguntó por el jefe nunca
   sustituye en el portal al último resultado que sí lo hizo.
 - **Tendencia (`tenant.pulse.trend`):** solo de la empresa, sin cortes. Un punto por ola cerrada (a lo más 12), y solo
   entre olas donde la pregunta tuvo la misma redacción; una pregunta que no se hizo, que cambió o que quedó oculta por
-  menos de 5 respuestas no es un cero: ese punto no existe. Las flechas aparecen solo con 30 respuestas o más en las dos
+  no llegar al mínimo por grupo no es un cero: ese punto no existe. Las flechas aparecen solo con 30 respuestas o más en las dos
   olas (`ENGAGEMENT_MIN_TREND`).
 
 ## Configuración
 
 `config/engagement.php`: `ENGAGEMENT_MIN_COMMENTS` (10), `ENGAGEMENT_MIN_TREND` (30), largo máximo de un comentario
-(1000) y soporte mínimo de un tema (3). El mínimo por grupo es `RESULTS_MIN_GROUP` (5), común a todas las herramientas.
+(1000) y soporte mínimo de un tema (3). El mínimo por grupo no vive aquí: es el de la empresa,
+congelado en cada encuesta al lanzarla; `RESULTS_MIN_GROUP` (5) es solo el valor por omisión de la plataforma.
 
 ## Pendientes fuera del código
 

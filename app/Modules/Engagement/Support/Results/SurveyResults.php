@@ -36,7 +36,7 @@ final class SurveyResults
 
     public static function for(Survey $survey): self
     {
-        return new self($survey, resolve(Thresholds::class));
+        return new self($survey, resolve(Thresholds::class)->of($survey));
     }
 
     public function survey(): Survey
@@ -133,7 +133,7 @@ final class SurveyResults
                 ->whereKeyNot($this->survey->id)
                 ->latest('closed_at')
                 ->first();
-            $this->previous = $previous === null ? null : new self($previous, $this->thresholds);
+            $this->previous = $previous === null ? null : self::for($previous);
         }
 
         return $this->previous;

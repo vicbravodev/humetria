@@ -50,7 +50,7 @@ final readonly class CompanyEvaluationResults implements EvaluationResults
             return null;
         }
 
-        $result = $this->distribution->of($guide, $this->responses->anonymous($campaign->id, $guide));
+        $result = $this->distribution->at($campaign->minGroup)->of($guide, $this->responses->anonymous($campaign->id, $guide));
 
         return $result['visible'] ? $result['final'] : null;
     }

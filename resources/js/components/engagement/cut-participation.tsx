@@ -4,6 +4,7 @@ import BarMeter from '@/components/humetria/bar-meter';
 import { pointsText } from '@/lib/engagement/format';
 import { percent } from '@/lib/evaluation';
 import { cn } from '@/lib/utils';
+import { hidesSmallGroups, NO_GROUP_MINIMUM } from '@/lib/group-minimum';
 import type { ClimateCut } from '@/types';
 
 /**
@@ -56,7 +57,9 @@ export default function CutParticipation({
             </div>
             {cut === undefined || cut.groups.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                    Ningún grupo de este tipo llega a {minGroup} personas.
+                    {hidesSmallGroups(minGroup)
+                        ? `Ningún grupo de este tipo llega a ${minGroup} personas.`
+                        : 'Ningún grupo de este tipo tiene personas invitadas.'}
                 </p>
             ) : (
                 <ul className="flex flex-col gap-4">
@@ -102,7 +105,9 @@ export default function CutParticipation({
                 )}
                 <p className="flex items-center gap-1.5">
                     <Lock aria-hidden className="size-4" />
-                    Los grupos de menos de {minGroup} personas no se muestran.
+                    {hidesSmallGroups(minGroup)
+                        ? `Los grupos de menos de ${minGroup} personas no se muestran.`
+                        : NO_GROUP_MINIMUM}
                 </p>
             </div>
         </section>

@@ -29,6 +29,8 @@ final class SurveyInvitation extends Notification implements MailBag
         private readonly string $workCenter,
         private readonly CarbonImmutable $closesOn,
         private readonly int $minutes,
+        /** The minimum of people per group the campaign froze when it launched: the number promised to whoever answers. */
+        private readonly int $minGroup,
         private readonly ?string $portalUrl = null,
     ) {}
 
@@ -75,7 +77,7 @@ final class SurveyInvitation extends Notification implements MailBag
                 'contact' => $this->contact,
                 'workCenter' => $this->workCenter,
                 'minutes' => $this->minutes,
-                'minGroup' => config()->integer('results.min_group'),
+                'groupNotice' => trans_choice('group-minimum.notice', $this->minGroup, ['minimum' => $this->minGroup]),
                 'title' => $deadline.' para contestar',
                 'lastDay' => $lastDay->isoFormat('D [de] MMMM'),
                 'lastDayLong' => $lastDay->isoFormat('dddd D [de] MMMM'),

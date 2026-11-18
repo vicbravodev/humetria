@@ -14,7 +14,8 @@ use App\Modules\Tenancy\Data\WorkCenterSummary;
 /**
  * «Comparte los resultados con tu equipo» (board V2-N035-Compartir): what the people of a center read once RH publishes the
  * results of an evaluation (num. 7.8; criterio C-54), beside how it reaches them. The center whole and never an area, by the
- * same route of data as Results with its minimum (C-23): below it the count is «menos de N» and no theme is named. The
+ * same route of data as Results with the minimum the evaluation froze at launch (C-23): below it the count is «menos de N»
+ * and no theme is named. The
  * measures are the Programa's that the page may show (ProgramMeasureFeed); the channel is the complaints channel's.
  */
 final readonly class SharePages
@@ -41,9 +42,9 @@ final readonly class SharePages
             'campaign' => ['id' => $campaign->id, 'closedOn' => $campaign->closedOn],
             'workCenter' => ['id' => $center->id, 'name' => $center->name],
             'company' => $this->companies->current()->tradeName,
-            // Below the minimum, only that it is fewer than it: the page writes «menos de 5».
+            // Below the minimum, only that it is fewer than it: the page writes «menos de N».
             'answered' => $figures ? $breakdown->answered : null,
-            'minimum' => config()->integer('results.min_group'),
+            'minimum' => $campaign->minGroup,
             'themes' => $figures ? ResultThemes::of($breakdown) : [],
             'measures' => array_map(fn (PublicMeasure $measure): array => ['title' => $measure->title, 'dueOn' => $measure->dueOn], $this->measures->forCampaign($campaign->id)),
             'channel' => $channel === null ? null : ['anonymous' => $channel->anonymousAllowed],

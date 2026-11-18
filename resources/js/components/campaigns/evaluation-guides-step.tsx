@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { guidesReason } from '@/lib/evaluation-centers';
+import { hidesSmallGroups, NO_GROUP_MINIMUM } from '@/lib/group-minimum';
 import { staffText } from '@/lib/work-centers';
 import { store } from '@/routes/tenant/campaigns';
 import type { WorkCenterEvaluation } from '@/types';
@@ -73,9 +74,9 @@ export default function EvaluationGuidesStep({
                                 aria-hidden
                                 className="mt-0.5 size-4 shrink-0"
                             />
-                            Los resultados por área solo aparecen con {minGroup}{' '}
-                            o más cuestionarios, para que nadie pueda deducir
-                            quién contestó qué.
+                            {hidesSmallGroups(minGroup)
+                                ? `Los resultados por área solo aparecen con ${minGroup} o más cuestionarios, para que nadie pueda deducir quién contestó qué.`
+                                : NO_GROUP_MINIMUM}
                         </p>
                     </div>
                     <div className="flex justify-between gap-2 rounded-b-xl border-t bg-muted px-6 py-4">

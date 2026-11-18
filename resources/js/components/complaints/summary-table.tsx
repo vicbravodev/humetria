@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table';
 import type { SummaryCell } from '@/types';
 
-/** One breakdown of the summary: each cell with its number, or «menos de 5» when it is under the minimum of people. */
+/** One breakdown of the summary: each cell with its number, or «menos de N» when it is under the minimum of people. */
 export default function SummaryTable({
     title,
     cells,

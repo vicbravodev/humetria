@@ -22,6 +22,7 @@ export default function SurveyRunner({
     instruments,
     instrument,
     noun,
+    minGroup,
     onBack,
     onSent,
 }: {
@@ -29,6 +30,7 @@ export default function SurveyRunner({
     instruments: SurveyInstrument[];
     instrument: SurveyInstrument;
     noun: IntroCopy['noun'];
+    minGroup: number | null;
     onBack: () => void;
     /** Told as the guide goes out, so the page can confirm it once the next one is shown. */
     onSent: (instrument: string) => void;
@@ -69,6 +71,7 @@ export default function SurveyRunner({
             <GuideIntro
                 instrument={instrument}
                 noun={noun}
+                minGroup={minGroup}
                 onBack={onBack}
                 onStart={() => setStarted(true)}
             />

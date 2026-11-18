@@ -17,8 +17,9 @@ export default function ReportAreas({ report }: { report: NomReport }) {
         >
             {areas.visible.length === 0 && (
                 <p className="text-muted-foreground">
-                    Ninguna área se muestra: se necesitan al menos 5
-                    cuestionarios por área, y que el resto no se pueda deducir.
+                    Ninguna área se muestra: se necesitan al menos{' '}
+                    {report.minGroup} cuestionarios por área, y que el resto no
+                    se pueda deducir.
                 </p>
             )}
             <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
@@ -37,10 +38,11 @@ export default function ReportAreas({ report }: { report: NomReport }) {
                                 : `${areas.hidden} áreas protegidas`}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            {protectedCount} cuestionarios de áreas con menos de
-                            5 respuestas, o que permitirían deducirlas. No se
-                            muestran para que nadie pueda deducir resultados
-                            individuales; sí cuentan en el total.
+                            {protectedCount} cuestionarios de áreas con menos de{' '}
+                            {report.minGroup} respuestas, o que permitirían
+                            deducirlas. No se muestran para que nadie pueda
+                            deducir resultados individuales; sí cuentan en el
+                            total.
                         </p>
                     </div>
                 )}

@@ -89,6 +89,8 @@ export type EngagementResults = {
         closedOn: string | null;
     };
     available: boolean;
+    /** The minimum per group the survey froze when it launched (criterio C-23); 1 is none. */
+    minGroup: number;
     /** How many commitments the survey has, to offer to write them or to see them. */
     commitments: number;
     cut: EngagementCut['value'] | null;
@@ -134,5 +136,7 @@ export type EngagementItemSection = {
 export type EngagementItems = {
     survey: Pick<EngagementResults['survey'], 'id' | 'name' | 'status'>;
     available: boolean;
+    /** The minimum per group the survey froze when it launched (criterio C-23); 1 is none. */
+    minGroup: number;
     sections: EngagementItemSection[];
 };

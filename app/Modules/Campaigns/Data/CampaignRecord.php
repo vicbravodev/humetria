@@ -16,6 +16,7 @@ final readonly class CampaignRecord
      * @param  list<string>  $instruments  instrument keys, in the order they are applied
      * @param  array<string, int>  $invited  people given each guide, cancelled ones left out
      * @param  array<string, int>  $answered  people who answered each guide
+     * @param  int  $minGroup  the fewest answers a group of its results needs: frozen at launch, the company's in a draft
      */
     public function __construct(
         public string $id,
@@ -31,6 +32,7 @@ final readonly class CampaignRecord
         public ?string $closedOn,
         public array $invited,
         public array $answered,
+        public int $minGroup,
         public ?string $closesOn = null,
         public ?int $daysLeft = null,
         public ?string $closedDate = null,

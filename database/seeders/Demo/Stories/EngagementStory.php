@@ -74,7 +74,7 @@ final class EngagementStory implements DemoStory
         $invitations = array_values(Invitation::query()->where('survey_id', $survey->id)->get()
             ->sortBy(fn (Invitation $invitation): string => DemoRoster::sortKey($people[$invitation->employee_id]->key))->all());
         // The open pulse leaves the door's links for prospects; anyone may have answered the closed waves.
-        $answering = $this->answering($invitations, fn (Invitation $invitation): bool => $closes || ! $people[$invitation->employee_id]->reservedForDoor, $turnout);
+        $answering = $this->answering($survey->groupMinimum(), $invitations, fn (Invitation $invitation): bool => $closes || ! $people[$invitation->employee_id]->reservedForDoor, $turnout);
         $answerDays = min($open, abs($day)) - 1;
 
         foreach ($invitations as $i => $invitation) {
@@ -103,14 +103,14 @@ final class EngagementStory implements DemoStory
 
     /**
      * Who answers: a `$turnout` share of everyone, spread evenly over those `$may`, plus whoever a group needs so that every
-     * group with answers has at least five. Who sits in a group where fewer than five may answer stays silent: that group
-     * shows nothing rather than too little.
+     * group with answers has at least the survey's `$minimum`. Who sits in a group where fewer than that may answer stays
+     * silent: that group shows nothing rather than too little.
      *
      * @param  list<Invitation>  $invitations
      * @param  callable(Invitation): bool  $may
      * @return array<string, true> by invitation id
      */
-    private function answering(array $invitations, callable $may, float $turnout): array
+    private function answering(int $minimum, array $invitations, callable $may, float $turnout): array
     {
         $eligible = array_values(array_filter($invitations, $may));
 
@@ -119,7 +119,7 @@ final class EngagementStory implements DemoStory
 
             foreach (self::CUTS as $cut) {
                 foreach ($this->groups($eligible, $cut) as $members) {
-                    if (count($members) < config()->integer('results.min_group')) {
+                    if (count($members) < $minimum) {
                         $eligible = array_values(array_filter($eligible, fn (Invitation $invitation): bool => ! in_array($invitation, $members, true)));
                     }
                 }
@@ -141,10 +141,10 @@ final class EngagementStory implements DemoStory
 
             foreach (self::CUTS as $cut) {
                 foreach ($this->groups($eligible, $cut) as $members) {
-                    $short = config()->integer('results.min_group') - count(array_filter($members, fn (Invitation $invitation): bool => isset($chosen[$invitation->id])));
+                    $short = $minimum - count(array_filter($members, fn (Invitation $invitation): bool => isset($chosen[$invitation->id])));
 
                     foreach ($members as $invitation) {
-                        if ($short > 0 && $short < config()->integer('results.min_group') && ! isset($chosen[$invitation->id])) {
+                        if ($short > 0 && $short < $minimum && ! isset($chosen[$invitation->id])) {
                             $chosen[$invitation->id] = true;
                             $short--;
                         }

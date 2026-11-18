@@ -34,6 +34,7 @@ final readonly class ItemStatistics
      */
     public function of(Survey $survey): array
     {
+        $thresholds = $this->thresholds->of($survey);
         $rows = array_values(Response::query()->where('survey_id', $survey->id)->get(['answers'])->map(fn (Response $response): ResponseRow => new ResponseRow(new Segment(null, null, null, null), $response->answers))->all());
         $statistics = [];
 
@@ -52,7 +53,7 @@ final readonly class ItemStatistics
             }
 
             // Only the agreement questions have a favorable share and a midpoint; the recommendation one is read as bands.
-            $tally = $item->scale === ItemScale::Agreement ? ItemTally::of($item, $rows, $this->thresholds) : null;
+            $tally = $item->scale === ItemScale::Agreement ? ItemTally::of($item, $rows, $thresholds) : null;
             $favorable = $tally?->favorable;
             $midpoint = $tally?->neutral;
 
@@ -82,7 +83,7 @@ final readonly class ItemStatistics
     {
         $minutes = array_values(array_filter(Response::query()->where('survey_id', $survey->id)->orderBy('minutes')->pluck('minutes')->all(), is_int(...)));
 
-        if (! $this->thresholds->met(count($minutes))) {
+        if (! $this->thresholds->of($survey)->met(count($minutes))) {
             return null;
         }
 

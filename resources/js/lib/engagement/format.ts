@@ -1,13 +1,18 @@
+import { tooFewText } from '@/lib/group-minimum';
+
 export type Delta = {
     points: number;
     /** Null when the groups are too small for an arrow: the points alone. */
     direction: 'up' | 'down' | 'same' | null;
 };
 
-/** A favorable share as the results write it: "72 %" (a non-breaking space keeps the sign with its number). */
-export function favorableText(value: number | null): string {
+/**
+ * A favorable share as the results write it: "72 %" (a non-breaking space keeps the sign with its number); hidden,
+ * why, under the minimum per group the survey froze.
+ */
+export function favorableText(value: number | null, minGroup: number): string {
     return value === null
-        ? 'Menos de 5 respuestas: no se muestra'
+        ? `${tooFewText(minGroup, 'respuestas')}: no se muestra`
         : `${value} %`;
 }
 

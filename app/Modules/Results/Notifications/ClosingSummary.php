@@ -39,6 +39,8 @@ final class ClosingSummary extends Notification implements MailBag, ShouldQueue
         private readonly ?array $domain,
         private readonly bool $hasRisk,
         private readonly int $requiringAssessment,
+        /** The minimum of people per group the evaluation froze when it launched. */
+        private readonly int $minGroup,
         private readonly string $url,
         private readonly ?string $programUrl = null,
     ) {}
@@ -78,7 +80,7 @@ final class ClosingSummary extends Notification implements MailBag, ShouldQueue
                     array_keys(self::LABELS),
                 ),
                 'belowMinimum' => $this->hasRisk && $this->levels === null,
-                'minGroup' => config()->integer('results.min_group'),
+                'hiddenNote' => trans_choice('group-minimum.hidden', $this->minGroup, ['minimum' => $this->minGroup]),
                 'assessment' => $this->requiringAssessment,
                 'report' => $this->levels !== null,
                 'programUrl' => $this->programUrl,

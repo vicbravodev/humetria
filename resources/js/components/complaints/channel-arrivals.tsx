@@ -1,8 +1,9 @@
+import { hidesSmallGroups, NO_GROUP_MINIMUM } from '@/lib/group-minimum';
 import type { ChannelSummary } from '@/types';
 
 /**
- * «Lo que ha llegado» (board V4-Quejas-Canal, decisión C5): how many cases by state as a list, so «menos de 5» never breaks in
- * a narrow card. Under the minimum the exact number is not shown, and never by center.
+ * «Lo que ha llegado» (board V4-Quejas-Canal, decisión C5): how many cases by state as a list, so «menos de N» never breaks in
+ * a narrow card. Under the company's minimum the exact number is not shown, and never by center; with none (1), it warns.
  */
 export default function ChannelArrivals({
     summary,
@@ -33,9 +34,10 @@ export default function ChannelArrivals({
                 ))}
             </dl>
             <p className="text-caption text-muted-foreground">
-                Con menos de {summary.minimum} no mostramos la cifra exacta,
-                para que nadie pueda deducir quién escribió. Tampoco se muestran
-                por centro.
+                {hidesSmallGroups(summary.minimum)
+                    ? `Con menos de ${summary.minimum} no mostramos la cifra exacta, para que nadie pueda deducir quién escribió.`
+                    : NO_GROUP_MINIMUM}{' '}
+                Tampoco se muestran por centro.
             </p>
         </section>
     );

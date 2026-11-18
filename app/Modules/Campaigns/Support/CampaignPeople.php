@@ -162,7 +162,7 @@ final readonly class CampaignPeople
      */
     public function answersByDay(Campaign $campaign): array
     {
-        $minimum = config()->integer('results.min_group');
+        $minimum = $campaign->groupMinimum();
         $finished = $campaign->participants()->getQuery()
             ->join('participant_instruments', 'participant_instruments.participant_id', '=', 'campaign_participants.id')
             ->where('participant_instruments.instrument', $campaign->measuringGuide())

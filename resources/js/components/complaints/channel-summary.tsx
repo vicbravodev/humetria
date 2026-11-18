@@ -1,4 +1,5 @@
 import SummaryTable from '@/components/complaints/summary-table';
+import { hidesSmallGroups, NO_GROUP_MINIMUM } from '@/lib/group-minimum';
 import type { ChannelSummary as Summary } from '@/types';
 
 /**
@@ -15,9 +16,10 @@ export default function ChannelSummary({ summary }: { summary: Summary }) {
                     : summary.total}
             </h2>
             <p className="text-sm text-muted-foreground">
-                Una cifra menor a {summary.minimum} no se muestra, y a veces
-                tampoco la de al lado, para que no se pueda deducir quién usó el
-                canal. Los casos que ya se purgaron cuentan.
+                {hidesSmallGroups(summary.minimum)
+                    ? `Una cifra menor a ${summary.minimum} no se muestra, y a veces tampoco la de al lado, para que no se pueda deducir quién usó el canal.`
+                    : NO_GROUP_MINIMUM}{' '}
+                Los casos que ya se purgaron cuentan.
             </p>
             <div className="grid gap-4 md:grid-cols-2">
                 <SummaryTable

@@ -47,7 +47,7 @@ final readonly class Participation
             'pending' => $pending,
             'withoutLink' => self::int($counts->without_link ?? 0),
             'canRemind' => $canManage && $survey->status === SurveyStatus::Active && $pending > 0,
-            'minGroup' => config()->integer('results.min_group'),
+            'minGroup' => $survey->groupMinimum(),
             'cuts' => array_map(fn (CutAttribute $cut): array => $this->cut($survey, $cut), self::CUTS),
         ];
     }
@@ -69,7 +69,7 @@ final readonly class Participation
         }
 
         // Whoever is in no group (reported with the whole company) is hidden too, and counts as such for the minimum.
-        $visible = array_values(array_filter($this->thresholds->visible($invited), fn (string $key): bool => $key !== ''));
+        $visible = array_values(array_filter($this->thresholds->of($survey)->visible($invited), fn (string $key): bool => $key !== ''));
         $labels = $this->labels($cut, $visible);
 
         return [

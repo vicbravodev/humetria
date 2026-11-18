@@ -9,14 +9,18 @@ import {
 
 describe('favorableText', () => {
     it('writes the share with a non-breaking space before the sign', () => {
-        expect(favorableText(72)).toBe('72 %');
-        expect(favorableText(0)).toBe('0 %');
+        expect(favorableText(72, 5)).toBe('72 %');
+        expect(favorableText(0, 5)).toBe('0 %');
     });
 
     it('says it is under the minimum, never how many are missing, when it is hidden', () => {
-        expect(favorableText(null)).toBe(
+        expect(favorableText(null, 5)).toBe(
             'Menos de 5 respuestas: no se muestra',
         );
+        expect(favorableText(null, 12)).toBe(
+            'Menos de 12 respuestas: no se muestra',
+        );
+        expect(favorableText(null, 1)).toBe('Sin respuestas: no se muestra');
     });
 });
 

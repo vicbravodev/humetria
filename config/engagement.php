@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /*
-| The knobs of Clima y pulso. The minimum people per group is not here: it is `results.min_group`, the one place every
-| tool takes it from. The two minimums below can be raised from the environment but never lowered under their floor,
+| The knobs of Clima y pulso. The minimum people per group is not here: it is the company's (Tenancy's GroupMinimums,
+| `results.min_group` by default), frozen in each survey when it launches. The two minimums below can be raised from the environment but never lowered under their floor,
 | because a lower one would let a few people be told apart in a comment or a trend.
 */
 return [

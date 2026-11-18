@@ -1,4 +1,5 @@
 import TopicBar from '@/components/engagement/results/topic-bar';
+import { hiddenQuestionsText } from '@/lib/engagement/results';
 import type { EngagementItem } from '@/types';
 
 /** The questions answered best and worst: where the group is strong and where there is room to act, side by side. */
@@ -6,9 +7,12 @@ export default function HighlightsCard({
     strengths,
     opportunities,
     reference = null,
+    minGroup,
 }: {
     strengths: EngagementItem[];
     opportunities: EngagementItem[];
+    /** The minimum per group the survey froze. */
+    minGroup: number;
     /** The company's engagement, as the mark of every bar. */
     reference?: number | null;
 }) {
@@ -38,8 +42,7 @@ export default function HighlightsCard({
                         </h3>
                         {column.items.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
-                                Las preguntas con menos de 5 respuestas no se
-                                muestran.
+                                {hiddenQuestionsText(minGroup)}
                             </p>
                         ) : (
                             column.items.map((item, index) => (

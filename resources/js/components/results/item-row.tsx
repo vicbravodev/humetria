@@ -1,9 +1,16 @@
 import ShareMeter from '@/components/humetria/share-meter';
+import { tooFewText } from '@/lib/group-minimum';
 import { unfavorableText } from '@/lib/results';
 import type { ItemResult } from '@/types';
 
 /** One question: its words, how large the unfavorable part of its answers is, and the count behind it. */
-export default function ItemRow({ item }: { item: ItemResult }) {
+export default function ItemRow({
+    item,
+    minGroup,
+}: {
+    item: ItemResult;
+    minGroup: number;
+}) {
     const label = `${item.number}. ${item.text}`;
 
     return (
@@ -16,7 +23,7 @@ export default function ItemRow({ item }: { item: ItemResult }) {
             </p>
             {item.unfavorable === null ? (
                 <p className="text-sm text-muted-foreground @2xl:col-span-2 @2xl:text-right">
-                    Menos de 5 respuestas: no se muestra
+                    {tooFewText(minGroup, 'respuestas')}: no se muestra
                 </p>
             ) : (
                 <>

@@ -18,6 +18,7 @@ export default function Survey({
     kind,
     closesOn,
     instruments,
+    minGroup,
 }: {
     token: string | null;
     unavailable: SurveyUnavailable | null;
@@ -26,6 +27,8 @@ export default function Survey({
     kind: CampaignKind | null;
     closesOn: string | null;
     instruments: SurveyInstrument[];
+    /** The minimum of people per group the evaluation froze at launch; none when the link opens nothing. */
+    minGroup: number | null;
 }) {
     const next = instruments.find(
         (instrument) => instrument.status === 'pending',
@@ -74,6 +77,7 @@ export default function Survey({
                     closesOn={closesOn}
                     copy={copy}
                     instruments={instruments}
+                    minGroup={minGroup}
                     next={next}
                     justSent={justSent}
                     onSent={setJustSent}

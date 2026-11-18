@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useEngagementRoutes } from '@/hooks/use-engagement-routes';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { closedText, participationText } from '@/lib/engagement/results';
+import { groupsFactText } from '@/lib/group-minimum';
 import type { EngagementResults, PageFact } from '@/types';
 
 /**
@@ -29,7 +30,7 @@ export default function ResultsHeader({
         ...(participation === null
             ? []
             : [{ icon: Users, text: participationText(participation) }]),
-        { icon: Lock, text: 'Grupos de 5 o más' },
+        { icon: Lock, text: groupsFactText(results.minGroup) },
     ];
 
     return (

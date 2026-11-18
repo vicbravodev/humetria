@@ -41,6 +41,7 @@ final readonly class ResultsPresenter
         $base = [
             'survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value, 'closedOn' => $survey->closed_at?->setTimezone(config()->string('app.display_timezone'))->toDateString()],
             'available' => $results->available(),
+            'minGroup' => $survey->groupMinimum(),
             'commitments' => $results->available() ? Commitment::query()->where('survey_id', $survey->id)->count() : 0,
             'cut' => $cut?->value,
             'cuts' => array_map(fn (CutAttribute $attribute): array => ['value' => $attribute->value, 'label' => self::cutLabel($attribute)], CutAttribute::cases()),
@@ -82,7 +83,7 @@ final readonly class ResultsPresenter
     public function itemsProps(SurveyResults $results): array
     {
         $survey = $results->survey();
-        $base = ['survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value], 'available' => $results->available()];
+        $base = ['survey' => ['id' => $survey->id, 'name' => $survey->name, 'status' => $survey->status->value], 'available' => $results->available(), 'minGroup' => $survey->groupMinimum()];
 
         if (! $results->available()) {
             return [...$base, 'sections' => []];

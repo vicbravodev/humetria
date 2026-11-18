@@ -4,6 +4,7 @@ import TrendLink from '@/components/engagement/pulse/trend-link';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
 import { scheduleBadge } from '@/lib/engagement/pulse';
+import { anonymityText } from '@/lib/engagement/results';
 import type { PulseModeOption, PulseSchedule } from '@/types';
 
 /**
@@ -14,11 +15,14 @@ export default function PulseHomeHeader({
     schedule,
     createWith,
     hasHistory,
+    minGroup,
 }: {
     schedule: PulseSchedule | null;
     /** The modes to create a pulse in, when this person may create one now. */
     createWith: PulseModeOption[] | null;
     hasHistory: boolean;
+    /** The company's minimum per group: what the next pulse will promise. */
+    minGroup: number;
 }) {
     return (
         <PageHeader
@@ -33,7 +37,7 @@ export default function PulseHomeHeader({
             facts={[
                 {
                     icon: Lock,
-                    text: 'Respuestas anónimas · resultados por grupos de 5 o más',
+                    text: anonymityText(minGroup),
                 },
             ]}
         >

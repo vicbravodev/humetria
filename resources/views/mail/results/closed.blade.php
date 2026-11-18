@@ -11,7 +11,7 @@
 @if ($high !== null)
 <p style="margin: 0;"><strong>{{ $high }} de {{ $answered }} cuestionarios</strong> quedan en riesgo alto o muy alto.@if ($domain) El dominio con más cuestionarios en riesgo alto o muy alto es <strong>{{ $domain['label'] }}</strong>, con {{ $domainShare }} %.@endif</p>
 @elseif ($belowMinimum)
-<p style="margin: 0;">Con menos de {{ $minGroup }} cuestionarios no se muestran niveles de riesgo, para cuidar el anonimato.</p>
+<p style="margin: 0;">{{ $hiddenNote }}</p>
 @else
 <p style="margin: 0;">Contestaron {{ $answered }} de {{ $invited }} personas.</p>
 @endif

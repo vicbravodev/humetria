@@ -12,6 +12,7 @@ import {
 } from '@/hooks/use-engagement-routes';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { managerReading } from '@/lib/engagement/manager';
+import { groupsFactText } from '@/lib/group-minimum';
 import type {
     ManagerComment,
     ManagerFeedback,
@@ -26,12 +27,13 @@ import type {
  */
 export default function Manager({
     survey,
+    minGroup,
     manager,
     feedback,
     neighbors,
     commentsState,
     comments,
-}: Pick<ManagerResults, 'survey'> & {
+}: Pick<ManagerResults, 'survey' | 'minGroup'> & {
     manager: ManagerRow;
     feedback: ManagerFeedback;
     neighbors: { previous: ManagerRow | null; next: ManagerRow | null };
@@ -67,7 +69,7 @@ export default function Manager({
                                 ? 'Resultado de su equipo completo'
                                 : 'Resultado de quienes le reportan directamente',
                         },
-                        { icon: Lock, text: 'Grupos de 5 o más' },
+                        { icon: Lock, text: groupsFactText(minGroup) },
                         { icon: Scale, text: 'Aquí no hay ranking' },
                     ]}
                 >

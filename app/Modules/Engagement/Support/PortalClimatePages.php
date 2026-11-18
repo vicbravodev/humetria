@@ -45,7 +45,7 @@ final readonly class PortalClimatePages
         $results = SurveyResults::for($survey);
         $company = $results->company();
         $invited = $survey->invited ?? 0;
-        $shown = resolve(Thresholds::class)->met($company->responses);
+        $shown = resolve(Thresholds::class)->of($survey)->met($company->responses);
 
         return [
             'slug' => $slug,

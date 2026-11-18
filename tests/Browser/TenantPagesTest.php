@@ -293,6 +293,33 @@ it('says the company has no plan yet', function (bool $dark): void {
         ->assertSee('Tu empresa aún no tiene un plan asignado');
 })->with(['light' => false, 'dark' => true]);
 
+it('shows the owner the minimum per group, and warns honestly when it goes under the recommended one', function (bool $dark, bool $mobile): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
+
+    visitPage('tenancy/privacy', '/admin/acme/privacy', $dark, $mobile)
+        ->assertSee('Privacidad de los resultados')
+        ->assertSee('Mínimo de personas por grupo')
+        ->assertSee('Valor recomendado')
+        ->assertSee('Lo ya lanzado no cambia')
+        ->assertValue('#min-group', '5')
+        ->click('[aria-label="Bajar mínimo de personas por grupo"]')
+        ->assertSee('Con grupos de 4 personas es más fácil adivinar quién respondió qué.')
+        ->fill('#min-group', '1')
+        ->assertSee('Sin mínimo, el resultado de un grupo de una persona mostrará su respuesta');
+})->with($looks);
+
+it('links «Privacidad de los resultados» from the owner\'s menu only', function (): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
+
+    visit('/admin/acme')->click('Privacidad')->assertPathIs('/admin/acme/privacy');
+
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr));
+
+    visit('/admin/acme')->assertDontSee('Privacidad');
+});
+
 it('links «Plan y uso» from the owner\'s menu only', function (): void {
     $tenant = Tenant::factory()->create(['slug' => 'acme']);
     $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));

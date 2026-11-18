@@ -30,9 +30,10 @@ final readonly class ItemStatisticsReport
         $this->companies->enter($found->tenant_id);
         $survey = Survey::query()->findOrFail($surveyId);
         $minutes = $this->statistics->minutes($survey);
+        $thresholds = $this->thresholds->of($survey);
 
         return [
-            ...array_map($this->line(...), $this->statistics->of($survey)),
+            ...array_map(fn (array $row): string => $this->line($row, $thresholds), $this->statistics->of($survey)),
             $minutes === null ? 'Minutos: sin datos suficientes' : "Minutos: mediana {$minutes['median']}, percentil 90 {$minutes['p90']}",
         ];
     }
@@ -40,9 +41,9 @@ final readonly class ItemStatisticsReport
     /**
      * @param  array{key: string, presented: int, answered: int, skipped: int, favorable: int|null, midpoint: int|null, flags: list<string>}  $row
      */
-    private function line(array $row): string
+    private function line(array $row, Thresholds $thresholds): string
     {
-        if (! $this->thresholds->met($row['answered'])) {
+        if (! $thresholds->met($row['answered'])) {
             return "{$row['key']}  presented={$row['presented']} skipped={$row['skipped']}";
         }
 

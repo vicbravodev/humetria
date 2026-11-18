@@ -19,6 +19,7 @@ export default function PulseHome({
     schedule,
     frequencies,
     howWeAre,
+    minGroup,
 }: EngagementHome) {
     const state = homeState({
         current: current !== null,
@@ -45,6 +46,7 @@ export default function PulseHome({
                         : null
                 }
                 hasHistory={surveys.total > 0}
+                minGroup={minGroup}
             />
             {state === 'first-time' ? (
                 <>
@@ -57,7 +59,7 @@ export default function PulseHome({
                         {current !== null && <SurveyCard survey={current} />}
                         {scheduleCard}
                     </div>
-                    <HowWeAreCard points={howWeAre ?? []} />
+                    <HowWeAreCard points={howWeAre ?? []} minGroup={minGroup} />
                 </div>
             )}
             <SurveyHistory surveys={surveys} />

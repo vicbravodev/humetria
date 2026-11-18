@@ -73,7 +73,7 @@ it('finds the criterion that answers a question, with its norm and its source', 
     expect($card['render'])->toBe('list')
         ->and($card['rows'][0])->toMatchArray(['norm' => 'NOM-035', 'id' => 'C-23', 'source' => 'Humetría'])
         ->and($card['rows'][0]['title'])->toBe('Mínimo de personas por grupo en los resultados')
-        ->and($card['rows'][0]['text'])->toContain('menos de 5 respuestas');
+        ->and($card['rows'][0]['text'])->toContain('menos respuestas que el mínimo de la')->toContain('Por omisión es 5');
 });
 
 it('ignores case and accents, and reaches the other norm', function (): void {
