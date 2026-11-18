@@ -21,7 +21,14 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 
 Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{CampaignRecords,EvaluationSchedule}`,
 `Results\Contracts\RiskResults`, `Telework\Contracts\TeleworkStanding`, `Interventions\Contracts\ProgramStandings`,
+`Disclosure\Contracts\DisclosureStanding`, `Seating\Contracts\SeatingRoute`, `Leave\Contracts\PendingRequests`,
+`Complaints\Contracts\{ComplaintChannels,ComplaintsToAcknowledge}`, `Engagement\Contracts\EngagementStanding`,
+`Attendance\Contracts\AttendanceStanding`, `Organization\Contracts\Headcount`, `Compensation\Contracts\CompensationStanding`,
 `Tenancy\Contracts\{Companies,Members,WorkCenters}`.
+
+**Todo módulo de la empresa le llega.** Cada uno tiene su lector en `Support/Readers` (una línea en el estado de
+cumplimiento) y sus criterios de `docs/normas` entran solos al buscador. `ModuleCoverageTest` falla si un módulo nuevo no
+se conecta; eximir uno exige su razón ahí (hoy: Sso, Demos, Responses, WorkerAccess).
 
 **Fuentes, paso siguiente y datos vivos.** Una herramienta pone en su `ToolCard` `sources` (de dónde salió la cifra:
 «Campaña Planta Apodaca · Evaluación NOM-035», «NOM-035 · C-23. …») y `next` (la pantalla exacta del panel, una ruta de

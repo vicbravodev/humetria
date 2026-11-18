@@ -12,6 +12,7 @@ use App\Modules\Assistant\Tools\GetComplianceOverview;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Telework\Models\Teleworker;
+use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
@@ -113,4 +114,12 @@ it('lists a new norm as soon as its reader is registered, without touching the t
 
 it('asks the model for nothing', function (): void {
     expect(resolve(GetComplianceOverview::class, ['scope' => $this->scope])->schema(new JsonSchemaTypeFactory))->toBe([]);
+});
+
+it('tells the model every module it reports on, so it reaches for it on any of them', function (): void {
+    $description = mb_strtolower((string) resolve(GetComplianceOverview::class, ['scope' => $this->scope])->description());
+
+    foreach ([...array_map(fn (Module $module): string => $module->label(), array_filter(Module::cases(), fn (Module $module): bool => $module !== Module::Sso)), 'Compensación', 'Difusión'] as $label) {
+        expect($description)->toContain(mb_strtolower($label));
+    }
 });
