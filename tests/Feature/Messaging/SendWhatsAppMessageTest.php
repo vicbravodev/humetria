@@ -6,6 +6,7 @@ use App\Modules\Messaging\Actions\ReconcileUnknown;
 use App\Modules\Messaging\Contracts\InvitationLinks;
 use App\Modules\Messaging\Contracts\WhatsAppGateway;
 use App\Modules\Messaging\Data\FailureCause;
+use App\Modules\Messaging\Data\OutboundMessage;
 use App\Modules\Messaging\Data\SendOutcome;
 use App\Modules\Messaging\Data\WhatsAppInvitation;
 use App\Modules\Messaging\Enums\DeliveryStatus;
@@ -317,4 +318,49 @@ it('settles an unknown of more than 24 hours as used, without fallback, and leav
         ->and($young->refresh()->status)->toBe(DeliveryStatus::Unknown);
     Event::assertDispatched(WhatsAppMessageAccepted::class, fn (WhatsAppMessageAccepted $e): bool => $e->deliveryId === $old->id && $e->tenantId === $this->tenant->id);
     Event::assertNotDispatched(WhatsAppMessageFailed::class);
+});
+
+it('does not send again when Meta accepted and the save failed: the message waits as unknown for its status (rule 8)', function (): void {
+    $delivery = pendingDelivery($this->tenant);
+    $armed = true;
+    Event::listen('eloquent.creating: '.DeliveryEvent::class, function () use (&$armed): void {
+        if ($armed) {
+            $armed = false;
+
+            throw new RuntimeException('connection lost');
+        }
+    });
+
+    expect(fn () => runSend($delivery))->toThrow(RuntimeException::class);
+
+    expect($this->gateway->sent())->toHaveCount(1)
+        ->and($delivery->refresh()->status)->toBe(DeliveryStatus::Unknown)
+        ->and($delivery->provider_message_id)->toBeNull();
+
+    // The retry of the queue finds it in transit and sends nothing.
+    runSend($delivery);
+
+    expect($this->gateway->sent())->toHaveCount(1);
+    Event::assertNotDispatched(WhatsAppMessageFailed::class);
+});
+
+it('marks the message as in transit while Meta is called, and gives it back to created when the cause is worth another attempt', function (): void {
+    $delivery = pendingDelivery($this->tenant);
+    $seen = null;
+    $this->gateway->script(SendOutcome::failed(FailureCause::ServerError));
+    app()->instance(WhatsAppGateway::class, new class($delivery, $seen) implements WhatsAppGateway
+    {
+        public function __construct(private Delivery $delivery, public ?DeliveryStatus &$seen) {}
+
+        public function send(OutboundMessage $message): SendOutcome
+        {
+            $this->seen = Delivery::query()->findOrFail($this->delivery->id)->status;
+
+            return SendOutcome::failed(FailureCause::ServerError);
+        }
+    });
+
+    expect(fn () => runSend($delivery))->toThrow(RetryableWhatsAppFailure::class);
+
+    expect($seen)->toBe(DeliveryStatus::Unknown)->and($delivery->refresh()->status)->toBe(DeliveryStatus::Created);
 });

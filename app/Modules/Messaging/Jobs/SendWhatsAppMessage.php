@@ -113,6 +113,11 @@ final class SendWhatsAppMessage implements ShouldQueue
             return;
         }
 
+        // In transit from here on: if the worker dies after Meta accepts and before the id is saved, the retry finds the message
+        // as unknown and does not send it again (a second message, charged twice); the status webhook or the reconciliation
+        // settles it. Only `created` is ever sent. Set directly: it is a marker of this call, not a fact of the history.
+        $delivery->update(['status' => DeliveryStatus::Unknown]);
+
         $outcome = $gateway->send(new OutboundMessage(
             $invitation->mobile,
             $invitation->template,
@@ -144,6 +149,9 @@ final class SendWhatsAppMessage implements ShouldQueue
         }
 
         if ($cause->retryable()) {
+            // Nothing left: it goes back to created so the retry sends it.
+            $delivery->update(['status' => DeliveryStatus::Created]);
+
             throw new RetryableWhatsAppFailure($cause->value);
         }
 
