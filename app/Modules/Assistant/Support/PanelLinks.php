@@ -71,6 +71,16 @@ final readonly class PanelLinks
         return $this->path('tenant.attendance.corrections.index');
     }
 
+    public function orgChart(): string
+    {
+        return $this->path('tenant.org-chart.index');
+    }
+
+    public function orgChartQuality(): string
+    {
+        return $this->path('tenant.org-chart.quality');
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');

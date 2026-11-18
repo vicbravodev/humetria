@@ -16,6 +16,7 @@ use App\Modules\Assistant\Support\Readers\ClimateReader;
 use App\Modules\Assistant\Support\Readers\ComplaintsReader;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
 use App\Modules\Assistant\Support\Readers\Nom037Reader;
+use App\Modules\Assistant\Support\Readers\OrgChartReader;
 use App\Modules\Assistant\Support\Readers\PulseReader;
 use App\Modules\Assistant\Support\Readers\SeatingReader;
 use App\Modules\Assistant\Support\Readers\VacationsReader;
@@ -59,7 +60,8 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(PulseReader::class),
             $app->make(ClimateReader::class),
             $app->make(AttendanceReader::class),
-        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance']));
+            $app->make(OrgChartReader::class),
+        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart']));
 
         // The tools of Humi: a new module adds its own here.
         $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [
@@ -71,7 +73,7 @@ final class AssistantServiceProvider extends ServiceProvider
             GetFirstSteps::class,
         ], [
             // Regulations are not a module of the company: Humi always has them. A tool that reads two norms stays with either.
-            GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations', 'complaints', 'pulse', 'climate', 'attendance'],
+            GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations', 'complaints', 'pulse', 'climate', 'attendance', 'org_chart'],
             GetCampaignProgress::class => ['nom035'],
             GetRiskResults::class => ['nom035'],
             ListPendingActions::class => ['nom035', 'nom037'],

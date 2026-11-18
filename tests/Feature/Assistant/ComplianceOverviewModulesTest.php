@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Assistant\Support\Readers\AttendanceReader;
 use App\Modules\Assistant\Support\Readers\ClimateReader;
 use App\Modules\Assistant\Support\Readers\ComplaintsReader;
+use App\Modules\Assistant\Support\Readers\OrgChartReader;
 use App\Modules\Assistant\Support\Readers\PulseReader;
 use App\Modules\Assistant\Support\Readers\SeatingReader;
 use App\Modules\Assistant\Support\Readers\VacationsReader;
@@ -30,7 +31,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
-mutates(AttendanceReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
+mutates(AttendanceReader::class, OrgChartReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();
@@ -401,6 +402,55 @@ it('does not tell attendance to a company without it, and offers the overview to
     expect(overviewLine($this, 'attendance'))->toBeNull();
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
+});
+
+it('tells a company without people that its org chart is empty', function (): void {
+    expect(overviewLine($this, 'org_chart'))->toBe([
+        'key' => 'org_chart',
+        'label' => 'Organigrama',
+        'state' => 'pending',
+        'stateLabel' => 'Pendiente',
+        'summary' => 'Aún no cargas a tu gente.',
+        'link' => "/admin/{$this->a->slug}/org-chart",
+    ]);
+});
+
+it('counts the active people and those the chart leaves out, never of another company nor who they are', function (): void {
+    $top = Employee::factory()->create(['tenant_id' => $this->a->id]);
+    Employee::factory()->reportingTo($top)->create();
+    Employee::factory()->create(['tenant_id' => $this->a->id, 'name' => 'Zafiro Luna']);
+    Employee::factory()->deactivated()->create(['tenant_id' => $this->a->id]);
+    Employee::factory()->count(4)->create(['tenant_id' => $this->b->id]);
+    workIn($this->a);
+
+    $line = overviewLine($this, 'org_chart');
+
+    expect($line)->toMatchArray([
+        'state' => 'pending',
+        'summary' => 'Tu organigrama tiene 3 personas activas; 1 no tiene jefe ni personas a cargo y no aparece en el árbol.',
+        'link' => "/admin/{$this->a->slug}/org-chart/quality",
+    ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro');
+
+    Employee::factory()->count(2)->create(['tenant_id' => $this->a->id]);
+
+    expect(overviewLine($this, 'org_chart')['summary'])->toBe('Tu organigrama tiene 5 personas activas; 3 no tienen jefe ni personas a cargo y no aparecen en el árbol.');
+});
+
+it('puts the org chart up to date when everyone is in the tree', function (): void {
+    Employee::factory()->reportingTo(Employee::factory()->create(['tenant_id' => $this->a->id]))->create();
+    workIn($this->a);
+
+    expect(overviewLine($this, 'org_chart'))->toMatchArray(['state' => 'up_to_date', 'stateLabel' => 'Al día', 'summary' => 'Las 2 personas activas están en el árbol del organigrama.', 'link' => "/admin/{$this->a->slug}/org-chart"]);
+});
+
+it('does not tell the org chart to a company without it, and offers the overview to a company with only the org chart', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(overviewLine($this, 'org_chart'))->toBeNull();
+
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['org_chart'], CarbonImmutable::now(config('app.display_timezone')));
 
     expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 });
