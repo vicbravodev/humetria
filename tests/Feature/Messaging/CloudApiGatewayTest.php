@@ -134,6 +134,23 @@ it('answers each Meta error with its cause', function (int $status, int $code, F
     [400, 424242, FailureCause::UnknownError],
 ]);
 
+it('reads the real error of a recipient that is not on the sandbox allow-list as a definitive failure, without mail fallback', function (): void {
+    // Body recorded from Meta's Cloud API sandbox on 2026-11-18 (HTTP 400, code 131030). It only happens with a test number.
+    Http::fake(['*' => Http::response(['error' => [
+        'message' => '(#131030) Recipient phone number not in allowed list',
+        'code' => 131030,
+        'type' => 'OAuthException',
+        'error_data' => ['messaging_product' => 'whatsapp', 'details' => 'Add the recipient phone number to the recipient list and try again.'],
+        'fbtrace_id' => 'Akvu5ZV1GrPIv26Mlu_qYN7',
+    ]], 400)]);
+
+    $cause = cloudGateway()->send(cloudMessage())->cause;
+
+    expect($cause)->toBe(FailureCause::UnknownError)
+        ->and($cause->retryable())->toBeFalse()
+        ->and($cause->fallsBackToMail())->toBeFalse();
+});
+
 it('answers by HTTP status when the body has no error code', function (): void {
     Http::fake(['*' => Http::response('bad gateway', 502)]);
 
