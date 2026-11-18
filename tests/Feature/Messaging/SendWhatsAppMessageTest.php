@@ -364,3 +364,21 @@ it('marks the message as in transit while Meta is called, and gives it back to c
 
     expect($seen)->toBe(DeliveryStatus::Unknown)->and($delivery->refresh()->status)->toBe(DeliveryStatus::Created);
 });
+
+it('counts a message settled as used against the daily cap and the platform cap: it gets its acceptance time', function (): void {
+    config(['whatsapp.daily_cap_per_company' => 1, 'whatsapp.platform_monthly_cap' => 1_000]);
+    $stuck = pendingDelivery($this->tenant, ['status' => DeliveryStatus::Unknown]);
+    Delivery::query()->whereKey($stuck->id)->toBase()->update(['updated_at' => now()->subHours(25)]);
+
+    app(ReconcileUnknown::class)->handle();
+
+    expect($stuck->refresh()->accepted_at)->not->toBeNull()
+        ->and($stuck->provider_message_id)->toBeNull();
+
+    $next = pendingDelivery($this->tenant);
+    $job = runSend($next);
+
+    expect($this->gateway->sent())->toBe([]);
+    $job->assertReleased();
+    expect($next->refresh()->status)->toBe(DeliveryStatus::Created);
+});

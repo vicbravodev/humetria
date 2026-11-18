@@ -33,6 +33,8 @@ final class ReconcileUnknown
         foreach ($stale as $delivery) {
             $this->companies->enter($delivery->tenant_id);
             $this->record->handle($delivery, DeliveryStatus::Failed, CarbonImmutable::now(), FailureCause::Unresolved);
+            // Settled as used, so it counts as accepted for the daily and platform caps, which read `accepted_at`.
+            $delivery->update(['accepted_at' => CarbonImmutable::now()]);
             event(new WhatsAppMessageAccepted($delivery->id, $delivery->tenant_id));
         }
 
