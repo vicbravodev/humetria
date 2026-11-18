@@ -661,3 +661,9 @@ it('keeps the logo, the two ways in and the tools menu in the header of a 375 px
         ->assertVisible('@header-demo')
         ->assertVisible('@tools-menu-mobile');
 })->with(['home' => '/', 'tool page' => '/nom-035']);
+
+it('links the footer to the blog with a plain link, so every page of the site hands its weight to it', function (): void {
+    visit('/')
+        ->assertScript("() => document.querySelector('[data-test=\"footer-blog\"]')?.tagName === 'A' && document.querySelector('[data-test=\"footer-blog\"]').getAttribute('href') === '/blog'")
+        ->assertNoJavaScriptErrors();
+});

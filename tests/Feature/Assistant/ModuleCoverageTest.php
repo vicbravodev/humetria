@@ -24,6 +24,7 @@ function humiExemptCodeModules(): array
 {
     return [
         'Assistant' => 'Es Humi.',
+        'Blog' => 'Es contenido público del sitio, sin datos de ninguna empresa: no hay nada de la empresa que Humi informe.',
         'Demos' => 'Solicitudes de demo y la empresa demo: son del superadmin, no de la empresa.',
         'Responses' => 'Respuestas anónimas: Humi solo las ve agregadas y con el mínimo por grupo, a través de Results.',
         'Sso' => 'Es un ajuste de cómo se entra a la cuenta, no algo de la empresa que informar.',

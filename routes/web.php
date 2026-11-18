@@ -43,6 +43,7 @@ Route::get(ToolPages::GUIDE_PATH, function (): Response {
 Route::get('/media/films/{film}', ToolFilmController::class)->name('films.show');
 
 require __DIR__.'/demos.php';
+require __DIR__.'/blog.php';
 require __DIR__.'/tenancy.php';
 require __DIR__.'/sso.php';
 require __DIR__.'/billing.php';
