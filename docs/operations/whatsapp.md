@@ -81,7 +81,7 @@ El log `whatsapp.quality_changed` (nivel warning) avisa un cambio de calidad del
 
 1. **Fase 1, local**: gateway falso y `Http::fake()` (el PR).
 2. **Fase 2, con Victor y paso a paso**: (a) el número de prueba de la app, con hasta 5 destinatarios: un mensaje llega,
-   el webhook recibe `sent`, `delivered` y `read`, y un STOP crea la baja; se confirma el formato del teléfono (`52` + 10
+   el webhook recibe `sent`, `delivered` y `read`, un STOP crea la baja y llega el texto de confirmación, y un ALTA la elimina y llega el suyo (texto libre dentro de las 24 h: confirmar con el sandbox); se confirma el formato del teléfono (`52` + 10
    dígitos). (b) El ping del webhook desde el panel de Meta. (c) El número real, con las dos plantillas aprobadas.
 3. **Fase 3, producción**: con las tres salidas de la Fase 2 y los supuestos confirmados; los secretos primero, después el
    callback en Meta y `WHATSAPP_ENABLED` al último.
