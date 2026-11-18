@@ -126,6 +126,7 @@ describe('maskAttribute', () => {
         ['d', 'M3 3h18'],
         ['href', '/build/assets/app-1a2b.css'],
         ['src', '/images/tools/nom-035-01-campaigns-light.webp'],
+        ['src', '/brand/logo-dark.svg'],
         // rrweb's own: the page's CSS inlined (without it the player paints the page unstyled), scroll, sizes, media.
         ['_cssText', '.flex{display:flex}'],
         ['rr_scrollTop', '120'],

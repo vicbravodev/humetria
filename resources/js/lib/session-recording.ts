@@ -65,8 +65,8 @@ const KEPT_ATTRIBUTES = new Set([
 const LOOK_ATTRIBUTE =
     /^(_csstext|rr_[a-z]+|aria-(?!label|description|valuetext)[a-z]+|data-(state|slot|side|align|orientation|disabled|selected|highlighted))$/;
 
-/** Our own static files (styles, images of the product): the player needs them to paint the page as it was. */
-const OWN_ASSET = /^\/(build|images|fonts)\//;
+/** Our own static files (styles, the logo, images of the product): the player needs them to paint the page as it was. */
+const OWN_ASSET = /^\/(build|images|fonts|brand)\//;
 
 /** What the recording carries to PostHog: the frames and their session, nothing about the page or the person. */
 const KEPT_PROPERTIES = new Set([
