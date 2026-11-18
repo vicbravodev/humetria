@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Providers;
 
+use App\Modules\Attendance\Contracts\AttendanceStanding;
 use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Attendance\Contracts\PlaceSearch;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
+use App\Modules\Attendance\Support\CompanyAttendanceStanding;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
 use App\Modules\Attendance\Support\PunchWorkerSection;
@@ -26,6 +28,7 @@ final class AttendanceServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(AttendanceStanding::class, CompanyAttendanceStanding::class);
         $this->app->bind(AttendanceUsage::class, CompanyAttendanceUsage::class);
         $this->app->bind(PlaceSearch::class, NominatimPlaceSearch::class);
         // «Marcar» in the person's start.
