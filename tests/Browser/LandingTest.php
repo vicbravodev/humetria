@@ -180,9 +180,9 @@ it('tells the visitor to wait when there were too many requests', function (): v
 it('presents Humetría as an HR platform with all its tools', function (): void {
     visitPage('landing', '/')
         ->assertTitleContains('NOM-035, NOM-037 y Ley Silla')
-        ->assertSeeIn('#hero-title', 'Tu gente contesta desde el celular. Tú llegas listo a la STPS.')
+        ->assertSeeIn('#hero-title', 'Tu gente contesta desde el celular. Tú tienes la evidencia lista para la STPS.')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación", "jornada", "Vacaciones", "Organigrama", "Clima"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
-        ->assertScript('() => [...document.querySelectorAll("[data-test=hero-families] a b")].map((family) => family.textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Lleva el día a día')
+        ->assertScript('() => [...document.querySelectorAll("[data-test=hero-families] a b")].map((family) => family.textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Personas y sueldos')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "Registro de jornada", "Buzón de quejas", "Clima y pulso", "Vacaciones y permisos", "Organigrama", "Compensación"].every((tool) => document.querySelector("[data-test=hero-families]").textContent.includes(tool))')
         ->assertDontSeeIn('#hero-title', 'NOM-035');
 });
@@ -365,6 +365,43 @@ it('jumps to the cards of the family a hero link names', function (string $famil
         ->assertScript("() => new Promise((resolve) => setTimeout(() => { const box = document.getElementById('familia-{$family}').getBoundingClientRect(); resolve(box.top < window.innerHeight && box.bottom > 0); }, 1000))");
 })->with(['compliance', 'listening', 'operations']);
 
+it('shows what the law already asks and what comes, with 2027 marked as next', function (): void {
+    $page = visitPage('landing', '/');
+
+    foreach (['NOM-035', 'Vacaciones dignas', 'NOM-037', 'Ley Silla', 'Registro de jornada', 'Jornada de 46 a 40 h'] as $milestone) {
+        $page->assertSeeIn('[data-test=legal-calendar]', $milestone);
+    }
+
+    $page->assertSeeIn('[data-test=legal-calendar] [aria-current=step]', '1 de enero de 2027');
+});
+
+it('shows each tool card with a real screenshot of the product', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => document.querySelectorAll("#herramientas [data-test^=tool-card-] img").length >= 9')
+        ->assertScript('() => [...document.querySelectorAll("#herramientas [data-test^=tool-card-] img")].every((img) => img.getAttribute("src").startsWith("/images/tools/"))');
+});
+
+it('answers the common questions before the demo, and links the guide of 2027', function (): void {
+    visitPage('landing', '/')
+        ->assertSeeIn('#preguntas', '¿Qué normas me tocan según mi tamaño?')
+        ->assertSeeIn('#preguntas', '¿Humetría certifica que cumplo?')
+        ->assertAttribute('#preguntas a[data-test=guide-link]', 'href', '/guias/registro-de-jornada-2027');
+});
+
+it('opens the tools on a phone from the menu button of the header', function (): void {
+    visitPage('landing', '/', mobile: true)
+        ->click('@tools-menu-mobile')
+        ->assertAttribute('@tools-menu-mobile', 'aria-expanded', 'true')
+        ->assertAttribute('#tools-menu a[href="/registro-de-jornada"]', 'href', '/registro-de-jornada')
+        ->keys('@tools-menu-mobile', 'Escape')
+        ->assertMissing('#tools-menu');
+});
+
+it('lists the nine tools in the footer, each to its page', function (): void {
+    visitPage('landing', '/')
+        ->assertScript('() => document.querySelectorAll("footer a[href=\'/nom-035\'], footer a[href=\'/registro-de-jornada\'], footer a[href=\'/clima-laboral\']").length', 3);
+});
+
 it('states its four promises right under the hero', function (): void {
     $page = visitPage('landing', '/');
 
@@ -540,7 +577,7 @@ it('fills the rail beside the steps as they scroll by on a phone', function (): 
 
 it('enters the headline word by word and the parts under it in a staggered fade, with CSS', function (): void {
     $animation = fn (string $selector): string => "() => JSON.stringify([...document.querySelectorAll({$selector})].map((node) => { const style = getComputedStyle(node); return [style.animationName, style.animationDuration, style.animationDelay, style.animationFillMode]; }))";
-    $words = array_map(fn (int $index): array => ['enter', '0.7s', (0.1 + $index * 0.05).'s', 'both'], range(0, 11));
+    $words = array_map(fn (int $index): array => ['enter', '0.7s', (0.1 + $index * 0.05).'s', 'both'], range(0, 13));
     $after = [['enter', '0.6s', '0.55s', 'both'], ['enter', '0.6s', '0.65s', 'both'], ['enter', '0.6s', '0.2s', 'both'], ['enter', '0.6s', '0.75s', 'both']];
 
     visit('/')

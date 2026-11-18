@@ -3,6 +3,7 @@ import Logo from '@/components/humetria/logo';
 import HeaderNav from '@/components/landing/header-nav';
 import { WRAP } from '@/components/landing/landing-layout';
 import LandingThemeMenu from '@/components/landing/landing-theme-menu';
+import ToolsMenu from '@/components/landing/tools-menu';
 import { Button } from '@/components/ui/button';
 import { useScrolled } from '@/hooks/use-scrolled';
 import { cn } from '@/lib/utils';
@@ -77,6 +78,7 @@ export default function LandingHeader() {
                             Agenda una demo
                         </a>
                     </Button>
+                    <ToolsMenu variant="icon" className="ml-1 md:hidden" />
                 </div>
             </div>
         </header>

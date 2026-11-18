@@ -52,9 +52,9 @@ export const FAMILIES: readonly LandingFamily[] = [
     },
     {
         key: 'operations',
-        name: 'Lleva el día a día',
+        name: 'Personas y sueldos',
         short: 'Operación',
-        hint: 'Personas, vacaciones y sueldos',
+        hint: 'Vacaciones, estructura y compensación',
         icon: Layers,
         tools: ['leave', 'org_chart', 'compensation'],
     },

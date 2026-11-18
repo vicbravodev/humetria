@@ -5,7 +5,9 @@ import { cn } from '@/lib/utils';
 const NBSP = '\u00A0';
 
 const WORDS =
-    'Tu gente contesta desde el celular. Tú llegas listo a la STPS.'.split(' ');
+    'Tu gente contesta desde el celular. Tú tienes la evidencia lista para la STPS.'.split(
+        ' ',
+    );
 
 /** The promise, word by word: each one rises out of a blur 50 ms after the last, as the page opens (CSS, `enter-word`). */
 export default function HeroHeadline() {
