@@ -30,6 +30,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $source_id
  * @property DeliveryStatus $status
  * @property CarbonImmutable|null $accepted_at
+ * @property CarbonImmutable $created_at
+ * @property CarbonImmutable $updated_at
  */
 #[Fillable(['tenant_id', 'channel', 'template', 'provider_message_id', 'recipient_hash', 'key_version', 'invitation_type', 'invitation_id', 'source_type', 'source_id', 'status', 'accepted_at'])]
 #[UseFactory(DeliveryFactory::class)]

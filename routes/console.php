@@ -24,6 +24,7 @@ use App\Modules\Engagement\Support\Results\ItemStatisticsReport;
 use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Leave\Actions\GrantEntitlements;
 use App\Modules\Leave\Actions\RouteRequests;
+use App\Modules\Messaging\Actions\ReconcileUnknown;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -208,6 +209,11 @@ Schedule::command('engagement:close-expired')->hourly()->onOneServer()->withoutO
 Schedule::command('engagement:launch-pulses')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // Ten minutes later, and three days ahead of the run: the date of a heads-up is the day the launch command will find due.
 Schedule::command('engagement:announce-pulses')->dailyAt('08:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('messaging:reconcile-unknown', function (ReconcileUnknown $reconcile): void {
+    $this->info('Mensajes resueltos: '.$reconcile->handle());
+})->purpose('Settle as used the WhatsApp messages that stayed unknown for a day with no status from Meta');
+
+Schedule::command('messaging:reconcile-unknown')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('schedule:heartbeat')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.

@@ -10,9 +10,11 @@ use App\Modules\Messaging\Contracts\WhatsAppGateway;
 use App\Modules\Messaging\Support\ChannelRules;
 use App\Modules\Messaging\Support\CloudApiWhatsAppGateway;
 use App\Modules\Messaging\Support\NullWhatsAppGateway;
+use App\Modules\Messaging\Support\WhatsAppChannel;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
@@ -36,6 +38,11 @@ final class MessagingServiceProvider extends ServiceProvider
         if (config()->boolean('whatsapp.enabled') && config()->array('messaging.recipient_keys') === []) {
             throw new LogicException('WHATSAPP_ENABLED needs MESSAGING_RECIPIENT_KEYS (1:<base64>,2:<base64>).');
         }
+
+        Notification::extend('whatsapp', fn (Application $app): WhatsAppChannel => $app->make(WhatsAppChannel::class));
+
+        // Sends a second, against the number's limit: the job releases itself when the limit is hit, without spending an attempt.
+        RateLimiter::for('whatsapp-send', fn (): Limit => Limit::perSecond(config()->integer('whatsapp.max_per_second')));
 
         // The providers (Meta, Resend) have no account here: they are throttled per address, whatever the body says.
         RateLimiter::for('messaging-webhooks', fn (Request $request): Limit => Limit::perMinute(config()->integer('messaging.webhook_per_minute'))

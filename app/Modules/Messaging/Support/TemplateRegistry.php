@@ -22,6 +22,16 @@ final class TemplateRegistry
         return $this->all()[$key] ?? throw new InvalidArgumentException("Unknown WhatsApp template [{$key}].");
     }
 
+    /** The template of an invitation type (an InvitationReference constant). */
+    public function forInvitation(string $invitationType): TemplateDefinition
+    {
+        return $this->get(match ($invitationType) {
+            'campaign_participant' => 'survey_invite_v1',
+            'engagement_invitation' => 'engagement_invite_v1',
+            default => throw new InvalidArgumentException("No WhatsApp template for invitation type [{$invitationType}]."),
+        });
+    }
+
     /** @return array<string, TemplateDefinition> */
     public function all(): array
     {
