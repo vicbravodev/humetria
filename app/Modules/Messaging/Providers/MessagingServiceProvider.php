@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Messaging\Providers;
 
 use App\Modules\Messaging\Contracts\WhatsAppGateway;
+use App\Modules\Messaging\Support\CloudApiWhatsAppGateway;
 use App\Modules\Messaging\Support\NullWhatsAppGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -19,10 +20,7 @@ final class MessagingServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // The Cloud API gateway is bound by the commit that writes it; until then the function exists only as the null one.
-        if (! config()->boolean('whatsapp.enabled')) {
-            $this->app->bind(WhatsAppGateway::class, NullWhatsAppGateway::class);
-        }
+        $this->app->bind(WhatsAppGateway::class, config()->boolean('whatsapp.enabled') ? CloudApiWhatsAppGateway::class : NullWhatsAppGateway::class);
     }
 
     public function boot(): void
