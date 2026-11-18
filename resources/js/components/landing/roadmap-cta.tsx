@@ -18,7 +18,9 @@ export default function RoadmapCta() {
                     </p>
                 </div>
                 <Button asChild size="lg" className="rounded-full">
-                    <a href={`${home().url}#agenda-una-demo`}>Pedir una demo</a>
+                    <a href={`${home().url}#agenda-una-demo`}>
+                        Agenda una demo
+                    </a>
                 </Button>
             </div>
         </div>

@@ -32,10 +32,8 @@ export default function DemoSection({ page, tool }: Props) {
                         Agenda una demo
                     </h2>
                     <p className={LEAD}>
-                        Déjanos cómo contactarte y te mostramos Humetría con un
-                        caso como el tuyo. La prueba gratis la vemos en la misma
-                        llamada, para que empieces con tu gente sin perder
-                        tiempo.
+                        Cuéntanos de tu empresa y qué herramientas te interesan,
+                        y preparamos la llamada con eso.
                     </p>
                     <DemoNextSteps />
                 </div>
