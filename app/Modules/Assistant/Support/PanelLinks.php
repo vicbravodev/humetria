@@ -86,6 +86,11 @@ final readonly class PanelLinks
         return $this->path('tenant.compensation.index');
     }
 
+    public function policy(): string
+    {
+        return $this->path('tenant.disclosure.policy');
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');

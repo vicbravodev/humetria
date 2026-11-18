@@ -6,6 +6,7 @@ use App\Modules\Assistant\Support\Readers\AttendanceReader;
 use App\Modules\Assistant\Support\Readers\ClimateReader;
 use App\Modules\Assistant\Support\Readers\CompensationReader;
 use App\Modules\Assistant\Support\Readers\ComplaintsReader;
+use App\Modules\Assistant\Support\Readers\DisclosureReader;
 use App\Modules\Assistant\Support\Readers\OrgChartReader;
 use App\Modules\Assistant\Support\Readers\PulseReader;
 use App\Modules\Assistant\Support\Readers\SeatingReader;
@@ -32,7 +33,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
-mutates(AttendanceReader::class, CompensationReader::class, OrgChartReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
+mutates(AttendanceReader::class, CompensationReader::class, DisclosureReader::class, OrgChartReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();
@@ -517,4 +518,49 @@ it('tells someone who may not see compensation nothing of it', function (): void
         'summary' => 'Compensación solo la ven el dueño y RH.',
         'link' => "/admin/{$this->a->slug}",
     ]);
+});
+
+/** A published policy of prevention of `$tenant` that reached `$center`. */
+function policyReaching(Tenant $tenant, WorkCenter $center): App\Modules\Disclosure\Models\Document
+{
+    $policy = App\Modules\Disclosure\Models\Document::factory()->published()->create(['tenant_id' => $tenant->id]);
+    App\Modules\Disclosure\Models\DocumentCenter::factory()->create(['tenant_id' => $tenant->id, 'document_id' => $policy->id, 'work_center_id' => $center->id]);
+
+    return $policy;
+}
+
+it('tells a company that has not published its policy of prevention', function (): void {
+    expect(overviewLine($this, 'disclosure'))->toBe([
+        'key' => 'disclosure',
+        'label' => 'Difusión',
+        'state' => 'pending',
+        'stateLabel' => 'Pendiente',
+        'summary' => 'Aún no publicas tu política de prevención de riesgos psicosociales.',
+        'link' => "/admin/{$this->a->slug}/disclosure/policy",
+    ]);
+});
+
+it('counts the centers in use the policy reached, never those of another company', function (): void {
+    $plant = WorkCenter::factory()->for($this->a)->create();
+    $offices = WorkCenter::factory()->for($this->a)->create();
+    WorkCenter::factory()->for($this->a)->create(['archived_at' => now()]);
+    $policy = policyReaching($this->a, $plant);
+    policyReaching($this->b, WorkCenter::factory()->for($this->b)->create());
+    workIn($this->a);
+
+    expect(overviewLine($this, 'disclosure'))->toMatchArray(['state' => 'pending', 'summary' => 'Tu política de prevención está publicada en 1 de 2 centros de trabajo.']);
+
+    App\Modules\Disclosure\Models\DocumentCenter::factory()->create(['tenant_id' => $this->a->id, 'document_id' => $policy->id, 'work_center_id' => $offices->id]);
+
+    expect(overviewLine($this, 'disclosure'))->toMatchArray([
+        'state' => 'up_to_date',
+        'stateLabel' => 'Al día',
+        'summary' => 'Tu política de prevención está publicada en tus 2 centros de trabajo.',
+    ]);
+});
+
+it('does not tell the disclosure to a company without NOM-035', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom037'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(overviewLine($this, 'disclosure'))->toBeNull();
 });

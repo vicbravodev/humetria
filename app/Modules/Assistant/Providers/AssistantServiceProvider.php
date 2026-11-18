@@ -15,6 +15,7 @@ use App\Modules\Assistant\Support\Readers\AttendanceReader;
 use App\Modules\Assistant\Support\Readers\ClimateReader;
 use App\Modules\Assistant\Support\Readers\CompensationReader;
 use App\Modules\Assistant\Support\Readers\ComplaintsReader;
+use App\Modules\Assistant\Support\Readers\DisclosureReader;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
 use App\Modules\Assistant\Support\Readers\Nom037Reader;
 use App\Modules\Assistant\Support\Readers\OrgChartReader;
@@ -54,6 +55,7 @@ final class AssistantServiceProvider extends ServiceProvider
         // One reader per norm, in the order Humi tells them: a new norm (Ley Silla, violencia laboral…) is one more here.
         $this->app->singleton(ComplianceReaders::class, fn (Application $app): ComplianceReaders => new ComplianceReaders([
             $app->make(Nom035Reader::class),
+            $app->make(DisclosureReader::class),
             $app->make(Nom037Reader::class),
             $app->make(SeatingReader::class),
             $app->make(VacationsReader::class),
@@ -64,7 +66,7 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(OrgChartReader::class),
             // Every company has Compensación: it is in no module of the company, so it is told to all.
             $app->make(CompensationReader::class),
-        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart']));
+        ], [Nom035Reader::class => 'nom035', DisclosureReader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart']));
 
         // The tools of Humi: a new module adds its own here.
         $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [
