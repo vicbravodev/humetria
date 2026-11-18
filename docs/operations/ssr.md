@@ -53,7 +53,8 @@ Ojo con el nombre: el paquete de Inertia lee `INERTIA_SSR_ENSURE_BUNDLE_EXISTS`,
 
 Variables que no son de este servicio pero intervienen: `APP_URL` (Q12 del diseño: sigue sin confirmar el valor en Dokploy; solo
 bloquea la redirección de `www`) y el secreto de GitHub `DOKPLOY_WEBHOOK_URL`, el webhook "Deploy" de Dokploy: sin él, `deploy.yml`
-publica las imágenes pero no redespliega ni comprueba el sitio.
+publica las imágenes pero no redespliega ni comprueba el sitio. El paso lo llama como un push de GitHub a `main` y falla si Dokploy
+no responde «Compose deployed successfully»: un POST vacío recibe «Branch Not Match» y no despliega nada.
 
 ## 3. Primer encendido, en orden
 

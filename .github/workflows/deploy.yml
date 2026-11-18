@@ -85,8 +85,14 @@ jobs:
       - name: Redeploy en Dokploy
         env:
           DOKPLOY_WEBHOOK_URL: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         if: env.DOKPLOY_WEBHOOK_URL != ''
-        run: curl -fsS -X POST "$DOKPLOY_WEBHOOK_URL"
+        # Dokploy ignores an empty POST («Branch Not Match», 301, which curl -f lets pass): it wants a GitHub push to its branch.
+        run: |
+          response=$(curl -sS -X POST "$DOKPLOY_WEBHOOK_URL" -H 'Content-Type: application/json' -H 'X-GitHub-Event: push' \
+            -d "{\"ref\":\"refs/heads/main\",\"head_commit\":{\"id\":\"$DEPLOY_SHA\",\"message\":\"deploy\"},\"repository\":{\"full_name\":\"$GITHUB_REPOSITORY\"}}")
+          echo "$response"
+          echo "$response" | grep -q 'Compose deployed successfully'
 
       # Espera a que Dokploy termine de reemplazar los contenedores (hasta 10 min) y falla si el sitio no sirve la landing
       # renderizada por Node con el commit recién publicado. Mismo criterio que synthetic.yml. Sin setup-node: el script no tiene
