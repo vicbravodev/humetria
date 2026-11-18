@@ -226,8 +226,25 @@ it('has no tool that watches the requests of the channel installed, and no tool 
     foreach (['laravel/telescope', 'laravel/pulse', 'laravel/nightwatch', 'sentry/sentry', 'bugsnag', 'rollbar'] as $watcher) {
         expect($composer)->not->toContain($watcher, "{$watcher} would record the requests of /c/*: the channel's privacy must be revisited first");
     }
+
+    // Humi tells whether the channel takes cases and, to whoever handles them, how many wait for acknowledgment and when
+    // the first falls due (the panel's own urgency): only through these contracts, never a complaint's text, kind or people.
+    $allowed = [
+        'App\Modules\Complaints\Contracts\ComplaintChannels',
+        'App\Modules\Complaints\Contracts\ComplaintsToAcknowledge',
+        'App\Modules\Complaints\Data\ChannelData',
+        'App\Modules\Complaints\Data\ComplaintToAcknowledge',
+    ];
+
     foreach (File::allFiles(app_path('Modules/Assistant')) as $file) {
-        expect(strtolower((string) file_get_contents($file->getPathname())))->not->toContain('complaint');
+        $source = (string) file_get_contents($file->getPathname());
+        preg_match_all('/App\\\\Modules\\\\Complaints\\\\[\w\\\\]+/', $source, $uses);
+
+        expect(array_values(array_diff($uses[0], $allowed)))->toBe([], "{$file->getFilename()} reaches into Complaints beyond its counts");
+
+        if ($uses[0] !== []) {
+            expect($source)->not->toMatch('/->(title|kind|body|description|subject|reporter|accused|id)\b/', "{$file->getFilename()} reads what a complaint is or is about");
+        }
     }
 });
 
