@@ -77,6 +77,21 @@ describe('the demo request, seen from the server', function (): void {
         }
     });
 
+    it('tells PostHog the keyword the ad was shown for, with the campaign', function (): void {
+        serverMeasuring();
+
+        $this->get('/?utm_source=google&utm_medium=cpc&utm_campaign=checador&utm_term=reloj+checador&utm_content=789&matchtype=p')->assertOk();
+        $this->post(route('demo-requests.store'), submittedDemo())->assertRedirect();
+
+        expect(sentToPostHog()[0]['properties'])->toMatchArray([
+            'utm_source' => 'google',
+            'utm_campaign' => 'checador',
+            'utm_term' => 'reloj checador',
+            'utm_content' => '789',
+            'matchtype' => 'p',
+        ]);
+    });
+
     it('does not tell PostHog without a token, without consent or for a bot', function (Closure $setUp): void {
         serverMeasuring();
         $setUp();

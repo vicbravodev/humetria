@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Demos\Models;
 
+use App\Modules\Demos\Enums\AdClickType;
 use App\Modules\Demos\Enums\DemoProfile;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Enums\Tool;
@@ -42,9 +43,14 @@ use Illuminate\Support\Collection;
  * @property string|null $first_utm_medium
  * @property string|null $first_utm_campaign
  * @property string|null $first_referrer_host
+ * @property AdClickType|null $ad_click_type The last ad click, for the import into Google Ads; forgotten after 90 days.
+ * @property string|null $ad_click_id
+ * @property string|null $utm_term The keyword the ad was shown for, from the final URL suffix.
+ * @property string|null $utm_content
+ * @property string|null $match_type
  * @property Carbon $created_at
  */
-#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_host', 'first_utm_source', 'first_utm_medium', 'first_utm_campaign', 'first_referrer_host'])]
+#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_host', 'first_utm_source', 'first_utm_medium', 'first_utm_campaign', 'first_referrer_host', 'ad_click_type', 'ad_click_id', 'utm_term', 'utm_content', 'match_type'])]
 #[UseFactory(DemoRequestFactory::class)]
 final class DemoRequest extends Model
 {
@@ -63,6 +69,7 @@ final class DemoRequest extends Model
             'workforce' => Workforce::class,
             'tools' => AsEnumCollection::of(Tool::class),
             'status' => DemoStatus::class,
+            'ad_click_type' => AdClickType::class,
             'handled_at' => 'datetime',
             'created_at' => 'datetime',
         ];
