@@ -55,13 +55,14 @@ Notas:
 | `whatsapp.daily_cap_reached` | info | una empresa llegó a su tope diario: sus envíos esperan al día siguiente | `delivery_id` |
 | `whatsapp.webhook_malformed` | warning | el webhook de Meta trajo una firma válida pero un cuerpo que no es JSON | `bytes` |
 | `whatsapp.orphans_discarded` | info | estados de Meta que nunca encontraron su mensaje, descartados | `discarded` |
+| `mail.webhook_malformed` | warning | el webhook de Resend trajo una firma válida pero un cuerpo que no es JSON | — |
 | `posthog.dispatch_failed` | warning | no se pudo encolar un evento para PostHog | `exception` (clase) |
 | `posthog.send_failed` | warning | PostHog no aceptó un evento | `exception` (clase) |
 
 Las señales de WhatsApp y las alertas que se les piden están en `docs/operations/whatsapp.md`:
 
 - **Inmediata a Victor**: `whatsapp.paused_automatically` y `whatsapp.quality_changed` (al menos 1 línea).
-- **Vigilar**: `whatsapp.daily_cap_reached`, `whatsapp.webhook_malformed` y `whatsapp.orphans_discarded` (más de 5 en 1 hora).
+- **Vigilar**: `whatsapp.daily_cap_reached`, `whatsapp.webhook_malformed`, `mail.webhook_malformed` (el webhook de Resend, `docs/operations/resend-webhook.md`) y `whatsapp.orphans_discarded` (más de 5 en 1 hora).
 - **Alerta de ausencia**: el webhook de Meta sin eventos en 24 horas con mensajes aceptados (0 líneas
   `messaging.delivery_status_changed` con `channel` `whatsapp` en 24 horas habiendo `whatsapp.message_accepted`).
 

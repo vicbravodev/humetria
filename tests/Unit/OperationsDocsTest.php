@@ -113,7 +113,7 @@ it('documents in the observability manual every WhatsApp signal the alerts read,
     $manual = repoFile('docs/operations/observability.md');
     $code = messagingCode();
 
-    foreach (['whatsapp.paused_automatically', 'whatsapp.quality_changed', 'whatsapp.daily_cap_reached', 'whatsapp.webhook_malformed', 'whatsapp.orphans_discarded'] as $signal) {
+    foreach (['whatsapp.paused_automatically', 'whatsapp.quality_changed', 'whatsapp.daily_cap_reached', 'whatsapp.webhook_malformed', 'whatsapp.orphans_discarded', 'mail.webhook_malformed'] as $signal) {
         expect(str_contains($code, $signal))->toBeTrue("The code no longer says {$signal}")
             ->and(str_contains($manual, $signal))->toBeTrue("The observability manual does not mention {$signal}");
     }
