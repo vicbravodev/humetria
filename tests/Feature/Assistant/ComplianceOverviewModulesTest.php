@@ -2,13 +2,18 @@
 
 declare(strict_types=1);
 
+use App\Modules\Assistant\Support\Readers\ClimateReader;
 use App\Modules\Assistant\Support\Readers\ComplaintsReader;
+use App\Modules\Assistant\Support\Readers\PulseReader;
 use App\Modules\Assistant\Support\Readers\SeatingReader;
 use App\Modules\Assistant\Support\Readers\VacationsReader;
 use App\Modules\Assistant\Tools\GetComplianceOverview;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
 use App\Modules\Complaints\Models\ComplaintChannel;
+use App\Modules\Engagement\Models\Comment;
+use App\Modules\Engagement\Models\Invitation;
+use App\Modules\Engagement\Models\Survey;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Seating\Contracts\SeatingRoute;
@@ -24,7 +29,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
-mutates(SeatingReader::class, VacationsReader::class, ComplaintsReader::class);
+mutates(SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();
@@ -251,3 +256,90 @@ it('does not tell complaints to a company without them, and offers the overview 
 
     expect(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 });
+
+/** `$answered` people of the company of `$survey` answered it, and one more was invited and did not. */
+function answeredBy(Survey $survey, int $answered): Survey
+{
+    Invitation::factory()->answered()->count($answered)->create(['survey_id' => $survey->id]);
+    Invitation::factory()->create(['survey_id' => $survey->id]);
+
+    return $survey;
+}
+
+it('tells no pulse nor climate survey was launched yet', function (): void {
+    expect(overviewLine($this, 'pulse'))->toBe([
+        'key' => 'pulse',
+        'label' => 'Pulso',
+        'state' => 'pending',
+        'stateLabel' => 'Pendiente',
+        'summary' => 'Aún no has lanzado ninguna encuesta de pulso.',
+        'link' => "/admin/{$this->a->slug}/pulse",
+    ])->and(overviewLine($this, 'climate'))->toBe([
+        'key' => 'climate',
+        'label' => 'Clima',
+        'state' => 'pending',
+        'stateLabel' => 'Pendiente',
+        'summary' => 'Aún no has lanzado ninguna encuesta de clima.',
+        'link' => "/admin/{$this->a->slug}/climate",
+    ]);
+});
+
+it('tells a draft waits to be launched', function (): void {
+    Survey::factory()->pulse()->create(['tenant_id' => $this->a->id]);
+    workIn($this->a);
+
+    expect(overviewLine($this, 'pulse'))->toMatchArray(['state' => 'pending', 'summary' => 'Tienes una encuesta de pulso en borrador, sin lanzar.']);
+});
+
+it('tells until when the open survey takes answers and how many answered, never of another company nor what they said', function (): void {
+    Carbon::setTestNow('2026-11-20 18:00:00');
+    $survey = answeredBy(Survey::factory()->active('2026-11-30')->create(['tenant_id' => $this->a->id, 'invited' => 80]), 34);
+    Comment::factory()->create(['tenant_id' => $this->a->id, 'survey_id' => $survey->id, 'body' => 'Mi jefe Zafiro no escucha']);
+    answeredBy(Survey::factory()->active('2026-12-15')->create(['tenant_id' => $this->b->id, 'invited' => 9]), 6);
+    workIn($this->a);
+
+    $line = overviewLine($this, 'climate');
+
+    expect($line)->toMatchArray([
+        'state' => 'in_progress',
+        'stateLabel' => 'En curso',
+        'summary' => 'La encuesta de clima está abierta hasta el 30 de noviembre: han contestado 34 de 80 personas.',
+    ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro');
+
+    Invitation::query()->where('answered', true)->limit(33)->delete();
+
+    expect(overviewLine($this, 'climate')['summary'])->toBe('La encuesta de clima está abierta hasta el 30 de noviembre: ha contestado 1 de 80 personas.');
+});
+
+it('tells the results of the last closed survey are ready, together with the one open', function (): void {
+    answeredBy(Survey::factory()->pulse()->closed()->create(['tenant_id' => $this->a->id, 'closed_at' => '2026-11-10 18:00:00']), 5);
+    answeredBy(Survey::factory()->pulse()->active('2026-11-30')->create(['tenant_id' => $this->a->id, 'invited' => 12]), 0);
+    workIn($this->a);
+
+    expect(overviewLine($this, 'pulse'))->toMatchArray([
+        'state' => 'in_progress',
+        'summary' => 'La encuesta de pulso está abierta hasta el 30 de noviembre: han contestado 0 de 12 personas. La última cerró el 10 de noviembre y sus resultados están listos.',
+    ]);
+});
+
+it('puts the survey up to date once the last one closed, and says its results are not shown below the minimum of respondents', function (): void {
+    answeredBy(Survey::factory()->closed()->create(['tenant_id' => $this->a->id, 'closed_at' => '2026-11-10 18:00:00']), 4);
+    workIn($this->a);
+
+    expect(overviewLine($this, 'climate'))->toMatchArray([
+        'state' => 'up_to_date',
+        'stateLabel' => 'Al día',
+        'summary' => 'La última encuesta de clima cerró el 10 de noviembre con menos de 5 respuestas: sus resultados no se muestran.',
+    ]);
+});
+
+it('does not tell pulse nor climate to a company without them, and offers the overview to a company with only one of them', function (string $module): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(overviewLine($this, $module))->toBeNull();
+
+    resolve(CompanyModules::class)->syncPlan($this->a->id, [$module], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe([$module])
+        ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
+})->with(['pulse', 'climate']);

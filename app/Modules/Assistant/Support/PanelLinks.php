@@ -46,6 +46,16 @@ final readonly class PanelLinks
         return $this->path('tenant.complaints.index');
     }
 
+    public function pulse(): string
+    {
+        return $this->path('tenant.pulse.index');
+    }
+
+    public function climate(): string
+    {
+        return $this->path('tenant.climate.index');
+    }
+
     public function campaigns(): string
     {
         return $this->path('tenant.campaigns.index');
