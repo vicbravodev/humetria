@@ -40,15 +40,6 @@ final class SecurityHeaders
      */
     private const string MAP_TILES = 'https://tile.openstreetmap.org';
 
-    /**
-     * The one origin PostHog needs: where it sends the events (connect-src). On `GET /` only for a visitor without a session,
-     * with a valid project token and consent (Analytics::projectToken); on any other page, for its error reports, with the
-     * token alone (Analytics::errorToken). Without a token the policy is exactly the one of any page.
-     * posthog-js ships in our own bundle, in its build that never loads external scripts, so no script, image or style origin
-     * opens: the page's policy stays 'self' plus this one.
-     */
-    private const string POSTHOG_ORIGIN = Analytics::HOST;
-
     private const string HORIZON_FONTS = 'https://fonts.bunny.net';
 
     /**
@@ -62,7 +53,7 @@ final class SecurityHeaders
         $response = $next($request);
 
         $headers = [
-            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request), $this->isHorizon($request), Analytics::opensPostHog($request)),
+            'Content-Security-Policy' => $this->policy($nonce, $devServer, $this->paintsMaps($request), $this->isHorizon($request), Analytics::connectOrigins($request)),
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'DENY',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
@@ -129,13 +120,20 @@ final class SecurityHeaders
         return $request->is($path, $path.'/*') && Gate::allows('viewHorizon');
     }
 
-    private function policy(string $nonce, string $devServer, bool $maps, bool $horizon, bool $analytics): string
+    /**
+     * PostHog's origins come from Analytics::connectOrigins: where the events go (the landing's measurement, or the error
+     * reports of any other page) and, with the panel's recording on, where the project's replay settings come from. Only
+     * connect-src: posthog-js ships in our own bundle, in its build that never loads external scripts.
+     *
+     * @param  list<string>  $posthog
+     */
+    private function policy(string $nonce, string $devServer, bool $maps, bool $horizon, array $posthog): string
     {
         $eval = $horizon ? " 'unsafe-eval'" : '';
         $bunny = $horizon ? ' '.self::HORIZON_FONTS : '';
         $socket = $devServer === '' ? '' : ' '.preg_replace('/^http/', 'ws', $devServer);
         $devServer = $devServer === '' ? '' : ' '.$devServer;
-        $posthog = $analytics ? ' '.self::POSTHOG_ORIGIN : '';
+        $posthog = implode('', array_map(fn (string $origin): string => ' '.$origin, $posthog));
 
         return implode('; ', [
             "default-src 'self'",

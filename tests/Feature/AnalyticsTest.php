@@ -270,3 +270,25 @@ it('never writes the value of a PostHog cookie, sent raw to the complaints page,
     expect($log)->not->toContain('SENTINEL')
         ->and($log)->not->toContain('ph_phc_');
 });
+
+it('tells the browser it may record the panel only when session recording is switched on, and nothing else about it', function (bool $on): void {
+    measuring(consent: 'denied');
+    config(['services.posthog.session_recording' => $on]);
+
+    // The browser decides on each page whether it is one of a company's panel worth recording (session-recording.ts).
+    expect(errorConfigIn((string) $this->get('/admin/login')->assertOk()->getContent()))
+        ->toBe(['token' => PH_TOKEN, 'host' => PH_HOST, ...($on ? ['recording' => true] : [])]);
+})->with(['on' => true, 'off' => false]);
+
+it('lets the page fetch the recording settings of PostHog only while recording is switched on, and never a script', function (bool $on): void {
+    measuring(consent: 'denied');
+    config(['services.posthog.session_recording' => $on]);
+
+    $policy = (string) $this->get('/admin/login')->assertOk()->headers->get('Content-Security-Policy');
+    preg_match('/script-src [^;]*/', $policy, $script);
+    preg_match('/connect-src [^;]*/', $policy, $connect);
+
+    // The project's replay settings come as JSON from its assets host (/array/<token>/config); the recorder is our bundle.
+    expect(str_contains($connect[0] ?? '', 'https://us-assets.i.posthog.com'))->toBe($on)
+        ->and($script[0] ?? '')->not->toContain('posthog');
+})->with(['on' => true, 'off' => false]);
