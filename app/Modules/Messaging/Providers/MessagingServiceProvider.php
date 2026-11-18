@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Messaging\Providers;
 
+use App\Modules\Messaging\Console\ExportTemplates;
 use App\Modules\Messaging\Contracts\ChannelConsent;
 use App\Modules\Messaging\Contracts\ChannelPicker;
 use App\Modules\Messaging\Contracts\DeliveryOutcomes;
@@ -43,6 +44,10 @@ final class MessagingServiceProvider extends ServiceProvider
         // A recipient hash needs a key: a deployment with the function on and no key would store nothing it can compare.
         if (config()->boolean('whatsapp.enabled') && config()->array('messaging.recipient_keys') === []) {
             throw new LogicException('WHATSAPP_ENABLED needs MESSAGING_RECIPIENT_KEYS (1:<base64>,2:<base64>).');
+        }
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([ExportTemplates::class]);
         }
 
         Notification::extend('whatsapp', fn (Application $app): WhatsAppChannel => $app->make(WhatsAppChannel::class));
