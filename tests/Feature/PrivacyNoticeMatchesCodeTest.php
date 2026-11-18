@@ -91,7 +91,7 @@ it('says the panel of a company may be recorded, anonymous and masked, and what 
 
     expect($text)->toContain('grabación anónima de la pantalla')->toContain('los nombres, los correos, las cifras y todo dato de tu empresa, y lo que escribes, aparecen ocultos')
         ->toContain('el buzón de quejas, la Guía I, Humi ni tu cuenta personal')->toContain('mientras alguien de soporte entra como tú')
-        ->and($recording)->toContain("maskTextSelector: '*'")->toContain('maskTextFn: maskText')->toContain("rememberData(page)")->toContain('maskAllInputs: true')->toContain("person_profiles: 'never'")
+        ->and($recording)->toContain("maskTextSelector: '*'")->toContain('maskTextFn: maskText')->toContain('rememberData(page)')->toContain('maskAllInputs: true')->toContain("person_profiles: 'never'")
         ->toContain("'complaints/'")->toContain("'campaigns/trauma'")->toContain("'results/screenings'")->toContain("'assistant/'")->toContain("'settings/'")
         ->toContain("prop(props, 'impersonator') == null");
 });
