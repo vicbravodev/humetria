@@ -14,6 +14,11 @@ import {
     watchErrors,
 } from '@/lib/error-tracking';
 import { initialPageName } from '@/lib/page-frame';
+import {
+    followPage,
+    startSessionRecording,
+    type RecordingEngine,
+} from '@/lib/session-recording';
 import { pageTransition } from '@/lib/page-transition';
 import { frameFor, preloadFrame } from '@/layouts/frames';
 
@@ -21,6 +26,9 @@ import { frameFor, preloadFrame } from '@/layouts/frames';
 globalThis.__webpack_nonce__ = cspNonce;
 
 const appName = import.meta.env['VITE_APP_NAME'] || 'Humetría';
+
+/** The page the server rendered first (its Inertia object): where the recording decides whether to start. */
+let firstPage: unknown = null;
 
 // Node renders this file too (SSR) and has no document: the frame is only preloaded in the browser.
 if (typeof document !== 'undefined') {
@@ -32,8 +40,12 @@ if (typeof document !== 'undefined') {
     )?.textContent;
 
     // What an error report says about where it happened: the page and its request id, kept up to date on every visit.
-    setErrorContext(initialPage ? JSON.parse(initialPage) : null);
-    router.on('navigate', (event) => setErrorContext(event.detail.page));
+    firstPage = initialPage ? JSON.parse(initialPage) : null;
+    setErrorContext(firstPage);
+    router.on('navigate', (event) => {
+        setErrorContext(event.detail.page);
+        void followPage(event.detail.page);
+    });
 
     await preloadFrame(initialPageName(initialPage));
 }
@@ -64,6 +76,13 @@ void createInertiaApp({
 // Applies the saved theme before the first paint.
 initializeTheme();
 
+// The recording instance: PostHog's build with its recorder inside (never a script from outside), only in a company's panel.
+async function loadRecorder(): Promise<RecordingEngine> {
+    const { default: posthog } = await import('posthog-js/full/no-external');
+
+    return posthog;
+}
+
 async function loadPostHog(): Promise<AnalyticsEngine> {
     const { default: posthog } = await import('posthog-js/no-external');
 
@@ -78,4 +97,8 @@ if (typeof document !== 'undefined') {
     void startErrorTracking(document, loadPostHog, window.location.origin).then(
         (started) => started && watchErrors(window, reportError),
     );
+    void startSessionRecording(document, firstPage, {
+        load: loadRecorder,
+        origin: window.location.origin,
+    });
 }
