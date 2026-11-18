@@ -32,11 +32,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $invited_at
  * @property InvitationStatus|null $invitation_status
  * @property string|null $invitation_batch
+ * @property string|null $invited_via
+ * @property int $token_version
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
 #[Table('campaign_participants')]
-#[Fillable(['tenant_id', 'campaign_id', 'employee_id', 'in_sample', 'token_hash', 'invited_at', 'invitation_status', 'invitation_batch'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'campaign_id', 'employee_id', 'in_sample', 'token_hash', 'invited_at', 'invitation_status', 'invitation_batch', 'invited_via', 'token_version'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(ParticipantFactory::class)]
 final class Participant extends Model
 {
@@ -54,7 +56,20 @@ final class Participant extends Model
      */
     public function surveyToken(): string
     {
-        return hash_hmac('sha256', "survey-link:{$this->id}", config()->string('app.key'));
+        // A rotated link (the mail took over from WhatsApp) carries its version; version 0 keeps the links already out.
+        $version = $this->token_version > 0 ? ":{$this->token_version}" : '';
+
+        return hash_hmac('sha256', "survey-link:{$this->id}{$version}", config()->string('app.key'));
+    }
+
+    /** A new link for the person: the one that went out stops working, so nobody has two live links for one invitation. */
+    public function rotateToken(): string
+    {
+        $this->token_version++;
+        $token = $this->surveyToken();
+        $this->update(['token_version' => $this->token_version, 'token_hash' => self::hashToken($token)]);
+
+        return $token;
     }
 
     /**
@@ -82,6 +97,7 @@ final class Participant extends Model
             'in_sample' => 'boolean',
             'invited_at' => 'immutable_datetime',
             'invitation_status' => InvitationStatus::class,
+            'token_version' => 'integer',
         ];
     }
 }

@@ -90,8 +90,9 @@ export default function LaunchForm({
                         transform={() => ({ closes_on: lastDay })}
                     >
                         <LaunchFigures
-                            emails={contact.reachable}
-                            withoutEmail={contact.unreachable}
+                            emails={contact.reachable - contact.whatsapp}
+                            whatsapp={contact.whatsapp}
+                            withoutContact={contact.unreachable}
                         />
                         <p className="text-sm text-muted-foreground">
                             Solo recibe la evaluación quien está en Empleados:

@@ -6,11 +6,15 @@ namespace App\Modules\Engagement\Providers;
 
 use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Listeners\CancelOnDeactivation;
+use App\Modules\Engagement\Listeners\FallBackToMail;
 use App\Modules\Engagement\Listeners\NotifyManagers;
 use App\Modules\Engagement\Listeners\QueueCommentSummaries;
 use App\Modules\Engagement\Support\ClimateWorkerSection;
+use App\Modules\Engagement\Support\EngagementInvitationLinks;
 use App\Modules\Engagement\Support\FeedbackWorkerSection;
 use App\Modules\Engagement\Support\SurveyWorkerSection;
+use App\Modules\Messaging\Contracts\InvitationLinks;
+use App\Modules\Messaging\Events\WhatsAppMessageFailed;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -28,6 +32,7 @@ final class EngagementServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->tag([SurveyWorkerSection::class, ClimateWorkerSection::class, FeedbackWorkerSection::class], 'worker.sections');
+        $this->app->tag([EngagementInvitationLinks::class], InvitationLinks::TAG);
     }
 
     public function boot(): void
@@ -51,5 +56,6 @@ final class EngagementServiceProvider extends ServiceProvider
         Event::listen(EmployeeDeactivated::class, CancelOnDeactivation::class);
         Event::listen(SurveyClosed::class, QueueCommentSummaries::class);
         Event::listen(SurveyClosed::class, NotifyManagers::class);
+        Event::listen(WhatsAppMessageFailed::class, FallBackToMail::class);
     }
 }

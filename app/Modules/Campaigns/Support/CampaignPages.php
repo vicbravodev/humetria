@@ -267,14 +267,15 @@ final readonly class CampaignPages
     }
 
     /**
-     * @return array{reachable: int, unreachable: int}
+     * @return array{reachable: int, unreachable: int, whatsapp: int}
      */
     private function contact(Campaign $campaign): array
     {
         $people = $this->roster->activeIn($campaign->work_center_id);
-        $reachable = count(array_filter($people, fn (RosterEntry $person): bool => SurveyInvitation::routes($person) !== []));
+        $channels = array_map(fn (RosterEntry $person): ?string => SurveyInvitation::channel($person), $people);
+        $reachable = count(array_filter($channels, fn (?string $channel): bool => $channel !== null));
 
-        return ['reachable' => $reachable, 'unreachable' => count($people) - $reachable];
+        return ['reachable' => $reachable, 'unreachable' => count($people) - $reachable, 'whatsapp' => count(array_filter($channels, fn (?string $channel): bool => $channel === 'whatsapp'))];
     }
 
     /**

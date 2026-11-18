@@ -46,3 +46,12 @@ it('points the button at the real survey links', function (string $key, string $
 it('throws for a template it does not know', function (): void {
     (new TemplateRegistry)->get('nope');
 })->throws(InvalidArgumentException::class);
+
+it('has a template for each invitation type the modules register, and no more', function (): void {
+    $types = collect(app()->tagged(App\Modules\Messaging\Contracts\InvitationLinks::TAG))->map(fn (App\Modules\Messaging\Contracts\InvitationLinks $links): string => $links->type())->sort()->values()->all();
+    $registry = new TemplateRegistry;
+
+    expect($types)->toBe(['campaign_participant', 'engagement_invitation'])
+        ->and(array_map(fn (string $type): string => $registry->forInvitation($type)->key, $types))->toBe(['survey_invite_v1', 'engagement_invite_v1'])
+        ->and(array_keys($registry->all()))->toBe(['survey_invite_v1', 'engagement_invite_v1']);
+});

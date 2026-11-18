@@ -26,7 +26,7 @@ export default function PersonCheckRow({
                 <span className="font-medium">{person.name}</span>
                 <span className="text-sm text-muted-foreground">
                     {person.area}
-                    {!person.reachable && ' · Sin correo'}
+                    {!person.reachable && ' · Sin contacto'}
                 </span>
             </Label>
         </li>

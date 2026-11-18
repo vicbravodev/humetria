@@ -25,5 +25,6 @@ final readonly class RosterEntry
         public bool $trusted = false,
         public ?string $jobGradeId = null,
         public ?string $staffGroup = null,
+        public ?string $mobile = null,
     ) {}
 }

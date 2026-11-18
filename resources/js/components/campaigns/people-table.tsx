@@ -72,7 +72,9 @@ export default function PeopleTable({
                                         className="size-4 text-muted-foreground"
                                     />
                                 )}
-                                {person.reachable ? 'Correo' : 'Sin correo'}
+                                {person.reachable
+                                    ? 'Con contacto'
+                                    : 'Sin contacto'}
                             </span>
                         </TableCell>
                         <TableCell>

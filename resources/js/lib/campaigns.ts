@@ -109,11 +109,11 @@ export function peoplePage(
         : { people, standings, filters };
 }
 
-/** Where those who did not answer a guide stand: "12 pendientes · 3 sin correo · 2 canceladas por bajas…". */
+/** Where those who did not answer a guide stand: "12 pendientes · 3 sin contacto · 2 canceladas por bajas…". */
 export function guideBreakdown(guide: InstrumentProgress): string {
     const parts = [
         guide.pending > 0 && countOf(guide.pending, 'pendiente', 'pendientes'),
-        guide.unreachable > 0 && `${guide.unreachable} sin correo`,
+        guide.unreachable > 0 && `${guide.unreachable} sin contacto`,
         guide.cancelled > 0 &&
             `${countOf(guide.cancelled, 'cancelada', 'canceladas')} por bajas o cambios de centro`,
     ].filter((part) => part !== false);

@@ -52,7 +52,7 @@ final class InstrumentTally
         $rows = ParticipantInstrument::query()
             ->join('campaign_participants', 'campaign_participants.id', '=', 'participant_instruments.participant_id')
             ->where('campaign_participants.campaign_id', $campaignId)
-            ->where(fn ($query) => $query->whereNull('campaign_participants.invitation_status')->orWhere('campaign_participants.invitation_status', InvitationStatus::NoEmail))
+            ->where(fn ($query) => $query->whereNull('campaign_participants.invitation_status')->orWhere('campaign_participants.invitation_status', InvitationStatus::Unreachable))
             ->where('participant_instruments.status', InstrumentStatus::Pending)
             ->groupBy('participant_instruments.instrument')
             ->selectRaw('participant_instruments.instrument, count(*)::int as total')

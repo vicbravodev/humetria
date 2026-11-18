@@ -4,21 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Jobs;
 
-use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Enums\SurveyEmail;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
-use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Campaigns\Support\CampaignClock;
-use App\Modules\Instruments\Contracts\Instruments;
+use App\Modules\Campaigns\Support\InvitationComposer;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
-use App\Modules\Tenancy\Contracts\WorkCenters;
-use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -69,8 +65,7 @@ final class SendSurveyInvitations implements ShouldQueue
             return;
         }
 
-        $companies = resolve(Companies::class);
-        $company = $companies->current();
+        $company = resolve(Companies::class)->current();
 
         // A blocked company sends nothing; who was waiting is marked failed, so a resend reaches them once it is back.
         if ($company->stopped('nom035')) {
@@ -84,51 +79,46 @@ final class SendSurveyInvitations implements ShouldQueue
             ->update(['invitation_status' => null, 'invitation_batch' => null]);
         $waiting = $this->waiting()->with(['instruments' => fn ($guides) => $guides->where('status', InstrumentStatus::Pending)])->get();
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Participant $participant): string => $participant->employee_id)->all()));
-        $contact = $companies->contact();
-        $workCenter = resolve(WorkCenters::class)->profile($campaign->work_center_id)->name ?? '';
-
-        // The foot of every email: the person's entrance, the same for all and with no credential in it.
-        $home = resolve(WorkerLinks::class)->home();
+        $composer = resolve(InvitationComposer::class);
+        $skippedReminders = 0;
 
         foreach ($waiting as $participant) {
             $person = $people[$participant->employee_id] ?? null;
-            $routes = $person === null ? [] : SurveyInvitation::routes($person);
+            // Whoever already got a link is reminded; a Guía I campaign and a Ley Silla survey ask the same way each time.
+            $kind = InvitationComposer::emailFor($campaign, $participant->invited_at !== null);
+            $reminder = $kind === SurveyEmail::Reminder;
+            $routes = $person === null ? [] : SurveyInvitation::routes($person, $reminder);
 
             if ($person === null || $routes === []) {
-                $participant->update(['invitation_status' => InvitationStatus::NoEmail]);
+                // A reminder has nobody to go to when the person only has WhatsApp: they already hold their link, so they stay as they were.
+                if ($person !== null && $reminder && SurveyInvitation::routes($person) !== []) {
+                    $participant->update(['invitation_status' => InvitationStatus::Sent]);
+                    $skippedReminders++;
+
+                    continue;
+                }
+
+                $participant->update(['invitation_status' => InvitationStatus::Unreachable]);
 
                 continue;
             }
 
             // Counted first and then compared, in one atomic step, so workers sending at once never pass the limit together.
-            if (RateLimiter::hit(self::LIMITER) > config()->integer('campaigns.invitations_per_minute')) {
+            // Only mail is capped here (the provider's per-minute limit); WhatsApp has its own limiter in its queue.
+            if (array_key_exists('mail', $routes) && RateLimiter::hit(self::LIMITER) > config()->integer('campaigns.invitations_per_minute')) {
                 $this->release(RateLimiter::availableIn(self::LIMITER));
 
                 return;
             }
 
-            // Whoever already got a link is reminded; a Guía I campaign and a Ley Silla survey ask the same way each time.
-            $kind = match (true) {
-                $campaign->kind === CampaignKind::Nom035Trauma => SurveyEmail::Trauma,
-                $campaign->kind === CampaignKind::SeatingSurvey => SurveyEmail::Seating,
-                $participant->invited_at !== null => SurveyEmail::Reminder,
-                default => SurveyEmail::Invitation,
-            };
             $token = $participant->surveyToken();
-            $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
-            Notification::routes($routes)->notify(new SurveyInvitation(
-                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant), $home,
-            ));
+            // A reminder does not change how the invitation went out: invited_via is the channel of the invitation.
+            $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now(), 'invited_via' => $reminder ? ($participant->invited_via ?? array_key_first($routes)) : array_key_first($routes)]);
+            Notification::routes($routes)->notify($composer->compose($campaign, $participant, $person, $token, $kind));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }
 
-        Log::info('campaign.invitations_sent', ['campaign_id' => $campaign->id, 'sent' => $waiting->count()]);
-    }
-
-    /** How long the guides the person has left take together: a reminder never counts what they already answered. */
-    private static function minutes(Participant $participant): int
-    {
-        return $participant->instruments->sum(fn (ParticipantInstrument $guide): int => resolve(Instruments::class)->definition($guide->instrument)->minutes);
+        Log::info('campaign.invitations_sent', ['campaign_id' => $campaign->id, 'sent' => $waiting->count() - $skippedReminders, 'skipped_reminders' => $skippedReminders]);
     }
 
     /**

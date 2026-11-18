@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Actions;
 
+use App\Modules\Billing\Contracts\WhatsAppQuota;
 use App\Modules\Engagement\Enums\InvitationStatus;
 use App\Modules\Engagement\Jobs\SendInvitations;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Notifications\SurveyInvitation;
 use App\Modules\Organization\Contracts\Roster;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +24,7 @@ final readonly class QueueInvitations
 {
     public const int BLOCK = 50;
 
-    public function __construct(private Roster $roster) {}
+    public function __construct(private Roster $roster, private WhatsAppQuota $whatsApp) {}
 
     /**
      * @param  list<string>  $invitationIds
@@ -30,14 +32,19 @@ final readonly class QueueInvitations
      */
     public function handle(Survey $survey, array $invitationIds): int
     {
-        $invitations = Invitation::query()->among('id', $invitationIds)->get(['id', 'employee_id', 'token_hash']);
+        $invitations = Invitation::query()->among('id', $invitationIds)->get(['id', 'employee_id', 'token_hash', 'invited_at']);
         $people = $this->roster->findMany(array_values($invitations->map(fn (Invitation $invitation): string => $invitation->employee_id)->all()));
-        $reached = $invitations->filter(fn (Invitation $invitation): bool => ($people[$invitation->employee_id]->email ?? '') !== '');
+        // The channel of each person; whoever already has a link is being reminded, and a reminder never goes through WhatsApp.
+        $channels = $invitations->mapWithKeys(fn (Invitation $invitation): array => [$invitation->id => isset($people[$invitation->employee_id]) ? SurveyInvitation::channel($people[$invitation->employee_id], $invitation->invited_at !== null) : null]);
+        $reached = $invitations->filter(fn (Invitation $invitation): bool => $channels[$invitation->id] !== null);
+
+        // Held before anything is marked or queued: if they do not all fit, nothing goes out. (The mail of a survey is not held, as it never was.)
+        $this->whatsApp->reserve($channels->filter(fn (?string $channel): bool => $channel === 'whatsapp')->count());
         // Who already holds a link keeps it: it works again as soon as they are reached.
         $unreached = $invitations->diffKeys($reached)->filter(fn (Invitation $invitation): bool => $invitation->token_hash === null);
 
         if ($unreached->isNotEmpty()) {
-            Invitation::query()->among('id', array_values($unreached->map(fn (Invitation $invitation): string => $invitation->id)->all()))->update(['invitation_status' => InvitationStatus::NoEmail, 'invitation_batch' => null]);
+            Invitation::query()->among('id', array_values($unreached->map(fn (Invitation $invitation): string => $invitation->id)->all()))->update(['invitation_status' => InvitationStatus::Unreachable, 'invitation_batch' => null]);
         }
 
         if ($reached->isEmpty()) {

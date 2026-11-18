@@ -58,7 +58,7 @@ final readonly class LaunchCampaign
             $queue = [];
 
             foreach ($people as $person) {
-                $queue[$participants[$person->id]] = SurveyInvitation::routes($person) !== [];
+                $queue[$participants[$person->id]] = SurveyInvitation::channel($person);
             }
 
             $invited = $this->queueInvitations->handle($campaign, $queue);

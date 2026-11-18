@@ -7,6 +7,10 @@ namespace App\Modules\Engagement\Notifications;
 use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Engagement\Enums\SurveyKind;
 use App\Modules\Engagement\Support\SurveyClock;
+use App\Modules\Messaging\Contracts\ChannelPicker;
+use App\Modules\Messaging\Contracts\TracksDelivery;
+use App\Modules\Messaging\Data\InvitationReference;
+use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -17,7 +21,7 @@ use Illuminate\Notifications\Notification;
  * The email that carries a person's survey link, from their company and written as the survey speaks («usted»): the
  * invitation and, with the same link, each reminder. The plain token lives only here and in the link.
  */
-final class SurveyInvitation extends Notification implements MailBag
+final class SurveyInvitation extends Notification implements MailBag, TracksDelivery
 {
     public function __construct(
         private readonly bool $reminder,
@@ -28,7 +32,30 @@ final class SurveyInvitation extends Notification implements MailBag
         private readonly CarbonImmutable $closesOn,
         private readonly SurveyKind $kind,
         private readonly ?string $portalUrl = null,
+        private readonly ?InvitationReference $reference = null,
     ) {}
+
+    /**
+     * How a person is reached: at most one route, the channel the company put first among the ones it has on for which the
+     * person has a contact. A reminder never goes through WhatsApp: the person already has their link.
+     *
+     * @return array<string, string>
+     */
+    public static function routes(RosterEntry $person, bool $reminder = false): array
+    {
+        return resolve(ChannelPicker::class)->route($person->email, $person->mobile, ! $reminder);
+    }
+
+    /** The channel a person is reached by, or null when no channel the company has on reaches them. */
+    public static function channel(RosterEntry $person, bool $reminder = false): ?string
+    {
+        return array_key_first(self::routes($person, $reminder));
+    }
+
+    public function deliveryReference(): ?InvitationReference
+    {
+        return $this->reference;
+    }
 
     /**
      * Every channel the person was routed on.

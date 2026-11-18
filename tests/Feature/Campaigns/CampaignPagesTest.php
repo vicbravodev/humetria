@@ -239,7 +239,7 @@ it('offers to launch a draft from tomorrow in Mexico City, suggesting two weeks'
 
 it('counts each guide of a launched campaign: answered, pending, without a link and cancelled', function (): void {
     $campaign = campaignWithAnswers($this->tenant, $this->plant, 'nom035.guide-ii', 4, 1);
-    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending], ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '+525512345678']);
+    personIn($campaign, 'Sin correo', ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending], ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Unreachable], ['email' => null, 'mobile' => '+525512345678']);
     personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
@@ -326,7 +326,7 @@ it('narrows the people by where they stand, counting each standing', function ()
     $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     $waiting = ['nom035.guide-i' => InstrumentStatus::Pending, 'nom035.guide-ii' => InstrumentStatus::Pending];
     personIn($campaign, 'Pendiente', $waiting);
-    personIn($campaign, 'Sin correo', $waiting, ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::NoEmail], ['email' => null, 'mobile' => '+525512345678']);
+    personIn($campaign, 'Sin correo', $waiting, ['invited_at' => null, 'invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Unreachable], ['email' => null, 'mobile' => '+525512345678']);
     personIn($campaign, 'Contestó', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Completed]);
     personIn($campaign, 'Baja', ['nom035.guide-i' => InstrumentStatus::Completed, 'nom035.guide-ii' => InstrumentStatus::Cancelled]);
     personIn($campaign, 'Falló', $waiting, ['invitation_status' => App\Modules\Campaigns\Enums\InvitationStatus::Failed]);
@@ -344,7 +344,7 @@ it('narrows the people by where they stand, counting each standing', function ()
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page->where('standings', [
             ['value' => 'pending', 'label' => 'Pendientes', 'count' => 2],
-            ['value' => 'unreachable', 'label' => 'Sin correo', 'count' => 1],
+            ['value' => 'unreachable', 'label' => 'Sin contacto', 'count' => 1],
             ['value' => 'failed', 'label' => 'Envío fallido', 'count' => 1],
             ['value' => 'answered', 'label' => 'Contestaron', 'count' => 1],
             ['value' => 'cancelled', 'label' => 'Canceladas', 'count' => 1],
@@ -472,7 +472,7 @@ it('tells a draft how many of its people the links reach, only to those who mana
 
     $this->actingAs($this->hr)
         ->get(route('tenant.campaigns.show', [$this->tenant, $draft->id]))
-        ->assertInertia(fn (Assert $page) => $page->where('contact', ['reachable' => 19, 'unreachable' => 1]));
+        ->assertInertia(fn (Assert $page) => $page->where('contact', ['reachable' => 19, 'unreachable' => 1, 'whatsapp' => 0]));
 
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.campaigns.show', [$this->tenant, $draft->id]))

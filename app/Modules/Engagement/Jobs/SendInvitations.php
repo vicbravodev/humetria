@@ -9,10 +9,10 @@ use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Notifications\SurveyInvitation;
+use App\Modules\Engagement\Support\InvitationComposer;
 use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
-use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -64,8 +64,7 @@ final class SendInvitations implements ShouldQueue
             return;
         }
 
-        $companies = resolve(Companies::class);
-        $company = $companies->current();
+        $company = resolve(Companies::class)->current();
 
         // A blocked company, or one without this survey's module, sends nothing; who was waiting is marked failed, so a reminder reaches them once it is back.
         if ($company->stopped($survey->kind->value)) {
@@ -76,37 +75,44 @@ final class SendInvitations implements ShouldQueue
 
         $waiting = $this->waiting()->get();
         $people = resolve(Roster::class)->findMany(array_values($waiting->map(fn (Invitation $invitation): string => $invitation->employee_id)->all()));
-        $contact = $companies->contact();
-
-        // The foot of every email: the person's entrance, the same for all and with no credential in it.
-        $home = resolve(WorkerLinks::class)->home();
+        $composer = resolve(InvitationComposer::class);
+        $skippedReminders = 0;
 
         foreach ($waiting as $invitation) {
             $person = $people[$invitation->employee_id] ?? null;
+            $reminder = $invitation->invited_at !== null;
+            $routes = $person === null ? [] : SurveyInvitation::routes($person, $reminder);
 
-            if ($person === null || ($person->email ?? '') === '') {
-                $invitation->update(['invitation_status' => InvitationStatus::NoEmail]);
+            if ($person === null || $routes === []) {
+                // A reminder has nobody to go to when the person only has WhatsApp: they already hold their link, so they stay as they were.
+                if ($person !== null && $reminder && SurveyInvitation::routes($person) !== []) {
+                    $invitation->update(['invitation_status' => InvitationStatus::Sent]);
+                    $skippedReminders++;
+
+                    continue;
+                }
+
+                $invitation->update(['invitation_status' => InvitationStatus::Unreachable]);
 
                 continue;
             }
 
             // Counted first and then compared, in one atomic step, so workers sending at once never pass the limit together.
-            if (RateLimiter::hit(self::LIMITER) > config()->integer('campaigns.invitations_per_minute')) {
+            // Only mail is capped here (the provider's per-minute limit); WhatsApp has its own limiter in its queue.
+            if (array_key_exists('mail', $routes) && RateLimiter::hit(self::LIMITER) > config()->integer('campaigns.invitations_per_minute')) {
                 $this->release(RateLimiter::availableIn(self::LIMITER));
 
                 return;
             }
 
             $token = $invitation->surveyToken();
-            $reminder = $invitation->invited_at !== null;
-            $invitation->update(['token_hash' => Invitation::hashToken($token), 'invited_at' => now()]);
-            Notification::routes(['mail' => $person->email])->notify(new SurveyInvitation(
-                $reminder, $token, $person->name, $company, $contact, $survey->closes_on, $survey->kind, $home,
-            ));
+            // A reminder does not change how the invitation went out: invited_via is the channel of the invitation.
+            $invitation->update(['token_hash' => Invitation::hashToken($token), 'invited_at' => now(), 'invited_via' => $reminder ? ($invitation->invited_via ?? array_key_first($routes)) : array_key_first($routes)]);
+            Notification::routes($routes)->notify($composer->compose($invitation, $survey, $person, $token, $reminder));
             $invitation->update(['invitation_status' => InvitationStatus::Sent]);
         }
 
-        Log::info('engagement.invitations_sent', ['survey_id' => $survey->id, 'sent' => $waiting->count()]);
+        Log::info('engagement.invitations_sent', ['survey_id' => $survey->id, 'sent' => $waiting->count() - $skippedReminders, 'skipped_reminders' => $skippedReminders]);
     }
 
     /**

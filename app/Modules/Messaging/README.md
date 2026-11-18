@@ -7,15 +7,15 @@ mensaje. El módulo que manda un aviso (Campaigns, Engagement…) sigue eligiend
 
 ## API pública (solo `Contracts`, `Events` y `Data`)
 
-| Contrato | Para qué |
-| --- | --- |
-| `WhatsAppGateway` | `send(OutboundMessage): SendOutcome` (Cloud API, nulo con `WHATSAPP_ENABLED=false`, falso en pruebas) |
-| `ChannelConsent` | `canSend(tenantId, channel, phone)`: canal activo con opt-in vigente y sin baja |
-| `ChannelPicker` | un solo canal por persona (el de menor preferencia entre los activos con dato de contacto) |
-| `TracksDelivery` | la notificación dice a qué invitación pertenece, para seguir su entrega |
-| `InvitationLinks` | cada módulo entrega el enlace y los parámetros de su plantilla |
-| `DeliverySummary` | agregados por canal de una campaña o encuesta (mínimo de 5) |
-| `DeliveryOutcomes` | cuáles mensajes no se entregaron, para la conciliación de Billing |
+| Contrato           | Para qué                                                                                              |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| `WhatsAppGateway`  | `send(OutboundMessage): SendOutcome` (Cloud API, nulo con `WHATSAPP_ENABLED=false`, falso en pruebas) |
+| `ChannelConsent`   | `canSend(tenantId, channel, phone)`: canal activo con opt-in vigente y sin baja                       |
+| `ChannelPicker`    | un solo canal por persona (el de menor preferencia entre los activos con dato de contacto)            |
+| `TracksDelivery`   | la notificación dice a qué invitación pertenece, para seguir su entrega                               |
+| `InvitationLinks`  | cada módulo entrega el enlace y los parámetros de su plantilla                                        |
+| `DeliverySummary`  | agregados por canal de una campaña o encuesta (mínimo de 5)                                           |
+| `DeliveryOutcomes` | cuáles mensajes no se entregaron, para la conciliación de Billing                                     |
 
 Los contratos se agregan en el commit que los usa; el diseño fija sus firmas.
 

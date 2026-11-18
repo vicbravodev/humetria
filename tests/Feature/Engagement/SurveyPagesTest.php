@@ -233,7 +233,7 @@ it('shows the survey in progress as counts: who is invited, how many answered, h
     climatePanelInvited($survey, 3, ['answered' => true]);
     climatePanelInvited($survey, 3);
     climatePanelInvited($survey, 1, ['cancelled' => true]);
-    climatePanelInvited($survey, 1, ['invitation_status' => App\Modules\Engagement\Enums\InvitationStatus::NoEmail]);
+    climatePanelInvited($survey, 1, ['invitation_status' => App\Modules\Engagement\Enums\InvitationStatus::Unreachable]);
 
     $props = $this->actingAs($this->viewer)->get(route('tenant.climate.show', [$this->tenant, $survey]))->assertOk()->inertiaProps();
 

@@ -121,6 +121,15 @@ it('releases the holds nobody used, of every company, in a command that logs it'
     Illuminate\Support\Facades\Log::shouldHaveReceived('info')->with('usage.holds_released', ['released' => 10])->once();
 });
 
+it('answers false instead of throwing when a caller with a plan B asks and the mails do not fit', function (): void {
+    $tenant = mailQuotaCompany(10);
+
+    expect(resolve(MailQuota::class)->tryReserve(10))->toBeTrue()
+        ->and(mailCounter($tenant)->reserved)->toBe(10)
+        ->and(resolve(MailQuota::class)->tryReserve(1))->toBeFalse()
+        ->and(mailCounter($tenant)->reserved)->toBe(10);
+});
+
 it('keeps each company to its own quota', function (): void {
     $a = mailQuotaCompany(10);
     resolve(MailQuota::class)->reserve(10);

@@ -35,7 +35,7 @@ final readonly class Participation
      */
     public function of(Survey $survey, bool $canManage): array
     {
-        $counts = Invitation::query()->toBase()->where('survey_id', $survey->id)->selectRaw('count(*) filter (where answered) as answered, count(*) filter (where not answered and not cancelled) as pending, count(*) filter (where invitation_status = ?) as without_link', [InvitationStatus::NoEmail->value])->first();
+        $counts = Invitation::query()->toBase()->where('survey_id', $survey->id)->selectRaw('count(*) filter (where answered) as answered, count(*) filter (where not answered and not cancelled) as pending, count(*) filter (where invitation_status = ?) as without_link', [InvitationStatus::Unreachable->value])->first();
         $invited = $survey->invited ?? 0;
         $answered = self::int($counts->answered ?? 0);
         $pending = self::int($counts->pending ?? 0);

@@ -52,8 +52,8 @@ beforeEach(function (): void {
     $this->gateway = new FakeWhatsAppGateway;
     app()->instance(WhatsAppGateway::class, $this->gateway);
     SendJobStubLinks::$answer = new WhatsAppInvitation('+528186875767', 'survey_invite_v1', ['Acme', '12 de mayo'], 'the-link-token');
-    app()->instance(SendJobStubLinks::class, new SendJobStubLinks);
-    app()->tag([SendJobStubLinks::class], InvitationLinks::TAG);
+    // The module's own links are tagged by its provider; the stub answers in their place (the container hands out the instance).
+    app()->instance(App\Modules\Campaigns\Support\CampaignInvitationLinks::class, new SendJobStubLinks);
     Event::fake([WhatsAppMessageAccepted::class, WhatsAppMessageFailed::class]);
 });
 

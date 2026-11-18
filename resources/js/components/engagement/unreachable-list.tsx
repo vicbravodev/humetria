@@ -20,7 +20,7 @@ export default function UnreachableList({
         <div className="flex flex-col gap-3">
             <Table>
                 <TableCaption className="sr-only">
-                    Personas sin correo
+                    Personas sin contacto
                 </TableCaption>
                 <TableHeader>
                     <TableRow>
@@ -41,7 +41,7 @@ export default function UnreachableList({
             </Table>
             <Pagination
                 page={people}
-                label="Páginas de personas sin correo"
+                label="Páginas de personas sin contacto"
                 pinned={false}
                 preserveState
             />
