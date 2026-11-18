@@ -75,7 +75,7 @@ it('creates the mail delivery before sending and puts its id on the message', fu
 
     expect($delivery->channel)->toBe('mail')
         ->and($delivery->tenant_id)->toBe($this->tenant->id)
-        ->and($delivery->status)->toBe(DeliveryStatus::Created)
+        ->and($delivery->status)->toBe(DeliveryStatus::Sent)
         ->and($delivery->invitation_id)->toBe($this->reference->id)
         ->and($delivery->recipient_hash)->toBeNull()
         ->and(sentMessages())->toHaveCount(1)
@@ -113,4 +113,47 @@ it('follows only the mail channel', function (): void {
     event(new Illuminate\Notifications\Events\NotificationSending(new stdClass, $notification, 'database'));
 
     expect(Delivery::query()->count())->toBe(0);
+});
+
+it('keeps a single live row when the send fails and the queue retries it', function (): void {
+    $attempts = 0;
+    Illuminate\Support\Facades\Event::listen(Illuminate\Mail\Events\MessageSending::class, function () use (&$attempts): void {
+        if (++$attempts === 1) {
+            throw new RuntimeException('smtp down');
+        }
+    });
+
+    expect(fn () => NotificationFacade::route('mail', 'ana@example.com')->notify(new TrackedTestNotification($this->reference)))->toThrow(RuntimeException::class);
+    expect(Delivery::query()->sole()->status)->toBe(DeliveryStatus::Created);
+
+    NotificationFacade::route('mail', 'ana@example.com')->notify(new TrackedTestNotification($this->reference));
+
+    $delivery = Delivery::query()->sole();
+    expect($delivery->status)->toBe(DeliveryStatus::Sent)
+        ->and(sentMessages())->toHaveCount(1)
+        ->and(sentMessages()[0]->getOriginalMessage()->getHeaders()->get(StampMailDelivery::HEADER)?->getBodyAsString())->toBe($delivery->id);
+});
+
+it('does not take a mail that already left for the failed attempt of the next one', function (): void {
+    NotificationFacade::route('mail', 'ana@example.com')->notify(new TrackedTestNotification($this->reference));
+    $first = Delivery::query()->sole();
+
+    NotificationFacade::route('mail', 'ana@example.com')->notify(new TrackedTestNotification($this->reference));
+
+    expect(Delivery::query()->count())->toBe(2)->and($first->refresh()->status)->toBe(DeliveryStatus::Sent);
+});
+
+it('reuses the row of a failed attempt only for the same invitation', function (): void {
+    $attempts = 0;
+    Illuminate\Support\Facades\Event::listen(Illuminate\Mail\Events\MessageSending::class, function () use (&$attempts): void {
+        if (++$attempts === 1) {
+            throw new RuntimeException('smtp down');
+        }
+    });
+    $other = new InvitationReference(InvitationReference::CAMPAIGN_PARTICIPANT, (string) Str::uuid(), InvitationReference::CAMPAIGN, $this->reference->sourceId);
+
+    expect(fn () => NotificationFacade::route('mail', 'ana@example.com')->notify(new TrackedTestNotification($this->reference)))->toThrow(RuntimeException::class);
+    NotificationFacade::route('mail', 'luis@example.com')->notify(new TrackedTestNotification($other));
+
+    expect(Delivery::query()->count())->toBe(2);
 });

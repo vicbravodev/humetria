@@ -109,5 +109,5 @@ it('rejects an unsigned bounce and leaves the message as it was', function (): v
 
     $this->call('POST', route('messaging.webhooks.resend.receive'), [], [], [], ['CONTENT_TYPE' => 'application/json'], $body)->assertForbidden();
 
-    expect($delivery->refresh()->status)->toBe(DeliveryStatus::Created);
+    expect($delivery->refresh()->status)->toBe(DeliveryStatus::Sent);
 });

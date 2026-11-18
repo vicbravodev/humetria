@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Messaging\Providers;
 
+use App\Modules\Messaging\Listeners\MarkMailSent;
 use App\Modules\Messaging\Listeners\OpenMailDelivery;
 use App\Modules\Messaging\Listeners\StampMailDelivery;
 use App\Modules\Messaging\Support\MailDeliveryStash;
 use App\Modules\Messaging\Support\ResendApiTransport;
 use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
@@ -30,6 +32,7 @@ final class MailTrackingServiceProvider extends ServiceProvider
     {
         Event::listen(NotificationSending::class, OpenMailDelivery::class);
         Event::listen(MessageSending::class, StampMailDelivery::class);
+        Event::listen(MessageSent::class, MarkMailSent::class);
 
         Mail::extend('resend', fn (array $config): ResendApiTransport => new ResendApiTransport(
             is_string($config['key'] ?? null) ? $config['key'] : config()->string('services.resend.key'),
