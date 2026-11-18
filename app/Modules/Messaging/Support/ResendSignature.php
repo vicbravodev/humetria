@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Messaging\Support;
 
+use Illuminate\Support\Facades\Log;
+
 /**
  * The Svix signature Resend puts on its webhooks: HMAC-SHA256 of `{id}.{timestamp}.{raw body}` with the base64 key that follows
  * `whsec_`, as `v1,<base64>` (several, space-separated, while Resend rotates). No package: `hash_hmac` and `hash_equals`.
@@ -26,10 +28,17 @@ final class ResendSignature
             }
         }
 
-        foreach (config()->array('services.resend.webhook_secrets') as $secret) {
-            $key = is_string($secret) ? base64_decode(substr($secret, 6), true) : false;
+        $reported = false;
 
-            if ($key === false) {
+        foreach (config()->array('services.resend.webhook_secrets') as $secret) {
+            // The prefix is only a label: a secret copied without it is the same secret.
+            $key = is_string($secret) ? base64_decode(str_starts_with($secret, 'whsec_') ? substr($secret, 6) : $secret, true) : false;
+
+            if ($key === false || $key === '') {
+                // Without this, every webhook is a 403 and nothing says why. Once per request, and never the secret.
+                $reported || Log::error('mail.webhook_secret_invalid');
+                $reported = true;
+
                 continue;
             }
 

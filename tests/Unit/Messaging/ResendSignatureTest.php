@@ -79,3 +79,40 @@ it('accepts nothing when no secret is configured', function (): void {
 
     expect((new ResendSignature)->valid('msg_1', (string) RESEND_NOW, svixSignature($this->secret, 'msg_1', RESEND_NOW, 'body'), 'body', RESEND_NOW))->toBeFalse();
 });
+
+it('accepts a secret copied without its whsec_ prefix, the same as with it', function (): void {
+    $bare = base64_encode('the-current-secret');
+    config(['services.resend.webhook_secrets' => [$bare]]);
+    $header = svixSignature($this->secret, 'msg_1', RESEND_NOW, '{"type":"email.sent"}');
+
+    expect((new ResendSignature)->valid('msg_1', (string) RESEND_NOW, $header, '{"type":"email.sent"}', RESEND_NOW))->toBeTrue();
+});
+
+it('does not cut six characters off a secret that has no prefix', function (): void {
+    // "abcdefghijklmnop" decodes whole; with six characters cut it would be another key.
+    $bare = base64_encode('abcdefghijklmnop');
+    config(['services.resend.webhook_secrets' => [$bare]]);
+    $header = 'v1,'.base64_encode(hash_hmac('sha256', 'msg_1.'.RESEND_NOW.'.{}', 'abcdefghijklmnop', true));
+
+    expect((new ResendSignature)->valid('msg_1', (string) RESEND_NOW, $header, '{}', RESEND_NOW))->toBeTrue();
+});
+
+it('says once, with a fixed event and without the secret, that a configured secret is not base64, and goes on with the others', function (): void {
+    Illuminate\Support\Facades\Log::spy();
+    config(['services.resend.webhook_secrets' => ['whsec_!!!not base64!!!', $this->secret]]);
+    $header = svixSignature($this->secret, 'msg_1', RESEND_NOW, '{}');
+
+    $valid = (new ResendSignature)->valid('msg_1', (string) RESEND_NOW, $header, '{}', RESEND_NOW);
+
+    expect($valid)->toBeTrue();
+    Illuminate\Support\Facades\Log::shouldHaveReceived('error')->withArgs(fn (string $event, array $context = []): bool => $event === 'mail.webhook_secret_invalid'
+        && ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'base64'))->once();
+});
+
+it('rejects everything, and says so, when the only secret is not base64', function (): void {
+    Illuminate\Support\Facades\Log::spy();
+    config(['services.resend.webhook_secrets' => ['whsec_!!!']]);
+
+    expect((new ResendSignature)->valid('msg_1', (string) RESEND_NOW, 'v1,AAAA', '{}', RESEND_NOW))->toBeFalse();
+    Illuminate\Support\Facades\Log::shouldHaveReceived('error')->withArgs(fn (string $event): bool => $event === 'mail.webhook_secret_invalid')->once();
+});
