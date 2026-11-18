@@ -51,3 +51,25 @@ it('fails loudly when Resend refuses the mail, so the job retries', function ():
 
     expect(fn () => sendProbe(null))->toThrow(TransportException::class);
 });
+
+it('sends the From of the message with its name, not the return path', function (): void {
+    Http::fake(['api.resend.com/*' => Http::response(['id' => 'abc'])]);
+
+    Mail::mailer('resend')->html('<p>Hola</p>', function (Illuminate\Mail\Message $message): void {
+        $message->from('no-reply@example.com', 'Humetria')->to('ana@example.com')->subject('Hola');
+        $message->returnPath('rebotes@bounces.example.com');
+    });
+
+    Http::assertSent(fn (Request $request): bool => $request['from'] === '"Humetria" <no-reply@example.com>');
+});
+
+it('sends every From address of a message, each with its name', function (): void {
+    Http::fake(['api.resend.com/*' => Http::response(['id' => 'abc'])]);
+
+    Mail::mailer('resend')->html('<p>Hola</p>', function (Illuminate\Mail\Message $message): void {
+        $message->from('uno@example.com', 'Uno')->to('ana@example.com')->subject('Hola');
+        $message->sender('otro@example.com');
+    });
+
+    Http::assertSent(fn (Request $request): bool => $request['from'] === '"Uno" <uno@example.com>');
+});

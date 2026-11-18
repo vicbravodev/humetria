@@ -70,10 +70,12 @@ final class ResendApiTransport extends AbstractTransport
 
         $recipients = array_map(fn (Address $address): string => $address->getAddress(), $envelope->getRecipients());
         $to = $this->addresses($email->getTo());
+        $from = $this->addresses($email->getFrom());
         $hidden = array_values(array_diff($recipients, array_map(fn (Address $address): string => $address->getAddress(), [...$email->getTo(), ...$email->getCc()])));
 
         $payload = array_filter([
-            'from' => $envelope->getSender()->toString(),
+            // The From of the message, with its name: the envelope sender is the return path, which has none.
+            'from' => $from === [] ? $envelope->getSender()->toString() : implode(', ', $from),
             'to' => $to,
             'cc' => $this->addresses($email->getCc()),
             'bcc' => $hidden,
