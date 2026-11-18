@@ -10,6 +10,7 @@ use App\Modules\Messaging\Support\RecordDeliveryEvent;
 use App\Modules\Messaging\Support\WebhookInbox;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -32,10 +33,24 @@ final class HandleResendEvents
         $data = is_array($payload['data'] ?? null) ? $payload['data'] : [];
         $status = $this->status($payload['type'] ?? null, $data);
 
-        if ($status === null || ! $this->inbox->firstTime('resend', $svixId)) {
+        if ($status === null) {
             return;
         }
 
+        // The id of the event and its effect are one transaction: if applying it fails, the retry of Resend is processed.
+        DB::transaction(function () use ($svixId, $data, $payload, $status): void {
+            if ($this->inbox->firstTime('resend', $svixId)) {
+                $this->apply($data, $payload, $status);
+            }
+        });
+    }
+
+    /**
+     * @param  array<mixed>  $data
+     * @param  array<mixed>  $payload
+     */
+    private function apply(array $data, array $payload, DeliveryStatus $status): void
+    {
         $tags = is_array($data['tags'] ?? null) ? $data['tags'] : [];
         $id = $tags[self::TAG] ?? null;
         $delivery = is_string($id) && Str::isUuid($id) ? Delivery::query()->where('channel', 'mail')->find($id) : null;

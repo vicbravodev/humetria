@@ -16,6 +16,7 @@ use App\Modules\Messaging\Support\WebhookInbox;
 use App\Modules\Messaging\Support\WhatsAppErrorMap;
 use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -130,13 +131,14 @@ final class HandleMetaEvents
 
     private function status(MetaStatus $status): void
     {
-        $delivery = $this->find($status);
+        // The id of the event and its effect are one transaction: if applying it fails, the id is not kept and the retry of Meta is processed.
+        DB::transaction(function () use ($status): void {
+            $delivery = $this->find($status);
 
-        if (! $this->inbox->firstTime('meta', $status->eventId(), $delivery === null ? $status->toOrphan() : null) || $delivery === null) {
-            return;
-        }
-
-        $this->apply($delivery, $status);
+            if ($this->inbox->firstTime('meta', $status->eventId(), $delivery === null ? $status->toOrphan() : null) && $delivery !== null) {
+                $this->apply($delivery, $status);
+            }
+        });
     }
 
     /** @param array<mixed> $message */
@@ -152,9 +154,14 @@ final class HandleMetaEvents
 
         $phone = $this->phones->fromWaId($from);
 
-        // Only a STOP is remembered, and only by its id: any other message leaves no trace.
-        if ($phone !== null && $this->inbox->firstTime('meta', "message:{$id}")) {
-            $this->optOut->handle($phone, 'stop');
+        // Only a STOP is remembered, and only by its id: any other message leaves no trace. The id and the opt-out are one
+        // transaction: a STOP that fails halfway is not taken for a repeat when Meta sends it again.
+        if ($phone !== null) {
+            DB::transaction(function () use ($id, $phone): void {
+                if ($this->inbox->firstTime('meta', "message:{$id}")) {
+                    $this->optOut->handle($phone, 'stop');
+                }
+            });
         }
     }
 
