@@ -41,7 +41,11 @@ it('shows the superadmin every demo request with its contact links', function (b
         ->assertSee('Queremos aplicar la Guía III este año.')
         ->assertSee('27 oct 2026, 10:05')
         ->assertAttribute('a[href="mailto:ana@empresa.mx"]', 'href', 'mailto:ana@empresa.mx')
-        ->assertAttribute('a[href="https://wa.me/525512345678"]', 'href', 'https://wa.me/525512345678');
+        ->assertAttribute('a[href="https://wa.me/525512345678"]', 'href', 'https://wa.me/525512345678')
+        ->assertSee('Conversiones para Google Ads (CSV)')
+        ->assertAttribute('a[download][href="/admin/demo-requests/ad-conversions"]', 'href', '/admin/demo-requests/ad-conversions')
+        ->assertSee('Conversiones de iOS (CSV)')
+        ->assertAttribute('a[download][href="/admin/demo-requests/ad-conversions/ios"]', 'href', '/admin/demo-requests/ad-conversions/ios');
 })->with($looks);
 
 it('shows the WhatsApp of a request as people read it, not in E.164', function (): void {

@@ -37,6 +37,11 @@ final class SubmitDemoRequest
             'first_utm_medium' => $first->medium,
             'first_utm_campaign' => $first->campaign,
             'first_referrer_host' => $first->referrerHost,
+            'ad_click_type' => $data->attribution?->adClick?->type,
+            'ad_click_id' => $data->attribution?->adClick?->id,
+            'utm_term' => $data->attribution?->keyword?->term,
+            'utm_content' => $data->attribution?->keyword?->content,
+            'match_type' => $data->attribution?->keyword?->matchType,
         ]);
 
         // Only what the console needs to spot a trend: never who asked or how to reach them.

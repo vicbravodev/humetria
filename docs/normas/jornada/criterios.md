@@ -62,7 +62,9 @@ Es una **tabla por año**, no una constante.
 
 Tope semanal de horas extra por año (transitorio cuarto): 9 en 2026 y 2027, 10 en 2028, 11 en 2029, 12 en 2030. Humetría
 avisa cuando una persona se acerca o rebasa: el tope semanal del año, 4 horas extra en un día, 4 días con extras en la
-semana.
+semana. Los topes son de la ley y no se configuran por empresa ni por centro: rebasarlos no se bloquea, se registra, se
+paga y se avisa. Rebasar el tope semanal del año enciende su propia bandera desde el primer minuto, no solo cuando el
+triple pasa de 4 h (2.4).
 
 **2.4 Tiempo extra que rebasa el tope: triple** · Norma · art. 68
 

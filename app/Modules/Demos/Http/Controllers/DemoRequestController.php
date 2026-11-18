@@ -49,6 +49,9 @@ final class DemoRequestController extends Controller
             'utm_medium' => $touch?->medium,
             'utm_campaign' => $touch?->campaign,
             'referrer_host' => $touch?->referrerHost,
+            'utm_term' => $data->attribution?->keyword?->term,
+            'utm_content' => $data->attribution?->keyword?->content,
+            'matchtype' => $data->attribution?->keyword?->matchType,
         ]);
     }
 }

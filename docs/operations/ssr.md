@@ -159,7 +159,8 @@ El servidor reporta sus errores con solo el token (ver "Errores").
 - Solo los eventos del catálogo de abajo; uno nuevo se agrega aquí. Un solo escucha de clics (`use-landing-measurement`).
   Medir el panel (`/admin`), las encuestas o los portales es un trabajo aparte con su revisión de privacidad.
 - La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente externo,
-  nunca una URL ni identificadores de clic). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
+  nunca una URL). Con consentimiento `granted` también el identificador del último clic en un anuncio (`gclid`, `gbraid` o
+  `wbraid`), que va a la solicitud y se borra a los 90 días (`demos:forget-ad-clicks`, cada noche). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con
   consentimiento `granted`. Lo que diga el aviso de privacidad sobre cookies coincide con el código
   (`tests/Feature/PrivacyNoticeMatchesCodeTest.php`).
 - Todo enlace que sale de la landing o llega a ella es un `<a href>`, no un `<Link>` de Inertia (salvo el logo de la cabecera,
@@ -191,7 +192,23 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 | `demo_request_stored` | `profile`, `workforce`, `tools_count`, `utm_*`, `referrer_host` | Lo mismo, dicho por el servidor: no lo frena un bloqueador |
 
 `generate_lead` y `demo_request_stored` cuentan lo mismo; la diferencia entre ambos es lo que bloquean los navegadores. La conversión
-principal del embudo es `demo_request_stored`. No se guardan `gclid`, `gbraid` ni `wbraid`.
+principal del embudo es `demo_request_stored`.
+
+### Conversiones para Google Ads
+
+Google Ads aprende de las demos por importación de clics fuera de línea, sin etiqueta de Google en la landing:
+
+1. La solicitud guarda el identificador del último clic (ver arriba); el `gclid` solo llega con el etiquetado automático de la cuenta.
+2. En la consola de demos, **Conversiones para Google Ads (CSV)** descarga todas las solicitudes con `gclid` de los últimos 90 días,
+   con la hora de la Ciudad de México y el nombre de `GOOGLE_ADS_CONVERSION_NAME` (debe ser idéntico al de la acción de conversión).
+3. Se sube en Google Ads → Objetivos → Conversiones → Cargas. Subir el archivo entero cada semana no duplica: Google descarta la
+   conversión con el mismo clic, nombre y hora.
+4. Los clics de iOS que llegan con `gbraid` o `wbraid` y sin `gclid` (frecuentes en Demand Gen) salen en otro archivo,
+   **Conversiones de iOS (CSV)**, con las columnas `GBRAID` y `WBRAID` y un solo identificador por fila. Confirma en la primera carga
+   que Google lo acepta; si no, súbelo por Data Manager, que sí toma esas columnas.
+5. Una solicitud de prueba con un `gclid` inventado se borra antes de exportar: Google la rechaza, pero ensucia el archivo.
+6. La solicitud guarda además la palabra clave del sufijo de URL final (`utm_term`, `utm_content` y `matchtype`), y el evento
+   `demo_request_stored` la lleva, para saber qué palabra trajo cada demo. PostHog conserva `matchtype` en la dirección del pageview.
 
 ### Páginas por herramienta
 

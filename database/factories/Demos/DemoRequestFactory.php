@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories\Demos;
 
+use App\Modules\Demos\Enums\AdClickType;
 use App\Modules\Demos\Enums\DemoProfile;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
@@ -49,5 +50,11 @@ final class DemoRequestFactory extends Factory
     public function referredBy(string $host): self
     {
         return $this->state(fn (): array => ['referrer_host' => $host, 'first_referrer_host' => $host]);
+    }
+
+    /** Came from a click on an ad of Google Ads with auto-tagging. */
+    public function withAdClick(AdClickType $type = AdClickType::Gclid, string $id = 'Cj0KCQ-prueba'): self
+    {
+        return $this->state(fn (): array => ['ad_click_type' => $type, 'ad_click_id' => $id]);
     }
 }
