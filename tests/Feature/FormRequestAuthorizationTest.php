@@ -42,6 +42,7 @@ it('refuses a viewer before validating what they sent', function (string $method
     'record the follow-up evaluation of a row' => ['put', 'tenant.campaigns.program.items.follow-up', ['campaign' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c', 'item' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
     'set who answers for the Programa' => ['put', 'tenant.campaigns.program.responsible', ['campaign' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],
     'change the NOM-037 settings' => ['put', 'tenant.telework.settings.update', []],
+    'change the channels' => ['put', 'tenant.channels.update', []],
     'publish a NOM-037 document' => ['post', 'tenant.telework.documents.store', []],
     'record a NOM-037 training' => ['post', 'tenant.telework.trainings.store', []],
     'register a teleworker' => ['post', 'tenant.telework.teleworkers.store', ['workCenter' => '9f6c1c55-7d3e-4f43-9c1e-6f3c2a4a1b2c']],

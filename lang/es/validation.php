@@ -236,6 +236,11 @@ return [
     ],
 
     'attributes' => [
+        'mail_enabled' => 'correo',
+        'whatsapp_enabled' => 'WhatsApp',
+        'preferred' => 'canal preferido',
+        'whatsapp_monthly_cap' => 'tope mensual de WhatsApp',
+        'consent_accepted' => 'aceptación del aviso',
         'plan' => 'plan',
         'seats' => 'personas contratadas',
         'negotiated_price' => 'precio negociado',

@@ -6,6 +6,7 @@ namespace App\Modules\Billing\Support;
 
 use App\Modules\Billing\Contracts\UsageMeter;
 use App\Modules\Billing\Contracts\WhatsAppQuota;
+use App\Modules\Billing\Data\MessagePrice;
 use App\Modules\Billing\Exceptions\WhatsAppQuotaExceeded;
 use App\Modules\Tenancy\Contracts\CompanyChannels;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -20,7 +21,15 @@ final readonly class LedgerWhatsAppQuota implements WhatsAppQuota
         private UsageQuota $quota,
         private CounterHold $hold,
         private CompanyChannels $channels,
+        private MessagingCost $costs,
     ) {}
+
+    public function price(): MessagePrice
+    {
+        $cost = $this->costs->at(CarbonImmutable::now());
+
+        return new MessagePrice($cost->priceMicros, $cost->currency);
+    }
 
     public function reserve(int $count): void
     {

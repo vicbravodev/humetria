@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Billing\Contracts;
 
+use App\Modules\Billing\Data\MessagePrice;
+
 /**
  * The WhatsApp messages a company may send in the month: the lower of what its plan includes and the cap its owner set. A launch
  * reserves the messages it will send before it marks anything, all or none; each message that Meta accepts takes its place from
@@ -18,4 +20,7 @@ interface WhatsAppQuota
      * @throws \App\Modules\Billing\Exceptions\WhatsAppQuotaExceeded when they do not fit.
      */
     public function reserve(int $count): void;
+
+    /** What one message is charged now: Meta's cost plus the margin. */
+    public function price(): MessagePrice;
 }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Sso\Http\Middleware\RequireSsoWhenEnforced;
+use App\Modules\Tenancy\Http\Controllers\CompanyChannelsController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\Nom035DossierController;
 use App\Modules\Tenancy\Http\Controllers\OnboardingController;
@@ -58,6 +59,8 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnfor
 
     // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
     Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');
+    Route::get('admin/{tenant:slug}/channels', [CompanyChannelsController::class, 'edit'])->where('tenant', $notReserved)->name('tenant.channels.edit');
+    Route::put('admin/{tenant:slug}/channels', [CompanyChannelsController::class, 'update'])->where('tenant', $notReserved)->name('tenant.channels.update');
 
     require __DIR__.'/organization.php';
     require __DIR__.'/campaigns.php';
