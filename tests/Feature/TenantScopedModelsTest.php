@@ -23,6 +23,7 @@ use App\Modules\Demos\Models\DemoRun;
 use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Models\DeliveryEvent;
 use App\Modules\Messaging\Models\OptOut;
+use App\Modules\Messaging\Models\Pause;
 use App\Modules\Messaging\Models\WebhookEvent;
 use App\Modules\Sso\Models\SsoConnection;
 use App\Modules\Sso\Models\SsoDomain;
@@ -90,6 +91,7 @@ const PLATFORM_MODELS = [
     DemoRun::class => 'a preparation of the demo company, run by the staff console',
     // Deduplication of what a provider sends again, before any company is known.
     WebhookEvent::class => 'deduplication of provider callbacks, before any company is known',
+    Pause::class => 'an operational stop of the whole feature, for every company',
 ];
 
 /** @return list<class-string<Model>> */

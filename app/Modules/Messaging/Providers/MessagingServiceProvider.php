@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Messaging\Providers;
 
+use App\Modules\Messaging\Contracts\ChannelConsent;
+use App\Modules\Messaging\Contracts\ChannelPicker;
 use App\Modules\Messaging\Contracts\WhatsAppGateway;
+use App\Modules\Messaging\Support\ChannelRules;
 use App\Modules\Messaging\Support\CloudApiWhatsAppGateway;
 use App\Modules\Messaging\Support\NullWhatsAppGateway;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -20,6 +24,9 @@ final class MessagingServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->scoped(ChannelRules::class);
+        $this->app->bind(ChannelConsent::class, fn (Application $app): ChannelRules => $app->make(ChannelRules::class));
+        $this->app->bind(ChannelPicker::class, fn (Application $app): ChannelRules => $app->make(ChannelRules::class));
         $this->app->bind(WhatsAppGateway::class, config()->boolean('whatsapp.enabled') ? CloudApiWhatsAppGateway::class : NullWhatsAppGateway::class);
     }
 
