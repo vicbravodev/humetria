@@ -38,6 +38,12 @@
     --sidebar: #f2f6f5;
     /* The landing's alternate sections: far enough from the page to read as a change of section. */
     --band: #eaf2ef;
+    --family-compliance: #1f5fc4;
+    --family-compliance-soft: #e8effc;
+    --family-listening: #a02f6e;
+    --family-listening-soft: #fbebf3;
+    --family-operations: #5b3fc4;
+    --family-operations-soft: #efebfd;
     --sidebar-foreground: #14211f;
     --sidebar-primary: #0b7a6f;
     --sidebar-primary-foreground: #ffffff;
@@ -103,6 +109,12 @@
     --chart-5: #8a7e70;
     --sidebar: #0b1211;
     --band: #172422;
+    --family-compliance: #8db4ff;
+    --family-compliance-soft: #18243a;
+    --family-listening: #f09ac6;
+    --family-listening-soft: #321a29;
+    --family-operations: #b7a6ff;
+    --family-operations-soft: #221d3b;
     --sidebar-foreground: #f1faf8;
     --sidebar-primary: #3ccfbd;
     --sidebar-primary-foreground: #0f1716;
@@ -186,6 +198,9 @@
     --color-chart-5: var(--chart-5);
     --color-sidebar: var(--sidebar);
     --color-band: var(--band);
+    /* The color of the family a tool belongs to (Cumple la norma, Escucha a tu gente, Personas y sueldos), set by .family-*. */
+    --color-family: var(--family, var(--primary));
+    --color-family-soft: var(--family-soft, var(--accent));
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
     --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
@@ -216,6 +231,14 @@
     --color-warning-foreground: var(--warning-foreground);
     --shadow-raised: var(--elevation-raised);
     --shadow-float: var(--elevation-float);
+}
+
+/*
+ * A toast slides in at full contrast instead of fading in: read mid-fade (by a person or by axe) its text falls to 2.5:1.
+ * Outside any layer, like sonner's own styles, so the more specific selector wins.
+ */
+li[data-sonner-toast] {
+    transition-property: transform, height, box-shadow;
 }
 
 @layer base {
@@ -983,4 +1006,20 @@ html:has([data-smooth-scroll]) {
     @media (prefers-reduced-motion: reduce) {
         --bar-from: none;
     }
+}
+
+/* Each family of tools wears its own color (as Integrate does): its tool pages, cards, menu and labels. The brand's primary stays for actions. */
+.family-compliance {
+    --family: var(--family-compliance);
+    --family-soft: var(--family-compliance-soft);
+}
+
+.family-listening {
+    --family: var(--family-listening);
+    --family-soft: var(--family-listening-soft);
+}
+
+.family-operations {
+    --family: var(--family-operations);
+    --family-soft: var(--family-operations-soft);
 }

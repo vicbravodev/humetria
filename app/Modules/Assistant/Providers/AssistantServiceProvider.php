@@ -11,8 +11,17 @@ use App\Modules\Assistant\Listeners\DeleteMemberConversations;
 use App\Modules\Assistant\Listeners\SendLlmAnalytics;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
+use App\Modules\Assistant\Support\Readers\AttendanceReader;
+use App\Modules\Assistant\Support\Readers\ClimateReader;
+use App\Modules\Assistant\Support\Readers\CompensationReader;
+use App\Modules\Assistant\Support\Readers\ComplaintsReader;
+use App\Modules\Assistant\Support\Readers\DisclosureReader;
 use App\Modules\Assistant\Support\Readers\Nom035Reader;
 use App\Modules\Assistant\Support\Readers\Nom037Reader;
+use App\Modules\Assistant\Support\Readers\OrgChartReader;
+use App\Modules\Assistant\Support\Readers\PulseReader;
+use App\Modules\Assistant\Support\Readers\SeatingReader;
+use App\Modules\Assistant\Support\Readers\VacationsReader;
 use App\Modules\Assistant\Support\TenantAiAccess;
 use App\Modules\Assistant\Support\TenantHumiActivity;
 use App\Modules\Assistant\Support\ToolRegistry;
@@ -46,8 +55,18 @@ final class AssistantServiceProvider extends ServiceProvider
         // One reader per norm, in the order Humi tells them: a new norm (Ley Silla, violencia laboral…) is one more here.
         $this->app->singleton(ComplianceReaders::class, fn (Application $app): ComplianceReaders => new ComplianceReaders([
             $app->make(Nom035Reader::class),
+            $app->make(DisclosureReader::class),
             $app->make(Nom037Reader::class),
-        ], [Nom035Reader::class => 'nom035', Nom037Reader::class => 'nom037']));
+            $app->make(SeatingReader::class),
+            $app->make(VacationsReader::class),
+            $app->make(ComplaintsReader::class),
+            $app->make(PulseReader::class),
+            $app->make(ClimateReader::class),
+            $app->make(AttendanceReader::class),
+            $app->make(OrgChartReader::class),
+            // Every company has Compensación: it is in no module of the company, so it is told to all.
+            $app->make(CompensationReader::class),
+        ], [Nom035Reader::class => 'nom035', DisclosureReader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart']));
 
         // The tools of Humi: a new module adds its own here.
         $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [
@@ -59,7 +78,7 @@ final class AssistantServiceProvider extends ServiceProvider
             GetFirstSteps::class,
         ], [
             // Regulations are not a module of the company: Humi always has them. A tool that reads two norms stays with either.
-            GetComplianceOverview::class => ['nom035', 'nom037'],
+            GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations', 'complaints', 'pulse', 'climate', 'attendance', 'org_chart'],
             GetCampaignProgress::class => ['nom035'],
             GetRiskResults::class => ['nom035'],
             ListPendingActions::class => ['nom035', 'nom037'],

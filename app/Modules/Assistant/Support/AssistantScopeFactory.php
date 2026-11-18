@@ -20,6 +20,8 @@ final readonly class AssistantScopeFactory
         'manage-telework',
         'review-workplaces',
         'view-trauma-screenings',
+        'handle-complaints',
+        'view-compensation',
     ];
 
     public function __construct(private CurrentTenant $tenant, private ResolveParticipant $participants) {}

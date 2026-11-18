@@ -35,6 +35,12 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
 - Un cambio que solo trae documentación que nadie lee (`docs/`, `.md` de la raíz) se salta el CI y el deploy
   (`scripts/ci-code-changed.sh`). Un documento que un test o la app leen es código (`docs/normas`, `docs/operations`,
   `CLAUDE.md`…) y va en ese script (`tests/Unit/CiCodeChangedTest.php`); todo job nuevo de `tests.yml` espera a `changes`.
+- **Humi está al corriente.** Un módulo o una función que cambia lo que la empresa tiene, debe o puede consultar no está
+  terminado hasta que Humi lo sabe; es parte del entregable, en el mismo PR. Se conecta por los contratos públicos del
+  módulo: un lector en `Assistant/Support/Readers` (lo cuenta `GetComplianceOverview`), una herramienta si hace falta
+  detalle, sus datos vivos si los hay, y sus criterios en `docs/normas/*/criterios.md` (entran solos al buscador). Mismas
+  reglas de privacidad: conteos y estados, nunca respuestas ni personas. `tests/Feature/Assistant/ModuleCoverageTest.php`
+  falla con un módulo nuevo sin conexión; eximir uno exige su razón en ese test.
 - **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra sola la clase cuyo test declara
   `mutates(Clase::class)`. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
   `--min`; si falla, falta el test que mata al mutante. Detalle: `docs/testing.md`.
@@ -135,7 +141,7 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   `tests/Feature/IndexablePagesTest.php`) que responden 200 en producción; staging y local nunca se indexan.
 - Solo las páginas de `App\Http\SsrPages` pasan por Node, y solo sin sesión; una ruta nueva no activa SSR. Si Node falla
   la página responde 200 y React la pinta: nunca 5xx por Node.
-- PostHog mide solo la landing: lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
+- PostHog mide solo las páginas públicas (landing, página de cada herramienta y guía: `Analytics::measuredRoutes()`): lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
   medición. Ningún dato de la persona va a PostHog. Todo enlace que sale de la landing o llega a ella es un `<a href>`.
 - El panel de una empresa se graba solo con `POSTHOG_SESSION_RECORDING=true`, anónimo y enmascarado (`lib/session-recording.ts`):
   se ve la interfaz y se oculta todo dato de la empresa (`lib/recording-mask.ts`: lo que viene en las props, datos con forma
@@ -189,7 +195,7 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   reusa sus piezas (marco con migas, encabezado con estado, tarjetas, tablas `muted`, pestañas con conteo, estados vacíos
   con siguiente paso); una que se vea como un formulario sin diseñar no está terminada. Antes de cerrar un trabajo con UI,
   se revisa en el navegador en claro, oscuro y a 375 px.
-- Un solo acento (`primary`; `brand-*` solo en el logo); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
+- Un solo acento (`primary`; `brand-*` solo en el logo), salvo el color de cada familia de herramientas en el sitio público (`family-*`); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
   a shadcn tras cada `npx shadcn add` (`DesignTokensOnlyTest`, `DesignSystemTest`, `ShadcnAdjustmentsTest`).
 - El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.
 

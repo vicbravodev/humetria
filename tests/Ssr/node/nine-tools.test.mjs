@@ -15,7 +15,7 @@ const textOf = (html) =>
         .replace(/<[^>]+>/g, ' ')
         .replace(/[\s ]+/g, ' ');
 
-void test('the HTML Node renders has one h1, a server marker and the nine tools as tab panels', async () => {
+void test('the HTML Node renders has one h1, a server marker and the nine tools as cards', async () => {
     const { json } = await render();
 
     assert.match(json.body, /data-server-rendered="true"/);
@@ -25,12 +25,12 @@ void test('the HTML Node renders has one h1, a server marker and the nine tools 
         expected.h1,
     );
     assert.equal(expected.tools.length, 9);
-    assert.equal((json.body.match(/role="tabpanel"/g) ?? []).length, 9);
+    assert.equal((json.body.match(/id="herramienta-/g) ?? []).length, 9);
 });
 
-/** The text of each tab panel, by the id it has, up to where the next panel starts. */
-const panelsOf = (html) => {
-    const starts = [...html.matchAll(/<div[^>]*role="tabpanel"[^>]*>/g)];
+/** The text of each tool card, by its id, up to where the next card starts. */
+const cardsOf = (html) => {
+    const starts = [...html.matchAll(/<a[^>]*id="herramienta-[^"]+"[^>]*>/g)];
 
     return new Map(
         starts.map((open, index) => [
@@ -40,15 +40,15 @@ const panelsOf = (html) => {
     );
 };
 
-void test('each tool has its own panel with its name and its description in the content', async () => {
+void test('each tool has its own card, with its name, its description and the link to its page', async () => {
     const { json } = await render();
-    const panels = panelsOf(json.body);
+    const cards = cardsOf(json.body);
 
     for (const { key, name, hint } of expected.tools) {
-        const panel = panels.get(`tool-panel-${key}`);
+        const card = cards.get(`herramienta-${key}`);
 
-        assert.ok(panel !== undefined, `${key} has a panel`);
-        assert.ok(panel.includes(name), `${key}: name in its panel`);
-        assert.ok(panel.includes(hint), `${key}: description in its panel`);
+        assert.ok(card !== undefined, `${key} has a card`);
+        assert.ok(card.includes(name), `${key}: name in its card`);
+        assert.ok(card.includes(hint), `${key}: description in its card`);
     }
 });

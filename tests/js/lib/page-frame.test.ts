@@ -6,6 +6,8 @@ describe('isStandalone', () => {
         'landing',
         'privacy-notice',
         'roadmap',
+        'tool',
+        'guide',
         'campaigns/survey',
         'engagement/survey',
         'engagement/portal-feedback',

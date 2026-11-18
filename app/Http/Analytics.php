@@ -79,7 +79,7 @@ final class Analytics
             return null;
         }
 
-        return $request->route()?->getName() === 'home'
+        return self::isMeasured($request)
             && $request->user() === null
             && Consent::analyticsAllowed($request) ? $token : null;
     }
@@ -90,7 +90,22 @@ final class Analytics
      */
     public static function errorToken(Request $request): ?string
     {
-        return $request->route()?->getName() === 'home' ? null : self::serverToken();
+        return self::isMeasured($request) ? null : self::serverToken();
+    }
+
+    /**
+     * The pages PostHog measures for a visitor: the landing, the page of each tool and the guide.
+     *
+     * @return list<string>
+     */
+    public static function measuredRoutes(): array
+    {
+        return ['home', ...ToolPages::routes(), ToolPages::GUIDE_ROUTE];
+    }
+
+    private static function isMeasured(Request $request): bool
+    {
+        return in_array($request->route()?->getName(), self::measuredRoutes(), true);
     }
 
     /**

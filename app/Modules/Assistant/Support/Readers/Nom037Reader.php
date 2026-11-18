@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Assistant\Support\Readers;
 
 use App\Modules\Assistant\Contracts\ComplianceReader;
+use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\ComplianceStatus;
 use App\Modules\Assistant\Support\PanelLinks;
 use App\Modules\Telework\Contracts\TeleworkStanding;
@@ -21,7 +22,7 @@ final readonly class Nom037Reader implements ComplianceReader
 {
     public function __construct(private WorkCenters $workCenters, private TeleworkStanding $standing, private PanelLinks $links) {}
 
-    public function status(): ComplianceStatus
+    public function status(AssistantScope $scope): ComplianceStatus
     {
         $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)));
         $centers = array_filter(
