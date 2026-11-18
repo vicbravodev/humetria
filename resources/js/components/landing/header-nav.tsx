@@ -25,6 +25,12 @@ const sections = [
         test: 'header-privacy',
     },
     { id: 'humi', section: 'seccion-humi', label: 'Humi', test: 'header-humi' },
+    {
+        id: 'precios',
+        section: 'seccion-precios',
+        label: 'Precios',
+        test: 'header-pricing',
+    },
 ] as const;
 
 // The hero comes first so nothing is marked until the page reaches a section.
@@ -35,7 +41,7 @@ const ITEM =
 
 /**
  * The sections of the landing in one pill: a chip slides under the one being read. «Herramientas» opens the tools menu.
- * Wide screens only. `sectionBase` is the page the sections live on, for a page that is not the landing.
+ * Screens of 1,024 px and up only: below that the five sections, the theme, the sign in and the demo do not fit side by side, and the tools menu button takes the nav's place. `sectionBase` is the page the sections live on, for a page that is not the landing.
  */
 export default function HeaderNav({
     sectionBase = '',
@@ -46,7 +52,7 @@ export default function HeaderNav({
     const [hovered, setHovered] = useState<string | null>(null);
 
     return (
-        <nav aria-label="Secciones" className="hidden md:block">
+        <nav aria-label="Secciones" className="hidden lg:block">
             <ul
                 onMouseLeave={() => setHovered(null)}
                 className="flex items-center rounded-full border bg-muted/70 p-1 backdrop-blur-md"

@@ -10,6 +10,7 @@ import LandingFooter from '@/components/landing/landing-footer';
 import LandingHeader from '@/components/landing/landing-header';
 import LandingHero from '@/components/landing/landing-hero';
 import LegalCalendar from '@/components/landing/legal-calendar';
+import PricingSection from '@/components/landing/pricing-section';
 import SeoHead from '@/components/landing/seo-head';
 import ToolsSection from '@/components/landing/tools-section';
 import TrustStrip from '@/components/landing/trust-strip';
@@ -40,6 +41,7 @@ export default function Landing({ seo }: { seo: Seo }) {
                     <ComplianceSection />
                     <HumiSection />
                     <AudienceSection />
+                    <PricingSection />
                     <LandingFaq />
                     <DemoSection />
                 </main>
