@@ -11,13 +11,18 @@ use App\Modules\Billing\Contracts\PlanSteps;
 use App\Modules\Billing\Contracts\PlatformRevenue;
 use App\Modules\Billing\Contracts\StorageGuard;
 use App\Modules\Billing\Contracts\UsageMeter;
+use App\Modules\Billing\Contracts\WhatsAppQuota;
 use App\Modules\Billing\Listeners\CountSentMail;
+use App\Modules\Billing\Listeners\CountWhatsApp;
 use App\Modules\Billing\Support\ContractedRevenue;
 use App\Modules\Billing\Support\LedgerMailQuota;
 use App\Modules\Billing\Support\LedgerStorageGuard;
 use App\Modules\Billing\Support\LedgerUsageMeter;
+use App\Modules\Billing\Support\LedgerWhatsAppQuota;
 use App\Modules\Billing\Support\SubscriptionPlans;
 use App\Modules\Billing\Support\SubscriptionSteps;
+use App\Modules\Messaging\Events\WhatsAppMessageAccepted;
+use App\Modules\Messaging\Events\WhatsAppMessageFailed;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -37,11 +42,14 @@ final class BillingServiceProvider extends ServiceProvider
         $this->app->bind(UsageMeter::class, LedgerUsageMeter::class);
         $this->app->bind(StorageGuard::class, LedgerStorageGuard::class);
         $this->app->bind(MailQuota::class, LedgerMailQuota::class);
+        $this->app->bind(WhatsAppQuota::class, LedgerWhatsAppQuota::class);
     }
 
     public function boot(): void
     {
         Event::listen(NotificationSent::class, CountSentMail::class);
+        Event::listen(WhatsAppMessageAccepted::class, [CountWhatsApp::class, 'accepted']);
+        Event::listen(WhatsAppMessageFailed::class, [CountWhatsApp::class, 'failed']);
 
         // Looking at who pays what is for the support role too (the superadmin passes through Gate::before); it changes
         // nothing. Everyone else gets a 404 that reveals nothing.

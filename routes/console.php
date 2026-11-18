@@ -6,7 +6,7 @@ use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Attendance\Actions\DispatchCloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
 use App\Modules\Billing\Actions\MeasureStorage;
-use App\Modules\Billing\Actions\ReleaseMailHolds;
+use App\Modules\Billing\Actions\ReleaseBulkHolds;
 use App\Modules\Billing\Actions\RenewSubscriptions;
 use App\Modules\Billing\Actions\SendBillingNotices;
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
@@ -193,12 +193,12 @@ Artisan::command('billing:notify', function (SendBillingNotices $notices): void 
 })->purpose('Email each account the next amount and the loss of the channel discount before the cut, and a balance past due; once each');
 
 Schedule::command('billing:notify')->dailyAt('09:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
-Artisan::command('billing:release-mail-holds', function (ReleaseMailHolds $release): void {
-    $this->info('Correos liberados: '.$release->handle());
-})->purpose('Give back the campaign mail a bulk send held and nobody used');
+Artisan::command('billing:release-holds', function (ReleaseBulkHolds $release): void {
+    $this->info('Reservas liberadas: '.$release->handle());
+})->purpose('Give back the campaign mail and WhatsApp messages a bulk send held and nobody used');
 
-// After the day's mail has gone out: what a send held and no mail took (people without an address) goes back to the quota.
-Schedule::command('billing:release-mail-holds')->dailyAt('03:50')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// After the day's messages have gone out: what a send held and nothing took (people without an address or a phone) goes back to the quota.
+Schedule::command('billing:release-holds')->dailyAt('03:50')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // After local midnight, so the anniversary of the day is granted on its day; a run again grants nothing twice and a day
 // it did not run is made up the next one.
 Schedule::command('leave:grant-entitlements')->dailyAt('00:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();

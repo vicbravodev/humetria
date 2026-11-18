@@ -28,7 +28,18 @@ return [
     | Lo que tiene una empresa sin suscripción (heredada o en prueba sin plan): la cuota del plan Integral, para no quitarle
     | nada que ya usaba. Una vez que tiene plan manda la cuota de su plan en el catálogo.
     */
-    'unplanned_quotas' => ['assistant_tokens' => 2_000_000, 'email_campaign' => 500, 'storage_bytes' => 5_368_709_120],
+    'unplanned_quotas' => ['assistant_tokens' => 2_000_000, 'email_campaign' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 0],
+
+    /*
+    | WhatsApp: lo que Meta cobra por mensaje (la entrada vigente en la fecha del envío) y el margen de Humetria; el precio de la empresa es
+    | costo × (1 + margen), y cada línea de uso guarda las dos cifras. Supuesto por confirmar (Victor, antes de la Fase 3): la tarifa de Meta
+    | para plantillas UTILITY en México (0.17 MXN) y el margen (30 %); si ya la tiene, antes del commit 8.
+    | La cuota mensual por plan está en `versions.v1.plans.{plan}.quotas.whatsapp` (supuesto por confirmar: 1000 mensajes); sin plan, 0.
+    */
+    'whatsapp' => [
+        'margin_percent' => 30,
+        'costs' => [['from' => '2026-07-01', 'currency' => 'MXN', 'unit_cost_micros' => 170_000]],
+    ],
 
     /* Días antes del corte en que se avisa el próximo importe y la pérdida del descuento; días después de emitido en que un saldo se da por vencido. */
     'notice_days_before_cut' => 5,
@@ -67,28 +78,28 @@ return [
                     'minimum_cents' => 199_000,
                     'included_centers' => 1,
                     'modules' => ['attendance', 'vacations', 'org_chart'],
-                    'quotas' => ['assistant_tokens' => 250_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120],
+                    'quotas' => ['assistant_tokens' => 250_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
                 ],
                 'cumplimiento' => [
                     'rate_cents' => 4_900,
                     'minimum_cents' => 299_000,
                     'included_centers' => 2,
                     'modules' => ['nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'],
-                    'quotas' => ['assistant_tokens' => 500_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120],
+                    'quotas' => ['assistant_tokens' => 500_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
                 ],
                 'integral' => [
                     'rate_cents' => 9_900,
                     'minimum_cents' => 499_000,
                     'included_centers' => 3,
                     'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'],
-                    'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120],
+                    'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
                 ],
                 'enterprise' => [
                     'rate_cents' => 19_900,
                     'minimum_cents' => 999_000,
                     'included_centers' => 3,
                     'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'sso'],
-                    'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120],
+                    'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
                 ],
             ],
         ],

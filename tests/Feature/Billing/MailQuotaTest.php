@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Billing\Actions\ReleaseMailHolds;
+use App\Modules\Billing\Actions\ReleaseBulkHolds;
 use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Billing\Exceptions\MailQuotaExceeded;
 use App\Modules\Billing\Models\UsageCounter;
@@ -12,7 +12,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Context;
 
-mutates(LedgerMailQuota::class, ReleaseMailHolds::class);
+mutates(LedgerMailQuota::class, ReleaseBulkHolds::class);
 
 final class MailQuotaCampaignNote extends Illuminate\Notifications\Notification implements App\Modules\Billing\Contracts\MailBag
 {
@@ -103,7 +103,7 @@ it('lets the next send use what the last one released', function (): void {
 
     expect(fn () => resolve(MailQuota::class)->reserve(1))->toThrow(MailQuotaExceeded::class);
 
-    resolve(ReleaseMailHolds::class)->handle();
+    resolve(ReleaseBulkHolds::class)->handle();
     resolve(MailQuota::class)->reserve(1);
 
     expect(mailCounter($tenant)->reserved)->toBe(1);
@@ -115,10 +115,10 @@ it('releases the holds nobody used, of every company, in a command that logs it'
     resolve(MailQuota::class)->reserve(10);
     UsageCounter::factory()->create(['meter' => 'assistant_tokens', 'period_start' => '2026-11-01', 'reserved' => 50]);
 
-    $this->artisan('billing:release-mail-holds')->expectsOutputToContain('Correos liberados: 10')->assertSuccessful();
+    $this->artisan('billing:release-holds')->expectsOutputToContain('Reservas liberadas: 10')->assertSuccessful();
 
     expect(mailCounter($a)->reserved)->toBe(0)->and(UsageCounter::query()->where('meter', 'assistant_tokens')->sole()->reserved)->toBe(50);
-    Illuminate\Support\Facades\Log::shouldHaveReceived('info')->with('usage.mail_holds_released', ['released' => 10])->once();
+    Illuminate\Support\Facades\Log::shouldHaveReceived('info')->with('usage.holds_released', ['released' => 10])->once();
 });
 
 it('keeps each company to its own quota', function (): void {
