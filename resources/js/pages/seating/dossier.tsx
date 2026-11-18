@@ -43,7 +43,7 @@ export default function SeatingDossier({
 
     return (
         <>
-            <Head title={`Expediente · ${header.workCenter}`} />
+            <Head title={`Expediente Ley Silla · ${header.workCenter}`} />
             <div className="flex w-full max-w-[960px] flex-col gap-6 px-4 py-6 [page:dossier] md:px-10 md:py-8 print:max-w-none print:p-0">
                 <DossierToolbar workCenterId={workCenterId} />
                 <PrintLetterhead

@@ -5,7 +5,7 @@
     tests/Ssr/fixtures/seo-tags.json keeps the two in step.
 --}}
 @php($seo = $page['props']['seo'])
-<title data-inertia="">{{ $seo['title'] }} - {{ $seo['siteName'] }}</title>
+<title data-inertia="">{{ App\Http\DocumentTitle::for($seo['title'], $seo['siteName']) }}</title>
 <meta data-inertia="description" name="description" content="{{ $seo['description'] }}">
 <link data-inertia="canonical" rel="canonical" href="{{ $seo['canonical'] }}">
 <meta data-inertia="og-url" property="og:url" content="{{ $seo['canonical'] }}">

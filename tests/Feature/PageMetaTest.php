@@ -50,7 +50,7 @@ it('prints the title, description, canonical, Open Graph and Twitter tags of the
     $xpath = xpathOf($this->get('/')->assertOk()->getContent());
 
     expect($xpath->query('//head/title')->length)->toBe(1)
-        ->and($xpath->query('//head/title')->item(0)->textContent)->toBe($seo['title'].' - '.$seo['siteName'])
+        ->and($xpath->query('//head/title')->item(0)->textContent)->toBe($seo['title'])->toStartWith($seo['siteName'])
         ->and(headValue($xpath, '//head/meta[@name="description"]'))->toBe($seo['description'])
         ->and(headValue($xpath, '//head/link[@rel="canonical"]', 'href'))->toBe('https://humetria.example/')
         ->and(headValue($xpath, '//head/meta[@property="og:url"]'))->toBe('https://humetria.example/')

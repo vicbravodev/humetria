@@ -555,7 +555,8 @@ it('leaves one of each tag of the head after the app starts, as many as the serv
         ], JSON_UNESCAPED_SLASHES))
         ->assertScript('() => document.head.querySelector("link[rel=canonical]").href', rtrim((string) config('app.url'), '/').parse_url($url, PHP_URL_PATH))
         ->assertScript('() => document.querySelector("meta[property=\"og:url\"]").content === document.head.querySelector("link[rel=canonical]").href', true)
-        ->assertScript('() => document.title.endsWith(" - Humetría")', true);
+        ->assertScript('() => document.title.endsWith(" - Humetría")', $url !== '/')
+        ->assertScript('() => document.title.startsWith("Humetría")', $url === '/');
 })->with([['landing', '/'], ['privacy-notice', '/privacy-notice']]);
 
 it('reveals the blocks below the fold as they scroll into view, and never hides what is already in view', function (): void {

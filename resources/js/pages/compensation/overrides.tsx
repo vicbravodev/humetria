@@ -35,7 +35,7 @@ export default function Overrides({
 
     return (
         <>
-            <Head title="Sueldos individuales" />
+            <Head title="Sueldos individuales · Compensación" />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <ContractDataFrame
                     status={status}
