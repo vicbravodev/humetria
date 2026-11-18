@@ -11,6 +11,7 @@ final readonly class DemoAttribution
         public DemoTouch $first,
         public DemoTouch $last,
         public ?AdClick $adClick = null,
+        public ?DemoKeyword $keyword = null,
     ) {}
 
     /** The channel the conversion is credited to: the last known one, else the first. */

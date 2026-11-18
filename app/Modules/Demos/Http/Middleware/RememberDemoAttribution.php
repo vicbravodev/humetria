@@ -8,6 +8,7 @@ use App\Http\Consent;
 use App\Http\SiteHost;
 use App\Modules\Demos\Data\AdClick;
 use App\Modules\Demos\Data\DemoAttribution;
+use App\Modules\Demos\Data\DemoKeyword;
 use App\Modules\Demos\Data\DemoTouch;
 use App\Modules\Demos\Enums\AdClickType;
 use Closure;
@@ -34,6 +35,11 @@ final class RememberDemoAttribution
 
     /** The last ad click, apart from the touch: a later visit without one does not erase it. */
     public const string CLICK_KEY = 'demo_ad_click';
+
+    /** The keyword of the last visit that brought one (term, content, match type), apart from the touch like the click. */
+    public const string KEYWORD_KEY = 'demo_ad_keyword';
+
+    private const int MAX_MATCH_TYPE = 20;
 
     private const int MAX_UTM = 100;
 
@@ -62,14 +68,15 @@ final class RememberDemoAttribution
         $allowed = Consent::analyticsAllowed($request);
         $stored = $allowed ? self::fromCookie($request) : null;
         $click = $allowed ? self::clickFrom($request->session()->get(self::CLICK_KEY)) : null;
+        $keyword = self::keywordFrom($request->session()->get(self::KEYWORD_KEY));
 
         if ($stored !== null) {
-            return new DemoAttribution($stored['first'], $stored['last'], $click ?? $stored['ad_click']);
+            return new DemoAttribution($stored['first'], $stored['last'], $click ?? $stored['ad_click'], $keyword ?? $stored['keyword']);
         }
 
         $touch = self::touchFrom($request->session()->get(self::SESSION_KEY));
 
-        return new DemoAttribution($touch, $touch, $click);
+        return new DemoAttribution($touch, $touch, $click, $keyword);
     }
 
     private function remember(Request $request): void
@@ -78,8 +85,14 @@ final class RememberDemoAttribution
         $allowed = Consent::analyticsAllowed($request);
         $click = $allowed ? self::clickOf($request) : null;
 
+        $keyword = self::keywordOf($request);
+
         if ($click !== null) {
             $request->session()->put(self::CLICK_KEY, self::clickArray($click));
+        }
+
+        if ($keyword !== null) {
+            $request->session()->put(self::KEYWORD_KEY, self::keywordArray($keyword));
         }
 
         if ($touch->isEmpty()) {
@@ -91,15 +104,16 @@ final class RememberDemoAttribution
         }
 
         if ($allowed) {
-            $this->writeCookie($request, $touch, $click);
+            $this->writeCookie($request, $touch, $click, $keyword);
         }
     }
 
     /** The first touch stays (and the day it was first seen); the last one is this visit's, and so is a new ad click. */
-    private function writeCookie(Request $request, DemoTouch $touch, ?AdClick $click): void
+    private function writeCookie(Request $request, DemoTouch $touch, ?AdClick $click, ?DemoKeyword $keyword): void
     {
         $stored = self::fromCookie($request);
         $click ??= $stored['ad_click'] ?? null;
+        $keyword ??= $stored['keyword'] ?? null;
 
         Cookie::queue(Cookie::make(
             self::COOKIE,
@@ -108,6 +122,7 @@ final class RememberDemoAttribution
                 'last' => self::toArray($touch),
                 'first_seen_at' => $stored['first_seen_at'] ?? now()->getTimestamp(),
                 ...($click === null ? [] : ['ad_click' => self::clickArray($click)]),
+                ...($keyword === null ? [] : ['keyword' => self::keywordArray($keyword)]),
             ], JSON_THROW_ON_ERROR),
             self::COOKIE_DAYS * 24 * 60,
             '/',
@@ -123,7 +138,7 @@ final class RememberDemoAttribution
      * The cookie as the browser sent it, or null when there is none, it is not what was written (it does not decrypt,
      * is not JSON of the right shape, has no first touch) or it is older than 90 days or from the future.
      *
-     * @return array{first: DemoTouch, last: DemoTouch, first_seen_at: int, ad_click: ?AdClick}|null
+     * @return array{first: DemoTouch, last: DemoTouch, first_seen_at: int, ad_click: ?AdClick, keyword: ?DemoKeyword}|null
      */
     private static function fromCookie(Request $request): ?array
     {
@@ -146,7 +161,36 @@ final class RememberDemoAttribution
             'last' => self::touchFrom($stored['last'] ?? null),
             'first_seen_at' => $seen,
             'ad_click' => self::clickFrom($stored['ad_click'] ?? null),
+            'keyword' => self::keywordFrom($stored['keyword'] ?? null),
         ];
+    }
+
+    /** The keyword this visit carries, from the final URL suffix of Google Ads; null when it carries none. */
+    private static function keywordOf(Request $request): ?DemoKeyword
+    {
+        return self::keywordFrom(['term' => $request->query('utm_term'), 'content' => $request->query('utm_content'), 'match_type' => $request->query('matchtype')]);
+    }
+
+    /** Reads a keyword from whatever was stored or sent, trusting none of it: each value a short line, or nothing. */
+    private static function keywordFrom(mixed $stored): ?DemoKeyword
+    {
+        if (! is_array($stored)) {
+            return null;
+        }
+
+        $keyword = new DemoKeyword(
+            term: self::line($stored['term'] ?? null, self::MAX_UTM),
+            content: self::line($stored['content'] ?? null, self::MAX_UTM),
+            matchType: self::line($stored['match_type'] ?? null, self::MAX_MATCH_TYPE),
+        );
+
+        return $keyword->isEmpty() ? null : $keyword;
+    }
+
+    /** @return array{term: ?string, content: ?string, match_type: ?string} */
+    private static function keywordArray(DemoKeyword $keyword): array
+    {
+        return ['term' => $keyword->term, 'content' => $keyword->content, 'match_type' => $keyword->matchType];
     }
 
     /** The click id this visit carries, in the order of AdClickType: a malformed one gives way to the next. */

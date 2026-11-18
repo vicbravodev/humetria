@@ -45,9 +45,12 @@ use Illuminate\Support\Collection;
  * @property string|null $first_referrer_host
  * @property AdClickType|null $ad_click_type The last ad click, for the import into Google Ads; forgotten after 90 days.
  * @property string|null $ad_click_id
+ * @property string|null $utm_term The keyword the ad was shown for, from the final URL suffix.
+ * @property string|null $utm_content
+ * @property string|null $match_type
  * @property Carbon $created_at
  */
-#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_host', 'first_utm_source', 'first_utm_medium', 'first_utm_campaign', 'first_referrer_host', 'ad_click_type', 'ad_click_id'])]
+#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_host', 'first_utm_source', 'first_utm_medium', 'first_utm_campaign', 'first_referrer_host', 'ad_click_type', 'ad_click_id', 'utm_term', 'utm_content', 'match_type'])]
 #[UseFactory(DemoRequestFactory::class)]
 final class DemoRequest extends Model
 {

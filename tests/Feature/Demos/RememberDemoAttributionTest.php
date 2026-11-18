@@ -200,6 +200,26 @@ it('drops a click id that arrives as an array', function (): void {
     expect(session()->has(RememberDemoAttribution::CLICK_KEY))->toBeFalse();
 });
 
+it('remembers the keyword of the last visit that brings one: term, content and match type', function (): void {
+    $this->get('/?utm_source=google&utm_term=checador&utm_content=111&matchtype=e')->assertOk();
+    $this->get('/?utm_source=google&utm_term=reloj+checador&matchtype=p')->assertOk();
+    $this->get('/?utm_source=boletin')->assertOk();
+
+    expect(session(RememberDemoAttribution::KEYWORD_KEY))->toBe(['term' => 'reloj checador', 'content' => null, 'match_type' => 'p']);
+});
+
+it('drops a keyword value that is not a short line of text', function (string $query, ?array $kept): void {
+    $this->get("/?{$query}")->assertOk();
+
+    expect(session(RememberDemoAttribution::KEYWORD_KEY))->toBe($kept);
+})->with([
+    'a term of 100 characters' => ['utm_term='.str_repeat('a', 100), ['term' => str_repeat('a', 100), 'content' => null, 'match_type' => null]],
+    'a term of 101 characters' => ['utm_term='.str_repeat('a', 101), null],
+    'a match type of 21 characters' => ['matchtype='.str_repeat('b', 21), null],
+    'a term as an array' => ['utm_term[]=a', null],
+    'a control character' => ['utm_content=a%0Ab', null],
+]);
+
 it('only looks at GET requests: a HEAD leaves nothing behind', function (): void {
     $this->call('HEAD', '/?utm_source=anuncios')->assertOk();
 
@@ -589,6 +609,31 @@ it('stores no click id from a session or cookie value that is not what was writt
     'a bad id' => [['type' => 'gclid', 'id' => 'no vale']],
     'no id' => [['type' => 'gclid']],
 ]);
+
+it('stores the keyword on the request, days later and from another page, through the cookie', function (): void {
+    consentGranted();
+    $this->get('/?utm_source=google&utm_medium=cpc&utm_campaign=checador&utm_term=reloj+checador&utm_content=789&matchtype=p&gclid=CLICK123');
+    $cookie = acquisition($this->get('/?utm_source=google&utm_medium=cpc&utm_campaign=checador&utm_term=reloj+checador&utm_content=789&matchtype=p&gclid=CLICK123'));
+
+    $this->flushSession();
+    $this->withCookie('humetria_acq', (string) json_encode($cookie))->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->utm_term)->toBe('reloj checador')
+        ->and(storedRequest()->utm_content)->toBe('789')
+        ->and(storedRequest()->match_type)->toBe('p')
+        ->and(storedRequest()->ad_click_id)->toBe('CLICK123')
+        ->and(storedRequest()->utm_campaign)->toBe('checador');
+});
+
+it('stores the keyword the session remembered when there is no cookie', function (): void {
+    $this->get('/?utm_source=google&utm_term=checador')->assertOk();
+
+    $this->post(route('demo-requests.store'), attributedSubmission())->assertRedirect();
+
+    expect(storedRequest()->utm_term)->toBe('checador')
+        ->and(storedRequest()->utm_content)->toBeNull()
+        ->and(storedRequest()->match_type)->toBeNull();
+});
 
 it('keeps the attribution for a second try after a submit the form refused', function (): void {
     $this->get('/?utm_source=anuncios')->assertOk();

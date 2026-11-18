@@ -63,7 +63,7 @@ const ORIGIN: PrivacySection = {
     id: 'de-donde-llegaste',
     title: 'De dónde llegaste',
     paragraphs: [
-        'Cuando llegas desde un anuncio o desde un enlace de campaña, la dirección trae etiquetas que dicen cuál fue (fuente, medio y campaña). Si pides una demo, guardamos esas etiquetas y el sitio desde el que llegaste junto con tu solicitud, para saber qué campañas funcionan.',
+        'Cuando llegas desde un anuncio o desde un enlace de campaña, la dirección trae etiquetas que dicen cuál fue (fuente, medio y campaña) y, en un anuncio de búsqueda, la palabra que buscaste y el anuncio que viste. Si pides una demo, guardamos esas etiquetas y el sitio desde el que llegaste junto con tu solicitud, para saber qué campañas funcionan.',
         'De la página de la que vienes guardamos solo su dominio, nunca la dirección completa.',
         'Si llegas desde un anuncio de Google, la dirección trae además un identificador del clic (gclid, gbraid o wbraid). Si pides una demo, lo guardamos con tu solicitud y se lo enviamos a Google Ads, sin tu nombre, correo, teléfono ni empresa, para que sepa qué anuncios terminan en una solicitud. Solo lo guardamos mientras medimos el sitio, y lo borramos a los 90 días de tu solicitud.',
         'Hoy esa información viene solo de tu sesión: es la primera visita con etiquetas desde que abriste el sitio, y se pierde cuando pasa un tiempo sin que lo uses. Si llegaste sin etiquetas ni otro sitio de por medio, tu solicitud queda sin dato de procedencia, y eso no significa que hayas llegado de forma directa.',

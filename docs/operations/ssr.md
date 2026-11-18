@@ -201,8 +201,12 @@ Google Ads aprende de las demos por importación de clics fuera de línea, sin e
    con la hora de la Ciudad de México y el nombre de `GOOGLE_ADS_CONVERSION_NAME` (debe ser idéntico al de la acción de conversión).
 3. Se sube en Google Ads → Objetivos → Conversiones → Cargas. Subir el archivo entero cada semana no duplica: Google descarta la
    conversión con el mismo clic, nombre y hora.
-4. Los `gbraid`/`wbraid` (iOS) se guardan pero no salen en el CSV: la importación de clics no los toma.
+4. Los clics de iOS que llegan con `gbraid` o `wbraid` y sin `gclid` (frecuentes en Demand Gen) salen en otro archivo,
+   **Conversiones de iOS (CSV)**, con las columnas `GBRAID` y `WBRAID` y un solo identificador por fila. Confirma en la primera carga
+   que Google lo acepta; si no, súbelo por Data Manager, que sí toma esas columnas.
 5. Una solicitud de prueba con un `gclid` inventado se borra antes de exportar: Google la rechaza, pero ensucia el archivo.
+6. La solicitud guarda además la palabra clave del sufijo de URL final (`utm_term`, `utm_content` y `matchtype`), y el evento
+   `demo_request_stored` la lleva, para saber qué palabra trajo cada demo. PostHog conserva `matchtype` en la dirección del pageview.
 
 ### Errores
 
