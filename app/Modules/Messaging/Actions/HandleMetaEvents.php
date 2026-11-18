@@ -7,6 +7,7 @@ namespace App\Modules\Messaging\Actions;
 use App\Modules\Messaging\Data\FailureCause;
 use App\Modules\Messaging\Enums\DeliveryStatus;
 use App\Modules\Messaging\Events\WhatsAppMessageAccepted;
+use App\Modules\Messaging\Jobs\SendWhatsAppServiceReply;
 use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Support\DeliveryFailures;
 use App\Modules\Messaging\Support\MetaStatus;
@@ -165,6 +166,7 @@ final class HandleMetaEvents
             DB::transaction(function () use ($id, $phone, $isStop): void {
                 if ($this->inbox->firstTime('meta', "message:{$id}")) {
                     $isStop ? $this->optOut->handle($phone, 'stop') : $this->lift->handle($phone);
+                    SendWhatsAppServiceReply::dispatch($phone, $isStop ? 'opted_out' : 'opted_in')->afterCommit();
                 }
             });
         }

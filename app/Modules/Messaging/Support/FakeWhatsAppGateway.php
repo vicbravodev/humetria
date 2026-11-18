@@ -19,6 +19,9 @@ final class FakeWhatsAppGateway implements WhatsAppGateway
     /** @var list<OutboundMessage> */
     private array $sent = [];
 
+    /** @var list<array{string, string}> */
+    private array $texts = [];
+
     public function script(SendOutcome ...$outcomes): void
     {
         $this->outcomes = array_values($outcomes);
@@ -29,6 +32,19 @@ final class FakeWhatsAppGateway implements WhatsAppGateway
         $this->sent[] = $message;
 
         return array_shift($this->outcomes) ?? SendOutcome::accepted('wamid.fake-'.count($this->sent));
+    }
+
+    public function sendText(string $to, string $body): SendOutcome
+    {
+        $this->texts[] = [$to, $body];
+
+        return array_shift($this->outcomes) ?? SendOutcome::accepted('wamid.fake-text-'.count($this->texts));
+    }
+
+    /** @return list<array{string, string}> the phone and the text of each service text sent */
+    public function texts(): array
+    {
+        return $this->texts;
     }
 
     /** @return list<OutboundMessage> */

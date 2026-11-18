@@ -21,4 +21,11 @@ final class NullWhatsAppGateway implements WhatsAppGateway
 
         return SendOutcome::failed(FailureCause::Disabled);
     }
+
+    public function sendText(string $to, string $body): SendOutcome
+    {
+        Log::info('whatsapp.send_skipped', ['kind' => 'service_text']);
+
+        return SendOutcome::failed(FailureCause::Disabled);
+    }
 }

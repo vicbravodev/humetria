@@ -177,3 +177,36 @@ it('behaves like the fake for the outcomes a caller sees', function (): void {
 
     expect(cloudGateway()->send(cloudMessage())->cause)->toBe($fake->send(cloudMessage())->cause);
 });
+
+it('sends a service text, free text inside the 24-hour window, with no template and no callback data', function (): void {
+    Http::preventStrayRequests();
+    Http::fake(['*' => Http::response(['messages' => [['id' => 'wamid.TXT']]], 200)]);
+
+    $outcome = cloudGateway()->sendText('+528112345678', 'Hola, ya quedó.');
+
+    expect($outcome->isAccepted())->toBeTrue()->and($outcome->providerMessageId)->toBe('wamid.TXT');
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://graph.example.test/v99.0/1234567890/messages'
+        && $request->hasHeader('Authorization', 'Bearer the-access-token')
+        && $request->data() === ['messaging_product' => 'whatsapp', 'to' => '528112345678', 'type' => 'text', 'text' => ['body' => 'Hola, ya quedó.']]);
+});
+
+it('sends no service text to a phone that is not a Mexican mobile', function (): void {
+    Http::preventStrayRequests();
+    Http::fake();
+
+    $outcome = cloudGateway()->sendText('+14155550123', 'Hola');
+
+    expect($outcome->cause)->toBe(FailureCause::NoWhatsappAccount);
+    Http::assertNothingSent();
+});
+
+it('answers the failure of a service text as it does for a template', function (): void {
+    Http::preventStrayRequests();
+    Http::fake(['*' => Http::response(['error' => ['code' => 131026]], 400)]);
+
+    expect(cloudGateway()->sendText('+528112345678', 'Hola')->isAccepted())->toBeFalse();
+
+    Http::fake(['*' => fn () => throw new ConnectionException('timeout')]);
+
+    expect(cloudGateway()->sendText('+528112345678', 'Hola')->cause)->toBe(FailureCause::TimedOut);
+});
