@@ -52,6 +52,10 @@ function expectDeadlockRetries(): void
     $db = Mockery::mock($real);
     $db->shouldReceive('transaction')->once()->withArgs(fn (Closure $callback, int $attempts = 1): bool => $attempts === 3)
         ->andReturnUsing(fn (Closure $callback, int $attempts) => $real->transaction($callback, $attempts));
+    // The queue is sync, so the invitations the write queues are sent inside the test, and each followed mail opens its own small
+    // transaction (the history of its delivery): those run as they are; only the write under test is expected to retry.
+    $db->shouldReceive('transaction')->withArgs(fn (Closure $callback, int $attempts = 1): bool => $attempts === 1)
+        ->andReturnUsing(fn (Closure $callback) => $real->transaction($callback));
     DB::swap($db);
 }
 
