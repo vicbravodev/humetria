@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Providers;
 
+use App\Modules\Engagement\Contracts\EngagementStanding;
 use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Listeners\CancelOnDeactivation;
 use App\Modules\Engagement\Listeners\NotifyManagers;
 use App\Modules\Engagement\Listeners\QueueCommentSummaries;
 use App\Modules\Engagement\Support\ClimateWorkerSection;
+use App\Modules\Engagement\Support\CompanyEngagementStanding;
 use App\Modules\Engagement\Support\FeedbackWorkerSection;
 use App\Modules\Engagement\Support\SurveyWorkerSection;
 use App\Modules\Organization\Events\EmployeeDeactivated;
@@ -27,6 +29,7 @@ final class EngagementServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(EngagementStanding::class, CompanyEngagementStanding::class);
         $this->app->tag([SurveyWorkerSection::class, ClimateWorkerSection::class, FeedbackWorkerSection::class], 'worker.sections');
     }
 

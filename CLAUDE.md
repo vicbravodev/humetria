@@ -35,6 +35,12 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
 - Un cambio que solo trae documentación que nadie lee (`docs/`, `.md` de la raíz) se salta el CI y el deploy
   (`scripts/ci-code-changed.sh`). Un documento que un test o la app leen es código (`docs/normas`, `docs/operations`,
   `CLAUDE.md`…) y va en ese script (`tests/Unit/CiCodeChangedTest.php`); todo job nuevo de `tests.yml` espera a `changes`.
+- **Humi está al corriente.** Un módulo o una función que cambia lo que la empresa tiene, debe o puede consultar no está
+  terminado hasta que Humi lo sabe; es parte del entregable, en el mismo PR. Se conecta por los contratos públicos del
+  módulo: un lector en `Assistant/Support/Readers` (lo cuenta `GetComplianceOverview`), una herramienta si hace falta
+  detalle, sus datos vivos si los hay, y sus criterios en `docs/normas/*/criterios.md` (entran solos al buscador). Mismas
+  reglas de privacidad: conteos y estados, nunca respuestas ni personas. `tests/Feature/Assistant/ModuleCoverageTest.php`
+  falla con un módulo nuevo sin conexión; eximir uno exige su razón en ese test.
 - **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra sola la clase cuyo test declara
   `mutates(Clase::class)`. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
   `--min`; si falla, falta el test que mata al mutante. Detalle: `docs/testing.md`.

@@ -26,7 +26,7 @@ final readonly class SearchRegulations implements Tool
 
     public function description(): string
     {
-        return 'Busca en los criterios con los que Humetría aplica la NOM-035 y la NOM-037 (qué dice la norma, cómo se aplica y en qué se basa). '
+        return 'Busca en los criterios con los que Humetría aplica '.implode(', ', array_keys(config()->array('humi.regulations'))).' (qué dice la norma, cómo se aplica y en qué se basa). '
             .'Devuelve hasta 3 criterios con su número y su fuente. Úsala para explicar normativa; no para datos de la empresa.';
     }
 
