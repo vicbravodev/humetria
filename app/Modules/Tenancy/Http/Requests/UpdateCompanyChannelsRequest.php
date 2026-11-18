@@ -66,8 +66,19 @@ final class UpdateCompanyChannelsRequest extends FormRequest
         }];
     }
 
+    /**
+     * Only a new activation is checked (it was off, or the owner accepted another version of the words): a WhatsApp that is already
+     * on with the current words keeps being saved when the function is off in this deployment or the plan has ended, so the owner can
+     * still change the preferred channel and the cap.
+     */
     private function checkWhatsApp(Validator $validator, CompanyChannels $channels, CompanyPlans $plans, Tenant $tenant): void
     {
+        $current = collect($channels->settings($tenant->id))->firstWhere('channel', 'whatsapp');
+
+        if ($current !== null && $current->enabled && $current->consentVersion === config()->string('whatsapp.consent.version')) {
+            return;
+        }
+
         if (! config()->boolean('whatsapp.enabled')) {
             $validator->errors()->add('whatsapp_enabled', 'WhatsApp todavía no está disponible.');
 
@@ -80,11 +91,7 @@ final class UpdateCompanyChannelsRequest extends FormRequest
             return;
         }
 
-        $current = collect($channels->settings($tenant->id))->firstWhere('channel', 'whatsapp');
-        $accepted = $current !== null && $current->enabled && $current->consentVersion === config()->string('whatsapp.consent.version');
-
-        // Activating, or the words changed since the owner accepted them: they accept them again.
-        if (! $accepted && ! $this->boolean('consent_accepted')) {
+        if (! $this->boolean('consent_accepted')) {
             $validator->errors()->add('consent_accepted', 'Acepta el aviso para activar WhatsApp.');
         }
     }

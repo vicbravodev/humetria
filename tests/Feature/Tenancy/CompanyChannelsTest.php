@@ -202,3 +202,29 @@ it('answers 404 to the guarded save while the staff works as the owner', functio
 
     expect(whatsAppRow($this->tenant))->toBeNull();
 });
+
+it('lets the owner save the preferred channel and the cap of a WhatsApp that is already on, with the function off in the deployment', function (): void {
+    TenantChannelFactory::new()->for($this->tenant)->whatsAppEnabled()->create();
+    config(['whatsapp.enabled' => false]);
+
+    $this->actingAs($this->owner)->put(route('tenant.channels.update', $this->tenant), channelsForm(['preferred' => 'whatsapp', 'whatsapp_monthly_cap' => 40, 'consent_accepted' => false]))->assertSessionHasNoErrors();
+
+    expect(whatsAppRow($this->tenant)?->monthly_cap)->toBe(40)->and(whatsAppRow($this->tenant)?->enabled)->toBeTrue()
+        ->and(AuditEntry::query()->where('event', 'tenancy.channel_enabled')->count())->toBe(0);
+});
+
+it('lets the owner save a WhatsApp that is already on when the plan has ended', function (): void {
+    $other = Tenant::factory()->create(['slug' => 'plan-vencido']);
+    TenantChannelFactory::new()->for($other)->whatsAppEnabled()->create();
+
+    $this->actingAs(ownerOf($other))->put(route('tenant.channels.update', $other), channelsForm(['whatsapp_monthly_cap' => 15, 'consent_accepted' => false]))->assertSessionHasNoErrors();
+
+    expect(whatsAppRow($other)?->monthly_cap)->toBe(15);
+});
+
+it('still checks the function, the plan and the words when the version changed, since that is a new activation', function (): void {
+    TenantChannelFactory::new()->for($this->tenant)->whatsAppEnabled()->create(['consent_wording_version' => '2025-01-01']);
+    config(['whatsapp.enabled' => false]);
+
+    $this->actingAs($this->owner)->put(route('tenant.channels.update', $this->tenant), channelsForm())->assertSessionHasErrors('whatsapp_enabled');
+});
