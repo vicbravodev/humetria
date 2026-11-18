@@ -39,7 +39,7 @@ it('says a company without work centers has nothing evaluated yet and no telewor
 
     expect($card['render'])->toBe('status_list')
         ->and($card['link'])->toBe("/admin/{$this->a->slug}")
-        ->and(array_column($card['rows'], 'key'))->toBe(['nom035', 'nom037'])
+        ->and(array_column($card['rows'], 'key'))->toBe(['nom035', 'nom037', 'seating'])
         ->and(normRow($card, 'nom035'))->toMatchArray(['label' => 'NOM-035', 'state' => 'pending', 'stateLabel' => 'Pendiente', 'summary' => 'Aún no registras centros de trabajo.'])
         ->and(normRow($card, 'nom037'))->toMatchArray(['label' => 'NOM-037', 'state' => 'not_applicable', 'stateLabel' => 'No aplica']);
 });
