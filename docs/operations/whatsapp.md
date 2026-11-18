@@ -25,7 +25,7 @@ clase de pausa. Quitar una pausa **no reenvía nada**.
 2. Secretos en Dokploy (nunca en el repositorio): `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
    `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, y las claves del hash del teléfono en `MESSAGING_RECIPIENT_KEYS`
    (`1:<base64>,2:<base64>`). `WHATSAPP_API_VERSION` es la versión de la Graph API (`v23.0` por omisión).
-3. Después de cargar los secretos, el webhook de Meta: dirección `https://<dominio>/webhooks/whatsapp`, el token de
+3. Después de cargar los secretos, el webhook de Meta (y, además, **suscribir la app al WABA** con `POST /{waba}/subscribed_apps`: sin eso no llega ningún evento, ver `docs/operations/whatsapp-validacion.md`): dirección `https://<dominio>/webhooks/whatsapp`, el token de
    verificación es `WHATSAPP_VERIFY_TOKEN`, y se suscribe el campo `messages` (y `phone_number_quality_update`). La
    firma `X-Hub-Signature-256` de cada POST se comprueba con el secreto de la app sobre el cuerpo crudo.
 4. Las plantillas `survey_invite_v1` y `engagement_invite_v1` (es_MX, categoría UTILITY, dos parámetros de cuerpo y un
@@ -80,7 +80,7 @@ El log `whatsapp.quality_changed` (nivel warning) avisa un cambio de calidad del
 ## 8. Orden de las fases
 
 1. **Fase 1, local**: gateway falso y `Http::fake()` (el PR).
-2. **Fase 2, con Victor y paso a paso**: (a) el número de prueba de la app, con hasta 5 destinatarios: un mensaje llega,
+2. **Fase 2, con Victor y paso a paso** (hecha en parte el 2026-11-18: `docs/operations/whatsapp-validacion.md`): (a) el número de prueba de la app, con hasta 5 destinatarios: un mensaje llega,
    el webhook recibe `sent`, `delivered` y `read`, un STOP crea la baja y llega el texto de confirmación, y un ALTA la elimina y llega el suyo (texto libre dentro de las 24 h: confirmar con el sandbox); se confirma el formato del teléfono (`52` + 10
    dígitos). (b) El ping del webhook desde el panel de Meta. (c) El número real, con las dos plantillas aprobadas.
 3. **Fase 3, producción**: con las tres salidas de la Fase 2 y los supuestos confirmados; los secretos primero, después el

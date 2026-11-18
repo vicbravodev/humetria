@@ -15,7 +15,7 @@ return [
 
     'base_url' => 'https://graph.facebook.com',
 
-    // Supuesto por confirmar (quien escribe el gateway): la versión vigente de la Graph API.
+    // Verificado en el sandbox el 2026-11-18: v23.0 responde 200 (envío, números, plantillas); la página de Meta ya muestra v25.0.
     'api_version' => env('WHATSAPP_API_VERSION', 'v23.0'),
 
     'access_token' => env('WHATSAPP_ACCESS_TOKEN'),

@@ -9,9 +9,9 @@ use App\Support\PhoneNumber;
 /**
  * The phone as Meta writes it. We store `+52…` (E.164); Meta takes the number without the plus.
  *
- * Supuesto por confirmar (Victor, Fase 2 (a)): Mexico is `52` + 10 digits to send, and the wa_id of an incoming message may come
- * as `521` + 10 digits. Meta's own documentation was not reachable when this was written (vendor summaries disagree, some
- * saying `521`); confirm with a real send and a real STOP. If it is wrong, only this class changes.
+ * Verified against Meta's sandbox on 2026-11-18: Meta accepts `52` + 10 digits to send and answers, in the response and in every
+ * webhook (`wa_id`, `recipient_id`, `from`), with `521` + 10 digits. fromWaId() drops that 1, so the hash of a STOP equals the
+ * hash of the stored phone (docs/operations/whatsapp-validacion.md).
  */
 final class PhoneForMeta
 {

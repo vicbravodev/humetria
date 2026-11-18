@@ -18,8 +18,9 @@ use InvalidArgumentException;
  * Sends the template through Meta's Cloud API. The message id travels in `biz_opaque_callback_data`, which Meta hands back in
  * the status webhooks, because a message's state cannot be asked for later.
  *
- * Supuesto por confirmar (Victor/Fase 2): `biz_opaque_callback_data` and the button payload follow Meta's documentation of
- * the Cloud API; the pages checked on 2026-11-18 did not restate the former.
+ * Verified against Meta's sandbox on 2026-11-18 (docs/operations/whatsapp-validacion.md): `biz_opaque_callback_data` comes back
+ * as sent in the `sent`, `delivered` and `read` statuses. Still to confirm: the button payload of a quick reply (needs an
+ * approved template with a button).
  */
 final class CloudApiWhatsAppGateway implements WhatsAppGateway
 {
