@@ -158,6 +158,16 @@ El servidor reporta sus errores con solo el token (ver "Errores").
   este sitio, solo su origen (`resources/js/lib/analytics.ts` lo impone en `before_send`).
 - Solo los eventos del catálogo de abajo; uno nuevo se agrega aquí. Un solo escucha de clics (`use-landing-measurement`).
   Medir el panel (`/admin`), las encuestas o los portales es un trabajo aparte con su revisión de privacidad.
+- Excepción: la grabación anónima del panel de una empresa (`resources/js/lib/session-recording.ts`), solo con
+  `POSTHOG_SESSION_RECORDING=true`. Una segunda instancia de PostHog (`posthog-js/full/no-external`, el grabador dentro del
+  bundle) que se descarga en la primera pantalla grabable: hay empresa, sesión propia y nadie suplanta, y la pantalla no está
+  en `UNRECORDED` (quejas, Guía I por acontecimiento, lista de Guía I, Humi, cuenta personal); el dock de Humi lleva
+  `ph-no-capture`. Muestra la interfaz y oculta los datos de la empresa (`resources/js/lib/recording-mask.ts`): todo texto que
+  contenga un valor de las props de la página (nombres, empresa, quien inició sesión), lo que tenga forma de correo, teléfono,
+  CURP, RFC o monto, las opciones de búsqueda y lo marcado `ph-mask` (las iniciales); además todos los campos y todo atributo
+  que no sea de forma (`maskAttribute`); el reproductor
+  ve la pantalla por su componente, no por su dirección; solo sale `$snapshot`, con id aleatorio en memoria, sin perfil ni
+  IP. La CSP abre en `connect-src` `us-assets.i.posthog.com` para leer la configuración de replay del proyecto (JSON).
 - La procedencia de una solicitud de demo vive en la sesión (`RememberDemoAttribution`: `utm_*` y el host del referente externo,
   nunca una URL). Con consentimiento `granted` también el identificador del último clic en un anuncio (`gclid`, `gbraid` o
   `wbraid`), que va a la solicitud y se borra a los 90 días (`demos:forget-ad-clicks`, cada noche). La cookie `humetria_acq` (cifrada, 90 días) solo se escribe y se lee con

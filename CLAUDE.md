@@ -143,6 +143,11 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
   la página responde 200 y React la pinta: nunca 5xx por Node.
 - PostHog mide solo las páginas públicas (landing, página de cada herramienta y guía: `Analytics::measuredRoutes()`): lo deciden `App\Http\Analytics` y `App\Http\Consent`; con consentimiento `denied` no hay
   medición. Ningún dato de la persona va a PostHog. Todo enlace que sale de la landing o llega a ella es un `<a href>`.
+- El panel de una empresa se graba solo con `POSTHOG_SESSION_RECORDING=true`, anónimo y enmascarado (`lib/session-recording.ts`):
+  se ve la interfaz y se oculta todo dato de la empresa (`lib/recording-mask.ts`: lo que viene en las props, datos con forma
+  personal, opciones de búsqueda, `ph-mask`), campos y atributos; sin persona, empresa ni dirección; nunca quejas, Guía I,
+  Humi (`ph-no-capture`), la cuenta personal ni al suplantar. Una pantalla sensible nueva entra en `UNRECORDED` con su test;
+  un dato calculado en el navegador que no venga en las props lleva `ph-mask`.
 - Reglas y operación de SSR, medición, eventos y errores a PostHog: `docs/operations/ssr.md` (se actualiza en el mismo PR).
 - Errores: el navegador de toda página manda a PostHog `$exception` con el mensaje enmascarado (`lib/error-tracking.ts`,
   solo errores, sin persona ni persistencia); `AppErrorBoundary` muestra «Algo salió mal» con el código de soporte. El servidor

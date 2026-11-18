@@ -85,3 +85,15 @@ it('keeps the legal items marked as pending review', function (): void {
     expect(substr_count(privacyNoticeText(), 'pendiente de revisión legal'))->toBe(1)
         ->and(privacyNoticeText())->toContain('${REVIEW}');
 });
+
+it('says the panel of a company may be recorded, anonymous and masked, and what is never recorded', function (): void {
+    $text = privacyNoticeText();
+    $recording = (string) file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/session-recording.ts')
+        .file_get_contents(dirname(__DIR__, 2).'/resources/js/lib/recording-mask.ts');
+
+    expect($text)->toContain('grabación anónima de la pantalla')->toContain('los nombres, los correos, las cifras y todo dato de tu empresa, y lo que escribes, aparecen ocultos')
+        ->toContain('el buzón de quejas, la Guía I, Humi ni tu cuenta personal')->toContain('mientras alguien de soporte entra como tú')
+        ->and($recording)->toContain("maskTextSelector: '*'")->toContain('maskTextFn: maskText')->toContain('rememberData(page)')->toContain('maskAllInputs: true')->toContain("person_profiles: 'never'")
+        ->toContain("'complaints/'")->toContain("'campaigns/trauma'")->toContain("'results/screenings'")->toContain("'assistant/'")->toContain("'settings/'")
+        ->toContain("prop(props, 'impersonator') == null");
+});

@@ -52,6 +52,8 @@ return [
     'posthog' => [
         'project_token' => env('POSTHOG_PROJECT_TOKEN', ''),
         'consent_default' => env('POSTHOG_CONSENT_DEFAULT', 'denied'),
+        // Anonymous, masked recording of a company's panel (resources/js/lib/session-recording.ts). Off unless switched on.
+        'session_recording' => (bool) env('POSTHOG_SESSION_RECORDING', false),
     ],
 
     'slack' => [

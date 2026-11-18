@@ -19,6 +19,9 @@ final class Analytics
     /** The PostHog ingestion host (US cloud): one constant, the one the CSP opens and the browser is told. */
     public const string HOST = 'https://us.i.posthog.com';
 
+    /** Where PostHog serves a project's settings (/array/<token>/config), which the panel's recording reads. */
+    public const string ASSETS_HOST = 'https://us-assets.i.posthog.com';
+
     /** The campaign parameters of our own links: the only part of the query PostHog is told. */
     private const array CAMPAIGN_PARAMETERS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'matchtype'];
 
@@ -105,16 +108,42 @@ final class Analytics
         return in_array($request->route()?->getName(), self::measuredRoutes(), true);
     }
 
-    /** What the error block carries for the browser: the token and the host, never the page's address. */
+    /**
+     * What the error block carries for the browser: the token and the host, never the page's address; and, when session
+     * recording is switched on, that it may record. Which pages it records (only a company's panel, masked, without
+     * whoever impersonates) the browser decides page by page, since Inertia moves between them without this block.
+     */
     public static function errorConfiguration(string $token): string
     {
-        return self::literal(['token' => $token, 'host' => self::HOST]);
+        return self::literal([
+            'token' => $token,
+            'host' => self::HOST,
+            ...(config()->boolean('services.posthog.session_recording') ? ['recording' => true] : []),
+        ]);
     }
 
     /** Whether the document talks to PostHog at all: the landing's measurement or the error reports of any other page. */
     public static function opensPostHog(Request $request): bool
     {
         return self::projectToken($request) !== null || self::errorToken($request) !== null;
+    }
+
+    /**
+     * The origins the page connects to for PostHog: where the events go and, while the panel's recording is switched on
+     * (any page but the landing: Inertia moves into the panel without a new policy), where the project's replay settings
+     * come from as JSON. Never a script: the recorder ships in our own bundle.
+     *
+     * @return list<string>
+     */
+    public static function connectOrigins(Request $request): array
+    {
+        if (! self::opensPostHog($request)) {
+            return [];
+        }
+
+        $records = self::errorToken($request) !== null && config()->boolean('services.posthog.session_recording');
+
+        return $records ? [self::HOST, self::ASSETS_HOST] : [self::HOST];
     }
 
     /**

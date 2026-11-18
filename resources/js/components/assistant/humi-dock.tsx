@@ -75,6 +75,7 @@ export default function HumiDock() {
         </Suspense>
     );
 
+    // `ph-no-capture`: the panel's recording (lib/session-recording.ts) never records what is said to Humi.
     return (
         <>
             <HumiInvitationSlot
@@ -94,7 +95,7 @@ export default function HumiDock() {
                 <aside
                     aria-label="Humi"
                     onAnimationEnd={removeDocked}
-                    className={`${leaving ? 'humi-slide-out' : 'humi-slide-in'} sticky top-0 h-svh w-[420px] shrink-0 border-l bg-background print:hidden`}
+                    className={`${leaving ? 'humi-slide-out' : 'humi-slide-in'} ph-no-capture sticky top-0 h-svh w-[420px] shrink-0 border-l bg-background print:hidden`}
                 >
                     {panel(dockedClose)}
                 </aside>
@@ -107,7 +108,7 @@ export default function HumiDock() {
                     {/* The header draws its own close beside its other actions: the sheet's is not drawn. */}
                     <SheetContent
                         side="right"
-                        className="w-full gap-0 p-0 sm:max-w-[420px] [&>button:last-child]:hidden"
+                        className="ph-no-capture w-full gap-0 p-0 sm:max-w-[420px] [&>button:last-child]:hidden"
                     >
                         <SheetTitle className="sr-only">Humi</SheetTitle>
                         <SheetDescription className="sr-only">
