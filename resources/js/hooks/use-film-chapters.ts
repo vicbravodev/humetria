@@ -4,9 +4,12 @@ import { useLoopVideo } from '@/hooks/use-loop-video';
 import { chapterStart } from '@/lib/film-chapters';
 import type { FilmTiming } from '@/lib/film-chapters';
 
-/** A looping film that knows where it is, and can jump to a chapter and play from there. */
-export function useFilmChapters(timing: FilmTiming) {
-    const loop = useLoopVideo();
+/**
+ * A looping film that knows where it is, and can jump to a chapter and play from there. It plays only while in view, and
+ * with `still` (reduced motion) never by itself.
+ */
+export function useFilmChapters(timing: FilmTiming, still = false) {
+    const loop = useLoopVideo(still);
     const { seek } = loop;
     const [time, setTime] = useState(0);
 

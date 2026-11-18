@@ -33,14 +33,14 @@ export default function LandingHeader({
             <div
                 className={cn(
                     WRAP,
-                    'grid h-16 grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-[1fr_auto_1fr]',
+                    'grid h-16 grid-cols-[1fr_auto] items-center gap-3 lg:grid-cols-[1fr_auto_1fr]',
                 )}
             >
                 {/* On the landing the logo stays in the document; from any other page it is a link out, so PostHog and the CSP load with the landing. */}
                 {sectionBase === '' ? (
                     <Link
                         href={home()}
-                        className="flex min-h-11 items-center justify-self-start rounded-md"
+                        className="flex min-h-11 min-w-11 items-center justify-self-start rounded-md"
                     >
                         <span className="sm:hidden">
                             <Logo kind="symbol" className="size-8" />
@@ -53,7 +53,7 @@ export default function LandingHeader({
                     <a
                         href={home().url}
                         aria-label="Humetría, inicio"
-                        className="flex min-h-11 items-center justify-self-start rounded-md"
+                        className="flex min-h-11 min-w-11 items-center justify-self-start rounded-md"
                     >
                         <span className="sm:hidden">
                             <Logo kind="symbol" className="size-8" />
@@ -73,7 +73,7 @@ export default function LandingHeader({
                         asChild
                         variant="ghost"
                         size="sm"
-                        className="font-normal"
+                        className="font-normal max-sm:h-11"
                     >
                         <a
                             data-track="sign_in_click"
@@ -87,7 +87,7 @@ export default function LandingHeader({
                     <Button
                         asChild
                         size="sm"
-                        className="ml-1 rounded-full px-4"
+                        className="ml-1 rounded-full px-4 max-sm:h-11"
                     >
                         <a
                             data-track="cta_click"
@@ -102,7 +102,7 @@ export default function LandingHeader({
                             </span>
                         </a>
                     </Button>
-                    <ToolsMenu variant="icon" className="ml-1 md:hidden" />
+                    <ToolsMenu variant="icon" className="ml-1 lg:hidden" />
                 </div>
             </div>
         </header>

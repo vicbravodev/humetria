@@ -5,7 +5,11 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import RecentProofDialog from '@/components/worker-access/recent-proof-dialog';
 import { initializeTheme } from '@/hooks/use-appearance';
-import { startAnalytics, type AnalyticsEngine } from '@/lib/analytics';
+import {
+    afterPageLoad,
+    startAnalytics,
+    type AnalyticsEngine,
+} from '@/lib/analytics';
 import { cspNonce } from '@/lib/csp-nonce';
 import { deferResizeObserver } from '@/lib/defer-resize-observer';
 import {
@@ -93,11 +97,24 @@ async function loadPostHog(): Promise<AnalyticsEngine> {
     return posthog;
 }
 
+// The landing's engine: with the replay switched on, the full build (the recorder and the speed are inside, never a script
+// from outside), downloaded after the page loaded so it never delays what the visitor came to see; without it, the light one.
+async function loadLandingPostHog(replay: boolean): Promise<AnalyticsEngine> {
+    if (!replay) {
+        return loadPostHog();
+    }
+
+    await afterPageLoad(window);
+    const { default: posthog } = await import('posthog-js/full/no-external');
+
+    return posthog;
+}
+
 // PostHog only where the document asks for it (App\Http\Analytics): the landing's measurement, or the error reports of
 // any other page. A page without either block never downloads it. The build without external scripts keeps the policy
 // of the page to its own origin plus the one that receives the events.
 if (typeof document !== 'undefined') {
-    void startAnalytics(document, loadPostHog);
+    void startAnalytics(document, loadLandingPostHog);
     void startErrorTracking(document, loadPostHog, window.location.origin).then(
         (started) => started && watchErrors(window, reportError),
     );

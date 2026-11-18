@@ -11,7 +11,7 @@ const FAQS = [
     },
     {
         question: '¿Tengo que contratar las nueve herramientas?',
-        answer: 'No. Activas las que necesitas y agregas las demás cuando quieras; tu plantilla ya está cargada.',
+        answer: 'No. Eliges un plan: Jornada (asistencia, vacaciones y organigrama), Cumplimiento (normas, quejas, clima y pulso) o Integral (todo, con Compensación). Compensación también se contrata sola. Tu plantilla se carga una vez y sirve para todo.',
     },
     {
         question: '¿Mi gente necesita instalar algo o crear una cuenta?',

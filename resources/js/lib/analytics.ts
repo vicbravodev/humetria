@@ -13,6 +13,8 @@ export type AnalyticsConfig = {
     host: string;
     pageLocation: string;
     pageReferrer?: string;
+    /** The owner switched on the replay of the visit and the measure of its speed (App\Http\Analytics). */
+    replay?: true;
 };
 
 /** The part of PostHog this app uses; `posthog-js` satisfies it, a test stand-in too. */
@@ -80,6 +82,7 @@ export function readAnalyticsConfig(
         host,
         pageLocation,
         ...(pageReferrer === undefined ? {} : { pageReferrer }),
+        ...(Reflect.get(value, 'replay') === true ? { replay: true } : {}),
     };
 }
 
@@ -143,7 +146,28 @@ export function sanitizeEvent(
     });
 }
 
-/** Only the page view and the lead: nothing is captured by itself, nothing is recorded, nothing loads from outside. */
+/**
+ * What the landing's replay adds, only when the server switched it on: the visit recorded anonymous (what is typed is
+ * masked, the console, the headers and the bodies of the network are not recorded) and how fast the page loads.
+ */
+function replayOptions(config: AnalyticsConfig): Partial<PostHogConfig> {
+    return config.replay === true
+        ? {
+              disable_session_recording: false,
+              enable_recording_console_log: false,
+              capture_performance: { web_vitals: true, network_timing: false },
+              session_recording: {
+                  maskAllInputs: true,
+                  blockClass: 'ph-no-capture',
+                  recordHeaders: false,
+                  recordBody: false,
+                  recordCrossOriginIframes: false,
+              },
+          }
+        : {};
+}
+
+/** The page view, the lead and the clicks: nothing is captured by itself and nothing loads from outside; the replay only if switched on. */
 export function posthogOptions(
     config: AnalyticsConfig,
 ): Partial<PostHogConfig> {
@@ -161,7 +185,20 @@ export function posthogOptions(
         save_referrer: false,
         disable_external_dependency_loading: true,
         before_send: sanitizeEvent(config),
+        ...replayOptions(config),
     };
+}
+
+/** Resolves once the page finished loading: the heavier build (the replay and the speed) never competes with the first paint. */
+export function afterPageLoad(page: {
+    document: { readyState: string };
+    addEventListener: (name: 'load', listener: () => void) => void;
+}): Promise<void> {
+    return page.document.readyState === 'complete'
+        ? Promise.resolve()
+        : new Promise((resolve) =>
+              page.addEventListener('load', () => resolve()),
+          );
 }
 
 /**
@@ -170,7 +207,7 @@ export function posthogOptions(
  */
 export async function startAnalytics(
     source: ConfigSource,
-    load: () => Promise<AnalyticsEngine>,
+    load: (replay: boolean) => Promise<AnalyticsEngine>,
 ): Promise<void> {
     active = null;
 
@@ -180,7 +217,7 @@ export async function startAnalytics(
         return;
     }
 
-    const engine = await load();
+    const engine = await load(config.replay === true);
 
     engine.init(config.token, posthogOptions(config));
     engine.capture('$pageview');

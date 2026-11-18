@@ -89,7 +89,7 @@ it('tells only the norms the company has in the compliance overview and the pend
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom037'], CarbonImmutable::now(config('app.display_timezone')));
     $overview = toolCard(GetComplianceOverview::class, $this->scope);
 
-    expect(array_map(fn (array $row): string => (string) $row['key'], $overview['rows']))->toBe(['nom037', 'compensation']);
+    expect(array_map(fn (array $row): string => (string) $row['key'], $overview['rows']))->toBe(['nom037']);
 
     $pending = json_encode(toolCard(ListPendingActions::class, $this->scope), JSON_THROW_ON_ERROR);
 

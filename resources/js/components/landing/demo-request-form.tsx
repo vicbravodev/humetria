@@ -104,7 +104,7 @@ export default function DemoRequestForm({ page = 'home', tool }: Props) {
                         data-test="demo-request-submit"
                     >
                         {processing && <Spinner />}
-                        Pedir mi demo
+                        Agenda mi demo
                     </Button>
                     <DemoPrivacyNote />
                 </>

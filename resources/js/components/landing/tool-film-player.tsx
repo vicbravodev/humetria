@@ -24,7 +24,7 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
         time,
         onTimeUpdate,
         jumpTo,
-    } = useFilmChapters(film.timing);
+    } = useFilmChapters(film.timing, still);
     const { canFullscreen, fullscreen } = useVideoFullscreen(video);
     // The film is drawn with the design tokens of each theme, so it sits in the page instead of being a dark block in it.
     const { resolvedAppearance } = useAppearance();
@@ -46,11 +46,10 @@ export default function ToolFilmPlayer({ film }: { film: ToolFilm }) {
                     <video
                         key={name}
                         ref={attach}
-                        autoPlay={!still}
                         muted
                         loop
                         playsInline
-                        preload="metadata"
+                        preload="none"
                         poster={`/video/${name}.jpg`}
                         onTimeUpdate={onTimeUpdate}
                         onPlay={onPlay}

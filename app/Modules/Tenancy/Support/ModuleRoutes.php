@@ -25,12 +25,13 @@ final class ModuleRoutes
             'org_chart' => ['tenant.org-chart.*'],
             'pulse' => ['tenant.pulse.*'],
             'climate' => ['tenant.climate.*'],
+            'compensation' => ['tenant.compensation.*'],
             'sso' => ['tenant.sso.*'],
         ];
     }
 
     /**
-     * What every company has whatever its modules: the panel, its people, their access and centers, Humi and the CCT calculator.
+     * What every company has whatever its modules: the panel, its people, their access and centers, and Humi.
      *
      * @return list<string>
      */
@@ -40,7 +41,6 @@ final class ModuleRoutes
             'tenant.dashboard',
             'tenant.areas.*',
             'tenant.assistant.*',
-            'tenant.compensation.*',
             'tenant.employees.*',
             'tenant.first-steps.*',
             'tenant.job-grades.*',

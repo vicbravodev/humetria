@@ -14,10 +14,11 @@ const links = [
     { href: '#herramientas', label: 'Herramientas' },
     { href: '#confidencialidad', label: 'Confidencialidad' },
     { href: '#humi', label: 'Humi' },
+    { href: '#precios', label: 'Precios' },
 ];
 
 const linkClass =
-    'inline-flex min-h-11 items-center rounded-md text-meta text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+    'inline-flex min-h-11 min-w-11 items-center rounded-md text-meta text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
 /**
  * The logo, the sections again, the notice of privacy, the theme switch and what Humetría does and does not do.

@@ -27,7 +27,7 @@ function enabledModulesOf(Tenant $tenant): array
     return resolve(CompanyModules::class)->enabledKeys($tenant->id);
 }
 
-const EXISTING_MODULES = ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'];
+const EXISTING_MODULES = ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation'];
 
 it('keeps every module a company can use today when it has no plan: nothing is lost by default', function (): void {
     $legacy = Tenant::factory()->create();
@@ -99,8 +99,8 @@ it('logs and audits what the plan switched on and off', function (): void {
 
     resolve(CompanyModules::class)->syncPlan($tenant->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
 
-    Log::shouldHaveReceived('info')->with('tenant.modules_synced', ['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate']]);
-    expect(AuditEntry::query()->where('event', 'tenant.modules_synced')->sole()->metadata)->toEqualCanonicalizing(['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate']]);
+    Log::shouldHaveReceived('info')->with('tenant.modules_synced', ['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate', 'compensation']]);
+    expect(AuditEntry::query()->where('event', 'tenant.modules_synced')->sole()->metadata)->toEqualCanonicalizing(['tenant_id' => $tenant->id, 'enabled' => ['seating'], 'disabled' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'complaints', 'pulse', 'climate', 'compensation']]);
 });
 
 it('refuses a plan with no modules or with one that is not a module', function (array $modules): void {

@@ -18,6 +18,7 @@ enum Module: string
     case Complaints = 'complaints';
     case Pulse = 'pulse';
     case Climate = 'climate';
+    case Compensation = 'compensation';
     case Sso = 'sso';
 
     /** The name the menu gives the tool: the console says the same thing the company sees. */
@@ -33,6 +34,7 @@ enum Module: string
             self::Complaints => 'Quejas',
             self::Pulse => 'Pulso',
             self::Climate => 'Clima',
+            self::Compensation => 'Compensación',
             self::Sso => 'Inicio de sesión único',
         };
     }

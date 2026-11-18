@@ -44,21 +44,20 @@ describe('the menu of a company with only some modules', () => {
         expect(listening(['attendance'])).toEqual([]);
     });
 
-    it('lists only the tools that order the operation whose module the company has, and keeps Compensación', () => {
+    it('lists only the tools that order the operation whose module the company has, Compensación included: it is a module like the rest', () => {
+        expect(operations(['vacations', 'org_chart', 'compensation'])).toEqual([
+            'Vacaciones',
+            'Organigrama',
+            'Compensación',
+        ]);
         expect(operations(['vacations', 'org_chart'])).toEqual([
             'Vacaciones',
             'Organigrama',
-            'Compensación',
         ]);
-        expect(operations(['vacations'])).toEqual([
-            'Vacaciones',
-            'Compensación',
-        ]);
-        expect(operations(['org_chart'])).toEqual([
-            'Organigrama',
-            'Compensación',
-        ]);
-        expect(operations(['attendance'])).toEqual(['Compensación']);
+        expect(operations(['vacations'])).toEqual(['Vacaciones']);
+        expect(operations(['org_chart'])).toEqual(['Organigrama']);
+        expect(operations(['compensation'])).toEqual(['Compensación']);
+        expect(operations(['attendance'])).toEqual([]);
     });
 
     it('lists everything when the page has no module list yet', () => {

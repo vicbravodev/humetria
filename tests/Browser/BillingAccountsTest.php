@@ -216,8 +216,8 @@ it('names the tools a plan takes away before it is assigned', function (): void 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
         ->click('Asignar plan')
         ->click('[name="profile"][value="channel_compliance"]')
-        ->assertSee('Asistencia, Vacaciones, Organigrama')
-        ->assertSee('Asignar y quitar 3 herramientas');
+        ->assertSee('Asistencia, Vacaciones, Organigrama, Compensación')
+        ->assertSee('Asignar y quitar 4 herramientas');
 });
 
 it('says what a plan takes away in a warning of its own, with an icon, apart from the price', function (): void {
@@ -227,7 +227,7 @@ it('says what a plan takes away in a warning of its own, with an icon, apart fro
     visit("/admin/billing/accounts/{$account->id}")
         ->click('Asignar plan')
         ->click('[name="profile"][value="channel_compliance"]')
-        ->assertSee('Asistencia, Vacaciones, Organigrama')
+        ->assertSee('Asistencia, Vacaciones, Organigrama, Compensación')
         ->assertScript(<<<'JS'
             () => {
                 const note = document.querySelector('[data-test="plan-modules-removed"]');
@@ -256,7 +256,7 @@ it('shows the next amount before saving a plan, and saves it', function (): void
         ->fill('seats', '100')
         ->assertSee('Banda de canal hasta 100 personas: $3,990')
         ->assertSee('IVA')
-        ->press('Asignar y quitar 3 herramientas')
+        ->press('Asignar y quitar 4 herramientas')
         ->assertSee('Plan asignado.')
         ->assertSee('Canal Cumplimiento')
         ->assertSee('$3,990');
