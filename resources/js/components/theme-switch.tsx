@@ -36,7 +36,7 @@ export function ThemeSwitch() {
         >
             <span
                 aria-hidden
-                className="absolute top-0.5 left-0.5 h-9 w-10 rounded-md bg-card shadow-raised transition-transform duration-200 ease-out motion-reduce:transition-none"
+                className="absolute top-0.5 left-0.5 h-9 w-11 rounded-md bg-card shadow-raised transition-transform duration-200 ease-out motion-reduce:transition-none"
                 style={{ transform: `translateX(${chosen * 100}%)` }}
             />
             {themeOptions.map(({ value, label, icon: Icon }) => (
@@ -45,7 +45,7 @@ export function ThemeSwitch() {
                     value={value}
                     aria-label={label}
                     title={label}
-                    className="relative h-9 w-10 min-w-10 rounded-md px-0 text-muted-foreground transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-1 before:content-[''] first:rounded-md last:rounded-md hover:bg-transparent hover:text-foreground data-[state=on]:bg-transparent data-[state=on]:text-foreground [&_svg]:size-[18px]"
+                    className="relative h-9 w-11 min-w-11 rounded-md px-0 text-muted-foreground transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-1 before:content-[''] first:rounded-md last:rounded-md hover:bg-transparent hover:text-foreground data-[state=on]:bg-transparent data-[state=on]:text-foreground [&_svg]:size-[18px]"
                 >
                     <Icon />
                 </ToggleGroupItem>

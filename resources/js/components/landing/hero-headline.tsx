@@ -8,7 +8,7 @@ const WORDS = 'Cumple la ley y cuida a tu gente desde un solo lugar.'.split(
     ' ',
 );
 
-/** The promise, word by word, ending on «un solo lugar» in the accent: each one rises out of a blur 50 ms after the last, as the page opens (CSS, `enter-word`). */
+/** The promise, word by word, in one color (no word picked out): each one rises out of a blur 50 ms after the last, as the page opens (CSS, `enter-word`). */
 export default function HeroHeadline() {
     return (
         <h1
@@ -21,7 +21,6 @@ export default function HeroHeadline() {
                     className={cn(
                         'inline-block enter-word',
                         enterDelay(0.1 + index * 0.05),
-                        index >= WORDS.length - 3 && 'text-primary',
                     )}
                 >
                     {word}

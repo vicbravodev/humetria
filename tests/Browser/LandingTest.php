@@ -352,9 +352,10 @@ it('speaks to consultants, multi-site companies and corporate groups, and to uni
         ->assertDontSeeIn('section[aria-labelledby="para-quien"]', 'la norma');
 });
 
-it('shows each audience as a card with its icon', function (): void {
+it('shows each audience as a plain row, with no icon and no card around it, separated by hairlines', function (): void {
     visitPage('landing', '/')
-        ->assertScript('() => [...document.querySelectorAll("section[aria-labelledby=para-quien] article")].map((article) => getComputedStyle(article).borderBottomWidth + "|" + article.querySelectorAll("span svg").length).join()', '1px|1,1px|1,1px|1');
+        // Per row: the hairline under it (none under the last) and how many icons it carries.
+        ->assertScript('() => [...document.querySelectorAll("section[aria-labelledby=para-quien] article")].map((article) => getComputedStyle(article.parentElement).borderBottomWidth + "|" + article.querySelectorAll("svg").length + "|" + getComputedStyle(article).borderBottomWidth).join()', '1px|0|0px,1px|0|0px,0px|0|0px');
 });
 
 it('shows the nine tools as cards by family, each one to its own page', function (string $tool, string $hint, string $path): void {

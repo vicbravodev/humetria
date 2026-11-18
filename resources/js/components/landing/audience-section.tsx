@@ -1,32 +1,23 @@
-import { Briefcase, Building2, Layers } from 'lucide-react';
-import {
-    ICON_BOX,
-    SECTION,
-    TITLE,
-    WRAP,
-} from '@/components/landing/landing-layout';
+import { SECTION, TITLE, WRAP } from '@/components/landing/landing-layout';
 import Reveal from '@/components/landing/reveal';
 import { cn } from '@/lib/utils';
 
 const audiences = [
     {
-        icon: Building2,
         title: 'Empresas',
         text: 'RH de una empresa con una o varias sucursales, plantas u oficinas (centros de trabajo). Cada centro recibe solo lo que le toca por su número de trabajadores.',
     },
     {
-        icon: Layers,
         title: 'Grupos de empresas',
         text: 'Un grupo con varias razones sociales, todas en una sola cuenta.',
     },
     {
-        icon: Briefcase,
         title: 'Consultores',
         text: 'Atiendes a varias empresas, cada una con sus datos aparte y tu logo en los informes.',
     },
 ];
 
-/** Who it is for: three cards, and a word for unions after them. */
+/** Who it is for: three plain rows (who, then what changes for them), and a word for unions after them. */
 export default function AudienceSection() {
     return (
         <section
@@ -34,27 +25,18 @@ export default function AudienceSection() {
             aria-labelledby="para-quien"
             className={cn('border-y bg-band', SECTION)}
         >
-            <div className={cn(WRAP, 'flex flex-col gap-8 lg:gap-14')}>
+            <div className={cn(WRAP, 'flex flex-col gap-8 lg:gap-12')}>
                 <h2 id="para-quien" className={TITLE}>
                     Hecha para quien lleva RH
                 </h2>
-                <div className="grid gap-3 md:grid-cols-3 md:gap-4">
-                    {audiences.map(({ icon: Icon, title, text }, index) => (
-                        <Reveal
-                            key={title}
-                            delay={index * 0.07}
-                            className="flex"
-                        >
-                            <article className="grid flex-1 grid-cols-[48px_minmax(0,1fr)] content-start gap-x-4 gap-y-1.5 rounded-2xl border bg-card p-[22px] transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:border-primary hover:shadow-raised md:grid-cols-1 md:gap-3.5 md:p-7">
-                                <span
-                                    className={`${ICON_BOX} row-span-2 size-12 rounded-[14px] md:row-span-1`}
-                                >
-                                    <Icon aria-hidden className="size-6" />
-                                </span>
-                                <h3 className="self-center text-xl leading-tight font-semibold tracking-[-0.02em]">
+                <div className="divide-y border-y">
+                    {audiences.map(({ title, text }, index) => (
+                        <Reveal key={title} delay={index * 0.07}>
+                            <article className="grid gap-2 py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-10 md:py-8">
+                                <h3 className="text-2xl leading-tight font-semibold tracking-[-0.02em]">
                                     {title}
                                 </h3>
-                                <p className="text-meta leading-normal text-muted-foreground">
+                                <p className="max-w-[60ch] text-lg leading-7 text-muted-foreground">
                                     {text}
                                 </p>
                             </article>
@@ -63,7 +45,7 @@ export default function AudienceSection() {
                 </div>
                 <p
                     data-test="unions"
-                    className="-mt-3 rounded-xl bg-accent px-[18px] py-4 text-meta lg:-mt-9"
+                    className="max-w-[60ch] text-meta text-muted-foreground"
                 >
                     ¿Representas a un sindicato? Compensación tiene su propia
                     cuenta para tu lado de la mesa, con tus datos aparte de los
