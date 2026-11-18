@@ -7,13 +7,20 @@ namespace App\Modules\Messaging\Support;
 use InvalidArgumentException;
 
 /**
- * The templates Humetria sends, in code: Meta approves them, the app does not. All UTILITY, es_MX, two body parameters ({{1}} the
- * company, {{2}} the last day) and a URL button whose variable is the survey link token.
- *
- * Supuesto por confirmar (Victor, antes de la Fase 2): the texts below are provisional.
+ * The templates Humetria sends, in code: Meta approves them, the app does not. Texts are the ones approved in
+ * `2026-11-18-whatsapp-templates.md`; variables are named and their examples are the ones the catalog gives.
  */
 final class TemplateRegistry
 {
+    private const string FOOTER = 'Humetria';
+
+    private const array EXAMPLES = [
+        'empresa' => 'Industrias Ejemplo',
+        'fecha_limite' => 'viernes 20 de noviembre',
+        'fecha' => 'lunes 16 de noviembre',
+        'minutos' => '15',
+    ];
+
     /** @var array<string, TemplateDefinition>|null */
     private ?array $templates = null;
 
@@ -36,27 +43,56 @@ final class TemplateRegistry
     public function all(): array
     {
         $language = config()->string('whatsapp.language');
+        $greeting = 'Hola, buen día. Le escribimos de parte de {{empresa}}.';
+        $privacy = TemplateButton::fixedUrl('Aviso de privacidad', route('privacy-notice'));
+        $stop = TemplateButton::quickReply(TemplateButton::OPT_OUT_LABEL);
+        $invite = fn (string $route): array => [TemplateButton::urlWithVariable('Contestar ahora', $this->base($route), 'abc123'), $privacy, $stop];
 
-        return $this->templates ??= [
-            'survey_invite_v1' => new TemplateDefinition(
-                key: 'survey_invite_v1',
-                language: $language,
-                category: 'UTILITY',
-                body: '{{1}} le invita a contestar una evaluación confidencial sobre su trabajo. Tiene hasta el {{2}}. El enlace es personal y sirve una sola vez.',
-                bodyParameterCount: 2,
-                buttonLabel: 'Contestar',
-                buttonUrlBase: $this->base('survey.show'),
-            ),
-            'engagement_invite_v1' => new TemplateDefinition(
-                key: 'engagement_invite_v1',
-                language: $language,
-                category: 'UTILITY',
-                body: '{{1}} le invita a dar su opinión en una encuesta anónima. Tiene hasta el {{2}}. El enlace es personal.',
-                bodyParameterCount: 2,
-                buttonLabel: 'Contestar',
-                buttonUrlBase: $this->base('engagement.survey.show'),
-            ),
-        ];
+        return $this->templates ??= $this->indexed([
+            $this->template('survey_invite_v1', $language, "{$greeting} Como parte de la NOM-035, tiene pendiente contestar una evaluación sobre su trabajo. Es confidencial y puede hacerlo hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", 'Su evaluación de la NOM-035', $invite('survey.show')),
+            $this->template('engagement_invite_v1', $language, "{$greeting} Queremos saber cómo le va en su trabajo con esta encuesta anónima: nadie verá sus respuestas individuales. Tiene hasta el {{fecha_limite}} para contestarla y su enlace es personal.", 'Encuesta anónima de {{empresa}}', $invite('engagement.survey.show')),
+        ]);
+    }
+
+    /**
+     * @param  list<TemplateButton>  $buttons
+     */
+    private function template(string $key, string $language, string $body, ?string $header, array $buttons): TemplateDefinition
+    {
+        $used = [...self::variablesIn($body), ...self::variablesIn($header ?? '')];
+
+        return new TemplateDefinition(
+            key: $key,
+            language: $language,
+            body: $body,
+            examples: array_intersect_key(self::EXAMPLES, array_flip($used)),
+            header: $header,
+            footer: self::FOOTER,
+            buttons: $buttons,
+        );
+    }
+
+    /** @return list<string> */
+    private static function variablesIn(string $text): array
+    {
+        preg_match_all('/\{\{([^{}]*)\}\}/', $text, $matches);
+
+        return $matches[1];
+    }
+
+    /**
+     * @param  list<TemplateDefinition>  $templates
+     * @return array<string, TemplateDefinition>
+     */
+    private function indexed(array $templates): array
+    {
+        $byKey = [];
+
+        foreach ($templates as $template) {
+            $byKey[$template->key] = $template;
+        }
+
+        return $byKey;
     }
 
     /** The route's URL with `{{1}}` where the token goes (Meta's variable of the button). */

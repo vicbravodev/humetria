@@ -95,7 +95,7 @@ it('names Meta and Resend as who delivers the messages, what each receives, the 
 });
 
 it('only has WhatsApp templates that are UTILITY, which is what the notice promises: invitations, never advertising', function (): void {
-    $categories = array_map(fn ($template): string => $template->category, (new App\Modules\Messaging\Support\TemplateRegistry)->all());
+    $categories = array_map(fn ($template): string => $template->category->value, (new App\Modules\Messaging\Support\TemplateRegistry)->all());
 
     expect($categories)->not->toBe([])->and(array_values(array_unique($categories)))->toBe(['UTILITY']);
 });

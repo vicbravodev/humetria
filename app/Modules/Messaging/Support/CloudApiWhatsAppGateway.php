@@ -8,6 +8,7 @@ use App\Modules\Messaging\Contracts\WhatsAppGateway;
 use App\Modules\Messaging\Data\FailureCause;
 use App\Modules\Messaging\Data\OutboundMessage;
 use App\Modules\Messaging\Data\SendOutcome;
+use App\Modules\Messaging\Enums\TemplateButtonType;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Http;
  */
 final class CloudApiWhatsAppGateway implements WhatsAppGateway
 {
-    public function __construct(private readonly PhoneForMeta $phones, private readonly WhatsAppErrorMap $errors) {}
+    public function __construct(private readonly PhoneForMeta $phones, private readonly WhatsAppErrorMap $errors, private readonly TemplateRegistry $templates) {}
 
     public function send(OutboundMessage $message): SendOutcome
     {
@@ -66,11 +67,37 @@ final class CloudApiWhatsAppGateway implements WhatsAppGateway
             'template' => [
                 'name' => $message->template,
                 'language' => ['code' => $message->language],
-                'components' => [
-                    ['type' => 'body', 'parameters' => array_map(fn (string $text): array => ['type' => 'text', 'text' => $text], $message->bodyParameters)],
-                    ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [['type' => 'text', 'text' => $message->buttonSuffix]]],
-                ],
+                'components' => $this->components($this->templates->get($message->template), $message),
             ],
         ];
+    }
+
+    /**
+     * The components the definition declares: the header and the body with their named parameters, and the buttons that carry a
+     * variable (at their own index). The token travels only in the button.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function components(TemplateDefinition $template, OutboundMessage $message): array
+    {
+        $named = $template->namedParameters($message->bodyParameters);
+        $parameter = fn (string $name): array => ['type' => 'text', 'parameter_name' => $name, 'text' => $named[$name]];
+        $components = [];
+
+        if ($template->headerVariable() !== null) {
+            $components[] = ['type' => 'header', 'parameters' => [$parameter($template->headerVariable())]];
+        }
+
+        if ($named !== []) {
+            $components[] = ['type' => 'body', 'parameters' => array_map($parameter, array_keys($named))];
+        }
+
+        foreach ($template->buttons as $index => $button) {
+            if ($button->type === TemplateButtonType::Url && $button->variable) {
+                $components[] = ['type' => 'button', 'sub_type' => 'url', 'index' => (string) $index, 'parameters' => [['type' => 'text', 'text' => $message->buttonSuffix]]];
+            }
+        }
+
+        return $components;
     }
 }
