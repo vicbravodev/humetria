@@ -197,7 +197,7 @@ it('tells the visitor to wait when there were too many requests', function (): v
 it('presents Humetría as an HR platform with all its tools', function (): void {
     visitPage('landing', '/')
         ->assertTitleContains('NOM-035, NOM-037 y Ley Silla')
-        ->assertSeeIn('#hero-title', 'Tu gente contesta desde el celular. Tú llegas listo a la STPS.')
+        ->assertSeeIn('#hero-title', 'Cumple la ley y cuida a tu gente desde un solo lugar.')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "quejas", "Compensación", "jornada", "Vacaciones", "Organigrama", "Clima"].every((tool) => document.querySelector("meta[name=description]").content.includes(tool))')
         ->assertScript('() => [...document.querySelectorAll("[data-test=hero-families] a b")].map((family) => family.textContent).join(" · ")', 'Cumple la norma · Escucha a tu gente · Personas y sueldos')
         ->assertScript('() => ["NOM-035", "NOM-037", "Ley Silla", "Registro de jornada", "Buzón de quejas", "Clima y pulso", "Vacaciones y permisos", "Organigrama", "Compensación"].every((tool) => document.querySelector("[data-test=hero-families]").textContent.includes(tool))')
@@ -629,7 +629,7 @@ it('keeps a space between the words of the headline, though each one is its own 
     // A plain space at the end of an inline block collapses: only a no-break space keeps the words apart.
     visit('/')
         ->assertScript("() => [...document.querySelectorAll('#hero-title span')].slice(0, -1).every((word) => word.textContent.endsWith('\\u00A0'))")
-        ->assertScript("() => document.querySelector('#hero-title').innerText.replace(/\\u00A0/g, ' ').includes('Tu gente contesta desde el celular.')");
+        ->assertScript("() => document.querySelector('#hero-title').innerText.replace(/\\u00A0/g, ' ').includes('Cumple la ley y cuida a tu gente')");
 });
 
 it('links the configured social profiles in the footer, as plain links that open in a new tab', function (): void {
