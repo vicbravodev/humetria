@@ -23,6 +23,9 @@ function publicRouteNames(): array
         'tools.nom_035', 'tools.nom_037', 'tools.ley_silla', 'tools.complaints', 'tools.compensation', 'tools.attendance',
         'tools.leave', 'tools.org_chart', 'tools.engagement', // guest: la página pública de cada herramienta (ToolPages); texto fijo, sin datos de nadie
         'guides.workday-2027', // guest: la guía de la reforma de jornada; texto fijo, sin datos de nadie
+        'blog.index', // guest: el índice público del blog; artículos de archivos .md ya revisados; sin datos de nadie
+        'blog.show', // guest: un artículo del blog por su slug; solo los publicados (revisados y con fecha cumplida), un borrador o un slug desconocido da 404; texto fijo, sin datos de nadie
+        'blog.sitemap', // guest: el sitemap de los artículos del blog para los buscadores; solo direcciones y fechas
         'films.show', // guest: the films of the landing page, served with byte ranges so a chapter can jump inside one; only files named humetria-*.mp4|webm that exist in public/video, anything else is a 404
         'demo-requests.store', // landing demo form; throttled + honeypot
         'demo.door', // guest: la puerta de una demostración en vivo (el QR que escanea el público); el código aleatorio de una sesión que abrió la consola y que vence es la credencial; solo entrega trabajadores de la empresa demo y redirige a un enlace de un solo uso de WorkerAccess (/me/{slug}/link/{token}) emitido como la jefa de RH de la demo; un código cerrado, vencido, desconocido o de otra empresa da la misma página; throttled por dirección
@@ -208,6 +211,7 @@ function credentialAddresses(): array
         'invitations.show' => 'la invitación de un miembro del panel: un solo uso',
         'invitations.accept' => 'la misma invitación: se acepta una vez',
         'films.show' => 'no es credencial: el nombre de un video de la landing',
+        'blog.show' => 'no es credencial: el slug público de un artículo, el mismo para todo el mundo',
         'demo.door' => 'la puerta de la empresa demo: el código es de una sesión en vivo, no de una persona; vence en horas, la sala la cierra y cada escaneo recibe un enlace de entrada de un solo uso',
     ];
 }
