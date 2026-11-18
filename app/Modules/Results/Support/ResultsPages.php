@@ -58,6 +58,7 @@ final readonly class ResultsPages
             'levels' => RiskLevels::catalog(),
             'trauma' => $withScreenings ? $this->responses->screeningCounts($campaign->id) : null,
             'program' => $results === null ? null : $this->programCard($campaign),
+            'minGroup' => $campaign->minGroup,
         ];
     }
 
@@ -87,18 +88,19 @@ final readonly class ResultsPages
      */
     public function risk(CampaignRecord $campaign, string $guide, ?string $areaId, bool $withItems = true): array
     {
+        $distribution = $this->distribution->at($campaign->minGroup);
         $records = $this->responses->anonymous($campaign->id, $guide);
-        $areas = $this->distribution->areas($guide, $records);
+        $areas = $distribution->areas($guide, $records);
         $names = $this->areas->names(array_column($areas['visible'], 'areaId'));
         $filtered = $areaId !== null && isset($names[$areaId]) ? $areaId : null;
 
         return [
-            'results' => $this->distribution->of($guide, $records, $filtered),
+            'results' => $distribution->of($guide, $records, $filtered),
             'areas' => [
                 'visible' => array_map(fn (array $area): array => ['id' => $area['areaId'], 'name' => $names[$area['areaId']] ?? '', 'answered' => $area['answered'], 'final' => $area['final']], $areas['visible']),
                 'hidden' => $areas['hidden'],
             ],
-            'items' => $withItems ? $this->distribution->items($guide, $records) : null,
+            'items' => $withItems ? $distribution->items($guide, $records) : null,
             'area' => $filtered === null ? null : ['value' => $filtered, 'label' => $names[$filtered]],
         ];
     }

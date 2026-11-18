@@ -275,7 +275,7 @@ it('starts with what Humi does and does not see, and the first questions as a li
         ->click('[aria-label="Abrir a Humi"]')
         ->assertSee('Hola, soy Humi')
         ->assertSee('Leo el cumplimiento de tu empresa y te explico la norma. No cambio datos.')
-        ->assertSee('Humi nunca ve respuestas individuales ni la Guía I. Solo resultados de grupos de 5 personas o más.')
+        ->assertSee('Humi nunca ve respuestas individuales ni la Guía I. Solo resultados de grupos, con el mínimo de personas que fijó cada evaluación.')
         ->assertScript('() => [...document.querySelectorAll(\'[role="log"] li > button\')].map((button) => `${getComputedStyle(button).borderTopWidth} ${getComputedStyle(button).borderLeftWidth}`).join(",")', '1px 0px,1px 0px,1px 0px,1px 0px')
         // The company has no work center yet: that is its one pending item, and no campaign runs.
         ->assertSee('1 pendiente')

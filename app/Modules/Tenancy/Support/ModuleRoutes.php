@@ -46,6 +46,7 @@ final class ModuleRoutes
             'tenant.job-grades.*',
             'tenant.members.*',
             'tenant.plan',
+            'tenant.privacy.*',
             'tenant.work-centers.*',
             'tenant.worker-access.*',
         ];

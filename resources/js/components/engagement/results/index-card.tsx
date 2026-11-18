@@ -2,6 +2,7 @@ import TrendBadge from '@/components/engagement/results/trend-badge';
 import ArcMeter from '@/components/humetria/arc-meter';
 import ProtectedCell from '@/components/humetria/protected-cell';
 import type { Delta } from '@/lib/engagement/format';
+import { tooFewText } from '@/lib/group-minimum';
 
 /**
  * The engagement index as the one protagonist figure (pantalla Clima · Resultados): its favorable share inside the arch
@@ -13,12 +14,15 @@ export default function IndexCard({
     delta,
     stay,
     previousName,
+    minGroup,
 }: {
     /** Null when one of the three questions behind it is hidden. */
     index: number | null;
     delta: Delta | null;
     stay: number | null;
     previousName: string | null;
+    /** The minimum per group the survey froze. */
+    minGroup: number;
 }) {
     return (
         <section
@@ -32,8 +36,8 @@ export default function IndexCard({
                 <div className="flex flex-col gap-2">
                     <ProtectedCell />
                     <p className="text-sm text-muted-foreground">
-                        Menos de 5 respuestas en alguna de sus tres preguntas:
-                        no se muestra.
+                        {tooFewText(minGroup, 'respuestas')} en alguna de sus
+                        tres preguntas: no se muestra.
                     </p>
                 </div>
             ) : (

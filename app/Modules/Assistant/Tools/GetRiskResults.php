@@ -65,7 +65,8 @@ final readonly class GetRiskResults implements TellsLiveFacts, Tool
         }
 
         $risk = $this->results->forCampaign($campaign, is_string($areaId) ? $areaId : null);
-        $minimum = config()->integer('results.min_group');
+        // The evaluation's own, frozen when it launched: the number promised to whoever answered.
+        $minimum = $campaign->minGroup;
         $link = $this->links->results($campaign->id);
 
         if ($risk->state !== RiskBreakdown::AVAILABLE) {

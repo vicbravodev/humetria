@@ -4,12 +4,14 @@ import type { EngagementLoopAction } from '@/types';
 
 /**
  * Whether the company closed the loop: how many have seen the improvements it presented after the previous survey. The
- * figure shows from five answers, as every other.
+ * figure shows from the minimum per group the survey froze, as every other.
  */
 export default function LoopActionCard({
     loopAction,
+    minGroup,
 }: {
     loopAction: EngagementLoopAction;
+    minGroup: number;
 }) {
     return (
         <section
@@ -20,7 +22,7 @@ export default function LoopActionCard({
             {loopAction.shown ? (
                 <>
                     <p className="text-[34px] leading-10 font-semibold tracking-[-0.02em] tabular-nums">
-                        {favorableText(loopAction.favorable)}
+                        {favorableText(loopAction.favorable, minGroup)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                         ha visto mejoras que la empresa presentó tras la
@@ -29,7 +31,9 @@ export default function LoopActionCard({
                     <TrendBadge delta={loopAction.vsPrevious} />
                 </>
             ) : (
-                <p className="text-muted-foreground">{favorableText(null)}.</p>
+                <p className="text-muted-foreground">
+                    {favorableText(null, minGroup)}.
+                </p>
             )}
         </section>
     );

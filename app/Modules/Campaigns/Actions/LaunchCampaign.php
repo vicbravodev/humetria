@@ -17,6 +17,7 @@ use App\Modules\Instruments\Contracts\Nom035Guides;
 use App\Modules\Instruments\Contracts\Nom035Sample;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -36,6 +37,7 @@ final readonly class LaunchCampaign
         private Nom035Sample $sample,
         private QueueSurveyInvitations $queueInvitations,
         private RecordAudit $recordAudit,
+        private GroupMinimums $groupMinimums,
     ) {}
 
     /**
@@ -49,7 +51,7 @@ final readonly class LaunchCampaign
             $campaign = Campaign::lockIn($campaign, CampaignStatus::Draft);
             $people = $this->roster->activeIn($campaign->work_center_id);
             $this->assertDraftStillHolds($campaign, $people);
-            $campaign->update(['status' => CampaignStatus::Active, 'launched_at' => now(), 'closes_on' => $closesOn, 'workers' => count($people)]);
+            $campaign->update(['status' => CampaignStatus::Active, 'launched_at' => now(), 'closes_on' => $closesOn, 'workers' => count($people), 'min_group' => $this->groupMinimums->current()]);
             $sampled = array_flip($this->sampledIds($campaign));
             $participants = CampaignInstruments::enroll($campaign, array_combine(
                 array_map(fn (RosterEntry $person): string => $person->id, $people),

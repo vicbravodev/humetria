@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Sso\Http\Middleware\RequireSsoWhenEnforced;
+use App\Modules\Tenancy\Http\Controllers\GroupMinimumController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Http\Controllers\Nom035DossierController;
 use App\Modules\Tenancy\Http\Controllers\OnboardingController;
@@ -58,6 +59,9 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnfor
 
     // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
     Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');
+    // «Privacidad de los resultados»: the owner's minimum of people per group (criterio C-23), for every anonymous tool.
+    Route::get('admin/{tenant:slug}/privacy', [GroupMinimumController::class, 'edit'])->where('tenant', $notReserved)->name('tenant.privacy.edit');
+    Route::put('admin/{tenant:slug}/privacy', [GroupMinimumController::class, 'update'])->where('tenant', $notReserved)->name('tenant.privacy.update');
 
     require __DIR__.'/organization.php';
     require __DIR__.'/campaigns.php';

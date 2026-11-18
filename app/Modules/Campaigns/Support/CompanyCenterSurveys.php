@@ -58,6 +58,7 @@ final readonly class CompanyCenterSurveys implements CenterSurveys
             $campaign->closes_on?->toDateString(),
             Participant::query()->where('campaign_id', $campaign->id)->count(),
             ParticipantInstrument::query()->whereIn('participant_id', Participant::query()->where('campaign_id', $campaign->id)->select('id'))->where('status', InstrumentStatus::Completed)->count(),
+            $campaign->groupMinimum(),
         );
     }
 }

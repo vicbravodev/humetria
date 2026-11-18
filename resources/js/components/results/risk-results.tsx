@@ -1,4 +1,5 @@
 import GroupBars from '@/components/results/group-bars';
+import { hidesSmallGroups, NO_GROUP_MINIMUM } from '@/lib/group-minimum';
 import { hiddenAreasText } from '@/lib/results';
 import type { AreaResults, RiskLevelInfo, RiskResults } from '@/types';
 
@@ -10,10 +11,12 @@ export default function RiskResultsSections({
     results,
     areas,
     levels,
+    minGroup,
 }: {
     results: RiskResults;
     areas: AreaResults;
     levels: RiskLevelInfo[];
+    minGroup: number;
 }) {
     const hidden = hiddenAreasText(areas.hidden);
 
@@ -42,7 +45,11 @@ export default function RiskResultsSections({
                     heading={
                         <h2 className="text-lg font-semibold">Por área</h2>
                     }
-                    description={`Solo áreas con al menos 5 cuestionarios, y de forma que el resto no se pueda deducir.${hidden === null ? '' : ` ${hidden}.`}`}
+                    description={
+                        hidesSmallGroups(minGroup)
+                            ? `Solo áreas con al menos ${minGroup} cuestionarios, y de forma que el resto no se pueda deducir.${hidden === null ? '' : ` ${hidden}.`}`
+                            : NO_GROUP_MINIMUM
+                    }
                     noun="Área"
                     rows={areas.visible.map((each) => ({
                         key: each.id,
@@ -57,9 +64,9 @@ export default function RiskResultsSections({
                 <section className="flex flex-col gap-2 card p-5 sm:p-6">
                     <h2 className="text-lg font-semibold">Por área</h2>
                     <p className="text-sm text-muted-foreground">
-                        Ninguna área se muestra: se necesitan al menos 5
-                        cuestionarios por área, y que el resto no se pueda
-                        deducir.{hidden === null ? '' : ` ${hidden}.`}
+                        Ninguna área se muestra: se necesitan al menos{' '}
+                        {minGroup} cuestionarios por área, y que el resto no se
+                        pueda deducir.{hidden === null ? '' : ` ${hidden}.`}
                     </p>
                 </section>
             )}

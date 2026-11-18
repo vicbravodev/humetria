@@ -1,5 +1,6 @@
 import { CalendarClock, Clock, Lock, MessageSquareOff } from 'lucide-react';
 import IntroChip from '@/components/engagement/survey/intro-chip';
+import { surveyPrivacyText } from '@/lib/engagement/results';
 import type { EngagementSurveyProps } from '@/types';
 
 /**
@@ -39,9 +40,7 @@ export default function SurveyIntro({
                     className="mt-0.5 size-5 shrink-0 text-primary"
                 />
                 <p className="font-medium">
-                    El sistema no guarda quién contestó qué y solo muestra
-                    resultados de grupos de {survey.minGroup ?? 0} personas o
-                    más.
+                    {surveyPrivacyText(survey.minGroup ?? 0)}
                 </p>
             </div>
             <div className="flex items-start gap-3">

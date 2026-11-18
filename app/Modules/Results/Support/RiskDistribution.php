@@ -22,6 +22,12 @@ final readonly class RiskDistribution
 {
     public function __construct(private Instruments $instruments, private GroupMinimum $minimum) {}
 
+    /** The same rule with the minimum a campaign froze when it launched, instead of the company's now. */
+    public function at(int $minimum): self
+    {
+        return new self($this->instruments, $this->minimum->at($minimum));
+    }
+
     /**
      * The final score, categories and domains of the questionnaires, or of one area when it is an area shown.
      *

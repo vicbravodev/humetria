@@ -117,7 +117,7 @@ final class SendSurveyInvitations implements ShouldQueue
             $token = $participant->surveyToken();
             $participant->update(['token_hash' => Participant::hashToken($token), 'invited_at' => now()]);
             Notification::routes($routes)->notify(new SurveyInvitation(
-                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant), $home,
+                $kind, $token, $person->name, $company, $contact, $workCenter, $campaign->closes_on, self::minutes($participant), $campaign->groupMinimum(), $home,
             ));
             $participant->update(['invitation_status' => InvitationStatus::Sent]);
         }

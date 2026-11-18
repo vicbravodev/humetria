@@ -184,6 +184,8 @@ export type EvidenceCenter = {
         state: 'ready' | 'done' | 'waiting' | 'not_applicable';
         closedOn: string | null;
         campaignId: string | null;
+        /** The minimum of people per group its evaluation froze; null without one. */
+        minimum: number | null;
     };
 };
 

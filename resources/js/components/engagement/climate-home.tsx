@@ -7,6 +7,7 @@ import SurveyCard from '@/components/engagement/survey-card';
 import SurveyHistory from '@/components/engagement/survey-history';
 import PageHeader from '@/components/humetria/page-header';
 import { homeState } from '@/lib/engagement/panel';
+import { anonymityText } from '@/lib/engagement/results';
 import type { EngagementHome } from '@/types';
 
 /**
@@ -18,6 +19,7 @@ export default function ClimateHome({
     surveys,
     canManage,
     latest,
+    minGroup,
 }: EngagementHome) {
     const state = homeState({
         current: current !== null,
@@ -32,7 +34,7 @@ export default function ClimateHome({
                 facts={[
                     {
                         icon: Lock,
-                        text: 'Respuestas anónimas · resultados por grupos de 5 o más',
+                        text: anonymityText(minGroup),
                     },
                 ]}
             >

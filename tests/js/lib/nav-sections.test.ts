@@ -44,6 +44,7 @@ describe('navSections', () => {
                     'Accesos',
                     'Usuarios',
                     'Plan y uso',
+                    'Privacidad',
                 ],
             ],
             [

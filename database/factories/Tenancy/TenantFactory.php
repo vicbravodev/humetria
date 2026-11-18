@@ -32,6 +32,8 @@ final class TenantFactory extends Factory
             'rfc' => Str::upper(fake()->lexify('???').fake()->date('ymd').fake()->bothify('???')),
             'slug' => Str::slug($tradeName).'-'.fake()->unique()->numberBetween(1, 99999),
             'type' => TenantType::Company,
+            // Follows the platform's minimum per group; set so the model carries it, as one read from the database does.
+            'min_group' => null,
         ];
     }
 

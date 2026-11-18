@@ -230,6 +230,8 @@ export type NomReport = {
     issuedOn: string;
     participation: Participation;
     method: string;
+    /** The minimum of questionnaires per group the evaluation froze when it launched; 1 is none. */
+    minGroup: number;
     objective: string;
     activities: string;
     conclusions: string | null;

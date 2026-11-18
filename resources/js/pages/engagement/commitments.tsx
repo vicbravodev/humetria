@@ -63,7 +63,10 @@ export default function Commitments(props: EngagementCommitments) {
                             }
                         />
                         {props.loopAction !== null && (
-                            <LoopActionCard loopAction={props.loopAction} />
+                            <LoopActionCard
+                                loopAction={props.loopAction}
+                                minGroup={props.minGroup}
+                            />
                         )}
                         <CommitmentsBoard {...props} />
                     </>

@@ -5,7 +5,6 @@ import {
     complianceNavItems,
     mainNavItems,
     navTrail,
-    nextObligation,
     settingsEntryHref,
     settingsNavItems,
 } from '@/lib/app-navigation';
@@ -29,6 +28,7 @@ const ACME_PAGES = [
     '/admin/acme/access',
     '/admin/acme/members',
     '/admin/acme/plan',
+    '/admin/acme/privacy',
 ];
 const titles = (tenant: ReturnType<typeof acme> | null) =>
     mainNavItems(tenant, false).map((item) => item.title);
@@ -64,6 +64,7 @@ describe('mainNavItems', () => {
             'Accesos',
             'Usuarios',
             'Plan y uso',
+            'Privacidad',
         ]);
         expect(titles(acme(true, false))).toEqual([
             'Panel',
@@ -187,27 +188,6 @@ describe('complianceNavItems', () => {
         expect(complianceNavItems(acme(), 2)[0]?.badge).toBe(2);
         expect(complianceNavItems(acme(), 2)[1]?.badge).toBeUndefined();
         expect(complianceNavItems(acme())[0]?.badge).toBe(0);
-    });
-});
-
-describe('nextObligation', () => {
-    it('tells when the soonest evaluation closes', () => {
-        expect(nextObligation({ count: 1, daysLeft: 11, elapsed: 21 })).toEqual(
-            { lead: 'La próxima evaluación cierra', when: 'en 11 días' },
-        );
-        expect(
-            nextObligation({ count: 2, daysLeft: 1, elapsed: 90 })?.when,
-        ).toBe('mañana');
-        expect(
-            nextObligation({ count: 1, daysLeft: 0, elapsed: 100 })?.when,
-        ).toBe('hoy');
-    });
-
-    it('has none without an evaluation in course', () => {
-        expect(nextObligation({ count: 0, daysLeft: null, elapsed: 0 })).toBe(
-            null,
-        );
-        expect(nextObligation(null)).toBe(null);
     });
 });
 

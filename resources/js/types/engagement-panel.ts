@@ -118,6 +118,8 @@ export type EngagementHome = {
     current: ClimateSurveyCard | null;
     surveys: Paginated<ClimateSurveyHistoryRow>;
     canManage: boolean;
+    /** The company's minimum per group now: what the next survey will promise (criterio C-23); 1 is none. */
+    minGroup: number;
     modes: PulseModeOption[] | null;
     schedule: PulseSchedule | null;
     frequencies: PulseModeOption[] | null;

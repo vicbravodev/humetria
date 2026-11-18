@@ -41,11 +41,11 @@ final class SummarizeComments implements ShouldQueue
     public function handle(): void
     {
         $survey = Survey::query()->find($this->surveyId);
-        $thresholds = resolve(Thresholds::class);
-
         if ($survey === null || $this->row()?->status === SummaryStatus::Ready) {
             return;
         }
+
+        $thresholds = resolve(Thresholds::class)->of($survey);
 
         $comments = $this->comments();
 

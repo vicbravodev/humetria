@@ -5,7 +5,7 @@
 <p>Hola, {{ $name }}:</p>
 <p>{{ $company->tradeName }} quiere saber cómo se vive el trabajo para decidir qué mejorar. Puede dejar sin contestar cualquier pregunta.</p>
 @include('mail.partials.callout', ['tone' => 'accent', 'icon' => 'lock', 'lines' => [
-    e("El sistema no guarda quién contestó qué y solo muestra resultados de grupos de {$minGroup} personas o más."),
+    e($groupNotice),
 ]])
 @include('mail.partials.facts', ['facts' => ['Tiempo' => "Unos {$minutes} minutos", 'Desde' => 'Su celular o computadora', 'Hasta el' => $lastDay]])
 <x-mail::action>

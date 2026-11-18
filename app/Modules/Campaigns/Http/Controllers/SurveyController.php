@@ -41,6 +41,7 @@ final class SurveyController extends Controller
                 'kind' => $unavailable->kind?->value,
                 'closesOn' => null,
                 'instruments' => [],
+                'minGroup' => null,
             ]);
         }
 
@@ -66,6 +67,8 @@ final class SurveyController extends Controller
             'kind' => $survey->campaign->kind->value,
             'closesOn' => $survey->campaign->closes_on === null ? null : CampaignClock::day($survey->campaign->closes_on, isDate: true),
             'instruments' => $instruments,
+            // What each anonymous guide tells about the groups: the minimum frozen when the evaluation launched.
+            'minGroup' => $survey->campaign->groupMinimum(),
         ]);
     }
 

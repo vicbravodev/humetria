@@ -58,9 +58,9 @@ function inventory(): array
     $url = 'https://humetria.test/x';
 
     return [
-        'survey invitation' => [fn () => new SurveyInvitation(SurveyEmail::Invitation, 'tok', 'Ana', $company, null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15), true],
-        'climate invitation' => [fn () => new App\Modules\Engagement\Notifications\SurveyInvitation(false, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-12-01'), App\Modules\Engagement\Enums\SurveyKind::Climate), true],
-        'climate reminder' => [fn () => new App\Modules\Engagement\Notifications\SurveyInvitation(true, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-12-01'), App\Modules\Engagement\Enums\SurveyKind::Climate), true],
+        'survey invitation' => [fn () => new SurveyInvitation(SurveyEmail::Invitation, 'tok', 'Ana', $company, null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15, 5), true],
+        'climate invitation' => [fn () => new App\Modules\Engagement\Notifications\SurveyInvitation(false, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-12-01'), App\Modules\Engagement\Enums\SurveyKind::Climate, 5), true],
+        'climate reminder' => [fn () => new App\Modules\Engagement\Notifications\SurveyInvitation(true, 'tok', 'Ana', $company, null, CarbonImmutable::parse('2026-12-01'), App\Modules\Engagement\Enums\SurveyKind::Climate, 5), true],
         'climate sensitive mentions' => [fn () => new App\Modules\Engagement\Notifications\SensitiveMentions($company, 'Clima · noviembre 2026', $url), true],
         'climate manager feedback' => [fn () => new App\Modules\Engagement\Notifications\ManagerFeedbackReady($company, 'Marta', 'Clima · noviembre 2026', $url), true],
         'progress digest' => [fn () => new ProgressDigest($company, 'Planta', 3, 10, 5, [], ['name' => 'Ventas', 'pending' => 7], 7, $url), true],
@@ -76,7 +76,7 @@ function inventory(): array
         'climate feedback published' => [fn () => new App\Modules\Engagement\Notifications\FeedbackPublished($url, 'Ana', $company), true],
         'pulse upcoming' => [fn () => new App\Modules\Engagement\Notifications\PulseUpcoming($company, CarbonImmutable::parse('2026-12-15'), 'Recorrido', 10, 2, $url), true],
         'program digest' => [fn () => new ProgramDigest($company, 'Olga', ['1 acción vencida.'], $url), true],
-        'closing summary' => [fn () => new ClosingSummary($company, 'Planta', 8, 10, null, null, true, 0, $url), true],
+        'closing summary' => [fn () => new ClosingSummary($company, 'Planta', 8, 10, null, null, true, 0, 5, $url), true],
         'referral follow-up' => [fn () => new ReferralFollowUp($company, $url), true],
         'support waiting' => [fn () => new SupportWaiting($url, 'Ana', $company), true],
         'risks to confirm' => [fn () => new RisksToConfirm($url, 'Ana', $company), true],
@@ -126,7 +126,7 @@ it('keeps a space between the sentence and the link spelled out under the button
 
     expect($html)->toMatch('#navegador: <br><a href="https?://[^"]+"#')->not->toContain('navegador:<br>');
 })->with([
-    'survey invitation reminder' => [fn () => new SurveyInvitation(SurveyEmail::Reminder, 'tok', 'Ana', inventoryCompany(), null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15)],
+    'survey invitation reminder' => [fn () => new SurveyInvitation(SurveyEmail::Reminder, 'tok', 'Ana', inventoryCompany(), null, 'Planta', CarbonImmutable::parse('2026-12-01'), 15, 5)],
 ]);
 
 // E-12: what a person of the company receives speaks of «usted», the spelled-out link included. The Comisión's «documents to

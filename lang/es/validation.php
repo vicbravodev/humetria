@@ -236,6 +236,7 @@ return [
     ],
 
     'attributes' => [
+        'min_group' => 'mínimo de personas por grupo',
         'plan' => 'plan',
         'seats' => 'personas contratadas',
         'negotiated_price' => 'precio negociado',

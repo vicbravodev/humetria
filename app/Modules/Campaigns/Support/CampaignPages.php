@@ -22,6 +22,7 @@ use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Closure;
@@ -54,6 +55,7 @@ final readonly class CampaignPages
         private CampaignPeople $people,
         private Areas $areas,
         private InviteMissing $inviteMissing,
+        private GroupMinimums $groupMinimums,
     ) {}
 
     /**
@@ -85,7 +87,8 @@ final readonly class CampaignPages
                 $workCenter, $headcount[$workCenter->id] ?? 0, $evaluations->where('work_center_id', $workCenter->id), $card,
             )),
             'centersBySize' => $this->centersBySize($all, $headcount),
-            'minGroup' => config()->integer('results.min_group'),
+            // The company's now: what an evaluation launched from here would freeze.
+            'minGroup' => $this->groupMinimums->current(),
         ];
     }
 

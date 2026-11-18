@@ -9,6 +9,7 @@ import Pagination from '@/components/humetria/pagination';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { ManagerResults, ManagerRow, Paginated } from '@/types';
 import { resultsCaption } from '@/lib/engagement/panel';
+import { hidesSmallGroups } from '@/lib/group-minimum';
 import {
     useEngagementKind,
     useEngagementTrail,
@@ -19,6 +20,7 @@ import {
 export default function Managers({
     survey,
     available,
+    minGroup,
     managers,
     hasHidden,
 }: ManagerResults & { managers: Paginated<ManagerRow> }) {
@@ -61,9 +63,11 @@ export default function Managers({
                         icon={Users}
                         title="Ningún jefe tiene un grupo que se pueda mostrar"
                     >
-                        Un grupo se muestra con al menos 5 respuestas. Los
-                        resultados de toda la empresa siguen en la pantalla de
-                        resultados.
+                        {hidesSmallGroups(minGroup)
+                            ? `Un grupo se muestra con al menos ${minGroup} respuestas.`
+                            : 'Ningún grupo recibió respuestas.'}{' '}
+                        Los resultados de toda la empresa siguen en la pantalla
+                        de resultados.
                     </EmptyState>
                 ) : (
                     <>

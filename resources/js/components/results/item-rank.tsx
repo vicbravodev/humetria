@@ -5,7 +5,13 @@ import type { ItemSection } from '@/types';
 const SHOWN = 6;
 
 /** The questions the center answered worst, across every section: where an intervention can start. */
-export default function ItemRank({ sections }: { sections: ItemSection[] }) {
+export default function ItemRank({
+    sections,
+    minGroup,
+}: {
+    sections: ItemSection[];
+    minGroup: number;
+}) {
     const worst = rankItems(sections.flatMap((section) => section.items))
         .filter((item) => item.unfavorable !== null && item.unfavorable > 0)
         .slice(0, SHOWN);
@@ -21,7 +27,11 @@ export default function ItemRank({ sections }: { sections: ItemSection[] }) {
             </h3>
             <ol className="@container divide-y card p-4 sm:p-5">
                 {worst.map((item) => (
-                    <ItemRow key={item.number} item={item} />
+                    <ItemRow
+                        key={item.number}
+                        item={item}
+                        minGroup={minGroup}
+                    />
                 ))}
             </ol>
         </div>
