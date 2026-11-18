@@ -60,11 +60,48 @@ it('sends the template the way the Cloud API expects it', function (): void {
                 'name' => 'survey_invite_v1',
                 'language' => ['code' => 'es_MX'],
                 'components' => [
-                    ['type' => 'body', 'parameters' => [['type' => 'text', 'text' => 'Acme'], ['type' => 'text', 'text' => '12 de mayo']]],
+                    ['type' => 'body', 'parameters' => [
+                        ['type' => 'text', 'parameter_name' => 'empresa', 'text' => 'Acme'],
+                        ['type' => 'text', 'parameter_name' => 'fecha_limite', 'text' => '12 de mayo'],
+                    ]],
                     ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [['type' => 'text', 'text' => 'the-link-token']]],
                 ],
             ];
     });
+});
+
+it('sends the header variable by name and the button at its own index', function (): void {
+    Http::fake(['*' => Http::response(['messages' => [['id' => 'wamid.ABC']]], 200)]);
+
+    cloudGateway()->send(new OutboundMessage('+528112345678', 'engagement_invite_v1', 'es_MX', ['Acme', '12 de mayo'], 'the-link-token', 'delivery-uuid'));
+
+    Http::assertSent(fn (Request $request): bool => $request->data()['template']['components'] === [
+        ['type' => 'header', 'parameters' => [['type' => 'text', 'parameter_name' => 'empresa', 'text' => 'Acme']]],
+        ['type' => 'body', 'parameters' => [
+            ['type' => 'text', 'parameter_name' => 'empresa', 'text' => 'Acme'],
+            ['type' => 'text', 'parameter_name' => 'fecha_limite', 'text' => '12 de mayo'],
+        ]],
+        ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [['type' => 'text', 'text' => 'the-link-token']]],
+    ]);
+});
+
+it('refuses a message whose parameters do not match its template, and sends nothing', function (): void {
+    Http::fake();
+
+    expect(fn () => cloudGateway()->send(new OutboundMessage('+528112345678', 'survey_invite_v1', 'es_MX', ['Acme'], 'the-link-token', 'delivery-uuid')))
+        ->toThrow(InvalidArgumentException::class);
+    Http::assertNothingSent();
+});
+
+it('sends the verification code of the authentication template in the body and in the copy-code button', function (): void {
+    Http::fake(['*' => Http::response(['messages' => [['id' => 'wamid.ABC']]], 200)]);
+
+    cloudGateway()->send(new OutboundMessage('+528112345678', 'proof_code_v1', 'es_MX', ['123456'], '123456', 'delivery-uuid'));
+
+    Http::assertSent(fn (Request $request): bool => $request->data()['template']['components'] === [
+        ['type' => 'body', 'parameters' => [['type' => 'text', 'text' => '123456']]],
+        ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [['type' => 'text', 'text' => '123456']]],
+    ]);
 });
 
 it('does not put the token anywhere but the button', function (): void {

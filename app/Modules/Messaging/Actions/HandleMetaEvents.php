@@ -12,6 +12,7 @@ use App\Modules\Messaging\Support\DeliveryFailures;
 use App\Modules\Messaging\Support\MetaStatus;
 use App\Modules\Messaging\Support\PhoneForMeta;
 use App\Modules\Messaging\Support\RecordDeliveryEvent;
+use App\Modules\Messaging\Support\TemplateButton;
 use App\Modules\Messaging\Support\WebhookInbox;
 use App\Modules\Messaging\Support\WhatsAppErrorMap;
 use App\Modules\Tenancy\Contracts\Companies;
@@ -21,8 +22,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
- * What a signed webhook of Meta says. Statuses go to the history of their message (in its company, whoever is current); a STOP
- * becomes an opt-out; the quality of the number is logged. Anything else is ignored, and the payload itself is never logged.
+ * What a signed webhook of Meta says. Statuses go to the history of their message (in its company, whoever is current); a STOP, typed or tapped on
+ * the «Dejar de recibir» button, becomes an opt-out; the quality of the number is logged. Anything else is ignored, and the payload itself is never logged.
  */
 final class HandleMetaEvents
 {
@@ -146,9 +147,8 @@ final class HandleMetaEvents
     {
         $id = $message['id'] ?? null;
         $from = $message['from'] ?? null;
-        $text = is_array($message['text'] ?? null) ? ($message['text']['body'] ?? null) : null;
 
-        if (($message['type'] ?? null) !== 'text' || ! is_string($id) || ! is_string($from) || ! is_string($text) || ! $this->isStop($text)) {
+        if (! is_string($id) || ! is_string($from) || ! $this->isStopRequest($message)) {
             return;
         }
 
@@ -163,6 +163,24 @@ final class HandleMetaEvents
                 }
             });
         }
+    }
+
+    /**
+     * A STOP typed as text, or a tap on the «Dejar de recibir» button of a template (a message of type `button`).
+     *
+     * @param  array<mixed>  $message
+     */
+    private function isStopRequest(array $message): bool
+    {
+        $type = $message['type'] ?? null;
+        $text = is_array($message['text'] ?? null) ? ($message['text']['body'] ?? null) : null;
+        $label = is_array($message['button'] ?? null) ? ($message['button']['text'] ?? null) : null;
+
+        return match (true) {
+            $type === 'text' && is_string($text) => $this->isStop($text),
+            $type === 'button' && is_string($label) => mb_strtoupper(trim($label)) === mb_strtoupper(TemplateButton::OPT_OUT_LABEL),
+            default => false,
+        };
     }
 
     private function isStop(string $text): bool

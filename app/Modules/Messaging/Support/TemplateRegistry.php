@@ -7,17 +7,24 @@ namespace App\Modules\Messaging\Support;
 use InvalidArgumentException;
 
 /**
- * The templates Humetria sends, in code: Meta approves them, the app does not. All UTILITY, es_MX, two body parameters ({{1}} the
- * company, {{2}} the last day) and a URL button whose variable is the survey link token.
- *
- * Supuesto por confirmar (Victor, antes de la Fase 2): the texts below are provisional.
+ * The templates Humetria sends, in code: Meta approves them, the app does not. Texts are the ones approved in
+ * `2026-11-18-whatsapp-templates.md`; variables are named and their examples are the ones the catalog gives.
  */
 final class TemplateRegistry
 {
-    /** @var array<string, TemplateDefinition>|null */
+    private const string FOOTER = 'Humetria';
+
+    private const array EXAMPLES = [
+        'empresa' => 'Industrias Ejemplo',
+        'fecha_limite' => 'viernes 20 de noviembre',
+        'fecha' => 'lunes 16 de noviembre',
+        'minutos' => '15',
+    ];
+
+    /** @var array<string, TemplateDefinition|AuthenticationTemplate>|null */
     private ?array $templates = null;
 
-    public function get(string $key): TemplateDefinition
+    public function get(string $key): TemplateDefinition|AuthenticationTemplate
     {
         return $this->all()[$key] ?? throw new InvalidArgumentException("Unknown WhatsApp template [{$key}].");
     }
@@ -25,38 +32,127 @@ final class TemplateRegistry
     /** The template of an invitation type (an InvitationReference constant). */
     public function forInvitation(string $invitationType): TemplateDefinition
     {
-        return $this->get(match ($invitationType) {
+        $template = $this->get(match ($invitationType) {
             'campaign_participant' => 'survey_invite_v1',
             'engagement_invitation' => 'engagement_invite_v1',
             default => throw new InvalidArgumentException("No WhatsApp template for invitation type [{$invitationType}]."),
         });
+
+        return $template instanceof TemplateDefinition ? $template : throw new InvalidArgumentException("[{$template->key}] is not an invitation template.");
     }
 
-    /** @return array<string, TemplateDefinition> */
+    /** @return array<string, TemplateDefinition|AuthenticationTemplate> */
     public function all(): array
     {
-        $language = config()->string('whatsapp.language');
+        return $this->templates ??= $this->indexed([...$this->surveys(), ...$this->portalNotices(), ...$this->access()]);
+    }
 
-        return $this->templates ??= [
-            'survey_invite_v1' => new TemplateDefinition(
-                key: 'survey_invite_v1',
-                language: $language,
-                category: 'UTILITY',
-                body: '{{1}} le invita a contestar una evaluación confidencial sobre su trabajo. Tiene hasta el {{2}}. El enlace es personal y sirve una sola vez.',
-                bodyParameterCount: 2,
-                buttonLabel: 'Contestar',
-                buttonUrlBase: $this->base('survey.show'),
-            ),
-            'engagement_invite_v1' => new TemplateDefinition(
-                key: 'engagement_invite_v1',
-                language: $language,
-                category: 'UTILITY',
-                body: '{{1}} le invita a dar su opinión en una encuesta anónima. Tiene hasta el {{2}}. El enlace es personal.',
-                bodyParameterCount: 2,
-                buttonLabel: 'Contestar',
-                buttonUrlBase: $this->base('engagement.survey.show'),
-            ),
+    /** @return list<TemplateDefinition> */
+    private function surveys(): array
+    {
+        $language = config()->string('whatsapp.language');
+        $greeting = 'Hola, buen día. Le escribimos de parte de {{empresa}}.';
+        $privacy = TemplateButton::fixedUrl('Aviso de privacidad', route('privacy-notice'));
+        $stop = TemplateButton::quickReply(TemplateButton::OPT_OUT_LABEL);
+        $link = fn (string $text, string $route): TemplateButton => TemplateButton::urlWithVariable($text, $this->base($route), 'abc123');
+        $invite = fn (string $route): array => [$link('Contestar ahora', $route), $privacy, $stop];
+        $reminder = 'Hola, buen día. Le recordamos que su evaluación de parte de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}.';
+
+        return [
+            $this->template('survey_invite_v1', $language, "{$greeting} Como parte de la NOM-035, tiene pendiente contestar una evaluación sobre su trabajo. Es confidencial y puede hacerlo hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", 'Su evaluación de la NOM-035', $invite('survey.show')),
+            $this->template('seating_invite_v1', $language, "{$greeting} Como parte de la Ley Silla, queremos saber cómo son los asientos y las pausas en su trabajo. Son unos minutos y puede contestar hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", 'Encuesta sobre su puesto de trabajo', $invite('survey.show')),
+            $this->template('engagement_invite_v1', $language, "{$greeting} Queremos saber cómo le va en su trabajo con esta encuesta anónima: nadie verá sus respuestas individuales. Tiene hasta el {{fecha_limite}} para contestarla y su enlace es personal.", 'Encuesta anónima de {{empresa}}', $invite('engagement.survey.show')),
+            $this->template('survey_reminder_v1', $language, $reminder, null, [$link('Continuar', 'survey.show'), $stop]),
+            $this->template('engagement_reminder_v1', $language, $reminder, null, [$link('Continuar', 'engagement.survey.show'), $stop]),
         ];
+    }
+
+    /**
+     * The notices that open the worker's portal. Their routes carry the section in the middle (`/me/{slug}/telework`), and
+     * Meta's URL variable goes at the end: until a route ends in the variable, the button is pending.
+     *
+     * @return list<TemplateDefinition>
+     */
+    private function portalNotices(): array
+    {
+        $language = config()->string('whatsapp.language');
+        $stop = TemplateButton::quickReply(TemplateButton::OPT_OUT_LABEL);
+        $hello = 'Hola, buen día.';
+        $pending = fn (string $text): TemplateButton => TemplateButton::pendingUrl($text, 'No route ends in the variable for this notice (the portal sections have the slug in the middle); worker.home (/me/{slug}) is the nearest one.');
+        $notice = fn (string $key, string $body, string $button, bool $optOut = true): TemplateDefinition => $this->template($key, $language, "{$hello} {$body}", null, [$pending($button), ...($optOut ? [$stop] : [])]);
+
+        return [
+            $this->template('leave_decision_v1', $language, "{$hello} {{empresa}} ya respondió su solicitud del {{fecha}}. Puede verla en su portal.", null, [
+                $pending('Ver respuesta'),
+                TemplateButton::pendingPhone('Llamar a RH', "The phone of HR is each company's own, and no template field carries it yet."),
+                $stop,
+            ]),
+            $notice('leave_to_decide_v1', 'Tiene una solicitud de su equipo en {{empresa}} que le toca responder. Puede hacerlo en su portal.', 'Responder'),
+            $notice('policy_to_confirm_v1', '{{empresa}} publicó su política de prevención y necesita que confirme que la leyó. Puede leerla y dar su acuse en su página.', 'Leer y confirmar'),
+            $notice('engagement_feedback_v1', '{{empresa}} publicó lo que hará a partir de la encuesta de clima. Puede leerlo en su página.', 'Leer'),
+            $notice('seating_risks_v1', '{{empresa}} ya evaluó su puesto de trabajo. Puede leer el resultado y confirmar que se lo explicaron en su página.', 'Ver resultado'),
+            $notice('seating_questions_v1', '{{empresa}} quiere hacerle dos preguntas sobre su trabajo de pie. Contestar es voluntario y toma un minuto.', 'Contestar'),
+            $notice('telework_invite_v1', '{{empresa}} le pide completar su lista de verificación de teletrabajo. Puede hacerlo en su portal.', 'Completar lista'),
+            $notice('telework_reminder_v1', 'Tiene pendientes en su portal de teletrabajo de {{empresa}}. Puede revisarlos cuando guste.', 'Ver pendientes'),
+            $notice('telework_answered_v1', '{{empresa}} respondió el aviso que usted envió. El detalle solo se ve en su portal.', 'Ver respuesta', false),
+            $notice('support_waiting_v1', '{{empresa}} le dejó un aviso en su portal personal. Solo usted puede verlo.', 'Ver aviso', false),
+            $notice('attendance_correction_v1', '{{empresa}} respondió su solicitud de corrección de asistencia. Puede verla en su portal.', 'Ver respuesta'),
+        ];
+    }
+
+    /** @return list<TemplateDefinition|AuthenticationTemplate> */
+    private function access(): array
+    {
+        $language = config()->string('whatsapp.language');
+        $pending = fn (string $text, string $what): TemplateButton => TemplateButton::pendingUrl($text, "The {$what} sits after the slug in the route, and Meta's variable goes at the end: a route that ends in it is missing.");
+
+        return [
+            $this->template('worker_invite_v1', $language, 'Hola, buen día. {{empresa}} le invita a crear su acceso personal al portal. El enlace es personal y solo sirve una vez.', null, [$pending('Crear mi acceso', 'one-use link')]),
+            $this->template('access_link_v1', $language, 'Hola, buen día. Este es el enlace que pidió para entrar a su portal de {{empresa}}. Solo sirve una vez y vence en {{minutos}} minutos.', null, [$pending('Entrar al portal', 'one-use link')]),
+            $this->template('key_registered_v1', $language, 'Hola, buen día. Se registró una llave de acceso nueva en su portal de {{empresa}}. Si no fue usted, avísenos.', null, [$pending('No fui yo', 'signed address that revokes the key')]),
+            new AuthenticationTemplate('proof_code_v1', $language),
+        ];
+    }
+
+    /**
+     * @param  list<TemplateButton>  $buttons
+     */
+    private function template(string $key, string $language, string $body, ?string $header, array $buttons): TemplateDefinition
+    {
+        $used = [...self::variablesIn($body), ...self::variablesIn($header ?? '')];
+
+        return new TemplateDefinition(
+            key: $key,
+            language: $language,
+            body: $body,
+            examples: array_intersect_key(self::EXAMPLES, array_flip($used)),
+            header: $header,
+            footer: self::FOOTER,
+            buttons: $buttons,
+        );
+    }
+
+    /** @return list<string> */
+    private static function variablesIn(string $text): array
+    {
+        preg_match_all('/\{\{([^{}]*)\}\}/', $text, $matches);
+
+        return $matches[1];
+    }
+
+    /**
+     * @param  list<TemplateDefinition|AuthenticationTemplate>  $templates
+     * @return array<string, TemplateDefinition|AuthenticationTemplate>
+     */
+    private function indexed(array $templates): array
+    {
+        $byKey = [];
+
+        foreach ($templates as $template) {
+            $byKey[$template->key] = $template;
+        }
+
+        return $byKey;
     }
 
     /** The route's URL with `{{1}}` where the token goes (Meta's variable of the button). */

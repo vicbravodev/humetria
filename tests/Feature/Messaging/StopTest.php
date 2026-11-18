@@ -93,3 +93,64 @@ it('does not log the phone or its hash', function (): void {
 
     Illuminate\Support\Facades\Log::shouldHaveReceived('info')->withArgs(fn (string $event, array $context = []): bool => ! str_contains((string) json_encode($context), '8186875767'));
 });
+
+/** What Meta sends when the person taps a quick-reply button of a template: a message of type `button`. */
+function tapped(string $label, string $id = 'wamid.TAP1', string $from = '5218186875767'): array
+{
+    return ['entry' => [['changes' => [['field' => 'messages', 'value' => ['messages' => [['from' => $from, 'id' => $id, 'timestamp' => '1795000000', 'type' => 'button', 'button' => ['payload' => $label, 'text' => $label]]]]]]]]];
+}
+
+it('reads a tap on «Dejar de recibir» as a STOP, for every company that wrote to the phone', function (): void {
+    [$a, $b] = [Tenant::factory()->create(), Tenant::factory()->create()];
+    wroteTo($a);
+    wroteTo($b);
+
+    $response = postMeta(tapped('Dejar de recibir'));
+
+    expect($response->getStatusCode())->toBe(200)->and($response->getContent())->toBe('')
+        ->and(OptOut::query()->pluck('tenant_id')->sort()->values()->all())->toBe(collect([$a->id, $b->id])->sort()->values()->all())
+        ->and(WebhookEvent::query()->pluck('event_id')->all())->toBe(['message:wamid.TAP1']);
+    Http::assertNothingSent();
+});
+
+it('takes the tap as a STOP however the button is written', function (string $label): void {
+    postMeta(tapped($label));
+
+    expect(OptOut::query()->count())->toBe(1);
+})->with(['dejar de recibir', 'DEJAR DE RECIBIR', '  Dejar de recibir ']);
+
+it('leaves no trace of any other button', function (string $label): void {
+    postMeta(tapped($label));
+
+    expect(OptOut::query()->count())->toBe(0)->and(WebhookEvent::query()->count())->toBe(0);
+})->with(['Contestar ahora', 'Aviso de privacidad', 'Dejar de recibir ahora', '']);
+
+it('ignores a button message without a text, a sender or a valid phone', function (): void {
+    $noText = tapped('Dejar de recibir');
+    unset($noText['entry'][0]['changes'][0]['value']['messages'][0]['button']['text']);
+    $noButton = tapped('Dejar de recibir');
+    unset($noButton['entry'][0]['changes'][0]['value']['messages'][0]['button']);
+
+    postMeta($noText);
+    postMeta($noButton);
+    postMeta(tapped('Dejar de recibir', id: 'wamid.TAP2', from: 'garbage'));
+
+    expect(OptOut::query()->count())->toBe(0)->and(WebhookEvent::query()->count())->toBe(0);
+});
+
+it('processes a tap once, when Meta repeats it', function (): void {
+    wroteTo(Tenant::factory()->create());
+
+    postMeta(tapped('Dejar de recibir', id: 'wamid.SAME'));
+    postMeta(tapped('Dejar de recibir', id: 'wamid.SAME'));
+
+    expect(WebhookEvent::query()->where('event_id', 'message:wamid.SAME')->count())->toBe(1)->and(OptOut::query()->count())->toBe(1);
+});
+
+it('does not read a tap without a valid signature', function (): void {
+    wroteTo(Tenant::factory()->create());
+
+    expect(postMeta(tapped('Dejar de recibir'), secret: null)->getStatusCode())->toBe(403)
+        ->and(postMeta(tapped('Dejar de recibir'), secret: 'wrong')->getStatusCode())->toBe(403)
+        ->and(OptOut::query()->count())->toBe(0)->and(WebhookEvent::query()->count())->toBe(0);
+});
