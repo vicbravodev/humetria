@@ -22,7 +22,7 @@ function exported(): array
 beforeEach(function (): void {
     Http::preventStrayRequests();
     Http::fake();
-    config(['whatsapp.access_token' => 'the-secret-token', 'whatsapp.phone_number_id' => '999']);
+    config(['whatsapp.access_token' => 'the-secret-token', 'whatsapp.phone_number_id' => 'the-phone-number-id']);
 });
 
 it('prints the creation request of every template as Meta asks for it, and calls nobody', function (): void {
@@ -98,5 +98,5 @@ it('writes one JSON file per template into a directory, and still sends nothing'
 });
 
 it('never reads the credentials', function (): void {
-    expect(json_encode(exported()))->not->toContain('the-secret-token')->not->toContain('999');
+    expect(json_encode(exported()))->not->toContain('the-secret-token')->not->toContain('the-phone-number-id');
 });
