@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Providers;
 
 use App\Models\User;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\CompanyChannels;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
@@ -23,6 +24,7 @@ use App\Modules\Tenancy\Support\CompanyModuleAccess;
 use App\Modules\Tenancy\Support\CompanyTimezones;
 use App\Modules\Tenancy\Support\CompanyWorkCenters;
 use App\Modules\Tenancy\Support\DemoCompanyRegistry;
+use App\Modules\Tenancy\Support\EloquentCompanyChannels;
 use App\Modules\Tenancy\Support\ModuleStates;
 use App\Modules\Tenancy\Support\TenantContext;
 use App\Modules\Tenancy\Support\TenantRegistry;
@@ -54,6 +56,7 @@ final class TenancyServiceProvider extends ServiceProvider
         $this->app->bind(CompanyModules::class, CompanyModuleAccess::class);
         $this->app->bind(CompanyLimits::class, CompanyLimitCounters::class);
         $this->app->bind(DemoCompanies::class, DemoCompanyRegistry::class);
+        $this->app->bind(CompanyChannels::class, EloquentCompanyChannels::class);
     }
 
     public function boot(): void
