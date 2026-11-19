@@ -1,4 +1,5 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import AuthHeading from '@/components/auth-heading';
 import InputError from '@/components/humetria/input-error';
 import PasskeyVerify from '@/components/passkeys/passkey-verify';
@@ -19,6 +20,8 @@ type Props = {
 };
 
 export default function Login({ status, canResetPassword }: Props) {
+    const [email, setEmail] = useState('');
+
     return (
         <>
             <Head title="Iniciar sesión" />
@@ -32,8 +35,6 @@ export default function Login({ status, canResetPassword }: Props) {
                     {status}
                 </p>
             )}
-
-            <PasskeyVerify />
 
             <Form
                 {...store.form()}
@@ -51,6 +52,10 @@ export default function Login({ status, canResetPassword }: Props) {
                                 required
                                 autoFocus
                                 autoComplete="email"
+                                value={email}
+                                onChange={(event) =>
+                                    setEmail(event.target.value)
+                                }
                                 placeholder="nombre@empresa.mx"
                             />
                             <InputError message={errors['email']} />
@@ -95,7 +100,22 @@ export default function Login({ status, canResetPassword }: Props) {
                 )}
             </Form>
 
-            <SsoEntry />
+            <div className="flex items-center gap-3 text-caption text-muted-foreground">
+                <span aria-hidden className="h-px flex-1 bg-border" />
+                o entra con
+                <span aria-hidden className="h-px flex-1 bg-border" />
+            </div>
+
+            <div className="grid gap-2">
+                <PasskeyVerify
+                    copy={{
+                        label: 'Entrar con llave de acceso',
+                        loading: 'Verificando…',
+                        separator: '',
+                    }}
+                />
+                <SsoEntry email={email} />
+            </div>
 
             <p className="text-sm text-muted-foreground">
                 ¿Tu empresa aún no usa Humetría?{' '}

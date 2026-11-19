@@ -26,8 +26,9 @@ it('shows the owner the setup of single sign-on', function (bool $dark, bool $mo
         ->assertSee('Activar el SSO');
 })->with($looks);
 
-it('offers the other way in on the login page', function (): void {
+it('offers the other ways in on the login page, reusing the email already typed', function (): void {
     visitPage('auth/login', '/admin/login')
-        ->assertSee('¿Tu empresa usa inicio de sesión único?')
-        ->assertSee('Continuar con SSO');
+        ->assertSee('o entra con')
+        ->assertSee('Continuar con SSO')
+        ->assertDontSee('¿Tu empresa usa inicio de sesión único?');
 });

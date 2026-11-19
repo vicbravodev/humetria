@@ -84,6 +84,7 @@ const LABELS: Record<string, string> = {
     'sso.enforced': 'Inicio de sesión único exigido',
     'sso.enforcement_lifted': 'Inicio de sesión único ya no se exige',
     'sso.signed_in': 'Inicio de sesión con SSO',
+    'sso.staff_signed_in': 'Inicio de sesión del personal con SSO',
     'assistant.results_viewed': 'Resultados consultados por Humi',
     'assistant.settings_changed': 'Ajustes de Humi cambiados',
     'complaint.message_sent': 'Mensaje enviado en una queja',
