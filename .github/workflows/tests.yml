@@ -67,6 +67,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     timeout-minutes: 15
     services: &postgres
       postgres:
@@ -102,6 +105,13 @@ jobs:
             resources/js/wayfinder
           if-no-files-found: error
           retention-days: 1
+      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
+      - name: Cancel the run
+        if: failure()
+        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run cancel "$GITHUB_RUN_ID"
 
   # Static checks and the frontend: the fast feedback (a style or type error shows up here in a couple of minutes). It
   # builds nothing: Wayfinder's files, which TypeScript and the linter read, are generated on their own.
@@ -109,6 +119,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     timeout-minutes: 20
     services: *postgres
     steps:
@@ -138,6 +151,13 @@ jobs:
           npm run check
           npm run types:check
           npm run test:js
+      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
+      - name: Cancel the run
+        if: failure()
+        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run cancel "$GITHUB_RUN_ID"
 
   # Unit and Feature with coverage, in three shards balanced by the time of each file (tests/.pest/shards.json). Each
   # shard keeps its coverage; the coverage job joins them and applies the minimum.
@@ -145,6 +165,9 @@ jobs:
     needs: [changes, build]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     timeout-minutes: 30
     services: *postgres
     strategy:
@@ -170,12 +193,22 @@ jobs:
           path: coverage-${{ matrix.shard }}.cov
           if-no-files-found: error
           retention-days: 1
+      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
+      - name: Cancel the run
+        if: failure()
+        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run cancel "$GITHUB_RUN_ID"
 
   # The coverage of the three shards together. Pest does not apply --min in parallel, so the script reads the report.
   coverage:
     needs: [changes, tests]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -196,12 +229,22 @@ jobs:
         run: |
           php scripts/coverage-merge.php coverage.xml coverage-*.cov
           php scripts/coverage-min.php coverage.xml 90
+      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
+      - name: Cancel the run
+        if: failure()
+        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run cancel "$GITHUB_RUN_ID"
 
   # The browser tests, in four shards balanced by the time of each file (tests/.pest/shards.json).
   browser:
     needs: [changes, build]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     timeout-minutes: 30
     services: *postgres
     strategy:
@@ -230,6 +273,13 @@ jobs:
           path: tests/Browser/Screenshots
           if-no-files-found: ignore
           retention-days: 7
+      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
+      - name: Cancel the run
+        if: failure()
+        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run cancel "$GITHUB_RUN_ID"
 
   # The tests that need a real Node and a real Docker: the SSR bundle served by Node under the browser (composer test:ssr) and
   # the `ssr` image, built and run with the restrictions of compose.production.yaml (scripts/ssr/container-test.sh). A broken
@@ -238,6 +288,9 @@ jobs:
     needs: [changes, build]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     timeout-minutes: 30
     services: *postgres
     steps:
@@ -267,6 +320,13 @@ jobs:
           path: tests/Browser/Screenshots
           if-no-files-found: ignore
           retention-days: 7
+      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
+      - name: Cancel the run
+        if: failure()
+        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run cancel "$GITHUB_RUN_ID"
 
   # The required check: every job passed, or the change was only documentation and they were skipped.
   ci:

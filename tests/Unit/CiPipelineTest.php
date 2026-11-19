@@ -104,6 +104,20 @@ it('stops every job of tests.yml that hangs', function (): void {
     }
 });
 
+it('cancels the whole run the moment a job fails, so nothing keeps running over a red pipeline', function (): void {
+    $jobs = workflowJobs('tests.yml');
+
+    foreach (['build', 'checks', 'tests', 'coverage', 'browser', 'ssr'] as $name) {
+        $steps = (array) ($jobs[$name]['steps'] ?? []);
+        $last = is_array(end($steps)) ? end($steps) : [];
+
+        expect($jobs[$name]['permissions'] ?? null)->toBe(['contents' => 'read', 'actions' => 'write'], "the job {$name} cannot cancel the run")
+            ->and($last['if'] ?? null)->toBe('failure()', "the job {$name} does not end with a step that runs on failure")
+            ->and($last['run'] ?? null)->toBe('gh run cancel "$GITHUB_RUN_ID"', "the job {$name} does not cancel the run when it fails")
+            ->and($last['continue-on-error'] ?? null)->toBeTrue("the job {$name} would hide its own failure if the cancel is refused");
+    }
+});
+
 it('runs on a merge queue as well', function (): void {
     $parsed = Yaml::parseFile(dirname(__DIR__, 2).'/.github/workflows/tests.yml');
 
