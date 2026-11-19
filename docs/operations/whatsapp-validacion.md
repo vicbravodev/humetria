@@ -69,10 +69,12 @@ repositorio y nunca en la salida de los comandos.
 6. **Entrantes:** desde tu teléfono manda «STOP», «ALTA» y «hola» al número de prueba; revisa `messaging_opt_outs`.
 7. **Plantillas:** `sail artisan messaging:export-templates` con `APP_URL` en `https`, y `POST /{waba}/message_templates` con
    cada JSON (sin los campos `_pending`).
+   El token temporal del sandbox caduca en unas dos horas (error 190, «Session has expired»): hay que generar otro y cambiarlo.
 8. Al terminar: genera un token nuevo para invalidar el anterior y elimina el túnel.
 
 ## 5. Lo que falta para producción
 
+- Estado al cierre (2026-11-18, unas seis horas después): las cinco plantillas del WABA de prueba seguían en revisión, sin rechazo; un sandbox sin negocio verificado puede no recibir revisión. Cerrada la validación sin ellas.
 - Aprobación de las plantillas en el WABA real (y el resultado de `engagement_invite_v1`: ¿UTILITY o MARKETING?).
 - Probar el botón de respuesta rápida «Dejar de recibir» (tipo `button` del mensaje entrante) con una plantilla aprobada.
 - Probar `proof_code_v1` y las 14 plantillas con destino pendiente cuando existan sus rutas.
