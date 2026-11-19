@@ -27,4 +27,26 @@ final readonly class OidcProviders
             $nonce,
         );
     }
+
+    /** Whether the platform has an identity provider for its own staff. */
+    public function staffConfigured(): bool
+    {
+        return config()->string('sso.staff.issuer', '') !== '' && config()->string('sso.staff.client_id', '') !== ''
+            && config()->string('sso.staff.client_secret', '') !== '' && config()->string('sso.staff.domain', '') !== '';
+    }
+
+    /**
+     * @throws SsoSignInFailed
+     */
+    public function forStaff(Request $request, string $nonce): OidcProvider
+    {
+        return new OidcProvider(
+            $request,
+            config()->string('sso.staff.client_id'),
+            config()->string('sso.staff.client_secret'),
+            route('sso.staff.callback'),
+            $this->discovery->endpoints(config()->string('sso.staff.issuer')),
+            $nonce,
+        );
+    }
 }

@@ -44,6 +44,16 @@ y 2FA y desactiva el SSO desde la misma pantalla. Si el dueño tampoco puede, so
 (restablecer contraseña / quitar 2FA) y apaga SSO con una sesión de impersonación… que no sirve para la pantalla de SSO
 (`ForbidWhileImpersonating`): en ese caso, ingeniería: `sso_connections` de esa empresa → `enabled = false, enforced = false`.
 
+## El personal de Humetría
+
+Aparte del SSO por empresa (que rechaza al personal), la plataforma tiene **un** proveedor propio para su gente (superadmin,
+soporte): `config/sso.php` → `staff`, desde `SSO_STAFF_ISSUER`, `SSO_STAFF_CLIENT_ID`, `SSO_STAFF_CLIENT_SECRET` y
+`SSO_STAFF_DOMAIN` (con Google Workspace: `https://accounts.google.com`; redirección `{APP_URL}/admin/sso-staff/callback`).
+Se entra por `GET /admin/sso-staff` (sin botón en el login). Mismo flujo (state, nonce, PKCE, ID token), y
+`Actions/CompleteStaffSsoSignIn` exige correo verificado del dominio del personal, de una cuenta que ya existe y tiene rol de
+plataforma; nunca crea cuentas. Sin las cuatro variables la ruta responde 404. Contraseña, 2FA y llave siguen funcionando.
+Bitácora y log: `sso.staff_signed_in`; fallos: `sso.staff_sign_in_failed` con `reason`.
+
 ## Bitácora y logs
 
 `sso.configured`, `sso.domain_verified`, `sso.enabled`, `sso.disabled`, `sso.enforced`, `sso.enforcement_lifted` y `sso.signed_in`
