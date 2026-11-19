@@ -7,6 +7,7 @@ namespace App\Modules\Sso\Support;
 use App\Modules\Sso\Exceptions\SsoSignInFailed;
 use App\Modules\Sso\Models\SsoConnection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 /** Builds the code flow of a company's own identity provider: its discovery, its credentials and the callback of the platform. */
 final readonly class OidcProviders
@@ -33,6 +34,13 @@ final readonly class OidcProviders
     {
         return config()->string('sso.staff.issuer', '') !== '' && config()->string('sso.staff.client_id', '') !== ''
             && config()->string('sso.staff.client_secret', '') !== '' && config()->string('sso.staff.domain', '') !== '';
+    }
+
+    /** Whether this work email is one of the platform's own staff, who come in with the platform provider and not a company's. */
+    public function isStaffEmail(string $email): bool
+    {
+        return $this->staffConfigured() && str_contains($email, '@')
+            && Str::lower(Str::afterLast($email, '@')) === Str::lower(config()->string('sso.staff.domain'));
     }
 
     /**

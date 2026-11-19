@@ -29,9 +29,15 @@ final class SsoSignInController extends Controller
 {
     private const string GENERIC = 'No pudimos iniciar tu sesión con SSO. Si el problema sigue, pide ayuda a quien administra tu cuenta.';
 
-    public function discover(Request $request, FindSsoCompany $find): RedirectResponse|Response
+    public function discover(Request $request, FindSsoCompany $find, OidcProviders $providers): RedirectResponse|Response
     {
-        $slug = $find->handle($request->string('email')->toString());
+        $email = $request->string('email')->toString();
+
+        if ($providers->isStaffEmail($email)) {
+            return Inertia::location(route('sso.staff.start'));
+        }
+
+        $slug = $find->handle($email);
 
         return $slug === null ? $this->refused('unknown_domain', null) : Inertia::location(route('sso.start', $slug));
     }
