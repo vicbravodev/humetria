@@ -1,50 +1,59 @@
-import { Form, usePage } from '@inertiajs/react';
-import { KeyRound } from 'lucide-react';
+import { router, usePage } from '@inertiajs/react';
+import { Building2 } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/humetria/input-error';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { discover } from '@/routes/sso';
 
+type Props = { email: string };
+
 /**
- * The other way in of the login: the work email decides which company's provider to go to. Whatever goes wrong (here or on
- * the way back) says the same thing, so nothing tells who has single sign-on.
+ * Another way in of the login: the work email already typed above decides which company's provider to go to. Whatever goes
+ * wrong (here or on the way back) says the same thing, so nothing tells who has single sign-on.
  */
-export default function SsoEntry() {
+export default function SsoEntry({ email }: Props) {
     const refused = usePage().props.errors['sso'];
+    const [processing, setProcessing] = useState(false);
+    const [missing, setMissing] = useState(false);
+
+    const go = () => {
+        if (email.trim() === '') {
+            setMissing(true);
+
+            return;
+        }
+
+        setMissing(false);
+        router.post(
+            discover.url(),
+            { email },
+            {
+                onStart: () => setProcessing(true),
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
 
     return (
-        <Form
-            {...discover.form()}
-            className="flex flex-col gap-3 border-t pt-6"
-        >
-            {({ processing }) => (
-                <>
-                    <div className="grid gap-1.5">
-                        <Label htmlFor="sso-email">
-                            ¿Tu empresa usa inicio de sesión único?
-                        </Label>
-                        <Input
-                            id="sso-email"
-                            type="email"
-                            name="email"
-                            required
-                            autoComplete="email"
-                            placeholder="nombre@empresa.mx"
-                        />
-                        <InputError message={refused} />
-                    </div>
-                    <Button
-                        type="submit"
-                        variant="outline"
-                        disabled={processing}
-                    >
-                        {processing ? <Spinner /> : <KeyRound aria-hidden />}
-                        Continuar con SSO
-                    </Button>
-                </>
-            )}
-        </Form>
+        <div className="grid gap-2">
+            <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={go}
+                disabled={processing}
+            >
+                {processing ? <Spinner /> : <Building2 aria-hidden />}
+                Continuar con SSO
+            </Button>
+            <InputError
+                message={
+                    missing
+                        ? 'Escribe arriba tu correo de trabajo para continuar con el SSO de tu empresa.'
+                        : refused
+                }
+            />
+        </div>
     );
 }
