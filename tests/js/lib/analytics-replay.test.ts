@@ -61,6 +61,11 @@ describe('replay of the landing', () => {
         });
     });
 
+    it('lets PostHog read the project replay settings, or the recorder never starts and every event says disabled', () => {
+        expect(posthogOptions(REPLAY).advanced_disable_flags).toBe(false);
+        expect(posthogOptions(CONFIG).advanced_disable_flags).toBe(true);
+    });
+
     it('keeps the replay off and the speed unmeasured without it', () => {
         const options = posthogOptions(CONFIG);
 
