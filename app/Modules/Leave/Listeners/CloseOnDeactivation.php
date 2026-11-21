@@ -7,6 +7,7 @@ namespace App\Modules\Leave\Listeners;
 use App\Modules\Leave\Actions\CancelRequest;
 use App\Modules\Leave\Actions\RecordTermination;
 use App\Modules\Leave\Actions\RouteRequests;
+use App\Modules\Leave\Actions\VoidLaterPeriods;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Support\Decider;
@@ -21,7 +22,7 @@ use App\Modules\Tenancy\Contracts\Companies;
  */
 final readonly class CloseOnDeactivation
 {
-    public function __construct(private Companies $companies, private CancelRequest $cancel, private RouteRequests $route, private RecordTermination $terminate) {}
+    public function __construct(private Companies $companies, private CancelRequest $cancel, private RouteRequests $route, private VoidLaterPeriods $void, private RecordTermination $terminate) {}
 
     public function handle(EmployeeDeactivated $event): void
     {
@@ -40,6 +41,8 @@ final readonly class CloseOnDeactivation
         }
 
         $this->route->reroute($event->employeeId);
+        // What was granted after the day they left was never theirs: out of the days they are owed.
+        $this->void->handle($event->employeeId, $event->effectiveOn);
         $this->terminate->handle($event->employeeId, $event->effectiveOn);
     }
 }

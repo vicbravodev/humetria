@@ -6,6 +6,7 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Leave\Actions\RecordTermination;
 use App\Modules\Leave\Actions\SettleTermination;
+use App\Modules\Leave\Actions\VoidLaterPeriods;
 use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\PolicyScope;
 use App\Modules\Leave\Enums\Tranche;
@@ -30,10 +31,11 @@ use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
-mutates(RecordTermination::class, SettleTermination::class, VoidTerminationOnReactivation::class);
+mutates(RecordTermination::class, SettleTermination::class, VoidLaterPeriods::class, VoidTerminationOnReactivation::class);
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create());
@@ -101,6 +103,55 @@ it('counts the days to the effective date of the departure, not to the day it wa
     // 12 days × 161 days elapsed / 365, not the 182 of today.
     expect($termination->terminated_on->toDateString())->toBe('2025-06-11')
         ->and($termination->proportional_days)->toBe(5.29);
+});
+
+it('voids with an entry of the ledger the period granted after the effective date, so only the proportional of that year is owed', function (): void {
+    // Typed on 10 March 2026 for a departure on 15 February: the sixth anniversary (1 March) never happened for them.
+    $this->travelTo('2026-03-10 18:00:00');
+    Context::add('user_id', $this->user->id);
+    $ana = hiredOn('2020-03-01');
+    $fifth = periodWith($ana, 5, '2025-03-01', statutory: 20, taken: 8);
+    $sixth = periodWith($ana, 6, '2026-03-01', statutory: 22);
+    Log::spy();
+
+    resolve(DeactivateEmployee::class)->handle($ana, effectiveOn: CarbonImmutable::parse('2026-02-15'));
+    $termination = LeaveTermination::query()->where('employee_id', $ana->id)->sole();
+
+    // The 12 left of the fifth year; 22 × 351 days from 1 March 2025 to 15 February 2026 / 365 for the sixth, in course.
+    expect($termination->only(['pending_days', 'proportional_days']))->toBe(['pending_days' => 12, 'proportional_days' => 21.16])
+        ->and(periodsLeftOf($ana))->toBe([[12, 0], [0, 0]])
+        ->and(LeaveEntry::query()->where('kind', EntryKind::Adjustment)->get()->map(fn (LeaveEntry $entry): array => [$entry->leave_entitlement_id, $entry->tranche, $entry->days, $entry->recorded_by, $entry->note])->all())
+        ->toBe([[$sixth->id, Tranche::Statutory, -22, $this->user->id, 'Periodo posterior a la fecha de la baja (15/02/2026): no llegó a cumplirse.']])
+        // Nothing is erased: the grant is still there.
+        ->and(LeaveEntry::query()->where('leave_entitlement_id', $sixth->id)->count())->toBe(2)
+        ->and(AuditEntry::query()->where('event', 'leave.entitlements_voided')->sole()->metadata)->toEqual(['employee_id' => $ana->id, 'periods' => 1, 'days' => 22]);
+    Log::shouldHaveReceived('info')->with('leave.entitlements_voided', ['employee_id' => $ana->id, 'periods' => 1, 'days' => 22])->once();
+    expect($fifth->refresh()->id)->toBe($fifth->id);
+});
+
+it('voids the extra days of a later period too, and the period that falls on the same day of the departure stays', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    Context::add('user_id', $this->user->id);
+    $ana = hiredOn('2020-03-01');
+    periodWith($ana, 5, '2025-03-01', statutory: 20);
+    periodWith($ana, 6, '2026-02-15', statutory: 22, extra: 3);
+    $after = periodWith($ana, 7, '2026-02-16', statutory: 22, extra: 3);
+
+    resolve(DeactivateEmployee::class)->handle($ana, effectiveOn: CarbonImmutable::parse('2026-02-15'));
+
+    expect(periodsLeftOf($ana))->toBe([[20, 0], [22, 3], [0, 0]])
+        ->and(LeaveEntry::query()->where('kind', EntryKind::Adjustment)->orderBy('days')->get()->map(fn (LeaveEntry $entry): array => [$entry->leave_entitlement_id, $entry->tranche, $entry->days])->all())
+        ->toBe([[$after->id, Tranche::Statutory, -22], [$after->id, Tranche::Extra, -3]]);
+});
+
+it('does not let a departure go through when a later period would be voided with nobody to answer for it', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    $ana = hiredOn('2020-03-01');
+    periodWith($ana, 6, '2026-03-01', statutory: 22);
+
+    expect(fn () => resolve(DeactivateEmployee::class)->handle($ana, effectiveOn: CarbonImmutable::parse('2026-02-15')))->toThrow(LogicException::class)
+        ->and($ana->refresh()->deactivated_at)->toBeNull()
+        ->and(LeaveEntry::query()->where('kind', EntryKind::Adjustment)->count())->toBe(0);
 });
 
 it('does not count as enjoyed a vacation approved after the effective date', function (): void {
