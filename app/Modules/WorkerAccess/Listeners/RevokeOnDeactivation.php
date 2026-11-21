@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Someone who left the company has no access: every key of theirs stops (reason `left_company`; one revoked before keeps its
- * reason and date), every link that still opened is revoked and every session ends (valid_after moves), as ReissueAccess does,
+ * reason and date), every link that still opened is revoked and every session ends (valid_after moves, even for someone with no key or link), as ReissueAccess does,
  * with no new link. It runs inside the transaction that deactivates them. Coming back, they get a new link and a new key.
  */
 final readonly class RevokeOnDeactivation
@@ -30,12 +30,14 @@ final readonly class RevokeOnDeactivation
         $links = WorkerAccessLink::query()->where('employee_id', $event->employeeId)->whereNull('used_at')->whereNull('revoked_at')->exists();
         WorkerAccessLink::revokePending($event->employeeId);
 
-        // Nothing of theirs to stop: nothing to move, say or log.
+        // Their sessions end whatever else they had: one opened with a link already used would come back with them.
+        WorkerAccessState::moveValidAfter($event->tenantId, $event->employeeId);
+
+        // Nothing of theirs to revoke: nothing to say or log.
         if ($revoked === 0 && ! $links) {
             return;
         }
 
-        WorkerAccessState::moveValidAfter($event->tenantId, $event->employeeId);
         $this->audit->handle('worker_access.access_revoked_on_leaving', null, ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]);
         Log::info('worker_access.access_revoked_on_leaving', ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]);
     }

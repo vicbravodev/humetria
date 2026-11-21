@@ -49,6 +49,20 @@ it('revokes every key and link of the person who left and ends their sessions', 
     Log::shouldHaveReceived('info')->with('worker_access.access_revoked_on_leaving', ['employee_id' => $this->ana->id, 'keys_revoked' => 2])->once();
 });
 
+it('ends the session of someone with no key and no link too, so coming back soon after does not bring it back', function (): void {
+    $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'hired_on' => '2025-01-01']);
+    // They entered with a link they already used: nothing of theirs to revoke, only the session.
+    enteredAs($beto->id, EntryVia::RequestedLink);
+    expect(resolve(WorkerSessionStore::class)->current())->not->toBeNull();
+    $this->travel(1)->seconds();
+
+    resolve(DeactivateEmployee::class)->handle($beto);
+    $this->travel(5)->minutes();
+    $beto->update(['deactivated_at' => null, 'terminated_on' => null, 'deactivation_reason' => null]);
+
+    expect(resolve(WorkerSessionStore::class)->current())->toBeNull();
+});
+
 it('keeps why and when a key was revoked before', function (): void {
     $lost = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'revoked_at' => now()->subDay(), 'revoked_reason' => 'not_me']);
 
