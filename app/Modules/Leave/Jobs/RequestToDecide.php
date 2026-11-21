@@ -18,7 +18,8 @@ use Illuminate\Support\Facades\Notification;
 
 /**
  * Tells a manager, by email, that a request is theirs to answer. The request is read again when it runs: one that was
- * answered, cancelled, taken to RH or given to another manager since is no longer theirs, and tells nobody. Only ids
+ * answered, cancelled or given to another manager since is no longer theirs, and tells nobody; one that reached RH still
+ * is: the manager keeps it until it is answered. Only ids
  * travel in the job; whoever has no email gets none, and the person's pages are the same either way.
  */
 final class RequestToDecide implements ShouldQueue, ShouldQueueAfterCommit
@@ -38,7 +39,7 @@ final class RequestToDecide implements ShouldQueue, ShouldQueueAfterCommit
         $company = $companies->enter($this->tenantId);
         $request = LeaveRequest::query()->find($this->requestId);
 
-        if ($request === null || $request->status !== RequestStatus::Requested || $request->escalated_at !== null || $request->approver_employee_id !== $this->managerId) {
+        if ($request === null || $request->status !== RequestStatus::Requested || $request->approver_employee_id !== $this->managerId) {
             return;
         }
 

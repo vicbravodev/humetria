@@ -115,13 +115,13 @@ describe('to the manager', function (): void {
         Notification::assertNothingSent();
     });
 
-    it('tells nobody when it already reached RH', function (): void {
+    it('still tells the manager when it reached RH: it stays theirs to answer', function (): void {
         Notification::fake();
         $request = waitingRequest('escalated');
 
         RequestToDecide::dispatchSync($this->tenant->id, $request->id, $this->boss->id);
 
-        Notification::assertNothingSent();
+        Notification::assertSentOnDemandTimes(ToDecideMail::class, 1);
     });
 
     it('does not swallow a failure: the queue retries it', function (): void {

@@ -91,6 +91,30 @@ final readonly class RouteRequests
         return $done;
     }
 
+    /**
+     * A person's manager changed: what waited for the one they had, the ones that already reached RH included, waits now
+     * for whoever answers for the person, who is told. With nobody above, what had not reached RH goes there.
+     *
+     * @param  string  $from  the manager they had
+     */
+    public function reassign(string $employeeId, string $from): void
+    {
+        $approver = $this->approver->for($employeeId);
+
+        if ($approver === $from) {
+            return;
+        }
+
+        foreach (LeaveRequest::query()->where('status', RequestStatus::Requested)->where('employee_id', $employeeId)->where('approver_employee_id', $from)->get() as $request) {
+            if ($approver === null && $request->escalated_at === null) {
+                $this->escalate($request, EscalationReason::NoManager, ['approver_employee_id' => null]);
+            } elseif (LeaveRequest::query()->whereKey($request->id)->where('status', RequestStatus::Requested)->where('approver_employee_id', $from)->update(['approver_employee_id' => $approver]) === 1) {
+                Log::info('leave.request_reassigned', ['request_id' => $request->id, 'approver_employee_id' => $approver]);
+                $this->notifier->toDecide($request->fill(['approver_employee_id' => $approver])->syncOriginal());
+            }
+        }
+    }
+
     private function markTaken(): int
     {
         $taken = 0;
