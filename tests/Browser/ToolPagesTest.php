@@ -217,3 +217,17 @@ it('tells what comes next after the form on a phone and beside it on a wide scre
     resizeTo(visit('/registro-de-jornada', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 1280, 900)
         ->assertScript("() => { const at = {$position}; return at.beside && ! at.below; }");
 });
+
+it('puts the sticky demo button away while the form is on screen and brings it back after', function (): void {
+    $page = resizeTo(visit('/registro-de-jornada', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 375, 812);
+    $bar = 'document.querySelector("[data-test=sticky-demo-bar]")';
+    $gone = "() => new Promise((resolve) => { const check = () => getComputedStyle({$bar}).opacity === '0' && {$bar}.inert ? resolve(true) : requestAnimationFrame(check); check(); })";
+    $back = "() => new Promise((resolve) => { const check = () => getComputedStyle({$bar}).opacity === '1' && ! {$bar}.inert ? resolve(true) : requestAnimationFrame(check); check(); })";
+
+    $page->assertScript("() => getComputedStyle({$bar}).opacity === '1' && ! {$bar}.inert")
+        ->click('a[data-track-target=sticky_demo]')
+        ->assertScript($gone)
+        ->script('() => window.scrollTo({ top: 0, behavior: "instant" })');
+
+    $page->assertScript($back);
+});
