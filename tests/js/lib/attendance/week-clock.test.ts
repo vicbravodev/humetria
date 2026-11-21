@@ -17,6 +17,7 @@ const week = {
     status: 'pending',
     answeredAt: null,
     disputeReason: null,
+    resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
     requests: [],

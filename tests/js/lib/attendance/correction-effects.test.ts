@@ -71,7 +71,7 @@ describe('approveLines', () => {
             },
             {
                 tone: 'done',
-                text: 'Su semana aún no está confirmada: no se reabre nada.',
+                text: 'Su semana aún no tiene respuesta: no se reabre nada.',
             },
             {
                 tone: 'done',
@@ -103,11 +103,11 @@ describe('approveLines', () => {
 
         expect(one[1]).toEqual({
             tone: 'done',
-            text: 'Su semana del 2 al 8 de noviembre de 2026 estaba confirmada: se reabre y le pedimos confirmarla otra vez.',
+            text: 'Su semana del 2 al 8 de noviembre de 2026 ya tenía respuesta: se reabre y le pedimos responderla otra vez.',
         });
         expect(two[1]).toEqual({
             tone: 'done',
-            text: 'Sus semanas del 2 al 8 de noviembre de 2026 y del 9 al 15 de noviembre de 2026 estaban confirmadas: se reabren y le pedimos confirmarlas otra vez.',
+            text: 'Sus semanas del 2 al 8 de noviembre de 2026 y del 9 al 15 de noviembre de 2026 ya tenían respuesta: se reabren y le pedimos responderlas otra vez.',
         });
     });
 

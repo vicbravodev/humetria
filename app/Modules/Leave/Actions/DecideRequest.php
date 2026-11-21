@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Enums\Tranche;
+use App\Modules\Leave\Events\AbsenceChanged;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Exceptions\RequestRefused;
 use App\Modules\Leave\Models\LeaveEntry;
@@ -67,6 +68,10 @@ final readonly class DecideRequest
                 'decided_at' => now(),
                 'rejection_reason' => $approve ? null : $reason,
             ]);
+
+            if ($approve) {
+                event(new AbsenceChanged($request->id, $request->employee_id, $request->starts_on->toDateString(), $request->ends_on->toDateString()));
+            }
 
             if ($by->isHr) {
                 $this->audit->handle('leave.request_decided_by_hr', $request, ['employee_id' => $request->employee_id, 'approved' => $approve, 'working_days' => $request->working_days]);

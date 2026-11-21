@@ -25,6 +25,7 @@ const week: WeekView = {
     status: 'pending',
     answeredAt: null,
     disputeReason: null,
+    resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
     days: [day],

@@ -297,14 +297,14 @@ describe('the request in view', function (): void {
         openRequest($second)->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.sequenceOk', false));
     });
 
-    it('lists the confirmed weeks the approval would reopen, by their Monday', function (): void {
+    it('lists the answered weeks the approval would reopen, confirmed or disputed, by their Monday', function (string $answer): void {
         queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');
-        WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-09']);
+        WeeklyConfirmation::factory()->{$answer}()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-09']);
         WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02']);
         $this->actingAs($this->hr);
 
         openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.reopensWeeks', ['2026-11-09']));
-    });
+    })->with(['confirmed', 'disputed']);
 
     it('reopens nothing when the week was not confirmed', function (): void {
         queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');

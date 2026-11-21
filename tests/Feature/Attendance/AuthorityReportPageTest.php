@@ -8,6 +8,8 @@ use App\Modules\Attendance\Http\Controllers\ReportController;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\ReportPages;
+use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
@@ -22,8 +24,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(ReportController::class, ReportPages::class);
 
-/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included; the pass over everyone for the figures and the one for the days of the page (seven each: 25 before the second), and the zone of the center, read once. */
-const REPORT_PAGE_QUERIES = 33;
+/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included; the pass over everyone for the figures and the one for the days of the page (eight each, who was away included: 26 before the second), and the zone of the center, read once. */
+const REPORT_PAGE_QUERIES = 35;
 
 beforeEach(function (): void {
     // Monday 1 February 2027, 12:00 in Mexico City: the last week that ended is 25 to 31 January.
@@ -165,7 +167,7 @@ describe('the page', function (): void {
     });
 
     it('shows the center\'s period: its figures, the people page by page with their days, and the link to the CSV', function (): void {
-        pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 18:00');
+        $first = pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 18:00');
         $corrected = pageDay($this->ana, '2027-01-27 08:20', '2027-01-27 16:00');
         AttendanceMark::factory()->correcting($corrected)->create(['marked_at' => CarbonImmutable::parse('2027-01-27 08:00', 'America/Mexico_City')->utc(), 'reason' => 'El lector falló.']);
         WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2027-01-25']);
@@ -186,8 +188,14 @@ describe('the page', function (): void {
             ->where('people.data.0.days.0', [
                 'date' => '2027-01-26', 'start' => '08:00', 'end' => '18:00', 'endDate' => '2027-01-26', 'breakMinutes' => 0, 'workedMinutes' => 600,
                 'ordinaryMinutes' => 480, 'doubleMinutes' => 120, 'tripleMinutes' => 0, 'restDayMinutes' => 0, 'evidence' => 'Fuerte',
-                'corrections' => [], 'confirmation' => 'confirmado', 'flags' => [], 'lateMinutes' => null, 'timezone' => 'UTC−06:00 · America/Mexico_City',
+                'corrections' => [], 'confirmation' => 'confirmado', 'flags' => [], 'lateMinutes' => null, 'timezone' => 'UTC−06:00 · America/Mexico_City', 'absence' => null,
+                'marks' => [
+                    ['id' => $first->id, 'type' => 'start', 'date' => '2027-01-26', 'time' => '08:00'],
+                    ['id' => AttendanceMark::query()->where('employee_id', $this->ana->id)->where('type', MarkType::End)->orderBy('marked_at')->value('id'), 'type' => 'end', 'date' => '2027-01-26', 'time' => '18:00'],
+                ],
             ])
+            // The marks in force: the correction, not the mark it replaced.
+            ->where('people.data.0.days.1.marks.0.time', '08:00')
             ->where('people.data.0.days.1.lateMinutes', null)
             ->where('people.data.0.days.1.corrections', ['hora corregida de 08:20 a 08:00 (por RH): El lector falló.'])
             ->where('people.data.1.days.0.flags', ['Sin marca de fin'])
@@ -198,6 +206,19 @@ describe('the page', function (): void {
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('longitude')
             ->not->toContain('accuracy')->not->toContain('distance')->not->toContain('credential_id')->not->toContain('credentialId');
+    });
+
+    it('says which day the person was away with vacations or a leave, never its type', function (): void {
+        $maternity = LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Maternidad']);
+        LeaveRequest::factory()->ofType($maternity)->approved()->create(['employee_id' => $this->ana->id, 'starts_on' => '2027-01-26', 'ends_on' => '2027-01-26', 'working_days' => 1]);
+        pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 16:00');
+        $this->actingAs($this->hr);
+
+        $response = $this->get(authorityReportUrl(['center' => $this->plant->id]))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.days.0.absence', 'leave')
+            ->where('people.data.0.days.0.flags', ['Marcó durante una ausencia']));
+
+        expect($response->getContent())->not->toContain('Maternidad');
     });
 
     it('shows an empty period as such, with no people', function (): void {

@@ -7,6 +7,7 @@ namespace App\Modules\Leave\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\RequestStatus;
+use App\Modules\Leave\Events\AbsenceChanged;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveRequest;
@@ -65,6 +66,10 @@ final readonly class CancelRequest
             }
 
             $request->update(['status' => RequestStatus::Cancelled, 'cancelled_at' => now()]);
+
+            if ($was !== RequestStatus::Requested) {
+                event(new AbsenceChanged($request->id, $request->employee_id, $request->starts_on->toDateString(), $request->ends_on->toDateString()));
+            }
 
             if ($by->isHr) {
                 $this->audit->handle('leave.request_cancelled', $request, ['employee_id' => $request->employee_id, 'was' => $was->value, 'days_returned' => $returned]);

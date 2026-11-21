@@ -18,7 +18,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * A person's answer about one week of their record (criterio 5.2): pending, confirmed or disputed with the reason, with the
- * moment and the device that signed it. Its current state only; the audit trail keeps the history. No hours are kept: they
+ * moment and the device that signed it. A dispute RH resolved goes back to pending with RH's note, who and when, keeping
+ * what was disputed, until the person answers again. Its current state only; the audit trail keeps the history. No hours are kept: they
  * are counted again from the marks every time.
  *
  * @property string $id
@@ -31,10 +32,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $reason
  * @property string|null $credential_id
  * @property string|null $digest
+ * @property string|null $resolution_note
+ * @property int|null $resolved_by
+ * @property CarbonImmutable|null $resolved_at
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'employee_id', 'week_start', 'status', 'confirmed_at', 'disputed_at', 'reason', 'credential_id', 'digest'])]
+#[Fillable(['tenant_id', 'employee_id', 'week_start', 'status', 'confirmed_at', 'disputed_at', 'reason', 'credential_id', 'digest', 'resolution_note', 'resolved_by', 'resolved_at'])]
 #[UseFactory(WeeklyConfirmationFactory::class)]
 final class WeeklyConfirmation extends Model
 {
@@ -44,6 +48,9 @@ final class WeeklyConfirmation extends Model
     protected $table = 'attendance_weekly_confirmations';
 
     protected $attributes = ['status' => 'pending'];
+
+    /** What an answer of the person clears: the resolution of a dispute is about the answer before it. */
+    public const array NO_RESOLUTION = ['resolution_note' => null, 'resolved_by' => null, 'resolved_at' => null];
 
     /** The row of a person's week, created pending when there is none, locked until the transaction ends. */
     public static function lockedFor(string $tenantId, string $employeeId, WeekPeriod $week): self
@@ -59,6 +66,6 @@ final class WeeklyConfirmation extends Model
      */
     protected function casts(): array
     {
-        return ['week_start' => 'immutable_date', 'status' => WeekStatus::class, 'confirmed_at' => 'immutable_datetime', 'disputed_at' => 'immutable_datetime'];
+        return ['week_start' => 'immutable_date', 'status' => WeekStatus::class, 'confirmed_at' => 'immutable_datetime', 'disputed_at' => 'immutable_datetime', 'resolved_at' => 'immutable_datetime'];
     }
 }

@@ -6,7 +6,8 @@ namespace App\Modules\Attendance\Data;
 
 /**
  * `policyReviewed` says RH saved the company's policy («Puesta en marcha»); `unscheduled` counts the active people of the
- * centers in use without a schedule; `pendingCorrections` the requests to correct a mark that wait for RH.
+ * centers in use without a schedule; `pendingCorrections` the requests to correct a mark that wait for RH; `disputedWeeks`
+ * the weeks people disputed that wait for RH to resolve them, of any week.
  */
 final readonly class AttendanceSetup
 {
@@ -14,5 +15,6 @@ final readonly class AttendanceSetup
         public bool $policyReviewed,
         public int $unscheduled,
         public int $pendingCorrections,
+        public int $disputedWeeks = 0,
     ) {}
 }

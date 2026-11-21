@@ -41,6 +41,7 @@ const LABELS: Record<string, string> = {
     'tenant.archived': 'Empresa archivada',
     'attendance.kiosk_revoked': 'Quiosco de asistencia revocado',
     'attendance.week_disputed': 'Semana de asistencia disputada',
+    'attendance.week_dispute_resolved': 'Objeción de semana resuelta por RH',
     'attendance.kiosk_reissued': 'Quiosco de asistencia reemitido',
     'attendance.week_confirmed': 'Semana de asistencia confirmada',
     'attendance.kiosk_issued': 'Quiosco de asistencia emitido',

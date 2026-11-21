@@ -43,3 +43,13 @@ it('counts the people of the centers in use without a schedule and the correctio
 
     expect($this->standing->current())->toEqual(new AttendanceSetup(true, 2, 1));
 });
+
+it('counts the weeks disputed and waiting for RH, of anyone and any week, never of another company', function (): void {
+    App\Modules\Attendance\Models\WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $this->a->id, 'week_start' => '2026-11-02']);
+    App\Modules\Attendance\Models\WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $this->a->id, 'week_start' => '2026-10-26']);
+    App\Modules\Attendance\Models\WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->a->id]);
+    App\Modules\Attendance\Models\WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $this->b->id]);
+    workIn($this->a);
+
+    expect($this->standing->current()->disputedWeeks)->toBe(2);
+});
