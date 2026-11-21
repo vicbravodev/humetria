@@ -14,7 +14,6 @@ use App\Modules\Leave\Support\Approver;
 use App\Modules\Leave\Support\RequestNotifier;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
-use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Carbon\CarbonImmutable;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -191,12 +190,13 @@ it('emails nobody about what RH records for a person, but still says whose it is
     Notification::assertNothingSent();
 });
 
-it('keeps the request when the email cannot be sent', function (): void {
-    Illuminate\Support\Facades\Exceptions::fake();
-    $this->mock(WorkerLinks::class)->shouldReceive('to')->andThrow(new RuntimeException('no link'));
+it('keeps the request while the email waits in the queue, to be retried if the mail server fails', function (): void {
+    Illuminate\Support\Facades\Queue::fake();
 
-    expect(requestBy($this->ana)->exists)->toBeTrue();
-    Illuminate\Support\Facades\Exceptions::assertReported(RuntimeException::class);
+    $request = requestBy($this->ana);
+
+    expect($request->exists)->toBeTrue();
+    Illuminate\Support\Facades\Queue::assertPushed(App\Modules\Leave\Jobs\RequestToDecide::class, 1);
 });
 
 it('logs who was born with RH', function (): void {
