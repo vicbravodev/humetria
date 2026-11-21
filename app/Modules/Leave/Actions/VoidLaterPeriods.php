@@ -25,6 +25,9 @@ use LogicException;
  */
 final readonly class VoidLaterPeriods
 {
+    /** What every voiding entry's note starts with: RestoreVoidedPeriods finds them by it. */
+    public const string NOTE = 'Periodo posterior a la fecha de la baja';
+
     public function __construct(private CurrentTenant $tenant, private RecordAudit $audit) {}
 
     /**
@@ -56,7 +59,7 @@ final readonly class VoidLaterPeriods
                         LeaveEntry::query()->create([
                             'tenant_id' => $this->tenant->id(), 'employee_id' => $employeeId, 'leave_entitlement_id' => $period->entitlementId,
                             'kind' => EntryKind::Adjustment, 'tranche' => $tranche, 'days' => -$left, 'recorded_by' => $by,
-                            'note' => 'Periodo posterior a la fecha de la baja ('.$effectiveOn->format('d/m/Y').'): no llegó a cumplirse.',
+                            'note' => self::NOTE.' ('.$effectiveOn->format('d/m/Y').'): no llegó a cumplirse.',
                         ]);
                         $voided += $left;
                     }

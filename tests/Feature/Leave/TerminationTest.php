@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Leave\Actions\RecordTermination;
+use App\Modules\Leave\Actions\RestoreVoidedPeriods;
 use App\Modules\Leave\Actions\SettleTermination;
 use App\Modules\Leave\Actions\VoidLaterPeriods;
 use App\Modules\Leave\Enums\EntryKind;
@@ -35,7 +36,7 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
-mutates(RecordTermination::class, SettleTermination::class, VoidLaterPeriods::class, VoidTerminationOnReactivation::class);
+mutates(RecordTermination::class, SettleTermination::class, RestoreVoidedPeriods::class, VoidLaterPeriods::class, VoidTerminationOnReactivation::class);
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create());
@@ -282,6 +283,60 @@ it('does not warn when the balance of today is the recorded one', function (): v
     resolve(SettleTermination::class)->handle($termination?->id ?? '', $this->user->id);
 
     Log::shouldNotHaveReceived('warning');
+});
+
+/**
+ * The four first years of someone hired on 1 March 2020, all enjoyed: nothing left of them and nothing for the nightly grant to give.
+ */
+function enjoyedFirstYears(Employee $person): void
+{
+    foreach ([[1, 12], [2, 14], [3, 16], [4, 18]] as [$year, $days]) {
+        periodWith($person, $year, (2020 + $year).'-03-01', statutory: $days, taken: $days);
+    }
+}
+
+it('gives back the periods voided by a departure that is undone, with entries that say why, and as many times as it happens', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    Context::add('user_id', $this->user->id);
+    $ana = hiredOn('2020-03-01');
+    enjoyedFirstYears($ana);
+    periodWith($ana, 5, '2025-03-01', statutory: 20, taken: 8);
+    $sixth = periodWith($ana, 6, '2026-03-01', statutory: 22, extra: 2);
+
+    $done = array_fill(0, 4, [0, 0]);
+    Log::spy();
+
+    foreach ([1, 2] as $round) {
+        resolve(DeactivateEmployee::class)->handle($ana, effectiveOn: CarbonImmutable::parse('2026-02-15'));
+        expect(periodsLeftOf($ana))->toBe([...$done, [12, 0], [0, 0]]);
+
+        resolve(ReactivateEmployee::class)->handle($ana->refresh());
+
+        // As it was before the mistaken departure: nothing was lost.
+        expect(periodsLeftOf($ana))->toBe([...$done, [12, 0], [22, 2]])
+            ->and(LeaveEntry::query()->where('kind', EntryKind::Adjustment)->where('days', '>', 0)->count())->toBe($round * 2)
+            ->and(AuditEntry::query()->where('event', 'leave.entitlements_restored')->count())->toBe($round);
+        Log::shouldHaveReceived('info')->with('leave.entitlements_restored', ['employee_id' => $ana->id, 'periods' => 1, 'days' => 24])->times($round);
+    }
+
+    expect(LeaveEntry::query()->where('leave_entitlement_id', $sixth->id)->where('kind', EntryKind::Adjustment)->where('days', '>', 0)->get()->every(fn (LeaveEntry $entry): bool => $entry->recorded_by === $this->user->id && str_starts_with((string) $entry->note, 'Baja deshecha')))->toBeTrue()
+        ->and(AuditEntry::query()->where('event', 'leave.entitlements_restored')->first()?->metadata)->toEqual(['employee_id' => $ana->id, 'periods' => 1, 'days' => 24]);
+});
+
+it('does not give back what was settled: the settled departure stays as it is', function (): void {
+    $this->travelTo('2026-03-10 18:00:00');
+    Context::add('user_id', $this->user->id);
+    $ana = hiredOn('2020-03-01');
+    enjoyedFirstYears($ana);
+    periodWith($ana, 5, '2025-03-01', statutory: 20, taken: 8);
+    periodWith($ana, 6, '2026-03-01', statutory: 22);
+    $termination = terminate($ana) ?? throw new LogicException('Nothing was recorded.');
+    resolve(SettleTermination::class)->handle($termination->id, $this->user->id);
+
+    resolve(ReactivateEmployee::class)->handle($ana->refresh());
+
+    expect(periodsLeftOf($ana))->toBe([...array_fill(0, 4, [0, 0]), [0, 0], [0, 0]])
+        ->and(AuditEntry::query()->where('event', 'leave.entitlements_restored')->count())->toBe(0);
 });
 
 it('voids a termination not yet settled when the person comes back, and never settles a voided one', function (): void {

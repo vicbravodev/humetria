@@ -206,6 +206,8 @@ const LABELS: Record<string, string> = {
     'leave.request_trimmed': 'Vacación acortada por la baja de la persona',
     'leave.entitlements_voided':
         'Periodos de vacaciones posteriores a la baja anulados',
+    'leave.entitlements_restored':
+        'Periodos de vacaciones anulados por una baja, restituidos',
     'leave.request_decided_by_hr': 'Solicitud de vacaciones resuelta por RH',
     'leave.advance_authorized': 'Adelanto de vacaciones autorizado',
     'leave.request_recorded_by_hr': 'Solicitud de vacaciones registrada por RH',
