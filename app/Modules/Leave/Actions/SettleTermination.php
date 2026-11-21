@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
+use App\Modules\Leave\Exceptions\PersonWorksHere;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveTermination;
 use App\Modules\Leave\Support\Balances;
@@ -28,7 +29,8 @@ final readonly class SettleTermination
     public function __construct(private Roster $roster, private RecordAudit $audit) {}
 
     /**
-     * @throws AlreadyDecided when it was already settled or voided, or the person works here
+     * @throws AlreadyDecided when it was already settled or voided
+     * @throws PersonWorksHere when the person is active again
      * @throws ModelNotFoundException<LeaveTermination>
      */
     public function handle(string $terminationId, int $userId): LeaveTermination
@@ -39,8 +41,12 @@ final readonly class SettleTermination
             EmployeeLock::of($employeeId);
             $termination = LeaveTermination::query()->lockForUpdate()->findOrFail($terminationId);
 
-            if ($termination->settled_at !== null || $termination->voided_at !== null || $this->roster->find($employeeId)?->active === true) {
+            if ($termination->settled_at !== null || $termination->voided_at !== null) {
                 throw new AlreadyDecided;
+            }
+
+            if ($this->roster->find($employeeId)?->active === true) {
+                throw new PersonWorksHere;
             }
 
             $difference = self::differenceOf($termination);

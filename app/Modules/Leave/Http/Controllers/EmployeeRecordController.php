@@ -7,6 +7,7 @@ namespace App\Modules\Leave\Http\Controllers;
 use App\Modules\Leave\Actions\AdjustBalance;
 use App\Modules\Leave\Actions\SettleTermination;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
+use App\Modules\Leave\Exceptions\PersonWorksHere;
 use App\Modules\Leave\Http\Requests\AdjustmentRequest;
 use App\Modules\Leave\Http\Requests\SettleRequest;
 use App\Modules\Leave\Models\LeaveEntitlement;
@@ -59,6 +60,8 @@ final readonly class EmployeeRecordController
             Inertia::flash('toast', $difference === 0
                 ? ['type' => 'success', 'message' => 'Días finiquitados.']
                 : ['type' => 'warning', 'message' => 'Se finiquitó el saldo de hoy ('.($record->pending_days + $difference)." días), pero la baja había registrado {$record->pending_days}: revisa el estado de cuenta."]);
+        } catch (PersonWorksHere) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Esta persona está activa: sus días no se finiquitan.']);
         } catch (AlreadyDecided) {
             Inertia::flash('toast', ['type' => 'error', 'message' => 'Estos días ya se habían finiquitado o la baja se canceló.']);
         }

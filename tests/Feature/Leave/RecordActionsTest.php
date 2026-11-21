@@ -132,7 +132,9 @@ it('tells HR when the days settled are not the ones recorded with the departure'
 it('does not settle the termination of a person who works here', function (): void {
     $termination = LeaveTermination::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
 
-    $this->actingAs($this->hr)->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()->assertSessionHas('inertia.flash_data.toast.type', 'error');
+    $this->actingAs($this->hr)->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()
+        ->assertSessionHas('inertia.flash_data.toast.type', 'error')
+        ->assertSessionHas('inertia.flash_data.toast.message', 'Esta persona está activa: sus días no se finiquitan.');
 
     expect($termination->refresh()->settled_at)->toBeNull()
         ->and(LeaveEntry::query()->where('kind', EntryKind::Termination)->count())->toBe(0);

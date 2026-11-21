@@ -12,6 +12,7 @@ use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\PolicyScope;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
+use App\Modules\Leave\Exceptions\PersonWorksHere;
 use App\Modules\Leave\Listeners\VoidTerminationOnReactivation;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
@@ -252,7 +253,7 @@ it('does not settle the termination of a person who works here: their days are t
     // Back at work without the event that voids the termination (reactivated by hand, in the database).
     $ana->update(['deactivated_at' => null, 'terminated_on' => null, 'deactivation_reason' => null]);
 
-    expect(fn () => resolve(SettleTermination::class)->handle($termination?->id ?? '', $this->user->id))->toThrow(AlreadyDecided::class)
+    expect(fn () => resolve(SettleTermination::class)->handle($termination?->id ?? '', $this->user->id))->toThrow(PersonWorksHere::class)
         ->and(LeaveEntry::query()->where('kind', EntryKind::Termination)->count())->toBe(0)
         ->and($termination?->refresh()->settled_at)->toBeNull()
         ->and(Balances::available($ana->id))->toBe(12);
