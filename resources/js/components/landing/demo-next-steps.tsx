@@ -7,10 +7,17 @@ const steps = [
     'Si te convence, arrancas la prueba con tu gente.',
 ] as const;
 
+type Props = {
+    className?: string | undefined;
+};
+
 /** What happens after the form, so nobody sends it wondering: three steps joined by a line. */
-export default function DemoNextSteps() {
+export default function DemoNextSteps({ className }: Props) {
     return (
-        <div data-test="demo-next-steps" className="mt-3 flex flex-col gap-4">
+        <div
+            data-test="demo-next-steps"
+            className={cn('mt-3 flex flex-col gap-4', className)}
+        >
             <h3 className="text-xl leading-tight font-semibold tracking-[-0.02em]">
                 Qué sigue
             </h3>
