@@ -12,6 +12,7 @@ use App\Modules\Attendance\Support\MarkLock;
 use App\Modules\Tenancy\Contracts\Members;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 /**
@@ -44,7 +45,7 @@ final readonly class CorrectMarkDirectly
             throw new InvalidArgumentException('A correction needs a note.');
         }
 
-        return DB::transaction(function () use ($markId, $local, $note, $userId) {
+        $correction = DB::transaction(function () use ($markId, $local, $note, $userId): AttendanceMark {
             $employeeId = AttendanceMark::query()->findOrFail($markId, ['id', 'employee_id'])->employee_id;
             // The person's marks hold still while the day is checked and changed.
             MarkLock::of($employeeId);
@@ -61,5 +62,10 @@ final readonly class CorrectMarkDirectly
 
             return $this->correct->handle($original->id, $at, $note, $userId);
         });
+
+        // With no request first: what the log tells apart from an approved one.
+        Log::info('attendance.mark_corrected_directly', ['mark_id' => $correction->id, 'corrects_mark_id' => $correction->corrects_mark_id, 'employee_id' => $correction->employee_id]);
+
+        return $correction;
     }
 }

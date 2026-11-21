@@ -2,9 +2,9 @@ import { useState } from 'react';
 import ReportMarkField from '@/components/attendance/report-mark-field';
 import FormSheet from '@/components/humetria/form-sheet';
 import InputError from '@/components/humetria/input-error';
+import TimePicker from '@/components/humetria/time-picker';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SheetTrigger } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
@@ -66,12 +66,10 @@ export default function ReportCorrectSheet({
                     />
                     <div className="grid gap-2">
                         <Label htmlFor="mark-time">Nueva hora</Label>
-                        <Input
+                        <TimePicker
                             id="mark-time"
-                            type="time"
                             value={time}
-                            disabled={voided}
-                            onChange={(event) => setTime(event.target.value)}
+                            onChange={setTime}
                             className="w-36"
                         />
                         <input

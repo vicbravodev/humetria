@@ -16,6 +16,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Illuminate\Support\Facades\Log;
 
 mutates(CorrectMarkDirectly::class);
 
@@ -46,8 +47,12 @@ function correctDirectly(object $test, ?string $local, string $note = 'Llegó a 
 }
 
 describe('the action', function (): void {
-    it('corrects the mark to the local time RH says, with the note, by RH, to the audit trail', function (): void {
+    it('corrects the mark to the local time RH says, with the note, by RH, to the log and the audit trail', function (): void {
+        Log::spy();
+
         $correction = correctDirectly($this, '2026-11-03 09:00');
+
+        Log::shouldHaveReceived('info')->with('attendance.mark_corrected_directly', ['mark_id' => $correction->id, 'corrects_mark_id' => $this->start->id, 'employee_id' => $this->ana->id]);
 
         expect($correction)
             ->corrects_mark_id->toBe($this->start->id)->method->toBe(MarkMethod::Correction)
