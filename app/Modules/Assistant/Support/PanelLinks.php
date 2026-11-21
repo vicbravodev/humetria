@@ -66,6 +66,12 @@ final readonly class PanelLinks
         return $this->path('tenant.attendance.setup');
     }
 
+    /** The disputed weeks of RH's overview of the registro. */
+    public function attendanceDisputes(): string
+    {
+        return $this->path('tenant.attendance.index', ['status' => 'disputed']);
+    }
+
     public function attendanceCorrections(): string
     {
         return $this->path('tenant.attendance.corrections.index');
