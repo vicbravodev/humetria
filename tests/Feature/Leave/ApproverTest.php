@@ -179,14 +179,27 @@ it('sends nothing to a company without an owner, and does not fail', function ()
     Notification::assertNothingSent();
 });
 
-it('emails nobody about what RH records for a person, but still says whose it is to decide', function (): void {
+it('tells the manager of what RH records for a person, as if the person had asked, and the owner when nobody is above', function (): void {
     $rh = User::factory()->create();
 
     $withBoss = requestBy($this->ana, recordedBy: $rh->id);
+    Notification::assertSentOnDemandTimes(RequestToDecide::class, 1);
+    Notification::assertSentOnDemandTimes(RequestEscalated::class, 0);
+
     $withoutBoss = requestBy($this->director, recordedBy: $rh->id);
 
     expect($withBoss->refresh()->approver_employee_id)->toBe($this->boss->id)
         ->and($withoutBoss->refresh()->escalation_reason)->toBe(EscalationReason::NoManager);
+    Notification::assertSentOnDemandTimes(RequestToDecide::class, 1);
+    Notification::assertSentOnDemandTimes(RequestEscalated::class, 1);
+});
+
+it('emails nobody about what RH records when it is going to answer it in the same step', function (): void {
+    $rh = User::factory()->create();
+
+    $request = resolve(RequestLeave::class)->handle($this->ana->id, null, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), null, $rh->id, announce: false);
+
+    expect($request->refresh()->approver_employee_id)->toBe($this->boss->id);
     Notification::assertNothingSent();
 });
 

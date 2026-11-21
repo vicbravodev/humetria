@@ -15,6 +15,7 @@ use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\LeaveDefaults;
 use App\Modules\Leave\Support\PeriodBalance;
+use App\Modules\Leave\Support\RequestNotifier;
 use App\Modules\Leave\Support\RequestPages;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -52,15 +53,16 @@ final readonly class RequestController
     }
 
     /**
-     * RH records vacations or a leave for somebody, even days already gone, and may answer it in the same step. Nobody is
-     * emailed to answer what RH recorded: RH answers on the same screen.
+     * RH records vacations or a leave for somebody, even days already gone, and may answer it in the same step. What it
+     * leaves waiting goes as if the person had asked: the manager is told. What it answers on the same screen tells nobody
+     * to answer.
      */
-    public function store(RecordLeaveRequest $request, mixed $tenant, RequestLeave $ask, DecideRequest $decide): RedirectResponse
+    public function store(RecordLeaveRequest $request, mixed $tenant, RequestLeave $ask, DecideRequest $decide, RequestNotifier $notifier): RedirectResponse
     {
         $employeeId = $request->string('employee_id')->toString();
 
         try {
-            $recorded = $ask->handle($employeeId, $request->typeId(), $request->startsOn(), $request->endsOn(), $request->string('note')->toString(), $request->userId());
+            $recorded = $ask->handle($employeeId, $request->typeId(), $request->startsOn(), $request->endsOn(), $request->string('note')->toString(), $request->userId(), announce: ! $request->boolean('approve'));
         } catch (RequestRefused $refused) {
             throw RecordLeaveRequest::refusal($refused);
         }
@@ -77,6 +79,8 @@ final readonly class RequestController
             $decide->handle($recorded->id, true, Decider::hr($request->userId()));
             Inertia::flash('toast', ['type' => 'success', 'message' => "Solicitud registrada y aprobada a nombre de {$name}."]);
         } catch (RequestRefused $refused) {
+            // Not answered after all: it goes on as any other, with its manager told.
+            $notifier->waiting($recorded);
             Inertia::flash('toast', ['type' => 'error', 'message' => 'La solicitud quedó registrada, pero sin aprobar: '.self::refusalText($refused)]);
         }
 

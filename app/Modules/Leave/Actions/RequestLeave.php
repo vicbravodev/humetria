@@ -38,7 +38,8 @@ use Illuminate\Support\Facades\Log;
  * week of their policy and the holidays of today (criterio C-04), and never again. For vacations it keeps whether they had
  * the days and where they would come from: it can be sent without them (criterio C-17) and the ledger is not touched until
  * someone approves. It is the first active manager's above them to answer; with none, it is born with RH (criterio C-18).
- * What RH records for a person emails nobody: RH answers it on the same screen. The note and the type never reach the logs.
+ * What RH records for a person goes the same way as if the person had asked: the manager is told it is theirs, unless RH
+ * answers it in the same step (not announced). The note and the type never reach the logs.
  */
 final readonly class RequestLeave
 {
@@ -49,10 +50,11 @@ final readonly class RequestLeave
 
     /**
      * @param  int|null  $recordedBy  the user of RH who records it for the person; RH may record days already gone
+     * @param  bool  $announce  whether to email who answers it; false when the caller is about to answer it itself
      *
      * @throws RequestRefused inactive_employee, type_unavailable, in_the_past, too_long, no_working_days or overlaps
      */
-    public function handle(string $employeeId, ?string $leaveTypeId, CarbonImmutable $startsOn, CarbonImmutable $endsOn, ?string $note = null, ?int $recordedBy = null): LeaveRequest
+    public function handle(string $employeeId, ?string $leaveTypeId, CarbonImmutable $startsOn, CarbonImmutable $endsOn, ?string $note = null, ?int $recordedBy = null, bool $announce = true): LeaveRequest
     {
         $today = PeriodWindow::today()->toDateString();
         $note = trim($note ?? '');
@@ -98,8 +100,8 @@ final readonly class RequestLeave
             $this->audit->handle('leave.request_recorded_by_hr', $request, ['employee_id' => $employeeId, 'working_days' => $request->working_days]);
         }
 
-        if ($recordedBy === null) {
-            $request->approver_employee_id === null ? $this->notifier->escalated($request) : $this->notifier->toDecide($request);
+        if ($announce) {
+            $this->notifier->waiting($request);
         }
 
         return $request;

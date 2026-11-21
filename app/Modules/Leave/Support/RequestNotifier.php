@@ -19,6 +19,14 @@ use App\Modules\Leave\Models\LeaveRequest;
 final readonly class RequestNotifier
 {
     /**
+     * Tells whoever it is to answer a request that waits: its manager or, with none, the owner.
+     */
+    public function waiting(LeaveRequest $request): void
+    {
+        $request->approver_employee_id === null ? $this->escalated($request) : $this->toDecide($request);
+    }
+
+    /**
      * Tells the manager whose it is to answer, with the address of their team's requests in their pages.
      */
     public function toDecide(LeaveRequest $request): void
