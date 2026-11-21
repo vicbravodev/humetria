@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\WorkerAccess\Listeners;
+
+use App\Actions\RecordAudit;
+use App\Modules\Organization\Events\EmployeeDeactivated;
+use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Models\WorkerAccessLink;
+use App\Modules\WorkerAccess\Models\WorkerAccessState;
+use App\Modules\WorkerAccess\Models\WorkerCredential;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * Someone who left the company has no access: every key of theirs stops (reason `left_company`; one revoked before keeps its
+ * reason and date), every link that still opened is revoked and every session ends (valid_after moves), as ReissueAccess does,
+ * with no new link. It runs inside the transaction that deactivates them. Coming back, they get a new link and a new key.
+ */
+final readonly class RevokeOnDeactivation
+{
+    public function __construct(private Companies $companies, private RecordAudit $audit) {}
+
+    public function handle(EmployeeDeactivated $event): void
+    {
+        $this->companies->enter($event->tenantId);
+        $revoked = WorkerCredential::query()->where('employee_id', $event->employeeId)->whereNull('revoked_at')
+            ->update(['revoked_at' => CarbonImmutable::now(), 'revoked_reason' => 'left_company']);
+        $links = WorkerAccessLink::query()->where('employee_id', $event->employeeId)->whereNull('used_at')->whereNull('revoked_at')->exists();
+        WorkerAccessLink::revokePending($event->employeeId);
+
+        // Nothing of theirs to stop: nothing to move, say or log.
+        if ($revoked === 0 && ! $links) {
+            return;
+        }
+
+        WorkerAccessState::moveValidAfter($event->tenantId, $event->employeeId);
+        $this->audit->handle('worker_access.access_revoked_on_leaving', null, ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]);
+        Log::info('worker_access.access_revoked_on_leaving', ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]);
+    }
+}
