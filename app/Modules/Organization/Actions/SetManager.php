@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Organization\Actions;
 
 use App\Actions\RecordAudit;
+use App\Modules\Organization\Events\ManagerChanged;
 use App\Modules\Organization\Models\Employee;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +34,7 @@ final readonly class SetManager
             $change = ['from_manager_id' => $from, 'to_manager_id' => $managerId];
             Log::info('employee.manager_changed', ['employee_id' => $employee->id, ...$change]);
             $this->audit->handle('employee.manager_changed', $employee, $change);
+            event(new ManagerChanged($employee->tenant_id, $employee->id, $from, $managerId));
         });
 
         return true;

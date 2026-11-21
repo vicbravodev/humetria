@@ -99,6 +99,7 @@ it('asks for a recent proof on exactly the delicate pages and forms of the perso
         'portal.seating.acknowledgment',
         'portal.seating.acknowledgments.store',
         'portal.support.show',
+        'portal.vacations.requests.cancel',
         'portal.vacations.requests.store',
         'portal.vacations.statements.acknowledge',
         'portal.vacations.team.approve',
