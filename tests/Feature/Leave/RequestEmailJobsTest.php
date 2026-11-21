@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use App\Modules\Leave\Actions\RequestLeave;
+use App\Modules\Leave\Jobs\RequestCancelled;
 use App\Modules\Leave\Jobs\RequestDecided;
 use App\Modules\Leave\Jobs\RequestEscalated;
 use App\Modules\Leave\Jobs\RequestToDecide;
 use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Notifications\RequestCancelled as CancelledMail;
 use App\Modules\Leave\Notifications\RequestDecided as DecidedMail;
 use App\Modules\Leave\Notifications\RequestEscalated as EscalatedMail;
 use App\Modules\Leave\Notifications\RequestToDecide as ToDecideMail;
@@ -18,7 +20,7 @@ use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 
-mutates(RequestToDecide::class, RequestEscalated::class, RequestDecided::class);
+mutates(RequestToDecide::class, RequestEscalated::class, RequestDecided::class, RequestCancelled::class);
 
 // The three emails of a request (H05, B4): each one is a job, queued once the request is saved, that reads the request again
 // when it runs, so one that changed in between (answered, cancelled, given to another manager) tells nobody what is no
@@ -82,7 +84,7 @@ it('runs after the commit and is retried twice, a minute and five minutes later'
     expect($instance)->toBeInstanceOf(ShouldQueueAfterCommit::class)
         ->and($instance->tries)->toBe(3)
         ->and($instance->backoff)->toBe([60, 300]);
-})->with([RequestToDecide::class, RequestEscalated::class, RequestDecided::class]);
+})->with([RequestToDecide::class, RequestEscalated::class, RequestDecided::class, RequestCancelled::class]);
 
 describe('to the manager', function (): void {
     it('tells the manager whose it is to answer', function (): void {
@@ -193,6 +195,43 @@ describe('to the person', function (): void {
         $request = waitingRequest('approved');
 
         RequestDecided::dispatchSync($this->tenant->id, $request->id);
+
+        Notification::assertNothingSent();
+    });
+});
+
+describe('to the manager who had approved', function (): void {
+    it('tells the manager the person cancelled, without saying which leave', function (): void {
+        Notification::fake();
+        $type = App\Modules\Leave\Models\LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Maternidad']);
+        $request = LeaveRequest::factory()->ofType($type)->approved()->cancelled()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'approver_employee_id' => $this->boss->id]);
+
+        RequestCancelled::dispatchSync($this->tenant->id, $request->id);
+
+        Notification::assertSentOnDemand(CancelledMail::class, function (CancelledMail $notification, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable): bool {
+            $mail = $notification->toMail($notifiable);
+            $text = implode("\n", [...$mail->introLines, ...$mail->outroLines]);
+
+            expect($channels)->toBe(['mail'])->and($notifiable->routes['mail'])->toBe('beto@autopartes.test')
+                ->and($mail->subject)->toBe('Ana Solís canceló lo que usted aprobó')
+                ->and($text)->toContain('Ana Solís canceló su solicitud de un permiso del 9 de noviembre de 2026 al 20 de noviembre de 2026: 9 días laborables.')
+                ->not->toContain('Maternidad');
+
+            return true;
+        });
+    });
+
+    it('tells nobody when it is not cancelled any more, or never had a manager, or the manager has no email', function (): void {
+        Notification::fake();
+        $approved = waitingRequest('approved');
+        $withoutManager = waitingRequest('approved', 'cancelled');
+        $withoutManager->update(['approver_employee_id' => null]);
+        $this->boss->update(['email' => null]);
+        $mute = waitingRequest('approved', 'cancelled');
+
+        foreach ([$approved, $withoutManager, $mute] as $request) {
+            RequestCancelled::dispatchSync($this->tenant->id, $request->id);
+        }
 
         Notification::assertNothingSent();
     });

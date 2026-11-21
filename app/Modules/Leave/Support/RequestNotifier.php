@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Leave\Support;
 
+use App\Modules\Leave\Jobs\RequestCancelled;
 use App\Modules\Leave\Jobs\RequestDecided;
 use App\Modules\Leave\Jobs\RequestEscalated;
 use App\Modules\Leave\Jobs\RequestToDecide;
@@ -41,5 +42,16 @@ final readonly class RequestNotifier
     public function decided(LeaveRequest $request): void
     {
         RequestDecided::dispatch($request->tenant_id, $request->id);
+    }
+
+    /**
+     * Tells the manager that the person cancelled what had been approved. A request that still waited, or that RH cancelled,
+     * tells nobody: nothing was answered, or whoever did it knows.
+     */
+    public function cancelled(LeaveRequest $request, bool $byHr): void
+    {
+        if (! $byHr && $request->decided_at !== null) {
+            RequestCancelled::dispatch($request->tenant_id, $request->id);
+        }
     }
 }
