@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Organization\Actions\DeactivateEmployee;
+use App\Modules\Organization\Actions\ReactivateEmployee;
+use App\Modules\Organization\Enums\DeactivationReason;
 use App\Modules\Organization\Events\EmployeeDeactivated;
+use App\Modules\Organization\Events\EmployeeReactivated;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Models\Tenant;
@@ -14,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-mutates(DeactivateEmployee::class);
+mutates(DeactivateEmployee::class, ReactivateEmployee::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-10 18:00:00');
@@ -65,4 +68,34 @@ it('does not log the deactivation when it is part of a transaction that rolls ba
 
     expect($this->ana->refresh()->deactivated_at)->toBeNull();
     Log::shouldNotHaveReceived('info', ['employee.deactivated', ['employee_id' => $this->ana->id]]);
+});
+
+describe('reactivating', function (): void {
+    it('records in the audit trail the departure it undoes, with its date and reason', function (): void {
+        resolve(DeactivateEmployee::class)->handle($this->ana, effectiveOn: CarbonImmutable::parse('2026-02-15'), reason: DeactivationReason::Resignation);
+        $this->travelTo('2026-03-12 18:00:00');
+        Log::spy();
+
+        resolve(ReactivateEmployee::class)->handle(Employee::query()->findOrFail($this->ana->id));
+
+        $entry = AuditEntry::query()->where('event', 'employee.reactivated')->sole();
+        expect($entry->metadata)->toEqual(['previous_terminated_on' => '2026-02-15', 'previous_reason' => 'resignation'])
+            ->and($entry->subject_id)->toBe($this->ana->id)
+            ->and(Employee::query()->findOrFail($this->ana->id)->terminated_on)->toBeNull();
+        Log::shouldHaveReceived('info')->with('employee.reactivated', ['employee_id' => $this->ana->id])->once();
+    });
+
+    it('does nothing the second time the same person is reactivated with a stale copy of them (a double submit)', function (): void {
+        resolve(DeactivateEmployee::class)->handle($this->ana, effectiveOn: CarbonImmutable::parse('2026-02-15'));
+        Event::fake([EmployeeReactivated::class]);
+        $first = Employee::query()->findOrFail($this->ana->id);
+        $second = Employee::query()->findOrFail($this->ana->id);
+
+        resolve(ReactivateEmployee::class)->handle($first);
+        resolve(ReactivateEmployee::class)->handle($second);
+
+        expect(AuditEntry::query()->where('event', 'employee.reactivated')->count())->toBe(1)
+            ->and(TenantLimit::query()->where('tenant_id', $this->tenant->id)->where('resource', 'seats')->firstOrFail()->used)->toBe(1);
+        Event::assertDispatchedTimes(EmployeeReactivated::class, 1);
+    });
 });
