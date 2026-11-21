@@ -9,6 +9,7 @@ use App\Modules\Campaigns\Listeners\CancelOnMove;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Carbon;
@@ -43,9 +44,17 @@ it('cancels the guides a person had pending when they are deactivated, keeping w
     $this->get(route('survey.show', 'the-token'))->assertInertia(fn ($page) => $page->where('unavailable', 'done'));
 });
 
+it('cancels their guides in the company of the event, whatever company was current', function (): void {
+    workIn(Tenant::factory()->create());
+
+    event(new EmployeeDeactivated($this->tenant->id, $this->employee->id, now()->toImmutable()));
+
+    expect(statusesOf($this->participant))->toBe(['nom035.guide-i' => 'completed', 'nom035.guide-ii' => 'cancelled']);
+});
+
 it('deactivates a person and cancels their guides together, or neither', function (): void {
     resolve(App\Modules\Tenancy\Contracts\Companies::class)->enter($this->tenant->id);
-    Illuminate\Support\Facades\Event::listen(App\Modules\Organization\Events\EmployeeDeactivated::class, fn () => throw new RuntimeException('Something after the cancelling failed.'));
+    Illuminate\Support\Facades\Event::listen(EmployeeDeactivated::class, fn () => throw new RuntimeException('Something after the cancelling failed.'));
 
     expect(fn () => resolve(App\Modules\Organization\Actions\DeactivateEmployee::class)->handle($this->employee))->toThrow(RuntimeException::class);
 
