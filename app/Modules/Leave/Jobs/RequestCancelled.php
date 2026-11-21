@@ -17,8 +17,9 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Tells the manager, by email, that the person cancelled a request that had been approved. The request is read again when
- * it runs: one that is not cancelled, or that never had a manager (RH answered it), tells nobody. Whoever has no email
+ * Tells the manager who approved it, by email, that the person cancelled it. The request is read again when it runs: one
+ * that is not cancelled, or that RH approved (no manager decided it), tells nobody; it goes to who decided, not to whoever
+ * answers for the person now. Whoever has no email
  * gets none.
  */
 final class RequestCancelled implements ShouldQueue, ShouldQueueAfterCommit
@@ -38,12 +39,12 @@ final class RequestCancelled implements ShouldQueue, ShouldQueueAfterCommit
         $company = $companies->enter($this->tenantId);
         $request = LeaveRequest::query()->find($this->requestId);
 
-        if ($request === null || $request->status !== RequestStatus::Cancelled || $request->approver_employee_id === null) {
+        if ($request === null || $request->status !== RequestStatus::Cancelled || $request->decided_by_employee_id === null) {
             return;
         }
 
-        $people = $roster->findMany([$request->employee_id, $request->approver_employee_id]);
-        $manager = $people[$request->approver_employee_id] ?? null;
+        $people = $roster->findMany([$request->employee_id, $request->decided_by_employee_id]);
+        $manager = $people[$request->decided_by_employee_id] ?? null;
         $person = $people[$request->employee_id] ?? null;
 
         if ($manager !== null && $manager->active && $manager->email !== null && $person !== null) {

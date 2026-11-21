@@ -204,7 +204,7 @@ describe('to the manager who had approved', function (): void {
     it('tells the manager the person cancelled, without saying which leave', function (): void {
         Notification::fake();
         $type = App\Modules\Leave\Models\LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Maternidad']);
-        $request = LeaveRequest::factory()->ofType($type)->approved()->cancelled()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'approver_employee_id' => $this->boss->id]);
+        $request = LeaveRequest::factory()->ofType($type)->approved()->cancelled()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'approver_employee_id' => $this->boss->id, 'decided_by_employee_id' => $this->boss->id]);
 
         RequestCancelled::dispatchSync($this->tenant->id, $request->id);
 
@@ -221,15 +221,36 @@ describe('to the manager who had approved', function (): void {
         });
     });
 
-    it('tells nobody when it is not cancelled any more, or never had a manager, or the manager has no email', function (): void {
+    it('tells the manager who approved it, not whoever answers for the person now', function (): void {
+        Notification::fake();
+        $request = waitingRequest('approved', 'cancelled');
+        $request->update(['decided_by_employee_id' => $this->boss->id, 'approver_employee_id' => $this->director->id]);
+
+        RequestCancelled::dispatchSync($this->tenant->id, $request->id);
+
+        Notification::assertSentOnDemandTimes(CancelledMail::class, 1);
+        Notification::assertSentOnDemand(CancelledMail::class, fn (CancelledMail $mail, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === 'beto@autopartes.test');
+    });
+
+    it('tells nobody what RH approved: no manager ever saw it', function (): void {
+        Notification::fake();
+        $request = waitingRequest('approved', 'cancelled');
+        $request->update(['decided_by_user_id' => $this->owner->id]);
+
+        RequestCancelled::dispatchSync($this->tenant->id, $request->id);
+
+        Notification::assertNothingSent();
+    });
+
+    it('tells nobody when it is not cancelled any more, or the manager who approved has no email', function (): void {
         Notification::fake();
         $approved = waitingRequest('approved');
-        $withoutManager = waitingRequest('approved', 'cancelled');
-        $withoutManager->update(['approver_employee_id' => null]);
+        $approved->update(['decided_by_employee_id' => $this->boss->id]);
         $this->boss->update(['email' => null]);
         $mute = waitingRequest('approved', 'cancelled');
+        $mute->update(['decided_by_employee_id' => $this->boss->id]);
 
-        foreach ([$approved, $withoutManager, $mute] as $request) {
+        foreach ([$approved, $mute] as $request) {
             RequestCancelled::dispatchSync($this->tenant->id, $request->id);
         }
 

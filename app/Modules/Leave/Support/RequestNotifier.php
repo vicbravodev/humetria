@@ -53,12 +53,12 @@ final readonly class RequestNotifier
     }
 
     /**
-     * Tells the manager that the person cancelled what had been approved. A request that still waited, or that RH cancelled,
-     * tells nobody: nothing was answered, or whoever did it knows.
+     * Tells the manager who approved it that the person cancelled it. A request that still waited, that RH cancelled or that
+     * RH approved (no manager ever saw it) tells nobody.
      */
     public function cancelled(LeaveRequest $request, bool $byHr): void
     {
-        if (! $byHr && $request->decided_at !== null) {
+        if (! $byHr && $request->decided_by_employee_id !== null) {
             RequestCancelled::dispatch($request->tenant_id, $request->id);
         }
     }

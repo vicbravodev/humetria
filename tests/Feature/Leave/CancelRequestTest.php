@@ -232,7 +232,7 @@ it('writes nothing when there is nothing to cancel', function (): void {
 describe('tells the manager when the person cancels what was approved', function (): void {
     it('queues the email to the manager when the person cancels an approved request', function (): void {
         Queue::fake();
-        $request = anasRequest('approved');
+        $request = anasRequest('approved', ['decided_by_employee_id' => Employee::factory()->create(['tenant_id' => $this->tenant->id])->id]);
 
         resolve(CancelRequest::class)->handle($request->id, Decider::requester($this->ana->id));
 
@@ -243,6 +243,15 @@ describe('tells the manager when the person cancels what was approved', function
         Queue::fake();
 
         resolve(CancelRequest::class)->handle(anasRequest('requested')->id, Decider::requester($this->ana->id));
+
+        Queue::assertNothingPushed();
+    });
+
+    it('queues nothing when RH was the one who approved it: no manager ever saw it', function (): void {
+        Queue::fake();
+        $request = anasRequest('approved', ['decided_by_user_id' => $this->rh->id]);
+
+        resolve(CancelRequest::class)->handle($request->id, Decider::requester($this->ana->id));
 
         Queue::assertNothingPushed();
     });
