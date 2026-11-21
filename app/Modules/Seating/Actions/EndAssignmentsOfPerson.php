@@ -21,7 +21,8 @@ final readonly class EndAssignmentsOfPerson
         $ended = (clone $open)->where('starts_on', '>', $on)->update(['ends_on' => DB::raw('starts_on')]) + $open->update(['ends_on' => $on]);
 
         if ($ended > 0) {
-            Log::info('seating.assignments_ended', ['employee_id' => $employeeId, 'count' => $ended]);
+            // Said once it committed: this may run inside the transaction of a departure, which may still roll back.
+            DB::afterCommit(fn () => Log::info('seating.assignments_ended', ['employee_id' => $employeeId, 'count' => $ended]));
         }
 
         return $ended;

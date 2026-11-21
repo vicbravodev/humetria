@@ -72,7 +72,8 @@ final readonly class VoidLaterPeriods
         });
 
         if ($periods > 0) {
-            Log::info('leave.entitlements_voided', ['employee_id' => $employeeId, 'periods' => $periods, 'days' => $voided]);
+            // Said once it committed: this runs inside the transaction of the departure, which may still roll back.
+            DB::afterCommit(fn () => Log::info('leave.entitlements_voided', ['employee_id' => $employeeId, 'periods' => $periods, 'days' => $voided]));
         }
 
         return $voided;

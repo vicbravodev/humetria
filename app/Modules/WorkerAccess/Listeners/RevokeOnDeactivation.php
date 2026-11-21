@@ -11,6 +11,7 @@ use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerAccessState;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -39,6 +40,7 @@ final readonly class RevokeOnDeactivation
         }
 
         $this->audit->handle('worker_access.access_revoked_on_leaving', null, ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]);
-        Log::info('worker_access.access_revoked_on_leaving', ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]);
+        // Said once it committed: this runs inside the transaction of the departure, which may still roll back.
+        DB::afterCommit(fn () => Log::info('worker_access.access_revoked_on_leaving', ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]));
     }
 }

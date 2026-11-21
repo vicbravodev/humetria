@@ -71,7 +71,8 @@ final readonly class TrimRequestsAfter
             return $request;
         });
 
-        Log::info('leave.request_trimmed', ['request_id' => $request->id, 'employee_id' => $request->employee_id, 'days_returned' => $returned]);
+        // Said once it committed: this runs inside the transaction of the departure, which may still roll back.
+        DB::afterCommit(fn () => Log::info('leave.request_trimmed', ['request_id' => $request->id, 'employee_id' => $request->employee_id, 'days_returned' => $returned]));
     }
 
     private function workingDays(CarbonImmutable $from, CarbonImmutable $to, WorkWeek $week): int
