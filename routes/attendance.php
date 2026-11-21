@@ -13,12 +13,16 @@ use App\Modules\Attendance\Http\Controllers\PlaceController;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
 use App\Modules\Attendance\Http\Controllers\ReportController;
 use App\Modules\Attendance\Http\Controllers\ScheduleController;
+use App\Modules\Attendance\Http\Controllers\WeekResolutionController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 /** @var string $notReserved */
 // RH's overview: one week of the people by state, and the centers.
 Route::get('admin/{tenant:slug}/attendance', [AttendanceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.index');
+
+// A person's disputed week: owner and hr resolve it with a note, once, and it goes back to the person (criterio 5.2).
+Route::post('admin/{tenant:slug}/attendance/weeks/{week}/resolve', WeekResolutionController::class)->where('tenant', $notReserved)->whereUuid('week')->name('tenant.attendance.weeks.resolve');
 
 // The road to the first mark: what each center, schedule, phone and the policy still need before 1 January 2027.
 Route::get('admin/{tenant:slug}/attendance/setup', [AttendanceController::class, 'setup'])->where('tenant', $notReserved)->name('tenant.attendance.setup');
