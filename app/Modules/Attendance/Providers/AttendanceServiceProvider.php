@@ -10,11 +10,13 @@ use App\Modules\Attendance\Contracts\PlaceSearch;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Listeners\AlertDispute;
+use App\Modules\Attendance\Listeners\ReopenOnAbsence;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
 use App\Modules\Attendance\Support\CompanyAttendanceStanding;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
 use App\Modules\Attendance\Support\PunchWorkerSection;
+use App\Modules\Leave\Events\AbsenceChanged;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -41,6 +43,7 @@ final class AttendanceServiceProvider extends ServiceProvider
     {
         Event::listen(MarkCorrected::class, ReopenOnCorrection::class);
         Event::listen(WeekDisputed::class, AlertDispute::class);
+        Event::listen(AbsenceChanged::class, ReopenOnAbsence::class);
 
         // A screen asks for a code about twice a minute: per address, so a center with several screens behind one router fits,
         // and guessing a token is slowed down before any is read.

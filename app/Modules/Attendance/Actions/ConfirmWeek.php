@@ -59,7 +59,7 @@ final readonly class ConfirmWeek
             }
 
             $marks = EffectiveMarks::forWeek($employeeId, $week);
-            $blocked = self::blocker($marks) ?? (hash_equals(WeekDigest::ofMarks($marks), $digest) ? null : 'week_changed');
+            $blocked = self::blocker($marks) ?? (hash_equals(WeekDigest::ofMarks($marks, WeekDigest::absences($employeeId, $week)), $digest) ? null : 'week_changed');
 
             if ($blocked !== null) {
                 throw new WeekRejected($blocked);

@@ -78,7 +78,7 @@ final readonly class AttendancePages
             ->among('employee_id', array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())))
             ->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
         // The days each person of the page was away with vacations or a leave: not days they missed. One query.
-        $away = AbsentDays::of($this->absences, $period, array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())));
+        $away = AbsentDays::of($this->absences->between($period->start(), $period->end(), array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items()))), $period);
 
         return [
             'week' => [
