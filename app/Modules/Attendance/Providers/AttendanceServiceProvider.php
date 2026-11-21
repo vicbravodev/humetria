@@ -8,6 +8,8 @@ use App\Modules\Attendance\Contracts\AttendanceStanding;
 use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Attendance\Contracts\PlaceSearch;
 use App\Modules\Attendance\Events\MarkCorrected;
+use App\Modules\Attendance\Events\WeekDisputed;
+use App\Modules\Attendance\Listeners\AlertDispute;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
 use App\Modules\Attendance\Support\CompanyAttendanceStanding;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
@@ -38,6 +40,7 @@ final class AttendanceServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(MarkCorrected::class, ReopenOnCorrection::class);
+        Event::listen(WeekDisputed::class, AlertDispute::class);
 
         // A screen asks for a code about twice a minute: per address, so a center with several screens behind one router fits,
         // and guessing a token is slowed down before any is read.
