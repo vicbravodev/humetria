@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Log;
  * When a person comes back: the days counted when they left, if RH had not settled them, no longer stand, and the periods
  * the departure voided (granted after the day they left) are given back with entries of the ledger: their balance is as it
  * was before the departure. A settled termination stays as it is, with its voids.
+ *
+ * What the departure did to requests is not undone: the vacations it cancelled or shortened stay so (a decision, as for any
+ * cancellation); their days already went back to the balance, and RH registers them again if they are still wanted.
  */
 final readonly class VoidTerminationOnReactivation
 {
