@@ -80,6 +80,8 @@ final class PersonWeek
             'status' => $status,
             'answeredAt' => $answer === null ? null : ($answer->confirmed_at ?? $answer->disputed_at)?->setTimezone($timezone)->format('Y-m-d H:i'),
             'disputeReason' => $answer?->reason,
+            // RH's answer to their dispute, with the week back to them (criterio 5.2).
+            'resolution' => $answer?->resolution_note,
             'digest' => WeekDigest::ofMarks($marks),
             'blocked' => $blocked,
             'days' => $days,

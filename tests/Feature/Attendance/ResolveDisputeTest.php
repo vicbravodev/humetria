@@ -11,6 +11,7 @@ use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Exceptions\WeekRejected;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\PersonWeek;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -106,6 +107,15 @@ describe('resolving', function (): void {
         expect(fn () => resolve(ResolveDispute::class)->handle($this->week->id, $stranger->id, 'Revisamos el lector y estaba bien.'))->toThrow(InvalidArgumentException::class);
         expect($this->week->fresh()?->status)->toBe(WeekStatus::Disputed);
     });
+});
+
+it('lets the person read RH\'s note in «Mi semana», the week pending and open to answer again', function (): void {
+    resolveDispute($this);
+
+    $week = PersonWeek::of($this->ana->id, 'Ana', WeekPeriod::ofDate(CarbonImmutable::parse('2026-11-02', 'America/Mexico_City'), 'America/Mexico_City'), 'acme');
+
+    expect($week)->status->toBe('pending')->resolution->toBe('Revisamos el lector: salió a las 17:00. Confirma de nuevo.')
+        ->confirmUrl->not->toBeNull()->disputeUrl->not->toBeNull();
 });
 
 describe('from RH\'s panel', function (): void {
