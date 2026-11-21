@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * A correction after a confirmation reopens the week (the design's Semana y día): what the person agreed to changed, so
  * they answer again. The weeks are those of the mark's old time and its new one, each by the day it belongs to (the start
- * before it; a night that ends on Monday belongs to Sunday's week). A disputed week stays disputed: RH resolves it.
+ * before it; a night that ends on Monday belongs to Sunday's week). A disputed week reopens too: what the person disputed
+ * changed. A pending week, even one whose dispute RH resolved, stays as it is.
  */
 final readonly class ReopenWeeks
 {
@@ -34,8 +35,8 @@ final readonly class ReopenWeeks
         $rows = WeeklyConfirmation::query()->where('employee_id', $correction->employee_id)
             ->whereIn('week_start', $weeks)->lockForUpdate()->get();
 
-        foreach ($rows->where('status', WeekStatus::Confirmed) as $week) {
-            $week->update(['status' => WeekStatus::Pending, 'confirmed_at' => null, 'credential_id' => null, 'digest' => null]);
+        foreach ($rows->whereIn('status', [WeekStatus::Confirmed, WeekStatus::Disputed]) as $week) {
+            $week->update(['status' => WeekStatus::Pending, 'confirmed_at' => null, 'disputed_at' => null, 'reason' => null, 'credential_id' => null, 'digest' => null]);
             $ids = ['employee_id' => $week->employee_id, 'week_start' => $week->week_start->toDateString()];
             $this->audit->handle('attendance.week_reopened', $week, [...$ids, 'mark_id' => $correction->id]);
             Log::info('attendance.week_reopened', ['confirmation_id' => $week->id, ...$ids]);

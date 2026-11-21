@@ -9,6 +9,7 @@ use App\Modules\Attendance\Actions\ConfirmWeek;
 use App\Modules\Attendance\Actions\CorrectMark;
 use App\Modules\Attendance\Actions\DisputeWeek;
 use App\Modules\Attendance\Actions\ReopenWeeks;
+use App\Modules\Attendance\Actions\ResolveDispute;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Events\WeekConfirmed;
@@ -19,6 +20,7 @@ use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
@@ -248,12 +250,23 @@ describe('a correction', function (): void {
         Log::shouldHaveReceived('info')->with('attendance.week_reopened', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK]);
     });
 
-    it('leaves a disputed week disputed, for RH to resolve', function (): void {
-        disputeWeek($this);
+    it('reopens a disputed week to pending: what the person disputed changed, so they answer again', function (): void {
+        $week = disputeWeek($this);
 
         resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', $this->hr->id);
 
-        expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Disputed);
+        expect($week->fresh())->status->toBe(WeekStatus::Pending)->disputed_at->toBeNull()->reason->toBeNull()->credential_id->toBeNull()->digest->toBeNull();
+        expect(AuditEntry::query()->where('event', 'attendance.week_reopened')->sole()->subject_id)->toBe($week->id);
+    });
+
+    it('leaves a pending week RH already resolved as it is', function (): void {
+        $week = disputeWeek($this);
+        resolve(ResolveDispute::class)->handle($week->id, memberOf($this->tenant, TenantRole::Hr)->id, 'Revisamos el lector y estaba bien.');
+
+        resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', $this->hr->id);
+
+        expect($week->fresh())->status->toBe(WeekStatus::Pending)->resolution_note->toBe('Revisamos el lector y estaba bien.')
+            ->and(AuditEntry::query()->where('event', 'attendance.week_reopened')->count())->toBe(0);
     });
 
     it('leaves the confirmation of another week alone', function (): void {

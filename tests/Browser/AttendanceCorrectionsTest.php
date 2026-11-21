@@ -48,7 +48,7 @@ it('shows RH the queue of corrections with its states and each request', functio
         ->assertSee('olvidó marcarla')
         ->assertSee('Ese día en el registro')
         ->assertSee('Si la apruebas')
-        ->assertSee('Su semana aún no está confirmada: no se reabre nada.')
+        ->assertSee('Su semana aún no tiene respuesta: no se reabre nada.')
         ->assertSee('Ana no tiene horario')
         ->assertSee('Si la rechazas')
         ->assertSee('Aprobar corrección')
