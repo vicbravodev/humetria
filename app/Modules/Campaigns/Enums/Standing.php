@@ -21,7 +21,7 @@ enum Standing: string
     {
         return match ($this) {
             self::Pending => 'Pendientes',
-            self::Unreachable => 'Sin correo',
+            self::Unreachable => 'Sin contacto',
             self::Failed => 'Envío fallido',
             self::Answered => 'Contestaron',
             self::Cancelled => 'Canceladas',

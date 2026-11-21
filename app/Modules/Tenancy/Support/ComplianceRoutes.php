@@ -35,6 +35,7 @@ final class ComplianceRoutes
             'tenant.worker-access.*',
             'tenant.privacy.*',
             'tenant.sso.*',
+            'tenant.channels.*',
         ];
     }
 }

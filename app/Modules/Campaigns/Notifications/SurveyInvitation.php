@@ -7,6 +7,9 @@ namespace App\Modules\Campaigns\Notifications;
 use App\Modules\Billing\Contracts\MailBag;
 use App\Modules\Campaigns\Enums\SurveyEmail;
 use App\Modules\Campaigns\Support\CampaignClock;
+use App\Modules\Messaging\Contracts\ChannelPicker;
+use App\Modules\Messaging\Contracts\TracksDelivery;
+use App\Modules\Messaging\Data\InvitationReference;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Data\CompanySummary;
 use Carbon\CarbonImmutable;
@@ -18,7 +21,7 @@ use Illuminate\Notifications\Notification;
  * The email that carries a person's survey link, from their company and written as the survey speaks ("usted"). The
  * plain token lives only here and in the link.
  */
-final class SurveyInvitation extends Notification implements MailBag
+final class SurveyInvitation extends Notification implements MailBag, TracksDelivery
 {
     public function __construct(
         private readonly SurveyEmail $email,
@@ -32,17 +35,30 @@ final class SurveyInvitation extends Notification implements MailBag
         /** The minimum of people per group the campaign froze when it launched: the number promised to whoever answers. */
         private readonly int $minGroup,
         private readonly ?string $portalUrl = null,
+        private readonly ?InvitationReference $reference = null,
     ) {}
 
     /**
-     * How a person can be reached, by channel: one route for each contact of theirs a channel takes. Another channel
-     * (SMS, WhatsApp) is one more route here and its to*() method; who sends, and who counts the unreachable, follow.
+     * How a person is reached: at most one route, the channel the company put first among the ones it has on for which the
+     * person has a contact (rule 1 of the WhatsApp design). A reminder never goes through WhatsApp: it is not a template the
+     * company pays for twice, and the person already has their link.
      *
      * @return array<string, string>
      */
-    public static function routes(RosterEntry $person): array
+    public static function routes(RosterEntry $person, bool $reminder = false): array
     {
-        return array_filter(['mail' => $person->email], fn (?string $contact): bool => $contact !== null);
+        return resolve(ChannelPicker::class)->route($person->email, $person->mobile, ! $reminder);
+    }
+
+    /** The channel a person is reached by, or null when no channel the company has on reaches them. */
+    public static function channel(RosterEntry $person, bool $reminder = false): ?string
+    {
+        return array_key_first(self::routes($person, $reminder));
+    }
+
+    public function deliveryReference(): ?InvitationReference
+    {
+        return $this->reference;
     }
 
     /**

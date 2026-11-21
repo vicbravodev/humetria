@@ -151,10 +151,10 @@ describe('pendingText', () => {
 describe('withoutLinkText', () => {
     it('says how many have no email, in the singular too', () => {
         expect(withoutLinkText(2)).toBe(
-            '2 personas sin correo no recibieron su enlace.',
+            '2 personas sin contacto no recibieron su enlace.',
         );
         expect(withoutLinkText(1)).toBe(
-            '1 persona sin correo no recibió su enlace.',
+            '1 persona sin contacto no recibió su enlace.',
         );
     });
 

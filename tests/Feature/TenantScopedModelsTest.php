@@ -20,6 +20,11 @@ use App\Modules\Billing\Models\UsageReservation;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Demos\Models\DemoRun;
+use App\Modules\Messaging\Models\Delivery;
+use App\Modules\Messaging\Models\DeliveryEvent;
+use App\Modules\Messaging\Models\OptOut;
+use App\Modules\Messaging\Models\Pause;
+use App\Modules\Messaging\Models\WebhookEvent;
 use App\Modules\Sso\Models\SsoConnection;
 use App\Modules\Sso\Models\SsoDomain;
 use App\Modules\Tenancy\Models\TenantInvitation;
@@ -44,6 +49,11 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     // What each company pays and who pays it is read across all of them, by the staff's console, never from inside a company.
     AccountCompany::class => 'read across companies by the billing console',
     Subscription::class => 'read across companies by the billing console',
+    // The webhooks, the reconciliation and the retention find a message before any company is chosen.
+    Delivery::class => 'read across companies by the webhooks, the reconciliation and the retention',
+    DeliveryEvent::class => 'read across companies by the webhooks, the reconciliation and the retention',
+    // A STOP says only the phone: it may cover every company, and a global opt-out has no company at all.
+    OptOut::class => 'a STOP may cover every company, and a global opt-out has no company',
     SubscriptionCharge::class => 'read across companies by the billing console',
     // The statement of a company is read with the rest of what its account owes, across all the companies it pays.
     Statement::class => 'read across companies by the billing console',
@@ -79,6 +89,9 @@ const PLATFORM_MODELS = [
     // The console prepares or resets the demo company; the run is the platform's lock and progress, not the company's
     // content, and it outlives every reset of the demo.
     DemoRun::class => 'a preparation of the demo company, run by the staff console',
+    // Deduplication of what a provider sends again, before any company is known.
+    WebhookEvent::class => 'deduplication of provider callbacks, before any company is known',
+    Pause::class => 'an operational stop of the whole feature, for every company',
 ];
 
 /** @return list<class-string<Model>> */

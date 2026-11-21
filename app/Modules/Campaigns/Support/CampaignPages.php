@@ -17,6 +17,8 @@ use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
 use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Contracts\Nom035Guides;
+use App\Modules\Messaging\Contracts\DeliverySummary;
+use App\Modules\Messaging\Data\InvitationReference;
 use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Organization\Contracts\Headcount;
 use App\Modules\Organization\Contracts\Roster;
@@ -55,6 +57,8 @@ final readonly class CampaignPages
         private CampaignPeople $people,
         private Areas $areas,
         private InviteMissing $inviteMissing,
+        private DeliverySummary $deliveries,
+        private ChannelAnswers $channelAnswers,
         private GroupMinimums $groupMinimums,
     ) {}
 
@@ -149,6 +153,12 @@ final readonly class CampaignPages
             // Before launch: how many of the people the links will reach, by email.
             'contact' => $canManage && $campaign->status === CampaignStatus::Draft ? $this->contact($campaign) : null,
             'sending' => $campaign->status === CampaignStatus::Active ? $this->sending($campaign) : null,
+            // How the messages went and who answered, by channel: aggregates under the minimum of 5, never a person.
+            'reach' => $campaign->status === CampaignStatus::Draft ? null : [
+                'channels' => array_map(fn ($tally): array => $tally->toArray(), $this->deliveries->forSource(InvitationReference::CAMPAIGN, $campaign->id, $campaign->groupMinimum())),
+                'answeredByChannel' => $this->channelAnswers->handle($campaign),
+                'minGroup' => $campaign->groupMinimum(),
+            ],
             'filters' => [
                 'status' => $filter->standing->value ?? 'all',
                 'guide' => $filter->guide ?? 'all',
@@ -270,14 +280,15 @@ final readonly class CampaignPages
     }
 
     /**
-     * @return array{reachable: int, unreachable: int}
+     * @return array{reachable: int, unreachable: int, whatsapp: int}
      */
     private function contact(Campaign $campaign): array
     {
         $people = $this->roster->activeIn($campaign->work_center_id);
-        $reachable = count(array_filter($people, fn (RosterEntry $person): bool => SurveyInvitation::routes($person) !== []));
+        $channels = array_map(fn (RosterEntry $person): ?string => SurveyInvitation::channel($person), $people);
+        $reachable = count(array_filter($channels, fn (?string $channel): bool => $channel !== null));
 
-        return ['reachable' => $reachable, 'unreachable' => count($people) - $reachable];
+        return ['reachable' => $reachable, 'unreachable' => count($people) - $reachable, 'whatsapp' => count(array_filter($channels, fn (?string $channel): bool => $channel === 'whatsapp'))];
     }
 
     /**

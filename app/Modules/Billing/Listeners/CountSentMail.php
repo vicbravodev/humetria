@@ -6,6 +6,7 @@ namespace App\Modules\Billing\Listeners;
 
 use App\Modules\Billing\Actions\RecordUsage;
 use App\Modules\Billing\Contracts\MailBag;
+use App\Modules\Billing\Contracts\UsageMeter;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Context;
@@ -14,8 +15,6 @@ use Illuminate\Support\Facades\Log;
 /** Counts each campaign email accepted for sending against the company that sent it (the tenant travels in the Context, also inside jobs). */
 final readonly class CountSentMail
 {
-    public const string METER = 'email_campaign';
-
     public function __construct(private RecordUsage $record, private DemoCompanies $demos) {}
 
     public function handle(NotificationSent $event): void
@@ -46,6 +45,6 @@ final readonly class CountSentMail
             return;
         }
 
-        $this->record->handle($tenantId, self::METER, 1, $key, fromHold: true);
+        $this->record->handle($tenantId, UsageMeter::EMAIL_CAMPAIGN, 1, $key, fromHold: true);
     }
 }

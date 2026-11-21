@@ -76,7 +76,7 @@ it('marks who has no email instead of queueing them', function (): void {
     $campaign = queuedEvaluation($this->tenant, $this->plant, $this->hr, 19);
 
     expect(participantsOf($campaign)->countBy(fn (Participant $participant): string => $participant->invitation_status?->value ?? 'none')->all())
-        ->toEqual(['queued' => 19, 'no_email' => 1]);
+        ->toEqual(['queued' => 19, 'unreachable' => 1]);
 });
 
 it('gives each person of its block a new link and emails it, once even when run again', function (): void {

@@ -60,6 +60,7 @@ require __DIR__.'/engagement-portal.php';
 require __DIR__.'/disclosure-portal.php';
 require __DIR__.'/results-portal.php';
 require __DIR__.'/workers.php';
+require __DIR__.'/messaging.php';
 require __DIR__.'/complaints-public.php';
 require __DIR__.'/shared-report.php';
 require __DIR__.'/compensation-shared.php';

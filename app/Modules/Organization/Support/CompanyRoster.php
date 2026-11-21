@@ -158,6 +158,7 @@ final class CompanyRoster implements Roster
             $employee->staff_group === StaffGroup::Trusted,
             $employee->job_grade_id,
             $employee->staff_group?->value,
+            $employee->mobile,
         );
     }
 }

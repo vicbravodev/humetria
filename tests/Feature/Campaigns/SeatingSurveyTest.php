@@ -56,7 +56,7 @@ it('launches for every active person of the center, with no sample, and invites 
         ->and(Participant::query()->where('campaign_id', $campaign->id)->count())->toBe(3)
         ->and(ParticipantInstrument::query()->where('instrument', 'seating.survey')->where('status', 'pending')->count())->toBe(3);
     Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->count() === 1 && $batch->jobs->first() instanceof SendSurveyInvitations);
-    expect(Participant::query()->where('invitation_status', 'queued')->count())->toBe(2)->and(Participant::query()->where('invitation_status', 'no_email')->count())->toBe(1);
+    expect(Participant::query()->where('invitation_status', 'queued')->count())->toBe(2)->and(Participant::query()->where('invitation_status', 'unreachable')->count())->toBe(1);
 });
 
 it('writes the launch to the audit trail with counts only', function (): void {

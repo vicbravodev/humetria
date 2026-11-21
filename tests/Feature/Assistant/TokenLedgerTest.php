@@ -128,6 +128,6 @@ it('keeps what was asked and answered out of the ledger and out of the logs', fu
 
     expect(implode("\n", $lines))->toContain('usage.settled')->not->toContain('secreta-plugh')->not->toContain('secreta-xyzzy')
         ->and($stored)->not->toContain('secreta')
-        ->and(Schema::getColumnListing('usage_events'))->toBe(['id', 'tenant_id', 'meter', 'period_start', 'quantity', 'idempotency_key', 'occurred_at'])
+        ->and(Schema::getColumnListing('usage_events'))->toBe(['id', 'tenant_id', 'meter', 'period_start', 'quantity', 'idempotency_key', 'occurred_at', 'unit_cost_micros', 'unit_price_micros', 'cost_currency'])
         ->and(Schema::getColumnListing('usage_reservations'))->toBe(['id', 'tenant_id', 'meter', 'period_start', 'idempotency_key', 'quantity', 'state', 'expires_at', 'created_at', 'updated_at']);
 });

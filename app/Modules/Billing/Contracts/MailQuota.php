@@ -19,4 +19,7 @@ interface MailQuota
      * @throws \App\Modules\Billing\Exceptions\MailQuotaExceeded when they do not fit.
      */
     public function reserve(int $count): void;
+
+    /** Like reserve(), for a caller that has a plan B: false, with nothing held, when they do not fit. */
+    public function tryReserve(int $count): bool;
 }
