@@ -22,9 +22,10 @@ export default function PeopleWeeks({
     filters,
     counts,
     people,
+    canManage,
 }: Pick<
     AttendanceOverviewProps,
-    'week' | 'center' | 'filters' | 'counts' | 'people'
+    'week' | 'center' | 'filters' | 'counts' | 'people' | 'canManage'
 >) {
     const tenantSlug = useTenantSlug();
     const current = {
@@ -66,6 +67,7 @@ export default function PeopleWeeks({
                 status={filters.status}
                 searching={filters.q !== ''}
                 over={week.over}
+                canManage={canManage}
             />
         </section>
     );

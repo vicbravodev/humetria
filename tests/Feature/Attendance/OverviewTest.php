@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Actions\ResolveDispute;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Models\AttendanceCenterMode;
@@ -93,20 +94,20 @@ describe('the summary', function (): void {
                 'id' => $this->ana->id, 'name' => 'Ana López', 'jobTitle' => 'Operadora', 'center' => 'Planta Norte',
                 'ordinaryMinutes' => 480, 'overtimeMinutes' => 120, 'flags' => [], 'status' => 'confirmed', 'atRisk' => false, 'hasSchedule' => false,
                 'days' => [['worked' => 0, 'overtime' => 0], ['worked' => 600, 'overtime' => 120], ...array_fill(0, 5, ['worked' => 0, 'overtime' => 0])],
-                'absentDays' => [],
+                'absentDays' => [], 'active' => true, 'dispute' => null,
             ])
             ->where('people.data.1.status', 'disputed')
             ->where('people.data.2', [
                 'id' => $this->carla->id, 'name' => 'Carla Ruiz', 'jobTitle' => 'Analista', 'center' => 'Oficinas',
                 'ordinaryMinutes' => 480, 'overtimeMinutes' => 300, 'flags' => ['day_over_12_hours', 'daily_overtime_over_4'], 'status' => 'pending', 'atRisk' => true, 'hasSchedule' => false,
                 'days' => [['worked' => 0, 'overtime' => 0], ['worked' => 780, 'overtime' => 300], ...array_fill(0, 5, ['worked' => 0, 'overtime' => 0])],
-                'absentDays' => [],
+                'absentDays' => [], 'active' => true, 'dispute' => null,
             ])
             // Dan has no marks and a week still pending.
             ->where('people.data.3', [
                 'id' => $this->dan->id, 'name' => 'Dan Soto', 'jobTitle' => 'Contador', 'center' => 'Oficinas',
                 'ordinaryMinutes' => 0, 'overtimeMinutes' => 0, 'flags' => [], 'status' => 'pending', 'atRisk' => false, 'hasSchedule' => true,
-                'days' => array_fill(0, 7, ['worked' => 0, 'overtime' => 0]), 'absentDays' => [],
+                'days' => array_fill(0, 7, ['worked' => 0, 'overtime' => 0]), 'absentDays' => [], 'active' => true, 'dispute' => null,
             ])
             ->where('centers.total', 2)
             ->where('centers.data.0', ['id' => $this->office->id, 'name' => 'Oficinas', 'people' => 2, 'zones' => 0, 'screens' => 0, 'mode' => 'company'])
@@ -219,6 +220,45 @@ describe('the summary', function (): void {
         $this->expectsDatabaseQueryCount(OVERVIEW_QUERIES);
         $this->get(overviewUrl())->assertOk();
     })->with(['a few' => [0], 'many more' => [30]]);
+});
+
+describe('a disputed week', function (): void {
+    it('shows RH the reason, with the week\'s answer to resolve it', function (): void {
+        $this->actingAs($this->hr);
+        $answer = WeeklyConfirmation::query()->where('employee_id', $this->bob->id)->sole();
+
+        $this->get(overviewUrl(['status' => 'disputed']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.dispute', ['id' => $answer->id, 'reason' => 'El martes salí a las 18:00, no a las 16:00.', 'resolution' => null]));
+    });
+
+    it('shows the reason and RH\'s note of a dispute already resolved, back to pending', function (): void {
+        $answer = WeeklyConfirmation::query()->where('employee_id', $this->bob->id)->sole();
+        resolve(ResolveDispute::class)->handle($answer->id, $this->hr->id, 'Revisamos el lector: salió a las 16:00.');
+        $this->actingAs($this->hr);
+
+        $this->get(overviewUrl(['status' => 'pending', 'q' => 'Bob']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.status', 'pending')
+            ->where('people.data.0.dispute', ['id' => $answer->id, 'reason' => 'El martes salí a las 18:00, no a las 16:00.', 'resolution' => 'Revisamos el lector: salió a las 16:00.']));
+    });
+
+    it('keeps in view the disputed week of a person who left, in their center, until RH resolves it', function (): void {
+        $gone = EmployeeFactory::new()->deactivated()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Eva Ríos']);
+        WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $gone->id, 'week_start' => '2026-11-02']);
+        $this->actingAs($this->hr);
+
+        $this->get(overviewUrl(['status' => 'disputed']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('counts.disputed', 2)
+            ->where('people.data', fn ($people): bool => collect($people)->map(fn ($person): array => [$person['name'], $person['active']])->all() === [['Bob Díaz', true], ['Eva Ríos', false]]));
+        $this->get(overviewUrl(['status' => 'disputed', 'center' => $this->office->id]))->assertInertia(fn (AssertableInertia $page) => $page->where('counts.disputed', 0));
+    });
+
+    it('does not bring back a person who left with a week that is not disputed', function (): void {
+        $gone = EmployeeFactory::new()->deactivated()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Eva Ríos']);
+        WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $gone->id, 'week_start' => '2026-11-02']);
+        $this->actingAs($this->hr);
+
+        $this->get(overviewUrl())->assertInertia(fn (AssertableInertia $page) => $page->where('counts.all', 4));
+    });
 });
 
 describe('the week', function (): void {
