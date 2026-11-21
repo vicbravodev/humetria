@@ -214,6 +214,7 @@ final readonly class ReportPages
             'flags' => $row->flags,
             'lateMinutes' => $row->lateMinutes,
             'timezone' => $row->timezone,
+            'absence' => $row->absence,
         ];
     }
 }

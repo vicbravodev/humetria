@@ -5,13 +5,14 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { confirmationBadge, dayHours, endText } from '@/lib/attendance/report';
 import { lateLabel } from '@/lib/attendance/late';
 import { isWarning } from '@/lib/attendance/report-person';
-import { dayTitle, duration } from '@/lib/attendance/week-text';
+import { absenceLabel, dayTitle, duration } from '@/lib/attendance/week-text';
 import type { ReportDay } from '@/types';
 
 /** One day of a person: its local start and end, breaks, hours as the law pays them, evidence, corrections and answer. */
 export default function ReportDayRow({ day }: { day: ReportDay }) {
     const badge = confirmationBadge(day.confirmation);
     const late = lateLabel(day.lateMinutes);
+    const away = absenceLabel(day.absence ?? null);
     const notes = [...day.corrections, ...day.flags];
 
     return (
@@ -31,6 +32,11 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
                 <ReportEvidence level={day.evidence} />
             </TableCell>
             <TableCell className="min-w-56 whitespace-normal max-md:w-full">
+                {away !== null && (
+                    <Badge variant="secondary" className="mr-1 mb-1">
+                        {away}
+                    </Badge>
+                )}
                 {late !== null && (
                     <Badge variant="warning" className="mb-1">
                         {late}

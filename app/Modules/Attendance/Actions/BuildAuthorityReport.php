@@ -23,6 +23,7 @@ use App\Modules\Attendance\Support\HoursCalculator;
 use App\Modules\Attendance\Support\LegalLimits;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Attendance\Support\WorkedDay;
+use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
@@ -41,8 +42,11 @@ use LogicException;
  * week from its Monday even when the period starts later; the week's double-pay cap goes to its earliest overtime, day
  * by day, and the rest is triple.
  *
- * Streamed: the people go in chunks, each read in the same seven queries (marks in two, what was corrected, schedules,
- * answers, and the roster's two), so memory holds one chunk.
+ * A day of approved vacations or leave (Vacaciones) says which of the two, never the type of the leave (C-22), has no
+ * lateness (criterio 2.6) and, when the person marked in it, a flag: vacations worked are RH's to notice (art. 81).
+ *
+ * Streamed: the people go in chunks, each read in the same eight queries (marks in two, what was corrected, schedules,
+ * answers, absences, and the roster's two), so memory holds one chunk.
  */
 final readonly class BuildAuthorityReport
 {
@@ -54,6 +58,9 @@ final readonly class BuildAuthorityReport
 
     /** The flag of today's day with its start and no end yet: information, not a warning. */
     public const string IN_PROGRESS = 'En curso';
+
+    /** A day the person marked while away with approved vacations or leave. */
+    public const string MARKED_WHILE_AWAY = 'Marcó durante una ausencia';
 
     /** At most the people of attendance.report.chunk_size per chunk, and at most this many person-weeks of marks held at once: a long period takes fewer people per chunk. */
     private const int PERSON_WEEKS = 1000;
@@ -73,7 +80,7 @@ final readonly class BuildAuthorityReport
         EvidenceLevel::Corrected->value => 3,
     ];
 
-    public function __construct(private Roster $roster, private Timezones $timezones) {}
+    public function __construct(private Roster $roster, private Timezones $timezones, private Absences $absences) {}
 
     /**
      * @return LazyCollection<int, AuthorityRow> by person (by name) and date
@@ -152,6 +159,7 @@ final readonly class BuildAuthorityReport
             ->whereBetween('week_start', [$weeks[0]->start()->toDateString(), $weeks[1]->start()->toDateString()])
             ->get(['employee_id', 'week_start', 'status', 'digest'])
             ->keyBy(fn (WeeklyConfirmation $answer): string => $answer->employee_id.' '.$answer->week_start->toDateString());
+        $away = $this->away($employeeIds, $weeks[0]->start(), $weeks[1]->end());
         $people = $this->roster->findMany($employeeIds);
         $rows = [];
 
@@ -167,7 +175,7 @@ final readonly class BuildAuthorityReport
             foreach (self::byWeek($days) as $monday => $days) {
                 $schedule = $schedules->get($id);
                 $hours = array_map(
-                    fn (int $offset): DayHours => WorkedDay::hours($date = CarbonImmutable::parse($monday)->addDays($offset), $days[$date->toDateString()] ?? [], $schedule, $tolerance),
+                    fn (int $offset): DayHours => WorkedDay::hours($date = CarbonImmutable::parse($monday)->addDays($offset), $days[$date->toDateString()] ?? [], $schedule, $tolerance, isset($away[$id][$date->toDateString()])),
                     range(0, 6),
                 );
                 $summary = HoursCalculator::week($hours, $schedule->shift_type ?? ShiftType::Day, CarbonImmutable::parse($monday)->year);
@@ -186,13 +194,32 @@ final readonly class BuildAuthorityReport
                     if (($marks !== [] || $dayVoids !== []) && $date >= $period[0] && $date <= $period[1] && $center === $workCenterId) {
                         $notes = [...$history->notesFor($marks), ...array_map(fn (array $void): array => [$void['at']->getTimestamp(), $void['text']], $dayVoids)];
                         usort($notes, fn (array $a, array $b): int => $a[0] <=> $b[0]);
-                        $rows[] = self::row($person, $marks, $day, [$overtime, $double], $summary, $answer, array_column($notes, 1));
+                        $rows[] = self::row($person, $marks, $day, [$overtime, $double], $summary, $answer, array_column($notes, 1), $away[$id][$date] ?? null);
                     }
                 }
             }
         }
 
         return $rows;
+    }
+
+    /**
+     * Who of these people was away which day of the weeks, with vacations or leave: one query.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, array<string, 'vacation'|'leave'>> by employee id and local date
+     */
+    private function away(array $employeeIds, CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        $away = [];
+
+        foreach ($this->absences->between($from, $to, $employeeIds) as $absence) {
+            for ($date = $absence->from->max($from); $date->lessThanOrEqualTo($absence->to->min($to)); $date = $date->addDay()) {
+                $away[$absence->employeeId][$date->toDateString()] = $absence->kind;
+            }
+        }
+
+        return $away;
     }
 
     /**
@@ -262,8 +289,9 @@ final readonly class BuildAuthorityReport
      * @param  list<AttendanceMark>  $marks  the day's effective marks, in order of time; none when all were voided
      * @param  array{int, int}  $overtime  the day's overtime minutes and how many of them are paid double
      * @param  list<string>  $corrections  what was corrected or voided in the day, in order
+     * @param  'vacation'|'leave'|null  $absence
      */
-    private static function row(RosterEntry $person, array $marks, DayHours $day, array $overtime, WeekSummary $week, ?WeeklyConfirmation $answer, array $corrections): AuthorityRow
+    private static function row(RosterEntry $person, array $marks, DayHours $day, array $overtime, WeekSummary $week, ?WeeklyConfirmation $answer, array $corrections, ?string $absence): AuthorityRow
     {
         $first = $marks[0] ?? null;
         $last = $marks === [] ? null : $marks[count($marks) - 1];
@@ -295,9 +323,10 @@ final readonly class BuildAuthorityReport
                 default => 'sin confirmar',
             },
             weekDigest: $confirmed ? ($answer->digest ?? '') : '',
-            flags: self::flags($marks, $day, $minutes, $minutes - $double, $week),
+            flags: [...self::flags($marks, $day, $minutes, $minutes - $double, $week), ...($absence !== null && $marks !== [] ? [self::MARKED_WHILE_AWAY] : [])],
             lateMinutes: $day->lateMinutes,
             timezone: self::zoneOf($first, $ended ? $last : null),
+            absence: $absence,
         );
     }
 

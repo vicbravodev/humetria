@@ -150,6 +150,8 @@ export type ReportDay = {
     flags: string[];
     /** Minutes late against the schedule's start time and the tolerance; null when there is none to compare. Informational. */
     lateMinutes?: number | null;
+    /** Away that day with approved vacations or a leave, never its type; null when not. */
+    absence?: 'vacation' | 'leave' | null;
 };
 
 /** A person with days in the report's period, each of them. */

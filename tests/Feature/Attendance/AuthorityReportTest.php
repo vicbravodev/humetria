@@ -14,7 +14,10 @@ use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\CorrectionHistory;
+use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -113,6 +116,46 @@ it('tells the lateness of each day against the start time and the company\'s tol
         fn ($row) => $row->lateMinutes->toBe(0),
         fn ($row) => $row->lateMinutes->toBe(6),
     );
+});
+
+describe('with the absences of Vacaciones (criterio 2.6)', function (): void {
+    beforeEach(function (): void {
+        AttendanceSchedule::query()->update(['starts_by_weekday' => [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => null, 7 => null]]);
+    });
+
+    it('has no lateness on a day of approved vacations, says so and flags that the person marked while away', function (): void {
+        LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => '2027-01-05', 'ends_on' => '2027-01-05', 'working_days' => 1]);
+        reportDay($this->ana, '2027-01-05 09:20', '2027-01-05 17:20');
+        reportDay($this->ana, '2027-01-06 09:20', '2027-01-06 17:20');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->localDate->toBe('2027-01-05')->lateMinutes->toBeNull()->absence->toBe('vacation')->flags->toBe([BuildAuthorityReport::MARKED_WHILE_AWAY]),
+            fn ($row) => $row->localDate->toBe('2027-01-06')->lateMinutes->toBe(20)->absence->toBeNull()->flags->toBe([]),
+        );
+    });
+
+    it('says leave for any leave, never its type, and counts only what was approved', function (): void {
+        $maternity = LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Maternidad']);
+        LeaveRequest::factory()->ofType($maternity)->approved()->create(['employee_id' => $this->ana->id, 'starts_on' => '2027-01-05', 'ends_on' => '2027-01-05', 'working_days' => 1]);
+        LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => '2027-01-06', 'ends_on' => '2027-01-06', 'working_days' => 1]);
+        reportDay($this->ana, '2027-01-05 09:20', '2027-01-05 17:20');
+        reportDay($this->ana, '2027-01-06 09:20', '2027-01-06 17:20');
+
+        $rows = authorityRows($this->plant, '2027-01-04', '2027-01-10');
+
+        expect(array_map(fn (AuthorityRow $row): ?string => $row->absence, $rows))->toBe(['leave', null])
+            ->and(serialize($rows))->not->toContain('Maternidad');
+    });
+
+    it('reads no absence in a company that does not use Vacaciones', function (): void {
+        LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => '2027-01-05', 'ends_on' => '2027-01-05', 'working_days' => 1]);
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+        reportDay($this->ana, '2027-01-05 09:20', '2027-01-05 17:20');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->lateMinutes->toBe(20)->absence->toBeNull()->flags->toBe([]),
+        );
+    });
 });
 
 it('puts a day on the local date of its start, even when its UTC date is the next one', function (): void {
@@ -364,8 +407,8 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
     $names = array_map(fn (AuthorityRow $row): string => $row->personName, authorityRows($this->plant, '2027-01-04', '2027-01-10'));
 
     expect($names)->toBe(array_map(fn (int $index): string => sprintf('Persona %03d', $index), range(0, 449)))
-        // Who has days and their order, the center's zone, then seven reads for each of the three chunks of 200 (the seventh: what was corrected).
-        ->and(count(DB::getQueryLog()))->toBe(3 + 3 * 7);
+        // Who has days and their order, the center's zone, then eight reads for each of the three chunks of 200 (what was corrected and who was away among them).
+        ->and(count(DB::getQueryLog()))->toBe(3 + 3 * 8);
 });
 
 it('reads its people in chunks of the size of config/attendance.php (200 by default)', function (): void {

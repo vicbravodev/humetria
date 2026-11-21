@@ -9,6 +9,8 @@ use App\Modules\Attendance\Http\Controllers\ReportController;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\AuthorityCsv;
+use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -22,7 +24,7 @@ mutates(ReportController::class, AuthorityCsv::class);
 /** The CSV's header row, as a spreadsheet reads it. */
 const AUTHORITY_CSV_HEADER = 'Persona,Puesto,Fecha,Inicio,Fin,Fecha de fin,Zona horaria,Pausas (min),Trabajado (min),Trabajado (h:mm),Ordinarias (min),Ordinarias (h:mm),'
     .'Extra doble (min),Extra doble (h:mm),Extra triple (min),Extra triple (h:mm),Día de descanso (min),Día de descanso (h:mm),'
-    .'Evidencia,Correcciones,Detalle de correcciones,Conformidad,Huella de la semana confirmada,Avisos';
+    .'Evidencia,Correcciones,Detalle de correcciones,Conformidad,Huella de la semana confirmada,Avisos,Ausencia';
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2027-02-01 18:00:00', 'UTC'));
@@ -78,8 +80,26 @@ describe('the file', function (): void {
         $response = $this->get(exportUrl(plantWeek($this)))->assertOk();
 
         expect($response->streamedContent())->toBe("\u{FEFF}".AUTHORITY_CSV_HEADER."\n"
-            .'Ana López,Operadora,2027-01-06,23:50,08:20,2027-01-07,UTC−06:00 · America/Mexico_City,30,480,8:00,480,8:00,0,0:00,0,0:00,0,0:00,Fuerte,0,,objetada,,'."\n"
-            .'Ana López,Operadora,2027-01-08,08:00,,,UTC−06:00 · America/Mexico_City,0,0,0:00,0,0:00,0,0:00,0,0:00,0,0:00,Corregida,1,"hora corregida de 08:15 a 08:00 (por RH): Llegó a las 8, el lector falló.",objetada,,Sin marca de fin'."\n");
+            .'Ana López,Operadora,2027-01-06,23:50,08:20,2027-01-07,UTC−06:00 · America/Mexico_City,30,480,8:00,480,8:00,0,0:00,0,0:00,0,0:00,Fuerte,0,,objetada,,,'."\n"
+            .'Ana López,Operadora,2027-01-08,08:00,,,UTC−06:00 · America/Mexico_City,0,0,0:00,0,0:00,0,0:00,0,0:00,0,0:00,Corregida,1,"hora corregida de 08:15 a 08:00 (por RH): Llegó a las 8, el lector falló.",objetada,,Sin marca de fin,'."\n");
+    });
+
+    it('says Vacaciones or Permiso on a day of an approved absence, never the type of the leave, and that the person marked in it', function (): void {
+        $maternity = LeaveType::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Maternidad']);
+        LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => '2027-01-05', 'ends_on' => '2027-01-05', 'working_days' => 1]);
+        LeaveRequest::factory()->ofType($maternity)->approved()->create(['employee_id' => $this->ana->id, 'starts_on' => '2027-01-06', 'ends_on' => '2027-01-06', 'working_days' => 1]);
+        foreach (['2027-01-05', '2027-01-06', '2027-01-07'] as $date) {
+            csvMark($this->ana, MarkType::Start, "{$date} 08:00");
+            csvMark($this->ana, MarkType::End, "{$date} 16:00");
+        }
+        $this->actingAs($this->hr);
+
+        $lines = explode("\n", $this->get(exportUrl(plantWeek($this)))->streamedContent());
+
+        expect($lines[1])->toEndWith(',Marcó durante una ausencia,Vacaciones')
+            ->and($lines[2])->toEndWith(',Marcó durante una ausencia,Permiso')
+            ->and($lines[3])->toEndWith(',sin confirmar,,,')
+            ->and(implode("\n", $lines))->not->toContain('Maternidad');
     });
 
     it('sends it as a download nobody keeps, named after the center and the period with safe characters only', function (): void {
