@@ -7,6 +7,7 @@ namespace App\Modules\Leave\Listeners;
 use App\Modules\Leave\Actions\CancelRequest;
 use App\Modules\Leave\Actions\RecordTermination;
 use App\Modules\Leave\Actions\RouteRequests;
+use App\Modules\Leave\Actions\TrimRequestsAfter;
 use App\Modules\Leave\Actions\VoidLaterPeriods;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Models\LeaveRequest;
@@ -22,7 +23,7 @@ use App\Modules\Tenancy\Contracts\Companies;
  */
 final readonly class CloseOnDeactivation
 {
-    public function __construct(private Companies $companies, private CancelRequest $cancel, private RouteRequests $route, private VoidLaterPeriods $void, private RecordTermination $terminate) {}
+    public function __construct(private Companies $companies, private CancelRequest $cancel, private RouteRequests $route, private TrimRequestsAfter $trim, private VoidLaterPeriods $void, private RecordTermination $terminate) {}
 
     public function handle(EmployeeDeactivated $event): void
     {
@@ -31,7 +32,7 @@ final readonly class CloseOnDeactivation
         $cutoff = $event->effectiveOn->toDateString();
 
         $open = LeaveRequest::query()->where('employee_id', $event->employeeId)
-            ->where(fn ($query) => $query->where('status', RequestStatus::Requested)->orWhere(fn ($query) => $query->where('status', RequestStatus::Approved)->where('starts_on', '>', $cutoff)))
+            ->where(fn ($query) => $query->where('status', RequestStatus::Requested)->orWhere(fn ($query) => $query->whereIn('status', [RequestStatus::Approved, RequestStatus::Taken])->where('starts_on', '>', $cutoff)))
             ->orderBy('starts_on')->pluck('id');
 
         foreach ($open as $requestId) {
@@ -40,6 +41,8 @@ final readonly class CloseOnDeactivation
             }
         }
 
+        // What began before they left and goes past it keeps what was worked until then.
+        $this->trim->handle($event->employeeId, $event->effectiveOn);
         $this->route->reroute($event->employeeId);
         // What was granted after the day they left was never theirs: out of the days they are owed.
         $this->void->handle($event->employeeId, $event->effectiveOn);
