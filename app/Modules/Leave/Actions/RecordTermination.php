@@ -61,9 +61,10 @@ final readonly class RecordTermination
             ]);
         });
 
-        Log::info('leave.termination_recorded', [
+        // Said once it committed: this runs inside the transaction of the departure, which may still roll back.
+        DB::afterCommit(fn () => Log::info('leave.termination_recorded', [
             'termination_id' => $termination->id, 'employee_id' => $employeeId, 'pending_days' => $termination->pending_days, 'proportional_days' => $termination->proportional_days,
-        ]);
+        ]));
 
         return $termination;
     }
