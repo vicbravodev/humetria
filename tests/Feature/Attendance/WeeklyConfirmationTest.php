@@ -16,6 +16,7 @@ use App\Modules\Attendance\Events\WeekConfirmed;
 use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Exceptions\WeekRejected;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
@@ -372,10 +373,7 @@ describe('the nightly close', function (): void {
         expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Pending);
     });
 
-    it('opens no week for a person who left, nor for a week with no marks or only voided ones', function (): void {
-        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
-        weekMark($bob, MarkType::Start, '2026-11-03 09:00');
-        $bob->update(['deactivated_at' => now()]);
+    it('opens no week with no marks or only voided ones', function (): void {
         $carla = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
         AttendanceMark::factory()->correcting(weekMark($carla, MarkType::Start, '2026-11-03 09:00'))->create(['marked_at' => null]);
         weekMark($this->ana, MarkType::Start, '2026-10-30 09:00');
@@ -383,6 +381,21 @@ describe('the nightly close', function (): void {
         resolve(CloseDays::class)->handle();
 
         expect(WeeklyConfirmation::query()->count())->toBe(0);
+    });
+
+    it('opens the last week of a person who left, up to the day they left: their marks in it (H09)', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        weekMark($bob, MarkType::Start, '2026-11-03 09:00');
+        weekMark($bob, MarkType::End, '2026-11-03 17:00');
+        $bob->update(['deactivated_at' => now(), 'terminated_on' => '2026-11-04']);
+        // Someone who left long before has no marks in the week: nothing to open.
+        $eva = EmployeeFactory::new()->deactivated()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $eva->id]);
+
+        resolve(CloseDays::class)->handle();
+
+        expect(WeeklyConfirmation::query()->get(['employee_id', 'week_start', 'status'])->map(fn (WeeklyConfirmation $week): array => [$week->employee_id, $week->week_start->toDateString(), $week->status])->all())
+            ->toBe([[$bob->id, LAST_WEEK, WeekStatus::Pending]]);
     });
 
     it('opens the week of a Sunday night that ends on Monday', function (): void {
