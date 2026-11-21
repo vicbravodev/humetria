@@ -244,6 +244,46 @@ it('settles the days once: every period ends at zero with termination entries, a
         ->and(AuditEntry::query()->where('event', 'leave.termination_settled')->count())->toBe(1);
 });
 
+it('does not settle the termination of a person who works here: their days are theirs again', function (): void {
+    $ana = hiredOn('2024-01-01');
+    periodWith($ana, 1, '2025-01-01', statutory: 12);
+    $termination = terminate($ana);
+    // Back at work without the event that voids the termination (reactivated by hand, in the database).
+    $ana->update(['deactivated_at' => null, 'terminated_on' => null, 'deactivation_reason' => null]);
+
+    expect(fn () => resolve(SettleTermination::class)->handle($termination?->id ?? '', $this->user->id))->toThrow(AlreadyDecided::class)
+        ->and(LeaveEntry::query()->where('kind', EntryKind::Termination)->count())->toBe(0)
+        ->and($termination?->refresh()->settled_at)->toBeNull()
+        ->and(Balances::available($ana->id))->toBe(12);
+});
+
+it('warns when the balance of today is not the one recorded with the departure, and settles all the same', function (): void {
+    $ana = hiredOn('2024-01-01');
+    $period = periodWith($ana, 1, '2025-01-01', statutory: 12);
+    $termination = terminate($ana);
+    // Two days were corrected after the departure was recorded.
+    LeaveEntry::factory()->of($period)->create(['kind' => EntryKind::Adjustment, 'days' => 2, 'note' => 'Antigüedad reconocida', 'recorded_by' => $this->user->id]);
+    Log::spy();
+
+    $settled = resolve(SettleTermination::class)->handle($termination?->id ?? '', $this->user->id);
+
+    expect($settled->settled_at)->not->toBeNull()
+        ->and(periodsLeftOf($ana))->toBe([[0, 0]])
+        ->and(AuditEntry::query()->where('event', 'leave.termination_settled')->sole()->metadata)->toEqual(['employee_id' => $ana->id, 'days' => 14, 'recorded_days' => 12]);
+    Log::shouldHaveReceived('warning')->with('leave.termination_settled_with_difference', ['termination_id' => $termination?->id, 'employee_id' => $ana->id, 'recorded_days' => 12, 'days_today' => 14])->once();
+});
+
+it('does not warn when the balance of today is the recorded one', function (): void {
+    $ana = hiredOn('2024-01-01');
+    periodWith($ana, 1, '2025-01-01', statutory: 12);
+    $termination = terminate($ana);
+    Log::spy();
+
+    resolve(SettleTermination::class)->handle($termination?->id ?? '', $this->user->id);
+
+    Log::shouldNotHaveReceived('warning');
+});
+
 it('voids a termination not yet settled when the person comes back, and never settles a voided one', function (): void {
     $ana = hiredOn('2024-01-01');
     periodWith($ana, 1, '2025-01-01', statutory: 12);

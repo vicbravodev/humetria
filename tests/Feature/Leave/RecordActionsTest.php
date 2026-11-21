@@ -84,6 +84,7 @@ it('does not adjust the period of somebody else', function (): void {
 });
 
 it('lets only owner and hr adjust and settle', function (TenantRole $role, bool $allowed): void {
+    $this->ana->update(['deactivated_at' => '2026-11-03 18:00:00']);
     $termination = LeaveTermination::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     $this->actingAs(memberOf($this->tenant, $role));
 
@@ -100,6 +101,7 @@ it('lets only owner and hr adjust and settle', function (TenantRole $role, bool 
 ]);
 
 it('settles the days of a person who left, once', function (): void {
+    $this->ana->update(['deactivated_at' => '2026-11-03 18:00:00']);
     $termination = LeaveTermination::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     $this->actingAs($this->hr);
 
@@ -113,6 +115,27 @@ it('settles the days of a person who left, once', function (): void {
 
     expect(LeaveEntry::query()->where('kind', EntryKind::Termination)->count())->toBe(1)
         ->and(AuditEntry::query()->where('event', 'leave.termination_settled')->count())->toBe(1);
+});
+
+it('tells HR when the days settled are not the ones recorded with the departure', function (): void {
+    $this->ana->update(['deactivated_at' => '2026-11-03 18:00:00']);
+    $termination = LeaveTermination::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'pending_days' => 10]);
+    $this->actingAs($this->hr);
+
+    $this->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()
+        ->assertSessionHas('inertia.flash_data.toast.type', 'warning')
+        ->assertSessionHas('inertia.flash_data.toast.message', 'Se finiquitó el saldo de hoy (14 días), pero la baja había registrado 10: revisa el estado de cuenta.');
+
+    expect($termination->refresh()->settled_at)->not->toBeNull();
+});
+
+it('does not settle the termination of a person who works here', function (): void {
+    $termination = LeaveTermination::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+
+    $this->actingAs($this->hr)->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()->assertSessionHas('inertia.flash_data.toast.type', 'error');
+
+    expect($termination->refresh()->settled_at)->toBeNull()
+        ->and(LeaveEntry::query()->where('kind', EntryKind::Termination)->count())->toBe(0);
 });
 
 it('does not settle the termination of another company', function (): void {

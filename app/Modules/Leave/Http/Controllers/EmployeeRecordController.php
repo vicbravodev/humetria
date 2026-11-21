@@ -10,6 +10,7 @@ use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Http\Requests\AdjustmentRequest;
 use App\Modules\Leave\Http\Requests\SettleRequest;
 use App\Modules\Leave\Models\LeaveEntitlement;
+use App\Modules\Leave\Models\LeaveTermination;
 use App\Modules\Leave\Support\LeaveDefaults;
 use App\Modules\Leave\Support\RecordPages;
 use App\Modules\Organization\Contracts\Roster;
@@ -52,8 +53,12 @@ final readonly class EmployeeRecordController
     public function settle(SettleRequest $request, mixed $tenant, string $termination, SettleTermination $settle): RedirectResponse
     {
         try {
+            $record = LeaveTermination::query()->findOrFail($termination);
+            $difference = SettleTermination::differenceOf($record);
             $settle->handle($termination, $request->userId());
-            Inertia::flash('toast', ['type' => 'success', 'message' => 'Días finiquitados.']);
+            Inertia::flash('toast', $difference === 0
+                ? ['type' => 'success', 'message' => 'Días finiquitados.']
+                : ['type' => 'warning', 'message' => 'Se finiquitó el saldo de hoy ('.($record->pending_days + $difference)." días), pero la baja había registrado {$record->pending_days}: revisa el estado de cuenta."]);
         } catch (AlreadyDecided) {
             Inertia::flash('toast', ['type' => 'error', 'message' => 'Estos días ya se habían finiquitado o la baja se canceló.']);
         }
