@@ -9,6 +9,7 @@ use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\CenterModeController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
+use App\Modules\Attendance\Http\Controllers\MarkCorrectionController;
 use App\Modules\Attendance\Http\Controllers\PlaceController;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
 use App\Modules\Attendance\Http\Controllers\ReportController;
@@ -46,6 +47,9 @@ Route::delete('admin/{tenant:slug}/attendance/kiosks/{kiosk}', [KioskController:
 Route::get('admin/{tenant:slug}/attendance/corrections', [CorrectionController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.corrections.index');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/approve', [CorrectionController::class, 'approve'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.approve');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/reject', [CorrectionController::class, 'reject'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.reject');
+
+// RH corrects a mark with no request first, from the report: to another time or voided, always with a note (criterio 5.4).
+Route::post('admin/{tenant:slug}/attendance/marks/{mark}/correct', MarkCorrectionController::class)->where('tenant', $notReserved)->whereUuid('mark')->name('tenant.attendance.marks.correct');
 
 // The company's policy: what a mark out of zone does, the accuracy asked of a position, the QR on site, the trusted browser
 // and how long the records are kept.

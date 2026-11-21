@@ -164,6 +164,16 @@ export type ReportDay = {
     lateMinutes?: number | null;
     /** Away that day with approved vacations or a leave, never its type; null when not. */
     absence?: 'vacation' | 'leave' | null;
+    /** The day's marks in force, for RH to correct one. */
+    marks?: ReportMark[];
+};
+
+/** A mark in force of a day of the report, at the local time of where it was taken. */
+export type ReportMark = {
+    id: string;
+    type: string;
+    date: string;
+    time: string;
 };
 
 /** A person with days in the report's period, each of them. */

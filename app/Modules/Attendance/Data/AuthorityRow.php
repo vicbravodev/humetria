@@ -47,5 +47,7 @@ final readonly class AuthorityRow
         public string $timezone = '',
         /** Away that day with approved vacations or a leave, never its type (C-22); null when not. */
         public ?string $absence = null,
+        /** @var list<array{id: string, type: string, date: string, time: string}> the day's marks in force, local, for RH to correct one: never in the CSV */
+        public array $marks = [],
     ) {}
 }

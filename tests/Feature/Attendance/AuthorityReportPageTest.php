@@ -167,7 +167,7 @@ describe('the page', function (): void {
     });
 
     it('shows the center\'s period: its figures, the people page by page with their days, and the link to the CSV', function (): void {
-        pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 18:00');
+        $first = pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 18:00');
         $corrected = pageDay($this->ana, '2027-01-27 08:20', '2027-01-27 16:00');
         AttendanceMark::factory()->correcting($corrected)->create(['marked_at' => CarbonImmutable::parse('2027-01-27 08:00', 'America/Mexico_City')->utc(), 'reason' => 'El lector falló.']);
         WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2027-01-25']);
@@ -189,7 +189,13 @@ describe('the page', function (): void {
                 'date' => '2027-01-26', 'start' => '08:00', 'end' => '18:00', 'endDate' => '2027-01-26', 'breakMinutes' => 0, 'workedMinutes' => 600,
                 'ordinaryMinutes' => 480, 'doubleMinutes' => 120, 'tripleMinutes' => 0, 'restDayMinutes' => 0, 'evidence' => 'Fuerte',
                 'corrections' => [], 'confirmation' => 'confirmado', 'flags' => [], 'lateMinutes' => null, 'timezone' => 'UTC−06:00 · America/Mexico_City', 'absence' => null,
+                'marks' => [
+                    ['id' => $first->id, 'type' => 'start', 'date' => '2027-01-26', 'time' => '08:00'],
+                    ['id' => AttendanceMark::query()->where('employee_id', $this->ana->id)->where('type', MarkType::End)->orderBy('marked_at')->value('id'), 'type' => 'end', 'date' => '2027-01-26', 'time' => '18:00'],
+                ],
             ])
+            // The marks in force: the correction, not the mark it replaced.
+            ->where('people.data.0.days.1.marks.0.time', '08:00')
             ->where('people.data.0.days.1.lateMinutes', null)
             ->where('people.data.0.days.1.corrections', ['hora corregida de 08:20 a 08:00 (por RH): El lector falló.'])
             ->where('people.data.1.days.0.flags', ['Sin marca de fin'])

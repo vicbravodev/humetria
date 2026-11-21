@@ -1,4 +1,5 @@
 import { Clock, TriangleAlert } from 'lucide-react';
+import ReportCorrectSheet from '@/components/attendance/report-correct-sheet';
 import ReportEvidence from '@/components/attendance/report-evidence';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -72,7 +73,15 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
                 )}
             </TableCell>
             <TableCell>
-                <Badge variant={badge.variant}>{badge.label}</Badge>
+                <div className="flex flex-col items-start gap-2">
+                    <Badge variant={badge.variant}>{badge.label}</Badge>
+                    {(day.marks ?? []).length > 0 && (
+                        <ReportCorrectSheet
+                            date={day.date}
+                            marks={day.marks ?? []}
+                        />
+                    )}
+                </div>
             </TableCell>
         </TableRow>
     );

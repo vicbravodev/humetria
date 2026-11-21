@@ -76,10 +76,12 @@ function authorityRows(WorkCenter $center, string $from, string $to): array
 }
 
 it('gives one row per person-day with local times, the breaks and the hours as «Mi semana» splits them', function (): void {
-    reportMark($this->ana, MarkType::Start, '2027-01-05 08:00');
-    reportMark($this->ana, MarkType::BreakStart, '2027-01-05 13:00');
-    reportMark($this->ana, MarkType::BreakEnd, '2027-01-05 14:00');
-    reportMark($this->ana, MarkType::End, '2027-01-05 18:00');
+    $marks = [
+        reportMark($this->ana, MarkType::Start, '2027-01-05 08:00'),
+        reportMark($this->ana, MarkType::BreakStart, '2027-01-05 13:00'),
+        reportMark($this->ana, MarkType::BreakEnd, '2027-01-05 14:00'),
+        reportMark($this->ana, MarkType::End, '2027-01-05 18:00'),
+    ];
 
     expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->toEqual([new AuthorityRow(
         employeeId: $this->ana->id,
@@ -101,6 +103,7 @@ it('gives one row per person-day with local times, the breaks and the hours as �
         weekDigest: '',
         flags: [],
         timezone: 'UTC−06:00 · America/Mexico_City',
+        marks: array_map(fn (AttendanceMark $mark): array => ['id' => $mark->id, 'type' => $mark->type->value, 'date' => '2027-01-05', 'time' => $mark->marked_at?->setTimezone('America/Mexico_City')->format('H:i')], $marks),
     )]);
 });
 

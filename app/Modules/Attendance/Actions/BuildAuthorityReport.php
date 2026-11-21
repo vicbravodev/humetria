@@ -327,6 +327,7 @@ final readonly class BuildAuthorityReport
             lateMinutes: $day->lateMinutes,
             timezone: self::zoneOf($first, $ended ? $last : null),
             absence: $absence,
+            marks: array_map(fn (AttendanceMark $mark): array => ['id' => $mark->id, 'type' => $mark->type->value, 'date' => $local($mark)->toDateString(), 'time' => $local($mark)->format('H:i')], $marks),
         );
     }
 
