@@ -9,6 +9,8 @@ use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveSetting;
 use App\Modules\Leave\Models\LeaveType;
+use App\Modules\Leave\Notifications\RequestDecided as DecidedMail;
+use App\Modules\Leave\Notifications\RequestToDecide as ToDecideMail;
 use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\RequestPages;
 use App\Modules\Organization\Models\Area;
@@ -248,6 +250,9 @@ describe('answering and correcting', function (): void {
         expect($request->refresh()->only(['status', 'decided_by_user_id']))->toBe(['status' => RequestStatus::Approved, 'decided_by_user_id' => $this->hr->id])
             ->and(leaveQueueLeft($this->ana))->toBe(17 - 9)
             ->and(AuditEntry::query()->where('event', 'leave.request_decided_by_hr')->count())->toBe(1);
+        // RH answered it on the same screen: the manager is not asked to answer what is already answered, the person is told.
+        Notification::assertSentOnDemandTimes(ToDecideMail::class, 0);
+        Notification::assertSentOnDemandTimes(DecidedMail::class, 1);
     });
 
     it('approves one that still waits for the manager: RH may answer at any time', function (): void {
@@ -361,7 +366,7 @@ describe('recording on behalf of somebody', function (): void {
             ->and(route('tenant.vacations.people.options', 'acme', absolute: false))->toBe('/admin/acme/vacations/people/options');
     });
 
-    it('records vacations for a person, waiting for an answer, without emailing anyone, and audits it', function (): void {
+    it('records vacations for a person, waiting for an answer, tells the manager as if the person had asked, and audits it', function (): void {
         $this->actingAs($this->hr)->post($this->url, leaveRecorded($this->ana, ['note' => 'Lo pidió por teléfono']))
             ->assertRedirect()
             ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Solicitud registrada a nombre de Ana Solís.']);
@@ -371,8 +376,10 @@ describe('recording on behalf of somebody', function (): void {
         expect($request->only(['employee_id', 'leave_type_id', 'working_days', 'status', 'note', 'recorded_by']))->toBe([
             'employee_id' => $this->ana->id, 'leave_type_id' => null, 'working_days' => 9, 'status' => RequestStatus::Requested, 'note' => 'Lo pidió por teléfono', 'recorded_by' => $this->hr->id,
         ])->and(leaveQueueLeft($this->ana))->toBe(14)
-            ->and(AuditEntry::query()->where('event', 'leave.request_recorded_by_hr')->sole()->metadata)->toBe(['employee_id' => $this->ana->id, 'working_days' => 9]);
-        Notification::assertNothingSent();
+            ->and(AuditEntry::query()->where('event', 'leave.request_recorded_by_hr')->sole()->metadata)->toBe(['employee_id' => $this->ana->id, 'working_days' => 9])
+            ->and($request->approver_employee_id)->toBe($this->boss->id);
+        Notification::assertSentOnDemandTimes(ToDecideMail::class, 1);
+        Notification::assertSentOnDemand(ToDecideMail::class, fn (ToDecideMail $mail, array $channels, Illuminate\Notifications\AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === 'beto@empresa.test');
     });
 
     it('may record days already gone, which the person cannot ask for', function (): void {
@@ -404,6 +411,18 @@ describe('recording on behalf of somebody', function (): void {
             ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'La solicitud quedó registrada, pero sin aprobar: La persona no tiene días disponibles y su política no permite adelantar vacaciones.']);
 
         expect(LeaveRequest::query()->sole()->status)->toBe(RequestStatus::Requested);
+        // Not answered after all: it goes on as any other, with the manager told that it is theirs.
+        Notification::assertSentOnDemandTimes(ToDecideMail::class, 1);
+    });
+
+    it('tells the owner, not a manager, when what could not be approved belongs to a person nobody is above', function (): void {
+        ownerOf($this->tenant);
+
+        $this->actingAs($this->hr)->post($this->url, leaveRecorded($this->boss, ['approve' => '1']));
+
+        expect(LeaveRequest::query()->sole()->status)->toBe(RequestStatus::Requested);
+        Notification::assertSentOnDemandTimes(ToDecideMail::class, 0);
+        Notification::assertSentOnDemandTimes(App\Modules\Leave\Notifications\RequestEscalated::class, 1);
     });
 
     it('says why it cannot be recorded, in tú', function (array $data, string $field, string $message): void {

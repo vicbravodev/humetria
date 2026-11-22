@@ -14,6 +14,7 @@ use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\EmployeeLock;
 use App\Modules\Leave\Support\PeriodWindow;
+use App\Modules\Leave\Support\RequestNotifier;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class CancelRequest
 {
-    public function __construct(private RecordAudit $audit) {}
+    public function __construct(private RecordAudit $audit, private RequestNotifier $notifier) {}
 
     /**
      * Whether the person who asked may still cancel it: while it waits, or once approved until the day before it starts.
@@ -79,6 +80,7 @@ final readonly class CancelRequest
         });
 
         Log::info('leave.request_cancelled', ['request_id' => $request->id, 'employee_id' => $request->employee_id, 'by_hr' => $by->isHr, 'days_returned' => $returned]);
+        $this->notifier->cancelled($request, $by->isHr);
 
         return $request;
     }
