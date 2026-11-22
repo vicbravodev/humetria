@@ -55,12 +55,15 @@ const LABELS: Record<string, string> = {
     'worker_access.credential_registered': 'Llave de acceso registrada',
     'worker_access.link_issued': 'Enlace de acceso emitido',
     'worker_access.access_reissued': 'Acceso reemitido',
+    'worker_access.access_revoked_on_leaving':
+        'Acceso revocado por la baja de la persona',
     'worker_access.center_invited': 'Invitaciones enviadas a un centro',
     'worker_access.not_me_reported':
         'Llave anulada por la persona («No fui yo»)',
     'attendance.report_exported': 'Reporte de asistencia exportado',
     'employee.manager_changed': 'Jefe directo cambiado',
     'employee.deactivated': 'Persona dada de baja',
+    'employee.reactivated': 'Persona reactivada',
     'nom035.dossier_viewed': 'Expediente de NOM-035 consultado',
     'disclosure.poster_viewed': 'Cartel de difusión consultado',
     'disclosure.dossier_viewed': 'Expediente de difusión consultado',
@@ -201,6 +204,11 @@ const LABELS: Record<string, string> = {
     'billing.company_transferred': 'Empresa transferida de cuenta de cobro',
     'leave.policy_archived': 'Política de vacaciones archivada',
     'leave.termination_settled': 'Finiquito de vacaciones saldado',
+    'leave.request_trimmed': 'Vacación acortada por la baja de la persona',
+    'leave.entitlements_voided':
+        'Periodos de vacaciones posteriores a la baja anulados',
+    'leave.entitlements_restored':
+        'Periodos de vacaciones anulados por una baja, restituidos',
     'leave.request_decided_by_hr': 'Solicitud de vacaciones resuelta por RH',
     'leave.advance_authorized': 'Adelanto de vacaciones autorizado',
     'leave.request_recorded_by_hr': 'Solicitud de vacaciones registrada por RH',

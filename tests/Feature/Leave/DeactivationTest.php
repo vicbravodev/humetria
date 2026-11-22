@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Leave\Actions\TrimRequestsAfter;
 use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\EscalationReason;
 use App\Modules\Leave\Enums\RequestStatus;
+use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Listeners\CloseOnDeactivation;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
@@ -18,11 +20,12 @@ use App\Modules\Organization\Actions\DeactivateEmployee;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
-mutates(CloseOnDeactivation::class);
+mutates(CloseOnDeactivation::class, TrimRequestsAfter::class);
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create());
@@ -73,6 +76,72 @@ it('cancels what the person who left was waiting for and gives back the days of 
         // 14 less the 5 enjoyed and the day that already started.
         ->and(Balances::available($this->ana->id))->toBe(8)
         ->and(AuditEntry::query()->where('event', 'leave.request_cancelled')->count())->toBe(2);
+});
+
+/**
+ * A vacation approved or enjoyed: it charged its working days to the period, as the ledger would have it.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function chargedRequest(Employee $person, LeaveEntitlement $period, string $state, array $attributes, int $charged): LeaveRequest
+{
+    $request = requestOf($person, $state, $attributes);
+    LeaveEntry::factory()->of($period)->taken($charged)->create(['leave_request_id' => $request->id]);
+
+    return $request;
+}
+
+it('cancels a vacation already enjoyed that started after the day the person left, and gives its days back', function (): void {
+    $enjoyed = chargedRequest($this->ana, $this->period, 'taken', ['starts_on' => '2026-10-19', 'ends_on' => '2026-10-23', 'working_days' => 5], 5);
+
+    resolve(DeactivateEmployee::class)->handle($this->ana, effectiveOn: CarbonImmutable::parse('2026-10-15'));
+
+    expect($enjoyed->refresh()->status)->toBe(RequestStatus::Cancelled)
+        ->and(Balances::available($this->ana->id))->toBe(14);
+});
+
+it('gives back the working days after the departure of a vacation that began before it, and shortens it', function (string $state, string $startsOn, string $endsOn, int $workingDays, string $effectiveOn, int $returned): void {
+    $request = chargedRequest($this->ana, $this->period, $state, ['starts_on' => $startsOn, 'ends_on' => $endsOn, 'working_days' => $workingDays], $workingDays);
+
+    resolve(DeactivateEmployee::class)->handle($this->ana, effectiveOn: CarbonImmutable::parse($effectiveOn));
+
+    expect($request->refresh()->only(['status', 'working_days']))->toBe(['status' => RequestStatus::from($state), 'working_days' => $workingDays - $returned])
+        ->and($request->ends_on->toDateString())->toBe($effectiveOn)
+        ->and(LeaveEntry::query()->where('kind', EntryKind::Adjustment)->get()->map(fn (LeaveEntry $entry): array => [$entry->leave_request_id, $entry->days, $entry->recorded_by])->all())->toBe([[$request->id, $returned, null]])
+        ->and(Balances::available($this->ana->id))->toBe(14 - ($workingDays - $returned))
+        ->and(AuditEntry::query()->where('event', 'leave.request_trimmed')->sole()->metadata)->toEqual(['employee_id' => $this->ana->id, 'was' => $state, 'days_returned' => $returned]);
+})->with([
+    // Monday 26 October to Friday 6 November, gone on Wednesday the 28th: three worked, the other seven go back.
+    'approved, going on' => ['approved', '2026-10-26', '2026-11-06', 10, '2026-10-28', 7],
+    'enjoyed, already over' => ['taken', '2026-10-19', '2026-10-23', 5, '2026-10-21', 2],
+    // The day they left is theirs; the weekend after it is not a working day.
+    'the last day it began' => ['approved', '2026-10-26', '2026-11-06', 10, '2026-10-26', 9],
+]);
+
+it('cancels a vacation whose only days after the start are not working days of the person', function (): void {
+    // Saturday 24 to Friday 30 October, gone on the Saturday: nothing of it was worked.
+    $request = chargedRequest($this->ana, $this->period, 'approved', ['starts_on' => '2026-10-24', 'ends_on' => '2026-10-30', 'working_days' => 5], 5);
+
+    resolve(DeactivateEmployee::class)->handle($this->ana, effectiveOn: CarbonImmutable::parse('2026-10-24'));
+
+    expect($request->refresh()->status)->toBe(RequestStatus::Cancelled)
+        ->and(Balances::available($this->ana->id))->toBe(14);
+});
+
+it('gives the days of a trimmed vacation back to the newest period first', function (): void {
+    $old = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->boss->id, 'years_of_service' => 1, 'anniversary_on' => '2025-01-01', 'statutory_days' => 12]);
+    $new = LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->boss->id, 'years_of_service' => 2, 'anniversary_on' => '2026-01-01', 'statutory_days' => 14, 'extra_days' => 2]);
+    $request = requestOf($this->boss, 'approved', ['starts_on' => '2026-10-26', 'ends_on' => '2026-11-06', 'working_days' => 10, 'approver_employee_id' => null]);
+    LeaveEntry::factory()->of($old)->taken(6)->create(['leave_request_id' => $request->id]);
+    LeaveEntry::factory()->of($new)->taken(3)->create(['leave_request_id' => $request->id]);
+    LeaveEntry::factory()->of($new)->taken(1, Tranche::Extra)->create(['leave_request_id' => $request->id]);
+
+    resolve(DeactivateEmployee::class)->handle($this->boss, $this->director->id, CarbonImmutable::parse('2026-10-28'));
+
+    // Seven to give back: the extra day and the three statutory ones of the newest, then the three of the oldest.
+    expect(LeaveEntry::query()->where('kind', EntryKind::Adjustment)->get()->map(fn (LeaveEntry $entry): array => [$entry->leave_entitlement_id, $entry->tranche, $entry->days])->all())->toEqualCanonicalizing([
+        [$new->id, Tranche::Extra, 1], [$old->id, Tranche::Statutory, 3], [$new->id, Tranche::Statutory, 3],
+    ]);
 });
 
 it('leaves the requests of everybody else as they are', function (): void {

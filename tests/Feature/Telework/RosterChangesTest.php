@@ -69,6 +69,24 @@ it('ends the period with left_company when the employee is deactivated, keeping 
     Notification::assertNothingSent();
 });
 
+it('ends the period on the day the person left, in the company\'s day, not on the day it was typed', function (): void {
+    $this->employee->update(['hired_on' => '2025-01-01']);
+
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure(['terminated_on' => '2026-02-15']))->assertRedirect();
+
+    $period = periodNow();
+    expect($period->status)->toBe(TeleworkerStatus::Ended)
+        ->and($period->ended_at?->setTimezone(config()->string('app.display_timezone'))->toDateString())->toBe('2026-02-15');
+});
+
+it('never ends the period before it started when the person left earlier', function (): void {
+    $this->employee->update(['hired_on' => '2025-01-01']);
+
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure(['terminated_on' => '2026-01-05']))->assertRedirect();
+
+    expect(periodNow()->ended_at?->toIso8601String())->toBe('2026-01-10T12:00:00+00:00');
+});
+
 it('ends the period with transfer when the employee moves to another work center, and tells the owner', function (): void {
     moveToWarehouse();
 
