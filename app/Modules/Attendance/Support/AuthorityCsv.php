@@ -8,7 +8,7 @@ use App\Modules\Attendance\Data\AuthorityRow;
 
 /**
  * The report for the authority as a spreadsheet opens it: UTF-8 with a BOM (Excel reads the accents), commas, LF, a header
- * of stable names in Spanish and one row per person-day. Minutes as integers and again as h:mm for people. Free text
+ * of stable names in Spanish and one row per person-day; a day away says Vacaciones or Permiso, never the type of the leave. Minutes as integers and again as h:mm for people. Free text
  * (names, job titles, reasons) cannot run as a formula: a cell that starts with =, +, -, @, a tab or a carriage return
  * gets a single quote first (OWASP, CSV injection).
  */
@@ -19,7 +19,7 @@ final class AuthorityCsv
         'Trabajado (min)', 'Trabajado (h:mm)', 'Ordinarias (min)', 'Ordinarias (h:mm)',
         'Extra doble (min)', 'Extra doble (h:mm)', 'Extra triple (min)', 'Extra triple (h:mm)',
         'Día de descanso (min)', 'Día de descanso (h:mm)',
-        'Evidencia', 'Correcciones', 'Detalle de correcciones', 'Conformidad', 'Huella de la semana confirmada', 'Avisos',
+        'Evidencia', 'Correcciones', 'Detalle de correcciones', 'Conformidad', 'Huella de la semana confirmada', 'Avisos', 'Ausencia',
     ];
 
     /**
@@ -54,6 +54,11 @@ final class AuthorityCsv
             ...$minutes($row->workedMinutes), ...$minutes($row->ordinaryMinutes),
             ...$minutes($row->doubleMinutes), ...$minutes($row->tripleMinutes), ...$minutes($row->restDayMinutes),
             $row->evidence, (string) count($row->corrections), implode('; ', $row->corrections), $row->confirmation, $row->weekDigest, implode('; ', $row->flags),
+            match ($row->absence) {
+                'vacation' => 'Vacaciones',
+                'leave' => 'Permiso',
+                default => '',
+            },
         ];
     }
 

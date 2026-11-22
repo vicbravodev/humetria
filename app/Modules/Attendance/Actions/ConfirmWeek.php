@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Log;
  * that is over (its Sunday ended, local), with marks of the person, whose last day is not still open (a night that
  * started on Sunday ends on Monday: its end would change the week after it was confirmed), and only the version the
  * person read: a week RH changed meanwhile is read again first. Confirming again keeps the first moment. A disputed week
- * is not confirmed over the dispute: RH resolves it.
+ * is not confirmed over the dispute: RH resolves it (ResolveDispute), and then the person confirms what they read.
  */
 final readonly class ConfirmWeek
 {
@@ -59,13 +59,13 @@ final readonly class ConfirmWeek
             }
 
             $marks = EffectiveMarks::forWeek($employeeId, $week);
-            $blocked = self::blocker($marks) ?? (hash_equals(WeekDigest::ofMarks($marks), $digest) ? null : 'week_changed');
+            $blocked = self::blocker($marks) ?? (hash_equals(WeekDigest::ofMarks($marks, WeekDigest::absences($employeeId, $week)), $digest) ? null : 'week_changed');
 
             if ($blocked !== null) {
                 throw new WeekRejected($blocked);
             }
 
-            $confirmation->update(['status' => WeekStatus::Confirmed, 'confirmed_at' => CarbonImmutable::now()->utc(), 'credential_id' => $credentialId, 'digest' => $digest]);
+            $confirmation->update(['status' => WeekStatus::Confirmed, 'confirmed_at' => CarbonImmutable::now()->utc(), 'disputed_at' => null, 'reason' => null, 'credential_id' => $credentialId, 'digest' => $digest, ...WeeklyConfirmation::NO_RESOLUTION]);
             $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'key_id' => $credentialId];
             $this->audit->handle('attendance.week_confirmed', $confirmation, [...$ids, 'digest' => $digest]);
             Log::info('attendance.week_confirmed', ['confirmation_id' => $confirmation->id, ...$ids]);

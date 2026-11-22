@@ -22,7 +22,7 @@ use InvalidArgumentException;
 /**
  * A person disputes their week (criterio 5.2) with their verified device and a reason: it stays in view of RH until
  * resolved. Only a week that is over. A person may dispute a week they had confirmed (they may notice later), not one
- * already disputed, nor a version of the week RH changed since the person read it (its digest, WeekDigest). A week with no
+ * already disputed (once RH resolved it, they may again), nor a version of the week RH changed since the person read it (its digest, WeekDigest). A week with no
  * marks may be disputed: the person's marks may be missing. The reason stays in the row, never in the log or the audit
  * trail.
  */
@@ -63,7 +63,7 @@ final readonly class DisputeWeek
                 throw new WeekRejected('week_changed');
             }
 
-            $confirmation->update(['status' => WeekStatus::Disputed, 'confirmed_at' => null, 'disputed_at' => CarbonImmutable::now()->utc(), 'reason' => $reason, 'credential_id' => $credentialId, 'digest' => $digest]);
+            $confirmation->update(['status' => WeekStatus::Disputed, 'confirmed_at' => null, 'disputed_at' => CarbonImmutable::now()->utc(), 'reason' => $reason, 'credential_id' => $credentialId, 'digest' => $digest, ...WeeklyConfirmation::NO_RESOLUTION]);
             $ids = ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'key_id' => $credentialId];
             $this->audit->handle('attendance.week_disputed', $confirmation, [...$ids, 'digest' => $digest]);
             Log::info('attendance.week_disputed', ['confirmation_id' => $confirmation->id, ...$ids]);

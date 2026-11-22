@@ -34,6 +34,18 @@ export type OverviewPerson = {
     days: { worked: number; overtime: number }[];
     /** The days of the week they were away with vacations or a leave (0 Monday to 6 Sunday): not days they missed. */
     absentDays: number[];
+    /** False for a person who left: they stay in view while their week is disputed. */
+    active: boolean;
+    /** What they disputed and, once RH resolved it, RH's note; null for a week never disputed. */
+    dispute: OverviewDispute | null;
+};
+
+/** A person's dispute of their week: their reason in their words and, once resolved, RH's note to them. */
+export type OverviewDispute = {
+    /** The week's answer, to resolve it. */
+    id: string;
+    reason: string;
+    resolution: string | null;
 };
 
 /** A center in use with its active people, its zones and the screens that show its code. */
@@ -150,6 +162,18 @@ export type ReportDay = {
     flags: string[];
     /** Minutes late against the schedule's start time and the tolerance; null when there is none to compare. Informational. */
     lateMinutes?: number | null;
+    /** Away that day with approved vacations or a leave, never its type; null when not. */
+    absence?: 'vacation' | 'leave' | null;
+    /** The day's marks in force, for RH to correct one. */
+    marks?: ReportMark[];
+};
+
+/** A mark in force of a day of the report, at the local time of where it was taken. */
+export type ReportMark = {
+    id: string;
+    type: string;
+    date: string;
+    time: string;
 };
 
 /** A person with days in the report's period, each of them. */

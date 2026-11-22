@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import PersonWeekNotes from '@/components/attendance/person-week-notes';
+import ResolveDisputeSheet from '@/components/attendance/resolve-dispute-sheet';
 import Initials from '@/components/humetria/initials';
 import WeekRibbon from '@/components/humetria/week-ribbon';
 import { Badge } from '@/components/ui/badge';
@@ -17,14 +18,16 @@ import type { OverviewPerson } from '@/types';
 /**
  * One person's week (board A1): who and where, the ribbon of their days with the hours and the overtime, what warns RH
  * (the limits broken, the week near the cap, no agreed schedule), the days away with vacations or a leave, their answer and the next step: fixing the schedule
- * when they have none, since without it they are held to 8 h a day with no rest day.
+ * when they have none, since without it they are held to 8 h a day with no rest day, or resolving the week they disputed.
  */
 export default function PersonWeekRow({
     person,
     over,
+    canManage,
 }: {
     person: OverviewPerson;
     over: boolean;
+    canManage: boolean;
 }) {
     const tenantSlug = useTenantSlug();
     const badge = weekBadge(person.status, over);
@@ -41,7 +44,7 @@ export default function PersonWeekRow({
                     <div className="flex min-w-0 flex-col">
                         <span className="font-medium">{person.name}</span>
                         <span className="text-caption text-muted-foreground">
-                            {`${person.jobTitle} · ${person.center}`}
+                            {`${person.jobTitle} · ${person.center}${person.active ? '' : ' · Dada de baja'}`}
                         </span>
                     </div>
                 </div>
@@ -77,7 +80,15 @@ export default function PersonWeekRow({
                 <Badge variant={badge.variant}>{badge.label}</Badge>
             </TableCell>
             <TableCell className="text-right">
-                {!person.hasSchedule && (
+                {canManage &&
+                    person.status === 'disputed' &&
+                    person.dispute !== null && (
+                        <ResolveDisputeSheet
+                            name={person.name}
+                            dispute={person.dispute}
+                        />
+                    )}
+                {!person.hasSchedule && person.status !== 'disputed' && (
                     <Button asChild size="sm" variant="outline">
                         <Link href={toSchedule}>Fijar horario</Link>
                     </Button>

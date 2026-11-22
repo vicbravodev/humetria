@@ -8,6 +8,7 @@ use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Leave\Support\CompanyAbsences;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 
@@ -134,4 +135,12 @@ it('asks the database once for any number of people, and not at all for nobody',
         ->and(absencesBetween('2026-11-01', '2026-11-30', $ids))->toHaveCount(2)
         ->and(absentOn('2026-11-10', []))->toBe([])
         ->and(absencesBetween('2026-11-01', '2026-11-30', []))->toBe([]);
+});
+
+it('gives no absence in a company that does not have the vacations module (H08)', function (): void {
+    absenceOf($this->ana);
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(absentOn('2026-11-10', [$this->ana->id]))->toBe([])
+        ->and(absencesBetween('2026-11-01', '2026-11-30', [$this->ana->id]))->toBe([]);
 });

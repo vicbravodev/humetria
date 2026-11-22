@@ -191,7 +191,7 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
     $page->navigate('/admin/acme/attendance/corrections')
         ->waitForText('El martes salí a las 20:00, el QR no cargaba.')
         // The panel says first that her confirmed week reopens.
-        ->waitForText('estaba confirmada: se reabre y le pedimos confirmarla otra vez')
+        ->waitForText('ya tenía respuesta: se reabre y le pedimos responderla otra vez')
         ->click('#approve-correction')
         ->waitForText('Solicitud aprobada');
 

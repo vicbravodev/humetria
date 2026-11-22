@@ -169,3 +169,24 @@ it('offers to shorten a period too long for the screen to what the screen shows'
         ->assertDontSee('Este periodo se descarga en CSV')
         ->assertNoJavaScriptErrors();
 });
+
+it('lets RH correct a mark of a day with no request first, from a phone too', function (bool $dark, bool $mobile): void {
+    [$url, $plant] = reportPanel();
+
+    visitPage('attendance/report', "{$url}/attendance/report?center={$plant->id}", $dark, $mobile)
+        ->click('Corregir')
+        ->waitForText('¿Qué marca corriges?')
+        ->assertNoAccessibilityIssues(1)
+        ->fill('#mark-time', '07:30')
+        ->type('#mark-note', 'Llegó a las 7:30; el lector de QR falló ese día.')
+        ->click('Corregir marca')
+        ->waitForText('Marca corregida')
+        ->assertSee('hora corregida de 08:00 a 07:30')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]');
+
+    expect(AttendanceMark::query()->whereNotNull('corrects_mark_id')->sole()->reason)->toBe('Llegó a las 7:30; el lector de QR falló ese día.');
+})->with([
+    'light, desktop' => [false, false],
+    'dark, phone' => [true, true],
+]);

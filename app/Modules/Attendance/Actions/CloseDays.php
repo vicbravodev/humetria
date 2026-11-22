@@ -23,8 +23,8 @@ use Throwable;
  * The nightly close of a work center, in its own zone (design of time zones, §3): shortly after its local midnight it closes
  * its day before yesterday (CloseDay) for each active person of the center with a mark that day or a working day by their
  * schedule — a whole day after it ended, so a night shift that started on it has had time to mark its end and is not
- * flagged as missing one — and leaves pending the week that last ended, in that zone, of each active person of the center
- * with marks in it (silence is not conformity: nobody confirms it for them). Once a night is enough: CloseDay stores nothing
+ * flagged as missing one — and leaves pending the week that last ended, in that zone, of each person of the center
+ * with marks in it, a person who left included (their marks end the day they left) (silence is not conformity: nobody confirms it for them). Once a night is enough: CloseDay stores nothing
  * and a week is opened once, so a run again changes nothing; and every night opens the last week again if needed, so a
  * Monday that failed is made up the next night.
  */
@@ -107,7 +107,8 @@ final readonly class CloseDays
         $marked = AttendanceMark::query()->where('marked_at', '>=', $week->startUtc())->where('marked_at', '<', $week->nextStartUtc())->distinct()->get(['employee_id'])
             ->map(fn (AttendanceMark $mark): string => $mark->employee_id);
 
-        foreach ($this->peopleOf($workCenterId, $marked->all()) as $person) {
+        // A person who left keeps their last week, up to the day they left: what they marked in it waits for an answer (H09).
+        foreach ($this->peopleOf($workCenterId, $marked->all(), true) as $person) {
             if (EffectiveMarks::forWeek($person->id, $week) === []) {
                 continue;
             }
@@ -121,16 +122,17 @@ final readonly class CloseDays
     }
 
     /**
-     * The active people of the center among `$employeeIds`: a person is closed by the center they belong to today.
+     * The people of the center among `$employeeIds`, the active ones unless `$left` too: a person is closed by the center
+     * they belong to today (or belonged to when they left).
      *
      * @param  array<array-key, string>  $employeeIds
-     * @return list<RosterEntry>
+     * @return array<string, RosterEntry> by id
      */
-    private function peopleOf(string $workCenterId, array $employeeIds): array
+    private function peopleOf(string $workCenterId, array $employeeIds, bool $left = false): array
     {
-        return array_values(array_filter(
+        return array_filter(
             $this->roster->findMany(array_values(array_unique($employeeIds))),
-            fn (RosterEntry $person): bool => $person->active && $person->workCenterId === $workCenterId,
-        ));
+            fn (RosterEntry $person): bool => ($left || $person->active) && $person->workCenterId === $workCenterId,
+        );
     }
 }

@@ -12,7 +12,6 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
-use App\Modules\Leave\Contracts\Absences;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use LogicException;
@@ -39,7 +38,8 @@ final class PersonWeek
         $schedule = AttendanceSchedule::query()->where('employee_id', $employeeId)->first();
         $latest = EffectiveMarks::of($employeeId)->latest('marked_at')->first(['id'])?->id;
         $yesterday = CarbonImmutable::now($timezone)->subDay()->startOfDay();
-        $away = AbsentDays::of(resolve(Absences::class), $week, [$employeeId])[$employeeId] ?? [];
+        $absences = WeekDigest::absences($employeeId, $week);
+        $away = AbsentDays::of($absences, $week)[$employeeId] ?? [];
         // The tolerance is read only when the schedule has start times: a week without them costs no query more.
         $tolerance = $schedule?->starts_by_weekday === null ? 0 : CompanyPolicy::current()->late_tolerance_minutes;
         $days = [];
@@ -80,7 +80,9 @@ final class PersonWeek
             'status' => $status,
             'answeredAt' => $answer === null ? null : ($answer->confirmed_at ?? $answer->disputed_at)?->setTimezone($timezone)->format('Y-m-d H:i'),
             'disputeReason' => $answer?->reason,
-            'digest' => WeekDigest::ofMarks($marks),
+            // RH's answer to their dispute, with the week back to them (criterio 5.2).
+            'resolution' => $answer?->resolution_note,
+            'digest' => WeekDigest::ofMarks($marks, $absences),
             'blocked' => $blocked,
             'days' => $days,
             'requests' => self::requests($employeeId, $week, $marks, $timezone),

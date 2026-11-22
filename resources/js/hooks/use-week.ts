@@ -3,7 +3,8 @@ import { getKey } from '@/hooks/use-punch';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import { correctionBody, correctionReason } from '@/lib/attendance/correction';
 import type { CorrectionDraft } from '@/lib/attendance/correction';
-import { sendWeek, weekMessage } from '@/lib/attendance/week';
+import { sendWeek } from '@/lib/attendance/week';
+import { weekMessage } from '@/lib/attendance/week-messages';
 import type { WeekView } from '@/lib/attendance/week';
 
 export type WeekAction = 'read' | 'confirm' | 'dispute' | 'correct';
