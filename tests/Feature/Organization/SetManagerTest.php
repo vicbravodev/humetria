@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Organization\Actions\SetManager;
+use App\Modules\Organization\Events\ManagerChanged;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\ManagerRules;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
 mutates(ManagerRules::class, SetManager::class);
@@ -95,4 +98,26 @@ it('writes neither the log nor the audit trail when the change is rejected', fun
     expect(fn () => resolve(SetManager::class)->handle($this->carla, $this->ana->id))->toThrow(Illuminate\Database\QueryException::class, 'employees_manager_cycle')
         ->and(AuditEntry::query()->count())->toBe(0);
     Log::shouldNotHaveReceived('info');
+});
+
+it('announces the change once it is committed, with who was the manager and who is now', function (): void {
+    Event::fake([ManagerChanged::class]);
+
+    resolve(SetManager::class)->handle($this->ana, $this->dora->id);
+    resolve(SetManager::class)->handle($this->ana, null);
+
+    Event::assertDispatchedTimes(ManagerChanged::class, 2);
+    Event::assertDispatched(ManagerChanged::class, fn (ManagerChanged $event): bool => $event->tenantId === $this->tenant->id
+        && $event->employeeId === $this->ana->id && $event->fromManagerId === $this->beto->id && $event->toManagerId === $this->dora->id);
+    Event::assertDispatched(ManagerChanged::class, fn (ManagerChanged $event): bool => $event->fromManagerId === $this->dora->id && $event->toManagerId === null);
+    expect(new ReflectionClass(ManagerChanged::class)->implementsInterface(ShouldDispatchAfterCommit::class))->toBeTrue();
+});
+
+it('announces nothing when the manager is the same or the change is rejected', function (): void {
+    Event::fake([ManagerChanged::class]);
+
+    resolve(SetManager::class)->handle($this->ana, $this->beto->id);
+    expect(fn () => resolve(SetManager::class)->handle($this->carla, $this->ana->id))->toThrow(Illuminate\Database\QueryException::class);
+
+    Event::assertNotDispatched(ManagerChanged::class);
 });

@@ -14,7 +14,6 @@ use App\Modules\Leave\Support\Approver;
 use App\Modules\Leave\Support\RequestNotifier;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
-use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Carbon\CarbonImmutable;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -180,23 +179,37 @@ it('sends nothing to a company without an owner, and does not fail', function ()
     Notification::assertNothingSent();
 });
 
-it('emails nobody about what RH records for a person, but still says whose it is to decide', function (): void {
+it('tells the manager of what RH records for a person, as if the person had asked, and the owner when nobody is above', function (): void {
     $rh = User::factory()->create();
 
     $withBoss = requestBy($this->ana, recordedBy: $rh->id);
+    Notification::assertSentOnDemandTimes(RequestToDecide::class, 1);
+    Notification::assertSentOnDemandTimes(RequestEscalated::class, 0);
+
     $withoutBoss = requestBy($this->director, recordedBy: $rh->id);
 
     expect($withBoss->refresh()->approver_employee_id)->toBe($this->boss->id)
         ->and($withoutBoss->refresh()->escalation_reason)->toBe(EscalationReason::NoManager);
+    Notification::assertSentOnDemandTimes(RequestToDecide::class, 1);
+    Notification::assertSentOnDemandTimes(RequestEscalated::class, 1);
+});
+
+it('emails nobody about what RH records when it is going to answer it in the same step', function (): void {
+    $rh = User::factory()->create();
+
+    $request = resolve(RequestLeave::class)->handle($this->ana->id, null, CarbonImmutable::parse('2026-11-09'), CarbonImmutable::parse('2026-11-20'), null, $rh->id, announce: false);
+
+    expect($request->refresh()->approver_employee_id)->toBe($this->boss->id);
     Notification::assertNothingSent();
 });
 
-it('keeps the request when the email cannot be sent', function (): void {
-    Illuminate\Support\Facades\Exceptions::fake();
-    $this->mock(WorkerLinks::class)->shouldReceive('to')->andThrow(new RuntimeException('no link'));
+it('keeps the request while the email waits in the queue, to be retried if the mail server fails', function (): void {
+    Illuminate\Support\Facades\Queue::fake();
 
-    expect(requestBy($this->ana)->exists)->toBeTrue();
-    Illuminate\Support\Facades\Exceptions::assertReported(RuntimeException::class);
+    $request = requestBy($this->ana);
+
+    expect($request->exists)->toBeTrue();
+    Illuminate\Support\Facades\Queue::assertPushed(App\Modules\Leave\Jobs\RequestToDecide::class, 1);
 });
 
 it('logs who was born with RH', function (): void {

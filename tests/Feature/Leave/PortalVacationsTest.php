@@ -55,6 +55,23 @@ it('takes a request for days only after a recent proof that it is the person', f
     'proved 5 minutes ago' => [EntryVia::Key, 5],
 ]);
 
+it('cancels a request only after a recent proof that it is the person', function (EntryVia $via, int $minutes): void {
+    $request = leavePortalRequest($this->ana, 'approved', ['starts_on' => '2026-11-09', 'ends_on' => '2026-11-10']);
+    enteredAs($this->ana->id, $via);
+    $this->travel($minutes)->minutes();
+    $page = route('portal.vacations.show', $this->slug);
+
+    $this->from($page)->post(route('portal.vacations.requests.cancel', [$this->slug, $request->id]))->assertRedirect($page)->assertInertiaFlash('proofRequired.mode', 'code');
+    expect($request->refresh()->status->value)->toBe('approved');
+
+    resolve(WorkerSessionStore::class)->prove();
+    $this->from($page)->post(route('portal.vacations.requests.cancel', [$this->slug, $request->id]))->assertRedirect($page)->assertSessionHasNoErrors();
+    expect($request->refresh()->status->value)->toBe('cancelled');
+})->with([
+    'entered with a link' => [EntryVia::RequestedLink, 0],
+    'proved 5 minutes ago' => [EntryVia::Key, 5],
+]);
+
 function leavePortalPeriod(Employee $person, int $years, string $anniversary, int $statutory, int $extra = 0): LeaveEntitlement
 {
     return LeaveEntitlement::factory()->withGrant()->create(['tenant_id' => $person->tenant_id, 'employee_id' => $person->id, 'years_of_service' => $years, 'anniversary_on' => $anniversary, 'statutory_days' => $statutory, 'extra_days' => $extra]);
