@@ -148,6 +148,13 @@ transcurridos se cuentan desde el último aniversario o, si aún no hay ninguno,
 baja** (del 15 de marzo al 14 de julio son 121 días; al 15 de julio, 122). Sobre esos días la persona también tiene derecho
 al pago de la prima vacacional (LFT art. 80, C-08): la pantalla lo recuerda y el importe lo calcula la nómina.
 
+Todo se cuenta a la **fecha efectiva** de la baja, no al día en que RH la capturó: un periodo cuyo aniversario cae después
+de esa fecha nunca se cumplió, aunque el otorgamiento nocturno ya lo haya dado, y se **anula con un asiento de ajuste**
+en el libro (con su nota; no se borra nada). Una vacación aprobada o ya disfrutada que empieza después de esa fecha se
+cancela y devuelve sus días; la que empieza antes o ese día y la cruza se acorta hasta la fecha efectiva y devuelve con
+ajustes los días laborables posteriores (primero al periodo más reciente, y los extra antes que los legales). Al liquidar,
+si el saldo de hoy no es el que la baja registró, se liquida igual y se avisa.
+
 **Qué dice la ley.** «Las vacaciones no podrán compensarse con una remuneración. Si la relación de trabajo termina
 antes de que se cumpla el año de servicios, el trabajador tendrá derecho a una remuneración proporcionada al tiempo de
 servicios prestados.» [LFT, art. 79].
@@ -363,6 +370,10 @@ están cubiertos.
 ---
 
 ## Historial
+
+- **2026-11-21 · C-07.** La baja cuenta a su fecha efectiva: anula con ajuste los periodos posteriores, devuelve los días
+  laborables posteriores de una vacación que la cruza y avisa si al liquidar el saldo no es el registrado. Es la lectura
+  directa del criterio (antes un aniversario posterior a la salida inflaba el finiquito).
 
 - **2026-11-10 · v1 (propuesta).** Primera versión, escrita contra la LFT (reforma 14-05-2026) y el decreto del
   27-12-2022. Hallazgo al verificar: el decreto no trae un transitorio que conserve la tabla anterior (C-02 quedó como

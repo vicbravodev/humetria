@@ -38,6 +38,24 @@ it('ends the assignment when the person is deactivated, keeping the history and 
         ->and(endOf($this->colleagueAssignment))->toBeNull();
 });
 
+it('ends the assignment on the day the person left, not on the day it was typed', function (): void {
+    $this->employee->update(['hired_on' => '2025-01-01']);
+
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure(['terminated_on' => '2026-02-15']))->assertRedirect();
+
+    expect(endOf($this->assignment))->toBe('2026-02-15');
+});
+
+it('never ends an assignment before it started when the person left earlier', function (): void {
+    $this->employee->update(['hired_on' => '2025-01-01']);
+    workIn($this->tenant);
+    $this->assignment->update(['starts_on' => '2026-02-20']);
+
+    $this->actingAs($this->owner)->post(route('tenant.employees.deactivate', [$this->tenant, $this->employee->id]), departure(['terminated_on' => '2026-02-15']))->assertRedirect();
+
+    expect(endOf($this->assignment))->toBe('2026-02-20');
+});
+
 it('ends the assignment when the person is moved to another center', function (): void {
     $this->actingAs($this->owner)->put(route('tenant.employees.update', [$this->tenant, $this->employee->id]), [
         'name' => $this->employee->name, 'email' => $this->employee->email, 'mobile' => $this->employee->mobile, 'gender' => $this->employee->gender->value,

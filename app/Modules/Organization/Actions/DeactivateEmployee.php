@@ -23,6 +23,8 @@ final readonly class DeactivateEmployee
      * The person no longer works here. Nothing is deleted: evaluations that name them keep their history. What other
      * modules do about it (cancelling their pending guides) commits together with the deactivation, or not at all.
      *
+     * A second call for someone already out does nothing: it waits for the first and finds them gone.
+     *
      * Their active direct reports go to `$reassignTo` first, so nobody is left under someone who left. Their own
      * manager is not touched: reactivated, they are back in their place.
      *
@@ -35,17 +37,23 @@ final readonly class DeactivateEmployee
         $effectiveOn ??= CarbonImmutable::parse(CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString());
 
         DB::transaction(function () use ($employee, $reassignTo, $effectiveOn, $reason): void {
-            $wasActive = $employee->deactivated_at === null;
+            // The row is locked: a second submit of the same departure waits here and finds them already out.
+            $out = Employee::query()->whereKey($employee->id)->lockForUpdate()->sole(['id', 'deactivated_at'])->deactivated_at !== null;
+            $employee->refresh();
+
+            if ($out) {
+                return;
+            }
+
             $this->reassign($employee, $reassignTo);
             $employee->update(['deactivated_at' => now(), 'terminated_on' => $effectiveOn->toDateString(), 'deactivation_reason' => $reason]);
 
-            // Their seat is free again for the plan; someone already out has none to give back.
-            if ($wasActive) {
-                $this->limits->release(CompanyLimits::SEATS, 1);
-            }
+            // Their seat is free again for the plan.
+            $this->limits->release(CompanyLimits::SEATS, 1);
 
-            Log::info('employee.deactivated', ['employee_id' => $employee->id]);
             $this->audit->handle('employee.deactivated', $employee, ['reason' => $reason->value, 'terminated_on' => $effectiveOn->toDateString()]);
+            // The log says it happened only once it did: not when a listener fails or an outer transaction rolls back.
+            DB::afterCommit(fn () => Log::info('employee.deactivated', ['employee_id' => $employee->id]));
             event(new EmployeeDeactivated($employee->tenant_id, $employee->id, $effectiveOn));
         });
 
