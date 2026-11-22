@@ -17,6 +17,7 @@ use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Leave\Actions\CancelRequest;
 use App\Modules\Leave\Actions\DecideRequest;
+use App\Modules\Leave\Actions\TrimRequestsAfter;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Leave\Support\Decider;
@@ -102,6 +103,20 @@ it('reopens the week when an approved absence in it is cancelled', function (): 
     resolve(CancelRequest::class)->handle($request->id, Decider::hr($this->hr->id));
 
     expect($week->fresh()?->status)->toBe(WeekStatus::Pending);
+});
+
+it('reopens the week when a departure trims an absence that went past it', function (): void {
+    $request = anasLeave('2026-11-10', '2026-11-13', 'approved');
+    $week = anaConfirms('2026-11-09');
+    $earlier = anaConfirms('2026-11-02');
+
+    resolve(TrimRequestsAfter::class)->handle($this->ana->id, CarbonImmutable::parse('2026-11-11'));
+
+    expect($request->fresh()?->ends_on->toDateString())->toBe('2026-11-11')
+        ->and($week->fresh()?->status)->toBe(WeekStatus::Pending)
+        ->and($earlier->fresh()?->status)->toBe(WeekStatus::Confirmed);
+    expect(AuditEntry::query()->where('event', 'attendance.week_reopened')->sole()->metadata)
+        ->toEqual(['employee_id' => $this->ana->id, 'week_start' => '2026-11-09', 'leave_request_id' => $request->id]);
 });
 
 it('gives the week another digest when an absence in it changes, so an answer about the old one is refused', function (): void {

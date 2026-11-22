@@ -9,6 +9,7 @@ use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Enums\WorkWeek;
+use App\Modules\Leave\Events\AbsenceChanged;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Support\Balances;
@@ -65,7 +66,10 @@ final readonly class TrimRequestsAfter
 
             $returned = $request->working_days - $kept;
             $this->giveBack($request, $returned);
+            $endedOn = $request->ends_on->toDateString();
             $request->update(['ends_on' => $effectiveOn->toDateString(), 'working_days' => $kept]);
+            // The days after the departure are no longer an absence.
+            event(new AbsenceChanged($request->id, $request->employee_id, $effectiveOn->addDay()->toDateString(), $endedOn));
             $this->audit->handle('leave.request_trimmed', $request, ['employee_id' => $request->employee_id, 'was' => $request->status->value, 'days_returned' => $returned]);
 
             return $request;
