@@ -573,3 +573,58 @@ it('asks again when the company gets NOM-037 back: the guard only holds while th
 
     expect(Acknowledgement::query()->where('employee_id', $person->id)->count())->toBe(1);
 });
+
+it('keeps the document of the center a person left out of their portal, their start and their email', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center, ['email' => 'ana@acme.test']);
+    [$old] = publishDocument(DocumentKind::Policy, $this->center);
+    [$new] = publishDocument(DocumentKind::Policy, $this->other);
+    $ana->update(['work_center_id' => $this->other->id]);
+    $portal = teleworkPortalOf($ana->id);
+    $titles = fn (): array => array_map(fn (PendingDocument $document): string => $document->id, resolve(App\Modules\Telework\Support\PortalPending::class)->for($portal)->documents);
+
+    // Asked of her when she arrives at the new center, as the listener does.
+    Acknowledgement::query()->where('employee_id', $ana->id)->where('document_id', $new->id)->delete();
+    expect($titles())->toBe([]);
+
+    resolve(RequestAcknowledgements::class)->forEmployee($ana->id, $this->other->id, DocumentKind::Policy);
+    expect($titles())->toBe([$new->id])
+        ->and(Acknowledgement::query()->where('employee_id', $ana->id)->where('document_id', $old->id)->whereNull('acknowledged_at')->count())->toBe(1);
+
+    $link = resolve(App\Modules\Telework\Support\TeleworkWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $ana->id, 'Acme', 'Ana'));
+    expect($link?->pending)->toBe(1);
+});
+
+it('does not let a person acknowledge the version of the center they left, though it was asked of them', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center);
+    [$old] = publishDocument(DocumentKind::Policy, $this->center);
+    $ana->update(['work_center_id' => $this->other->id]);
+
+    expect(fn () => resolve(Acknowledge::class)->handle(teleworkPortalOf($ana->id), $old->id, null))->toThrow(ValidationException::class);
+
+    expect(Acknowledgement::query()->where('document_id', $old->id)->sole()->acknowledged_at)->toBeNull();
+});
+
+it('still lets the Comisión confirm in the panel the version asked of them, whatever center they work in', function (): void {
+    Queue::fake();
+    $member = memberOf($this->tenant, TenantRole::Hr);
+    [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
+    Acknowledgement::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $risk->id, 'employee_id' => null, 'user_id' => $member->id]);
+
+    resolve(Acknowledge::class)->inPanel($member->id, $risk->id, null);
+
+    expect(Acknowledgement::query()->where('user_id', $member->id)->sole()->acknowledged_at)->not->toBeNull();
+});
+
+it('keeps the document of the center they left out of the reminder email', function (): void {
+    $ana = staffer($this->center, ['email' => 'ana@acme.test']);
+    publishDocument(DocumentKind::Policy, $this->center);
+    $ana->update(['work_center_id' => $this->other->id]);
+    // The queue here is synchronous: only what the job does from now on is watched.
+    Notification::fake();
+
+    SendPortalReminder::dispatchSync($this->tenant->id, $ana->id, null);
+
+    Notification::assertNothingSent();
+});

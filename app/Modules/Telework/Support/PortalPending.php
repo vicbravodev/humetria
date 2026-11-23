@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Support;
 
+use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Telework\Data\PendingChecklist;
 use App\Modules\Telework\Data\PendingDocument;
 use App\Modules\Telework\Data\PendingEquipment;
@@ -27,7 +28,7 @@ use App\Modules\Telework\Models\WorkplaceReview;
  */
 final readonly class PortalPending
 {
-    public function __construct(private WorkplaceAddress $address) {}
+    public function __construct(private WorkplaceAddress $address, private Roster $roster) {}
 
     public function for(OpenedPortal $portal): PortalPendingData
     {
@@ -79,12 +80,13 @@ final readonly class PortalPending
             ->map(fn (EquipmentItem $item): PendingEquipment => new PendingEquipment($item->id, $item->description, $item->kind->label(), $item->delivered_on->toDateString()))->all());
     }
 
-    /** @return list<PendingDocument> The versions in force asked of the person and not confirmed yet, oldest request first. */
+    /** @return list<PendingDocument> The versions in force in the person's work center now, asked of them and not confirmed yet, oldest request first. */
     private function documents(OpenedPortal $portal): array
     {
         $pending = Acknowledgement::query()->where('employee_id', $portal->employeeId)->whereNull('acknowledged_at')->select('document_id');
 
         return array_values(TeleworkDocument::query() // @pest-mutate-ignore: UnwrapArrayValues
+            ->where('work_center_id', $this->roster->find($portal->employeeId)->workCenterId ?? '')
             ->inForce()->whereIn('id', $pending)->orderBy('created_at')->orderBy('id')->get()
             ->map(fn (TeleworkDocument $document): PendingDocument => new PendingDocument(
                 $document->id,
