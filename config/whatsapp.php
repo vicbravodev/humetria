@@ -52,8 +52,8 @@ return [
     // Supuesto por confirmar (Victor): the answers of service to a STOP and to an ALTA or START. Free text inside the 24 hours that
     // the person's own message opens; not a template, not metered, not charged. Meta's policy asks to honor a STOP always.
     'replies' => [
-        'opted_out' => 'A partir de hoy no recibirás invitaciones por WhatsApp de Humetria. Para volver a recibirlas responde ALTA',
-        'opted_in' => 'A partir de hoy volverás a recibir por este número las invitaciones de tus encuestas. Para darte de baja responde STOP',
+        'opted_out' => 'A partir de hoy no recibirá invitaciones por WhatsApp de Humetria. Para volver a recibirlas, responda ALTA.',
+        'opted_in' => 'A partir de hoy volverá a recibir por este número las invitaciones de sus encuestas. Para darse de baja, responda STOP.',
     ],
 
     'cost_notice' => 'WhatsApp tiene costo adicional: cada mensaje aceptado se cobra en tu estado de cuenta a {precio} más IVA.',

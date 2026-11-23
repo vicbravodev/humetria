@@ -39,8 +39,8 @@ function wa(string $text, string $id = 'wamid.IN1'): array
 it('has default texts in es-MX that tell how to come back and how to leave', function (): void {
     $fresh = require base_path('config/whatsapp.php');
 
-    expect($fresh['replies']['opted_out'])->toBe('A partir de hoy no recibirás invitaciones por WhatsApp de Humetria. Para volver a recibirlas responde ALTA')
-        ->and($fresh['replies']['opted_in'])->toBe('A partir de hoy volverás a recibir por este número las invitaciones de tus encuestas. Para darte de baja responde STOP');
+    expect($fresh['replies']['opted_out'])->toBe('A partir de hoy no recibirá invitaciones por WhatsApp de Humetria. Para volver a recibirlas, responda ALTA.')
+        ->and($fresh['replies']['opted_in'])->toBe('A partir de hoy volverá a recibir por este número las invitaciones de sus encuestas. Para darse de baja, responda STOP.');
 });
 
 it('answers a STOP with one text job on the whatsapp queue', function (): void {
