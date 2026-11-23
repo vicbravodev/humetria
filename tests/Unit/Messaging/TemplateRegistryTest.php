@@ -34,7 +34,7 @@ it('keeps the approved texts of the catalog, word for word', function (): void {
 
     expect($survey->header)->toBe('Su evaluación de la NOM-035')
         ->and($survey->body)->toBe('Hola, buen día. Le escribimos de parte de {{empresa}}. Como parte de la NOM-035, tiene pendiente contestar una evaluación sobre su trabajo. Es confidencial y puede hacerlo hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.')
-        ->and($engagement->header)->toBe('Encuesta anónima de {{empresa}}')
+        ->and($engagement->header)->toBe('Encuesta anónima de clima')
         ->and($engagement->body)->toBe('Hola, buen día. Le escribimos de parte de {{empresa}}. Queremos saber cómo le va en su trabajo con esta encuesta anónima: nadie verá sus respuestas individuales. Tiene hasta el {{fecha_limite}} para contestarla y su enlace es personal.');
 });
 
@@ -75,7 +75,7 @@ function catalog(): array
     return [
         'survey_invite_v1' => ['Su evaluación de la NOM-035', "{$hello} Como parte de la NOM-035, tiene pendiente contestar una evaluación sobre su trabajo. Es confidencial y puede hacerlo hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", ['Contestar ahora', 'Aviso de privacidad', $stop]],
         'seating_invite_v1' => ['Encuesta sobre su puesto de trabajo', "{$hello} Como parte de la Ley Silla, queremos saber cómo son los asientos y las pausas en su trabajo. Son unos minutos y puede contestar hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", ['Contestar ahora', 'Aviso de privacidad', $stop]],
-        'engagement_invite_v1' => ['Encuesta anónima de {{empresa}}', "{$hello} Queremos saber cómo le va en su trabajo con esta encuesta anónima: nadie verá sus respuestas individuales. Tiene hasta el {{fecha_limite}} para contestarla y su enlace es personal.", ['Contestar ahora', 'Aviso de privacidad', $stop]],
+        'engagement_invite_v1' => ['Encuesta anónima de clima', "{$hello} Queremos saber cómo le va en su trabajo con esta encuesta anónima: nadie verá sus respuestas individuales. Tiene hasta el {{fecha_limite}} para contestarla y su enlace es personal.", ['Contestar ahora', 'Aviso de privacidad', $stop]],
         'survey_reminder_v1' => [null, 'Hola, buen día. Le recordamos que su evaluación de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.', ['Continuar', $stop]],
         'engagement_reminder_v1' => [null, 'Hola, buen día. Le recordamos que su encuesta anónima de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.', ['Continuar', $stop]],
         'leave_decision_v1' => [null, 'Hola, buen día. {{empresa}} ya respondió su solicitud del {{fecha}}. Puede verla en su portal.', ['Ver respuesta', $stop]],

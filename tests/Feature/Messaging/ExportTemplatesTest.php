@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Modules\Messaging\Console\ExportTemplates;
+use App\Modules\Messaging\Support\TemplateDefinition;
+use App\Modules\Messaging\Support\TemplateExport;
 use App\Modules\Messaging\Support\TemplateRegistry;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
@@ -57,10 +59,24 @@ it('writes the named variables, their examples and the buttons of an invitation'
         ]);
 });
 
-it('gives the header its own example when it has a variable', function (): void {
+it('exports the climate invitation header as fixed text, with no example', function (): void {
     $header = exported()['engagement_invite_v1']['components'][0];
 
-    expect($header)->toBe(['type' => 'HEADER', 'format' => 'TEXT', 'text' => 'Encuesta anónima de {{empresa}}', 'example' => ['header_text_named_params' => [['param_name' => 'empresa', 'example' => 'Industrias Ejemplo']]]]);
+    expect($header)->toBe(['type' => 'HEADER', 'format' => 'TEXT', 'text' => 'Encuesta anónima de clima']);
+});
+
+it('gives the header its own example when it has a variable', function (): void {
+    $template = new TemplateDefinition(
+        key: 'sample_v1',
+        language: 'es_MX',
+        body: 'Hola. Le escribimos de parte de {{empresa}}. Tiene hasta el {{fecha_limite}} para contestar.',
+        examples: ['empresa' => 'Industrias Ejemplo', 'fecha_limite' => 'viernes 20 de noviembre'],
+        header: 'Encuesta de {{empresa}}',
+        footer: null,
+        buttons: [],
+    );
+
+    expect((new TemplateExport)->build($template)['components'][0])->toBe(['type' => 'HEADER', 'format' => 'TEXT', 'text' => 'Encuesta de {{empresa}}', 'example' => ['header_text_named_params' => [['param_name' => 'empresa', 'example' => 'Industrias Ejemplo']]]]);
 });
 
 it('marks a button without a destination as pending, with its reason, and does not invent the destination', function (): void {

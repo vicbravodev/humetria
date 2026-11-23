@@ -89,7 +89,7 @@ Variables y sus ejemplos para Meta: `empresa` = «Industrias Ejemplo»; `fecha_l
 
 | Componente | Contenido |
 | --- | --- |
-| Encabezado | `Encuesta anónima de {{empresa}}` |
+| Encabezado | `Encuesta anónima de clima` (fijo, sin variable: la empresa va solo en el cuerpo) |
 | Cuerpo | `Hola, buen día. Le escribimos de parte de {{empresa}}. Queremos saber cómo le va en su trabajo con esta encuesta anónima: nadie verá sus respuestas individuales. Tiene hasta el {{fecha_limite}} para contestarla y su enlace es personal.` |
 | Pie | `Humetria` |
 | Botones | URL `Contestar ahora` → `https://{dominio}/engagement/survey/{{token}}`; URL `Aviso de privacidad` (fija); QR `Dejar de recibir` |

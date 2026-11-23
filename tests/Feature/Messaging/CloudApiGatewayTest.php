@@ -8,6 +8,8 @@ use App\Modules\Messaging\Data\OutboundMessage;
 use App\Modules\Messaging\Data\SendOutcome;
 use App\Modules\Messaging\Support\CloudApiWhatsAppGateway;
 use App\Modules\Messaging\Support\FakeWhatsAppGateway;
+use App\Modules\Messaging\Support\TemplateDefinition;
+use App\Modules\Messaging\Support\TemplateRegistry;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -70,10 +72,36 @@ it('sends the template the way the Cloud API expects it', function (): void {
     });
 });
 
-it('sends the header variable by name and the button at its own index', function (): void {
+it('sends the climate invitation with a fixed header: only the body variables and the button travel', function (): void {
     Http::fake(['*' => Http::response(['messages' => [['id' => 'wamid.ABC']]], 200)]);
 
     cloudGateway()->send(new OutboundMessage('+528112345678', 'engagement_invite_v1', 'es_MX', ['Acme', '12 de mayo'], 'the-link-token', 'delivery-uuid'));
+
+    Http::assertSent(fn (Request $request): bool => $request->data()['template']['components'] === [
+        ['type' => 'body', 'parameters' => [
+            ['type' => 'text', 'parameter_name' => 'empresa', 'text' => 'Acme'],
+            ['type' => 'text', 'parameter_name' => 'fecha_limite', 'text' => '12 de mayo'],
+        ]],
+        ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [['type' => 'text', 'text' => 'the-link-token']]],
+    ]);
+});
+
+it('sends the header variable by name when a template has one', function (): void {
+    Http::fake(['*' => Http::response(['messages' => [['id' => 'wamid.ABC']]], 200)]);
+    $registry = new TemplateRegistry;
+    $withHeader = new TemplateDefinition(
+        key: 'headed_v1',
+        language: 'es_MX',
+        body: 'Hola. Le escribimos de parte de {{empresa}}. Tiene hasta el {{fecha_limite}} para contestar.',
+        examples: ['empresa' => 'Industrias Ejemplo', 'fecha_limite' => 'viernes 20 de noviembre'],
+        header: 'Encuesta de {{empresa}}',
+        footer: null,
+        buttons: [],
+    );
+    (new ReflectionProperty($registry, 'templates'))->setValue($registry, ['headed_v1' => $withHeader]);
+    app()->instance(TemplateRegistry::class, $registry);
+
+    cloudGateway()->send(new OutboundMessage('+528112345678', 'headed_v1', 'es_MX', ['Acme', '12 de mayo'], 'the-link-token', 'delivery-uuid'));
 
     Http::assertSent(fn (Request $request): bool => $request->data()['template']['components'] === [
         ['type' => 'header', 'parameters' => [['type' => 'text', 'parameter_name' => 'empresa', 'text' => 'Acme']]],
@@ -81,7 +109,6 @@ it('sends the header variable by name and the button at its own index', function
             ['type' => 'text', 'parameter_name' => 'empresa', 'text' => 'Acme'],
             ['type' => 'text', 'parameter_name' => 'fecha_limite', 'text' => '12 de mayo'],
         ]],
-        ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [['type' => 'text', 'text' => 'the-link-token']]],
     ]);
 });
 
