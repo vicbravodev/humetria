@@ -112,10 +112,67 @@ final readonly class CompanyRoles
         $this->forgetMembers();
     }
 
-    /** Takes the person's role in the company away; their roles elsewhere, and the superadmin one, stay. */
+    /**
+     * The permissions given to the person themselves in the company, by name.
+     *
+     * @return list<string>
+     */
+    public function directPermissionsOf(User $user, Tenant $tenant): array
+    {
+        $names = [];
+
+        foreach (DB::table('model_has_permissions')
+            ->join('permissions', 'permissions.id', '=', 'model_has_permissions.permission_id')
+            ->where('model_has_permissions.tenant_id', $tenant->id)
+            ->where('model_has_permissions.model_type', $user->getMorphClass())
+            ->where('model_has_permissions.model_id', $user->id)
+            ->orderBy('permissions.name')
+            ->get(['permissions.name']) as $row) {
+            is_string($row->name) && $names[] = $row->name;
+        }
+
+        return $names;
+    }
+
+    /**
+     * Every permission the person has in the company and where it comes from (the role wins when both give it),
+     * leaving out those of a module the company does not have.
+     *
+     * @return array<string, 'role'|'direct'>
+     */
+    public function effectivePermissions(User $user, Tenant $tenant): array
+    {
+        $effective = [];
+
+        foreach ($this->roleOf($user, $tenant)?->permissions->all() ?? [] as $permission) {
+            $effective[$permission->name] = 'role';
+        }
+
+        foreach ($this->directPermissionsOf($user, $tenant) as $name) {
+            $effective[$name] ??= 'direct';
+        }
+
+        return array_filter($effective, fn (string $source, string $name): bool => ($definition = PermissionCatalog::find($name)) === null
+            || PermissionCatalog::unavailableReason($tenant, $definition) === null, ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * Replaces the person's direct permissions in the company with `$permissions`.
+     *
+     * @param  list<string>  $permissions
+     */
+    public function syncDirectPermissions(User $user, Tenant $tenant, array $permissions): void
+    {
+        $this->inTeam($user, $tenant, fn () => $user->syncPermissions($permissions));
+    }
+
+    /** Takes the person's role and direct permissions in the company away; what they have elsewhere, and the superadmin role, stay. */
     public function remove(User $user, Tenant $tenant): void
     {
-        $this->inTeam($user, $tenant, fn () => $user->syncRoles([]));
+        $this->inTeam($user, $tenant, function () use ($user): void {
+            $user->syncRoles([]);
+            $user->syncPermissions([]);
+        });
         $this->forgetMembers();
     }
 
