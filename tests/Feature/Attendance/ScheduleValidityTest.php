@@ -17,6 +17,9 @@ mutates(SaveSchedule::class, AttendanceSchedule::class);
 
 const WEEK_9_TO_6 = [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => 0, 7 => 0];
 
+/** How the audit trail keeps a week: a list from Monday to Sunday, which the audit page reads as one. */
+const WEEK_9_TO_6_LIST = [540, 540, 540, 540, 540, 0, 0];
+
 beforeEach(function (): void {
     // Wednesday 11 Nov 2026, noon in Mexico City.
     $this->travelTo(CarbonImmutable::parse('2026-11-11 18:00:00', 'UTC'));
@@ -96,11 +99,11 @@ describe('saving a schedule with a start date', function (): void {
                 'employee_id' => $this->ana->id,
                 'valid_from' => '2026-01-01',
                 'before' => null,
-                'after' => ['valid_from' => '2026-01-01', 'shift_type' => 'day', 'work_mode' => 'onsite', 'minutes' => WEEK_9_TO_6, 'starts' => [1 => 540, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]],
+                'after' => ['valid_from' => '2026-01-01', 'shift_type' => 'day', 'work_mode' => 'onsite', 'minutes' => WEEK_9_TO_6_LIST, 'starts' => [540, null, null, null, null, null, null]],
             ])
             ->and($entries[1]->subject_id)->toBe($after->id)
-            ->and($entries[1]->metadata['before'])->toEqual(['valid_from' => '2026-01-01', 'shift_type' => 'day', 'work_mode' => 'onsite', 'minutes' => WEEK_9_TO_6, 'starts' => [1 => 540, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]])
-            ->and($entries[1]->metadata['after'])->toEqual(['valid_from' => '2026-03-01', 'shift_type' => 'mixed', 'work_mode' => 'remote', 'minutes' => [1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 0, 7 => 0], 'starts' => null])
+            ->and($entries[1]->metadata['before'])->toEqual(['valid_from' => '2026-01-01', 'shift_type' => 'day', 'work_mode' => 'onsite', 'minutes' => WEEK_9_TO_6_LIST, 'starts' => [540, null, null, null, null, null, null]])
+            ->and($entries[1]->metadata['after'])->toEqual(['valid_from' => '2026-03-01', 'shift_type' => 'mixed', 'work_mode' => 'remote', 'minutes' => [420, 420, 420, 420, 420, 0, 0], 'starts' => null])
             ->and($before->id)->not->toBe($after->id)
             ->and(collect($entries)->map(fn (AuditEntry $entry): string => auditContent($entry))->implode(' '))->not->toContain($this->ana->name);
     });

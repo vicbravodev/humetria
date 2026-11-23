@@ -69,9 +69,10 @@ describe('the list', function (): void {
             ->where('people.per_page', 25)
             ->where('people.data.0', [
                 'id' => $this->ana->id, 'name' => 'Ana López', 'jobTitle' => 'Operadora', 'center' => 'Planta Norte',
-                'schedule' => ['shiftType' => 'day', 'workMode' => 'onsite', 'minutes' => ['1' => 480, '2' => 480, '3' => 480, '4' => 480, '5' => 480, '6' => 0, '7' => 0], 'starts' => null],
+                'schedule' => ['validFrom' => null, 'shiftType' => 'day', 'workMode' => 'onsite', 'minutes' => ['1' => 480, '2' => 480, '3' => 480, '4' => 480, '5' => 480, '6' => 0, '7' => 0], 'starts' => null],
+                'upcoming' => [], 'history' => [],
             ])
-            ->where('people.data.1', ['id' => $this->bob->id, 'name' => 'Bob Díaz', 'jobTitle' => 'Almacenista', 'center' => 'Planta Norte', 'schedule' => null])
+            ->where('people.data.1', ['id' => $this->bob->id, 'name' => 'Bob Díaz', 'jobTitle' => 'Almacenista', 'center' => 'Planta Norte', 'schedule' => null, 'upcoming' => [], 'history' => []])
             ->where('people.data.2.schedule.shiftType', 'night')
             ->where('people.data.2.schedule.workMode', 'remote'));
     });
@@ -295,8 +296,8 @@ describe('copying the schedule of another person', function (): void {
         AttendanceSchedule::query()->where('employee_id', $this->ana->id)->update(['starts_by_weekday' => [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => null, 7 => null]]);
 
         $this->getJson(route('tenant.attendance.schedules.options', ['acme']))->assertOk()->assertExactJson([
-            ['value' => $this->ana->id, 'label' => 'Ana López', 'schedule' => ['shiftType' => 'day', 'workMode' => 'onsite', 'minutes' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0], 'starts' => [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => null, 7 => null]]],
-            ['value' => $this->carla->id, 'label' => 'Carla Ruiz', 'schedule' => ['shiftType' => 'night', 'workMode' => 'remote', 'minutes' => [1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 420, 7 => 0], 'starts' => null]],
+            ['value' => $this->ana->id, 'label' => 'Ana López', 'schedule' => ['validFrom' => null, 'shiftType' => 'day', 'workMode' => 'onsite', 'minutes' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0], 'starts' => [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => null, 7 => null]]],
+            ['value' => $this->carla->id, 'label' => 'Carla Ruiz', 'schedule' => ['validFrom' => null, 'shiftType' => 'night', 'workMode' => 'remote', 'minutes' => [1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 420, 7 => 0], 'starts' => null]],
         ]);
         $this->getJson(route('tenant.attendance.schedules.options', ['acme', 'q' => 'carla']))->assertOk()->assertJsonPath('*.label', ['Carla Ruiz']);
     });
@@ -315,5 +316,152 @@ describe('copying the schedule of another person', function (): void {
         $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
 
         $this->getJson(route('tenant.attendance.schedules.options', ['acme']))->assertForbidden();
+    });
+});
+
+describe('with a start date', function (): void {
+    it('starts the schedule on the date RH picks, keeping the one in effect, and tells the page what is in effect, coming and past', function (): void {
+        $this->actingAs($this->hr);
+        $later = scheduleInput(['valid_from' => '2026-12-01', 'minutes' => array_replace(scheduleInput()['minutes'], ['6' => '240'])]);
+        $past = scheduleInput(['valid_from' => '2026-03-02', 'shift_type' => 'mixed']);
+
+        saveSchedule($this->ana->id, $later)->assertSessionHasNoErrors();
+        saveSchedule($this->ana->id, scheduleInput(['valid_from' => '2026-11-11']))->assertSessionHasNoErrors();
+        saveSchedule($this->ana->id, $past)->assertSessionHasNoErrors();
+
+        expect(AttendanceSchedule::query()->where('employee_id', $this->ana->id)->orderBy('valid_from')->pluck('valid_from')->map->toDateString()->all())
+            ->toBe(['1970-01-01', '2026-03-02', '2026-11-11', '2026-12-01']);
+
+        $this->get(schedulesUrl(['q' => 'LOPEZ']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('today', '2026-11-11')
+            ->where('people.data.0.schedule.validFrom', '2026-11-11')
+            ->where('people.data.0.upcoming', fn ($upcoming): bool => collect($upcoming)->pluck('validFrom')->all() === ['2026-12-01'] && collect($upcoming)->pluck('minutes.6')->all() === [240])
+            ->where('people.data.0.history', fn ($history): bool => collect($history)->pluck('validFrom')->all() === ['2026-03-02', null]));
+    });
+
+    it('says «since always» (null) for a schedule that began with no date, and has none upcoming or past', function (): void {
+        $this->actingAs($this->hr);
+
+        $this->get(schedulesUrl())->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.schedule.validFrom', null)
+            ->where('people.data.0.upcoming', [])
+            ->where('people.data.0.history', [])
+            ->where('people.data.1.schedule', null)
+            ->where('people.data.1.upcoming', [])
+            ->where('people.data.1.history', []));
+    });
+
+    it('changes in place the schedule that starts the same day, and starts today when no date comes', function (): void {
+        $this->actingAs($this->hr);
+
+        saveSchedule($this->bob->id, scheduleInput(['valid_from' => '2026-11-11']))->assertSessionHasNoErrors();
+        saveSchedule($this->bob->id, scheduleInput(['shift_type' => 'night']))->assertSessionHasNoErrors();
+        saveSchedule($this->bob->id, scheduleInput(['valid_from' => '']))->assertSessionHasNoErrors();
+
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->sole())->shift_type->toBe(ShiftType::Day);
+    });
+
+    it('puts the change in the audit trail with what was in effect that day and what is now', function (): void {
+        $this->actingAs($this->hr);
+
+        saveSchedule($this->ana->id, scheduleInput(['valid_from' => '2026-12-01', 'shift_type' => 'mixed']))->assertSessionHasNoErrors();
+
+        $entry = App\Models\AuditEntry::query()->where('event', 'attendance.schedule_saved')->sole();
+        expect($entry->metadata)->toMatchArray(['employee_id' => $this->ana->id, 'valid_from' => '2026-12-01'])
+            ->and($entry->metadata['before']['valid_from'])->toBe('1970-01-01')
+            ->and($entry->metadata['after'])->toMatchArray(['valid_from' => '2026-12-01', 'shift_type' => 'mixed'])
+            ->and($entry->actor_id)->toBe($this->hr->id);
+    });
+
+    it('starts it for everyone chosen from the date, kept for each', function (): void {
+        $this->actingAs($this->hr);
+
+        saveSchedules([$this->ana->id, $this->bob->id], ['valid_from' => '2026-12-01'])->assertSessionHasNoErrors();
+
+        expect(AttendanceSchedule::query()->whereIn('employee_id', [$this->ana->id, $this->bob->id])->where('valid_from', '2026-12-01')->count())->toBe(2)
+            ->and(AttendanceSchedule::query()->where('employee_id', $this->ana->id)->count())->toBe(2)
+            ->and(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->count())->toBe(1);
+    });
+
+    it('counts a person whose first schedule has not started as without one, and lists them so', function (): void {
+        $this->actingAs($this->hr);
+        saveSchedule($this->bob->id, scheduleInput(['valid_from' => '2026-12-01']))->assertSessionHasNoErrors();
+
+        $this->get(schedulesUrl(['status' => 'unscheduled']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('counts', ['all' => 3, 'scheduled' => 2, 'unscheduled' => 1])
+            ->where('people.data.0.name', 'Bob Díaz')
+            ->where('people.data.0.schedule', null)
+            ->where('people.data.0.upcoming.0.validFrom', '2026-12-01'));
+    });
+
+    it('copies the schedule in effect today, not a past or coming one', function (): void {
+        $this->actingAs($this->hr);
+        saveSchedule($this->ana->id, scheduleInput(['valid_from' => '2026-12-01', 'shift_type' => 'night']))->assertSessionHasNoErrors();
+        saveSchedule($this->ana->id, scheduleInput(['valid_from' => '2026-11-01', 'shift_type' => 'mixed']))->assertSessionHasNoErrors();
+
+        $this->getJson(route('tenant.attendance.schedules.options', ['acme', 'q' => 'LOPEZ']))->assertOk()
+            ->assertJsonPath('0.schedule.shiftType', 'mixed');
+    });
+
+    it('is checked in Spanish', function (string $date, string $message): void {
+        $this->actingAs($this->hr);
+
+        saveSchedule($this->bob->id, scheduleInput(['valid_from' => $date]))->assertSessionHasErrors(['valid_from' => $message]);
+        expect(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->exists())->toBeFalse();
+    })->with([
+        'not a date' => ['mañana', 'Elige una fecha de inicio válida.'],
+        'an impossible day' => ['2026-02-30', 'Elige una fecha de inicio válida.'],
+        'before 2000' => ['1999-12-31', 'La fecha de inicio no puede ser anterior al 1 de enero de 2000.'],
+        'more than a year ahead' => ['2027-11-12', 'La fecha de inicio no puede ser de más de un año adelante.'],
+    ]);
+
+    it('takes the exact limits of the date: 1 January 2000 and a year from today', function (string $date): void {
+        $this->actingAs($this->hr);
+
+        saveSchedule($this->bob->id, scheduleInput(['valid_from' => $date]))->assertSessionHasNoErrors();
+    })->with(['2000-01-01', '2027-11-11']);
+
+    it('starts one on a rest day, and the days before it keep the schedule before', function (): void {
+        $this->actingAs($this->hr);
+
+        // Saturday 14 November: a rest day of both.
+        saveSchedule($this->ana->id, scheduleInput(['valid_from' => '2026-11-14', 'shift_type' => 'mixed']))->assertSessionHasNoErrors();
+
+        expect(AttendanceSchedule::query()->where('employee_id', $this->ana->id)->orderBy('valid_from')->pluck('shift_type')->map->value->all())->toBe(['day', 'mixed']);
+    });
+
+    it('answers 404 for another company and 403 for a viewer, with a date too', function (): void {
+        $foreign = EmployeeFactory::new()->create();
+        workIn($this->tenant);
+        $this->actingAs($this->hr);
+        saveSchedule($foreign->id, scheduleInput(['valid_from' => '2026-12-01']))->assertNotFound();
+        saveSchedules([$this->bob->id, $foreign->id], ['valid_from' => '2026-12-01'])->assertNotFound();
+
+        $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
+        saveSchedule($this->bob->id, scheduleInput(['valid_from' => '2026-12-01']))->assertForbidden();
+        saveSchedules([$this->bob->id], ['valid_from' => '2026-12-01'])->assertForbidden();
+
+        expect(AttendanceSchedule::query()->withoutGlobalScopes()->where('valid_from', '2026-12-01')->exists())->toBeFalse();
+    });
+
+    it('takes the same queries however many schedules each person has', function (): void {
+        foreach (EmployeeFactory::new()->count(30)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->office->id]) as $person) {
+            foreach (['1970-01-01', '2026-03-01', '2026-09-01', '2026-12-01'] as $date) {
+                AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $person->id, 'valid_from' => $date]);
+            }
+        }
+        $this->actingAs($this->hr);
+
+        $this->expectsDatabaseQueryCount(SCHEDULES_PAGE_QUERIES);
+        $this->get(schedulesUrl())->assertOk();
+    });
+
+    it('keeps the history free of anything personal: only dates and the week agreed', function (): void {
+        $this->actingAs($this->hr);
+        saveSchedule($this->ana->id, scheduleInput(['valid_from' => '2026-12-01']))->assertSessionHasNoErrors();
+
+        $content = $this->get(schedulesUrl(['q' => 'LOPEZ']))->getContent();
+
+        expect($content)->not->toContain('latitude')->not->toContain('credential');
     });
 });

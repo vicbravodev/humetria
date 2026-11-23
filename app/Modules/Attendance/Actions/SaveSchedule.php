@@ -65,7 +65,9 @@ final readonly class SaveSchedule
     }
 
     /**
-     * @return array{valid_from: string, shift_type: string, work_mode: string, minutes: array<int, int>, starts: array<int, int|null>|null}
+     * The week as lists from Monday to Sunday, which the audit page reads as such.
+     *
+     * @return array{valid_from: string, shift_type: string, work_mode: string, minutes: list<int>, starts: list<int|null>|null}
      */
     private static function snapshot(AttendanceSchedule $schedule): array
     {
@@ -73,8 +75,8 @@ final readonly class SaveSchedule
             'valid_from' => $schedule->valid_from->toDateString(),
             'shift_type' => $schedule->shift_type->value,
             'work_mode' => $schedule->work_mode->value,
-            'minutes' => $schedule->minutes_by_weekday,
-            'starts' => $schedule->starts_by_weekday,
+            'minutes' => array_values($schedule->minutes_by_weekday),
+            'starts' => $schedule->starts_by_weekday === null ? null : array_values($schedule->starts_by_weekday),
         ];
     }
 }

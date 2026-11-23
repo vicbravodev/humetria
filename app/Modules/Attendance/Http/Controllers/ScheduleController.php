@@ -53,7 +53,7 @@ final readonly class ScheduleController
     public function update(ScheduleRequest $request, mixed $tenant, string $employee, SaveSchedule $save): RedirectResponse
     {
         $person = $this->roster->find($employee) ?? abort(404);
-        $save->handle($person->id, $request->shiftType(), $request->workMode(), $request->minutesByWeekday(), $request->startsByWeekday());
+        $save->handle($person->id, $request->shiftType(), $request->workMode(), $request->minutesByWeekday(), $request->startsByWeekday(), $request->validFrom());
         Inertia::flash('toast', ['type' => 'success', 'message' => "Horario de {$person->name} guardado."]);
 
         return back();
@@ -63,7 +63,7 @@ final readonly class ScheduleController
     public function bulk(BulkScheduleRequest $request, mixed $tenant, SaveSchedules $save): RedirectResponse
     {
         try {
-            $people = $save->handle($request->employeeIds(), $request->shiftType(), $request->workMode(), $request->minutesByWeekday(), $request->startsByWeekday());
+            $people = $save->handle($request->employeeIds(), $request->shiftType(), $request->workMode(), $request->minutesByWeekday(), $request->startsByWeekday(), $request->validFrom());
         } catch (EmployeeNotAvailable) {
             abort(404);
         }

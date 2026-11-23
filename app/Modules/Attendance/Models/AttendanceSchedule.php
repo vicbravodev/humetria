@@ -38,6 +38,9 @@ use Illuminate\Database\Eloquent\Model;
 #[UseFactory(AttendanceScheduleFactory::class)]
 final class AttendanceSchedule extends Model
 {
+    /** The start date of the schedules that existed before start dates did: they apply «since always». */
+    public const string SINCE_ALWAYS = '1970-01-01';
+
     /** @use HasFactory<AttendanceScheduleFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
 
