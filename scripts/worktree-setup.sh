@@ -5,7 +5,8 @@
 # Usage: composer worktree:setup
 set -euo pipefail
 
-main=$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')
+# Not `git worktree list | awk … exit`: awk quits early and, under pipefail, git's SIGPIPE (141) aborted the script.
+main=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
 
 [ -f .env ] || scripts/worktree-env.sh "$main/.env" .env
 composer install --no-interaction
