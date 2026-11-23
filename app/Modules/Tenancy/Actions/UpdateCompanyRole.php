@@ -26,6 +26,7 @@ final readonly class UpdateCompanyRole
      */
     public function handle(Role $role, string $label, array $permissions, User $by): void
     {
+        $this->roles->assertCustom($role);
         $tenant = Tenant::query()->whereKey($role->getAttribute('tenant_id'))->sole();
         $this->roles->assertAssignable($tenant, $permissions);
 

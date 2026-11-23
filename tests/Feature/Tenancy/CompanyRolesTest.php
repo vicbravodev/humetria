@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Actions\UpdateCompanyRole;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\CompanyRoleInUse;
 use App\Modules\Tenancy\Exceptions\CompanyRoleLimitReached;
+use App\Modules\Tenancy\Exceptions\NotACompanyRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\CompanyRoles;
@@ -71,8 +72,11 @@ it('rejects a permission that is not for a union', function (): void {
     expect(($this->create)('X', ['view-compensation'], null, $union)->permissions)->toHaveCount(1);
 });
 
-it('allows 20 custom roles and refuses the 21st', function (): void {
-    foreach (range(1, 20) as $n) {
+it('allows the configured number of custom roles (20 by default) and refuses one more', function (): void {
+    expect(config('tenancy.max_custom_roles'))->toBe(20);
+    config(['tenancy.max_custom_roles' => 2]);
+
+    foreach (range(1, 2) as $n) {
         ($this->create)("Rol $n");
     }
     $other = Tenant::factory()->create();
@@ -164,4 +168,23 @@ it('lists only the company\'s own custom roles and finds a person\'s role, templ
         ->and($roles->roleOf($person, $this->tenant)?->id)->toBe($mine->id)
         ->and($roles->roleOf($templated, $this->tenant)?->name)->toBe('hr')
         ->and($roles->roleOf($person, $other))->toBeNull();
+});
+
+it('never deletes or edits a template role', function (): void {
+    $viewer = Role::query()->where('name', 'viewer')->whereNull('tenant_id')->sole();
+    $permissions = $viewer->permissions->pluck('name')->sort()->values()->all();
+
+    expect(fn () => app(DeleteCompanyRole::class)->handle($viewer, $this->owner))->toThrow(NotACompanyRole::class)
+        ->and(fn () => app(UpdateCompanyRole::class)->handle($viewer, 'Hackeado', ['view-dashboard'], $this->owner))->toThrow(NotACompanyRole::class);
+
+    $viewer->refresh();
+    expect($viewer->getAttribute('label'))->not->toBe('Hackeado')
+        ->and($viewer->permissions->pluck('name')->sort()->values()->all())->toBe($permissions)
+        ->and(AuditEntry::query()->where('event', 'like', 'tenant_role.%')->exists())->toBeFalse();
+});
+
+it('does not touch a role through a tenant_id-less custom name either', function (): void {
+    $role = Role::query()->create(['name' => 'custom_orphan', 'guard_name' => 'web']);
+
+    expect(fn () => app(DeleteCompanyRole::class)->handle($role, $this->owner))->toThrow(NotACompanyRole::class);
 });

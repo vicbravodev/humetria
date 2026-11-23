@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Actions;
 use App\Actions\RecordAudit;
 use App\Models\User;
 use App\Modules\Tenancy\Exceptions\CompanyRoleInUse;
+use App\Modules\Tenancy\Exceptions\NotACompanyRole;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,9 +17,11 @@ final readonly class DeleteCompanyRole
 {
     public function __construct(private RecordAudit $recordAudit, private CompanyRoles $roles) {}
 
-    /** @throws CompanyRoleInUse when a person holds the role or an open invitation points at it. */
+    /** @throws NotACompanyRole for a template. @throws CompanyRoleInUse when a person holds the role or an open invitation points at it. */
     public function handle(Role $role, User $by): void
     {
+        $this->roles->assertCustom($role);
+
         DB::transaction(function () use ($role, $by): void {
             $this->roles->inUse($role) && throw new CompanyRoleInUse;
 

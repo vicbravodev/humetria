@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Support;
 
 use App\Models\User;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Exceptions\NotACompanyRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Closure;
 use Illuminate\Support\Collection;
@@ -64,6 +65,12 @@ final readonly class CompanyRoles
         }
 
         return $ids;
+    }
+
+    /** @throws NotACompanyRole when the role is a template or belongs to no company. */
+    public function assertCustom(Role $role): void
+    {
+        (str_starts_with($role->name, 'custom_') && $role->getAttribute('tenant_id') !== null) || throw new NotACompanyRole;
     }
 
     /** Whether a person holds the role or an open invitation names it. */
