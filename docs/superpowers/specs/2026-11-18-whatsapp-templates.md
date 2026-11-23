@@ -102,7 +102,7 @@ Variables y sus ejemplos para Meta: `empresa` = «Industrias Ejemplo»; `fecha_l
 | Pie | `Humetria` |
 | Botones | URL `Continuar` → `https://{dominio}/survey/{{token}}`; QR `Dejar de recibir` |
 
-*   Una variante para clima y pulso (`engagement_reminder_v1`) con el mismo texto y la ruta `engagement/survey`.
+*   Una variante para clima y pulso (`engagement_reminder_v1`) con su propio cuerpo, `Hola, buen día. Le recordamos que su encuesta anónima de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.`, y la ruta `engagement/survey`.
 
 ### B. Avisos al portal de la persona trabajadora
 

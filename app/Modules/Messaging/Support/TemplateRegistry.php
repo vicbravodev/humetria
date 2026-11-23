@@ -56,14 +56,14 @@ final class TemplateRegistry
         $stop = TemplateButton::quickReply(TemplateButton::OPT_OUT_LABEL);
         $link = fn (string $text, string $route): TemplateButton => TemplateButton::urlWithVariable($text, $this->base($route), 'abc123');
         $invite = fn (string $route): array => [$link('Contestar ahora', $route), $privacy, $stop];
-        $reminder = 'Hola, buen día. Le recordamos que su evaluación de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.';
+        $reminder = fn (string $what): string => "Hola, buen día. Le recordamos que su {$what} de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.";
 
         return [
             $this->template('survey_invite_v1', $language, "{$greeting} Como parte de la NOM-035, tiene pendiente contestar una evaluación sobre su trabajo. Es confidencial y puede hacerlo hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", 'Su evaluación de la NOM-035', $invite('survey.show')),
             $this->template('seating_invite_v1', $language, "{$greeting} Como parte de la Ley Silla, queremos saber cómo son los asientos y las pausas en su trabajo. Son unos minutos y puede contestar hasta el {{fecha_limite}}. Su enlace es personal y solo sirve una vez.", 'Encuesta sobre su puesto de trabajo', $invite('survey.show')),
             $this->template('engagement_invite_v1', $language, "{$greeting} Queremos saber cómo le va en su trabajo con esta encuesta anónima: nadie verá sus respuestas individuales. Tiene hasta el {{fecha_limite}} para contestarla y su enlace es personal.", 'Encuesta anónima de {{empresa}}', $invite('engagement.survey.show')),
-            $this->template('survey_reminder_v1', $language, $reminder, null, [$link('Continuar', 'survey.show'), $stop]),
-            $this->template('engagement_reminder_v1', $language, $reminder, null, [$link('Continuar', 'engagement.survey.show'), $stop]),
+            $this->template('survey_reminder_v1', $language, $reminder('evaluación'), null, [$link('Continuar', 'survey.show'), $stop]),
+            $this->template('engagement_reminder_v1', $language, $reminder('encuesta anónima'), null, [$link('Continuar', 'engagement.survey.show'), $stop]),
         ];
     }
 
