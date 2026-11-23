@@ -153,7 +153,7 @@ El servidor reporta sus errores con solo el token (ver "Errores").
 
 - PostHog (nube US, `posthog-js` en su build, sin scripts externos) arranca solo en el documento de la landing
   (`App\Http\Analytics::measuredRoutes()`: `home`, `tools.*` y `guides.workday-2027`, sin sesión, token `phc_…` válido) y solo si `App\Http\Consent` lo permite.
-- Sin autocapture, sin grabación de sesión (salvo `POSTHOG_LANDING_REPLAY`, abajo), sin encuestas ni flags, sin perfil de persona, sin cookie propia (almacenamiento
+- Sin autocapture, sin grabación de sesión (salvo `POSTHOG_LANDING_REPLAY`, abajo), sin encuestas ni flags (salvo, con `POSTHOG_LANDING_REPLAY`, la petición que trae la configuración de replay del proyecto), sin perfil de persona, sin cookie propia (almacenamiento
   local) y sin IP. A PostHog no se le manda nada de la persona: la dirección sin más query que las `utm_*` y, de un referente de
   este sitio, solo su origen (`resources/js/lib/analytics.ts` lo impone en `before_send`).
 - Solo los eventos del catálogo de abajo; uno nuevo se agrega aquí. Un solo escucha de clics (`use-landing-measurement`).
@@ -161,7 +161,8 @@ El servidor reporta sus errores con solo el token (ver "Errores").
 - Excepción: la grabación de la visita a la landing y la medición de su velocidad, solo con `POSTHOG_LANDING_REPLAY=true` (el
   proyecto necesita Session Replay encendido). El servidor lo avisa con `replay: true` en el bloque `analytics-config`, que ya solo
   existe con token, consentimiento `granted` y sin sesión (nadie con cuenta se graba en la landing), y abre `us-assets.i.posthog.com`
-  en `connect-src` para leer la configuración de replay del proyecto. Con la bandera encendida la landing descarga, **después del evento
+  en `connect-src` para leer la configuración de replay del proyecto. Esa configuración llega con la petición de flags, así que con replay la
+  landing deja `advanced_disable_flags` en `false`: apagada, el grabador no arranca y cada evento trae `$recording_status: disabled`. Con la bandera encendida la landing descarga, **después del evento
   `load`** para no competir con el primer pintado, la build `posthog-js/full/no-external` (trae el grabador y `web-vitals`; la ligera
   no trae ninguno), con una sola instancia y un solo `$session_id` para que cada grabación se ligue a sus eventos. Graba anónimo
   (`person_profiles: 'never'`, sin IP, sin consola, sin cabeceras ni cuerpos de red, `maskAllInputs: true`: lo escrito en el formulario

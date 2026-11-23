@@ -9,16 +9,21 @@ use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Http\Controllers\CenterModeController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
+use App\Modules\Attendance\Http\Controllers\MarkCorrectionController;
 use App\Modules\Attendance\Http\Controllers\PlaceController;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
 use App\Modules\Attendance\Http\Controllers\ReportController;
 use App\Modules\Attendance\Http\Controllers\ScheduleController;
+use App\Modules\Attendance\Http\Controllers\WeekResolutionController;
 use App\Modules\Attendance\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 /** @var string $notReserved */
 // RH's overview: one week of the people by state, and the centers.
 Route::get('admin/{tenant:slug}/attendance', [AttendanceController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.index');
+
+// A person's disputed week: owner and hr resolve it with a note, once, and it goes back to the person (criterio 5.2).
+Route::post('admin/{tenant:slug}/attendance/weeks/{week}/resolve', WeekResolutionController::class)->where('tenant', $notReserved)->whereUuid('week')->name('tenant.attendance.weeks.resolve');
 
 // The road to the first mark: what each center, schedule, phone and the policy still need before 1 January 2027.
 Route::get('admin/{tenant:slug}/attendance/setup', [AttendanceController::class, 'setup'])->where('tenant', $notReserved)->name('tenant.attendance.setup');
@@ -42,6 +47,9 @@ Route::delete('admin/{tenant:slug}/attendance/kiosks/{kiosk}', [KioskController:
 Route::get('admin/{tenant:slug}/attendance/corrections', [CorrectionController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.corrections.index');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/approve', [CorrectionController::class, 'approve'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.approve');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/reject', [CorrectionController::class, 'reject'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.reject');
+
+// RH corrects a mark with no request first, from the report: to another time or voided, always with a note (criterio 5.4).
+Route::post('admin/{tenant:slug}/attendance/marks/{mark}/correct', MarkCorrectionController::class)->where('tenant', $notReserved)->whereUuid('mark')->name('tenant.attendance.marks.correct');
 
 // The company's policy: what a mark out of zone does, the accuracy asked of a position, the QR on site, the trusted browser
 // and how long the records are kept.

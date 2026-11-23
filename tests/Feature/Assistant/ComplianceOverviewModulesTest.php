@@ -381,6 +381,22 @@ it('counts the people without a schedule and the corrections waiting for RH, nev
     expect(overviewLine($this, 'attendance')['summary'])->toBe('2 personas no tienen horario. Hay 2 solicitudes de corrección por atender.');
 });
 
+it('counts the disputed weeks waiting for RH and sends to them, never whose they are nor why', function (): void {
+    App\Modules\Attendance\Models\AttendancePolicy::factory()->create(['tenant_id' => $this->a->id]);
+    $zafiro = Employee::factory()->create(['tenant_id' => $this->a->id, 'name' => 'Zafiro Luna']);
+    App\Modules\Attendance\Models\AttendanceSchedule::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $zafiro->id]);
+    App\Modules\Attendance\Models\WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $this->a->id, 'employee_id' => $zafiro->id]);
+    workIn($this->a);
+
+    $line = overviewLine($this, 'attendance');
+
+    expect($line)->toMatchArray([
+        'state' => 'pending',
+        'summary' => 'Hay 1 semana objetada por resolver.',
+        'link' => "/admin/{$this->a->slug}/attendance?status=disputed",
+    ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro')->not->toContain('16:00');
+});
+
 it('sends to the setup while someone lacks a schedule, and puts attendance up to date once everyone has one and nothing waits', function (): void {
     App\Modules\Attendance\Models\AttendancePolicy::factory()->create(['tenant_id' => $this->a->id]);
     $person = Employee::factory()->create(['tenant_id' => $this->a->id]);
@@ -393,7 +409,7 @@ it('sends to the setup while someone lacks a schedule, and puts attendance up to
     expect(overviewLine($this, 'attendance'))->toMatchArray([
         'state' => 'up_to_date',
         'stateLabel' => 'Al día',
-        'summary' => 'Tu política está revisada, todas las personas tienen horario y no hay correcciones por atender.',
+        'summary' => 'Tu política está revisada, todas las personas tienen horario y no hay correcciones ni objeciones por atender.',
         'link' => "/admin/{$this->a->slug}/attendance",
     ]);
 });

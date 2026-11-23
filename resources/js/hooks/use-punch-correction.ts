@@ -4,7 +4,8 @@ import { xsrfToken } from '@/lib/assistant/xsrf';
 import { correctionBody, correctionReason } from '@/lib/attendance/correction';
 import type { CorrectionDraft } from '@/lib/attendance/correction';
 import type { PunchFeedback } from '@/lib/attendance/punch-state';
-import { sendWeek, weekMessage } from '@/lib/attendance/week';
+import { sendWeek } from '@/lib/attendance/week';
+import { weekMessage } from '@/lib/attendance/week-messages';
 
 /**
  * From Marcar, when a mark was refused: the person asks RH to add it, with a signature of its own. Nothing of the person

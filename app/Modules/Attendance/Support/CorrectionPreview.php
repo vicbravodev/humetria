@@ -95,7 +95,7 @@ final class CorrectionPreview
     }
 
     /**
-     * The Mondays of the confirmed weeks the approval would reopen.
+     * The Mondays of the answered weeks, confirmed or disputed, the approval would reopen.
      *
      * @return list<string>
      */
@@ -103,9 +103,9 @@ final class CorrectionPreview
     {
         $weeks = TouchedWeeks::of($employeeId, array_values(array_filter([$original?->marked_at, $asked])), $timezone);
 
-        $confirmed = WeeklyConfirmation::query()->where('employee_id', $employeeId)->whereIn('week_start', $weeks)
-            ->where('status', WeekStatus::Confirmed)->orderBy('week_start')->get(['week_start']);
+        $answered = WeeklyConfirmation::query()->where('employee_id', $employeeId)->whereIn('week_start', $weeks)
+            ->whereIn('status', [WeekStatus::Confirmed, WeekStatus::Disputed])->orderBy('week_start')->get(['week_start']);
 
-        return array_values($confirmed->map(fn (WeeklyConfirmation $week): string => $week->week_start->toDateString())->all());
+        return array_values($answered->map(fn (WeeklyConfirmation $week): string => $week->week_start->toDateString())->all());
     }
 }

@@ -83,3 +83,12 @@ it('refuses a callback without the session of a start', function (): void {
 
     $this->assertGuest();
 });
+
+it('sends a staff email typed in the login to the platform provider, and answers alike when the staff provider is off', function (): void {
+    $this->post(route('sso.discover'), ['email' => 'yo@HUMETRIA.mx'])->assertRedirect(route('sso.staff.start'));
+
+    config(['sso.staff' => ['issuer' => '', 'client_id' => '', 'client_secret' => '', 'domain' => '']]);
+
+    $this->from(route('login'))->post(route('sso.discover'), ['email' => 'yo@humetria.mx'])
+        ->assertRedirect(route('login'))->assertSessionHasErrors('sso');
+});

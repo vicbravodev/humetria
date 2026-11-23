@@ -10,6 +10,7 @@ use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Exceptions\RequestRefused;
+use App\Modules\Leave\Jobs\RequestDecided as RequestDecidedJob;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeavePolicy;
@@ -21,15 +22,14 @@ use App\Modules\Leave\Support\Balances;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
-use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 
 mutates(DecideRequest::class);
@@ -350,19 +350,17 @@ it('emails the reason of a rejection, and never which leave it was nor any amoun
         ->and($html)->not->toContain('Maternidad')->not->toContain('Nota privada')->not->toContain('$')->not->toContain('MXN');
 });
 
-it('emails nobody when who asked has no email or the email cannot be made, and the answer stays', function (): void {
+it('emails nobody when who asked has no email, and keeps the answer when the email waits in the queue', function (): void {
     $this->ana->update(['email' => null]);
     decide(waiting(), true, asBoss());
     Notification::assertNothingSent();
 
     $this->ana->update(['email' => 'ana@autopartes.test']);
-    Exceptions::fake();
-    $this->mock(WorkerLinks::class)->shouldReceive('to')->andThrow(new RuntimeException('no link'));
+    Queue::fake();
     $second = waiting(['starts_on' => '2026-12-01', 'ends_on' => '2026-12-02', 'working_days' => 2]);
 
     expect(decide($second, true, asBoss())->refresh()->status)->toBe(RequestStatus::Approved);
-    Exceptions::assertReported(RuntimeException::class);
-    Notification::assertNothingSent();
+    Queue::assertPushed(RequestDecidedJob::class, fn (RequestDecidedJob $job): bool => $job->requestId === $second->id);
 });
 
 it('logs each answer with ids and days: never the reason nor the note', function (): void {

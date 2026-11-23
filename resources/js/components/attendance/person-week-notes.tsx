@@ -1,11 +1,12 @@
 import { Link } from '@inertiajs/react';
+import DisputeNote from '@/components/attendance/dispute-note';
 import { Badge } from '@/components/ui/badge';
 import { absentNote, weekNotes } from '@/lib/attendance/overview';
 import type { OverviewPerson } from '@/types';
 
 /**
  * What warns RH of a person's week: no agreed schedule (with the way to fix it), the limits broken or the week near the
- * cap, and the days away with approved vacations or a leave, which are not days without marks.
+ * cap, the days away with approved vacations or a leave, which are not days without marks, and what the person disputed.
  */
 export default function PersonWeekNotes({
     person,
@@ -51,9 +52,15 @@ export default function PersonWeekNotes({
                     {away}
                 </Badge>
             )}
-            {person.hasSchedule && notes.length === 0 && away === null && (
-                <span className="text-muted-foreground">Sin avisos</span>
+            {person.dispute !== null && (
+                <DisputeNote dispute={person.dispute} />
             )}
+            {person.hasSchedule &&
+                notes.length === 0 &&
+                away === null &&
+                person.dispute === null && (
+                    <span className="text-muted-foreground">Sin avisos</span>
+                )}
         </div>
     );
 }

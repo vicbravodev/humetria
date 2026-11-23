@@ -148,6 +148,13 @@ transcurridos se cuentan desde el último aniversario o, si aún no hay ninguno,
 baja** (del 15 de marzo al 14 de julio son 121 días; al 15 de julio, 122). Sobre esos días la persona también tiene derecho
 al pago de la prima vacacional (LFT art. 80, C-08): la pantalla lo recuerda y el importe lo calcula la nómina.
 
+Todo se cuenta a la **fecha efectiva** de la baja, no al día en que RH la capturó: un periodo cuyo aniversario cae después
+de esa fecha nunca se cumplió, aunque el otorgamiento nocturno ya lo haya dado, y se **anula con un asiento de ajuste**
+en el libro (con su nota; no se borra nada). Una vacación aprobada o ya disfrutada que empieza después de esa fecha se
+cancela y devuelve sus días; la que empieza antes o ese día y la cruza se acorta hasta la fecha efectiva y devuelve con
+ajustes los días laborables posteriores (primero al periodo más reciente, y los extra antes que los legales). Al liquidar,
+si el saldo de hoy no es el que la baja registró, se liquida igual y se avisa.
+
 **Qué dice la ley.** «Las vacaciones no podrán compensarse con una remuneración. Si la relación de trabajo termina
 antes de que se cumpla el año de servicios, el trabajador tendrá derecho a una remuneración proporcionada al tiempo de
 servicios prestados.» [LFT, art. 79].
@@ -284,7 +291,11 @@ con el nombre de quien los autorizó y registro en la bitácora.
 **Qué hacemos.** La solicitud le llega al jefe directo. Si está inactivo, al primer jefe activo hacia arriba. Le llega
 a RH cuando no hay ningún jefe activo, o cuando el jefe no responde en 3 días hábiles (lunes a viernes, sin los
 descansos obligatorios ni los festivos que la empresa agregue; configurable). RH puede ver y corregir cualquier
-solicitud en todo momento, y queda en la bitácora.
+solicitud en todo momento, y queda en la bitácora. Lo que RH registra sin aprobar sigue el mismo camino, y el jefe recibe
+el aviso como si la persona lo hubiera pedido. Si el jefe cambia, lo que esperaba al anterior (también lo que ya llegó a
+RH) pasa al nuevo en ese momento y se le avisa; el anterior ya no puede responderlo. Los correos salen en cola, se
+reintentan si el servidor falla y no se envían si la solicitud ya cambió; nunca dicen el tipo de permiso (C-22).
+Cancelar en el portal pide prueba reciente, y el jefe es avisado si la persona cancela lo que él había aprobado.
 
 **Por qué.** La ley obliga a la empresa a conceder las vacaciones (C-09), no dice quién dentro de ella. El plazo evita
 que una solicitud se quede sin respuesta. Un festivo de la empresa tampoco es día de trabajo para el jefe (C-04), así
@@ -359,6 +370,10 @@ están cubiertos.
 ---
 
 ## Historial
+
+- **2026-11-21 · C-07.** La baja cuenta a su fecha efectiva: anula con ajuste los periodos posteriores, devuelve los días
+  laborables posteriores de una vacación que la cruza y avisa si al liquidar el saldo no es el registrado. Es la lectura
+  directa del criterio (antes un aniversario posterior a la salida inflaba el finiquito).
 
 - **2026-11-10 · v1 (propuesta).** Primera versión, escrita contra la LFT (reforma 14-05-2026) y el decreto del
   27-12-2022. Hallazgo al verificar: el decreto no trae un transitorio que conserve la tabla anterior (C-02 quedó como

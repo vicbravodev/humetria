@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { sendWeek, weekMessage, weekView } from '@/lib/attendance/week';
+import { sendWeek, weekView } from '@/lib/attendance/week';
 import type { WeekView } from '@/lib/attendance/week';
 import type { SignedKey } from '@/lib/webauthn';
 
@@ -20,6 +20,7 @@ const week: WeekView = {
     status: 'pending',
     answeredAt: null,
     disputeReason: null,
+    resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
     days: [
@@ -85,6 +86,14 @@ const signs = () => Promise.resolve(key);
 describe('weekView', () => {
     it('reads the week the server sent', () => {
         expect(weekView(JSON.parse(JSON.stringify(week)))).toEqual(week);
+    });
+
+    it("reads RH's answer to a dispute, and none when there is none", () => {
+        expect(
+            weekView({ ...week, resolution: 'Revisamos el lector.' })
+                ?.resolution,
+        ).toBe('Revisamos el lector.');
+        expect(weekView({ ...week, resolution: 4 })?.resolution).toBeNull();
     });
 
     it('is null for anything that is not a week', () => {
@@ -248,25 +257,6 @@ describe('sendWeek', () => {
                 },
             ),
         ).resolves.toEqual({ kind: 'failed', reason: 'failed' });
-    });
-});
-
-describe('weekMessage', () => {
-    it.each([
-        ['not_verified', 'No se pudo verificar su dispositivo'],
-        ['cancelled', 'No se confirmó su huella'],
-        ['throttled', 'demasiados intentos'],
-        ['week_not_over', 'cuando termine el domingo'],
-        ['week_disputed', 'Recursos Humanos la revisará'],
-        ['already_disputed', 'Ya objetó esta semana'],
-        ['invalid', 'al menos 10 caracteres'],
-        ['week_changed', 'Su semana cambió'],
-        ['day_open', 'cuando marque su salida'],
-        ['no_marks', 'No estoy de acuerdo'],
-        ['unsupported', 'llaves de acceso'],
-        ['anything', 'Intente de nuevo'],
-    ])('words %s', (reason, text) => {
-        expect(weekMessage(reason)).toContain(text);
     });
 });
 

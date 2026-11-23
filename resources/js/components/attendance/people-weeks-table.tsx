@@ -41,11 +41,13 @@ export default function PeopleWeeksTable({
     status,
     searching,
     over,
+    canManage,
 }: {
     people: Paginated<OverviewPerson>;
     status: OverviewView;
     searching: boolean;
     over: boolean;
+    canManage: boolean;
 }) {
     if (people.total === 0) {
         return (
@@ -80,6 +82,7 @@ export default function PeopleWeeksTable({
                             key={person.id}
                             person={person}
                             over={over}
+                            canManage={canManage}
                         />
                     ))}
                 </TableBody>

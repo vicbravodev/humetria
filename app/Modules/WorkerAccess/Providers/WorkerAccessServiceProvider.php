@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\WorkerAccess\Providers;
 
+use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use App\Modules\WorkerAccess\Contracts\WorkerInvitations;
 use App\Modules\WorkerAccess\Contracts\WorkerKeys;
@@ -11,6 +12,7 @@ use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof;
+use App\Modules\WorkerAccess\Listeners\RevokeOnDeactivation;
 use App\Modules\WorkerAccess\Support\CeremonyKeys;
 use App\Modules\WorkerAccess\Support\CeremonySignatures;
 use App\Modules\WorkerAccess\Support\CompanyWorkerCredentials;
@@ -23,6 +25,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -45,6 +48,9 @@ final class WorkerAccessServiceProvider extends ServiceProvider
     {
         // What is delicate in another module's pages asks for a recent proof by this name, after the person's session.
         $router->aliasMiddleware('worker.proof', RequireRecentProof::class);
+
+        // Someone who left the company has no access: their keys, links and sessions stop with the departure.
+        Event::listen(EmployeeDeactivated::class, RevokeOnDeactivation::class);
 
         // The `worker` guard (config/auth.php): the person of the session that holds in this request, or nobody.
         Auth::viaRequest('worker-session', function (): ?GenericUser {

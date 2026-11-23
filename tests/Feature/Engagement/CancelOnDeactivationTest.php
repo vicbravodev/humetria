@@ -45,6 +45,14 @@ it('cancels the link of someone who is deactivated before answering', function (
     expect($this->invitation->fresh()?->cancelled)->toBeTrue();
 });
 
+it('cancels the link in the company of the event, whatever company was current', function (): void {
+    workIn(Tenant::factory()->create());
+
+    event(new EmployeeDeactivated($this->tenant->id, $this->employee->id, now()->toImmutable()));
+
+    expect(Invitation::query()->withoutGlobalScopes()->whereKey($this->invitation->id)->sole()->cancelled)->toBeTrue();
+});
+
 it('opens «not available» at the link of someone who left', function (): void {
     $this->get(route('engagement.survey.show', 'the-token'))->assertInertia(fn ($page) => $page->where('unavailable', null));
 

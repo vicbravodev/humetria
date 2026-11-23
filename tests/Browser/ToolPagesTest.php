@@ -170,3 +170,64 @@ it('dresses each tool page in the color of its family', function (string $path, 
     'listening' => ['/clima-laboral', 'family-listening'],
     'operations' => ['/compensacion', 'family-operations'],
 ]);
+
+/**
+ * Resolves once the window stopped scrolling (the jump to a section is smooth), with what the script measured there.
+ */
+function afterScrollSettles(string $measure): string
+{
+    return <<<JS
+        () => new Promise((resolve) => {
+            let last = -1;
+            let still = 0;
+            const frame = () => {
+                still = window.scrollY === last ? still + 1 : 0;
+                last = window.scrollY;
+                still >= 12 ? resolve({$measure}) : requestAnimationFrame(frame);
+            };
+            requestAnimationFrame(frame);
+        })
+        JS;
+}
+
+it('shows the contact fields on the first screen when a phone opens the demo section', function (): void {
+    $page = resizeTo(visit('/registro-de-jornada', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 375, 812);
+
+    $page->click('a[data-track-target=sticky_demo]')
+        ->assertScript(afterScrollSettles(<<<'JS'
+            ['[name=name]', '[name=email]', '[name=company]', '#demo-whatsapp'].every((selector) => {
+                const box = document.querySelector(`#demo-request-form ${selector}`).getBoundingClientRect();
+                return box.top >= 0 && box.bottom <= window.innerHeight;
+            })
+            JS));
+});
+
+it('tells what comes next after the form on a phone and beside it on a wide screen', function (): void {
+    $position = <<<'JS'
+        (() => {
+            const form = document.getElementById('demo-request-form').getBoundingClientRect();
+            const steps = document.querySelector('[data-test=demo-next-steps]').getBoundingClientRect();
+            return {below: steps.top > form.bottom, beside: steps.right <= form.left};
+        })()
+        JS;
+
+    resizeTo(visit('/registro-de-jornada', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 375, 812)
+        ->assertScript("() => { const at = {$position}; return at.below && ! at.beside; }");
+
+    resizeTo(visit('/registro-de-jornada', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 1280, 900)
+        ->assertScript("() => { const at = {$position}; return at.beside && ! at.below; }");
+});
+
+it('puts the sticky demo button away while the form is on screen and brings it back after', function (): void {
+    $page = resizeTo(visit('/registro-de-jornada', ['reducedMotion' => 'reduce'])->assertNoJavaScriptErrors(), 375, 812);
+    $bar = 'document.querySelector("[data-test=sticky-demo-bar]")';
+    $gone = "() => new Promise((resolve) => { const check = () => getComputedStyle({$bar}).opacity === '0' && {$bar}.inert ? resolve(true) : requestAnimationFrame(check); check(); })";
+    $back = "() => new Promise((resolve) => { const check = () => getComputedStyle({$bar}).opacity === '1' && ! {$bar}.inert ? resolve(true) : requestAnimationFrame(check); check(); })";
+
+    $page->assertScript("() => getComputedStyle({$bar}).opacity === '1' && ! {$bar}.inert")
+        ->click('a[data-track-target=sticky_demo]')
+        ->assertScript($gone)
+        ->script('() => window.scrollTo({ top: 0, behavior: "instant" })');
+
+    $page->assertScript($back);
+});

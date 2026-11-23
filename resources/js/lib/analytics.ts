@@ -153,6 +153,8 @@ export function sanitizeEvent(
 function replayOptions(config: AnalyticsConfig): Partial<PostHogConfig> {
     return config.replay === true
         ? {
+              // The project's replay settings arrive with the flags request; with it off the recorder never starts.
+              advanced_disable_flags: false,
               disable_session_recording: false,
               enable_recording_console_log: false,
               capture_performance: { web_vitals: true, network_timing: false },

@@ -9,6 +9,7 @@ use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\RequestStatus;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
+use App\Modules\Leave\Jobs\RequestCancelled;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveRequest;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 
 mutates(CancelRequest::class, Decider::class);
 
@@ -225,4 +227,40 @@ it('writes nothing when there is nothing to cancel', function (): void {
 
     Log::shouldNotHaveReceived('info');
     expect(AuditEntry::query()->count())->toBe(0);
+});
+
+describe('tells the manager when the person cancels what was approved', function (): void {
+    it('queues the email to the manager when the person cancels an approved request', function (): void {
+        Queue::fake();
+        $request = anasRequest('approved', ['decided_by_employee_id' => Employee::factory()->create(['tenant_id' => $this->tenant->id])->id]);
+
+        resolve(CancelRequest::class)->handle($request->id, Decider::requester($this->ana->id));
+
+        Queue::assertPushed(RequestCancelled::class, fn (RequestCancelled $job): bool => $job->requestId === $request->id && $job->tenantId === $this->tenant->id);
+    });
+
+    it('queues nothing when what was cancelled was still waiting: nobody had answered it', function (): void {
+        Queue::fake();
+
+        resolve(CancelRequest::class)->handle(anasRequest('requested')->id, Decider::requester($this->ana->id));
+
+        Queue::assertNothingPushed();
+    });
+
+    it('queues nothing when RH was the one who approved it: no manager ever saw it', function (): void {
+        Queue::fake();
+        $request = anasRequest('approved', ['decided_by_user_id' => $this->rh->id]);
+
+        resolve(CancelRequest::class)->handle($request->id, Decider::requester($this->ana->id));
+
+        Queue::assertNothingPushed();
+    });
+
+    it('queues nothing when RH cancels: RH is the one who did it', function (): void {
+        Queue::fake();
+
+        resolve(CancelRequest::class)->handle(anasRequest('approved')->id, Decider::hr($this->rh->id));
+
+        Queue::assertNothingPushed();
+    });
 });

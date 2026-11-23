@@ -9,16 +9,19 @@ use App\Modules\Attendance\Actions\ConfirmWeek;
 use App\Modules\Attendance\Actions\CorrectMark;
 use App\Modules\Attendance\Actions\DisputeWeek;
 use App\Modules\Attendance\Actions\ReopenWeeks;
+use App\Modules\Attendance\Actions\ResolveDispute;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Events\WeekConfirmed;
 use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Exceptions\WeekRejected;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
@@ -248,12 +251,23 @@ describe('a correction', function (): void {
         Log::shouldHaveReceived('info')->with('attendance.week_reopened', ['confirmation_id' => $week->id, 'employee_id' => $this->ana->id, 'week_start' => LAST_WEEK]);
     });
 
-    it('leaves a disputed week disputed, for RH to resolve', function (): void {
-        disputeWeek($this);
+    it('reopens a disputed week to pending: what the person disputed changed, so they answer again', function (): void {
+        $week = disputeWeek($this);
 
         resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', $this->hr->id);
 
-        expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Disputed);
+        expect($week->fresh())->status->toBe(WeekStatus::Pending)->disputed_at->toBeNull()->reason->toBeNull()->credential_id->toBeNull()->digest->toBeNull();
+        expect(AuditEntry::query()->where('event', 'attendance.week_reopened')->sole()->subject_id)->toBe($week->id);
+    });
+
+    it('leaves a pending week RH already resolved as it is', function (): void {
+        $week = disputeWeek($this);
+        resolve(ResolveDispute::class)->handle($week->id, memberOf($this->tenant, TenantRole::Hr)->id, 'Revisamos el lector y estaba bien.');
+
+        resolve(CorrectMark::class)->handle($this->start->id, null, 'Marcó por error.', $this->hr->id);
+
+        expect($week->fresh())->status->toBe(WeekStatus::Pending)->resolution_note->toBe('Revisamos el lector y estaba bien.')
+            ->and(AuditEntry::query()->where('event', 'attendance.week_reopened')->count())->toBe(0);
     });
 
     it('leaves the confirmation of another week alone', function (): void {
@@ -359,10 +373,7 @@ describe('the nightly close', function (): void {
         expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Pending);
     });
 
-    it('opens no week for a person who left, nor for a week with no marks or only voided ones', function (): void {
-        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
-        weekMark($bob, MarkType::Start, '2026-11-03 09:00');
-        $bob->update(['deactivated_at' => now()]);
+    it('opens no week with no marks or only voided ones', function (): void {
         $carla = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
         AttendanceMark::factory()->correcting(weekMark($carla, MarkType::Start, '2026-11-03 09:00'))->create(['marked_at' => null]);
         weekMark($this->ana, MarkType::Start, '2026-10-30 09:00');
@@ -370,6 +381,21 @@ describe('the nightly close', function (): void {
         resolve(CloseDays::class)->handle();
 
         expect(WeeklyConfirmation::query()->count())->toBe(0);
+    });
+
+    it('opens the last week of a person who left, up to the day they left: their marks in it (H09)', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        weekMark($bob, MarkType::Start, '2026-11-03 09:00');
+        weekMark($bob, MarkType::End, '2026-11-03 17:00');
+        $bob->update(['deactivated_at' => now(), 'terminated_on' => '2026-11-04']);
+        // Someone who left long before has no marks in the week: nothing to open.
+        $eva = EmployeeFactory::new()->deactivated()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $eva->id]);
+
+        resolve(CloseDays::class)->handle();
+
+        expect(WeeklyConfirmation::query()->get(['employee_id', 'week_start', 'status'])->map(fn (WeeklyConfirmation $week): array => [$week->employee_id, $week->week_start->toDateString(), $week->status])->all())
+            ->toBe([[$bob->id, LAST_WEEK, WeekStatus::Pending]]);
     });
 
     it('opens the week of a Sunday night that ends on Monday', function (): void {

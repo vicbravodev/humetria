@@ -134,3 +134,26 @@ it('takes RH from the sidebar to the overview and to the corrections', function 
         ->assertPathIs("{$url}/attendance/corrections")
         ->assertNoJavaScriptErrors();
 });
+
+it('shows RH a disputed week with its reason and resolves it with a note, from a phone too', function (bool $dark, bool $mobile): void {
+    $url = overviewPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->firstOrFail();
+    $bob = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::query()->where('name', 'Planta Norte')->value('id'), 'name' => 'Bob Díaz', 'job_title' => 'Almacenista']);
+    $week = WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $tenant->id, 'employee_id' => $bob->id, 'week_start' => CarbonImmutable::now('America/Mexico_City')->startOfWeek()->subWeek()->toDateString()]);
+
+    $page = visitPage('attendance/index', "{$url}/attendance?status=disputed", $dark, $mobile)
+        ->assertSee('Bob Díaz')
+        ->assertSee('El martes salí a las 18:00, no a las 16:00.')
+        ->click('Resolver')
+        ->waitForText('Resolver la objeción de Bob Díaz')
+        ->assertNoAccessibilityIssues(1)
+        ->type('#dispute-note', 'Revisamos el lector: saliste a las 16:00. Confirma tu semana otra vez.')
+        ->click('Resolver objeción')
+        ->waitForText('Objeción resuelta');
+
+    expect($week->fresh()?->resolution_note)->toBe('Revisamos el lector: saliste a las 16:00. Confirma tu semana otra vez.');
+    $page->assertNoJavaScriptErrors()->assertScript(cspViolations(), '[]');
+})->with([
+    'light, desktop' => [false, false],
+    'dark, phone' => [true, true],
+]);

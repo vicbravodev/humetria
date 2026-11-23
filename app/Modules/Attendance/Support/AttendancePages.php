@@ -22,6 +22,7 @@ use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 
@@ -30,7 +31,8 @@ use Illuminate\Support\Facades\Gate;
  * never one to come) of the people active in the company's centers in use, or in one of them. How many are al día,
  * objetadas, sin confirmar and near the year's limits, the correction requests waiting and the centers with no zone;
  * then the people of one state, 25 at a time, searched by name, with their hours and the limits they broke, and the
- * centers 25 at a time. Which days a person was away with vacations or a leave, never which of the two. Never a position,
+ * centers 25 at a time. Which days a person was away with vacations or a leave, never which of the two. What a person
+ * disputed and RH's note once resolved; a person who left stays in view while their week is disputed. Never a position,
  * a coordinate or a device.
  */
 final readonly class AttendancePages
@@ -51,14 +53,15 @@ final readonly class AttendancePages
         $period = $this->week($week, $center === null ? $this->timezones->forTenant() : $this->timezones->forCenter($center->id));
         $panel = PanelScope::of($this->workCenters, $this->roster, $center);
         $names = $panel->names;
-        $people = $panel->people;
         $scope = $center === null ? array_keys($names) : [$center->id];
+        // Every answer of the week in the company: a person who left keeps their disputed week in view until RH resolves it.
+        $answers = WeeklyConfirmation::query()->where('week_start', $period->start()->toDateString())
+            ->get(['id', 'employee_id', 'status', 'reason', 'resolution_note'])->keyBy('employee_id');
+        $people = [...$panel->people, ...$this->leftWithDispute($answers, $panel->people, $scope)];
         [$summaries, $worked] = TeamWeek::withDays($people, $period);
-        $answers = WeeklyConfirmation::query()->among('employee_id', $people)->where('week_start', $period->start()->toDateString())
-            ->toBase()->pluck('status', 'employee_id')->all();
         $states = [];
         foreach ($people as $id) {
-            $states[$id] = is_string($answers[$id] ?? null) ? $answers[$id] : WeekStatus::Pending->value;
+            $states[$id] = $answers->get($id)->status->value ?? WeekStatus::Pending->value;
         }
         $atRisk = array_keys(array_filter($summaries, fn ($summary): bool => TeamWeek::atRisk($summary, $period->start()->year)));
         $zones = AttendanceZone::query()->toBase()->selectRaw('work_center_id, count(*) as total')->groupBy('work_center_id')->pluck('total', 'work_center_id')->all();
@@ -75,7 +78,7 @@ final readonly class AttendancePages
             ->among('employee_id', array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())))
             ->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
         // The days each person of the page was away with vacations or a leave: not days they missed. One query.
-        $away = AbsentDays::of($this->absences, $period, array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())));
+        $away = AbsentDays::of($this->absences->between($period->start(), $period->end(), array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items()))), $period);
 
         return [
             'week' => [
@@ -110,6 +113,8 @@ final readonly class AttendancePages
                 'hasSchedule' => isset($scheduled[$person->id]),
                 'days' => $this->ribbon($worked[$person->id] ?? [], $summaries[$person->id]->overtimeByDay ?? [], $period),
                 'absentDays' => array_keys($away[$person->id] ?? []),
+                'active' => $person->active,
+                'dispute' => self::dispute($answers->get($person->id)),
             ]),
             'centers' => $this->centers($panel->byCenter, $zones, $field),
             'setup' => $this->setup->of($names, $panel->byCenter),
@@ -119,6 +124,38 @@ final readonly class AttendancePages
             ],
             'canManage' => Gate::allows('manage-attendance'),
         ];
+    }
+
+    /**
+     * The people who left whose week, in these centers, is disputed: one query when there are any, none otherwise.
+     *
+     * @param  Collection<string, WeeklyConfirmation>  $answers  by employee id
+     * @param  list<string>  $active  the people active in scope
+     * @param  list<string>  $scope  the centers in view
+     * @return list<string>
+     */
+    private function leftWithDispute(Collection $answers, array $active, array $scope): array
+    {
+        $disputed = array_values(array_diff($answers->where('status', WeekStatus::Disputed)->keys()->all(), $active));
+
+        if ($disputed === []) {
+            return [];
+        }
+
+        return array_values(array_map(
+            fn (RosterEntry $person): string => $person->id,
+            array_filter($this->roster->findMany($disputed), fn (RosterEntry $person): bool => ! $person->active && in_array($person->workCenterId, $scope, true)),
+        ));
+    }
+
+    /**
+     * What the person disputed and, once RH resolved it, RH's note; null for a week never disputed.
+     *
+     * @return array{id: string, reason: string, resolution: string|null}|null
+     */
+    private static function dispute(?WeeklyConfirmation $answer): ?array
+    {
+        return $answer?->reason === null ? null : ['id' => $answer->id, 'reason' => $answer->reason, 'resolution' => $answer->resolution_note];
     }
 
     /**

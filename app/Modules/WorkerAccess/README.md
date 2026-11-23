@@ -7,7 +7,7 @@ es una herramienta del catálogo.
 ## Tablas
 
 - `worker_credentials`: las llaves. `credential_id` y `public_key` nunca llegan a una página, un log ni la bitácora.
-  `registered_via` (`issued_link`, `session`) y `revoked_reason` (`reissued`, `revoked_by_hr`, `not_me`).
+  `registered_via` (`issued_link`, `session`) y `revoked_reason` (`reissued`, `revoked_by_hr`, `not_me`, `left_company`).
 - `worker_access_links`: enlaces de un solo uso. Solo el hash del token; `issued` (RH, 48 h, permite crear una llave) o
   `requested` (la persona, 30 min, solo abre sesión). Un UPDATE condicional lo gasta una vez.
 - `worker_access_states`: una fila por persona con `valid_after`; toda sesión abierta antes deja de valer.

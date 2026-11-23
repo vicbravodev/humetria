@@ -163,7 +163,10 @@ aceptación de la **versión vigente** no puede marcar. Si el texto cambia (por 
 siguiente marca pide aceptar la versión nueva. Se guarda el texto, su versión, la llave con que firmó y el momento.
 
 **5.2 Conformidad semanal** · Humetría · cada semana la persona revisa su registro y lo **confirma** u **objeta** con
-motivo. Lo confirmado es contenido «acordado» (1.3). Lo objetado queda a la vista de RH hasta resolverse.
+motivo. Lo confirmado es contenido «acordado» (1.3). Lo objetado queda a la vista de RH hasta resolverse: RH ve el
+motivo, recibe un aviso y la resuelve con una nota que la persona lee; la semana vuelve a pendiente para que la persona la
+confirme o la objete otra vez. Lo acordado incluye las ausencias aprobadas de la semana: aprobar o cancelar una ausencia,
+o corregir una marca, reabre la semana confirmada u objetada.
 
 **5.3 Nivel de evidencia por marca** · Humetría · cada marca guarda cómo se hizo (QR más geocerca, solo geocerca, solo QR,
 navegador de confianza, remoto, en campo, corrección) y el reporte lo muestra. «Fuerte» es la marca **completa para su
@@ -241,3 +244,9 @@ exige, pero sin esto no se puede hablar de «acuerdo».
     marca.
   - **Conservación** (7.1): la empresa elige de 12 a **120 meses** después de terminada la relación. El tope de 120 lo
     fijó el constructor. **⚠ pendiente del usuario:** confirmar el tope (el criterio dice «ampliable», sin máximo).
+- 2026-11-21 · decisiones del usuario (auditoría de flujos, casos H01, H02, H30): una objeción se resuelve con una nota
+  de RH y la semana **vuelve a pendiente** (no queda «resuelta» sin respuesta de la persona); la objetada de quien se dio
+  de baja sigue a la vista. Las ausencias forman parte de lo que la persona confirmó (1.3): aprobar o cancelar una ausencia
+  reabre la semana, y la huella de la semana incluye sus ausencias. El reporte para la autoridad (6.1) no marca retardo
+  en un día con ausencia aprobada (2.6), dice «Vacaciones» o «Permiso» (nunca el tipo de permiso) y señala «Marcó durante
+  una ausencia».

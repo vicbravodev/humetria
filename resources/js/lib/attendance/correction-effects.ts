@@ -48,12 +48,12 @@ function whatHappens(detail: CorrectionDetail): EffectLine {
 
 function weeksText(weeks: readonly string[]): string {
     if (weeks.length === 0) {
-        return 'Su semana aún no está confirmada: no se reabre nada.';
+        return 'Su semana aún no tiene respuesta: no se reabre nada.';
     }
 
     return weeks.length === 1
-        ? `Su semana ${weekOf(weeks[0] ?? '')} estaba confirmada: se reabre y le pedimos confirmarla otra vez.`
-        : `Sus semanas ${weeks.map(weekOf).join(' y ')} estaban confirmadas: se reabren y le pedimos confirmarlas otra vez.`;
+        ? `Su semana ${weekOf(weeks[0] ?? '')} ya tenía respuesta: se reabre y le pedimos responderla otra vez.`
+        : `Sus semanas ${weeks.map(weekOf).join(' y ')} ya tenían respuesta: se reabren y le pedimos responderlas otra vez.`;
 }
 
 /** What approving the request does, and what to know about it; empty for a request already resolved. */

@@ -11,7 +11,7 @@ const CHIPS: Record<string, string> = {
 
 /**
  * What the week says first (board «Asistencia: su semana»): whose week the signature opened, the title with where it stands
- * beside it, what to do or when it was answered, and the person's reason when they said what is not right.
+ * beside it, what to do or when it was answered, the person's reason when they said what is not right and RH's answer to it.
  */
 export default function WeekHeading({ week }: { week: WeekView }) {
     const { label, detail } = statusText(week);
@@ -41,6 +41,12 @@ export default function WeekHeading({ week }: { week: WeekView }) {
                 <blockquote className="mt-1 border-l-2 pl-3 text-base text-muted-foreground">
                     {week.disputeReason}
                 </blockquote>
+            )}
+            {week.resolution !== null && (
+                <p className="mt-1 rounded-lg bg-muted/50 p-3 text-base text-pretty">
+                    <span className="font-medium">Respuesta de RH: </span>
+                    {week.resolution}
+                </p>
             )}
         </div>
     );

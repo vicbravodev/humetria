@@ -7,12 +7,14 @@ namespace App\Modules\Leave\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\RequestStatus;
+use App\Modules\Leave\Events\AbsenceChanged;
 use App\Modules\Leave\Exceptions\AlreadyDecided;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Support\Decider;
 use App\Modules\Leave\Support\EmployeeLock;
 use App\Modules\Leave\Support\PeriodWindow;
+use App\Modules\Leave\Support\RequestNotifier;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +26,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class CancelRequest
 {
-    public function __construct(private RecordAudit $audit) {}
+    public function __construct(private RecordAudit $audit, private RequestNotifier $notifier) {}
 
     /**
      * Whether the person who asked may still cancel it: while it waits, or once approved until the day before it starts.
@@ -66,6 +68,10 @@ final readonly class CancelRequest
 
             $request->update(['status' => RequestStatus::Cancelled, 'cancelled_at' => now()]);
 
+            if ($was !== RequestStatus::Requested) {
+                event(new AbsenceChanged($request->id, $request->employee_id, $request->starts_on->toDateString(), $request->ends_on->toDateString()));
+            }
+
             if ($by->isHr) {
                 $this->audit->handle('leave.request_cancelled', $request, ['employee_id' => $request->employee_id, 'was' => $was->value, 'days_returned' => $returned]);
             }
@@ -74,6 +80,7 @@ final readonly class CancelRequest
         });
 
         Log::info('leave.request_cancelled', ['request_id' => $request->id, 'employee_id' => $request->employee_id, 'by_hr' => $by->isHr, 'days_returned' => $returned]);
+        $this->notifier->cancelled($request, $by->isHr);
 
         return $request;
     }

@@ -48,7 +48,7 @@ final readonly class EndTelework
             // Never the note: it may say why a person left.
             $record = ['teleworker_id' => $current->id, 'employee_id' => $current->employee_id, 'work_center_id' => $current->work_center_id, 'reason' => $reason->value];
             $this->audit->handle('telework.teleworker_ended', $current, [...$record, 'ended_by' => $userId]);
-            Log::info('telework.teleworker_ended', $record);
+            DB::afterCommit(fn () => Log::info('telework.teleworker_ended', $record));
         });
     }
 }

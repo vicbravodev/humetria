@@ -45,5 +45,9 @@ final readonly class AuthorityRow
         public ?int $lateMinutes = null,
         /** The zone of the day's marks with their offset, «UTC−07:00 a UTC−08:00 · America/Tijuana» across a change of time; empty with no marks. */
         public string $timezone = '',
+        /** Away that day with approved vacations or a leave, never its type (C-22); null when not. */
+        public ?string $absence = null,
+        /** @var list<array{id: string, type: string, date: string, time: string}> the day's marks in force, local, for RH to correct one: never in the CSV */
+        public array $marks = [],
     ) {}
 }

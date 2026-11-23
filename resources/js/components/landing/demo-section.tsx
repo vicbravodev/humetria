@@ -24,10 +24,11 @@ export default function DemoSection({ page, tool }: Props) {
             <div
                 className={cn(
                     WRAP,
-                    'grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-14',
+                    'grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-14',
                 )}
             >
-                <div className="flex flex-col gap-4 lg:sticky lg:top-28">
+                {/* On a phone the column dissolves into the grid, so the steps can follow the form; from lg it is one sticky column. */}
+                <div className="contents lg:sticky lg:top-28 lg:flex lg:flex-col lg:gap-4">
                     <h2 id="agenda-una-demo-title" className={TITLE}>
                         Agenda una demo
                     </h2>
@@ -35,9 +36,9 @@ export default function DemoSection({ page, tool }: Props) {
                         Cuéntanos de tu empresa y qué herramientas te interesan,
                         y preparamos la llamada con eso.
                     </p>
-                    <DemoNextSteps />
+                    <DemoNextSteps className="order-last mt-6 lg:order-none lg:mt-3" />
                 </div>
-                <div className="min-w-0">
+                <div className="mt-4 min-w-0 lg:mt-0">
                     <DemoRequestForm page={page} tool={tool} />
                 </div>
             </div>
