@@ -14,13 +14,13 @@ use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
-use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\CompanyPolicy;
 use App\Modules\Attendance\Support\CorrectionHistory;
 use App\Modules\Attendance\Support\EffectiveMarks;
 use App\Modules\Attendance\Support\HoursCalculator;
 use App\Modules\Attendance\Support\LegalLimits;
+use App\Modules\Attendance\Support\ScheduleTimeline;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Attendance\Support\WorkedDay;
 use App\Modules\Leave\Contracts\Absences;
@@ -153,8 +153,8 @@ final readonly class BuildAuthorityReport
         $byPerson = EffectiveMarks::byDayBetween($employeeIds, $weeks[0]->start(), $weeks[1]->end());
         // A day of slack each side: a night's end, or the end a void points to, may fall past the weeks.
         $history = CorrectionHistory::of($employeeIds, $weeks[0]->startUtc()->subDay(), $weeks[1]->nextStartUtc()->addDay());
-        $schedules = AttendanceSchedule::query()->among('employee_id', $employeeIds)->get()->keyBy('employee_id');
-        $tolerance = $schedules->contains(fn (AttendanceSchedule $schedule): bool => $schedule->starts_by_weekday !== null) ? CompanyPolicy::current()->late_tolerance_minutes : 0;
+        $schedules = ScheduleTimeline::of($employeeIds);
+        $tolerance = $schedules->hasStartTimes() ? CompanyPolicy::current()->late_tolerance_minutes : 0;
         $answers = WeeklyConfirmation::query()->among('employee_id', $employeeIds)
             ->whereBetween('week_start', [$weeks[0]->start()->toDateString(), $weeks[1]->start()->toDateString()])
             ->get(['employee_id', 'week_start', 'status', 'digest'])
@@ -173,12 +173,11 @@ final readonly class BuildAuthorityReport
             [$days, $voids] = self::withVoids($byPerson[$id] ?? [], $history->voidsOf($id));
 
             foreach (self::byWeek($days) as $monday => $days) {
-                $schedule = $schedules->get($id);
                 $hours = array_map(
-                    fn (int $offset): DayHours => WorkedDay::hours($date = CarbonImmutable::parse($monday)->addDays($offset), $days[$date->toDateString()] ?? [], $schedule, $tolerance, isset($away[$id][$date->toDateString()])),
+                    fn (int $offset): DayHours => WorkedDay::hours($date = CarbonImmutable::parse($monday)->addDays($offset), $days[$date->toDateString()] ?? [], $schedules->on($id, $date), $tolerance, isset($away[$id][$date->toDateString()])),
                     range(0, 6),
                 );
-                $summary = HoursCalculator::week($hours, $schedule->shift_type ?? ShiftType::Day, CarbonImmutable::parse($monday)->year);
+                $summary = HoursCalculator::week($hours, $schedules->on($id, CarbonImmutable::parse($monday)->addDays(6))->shift_type ?? ShiftType::Day, CarbonImmutable::parse($monday)->year);
                 $answer = $answers->get("{$id} {$monday}");
                 $doubleLeft = LegalLimits::weeklyOvertimeCapMinutes(CarbonImmutable::parse($monday)->year);
 

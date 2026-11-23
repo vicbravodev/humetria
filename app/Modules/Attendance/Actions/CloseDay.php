@@ -6,8 +6,8 @@ namespace App\Modules\Attendance\Actions;
 
 use App\Modules\Attendance\Data\DayHours;
 use App\Modules\Attendance\Events\DayClosed;
-use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Support\EffectiveMarks;
+use App\Modules\Attendance\Support\ScheduleTimeline;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Attendance\Support\WorkedDay;
 use Carbon\CarbonImmutable;
@@ -29,7 +29,7 @@ final readonly class CloseDay
     {
         $date = CarbonImmutable::parse($localDate->toDateString(), $timezone);
         $marks = EffectiveMarks::byDay($employeeId, WeekPeriod::containing($date, $timezone))[$date->toDateString()] ?? [];
-        $schedule = AttendanceSchedule::query()->where('employee_id', $employeeId)->first();
+        $schedule = ScheduleTimeline::of([$employeeId])->on($employeeId, $date);
 
         if ($marks === [] && ($schedule?->minutes_by_weekday[$date->isoWeekday()] ?? 0) === 0) {
             return null;

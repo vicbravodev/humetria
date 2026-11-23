@@ -7,7 +7,6 @@ namespace App\Modules\Attendance\Support;
 use App\Modules\Attendance\Data\DayHours;
 use App\Modules\Attendance\Data\WeekSummary;
 use App\Modules\Attendance\Enums\ShiftType;
-use App\Modules\Attendance\Models\AttendanceSchedule;
 
 /**
  * The weeks of many people for RH's panel: each split as criterio 2.9 says, read in two queries whatever their number
@@ -43,17 +42,16 @@ final class TeamWeek
         // ponytail: hydrates every scoped person's marks of the week (one query, each inside its index-bounded window): fine
         // for hundreds of people; past a few thousand, aggregate the minutes in SQL or chunk the ids.
         $byPerson = EffectiveMarks::byDayOf($employeeIds, $week);
-        $schedules = AttendanceSchedule::query()->among('employee_id', $employeeIds)->get()->keyBy('employee_id');
+        $schedules = ScheduleTimeline::of($employeeIds);
         $summaries = [];
         $worked = [];
 
         foreach ($employeeIds as $employeeId) {
-            $schedule = $schedules->get($employeeId);
             $days = array_map(
-                fn (int $offset) => WorkedDay::hours($date = $week->start()->addDays($offset), $byPerson[$employeeId][$date->toDateString()] ?? [], $schedule),
+                fn (int $offset) => WorkedDay::hours($date = $week->start()->addDays($offset), $byPerson[$employeeId][$date->toDateString()] ?? [], $schedules->on($employeeId, $date)),
                 range(0, 6),
             );
-            $summaries[$employeeId] = HoursCalculator::week($days, $schedule->shift_type ?? ShiftType::Day, $week->start()->year);
+            $summaries[$employeeId] = HoursCalculator::week($days, $schedules->on($employeeId, $week->end())->shift_type ?? ShiftType::Day, $week->start()->year);
             $worked[$employeeId] = array_map(fn (DayHours $day): int => $day->workedMinutes, $days);
         }
 
