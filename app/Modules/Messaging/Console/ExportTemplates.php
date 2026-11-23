@@ -10,6 +10,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use InvalidArgumentException;
 
 /**
  * Writes the creation request of every WhatsApp template, as Meta's API asks for it. It sends nothing and reads no credential: the
@@ -21,7 +22,14 @@ final class ExportTemplates extends Command
 {
     public function handle(TemplateRegistry $registry, TemplateExport $export): int
     {
-        $requests = array_map($export->build(...), $registry->all());
+        try {
+            $requests = array_map($export->build(...), $registry->all());
+        } catch (InvalidArgumentException $exception) {
+            $this->components->error($exception->getMessage());
+
+            return self::FAILURE;
+        }
+
         $path = $this->option('path');
 
         if (! is_string($path) || $path === '') {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Messaging\Support;
 
 use App\Modules\Messaging\Enums\TemplateButtonType;
+use InvalidArgumentException;
 
 /**
  * A template as Meta's API asks for it when it is created (named variables, an example for each). It only builds the array: nothing
@@ -69,6 +70,11 @@ final class TemplateExport
         $json = ['type' => $button->type->value, 'text' => $button->text];
 
         if ($button->type === TemplateButtonType::Url && $button->url !== null) {
+            // Meta takes only https in a button (it came back as an error from the real API); the host is APP_URL.
+            if (! str_starts_with($button->url, 'https://')) {
+                throw new InvalidArgumentException("Meta needs https in the URL of a button [{$button->url}]: set APP_URL to the public https address.");
+            }
+
             $json['url'] = $button->url;
 
             if ($button->variable) {

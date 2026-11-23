@@ -82,11 +82,7 @@ final class TemplateRegistry
         $notice = fn (string $key, string $body, string $button, bool $optOut = true): TemplateDefinition => $this->template($key, $language, "{$hello} {$body}", null, [$pending($button), ...($optOut ? [$stop] : [])]);
 
         return [
-            $this->template('leave_decision_v1', $language, "{$hello} {{empresa}} ya respondió su solicitud del {{fecha}}. Puede verla en su portal.", null, [
-                $pending('Ver respuesta'),
-                TemplateButton::pendingPhone('Llamar a RH', "The phone of HR is each company's own, and no template field carries it yet."),
-                $stop,
-            ]),
+            $notice('leave_decision_v1', '{{empresa}} ya respondió su solicitud del {{fecha}}. Puede verla en su portal.', 'Ver respuesta'),
             $notice('leave_to_decide_v1', 'Tiene una solicitud de su equipo en {{empresa}} que le toca responder. Puede hacerlo en su portal.', 'Responder'),
             $notice('policy_to_confirm_v1', '{{empresa}} publicó su política de prevención y necesita que confirme que la leyó. Puede leerla y dar su acuse en su página.', 'Leer y confirmar'),
             $notice('engagement_feedback_v1', '{{empresa}} publicó lo que hará a partir de la encuesta de clima. Puede leerlo en su página.', 'Leer'),
