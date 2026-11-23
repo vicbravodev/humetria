@@ -20,6 +20,7 @@ export default function SchedulePeople({
     filters,
     counts,
     weeklyMaximum,
+    today,
     people,
     canManage,
 }: AttendanceSchedulesProps) {
@@ -58,6 +59,7 @@ export default function SchedulePeople({
                 <ScheduleSelectionBar
                     chosen={selection.chosen}
                     weeklyMaximum={weeklyMaximum}
+                    today={today}
                     onClear={selection.clear}
                 />
             )}
@@ -66,6 +68,7 @@ export default function SchedulePeople({
                 status={filters.status}
                 searching={filters.q !== ''}
                 weeklyMaximum={weeklyMaximum}
+                today={today}
                 canManage={canManage}
                 selection={selection}
             />

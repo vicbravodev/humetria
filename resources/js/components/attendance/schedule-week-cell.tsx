@@ -6,14 +6,19 @@ import {
     scheduleRibbon,
 } from '@/lib/attendance/schedule';
 import { startLabel } from '@/lib/attendance/schedule-starts';
+import { comingNote, sinceText } from '@/lib/attendance/schedule-validity';
 import type { WorkSchedule } from '@/types';
 
 /** The week agreed as its ribbon with the days in a row and the rests; or that there is none and what is counted then. */
 export default function ScheduleWeekCell({
     schedule,
+    upcoming,
 }: {
     schedule: WorkSchedule | null;
+    upcoming: readonly WorkSchedule[];
 }) {
+    const coming = comingNote(upcoming, schedule !== null);
+
     if (schedule === null) {
         return (
             <div className="flex flex-col items-start gap-1">
@@ -21,6 +26,11 @@ export default function ScheduleWeekCell({
                 <span className="text-caption text-muted-foreground">
                     Se cuentan 8 h al día
                 </span>
+                {coming !== null && (
+                    <span className="text-caption text-muted-foreground">
+                        {coming}
+                    </span>
+                )}
             </div>
         );
     }
@@ -40,6 +50,18 @@ export default function ScheduleWeekCell({
                         .filter((part) => part !== null)
                         .join(' · ')}
                 </span>
+                {(schedule.validFrom !== null || coming !== null) && (
+                    <span className="text-caption text-muted-foreground">
+                        {[
+                            schedule.validFrom === null
+                                ? null
+                                : sinceText(schedule.validFrom),
+                            coming,
+                        ]
+                            .filter((part) => part !== null)
+                            .join(' · ')}
+                    </span>
+                )}
             </div>
         </div>
     );

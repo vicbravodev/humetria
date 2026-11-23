@@ -200,18 +200,20 @@ describe('who was chosen', () => {
         expect(chosenText(2)).toBe('2 personas elegidas');
     });
 
-    it('says how many of them lose their schedule when the same one is set for all', () => {
+    it('says how many of them already have a schedule, which stays in their history, when the same one is set for all', () => {
         const some = { schedule: { shiftType: 'day' } };
         const none = { schedule: null };
 
         expect(replacingText([none, none])).toBeNull();
         expect(replacingText([some, none])).toBe(
-            '1 de ellas ya tiene horario: se reemplaza.',
+            '1 de ellas ya tiene horario: el anterior queda en su historial.',
         );
         expect(replacingText([some, some, none])).toBe(
-            '2 de ellas ya tienen horario: se reemplaza.',
+            '2 de ellas ya tienen horario: el anterior queda en su historial.',
         );
-        expect(replacingText([some])).toBe('Ya tiene horario: se reemplaza.');
+        expect(replacingText([some])).toBe(
+            'Ya tiene horario: el anterior queda en su historial.',
+        );
     });
 });
 

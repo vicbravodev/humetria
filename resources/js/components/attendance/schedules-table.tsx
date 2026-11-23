@@ -39,6 +39,7 @@ export default function SchedulesTable({
     status,
     searching,
     weeklyMaximum,
+    today,
     canManage,
     selection,
 }: {
@@ -46,6 +47,7 @@ export default function SchedulesTable({
     status: ScheduleView;
     searching: boolean;
     weeklyMaximum: WeeklyMaximum;
+    today: string;
     canManage: boolean;
     selection: ScheduleSelection;
 }) {
@@ -92,6 +94,7 @@ export default function SchedulesTable({
                             key={person.id}
                             person={person}
                             weeklyMaximum={weeklyMaximum}
+                            today={today}
                             canManage={canManage}
                             chosen={selection.isChosen(person.id)}
                             onChoose={(checked) =>

@@ -194,7 +194,7 @@ export function chosenText(count: number): string {
     return count === 1 ? '1 persona elegida' : `${count} personas elegidas`;
 }
 
-/** What setting the same schedule for all costs: those who already have one lose it. Null when nobody does. */
+/** What setting the same schedule for all does to those who already have one: it stays in their history. Null when nobody does. */
 export function replacingText(
     chosen: readonly { schedule: unknown }[],
 ): string | null {
@@ -205,10 +205,10 @@ export function replacingText(
     }
 
     if (chosen.length === 1) {
-        return 'Ya tiene horario: se reemplaza.';
+        return 'Ya tiene horario: el anterior queda en su historial.';
     }
 
-    return `${have} de ellas ${have === 1 ? 'ya tiene' : 'ya tienen'} horario: se reemplaza.`;
+    return `${have} de ellas ${have === 1 ? 'ya tiene' : 'ya tienen'} horario: el anterior queda en su historial.`;
 }
 
 /** «Ana, Bob y Carla»: the first three names, and how many more there are. */
