@@ -947,6 +947,12 @@ require_once __DIR__.'/Unit/Compensation/ScenarioHelpers.php';
 */
 require_once __DIR__.'/Browser/attendance-helpers.php';
 
+/*
+| The signed POST to Meta's webhook (postMeta), shared by the webhook, STOP, ALTA and service-reply tests: a file run on its own
+| (or in another parallel process) must not depend on the one that used to define it.
+*/
+require_once __DIR__.'/Feature/Messaging/meta-helpers.php';
+
 /**
  * Issues `$employeeId` the link RH sends to enter and create their key, and gives its path: the one emailed to them (the
  * mail must be faked), or the one RH hands over when they have no email.

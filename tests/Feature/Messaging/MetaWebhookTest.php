@@ -18,30 +18,14 @@ use Database\Factories\Messaging\DeliveryFactory;
 use Database\Factories\Messaging\WebhookEventFactory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Testing\TestResponse;
 
 mutates(MetaWebhookController::class, HandleMetaEvents::class, ReplayOrphanEvents::class);
-
-const META_SECRET = 'meta-app-secret';
 
 beforeEach(function (): void {
     config(['whatsapp.app_secrets' => [META_SECRET], 'whatsapp.verify_token' => 'the-verify-token', 'messaging.recipient_keys' => [1 => base64_encode('a-key')]]);
     Event::fake([WhatsAppMessageAccepted::class, WhatsAppMessageFailed::class]);
     $this->tenant = Tenant::factory()->create();
 });
-
-/** @param array<string, mixed> $payload */
-function postMeta(array|string $payload, ?string $secret = META_SECRET, ?string $header = null): TestResponse
-{
-    $raw = is_string($payload) ? $payload : json_encode($payload, JSON_THROW_ON_ERROR);
-    $server = ['CONTENT_TYPE' => 'application/json'];
-
-    if ($header !== null || $secret !== null) {
-        $server['HTTP_X_HUB_SIGNATURE_256'] = $header ?? 'sha256='.hash_hmac('sha256', $raw, (string) $secret);
-    }
-
-    return test()->call('POST', route('messaging.webhooks.meta.receive'), [], [], [], $server, $raw);
-}
 
 /** @return array<string, mixed> */
 function statusPayload(string $wamid, string $status, ?string $callback = null, ?int $timestamp = null, ?int $code = null): array
