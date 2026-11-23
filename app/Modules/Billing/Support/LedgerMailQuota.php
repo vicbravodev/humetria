@@ -19,6 +19,17 @@ final readonly class LedgerMailQuota implements MailQuota
 {
     public function __construct(private CurrentTenant $tenant, private UsageQuota $quota) {}
 
+    public function tryReserve(int $count): bool
+    {
+        try {
+            $this->reserve($count);
+        } catch (MailQuotaExceeded) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function reserve(int $count): void
     {
         $tenantId = $this->tenant->id();
