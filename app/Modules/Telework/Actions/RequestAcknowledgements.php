@@ -32,22 +32,23 @@ final readonly class RequestAcknowledgements
 
     /**
      * @param  list<string>  $documentIds
+     * @param  bool  $retrying  a retry of a try that failed: whoever still waits is mailed too, not only who was just added.
      * @return int How many new requests were made.
      */
-    public function handle(array $documentIds): int
+    public function handle(array $documentIds, bool $retrying = false): int
     {
         // A fresh get() is already a list.
         $documents = array_values(TeleworkDocument::query()->whereIn('id', $documentIds)->get()->all()); // @pest-mutate-ignore: UnwrapArrayValues
 
-        return $this->ask($documents, fn (TeleworkDocument $document): AckAudienceIds => $this->audience->of($document));
+        return $this->ask($documents, fn (TeleworkDocument $document): AckAudienceIds => $this->audience->of($document), $retrying);
     }
 
     /** Asks one employee for the version in force of a kind in their work center: someone who arrived after it was published. */
-    public function forEmployee(string $employeeId, string $workCenterId, DocumentKind $kind): int
+    public function forEmployee(string $employeeId, string $workCenterId, DocumentKind $kind, bool $retrying = false): int
     {
         $document = $this->inForce($workCenterId, $kind);
 
-        return $document === null ? 0 : $this->ask([$document], fn (): AckAudienceIds => new AckAudienceIds([$employeeId], []));
+        return $document === null ? 0 : $this->ask([$document], fn (): AckAudienceIds => new AckAudienceIds([$employeeId], []), $retrying);
     }
 
     /** Asks a Comisión member seated after the risk information was published, for the version in force of the center. */
@@ -55,7 +56,7 @@ final readonly class RequestAcknowledgements
     {
         $document = $this->inForce($workCenterId, DocumentKind::RiskInformation);
 
-        return $document === null ? 0 : $this->ask([$document], fn (): AckAudienceIds => new AckAudienceIds([], [$userId]));
+        return $document === null ? 0 : $this->ask([$document], fn (): AckAudienceIds => new AckAudienceIds([], [$userId]), false);
     }
 
     /**
@@ -95,32 +96,62 @@ final readonly class RequestAcknowledgements
      * @param  list<TeleworkDocument>  $documents
      * @param  callable(TeleworkDocument): AckAudienceIds  $audience
      */
-    private function ask(array $documents, callable $audience): int
+    private function ask(array $documents, callable $audience, bool $retrying): int
     {
         // The request is always kept: the mail is a courtesy on top of it, and the quota only holds what is mailed.
-        [$employees, $users] = DB::transaction(function () use ($documents, $audience): array {
+        [$employees, $users, $everyone] = DB::transaction(function () use ($documents, $audience): array {
             $employees = [];
             $users = [];
+            $everyone = new AckAudienceIds([], []);
 
             foreach ($documents as $document) {
                 $ids = $audience($document);
                 $employees = [...$employees, ...$this->insertMissing($document, 'employee_id', $ids->employeeIds)];
                 $users = [...$users, ...$this->insertMissing($document, 'user_id', $ids->userIds)];
+                $everyone = new AckAudienceIds([...$everyone->employeeIds, ...$ids->employeeIds], [...$everyone->userIds, ...$ids->userIds]);
             }
 
             // The people are only counted and chunked: their keys are never read.
-            return [array_values(array_unique($employees)), array_values(array_unique($users))]; // @pest-mutate-ignore: UnwrapArrayValues
+            return [array_values(array_unique($employees)), array_values(array_unique($users)), $everyone]; // @pest-mutate-ignore: UnwrapArrayValues
         });
 
-        if ($employees === [] && $users === []) {
+        if ($employees === [] && $users === [] && ! $retrying) {
             return 0;
         }
 
         $documentIds = array_map(fn (TeleworkDocument $document): string => $document->id, $documents);
-        Log::info('telework.acknowledgement_requested', ['document_ids' => $documentIds, 'employees' => count($employees), 'users' => count($users)]);
-        $this->tell($documentIds, $employees, $users);
+
+        if ($employees !== [] || $users !== []) {
+            Log::info('telework.acknowledgement_requested', ['document_ids' => $documentIds, 'employees' => count($employees), 'users' => count($users)]);
+        }
+
+        // Who was just added is told; on a retry, everyone of the audience still waiting: the try that failed may have kept the
+        // requests and died before the mail was queued, and its retry finds them already made. A person has at most one reminder waiting (the job is unique).
+        $this->tell($documentIds, $retrying ? $this->waiting($documentIds, 'employee_id', $everyone->employeeIds) : $employees, $retrying ? $this->waiting($documentIds, 'user_id', $everyone->userIds) : $users);
 
         return count($employees) + count($users);
+    }
+
+    /**
+     * Who of `$people` has a request for any of the documents that is not confirmed yet.
+     *
+     * @template T of string|int
+     *
+     * @param  list<string>  $documentIds
+     * @param  'employee_id'|'user_id'  $column
+     * @param  list<T>  $people
+     * @return list<T>
+     */
+    private function waiting(array $documentIds, string $column, array $people): array
+    {
+        $waiting = [];
+
+        foreach (array_chunk(array_values(array_unique($people)), self::CHUNK) as $chunk) {
+            $have = Acknowledgement::query()->whereIn('document_id', $documentIds)->whereIn($column, $chunk)->whereNull('acknowledged_at')->pluck($column)->all();
+            $waiting = [...$waiting, ...array_values(array_filter($chunk, fn (string|int $person): bool => in_array($person, $have, false)))];
+        }
+
+        return $waiting;
     }
 
     /**

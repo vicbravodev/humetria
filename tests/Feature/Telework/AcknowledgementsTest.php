@@ -667,3 +667,85 @@ it('keeps the document of the center they left out of the reminder email', funct
 
     Notification::assertNothingSent();
 });
+
+it('retries a failed request by itself: three tries, waiting a minute and then five, whatever Horizon says', function (string $event, string $listener): void {
+    [$policy] = publishDocument(DocumentKind::Policy, $this->center);
+    $person = staffer($this->center);
+    Queue::fake();
+
+    Event::dispatch(match ($event) {
+        'publication' => new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id]),
+        'created' => new EmployeeCreated($this->tenant->id, $person->id, $this->center->id),
+        'reactivated' => new EmployeeReactivated($this->tenant->id, $person->id, $this->center->id),
+        'moved' => new EmployeeMoved($this->tenant->id, $person->id, $this->other->id, $this->center->id),
+    });
+
+    $jobs = Queue::pushed(Illuminate\Events\CallQueuedListener::class, fn (Illuminate\Events\CallQueuedListener $job): bool => $job->class === $listener);
+    expect($jobs)->toHaveCount(1)
+        ->and($jobs->first()->tries)->toBe(3)
+        ->and($jobs->first()->backoff)->toBe([60, 300]);
+})->with([
+    'publication' => ['publication', RequestOnPublication::class],
+    'created' => ['created', RequestPolicyFromNewStaff::class],
+    'reactivated' => ['reactivated', RequestPolicyFromNewStaff::class],
+    'moved' => ['moved', RequestPolicyFromNewStaff::class],
+]);
+
+/** A listener running as the worker's second try would: the first one failed. */
+function asTeleworkRetry(object $listener): object
+{
+    $job = Mockery::mock(Illuminate\Contracts\Queue\Job::class);
+    $job->shouldReceive('attempts')->andReturn(2);
+    $listener->setJob($job);
+
+    return $listener;
+}
+
+it('mails on the retry the ones whose request a failed first try left unmailed, and nobody who confirmed or has no address', function (): void {
+    $waiting = staffer($this->center, ['email' => 'espera@acme.test']);
+    $confirmed = staffer($this->center);
+    $paper = staffer($this->center, ['email' => null]);
+    [$policy] = publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->where('employee_id', $confirmed->id)->update(['acknowledged_at' => now(), 'channel' => AckChannel::Portal]);
+    Queue::fake();
+    $event = new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id]);
+
+    // Everything is already kept, as a try that died before queueing the mail leaves it: asking again, without a retry, mails nobody.
+    resolve(RequestOnPublication::class)->handle($event);
+    Queue::assertNotPushed(SendPortalReminder::class);
+
+    asTeleworkRetry(resolve(RequestOnPublication::class))->handle($event);
+
+    Queue::assertPushed(SendPortalReminder::class, 1);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $waiting->id);
+    expect(Acknowledgement::query()->count())->toBe(3)->and($paper->email)->toBeNull();
+});
+
+it('mails on the retry the Comisión member whose request was kept but not mailed', function (): void {
+    $member = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $member->id]);
+    [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
+    Queue::fake();
+    $event = new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$risk->id]);
+
+    asTeleworkRetry(resolve(RequestOnPublication::class))->handle($event);
+
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->userId === $member->id && $job->employeeId === null);
+});
+
+it('mails on the retry the newcomer whose request was kept but not mailed, and holds the quota for that one mail', function (): void {
+    $person = staffer($this->center);
+    publishDocument(DocumentKind::Policy, $this->center);
+    Queue::fake();
+    // The first request was mailed when the policy was published (the queue here is synchronous): one of the two is spent.
+    withMailQuota($this->tenant, 2);
+    $event = new EmployeeCreated($this->tenant->id, $person->id, $this->center->id);
+
+    resolve(RequestPolicyFromNewStaff::class)->handle($event);
+    Queue::assertNothingPushed();
+
+    asTeleworkRetry(resolve(RequestPolicyFromNewStaff::class))->handle($event);
+
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $person->id);
+    expect(App\Modules\Billing\Models\UsageCounter::query()->where('meter', 'email_campaign')->sole()->reserved)->toBe(1);
+});
