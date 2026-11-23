@@ -60,6 +60,7 @@ final readonly class RequestAcknowledgments
      */
     private function ask(string $documentId, array $employees): int
     {
+        // The request is always kept: the mail is a courtesy on top of it, and the quota only holds what is mailed (see tell()).
         $made = DB::transaction(function () use ($documentId, $employees): array {
             $made = [];
 
@@ -81,30 +82,37 @@ final readonly class RequestAcknowledgments
                 $made = [...$made, ...$missing];
             }
 
-            // Every request is mailed to whoever has an address: they are held before anything is kept (the upper bound; the night gives back the rest).
-            $this->mail->reserve(count($made));
-
             return $made;
         });
 
         if ($made !== []) {
             Log::info('disclosure.acknowledgment_requested', ['document_id' => $documentId, 'employees' => count($made)]);
-            $this->tell($made);
+            $this->tell($documentId, $made);
         }
 
         return count($made);
     }
 
     /**
-     * Those who can be reached get an email; the rest are left to RH's record of paper acknowledgments.
+     * Those who can be reached get an email; the rest are left to RH's record of paper acknowledgments. The quota is held for
+     * them alone (the upper bound; the night gives back the rest) and, when it does not fit, nobody is mailed and the requests stay.
      *
      * @param  list<string>  $employees
      */
-    private function tell(array $employees): void
+    private function tell(string $documentId, array $employees): void
     {
+        $reachable = [];
+
         foreach (array_chunk($employees, self::CHUNK) as $chunk) {
-            $reachable = array_keys(array_filter($this->roster->findMany($chunk), fn (RosterEntry $person): bool => $person->email !== null));
-            array_map(fn (string $id) => SendPolicyReminder::remind($this->tenant->id(), $id), $reachable);
+            $reachable = [...$reachable, ...array_keys(array_filter($this->roster->findMany($chunk), fn (RosterEntry $person): bool => $person->email !== null))];
         }
+
+        if (! $this->mail->tryReserve(count($reachable))) {
+            Log::info('disclosure.acknowledgment_mail_withheld', ['document_id' => $documentId, 'employees' => count($reachable)]);
+
+            return;
+        }
+
+        array_map(fn (string $id) => SendPolicyReminder::remind($this->tenant->id(), $id), $reachable);
     }
 }

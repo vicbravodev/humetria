@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Disclosure\Actions\RequestAcknowledgments;
+use App\Modules\Disclosure\Jobs\SendPolicyReminder;
 use App\Modules\Disclosure\Listeners\RequestOnPublication;
 use App\Modules\Disclosure\Listeners\RequestPolicyFromNewStaff;
 use App\Modules\Disclosure\Models\Acknowledgment;
@@ -201,15 +202,47 @@ it('logs how many were asked, with ids only', function (): void {
     Log::shouldHaveReceived('info')->with('disclosure.acknowledgment_requested', ['document_id' => $policy->id, 'employees' => 2])->once();
 });
 
-it('holds the mail before it keeps the requests: what does not fit keeps none and says how many are missing', function (): void {
+it('keeps every request when the mail quota runs out: nothing is mailed, nothing is undone, and the person still sees it pending', function (): void {
+    Queue::fake();
+    Log::spy();
     staffOf($this->tenant, $this->north, 3);
     $policy = policyReaching([$this->north]);
     withMailQuota($this->tenant, 2);
 
-    expect(fn () => resolve(RequestAcknowledgments::class)->handle($policy->id))
-        ->toThrow(App\Modules\Billing\Exceptions\MailQuotaExceeded::class, 'faltan 1');
+    $made = resolve(RequestAcknowledgments::class)->handle($policy->id);
 
-    expect(askedFor($policy))->toBe([]);
+    expect($made)->toBe(3)
+        ->and(askedFor($policy))->toHaveCount(3);
+    Queue::assertNotPushed(SendPolicyReminder::class);
+    Log::shouldHaveReceived('info')->with('disclosure.acknowledgment_requested', ['document_id' => $policy->id, 'employees' => 3])->once();
+    Log::shouldHaveReceived('info')->with('disclosure.acknowledgment_mail_withheld', ['document_id' => $policy->id, 'employees' => 3])->once();
+});
+
+it('holds the mail only for who has an address: the quota is not spent on people the email cannot reach', function (): void {
+    Queue::fake();
+    $people = staffOf($this->tenant, $this->north, 3);
+    $people[0]->update(['email' => null]);
+    $policy = policyReaching([$this->north]);
+    withMailQuota($this->tenant, 2);
+
+    expect(resolve(RequestAcknowledgments::class)->handle($policy->id))->toBe(3);
+
+    expect(askedFor($policy))->toHaveCount(3);
+    Queue::assertPushed(SendPolicyReminder::class, 2);
+    Queue::assertNotPushed(SendPolicyReminder::class, fn (SendPolicyReminder $job): bool => $job->employeeId === $people[0]->id);
+});
+
+it('keeps the request of a newcomer too when the quota is gone: the arrival is never undone by the mail', function (): void {
+    Queue::fake();
+    $person = staffOf($this->tenant, $this->north, 1)->first();
+    $policy = policyReaching([$this->north]);
+    withMailQuota($this->tenant, 1);
+    resolve(App\Modules\Billing\Contracts\MailQuota::class)->reserve(1);
+
+    resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeCreated($this->tenant->id, $person->id, $this->north->id));
+
+    expect(askedFor($policy))->toBe([$person->id]);
+    Queue::assertNotPushed(SendPolicyReminder::class);
 });
 
 it('keeps the requests when they fit the quota exactly', function (): void {
