@@ -18,6 +18,8 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
+use Illuminate\Events\CallQueuedListener;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 
@@ -281,4 +283,76 @@ it('asks again when the company gets NOM-035 back: the guard only holds while th
     resolve(RequestOnPublication::class)->handle(new App\Modules\Disclosure\Events\PolicyPublished($this->tenant->id, $policy->id, [$this->north->id]));
 
     expect(askedFor($policy))->toBe([$person->id]);
+});
+
+it('retries a failed request by itself: three tries, waiting a minute and then five, whatever Horizon says', function (string $event, string $listener): void {
+    Queue::fake();
+    $person = staffOf($this->tenant, $this->north, 1)->first();
+    $policy = policyReaching([$this->north]);
+
+    Event::dispatch(match ($event) {
+        'publication' => new App\Modules\Disclosure\Events\PolicyPublished($this->tenant->id, $policy->id, [$this->north->id]),
+        'created' => new EmployeeCreated($this->tenant->id, $person->id, $this->north->id),
+        'reactivated' => new EmployeeReactivated($this->tenant->id, $person->id, $this->north->id),
+        'moved' => new EmployeeMoved($this->tenant->id, $person->id, $this->south->id, $this->north->id),
+    });
+
+    $jobs = Queue::pushed(CallQueuedListener::class, fn (CallQueuedListener $job): bool => $job->class === $listener);
+    expect($jobs)->toHaveCount(1)
+        ->and($jobs->first()->tries)->toBe(3)
+        ->and($jobs->first()->backoff)->toBe([60, 300]);
+})->with([
+    'publication' => ['publication', RequestOnPublication::class],
+    'created' => ['created', RequestPolicyFromNewStaff::class],
+    'reactivated' => ['reactivated', RequestPolicyFromNewStaff::class],
+    'moved' => ['moved', RequestPolicyFromNewStaff::class],
+]);
+
+/** A listener running as the worker's second try would: the first one failed. */
+function asRetry(object $listener): object
+{
+    $job = Mockery::mock(Illuminate\Contracts\Queue\Job::class);
+    $job->shouldReceive('attempts')->andReturn(2);
+    $listener->setJob($job);
+
+    return $listener;
+}
+
+it('mails on the retry the ones whose request a failed first try left unmailed, and nobody who confirmed, left or has no address', function (): void {
+    Queue::fake();
+    [$waiting, $confirmed, $paper] = staffOf($this->tenant, $this->north, 3)->all();
+    $paper->update(['email' => null]);
+    $left = Employee::factory()->deactivated()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id, 'area_id' => $waiting->area_id]);
+    $policy = policyReaching([$this->north]);
+    // What the first try left: the requests are there, the mail never went.
+    foreach ([$waiting, $confirmed, $paper, $left] as $person) {
+        Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $policy->id, 'employee_id' => $person->id, ...($person->is($confirmed) ? ['acknowledged_at' => now(), 'channel' => 'portal'] : [])]);
+    }
+
+    $event = new App\Modules\Disclosure\Events\PolicyPublished($this->tenant->id, $policy->id, [$this->north->id]);
+    resolve(RequestOnPublication::class)->handle($event);
+    Queue::assertNothingPushed();
+
+    asRetry(resolve(RequestOnPublication::class))->handle($event);
+
+    Queue::assertPushed(SendPolicyReminder::class, 1);
+    Queue::assertPushed(SendPolicyReminder::class, fn (SendPolicyReminder $job): bool => $job->employeeId === $waiting->id);
+});
+
+it('mails on the retry the newcomer whose request was kept but not mailed, and holds the quota for that one mail', function (): void {
+    Queue::fake();
+    $person = staffOf($this->tenant, $this->north, 1)->first();
+    $policy = policyReaching([$this->north]);
+    Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $policy->id, 'employee_id' => $person->id]);
+    withMailQuota($this->tenant, 1);
+    $event = new EmployeeCreated($this->tenant->id, $person->id, $this->north->id);
+
+    resolve(RequestPolicyFromNewStaff::class)->handle($event);
+    Queue::assertNothingPushed();
+
+    asRetry(resolve(RequestPolicyFromNewStaff::class))->handle($event);
+
+    Queue::assertPushed(SendPolicyReminder::class, fn (SendPolicyReminder $job): bool => $job->employeeId === $person->id);
+    expect(Acknowledgment::query()->count())->toBe(1)
+        ->and(App\Modules\Billing\Models\UsageCounter::query()->where('meter', 'email_campaign')->sole()->reserved)->toBe(1);
 });
