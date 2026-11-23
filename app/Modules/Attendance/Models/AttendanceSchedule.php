@@ -12,6 +12,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Attendance\AttendanceScheduleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,16 @@ final class AttendanceSchedule extends Model
 {
     /** @use HasFactory<AttendanceScheduleFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
+
+    /**
+     * The schedules that have started by the local date (its date only): those that apply on it or already ended.
+     *
+     * @param  Builder<static>  $query
+     */
+    public function scopeStartedBy(Builder $query, string $date): void
+    {
+        $query->where('valid_from', '<=', $date);
+    }
 
     /**
      * @return array<string, string>

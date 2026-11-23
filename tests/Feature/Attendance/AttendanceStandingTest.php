@@ -44,6 +44,19 @@ it('counts the people of the centers in use without a schedule and the correctio
     expect($this->standing->current())->toEqual(new AttendanceSetup(true, 2, 1));
 });
 
+it('counts a person with several schedules once, and one whose first schedule has not started yet as without one', function (): void {
+    AttendancePolicy::factory()->create(['tenant_id' => $this->a->id]);
+    $center = WorkCenter::factory()->for($this->a)->create();
+    [$many, $later, $none] = Employee::factory()->count(3)->create(['tenant_id' => $this->a->id, 'work_center_id' => $center->id])->all();
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $many->id]);
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $many->id, 'valid_from' => now()->subDays(5)->toDateString()]);
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $many->id, 'valid_from' => now()->addDays(5)->toDateString()]);
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $later->id, 'valid_from' => now()->addDays(5)->toDateString()]);
+    workIn($this->a);
+
+    expect($this->standing->current()->unscheduled)->toBe(2)->and($none->id)->not->toBe($later->id);
+});
+
 it('counts the weeks disputed and waiting for RH, of anyone and any week, never of another company', function (): void {
     App\Modules\Attendance\Models\WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $this->a->id, 'week_start' => '2026-11-02']);
     App\Modules\Attendance\Models\WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $this->a->id, 'week_start' => '2026-10-26']);

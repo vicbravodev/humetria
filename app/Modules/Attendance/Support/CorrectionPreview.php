@@ -8,7 +8,6 @@ use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
-use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use Carbon\CarbonImmutable;
@@ -41,7 +40,7 @@ final class CorrectionPreview
         $original = $request->mark_id === null ? null : EffectiveMarks::of($employee)->whereKey($request->mark_id)->first();
         $date = self::dayOf($employee, $original, $request->type, $asked, $timezone);
         $marks = EffectiveMarks::byDayBetween([$employee], $date, $date)[$employee][$date->toDateString()] ?? [];
-        $schedule = AttendanceSchedule::query()->where('employee_id', $employee)->first(['minutes_by_weekday']);
+        $schedule = ScheduleTimeline::of([$employee])->on($employee, $date);
 
         return [
             'day' => [

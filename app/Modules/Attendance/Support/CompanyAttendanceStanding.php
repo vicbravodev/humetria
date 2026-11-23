@@ -13,12 +13,14 @@ use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use Carbon\CarbonImmutable;
 
-/** The counts of «Puesta en marcha», of the queue of corrections and of the disputed weeks, in six queries whatever the size of the company. */
+/** The counts of «Puesta en marcha» (who has no schedule in effect today), of the queue of corrections and of the disputed weeks, in six queries whatever the size of the company. */
 final readonly class CompanyAttendanceStanding implements AttendanceStanding
 {
-    public function __construct(private WorkCenters $workCenters, private Roster $roster) {}
+    public function __construct(private WorkCenters $workCenters, private Roster $roster, private Timezones $timezones) {}
 
     public function current(): AttendanceSetup
     {
@@ -26,7 +28,7 @@ final readonly class CompanyAttendanceStanding implements AttendanceStanding
 
         return new AttendanceSetup(
             AttendancePolicy::query()->exists(),
-            count($people) - ($people === [] ? 0 : AttendanceSchedule::query()->among('employee_id', $people)->count()),
+            count($people) - ($people === [] ? 0 : AttendanceSchedule::query()->among('employee_id', $people)->startedBy(CarbonImmutable::now($this->timezones->forTenant())->toDateString())->distinct()->count('employee_id')),
             CorrectionRequest::query()->where('status', CorrectionStatus::Pending)->count(),
             WeeklyConfirmation::query()->where('status', WeekStatus::Disputed)->count(),
         );
