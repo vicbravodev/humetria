@@ -8,7 +8,10 @@ use App\Models\User;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Closure;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -23,6 +26,76 @@ final readonly class CompanyRoles
     public function of(User $user, Tenant $tenant): ?TenantRole
     {
         return $this->inCompany($tenant)[$user->id] ?? null;
+    }
+
+    /**
+     * The company's own roles, by label.
+     *
+     * @return Collection<int, Role>
+     */
+    public function customRoles(Tenant $tenant): Collection
+    {
+        return Role::query()->where('tenant_id', $tenant->id)->where('name', 'like', 'custom\_%')->orderBy('label')->get();
+    }
+
+    /** The person's role in the company, a template or one of its own. */
+    public function roleOf(User $user, Tenant $tenant): ?Role
+    {
+        $id = DB::table('model_has_roles')
+            ->where('tenant_id', $tenant->id)
+            ->where('model_type', $user->getMorphClass())
+            ->where('model_id', $user->id)
+            ->value('role_id');
+
+        return is_int($id) ? Role::query()->find($id) : null;
+    }
+
+    /**
+     * Ids of the people who hold the role.
+     *
+     * @return list<int>
+     */
+    public function holders(Role $role): array
+    {
+        $ids = [];
+
+        foreach (DB::table('model_has_roles')->where('role_id', $role->id)->orderBy('model_id')->get(['model_id']) as $row) {
+            is_int($row->model_id) && $ids[] = $row->model_id;
+        }
+
+        return $ids;
+    }
+
+    /** Whether a person holds the role or an open invitation names it. */
+    public function inUse(Role $role): bool
+    {
+        return $this->holders($role) !== []
+            || DB::table('tenant_invitations')->where('role', $role->name)->whereNull('accepted_at')->whereNull('cancelled_at')->exists();
+    }
+
+    /**
+     * Checks every permission is one the company can hand out (not the owner's own, not a module it did not contract).
+     *
+     * @param  list<string>  $permissions
+     * @return bool whether any of them is sensitive.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function assertAssignable(Tenant $tenant, array $permissions): bool
+    {
+        $assignable = [];
+
+        foreach (PermissionCatalog::assignable($tenant) as $definition) {
+            if (PermissionCatalog::unavailableReason($tenant, $definition) === null) {
+                $assignable[$definition->name] = $definition->sensitive;
+            }
+        }
+
+        foreach ($permissions as $name) {
+            isset($assignable[$name]) || throw new InvalidArgumentException("The company cannot hand out [$name].");
+        }
+
+        return array_any($permissions, fn (string $name): bool => $assignable[$name]);
     }
 
     /** Replaces the person's role in the company with `$role`. */
