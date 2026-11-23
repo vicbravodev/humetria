@@ -12,7 +12,7 @@ use Database\Factories\Tenancy\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * A day shift on site, eight hours Monday to Friday.
+ * A day shift on site, eight hours Monday to Friday, in effect since always.
  *
  * @extends Factory<AttendanceSchedule>
  */
@@ -28,6 +28,7 @@ final class AttendanceScheduleFactory extends Factory
         return [
             'tenant_id' => TenantFactory::new(),
             'employee_id' => fn (array $attributes) => EmployeeFactory::new()->state(['tenant_id' => $attributes['tenant_id']]),
+            'valid_from' => '1970-01-01',
             'shift_type' => ShiftType::Day,
             'work_mode' => WorkMode::Onsite,
             'minutes_by_weekday' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0],

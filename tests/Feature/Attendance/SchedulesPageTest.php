@@ -203,7 +203,7 @@ function saveSchedules(array $employeeIds, array $input = []): Illuminate\Testin
 }
 
 describe('saving the same schedule for several people', function (): void {
-    it('gives each of them the one schedule, replacing the one they had, and tells RH how many', function (): void {
+    it('gives each of them the one schedule from today, keeping the one they had, and tells RH how many', function (): void {
         $this->actingAs($this->hr);
 
         saveSchedules([$this->ana->id, $this->bob->id], scheduleInput(['shift_type' => 'mixed', 'work_mode' => 'remote', 'minutes' => array_replace(scheduleInput()['minutes'], ['6' => '240'])]))
@@ -211,12 +211,13 @@ describe('saving the same schedule for several people', function (): void {
             ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Horario guardado para 2 personas.']);
 
         foreach ([$this->ana, $this->bob] as $person) {
-            expect(AttendanceSchedule::query()->where('employee_id', $person->id)->sole())
+            expect(AttendanceSchedule::query()->where('employee_id', $person->id)->where('valid_from', '2026-11-11')->sole())
                 ->shift_type->toBe(ShiftType::Mixed)->work_mode->toBe(WorkMode::Remote)
                 ->minutes_by_weekday->toBe([1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 240, 7 => 0]);
         }
-        // Carla was not chosen: hers stays.
-        expect(AttendanceSchedule::query()->where('employee_id', $this->carla->id)->sole())->shift_type->toBe(ShiftType::Night);
+        // Ana keeps the one she had, since always; Carla was not chosen: hers stays.
+        expect(AttendanceSchedule::query()->where('employee_id', $this->ana->id)->count())->toBe(2)
+            ->and(AttendanceSchedule::query()->where('employee_id', $this->carla->id)->sole())->shift_type->toBe(ShiftType::Night);
     });
 
     it('says «de la persona» for one', function (): void {
@@ -271,7 +272,7 @@ describe('saving the same schedule for several people', function (): void {
 
         saveSchedules([$this->ana->id, $this->bob->id], scheduleInput(['starts' => ['1' => '480']]))->assertSessionHasNoErrors();
 
-        expect(AttendanceSchedule::query()->whereIn('employee_id', [$this->ana->id, $this->bob->id])->pluck('starts_by_weekday')->all())->toBe([[1 => 480, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null], [1 => 480, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]]);
+        expect(AttendanceSchedule::query()->whereIn('employee_id', [$this->ana->id, $this->bob->id])->where('valid_from', '2026-11-11')->pluck('starts_by_weekday')->all())->toBe([[1 => 480, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null], [1 => 480, 2 => null, 3 => null, 4 => null, 5 => null, 6 => null, 7 => null]]);
     });
 
     it('is checked like a single schedule', function (): void {
