@@ -54,6 +54,7 @@ final class AuditPages
         'assistant' => 'Humi',
         'sso' => 'Inicio de sesión único',
         'tenancy' => 'Canales de comunicación',
+        'messaging' => 'WhatsApp',
     ];
 
     /**
@@ -110,6 +111,7 @@ final class AuditPages
      * @var array<string, string>
      */
     public const array KEYS = [
+        'opt_outs' => 'Bajas retiradas',
         'channel' => 'Canal',
         'wording_version' => 'Versión del aviso aceptado',
         'user_id' => 'Persona',
