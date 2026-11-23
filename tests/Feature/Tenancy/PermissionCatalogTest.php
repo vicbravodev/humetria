@@ -69,7 +69,7 @@ it('hands the three coverage permissions to the roles that see those pages today
         ->where('permissions.name', $permission)->whereNull('roles.tenant_id')->pluck('roles.name')->all();
 
     expect($roles('view-dashboard'))->toEqualCanonicalizing(['owner', 'hr', 'viewer', 'committee', 'complaints'])
-        ->and($roles('view-work-centers'))->toEqualCanonicalizing(['owner', 'hr', 'viewer', 'committee'])
+        ->and($roles('view-work-centers'))->toEqualCanonicalizing(['owner', 'hr', 'viewer'])
         ->and($roles('view-nom035-route'))->toEqualCanonicalizing(['owner', 'hr', 'viewer']);
 });
 
