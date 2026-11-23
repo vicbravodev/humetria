@@ -540,3 +540,36 @@ it('holds the mail before it keeps the requests: what does not fit keeps none an
     expect(Acknowledgement::query()->where('document_id', $document->id)->count())->toBe(0);
     Queue::assertNotPushed(SendPortalReminder::class);
 });
+
+it('asks nobody while the company has no NOM-037: the module is off, so no request and no mail are made', function (string $event): void {
+    Queue::fake();
+    [$policy] = publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->delete();
+    $person = staffer($this->center);
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    match ($event) {
+        'publication' => resolve(RequestOnPublication::class)->handle(new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id])),
+        'created' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeCreated($this->tenant->id, $person->id, $this->center->id)),
+        'reactivated' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeReactivated($this->tenant->id, $person->id, $this->center->id)),
+        'moved' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeMoved($this->tenant->id, $person->id, $this->other->id, $this->center->id)),
+    };
+
+    expect(Acknowledgement::query()->count())->toBe(0);
+    Queue::assertNotPushed(SendPortalReminder::class);
+})->with(['publication', 'created', 'reactivated', 'moved']);
+
+it('asks again when the company gets NOM-037 back: the guard only holds while the module is off', function (): void {
+    Queue::fake();
+    [$policy] = publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->delete();
+    $person = staffer($this->center);
+    $modules = resolve(App\Modules\Tenancy\Contracts\CompanyModules::class);
+    $modules->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+    resolve(RequestOnPublication::class)->handle(new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id]));
+    $modules->syncPlan($this->tenant->id, ['nom037'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    resolve(RequestOnPublication::class)->handle(new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id]));
+
+    expect(Acknowledgement::query()->where('employee_id', $person->id)->count())->toBe(1);
+});

@@ -20,7 +20,10 @@ final class RequestOnPublication implements ShouldQueue, ShouldQueueAfterCommit
 
     public function handle(PolicyPublished $event): void
     {
-        $this->companies->enter($event->tenantId);
+        if ($this->companies->enter($event->tenantId)->stopped('nom035')) {
+            return;
+        }
+
         $this->request->handle($event->documentId);
     }
 }

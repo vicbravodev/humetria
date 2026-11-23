@@ -24,7 +24,10 @@ final class RequestPolicyFromNewStaff implements ShouldQueue, ShouldQueueAfterCo
 
     public function handle(EmployeeCreated|EmployeeReactivated|EmployeeMoved $event): void
     {
-        $this->companies->enter($event->tenantId);
+        if ($this->companies->enter($event->tenantId)->stopped('nom035')) {
+            return;
+        }
+
         $person = $this->roster->find($event->employeeId);
 
         if ($person !== null && $person->active) {

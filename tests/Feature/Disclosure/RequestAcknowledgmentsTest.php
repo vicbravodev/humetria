@@ -18,6 +18,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 
 mutates(RequestAcknowledgments::class, RequestOnPublication::class, RequestPolicyFromNewStaff::class);
 
@@ -217,4 +218,34 @@ it('keeps the requests when they fit the quota exactly', function (): void {
     withMailQuota($this->tenant, 3);
 
     expect(resolve(RequestAcknowledgments::class)->handle($policy->id))->toBe(3);
+});
+
+it('asks nobody while the company has no NOM-035: the module is off, so no request and no mail are made', function (string $event): void {
+    Queue::fake();
+    $person = staffOf($this->tenant, $this->north, 1)->first();
+    $policy = policyReaching([$this->north]);
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    match ($event) {
+        'publication' => resolve(RequestOnPublication::class)->handle(new App\Modules\Disclosure\Events\PolicyPublished($this->tenant->id, $policy->id, [$this->north->id])),
+        'created' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeCreated($this->tenant->id, $person->id, $this->north->id)),
+        'reactivated' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeReactivated($this->tenant->id, $person->id, $this->north->id)),
+        'moved' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeMoved($this->tenant->id, $person->id, $this->south->id, $this->north->id)),
+    };
+
+    expect(Acknowledgment::query()->count())->toBe(0);
+    Queue::assertNothingPushed();
+})->with(['publication', 'created', 'reactivated', 'moved']);
+
+it('asks again when the company gets NOM-035 back: the guard only holds while the module is off', function (): void {
+    $person = staffOf($this->tenant, $this->north, 1)->first();
+    $policy = policyReaching([$this->north]);
+    $modules = resolve(App\Modules\Tenancy\Contracts\CompanyModules::class);
+    $modules->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+    resolve(RequestOnPublication::class)->handle(new App\Modules\Disclosure\Events\PolicyPublished($this->tenant->id, $policy->id, [$this->north->id]));
+    $modules->syncPlan($this->tenant->id, ['nom035'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    resolve(RequestOnPublication::class)->handle(new App\Modules\Disclosure\Events\PolicyPublished($this->tenant->id, $policy->id, [$this->north->id]));
+
+    expect(askedFor($policy))->toBe([$person->id]);
 });
