@@ -27,7 +27,7 @@ function wroteTo(Tenant $tenant, string $phone = '+528186875767'): void
     DeliveryFactory::new()->create(['tenant_id' => $tenant->id, 'recipient_hash' => (new RecipientHash)->current($phone)['hash']]);
 }
 
-it('records the opt-out of every company that wrote to the phone and answers nothing (CUJ 4)', function (): void {
+it('records the opt-out of every company that wrote to the phone and answers only with the confirmation text (CUJ 4)', function (): void {
     [$a, $b, $c] = [Tenant::factory()->create(), Tenant::factory()->create(), Tenant::factory()->create()];
     wroteTo($a);
     wroteTo($b);
@@ -37,6 +37,7 @@ it('records the opt-out of every company that wrote to the phone and answers not
 
     expect($response->getStatusCode())->toBe(200)->and($response->getContent())->toBe('')
         ->and(OptOut::query()->pluck('tenant_id')->sort()->values()->all())->toBe(collect([$a->id, $b->id])->sort()->values()->all());
+    // The confirmation is a queued job and the function is off in this test: no request leaves.
     Http::assertNothingSent();
 });
 

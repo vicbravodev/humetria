@@ -9,6 +9,7 @@ use App\Modules\Messaging\Data\FailureCause;
 use App\Modules\Messaging\Data\OutboundMessage;
 use App\Modules\Messaging\Data\SendOutcome;
 use App\Modules\Messaging\Enums\TemplateButtonType;
+use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
@@ -17,8 +18,9 @@ use InvalidArgumentException;
  * Sends the template through Meta's Cloud API. The message id travels in `biz_opaque_callback_data`, which Meta hands back in
  * the status webhooks, because a message's state cannot be asked for later.
  *
- * Supuesto por confirmar (Victor/Fase 2): `biz_opaque_callback_data` and the button payload follow Meta's documentation of
- * the Cloud API; the pages checked on 2026-11-18 did not restate the former.
+ * Verified against Meta's sandbox on 2026-11-18 (docs/operations/whatsapp-validacion.md): `biz_opaque_callback_data` comes back
+ * as sent in the `sent`, `delivered` and `read` statuses. Still to confirm: the button payload of a quick reply (needs an
+ * approved template with a button).
  */
 final class CloudApiWhatsAppGateway implements WhatsAppGateway
 {
@@ -26,7 +28,18 @@ final class CloudApiWhatsAppGateway implements WhatsAppGateway
 
     public function send(OutboundMessage $message): SendOutcome
     {
-        $to = $this->phones->toMeta($message->to);
+        return $this->post($message->to, fn (string $to): array => $this->payload($message, $to));
+    }
+
+    public function sendText(string $to, string $body): SendOutcome
+    {
+        return $this->post($to, fn (string $meta): array => ['messaging_product' => 'whatsapp', 'to' => $meta, 'type' => 'text', 'text' => ['body' => $body]]);
+    }
+
+    /** @param Closure(string): array<string, mixed> $payload the body to send, given the phone as Meta writes it */
+    private function post(string $phone, Closure $payload): SendOutcome
+    {
+        $to = $this->phones->toMeta($phone);
 
         // Not a Mexican mobile: there is no WhatsApp account to reach, and nothing leaves.
         if ($to === null) {
@@ -40,7 +53,7 @@ final class CloudApiWhatsAppGateway implements WhatsAppGateway
                 ->withToken(config()->string('whatsapp.access_token'))
                 ->acceptJson()
                 ->asJson()
-                ->post($url, $this->payload($message, $to));
+                ->post($url, $payload($to));
         } catch (ConnectionException) {
             // It is not known whether the message left.
             return SendOutcome::failed(FailureCause::TimedOut);

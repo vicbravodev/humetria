@@ -134,6 +134,23 @@ it('answers each Meta error with its cause', function (int $status, int $code, F
     [400, 424242, FailureCause::UnknownError],
 ]);
 
+it('reads the real error of a recipient that is not on the sandbox allow-list as a definitive failure, without mail fallback', function (): void {
+    // Body recorded from Meta's Cloud API sandbox on 2026-11-18 (HTTP 400, code 131030). It only happens with a test number.
+    Http::fake(['*' => Http::response(['error' => [
+        'message' => '(#131030) Recipient phone number not in allowed list',
+        'code' => 131030,
+        'type' => 'OAuthException',
+        'error_data' => ['messaging_product' => 'whatsapp', 'details' => 'Add the recipient phone number to the recipient list and try again.'],
+        'fbtrace_id' => 'Akvu5ZV1GrPIv26Mlu_qYN7',
+    ]], 400)]);
+
+    $cause = cloudGateway()->send(cloudMessage())->cause;
+
+    expect($cause)->toBe(FailureCause::UnknownError)
+        ->and($cause->retryable())->toBeFalse()
+        ->and($cause->fallsBackToMail())->toBeFalse();
+});
+
 it('answers by HTTP status when the body has no error code', function (): void {
     Http::fake(['*' => Http::response('bad gateway', 502)]);
 
@@ -176,4 +193,37 @@ it('behaves like the fake for the outcomes a caller sees', function (): void {
     Http::fake(['*' => Http::response(['error' => ['code' => 131026]], 400)]);
 
     expect(cloudGateway()->send(cloudMessage())->cause)->toBe($fake->send(cloudMessage())->cause);
+});
+
+it('sends a service text, free text inside the 24-hour window, with no template and no callback data', function (): void {
+    Http::preventStrayRequests();
+    Http::fake(['*' => Http::response(['messages' => [['id' => 'wamid.TXT']]], 200)]);
+
+    $outcome = cloudGateway()->sendText('+528112345678', 'Hola, ya quedó.');
+
+    expect($outcome->isAccepted())->toBeTrue()->and($outcome->providerMessageId)->toBe('wamid.TXT');
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://graph.example.test/v99.0/1234567890/messages'
+        && $request->hasHeader('Authorization', 'Bearer the-access-token')
+        && $request->data() === ['messaging_product' => 'whatsapp', 'to' => '528112345678', 'type' => 'text', 'text' => ['body' => 'Hola, ya quedó.']]);
+});
+
+it('sends no service text to a phone that is not a Mexican mobile', function (): void {
+    Http::preventStrayRequests();
+    Http::fake();
+
+    $outcome = cloudGateway()->sendText('+14155550123', 'Hola');
+
+    expect($outcome->cause)->toBe(FailureCause::NoWhatsappAccount);
+    Http::assertNothingSent();
+});
+
+it('answers the failure of a service text as it does for a template', function (): void {
+    Http::preventStrayRequests();
+    Http::fake(['*' => Http::response(['error' => ['code' => 131026]], 400)]);
+
+    expect(cloudGateway()->sendText('+528112345678', 'Hola')->isAccepted())->toBeFalse();
+
+    Http::fake(['*' => fn () => throw new ConnectionException('timeout')]);
+
+    expect(cloudGateway()->sendText('+528112345678', 'Hola')->cause)->toBe(FailureCause::TimedOut);
 });

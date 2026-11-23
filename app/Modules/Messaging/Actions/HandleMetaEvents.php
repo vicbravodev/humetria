@@ -7,6 +7,7 @@ namespace App\Modules\Messaging\Actions;
 use App\Modules\Messaging\Data\FailureCause;
 use App\Modules\Messaging\Enums\DeliveryStatus;
 use App\Modules\Messaging\Events\WhatsAppMessageAccepted;
+use App\Modules\Messaging\Jobs\SendWhatsAppServiceReply;
 use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Support\DeliveryFailures;
 use App\Modules\Messaging\Support\MetaStatus;
@@ -23,11 +24,13 @@ use Illuminate\Support\Str;
 
 /**
  * What a signed webhook of Meta says. Statuses go to the history of their message (in its company, whoever is current); a STOP, typed or tapped on
- * the «Dejar de recibir» button, becomes an opt-out; the quality of the number is logged. Anything else is ignored, and the payload itself is never logged.
+ * the «Dejar de recibir» button, becomes an opt-out, and an ALTA or START from the person lifts it; the quality of the number is logged. Anything else is ignored, and the payload itself is never logged.
  */
 final class HandleMetaEvents
 {
     private const array STOP_WORDS = ['STOP', 'BAJA', 'ALTO', 'CANCELAR'];
+
+    private const array START_WORDS = ['ALTA', 'START'];
 
     public function __construct(
         private readonly WebhookInbox $inbox,
@@ -36,6 +39,7 @@ final class HandleMetaEvents
         private readonly DeliveryFailures $failures,
         private readonly WhatsAppErrorMap $errors,
         private readonly RecordOptOut $optOut,
+        private readonly LiftOptOut $lift,
         private readonly PhoneForMeta $phones,
     ) {}
 
@@ -148,18 +152,21 @@ final class HandleMetaEvents
         $id = $message['id'] ?? null;
         $from = $message['from'] ?? null;
 
-        if (! is_string($id) || ! is_string($from) || ! $this->isStopRequest($message)) {
+        $isStop = $this->isStopRequest($message);
+
+        if (! is_string($id) || ! is_string($from) || (! $isStop && ! $this->isStartRequest($message))) {
             return;
         }
 
         $phone = $this->phones->fromWaId($from);
 
-        // Only a STOP is remembered, and only by its id: any other message leaves no trace. The id and the opt-out are one
-        // transaction: a STOP that fails halfway is not taken for a repeat when Meta sends it again.
+        // Only a STOP or an ALTA is remembered, and only by its id: any other message leaves no trace. The id and its effect are one
+        // transaction: a message that fails halfway is not taken for a repeat when Meta sends it again.
         if ($phone !== null) {
-            DB::transaction(function () use ($id, $phone): void {
+            DB::transaction(function () use ($id, $phone, $isStop): void {
                 if ($this->inbox->firstTime('meta', "message:{$id}")) {
-                    $this->optOut->handle($phone, 'stop');
+                    $isStop ? $this->optOut->handle($phone, 'stop') : $this->lift->handle($phone);
+                    SendWhatsAppServiceReply::dispatch($phone, $isStop ? 'opted_out' : 'opted_in')->afterCommit();
                 }
             });
         }
@@ -183,9 +190,23 @@ final class HandleMetaEvents
         };
     }
 
+    /** @param array<mixed> $message */
+    private function isStartRequest(array $message): bool
+    {
+        $text = is_array($message['text'] ?? null) ? ($message['text']['body'] ?? null) : null;
+
+        return ($message['type'] ?? null) === 'text' && is_string($text) && $this->saysAnyOf($text, self::START_WORDS);
+    }
+
     private function isStop(string $text): bool
     {
-        return in_array(trim(rtrim(mb_strtoupper(trim($text)), '.!')), self::STOP_WORDS, true);
+        return $this->saysAnyOf($text, self::STOP_WORDS);
+    }
+
+    /** @param list<string> $words */
+    private function saysAnyOf(string $text, array $words): bool
+    {
+        return in_array(trim(rtrim(mb_strtoupper(trim($text)), '.!')), $words, true);
     }
 
     /** @param array<mixed> $value */

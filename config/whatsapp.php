@@ -15,7 +15,7 @@ return [
 
     'base_url' => 'https://graph.facebook.com',
 
-    // Supuesto por confirmar (quien escribe el gateway): la versión vigente de la Graph API.
+    // Verificado en el sandbox el 2026-11-18: v23.0 responde 200 (envío, números, plantillas); la página de Meta ya muestra v25.0.
     'api_version' => env('WHATSAPP_API_VERSION', 'v23.0'),
 
     'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
@@ -49,5 +49,12 @@ return [
         'version' => '2026-11-18',
         'text' => 'Declaro que las personas cuyo celular {empresa} registra en Humetria aceptaron recibir por WhatsApp, desde el número de Humetria, las invitaciones a sus encuestas, y que pueden darse de baja respondiendo STOP.',
     ],
+    // Supuesto por confirmar (Victor): the answers of service to a STOP and to an ALTA or START. Free text inside the 24 hours that
+    // the person's own message opens; not a template, not metered, not charged. Meta's policy asks to honor a STOP always.
+    'replies' => [
+        'opted_out' => 'A partir de hoy no recibirás invitaciones por WhatsApp de Humetria. Para volver a recibirlas responde ALTA',
+        'opted_in' => 'A partir de hoy volverás a recibir por este número las invitaciones de tus encuestas. Para darte de baja responde STOP',
+    ],
+
     'cost_notice' => 'WhatsApp tiene costo adicional: cada mensaje aceptado se cobra en tu estado de cuenta a {precio} más IVA.',
 ];
