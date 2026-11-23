@@ -98,7 +98,7 @@ Variables y sus ejemplos para Meta: `empresa` = «Industrias Ejemplo»; `fecha_l
 
 | Componente | Contenido |
 | --- | --- |
-| Cuerpo | `Hola, buen día. Le recordamos que su evaluación de parte de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.` (Meta rechaza un cuerpo que termina en variable: confirmado con el WABA de prueba.) |
+| Cuerpo | `Hola, buen día. Le recordamos que su evaluación de {{empresa}} sigue pendiente. Puede contestarla hasta el {{fecha_limite}}. Su enlace sigue siendo personal.` (Meta rechaza un cuerpo que termina en variable: confirmado con el WABA de prueba.) |
 | Pie | `Humetria` |
 | Botones | URL `Continuar` → `https://{dominio}/survey/{{token}}`; QR `Dejar de recibir` |
 
