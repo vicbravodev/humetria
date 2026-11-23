@@ -523,8 +523,9 @@ it('keeps «Tiene pendientes en su portal» when the portal asks for more than c
         ->and($mail->actionText)->toBe('Abrir mi portal');
 });
 
-it('holds the mail before it keeps the requests: what does not fit keeps none and says how many are missing', function (): void {
+it('keeps every request when the mail quota runs out: nothing is mailed, nothing is undone', function (): void {
     Queue::fake();
+    Log::spy();
     staffer($this->center);
     staffer($this->center);
     $path = tempnam(sys_get_temp_dir(), 'doc');
@@ -534,10 +535,48 @@ it('holds the mail before it keeps the requests: what does not fit keeps none an
     expect(fn () => resolve(PublishDocument::class)->handle(DocumentKind::Policy, $path, [$this->center->id], [], $this->hr->id))->not->toThrow(Throwable::class);
     $document = TeleworkDocument::query()->sole();
 
-    expect(fn () => resolve(RequestAcknowledgements::class)->handle([$document->id]))
-        ->toThrow(App\Modules\Billing\Exceptions\MailQuotaExceeded::class, 'faltan 1');
+    expect(resolve(RequestAcknowledgements::class)->handle([$document->id]))->toBe(2);
 
-    expect(Acknowledgement::query()->where('document_id', $document->id)->count())->toBe(0);
+    expect(Acknowledgement::query()->where('document_id', $document->id)->count())->toBe(2);
+    Queue::assertNotPushed(SendPortalReminder::class);
+    Log::shouldHaveReceived('info')->with('telework.acknowledgement_requested', ['document_ids' => [$document->id], 'employees' => 2, 'users' => 0])->once();
+    Log::shouldHaveReceived('info')->with('telework.acknowledgement_mail_withheld', ['document_ids' => [$document->id], 'employees' => 2, 'users' => 0])->once();
+});
+
+it('holds the mail only for who can be mailed: employees with an address and the Comisión', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center, ['email' => 'ana@acme.test']);
+    $paper = staffer($this->center, ['email' => null]);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id]);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $paper->id]);
+    $member = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $member->id]);
+    [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
+    Acknowledgement::query()->delete();
+    Queue::fake();
+    withMailQuota($this->tenant, 2);
+
+    expect(resolve(RequestAcknowledgements::class)->handle([$risk->id]))->toBe(3);
+
+    expect(Acknowledgement::query()->count())->toBe(3);
+    Queue::assertPushed(SendPortalReminder::class, 2);
+    Queue::assertNotPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $paper->id);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $ana->id);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->userId === $member->id);
+});
+
+it('keeps the request of someone who joins the roster when the quota is gone: joining is never undone by the mail', function (): void {
+    Queue::fake();
+    $person = staffer($this->center);
+    publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->delete();
+    Queue::fake();
+    withMailQuota($this->tenant, 1);
+    resolve(App\Modules\Billing\Contracts\MailQuota::class)->reserve(1);
+
+    resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeCreated($this->tenant->id, $person->id, $this->center->id));
+
+    expect(Acknowledgement::query()->where('employee_id', $person->id)->count())->toBe(1);
     Queue::assertNotPushed(SendPortalReminder::class);
 });
 

@@ -58,6 +58,34 @@ final readonly class RequestAcknowledgements
         return $document === null ? 0 : $this->ask([$document], fn (): AckAudienceIds => new AckAudienceIds([], [$userId]));
     }
 
+    /**
+     * Those who can be reached get an email (a Comisión member always can); an employee without an address is left to RH's record
+     * of paper acknowledgements. The quota is held for them alone (the upper bound; the night gives back the rest) and, when it
+     * does not fit, nobody is mailed and the requests stay.
+     *
+     * @param  list<string>  $documentIds
+     * @param  list<string>  $employees
+     * @param  list<int>  $users
+     */
+    private function tell(array $documentIds, array $employees, array $users): void
+    {
+        $reachable = [];
+
+        foreach (array_chunk($employees, self::CHUNK) as $chunk) {
+            $reachable = [...$reachable, ...array_keys(array_filter($this->roster->findMany($chunk), fn (RosterEntry $person): bool => $person->email !== null))];
+        }
+
+        if (! $this->mail->tryReserve(count($reachable) + count($users))) {
+            Log::info('telework.acknowledgement_mail_withheld', ['document_ids' => $documentIds, 'employees' => count($reachable), 'users' => count($users)]);
+
+            return;
+        }
+
+        $tenantId = $this->tenant->id();
+        array_map(fn (string $id) => SendPortalReminder::dispatch($tenantId, $id, null)->delay(SendPortalReminder::DELAY), $reachable);
+        array_map(fn (int $id) => SendPortalReminder::dispatch($tenantId, null, $id)->delay(SendPortalReminder::DELAY), $users);
+    }
+
     private function inForce(string $workCenterId, DocumentKind $kind): ?TeleworkDocument
     {
         return TeleworkDocument::query()->where('work_center_id', $workCenterId)->where('kind', $kind)->orderByDesc('version')->first();
@@ -69,6 +97,7 @@ final readonly class RequestAcknowledgements
      */
     private function ask(array $documents, callable $audience): int
     {
+        // The request is always kept: the mail is a courtesy on top of it, and the quota only holds what is mailed.
         [$employees, $users] = DB::transaction(function () use ($documents, $audience): array {
             $employees = [];
             $users = [];
@@ -79,9 +108,6 @@ final readonly class RequestAcknowledgements
                 $users = [...$users, ...$this->insertMissing($document, 'user_id', $ids->userIds)];
             }
 
-            // Held before anything is kept, one mail for each person asked (the upper bound; the night gives back the rest).
-            $this->mail->reserve(count(array_unique($employees)) + count(array_unique($users)));
-
             // The people are only counted and chunked: their keys are never read.
             return [array_values(array_unique($employees)), array_values(array_unique($users))]; // @pest-mutate-ignore: UnwrapArrayValues
         });
@@ -90,14 +116,9 @@ final readonly class RequestAcknowledgements
             return 0;
         }
 
-        $tenantId = $this->tenant->id();
-        // Those without an email are not mailed: RH records their paper acknowledgements.
-        foreach (array_chunk($employees, self::CHUNK) as $chunk) {
-            $reachable = array_keys(array_filter($this->roster->findMany($chunk), fn (RosterEntry $person): bool => $person->email !== null));
-            array_map(fn (string $id) => SendPortalReminder::dispatch($tenantId, $id, null)->delay(SendPortalReminder::DELAY), $reachable);
-        }
-        array_map(fn (int $id) => SendPortalReminder::dispatch($tenantId, null, $id)->delay(SendPortalReminder::DELAY), $users);
-        Log::info('telework.acknowledgement_requested', ['document_ids' => array_map(fn (TeleworkDocument $document): string => $document->id, $documents), 'employees' => count($employees), 'users' => count($users)]);
+        $documentIds = array_map(fn (TeleworkDocument $document): string => $document->id, $documents);
+        Log::info('telework.acknowledgement_requested', ['document_ids' => $documentIds, 'employees' => count($employees), 'users' => count($users)]);
+        $this->tell($documentIds, $employees, $users);
 
         return count($employees) + count($users);
     }
