@@ -72,8 +72,8 @@ it('opens the editor of a role someone holds, saying so', function (bool $dark, 
 it('opens the permissions a person has besides their role', function (bool $dark, bool $mobile): void {
     signInToPanel();
     $member = App\Modules\Tenancy\Models\TenantMembership::factory()
-        ->for(App\Modules\Tenancy\Models\Tenant::query()->where('slug', 'acme')->sole())
-        ->for(App\Models\User::factory()->create())
+        ->for(Tenant::query()->where('slug', 'acme')->sole())
+        ->for(User::factory()->create())
         ->viewer()->create();
 
     visitPage('tenancy/member-permissions', "/admin/acme/members/{$member->id}/permissions", $dark, $mobile)
