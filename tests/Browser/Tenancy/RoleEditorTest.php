@@ -209,6 +209,24 @@ it('raises an area of a person past their role, with the role\'s level as a floo
     expect(resolve(CompanyRoles::class)->directPermissionsOf($person, $tenant))->toEqualCanonicalizing(['manage-vacations', 'handle-complaints']);
 });
 
+it('shows an area the person\'s role holds as a mix no level names as locked, with nothing to raise', function (): void {
+    $owner = User::factory()->create();
+    signInToPanel($owner);
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $role = app(CreateCompanyRole::class)->handle($tenant, 'Heredado', ['view-dashboard', 'manage-vacations'], null, $owner);
+    $person = User::factory()->create(['name' => 'Hilda Heredada']);
+    $member = TenantMembership::factory()->for($tenant)->for($person)->viewer()->create();
+    resolve(CompanyRoles::class)->assign($person, $tenant, $role);
+
+    visit("/admin/acme/members/{$member->id}/permissions")
+        ->assertSee('Combinación del rol')
+        ->assertAttribute('input[name="level-vacations"][value="view"]', 'disabled', '')
+        ->assertAttribute('input[name="level-vacations"][value="manage"]', 'disabled', '')
+        ->assertAttribute('input[name="level-vacations"][value="none"]', 'disabled', '')
+        ->assertNotChecked('input[name="level-vacations"][value="none"]')
+        ->assertNoJavaScriptErrors();
+});
+
 it('offers no new role nor a copy of a template once the company has as many roles as it may', function (): void {
     config(['tenancy.max_custom_roles' => 1]);
     acmeRoleHeldBy(0);

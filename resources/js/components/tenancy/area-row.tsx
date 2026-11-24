@@ -1,12 +1,11 @@
-import { Lock } from 'lucide-react';
+import AreaTitle from '@/components/tenancy/area-title';
 import AreaExtra from '@/components/tenancy/area-extra';
 import LevelControl from '@/components/tenancy/level-control';
-import { Badge } from '@/components/ui/badge';
+import { roleMix } from '@/lib/permission-floor';
 import { toggled } from '@/lib/permission-groups';
 import {
     floorOf,
     levelOf,
-    phraseOf,
     rowTags,
     sensitiveLevel,
     withLevel,
@@ -32,35 +31,22 @@ export default function AreaRow({
 }) {
     const { area, reason } = item;
     const { groups, base = [] } = context;
-    const change = reason === null ? onChange : undefined;
+    // The role itself holds a mix no level names: nothing to raise from, the role is what to change.
+    const mixed = context.base !== undefined && roleMix(area, base);
+    const change = reason === null && !mixed ? onChange : undefined;
     const value = levelOf(area, held);
     const tags = rowTags({ area, held, base: context.base, groups });
 
     return (
         <li className="flex flex-col gap-3 px-4 py-3.5 sm:px-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="flex flex-wrap items-center gap-2 font-medium">
-                        {area.label}
-                        {tags.additional && <Badge>Adicional</Badge>}
-                        {tags.sensitive && (
-                            <Badge variant="warning">Sensible</Badge>
-                        )}
-                    </span>
-                    <span className="text-sm text-pretty text-muted-foreground">
-                        {reason === null ? (
-                            phraseOf(area, held, groups)
-                        ) : (
-                            <span className="flex items-center gap-1.5">
-                                <Lock
-                                    aria-hidden
-                                    className="size-3.5 shrink-0"
-                                />
-                                {reason}
-                            </span>
-                        )}
-                    </span>
-                </div>
+                <AreaTitle
+                    area={area}
+                    held={held}
+                    groups={groups}
+                    reason={reason}
+                    tags={{ ...tags, mixed }}
+                />
                 <LevelControl
                     name={area.key}
                     label={area.label}

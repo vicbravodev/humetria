@@ -1,4 +1,9 @@
-import { floorOf, levelOf, summarize } from '@/lib/permission-areas';
+import {
+    areaPermissions,
+    floorOf,
+    levelOf,
+    summarize,
+} from '@/lib/permission-areas';
 import type { PermissionArea } from '@/lib/permission-areas';
 
 /** The level an area holds: its own, or for a mixed set the highest wholly held under it. */
@@ -51,4 +56,15 @@ export function summarizeBeyond({
         held: ownLevels({ areas, held, base }),
         subject,
     });
+}
+
+/**
+ * Whether the role itself holds the area as a mix no level names (managing without seeing, from data saved before levels):
+ * on a person's page there is no floor to raise from, so the area is shown locked and the role is what to change.
+ */
+export function roleMix(area: PermissionArea, base: string[]): boolean {
+    return (
+        areaPermissions(area).some((name) => base.includes(name)) &&
+        levelOf(area, base) === null
+    );
 }

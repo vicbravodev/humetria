@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { AREAS } from '@/lib/permission-areas';
-import { ownLevels, summarizeBeyond } from '@/lib/permission-floor';
+import { area } from '../support/permission-areas';
+import { ownLevels, roleMix, summarizeBeyond } from '@/lib/permission-floor';
 
 const viewer = [
     'view-vacations',
@@ -64,5 +65,22 @@ describe('the summary of what a person has besides their role', () => {
                 subject: 'Vera',
             }),
         ).toBe('Vera atiende quejas asignadas.');
+    });
+});
+
+describe('an area the role holds as a mix no level names', () => {
+    const vacations = area('vacations');
+
+    it('is one where the role holds permissions of the area that are not a level, such as managing without seeing', () => {
+        expect(roleMix(vacations, ['manage-vacations'])).toBe(true);
+    });
+
+    it('is not one when the role holds a whole level, or nothing of the area', () => {
+        expect(roleMix(vacations, ['view-vacations'])).toBe(false);
+        expect(roleMix(vacations, ['view-vacations', 'manage-vacations'])).toBe(
+            false,
+        );
+        expect(roleMix(vacations, ['view-dashboard'])).toBe(false);
+        expect(roleMix(vacations, [])).toBe(false);
     });
 });
