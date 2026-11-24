@@ -76,5 +76,9 @@ it('opens the permissions a person has besides their role', function (bool $dark
         ->for(App\Models\User::factory()->create())
         ->viewer()->create();
 
-    visitPage('tenancy/member-permissions', "/admin/acme/members/{$member->id}/permissions", $dark, $mobile)->assertSee('Permisos adicionales');
+    visitPage('tenancy/member-permissions', "/admin/acme/members/{$member->id}/permissions", $dark, $mobile)
+        ->assertSee('Permisos adicionales')
+        ->assertSee('Su rol: Solo consulta')
+        ->assertSee('Viene de su rol')
+        ->assertSee('Guardar permisos');
 })->with($looks);

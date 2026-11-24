@@ -76,3 +76,21 @@ it('says a role someone holds cannot be deleted, and deletes one nobody holds', 
         ->assertSee('Rol borrado.')
         ->assertDontSee('Temporal');
 });
+
+it('gives a person a permission besides their role, keeping the role\'s on and locked', function (): void {
+    signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $person = User::factory()->create(['name' => 'Vera Vista']);
+    $member = TenantMembership::factory()->for($tenant)->for($person)->viewer()->create();
+
+    visit("/admin/acme/members/{$member->id}/permissions")
+        ->assertSee('Permisos adicionales de Vera Vista')
+        ->assertAttribute('@permission-view-dashboard', 'aria-checked', 'true')
+        ->assertAttribute('@permission-view-dashboard', 'disabled', '')
+        ->click('@permission-manage-vacations')
+        ->press('Guardar permisos')
+        ->assertSee('Permisos actualizados.')
+        ->assertNoJavaScriptErrors();
+
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($person, $tenant))->toBe(['manage-vacations']);
+});

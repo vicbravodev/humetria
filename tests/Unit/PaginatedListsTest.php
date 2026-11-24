@@ -20,6 +20,7 @@ const ARRAY_PROPS = [
     'tenancy/invite-member:roles' => 'catálogo fijo: los roles que se pueden dar',
     'tenancy/role-editor:templates' => 'catálogo fijo: las plantillas de Humetría que la cuenta da (cuatro a lo más)',
     'tenancy/role-editor:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog)',
+    'tenancy/member-permissions:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog)',
     'tenancy/roles:templates' => 'catálogo fijo: las plantillas de Humetría que la cuenta da (cuatro a lo más)',
     'sso/settings:domains' => 'resumen corto: los dominios de correo de la empresa, cinco a lo más (el formulario los topa)',
     'dashboard:norms' => 'catálogo fijo: las normas que la persona puede ver (NOM-035, NOM-037, Ley Silla), tres a lo más',
