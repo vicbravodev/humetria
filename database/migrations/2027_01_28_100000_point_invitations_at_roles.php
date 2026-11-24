@@ -50,9 +50,12 @@ return new class extends Migration
         });
 
         // Nothing is deleted. An invitation to a template keeps it; one to a role of the company's own becomes the template
-        // that role was based on (never the owner's), or viewer, the least a role can give; a closed one whose role was
+        // that role was based on (never the owner's), or viewer, the least a role can give (an open one is cancelled, so it gives nothing); a closed one whose role was
         // deleted since becomes viewer too (it is closed, so it gives nothing). The extra permissions an invitation brought
         // are lost: the old schema has nowhere to keep them.
+        // An open invitation to a role of the company's own is cancelled first: the old column cannot say what it gave, and
+        // mapping it to a template could widen it (viewer reads NOM-035 results). The role below only satisfies NOT NULL.
+        DB::statement('UPDATE tenant_invitations SET cancelled_at = NOW() FROM roles WHERE roles.id = tenant_invitations.role_id AND roles.tenant_id IS NOT NULL AND tenant_invitations.accepted_at IS NULL AND tenant_invitations.cancelled_at IS NULL');
         DB::statement("UPDATE tenant_invitations SET role = roles.name FROM roles WHERE roles.id = tenant_invitations.role_id AND roles.tenant_id IS NULL AND roles.name IN ('owner', 'hr', 'viewer', 'committee', 'complaints')");
         DB::statement("UPDATE tenant_invitations SET role = roles.based_on FROM roles WHERE roles.id = tenant_invitations.role_id AND tenant_invitations.role IS NULL AND roles.based_on IN ('hr', 'viewer', 'committee', 'complaints')");
         DB::statement("UPDATE tenant_invitations SET role = 'viewer' WHERE role IS NULL");

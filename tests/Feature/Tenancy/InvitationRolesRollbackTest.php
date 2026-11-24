@@ -36,3 +36,25 @@ it('rolls back to a role column without deleting any invitation', function (): v
         $deleted->id => 'viewer',
     ]);
 });
+
+// A role of the company's own cannot be told apart by the old column: an open invitation to one would widen into its base
+// template (or viewer, which reads NOM-035 results), so it is cancelled and gives nothing; a template's stays open.
+it('cancels the open invitations to a role of the company\'s own instead of widening them', function (): void {
+    $tenant = Tenant::factory()->create();
+    $by = ownerOf($tenant);
+    $custom = fn (string $label, ?TenantRole $basedOn) => app(CreateCompanyRole::class)->handle($tenant, $label, ['view-dashboard'], $basedOn, $by);
+
+    $fromHr = TenantInvitation::factory()->for($tenant)->role($custom('Auditoría', TenantRole::Hr))->create();
+    $fromNothing = TenantInvitation::factory()->for($tenant)->role($custom('Libre', null))->create();
+    $template = TenantInvitation::factory()->for($tenant)->role(TenantRole::Committee)->create();
+    $accepted = TenantInvitation::factory()->for($tenant)->role($custom('Usada', TenantRole::Hr))->accepted()->create();
+
+    (require database_path('migrations/2027_01_28_100000_point_invitations_at_roles.php'))->down();
+
+    $cancelled = fn (TenantInvitation $invitation): bool => DB::table('tenant_invitations')->where('id', $invitation->id)->whereNotNull('cancelled_at')->exists();
+
+    expect($cancelled($fromHr))->toBeTrue()
+        ->and($cancelled($fromNothing))->toBeTrue()
+        ->and($cancelled($template))->toBeFalse()
+        ->and($cancelled($accepted))->toBeFalse();
+});
