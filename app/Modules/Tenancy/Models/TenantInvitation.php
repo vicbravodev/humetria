@@ -97,13 +97,16 @@ final class TenantInvitation extends Model
     }
 
     /**
-     * Invitations to own the company, or (`$owner` false) to join it as a member.
+     * Invitations to own the company, or (`$owner` false) to join it as a member: a closed one whose role was deleted
+     * since has none, and was a member's (the owner's role is never deleted).
      *
      * @param  Builder<TenantInvitation>  $query
      */
     public function scopeForOwner(Builder $query, bool $owner = true): void
     {
-        $query->whereIn('role_id', self::ownerRole(), not: ! $owner);
+        $owner
+            ? $query->whereIn('role_id', self::ownerRole())
+            : $query->where(fn (Builder $member) => $member->whereNull('role_id')->orWhereNotIn('role_id', self::ownerRole()));
     }
 
     /**

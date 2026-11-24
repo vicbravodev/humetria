@@ -199,6 +199,16 @@ it('answers 404 to the invitation of another company or to the owner invitation'
         ->and($ownerInvitation->refresh()->cancelled_at)->toBeNull();
 })->with(['resend', 'cancel']);
 
+it('says an invitation is no longer open once it closed and its role was deleted', function (string $action): void {
+    $closed = TenantInvitation::factory()->for($this->tenant)->cancelled()->create(['role_id' => null]);
+
+    ($action === 'resend'
+        ? $this->actingAs($this->owner)->post(route('tenant.members.invitations.resend', [$this->tenant, $closed->id]))
+        : $this->actingAs($this->owner)->delete(route('tenant.members.invitations.cancel', [$this->tenant, $closed->id])))
+        ->assertRedirect(route('tenant.members.index', $this->tenant))
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'error', 'message' => 'Esta invitación ya no está abierta.']]);
+})->with(['resend', 'cancel']);
+
 it('names each company role by what it does (rediseño v2, decisión A6)', function (): void {
     expect(array_map(fn (TenantRole $role): string => $role->label(), TenantRole::cases()))->toBe([
         'Administra todo', 'Ayuda con las rutas', 'Solo consulta', 'Comisión de seguridad e higiene', 'Atención de quejas',
