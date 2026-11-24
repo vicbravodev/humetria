@@ -8,6 +8,10 @@ use App\Modules\Complaints\Listeners\EndAssignmentsOnRoleConflict;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
 use App\Modules\Complaints\Models\ComplaintChannel;
+use App\Modules\Complaints\Models\ComplaintHandler;
+use App\Modules\Complaints\Support\CaseAccess;
+use App\Modules\Complaints\Support\EvidencePages;
+use App\Modules\Complaints\Support\HandlerCoverage;
 use App\Modules\Tenancy\Actions\ChangeMemberRole;
 use App\Modules\Tenancy\Actions\CreateCompanyRole;
 use App\Modules\Tenancy\Actions\GrantMemberPermissions;
@@ -16,7 +20,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Support\Facades\DB;
 
-mutates(EndAssignmentsOnRoleConflict::class, RespondentKind::class);
+mutates(EndAssignmentsOnRoleConflict::class, RespondentKind::class, CaseAccess::class, HandlerCoverage::class, EvidencePages::class);
 
 // Criterio C-45 by permission: holding manage-organization is being HR, being owner is being management.
 beforeEach(function (): void {
@@ -101,7 +105,7 @@ it('leaves the cases the same person holds in another company', function (): voi
     expect($here->refresh()->ended_on)->not->toBeNull()->and($elsewhere->refresh()->ended_on)->toBeNull();
 });
 
-it('ends the cases against management of a person who becomes owner, and those against HR since the owner manages the organization', function (): void {
+it('ends the cases against management of a person who becomes owner, and leaves those against HR as before', function (): void {
     $person = customRoleMember($this->tenant, $this->owner);
     $againstManagement = caseHeldBy($this->tenant, RespondentKind::Management, $person);
     $againstHr = caseHeldBy($this->tenant, RespondentKind::Hr, $person);
@@ -110,6 +114,51 @@ it('ends the cases against management of a person who becomes owner, and those a
     resolve(ChangeMemberRole::class)->handle(TenantMembership::query()->where('user_id', $person->id)->sole(), TenantRole::Owner, $this->owner);
 
     expect($againstManagement->refresh()->end_reason)->toBe('role_conflict')
-        ->and($againstHr->refresh()->end_reason)->toBe('role_conflict')
+        ->and($againstHr->refresh()->ended_on)->toBeNull()
         ->and($other->refresh()->ended_on)->toBeNull();
+});
+
+it('leaves the cases against HR of the owner when the owner is given a permission directly', function (): void {
+    $owner = memberOf($this->tenant, TenantRole::Owner);
+    $againstHr = caseHeldBy($this->tenant, RespondentKind::Hr, $owner);
+
+    grantDirect($this->tenant, $owner, ['view-seating'], $this->owner);
+
+    expect($againstHr->refresh()->ended_on)->toBeNull()
+        ->and(resolve(CaseAccess::class)->find($owner->id, $againstHr->complaint_id)?->id)->toBe($againstHr->complaint_id);
+});
+
+/** The company's outside handler, designated, who was then given manage-organization directly. */
+function outsiderGivenHr(Tenant $tenant, User $by): User
+{
+    $person = memberOf($tenant, TenantRole::Complaints);
+    ComplaintHandler::factory()->company($tenant->id)->create(['user_id' => $person->id]);
+    grantDirect($tenant, $person, ['manage-organization'], $by);
+
+    return $person;
+}
+
+it('keeps a person given manage-organization out of a case against HR routed to them afterwards, and not out of others', function (): void {
+    $person = outsiderGivenHr($this->tenant, $this->owner);
+    $againstHr = caseHeldBy($this->tenant, RespondentKind::Hr, $person);
+    $other = caseHeldBy($this->tenant, RespondentKind::Coworker, $person);
+
+    expect(resolve(CaseAccess::class)->find($person->id, $againstHr->complaint_id))->toBeNull()
+        ->and(resolve(CaseAccess::class)->find($person->id, $other->complaint_id)?->id)->toBe($other->complaint_id);
+    $this->actingAs($person)->get(route('tenant.complaints.cases.show', [$this->tenant, $againstHr->complaint_id]))->assertNotFound();
+});
+
+it('does not route a complaint against HR to a handler given manage-organization', function (): void {
+    $person = outsiderGivenHr($this->tenant, $this->owner);
+    $coverage = resolve(HandlerCoverage::class);
+
+    expect($coverage->handlerIds(RespondentKind::Hr, null))->not->toContain($person->id)
+        ->and($coverage->handlerIds(RespondentKind::Coworker, null))->toContain($person->id)
+        ->and($coverage->counts()['hr'])->toBe(0);
+});
+
+it('does not count a handler given manage-organization as independent', function (): void {
+    outsiderGivenHr($this->tenant, $this->owner);
+
+    expect(resolve(EvidencePages::class)->show()['handlers'])->toBe(['count' => 1, 'independent' => false]);
 });

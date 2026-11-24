@@ -18,4 +18,7 @@ interface MemberLookup
      * @return list<string>
      */
     public function permissionsOf(string $tenantId, int $userId): array;
+
+    /** The internal name of the person's role in the company (a template key or `custom_<uuid>`); null when they have none. */
+    public function roleOf(string $tenantId, int $userId): ?string;
 }

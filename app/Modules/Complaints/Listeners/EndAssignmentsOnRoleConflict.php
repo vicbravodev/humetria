@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * A person who becomes who a case is against stops holding it (criterio C-45): it shows as unassigned and can be routed
- * again. Being HR is holding its permission, by role or directly; being management is becoming the owner.
+ * again. Being HR is holding its permission, by role or directly, unless one is the owner, who is management.
  */
 final readonly class EndAssignmentsOnRoleConflict
 {
@@ -24,11 +24,9 @@ final readonly class EndAssignmentsOnRoleConflict
     public function handle(MemberRoleChanged|MemberPermissionsChanged $event): void
     {
         $permissions = $this->members->permissionsOf($event->tenantId, $event->userId);
-        $role = $event instanceof MemberRoleChanged ? $event->role : null;
+        $role = $this->members->roleOf($event->tenantId, $event->userId);
         $kinds = collect(RespondentKind::cases())
-            ->filter(fn (RespondentKind $kind): bool => ($permission = $kind->excludedPermission()) !== null
-                ? in_array($permission, $permissions, true)
-                : $role !== null && $kind->excludedRole() === $role)
+            ->filter(fn (RespondentKind $kind): bool => $kind->excludes($role, $permissions))
             ->map(fn (RespondentKind $kind): string => $kind->value)->values()->all();
 
         if ($kinds === []) {

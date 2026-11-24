@@ -7,25 +7,34 @@ namespace App\Modules\Complaints\Support;
 use App\Modules\Complaints\Enums\RespondentKind;
 
 /**
- * Who would receive a complaint of each kind: the active handlers whose scope includes the center, leaving out the role the
+ * Who would receive a complaint of each kind: the active handlers whose scope includes the center, leaving out whoever the
  * complaint is against. A kind nobody would receive is not accepted by the form (criterio C-45): the company would
  * be handing the complaint to the person it is about.
  */
 final readonly class HandlerCoverage
 {
-    public function __construct(private ActiveHandlers $active) {}
+    public function __construct(private ActiveHandlers $active, private ExcludingPermissions $excluding) {}
 
     /**
      * @return list<int> the user ids, in the order of the designation.
      */
     public function handlerIds(RespondentKind $kind, ?string $workCenterId): array
     {
+        return $this->eligible($kind, $workCenterId, $this->excluding->byMember());
+    }
+
+    /**
+     * @param  array<int, list<string>>  $held
+     * @return list<int>
+     */
+    private function eligible(RespondentKind $kind, ?string $workCenterId, array $held): array
+    {
         $ids = [];
 
         foreach ($this->active->all() as ['handler' => $handler, 'member' => $member]) {
             $inScope = $handler->work_center_id === null || $handler->work_center_id === $workCenterId;
 
-            if ($inScope && $member->role->value !== $kind->excludedRole()) {
+            if ($inScope && ! $kind->excludes($member->role->value, $held[$member->userId] ?? [])) {
                 $ids[$member->userId] = $member->userId;
             }
         }
@@ -41,9 +50,10 @@ final readonly class HandlerCoverage
     public function counts(): array
     {
         $counts = [];
+        $held = $this->excluding->byMember();
 
         foreach (RespondentKind::cases() as $kind) {
-            $counts[$kind->value] = count($this->handlerIds($kind, null));
+            $counts[$kind->value] = count($this->eligible($kind, null, $held));
         }
 
         return $counts;

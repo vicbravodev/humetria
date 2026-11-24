@@ -29,4 +29,9 @@ final readonly class CompanyMemberLookup implements MemberLookup
     {
         return array_keys($this->roles->effectivePermissions(User::query()->findOrFail($userId), Tenant::query()->findOrFail($tenantId)));
     }
+
+    public function roleOf(string $tenantId, int $userId): ?string
+    {
+        return $this->roles->roleOf(User::query()->findOrFail($userId), Tenant::query()->findOrFail($tenantId))?->name;
+    }
 }

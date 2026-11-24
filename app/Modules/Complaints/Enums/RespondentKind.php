@@ -57,4 +57,21 @@ enum RespondentKind: string
     {
         return $this === self::Hr ? 'manage-organization' : null;
     }
+
+    /**
+     * Whether someone with that role and those permissions is who a complaint of this kind is against (criterio C-45): the
+     * owner is management and only management; anyone else is HR when holding its permission.
+     *
+     * @param  list<string>  $permissions
+     */
+    public function excludes(?string $role, array $permissions): bool
+    {
+        if ($role === 'owner') {
+            return $this->excludedRole() === $role;
+        }
+
+        $permission = $this->excludedPermission();
+
+        return $permission !== null && in_array($permission, $permissions, true);
+    }
 }
