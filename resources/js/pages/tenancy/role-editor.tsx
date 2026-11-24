@@ -38,11 +38,7 @@ export default function RoleEditor(props: {
                 <PageHeader
                     title={title}
                     status={role === null ? undefined : <Badge>Propio</Badge>}
-                    description={
-                        role === null || role.based_on === null
-                            ? 'Un rol de tu empresa: enciende solo lo que necesita quien lo tenga.'
-                            : `Basado en ${role.based_on}.`
-                    }
+                    description={`${role?.based_on == null ? '' : `Basado en ${role.based_on}. `}Elige el nivel de acceso en cada área. «Administrar» incluye «Ver».`}
                 />
                 {!can_manage && (
                     <ReadOnlyNotice>

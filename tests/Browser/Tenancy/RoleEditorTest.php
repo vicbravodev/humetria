@@ -26,35 +26,65 @@ function acmeRoleHeldBy(int $people, string $label = 'Auditoría'): Role
     return $role;
 }
 
-it('creates a role with a sensitive permission only after the owner confirms it', function (): void {
+it('creates a role with a sensitive level and extra only after the owner confirms them', function (): void {
     signInToPanel();
 
     visit('/admin/acme/roles/create')
         ->type('label', 'Canalización')
-        ->click('@permission-view-trauma-screenings')
-        ->assertSee('Vas a dar permisos que abren información sensible: Ver tamizajes de la Guía I.')
+        ->click('@level-complaints-handle')
+        ->click('@extra-view-trauma-screenings')
+        ->assertSee('Este rol abre información sensible')
+        ->assertSee('Ver tamizajes de la Guía I · Atender quejas')
+        ->assertSee('Quien tenga este rol atiende quejas asignadas y ve los tamizajes de la Guía I.')
         ->press('Crear rol')
         ->assertSee('Confirma que quieres dar permisos que abren información sensible.')
-        ->click('Entiendo y confirmo')
+        ->click('#acknowledge-sensitive')
         ->press('Crear rol')
         ->assertSee('Rol creado.')
         ->assertSee('Canalización')
         ->assertNoJavaScriptErrors();
 
     $role = Role::query()->where('label', 'Canalización')->sole();
-    expect($role->permissions->pluck('name')->all())->toBe(['view-trauma-screenings']);
+    expect($role->permissions->pluck('name')->all())->toEqualCanonicalizing(['handle-complaints', 'view-trauma-screenings']);
 });
 
-it('starts a new role from a template, with what the template has switched on', function (): void {
+it('starts a new role from a template, with each area at the template\'s level', function (): void {
     signInToPanel();
 
     visit('/admin/acme/roles')
         ->click('[aria-label="Copiar y ajustar Solo consulta"]')
         ->assertSee('Nuevo rol')
-        ->assertSeeIn('#role-start', 'Copia de Solo consulta')
-        ->assertAttribute('@permission-view-dashboard', 'aria-checked', 'true')
-        ->assertAttribute('@permission-manage-campaigns', 'aria-checked', 'false')
+        ->assertChecked('input[name="preset"][value="viewer"]')
+        ->assertChecked('input[name="level-vacations"][value="view"]')
+        ->assertChecked('input[name="level-nom035"][value="view"]')
+        ->assertChecked('input[name="level-complaints"][value="none"]')
         ->assertNoJavaScriptErrors();
+});
+
+it('sets every area from the card chosen to start from, and back to nothing from scratch', function (): void {
+    signInToPanel();
+
+    visit('/admin/acme/roles/create')
+        ->click('@preset-committee')
+        ->assertChecked('input[name="level-complaints"][value="handle"]')
+        ->assertChecked('input[name="level-telework"][value="view"]')
+        ->assertChecked('#extra-review-workplaces')
+        ->type('label', 'Comisión norte')
+        ->click('@level-vacations-manage')
+        ->click('#acknowledge-sensitive')
+        ->press('Crear rol')
+        ->assertSee('Rol creado.')
+        ->assertSee('Basado en Comisión de seguridad e higiene')
+        ->assertNoJavaScriptErrors();
+
+    expect(Role::query()->where('label', 'Comisión norte')->sole()->permissions->pluck('name')->all())
+        ->toEqualCanonicalizing([...Role::findByName('committee')->permissions->pluck('name')->all(), 'view-vacations', 'manage-vacations']);
+
+    visit('/admin/acme/roles/create')
+        ->click('@preset-committee')
+        ->click('@preset-blank')
+        ->assertChecked('input[name="level-complaints"][value="none"]')
+        ->assertSee('Quien tenga este rol no tiene acceso a ninguna área.');
 });
 
 it('says a role someone holds cannot be deleted, and deletes one nobody holds', function (): void {

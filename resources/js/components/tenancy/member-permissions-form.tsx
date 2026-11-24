@@ -40,6 +40,11 @@ export default function MemberPermissionsForm({
                 onToggle={canManage ? editor.toggle : undefined}
             />
             <SensitiveConfirm
+                copy={{
+                    title: 'Estás abriendo información sensible',
+                    consent:
+                        'Entiendo que esta persona verá datos personales y que cada consulta queda registrada.',
+                }}
                 labels={editor.sensitive}
                 checked={editor.data.acknowledge_sensitive}
                 onChange={editor.acknowledge}

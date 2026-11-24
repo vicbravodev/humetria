@@ -93,7 +93,7 @@ final class RoleController extends Controller
         return Inertia::render('tenancy/role-editor', [
             'role' => null,
             'from' => $from?->value,
-            'templates' => array_map(fn (TenantRole $template): array => ['key' => $template->value, 'label' => $template->label()], $tenant->type->assignableRoles()),
+            'templates' => $this->templateOptions($tenant),
             'groups' => PermissionGroups::for($tenant, $from === null ? [] : self::held($this->roles->template($from))),
             'can_manage' => ! $this->impersonation->isActive(),
         ]);
@@ -129,7 +129,7 @@ final class RoleController extends Controller
                 'invitations' => $tenant->invitations()->open()->where('role_id', $id)->count(),
             ],
             'from' => null,
-            'templates' => array_map(fn (TenantRole $template): array => ['key' => $template->value, 'label' => $template->label()], $tenant->type->assignableRoles()),
+            'templates' => $this->templateOptions($tenant),
             'groups' => PermissionGroups::for($tenant, self::held($editing)),
             'can_manage' => ! $this->impersonation->isActive(),
         ]);
@@ -144,6 +144,21 @@ final class RoleController extends Controller
         }
 
         return $this->done($tenant, 'Rol actualizado.');
+    }
+
+    /**
+     * The templates a new role can start from, each with what it switches on (the cards of «Empezar desde» set it).
+     *
+     * @return list<array{key: string, label: string, permissions: list<string>}>
+     */
+    private function templateOptions(Tenant $tenant): array
+    {
+        return array_map(function (TenantRole $template): array {
+            $permissions = array_keys(self::held($this->roles->template($template)));
+            sort($permissions);
+
+            return ['key' => $template->value, 'label' => $template->label(), 'permissions' => $permissions];
+        }, $tenant->type->assignableRoles());
     }
 
     /** Another role took the name between the check and the write (the database keeps names unique per company). */

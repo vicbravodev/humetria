@@ -85,6 +85,11 @@ export default function InviteExtraPermissions({
                 <input type="hidden" name="acknowledge_sensitive" value="1" />
             )}
             <SensitiveConfirm
+                copy={{
+                    title: 'Estás abriendo información sensible',
+                    consent:
+                        'Entiendo que esta persona verá datos personales y que cada consulta queda registrada.',
+                }}
                 labels={sensitiveAdded(groups, [], selected)}
                 checked={acknowledged}
                 onChange={setAcknowledged}

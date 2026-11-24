@@ -55,5 +55,9 @@ export type RoleEditorProps = {
     can_manage: boolean;
 };
 
-/** A template a new role can start from. */
-export type RoleTemplateOption = { key: string; label: string };
+/** A template a new role can start from, with what it switches on. */
+export type RoleTemplateOption = {
+    key: string;
+    label: string;
+    permissions: string[];
+};

@@ -4,16 +4,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
 /**
- * Before saving permissions that open confidential data (spec: «advertencia en los sensibles»): which ones, what they open, and
- * the owner's «Entiendo y confirmo», which the server asks for (`acknowledge_sensitive`). Nothing while none is added.
+ * Before saving permissions that open confidential data (spec: «advertencia en los sensibles»; board Roles 7c): exactly which
+ * ones open, and the owner's confirmation, which the server asks for (`acknowledge_sensitive`). Nothing while none is added.
  */
 export default function SensitiveConfirm({
     labels,
+    copy,
     checked,
     onChange,
     error,
 }: {
     labels: string[];
+    /** «Este rol abre información sensible» and «Entiendo que quienes tengan este rol verán…». */
+    copy: { title: string; consent: string };
     checked: boolean;
     onChange: (checked: boolean) => void;
     error: string | undefined;
@@ -25,22 +28,14 @@ export default function SensitiveConfirm({
     return (
         <div
             role="status"
-            className="flex flex-col gap-3 rounded-xl bg-warning px-5 py-4 text-warning-foreground"
+            className="flex flex-col gap-2.5 rounded-xl bg-warning p-4 text-meta text-warning-foreground"
         >
-            <div className="flex gap-3">
-                <ShieldAlert aria-hidden className="mt-0.5 size-5 shrink-0" />
-                <div className="flex flex-col gap-1 text-meta">
-                    <p className="font-semibold">
-                        Vas a dar permisos que abren información sensible:{' '}
-                        {labels.join(', ')}.
-                    </p>
-                    <p>
-                        Quien los tenga verá datos personales y confidenciales.
-                        Cada vez que los abra queda registrado quién y cuándo.
-                    </p>
-                </div>
-            </div>
-            <div className="flex items-center gap-2.5 pl-8">
+            <p className="flex items-center gap-2 font-semibold">
+                <ShieldAlert aria-hidden className="size-5 shrink-0" />
+                {copy.title}
+            </p>
+            <p>{labels.join(' · ')}</p>
+            <div className="flex items-start gap-2.5">
                 <Checkbox
                     id="acknowledge-sensitive"
                     checked={checked}
@@ -51,9 +46,13 @@ export default function SensitiveConfirm({
                             ? undefined
                             : 'acknowledge-sensitive-error'
                     }
+                    className="mt-0.5 bg-card"
                 />
-                <Label htmlFor="acknowledge-sensitive">
-                    Entiendo y confirmo
+                <Label
+                    htmlFor="acknowledge-sensitive"
+                    className="leading-5 font-normal"
+                >
+                    {copy.consent}
                 </Label>
             </div>
             <InputError id="acknowledge-sensitive-error" message={error} />

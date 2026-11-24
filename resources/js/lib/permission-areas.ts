@@ -59,6 +59,15 @@ export function areasFor(
     });
 }
 
+/** Of some permissions (a template's), those this account can hand out now: known to it and of a tool its plan has. */
+export function handOut(names: string[], groups: PermissionGroup[]): string[] {
+    const open = toggles(groups)
+        .filter((toggle) => toggle.unavailableReason === null)
+        .map((toggle) => toggle.name);
+
+    return names.filter((name) => open.includes(name));
+}
+
 /** The level of an area whose permissions are exactly those held there, or null when none is (a set saved before levels). */
 export function levelOf(area: PermissionArea, held: string[]): string | null {
     const inArea = areaPermissions(area).filter((name) => held.includes(name));
@@ -122,9 +131,9 @@ export function phraseOf(
     return `Tiene una combinación propia: ${names.join(', ')}. Elige un nivel para ordenarla.`;
 }
 
-/** Whether a level opens confidential data: any of its permissions is sensitive. */
+/** Whether a level (or an extra) opens confidential data: any of its permissions is sensitive. */
 export function sensitiveLevel(
-    level: AreaLevel | undefined,
+    level: { permissions: string[] } | undefined,
     groups: PermissionGroup[],
 ): boolean {
     const sensitive = toggles(groups)

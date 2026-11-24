@@ -19,7 +19,7 @@ it('lets the owner make a role with only the vacations, give it to someone, and 
     visit('/admin/acme/roles')
         ->click('Nuevo rol')
         ->type('label', 'Solo vacaciones')
-        ->click('@permission-view-vacations')
+        ->click('@level-vacations-view')
         ->press('Crear rol')
         ->assertSee('Rol creado.')
         ->assertSee('Solo vacaciones')

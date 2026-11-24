@@ -1,21 +1,16 @@
-import { Link } from '@inertiajs/react';
-import { Save } from 'lucide-react';
 import InputError from '@/components/humetria/input-error';
-import DeleteRoleDialog from '@/components/tenancy/delete-role-dialog';
-import PermissionToggles from '@/components/tenancy/permission-toggles';
-import RoleStart from '@/components/tenancy/role-start';
-import SensitiveConfirm from '@/components/tenancy/sensitive-confirm';
+import AreaSections from '@/components/tenancy/area-sections';
+import RoleEditorSummary from '@/components/tenancy/role-editor-summary';
+import RolePresets from '@/components/tenancy/role-presets';
+import SaveBar from '@/components/tenancy/save-bar';
 import TenantField from '@/components/tenancy/tenant-field';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { useRoleEditor } from '@/hooks/use-role-editor';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/roles';
+import { accessCount, areasFor } from '@/lib/permission-areas';
 import type { RoleEditorProps } from '@/types';
 
 /**
- * The role's name and its switches by tool, then, when it adds a sensitive permission, the owner's confirmation; save, cancel
- * and, for a role already made, delete it. Support sees the same, still.
+ * The role's name, where it starts from (a new one), its areas by group and, beside them, the summary with the confirmation of
+ * sensitive permissions and the buttons; on a phone the save button stays at the bottom. Support sees the same, still.
  */
 export default function RoleEditorForm({
     role,
@@ -24,13 +19,16 @@ export default function RoleEditorForm({
     groups,
     can_manage,
 }: RoleEditorProps) {
-    const tenantSlug = useTenantSlug();
     const editor = useRoleEditor(role, from, groups);
+    const count = accessCount(
+        areasFor(groups).map((item) => item.area),
+        editor.data.permissions,
+    );
 
     return (
         <form
             noValidate
-            className="flex flex-col gap-8"
+            className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]"
             onSubmit={(event) => {
                 // The delete dialog's own form lives in a portal, but React still bubbles its submit up here.
                 if (event.target !== event.currentTarget) {
@@ -41,65 +39,55 @@ export default function RoleEditorForm({
                 editor.save();
             }}
         >
-            <div className="flex flex-col gap-5 sm:max-w-md">
-                <TenantField
-                    name="label"
-                    label="Nombre del rol"
-                    required
-                    maxLength={60}
-                    value={editor.data.label}
-                    onChange={(event) => editor.rename(event.target.value)}
-                    disabled={!can_manage}
-                    error={editor.errors['label']}
-                />
-                {role === null && can_manage && (
-                    <RoleStart templates={templates} from={from} />
-                )}
-            </div>
-            <section aria-labelledby="role-permissions" className="grid gap-4">
-                <div className="flex flex-col gap-0.5">
-                    <h2 id="role-permissions" className="text-lg font-semibold">
-                        Qué puede hacer
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                        Enciende solo lo que este rol necesita. Lo que tu plan
-                        no incluye queda apagado.
-                    </p>
+            <div className="flex min-w-0 flex-col gap-7">
+                <div className="sm:max-w-md">
+                    <TenantField
+                        name="label"
+                        label="Nombre del rol"
+                        required
+                        maxLength={60}
+                        value={editor.data.label}
+                        onChange={(event) => editor.rename(event.target.value)}
+                        disabled={!can_manage}
+                        error={editor.errors['label']}
+                    />
                 </div>
-                <PermissionToggles
+                {role === null && can_manage && (
+                    <RolePresets
+                        templates={templates}
+                        value={editor.data.based_on}
+                        onChoose={editor.choose}
+                    />
+                )}
+                <AreaSections
                     groups={groups}
-                    selection={{
-                        selected: editor.data.permissions,
-                        locked: [],
-                    }}
-                    onToggle={can_manage ? editor.toggle : undefined}
+                    held={editor.data.permissions}
+                    onChange={can_manage ? editor.change : undefined}
                 />
                 <InputError
                     id="role-permissions-error"
                     message={editor.errors['permissions']}
                 />
-            </section>
-            <SensitiveConfirm
-                labels={editor.sensitive}
-                checked={editor.data.acknowledge_sensitive}
-                onChange={editor.acknowledge}
-                error={editor.errors['acknowledge_sensitive']}
+            </div>
+            <RoleEditorSummary
+                role={role}
+                groups={groups}
+                editor={editor}
+                canManage={can_manage}
             />
             {can_manage && (
-                <div className="flex flex-wrap gap-2.5">
-                    <Button type="submit" disabled={editor.processing}>
-                        {editor.processing ? <Spinner /> : <Save aria-hidden />}
-                        {role === null ? 'Crear rol' : 'Guardar cambios'}
-                    </Button>
-                    <Button variant="outline" asChild>
-                        <Link href={index(tenantSlug)}>Cancelar</Link>
-                    </Button>
-                    {role !== null && (
-                        <div className="sm:ml-auto">
-                            <DeleteRoleDialog role={role} />
-                        </div>
-                    )}
-                </div>
+                <SaveBar
+                    status={
+                        <>
+                            <strong className="font-semibold text-foreground tabular-nums">
+                                {count.on} de {count.total}
+                            </strong>{' '}
+                            áreas con acceso
+                        </>
+                    }
+                    label={role === null ? 'Crear rol' : 'Guardar rol'}
+                    processing={editor.processing}
+                />
             )}
         </form>
     );

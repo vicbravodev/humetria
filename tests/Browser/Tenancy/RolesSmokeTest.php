@@ -45,9 +45,10 @@ it('opens the editor of a new role', function (bool $dark, bool $mobile): void {
     visitPage('tenancy/role-editor', '/admin/acme/roles/create', $dark, $mobile)
         ->assertSee('Nuevo rol')
         ->assertSee('Empezar desde')
-        ->assertSee('Qué puede hacer')
-        ->assertSee('Ver vacaciones')
+        ->assertSee('Cumple la norma')
+        ->assertSee('Vacaciones')
         ->assertSee('Sensible')
+        ->assertSee('Quien tenga este rol no tiene acceso a ninguna área.')
         ->assertSee('Crear rol');
 })->with($looks);
 
@@ -64,8 +65,8 @@ it('opens the editor of a role someone holds, saying so', function (bool $dark, 
         ->assertSee('Auditoría')
         ->assertSee('Basado en Solo consulta.')
         ->assertSee('Una persona tiene este rol.')
-        ->assertSee('1 de 2')
-        ->assertSee('Guardar cambios')
+        ->assertSee('Quien tenga este rol ve Panel y Vacaciones.')
+        ->assertSee('Guardar rol')
         ->assertSee('Borrar rol');
 })->with($looks);
 

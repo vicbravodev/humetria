@@ -189,12 +189,13 @@ it('opens the editor of a new role with every permission the company can hand ou
             ->component('tenancy/role-editor')
             ->where('role', null)
             ->where('from', null)
-            ->where('templates', [
-                ['key' => 'hr', 'label' => 'Ayuda con las rutas'],
-                ['key' => 'viewer', 'label' => 'Solo consulta'],
-                ['key' => 'committee', 'label' => 'Comisión de seguridad e higiene'],
-                ['key' => 'complaints', 'label' => 'Atención de quejas'],
-            ])
+            // Each template with what it switches on, so a card can start the role from it.
+            ->where('templates', fn ($templates): bool => collect($templates)->map(fn ($row): array => [$row['key'], $row['label']])->all() === [
+                ['hr', 'Ayuda con las rutas'],
+                ['viewer', 'Solo consulta'],
+                ['committee', 'Comisión de seguridad e higiene'],
+                ['complaints', 'Atención de quejas'],
+            ] && collect($templates)->every(fn ($row): bool => $row['permissions'] === Role::findByName($row['key'])->permissions->pluck('name')->sort()->values()->all()))
             ->where('groups.0.module', 'general')
             ->where('groups.0.label', 'General')
             ->where('groups.0.permissions.0', [

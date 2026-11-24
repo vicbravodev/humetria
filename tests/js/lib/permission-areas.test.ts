@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
     AREAS,
     areasFor,
+    handOut,
     floorOf,
     levelOf,
     withLevel,
@@ -137,5 +138,21 @@ describe('choosing a level', () => {
             'view-interventions',
             'view-disclosure',
         ]);
+    });
+});
+
+describe('starting from a template', () => {
+    it('keeps only what the account can hand out now', () => {
+        expect(
+            handOut(
+                [
+                    'view-vacations',
+                    'view-attendance',
+                    'manage-members',
+                    'view-dashboard',
+                ],
+                groups,
+            ),
+        ).toEqual(['view-vacations', 'view-dashboard']);
     });
 });
