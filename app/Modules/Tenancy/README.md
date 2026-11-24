@@ -25,7 +25,8 @@ Este README cubre lo que no se ve leyendo una sola clase: **quién puede hacer q
   archivo contra el catálogo y las plantillas. Un área nueva va en los tres, o algún test falla.
 - **Solo el dueño administra** roles y permisos (`manage-members`). Suplantando al dueño, soporte ve las pantallas pero no
   cambia nada: las escrituras están en `ForbidWhileImpersonating`.
-- Cambios de rol o de extras emiten `MemberRoleChanged` / `MemberPermissionsChanged` (Complaints aplica el conflicto C-45),
+- Cambios de rol o de extras emiten `MemberRoleChanged` / `MemberPermissionsChanged`; editar un rol propio emite un solo
+  `RolePermissionsChanged` con todos sus titulares (Complaints aplica el conflicto C-45),
   escriben log (`tenant_role.*`, `tenant_member.*`) y van a la bitácora.
 
 ## Ninguna ruta sin permiso

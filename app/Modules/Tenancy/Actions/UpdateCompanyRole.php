@@ -6,7 +6,7 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Actions\RecordAudit;
 use App\Models\User;
-use App\Modules\Tenancy\Events\MemberPermissionsChanged;
+use App\Modules\Tenancy\Events\RolePermissionsChanged;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\PermissionCatalog;
@@ -46,9 +46,9 @@ final readonly class UpdateCompanyRole
             $role->syncPermissions($permissions);
             $this->roles->forgetMembers();
 
-            // One event per holder, and each listener reads that person's permissions: batch it if a role ever holds hundreds.
-            foreach ($added === [] && $removed === [] ? [] : $holders as $holder) {
-                event(new MemberPermissionsChanged($tenant->id, $holder));
+            // One event for the role, carrying its holders, so listeners read them together however many they are.
+            if (($added !== [] || $removed !== []) && $holders !== []) {
+                event(new RolePermissionsChanged($tenant->id, $role->name, $holders));
             }
 
             Log::info('tenant_role.updated', ['tenant_id' => $tenant->id, 'user_id' => $by->id, 'role_id' => $role->id]);

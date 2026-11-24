@@ -267,8 +267,49 @@ final readonly class CompanyRoles
             $effective[$name] ??= 'direct';
         }
 
-        return array_filter($effective, fn (string $source, string $name): bool => ($definition = PermissionCatalog::find($name)) === null
-            || PermissionCatalog::unavailableReason($tenant, $definition) === null, ARRAY_FILTER_USE_BOTH);
+        return array_filter($effective, fn (string $source, string $name): bool => $this->offered($tenant, $name), ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * The same as effectivePermissions for many people at once, in three queries: the permission names of each, by user id.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, list<string>>
+     */
+    public function effectivePermissionNames(Tenant $tenant, array $userIds): array
+    {
+        $morph = (new User)->getMorphClass();
+        $names = array_fill_keys($userIds, []);
+        $roleOf = [];
+
+        foreach (DB::table('model_has_roles')->where('tenant_id', $tenant->id)->where('model_type', $morph)->whereIn('model_id', $userIds)->get(['model_id', 'role_id']) as $row) {
+            is_int($row->model_id) && is_int($row->role_id) && $roleOf[$row->model_id] = $row->role_id;
+        }
+
+        $byRole = [];
+
+        foreach (DB::table('role_has_permissions')->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+            ->whereIn('role_has_permissions.role_id', array_values(array_unique($roleOf)))->get(['role_has_permissions.role_id', 'permissions.name']) as $row) {
+            is_int($row->role_id) && is_string($row->name) && $byRole[$row->role_id][] = $row->name;
+        }
+
+        foreach ($roleOf as $userId => $roleId) {
+            $names[$userId] = $byRole[$roleId] ?? [];
+        }
+
+        foreach (DB::table('model_has_permissions')->join('permissions', 'permissions.id', '=', 'model_has_permissions.permission_id')
+            ->where('model_has_permissions.tenant_id', $tenant->id)->where('model_has_permissions.model_type', $morph)->whereIn('model_has_permissions.model_id', $userIds)
+            ->get(['model_has_permissions.model_id', 'permissions.name']) as $row) {
+            is_int($row->model_id) && is_string($row->name) && $names[$row->model_id][] = $row->name;
+        }
+
+        return array_map(fn (array $held): array => array_values(array_filter(array_unique($held), fn (string $name): bool => $this->offered($tenant, $name))), $names);
+    }
+
+    /** Whether a permission counts for the company: of a tool it has, or of none. */
+    private function offered(Tenant $tenant, string $name): bool
+    {
+        return ($definition = PermissionCatalog::find($name)) === null || PermissionCatalog::unavailableReason($tenant, $definition) === null;
     }
 
     /**

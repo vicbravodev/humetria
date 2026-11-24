@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Tenancy\Actions\CreateCompanyRole;
 use App\Modules\Tenancy\Actions\UpdateCompanyRole;
 use App\Modules\Tenancy\Events\MemberPermissionsChanged;
+use App\Modules\Tenancy\Events\RolePermissionsChanged;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -23,24 +24,26 @@ beforeEach(function (): void {
         DB::table('model_has_roles')->insert(['role_id' => $this->role->id, 'model_type' => $person->getMorphClass(), 'model_id' => $person->id, 'tenant_id' => $this->tenant->id]);
     }
 
-    Event::fake([MemberPermissionsChanged::class]);
+    Event::fake([MemberPermissionsChanged::class, RolePermissionsChanged::class]);
 });
 
 it('tells nobody when only the label changes', function (): void {
     app(UpdateCompanyRole::class)->handle($this->role, 'Auditoría interna', ['view-dashboard'], $this->owner);
 
     Event::assertNotDispatched(MemberPermissionsChanged::class);
+    Event::assertNotDispatched(RolePermissionsChanged::class);
 });
 
-it('tells each holder once when the permissions change, reading the holders once', function (): void {
+it('tells all its holders in one event when the permissions change, reading the holders once', function (): void {
     DB::enableQueryLog();
     app(UpdateCompanyRole::class)->handle($this->role, 'Auditoría', ['view-dashboard', 'manage-organization'], $this->owner);
     $reads = collect(DB::getQueryLog())->filter(fn (array $log): bool => str_starts_with((string) $log['query'], 'select "model_id" from "model_has_roles"'));
     DB::disableQueryLog();
 
-    Event::assertDispatchedTimes(MemberPermissionsChanged::class, 2);
-    foreach ($this->holders as $person) {
-        Event::assertDispatched(MemberPermissionsChanged::class, fn (MemberPermissionsChanged $event): bool => $event->userId === $person->id && $event->tenantId === $this->tenant->id);
-    }
+    Event::assertDispatchedTimes(RolePermissionsChanged::class, 1);
+    Event::assertDispatched(RolePermissionsChanged::class, fn (RolePermissionsChanged $event): bool => $event->tenantId === $this->tenant->id
+        && $event->roleName === $this->role->name
+        && $event->userIds === $this->holders->pluck('id')->sort()->values()->all());
+    Event::assertNotDispatched(MemberPermissionsChanged::class);
     expect($reads)->toHaveCount(1);
 });

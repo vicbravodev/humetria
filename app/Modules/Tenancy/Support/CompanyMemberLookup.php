@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Support;
 
 use App\Models\User;
 use App\Modules\Tenancy\Contracts\MemberLookup;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,8 +31,13 @@ final readonly class CompanyMemberLookup implements MemberLookup
         return array_keys($this->roles->effectivePermissions(User::query()->findOrFail($userId), Tenant::query()->findOrFail($tenantId)));
     }
 
-    public function roleOf(string $tenantId, int $userId): ?string
+    public function permissionsOfMany(string $tenantId, array $userIds): array
     {
-        return $this->roles->roleOf(User::query()->findOrFail($userId), Tenant::query()->findOrFail($tenantId))?->name;
+        return $userIds === [] ? [] : $this->roles->effectivePermissionNames(Tenant::query()->findOrFail($tenantId), $userIds);
+    }
+
+    public function isOwner(string $tenantId, int $userId): bool
+    {
+        return $this->roles->roleOf(User::query()->findOrFail($userId), Tenant::query()->findOrFail($tenantId))?->name === TenantRole::Owner->value;
     }
 }

@@ -19,6 +19,14 @@ interface MemberLookup
      */
     public function permissionsOf(string $tenantId, int $userId): array;
 
-    /** The internal name of the person's role in the company (a template key or `custom_<uuid>`); null when they have none. */
-    public function roleOf(string $tenantId, int $userId): ?string;
+    /**
+     * The same for many people at once, in a fixed number of queries: each person's permissions, by user id.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, list<string>>
+     */
+    public function permissionsOfMany(string $tenantId, array $userIds): array;
+
+    /** Whether the person is the company's owner (its management); false when they hold any other role or none. */
+    public function isOwner(string $tenantId, int $userId): bool;
 }
