@@ -50,19 +50,21 @@ final class MemberController extends Controller
 
         $owner = array_find_key($roles, fn (CompanyRoleSummary $role): bool => $role->key === TenantRole::Owner->value);
 
+        $members = $tenant->memberships()
+            ->with('user')
+            ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
+            ->whereIn('tenant_memberships.user_id', array_keys($roles))
+            // The owner first, then by name.
+            ->orderByRaw('tenant_memberships.user_id = ? desc', [$owner ?? 0])
+            ->orderBy('users.name')
+            ->orderBy('tenant_memberships.id')
+            ->select('tenant_memberships.*')
+            ->paginate(self::PER_PAGE, pageName: 'members')
+            ->withQueryString();
+        $extras = $this->roles->directPermissionCounts($tenant, array_values(array_map(fn (TenantMembership $member): int => $member->user_id, $members->items())));
+
         return Inertia::render('tenancy/members', [
-            'members' => $tenant->memberships()
-                ->with('user')
-                ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
-                ->whereIn('tenant_memberships.user_id', array_keys($roles))
-                // The owner first, then by name.
-                ->orderByRaw('tenant_memberships.user_id = ? desc', [$owner ?? 0])
-                ->orderBy('users.name')
-                ->orderBy('tenant_memberships.id')
-                ->select('tenant_memberships.*')
-                ->paginate(self::PER_PAGE, pageName: 'members')
-                ->withQueryString()
-                ->through(fn (TenantMembership $member): array => $this->memberRow($member, $roles[$member->user_id] ?? null, $user)),
+            'members' => $members->through(fn (TenantMembership $member): array => $this->memberRow($member, $roles[$member->user_id] ?? null, $user, $extras[$member->user_id] ?? 0)),
             'invitations' => $tenant->invitations()->open()->forOwner(false)->with('role')->latest()->orderByDesc('id')
                 ->paginate(self::PER_PAGE, pageName: 'invitations')
                 ->withQueryString()
@@ -165,9 +167,9 @@ final class MemberController extends Controller
     /**
      * Only people with a role in the company are listed, so both are there; anything else is broken data.
      *
-     * @return array{id: int, name: string, email: string, role: string, role_label: string, is_you: bool, since: string}
+     * @return array{id: int, name: string, email: string, role: string, role_label: string, extra_permissions: int, is_you: bool, since: string}
      */
-    private function memberRow(TenantMembership $member, ?CompanyRoleSummary $role, User $you): array
+    private function memberRow(TenantMembership $member, ?CompanyRoleSummary $role, User $you, int $extras): array
     {
         $user = $member->user ?? throw new LogicException("Membership [{$member->id}] has no user.");
         $role ??= throw new LogicException("Membership [{$member->id}] has no role.");
@@ -178,6 +180,8 @@ final class MemberController extends Controller
             'email' => $user->email,
             'role' => $role->key,
             'role_label' => $role->label,
+            // How many permissions they have besides their role («Permisos adicionales»).
+            'extra_permissions' => $extras,
             'is_you' => $user->id === $you->id,
             'since' => DisplayDate::day($member->created_at),
         ];

@@ -212,6 +212,30 @@ final readonly class CompanyRoles
     }
 
     /**
+     * How many permissions each of these people has in the company besides their role, by user id, in one query.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, int>
+     */
+    public function directPermissionCounts(Tenant $tenant, array $userIds): array
+    {
+        $counts = [];
+
+        foreach (DB::table('model_has_permissions')
+            ->where('tenant_id', $tenant->id)
+            ->where('model_type', (new User)->getMorphClass())
+            ->whereIn('model_id', $userIds)
+            ->groupBy('model_id')
+            ->get(['model_id', DB::raw('count(*) as total')]) as $row) {
+            if (is_int($row->model_id) && is_int($row->total)) {
+                $counts[$row->model_id] = $row->total;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
      * Every permission the person has in the company and where it comes from (the role wins when both give it),
      * leaving out those of a module the company does not have.
      *

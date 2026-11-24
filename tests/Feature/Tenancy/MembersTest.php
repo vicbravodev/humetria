@@ -53,7 +53,7 @@ it('lists the people with access, the owner first, and the open invitations', fu
             ->where('members.data.0.is_you', true)
             ->where('members.data.0.role_label', 'Administra todo')
             ->where('members.data.2', fn ($row): bool => collect($row)->except('id')->all() === [
-                'name' => 'Beto RH', 'email' => 'beto@acme.mx', 'role' => 'hr', 'role_label' => 'Ayuda con las rutas', 'is_you' => false, 'since' => '29 oct 2026',
+                'name' => 'Beto RH', 'email' => 'beto@acme.mx', 'role' => 'hr', 'role_label' => 'Ayuda con las rutas', 'extra_permissions' => 0, 'is_you' => false, 'since' => '29 oct 2026',
             ])
             ->where('invitations.total', 1)
             ->where('invitations.data.0', [
@@ -61,6 +61,21 @@ it('lists the people with access, the owner first, and the open invitations', fu
                 'status' => 'pending', 'status_label' => 'Invitación enviada', 'expires_on' => '5 nov 2026',
             ])
             ->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas'], ['value' => 'viewer', 'label' => 'Solo consulta'], ['value' => 'committee', 'label' => 'Comisión de seguridad e higiene'], ['value' => 'complaints', 'label' => 'Atención de quejas']]));
+});
+
+it('says how many permissions each person has besides their role, here only', function (): void {
+    $ana = User::factory()->create(['name' => 'Ana Lectora']);
+    $membership = TenantMembership::factory()->for($this->tenant)->for($ana)->viewer()->create();
+    TenantMembership::factory()->for($other = Tenant::factory()->create())->for($ana)->viewer()->create();
+    app(App\Modules\Tenancy\Actions\GrantMemberPermissions::class)->handle($membership, ['manage-vacations', 'manage-attendance'], $this->owner);
+    app(App\Modules\Tenancy\Actions\GrantMemberPermissions::class)->handle(TenantMembership::query()->where('tenant_id', $other->id)->sole(), ['manage-climate'], $this->owner);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('members.data.0.extra_permissions', 0)
+            ->where('members.data.1.name', 'Ana Lectora')
+            ->where('members.data.1.extra_permissions', 2));
 });
 
 it('pages the people with access and the invitations, each on its own, the owner always first', function (): void {
@@ -240,5 +255,5 @@ it('reads the list in the same number of queries however many people and invitat
     $this->get(route('tenant.members.index', $this->tenant))->assertOk();
 })->with([1, 4]);
 
-// Measured, then fixed so that a query per person, invitation or role breaks the test.
-const QUERIES_OF_THE_MEMBERS_PAGE = 19;
+// Measured, then fixed so that a query per person, invitation or role breaks the test. +1: the permissions besides the role.
+const QUERIES_OF_THE_MEMBERS_PAGE = 20;
