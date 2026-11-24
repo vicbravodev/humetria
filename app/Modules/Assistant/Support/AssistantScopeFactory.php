@@ -23,6 +23,18 @@ final readonly class AssistantScopeFactory
         'view-trauma-screenings',
         'handle-complaints',
         'view-compensation',
+        // The areas Humi tells about: each only to whoever sees it in the panel.
+        'view-nom035-route',
+        'view-interventions',
+        'view-disclosure',
+        'view-telework',
+        'view-seating',
+        'view-vacations',
+        'view-pulse',
+        'view-climate',
+        'view-attendance',
+        'view-org-chart',
+        'view-work-centers',
     ];
 
     public function __construct(private CurrentTenant $tenant, private ResolveParticipant $participants) {}

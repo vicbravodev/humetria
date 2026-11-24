@@ -39,10 +39,11 @@ final readonly class GetComplianceOverview implements Tool
         return (new ToolCard(
             'status_list',
             'Estado de cumplimiento',
-            // A norm is a module of the company: one it does not have is not told.
+            // A norm is a module of the company: one it does not have is not told, nor one the person does not see in the panel.
             array_values(array_map(
                 fn (ComplianceReader $reader): array => $reader->status($this->scope)->toArray(),
-                array_filter($this->readers->all(), fn (ComplianceReader $reader): bool => ($module = $this->readers->moduleOf($reader)) === null || $this->modules->enabled($this->scope->tenantId, $module)),
+                array_filter($this->readers->all(), fn (ComplianceReader $reader): bool => (($module = $this->readers->moduleOf($reader)) === null || $this->modules->enabled($this->scope->tenantId, $module))
+                    && $this->readers->tells($reader, $this->scope)),
             )),
             $this->links->dashboard(),
         ))->toJson();

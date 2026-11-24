@@ -31,6 +31,12 @@ final readonly class ToolCard
         public ?array $next = null,
     ) {}
 
+    /** The card for someone whose role does not see `$area` in the panel: no figure, and who can give them access. */
+    public static function withoutAccess(string $render, string $title, string $area): self
+    {
+        return new self($render, $title, note: "Tu rol no incluye ver {$area}: pídele acceso a quien administra los roles de tu empresa.");
+    }
+
     public function toJson(): string
     {
         return json_encode(get_object_vars($this), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
