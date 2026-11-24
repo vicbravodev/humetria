@@ -11,7 +11,7 @@ export default function LevelControl({
     label,
     levels,
     value,
-    floor = 0,
+    floor,
     onChange,
 }: {
     name: string;
@@ -19,7 +19,8 @@ export default function LevelControl({
     label: string;
     levels: { key: string; label: string }[];
     value: string | null;
-    floor?: number;
+    /** A person's role's level, by position; undefined for a role itself. */
+    floor?: number | undefined;
     onChange: ((level: string) => void) | undefined;
 }) {
     return (
@@ -27,8 +28,8 @@ export default function LevelControl({
             <legend className="sr-only">Nivel de acceso a {label}</legend>
             <div className="grid w-full auto-cols-fr grid-flow-col overflow-hidden rounded-lg border border-input bg-card sm:inline-grid sm:w-auto">
                 {levels.map((level, index) => {
-                    const below = index < floor;
-                    const own = floor > 0 && index === floor;
+                    const below = index < (floor ?? 0);
+                    const own = index === floor;
 
                     return (
                         <label
@@ -56,7 +57,7 @@ export default function LevelControl({
                                 className="sr-only"
                             />
                             {level.label}
-                            {own && (
+                            {own && index > 0 && (
                                 <span className="ml-1 font-normal">
                                     · su rol
                                 </span>

@@ -4,10 +4,10 @@ import LevelControl from '@/components/tenancy/level-control';
 import { Badge } from '@/components/ui/badge';
 import { toggled } from '@/lib/permission-groups';
 import {
-    beyondRole,
     floorOf,
     levelOf,
     phraseOf,
+    rowTags,
     sensitiveLevel,
     withLevel,
 } from '@/lib/permission-areas';
@@ -34,14 +34,7 @@ export default function AreaRow({
     const { groups, base = [] } = context;
     const change = reason === null ? onChange : undefined;
     const value = levelOf(area, held);
-    const index = area.levels.findIndex((level) => level.key === value);
-    const floor = floorOf(area, base);
-    const additional =
-        context.base !== undefined &&
-        beyondRole(
-            [area],
-            held.filter((name) => !base.includes(name)),
-        ).length > 0;
+    const tags = rowTags({ area, held, base: context.base, groups });
 
     return (
         <li className="flex flex-col gap-3 px-4 py-3.5 sm:px-5">
@@ -49,11 +42,10 @@ export default function AreaRow({
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="flex flex-wrap items-center gap-2 font-medium">
                         {area.label}
-                        {additional && <Badge>Adicional</Badge>}
-                        {index > floor &&
-                            sensitiveLevel(area.levels[index], groups) && (
-                                <Badge variant="warning">Sensible</Badge>
-                            )}
+                        {tags.additional && <Badge>Adicional</Badge>}
+                        {tags.sensitive && (
+                            <Badge variant="warning">Sensible</Badge>
+                        )}
                     </span>
                     <span className="text-sm text-pretty text-muted-foreground">
                         {reason === null ? (
@@ -74,7 +66,11 @@ export default function AreaRow({
                     label={area.label}
                     levels={area.levels}
                     value={value}
-                    floor={floor}
+                    floor={
+                        context.base === undefined
+                            ? undefined
+                            : floorOf(area, base)
+                    }
                     onChange={
                         change === undefined
                             ? undefined

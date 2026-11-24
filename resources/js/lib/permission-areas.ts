@@ -266,3 +266,27 @@ export const openAreas = (groups: PermissionGroup[]): PermissionArea[] =>
     areasFor(groups)
         .filter((item) => item.reason === null)
         .map((item) => item.area);
+
+/** The tags of an area's row: «Adicional» where a person has more than their role (`base`), «Sensible» for a level that opens confidential data above it. */
+export function rowTags({
+    area,
+    held,
+    base,
+    groups,
+}: {
+    area: PermissionArea;
+    held: string[];
+    base: string[] | undefined;
+    groups: PermissionGroup[];
+}): { additional: boolean; sensitive: boolean } {
+    const floor = floorOf(area, base ?? []);
+    const index = area.levels.findIndex(
+        (level) => level.key === levelOf(area, held),
+    );
+    const own = held.filter((name) => !(base ?? []).includes(name));
+
+    return {
+        additional: base !== undefined && beyondRole([area], own).length > 0,
+        sensitive: index > floor && sensitiveLevel(area.levels[index], groups),
+    };
+}

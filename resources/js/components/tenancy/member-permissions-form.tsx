@@ -89,10 +89,10 @@ export default function MemberPermissionsForm({
                 <SaveBar
                     status={
                         <>
-                            Permisos adicionales:{' '}
                             <strong className="font-semibold text-foreground">
                                 {extra}
-                            </strong>
+                            </strong>{' '}
+                            adicionales
                         </>
                     }
                     label="Guardar permisos"

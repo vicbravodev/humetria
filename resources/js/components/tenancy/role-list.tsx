@@ -71,7 +71,7 @@ export default function RoleList({
                                 subject: '',
                             })}
                         </TableCell>
-                        <TableCell className="text-sm whitespace-normal text-muted-foreground tabular-nums">
+                        <TableCell className="text-sm whitespace-normal text-muted-foreground tabular-nums md:min-w-28">
                             {countOf(role.people, 'persona', 'personas')}
                             {role.invitations > 0 &&
                                 ` · ${countOf(role.invitations, 'invitación pendiente', 'invitaciones pendientes')}`}

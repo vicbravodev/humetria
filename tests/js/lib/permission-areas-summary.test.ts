@@ -5,6 +5,7 @@ import {
     beyondRole,
     areasFor,
     phraseOf,
+    rowTags,
     sensitiveLevel,
     summarize,
 } from '@/lib/permission-areas';
@@ -178,5 +179,37 @@ describe('the summary without a subject', () => {
         expect(summarize({ areas: AREAS, held: [], subject: '' })).toBe(
             'No tiene acceso a ninguna área.',
         );
+    });
+});
+
+describe('the tags of a row', () => {
+    it('says «Sensible» for a sensitive level chosen above the floor', () => {
+        expect(
+            rowTags({
+                area: area('complaints'),
+                held: ['handle-complaints'],
+                base: undefined,
+                groups,
+            }),
+        ).toEqual({ additional: false, sensitive: true });
+        expect(
+            rowTags({
+                area: area('complaints'),
+                held: ['handle-complaints'],
+                base: ['handle-complaints'],
+                groups,
+            }),
+        ).toEqual({ additional: false, sensitive: false });
+    });
+
+    it('says «Adicional» where a person has more than their role', () => {
+        expect(
+            rowTags({
+                area: area('vacations'),
+                held: ['view-vacations', 'manage-vacations'],
+                base: ['view-vacations'],
+                groups,
+            }),
+        ).toEqual({ additional: true, sensitive: false });
     });
 });

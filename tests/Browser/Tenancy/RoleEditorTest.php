@@ -87,6 +87,23 @@ it('sets every area from the card chosen to start from, and back to nothing from
         ->assertSee('Quien tenga este rol no tiene acceso a ninguna área.');
 });
 
+it('shows a set saved before levels as it is, and keeps it when another area is changed', function (): void {
+    $owner = User::factory()->create();
+    signInToPanel($owner);
+    $role = app(CreateCompanyRole::class)->handle(Tenant::query()->where('slug', 'acme')->sole(), 'Heredado', ['view-dashboard', 'manage-vacations'], null, $owner);
+
+    visit("/admin/acme/roles/{$role->id}/edit")
+        ->assertSee('Tiene una combinación propia: Administrar vacaciones. Elige un nivel para ordenarla.')
+        ->assertNotChecked('input[name="level-vacations"][value="none"]')
+        ->assertNotChecked('input[name="level-vacations"][value="manage"]')
+        ->click('@level-assistant-use')
+        ->press('Guardar rol')
+        ->assertSee('Rol actualizado.')
+        ->assertNoJavaScriptErrors();
+
+    expect($role->fresh()?->permissions->pluck('name')->all())->toEqualCanonicalizing(['view-dashboard', 'manage-vacations', 'use-assistant']);
+});
+
 it('says a role someone holds cannot be deleted, and deletes one nobody holds', function (): void {
     acmeRoleHeldBy(1);
 
