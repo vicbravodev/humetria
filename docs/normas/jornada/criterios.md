@@ -1,6 +1,6 @@
 # Criterios de aplicación de la reforma de jornada y registro electrónico en Humetría
 
-Versión 0.1 (borrador) · 7 de noviembre de 2026 · Base: Decreto DOF 01/05/2026 que reforma la Ley Federal del Trabajo
+Versión 0.5 · 24 de noviembre de 2026 · Base: Decreto DOF 01/05/2026 que reforma la Ley Federal del Trabajo
 «en materia de reducción de la jornada laboral» (texto literal en [`fuentes/`](fuentes/README.md)).
 
 Este documento explica **cómo aplica Humetría la reforma y por qué**. Manda sobre cualquier otro documento del
@@ -64,7 +64,8 @@ Tope semanal de horas extra por año (transitorio cuarto): 9 en 2026 y 2027, 10 
 avisa cuando una persona se acerca o rebasa: el tope semanal del año, 4 horas extra en un día, 4 días con extras en la
 semana. Los topes son de la ley y no se configuran por empresa ni por centro: rebasarlos no se bloquea, se registra, se
 paga y se avisa. Rebasar el tope semanal del año enciende su propia bandera desde el primer minuto, no solo cuando el
-triple pasa de 4 h (2.4).
+triple pasa de 4 h (2.4). Una marca sin conexión cuenta para las horas extra y los topes con su hora contada (3.3.1), también
+mientras está por verificar.
 
 **2.4 Tiempo extra que rebasa el tope: triple** · Norma · art. 68
 
@@ -95,7 +96,8 @@ semana con cambio a mitad se toma del horario vigente su domingo (hoy no cambia 
 entrada. Humetría deja que RH escriba, si quiere, la hora de entrada de cada día del horario y que la empresa fije una
 **tolerancia** (por omisión 10 minutos, de 0 a 120). El retardo es la diferencia entre esa hora y la **primera marca de
 entrada** del día, cuando pasa de la tolerancia (con la tolerancia exacta no hay retardo). **Solo se muestra**: no
-descuenta minutos, no genera faltas y no cambia lo trabajado ni lo programado. Un día de descanso, con una ausencia
+descuenta minutos, no genera faltas y no cambia lo trabajado ni lo programado. Una marca de entrada sin conexión cuenta para
+el retardo con su hora contada (3.3.1), también mientras está por verificar. Un día de descanso, con una ausencia
 aprobada, sin marca o sin hora de entrada no tiene retardo. La tolerancia es de la empresa porque la ley no la fija.
 
 **2.7 Sin merma salarial** · Norma · transitorio séptimo: la reducción no baja sueldos, salarios ni prestaciones. Para
@@ -128,18 +130,37 @@ redondear:
   Si el triple pasa de 4 h a la semana, se avisa: esos minutos siguen contando como triple, porque trabajados se pagan.
 - Se avisa también cuando un día pasa de 12 h trabajadas (incluso en descanso), cuando un día tiene más de 4 h extra y
   cuando hay extra en más de 4 días de la semana.
+- Un **día sin cubrir** (5.2) no es un día corto ni cambia el cálculo del extra: solo impide confirmar la semana. Quien no
+  tiene horario vigente ese día (ninguno, o un día anterior a su primer horario, 2.6) no tiene días sin cubrir.
 
 ## 3. Qué registra Humetría y qué no
 
 **3.1 Inicio y fin de jornada** · Norma (1.1). **3.2 Pausa de comida y descansos** · Humetría: la ley no los pide, pero sin
-ellos no se puede calcular tiempo efectivo ni horas extra de forma defendible. Se registran como marcas de pausa.
+ellos no se puede calcular tiempo efectivo ni horas extra de forma defendible. Se registran como marcas de pausa. Las pausas también pueden marcarse sin conexión, con la regla de 3.3.1.
 
-**3.3 Hora del servidor** · Humetría: la hora de cada marca la pone siempre el servidor, nunca el reloj del teléfono.
+**3.3 Hora del servidor** · Humetría: la hora de una marca en línea la pone el servidor; la de una marca sin conexión la
+declara la persona y el servidor la acota (3.3.1). El reloj del teléfono nunca es prueba.
+
+**3.3.1 Marca sin conexión** · Humetría · una marca hecha sin conexión es válida, cuenta en horas y horas extra, y lleva la
+etiqueta «Sin conexión · por verificar» hasta que Recursos Humanos la revisa. La persona declara la hora y el servidor la
+acota: no puede ser **anterior** al último contacto del teléfono con el servidor (el boleto), al inicio de la ventana del QR
+del centro si lo leyó (el QR prueba que el código existía: la marca es «no antes de» esa ventana, no «a esa hora»), ni a la
+marca anterior; y no puede ser **posterior** a la recepción ni a la marca siguiente. Cuenta la hora declarada llevada a ese
+intervalo, si entre el boleto y la recepción pasaron hasta 72 horas; si pasaron más, cuenta la cota probada (la más temprana
+posible) hasta que Recursos Humanos la verifique o la corrija. La hora declarada es **no probada**. Un QR leído más de 30
+minutos antes de la hora declarada no sube la evidencia (la marca queda como sin QR). Si el intervalo queda vacío, la marca no
+se acepta. Se señalan para revisión primero las marcas con intervalo de más de 240 minutos, con un QR viejo, sin posición,
+fuera de la zona del centro o cuya hora contada difiere de la declarada. El boleto vale hasta 35 días (el horizonte de la
+corrección); más viejo, no se acepta. Una marca declarada después de que se revocó la llave que la firmó no se acepta. Toda
+marca no aceptada queda en el teléfono como «No aceptada» con su motivo; si traía boleto y firma válidos, también queda
+registrada para Recursos Humanos. Nada aceptable se pierde en silencio (salvo que se borren los datos del teléfono antes de
+entregarla). *Pendiente de revisión del usuario: los umbrales de 240 minutos, 30 minutos, 72 horas y 35 días.*
 
 **3.4 Ubicación** · Humetría · se guardan **las coordenadas, su precisión y la zona de la geocerca** donde se marcó, para
 poder demostrar dónde se hizo dentro de un centro grande. En un centro que marca **en campo** (4.5) se guardan las
 coordenadas y su precisión aunque la marca caiga fuera de toda zona. Es un dato personal; por eso se informa en la aceptación
-(criterio 5.1), solo se captura **al marcar** (nunca en segundo plano ni entre marcas), solo lo ven los roles
+(criterio 5.1), solo se captura **al marcar** (nunca en segundo plano ni entre marcas; sin conexión se toma en el teléfono al marcar, viaja con
+la marca y se guarda igual), solo lo ven los roles
 autorizados, y se conserva por el plazo del criterio 7. Base: LFPDPPP (copia en
 `../nom-037/fuentes/lfpdppp-extracto.txt`: arts. 3-VI, 7, 8 y 9).
 
@@ -152,7 +173,8 @@ personal de confianza siguen siendo de la empresa.
 
 **4.2 Presencial** · el método fuerte es **QR rotativo del centro + geocerca** a la vez; solo uno de los dos es evidencia
 más débil (criterio 5.3). **Por defecto se bloquea marcar fuera de toda zona**; la empresa puede cambiar su política a
-«permitir y señalar» (la marca queda como evidencia media y señalada). Aun bloqueando, la persona puede pedir una corrección.
+«permitir y señalar» (la marca queda como evidencia media y señalada). Aun bloqueando, la persona puede pedir una corrección. Sin conexión **no se bloquea** fuera de zona: la marca se señala
+(3.3.1), porque la persona no puede saber si la zona la aceptaría.
 
 **4.3 Teletrabajo (NOM-037)** · sin geocerca; marca desde su dispositivo con la confirmación del dispositivo vinculado.
 
@@ -173,43 +195,66 @@ centro. La hora sigue siendo la del servidor (3.3). Cambiar el modo de un centro
 registro electrónico: medios, datos que se registran (incluida la ubicación), cómo se corrige, quién ve, plazo de
 conservación y su valor de prueba. Lo acepta al marcar, con su propia llave (una firma de esa sola acción); sin la
 aceptación de la **versión vigente** no puede marcar. Si el texto cambia (por ejemplo, el plazo de conservación), la
-siguiente marca pide aceptar la versión nueva. Se guarda el texto, su versión, la llave con que firmó y el momento.
+siguiente marca pide aceptar la versión nueva. Se guarda el texto, su versión, la llave con que firmó y el momento. Sin conexión: la marca puede guardarse en el teléfono
+hasta entregarse; la hora la declara la persona y el servidor la acota (3.3.1); la posición se captura en el teléfono; y existe
+un plan B con una llave propia del teléfono para quien su llave de acceso no firma sin conexión. Una versión del acuerdo
+publicada mientras la persona estaba sin conexión no rechaza una marca anterior.
 
 **5.2 Conformidad semanal** · Humetría · cada semana la persona revisa su registro y lo **confirma** u **objeta** con
 motivo. Lo confirmado es contenido «acordado» (1.3). Lo objetado queda a la vista de RH hasta resolverse: RH ve el
 motivo, recibe un aviso y la resuelve con una nota que la persona lee; la semana vuelve a pendiente para que la persona la
 confirme o la objete otra vez. Lo acordado incluye las ausencias aprobadas de la semana: aprobar o cancelar una ausencia,
-o corregir una marca, reabre la semana confirmada u objetada.
+o corregir una marca, reabre la semana confirmada u objetada; una marca sin conexión que llega después de confirmar una
+semana la reabre, y la persona la confirma de nuevo.
+
+*Días sin cubrir* · Humetría · no se confirma una semana con **días sin cubrir**: un día laborable de su horario vigente
+ese día, ya terminado, sin marcas (o con una entrada sin salida), que no sea de descanso, festivo ni anterior a su fecha
+de alta, ni tenga una ausencia aprobada en Vacaciones y permisos. Se suma a los bloqueos que ya existen (`no_marks`, y «Día
+abierto», `day_open`: la última jornada sin marca de fin): «Día abierto» habla de una jornada empezada; «día sin cubrir», de un
+día sin ninguna marca. Aplica a **toda empresa**; la plataforma puede apagar el bloqueo (`attendance.week.block_uncovered_days`)
+y entonces solo lo registra. La persona puede objetar la semana, pedir una corrección (agregar la marca que falta) o pedir a
+Recursos Humanos que registre la ausencia como permiso. *Pendiente de revisión del usuario: el bloqueo para toda empresa.*
 
 **5.3 Nivel de evidencia por marca** · Humetría · cada marca guarda cómo se hizo (QR más geocerca, solo geocerca, solo QR,
 navegador de confianza, remoto, en campo, corrección) y el reporte lo muestra. «Fuerte» es la marca **completa para su
 modo**: QR más geocerca en un centro presencial; en un centro en campo, una ubicación con precisión dentro del máximo de
 la política (método `field`). En campo sin ubicación utilizable (ninguna, o menos precisa que el máximo, que igual se
 guarda) es «Media» (método `field_unlocated`), o «solo QR» si escaneó un QR válido. El reporte señala esos días con
-«Marcó en campo», como información y no como aviso.
+«Marcó en campo», como información y no como aviso. Las marcas sin conexión usan el método `offline_qr` («Media») o
+`offline_declared` («Básica»): la evidencia es el mínimo entre la base de tiempo y la identidad (llave de acceso fuerte,
+llave del teléfono media), y la revisión de Recursos Humanos no la sube. *Pendiente de revisión del usuario: el plan B con
+evidencia media.*
 
 **5.4 Registro inalterable** · Humetría · las marcas son de **solo inserción** (trigger de Postgres, como `audit_entries`).
 Una corrección es una **marca nueva** con autor, motivo y referencia a la original; la original nunca se edita ni se
 borra. Esto responde a lo que se exige para sostener el valor probatorio: identificar quién registró y cuándo, detectar
 alteraciones, y explicar quién puede modificar y qué controles lo impiden.
 
+*Revisión de una marca sin conexión* · Humetría · la revisión es un registro nuevo enlazado a la marca, de solo inserción; la
+vigente es la última. «Correcta» solo agrega esa revisión y no cambia la hora. «Incorrecta» siempre va con su corrección
+(anular la marca o una marca nueva a la hora que escribe Recursos Humanos), en una sola operación.
+
 ## 6. Reporte para la autoridad
 
 **6.1** · Norma (1.1) · Un reporte por centro de trabajo y periodo con: persona, fecha, hora de inicio y de fin, pausas,
 horas ordinarias y extra, nivel de evidencia, correcciones con su motivo y estado de la conformidad. Cada descarga se
-registra en la bitácora (acción sensible).
+registra en la bitácora (acción sensible). El reporte muestra la etiqueta «Sin conexión» (también en una marca corregida, por
+su marca original), cuántas siguen por verificar, quién revisó y cuándo, y las marcas no aceptadas que quedaron registradas.
 
 ## 7. Conservación
 
 **7.1** · Interpretación · el art. 804 de la LFT obliga a conservar los registros de asistencia durante la relación
 laboral y un año después (dato de fuente secundaria; **falta cotejarlo con el texto vigente de la LFT**). La reforma
 no fija un plazo nuevo. Humetría propone conservar **mientras dure la relación y un año después como mínimo**, y que la
-empresa pueda ampliarlo; el plazo se dice en la aceptación. *Por decidir con el usuario y revisar si la STPS fija otro.*
+empresa pueda ampliarlo; el plazo se dice en la aceptación. *Por decidir con el usuario y revisar si la STPS fija otro.* La nota de la persona en una marca sin conexión (hasta 500
+caracteres) se conserva con el registro, solo la ve Recursos Humanos y nunca va a logs; las marcas sin conexión se conservan
+como las marcas, sin poda en esta versión.
 
 ## 8. Acceso de la persona a su registro
 
 **8.1** · Humetría · la persona ve siempre su propio registro, el detalle de cada marca y sus correcciones. La ley no lo
-exige, pero sin esto no se puede hablar de «acuerdo».
+exige, pero sin esto no se puede hablar de «acuerdo». La persona ve en su teléfono y en Mi semana el estado de cada marca sin conexión:
+guardada sin enviar, por verificar, verificada, incorrecta (con la nota de Recursos Humanos) o no aceptada (con su motivo).
 
 ## Historial
 
@@ -265,3 +310,13 @@ exige, pero sin esto no se puede hablar de «acuerdo».
   una ausencia».
 - 2026-11-23 · v0.4 · **2.6** agrega la vigencia del horario por fecha de inicio (decisión del dueño); el cambio de horario y
   el de centro, puesto, área o nivel del expediente quedan en la bitácora con su antes y su después.
+- 2026-11-24 · v0.5 · **marcas sin conexión** (propuesta del diseño `docs/superpowers/specs/2026-11-20-worker-pwa-offline-design.md`;
+  cada punto marcado **⚠ pendiente del usuario** espera su decisión y el código sigue lo descrito hasta entonces):
+  - **3.3 y 3.3.1**: la hora de una marca en línea la pone el servidor; la de una marca sin conexión la declara la persona y el
+    servidor la acota. **⚠ pendiente del usuario:** los umbrales de 240 minutos, 30 minutos, 72 horas y 35 días.
+  - **3.2, 3.4, 4.2, 2.3, 2.6, 2.9, 5.1, 5.3, 5.4, 6.1, 7.1, 8.1**: lo que cambia para la marca sin conexión (se escribe en
+    cada criterio).
+  - **5.1**: el plan B con una llave propia del teléfono, con evidencia media. **⚠ pendiente del usuario.** Texto del acuerdo
+    nuevo: **⚠ pendiente del usuario.**
+  - **5.2**: el bloqueo por días sin cubrir vale para toda empresa. **⚠ pendiente del usuario.** Una marca sin conexión que
+    llega a una semana objetada la deja objetada. **⚠ pendiente del usuario.**

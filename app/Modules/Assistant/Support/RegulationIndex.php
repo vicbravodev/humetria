@@ -42,7 +42,7 @@ final class RegulationIndex
 
     /**
      * One chunk per criterion, however the document numbers them: `### C-01. Title · Origin`, `**C-01. Title.** text`,
-     * `**1.1 Title** · Origin · text` or `### 2.1 Title`. A criterion runs until the next one or the next heading; one
+     * `**1.1 Title** · Origin · text` (also `**3.3.1 Title**`) or `### 2.1 Title`. A criterion runs until the next one or the next heading; one
      * with no text (a heading over others) is left out.
      *
      * @return list<RegulationChunk>
@@ -52,7 +52,7 @@ final class RegulationIndex
         $starts = [
             '/^### (C-\d+)\. (.+?)(?: · (.+))?()$/u',
             '/^\*\*(C-\d+)\. (.+?)\.\*\*()\s*(.*)$/u',
-            '/^\*\*(\d+\.\d+) (.+?)\*\*(?: · ([^·]+?))?(?: · (.*))?$/u',
+            '/^\*\*(\d+\.\d+(?:\.\d+)?) (.+?)\*\*(?: · ([^·]+?))?(?: · (.*))?$/u',
             '/^#{2,3} (\d+(?:\.\d+)?)\.? (.+?)()()$/u',
         ];
         $chunks = [];

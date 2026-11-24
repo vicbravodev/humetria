@@ -58,6 +58,16 @@ it('reads the working time criteria by their numbered points, with their origin'
         ->and($chunk->text)->toContain('doce horas en una semana');
 });
 
+it('reads a sub-point of the working time criteria, as the offline mark', function (): void {
+    $chunk = resolve(RegulationIndex::class)->search('marca sin conexión hora declarada no antes de', 1)[0];
+
+    expect($chunk->norm)->toBe('Jornada')
+        ->and($chunk->id)->toBe('3.3.1')
+        ->and($chunk->title)->toBe('Marca sin conexión')
+        ->and($chunk->source)->toBe('Humetría')
+        ->and($chunk->text)->toContain('no probada');
+});
+
 it('reads the compensation criteria by their numbered sections', function (): void {
     $chunk = resolve(RegulationIndex::class)->search('cesantía y vejez cuota patronal', 1)[0];
 
