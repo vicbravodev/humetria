@@ -273,6 +273,35 @@ it('without a ticket, the mark without a connection says what is missing instead
     expect(AttendanceOfflineMark::query()->count())->toBe(0);
 });
 
+it('marks from the shell of the installed app, with no page of the server: the same queue, the same delivery', function (bool $dark): void {
+    $page = phoneWithTickets();
+    $page->navigate('/me/acme/offline')->waitForText('No hay internet');
+    withoutNetwork($page);
+    // The worker serves the shell at the address of Marcar when the phone opens the icon with no network at all: here the
+    // history moves to that address, which is what the shell reads to know it is Marcar it must show.
+    $page->script("() => { history.pushState({}, '', '/me/acme/punch'); window.dispatchEvent(new PopStateEvent('popstate')); }");
+
+    $page->waitForText('Marcar sin internet')
+        ->assertSee('Entrada')
+        ->assertSee('Salir a comer')
+        ->assertSee('Leer el código de la pantalla')
+        ->assertSee('Reintentar con internet')
+        ->assertDontSee('Ana')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1);
+
+    markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
+    $page->assertSee('1 marca sin enviar')->assertNoAccessibilityIssues(1);
+
+    withoutNetwork($page, false);
+    $page->press('Listo');
+    $page->assertScript(eventually('() => document.body.innerText.includes("Recibida.")'), true);
+
+    expect(AttendanceOfflineMark::query()->sole()->outcome)->toBe('accepted');
+})->with(['light' => [false]]);
+
 it('opens the shell with the count of the marks that wait and the way to Marcar', function (): void {
     $page = phoneWithTickets();
     withoutNetwork($page);

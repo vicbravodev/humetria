@@ -1,5 +1,6 @@
 import OfflineHome from '@/components/attendance/offline-home';
 import OfflinePunch from '@/components/attendance/offline-punch';
+import { usePathname } from '@/hooks/use-pathname';
 
 /** What the shell knows about the queue of marks: the company's segment and where Marcar, the delivery and the tickets are. */
 export type OfflineQueueUrls = {
@@ -24,7 +25,9 @@ export default function OfflineApp({
     homeUrl: string;
     queue: OfflineQueueUrls | null;
 }) {
-    if (queue !== null && location.pathname === queue.punchUrl) {
+    const pathname = usePathname();
+
+    if (queue !== null && pathname === queue.punchUrl) {
         return <OfflinePunch company={company} queue={{ ...queue, homeUrl }} />;
     }
 
