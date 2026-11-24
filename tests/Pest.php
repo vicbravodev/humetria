@@ -22,6 +22,7 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
+use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -336,13 +337,14 @@ function toolCard(string $tool, AssistantScope $scope, array $arguments = []): a
 }
 
 /** A conversation with one message that the participant owns. */
-function assistantConversation(ConversationParticipant $participant, string $title = 'Avance'): Conversation
+function assistantConversation(ConversationParticipant $participant, string $title = 'Avance', ?CarbonInterface $updatedAt = null): Conversation
 {
     $conversation = Conversation::query()->create([
         'id' => (string) Str::uuid(),
         'participant_type' => 'assistant_participant',
         'participant_id' => $participant->id,
         'title' => $title,
+        ...($updatedAt === null ? [] : ['created_at' => $updatedAt, 'updated_at' => $updatedAt]),
     ]);
     $conversation->messages()->create([
         'id' => (string) Str::uuid(),

@@ -47,6 +47,22 @@ it('lists the conversations of the person, the newest first, a page at a time', 
         ->assertJsonMissingPath('data.0.participant_id');
 });
 
+it('orders conversations with the same update time by id, so no page repeats or skips one', function (): void {
+    $stamp = now()->startOfSecond();
+    $ids = collect(range(1, 20))->map(function (int $number) use ($stamp): string {
+        $conversation = assistantConversation($this->mine, "Conversación {$number}");
+        $conversation->forceFill(['updated_at' => $stamp])->save();
+
+        return $conversation->id;
+    });
+    $expected = $ids->sortDesc()->values();
+
+    $first = $this->actingAs($this->hr)->getJson(conversationsUrl($this->a))->json('data.*.id');
+    $second = $this->actingAs($this->hr)->getJson(conversationsUrl($this->a).'?page=2')->json('data.*.id');
+
+    expect([...$first, ...$second])->toBe($expected->all());
+});
+
 it('pages the list in the server', function (): void {
     foreach (range(1, 16) as $number) {
         assistantConversation($this->mine, "Conversación {$number}");
