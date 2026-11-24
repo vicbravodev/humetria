@@ -2,38 +2,71 @@
     {
         "key": "dashboard",
         "section": "general",
-        "levels": { "none": [], "view": ["view-dashboard"] },
-        "extras": []
+        "label": "Panel",
+        "levels": {
+            "none": [],
+            "view": ["view-dashboard"]
+        },
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "organization",
         "section": "general",
+        "label": "Centros de trabajo y empleados",
         "levels": {
             "none": [],
             "view": ["view-work-centers"],
             "manage": ["view-work-centers", "manage-organization"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "worker-access",
         "section": "general",
+        "label": "Acceso de trabajadores",
         "levels": {
             "none": [],
             "view": ["view-worker-access"],
             "manage": ["view-worker-access", "manage-worker-access"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "assistant",
         "section": "general",
-        "levels": { "none": [], "use": ["use-assistant"] },
-        "extras": []
+        "label": "Humi, el asistente",
+        "levels": {
+            "none": [],
+            "use": ["use-assistant"]
+        },
+        "levelLabels": {
+            "none": "Sin acceso",
+            "use": "Usar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "nom035",
         "section": "compliance",
+        "label": "NOM-035",
         "levels": {
             "none": [],
             "view": [
@@ -50,96 +83,171 @@
                 "manage-disclosure"
             ]
         },
-        "extras": ["view-trauma-screenings"]
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": ["view-trauma-screenings"],
+        "extraLabels": {
+            "view-trauma-screenings": "Ver tamizajes de la Guía I (lista de personas a canalizar)"
+        }
     },
     {
         "key": "telework",
         "section": "compliance",
+        "label": "NOM-037, teletrabajo",
         "levels": {
             "none": [],
             "view": ["view-telework"],
             "manage": ["view-telework", "manage-telework"]
         },
-        "extras": ["review-workplaces"]
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": ["review-workplaces"],
+        "extraLabels": {
+            "review-workplaces": "Revisar los espacios de trabajo de las personas"
+        }
     },
     {
         "key": "seating",
         "section": "compliance",
+        "label": "Ley Silla",
         "levels": {
             "none": [],
             "view": ["view-seating"],
             "manage": ["view-seating", "manage-seating"]
         },
-        "extras": ["assess-seating"]
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": ["assess-seating"],
+        "extraLabels": {
+            "assess-seating": "Evaluar el riesgo de los puestos"
+        }
     },
     {
         "key": "complaints",
         "section": "compliance",
+        "label": "Canal de quejas",
         "levels": {
             "none": [],
             "handle": ["handle-complaints"],
             "manage": ["handle-complaints", "manage-complaint-channel"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "handle": "Atender",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "climate",
         "section": "listening",
+        "label": "Clima laboral",
         "levels": {
             "none": [],
             "view": ["view-climate"],
             "manage": ["view-climate", "manage-climate"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "pulse",
         "section": "listening",
+        "label": "Pulso",
         "levels": {
             "none": [],
             "view": ["view-pulse"],
             "manage": ["view-pulse", "manage-pulse"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "attendance",
         "section": "operations",
+        "label": "Asistencia",
         "levels": {
             "none": [],
             "view": ["view-attendance"],
             "manage": ["view-attendance", "manage-attendance"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "vacations",
         "section": "operations",
+        "label": "Vacaciones",
         "levels": {
             "none": [],
             "view": ["view-vacations"],
             "manage": ["view-vacations", "manage-vacations"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "org-chart",
         "section": "operations",
+        "label": "Organigrama",
         "levels": {
             "none": [],
             "view": ["view-org-chart"],
             "manage": ["view-org-chart", "manage-org-chart"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     },
     {
         "key": "compensation",
         "section": "operations",
+        "label": "Compensación",
         "levels": {
             "none": [],
             "view": ["view-compensation"],
             "manage": ["view-compensation", "manage-compensation"]
         },
-        "extras": []
+        "levelLabels": {
+            "none": "Sin acceso",
+            "view": "Ver",
+            "manage": "Administrar"
+        },
+        "extras": [],
+        "extraLabels": {}
     }
 ]

@@ -125,3 +125,13 @@ it('has the same areas, levels and extras on the server, where Humi reads them, 
 
     expect($server)->toBe(array_map(fn (array $area): array => ['key' => $area['key'], 'levels' => $area['levels'], 'extras' => $area['extras']], permissionAreas()));
 });
+
+it('calls each area and each level on the server, where Humi says them, as areas.json does', function (): void {
+    $decoded = json_decode((string) file_get_contents(base_path('tests/Fixtures/permissions/areas.json')), true, flags: JSON_THROW_ON_ERROR);
+    $fixture = array_map(fn (array $area): array => ['label' => $area['label'] ?? null, 'levels' => $area['levelLabels'] ?? null], is_array($decoded) ? $decoded : []);
+
+    expect(array_values(array_map(fn (array $area): array => [
+        'label' => $area['label'],
+        'levels' => array_map(fn (array $level): string => $level['label'], $area['levels']),
+    ], PermissionAreas::all())))->toBe($fixture);
+});

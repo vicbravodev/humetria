@@ -7,7 +7,9 @@ namespace App\Modules\Tenancy\Support;
 /**
  * The areas of «Roles y permisos» as the server reads them (Humi tells a person their level in each): one access level per
  * area, each including the one before, plus a few extras. The screen draws them from resources/js/lib/permission-areas-data.ts;
- * PermissionAreasTest holds this list and that one to tests/Fixtures/permissions/areas.json, so the three never drift.
+ * PermissionAreasTest and permission-areas.test.ts hold this list and that one to tests/Fixtures/permissions/areas.json (the
+ * areas, their labels, the permissions and labels of each level, and the extras), so the three never drift. Only how Humi
+ * says each extra is this list's own: the screen labels it differently.
  */
 final class PermissionAreas
 {

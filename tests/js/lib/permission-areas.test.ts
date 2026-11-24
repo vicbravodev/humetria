@@ -25,13 +25,20 @@ const fixture: unknown = JSON.parse(
 describe('the areas', () => {
     it('are the ones written in tests/Fixtures/permissions/areas.json, which PermissionAreasTest holds to the catalog', () => {
         expect(
-            AREAS.map(({ key, section, levels, extras }) => ({
+            AREAS.map(({ key, section, label, levels, extras }) => ({
                 key,
                 section,
+                label,
                 levels: Object.fromEntries(
                     levels.map((level) => [level.key, level.permissions]),
                 ),
+                levelLabels: Object.fromEntries(
+                    levels.map((level) => [level.key, level.label]),
+                ),
                 extras: extras.map((extra) => extra.permission),
+                extraLabels: Object.fromEntries(
+                    extras.map((extra) => [extra.permission, extra.label]),
+                ),
             })),
         ).toEqual(fixture);
     });
