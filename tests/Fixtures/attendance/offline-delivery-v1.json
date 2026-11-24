@@ -43,18 +43,34 @@
     },
     "response": {
         "results": [
-            {"seq": 0, "status": "received"},
-            {"seq": 1, "status": "duplicate", "stored_status": "received"},
-            {"seq": 2, "status": "duplicate", "reason": "already_recorded", "stored_status": "received"},
-            {"seq": 3, "status": "duplicate", "reason": "sequence_conflict", "stored_status": "rejected"},
-            {"seq": 4, "status": "rejected", "reason": "wrong_center"},
-            {"seq": 5, "status": "rejected", "reason": "ticket_invalid"},
-            {"seq": 6, "status": "rejected", "reason": "signature_invalid"},
-            {"seq": 7, "status": "conflict", "reason": "ticket_reused"}
+            { "seq": 0, "status": "received" },
+            { "seq": 1, "status": "duplicate", "stored_status": "received" },
+            {
+                "seq": 2,
+                "status": "duplicate",
+                "reason": "already_recorded",
+                "stored_status": "received"
+            },
+            {
+                "seq": 3,
+                "status": "duplicate",
+                "reason": "sequence_conflict",
+                "stored_status": "rejected"
+            },
+            { "seq": 4, "status": "rejected", "reason": "wrong_center" },
+            { "seq": 5, "status": "rejected", "reason": "ticket_invalid" },
+            { "seq": 6, "status": "rejected", "reason": "signature_invalid" },
+            { "seq": 7, "status": "conflict", "reason": "ticket_reused" }
         ],
         "tickets": [
-            {"ticket": "v1.fixture-ticket-1.fixture-mac", "issuedAt": 1794086400},
-            {"ticket": "v1.fixture-ticket-2.fixture-mac", "issuedAt": 1794086400}
+            {
+                "ticket": "v1.fixture-ticket-1.fixture-mac",
+                "issuedAt": 1794086400
+            },
+            {
+                "ticket": "v1.fixture-ticket-2.fixture-mac",
+                "issuedAt": 1794086400
+            }
         ],
         "context": {
             "tenantId": "0b6c3d3e-9a51-4f8a-9a0f-2f1d6e3b8c11",
@@ -66,10 +82,33 @@
         }
     },
     "envelope": [
-        {"status": 413, "when": "the body is larger than 64 KB", "body": {"message": "Request Entity Too Large"}},
-        {"status": 422, "when": "an error of the envelope: shape, more than 20 marks, two people", "body": {"message": "The items field is required.", "errors": {"items": ["The items field is required."]}}},
-        {"status": 403, "when": "Sec-Fetch-Site is cross-site", "body": {"message": "Forbidden"}},
-        {"status": 404, "when": "the company does not exist or has no registro de jornada", "body": {"message": "Not Found"}},
-        {"status": 429, "when": "more than 600 requests a minute from one address", "body": {"message": "Too Many Requests"}}
+        {
+            "status": 413,
+            "when": "the body is larger than 64 KB",
+            "body": { "message": "Request Entity Too Large" }
+        },
+        {
+            "status": 422,
+            "when": "an error of the envelope: shape, more than 20 marks, two people",
+            "body": {
+                "message": "The items field is required.",
+                "errors": { "items": ["The items field is required."] }
+            }
+        },
+        {
+            "status": 403,
+            "when": "Sec-Fetch-Site is cross-site",
+            "body": { "message": "Forbidden" }
+        },
+        {
+            "status": 404,
+            "when": "the company does not exist or has no registro de jornada",
+            "body": { "message": "Not Found" }
+        },
+        {
+            "status": 429,
+            "when": "more than 600 requests a minute from one address",
+            "body": { "message": "Too Many Requests" }
+        }
     ]
 }
