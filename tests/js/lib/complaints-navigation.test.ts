@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import { activeChild, mainNavItems } from '@/lib/app-navigation';
-import { listeningNavItems } from '@/lib/tool-navigation';
+import { handlesCasesOnly } from '@/lib/complaints-navigation';
+import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
 import { coverage, templateCan } from '../support/tenant-can';
 import type { CurrentTenant } from '@/types';
@@ -137,5 +138,66 @@ describe('the complaints in the navigation', () => {
         expect(lit('/admin/acme/complaints/channel')).toBe('Canal');
         expect(lit('/admin/acme/complaints/cases/9')).toBe('Casos');
         expect(lit('/admin/acme/complaints')).toBe('Casos');
+    });
+
+    // A role of the company's own that handles complaints plus any other page keeps that page: «cases only» is read from the
+    // whole `can`, not from a list of pages that can go stale.
+    it.each([
+        'view_vacations',
+        'view_climate',
+        'manage_compensation',
+        'view_interventions',
+    ])(
+        'keeps what %s opens for a role that also handles complaints',
+        (permission) => {
+            const custom = {
+                slug: 'acme',
+                role: 'custom:7',
+                can: templateCan('complaints', [permission]),
+            };
+
+            expect(handlesCasesOnly(custom)).toBe(false);
+        },
+    );
+
+    it('keeps Vacaciones in the menu of a custom role that handles complaints and views vacations', () => {
+        const custom = {
+            slug: 'acme',
+            role: 'custom:7',
+            can: templateCan('complaints', ['view_vacations']),
+        };
+
+        expect(operationsNavItems(custom).map((item) => item.title)).toContain(
+            'Vacaciones',
+        );
+    });
+
+    it('still reduces the complaints template and a custom role made the same to their cases', () => {
+        expect(
+            handlesCasesOnly({
+                slug: 'acme',
+                role: 'complaints',
+                can: templateCan('complaints'),
+            }),
+        ).toBe(true);
+        expect(
+            handlesCasesOnly({
+                slug: 'acme',
+                role: 'custom:7',
+                can: templateCan('complaints', ['use_assistant']),
+            }),
+        ).toBe(true);
+    });
+
+    it('does not reduce the templates that open more than complaints', () => {
+        for (const template of ['owner', 'hr', 'viewer', 'committee']) {
+            expect(
+                handlesCasesOnly({
+                    slug: 'acme',
+                    role: template,
+                    can: templateCan(template),
+                }),
+            ).toBe(false);
+        }
     });
 });
