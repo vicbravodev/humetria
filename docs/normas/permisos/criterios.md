@@ -41,8 +41,8 @@ aceptar (aunque hayan vencido) no se puede borrar: primero se pasan esas persona
 
 ### C-05. Un nivel de acceso por área · Humetría
 
-Un rol se arma eligiendo, para cada área del panel (Panel; Centros de trabajo y empleados; Acceso de trabajadores; Humi;
-NOM-035; NOM-037; Ley Silla; Canal de quejas; Clima laboral; Pulso; Asistencia; Vacaciones; Organigrama; Compensación), **un
+Un rol se arma eligiendo, para cada área del panel (Panel; Centros de trabajo y empleados; Acceso de trabajadores; Humi, el
+asistente; NOM-035; NOM-037, teletrabajo; Ley Silla; Canal de quejas; Clima laboral; Pulso; Asistencia; Vacaciones; Organigrama; Compensación), **un
 solo nivel**: «Sin acceso», «Ver» o «Administrar» (en el canal de quejas, «Atender» o «Administrar»; en Humi, «Usar»).
 Cada nivel incluye lo del anterior. Algunas áreas tienen además permisos aparte, que se marcan uno por uno: ver los
 tamizajes de la Guía I (NOM-035), revisar espacios de teletrabajo (NOM-037) y evaluar el riesgo de los puestos (Ley Silla).
