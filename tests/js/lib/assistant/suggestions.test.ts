@@ -36,6 +36,7 @@ describe('followUpsFor', () => {
     it('offers nothing after an answer with no card, or after a list', () => {
         expect(followUpsFor([])).toEqual([]);
         expect(followUpsFor(['list'])).toEqual([]);
+        expect(followUpsFor(['choices'])).toEqual([]);
         expect(followUpsFor(['otra'])).toEqual([]);
     });
 });

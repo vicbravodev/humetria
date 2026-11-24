@@ -16,6 +16,31 @@ function answer(parts: UIMessage['parts']): UIMessage {
 }
 
 describe('viewOf', () => {
+    it('draws the buttons as a card and does not list asking them as something Humi looked at', () => {
+        const view = viewOf(
+            answer([
+                {
+                    type: 'tool-OfferChoices',
+                    toolCallId: 't-1',
+                    state: 'output-available',
+                    input: {},
+                    output: JSON.stringify({
+                        render: 'choices',
+                        title: '¿De qué parte?',
+                        link: null,
+                        note: null,
+                        truncated: false,
+                        rows: [{ label: 'De todo', text: 'Quiero ver todo' }],
+                    }),
+                },
+            ]),
+        );
+
+        expect(view.steps).toEqual([]);
+        expect(view.renders).toEqual(['choices']);
+        expect(view.items.map((item) => item.kind)).toEqual(['card']);
+    });
+
     it('keeps the order of the answer: its steps on top, then its text and cards as they came', () => {
         const view = viewOf(
             answer([

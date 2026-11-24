@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Assistant\Providers;
 
 use App\Modules\Assistant\Console\EvaluateAssistant;
+use App\Modules\Assistant\Console\QualityAssistant;
 use App\Modules\Assistant\Contracts\AiAccess;
 use App\Modules\Assistant\Contracts\HumiActivity;
 use App\Modules\Assistant\Listeners\DeleteMemberConversations;
@@ -30,6 +31,7 @@ use App\Modules\Assistant\Tools\GetComplianceOverview;
 use App\Modules\Assistant\Tools\GetFirstSteps;
 use App\Modules\Assistant\Tools\GetRiskResults;
 use App\Modules\Assistant\Tools\ListPendingActions;
+use App\Modules\Assistant\Tools\OfferChoices;
 use App\Modules\Assistant\Tools\SearchRegulations;
 use App\Modules\Tenancy\Events\MemberRemoved;
 use Illuminate\Contracts\Foundation\Application;
@@ -76,6 +78,7 @@ final class AssistantServiceProvider extends ServiceProvider
             ListPendingActions::class,
             SearchRegulations::class,
             GetFirstSteps::class,
+            OfferChoices::class,
         ], [
             // Regulations are not a module of the company: Humi always has them. A tool that reads two norms stays with either.
             GetComplianceOverview::class => ['nom035', 'nom037', 'seating', 'vacations', 'complaints', 'pulse', 'climate', 'attendance', 'org_chart', 'compensation'],
@@ -100,7 +103,7 @@ final class AssistantServiceProvider extends ServiceProvider
         Event::listen(AgentFailed::class, [SendLlmAnalytics::class, 'failed']);
 
         if ($this->app->runningInConsole()) {
-            $this->commands([EvaluateAssistant::class]);
+            $this->commands([EvaluateAssistant::class, QualityAssistant::class]);
         }
     }
 }

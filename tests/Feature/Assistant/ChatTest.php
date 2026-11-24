@@ -260,7 +260,7 @@ it('wires the stop switch into the steps of the agent', function (): void {
     $middleware = $agent->middleware();
     $condition = (new ReflectionProperty(Stop::class, 'condition'))->getValue($middleware[0]);
 
-    expect($middleware)->toHaveCount(1)->and($middleware[0])->toBeInstanceOf(Stop::class)
+    expect($middleware)->toHaveCount(2)->and($middleware[0])->toBeInstanceOf(Stop::class)
         ->and(value($condition))->toBeFalse();
 
     resolve(StopSwitch::class)->request($scope->participantId);

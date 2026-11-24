@@ -2,6 +2,9 @@ import type { UIMessage } from 'ai';
 import { getToolName, isToolUIPart } from '@/lib/assistant/ai-client';
 import { parseToolCard, type ToolCard } from '@/lib/assistant/tool-cards';
 
+/** Tools whose card says it all: asking the question with buttons is not something Humi looked at. */
+const SILENT_TOOLS: readonly string[] = ['OfferChoices'];
+
 export type MessageStep = { id: string; tool: string; done: boolean };
 
 export type MessageItem =
@@ -87,7 +90,11 @@ export function viewOf(message: UIMessage): MessageView {
             const done = part.state === 'output-available';
             const card = done ? parseToolCard(part.output) : null;
 
-            steps.push({ id: part.toolCallId, tool: getToolName(part), done });
+            const tool = getToolName(part);
+
+            if (!SILENT_TOOLS.includes(tool)) {
+                steps.push({ id: part.toolCallId, tool, done });
+            }
 
             if (card !== null) {
                 addCard(items, card, seen);

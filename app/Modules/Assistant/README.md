@@ -9,7 +9,7 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 | Pieza                             | Dónde                                                                                                                                                                                                                                         |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Agente (SDK `laravel/ai`)         | `Agents/HumiAssistant.php` + `resources/ai/humi.system.md` (instrucciones versionadas)                                                                                                                                                        |
-| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`, `GetFirstSteps`                                                                                                        |
+| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`, `GetFirstSteps`, `OfferChoices`                                                                                                        |
 | Quién es la persona en la empresa | `Data/AssistantScope` (empresa, participante, permisos), armado en el servidor por `Support/AssistantScopeFactory`                                                                                                                            |
 | Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                                                                                                                 |
 | Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                                                                                                                     |
@@ -18,6 +18,19 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 | Datos vivos                       | `Support/LiveFacts`: cada herramienta que implementa `Contracts\TellsLiveFacts` da frases cortas por llave (`pending`, `participation`, `risk`, `telework`, `invite.{página}`); un minuto en caché por empresa; ruta `tenant.assistant.facts` |
 | Rutas                             | `routes/assistant.php` bajo `admin/{empresa}/assistant/*` (nombre `tenant.assistant.*`); consola del superadmin en `routes/assistant_console.php`                                                                                             |
 | Front                             | `resources/js/components/assistant/*`, `hooks/use-humi-chat.ts`, `lib/assistant/*`, `pages/assistant/index.tsx`                                                                                                                               |
+
+**Preguntar antes de asumir.** Cuando una pregunta puede entenderse de dos maneras que dan datos distintos («¿qué me falta?»
+sin decir de qué norma; «¿cómo va la campaña?» con varias), Humi consulta primero lo que la empresa tiene y llama a
+`OfferChoices`: una pregunta y de 2 a 6 opciones (la última, la de «todo»), que el panel dibuja como botones
+(`components/assistant/humi-choices-card.tsx`). Un clic envía el texto de la opción como un mensaje normal. Tras la
+tarjeta el turno termina solo (`Support/ChoicesOffered`, un segundo `Stop` de `HumiAssistant::middleware()`): la pregunta
+ya va en la tarjeta y no se paga otro paso del modelo. Las opciones salen de lo que devolvió una herramienta por regla del
+prompt, no por validación del servidor; todo texto que llega a un botón pasa por `UntrustedText::line`. Las tarjetas
+llevan el detalle y el texto de Humi la conclusión, lo más urgente y el paso siguiente (`resources/ai/humi.system.md`).
+
+**Caché de prompt.** `HumiAssistant` cachea las definiciones de sus herramientas (`#[CacheToolDefinitions]`, Anthropic las
+cachea solo si se le pide); las instrucciones no, porque llevan la pantalla abierta y cambian con ella. `ai_usage` guarda
+`cache_read_tokens` y `cache_write_tokens` (nulos si el proveedor no los reporta).
 
 Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{CampaignRecords,EvaluationSchedule}`,
 `Results\Contracts\RiskResults`, `Telework\Contracts\TeleworkStanding`, `Interventions\Contracts\ProgramStandings`,
@@ -118,6 +131,16 @@ php artisan humi:evaluate {id-de-la-empresa} --as=persona@empresa.mx --other={id
 Intenta leer otra empresa, hacerse pasar por el administrador global, esconder órdenes en el nombre de un centro, pedir lo que
 contestó una persona, ver su propio prompt, salirse de alcance (médico y legal), mandar datos personales y cambiarle las
 reglas. Termina con error si algún intento pasa; no guarda conversaciones ni uso. Guarda el resultado en el PR.
+
+**Calidad de las respuestas** (con el modelo real, solo en staging, mismas reglas que la evaluación):
+
+```bash
+php artisan humi:quality {id-de-la-empresa} --as=persona@empresa.mx [--model=otro-modelo]
+```
+
+Hace 8 preguntas fijas de un día normal con las herramientas reales y reporta por pregunta palabras, enlaces, si cierra con
+una oferta y si preguntó con botones; al final, el promedio y cuántas de las ambiguas preguntaron. Sirve para comparar dos
+prompts o dos modelos con números. No guarda nada y solo falla si el modelo falla.
 
 ## Pendiente o fuera de alcance
 

@@ -6,9 +6,11 @@ namespace App\Modules\Assistant\Agents;
 
 use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\PageContext;
+use App\Modules\Assistant\Support\ChoicesOffered;
 use App\Modules\Assistant\Support\StopSwitch;
 use App\Modules\Assistant\Support\ToolRegistry;
 use App\Modules\Assistant\Support\UntrustedText;
+use Laravel\Ai\Attributes\CacheToolDefinitions;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\MaxTokens;
 use Laravel\Ai\Attributes\Timeout;
@@ -25,6 +27,8 @@ use Laravel\Ai\Promptable;
  * SDK keeps the conversation (RemembersConversations: messages() comes from there). It only reads and explains: it
  * changes nothing. Its provider and model come from config.
  */
+// Only the tools are cached: the instructions carry the open page, so they change with it and would be written, never read.
+#[CacheToolDefinitions]
 #[MaxSteps(6)]
 #[MaxTokens(1500)]
 #[Timeout(60)]
@@ -69,7 +73,11 @@ final class HumiAssistant implements Agent, HasMiddleware, HasTools, RemembersCo
     public function middleware(): array
     {
         // Before each step, so «Detener» keeps it from asking the provider for more.
-        return [Stop::when(fn (): bool => $this->stop->requested($this->scope->participantId))];
+        return [
+            Stop::when(fn (): bool => $this->stop->requested($this->scope->participantId)),
+            // The question of the buttons is the card's: nothing the model adds after it would be read before the person answers.
+            Stop::when(ChoicesOffered::in(...)),
+        ];
     }
 
     public function tools(): iterable

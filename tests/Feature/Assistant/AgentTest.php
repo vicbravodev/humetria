@@ -7,6 +7,8 @@ use App\Modules\Assistant\Data\PageContext;
 use App\Modules\Assistant\Tools\GetRiskResults;
 use App\Modules\Assistant\Tools\SearchRegulations;
 use App\Modules\Tenancy\Models\Tenant;
+use Laravel\Ai\Attributes\CacheInstructions;
+use Laravel\Ai\Attributes\CacheToolDefinitions;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\MaxTokens;
 use Laravel\Ai\Attributes\Timeout;
@@ -46,10 +48,17 @@ it('is bounded: at most six steps, a limit of tokens and a timeout', function ()
         ->and($class->getAttributes(Timeout::class)[0]->newInstance()->value)->toBeGreaterThan(0);
 });
 
+it('caches its tool definitions but not its instructions, which carry the open page and change with it', function (): void {
+    $class = new ReflectionClass(HumiAssistant::class);
+
+    expect($class->getAttributes(CacheToolDefinitions::class))->toHaveCount(1)
+        ->and($class->getAttributes(CacheInstructions::class))->toBeEmpty();
+});
+
 it('works with the tools of the registry, built for its scope', function (): void {
     $tools = collect(HumiAssistant::make(scope: $this->scope)->tools());
 
-    expect($tools)->toHaveCount(6)
+    expect($tools)->toHaveCount(7)
         ->and($tools->map(fn (Tool $tool): string => $tool::class))->toContain(GetRiskResults::class, SearchRegulations::class);
 });
 
@@ -80,6 +89,27 @@ it('says what it cannot read yet and where to see it in Humetría, never sending
             && str_contains($instructions, 'la pantalla de Humetría')
             && str_contains($instructions, 'Nunca mandes a la persona al sistema de su empresa');
     });
+});
+
+it('tells Humi when to ask with buttons and to leave the detail to the cards', function (): void {
+    HumiAssistant::fake(['Hola.']);
+    HumiAssistant::make(scope: $this->scope)->prompt('¿Qué me falta?');
+
+    HumiAssistant::assertPrompted(function (AgentPrompt $prompt): bool {
+        $instructions = instructionsOf($prompt);
+
+        return str_contains($instructions, 'OfferChoices')
+            && str_contains($instructions, 'La última opción es siempre la de «todo»')
+            && str_contains($instructions, 'No repitas las filas de una tarjeta')
+            && ! str_contains($instructions, 'avanza con la lectura más razonable');
+    });
+});
+
+it('asks for each link as a markdown link with a short label, never as a bare path', function (): void {
+    HumiAssistant::fake(['Hola.']);
+    HumiAssistant::make(scope: $this->scope)->prompt('¿Dónde veo las quejas?');
+
+    HumiAssistant::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains(instructionsOf($prompt), 'enlace de markdown con una etiqueta corta') && str_contains(instructionsOf($prompt), 'nunca la ruta suelta'));
 });
 
 it('speaks to RH without exclamation marks or emoji, and so do its instructions', function (): void {

@@ -227,3 +227,31 @@ describe('parseToolCard: what is no card', () => {
         ).toBeNull();
     });
 });
+
+describe('parseToolCard: choices', () => {
+    it('draws the question and the options that carry a label and the text they send', () => {
+        const card = parseToolCard(
+            JSON.stringify({
+                ...base,
+                render: 'choices',
+                title: '¿De qué parte?',
+                rows: [
+                    { label: 'De todo', text: 'Quiero ver todo' },
+                    { label: 'sin texto' },
+                    { text: 'sin etiqueta' },
+                    { label: 'NOM-035', text: 'Quiero ver NOM-035' },
+                ],
+            }),
+        );
+
+        expect(card).toEqual({
+            ...base,
+            render: 'choices',
+            title: '¿De qué parte?',
+            rows: [
+                { label: 'De todo', text: 'Quiero ver todo' },
+                { label: 'NOM-035', text: 'Quiero ver NOM-035' },
+            ],
+        });
+    });
+});

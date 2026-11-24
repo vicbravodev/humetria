@@ -54,6 +54,7 @@ export default function HumiThread({
                             message={message}
                             streaming={streaming}
                             last={index === shown.length - 1}
+                            following={shown[index + 1]}
                             rating={chat.ratings[message.id] ?? null}
                             canRate={chat.canRate(message.id)}
                             onRate={(rating) =>
