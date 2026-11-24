@@ -8,15 +8,28 @@ use App\Modules\Complaints\Enums\RespondentKind;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
 use App\Modules\Complaints\Support\Dates;
+use App\Modules\Tenancy\Contracts\MemberLookup;
+use App\Modules\Tenancy\Events\MemberPermissionsChanged;
 use App\Modules\Tenancy\Events\MemberRoleChanged;
 use Illuminate\Support\Facades\Log;
 
-/** A person who becomes the role a case is against stops holding it (criterio C-45): it shows as unassigned and can be routed again. */
+/**
+ * A person who becomes who a case is against stops holding it (criterio C-45): it shows as unassigned and can be routed
+ * again. Being HR is holding its permission, by role or directly; being management is becoming the owner.
+ */
 final readonly class EndAssignmentsOnRoleConflict
 {
-    public function handle(MemberRoleChanged $event): void
+    public function __construct(private MemberLookup $members) {}
+
+    public function handle(MemberRoleChanged|MemberPermissionsChanged $event): void
     {
-        $kinds = collect(RespondentKind::cases())->filter(fn (RespondentKind $kind): bool => $kind->excludedRole() === $event->role)->map(fn (RespondentKind $kind): string => $kind->value)->values()->all();
+        $permissions = $this->members->permissionsOf($event->tenantId, $event->userId);
+        $role = $event instanceof MemberRoleChanged ? $event->role : null;
+        $kinds = collect(RespondentKind::cases())
+            ->filter(fn (RespondentKind $kind): bool => ($permission = $kind->excludedPermission()) !== null
+                ? in_array($permission, $permissions, true)
+                : $role !== null && $kind->excludedRole() === $role)
+            ->map(fn (RespondentKind $kind): string => $kind->value)->values()->all();
 
         if ($kinds === []) {
             return;

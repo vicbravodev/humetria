@@ -16,6 +16,7 @@ use App\Modules\Complaints\Support\ComplaintsWorkerSection;
 use App\Modules\Complaints\Support\RandomReferenceSource;
 use App\Modules\Complaints\Support\ReferenceSource;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
+use App\Modules\Tenancy\Events\MemberPermissionsChanged;
 use App\Modules\Tenancy\Events\MemberRemoved;
 use App\Modules\Tenancy\Events\MemberRoleChanged;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -43,6 +44,7 @@ final class ComplaintsServiceProvider extends ServiceProvider
     {
         Event::listen(MemberRemoved::class, EndHandlerOnMemberRemoval::class);
         Event::listen(MemberRoleChanged::class, EndAssignmentsOnRoleConflict::class);
+        Event::listen(MemberPermissionsChanged::class, EndAssignmentsOnRoleConflict::class);
 
         // Keyed by a hash of the address, never the address; a whole office behind one address must still be able to use it.
         RateLimiter::for('complaints-view', fn (Request $request): Limit => Limit::perHour(config()->integer('complaints.rate_limits.views_per_hour'))->by(AddressKey::for($request)));

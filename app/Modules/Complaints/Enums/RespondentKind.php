@@ -51,4 +51,10 @@ enum RespondentKind: string
             default => null,
         };
     }
+
+    /** The permission whose holder counts as the people a complaint of this kind is against (criterio C-45); null when none does. */
+    public function excludedPermission(): ?string
+    {
+        return $this === self::Hr ? 'manage-organization' : null;
+    }
 }

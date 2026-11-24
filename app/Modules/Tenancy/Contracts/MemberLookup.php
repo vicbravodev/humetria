@@ -11,4 +11,11 @@ interface MemberLookup
 {
     /** The user with that email (case aside) who is a member of the company; null when nobody is. */
     public function userIdByEmail(string $tenantId, string $email): ?int;
+
+    /**
+     * Every permission the person has in the company, by their role and given directly; empty when they hold none.
+     *
+     * @return list<string>
+     */
+    public function permissionsOf(string $tenantId, int $userId): array;
 }
