@@ -49,6 +49,7 @@ final class ModuleRoutes
             'tenant.no-access',
             'tenant.plan',
             'tenant.privacy.*',
+            'tenant.roles.*',
             'tenant.work-centers.*',
             'tenant.worker-access.*',
         ];

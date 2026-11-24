@@ -25,6 +25,8 @@ const UNION_ALLOWED_ROUTES = [
     'tenant.employees.*',
     'tenant.areas.*',
     'tenant.members.*',
+    // A union's own roles, made only of compensation permissions.
+    'tenant.roles.*',
     'tenant.plan',
     'tenant.job-grades.*',
     'tenant.compensation.*',
