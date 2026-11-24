@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Http\PageSeo;
 use App\Models\User;
+use App\Modules\Tenancy\Contracts\CompanyModules;
+use App\Modules\Tenancy\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -188,4 +191,21 @@ it('is routes/web.php, and nothing else, that asks PageSeo for the tags', functi
     $callers = array_values(array_filter($callers, fn (string $path): bool => $path !== 'app/Http/PageSeo.php'));
 
     expect($callers)->toBe(['routes/web.php']);
+});
+
+it('links the manifest of its company only in the person\'s pages', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    foreach (['/me/acme', '/me/acme/punch'] as $url) {
+        $xpath = xpathOf($this->get($url)->assertOk()->getContent());
+
+        expect(headValue($xpath, '//head/link[@rel="manifest"]', 'href'))->toEndWith('/me/acme/manifest.webmanifest');
+    }
+
+    foreach (['/', '/privacy-notice', '/a/acme/kiosk', '/me/no-existe'] as $url) {
+        expect($this->get($url)->getContent())->not->toContain('rel="manifest"');
+    }
+
+    expect($this->actingAs(User::factory()->create())->get('/admin/login')->getContent())->not->toContain('rel="manifest"');
 });

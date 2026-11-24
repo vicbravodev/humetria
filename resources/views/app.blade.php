@@ -49,6 +49,10 @@
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
         <link rel="apple-touch-icon" href="/apple-touch-icon-180.png">
+        @if (request()->is('me/*') && ($page['component'] ?? '') !== 'error' && is_string($appSlug = request()->route('tenant')))
+            {{-- The installable app of the company of the person's pages (WorkerAccess): only under /me/{slug}. --}}
+            <link rel="manifest" href="{{ route('worker.app.manifest', $appSlug) }}">
+        @endif
 
         @fonts
 

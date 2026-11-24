@@ -5,15 +5,26 @@ declare(strict_types=1);
 // Required from routes/web.php: the pages of the person who works (no account), under me/{tenant:slug}. Every name starts
 // with worker.
 
+use App\Http\Middleware\AssignRequestContext;
+use App\Http\Middleware\EndRevokedImpersonation;
+use App\Http\Middleware\ForbidWhileImpersonating;
+use App\Http\Middleware\HandleAppearance;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\WorkerAccess\Http\Controllers\AccessLinkController;
 use App\Modules\WorkerAccess\Http\Controllers\EntryController;
 use App\Modules\WorkerAccess\Http\Controllers\HomeController;
+use App\Modules\WorkerAccess\Http\Controllers\InstallableAppController;
 use App\Modules\WorkerAccess\Http\Controllers\KeyController;
 use App\Modules\WorkerAccess\Http\Controllers\NotMeController;
 use App\Modules\WorkerAccess\Http\Controllers\ProofController;
 use App\Modules\WorkerAccess\Http\Middleware\RequireWorkerSession;
 use App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 // The company of the slug (ResolveWorkerTenant: an unknown or blocked one gets the same 404). The address carries no
 // credential: the person's session is, or the signature of their key. Per address, and per key where one signs.
@@ -57,4 +68,14 @@ Route::middleware(['throttle:worker-proof', ResolveWorkerTenant::class, RequireW
     Route::post('/', [ProofController::class, 'store'])->name('worker.proof.store');
     Route::post('code', [ProofController::class, 'sendCode'])->name('worker.proof.code.send');
     Route::post('code/check', [ProofController::class, 'checkCode'])->name('worker.proof.code.check');
+});
+
+// The installable app: its manifest, with no session and no cookie (with SESSION_DRIVER=database each request without a
+// cookie would open a row in `sessions`, and an installed phone asks for these often); nothing of anyone is in it.
+Route::withoutMiddleware([
+    EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class, ShareErrorsFromSession::class,
+    PreventRequestForgery::class, EndRevokedImpersonation::class, AssignRequestContext::class, ForbidWhileImpersonating::class,
+    HandleAppearance::class, HandleInertiaRequests::class,
+])->middleware(['throttle:worker-enter', ResolveWorkerTenant::class])->group(function (): void {
+    Route::get('me/{tenant:slug}/manifest.webmanifest', [InstallableAppController::class, 'manifest'])->name('worker.app.manifest');
 });
