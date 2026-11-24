@@ -542,7 +542,7 @@ it('tells someone who may not see compensation nothing of it', function (): void
         'label' => 'Compensación',
         'state' => 'not_applicable',
         'stateLabel' => 'No aplica',
-        'summary' => 'Compensación solo la ven el dueño y RH.',
+        'summary' => 'Compensación solo la ven quienes tienen ese permiso.',
         'link' => "/admin/{$this->a->slug}",
     ]);
 });

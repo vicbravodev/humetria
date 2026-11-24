@@ -59,7 +59,7 @@ it('tells a role that may only use Humi no figure of any area: only its own acce
 
     expect(array_keys($rows))->toBe(['complaints', 'compensation', 'access'])
         ->and($rows['complaints']['summary'])->toBe('Tu canal de quejas aún no recibe casos.')
-        ->and($rows['compensation']['summary'])->toBe('Compensación solo la ven el dueño y RH.')
+        ->and($rows['compensation']['summary'])->toBe('Compensación solo la ven quienes tienen ese permiso.')
         ->and($rows['access']['summary'])->toStartWith('Tu acceso: Humi, el asistente: Usar.');
 });
 

@@ -22,7 +22,7 @@ final readonly class CompensationReader implements ComplianceReader
     public function status(AssistantScope $scope): ComplianceStatus
     {
         if (! $scope->canSee('view-compensation')) {
-            return new ComplianceStatus('compensation', 'Compensación', 'not_applicable', 'No aplica', 'Compensación solo la ven el dueño y RH.', $this->links->dashboard());
+            return new ComplianceStatus('compensation', 'Compensación', 'not_applicable', 'No aplica', 'Compensación solo la ven quienes tienen ese permiso.', $this->links->dashboard());
         }
 
         $contract = $this->compensation->current();
