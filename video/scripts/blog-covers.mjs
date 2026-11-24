@@ -1,5 +1,5 @@
 // Portadas del blog: una por artículo de content/blog, del color de la familia de su herramienta (`tool:` del front matter).
-// Escribe public/blog/{slug}.webp (la de la página y las tarjetas) y public/blog/{slug}-og.jpg (con título, para Open Graph).
+// Escribe public/images/blog/{slug}.webp (la de la página y las tarjetas) y public/images/blog/{slug}-og.jpg (con título, para Open Graph).
 // Uso, desde video/: npm run covers:blog [slug ...]    Requiere `cwebp` (brew install webp).
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const articles = join(import.meta.dirname, '../../content/blog');
-const out = join(import.meta.dirname, '../../public/blog');
+const out = join(import.meta.dirname, '../../public/images/blog');
 const only = process.argv.slice(2);
 mkdirSync(out, { recursive: true });
 

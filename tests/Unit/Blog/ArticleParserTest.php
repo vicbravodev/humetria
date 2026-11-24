@@ -143,8 +143,8 @@ it('knows the tool an article is about, the family that gives it its color and w
         ->and($article->toolName)->toBe('Vacaciones y permisos')
         ->and($article->family)->toBe('operations')
         ->and($article->toolRoute)->toBe('tools.leave')
-        ->and($article->cover())->toBe('/blog/jornada-40-horas.webp')
-        ->and($article->ogImage())->toBe('/blog/jornada-40-horas-og.jpg');
+        ->and($article->cover())->toBe('/images/blog/jornada-40-horas.webp')
+        ->and($article->ogImage())->toBe('/images/blog/jornada-40-horas-og.jpg');
 });
 
 it('puts every tool in the family its page wears', function (string $tool, string $family): void {

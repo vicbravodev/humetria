@@ -25,7 +25,7 @@ it('renders the blog index with the newest article large and its cover', functio
     visitPage('blog/index', '/blog', $dark, $mobile)
         ->assertSee('Blog de cumplimiento laboral')
         ->assertSee('Jornada de 40 horas')
-        ->assertAttribute('img[src="/blog/jornada-40-horas.webp"]', 'width', '1200');
+        ->assertAttribute('img[src="/images/blog/jornada-40-horas.webp"]', 'width', '1200');
 })->with('blogLooks');
 
 it('renders an article with its table of contents, table and quote', function (bool $dark, bool $mobile): void {
