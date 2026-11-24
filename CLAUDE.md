@@ -94,7 +94,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones.
 - `Billing`: cuentas, suscripciones, cargos, estados de cuenta y pagos.
 - `Blog`: blog público para SEO: artículos en `content/blog/*.md`, validados en CI y publicados solo con el visto bueno del dueño
-  (`reviewed_at`); HTML del servidor, sin base de datos (ver `docs/blog/README.md`).
+  (`reviewed_at`); páginas de Inertia con SSR y el header de la landing, sin base de datos (ver `docs/blog/README.md`).
 - `Campaigns`: evaluaciones NOM-035: campañas, participantes e invitaciones, la encuesta del empleado.
 - `Compensation`: compensación y contrato colectivo: prestaciones, salarios por nivel, escenarios y su costo.
 - `Complaints`: canal de denuncias: público, seguimiento anónimo, gestores de casos.

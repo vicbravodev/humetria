@@ -1,10 +1,11 @@
 ---
 title: 'Registro de jornada 2027: lista de 10 pasos'
 description: 'Lista práctica para preparar el registro electrónico de la jornada antes del 1 de enero de 2027: horarios, acuerdo, correcciones, conservación y reporte.'
+tool: attendance
 published_at: 2026-11-20
 updated_at: 2026-11-20
-reviewed_by: null
-reviewed_at: null
+reviewed_by: 'Equipo Humetría'
+reviewed_at: 2026-11-23
 sources:
     - https://www.diputados.gob.mx/LeyesBiblio/ref/lft/LFT_ref52_01may26.pdf
     - https://sidof.segob.gob.mx/notas/docFuente/5786537
@@ -15,6 +16,8 @@ La reforma a la Ley Federal del Trabajo publicada el 1 de mayo de 2026 trae dos 
 «registrar de manera electrónica la jornada laboral de cada persona trabajadora, incluyendo el horario de inicio y
 finalización». Incumplir esa obligación se multa con 250 a 5,000 UMA (artículo 994, fracción IV Bis). Esta lista
 ordena el trabajo en diez pasos. Distinguimos en cada uno lo que dice la ley de lo que es **recomendación de Humetría**.
+
+[diagrama: registro-diez-pasos]
 
 ## 1. Actualiza los horarios a 46 horas
 

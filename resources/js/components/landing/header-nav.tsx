@@ -1,47 +1,34 @@
+import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import GlideChips from '@/components/humetria/glide-chips';
+import ResourcesMenu from '@/components/landing/resources-menu';
+import type { ResourceLink } from '@/types/public-nav';
 import ToolsMenu from '@/components/landing/tools-menu';
 import { useActiveSection } from '@/hooks/use-active-section';
+import { PUBLIC_LINKS } from '@/lib/public-nav';
 import { cn } from '@/lib/utils';
 
-// Each link jumps to its heading (`id`) and is marked while its whole section (`section`) is being read.
-const sections = [
-    {
-        id: 'como-funciona',
-        section: 'seccion-como-funciona',
-        label: 'Cómo funciona',
-        test: 'header-how',
-    },
-    {
-        id: 'herramientas',
-        section: 'herramientas',
-        label: 'Herramientas',
-        test: 'header-tools',
-    },
-    {
-        id: 'confidencialidad',
-        section: 'seccion-confidencialidad',
-        label: 'Confidencialidad',
-        test: 'header-privacy',
-    },
-    { id: 'humi', section: 'seccion-humi', label: 'Humi', test: 'header-humi' },
-    {
-        id: 'precios',
-        section: 'seccion-precios',
-        label: 'Precios',
-        test: 'header-pricing',
-    },
-] as const;
+// The links come from one file that the Blade header of the blog reads too. A section jumps to its heading (`id`) and is
+// marked while its whole section (`section`) is being read; a page is a plain link, marked on its own page. «Recursos»
+// is a group: Blog, Roadmap, the guide, Confidencialidad and Humi live inside it so the bar keeps to four things.
+const links = PUBLIC_LINKS;
+const resourceItems = links.flatMap((link) => link.items ?? []);
 
 // The hero comes first so nothing is marked until the page reaches a section.
-const watched = ['inicio', ...sections.map((section) => section.section)];
+const watched = [
+    'inicio',
+    ...[...links, ...resourceItems].flatMap((link) =>
+        link.section === undefined ? [] : [link.section],
+    ),
+];
 
 const ITEM =
     'relative flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-1 before:content-[""]';
 
 /**
- * The sections of the landing in one pill: a chip slides under the one being read. «Herramientas» opens the tools menu.
- * Screens of 1,024 px and up only: below that the five sections, the theme, the sign in and the demo do not fit side by side, and the tools menu button takes the nav's place. `sectionBase` is the page the sections live on, for a page that is not the landing.
+ * Four things in one pill: Herramientas (the tools menu), Cómo funciona, Precios and Recursos (a menu); a chip slides under
+ * the one being read. Screens of 1,024 px and up only: below that the menu button takes the nav's place. `sectionBase` is the
+ * page the sections live on, for a page that is not the landing.
  */
 export default function HeaderNav({
     sectionBase = '',
@@ -49,7 +36,18 @@ export default function HeaderNav({
     sectionBase?: string;
 }) {
     const active = useActiveSection(watched);
+    const { url } = usePage();
     const [hovered, setHovered] = useState<string | null>(null);
+    const path = url.split('?')[0] ?? '';
+    const hrefOf = (link: Pick<ResourceLink, 'id' | 'kind' | 'path'>) =>
+        link.kind === 'page' ? (link.path ?? '') : `${sectionBase}#${link.id}`;
+    const currentItem =
+        resourceItems.find((item) =>
+            item.kind === 'page'
+                ? item.path !== undefined &&
+                  (path === item.path || path.startsWith(`${item.path}/`))
+                : item.section === active,
+        )?.id ?? null;
 
     return (
         <nav aria-label="Secciones" className="hidden lg:block">
@@ -57,27 +55,41 @@ export default function HeaderNav({
                 onMouseLeave={() => setHovered(null)}
                 className="flex items-center rounded-full border bg-muted/70 p-1 backdrop-blur-md"
             >
-                {sections.map((section) => {
-                    const current = active === section.section;
+                {links.map((link) => {
+                    const current =
+                        link.kind === 'group'
+                            ? currentItem !== null
+                            : active === link.section;
                     const tone = current
                         ? 'text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground';
                     const pointer = {
-                        onMouseEnter: () => setHovered(section.id),
-                        onFocus: () => setHovered(section.id),
+                        onMouseEnter: () => setHovered(link.id),
+                        onFocus: () => setHovered(link.id),
                         onBlur: () => setHovered(null),
                     };
 
                     return (
-                        <li key={section.id} className="relative">
+                        <li key={link.id} className="relative">
                             <GlideChips
                                 group="header"
                                 current={current}
-                                hovered={hovered === section.id}
+                                hovered={hovered === link.id}
                                 className="rounded-full"
                             />
-                            {section.id === 'herramientas' ? (
-                                <div {...pointer} data-test={section.test}>
+                            {link.kind === 'group' ? (
+                                <div {...pointer}>
+                                    <ResourcesMenu
+                                        label={link.label}
+                                        test={link.test}
+                                        items={link.items ?? []}
+                                        hrefOf={hrefOf}
+                                        currentId={currentItem}
+                                        triggerClassName={cn(ITEM, tone)}
+                                    />
+                                </div>
+                            ) : link.id === 'herramientas' ? (
+                                <div {...pointer} data-test={link.test}>
                                     <ToolsMenu
                                         variant="bar"
                                         triggerClassName={cn(ITEM, tone)}
@@ -85,15 +97,15 @@ export default function HeaderNav({
                                 </div>
                             ) : (
                                 <a
-                                    href={`${sectionBase}#${section.id}`}
-                                    data-test={section.test}
+                                    href={hrefOf(link)}
+                                    data-test={link.test}
                                     data-track="nav_click"
-                                    data-track-target={section.id}
+                                    data-track-target={link.id}
                                     aria-current={current ? 'true' : undefined}
                                     {...pointer}
                                     className={cn(ITEM, tone)}
                                 >
-                                    {section.label}
+                                    {link.label}
                                 </a>
                             )}
                         </li>

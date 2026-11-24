@@ -1,24 +1,25 @@
 {
-  "name": "humetria-motion-kit",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "studio": "remotion studio",
-    "types:check": "tsc --noEmit",
-    "check:film": "node scripts/check.mjs anonimato angie",
-    "voice:master": "node scripts/voice-master.mjs anonimato angie",
-    "render:anonimato": "remotion render Anonimato ../public/video/humetria-anonimato.mp4 --codec=h264 --crf=20 --pixel-format=yuv420p && remotion render Anonimato ../public/video/humetria-anonimato.webm --codec=vp9 --crf=32",
-    "poster:anonimato": "remotion still Anonimato ../public/video/humetria-anonimato.jpg --frame=520 --image-format=jpeg --jpeg-quality=85"
-  },
-  "dependencies": {
-    "@remotion/cli": "4.0.538",
-    "@remotion/fonts": "4.0.538",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "remotion": "4.0.538"
-  },
-  "devDependencies": {
-    "@types/react": "19.2.2",
-    "typescript": "5.9.3"
-  }
+    "name": "humetria-motion-kit",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "studio": "remotion studio",
+        "types:check": "tsc --noEmit",
+        "check:film": "node scripts/check.mjs anonimato angie",
+        "voice:master": "node scripts/voice-master.mjs anonimato angie",
+        "render:anonimato": "remotion render Anonimato ../public/video/humetria-anonimato.mp4 --codec=h264 --crf=20 --pixel-format=yuv420p && remotion render Anonimato ../public/video/humetria-anonimato.webm --codec=vp9 --crf=32",
+        "poster:anonimato": "remotion still Anonimato ../public/video/humetria-anonimato.jpg --frame=520 --image-format=jpeg --jpeg-quality=85",
+        "covers:blog": "node scripts/blog-covers.mjs"
+    },
+    "dependencies": {
+        "@remotion/cli": "4.0.538",
+        "@remotion/fonts": "4.0.538",
+        "react": "19.2.0",
+        "react-dom": "19.2.0",
+        "remotion": "4.0.538"
+    },
+    "devDependencies": {
+        "@types/react": "19.2.2",
+        "typescript": "5.9.3"
+    }
 }
