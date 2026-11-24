@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Models\User;
 use App\Modules\Tenancy\Exceptions\CompanyRoleInUse;
 use App\Modules\Tenancy\Exceptions\NotACompanyRole;
+use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +27,11 @@ final readonly class DeleteCompanyRole
         $this->roles->assertCustom($role);
 
         DB::transaction(function () use ($role, $by): void {
+            // Locked company first, then the role (the order the other actions take): a person or invitation that points at
+            // the role at the same time waits (their foreign key needs the row) and then finds it gone, or is seen here.
+            Tenant::query()->whereKey($role->getAttribute('tenant_id'))->lockForUpdate()->sole();
+            Role::query()->whereKey($role->id)->lockForUpdate()->sole();
+
             $this->roles->inUse($role) && throw new CompanyRoleInUse;
 
             $role->delete();
