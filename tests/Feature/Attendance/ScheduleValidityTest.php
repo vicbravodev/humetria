@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Attendance\Actions\SaveSchedule;
+use App\Modules\Attendance\Actions\SaveSchedules;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -13,7 +14,7 @@ use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-mutates(SaveSchedule::class, AttendanceSchedule::class);
+mutates(SaveSchedule::class, SaveSchedules::class, AttendanceSchedule::class);
 
 const WEEK_9_TO_6 = [1 => 540, 2 => 540, 3 => 540, 4 => 540, 5 => 540, 6 => 0, 7 => 0];
 
@@ -106,5 +107,25 @@ describe('saving a schedule with a start date', function (): void {
             ->and($entries[1]->metadata['after'])->toEqual(['valid_from' => '2026-03-01', 'shift_type' => 'mixed', 'work_mode' => 'remote', 'minutes' => [420, 420, 420, 420, 420, 0, 0], 'starts' => null])
             ->and($before->id)->not->toBe($after->id)
             ->and(collect($entries)->map(fn (AuditEntry $entry): string => auditContent($entry))->implode(' '))->not->toContain($this->ana->name);
+    });
+});
+
+describe('a batch', function (): void {
+    it('starts every schedule on one date even when the batch crosses midnight', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+        // 23:50 of the 11th in Mexico City; after the first person is saved it is already the 12th there.
+        $this->travelTo(CarbonImmutable::parse('2026-11-11 23:50:00', 'America/Mexico_City'));
+        $moved = false;
+        Illuminate\Support\Facades\Event::listen('eloquent.created: '.AuditEntry::class, function () use (&$moved): void {
+            if (! $moved) {
+                $moved = true;
+                $this->travelTo(CarbonImmutable::parse('2026-11-12 00:10:00', 'America/Mexico_City'));
+            }
+        });
+
+        resolve(SaveSchedules::class)->handle([$this->ana->id, $bob->id], ShiftType::Day, WorkMode::Onsite, WEEK_9_TO_6);
+
+        expect($moved)->toBeTrue()
+            ->and(AttendanceSchedule::query()->pluck('valid_from')->map->toDateString()->unique()->all())->toBe(['2026-11-11']);
     });
 });

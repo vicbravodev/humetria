@@ -9,6 +9,7 @@ use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\EmployeeNotAvailable;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
+use App\Modules\Tenancy\Contracts\Timezones;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class SaveSchedules
 {
-    public function __construct(private Roster $roster, private SaveSchedule $save) {}
+    public function __construct(private Roster $roster, private SaveSchedule $save, private Timezones $timezones) {}
 
     /**
      * @param  list<string>  $employeeIds
@@ -34,6 +35,9 @@ final readonly class SaveSchedules
     {
         $found = $this->roster->findMany($employeeIds);
         $people = array_map(fn (string $id): RosterEntry => $found[$id] ?? throw new EmployeeNotAvailable, $employeeIds);
+
+        // One date for all: a batch that crosses midnight must not split its people in two days.
+        $validFrom ??= CarbonImmutable::now($this->timezones->forTenant());
 
         // ponytail: one save per person, at most 100 of them; a single upsert if batches ever grow.
         DB::transaction(function () use ($people, $shiftType, $workMode, $minutesByWeekday, $startsByWeekday, $validFrom): void {
