@@ -5,17 +5,20 @@ import type { RoleTemplateOption } from '@/types';
 const BLANK = 'blank';
 
 /**
- * «Empezar desde» of a new role (board Roles 7c): «Desde cero» or a template of Humetría, as cards that are native radios.
- * Choosing one sets every area to what the template has; after that each area is adjusted on its own.
+ * «Empezar desde» of a role (board Roles 7c): «Desde cero» or a template of Humetría, as cards that are native radios.
+ * Choosing one sets every area to what the template has; after that each area is adjusted on its own. On a role already
+ * made (`editing`) nothing is chosen at first, and choosing says that nothing is saved yet.
  */
 export default function RolePresets({
     templates,
     value,
+    editing,
     onChoose,
 }: {
     templates: RoleTemplateOption[];
-    /** The template chosen, or null for «Desde cero». */
-    value: string | null;
+    /** The template chosen, null for «Desde cero», undefined while none is (a role being edited). */
+    value: string | null | undefined;
+    editing: boolean;
     onChoose: (template: RoleTemplateOption | null) => void;
 }) {
     const options = [
@@ -51,7 +54,10 @@ export default function RolePresets({
                             type="radio"
                             name="preset"
                             value={option.key}
-                            checked={(value ?? BLANK) === option.key}
+                            checked={
+                                value !== undefined &&
+                                (value ?? BLANK) === option.key
+                            }
                             onChange={() => onChoose(option.template)}
                             className="sr-only"
                         />
@@ -64,6 +70,12 @@ export default function RolePresets({
                     </label>
                 ))}
             </div>
+            {editing && value !== undefined && (
+                <p className="text-sm text-pretty text-muted-foreground">
+                    Todavía no se guarda nada: elige «Guardar rol» para aplicar
+                    estos niveles.
+                </p>
+            )}
         </fieldset>
     );
 }

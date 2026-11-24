@@ -47,10 +47,11 @@ export default function RoleEditorForm({
                         error={editor.errors['label']}
                     />
                 </div>
-                {role === null && can_manage && (
+                {can_manage && (
                     <RolePresets
                         templates={templates}
-                        value={editor.data.based_on}
+                        value={editor.preset}
+                        editing={role !== null}
                         onChoose={editor.choose}
                     />
                 )}

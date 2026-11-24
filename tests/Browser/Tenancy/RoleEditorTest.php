@@ -87,6 +87,33 @@ it('sets every area from the card chosen to start from, and back to nothing from
         ->assertSee('Quien tenga este rol no tiene acceso a ninguna área.');
 });
 
+it('offers «Empezar desde» when editing too: a template replaces the levels in the form, nothing is saved until «Guardar rol»', function (): void {
+    $owner = User::factory()->create();
+    signInToPanel($owner);
+    $role = app(CreateCompanyRole::class)->handle(Tenant::query()->where('slug', 'acme')->sole(), 'Auditoría', ['view-dashboard', 'view-vacations'], null, $owner);
+
+    visit("/admin/acme/roles/{$role->id}/edit")
+        ->assertSee('Empezar desde')
+        ->assertNotChecked('input[name="preset"][value="blank"]')
+        ->click('@preset-committee')
+        ->assertSee('Todavía no se guarda nada: elige «Guardar rol» para aplicar estos niveles.')
+        ->assertChecked('input[name="level-complaints"][value="handle"]')
+        ->assertChecked('input[name="level-vacations"][value="none"]')
+        ->assertValue('input[name="label"]', 'Auditoría')
+        ->assertNoJavaScriptErrors();
+
+    expect($role->fresh()?->permissions->pluck('name')->all())->toEqualCanonicalizing(['view-dashboard', 'view-vacations']);
+
+    visit("/admin/acme/roles/{$role->id}/edit")
+        ->click('@preset-committee')
+        ->click('#acknowledge-sensitive')
+        ->press('Guardar rol')
+        ->assertSee('Rol actualizado.')
+        ->assertNoJavaScriptErrors();
+
+    expect($role->fresh()?->permissions->pluck('name')->all())->toEqualCanonicalizing(Role::findByName('committee')->permissions->pluck('name')->all());
+});
+
 it('shows a set saved before levels as it is, and keeps it when another area is changed', function (): void {
     $owner = User::factory()->create();
     signInToPanel($owner);
