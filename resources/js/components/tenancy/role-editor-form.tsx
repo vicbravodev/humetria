@@ -30,11 +30,6 @@ export default function RoleEditorForm({
             noValidate
             className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]"
             onSubmit={(event) => {
-                // The delete dialog's own form lives in a portal, but React still bubbles its submit up here.
-                if (event.target !== event.currentTarget) {
-                    return;
-                }
-
                 event.preventDefault();
                 editor.save(event.currentTarget);
             }}

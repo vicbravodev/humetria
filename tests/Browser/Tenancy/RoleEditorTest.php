@@ -156,6 +156,33 @@ it('says a role someone holds cannot be deleted, and deletes one nobody holds', 
         ->assertDontSee('Temporal');
 });
 
+it('deletes from inside the editor without also saving the role the dialog is in front of', function (): void {
+    $owner = User::factory()->create();
+    signInToPanel($owner);
+    $free = app(CreateCompanyRole::class)->handle(Tenant::query()->where('slug', 'acme')->sole(), 'Pasajero', ['view-dashboard'], null, $owner);
+
+    visit("/admin/acme/roles/{$free->id}/edit")
+        // Every request the page makes from here on, by its verb: one POST (the delete, spoofed), not a second one from the editor's form.
+        ->assertScript(<<<'JS'
+            () => {
+                window.verbs = [];
+                const open = XMLHttpRequest.prototype.open;
+                XMLHttpRequest.prototype.open = function (method, ...rest) { window.verbs.push(method.toUpperCase()); return open.call(this, method, ...rest); };
+                const original = window.fetch;
+                window.fetch = (input, init) => { window.verbs.push((init?.method ?? 'GET').toUpperCase()); return original(input, init); };
+
+                return true;
+            }
+            JS, true)
+        ->press('Borrar rol')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertSee('Rol borrado.')
+        ->assertScript('() => window.verbs.filter((verb) => verb !== "GET").join()', 'POST')
+        ->assertNoJavaScriptErrors();
+
+    expect(Role::query()->whereKey($free->id)->exists())->toBeFalse();
+});
+
 it('raises an area of a person past their role, with the role\'s level as a floor, and confirms a sensitive one', function (): void {
     signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();
