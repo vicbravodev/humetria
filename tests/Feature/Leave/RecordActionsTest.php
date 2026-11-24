@@ -102,16 +102,20 @@ it('lets only owner and hr adjust and settle', function (TenantRole $role, bool 
 
 it('settles the days of a person who left, once', function (): void {
     $this->ana->update(['deactivated_at' => '2026-11-03 18:00:00']);
-    $termination = LeaveTermination::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    $termination = LeaveTermination::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'pending_days' => 14]);
     $this->actingAs($this->hr);
 
-    $this->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect();
+    $this->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()
+        ->assertSessionHas('inertia.flash_data.toast.type', 'success')
+        ->assertSessionHas('inertia.flash_data.toast.message', 'Vacaciones marcadas como pagadas.');
 
     expect(Balances::available($this->ana->id))->toBe(0)
         ->and($termination->refresh()->settled_by)->toBe($this->hr->id)
         ->and(AuditEntry::query()->where('event', 'leave.termination_settled')->count())->toBe(1);
 
-    $this->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()->assertSessionHas('inertia.flash_data.toast.type', 'error');
+    $this->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()
+        ->assertSessionHas('inertia.flash_data.toast.type', 'error')
+        ->assertSessionHas('inertia.flash_data.toast.message', 'Estas vacaciones ya estaban pagadas o la baja se canceló.');
 
     expect(LeaveEntry::query()->where('kind', EntryKind::Termination)->count())->toBe(1)
         ->and(AuditEntry::query()->where('event', 'leave.termination_settled')->count())->toBe(1);
@@ -124,7 +128,7 @@ it('tells HR when the days settled are not the ones recorded with the departure'
 
     $this->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()
         ->assertSessionHas('inertia.flash_data.toast.type', 'warning')
-        ->assertSessionHas('inertia.flash_data.toast.message', 'Se finiquitó el saldo de hoy (14 días), pero la baja había registrado 10: revisa el estado de cuenta.');
+        ->assertSessionHas('inertia.flash_data.toast.message', 'Se marcó como pagado el saldo de hoy (14 días), pero la baja había registrado 10: revisa el estado de cuenta.');
 
     expect($termination->refresh()->settled_at)->not->toBeNull();
 });
@@ -134,7 +138,7 @@ it('does not settle the termination of a person who works here', function (): vo
 
     $this->actingAs($this->hr)->post(route('tenant.vacations.terminations.settle', [$this->tenant, $termination]))->assertRedirect()
         ->assertSessionHas('inertia.flash_data.toast.type', 'error')
-        ->assertSessionHas('inertia.flash_data.toast.message', 'Esta persona está activa: sus días no se finiquitan.');
+        ->assertSessionHas('inertia.flash_data.toast.message', 'Esta persona está activa: sus vacaciones no se marcan como pagadas.');
 
     expect($termination->refresh()->settled_at)->toBeNull()
         ->and(LeaveEntry::query()->where('kind', EntryKind::Termination)->count())->toBe(0);

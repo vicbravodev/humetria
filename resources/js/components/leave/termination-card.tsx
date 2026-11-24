@@ -26,7 +26,7 @@ export default function TerminationCard({
         >
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 id="termination-title" className="text-lg font-semibold">
-                    Días al terminar la relación
+                    Vacaciones al terminar la relación
                 </h2>
                 {termination.settledOn === null ? (
                     <Badge variant="warning">Por finiquitar</Badge>
@@ -37,6 +37,11 @@ export default function TerminationCard({
                     </Badge>
                 )}
             </div>
+            <p className="text-meta text-muted-foreground">
+                Solo los días de vacaciones que se le deben. El finiquito
+                completo (salario, aguinaldo, prima vacacional en pesos y, si
+                aplica, la liquidación) lo calcula tu nómina.
+            </p>
             <dl className="grid gap-4 sm:grid-cols-3">
                 <div>
                     <dt className="text-meta text-muted-foreground">Baja</dt>
@@ -78,10 +83,12 @@ export default function TerminationCard({
             {termination.canSettle && (
                 <div className="flex justify-end">
                     <ConfirmDialog
-                        trigger={<Button>Finiquitar los días</Button>}
-                        title="¿Finiquitar los días de esta persona?"
+                        trigger={
+                            <Button>Marcar vacaciones como pagadas</Button>
+                        }
+                        title="¿Marcar como pagadas las vacaciones de esta persona?"
                         description="Lo que le queda de cada periodo sale del libro y su saldo queda en cero. Se registra en la bitácora y no se puede deshacer."
-                        confirmLabel="Sí, finiquitar"
+                        confirmLabel="Sí, marcar como pagadas"
                         dismissLabel="Volver"
                         destructive={false}
                         form={settle.form({
