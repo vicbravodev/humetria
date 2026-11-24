@@ -279,6 +279,7 @@ final readonly class CompanyRoles
     public function syncDirectPermissions(User $user, Tenant $tenant, array $permissions): void
     {
         $this->inTeam($user, $tenant, fn () => $user->syncPermissions($permissions));
+        $this->forgetMembers();
     }
 
     /** Takes the person's role and direct permissions in the company away; what they have elsewhere, and the superadmin role, stay. */
@@ -315,7 +316,7 @@ final readonly class CompanyRoles
     }
 
     /** The request's memo of the company's people is stale once a role changes. */
-    private function forgetMembers(): void
+    public function forgetMembers(): void
     {
         resolve(CompanyMembers::class)->forget();
     }

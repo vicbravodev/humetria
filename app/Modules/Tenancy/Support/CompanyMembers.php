@@ -30,6 +30,9 @@ final class CompanyMembers implements Members
     /** @var array<string, list<MemberSummary>> */
     private array $managing = [];
 
+    /** @var array<string, list<MemberSummary>> by company and permission */
+    private array $holders = [];
+
     public function __construct(private readonly CurrentTenant $current, private readonly CompanyRoles $roles) {}
 
     public function all(): array
@@ -46,6 +49,7 @@ final class CompanyMembers implements Members
         $this->reviewing = [];
         $this->handling = [];
         $this->managing = [];
+        $this->holders = [];
     }
 
     /** @return list<MemberSummary> */
@@ -92,6 +96,18 @@ final class CompanyMembers implements Members
     public function holding(string $permission): array
     {
         $tenantId = $this->current->id();
+
+        return $this->holders[$tenantId.'|'.$permission] ??= $this->loadHolding($tenantId, $permission);
+    }
+
+    /** @return list<MemberSummary> */
+    private function loadHolding(string $tenantId, string $permission): array
+    {
+        // A tool the company has not contracted counts for nothing, as in a person's effective permissions.
+        if (($definition = PermissionCatalog::find($permission)) !== null && ! PermissionCatalog::available($tenantId, $definition)) {
+            return [];
+        }
+
         $type = (new User)->getMorphClass();
         $direct = DB::table('model_has_permissions')
             ->join('permissions', 'permissions.id', '=', 'model_has_permissions.permission_id')

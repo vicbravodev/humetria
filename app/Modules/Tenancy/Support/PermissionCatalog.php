@@ -95,10 +95,14 @@ final class PermissionCatalog
     /** Why the company cannot use the permission (its plan lacks the module), or null when it can. */
     public static function unavailableReason(Tenant $tenant, PermissionDefinition $permission): ?string
     {
-        if ($permission->requiresModule === null || resolve(CompanyModules::class)->enabled($tenant->id, $permission->requiresModule->value)) {
-            return null;
-        }
+        $module = $permission->requiresModule;
 
-        return 'Tu plan no incluye '.$permission->requiresModule->label().'.';
+        return $module === null || self::available($tenant->id, $permission) ? null : 'Tu plan no incluye '.$module->label().'.';
+    }
+
+    /** Whether the company has the tool the permission belongs to (a permission of no tool is always available). */
+    public static function available(string $tenantId, PermissionDefinition $permission): bool
+    {
+        return $permission->requiresModule === null || resolve(CompanyModules::class)->enabled($tenantId, $permission->requiresModule->value);
     }
 }

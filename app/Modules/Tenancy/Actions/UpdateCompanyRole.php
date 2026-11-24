@@ -44,6 +44,7 @@ final readonly class UpdateCompanyRole
 
             $role->update(['label' => $label]);
             $role->syncPermissions($permissions);
+            $this->roles->forgetMembers();
 
             // One event per holder, and each listener reads that person's permissions: batch it if a role ever holds hundreds.
             foreach ($added === [] && $removed === [] ? [] : $holders as $holder) {

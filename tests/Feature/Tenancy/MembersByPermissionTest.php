@@ -8,7 +8,10 @@ use App\Modules\Tenancy\Data\MemberSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\CompanyMembers;
+use App\Modules\Tenancy\Support\ModuleStates;
+use Illuminate\Support\Facades\DB;
 
 mutates(CompanyMembers::class);
 
@@ -41,4 +44,28 @@ it('does not count a permission given in another company', function (): void {
     app(GrantMemberPermissions::class)->handle(TenantMembership::query()->where('tenant_id', $other->id)->where('user_id', $this->plain->id)->sole(), ['handle-complaints'], $this->owner);
 
     expect(userIdsOf(resolve(Members::class)->complaintHandlers()))->not->toContain($this->plain->id);
+});
+
+it('leaves out whoever holds a permission of a tool the company has not contracted, as the effective permissions do', function (): void {
+    app(GrantMemberPermissions::class)->handle(TenantMembership::query()->where('user_id', $this->given->id)->sole(), ['view-vacations'], $this->owner);
+    TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
+    resolve(ModuleStates::class)->forget();
+    resolve(CompanyMembers::class)->forget();
+
+    expect(resolve(Members::class)->holding('view-vacations'))->toBe([]);
+});
+
+it('asks who holds a permission once per request, and again after a role or permission changes', function (): void {
+    $members = resolve(Members::class);
+    $members->holding('manage-organization');
+
+    DB::enableQueryLog();
+    $members->holding('manage-organization');
+    $repeated = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    app(GrantMemberPermissions::class)->handle(TenantMembership::query()->where('user_id', $this->given->id)->sole(), ['manage-organization'], $this->owner);
+
+    expect($repeated)->toBe(0)
+        ->and(userIdsOf($members->holding('manage-organization')))->toContain($this->given->id);
 });
