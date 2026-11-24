@@ -82,6 +82,9 @@ function humiChoicesStream(): string
     $parts = [
         ['type' => 'start', 'messageId' => 'a1'],
         ['type' => 'start-step'],
+        // What Humi consulted to know what to offer: its card must not be drawn over the question.
+        ['type' => 'tool-input-available', 'toolCallId' => 't0', 'toolName' => 'GetComplianceOverview', 'input' => []],
+        ['type' => 'tool-output-available', 'toolCallId' => 't0', 'output' => json_encode(['render' => 'status_list', 'title' => 'Resumen consultado oculto', 'rows' => [], 'link' => null, 'note' => null, 'truncated' => false])],
         ['type' => 'tool-input-available', 'toolCallId' => 't1', 'toolName' => 'OfferChoices', 'input' => []],
         ['type' => 'tool-output-available', 'toolCallId' => 't1', 'output' => json_encode($card)],
         ['type' => 'finish-step'],
@@ -121,6 +124,8 @@ it('asks with buttons, sends the option as the person\'s message, and keeps the 
         ->click('[aria-label="Abrir a Humi"]')
         ->click('¿Cómo va la participación?')
         ->assertSee('¿De qué parte?')
+        ->assertSee('Consulté el estado de cumplimiento')
+        ->assertDontSee('Resumen consultado oculto')
         ->assertScript('() => [...document.querySelectorAll(\'[role="group"][aria-label="¿De qué parte?"] button\')].map((button) => button.disabled).join()', 'false,false')
         ->click('NOM-035')
         ->assertSee('Quiero ver mis pendientes de NOM-035')

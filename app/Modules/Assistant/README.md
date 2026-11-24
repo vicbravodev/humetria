@@ -24,7 +24,7 @@ sin decir de qué norma; «¿cómo va la campaña?» con varias), Humi consulta 
 `OfferChoices`: una pregunta y de 2 a 6 opciones (la última, la de «todo»), que el panel dibuja como botones
 (`components/assistant/humi-choices-card.tsx`). Un clic envía el texto de la opción como un mensaje normal. Tras la
 tarjeta el turno termina solo (`Support/ChoicesOffered`, un segundo `Stop` de `HumiAssistant::middleware()`): la pregunta
-ya va en la tarjeta y no se paga otro paso del modelo. Las opciones salen de lo que devolvió una herramienta por regla del
+ya va en la tarjeta y no se paga otro paso del modelo. Una respuesta que termina en botones dibuja solo esa tarjeta: la de lo que Humi consultó para saber qué ofrecer (`lib/assistant/message-view.ts`, `whenAsking`) no se dibuja encima, aunque el renglón «Consulté…» queda. Las opciones salen de lo que devolvió una herramienta por regla del
 prompt, no por validación del servidor; todo texto que llega a un botón pasa por `UntrustedText::line`. Las tarjetas
 llevan el detalle y el texto de Humi la conclusión, lo más urgente y el paso siguiente (`resources/ai/humi.system.md`).
 
