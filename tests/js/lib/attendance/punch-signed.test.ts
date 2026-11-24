@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { punch, punchDay } from '@/lib/attendance/punch';
 import type { PunchRequest } from '@/lib/attendance/punch';
+import {
+    PUNCH_TIMEOUTS,
+    sendSigned,
+    sign,
+} from '@/lib/attendance/signed-request';
 import type { SignedKey } from '@/lib/webauthn';
 
 const options = { challenge: 'AQID', rpId: 'localhost' };
@@ -144,5 +149,70 @@ describe('punch, a code of another center', () => {
             person: { name: 'Ana López', next: ['start'] },
             center: 'Oficinas Querétaro',
         });
+    });
+});
+
+describe('sign, the signature of the device', () => {
+    const asks = { challenge: new Uint8Array([1]) };
+
+    it('gives the key the device signed with', async () => {
+        await expect(sign(asks, { getKey: signs })).resolves.toBe(key);
+    });
+
+    it('says cancelled when the person did not confirm, and failed for anything else', async () => {
+        const refused = () =>
+            Promise.reject(new DOMException('no', 'NotAllowedError'));
+        const broken = () => Promise.reject(new Error('boom'));
+
+        await expect(sign(asks, { getKey: refused })).resolves.toBe(
+            'cancelled',
+        );
+        await expect(sign(asks, { getKey: broken })).resolves.toBe('failed');
+    });
+
+    it('says failed when the browser gave no signature', async () => {
+        await expect(
+            sign(asks, { getKey: () => Promise.resolve(null) }),
+        ).resolves.toBe('failed');
+    });
+});
+
+describe('sendSigned, how long it waits', () => {
+    const signed = {
+        optionsUrl: request.optionsUrl,
+        url: request.punchUrl,
+        body: { mark_type: 'start' },
+    };
+
+    function signalsOf(fetcher: ReturnType<typeof serverAnswering>) {
+        return fetcher.mock.calls.map(([, init]) => init?.signal ?? null);
+    }
+
+    it('gives each request its time when it is asked to, and none when it is not', async () => {
+        const waiting = serverAnswering();
+        await sendSigned(signed, {
+            fetcher: waiting,
+            getKey: signs,
+            xsrf: null,
+            timeouts: { options: 4_000, request: 20_000 },
+        });
+
+        expect(signalsOf(waiting)).toHaveLength(2);
+        expect(
+            signalsOf(waiting).every((signal) => signal instanceof AbortSignal),
+        ).toBe(true);
+
+        const patient = serverAnswering();
+        await sendSigned(signed, {
+            fetcher: patient,
+            getKey: signs,
+            xsrf: null,
+        });
+
+        expect(signalsOf(patient)).toEqual([null, null]);
+    });
+
+    it('waits 4 seconds for the server to offer a challenge and 20 for it to take the mark', () => {
+        expect(PUNCH_TIMEOUTS).toEqual({ options: 4_000, request: 20_000 });
     });
 });
