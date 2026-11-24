@@ -138,6 +138,26 @@ export function kept(marks: QueuedMark[]): QueuedMark[] {
     return bySeq(marks.filter((mark) => mark.state === 'kept'));
 }
 
+/** What the phone tells the server of the person's queue when it asks for tickets: how many marks wait and the oldest's age. */
+export function queueReport(
+    marks: QueuedMark[],
+    employeeId: string,
+    now: number,
+): { count: number; oldest_age_minutes: number } | null {
+    const waiting = pending(forPerson(marks, employeeId));
+    const oldest = Math.min(...waiting.map((mark) => mark.createdAt));
+
+    return waiting.length === 0
+        ? null
+        : {
+              count: waiting.length,
+              oldest_age_minutes: Math.max(
+                  0,
+                  Math.floor((now - oldest) / 60_000),
+              ),
+          };
+}
+
 /** The mark refused, with its reason; it stays in the phone. */
 export function keep(mark: QueuedMark, reason: string | null): QueuedMark {
     return { ...mark, schema: QUEUE_SCHEMA, state: 'kept', reason };

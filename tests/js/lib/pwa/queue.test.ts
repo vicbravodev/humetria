@@ -6,6 +6,7 @@ import {
     kept,
     keep,
     pending,
+    queueReport,
     readMark,
 } from '@/lib/pwa/queue';
 import type { DeliveryItem, QueuedMark } from '@/lib/pwa/queue';
@@ -154,6 +155,38 @@ describe('forPerson, pending and kept', () => {
 
     it('puts the refused in order of seq', () => {
         expect(kept(marks).map((m) => m.seq)).toEqual([4, 5]);
+    });
+});
+
+describe('queueReport', () => {
+    const now = 1_794_050_400_000 + 90 * 60_000;
+
+    it('says how many marks of the person wait and how old the oldest is, by the phone', () => {
+        const marks = [
+            mark(1, { createdAt: 1_794_050_400_000 }),
+            mark(2, { createdAt: 1_794_050_400_000 + 30 * 60_000 }),
+            mark(3, { employeeId: 'beto', createdAt: 1_000 }),
+            mark(4, { state: 'kept', reason: 'x', createdAt: 1_000 }),
+        ];
+
+        expect(queueReport(marks, 'ana', now)).toEqual({
+            count: 2,
+            oldest_age_minutes: 90,
+        });
+    });
+
+    it('has nothing to say when nothing of the person waits', () => {
+        expect(queueReport([mark(1)], 'beto', now)).toBeNull();
+        expect(queueReport([], 'ana', now)).toBeNull();
+    });
+
+    it("never says a negative age, even if the phone's clock went back", () => {
+        expect(
+            queueReport([mark(1, { createdAt: now + 5_000 })], 'ana', now),
+        ).toEqual({
+            count: 1,
+            oldest_age_minutes: 0,
+        });
     });
 });
 
