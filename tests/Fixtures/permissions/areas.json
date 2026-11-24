@@ -1,0 +1,145 @@
+[
+    {
+        "key": "dashboard",
+        "section": "general",
+        "levels": { "none": [], "view": ["view-dashboard"] },
+        "extras": []
+    },
+    {
+        "key": "organization",
+        "section": "general",
+        "levels": {
+            "none": [],
+            "view": ["view-work-centers"],
+            "manage": ["view-work-centers", "manage-organization"]
+        },
+        "extras": []
+    },
+    {
+        "key": "worker-access",
+        "section": "general",
+        "levels": {
+            "none": [],
+            "view": ["view-worker-access"],
+            "manage": ["view-worker-access", "manage-worker-access"]
+        },
+        "extras": []
+    },
+    {
+        "key": "assistant",
+        "section": "general",
+        "levels": { "none": [], "use": ["use-assistant"] },
+        "extras": []
+    },
+    {
+        "key": "nom035",
+        "section": "compliance",
+        "levels": {
+            "none": [],
+            "view": [
+                "view-nom035-route",
+                "view-interventions",
+                "view-disclosure"
+            ],
+            "manage": [
+                "view-nom035-route",
+                "view-interventions",
+                "view-disclosure",
+                "manage-campaigns",
+                "manage-interventions",
+                "manage-disclosure"
+            ]
+        },
+        "extras": ["view-trauma-screenings"]
+    },
+    {
+        "key": "telework",
+        "section": "compliance",
+        "levels": {
+            "none": [],
+            "view": ["view-telework"],
+            "manage": ["view-telework", "manage-telework"]
+        },
+        "extras": ["review-workplaces"]
+    },
+    {
+        "key": "seating",
+        "section": "compliance",
+        "levels": {
+            "none": [],
+            "view": ["view-seating"],
+            "manage": ["view-seating", "manage-seating"]
+        },
+        "extras": ["assess-seating"]
+    },
+    {
+        "key": "complaints",
+        "section": "compliance",
+        "levels": {
+            "none": [],
+            "handle": ["handle-complaints"],
+            "manage": ["handle-complaints", "manage-complaint-channel"]
+        },
+        "extras": []
+    },
+    {
+        "key": "climate",
+        "section": "listening",
+        "levels": {
+            "none": [],
+            "view": ["view-climate"],
+            "manage": ["view-climate", "manage-climate"]
+        },
+        "extras": []
+    },
+    {
+        "key": "pulse",
+        "section": "listening",
+        "levels": {
+            "none": [],
+            "view": ["view-pulse"],
+            "manage": ["view-pulse", "manage-pulse"]
+        },
+        "extras": []
+    },
+    {
+        "key": "attendance",
+        "section": "operations",
+        "levels": {
+            "none": [],
+            "view": ["view-attendance"],
+            "manage": ["view-attendance", "manage-attendance"]
+        },
+        "extras": []
+    },
+    {
+        "key": "vacations",
+        "section": "operations",
+        "levels": {
+            "none": [],
+            "view": ["view-vacations"],
+            "manage": ["view-vacations", "manage-vacations"]
+        },
+        "extras": []
+    },
+    {
+        "key": "org-chart",
+        "section": "operations",
+        "levels": {
+            "none": [],
+            "view": ["view-org-chart"],
+            "manage": ["view-org-chart", "manage-org-chart"]
+        },
+        "extras": []
+    },
+    {
+        "key": "compensation",
+        "section": "operations",
+        "levels": {
+            "none": [],
+            "view": ["view-compensation"],
+            "manage": ["view-compensation", "manage-compensation"]
+        },
+        "extras": []
+    }
+]
