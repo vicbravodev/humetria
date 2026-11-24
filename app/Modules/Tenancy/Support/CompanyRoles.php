@@ -183,8 +183,9 @@ final readonly class CompanyRoles
     }
 
     /**
-     * Of `$held`, those of a tool the company's plan no longer includes: they count for nothing now, and a save that cannot
-     * send them (the panel shows them off) keeps them for when the tool comes back.
+     * Of `$held`, those that count for nothing now and that a save cannot send back (the panel shows them off): of a tool
+     * the company's plan no longer includes, or that its account type cannot have (a role made when it was another type).
+     * They are kept for when they come back; only what is already stored is kept, never added, and never an owner's own.
      *
      * @param  array<int, string>  $held
      * @return list<string>
@@ -192,7 +193,7 @@ final readonly class CompanyRoles
     public function keptWhileUnavailable(Tenant $tenant, array $held): array
     {
         return array_values(array_filter($held, fn (string $name): bool => ($definition = PermissionCatalog::find($name)) !== null
-            && PermissionCatalog::unavailableReason($tenant, $definition) !== null));
+            && (PermissionCatalog::unavailableReason($tenant, $definition) !== null || (! $definition->ownerOnly && ! $tenant->type->admits([$name])))));
     }
 
     /** Replaces the person's role in the company with `$role`, a template or one of the company's own. */

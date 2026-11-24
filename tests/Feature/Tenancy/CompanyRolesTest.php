@@ -166,6 +166,20 @@ it('locks the company and the role before checking nobody uses it, so an invitat
         ->and($lockOf('roles'))->toBeLessThan($check);
 });
 
+it('keeps what a role holds that its account type cannot have, besides what its plan lacks, and never adds anything', function (): void {
+    $role = ($this->create)('Antes', ['view-dashboard', 'view-compensation']);
+    $this->tenant->update(['type' => App\Modules\Tenancy\Enums\TenantType::Union]);
+    $tenant = $this->tenant->refresh();
+
+    expect(app(CompanyRoles::class)->keptWhileUnavailable($tenant, ['view-dashboard', 'view-compensation', 'manage-members', 'fly-to-moon']))->toBe(['view-dashboard']);
+
+    // Saving what the union can have keeps the rest of the role and does not record it as removed.
+    app(UpdateCompanyRole::class)->handle($role, 'Antes', ['view-compensation'], $this->owner);
+
+    expect($role->refresh()->permissions->pluck('name')->sort()->values()->all())->toBe(['view-compensation', 'view-dashboard'])
+        ->and(AuditEntry::query()->where('event', 'tenant_role.updated')->sole()->metadata)->toMatchArray(['added' => [], 'removed' => []]);
+});
+
 it('refuses to delete a role a person holds', function (): void {
     $role = ($this->create)();
     $person = User::factory()->create();
