@@ -4,20 +4,20 @@ import {
     heldBy,
     keepsAcknowledgement,
     sensitiveAdded,
-    toggled,
 } from '@/lib/permission-groups';
 import { update } from '@/routes/tenant/members/permissions';
 import type { PermissionGroup } from '@/types';
 
 /**
- * A person's permissions besides their role, while the owner switches them; one send. What the role brings is shown on and
- * locked, and never sent: only the person's own go, so switching all of them off sends an empty list.
+ * A person's permissions besides their role, while the owner raises the level of some areas; one send. What the role brings is
+ * the floor and is never sent: only the person's own go, so bringing every area back to the role's level sends an empty list.
  */
 export function useMemberPermissions(
     memberId: number,
     groups: PermissionGroup[],
 ) {
     const tenantSlug = useTenantSlug();
+    const base = heldBy(groups, 'role');
     const before = heldBy(groups, 'direct');
     const form = useForm({ permissions: before, acknowledge_sensitive: false });
     const errors: Partial<Record<string, string>> = form.errors;
@@ -26,10 +26,12 @@ export function useMemberPermissions(
         data: form.data,
         errors,
         processing: form.processing,
-        locked: heldBy(groups, 'role'),
+        base,
+        held: [...base, ...form.data.permissions],
         sensitive: sensitiveAdded(groups, before, form.data.permissions),
-        toggle: (name: string, on: boolean) => {
-            const next = toggled(form.data.permissions, name, on);
+        /** Every permission in play with one area changed: what goes past the role is the person's own. */
+        change: (held: string[]) => {
+            const next = held.filter((name) => !base.includes(name));
 
             form.setData((data) => ({
                 ...data,

@@ -40,8 +40,8 @@ export default function MemberPermissions({
                                     Su rol: {member.role_label}.{' '}
                                 </strong>
                             )}
-                            Aquí le sumas permisos a los de su rol. Lo que trae
-                            su rol no se quita aquí: para que tenga menos,
+                            Lo que trae su rol queda fijo. Sube el nivel solo
+                            donde necesite más que su rol; para que tenga menos,
                             cámbiale el rol.
                         </>
                     }
@@ -53,7 +53,7 @@ export default function MemberPermissions({
                     </ReadOnlyNotice>
                 )}
                 <MemberPermissionsForm
-                    memberId={member.id}
+                    member={member}
                     groups={groups}
                     canManage={can_manage}
                 />

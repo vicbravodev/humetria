@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
     AREAS,
     accessCount,
+    beyondRole,
     areasFor,
     phraseOf,
     sensitiveLevel,
@@ -150,5 +151,17 @@ describe('how many areas', () => {
                 'view-trauma-screenings',
             ]),
         ).toEqual({ on: 2, total: AREAS.length });
+    });
+});
+
+describe('what a person has besides their role', () => {
+    it('are the areas where any permission is their own, an extra included', () => {
+        expect(
+            beyondRole(AREAS, [
+                'manage-vacations',
+                'view-trauma-screenings',
+            ]).map((item) => item.key),
+        ).toEqual(['nom035', 'vacations']);
+        expect(beyondRole(AREAS, [])).toEqual([]);
     });
 });

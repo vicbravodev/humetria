@@ -4,7 +4,7 @@ import LevelControl from '@/components/tenancy/level-control';
 import { Badge } from '@/components/ui/badge';
 import { toggled } from '@/lib/permission-groups';
 import {
-    areaPermissions,
+    beyondRole,
     floorOf,
     levelOf,
     phraseOf,
@@ -38,10 +38,10 @@ export default function AreaRow({
     const floor = floorOf(area, base);
     const additional =
         context.base !== undefined &&
-        [
-            ...areaPermissions(area),
-            ...area.extras.map((extra) => extra.permission),
-        ].some((name) => held.includes(name) && !base.includes(name));
+        beyondRole(
+            [area],
+            held.filter((name) => !base.includes(name)),
+        ).length > 0;
 
     return (
         <li className="flex flex-col gap-3 px-4 py-3.5 sm:px-5">

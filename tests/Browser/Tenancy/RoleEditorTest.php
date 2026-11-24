@@ -107,7 +107,7 @@ it('says a role someone holds cannot be deleted, and deletes one nobody holds', 
         ->assertDontSee('Temporal');
 });
 
-it('gives a person a permission besides their role, keeping the role\'s on and locked', function (): void {
+it('raises an area of a person past their role, with the role\'s level as a floor, and confirms a sensitive one', function (): void {
     signInToPanel();
     $tenant = Tenant::query()->where('slug', 'acme')->sole();
     $person = User::factory()->create(['name' => 'Vera Vista']);
@@ -115,14 +115,22 @@ it('gives a person a permission besides their role, keeping the role\'s on and l
 
     visit("/admin/acme/members/{$member->id}/permissions")
         ->assertSee('Permisos adicionales de Vera Vista')
-        ->assertAttribute('@permission-view-dashboard', 'aria-checked', 'true')
-        ->assertAttribute('@permission-view-dashboard', 'disabled', '')
-        ->click('@permission-manage-vacations')
+        ->assertChecked('input[name="level-vacations"][value="view"]')
+        ->assertAttribute('input[name="level-vacations"][value="none"]', 'disabled', '')
+        ->assertSee('· su rol')
+        ->click('@level-vacations-manage')
+        ->assertSee('Adicional')
+        ->assertSee('Además de lo que trae su rol, Vera Vista administra Vacaciones.')
+        ->click('@level-complaints-handle')
+        ->assertSee('Estás abriendo información sensible')
+        ->press('Guardar permisos')
+        ->assertSee('Confirma que quieres dar permisos que abren información sensible.')
+        ->click('#acknowledge-sensitive')
         ->press('Guardar permisos')
         ->assertSee('Permisos actualizados.')
         ->assertNoJavaScriptErrors();
 
-    expect(resolve(CompanyRoles::class)->directPermissionsOf($person, $tenant))->toBe(['manage-vacations']);
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($person, $tenant))->toEqualCanonicalizing(['manage-vacations', 'handle-complaints']);
 });
 
 it('offers no new role nor a copy of a template once the company has as many roles as it may', function (): void {

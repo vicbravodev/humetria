@@ -238,3 +238,16 @@ export function accessCount(
         total: areas.length,
     };
 }
+
+/** The areas where a person has permissions of their own besides their role (`direct`), an extra included. */
+export function beyondRole(
+    areas: PermissionArea[],
+    direct: string[],
+): PermissionArea[] {
+    return areas.filter((area) =>
+        [
+            ...areaPermissions(area),
+            ...area.extras.map((extra) => extra.permission),
+        ].some((name) => direct.includes(name)),
+    );
+}
