@@ -22,10 +22,11 @@ import type { RoleTemplateRow } from '@/types';
  */
 export default function RoleTemplates({
     templates,
-    canManage,
+    canCopy,
 }: {
     templates: RoleTemplateRow[];
-    canManage: boolean;
+    /** Off for support, and at the limit of roles of the company's own. */
+    canCopy: boolean;
 }) {
     const tenantSlug = useTenantSlug();
 
@@ -53,7 +54,7 @@ export default function RoleTemplates({
                         <TableHead>Tipo</TableHead>
                         <TableHead>Personas</TableHead>
                         <TableHead>Permisos</TableHead>
-                        {canManage && (
+                        {canCopy && (
                             <TableHead>
                                 <span className="sr-only">Acciones</span>
                             </TableHead>
@@ -89,7 +90,7 @@ export default function RoleTemplates({
                                     'permisos',
                                 )}
                             </TableCell>
-                            {canManage && (
+                            {canCopy && (
                                 <TableCell className="text-right md:w-px">
                                     <Button variant="outline" size="sm" asChild>
                                         <Link

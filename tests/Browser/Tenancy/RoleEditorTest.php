@@ -17,7 +17,7 @@ function acmeRoleHeldBy(int $people, string $label = 'Auditoría'): Role
     $tenant = Tenant::query()->where('slug', 'acme')->sole();
     $role = app(CreateCompanyRole::class)->handle($tenant, $label, ['view-dashboard', 'view-vacations'], null, $owner);
 
-    foreach (range(1, $people) as $ignored) {
+    for ($held = 0; $held < $people; $held++) {
         $person = User::factory()->create();
         TenantMembership::factory()->for($tenant)->for($person)->viewer()->create();
         resolve(CompanyRoles::class)->assign($person, $tenant, $role);
@@ -93,4 +93,15 @@ it('gives a person a permission besides their role, keeping the role\'s on and l
         ->assertNoJavaScriptErrors();
 
     expect(resolve(CompanyRoles::class)->directPermissionsOf($person, $tenant))->toBe(['manage-vacations']);
+});
+
+it('offers no new role nor a copy of a template once the company has as many roles as it may', function (): void {
+    config(['tenancy.max_custom_roles' => 1]);
+    acmeRoleHeldBy(0);
+
+    visit('/admin/acme/roles')
+        ->assertSee('Llegaste al máximo de 1 roles propios.')
+        ->assertDontSee('Nuevo rol')
+        ->assertDontSee('Copiar y ajustar')
+        ->assertNoJavaScriptErrors();
 });

@@ -62,7 +62,10 @@ export default function Roles({
                         Borra uno que no uses para crear otro.
                     </Notice>
                 )}
-                <RoleTemplates templates={templates} canManage={can_manage} />
+                <RoleTemplates
+                    templates={templates}
+                    canCopy={can_manage && !full}
+                />
                 <OwnRoles
                     roles={roles}
                     search={search}
