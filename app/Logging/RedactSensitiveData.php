@@ -149,6 +149,12 @@ final class RedactSensitiveData implements ProcessorInterface
             'id_token',
             'access_token',
             'code_verifier',
+            // Llave del dispositivo (plan B de las marcas sin conexión): the possession challenge, the signature, the pass and the
+            // key's id are credentials of a person's phone.
+            'challenge',
+            'device_key_id',
+            'pass',
+            'signature',
         ];
 
         foreach ($data as $key => $value) {

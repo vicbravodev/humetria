@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\WorkerAccess\Providers;
 
 use App\Modules\Organization\Events\EmployeeDeactivated;
+use App\Modules\WorkerAccess\Contracts\DeviceKeySignatures;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use App\Modules\WorkerAccess\Contracts\WorkerInvitations;
 use App\Modules\WorkerAccess\Contracts\WorkerKeys;
@@ -15,6 +16,7 @@ use App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof;
 use App\Modules\WorkerAccess\Listeners\RevokeOnDeactivation;
 use App\Modules\WorkerAccess\Support\CeremonyKeys;
 use App\Modules\WorkerAccess\Support\CeremonySignatures;
+use App\Modules\WorkerAccess\Support\CompanyDeviceKeySignatures;
 use App\Modules\WorkerAccess\Support\CompanyWorkerCredentials;
 use App\Modules\WorkerAccess\Support\LinkInvitations;
 use App\Modules\WorkerAccess\Support\RequestWorkerSession;
@@ -38,6 +40,7 @@ final class WorkerAccessServiceProvider extends ServiceProvider
     {
         $this->app->bind(WorkerSignatures::class, CeremonySignatures::class);
         $this->app->bind(WorkerKeys::class, CeremonyKeys::class);
+        $this->app->bind(DeviceKeySignatures::class, CompanyDeviceKeySignatures::class);
         $this->app->bind(WorkerCredentials::class, CompanyWorkerCredentials::class);
         $this->app->bind(WorkerSession::class, RequestWorkerSession::class);
         $this->app->bind(WorkerLinks::class, RouteWorkerLinks::class);
@@ -89,6 +92,13 @@ final class WorkerAccessServiceProvider extends ServiceProvider
         RateLimiter::for('worker-proof', fn (Request $request): array => [
             Limit::perMinute(60)->by('worker-proof-ip:'.$request->ip()),
             Limit::perMinute(20)->by('worker-proof-session:'.hash('sha256', $request->session()->getId())),
+        ]);
+
+        // The device key of the app takes a challenge, the key and, every time the person opens their start, a renewal of the pass:
+        // per address 30 a minute, and per session 20. The session id's hash names its counter.
+        RateLimiter::for('worker-device-key', fn (Request $request): array => [
+            Limit::perMinute(30)->by('worker-device-key-ip:'.$request->ip()),
+            Limit::perMinute(20)->by('worker-device-key-session:'.hash('sha256', $request->session()->getId())),
         ]);
 
         // Opening a link takes two requests (the page, «Continuar»): per address, and per link, so guessing or replaying one is

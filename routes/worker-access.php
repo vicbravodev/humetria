@@ -11,6 +11,7 @@ use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\WorkerAccess\Http\Controllers\AccessLinkController;
+use App\Modules\WorkerAccess\Http\Controllers\DeviceKeyController;
 use App\Modules\WorkerAccess\Http\Controllers\EntryController;
 use App\Modules\WorkerAccess\Http\Controllers\HomeController;
 use App\Modules\WorkerAccess\Http\Controllers\InstallableAppController;
@@ -68,6 +69,15 @@ Route::middleware(['throttle:worker-proof', ResolveWorkerTenant::class, RequireW
     Route::post('/', [ProofController::class, 'store'])->name('worker.proof.store');
     Route::post('code', [ProofController::class, 'sendCode'])->name('worker.proof.code.send');
     Route::post('code/check', [ProofController::class, 'checkCode'])->name('worker.proof.code.check');
+});
+
+// The device key of the app (plan B of the offline marks), JSON only and with the person's session and the normal CSRF token:
+// a challenge to prove possession and the key itself take a recent proof (alias worker.proof); renewing the pass, which moves
+// only the key's last use, does not. Per address and per session.
+Route::middleware(['throttle:worker-device-key', ResolveWorkerTenant::class, RequireWorkerSession::class])->prefix('me/{tenant:slug}/device-key')->group(function (): void {
+    Route::post('options', [DeviceKeyController::class, 'options'])->middleware('worker.proof')->name('worker.device-key.options');
+    Route::post('/', [DeviceKeyController::class, 'store'])->middleware('worker.proof')->name('worker.device-key.store');
+    Route::post('pass', [DeviceKeyController::class, 'pass'])->name('worker.device-key.pass');
 });
 
 // The installable app: its manifest, its service worker and its shell, with no session and no cookie (with

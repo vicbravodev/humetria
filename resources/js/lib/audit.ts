@@ -57,6 +57,7 @@ const LABELS: Record<string, string> = {
     'worker_access.credential_revoked': 'Llave de acceso revocada',
     'attendance.week_reopened': 'Semana de asistencia reabierta',
     'worker_access.credential_registered': 'Llave de acceso registrada',
+    'worker_access.device_key_registered': 'Llave del teléfono registrada',
     'worker_access.link_issued': 'Enlace de acceso emitido',
     'worker_access.access_reissued': 'Acceso reemitido',
     'worker_access.access_revoked_on_leaving':

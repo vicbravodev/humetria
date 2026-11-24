@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerAccessState;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -28,6 +29,8 @@ final readonly class RevokeOnDeactivation
         $this->companies->enter($event->tenantId);
         $revoked = WorkerCredential::query()->where('employee_id', $event->employeeId)->whereNull('revoked_at')
             ->update(['revoked_at' => CarbonImmutable::now(), 'revoked_reason' => 'left_company']);
+        // The device keys of their phone (plan B of the offline marks) stop signing new marks too.
+        $deviceKeys = WorkerDeviceKey::revokeAllOf($event->employeeId, 'left_company');
         $links = WorkerAccessLink::query()->where('employee_id', $event->employeeId)->whereNull('used_at')->whereNull('revoked_at')->exists();
         WorkerAccessLink::revokePending($event->employeeId);
 
@@ -35,12 +38,14 @@ final readonly class RevokeOnDeactivation
         WorkerAccessState::moveValidAfter($event->tenantId, $event->employeeId);
 
         // Nothing of theirs to revoke: nothing to say or log.
-        if ($revoked === 0 && ! $links) {
+        if ($revoked === 0 && $deviceKeys === 0 && ! $links) {
             return;
         }
 
-        $this->audit->handle('worker_access.access_revoked_on_leaving', null, ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]);
+        // How many device keys stopped is said only when there were some.
+        $counts = ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked, ...($deviceKeys > 0 ? ['device_keys_revoked' => $deviceKeys] : [])];
+        $this->audit->handle('worker_access.access_revoked_on_leaving', null, $counts);
         // Said once it committed: this runs inside the transaction of the departure, which may still roll back.
-        DB::afterCommit(fn () => Log::info('worker_access.access_revoked_on_leaving', ['employee_id' => $event->employeeId, 'keys_revoked' => $revoked]));
+        DB::afterCommit(fn () => Log::info('worker_access.access_revoked_on_leaving', $counts));
     }
 }

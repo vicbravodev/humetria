@@ -105,6 +105,8 @@ it('asks for a recent proof on exactly the delicate pages and forms of the perso
         'portal.vacations.team.approve',
         'portal.vacations.team.reject',
         'portal.visits.confirm',
+        'worker.device-key.options',
+        'worker.device-key.store',
     ]);
 });
 

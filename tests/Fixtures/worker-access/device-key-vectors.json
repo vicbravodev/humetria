@@ -1,0 +1,29 @@
+{
+    "about": "Shared vectors of the device key (plan B): spki is the public key (SPKI DER, base64url), message the 32 bytes that were signed (hex), signature the r||s of 64 bytes as WebCrypto gives it (base64url), valid whether it verifies. Produced with WebCrypto ECDSA P-256 / SHA-256 (Node) and checked there; read by Pest (tests/Unit/WorkerAccess/DeviceKeyCryptoTest.php) and by Vitest (the app's signBytes, commit 19).",
+    "vectors": [
+        {
+            "name": "r_with_high_bit",
+            "description": "The first byte of r is 0x80 or more: DER needs a 0x00 in front of it.",
+            "spki": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFJg8VwnWQi7vZ5mTP8bPdJhA38WKvDMQJ4yravX5C7y4-FltHpt6Pxiu05HGYs_wxaSLs-QUMqWIt8tS9aq16A",
+            "message": "5c029b6de367f86d23155a2dc9850a1a12f5a039156581dea1d442fb267e48f2",
+            "signature": "-BzVRBtG9f4r55YYPPO_9GnTHJ6VeKUftCJpW3t_YW3udeJxsJbJ6z8ADHJEpwE_OyPf9mRmy-LBoMEu0MoHfw",
+            "valid": true
+        },
+        {
+            "name": "s_with_leading_zero",
+            "description": "The first byte of s is 0x00: DER drops it.",
+            "spki": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMCPw_Y3C_jIdBOSjCn10_2xz8tY5VvOx0a5iagtlYT835w78KzZdV2M3wnZT_K-rDegoioG8YAmBWAQkKM1C-w",
+            "message": "997420f51933c82788c59d5ec952d4d4e80d6d5c7f04270544e787d855ba90cf",
+            "signature": "BqesH-da_0Z_gfEKVz0Q8jqhI5ncizP0uZS274mig1cAGkawlob7bK6eDzvE2S21MVFiN43931DNrk4vY6rcZA",
+            "valid": true
+        },
+        {
+            "name": "altered_signature",
+            "description": "The first vector with one bit of s changed: well formed, does not verify.",
+            "spki": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFJg8VwnWQi7vZ5mTP8bPdJhA38WKvDMQJ4yravX5C7y4-FltHpt6Pxiu05HGYs_wxaSLs-QUMqWIt8tS9aq16A",
+            "message": "5c029b6de367f86d23155a2dc9850a1a12f5a039156581dea1d442fb267e48f2",
+            "signature": "-BzVRBtG9f4r55YYPPO_9GnTHJ6VeKUftCJpW3t_YW3udeJxsJbJ6z4ADHJEpwE_OyPf9mRmy-LBoMEu0MoHfw",
+            "valid": false
+        }
+    ]
+}

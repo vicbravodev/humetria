@@ -110,6 +110,8 @@ it('redacts each sensitive key', function (string $key): void {
     'client_secret', 'id_token', 'access_token', 'code_verifier',
     // WhatsApp: a phone number reaches a person, and what the provider sends or asks for is a credential or a person's data.
     'phone', 'mobile', 'wa_id', 'msisdn', 'recipient_hash', 'app_secret', 'verify_token', 'hub_verify_token', 'components',
+    // Llave del dispositivo (plan B de las marcas sin conexión): the possession challenge, the signature, the pass and the key's id.
+    'challenge', 'signature', 'pass', 'device_key_id',
 ]);
 
 it('redacts every salary key at any depth', function (): void {

@@ -110,6 +110,7 @@ final class AuditPages
         'climate' => 'Clima',
         'sso' => 'Inicio de sesión único',
         'whatsapp' => 'WhatsApp',
+        'replaced' => 'Reemplazada',
     ];
 
     /**
@@ -158,6 +159,8 @@ final class AuditPages
         'without_email' => 'Sin correo',
         'with_link' => 'Con enlace',
         'keys_revoked' => 'Llaves revocadas',
+        'device_keys_revoked' => 'Llaves del teléfono revocadas',
+        'replaced_id' => 'Llave reemplazada',
         'with_key' => 'Con llave',
         'from_manager_id' => 'Jefe anterior',
         'to_manager_id' => 'Jefe nuevo',
