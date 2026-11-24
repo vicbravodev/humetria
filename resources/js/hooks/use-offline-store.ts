@@ -3,6 +3,7 @@ import { absorb } from '@/lib/pwa/absorb';
 import { offlineStore } from '@/lib/pwa/offline-store';
 import type { KeyValueStore, OfflineStore } from '@/lib/pwa/offline-store';
 import { readPlatform, shouldAskPersistence } from '@/lib/pwa/platform';
+import { workerSlug } from '@/lib/pwa/sw-rules';
 
 /*
  * The phone's storage for the installed app: one IndexedDB per company (`humetria-me-{slug}`, one object store `kv`, version
@@ -143,6 +144,15 @@ export async function forgetPerson(slug: string): Promise<void> {
         announceStoreChange();
     } catch {
         // No storage: nothing was kept.
+    }
+}
+
+/** `storeTicketsFrom` for the company of the page the person is on: every page of the person is under `/me/{slug}`. */
+export function keepAnswer(json: unknown): void {
+    const slug = workerSlug(location.pathname);
+
+    if (slug !== null) {
+        void storeTicketsFrom(json, slug);
     }
 }
 
