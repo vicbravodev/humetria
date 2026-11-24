@@ -1,11 +1,9 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import Notice from '@/components/humetria/notice';
 import PageHeader from '@/components/humetria/page-header';
 import ReadOnlyNotice from '@/components/humetria/read-only-notice';
 import RoleEditorForm from '@/components/tenancy/role-editor-form';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { plural } from '@/lib/plural';
 import { index } from '@/routes/tenant/roles';
 import type {
     PermissionGroup,
@@ -45,20 +43,6 @@ export default function RoleEditor(props: {
                         Estás dentro de la empresa como soporte: puedes revisar
                         este rol, pero solo su dueño lo cambia.
                     </ReadOnlyNotice>
-                )}
-                {role !== null && role.people > 0 && (
-                    <Notice>
-                        <strong>
-                            {plural(
-                                role.people,
-                                'Una persona tiene',
-                                `${role.people} personas tienen`,
-                            )}{' '}
-                            este rol.
-                        </strong>{' '}
-                        Lo que cambies aquí cambia lo que pueden hacer en cuanto
-                        guardes.
-                    </Notice>
                 )}
                 <RoleEditorForm {...props} />
             </div>

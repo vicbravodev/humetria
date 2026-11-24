@@ -141,7 +141,8 @@ it('says a role someone holds cannot be deleted, and deletes one nobody holds', 
 
     visit('/admin/acme/roles')
         ->click('[aria-label="Editar Auditoría"]')
-        ->assertSee('Una persona tiene este rol.')
+        ->assertDontSee('Una persona tiene este rol.')
+        ->assertSee('Los cambios aplican a la persona con este rol en cuanto guardes.')
         ->press('Borrar rol')
         ->assertSee('No puedes borrarlo: tiene 1 persona.')
         ->assertNoJavaScriptErrors();

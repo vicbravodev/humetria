@@ -75,7 +75,7 @@ it('opens the editor of a role someone holds, saying so', function (bool $dark, 
     visitPage('tenancy/role-editor', "/admin/acme/roles/{$role->id}/edit", $dark, $mobile)
         ->assertSee('Auditoría')
         ->assertSee('Basado en Solo consulta.')
-        ->assertSee('Una persona tiene este rol.')
+        ->assertDontSee('Una persona tiene este rol.')
         ->assertSee('Quien tenga este rol ve Panel y Vacaciones.')
         ->assertSee('Los cambios aplican a la persona con este rol en cuanto guardes.')
         ->assertSee('Guardar rol')
