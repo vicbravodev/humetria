@@ -171,6 +171,32 @@ it('turns off «Confirmar mi semana» while a working day has no marks, says whi
         ->assertNoJavaScriptErrors();
 })->with(['light' => [false], 'dark' => [true]]);
 
+it('turns off «Confirmar mi semana» while a mark of Ana waits in her phone, counts it, and still lets her object', function (bool $dark): void {
+    $page = anaSeesHerWeek($dark);
+    $page->assertPresent('button:has-text("Confirmar mi semana"):not([disabled])');
+
+    queueMarkInPhone($page, $this->ana->id, $this->ana->id);
+
+    $page->assertSee('1 marca sin enviar')
+        ->assertPresent('button:has-text("Confirmar mi semana")[disabled]')
+        ->assertSee('Tiene marcas sin enviar en este teléfono. Abra Humetría con internet para enviarlas antes de confirmar.')
+        ->assertPresent('button:has-text("No estoy de acuerdo"):not([disabled])')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1);
+})->with(['light' => [false], 'dark' => [true]]);
+
+it('does not turn it off for a mark that waits in the same phone for another person', function (): void {
+    $page = anaSeesHerWeek();
+
+    queueMarkInPhone($page, $this->ana->id, EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id])->id);
+
+    $page->assertDontSee('marca sin enviar')
+        ->assertPresent('button:has-text("Confirmar mi semana"):not([disabled])')
+        ->assertDontSee('Tiene marcas sin enviar en este teléfono');
+});
+
 it('lets Ana say what is not right, with her reason', function (): void {
     $page = anaSeesHerWeek();
 

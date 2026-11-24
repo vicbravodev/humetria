@@ -9,25 +9,28 @@ import { confirmBlock, weekActions } from '@/lib/attendance/week-text';
 /**
  * The buttons at the foot of «Mi semana»: first the one that opens the week with the person's fingerprint, face or PIN; then
  * «Confirmar mi semana» and «No estoy de acuerdo», of the same size. Each asks the device again; nothing is answered for
- * the person. With days without cover «Confirmar mi semana» is turned off and the line under it says which days are missing;
- * «No estoy de acuerdo» stays.
+ * the person. With days without cover, or marks of the person that still wait in the phone, «Confirmar mi semana» is turned
+ * off and the line under it says why; «No estoy de acuerdo» stays.
  */
 export default function WeekActions({
     week,
     working,
+    queued,
     onRead,
     onConfirm,
     onDispute,
 }: {
     week: WeekView | null;
     working: WeekAction | null;
+    /** How many of the person's marks wait in the phone: while any do, the week cannot be confirmed. */
+    queued: number;
     onRead: () => void;
     onConfirm: (url: string) => void;
     onDispute: () => void;
 }) {
     const actions = weekActions(week, false);
     const confirmUrl = week?.confirmUrl ?? null;
-    const block = week === null ? null : confirmBlock(week);
+    const block = week === null ? null : confirmBlock(week, queued);
 
     return (
         <>

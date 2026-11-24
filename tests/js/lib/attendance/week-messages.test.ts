@@ -18,6 +18,8 @@ describe('weekMessage', () => {
             'uncovered_days',
             'pida a Recursos Humanos que registre su ausencia como permiso',
         ],
+        ['queued_marks', 'marcas sin enviar en este teléfono'],
+        ['queued_marks', 'Abra Humetría con internet'],
         ['unsupported', 'llaves de acceso'],
         ['anything', 'Intente de nuevo'],
     ])('words %s', (reason, text) => {

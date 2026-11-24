@@ -201,6 +201,45 @@ describe('confirmBlock', () => {
     });
 });
 
+describe('confirmBlock, with marks that wait in the phone', () => {
+    it('is the marks that wait when any do, and it wins over the days without cover', () => {
+        expect(confirmBlock(week, 1)).toEqual({
+            reason: 'queued_marks',
+            dates: [],
+        });
+        expect(
+            confirmBlock(
+                {
+                    ...week,
+                    blocked: 'uncovered_days',
+                    uncoveredDays: ['2026-11-04'],
+                },
+                3,
+            )?.reason,
+        ).toBe('queued_marks');
+    });
+
+    it('is as before with none waiting', () => {
+        expect(confirmBlock(week, 0)).toBeNull();
+        expect(
+            confirmBlock(
+                {
+                    ...week,
+                    blocked: 'uncovered_days',
+                    uncoveredDays: ['2026-11-04'],
+                },
+                0,
+            )?.reason,
+        ).toBe('uncovered_days');
+    });
+
+    it('says what to do in the line under the button', () => {
+        expect(confirmBlockText({ reason: 'queued_marks', dates: [] })).toBe(
+            'Tiene marcas sin enviar en este teléfono. Abra Humetría con internet para enviarlas antes de confirmar.',
+        );
+    });
+});
+
 describe('confirmBlockText', () => {
     it.each([
         [['Miércoles 4 de noviembre'], 'Falta el miércoles 4 de noviembre'],

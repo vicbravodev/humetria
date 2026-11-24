@@ -1,4 +1,5 @@
 import type { PunchFeedback } from '@/lib/attendance/punch-state';
+import { weekMessage } from '@/lib/attendance/week-messages';
 import type { RibbonDay } from '@/lib/attendance/week-ribbon';
 import type { WeekDay, WeekView } from '@/lib/attendance/week';
 
@@ -229,12 +230,18 @@ export function absenceLabel(absence: WeekDay['absence']): string | null {
 export type ConfirmBlock = { reason: string; dates: string[] };
 
 /**
- * What keeps the person from confirming a week the server did offer to read: the days without cover, each with its title.
- * Null when nothing does.
+ * What keeps the person from confirming a week the server did offer to read: marks of theirs that wait in the phone (the
+ * server cannot know of them, so the app holds the confirmation until they are sent), or the days without cover, each with
+ * its title. Null when nothing does.
  */
 export function confirmBlock(
     view: Pick<WeekView, 'blocked' | 'uncoveredDays'>,
+    queued = 0,
 ): ConfirmBlock | null {
+    if (queued > 0) {
+        return { reason: 'queued_marks', dates: [] };
+    }
+
     return view.blocked === 'uncovered_days'
         ? { reason: view.blocked, dates: view.uncoveredDays.map(dayTitle) }
         : null;
@@ -242,6 +249,10 @@ export function confirmBlock(
 
 /** The line under the turned-off «Confirmar mi semana»: «Falta el miércoles 4 de noviembre», or several in one list. */
 export function confirmBlockText(block: ConfirmBlock): string {
+    if (block.reason === 'queued_marks') {
+        return weekMessage('queued_marks');
+    }
+
     const list = new Intl.ListFormat('es', {
         style: 'long',
         type: 'conjunction',
