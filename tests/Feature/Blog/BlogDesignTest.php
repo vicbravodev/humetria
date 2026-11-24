@@ -13,7 +13,7 @@ it('gives the article a cover of a known size and a description of it', function
     writeArticle(blogFolder(), 'jornada', ['tool' => 'tool: leave']);
 
     $this->get(route('blog.show', 'jornada'))->assertInertia(fn (Assert $page) => $page
-        ->where('article.cover', '/blog/jornada.webp')
+        ->where('article.cover', '/images/blog/jornada.webp')
         ->where('article.coverAlt', 'Portada del artículo sobre Vacaciones y permisos: Artículo jornada'));
 });
 
@@ -25,13 +25,13 @@ it('shares the cover with the title on it, in Open Graph, Twitter and the JSON-L
     preg_match('~<script data-inertia="json-ld"[^>]*>(.*?)</script>~s', $html, $match);
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->where('seo.image.url', 'http://localhost/blog/jornada-og.jpg')
+        ->where('seo.image.url', 'http://localhost/images/blog/jornada-og.jpg')
         ->where('seo.image.alt', 'Portada del artículo sobre Registro de jornada: Artículo jornada')
         ->where('seo.image.width', 1200)->where('seo.image.height', 630));
 
-    expect($html)->toContain('<meta data-inertia="og-image" property="og:image" content="http://localhost/blog/jornada-og.jpg">')
-        ->and($html)->toContain('<meta data-inertia="twitter-image" name="twitter:image" content="http://localhost/blog/jornada-og.jpg">')
-        ->and(json_decode($match[1], true)['image'])->toBe(['http://localhost/blog/jornada-og.jpg']);
+    expect($html)->toContain('<meta data-inertia="og-image" property="og:image" content="http://localhost/images/blog/jornada-og.jpg">')
+        ->and($html)->toContain('<meta data-inertia="twitter-image" name="twitter:image" content="http://localhost/images/blog/jornada-og.jpg">')
+        ->and(json_decode($match[1], true)['image'])->toBe(['http://localhost/images/blog/jornada-og.jpg']);
 });
 
 it('keeps the generic image for the index', function (): void {
@@ -86,8 +86,8 @@ it('gives every card of the list its cover, and its tool with the family that co
     writeArticle($folder, 'second', ['published_at' => 'published_at: 2026-11-14', 'tool' => 'tool: engagement']);
 
     $this->get(route('blog.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('articles.0.cover', '/blog/first.webp')->where('articles.0.family', 'compliance')
-        ->where('articles.1.cover', '/blog/second.webp')->where('articles.1.family', 'listening')
+        ->where('articles.0.cover', '/images/blog/first.webp')->where('articles.0.family', 'compliance')
+        ->where('articles.1.cover', '/images/blog/second.webp')->where('articles.1.family', 'listening')
         ->where('articles.1.toolName', 'Clima y pulso'));
 });
 

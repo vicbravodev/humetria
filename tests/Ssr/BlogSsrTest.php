@@ -38,7 +38,7 @@ it('puts the list of articles in the HTML Node rendered, each a plain link', fun
 
     expect($html)->toContain('data-server-rendered')
         ->and($html)->toContain('href="/blog/jornada-40-horas"')->toContain('href="/blog/otro"')
-        ->and($html)->toContain('src="/blog/jornada-40-horas.webp"');
+        ->and($html)->toContain('src="/images/blog/jornada-40-horas.webp"');
 });
 
 it('hydrates the article server-rendered by Node without errors, light and dark', function (bool $dark): void {
