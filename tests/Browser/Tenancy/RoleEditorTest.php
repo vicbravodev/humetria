@@ -117,6 +117,25 @@ it('brings the first error into view on a phone when the save at the bottom is r
         ->assertNoJavaScriptErrors();
 });
 
+it('marks a chosen «Sin acceso» in a quiet fill, not in the accent of a level that gives access', function (): void {
+    signInToPanel();
+
+    visit('/admin/acme/roles/create')
+        ->assertChecked('input[name="level-dashboard"][value="none"]')
+        ->assertScript(<<<'JS'
+            () => {
+                const probe = document.createElement('div');
+                probe.className = 'bg-primary';
+                document.body.append(probe);
+                const accent = getComputedStyle(probe).backgroundColor;
+                probe.remove();
+
+                return getComputedStyle(document.querySelector('[data-test="level-dashboard-none"]')).backgroundColor !== accent;
+            }
+            JS, true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('says a role someone holds cannot be deleted, and deletes one nobody holds', function (): void {
     acmeRoleHeldBy(1);
 

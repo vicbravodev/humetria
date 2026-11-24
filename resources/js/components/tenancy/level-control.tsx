@@ -42,6 +42,9 @@ export default function LevelControl({
                                 'has-checked:bg-primary has-checked:font-semibold has-checked:text-primary-foreground',
                                 own &&
                                     'has-checked:bg-accent has-checked:text-foreground',
+                                // «Sin acceso» chosen reads as no access: a quiet fill, never the accent of a level that gives some.
+                                level.key === 'none' &&
+                                    'has-checked:bg-secondary has-checked:text-foreground has-checked:ring-2 has-checked:ring-input has-checked:ring-inset',
                                 'has-disabled:cursor-not-allowed has-disabled:hover:bg-transparent',
                                 below &&
                                     'bg-muted font-normal text-muted-foreground',
