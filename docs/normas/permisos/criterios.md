@@ -92,4 +92,5 @@ página que se lo dice y le indica que lo pida al dueño de la cuenta. El menú 
 
 Humi le dice a cada persona qué puede hacer ella, área por área. Al dueño le dice además cuántos roles propios tiene la
 empresa (de 20), cuántas personas tienen cada rol y cuántas tienen permisos adicionales: siempre conteos, nunca quién tiene
-qué.
+qué. De cada área (NOM-035 y sus resultados, NOM-037, Ley Silla, vacaciones, clima, pulso, asistencia, organigrama) Humi
+solo le cuenta algo a quien la ve en el panel: a quien no, le dice que su rol no la incluye y que pida acceso.
