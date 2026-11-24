@@ -212,6 +212,23 @@ describe('sendSigned, how long it waits', () => {
         expect(signalsOf(patient)).toEqual([null, null]);
     });
 
+    it('hands the answer of the request that took the mark to whoever keeps the tickets, whatever it said', async () => {
+        for (const markStatus of [200, 422, 409]) {
+            const answers: unknown[] = [];
+
+            await sendSigned(signed, {
+                fetcher: serverAnswering({ markStatus }),
+                getKey: signs,
+                xsrf: null,
+                onAnswer: (json) => answers.push(json),
+            });
+            // Read on a copy, in the background: let it settle.
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(answers, String(markStatus)).toEqual([day]);
+        }
+    });
+
     it('waits 4 seconds for the server to offer a challenge and 20 for it to take the mark', () => {
         expect(PUNCH_TIMEOUTS).toEqual({ options: 4_000, request: 20_000 });
     });

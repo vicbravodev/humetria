@@ -5,6 +5,7 @@ import type { Agreement } from '@/lib/attendance/punch-agreement';
 import type { MarkType } from '@/lib/attendance/next-step';
 import { sendSigned } from '@/lib/attendance/signed-request';
 import type { SignDeps } from '@/lib/attendance/signed-request';
+import { isNetworkFailure } from '@/lib/pwa/delivery';
 
 /** Who the server verified as signing, and what they may do next. */
 export type Signer = { name: string; next: string[] };
@@ -190,8 +191,13 @@ export async function punch(
         return day === null
             ? { kind: 'failed', reason: 'failed', person: null }
             : { kind: 'done', day };
-    } catch {
-        return { kind: 'failed', reason: 'failed', person: null };
+    } catch (error) {
+        // No answer at all (the network, or the server took too long): with the mode on, the app keeps the mark in its queue.
+        return {
+            kind: 'failed',
+            reason: isNetworkFailure(error) ? 'offline' : 'failed',
+            person: null,
+        };
     }
 }
 
@@ -221,6 +227,7 @@ const MESSAGES: Record<string, string> = {
     throttled: 'Hubo demasiados intentos. Espere un minuto e intente de nuevo.',
     unsupported:
         'Este navegador no puede usar llaves de acceso. Abra la página en el navegador de su teléfono.',
+    offline: 'No hay internet. Intente de nuevo cuando tenga señal.',
 };
 
 /** What to tell the person when the mark was not taken. */

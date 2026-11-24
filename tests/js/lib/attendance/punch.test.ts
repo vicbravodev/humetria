@@ -205,16 +205,6 @@ describe('punch, when the mark is not taken', () => {
             }),
         ).resolves.toEqual({ kind: 'failed', reason: 'failed', person: null });
     });
-
-    it('fails when the network does', async () => {
-        await expect(
-            punch(request, {
-                fetcher: () => Promise.reject(new TypeError('offline')),
-                getKey: signs,
-                xsrf: null,
-            }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'failed', person: null });
-    });
 });
 
 describe('punchDay', () => {

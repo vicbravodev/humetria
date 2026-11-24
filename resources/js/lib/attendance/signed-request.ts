@@ -14,6 +14,11 @@ export type SignDeps = {
      * server's challenge, and the request that takes the mark. Without it, no request has a time limit.
      */
     timeouts?: { options: number; request: number };
+    /**
+     * Gets what the request that took the action answered (read on a copy, whatever the status), for the phone to keep the
+     * tickets and the context every answer after a verified signature carries.
+     */
+    onAnswer?: (json: unknown) => void;
 };
 
 /**
@@ -95,11 +100,22 @@ export async function sendSigned(
     const options = requestOptions(await response.json());
     const key = options === null ? 'failed' : await sign(options, deps);
 
-    return typeof key === 'string'
-        ? key
-        : post(
-              url,
-              { ...body, credential: assertionPayload(key) },
-              { ...deps, timeout: deps.timeouts?.request },
-          );
+    if (typeof key === 'string') {
+        return key;
+    }
+
+    const answer = await post(
+        url,
+        { ...body, credential: assertionPayload(key) },
+        { ...deps, timeout: deps.timeouts?.request },
+    );
+
+    if (deps.onAnswer !== undefined) {
+        answer
+            .clone()
+            .json()
+            .then(deps.onAnswer, () => undefined);
+    }
+
+    return answer;
 }
