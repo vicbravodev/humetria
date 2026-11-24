@@ -7,6 +7,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Actions\ReissueAccess;
 use App\Modules\WorkerAccess\Data\InvitationOutcome;
 use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
@@ -15,6 +16,7 @@ use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -155,4 +157,38 @@ it('keeps the device keys active when the new link cannot be issued', function (
     expect(fn () => resolve(ReissueAccess::class)->handle($this->ana->id, $this->rh->id))->toThrow(RuntimeException::class, 'audit down');
 
     expect($phoneKey->refresh()->revoked_at)->toBeNull();
+});
+
+it('says that the access of the person was reissued, with no key in particular, even when they had no key', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+    $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'email' => 'beto@acme.mx']);
+
+    resolve(ReissueAccess::class)->handle($this->ana->id, $this->rh->id);
+    resolve(ReissueAccess::class)->handle($beto->id, $this->rh->id);
+
+    Event::assertDispatchedTimes(WorkerAccessRevoked::class, 2);
+    Event::assertDispatched(WorkerAccessRevoked::class, fn (WorkerAccessRevoked $event): bool => $event->employeeId === $this->ana->id && $event->reason === 'reissued' && $event->credentialId === null);
+    Event::assertDispatched(WorkerAccessRevoked::class, fn (WorkerAccessRevoked $event): bool => $event->employeeId === $beto->id);
+});
+
+it('says nothing when the new link cannot be issued, so nothing was revoked', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+    AuditEntry::creating(function (AuditEntry $entry): void {
+        if ($entry->event === 'worker_access.link_issued') {
+            throw new RuntimeException('audit down');
+        }
+    });
+
+    expect(fn () => resolve(ReissueAccess::class)->handle($this->ana->id, $this->rh->id))->toThrow(RuntimeException::class, 'audit down');
+
+    Event::assertNotDispatched(WorkerAccessRevoked::class);
+});
+
+it('says nothing for a person who left or is not the company\'s', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+    $left = EmployeeFactory::new()->deactivated()->create(['tenant_id' => $this->tenant->id]);
+
+    resolve(ReissueAccess::class)->handle($left->id, $this->rh->id);
+
+    Event::assertNotDispatched(WorkerAccessRevoked::class);
 });

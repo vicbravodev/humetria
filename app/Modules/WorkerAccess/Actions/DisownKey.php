@@ -7,6 +7,7 @@ namespace App\Modules\WorkerAccess\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerAccessState;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
@@ -57,6 +58,7 @@ final readonly class DisownKey
         }
 
         Log::info('worker_access.not_me', ['key_id' => $credential->id, 'employee_id' => $credential->employee_id]);
+        event(new WorkerAccessRevoked($credential->employee_id, 'not_me', $credential->id));
         $contact = $this->companies->contact();
         $person = $this->roster->find($credential->employee_id);
 

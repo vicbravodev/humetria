@@ -161,6 +161,10 @@ final class RedactSensitiveData implements ProcessorInterface
             'justification',
             'lat_e5',
             'lng_e5',
+            // Avisos push: where a person's phone receives them (the address of its push service and its keys) identifies the phone.
+            'endpoint',
+            'p256dh',
+            'auth',
         ];
 
         foreach ($data as $key => $value) {

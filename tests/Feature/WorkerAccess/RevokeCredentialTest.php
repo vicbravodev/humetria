@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Actions\RevokeCredential;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Exceptions\InvalidCredential;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
@@ -12,6 +13,7 @@ use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Tests\Support\SoftAuthenticator;
 
@@ -68,4 +70,15 @@ it('leaves the device keys active: they are not tied to one passkey, and RH revo
     resolve(RevokeCredential::class)->handle($device->id);
 
     expect($phoneKey->refresh()->revoked_at)->toBeNull();
+});
+
+it('says that the access of the person was revoked, once, and not when it is revoked again', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+    $device = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+
+    resolve(RevokeCredential::class)->handle($device->id);
+    resolve(RevokeCredential::class)->handle($device->id);
+
+    Event::assertDispatchedTimes(WorkerAccessRevoked::class, 1);
+    Event::assertDispatched(WorkerAccessRevoked::class, fn (WorkerAccessRevoked $event): bool => $event->employeeId === $this->ana->id && $event->reason === 'revoked_by_hr' && $event->credentialId === $device->id);
 });

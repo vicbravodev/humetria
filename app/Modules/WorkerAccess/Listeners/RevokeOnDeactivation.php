@@ -7,6 +7,7 @@ namespace App\Modules\WorkerAccess\Listeners;
 use App\Actions\RecordAudit;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerAccessState;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
@@ -36,6 +37,8 @@ final readonly class RevokeOnDeactivation
 
         // Their sessions end whatever else they had: one opened with a link already used would come back with them.
         WorkerAccessState::moveValidAfter($event->tenantId, $event->employeeId);
+        // Said once the departure committed, with or without keys: the sessions ended either way (Notifications forgets their push subscriptions).
+        DB::afterCommit(fn () => event(new WorkerAccessRevoked($event->employeeId, 'left_company')));
 
         // Nothing of theirs to revoke: nothing to say or log.
         if ($revoked === 0 && $deviceKeys === 0 && ! $links) {

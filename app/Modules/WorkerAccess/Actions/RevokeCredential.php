@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\WorkerAccess\Actions;
 
 use App\Actions\RecordAudit;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -37,6 +38,7 @@ final readonly class RevokeCredential
 
         if ($revoked) {
             Log::info('worker_access.credential_revoked', ['key_id' => $credential->id, 'employee_id' => $credential->employee_id]);
+            event(new WorkerAccessRevoked($credential->employee_id, 'revoked_by_hr', $credential->id));
         }
     }
 }

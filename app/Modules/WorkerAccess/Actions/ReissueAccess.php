@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\WorkerAccess\Data\InvitationOutcome;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerAccessState;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
@@ -46,6 +47,8 @@ final readonly class ReissueAccess
         });
 
         Log::info('worker_access.access_reissued', $counts);
+        // Even with no key to revoke, their sessions ended.
+        event(new WorkerAccessRevoked($person->id, 'reissued'));
 
         return $outcome;
     }

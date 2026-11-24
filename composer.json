@@ -21,6 +21,7 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "maxmind-db/reader": "^1.14",
+        "minishlink/web-push": "^11.0",
         "spatie/laravel-permission": "^8.3",
         "web-auth/webauthn-lib": "^5.3"
     },
@@ -169,7 +170,7 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": false
         }
     },
     "minimum-stability": "stable",

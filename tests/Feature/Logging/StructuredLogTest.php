@@ -115,6 +115,8 @@ it('redacts each sensitive key', function (string $key): void {
     // Registro de jornada, marks made without a connection: the screen's code, the note of the person and the position, in the
     // integers the phone signs (the delivery's body).
     'qr', 'justification', 'lat_e5', 'lng_e5',
+    // Avisos push: the address of a phone's push service and its keys identify the phone.
+    'endpoint', 'p256dh', 'auth',
 ]);
 
 it('redacts every salary key at any depth', function (): void {

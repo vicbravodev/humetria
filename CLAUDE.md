@@ -79,7 +79,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   `routes/company.php`, el resto desde `routes/web.php`.
 - Toda ruta tiene nombre y exige autenticación, salvo las de la lista pública de `tests/Feature/RouteSecurityTest.php`;
   agregar ahí una ruta exige una razón.
-- Sin cuenta: `*-portal.php` son el **portal** de la persona trabajadora (`/me/{slug}/...`), que lee su sesión
+- Sin cuenta: `*-portal.php` son el **portal** de la persona trabajadora (`/me/{slug}/...`; también `notifications-portal.php`, la
+  suscripción a avisos push), que lee su sesión
   (`worker-access.php`, que además sirve, sin sesión, el manifest, el service worker y el cascarón de la app instalable:
   entra con su llave o con un enlace de un solo uso); ninguna dirección suya lleva una credencial que
   sirva más de una vez (`RouteSecurityTest`). El token del enlace es la credencial (con throttle por enlace y por
@@ -94,7 +95,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 ### Módulos
 
 - `Assistant`: Humi, el asistente de IA (ver su README).
-- `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones.
+- `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones, marcas sin conexión y su revisión.
 - `Billing`: cuentas, suscripciones, cargos, estados de cuenta y pagos.
 - `Blog`: blog público para SEO: artículos en `content/blog/*.md`, validados en CI y publicados solo con el visto bueno del dueño
   (`reviewed_at`); páginas de Inertia con SSR y el header de la landing, sin base de datos (ver `docs/blog/README.md`).
@@ -111,6 +112,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Leave`: vacaciones y permisos: políticas, saldos, solicitudes, días festivos.
 - `Messaging`: transporte de WhatsApp y de eventos de correo: gateway, webhooks, plantillas, consentimiento, historial de
   estados (ver su README).
+- `Notifications`: avisos push (Web Push con VAPID) sin contenido a la persona trabajadora: suscripciones y envío; reacciona a
+  eventos públicos de Attendance y WorkerAccess; nunca manda correo (ver su README).
 - `Organization`: áreas, empleados, niveles de puesto, líneas de reporte (organigrama).
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
@@ -121,7 +124,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso, sesión y prueba reciente;
   el inicio de su portal en `/me/{slug}` (ver su README).
 
-No hay módulo de notificaciones: cada módulo manda sus correos con `Notifications/`. No hay SMS. WhatsApp sale solo por `Messaging`.
+Cada módulo manda sus correos con su carpeta `Notifications/`; el módulo `Notifications` solo manda avisos push, nunca correo ni WhatsApp.
+No hay SMS. WhatsApp sale solo por `Messaging`.
 
 ## Arquitectura del frontend
 

@@ -125,3 +125,7 @@ muestra una vez en el flash `accessLink`; la bitácora (`worker_access.link_issu
 - `DeviceKeySignatures`: `passId($pass)` lee el id de un pase de la empresa actual sin mirar vigencia ni revocación (Attendance lo
   necesita para armar el reto) y `verify($expected, $signature, $pass, $ticketIssuedAt)` dice qué llave del dispositivo firmó
   (`DeviceSigned`, con `revokedAt` con la misma regla contra el boleto); solo lee.
+- Evento `WorkerAccessRevoked(employeeId, reason, ?credentialId)`: se le quitó el acceso a la persona sin tener su teléfono en la mano.
+  Lo dispara, después del commit y solo si algo cambió, `RevokeCredential` (`revoked_by_hr`, con el id de la llave), `ReissueAccess`
+  (`reissued`), `DisownKey` (`not_me`, con el id) y `RevokeOnDeactivation` (`left_company`, aunque no tuviera llaves: sus sesiones
+  terminan). «Salir» no dispara nada. Lo escucha `Notifications` para borrar las suscripciones push de la persona.

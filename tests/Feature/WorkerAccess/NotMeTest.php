@@ -6,6 +6,7 @@ use App\Models\AuditEntry;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Actions\DisownKey;
 use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
@@ -13,6 +14,7 @@ use App\Modules\WorkerAccess\Notifications\KeyDisowned;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -139,4 +141,15 @@ it('does not touch the device keys when the confirmation is said again', functio
     $this->post(notMeUrl($this->key->id))->assertRedirect();
 
     expect($late->refresh()->revoked_at)->toBeNull();
+});
+
+it('says that the person disowned a key, once, and not when they confirm again', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+    $url = notMeUrl($this->key->id);
+
+    $this->post($url)->assertRedirect();
+    $this->post($url)->assertRedirect();
+
+    Event::assertDispatchedTimes(WorkerAccessRevoked::class, 1);
+    Event::assertDispatched(WorkerAccessRevoked::class, fn (WorkerAccessRevoked $event): bool => $event->employeeId === $this->ana->id && $event->reason === 'not_me' && $event->credentialId === $this->key->id);
 });
