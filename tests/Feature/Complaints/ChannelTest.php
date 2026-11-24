@@ -62,6 +62,7 @@ it('says who receives each kind of complaint by name, for the whole company, and
         ->get(route('tenant.complaints.channel.show', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
             ->has('coverage', 6)
+            ->where('coverage', fn ($rows): bool => collect($rows)->pluck('kind')->all() === ['direct_supervisor', 'coworker', 'hr', 'management', 'third_party', 'unknown'])
             ->where('coverage.1', ['kind' => 'coworker', 'label' => 'Compañera o compañero', 'handlers' => [
                 ['name' => $this->owner->name, 'roleLabel' => 'Administra todo'],
                 ['name' => $hr->name, 'roleLabel' => 'Ayuda con las rutas'],
