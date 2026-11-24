@@ -19,7 +19,7 @@ export default function MemberInvitationRow({
 
     return (
         <TableRow>
-            <TableCell className="whitespace-normal">
+            <TableCell className="whitespace-normal max-md:w-full">
                 <div className="flex items-center gap-2.5">
                     <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-input text-muted-foreground">
                         <Mail aria-hidden className="size-3.5" />
@@ -48,7 +48,7 @@ export default function MemberInvitationRow({
             >
                 {expired ? 'Vencida' : 'Pendiente'}
             </TableCell>
-            <TableCell className="w-px">
+            <TableCell className="w-px max-md:ml-auto max-md:w-auto">
                 <div className="-my-2 flex justify-end gap-1">
                     <Button asChild size="sm" variant="ghost">
                         <Link

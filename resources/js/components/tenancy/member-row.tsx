@@ -25,7 +25,7 @@ export default function MemberRow({
 
     return (
         <TableRow>
-            <TableCell className="whitespace-normal">
+            <TableCell className="whitespace-normal max-md:w-full">
                 <div className="flex items-center gap-2.5">
                     <Initials name={member.name} />
                     <div className="flex min-w-0 flex-col">
@@ -78,7 +78,7 @@ export default function MemberRow({
             <TableCell className="text-sm text-muted-foreground">
                 Desde el {member.since}
             </TableCell>
-            <TableCell className="w-px text-right">
+            <TableCell className="w-px text-right max-md:ml-auto max-md:w-auto">
                 {!fixed && <MemberRowActions member={member} />}
             </TableCell>
         </TableRow>

@@ -233,3 +233,22 @@ it('keeps a raised area whole when the role of the invitation changes to one wit
     expect(TenantInvitation::query()->where('email', 'raul@acme.mx')->sole()->extra_permissions)
         ->toEqualCanonicalizing(['view-vacations', 'manage-vacations']);
 });
+
+it('fits a person with extra permissions in a phone: the role and the «+N» link are whole, nothing scrolls sideways', function (bool $dark): void {
+    $tenant = acmeWithPeople();
+    $beto = User::query()->where('email', 'beto@acme.mx')->sole();
+    resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->syncDirectPermissions($beto, $tenant, ['manage-vacations']);
+
+    visitPage('tenancy/members', '/admin/acme/members', $dark, true)
+        ->assertSee('+1 permiso adicional')
+        ->assertScript(<<<'JS'
+            () => {
+                const box = (selector) => document.querySelector(selector).getBoundingClientRect();
+                const frame = document.querySelector('[data-slot="table-container"]');
+                const inside = ['[data-test="member-extras"]', '[data-test="member-role"]', '[data-test="member-actions"]']
+                    .every((selector) => box(selector).left >= 0 && box(selector).right <= window.innerWidth);
+
+                return inside && frame.scrollWidth <= frame.clientWidth && document.documentElement.scrollWidth <= window.innerWidth;
+            }
+            JS, true);
+})->with([[false], [true]]);
