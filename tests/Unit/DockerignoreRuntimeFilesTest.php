@@ -3,36 +3,33 @@
 declare(strict_types=1);
 
 /**
- * Whether `.dockerignore` keeps `$path` out of the image, the conservative way: a directory that is excluded takes everything
- * under it, whatever a later rule says, so a file is in only when no folder on its way, nor the file, ends up excluded. Within
- * one path the last rule that matches wins, and `!` brings it back. `*` stays inside a name, `**` crosses folders.
+ * Whether `.dockerignore` keeps `$path` out of the image, as Docker decides it: the rules are read in order and the last one
+ * that matches wins, `!` bringing the path back. A rule matches a path when it matches the path itself or any folder on its
+ * way, so `docs` matches `docs/normas/a.md` too, and a later `!docs/normas` still re-includes it. `*` stays inside a name,
+ * `**` crosses folders.
  *
  * @param  list<string>  $rules
  */
 function dockerIgnores(array $rules, string $path): bool
 {
     $parts = explode('/', $path);
+    $excluded = false;
 
-    for ($depth = 1; $depth <= count($parts); $depth++) {
-        $prefix = implode('/', array_slice($parts, 0, $depth));
-        $excluded = false;
+    foreach ($rules as $rule) {
+        $negated = str_starts_with($rule, '!');
+        $pattern = ltrim($negated ? substr($rule, 1) : $rule, '/');
+        $regex = '~^'.str_replace(['\*\*', '\*'], ['.*', '[^/]*'], preg_quote($pattern, '~')).'$~';
 
-        foreach ($rules as $rule) {
-            $negated = str_starts_with($rule, '!');
-            $pattern = ltrim($negated ? substr($rule, 1) : $rule, '/');
-            $regex = '~^'.str_replace(['\*\*', '\*'], ['.*', '[^/]*'], preg_quote($pattern, '~')).'$~';
-
-            if (preg_match($regex, $prefix) === 1) {
+        for ($depth = 1; $depth <= count($parts); $depth++) {
+            if (preg_match($regex, implode('/', array_slice($parts, 0, $depth))) === 1) {
                 $excluded = ! $negated;
-            }
-        }
 
-        if ($excluded) {
-            return true;
+                break;
+            }
         }
     }
 
-    return false;
+    return $excluded;
 }
 
 /** @return list<string> */
@@ -61,9 +58,11 @@ describe('.dockerignore', function (): void {
         }
     });
 
-    it('understands its own matcher: a folder excluded takes its files whatever a later rule says', function (): void {
-        expect(dockerIgnores(['docs', '!docs/normas'], 'docs/normas/a.md'))->toBeTrue()
+    it('understands its own matcher as Docker does: the last rule that matches wins, and a negation of a nested path re-includes it under an excluded folder', function (): void {
+        expect(dockerIgnores(['docs', '!docs/normas'], 'docs/normas/a.md'))->toBeFalse()
             ->and(dockerIgnores(['docs/*', '!docs/normas'], 'docs/normas/a.md'))->toBeFalse()
-            ->and(dockerIgnores(['docs/*', '!docs/normas'], 'docs/other'))->toBeTrue();
+            ->and(dockerIgnores(['docs/*', '!docs/normas'], 'docs/other'))->toBeTrue()
+            ->and(dockerIgnores(['!docs/normas', 'docs'], 'docs/normas/a.md'))->toBeTrue()
+            ->and(dockerIgnores(['docs/*', '!docs/normas', '!docs/normas/**'], 'docs/operations/ssr.md'))->toBeTrue();
     });
 });
