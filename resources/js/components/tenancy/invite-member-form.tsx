@@ -1,5 +1,6 @@
 import { Form, Link } from '@inertiajs/react';
 import { Send } from 'lucide-react';
+import InviteExtraPermissions from '@/components/tenancy/invite-extra-permissions';
 import MemberRoleChoice from '@/components/tenancy/member-role-choice';
 import TenantField from '@/components/tenancy/tenant-field';
 import { Button } from '@/components/ui/button';
@@ -7,13 +8,19 @@ import { Spinner } from '@/components/ui/spinner';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/members';
 import { store } from '@/routes/tenant/members/invitations';
-import type { RoleOption } from '@/types';
+import type { PermissionGroup, RoleOption } from '@/types';
 
 /**
  * Who is invited and what they will do (board V3-Roles). The link goes by email, single use, for 7 days; the people of a
  * center never come in here: they get their personal link from the route.
  */
-export default function InviteMemberForm({ roles }: { roles: RoleOption[] }) {
+export default function InviteMemberForm({
+    roles,
+    groups,
+}: {
+    roles: RoleOption[];
+    groups: PermissionGroup[];
+}) {
     const tenantSlug = useTenantSlug();
 
     return (
@@ -40,6 +47,13 @@ export default function InviteMemberForm({ roles }: { roles: RoleOption[] }) {
                         error={errors['email']}
                     />
                     <MemberRoleChoice roles={roles} error={errors['role']} />
+                    <InviteExtraPermissions
+                        groups={groups}
+                        errors={{
+                            permissions: errors['permissions'],
+                            acknowledge: errors['acknowledge_sensitive'],
+                        }}
+                    />
                     <p className="text-sm text-pretty text-muted-foreground">
                         Le llegará un correo con un enlace de un solo uso,
                         válido por 7 días. Las personas trabajadoras no se

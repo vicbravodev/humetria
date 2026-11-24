@@ -1,3 +1,4 @@
+import RoleMatrixByRole from '@/components/tenancy/role-matrix-by-role';
 import {
     Table,
     TableBody,
@@ -12,7 +13,7 @@ import type { RoleMatrix as Matrix } from '@/types';
 
 /**
  * «Qué puede hacer cada quien» (board V3-Roles): each role a column, as the permissions really are. «Sí» goes in the accent;
- * the table scrolls sideways inside its card on a phone.
+ * on a phone, one folded row per role instead.
  */
 export default function RoleMatrix({ matrix }: { matrix: Matrix }) {
     return (
@@ -23,48 +24,53 @@ export default function RoleMatrix({ matrix }: { matrix: Matrix }) {
             >
                 Qué puede hacer cada quien
             </h2>
-            <Table className="text-sm">
-                <TableCaption className="sr-only">
-                    Qué puede hacer cada rol en Humetría
-                </TableCaption>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="whitespace-normal">
-                            Puede
-                        </TableHead>
-                        {matrix.columns.map((column) => (
-                            <TableHead
-                                key={column}
-                                className="min-w-24 whitespace-normal"
-                            >
-                                {column}
+            <div className="md:hidden">
+                <RoleMatrixByRole matrix={matrix} />
+            </div>
+            <div className="max-md:hidden">
+                <Table className="text-sm">
+                    <TableCaption className="sr-only">
+                        Qué puede hacer cada rol en Humetría
+                    </TableCaption>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="whitespace-normal">
+                                Puede
                             </TableHead>
-                        ))}
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {matrix.rows.map((row) => (
-                        <TableRow key={row.label}>
-                            <TableCell className="min-w-36 font-medium whitespace-normal">
-                                {row.label}
-                            </TableCell>
-                            {row.cells.map((cell, index) => (
-                                <TableCell
-                                    key={matrix.columns[index] ?? index}
-                                    className={cn(
-                                        'whitespace-normal',
-                                        cell === 'Sí'
-                                            ? 'font-semibold text-primary'
-                                            : 'text-muted-foreground',
-                                    )}
+                            {matrix.columns.map((column) => (
+                                <TableHead
+                                    key={column}
+                                    className="min-w-24 whitespace-normal"
                                 >
-                                    {cell}
-                                </TableCell>
+                                    {column}
+                                </TableHead>
                             ))}
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {matrix.rows.map((row) => (
+                            <TableRow key={row.label}>
+                                <TableCell className="min-w-36 font-medium whitespace-normal">
+                                    {row.label}
+                                </TableCell>
+                                {row.cells.map((cell, index) => (
+                                    <TableCell
+                                        key={matrix.columns[index] ?? index}
+                                        className={cn(
+                                            'whitespace-normal',
+                                            cell === 'Sí'
+                                                ? 'font-semibold text-primary'
+                                                : 'text-muted-foreground',
+                                        )}
+                                    >
+                                        {cell}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
             <p className="border-t px-5 py-4 text-sm text-muted-foreground">
                 Cada vez que alguien abre datos confidenciales, queda registrado
                 quién y cuándo. Quien atiende quejas solo ve los casos que le

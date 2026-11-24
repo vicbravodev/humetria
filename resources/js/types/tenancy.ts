@@ -180,6 +180,7 @@ export type MemberRow = {
     email: string;
     role: CompanyRoleKey;
     role_label: string;
+    extra_permissions: number; // besides their role
     is_you: boolean;
     /** The day they got access, written for display. */
     since: string;

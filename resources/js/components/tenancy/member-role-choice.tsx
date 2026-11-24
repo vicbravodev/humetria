@@ -41,7 +41,8 @@ export default function MemberRoleChoice({
                         <span className="flex flex-col">
                             <span className="font-medium">{role.label}</span>
                             <span className="text-sm text-muted-foreground">
-                                {HINTS[role.value]}
+                                {HINTS[role.value] ??
+                                    'Rol propio de tu empresa: entra con los permisos que le diste.'}
                             </span>
                         </span>
                     </label>

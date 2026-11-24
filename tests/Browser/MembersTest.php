@@ -47,13 +47,21 @@ it('lists who has access and the pending invitations', function (bool $dark, boo
 it('invites from its own page, with what each role can do beside the form (board V3-Roles)', function (bool $dark, bool $mobile): void {
     acmeWithPeople();
 
-    visitPage('tenancy/invite-member', '/admin/acme/members/invitations/create', $dark, $mobile)
+    $page = visitPage('tenancy/invite-member', '/admin/acme/members/invitations/create', $dark, $mobile)
         ->assertSee('Invitar a alguien')
         ->assertSee('Qué hará en Humetría')
         ->assertSee('Ayuda con las rutas')
+        ->assertSee('Permisos adicionales')
         ->assertSee('Qué puede hacer cada quien')
-        ->assertSee('Ver tamizajes de la Guía I')
         ->assertSee('Le llegará un correo con un enlace de un solo uso, válido por 7 días.');
+
+    // On a phone the matrix is one folded row per role, not a table of dozens of rows: opening one lists what it can do.
+    if ($mobile) {
+        $page->assertDontSee('Ver tamizajes de la Guía I')
+            ->click('summary:has-text("Ayuda con las rutas")');
+    }
+
+    $page->assertSee('Ver tamizajes de la Guía I');
 })->with($looks);
 
 it('passes the checks with a row menu open', function (bool $dark, bool $mobile): void {
@@ -165,4 +173,38 @@ it('shows Usuarios in the sidebar only to the owner', function (): void {
         ->click('Usuarios')
         ->assertScript(pathBecomes('/admin/acme/members'), true)
         ->assertPathIs('/admin/acme/members');
+});
+
+it('says how many permissions a person has besides their role, and leads to them', function (): void {
+    $tenant = acmeWithPeople();
+    $beto = User::query()->where('email', 'beto@acme.mx')->sole();
+    resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->syncDirectPermissions($beto, $tenant, ['manage-vacations']);
+
+    visit('/admin/acme/members')
+        ->assertSee('+1 permiso adicional')
+        ->click('@member-extras')
+        ->assertSee('Permisos adicionales de Beto Ramírez')
+        ->assertNoJavaScriptErrors();
+});
+
+it('invites someone with a role of the company\'s own and a sensitive permission besides it, after confirming', function (): void {
+    $tenant = acmeWithPeople();
+    $role = app(App\Modules\Tenancy\Actions\CreateCompanyRole::class)->handle($tenant, 'Auditoría', ['view-dashboard', 'view-vacations'], null, User::query()->where('name', 'Olga Owner')->sole());
+
+    visit('/admin/acme/members/invitations/create')
+        ->type('name', 'Iris Interna')
+        ->type('email', 'iris@acme.mx')
+        ->radio('role', $role->name)
+        ->assertSee('Rol propio de tu empresa')
+        ->click('@invite-extras')
+        ->click('@permission-view-trauma-screenings')
+        ->click('Entiendo y confirmo')
+        ->press('Enviar invitación')
+        ->assertSee('Invitación enviada.')
+        ->assertSee('Iris Interna')
+        ->assertNoJavaScriptErrors();
+
+    $invitation = TenantInvitation::query()->where('email', 'iris@acme.mx')->sole();
+    expect($invitation->role?->name)->toBe($role->name)
+        ->and($invitation->extra_permissions)->toBe(['view-trauma-screenings']);
 });

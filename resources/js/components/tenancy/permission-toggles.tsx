@@ -1,5 +1,6 @@
 import PermissionSwitch from '@/components/tenancy/permission-switch';
 import { groupCount } from '@/lib/permission-groups';
+import { cn } from '@/lib/utils';
 import type { PermissionGroup } from '@/types';
 
 /**
@@ -10,13 +11,21 @@ export default function PermissionToggles({
     groups,
     selection,
     onToggle,
+    columns = 2,
 }: {
     groups: PermissionGroup[];
     selection: { selected: string[]; locked: string[] };
     onToggle?: ((name: string, on: boolean) => void) | undefined;
+    /** Two side by side on a wide screen; one inside a narrow form. */
+    columns?: 1 | 2;
 }) {
     return (
-        <div className="grid items-start gap-4 lg:grid-cols-2">
+        <div
+            className={cn(
+                'grid items-start gap-4',
+                columns === 2 && 'lg:grid-cols-2',
+            )}
+        >
             {groups.map((group) => {
                 const { on, total } = groupCount(
                     group,
