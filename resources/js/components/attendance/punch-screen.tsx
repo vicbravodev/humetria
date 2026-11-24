@@ -94,7 +94,9 @@ export default function PunchScreen({
             enterUrl={page.enterUrl}
             timezone={page.timezone}
             now={now}
+            readInApp={punch.readInApp}
             onMark={(type) => void punch.mark(type)}
+            onCode={punch.readCode}
             onForget={punch.forget}
         />
     );

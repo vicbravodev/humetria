@@ -69,8 +69,8 @@ final readonly class MarkController
     public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones, private WorkCenters $workCenters, private WorkerSession $session) {}
 
     /**
-     * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
-     * page allows it to its own origin only (SecurityHeaders keeps a header the response already carries).
+     * The page that reads the device's position and the camera (the QR of the center's screen): the panel's
+     * Permissions-Policy denies both, and SecurityHeaders opens them to their own origin for every page under `/me/{slug}`.
      */
     public function show(Request $request, string $tenant): SymfonyResponse
     {
@@ -115,10 +115,7 @@ final readonly class MarkController
             'now' => CarbonImmutable::now()->getTimestampMs(),
         ]);
 
-        $response = $page->toResponse($request);
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
-
-        return $response;
+        return $page->toResponse($request);
     }
 
     /** «¿No es usted?»: this browser forgets who marked in it, at once. */

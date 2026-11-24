@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Support\QrImage;
 use Pest\Browser\Api\AwaitableWebpage;
 
 /*
@@ -23,6 +24,45 @@ function visitShell(string $url, bool $dark = false, bool $mobile = false): Awai
     $page->assertScript(eventually('() => document.querySelector("#offline-app h1") !== null'), true);
 
     return pageIsHealthy($page, $mobile);
+}
+
+/**
+ * Makes the phone's camera show `$text` as a QR: the page's `getUserMedia` answers a stream drawn from the image of that
+ * code (`img-src` allows `data:`), kept in `window.__camera` so a test can assert its tracks ended when the camera closed.
+ * Call it before the camera opens. The address of the page is the origin the code should carry: use `originOf`.
+ */
+function withCameraShowing(AwaitableWebpage $page, string $text): void
+{
+    $image = json_encode(QrImage::dataUri($text), JSON_THROW_ON_ERROR);
+
+    $page->script(runOnce(<<<JS
+        () => new Promise((resolve) => {
+            const picture = new Image();
+            picture.onload = () => {
+                const canvas = document.createElement('canvas');
+                // A phone held upright: a tall frame with the code in the middle, whole inside what the video shows.
+                canvas.width = 360;
+                canvas.height = 780;
+                const context = canvas.getContext('2d');
+                const draw = () => {
+                    context.fillStyle = '#fff';
+                    context.fillRect(0, 0, 360, 780);
+                    context.drawImage(picture, 20, 230, 320, 320);
+                };
+                draw();
+                setInterval(draw, 66);
+                navigator.mediaDevices.getUserMedia = async () => (window.__camera = canvas.captureStream(15));
+                resolve(true);
+            };
+            picture.src = {$image};
+        })
+        JS));
+}
+
+/** `http://localhost:1234`: the origin the browser has the app at, for the address a QR carries. */
+function originOf(AwaitableWebpage $page): string
+{
+    return parse_url($page->url(), PHP_URL_SCHEME).'://'.parse_url($page->url(), PHP_URL_HOST).':'.parse_url($page->url(), PHP_URL_PORT);
 }
 
 /** A script that waits until a service worker controls the page. */

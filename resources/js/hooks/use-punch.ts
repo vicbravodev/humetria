@@ -77,6 +77,8 @@ export function usePunch({
     const [location, setLocation] = useState<LocationError | null>(null);
     const [asksPosition, setAsksPosition] = useState(mode !== 'remote');
     const [tapped, setTapped] = useState<MarkType>('start');
+    // A code read with the app's own camera wins over the one the page opened with (the screen's QR, scanned outside).
+    const [read, setRead] = useState<string | null>(null);
 
     const mark = async (type: MarkType, agreementVersion?: number) => {
         setTapped(type);
@@ -103,7 +105,7 @@ export function usePunch({
                 optionsUrl,
                 punchUrl,
                 type,
-                qr,
+                qr: read ?? qr,
                 position: located.position,
                 ...(agreementVersion === undefined ? {} : { agreementVersion }),
             },
@@ -135,6 +137,10 @@ export function usePunch({
         location,
         /** The step the agreement is accepted with: the one tapped when it proceeds. */
         step: stepThatProceeds(tapped, next),
+        /** The code was read inside the app. */
+        readInApp: read !== null,
+        /** Keeps the code the app's camera read for the marks that follow. */
+        readCode: setRead,
         mark,
         accept: (version: number) =>
             void mark(stepThatProceeds(tapped, next), version),

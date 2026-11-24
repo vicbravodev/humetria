@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Middleware\SecurityHeaders;
 use App\Models\User;
+use App\Modules\Tenancy\Contracts\CompanyModules;
+use App\Modules\Tenancy\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
@@ -309,3 +312,24 @@ it('sends the policy of the landing of today when nothing is configured', functi
 
     $response->assertOk()->assertHeader('Content-Security-Policy', cspFor(nonceOf($response)));
 });
+
+it('opens camera and position to the person\'s pages only', function (Closure $visit, bool $opens): void {
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    $visit()->assertHeader('Permissions-Policy', $opens
+        ? 'camera=(self), microphone=(), geolocation=(self), payment=(), usb=()'
+        : 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+})->with([
+    'the person\'s start' => [fn (): TestResponse => test()->get('/me/acme'), true],
+    'the start with a session cookie' => [fn (): TestResponse => test()->withCookie(config()->string('session.cookie'), 'a-session-id')->get('/me/acme'), true],
+    'Marcar' => [fn (): TestResponse => test()->get('/me/acme/punch'), true],
+    'Marcar from the QR of a center' => [fn (): TestResponse => test()->get('/me/acme/punch?q=1.abc'), true],
+    'Mi semana' => [fn (): TestResponse => test()->get('/me/acme/week'), true],
+    'the shell of the installed app' => [fn (): TestResponse => test()->get('/me/acme/offline'), true],
+    'a company that does not exist' => [fn (): TestResponse => test()->get('/me/no-existe'), true],
+    'the landing' => [fn (): TestResponse => test()->get('/'), false],
+    'the panel, with a user' => [fn (): TestResponse => test()->actingAs(User::factory()->create())->get('/admin'), false],
+    'the screen of a center' => [fn (): TestResponse => test()->get('/a/acme/kiosk'), false],
+    'a POST under /me' => [fn (): TestResponse => test()->post('/me/acme/enter/options'), false],
+]);

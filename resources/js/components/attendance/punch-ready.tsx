@@ -8,6 +8,7 @@ import PersonHeading from '@/components/humetria/person-heading';
 import PunchButton from '@/components/attendance/punch-button';
 import PunchFeedback from '@/components/attendance/punch-feedback';
 import PunchHint from '@/components/attendance/punch-hint';
+import PunchScanButton from '@/components/attendance/punch-scan-button';
 import PunchWeekLink from '@/components/attendance/punch-week-link';
 import { clockNow } from '@/lib/attendance/correction';
 import type { MarkType } from '@/lib/attendance/next-step';
@@ -32,7 +33,9 @@ export default function PunchReady({
     enterUrl,
     timezone,
     now,
+    readInApp,
     onMark,
+    onCode,
     onForget,
 }: {
     company: string;
@@ -46,7 +49,11 @@ export default function PunchReady({
     timezone: string;
     /** The server's time now: the date and the greeting are the center's at that moment, never the phone's. */
     now: number;
+    /** The code was read with the app's camera. */
+    readInApp: boolean;
     onMark: (type: MarkType) => void;
+    /** The camera read the code of the screen of the person's center. */
+    onCode: (code: string) => void;
     onForget: () => void;
 }) {
     const today = clockNow(new Date(now), timezone);
@@ -58,7 +65,11 @@ export default function PunchReady({
             actions={
                 <>
                     <PunchButton person={person} onMark={onMark} />
-                    <PunchHint mode={mode} scannedAt={scannedAt} />
+                    <PunchHint
+                        mode={mode}
+                        scannedAt={scannedAt}
+                        readInApp={readInApp}
+                    />
                 </>
             }
         >
@@ -79,6 +90,10 @@ export default function PunchReady({
                     </>
                 )}
                 <PunchFeedback feedback={feedback} />
+                {/* In the content, not in the bar of steps: that bar stays compact (hallazgo 16). */}
+                {mode !== 'remote' && (
+                    <PunchScanButton read={readInApp} onCode={onCode} />
+                )}
                 <PunchWeekLink href={weekUrl} />
                 {marks !== null && <DayMarks marks={marks} />}
                 {mode !== 'remote' && <LocationNote />}

@@ -181,11 +181,11 @@ describe('the page', function (): void {
         $this->get('/me/acme/punch?q[]=x')->assertInertia(fn (AssertableInertia $page) => $page->where('qr', null));
     });
 
-    it('lets this page alone read the position, from its own origin only (Permissions-Policy)', function (): void {
+    it('lets the person\'s pages read the camera and the position, from their own origin only (Permissions-Policy)', function (): void {
         $this->get(route('attendance.device.punch.show', 'acme'))
-            ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
+            ->assertHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self), payment=(), usb=()');
         $this->get(route('attendance.device.punch.show', ['acme', 'q' => 'abc']))
-            ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
+            ->assertHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self), payment=(), usb=()');
         $this->get(route('login'))->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
     });
 

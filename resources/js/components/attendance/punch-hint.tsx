@@ -5,17 +5,35 @@
 export default function PunchHint({
     mode,
     scannedAt,
+    readInApp,
 }: {
     mode: 'remote' | 'onsite' | null;
     /** When the code of the screen was read, at its center's clock; null when the page did not open from one that counted. */
     scannedAt: string | null;
+    /** The code was read inside the app: its time is the server's and there is none to say (nor a network to ask it of). */
+    readInApp: boolean;
 }) {
-    const hint =
-        mode === 'remote'
-            ? 'Marque desde donde esté: no se le pedirá un QR ni estar en una zona.'
-            : scannedAt !== null
-              ? `Escaneó a las ${scannedAt}, tiene 3 minutos para marcar.`
-              : 'Si su centro tiene una pantalla QR, escanee su código con la cámara antes de marcar.';
+    return (
+        <p className="text-center text-sm text-muted-foreground">
+            {hintText(mode, scannedAt, readInApp)}
+        </p>
+    );
+}
 
-    return <p className="text-center text-sm text-muted-foreground">{hint}</p>;
+function hintText(
+    mode: 'remote' | 'onsite' | null,
+    scannedAt: string | null,
+    readInApp: boolean,
+): string {
+    if (mode === 'remote') {
+        return 'Marque desde donde esté: no se le pedirá un QR ni estar en una zona.';
+    }
+
+    if (readInApp) {
+        return 'Leyó el código de la pantalla. Marque ahora.';
+    }
+
+    return scannedAt !== null
+        ? `Escaneó a las ${scannedAt}, tiene 3 minutos para marcar.`
+        : 'Si su centro tiene una pantalla QR, escanee su código con la cámara antes de marcar.';
 }
