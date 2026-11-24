@@ -166,7 +166,7 @@ it('launches when the mail fits the quota exactly, counting only whoever has an 
 
     expect($survey->status)->toBe(SurveyStatus::Active)
         ->and(Invitation::query()->where('invitation_status', InvitationStatus::Queued)->count())->toBe(5)
-        ->and(Invitation::query()->where('invitation_status', InvitationStatus::NoEmail)->count())->toBe(1);
+        ->and(Invitation::query()->where('invitation_status', InvitationStatus::Unreachable)->count())->toBe(1);
     Bus::assertBatchCount(1);
 });
 
