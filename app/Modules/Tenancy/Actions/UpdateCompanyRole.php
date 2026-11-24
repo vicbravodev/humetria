@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Actions\RecordAudit;
 use App\Models\User;
+use App\Modules\Tenancy\Events\MemberPermissionsChanged;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\PermissionCatalog;
@@ -37,6 +38,10 @@ final readonly class UpdateCompanyRole
 
             $role->update(['label' => $label]);
             $role->syncPermissions($permissions);
+
+            foreach ($this->roles->holders($role) as $holder) {
+                event(new MemberPermissionsChanged($tenant->id, $holder));
+            }
 
             Log::info('tenant_role.updated', ['tenant_id' => $tenant->id, 'user_id' => $by->id, 'role_id' => $role->id]);
             $this->recordAudit->handle('tenant_role.updated', $role, [

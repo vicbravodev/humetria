@@ -15,10 +15,12 @@ use App\Modules\Complaints\Support\HandlerCoverage;
 use App\Modules\Tenancy\Actions\ChangeMemberRole;
 use App\Modules\Tenancy\Actions\CreateCompanyRole;
 use App\Modules\Tenancy\Actions\GrantMemberPermissions;
+use App\Modules\Tenancy\Actions\UpdateCompanyRole;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 mutates(EndAssignmentsOnRoleConflict::class, RespondentKind::class, CaseAccess::class, HandlerCoverage::class, EvidencePages::class);
 
@@ -161,4 +163,14 @@ it('does not count a handler given manage-organization as independent', function
     outsiderGivenHr($this->tenant, $this->owner);
 
     expect(resolve(EvidencePages::class)->show()['handlers'])->toBe(['count' => 1, 'independent' => false]);
+});
+
+it('ends the cases against HR of the people of a role of its own when manage-organization is added to the role', function (): void {
+    $person = customRoleMember($this->tenant, $this->owner);
+    $againstHr = caseHeldBy($this->tenant, RespondentKind::Hr, $person);
+    $role = Role::query()->where('tenant_id', $this->tenant->id)->sole();
+
+    app(UpdateCompanyRole::class)->handle($role, 'Atención externa', ['handle-complaints', 'manage-organization'], $this->owner);
+
+    expect($againstHr->refresh()->end_reason)->toBe('role_conflict');
 });
