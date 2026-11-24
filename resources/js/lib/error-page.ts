@@ -88,6 +88,19 @@ export function errorMessage(
     return { caption: `Error ${status}`, ...message };
 }
 
+/** The role by its label; a company's own role the page carries only by its key (`custom_<uuid>`) is «Rol propio», never the key. */
+function roleName(tenant: {
+    role: CompanyRoleKey;
+    role_label: string;
+}): string {
+    const bare =
+        tenant.role_label.trim() === '' || tenant.role_label === tenant.role;
+
+    return bare && tenant.role.startsWith('custom_')
+        ? 'Rol propio'
+        : tenant.role_label;
+}
+
 /**
  * Why a 403 happened when it is the person's role in the company: "Tu rol en Acme es Consulta, que ve resultados e
  * informes". Null outside a company and for the owner, whose role allows everything a role can.
@@ -106,7 +119,7 @@ export function roleLimit(
 
     return {
         company: tenant.trade_name,
-        role: tenant.role_label,
+        role: roleName(tenant),
         summary: roleSummary(tenant.role),
     };
 }
