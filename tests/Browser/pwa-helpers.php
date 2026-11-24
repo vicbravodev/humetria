@@ -109,14 +109,10 @@ function withoutNetwork(AwaitableWebpage $page, bool $off = true, ?int $delivery
         window.fetch = () => Promise.reject(new TypeError('Failed to fetch'));
         Object.defineProperty(navigator, 'onLine', { get: () => false, configurable: true });
         JS;
-    $context = pestInternal($page, 'page')->context();
-    // One script for the whole test: the first call that takes the network away installs it.
-    static $installed = [];
-    $id = spl_object_id($context);
-
-    if ($off && ! isset($installed[$id])) {
-        $installed[$id] = true;
-        $context->addInitScript("try { if (sessionStorage.getItem('pwa-test-offline') === '1') { {$install} } } catch (error) {}");
+    // The script every document of this page runs first. It is idempotent (the real `fetch` is kept once), so asking for it on every
+    // call is harmless; keeping a record of which pages have it would trust an object id that PHP reuses.
+    if ($off) {
+        pestInternal($page, 'page')->context()->addInitScript("try { if (sessionStorage.getItem('pwa-test-offline') === '1') { {$install} } } catch (error) {}");
     }
 
     if ($off) {
