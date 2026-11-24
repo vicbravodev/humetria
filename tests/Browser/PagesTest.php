@@ -46,6 +46,16 @@ it('wears the header of the landing on the roadmap, with the way back to its sec
         ->assertAttribute('[data-test="header-demo"]', 'href', '/#agenda-una-demo');
 });
 
+it('opens the menu of the header on the roadmap from a phone, with Blog and Roadmap in it', function (): void {
+    visitPage('roadmap', '/roadmap', mobile: true)
+        ->click('@tools-menu-mobile')
+        ->assertVisible('#tools-menu a[data-test="menu-blog"]')
+        ->assertVisible('#tools-menu a[data-test="menu-roadmap"]')
+        // Painted, not just in the page: without the motion provider the panel stays at opacity 0.
+        ->waitForEvent('networkidle')
+        ->assertScript("() => new Promise((done) => setTimeout(() => done(getComputedStyle(document.querySelector('#tools-menu')).opacity === '1'), 600))");
+});
+
 it('filters the public roadmap by area and brings everything back', function (bool $dark, bool $mobile): void {
     visitPage('roadmap', '/roadmap', $dark, $mobile, function ($page): void {
         $page->assertSee('Jornada de 40 horas')

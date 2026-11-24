@@ -35,8 +35,8 @@
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="size-5 dark:hidden"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden size-5 dark:block"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
             </button>
-            <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-normal text-muted-foreground transition-colors hover:text-foreground">{{ __('blog.login') }}</a>
-            <a data-test="header-demo" href="/#agenda-una-demo" class="ml-1 inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
+            <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-normal whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground">{{ __('blog.login') }}</a>
+            <a data-test="header-demo" href="/#agenda-una-demo" class="ml-1 inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-sm font-medium whitespace-nowrap text-primary-foreground transition-opacity hover:opacity-90">
                 <span class="sm:hidden">Demo</span><span class="hidden sm:inline">{{ __('blog.cta_button') }}</span>
             </a>
             <details class="group ml-1 lg:hidden">

@@ -26,9 +26,10 @@ final class BlogSeo
         return self::base().route('blog.show', $slug, false);
     }
 
-    public static function imageUrl(): string
+    /** The image to share: the article's own cover (with its title) or, for the index, the one of the whole site. */
+    public static function imageUrl(?Article $article = null): string
     {
-        return self::base().self::IMAGE;
+        return self::base().($article?->ogImage() ?? self::IMAGE);
     }
 
     /** JSON_HEX_TAG turns `<` and `>` into escapes, so a title with `</script>` cannot close the block it is printed in. */
@@ -46,7 +47,7 @@ final class BlogSeo
             'dateModified' => $article->updatedAt->toDateString(),
             'inLanguage' => 'es-MX',
             'mainEntityOfPage' => self::articleUrl($article->slug),
-            'image' => [self::imageUrl()],
+            'image' => [self::imageUrl($article)],
             'author' => $organization,
             'publisher' => [...$organization, 'logo' => ['@type' => 'ImageObject', 'url' => self::base().'/app-icon-512.png']],
         ], JSON_HEX_TAG | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);

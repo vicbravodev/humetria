@@ -16,14 +16,14 @@
         <meta property="og:title" content="{{ $title }}">
         <meta property="og:description" content="{{ $description }}">
         <meta property="og:locale" content="es_MX">
-        <meta property="og:image" content="{{ App\Modules\Blog\Support\BlogSeo::imageUrl() }}">
+        <meta property="og:image" content="{{ ($image ?? App\Modules\Blog\Support\BlogSeo::imageUrl()) }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
-        <meta property="og:image:alt" content="{{ __('blog.image_alt') }}">
+        <meta property="og:image:alt" content="{{ $imageAlt ?? __('blog.image_alt') }}">
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="{{ $title }}">
         <meta name="twitter:description" content="{{ $description }}">
-        <meta name="twitter:image" content="{{ App\Modules\Blog\Support\BlogSeo::imageUrl() }}">
+        <meta name="twitter:image" content="{{ ($image ?? App\Modules\Blog\Support\BlogSeo::imageUrl()) }}">
 
         <script nonce="{{ Vite::cspNonce() }}">
             // The person's choice in the app (cookie `appearance`) wins; without one the system decides, as in the app.

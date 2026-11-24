@@ -11,27 +11,26 @@
 @endsection
 
 @section('content')
-    <div class="mx-auto w-full max-w-[1200px] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
-        <h1 class="text-[32px] leading-[1.06] font-semibold tracking-[-0.035em] text-balance sm:text-[44px]">{{ __('blog.title') }}</h1>
-        <p class="mt-4 max-w-[56ch] text-lg leading-7 text-pretty text-muted-foreground">{{ __('blog.lead') }}</p>
+    <div class="mx-auto w-full max-w-[1200px] px-5 pt-10 pb-4 sm:px-8 sm:pt-12 lg:px-10 lg:pt-16 min-[1700px]:max-w-[1360px]">
+        <h1 class="text-[32px] leading-[1.06] font-semibold tracking-[-0.035em] text-balance sm:text-[44px] lg:text-[56px]">{{ __('blog.title') }}</h1>
+        <p class="mt-4 max-w-[56ch] text-lg leading-7 text-pretty text-muted-foreground lg:text-xl lg:leading-8">{{ __('blog.lead') }}</p>
 
         @if ($articles === [])
             <p class="mt-10 rounded-xl border bg-muted p-6 text-muted-foreground">{{ __('blog.empty') }}</p>
         @else
-            <ul class="mt-10 grid gap-5 md:grid-cols-2">
-                @foreach ($articles as $article)
-                    <li class="rounded-xl border bg-card p-6 text-card-foreground">
-                        <p class="text-caption text-muted-foreground">
-                            <time datetime="{{ $article->publishedAt->toDateString() }}">{{ $article->publishedAt->translatedFormat('j \d\e F \d\e Y') }}</time>
-                            · {{ __('blog.reading', ['minutes' => $article->readingMinutes]) }}
-                        </p>
-                        <h2 class="mt-2 text-xl leading-snug font-semibold tracking-[-0.02em] text-balance">
-                            <a href="{{ route('blog.show', $article->slug) }}" class="rounded-md hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{{ $article->title }}</a>
-                        </h2>
-                        <p class="mt-3 text-meta text-muted-foreground">{{ $article->description }}</p>
-                    </li>
-                @endforeach
-            </ul>
+            @php($first = $articles[0])
+            @php($rest = array_slice($articles, 1))
+            <div class="mt-10">
+                @include('blog.partials.card', ['article' => $first, 'featured' => true, 'eager' => true])
+            </div>
+
+            @if ($rest !== [])
+                <ul class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($rest as $article)
+                        <li>@include('blog.partials.card', ['article' => $article])</li>
+                    @endforeach
+                </ul>
+            @endif
         @endif
 
         @if ($previous || $next)
