@@ -36,8 +36,6 @@ export type HandlerRow = {
 export type CoverageByKind = {
     kind: string;
     label: string;
-    /** The role that may not receive it: «hr», «owner» or none. */
-    excludedRole: string | null;
     handlers: Array<{ name: string; roleLabel: string }>;
 };
 
@@ -47,6 +45,8 @@ export type HandlerCandidate = {
     label: string;
     role: string;
     roleLabel: string;
+    /** The kinds of complaint they may not receive, as the server decides them (criterio C-45). */
+    excludedKinds: string[];
 };
 
 /** How many people would receive a complaint against this kind of person. */

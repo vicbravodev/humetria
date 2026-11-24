@@ -6,9 +6,7 @@ namespace App\Modules\Complaints\Support;
 
 use App\Modules\Complaints\Enums\ChannelStatus;
 use App\Modules\Complaints\Models\ComplaintChannel;
-use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
-use App\Modules\Tenancy\Data\MemberSummary;
 
 /**
  * What the page of who handles the complaints shows: the handlers and who could be one, with their role. Who receives each kind
@@ -16,7 +14,7 @@ use App\Modules\Tenancy\Data\MemberSummary;
  */
 final readonly class HandlerPages
 {
-    public function __construct(private ActiveHandlers $active, private Members $members, private WorkCenters $workCenters) {}
+    public function __construct(private ActiveHandlers $active, private HandlerCandidates $candidates, private WorkCenters $workCenters) {}
 
     /**
      * @return array<string, mixed>
@@ -38,7 +36,7 @@ final readonly class HandlerPages
                 'scope' => $row['handler']->work_center_id === null ? 'Toda la empresa' : ($centers[$row['handler']->work_center_id] ?? 'Un centro'),
                 'designatedOn' => $row['handler']->designated_at->setTimezone(config()->string('app.display_timezone'))->toDateString(),
             ], $this->active->all()),
-            'candidates' => array_map(fn (MemberSummary $member): array => ['value' => (string) $member->userId, 'label' => $member->name, 'role' => $member->role->key, 'roleLabel' => $member->role->label], $this->members->complaintHandlers()),
+            'candidates' => $this->candidates->all(),
         ];
     }
 }

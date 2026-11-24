@@ -48,9 +48,10 @@ export function againstWhom(kind: string): string {
     return AGAINST[kind] ?? 'sin decir contra quién';
 }
 
+/** Who may not receive a kind of complaint, by kind: only those against HR or against management leave someone out. */
 const NOT: Record<string, string> = {
     hr: 'que no sea de recursos humanos',
-    owner: 'que no tenga el rol de dueño',
+    management: 'que no tenga el rol de dueño',
 };
 
 export type ChannelGap = { kind: string | null; title: string; text: string };
@@ -76,10 +77,11 @@ export function channelGaps(
     return coverage
         .filter((row) => row.handlers.length === 0)
         .map((row) => {
+            const not = NOT[row.kind];
             const who =
-                row.excludedRole === null
+                not === undefined
                     ? 'para toda la empresa: hoy solo atienden centros'
-                    : `${NOT[row.excludedRole] ?? ''}: alguien de tu equipo o de la Comisión`;
+                    : `${not}: alguien de tu equipo o de la Comisión`;
 
             return {
                 kind: row.kind,
@@ -108,13 +110,15 @@ export function channelSince(
 
 /**
  * Who may be designated for a kind of complaint (board V4-Quejas-Designar): the team and the committee apart, leaving out
- * the role the complaint is against, and who that leaves out by name.
+ * whoever the server says the complaint is against (criterio C-45), and who that leaves out by name.
  */
 export function eligibleFor(
     candidates: HandlerCandidate[],
-    excludedRole: string | null,
+    kind: string | null,
 ): { team: Option[]; committee: Option[]; excluded: string[] } {
-    const allowed = candidates.filter((person) => person.role !== excludedRole);
+    const against = (person: HandlerCandidate): boolean =>
+        kind !== null && person.excludedKinds.includes(kind);
+    const allowed = candidates.filter((person) => !against(person));
 
     return {
         team: allowed
@@ -126,14 +130,13 @@ export function eligibleFor(
         committee: allowed
             .filter((person) => person.role === 'committee')
             .map((person) => ({ value: person.value, label: person.label })),
-        excluded: candidates
-            .filter((person) => person.role === excludedRole)
-            .map((person) => person.label),
+        excluded: candidates.filter(against).map((person) => person.label),
     };
 }
 
 const LEADS: Record<string, string> = {
-    owner: 'Debe ser alguien que no tenga el rol de dueño. Solo verá los casos que le lleguen.',
+    management:
+        'Debe ser alguien que no tenga el rol de dueño. Solo verá los casos que le lleguen.',
     hr: 'Debe ser alguien que no sea de recursos humanos. Solo verá los casos que le lleguen.',
 };
 
@@ -148,7 +151,7 @@ export function designateWords(
                 ? '¿Quién atiende las quejas?'
                 : `¿Quién atiende las quejas ${againstWhom(row.kind)}?`,
         lead:
-            LEADS[row?.excludedRole ?? ''] ??
+            LEADS[row?.kind ?? ''] ??
             'Recibe las quejas que le lleguen, nunca una contra su propio rol.',
         teamHint:
             people.excluded.length === 0

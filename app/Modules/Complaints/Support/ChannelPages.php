@@ -7,8 +7,6 @@ namespace App\Modules\Complaints\Support;
 use App\Modules\Complaints\Enums\ChannelStatus;
 use App\Modules\Complaints\Enums\RespondentKind;
 use App\Modules\Complaints\Models\ComplaintChannel;
-use App\Modules\Tenancy\Contracts\Members;
-use App\Modules\Tenancy\Data\MemberSummary;
 
 /**
  * What the channel page of the company shows (board V4-Quejas-Canal): its state and settings, who receives each kind of
@@ -21,7 +19,7 @@ final readonly class ChannelPages
         private ChannelStatusPages $status,
         private ActiveHandlers $active,
         private HandlerCoverage $coverage,
-        private Members $members,
+        private HandlerCandidates $candidates,
         private QrCodeImage $qr,
     ) {}
 
@@ -61,7 +59,7 @@ final readonly class ChannelPages
      * Who receives each kind of complaint when the person names no center (the handlers of the whole company), by name, and
      * the people who may be designated with their role: the page tells which of them the conflict leaves for each kind.
      *
-     * @return array{coverage: list<array{kind: string, label: string, excludedRole: string|null, handlers: list<array{name: string, roleLabel: string}>}>, handlersCount: int, candidates: list<array{value: string, label: string, role: string, roleLabel: string}>}
+     * @return array{coverage: list<array{kind: string, label: string, handlers: list<array{name: string, roleLabel: string}>}>, handlersCount: int, candidates: list<array{value: string, label: string, role: string, roleLabel: string, excludedKinds: list<string>}>}
      */
     private function handlers(): array
     {
@@ -76,16 +74,10 @@ final readonly class ChannelPages
             'coverage' => array_map(fn (RespondentKind $kind): array => [
                 'kind' => $kind->value,
                 'label' => $kind->shortLabel(),
-                'excludedRole' => $kind->excludedRole(),
                 'handlers' => array_map(fn (int $id): array => $people[$id], $this->coverage->handlerIds($kind, null)),
             ], RespondentKind::cases()),
             'handlersCount' => count($active),
-            'candidates' => array_map(fn (MemberSummary $member): array => [
-                'value' => (string) $member->userId,
-                'label' => $member->name,
-                'role' => $member->role->key,
-                'roleLabel' => $member->role->label,
-            ], $this->members->complaintHandlers()),
+            'candidates' => $this->candidates->all(),
         ];
     }
 }
