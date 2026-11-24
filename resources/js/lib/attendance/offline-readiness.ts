@@ -64,7 +64,7 @@ function agreementRow(context: ReadinessInput['context']): ReadinessRow {
         blocking: true,
         text: ok
             ? 'Ya aceptó el acuerdo de registro'
-            : 'Falta aceptar el acuerdo de registro',
+            : 'Falta aceptar el acuerdo de registro: se acepta con su próxima marca con internet',
         fix: ok ? null : 'accept-agreement',
     };
 }
