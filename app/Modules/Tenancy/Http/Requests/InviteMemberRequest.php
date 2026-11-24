@@ -26,7 +26,7 @@ final class InviteMemberRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        abort_if(resolve(Impersonation::class)->isActive() && (str_starts_with($this->string('role')->toString(), 'custom_') || $this->array('permissions') !== []), 404);
+        abort_if(resolve(Impersonation::class)->isActive() && (MemberRoleRules::isCustom($this) || $this->array('permissions') !== []), 404);
 
         return Gate::allows('manage-members');
     }

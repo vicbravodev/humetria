@@ -8,6 +8,7 @@ use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\PermissionCatalog;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\In;
 
@@ -23,6 +24,14 @@ final class MemberRoleRules
         $keys = array_map(fn (CompanyRoleSummary $role): string => $role->key, resolve(CompanyRoles::class)->assignableSummaries($tenant));
 
         return ['required', 'string', Rule::in($keys)];
+    }
+
+    /** Whether the role sent is a company's own; anything that is not a string is not (validation answers it). */
+    public static function isCustom(Request $request): bool
+    {
+        $role = $request->input('role');
+
+        return is_string($role) && str_starts_with($role, 'custom_');
     }
 
     /**
