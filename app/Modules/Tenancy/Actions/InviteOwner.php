@@ -25,9 +25,10 @@ final readonly class InviteOwner
     public function handle(Tenant $tenant, OwnerInvitationData $data, User $invitedBy): TenantInvitation
     {
         return DB::transaction(function () use ($tenant, $data, $invitedBy): TenantInvitation {
-            // At most one is open (a unique index): its id stays on record so the replacement leaves a trace.
-            $replacedId = $tenant->invitations()->open()->value('id');
-            $tenant->invitations()->open()->update(['cancelled_at' => now()]);
+            // At most one owner invitation is open (a unique index): its id stays on record so the replacement leaves a trace.
+            // The members' open invitations are none of this.
+            $replacedId = $tenant->invitations()->open()->forOwner()->value('id');
+            $tenant->invitations()->open()->forOwner()->update(['cancelled_at' => now()]);
             $replaced = is_string($replacedId) ? ['replaced_invitation_id' => $replacedId] : [];
 
             $token = Str::random(64);
