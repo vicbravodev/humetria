@@ -537,6 +537,15 @@ it('says the name is taken when another role takes it while this one is saved', 
     expect($role->refresh()->getAttribute('label'))->toBe('Auditoría');
 })->with(['store', 'update']);
 
+it('only calls the name taken when the per-company name index fired, and lets any other unique violation through', function (): void {
+    $this->withoutExceptionHandling();
+    // Another request writes a role with the same internal name between the check and the write: not the name index.
+    Role::creating(fn (Role $role) => DB::table('roles')->insert(['name' => $role->name, 'guard_name' => 'web', 'tenant_id' => $this->tenant->id, 'label' => 'Otro', 'created_at' => now(), 'updated_at' => now()]));
+
+    expect(fn () => $this->actingAs($this->owner)->post(route('tenant.roles.store', $this->tenant), ['label' => 'Nómina', 'permissions' => ['view-dashboard']]))
+        ->toThrow(Illuminate\Database\UniqueConstraintViolationException::class);
+});
+
 it('answers 404, not an error, to a role id too large to be one', function (): void {
     $this->actingAs($this->owner)->get('/admin/acme/roles/99999999999999999999/edit')->assertNotFound();
     $this->actingAs($this->owner)->put('/admin/acme/roles/99999999999999999999', ['label' => 'X', 'permissions' => ['view-dashboard']])->assertNotFound();

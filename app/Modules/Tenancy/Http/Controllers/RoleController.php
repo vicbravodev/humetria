@@ -33,6 +33,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 /**
  * «Roles y permisos»: the templates of the system, locked, and the company's own roles. Only its owner manages them; the
@@ -109,8 +110,8 @@ final class RoleController extends Controller
             $max = config()->integer('tenancy.max_custom_roles');
 
             throw ValidationException::withMessages(['label' => "Ya tienes {$max} roles propios, el máximo. Borra uno que no uses para crear otro."]);
-        } catch (UniqueConstraintViolationException) {
-            throw self::nameTaken();
+        } catch (UniqueConstraintViolationException $violation) {
+            throw self::nameTaken($violation);
         }
 
         return $this->done($tenant, 'Rol creado.');
@@ -141,8 +142,8 @@ final class RoleController extends Controller
     {
         try {
             $updateCompanyRole->handle($request->role(), $request->label(), $request->permissions(), $user);
-        } catch (UniqueConstraintViolationException) {
-            throw self::nameTaken();
+        } catch (UniqueConstraintViolationException $violation) {
+            throw self::nameTaken($violation);
         }
 
         return $this->done($tenant, 'Rol actualizado.');
@@ -167,10 +168,15 @@ final class RoleController extends Controller
         ], $assignable);
     }
 
-    /** Another role took the name between the check and the write (the database keeps names unique per company). */
-    private static function nameTaken(): ValidationException
+    /**
+     * Another role took the name between the check and the write (the database keeps names unique per company). Any other
+     * unique violation is not about the name and goes on as it is.
+     */
+    private static function nameTaken(UniqueConstraintViolationException $violation): Throwable
     {
-        return ValidationException::withMessages(['label' => CompanyRoleRules::NAME_TAKEN]);
+        return str_contains($violation->getMessage(), 'roles_tenant_label_unique')
+            ? ValidationException::withMessages(['label' => CompanyRoleRules::NAME_TAKEN])
+            : $violation;
     }
 
     /** A role that someone holds, or an invitation not yet accepted names (expired ones too), stays. */
