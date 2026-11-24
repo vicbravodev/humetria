@@ -324,3 +324,10 @@ it('says the electronic workday record starts in 2027 for whom the STPS sets, wh
         ->and($guide)->not->toContain('es obligatorio desde el 1 de enero de 2027')
         ->toContain('si será gradual')->toContain('a quien la STPS determine como obligado');
 });
+
+it('does not promise server time for marks made without connection', function (): void {
+    $text = json_encode(ToolPages::page('attendance'), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+
+    expect($text)->not->toContain('El reloj del teléfono no cuenta')->not->toContain('nadie adelanta')
+        ->toContain('por verificar');
+});

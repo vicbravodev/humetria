@@ -128,3 +128,18 @@ it('says a visit to the landing may be recorded, anonymous and with what is type
         ->and($options)->toContain('maskAllInputs: true')->toContain('web_vitals: true')->toContain('network_timing: false')
         ->toContain('recordHeaders: false')->toContain('recordBody: false')->toContain("person_profiles: 'never'");
 });
+
+it('says what the workers\' app keeps on the phone and what a push says', function (): void {
+    $text = privacyNoticeText();
+    $root = dirname(__DIR__, 2);
+    $worker = (string) file_get_contents($root.'/resources/js/lib/pwa/sw-rules.ts');
+    $store = (string) file_get_contents($root.'/resources/js/hooks/use-offline-store.ts');
+
+    expect($text)->toContain('La app de las personas trabajadoras')
+        ->toContain('Tiene un aviso en Humetría')->and($worker)->toContain('Tiene un aviso en Humetría')
+        ->and($text)->toContain('almacenamiento del navegador del teléfono')->and($store)->toContain('indexedDB.open(')
+        ->and($text)->toContain('nunca en segundo plano')
+        ->and($text)->toContain('vacío')
+        // A push carries no content because there is nowhere to pass it: notify() takes a single argument.
+        ->and((new ReflectionMethod(App\Modules\Notifications\Support\PushNotifier::class, 'notify'))->getNumberOfParameters())->toBe(1);
+});
