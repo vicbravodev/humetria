@@ -7,6 +7,7 @@ namespace App\Modules\Attendance\Http\Controllers;
 use App\Modules\Attendance\Actions\ConfirmWeek;
 use App\Modules\Attendance\Actions\DisputeWeek;
 use App\Modules\Attendance\Exceptions\WeekRejected;
+use App\Modules\Attendance\Http\Middleware\AttachOfflineTickets;
 use App\Modules\Attendance\Http\Requests\ConfirmRequest;
 use App\Modules\Attendance\Http\Requests\DisputeRequest;
 use App\Modules\Attendance\Http\Requests\WeekRequest;
@@ -108,6 +109,9 @@ final readonly class WeekController
             Log::warning('attendance.week_unverified', ['tenant_id' => $this->tenant->id(), 'request_id' => Context::get('request_id')]);
             abort(404);
         }
+
+        // Whoever signed gets new tickets with the answer (a 404 after this still carries none).
+        AttachOfflineTickets::signedBy($signed->employeeId);
 
         return $signed;
     }

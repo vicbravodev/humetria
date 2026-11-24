@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
+use Tests\Support\OfflineTickets;
 use Tests\Support\SoftAuthenticator;
 
 mutates(WeekController::class, PersonWeek::class);
@@ -325,6 +326,18 @@ describe('reading the week', function (): void {
     });
 });
 
+describe('tickets', function (): void {
+    it('brings tickets and context with the week read, with a refusal and with an answer, and none with a signature that does not verify', function (): void {
+        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline']];
+        anaWorkedLastWeek();
+
+        anaReadsWeek()->assertOk()->assertJsonStructure($shape);
+        anaAnswers('confirm')->assertUnprocessable()->assertJsonPath('reason', 'uncovered_days')->assertJsonStructure($shape);
+        anaAnswers('dispute', body: ['reason' => 'Los otros días también trabajé.'])->assertOk()->assertJsonStructure($shape);
+        expect(weekSigned($this->phone, $this->ana->id, route('attendance.device.week.read', 'acme'), [], 'not-the-session')->json())->not->toHaveKey('tickets');
+    });
+});
+
 describe('answering', function (): void {
     it('confirms the week with its own signature and gives the week back confirmed', function (): void {
         anaWithoutSchedule();
@@ -351,7 +364,7 @@ describe('answering', function (): void {
     })->with(['none' => [[]], 'too short' => [['reason' => 'No es así']], 'too long' => [['reason' => str_repeat('a', 1001)]]]);
 
     it('rejects the current week', function (string $answer): void {
-        anaAnswers($answer, '2026-11-09', ['reason' => 'El martes salí a las 20:00.'])->assertUnprocessable()->assertExactJson(['reason' => 'week_not_over']);
+        OfflineTickets::without(anaAnswers($answer, '2026-11-09', ['reason' => 'El martes salí a las 20:00.'])->assertUnprocessable())->assertExactJson(['reason' => 'week_not_over']);
         expect(WeeklyConfirmation::query()->count())->toBe(0);
     })->with(['confirm', 'dispute']);
 
@@ -364,7 +377,7 @@ describe('answering', function (): void {
             ->assertJsonPath('blocked', 'day_open')
             ->assertJsonPath('confirmUrl', null)
             ->assertJsonPath('disputeUrl', route('attendance.device.week.dispute', ['acme', '2026-11-02']));
-        anaAnswers('confirm')->assertUnprocessable()->assertExactJson(['reason' => 'day_open']);
+        OfflineTickets::without(anaAnswers('confirm')->assertUnprocessable())->assertExactJson(['reason' => 'day_open']);
 
         weekPunch($this->ana, MarkType::End, '2026-11-09 06:00');
         $this->travelTo(CarbonImmutable::parse('2026-11-09 06:05', 'America/Mexico_City'));
@@ -385,7 +398,7 @@ describe('answering', function (): void {
 
     it('offers no confirmation of a week with no marks, and rejects one, while letting the person dispute it', function (): void {
         anaReadsWeek()->assertOk()->assertJsonPath('blocked', 'no_marks')->assertJsonPath('confirmUrl', null);
-        anaAnswers('confirm')->assertUnprocessable()->assertExactJson(['reason' => 'no_marks']);
+        OfflineTickets::without(anaAnswers('confirm')->assertUnprocessable())->assertExactJson(['reason' => 'no_marks']);
         anaAnswers('dispute', body: ['reason' => 'Faltan mis marcas del lunes y del martes.'])->assertOk()->assertJsonPath('status', 'disputed');
     });
 
@@ -412,7 +425,7 @@ describe('answering', function (): void {
     it('rejects confirming over a dispute', function (): void {
         anaAnswers('dispute', body: ['reason' => 'El martes salí a las 20:00.'])->assertOk();
 
-        anaAnswers('confirm')->assertUnprocessable()->assertExactJson(['reason' => 'week_disputed']);
+        OfflineTickets::without(anaAnswers('confirm')->assertUnprocessable())->assertExactJson(['reason' => 'week_disputed']);
     });
 
     it('answers 404 to a signature replayed, and confirms once', function (): void {
