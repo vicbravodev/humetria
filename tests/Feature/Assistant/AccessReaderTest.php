@@ -107,6 +107,20 @@ it('tells anyone else only what they themselves can do, area by area, with what 
         ->and($line['summary'])->not->toContain('Auditoría');
 });
 
+it('never tells anyone but the owner how many people hold each role nor how many have extras', function (): void {
+    $audit = accessOwnRole($this->a, $this->owner, 'Auditoría');
+    accessHolderOf($this->a, $audit, 'Persona Uno');
+    $hr = memberOf($this->a, TenantRole::Hr);
+    app(GrantMemberPermissions::class)->handle(TenantMembership::query()->where('tenant_id', $this->a->id)->where('user_id', $hr->id)->sole(), ['view-climate'], $this->owner);
+
+    foreach ([$hr, memberOf($this->a, TenantRole::Viewer)] as $person) {
+        expect(accessLine(accessScopeOf($this->a, $person))['summary'])
+            ->not->toContain('Personas por rol')
+            ->not->toContain('además de su rol')
+            ->not->toContain('Nadie tiene permisos');
+    }
+});
+
 it('leaves out the areas of the tools the plan does not include', function (): void {
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035'], CarbonImmutable::now(config('app.display_timezone')));
     $person = accessHolderOf($this->a, accessOwnRole($this->a, $this->owner, 'Auditoría', ['view-dashboard', 'view-nom035-route', 'view-interventions', 'view-disclosure']));
