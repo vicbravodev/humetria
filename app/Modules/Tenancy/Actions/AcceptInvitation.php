@@ -12,6 +12,7 @@ use App\Modules\Tenancy\Enums\InvitationStatus;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Events\MemberRemoved;
+use App\Modules\Tenancy\Events\MemberRoleChanged;
 use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
@@ -151,6 +152,8 @@ final readonly class AcceptInvitation
         $tenant->memberships()->firstOrCreate(['user_id' => $user->id]);
         // Replaces the role a member had: a person holds one role per company.
         $this->roles->assign($user, $tenant, TenantRole::Owner);
+        // A member who becomes owner is management now: what that ends (their cases against management, C-45) ends here.
+        event(new MemberRoleChanged($tenant->id, $user->id, TenantRole::Owner->value));
 
         return $previous?->user_id;
     }

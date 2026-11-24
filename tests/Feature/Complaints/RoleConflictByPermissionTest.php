@@ -12,15 +12,16 @@ use App\Modules\Complaints\Models\ComplaintHandler;
 use App\Modules\Complaints\Support\CaseAccess;
 use App\Modules\Complaints\Support\EvidencePages;
 use App\Modules\Complaints\Support\HandlerCoverage;
+use App\Modules\Tenancy\Actions\AcceptInvitation;
 use App\Modules\Tenancy\Actions\CreateCompanyRole;
 use App\Modules\Tenancy\Actions\GrantMemberPermissions;
 use App\Modules\Tenancy\Actions\UpdateCompanyRole;
 use App\Modules\Tenancy\Enums\TenantRole;
-use App\Modules\Tenancy\Events\MemberRoleChanged;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
-use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 mutates(EndAssignmentsOnRoleConflict::class, RespondentKind::class, CaseAccess::class, HandlerCoverage::class, EvidencePages::class);
@@ -114,9 +115,9 @@ it('ends the cases against management of a person who becomes owner, and leaves 
     $againstHr = caseHeldBy($this->tenant, RespondentKind::Hr, $person);
     $other = caseHeldBy($this->tenant, RespondentKind::Coworker, $person);
 
-    // ChangeMemberRole never gives the owner's role: it is set directly and announced as the role change it is.
-    resolve(CompanyRoles::class)->assign($person, $this->tenant, TenantRole::Owner);
-    event(new MemberRoleChanged($this->tenant->id, $person->id, TenantRole::Owner->value));
+    // The owner changes only through its own invitation: the person accepts it.
+    $invitation = TenantInvitation::factory()->for($this->tenant)->create(['email' => Str::lower($person->email)]);
+    app(AcceptInvitation::class)->handle($invitation, $person);
 
     expect($againstManagement->refresh()->end_reason)->toBe('role_conflict')
         ->and($againstHr->refresh()->ended_on)->toBeNull()
