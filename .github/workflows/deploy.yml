@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   # Un cambio que solo trajo documentación se saltó el pipeline (tests.yml, job `changes`) y las imágenes serían las
-  # mismas, porque .dockerignore deja fuera docs: no se despliega. Se pregunta a esa corrida si su job `build` corrió (`tests` va en shards y su nombre lleva el número);
+  # mismas, porque .dockerignore deja fuera docs (salvo docs/normas, que la app lee y cuenta como código): no se despliega. Se pregunta a esa corrida si su job `build` corrió (`tests` va en shards y su nombre lleva el número);
   # si no se puede leer la respuesta, se despliega.
   pipeline:
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository

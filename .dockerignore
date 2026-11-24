@@ -20,7 +20,11 @@ coverage.xml
 tests
 # Lo único de tests/ que entra: la lista que lee el healthcheck de la imagen ssr.
 !tests/Ssr/fixtures/landing-expected.json
-docs
+# docs/normas lo lee la app en producción (Humi busca en sus criterios: config/humi.php); el resto de docs no entra.
+# `docs` y luego `!docs/normas` no vuelve a incluirla: con la carpeta padre excluida, la regla se pierde.
+docs/*
+!docs/normas
+!docs/normas/**
 video
 Dockerfile
 compose*.yaml
