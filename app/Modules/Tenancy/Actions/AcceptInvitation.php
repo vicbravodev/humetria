@@ -145,6 +145,7 @@ final readonly class AcceptInvitation
             }
 
             $previous->delete();
+            $this->cancelInvitationsOf($tenant, $previous->user_id);
             // Same event as RemoveMember: their complaint cases, designation and Humi conversations end with their access.
             event(new MemberRemoved($tenant->id, $previous->user_id));
         }
@@ -158,6 +159,22 @@ final readonly class AcceptInvitation
         event(new MemberRoleChanged($tenant->id, $user->id, TenantRole::Owner->value));
 
         return $previous?->user_id;
+    }
+
+    /**
+     * What the outgoing owner left open (a member invitation, perhaps with a sensitive role) must not outlive the handover:
+     * it was sent with an authority that ends here. The invitations of the staff that stays remain.
+     */
+    private function cancelInvitationsOf(Tenant $tenant, int $ownerId): void
+    {
+        $ids = $tenant->invitations()->open()->forOwner(false)->where('invited_by', $ownerId)->pluck('id')->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        TenantInvitation::query()->whereIn('id', $ids)->update(['cancelled_at' => now()]);
+        Log::info('tenant_invitation.cancelled_on_owner_change', ['tenant_id' => $tenant->id, 'invitation_ids' => $ids]);
     }
 
     private function createUser(string $email, NewAccountData $data): User

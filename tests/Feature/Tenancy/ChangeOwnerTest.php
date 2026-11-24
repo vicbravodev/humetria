@@ -204,3 +204,32 @@ it('takes away the permissions a member had besides their role when they become 
     expect(resolve(CompanyRoles::class)->directPermissionsOf($member, $tenant))->toBe([])
         ->and($access)->toContain('Nadie tiene permisos además de su rol.');
 });
+
+// An owner about to be replaced could invite another address with a sensitive role that outlives the handover.
+it('cancels the open member invitations the previous owner sent when the owner changes, and leaves those of other staff', function (): void {
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create();
+    $previous = ownerOf($tenant);
+    $staff = memberOf($tenant, TenantRole::Hr);
+    $byPrevious = TenantInvitation::factory()->for($tenant)->role(TenantRole::Committee)->create(['invited_by' => $previous->id]);
+    $byStaff = TenantInvitation::factory()->for($tenant)->role(TenantRole::Viewer)->create(['invited_by' => $staff->id]);
+    $accepted = TenantInvitation::factory()->for($tenant)->role(TenantRole::Viewer)->accepted()->create(['invited_by' => $previous->id]);
+    $next = User::factory()->create();
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $next->email, 'invited_by' => $previous->id]), $next);
+
+    expect($byPrevious->fresh()->cancelled_at)->not->toBeNull()
+        ->and($byStaff->fresh()->cancelled_at)->toBeNull()
+        ->and($accepted->fresh()->cancelled_at)->toBeNull();
+});
+
+it('leaves every member invitation open when the owner stays the same', function (): void {
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create();
+    $owner = ownerOf($tenant);
+    $member = TenantInvitation::factory()->for($tenant)->role(TenantRole::Viewer)->create(['invited_by' => $owner->id]);
+    $ownerInvitation = TenantInvitation::factory()->for($tenant)->create(['email' => $owner->email, 'invited_by' => $owner->id]);
+    $owner->forceFill(['email_verified_at' => now()])->save();
+
+    app(AcceptInvitation::class)->handle($ownerInvitation, $owner);
+
+    expect($member->fresh()->cancelled_at)->toBeNull();
+});
