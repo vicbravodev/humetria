@@ -86,3 +86,17 @@ it('is only for the owner', function (TenantRole $role): void {
         ->get(route('tenant.members.invitations.create', $this->tenant))
         ->assertForbidden();
 })->with([TenantRole::Hr, TenantRole::Viewer]);
+
+it('reads the page in the same number of queries however many roles of its own the company has', function (int $roles): void {
+    foreach (range(1, $roles) as $index) {
+        app(CreateCompanyRole::class)->handle($this->tenant, "Rol {$index}", ['view-dashboard', 'view-climate'], null, $this->owner);
+    }
+
+    $this->actingAs($this->owner->fresh());
+    $this->expectsDatabaseQueryCount(QUERIES_OF_THE_INVITE_PAGE);
+
+    $this->get(route('tenant.members.invitations.create', $this->tenant))->assertOk();
+})->with([1, 4]);
+
+// Measured, then fixed so that a query per role or per permission breaks the test.
+const QUERIES_OF_THE_INVITE_PAGE = 16;

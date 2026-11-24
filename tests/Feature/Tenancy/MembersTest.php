@@ -225,3 +225,20 @@ it('counts the open invitations of the company, not the accepted, cancelled, exp
 
     expect(resolve(Members::class)->pendingInvitations())->toBe(1);
 });
+
+it('reads the list in the same number of queries however many people and invitations it shows', function (int $people): void {
+    $own = app(App\Modules\Tenancy\Actions\CreateCompanyRole::class)->handle($this->tenant, 'Auditoría', ['view-dashboard'], null, $this->owner);
+
+    foreach (range(1, $people) as $index) {
+        TenantMembership::factory()->for($this->tenant)->for(User::factory()->create())->viewer()->create();
+        TenantInvitation::factory()->for($this->tenant)->role($index % 2 === 0 ? $own : TenantRole::Hr)->create(['email' => "persona{$index}@acme.mx"]);
+    }
+
+    $this->actingAs($this->owner->fresh());
+    $this->expectsDatabaseQueryCount(QUERIES_OF_THE_MEMBERS_PAGE);
+
+    $this->get(route('tenant.members.index', $this->tenant))->assertOk();
+})->with([1, 4]);
+
+// Measured, then fixed so that a query per person, invitation or role breaks the test.
+const QUERIES_OF_THE_MEMBERS_PAGE = 19;
