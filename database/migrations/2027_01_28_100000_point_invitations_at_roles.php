@@ -49,10 +49,13 @@ return new class extends Migration
             $table->string('role', 20)->nullable();
         });
 
-        // Invitations to a role of the company's own, and closed ones whose role was deleted, have no place in the old
-        // column: going back DELETES them, open or not.
-        DB::statement("UPDATE tenant_invitations SET role = roles.name FROM roles WHERE roles.id = tenant_invitations.role_id AND roles.name IN ('owner', 'hr', 'viewer', 'committee', 'complaints')");
-        DB::statement('DELETE FROM tenant_invitations WHERE role IS NULL');
+        // Nothing is deleted. An invitation to a template keeps it; one to a role of the company's own becomes the template
+        // that role was based on (never the owner's), or viewer, the least a role can give; a closed one whose role was
+        // deleted since becomes viewer too (it is closed, so it gives nothing). The extra permissions an invitation brought
+        // are lost: the old schema has nowhere to keep them.
+        DB::statement("UPDATE tenant_invitations SET role = roles.name FROM roles WHERE roles.id = tenant_invitations.role_id AND roles.tenant_id IS NULL AND roles.name IN ('owner', 'hr', 'viewer', 'committee', 'complaints')");
+        DB::statement("UPDATE tenant_invitations SET role = roles.based_on FROM roles WHERE roles.id = tenant_invitations.role_id AND tenant_invitations.role IS NULL AND roles.based_on IN ('hr', 'viewer', 'committee', 'complaints')");
+        DB::statement("UPDATE tenant_invitations SET role = 'viewer' WHERE role IS NULL");
 
         Schema::table('tenant_invitations', function (Blueprint $table): void {
             $table->dropConstrainedForeignId('role_id');
