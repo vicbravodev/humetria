@@ -17,14 +17,13 @@ export async function requestTickets(
     },
 ): Promise<void> {
     const held = newest(await store.tickets());
-    const schedule = await store.schedule();
     const now = deps.now();
 
-    if (held === null || !renewalDue(schedule.lastTicketsAt, now)) {
+    if (held === null || !renewalDue(await store.ticketsAt(), now)) {
         return;
     }
 
-    await store.saveSchedule({ ...schedule, lastTicketsAt: now });
+    await store.saveTicketsAt(now);
 
     const context = await store.context();
     const queue =

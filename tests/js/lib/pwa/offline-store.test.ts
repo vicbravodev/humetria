@@ -133,8 +133,8 @@ describe('what the store keeps besides the marks', () => {
             nextAttemptAt: 0,
             attempts: 0,
             isolating: 0,
-            lastTicketsAt: null,
         });
+        expect(await store.ticketsAt()).toBeNull();
     });
 
     it('reads back what it wrote', async () => {
@@ -150,7 +150,6 @@ describe('what the store keeps besides the marks', () => {
             nextAttemptAt: 5,
             attempts: 2,
             isolating: 1,
-            lastTicketsAt: 9,
         };
 
         await store.saveTickets(tickets);
@@ -158,6 +157,7 @@ describe('what the store keeps besides the marks', () => {
         await store.savePass(pass);
         await store.saveDeviceKey(key);
         await store.savePractice({ result: 'passkey', at: 77 });
+        await store.saveTicketsAt(9);
         await store.saveSchedule(schedule);
 
         expect(await store.tickets()).toEqual(tickets);
@@ -165,6 +165,7 @@ describe('what the store keeps besides the marks', () => {
         expect(await store.pass()).toEqual(pass);
         expect(await store.deviceKey()).toBe(key);
         expect(await store.practice()).toEqual({ result: 'passkey', at: 77 });
+        expect(await store.ticketsAt()).toBe(9);
         expect(await store.schedule()).toEqual(schedule);
     });
 
@@ -178,6 +179,7 @@ describe('what the store keeps besides the marks', () => {
         kv.data.set('practice', { result: 'maybe', at: 1 });
         kv.data.set('seq', 'two');
         kv.data.set('schedule', { attempts: 'many' });
+        kv.data.set('tickets-at', 'yesterday');
 
         expect(await store.tickets()).toEqual([]);
         expect(await store.context()).toBeNull();
@@ -186,6 +188,24 @@ describe('what the store keeps besides the marks', () => {
         expect(await store.practice()).toBeNull();
         expect(await store.nextSeq()).toBe(1);
         expect((await store.schedule()).attempts).toBe(0);
+        expect(await store.ticketsAt()).toBeNull();
+    });
+
+    it('keeps when tickets were asked for apart from the delivery schedule: neither writes the other', async () => {
+        const store = offlineStore(memoryStore());
+
+        await store.saveTicketsAt(1_000);
+        await store.saveSchedule({
+            nextAttemptAt: 5,
+            attempts: 2,
+            isolating: 0,
+        });
+
+        expect(await store.ticketsAt()).toBe(1_000);
+
+        await store.saveTicketsAt(2_000);
+
+        expect((await store.schedule()).attempts).toBe(2);
     });
 });
 
@@ -217,8 +237,8 @@ describe('forgetPerson', () => {
             nextAttemptAt: 0,
             attempts: 1,
             isolating: 0,
-            lastTicketsAt: 3,
         });
+        await store.saveTicketsAt(3);
         kv.data.set('device-key', 'key');
 
         await store.forgetPerson();
@@ -231,5 +251,6 @@ describe('forgetPerson', () => {
         expect((await store.marks()).map((m) => m.seq)).toEqual([1]);
         expect(await store.nextSeq()).toBe(2);
         expect((await store.schedule()).attempts).toBe(1);
+        expect(await store.ticketsAt()).toBeNull();
     });
 });

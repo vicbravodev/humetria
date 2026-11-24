@@ -20,12 +20,11 @@ export const JSON_HEADERS = {
     'Content-Type': 'application/json',
 };
 
-/** When to try again, how many times it failed in a row, how many marks go one by one and when tickets were last asked for. */
+/** When to try again, how many times it failed in a row and how many marks go one by one. */
 export type Schedule = {
     nextAttemptAt: number;
     attempts: number;
     isolating: number;
-    lastTicketsAt: number | null;
 };
 
 export type Outcome =

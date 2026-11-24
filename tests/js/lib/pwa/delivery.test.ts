@@ -61,7 +61,6 @@ const calm: Schedule = {
     nextAttemptAt: 0,
     attempts: 0,
     isolating: 0,
-    lastTicketsAt: null,
 };
 
 describe('nextBatch', () => {

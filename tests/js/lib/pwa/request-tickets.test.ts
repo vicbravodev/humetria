@@ -50,6 +50,23 @@ describe('requestTickets', () => {
         expect((await store.context())?.agreementVersion).toBe(4);
     });
 
+    it('remembers when it asked, apart from the delivery schedule, which a delivery writes on its own', async () => {
+        const store = await holding();
+        const post = gives(fresh);
+
+        await requestTickets(store, { post, now: () => NOW });
+        // A delivery in between saves its schedule: it must not make the next ask come sooner than 30 s.
+        await store.saveSchedule({
+            nextAttemptAt: 0,
+            attempts: 0,
+            isolating: 0,
+        });
+        await requestTickets(store, { post, now: () => NOW + 10_000 });
+
+        expect(await store.ticketsAt()).toBe(NOW);
+        expect(post).toHaveBeenCalledTimes(1);
+    });
+
     it('asks for nothing when it holds no ticket: the first ones come with a signed action', async () => {
         const post = gives(fresh);
 

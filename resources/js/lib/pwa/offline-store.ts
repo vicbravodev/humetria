@@ -28,11 +28,17 @@ const CALM: Schedule = {
     nextAttemptAt: 0,
     attempts: 0,
     isolating: 0,
-    lastTicketsAt: null,
 };
 
 /** What belongs to the person who was on the phone, and goes when they say «¿No es usted?» or «Salir». */
-const THEIRS = ['tickets', 'context', 'pass', 'device-key', 'practice'];
+const THEIRS = [
+    'tickets',
+    'tickets-at',
+    'context',
+    'pass',
+    'device-key',
+    'practice',
+];
 
 function isJson(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -49,8 +55,6 @@ function practiceOf(value: unknown): Practice | null {
 }
 
 function scheduleOf(value: unknown): Schedule {
-    const last = isJson(value) ? value['lastTicketsAt'] : null;
-
     return isJson(value) &&
         typeof value['nextAttemptAt'] === 'number' &&
         typeof value['attempts'] === 'number' &&
@@ -59,7 +63,6 @@ function scheduleOf(value: unknown): Schedule {
               nextAttemptAt: value['nextAttemptAt'],
               attempts: value['attempts'],
               isolating: value['isolating'],
-              lastTicketsAt: typeof last === 'number' ? last : null,
           }
         : CALM;
 }
@@ -136,6 +139,16 @@ export function offlineStore(kv: KeyValueStore) {
         },
         saveSchedule: (schedule: Schedule) =>
             kv.transact([['schedule', schedule]], []),
+        /**
+         * When tickets were last asked for (the phone's clock): its own record, so the delivery, which saves its schedule as
+         * it goes, never overwrites it, and the other way round.
+         */
+        async ticketsAt(): Promise<number | null> {
+            const at = await kv.get('tickets-at');
+
+            return typeof at === 'number' ? at : null;
+        },
+        saveTicketsAt: (at: number) => kv.transact([['tickets-at', at]], []),
         /**
          * «¿No es usted?» and «Salir»: out of the phone go the tickets, the pass, the device key, the practice and the context;
          * the marks that wait stay (they are signed already and need no session). Nothing is revoked at the server.

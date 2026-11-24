@@ -33,7 +33,6 @@ const calm: Schedule = {
     nextAttemptAt: 0,
     attempts: 0,
     isolating: 0,
-    lastTicketsAt: null,
 };
 
 describe('delayFor', () => {
@@ -109,16 +108,5 @@ describe('scheduleAfter', () => {
         }
 
         expect(schedule.isolating).toBe(0);
-    });
-
-    it('keeps the time the tickets were last asked for', () => {
-        const kept = scheduleAfter(
-            { ...calm, lastTicketsAt: 7 },
-            { kind: 'retry', retryAfter: 3 },
-            { size: 1, now },
-        );
-
-        expect(kept.lastTicketsAt).toBe(7);
-        expect(kept.nextAttemptAt).toBe(now + 5_000);
     });
 });
