@@ -186,3 +186,21 @@ it('tells nobody about an owner change when a non-owner role is accepted', funct
 
     Notification::assertNothingSent();
 });
+
+it('takes away the permissions a member had besides their role when they become the owner, who already has everything', function (): void {
+    $tenant = Tenant::factory()->create();
+    ownerOf($tenant);
+    $member = memberOf($tenant, TenantRole::Viewer);
+    resolve(CompanyRoles::class)->syncDirectPermissions($member, $tenant, ['manage-climate']);
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $member->email]), $member);
+
+    workIn($tenant);
+    $access = array_values(array_filter(
+        toolCard(App\Modules\Assistant\Tools\GetComplianceOverview::class, resolve(App\Modules\Assistant\Support\AssistantScopeFactory::class)->make($member))['rows'],
+        fn (array $row): bool => $row['key'] === 'access',
+    ))[0]['summary'];
+
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($member, $tenant))->toBe([])
+        ->and($access)->toContain('Nadie tiene permisos además de su rol.');
+});

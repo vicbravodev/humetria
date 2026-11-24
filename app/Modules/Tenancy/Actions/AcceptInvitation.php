@@ -150,8 +150,10 @@ final readonly class AcceptInvitation
         }
 
         $tenant->memberships()->firstOrCreate(['user_id' => $user->id]);
-        // Replaces the role a member had: a person holds one role per company.
+        // Replaces the role a member had: a person holds one role per company. The owner already has everything, so
+        // what they had besides their former role goes too (else Humi counts them among those with extras).
         $this->roles->assign($user, $tenant, TenantRole::Owner);
+        $this->roles->syncDirectPermissions($user, $tenant, []);
         // A member who becomes owner is management now: what that ends (their cases against management, C-45) ends here.
         event(new MemberRoleChanged($tenant->id, $user->id, TenantRole::Owner->value));
 
