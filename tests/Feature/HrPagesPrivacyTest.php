@@ -114,6 +114,23 @@ it('gives HR no individual response on any page about campaigns, results or peop
     'NOM-037 notices' => fn (): string => route('tenant.telework.notices.index', $this->tenant),
 ], [TenantRole::Owner, TenantRole::Hr]);
 
+// The owner's pages of people and roles: who has access and what each role may do, never what anyone answered.
+it('gives the owner no individual response on the pages of users, roles and permissions', function (Closure $url): void {
+    $owner = ownerOf($this->tenant);
+    $member = App\Modules\Tenancy\Models\TenantMembership::factory()->for($this->tenant)->for(App\Models\User::factory()->create())->viewer()->create();
+
+    $this->actingAs($owner)
+        ->get($url($member))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => expectNoIndividualResponses($page->toArray()['props']));
+})->with([
+    'Usuarios' => [fn (): string => route('tenant.members.index', test()->tenant)],
+    'Invitar' => [fn (): string => route('tenant.members.invitations.create', test()->tenant)],
+    'Permisos adicionales' => [fn ($member): string => route('tenant.members.permissions.edit', [test()->tenant, $member->id])],
+    'Roles y permisos' => [fn (): string => route('tenant.roles.index', test()->tenant)],
+    'Nuevo rol' => [fn (): string => route('tenant.roles.create', [test()->tenant, 'from' => 'hr'])],
+]);
+
 it('gives whoever opens a shared report no individual response', function (): void {
     $token = str_repeat('a', 64);
     ReportShare::factory()->create(['campaign_id' => $this->evaluation->id, 'token_hash' => hash('sha256', $token), 'created_at' => now(), 'expires_at' => now()->addHour()]);
