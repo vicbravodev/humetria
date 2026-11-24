@@ -27,11 +27,13 @@ use App\Modules\Tenancy\Support\DisplayDate;
 use App\Modules\Tenancy\Support\PermissionGroups;
 use App\Modules\Tenancy\Support\RoleMatrix;
 use Illuminate\Container\Attributes\CurrentUser;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use LogicException;
+use Spatie\Permission\Models\Role;
 
 /**
  * «Usuarios»: who has access to the company and with which role. Only its owner manages it; the owner's own
@@ -87,7 +89,7 @@ final class MemberController extends Controller
         $this->authorizeOwner();
 
         return Inertia::render('tenancy/invite-member', [
-            'roles' => $this->assignable($tenant),
+            'roles' => $this->invitable($tenant),
             'matrix' => RoleMatrix::for($tenant),
             // «Permisos adicionales»: what the invitation may bring besides the role.
             'groups' => PermissionGroups::for($tenant, []),
@@ -208,6 +210,29 @@ final class MemberController extends Controller
     private function assignable(Tenant $tenant): array
     {
         return array_map(fn (CompanyRoleSummary $role): array => ['value' => $role->key, 'label' => $role->label], $this->roles->assignableSummaries($tenant));
+    }
+
+    /**
+     * The roles an invitation can give, each with what it switches on: the floor of «Permisos adicionales».
+     *
+     * @return list<array{value: string, label: string, permissions: list<string>}>
+     */
+    private function invitable(Tenant $tenant): array
+    {
+        $held = [];
+
+        foreach (Role::query()->with('permissions')->where(fn (Builder $query) => $query->whereNull('tenant_id')->orWhere('tenant_id', $tenant->id))->get() as $role) {
+            $names = [];
+
+            foreach ($role->permissions as $permission) {
+                $names[] = $permission->name;
+            }
+
+            sort($names);
+            $held[$role->name] = $names;
+        }
+
+        return array_map(fn (array $role): array => [...$role, 'permissions' => $held[$role['value']] ?? []], $this->assignable($tenant));
     }
 
     private function authorizeOwner(): void

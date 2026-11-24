@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-    groupCount,
     heldBy,
     keepsAcknowledgement,
     sensitiveAdded,
-    switchLook,
     toggled,
 } from '@/lib/permission-groups';
 import type { PermissionGroup, PermissionToggle } from '@/types';
@@ -51,26 +49,6 @@ describe('heldBy', () => {
     });
 });
 
-describe('groupCount', () => {
-    it('counts the ones on, chosen or locked, out of the ones the plan lets switch on', () => {
-        const [nom035, vacations] = groups;
-
-        expect(nom035 && groupCount(nom035, ['manage-campaigns'])).toEqual({
-            on: 1,
-            total: 3,
-        });
-        expect(
-            nom035 &&
-                groupCount(nom035, ['manage-campaigns'], ['view-nom035-route']),
-        ).toEqual({ on: 2, total: 3 });
-        // A permission of a tool the plan lacks neither counts as on nor as one to switch on.
-        expect(vacations && groupCount(vacations, ['view-vacations'])).toEqual({
-            on: 0,
-            total: 0,
-        });
-    });
-});
-
 describe('sensitiveAdded', () => {
     it('names the sensitive permissions switched on that were not there before', () => {
         expect(sensitiveAdded(groups, [], ['view-trauma-screenings'])).toEqual([
@@ -94,51 +72,6 @@ describe('toggled', () => {
         expect(toggled(['a'], 'b', true)).toEqual(['a', 'b']);
         expect(toggled(['a', 'b'], 'b', true)).toEqual(['a', 'b']);
         expect(toggled(['a', 'b'], 'a', false)).toEqual(['b']);
-    });
-});
-
-describe('switchLook', () => {
-    it('keeps one of a tool the plan lacks off and still, with its reason', () => {
-        expect(
-            switchLook(
-                toggle('view-vacations', {
-                    unavailableReason: 'Tu plan no incluye Vacaciones.',
-                }),
-                { on: true, locked: false },
-                false,
-            ),
-        ).toEqual({
-            on: false,
-            still: true,
-            hint: 'Tu plan no incluye Vacaciones.',
-        });
-    });
-
-    it('keeps one the role brings on and still, saying so', () => {
-        expect(
-            switchLook(
-                toggle('view-dashboard'),
-                { on: true, locked: true },
-                false,
-            ),
-        ).toEqual({ on: true, still: true, hint: 'Viene de su rol' });
-    });
-
-    it('lets the others change, unless the screen is only read', () => {
-        expect(
-            switchLook(
-                toggle('view-dashboard'),
-                { on: false, locked: false },
-                false,
-            ),
-        ).toEqual({ on: false, still: false, hint: null });
-        expect(
-            switchLook(
-                toggle('view-dashboard'),
-                { on: true, locked: false },
-                true,
-            ),
-        ).toEqual({ on: true, still: true, hint: null });
     });
 });
 

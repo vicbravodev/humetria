@@ -5,9 +5,9 @@ import RoleMatrix from '@/components/tenancy/role-matrix';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/members';
 import type {
+    InvitableRole,
     PermissionGroup,
     RoleMatrix as Matrix,
-    RoleOption,
 } from '@/types';
 
 /** «Invitar a alguien» (board V3-Roles): the form, and beside it what each role can do. */
@@ -16,7 +16,7 @@ export default function InviteMember({
     matrix,
     groups,
 }: {
-    roles: RoleOption[];
+    roles: InvitableRole[];
     matrix: Matrix | null;
     groups: PermissionGroup[];
 }) {

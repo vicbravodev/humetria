@@ -167,6 +167,9 @@ export type MemberInvitationRow = {
 
 export type RoleOption = { value: CompanyRoleKey; label: string };
 
+/** A role an invitation can give, with what it switches on: the floor of its «Permisos adicionales». */
+export type InvitableRole = RoleOption & { permissions: string[] };
+
 /** «Qué puede hacer cada quien» (board V3-Roles): one column per role, one cell per row and role. */
 export type RoleMatrix = {
     columns: string[];

@@ -10,12 +10,14 @@ const HINTS: Record<string, string> = {
         'Solo el canal de quejas: atiende los casos que le designen. Para un asesor externo de confianza.',
 };
 
-/** What the invited person will do, as option cards (board V3-Roles); «Ayuda con las rutas» is chosen to begin with. */
+/** What the invited person will do, as option cards (board V3-Roles); the form keeps which one is chosen. */
 export default function MemberRoleChoice({
     roles,
+    choice,
     error,
 }: {
     roles: RoleOption[];
+    choice: { value: string; onChange: (value: string) => void };
     error: string | undefined;
 }) {
     return (
@@ -35,7 +37,8 @@ export default function MemberRoleChoice({
                             type="radio"
                             name="role"
                             value={role.value}
-                            defaultChecked={role.value === 'hr'}
+                            checked={role.value === choice.value}
+                            onChange={() => choice.onChange(role.value)}
                             className="mt-0.5 size-5 shrink-0 accent-primary"
                         />
                         <span className="flex flex-col">

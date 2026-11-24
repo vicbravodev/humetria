@@ -31,12 +31,13 @@ it('offers the roles the owner can give and what each one can do (board V3-Roles
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('tenancy/invite-member')
-            ->where('roles', [
-                ['value' => 'hr', 'label' => 'Ayuda con las rutas'],
-                ['value' => 'viewer', 'label' => 'Solo consulta'],
-                ['value' => 'committee', 'label' => 'Comisión de seguridad e higiene'],
-                ['value' => 'complaints', 'label' => 'Atención de quejas'],
-            ])
+            // Each with what it switches on: the floor of «Permisos adicionales».
+            ->where('roles', fn ($roles): bool => collect($roles)->map(fn ($row): array => [$row['value'], $row['label']])->all() === [
+                ['hr', 'Ayuda con las rutas'],
+                ['viewer', 'Solo consulta'],
+                ['committee', 'Comisión de seguridad e higiene'],
+                ['complaints', 'Atención de quejas'],
+            ] && collect($roles)->every(fn ($row): bool => $row['permissions'] === Role::findByName($row['value'])->permissions->pluck('name')->sort()->values()->all()))
             ->where('matrix.columns', ['Administra todo', 'Ayuda con las rutas', 'Solo consulta', 'Comisión de seguridad e higiene', 'Atención de quejas'])
             ->where('matrix.rows', fn ($rows): bool => collect($rows)->pluck('label')->all() === array_map(fn (PermissionDefinition $permission): string => $permission->label, PermissionCatalog::all())));
 });
@@ -49,7 +50,7 @@ it('adds the company\'s own roles, and only the permissions of the tools it has'
         ->get(route('tenant.members.invitations.create', $this->tenant))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('roles.4', ['value' => $role->name, 'label' => 'Auditoría'])
+            ->where('roles.4', ['value' => $role->name, 'label' => 'Auditoría', 'permissions' => ['view-climate', 'view-dashboard']])
             ->where('matrix.columns.5', 'Auditoría')
             ->where('matrix.rows', fn ($rows): bool => ! collect($rows)->pluck('label')->contains('Ver vacaciones')
                 && collect($rows)->firstWhere('label', 'Ver clima')['cells'][5] === 'Sí'
@@ -77,7 +78,7 @@ it('shows a union only its roles and no matrix of the company tools', function (
         ->get(route('tenant.members.invitations.create', $union))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas']])
+            ->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas', 'permissions' => Role::findByName('hr')->permissions->pluck('name')->sort()->values()->all()]])
             ->where('matrix', null));
 });
 
@@ -99,4 +100,4 @@ it('reads the page in the same number of queries however many roles of its own t
 })->with([1, 4]);
 
 // Measured, then fixed so that a query per role or per permission breaks the test.
-const QUERIES_OF_THE_INVITE_PAGE = 16;
+const QUERIES_OF_THE_INVITE_PAGE = 18;

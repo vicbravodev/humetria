@@ -1,4 +1,4 @@
-import type { PermissionGroup, PermissionToggle } from '@/types/roles';
+import type { PermissionGroup } from '@/types/roles';
 
 const all = (groups: PermissionGroup[]) =>
     groups.flatMap((group) => group.permissions);
@@ -11,27 +11,6 @@ export function heldBy(
     return all(groups)
         .filter((permission) => permission.source === source)
         .map((permission) => permission.name);
-}
-
-/**
- * «2 de 3»: of the permissions of a tool the plan lets switch on, how many are on (chosen here, or locked on because the
- * person's role brings them). One of a tool the plan lacks counts for neither.
- */
-export function groupCount(
-    group: PermissionGroup,
-    selected: string[],
-    locked: string[] = [],
-): { on: number; total: number } {
-    const available = group.permissions.filter(
-        (permission) => permission.unavailableReason === null,
-    );
-
-    return {
-        on: available.filter(
-            ({ name }) => selected.includes(name) || locked.includes(name),
-        ).length,
-        total: available.length,
-    };
 }
 
 /**
@@ -60,28 +39,6 @@ export function toggled(
     const without = selected.filter((chosen) => chosen !== name);
 
     return on ? [...without, name] : without;
-}
-
-/**
- * How one switch shows: on only where the plan lets it be; still where the plan lacks its tool, the role brings it or the
- * screen is only read; and the reason under it, if any.
- */
-export function switchLook(
-    permission: PermissionToggle,
-    state: { on: boolean; locked: boolean },
-    readOnly: boolean,
-): { on: boolean; still: boolean; hint: string | null } {
-    const reason = permission.unavailableReason;
-
-    if (reason !== null) {
-        return { on: false, still: true, hint: reason };
-    }
-
-    return {
-        on: state.on,
-        still: state.locked || readOnly,
-        hint: state.locked ? 'Viene de su rol' : null,
-    };
 }
 
 /**

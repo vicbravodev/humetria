@@ -1,5 +1,6 @@
 import { Form, Link } from '@inertiajs/react';
 import { Send } from 'lucide-react';
+import { useState } from 'react';
 import InviteExtraPermissions from '@/components/tenancy/invite-extra-permissions';
 import MemberRoleChoice from '@/components/tenancy/member-role-choice';
 import TenantField from '@/components/tenancy/tenant-field';
@@ -8,7 +9,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/members';
 import { store } from '@/routes/tenant/members/invitations';
-import type { PermissionGroup, RoleOption } from '@/types';
+import type { InvitableRole, PermissionGroup } from '@/types';
 
 /**
  * Who is invited and what they will do (board V3-Roles). The link goes by email, single use, for 7 days; the people of a
@@ -18,10 +19,16 @@ export default function InviteMemberForm({
     roles,
     groups,
 }: {
-    roles: RoleOption[];
+    roles: InvitableRole[];
     groups: PermissionGroup[];
 }) {
     const tenantSlug = useTenantSlug();
+    // «Ayuda con las rutas» to begin with, where the account hands it out.
+    const [role, setRole] = useState(
+        roles.find((option) => option.value === 'hr')?.value ??
+            roles[0]?.value ??
+            '',
+    );
 
     return (
         <Form
@@ -46,9 +53,17 @@ export default function InviteMemberForm({
                         maxLength={255}
                         error={errors['email']}
                     />
-                    <MemberRoleChoice roles={roles} error={errors['role']} />
+                    <MemberRoleChoice
+                        roles={roles}
+                        choice={{ value: role, onChange: setRole }}
+                        error={errors['role']}
+                    />
                     <InviteExtraPermissions
                         groups={groups}
+                        base={
+                            roles.find((option) => option.value === role)
+                                ?.permissions ?? []
+                        }
                         errors={{
                             permissions: errors['permissions'],
                             acknowledge: errors['acknowledge_sensitive'],
