@@ -44,7 +44,7 @@ final class ForbidWhileImpersonating
             // How a company's people sign in is the owner's alone: whoever works as them never changes it.
             'tenant.sso.*',
             // Roles and permissions are the owner's alone: whoever works as them reads them, and changes none.
-            'tenant.roles.create', 'tenant.roles.store', 'tenant.roles.update', 'tenant.roles.destroy',
+            'tenant.roles.create', 'tenant.roles.store', 'tenant.roles.update', 'tenant.roles.destroy', 'tenant.members.permissions.update',
         ];
     }
 

@@ -27,6 +27,7 @@ it('refuses a viewer before validating what they sent', function (string $method
     'change a member\'s role' => ['put', 'tenant.members.update', ['member' => '4242']],
     'create a role' => ['post', 'tenant.roles.store', []],
     'edit a role' => ['put', 'tenant.roles.update', ['role' => '4242']],
+    'give a person permissions besides their role' => ['put', 'tenant.members.permissions.update', ['member' => '4242']],
     'change the minimum per group' => ['put', 'tenant.privacy.update', []],
     'create an evaluation' => ['post', 'tenant.campaigns.store', []],
     'launch a Guía I campaign' => ['post', 'tenant.campaigns.trauma.store', []],

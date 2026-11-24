@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\CancelInvitation;
 use App\Modules\Tenancy\Actions\ChangeMemberRole;
+use App\Modules\Tenancy\Actions\GrantMemberPermissions;
 use App\Modules\Tenancy\Actions\InviteMember;
 use App\Modules\Tenancy\Actions\RemoveMember;
 use App\Modules\Tenancy\Actions\ResendInvitation;
@@ -16,11 +18,13 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Http\Requests\ChangeMemberRoleRequest;
 use App\Modules\Tenancy\Http\Requests\InviteMemberRequest;
+use App\Modules\Tenancy\Http\Requests\UpdateMemberPermissionsRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\DisplayDate;
+use App\Modules\Tenancy\Support\PermissionGroups;
 use App\Modules\Tenancy\Support\RoleMatrix;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
@@ -37,7 +41,7 @@ final class MemberController extends Controller
 {
     private const int PER_PAGE = 25;
 
-    public function __construct(private readonly CompanyRoles $roles) {}
+    public function __construct(private readonly CompanyRoles $roles, private readonly Impersonation $impersonation) {}
 
     public function index(Tenant $tenant, #[CurrentUser] User $user): Response
     {
@@ -127,6 +131,27 @@ final class MemberController extends Controller
         $changeMemberRole->handle($this->member($tenant, $member), $this->roles->assignable($tenant, $request->role()) ?? abort(404), $user);
 
         return $this->done($tenant, 'Rol actualizado.');
+    }
+
+    /** «Permisos adicionales»: what the person has besides their role, and where each permission comes from. */
+    public function permissions(Tenant $tenant, string $member): Response
+    {
+        $this->authorizeOwner();
+        $membership = $this->member($tenant, $member);
+        $person = $membership->user()->sole();
+
+        return Inertia::render('tenancy/member-permissions', [
+            'member' => ['id' => $membership->id, 'name' => $person->name, 'role_label' => $this->roles->of($person, $tenant)?->label],
+            'groups' => PermissionGroups::for($tenant, $this->roles->effectivePermissions($person, $tenant)),
+            'can_manage' => ! $this->impersonation->isActive(),
+        ]);
+    }
+
+    public function updatePermissions(UpdateMemberPermissionsRequest $request, Tenant $tenant, GrantMemberPermissions $grantMemberPermissions, #[CurrentUser] User $user): RedirectResponse
+    {
+        $grantMemberPermissions->handle($request->member(), $request->permissions(), $user);
+
+        return $this->done($tenant, 'Permisos actualizados.');
     }
 
     public function destroy(Tenant $tenant, string $member, RemoveMember $removeMember, #[CurrentUser] User $user): RedirectResponse

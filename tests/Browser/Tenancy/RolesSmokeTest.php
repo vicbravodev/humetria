@@ -21,3 +21,13 @@ it('opens the editor of a new role', function (bool $dark, bool $mobile): void {
 
     visitPage('tenancy/role-editor', '/admin/acme/roles/create', $dark, $mobile)->assertSee('Rol');
 })->with($looks);
+
+it('opens the permissions a person has besides their role', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+    $member = App\Modules\Tenancy\Models\TenantMembership::factory()
+        ->for(App\Modules\Tenancy\Models\Tenant::query()->where('slug', 'acme')->sole())
+        ->for(App\Models\User::factory()->create())
+        ->viewer()->create();
+
+    visitPage('tenancy/member-permissions', "/admin/acme/members/{$member->id}/permissions", $dark, $mobile)->assertSee('Permisos adicionales');
+})->with($looks);

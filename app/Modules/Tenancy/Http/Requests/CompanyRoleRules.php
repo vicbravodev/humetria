@@ -29,7 +29,7 @@ final class CompanyRoleRules
         return [
             'label' => ['required', 'string', 'max:60', TenantRules::SINGLE_LINE],
             'permissions' => ['required', 'array', 'min:1'],
-            'permissions.*' => ['string', 'distinct', self::assignable($tenant)],
+            'permissions.*' => ['string', 'distinct', self::permission($tenant)],
             'acknowledge_sensitive' => ['sometimes', 'boolean'],
         ];
     }
@@ -46,6 +46,16 @@ final class CompanyRoleRules
             $validator->errors()->add('label', 'Ya hay un rol con ese nombre.');
         }
 
+        self::acknowledged($validator, $request, $held);
+    }
+
+    /**
+     * A sensitive permission switched on, that was not on before, asks to be acknowledged.
+     *
+     * @param  array<int, string>  $held
+     */
+    public static function acknowledged(Validator $validator, Request $request, array $held): void
+    {
         $added = array_diff(self::names($request), $held);
 
         if (! $request->boolean('acknowledge_sensitive') && array_any($added, fn (string $name): bool => PermissionCatalog::find($name)?->sensitive === true)) {
@@ -74,7 +84,7 @@ final class CompanyRoleRules
      *
      * @return Closure(string, mixed, Closure(string): mixed): void
      */
-    private static function assignable(Tenant $tenant): Closure
+    public static function permission(Tenant $tenant): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail) use ($tenant): void {
             $permission = is_string($value) ? PermissionCatalog::find($value) : null;
