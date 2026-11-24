@@ -137,7 +137,7 @@ describe('the page', function (): void {
                 ->where('start', null)
                 ->where('optionsUrl', route('attendance.device.week.options', 'acme'))
                 ->where('weekUrl', route('attendance.device.week.read', 'acme'))
-                ->where('punchUrl', route('attendance.device.punch.home', 'acme'))
+                ->where('punchUrl', route('attendance.device.punch.show', 'acme'))
                 ->missing('week')
                 ->missing('days'));
     });
@@ -148,14 +148,21 @@ describe('the page', function (): void {
     });
 
     it('answers 404 to a date that does not exist and to a company that does not exist', function (): void {
-        $this->get('/a/acme/week/2026-02-30')->assertNotFound();
-        $this->get('/a/acme/week/ayer')->assertNotFound();
+        $this->get('/me/acme/week/2026-02-30')->assertNotFound();
+        $this->get('/me/acme/week/ayer')->assertNotFound();
         $this->get(route('attendance.device.week.show', 'nadie'))->assertNotFound();
         $this->postJson(route('attendance.device.week.options', 'nadie'))->assertNotFound();
     });
 
+    it('lives under /me/{slug}: the old addresses under /a/ answer 404 (no customers, no redirect)', function (): void {
+        expect(route('attendance.device.week.show', 'acme', absolute: false))->toBe('/me/acme/week');
+
+        $this->get('/a/acme/week')->assertNotFound();
+        $this->postJson('/a/acme/week/options')->assertNotFound();
+    });
+
     it('is linked from the screen of Marcar', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))
+        $this->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('weekUrl', route('attendance.device.week.show', 'acme')));
     });
 });

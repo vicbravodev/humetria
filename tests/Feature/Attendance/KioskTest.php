@@ -167,7 +167,7 @@ describe('the screen', function (): void {
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertExactJson([
                 'token' => $code,
-                'url' => url("a/{$this->tenant->slug}/punch").'?q='.$code,
+                'url' => url("me/{$this->tenant->slug}/punch").'?q='.$code,
                 'qr' => $response->json('qr'),
                 'expiresAt' => '2026-11-07T12:00:30+00:00',
                 'expiresIn' => 20,

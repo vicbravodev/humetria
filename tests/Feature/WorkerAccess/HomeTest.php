@@ -56,12 +56,12 @@ it('lists what each tool offers the person, in the fixed order of the start, wit
     workerSection('test.vacations', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('vacations', 'Mis vacaciones', 'Su saldo.', '/me/acme/vacations', 2));
     workerSection('test.telework', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('telework', 'Su teletrabajo', 'Sus pendientes.', '/me/acme/telework'));
     workerSection('test.unknown', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('something-new', 'Algo nuevo', 'Al final.', '/me/acme/new'));
-    workerSection('test.attendance', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('attendance', 'Marcar', 'Su entrada.', '/a/acme'));
+    workerSection('test.attendance', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('attendance', 'Marcar', 'Su entrada.', '/me/acme/punch'));
     enteredAs($this->ana->id);
 
     expect(homeSections())->toBe([
         ['key' => 'telework', 'label' => 'Su teletrabajo', 'description' => 'Sus pendientes.', 'href' => '/me/acme/telework', 'pending' => null],
-        ['key' => 'attendance', 'label' => 'Marcar', 'description' => 'Su entrada.', 'href' => '/a/acme', 'pending' => null],
+        ['key' => 'attendance', 'label' => 'Marcar', 'description' => 'Su entrada.', 'href' => '/me/acme/punch', 'pending' => null],
         ['key' => 'vacations', 'label' => 'Mis vacaciones', 'description' => 'Su saldo.', 'href' => '/me/acme/vacations', 'pending' => 2],
         ['key' => 'something-new', 'label' => 'Algo nuevo', 'description' => 'Al final.', 'href' => '/me/acme/new', 'pending' => null],
     ]);

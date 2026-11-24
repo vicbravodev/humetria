@@ -63,9 +63,9 @@ const week: WeekView = {
         restDayMinutes: 0,
         flags: ['day_over_12_hours'],
     },
-    confirmUrl: '/a/acme/week/2026-11-02/confirm',
-    disputeUrl: '/a/acme/week/2026-11-02/dispute',
-    previousUrl: '/a/acme/week/2026-10-26',
+    confirmUrl: '/me/acme/week/2026-11-02/confirm',
+    disputeUrl: '/me/acme/week/2026-11-02/dispute',
+    previousUrl: '/me/acme/week/2026-10-26',
     nextUrl: null,
 };
 

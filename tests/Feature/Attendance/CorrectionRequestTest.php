@@ -301,10 +301,10 @@ describe('from the device', function (): void {
         $this->get(route($route, 'acme'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('correctionOptionsUrl', route('attendance.device.correction.options', 'acme'))
             ->where('correctionUrl', route('attendance.device.correction.store', 'acme')));
-    })->with(['attendance.device.week.show', 'attendance.device.punch.home']);
+    })->with(['attendance.device.week.show', 'attendance.device.punch.show']);
 
     it('gives Marcar the company\'s time zone, to read the time of a mark refused on its clock', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('timezone', 'America/Mexico_City'));
+        $this->get(route('attendance.device.punch.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('timezone', 'America/Mexico_City'));
     });
 
     it('has its own limiter: generous per address and per key', function (): void {

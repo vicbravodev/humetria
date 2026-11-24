@@ -80,7 +80,7 @@ function punchDevice(SoftAuthenticator $phone, Employee $person, bool $accepted 
 /** The session the page of Marcar opens, as the browser keeps it in its cookie. */
 function punchSession(string $slug = 'acme'): string
 {
-    return test()->get(route('attendance.device.punch.home', $slug))->assertOk()->getCookie(config()->string('session.cookie'))?->getValue()
+    return test()->get(route('attendance.device.punch.show', $slug))->assertOk()->getCookie(config()->string('session.cookie'))?->getValue()
         ?? throw new LogicException('The page opened no session.');
 }
 
@@ -134,15 +134,25 @@ function anaPunches(array $body = [], ?string $session = null): TestResponse
 }
 
 describe('the page', function (): void {
+    it('lives under /me/{slug}, with no screen of its own at /a/{slug}', function (): void {
+        expect(route('attendance.device.punch.show', 'acme', absolute: false))->toBe('/me/acme/punch')
+            ->and(route('attendance.device.punch.options', 'acme', absolute: false))->toBe('/me/acme/punch/options')
+            ->and(Route::has('attendance.device.punch.home'))->toBeFalse();
+
+        $this->get('/a/acme')->assertNotFound();
+        $this->get('/a/acme/punch')->assertNotFound();
+        $this->postJson('/a/acme/punch/options')->assertNotFound();
+    });
+
     it('gives the screen where to accept the agreement', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))
+        $this->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->component('attendance/punch')
                 ->where('agreementOptionsUrl', route('attendance.device.agreement.options', 'acme'))
                 ->where('agreementUrl', route('attendance.device.agreement.accept', 'acme')));
     });
 
     it('opens for a device that has not marked here yet, asking for the location only when marking', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))
+        $this->get(route('attendance.device.punch.show', 'acme'))
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page->component('attendance/punch')
                 ->where('company', 'Acme')
@@ -155,7 +165,7 @@ describe('the page', function (): void {
     });
 
     it('tells a person without a key where to add one: their entrance, with a session; the first comes from RH', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))
+        $this->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('enterUrl', route('worker.home', 'acme')));
     });
 
@@ -168,11 +178,11 @@ describe('the page', function (): void {
     it('drops a code that cannot be one', function (): void {
         $this->get(route('attendance.device.punch.show', ['acme', 'q' => str_repeat('a', 200)]))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('qr', null));
-        $this->get('/a/acme/punch?q[]=x')->assertInertia(fn (AssertableInertia $page) => $page->where('qr', null));
+        $this->get('/me/acme/punch?q[]=x')->assertInertia(fn (AssertableInertia $page) => $page->where('qr', null));
     });
 
     it('lets this page alone read the position, from its own origin only (Permissions-Policy)', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))
+        $this->get(route('attendance.device.punch.show', 'acme'))
             ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
         $this->get(route('attendance.device.punch.show', ['acme', 'q' => 'abc']))
             ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
@@ -180,15 +190,15 @@ describe('the page', function (): void {
     });
 
     it('says how the person who marked here works: remote asks for no code nor zone, on site as it was, nobody known says nothing', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('mode', null));
+        $this->get(route('attendance.device.punch.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('mode', null));
 
         $session = punchSession();
         anaPunches([], $session)->assertOk();
-        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'onsite'));
 
         AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
-        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote'));
     });
 
@@ -197,17 +207,17 @@ describe('the page', function (): void {
         AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
         enteredAs($this->ana->id);
 
-        $this->get(route('attendance.device.punch.home', 'acme'))
+        $this->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote')->where('timezone', 'America/Tijuana')->where('person', null));
     });
 
     it('gives the server\'s time, for the clock of the page to follow it and not the phone\'s', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))
+        $this->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('now', CarbonImmutable::now()->getTimestampMs()));
     });
 
     it('answers 404 for a company that does not exist', function (): void {
-        $this->get(route('attendance.device.punch.home', 'nadie'))->assertNotFound();
+        $this->get(route('attendance.device.punch.show', 'nadie'))->assertNotFound();
         $this->postJson(route('attendance.device.punch.options', 'nadie'))->assertNotFound();
     });
 
@@ -217,14 +227,14 @@ describe('the page', function (): void {
         $this->travel(9)->minutes();
         $this->travel(59)->seconds();
 
-        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('person', ['name' => 'Ana López', 'next' => ['break_start', 'end']])
                 ->missing('person.marks')
                 ->missing('person.id'));
 
         $this->travel(1)->seconds();
-        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person', null));
     });
 
@@ -235,7 +245,7 @@ describe('the page', function (): void {
         punchWith($this->phone, $this->ana->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE], $session)->assertOk();
         $this->travel(60)->seconds();
 
-        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person', null));
     });
 
@@ -248,7 +258,7 @@ describe('the page', function (): void {
             ->post(route('attendance.device.punch.forget', 'acme'))
             ->assertRedirect(route('attendance.device.punch.show', ['acme', 'q' => 'abc']));
 
-        $this->withCookie($cookie, $session)->get(route('attendance.device.punch.home', 'acme'))
+        $this->withCookie($cookie, $session)->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person', null));
     });
 
@@ -271,7 +281,7 @@ describe('the page', function (): void {
         punchWith($bobPhone, $bob->id, ['q' => punchQr($this->tenant->id, $this->plant->id), ...PUNCH_INSIDE], $session)
             ->assertOk()->assertExactJson(['name' => 'Bob Ruiz', 'marks' => [['type' => 'start', 'time' => '09:00', 'date' => '2026-11-09', 'clock' => null]], 'next' => ['break_start', 'end'], 'flag' => null, 'evidence' => 'strong']);
 
-        $this->withCookie($cookie, $session)->get(route('attendance.device.punch.home', 'acme'))
+        $this->withCookie($cookie, $session)->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person.name', 'Bob Ruiz'));
     });
 
@@ -290,7 +300,7 @@ describe('the page', function (): void {
             $this->ana->update(['deactivated_at' => now()]);
         }
 
-        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.home', 'acme'))
+        $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('person', null));
     })->with(['revoked', 'deactivated']);
 });
@@ -384,7 +394,7 @@ describe('on site', function (): void {
         $this->travel(61)->seconds();
         $this->get(route('attendance.device.punch.show', ['acme', 'q' => $code]))
             ->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', null));
-        $this->get(route('attendance.device.punch.home', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', null));
+        $this->get(route('attendance.device.punch.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('scannedAt', null));
 
         $fresh = punchQr($this->tenant->id, $this->plant->id);
         $this->get(route('attendance.device.punch.show', ['acme', 'q' => $fresh]))->assertOk();

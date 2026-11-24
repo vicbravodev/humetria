@@ -39,7 +39,7 @@ it('offers «Marcar» to a person of a company with the registro de jornada, at 
         'key' => 'attendance',
         'label' => 'Marcar',
         'description' => 'Su entrada y su salida',
-        'href' => route('attendance.device.punch.home', 'acme'),
+        'href' => route('attendance.device.punch.show', 'acme'),
         'pending' => null,
     ]);
 });

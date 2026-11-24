@@ -40,7 +40,7 @@ const week: WeekView = {
     },
     confirmUrl: null,
     disputeUrl: null,
-    previousUrl: '/a/acme/week/2026-10-26',
+    previousUrl: '/me/acme/week/2026-10-26',
     nextUrl: null,
 };
 

@@ -41,12 +41,12 @@ function phoneAtThePunchScreen(bool $dark = false): AwaitableWebpage
     linkThePhone($page, test()->ana->id);
 
     // The test goes on once the screen of Marcar is really there, not while the browser is still settling the navigation.
-    return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    return $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText('Marcar su jornada');
 }
 
 it('opens the screen of Marcar for a device not known yet: every step compact, «Mi semana» on top, why the position is asked and how to link, to open', function (bool $dark, bool $mobile): void {
-    visitPage('attendance/punch', '/a/acme', $dark, $mobile)
+    visitPage('attendance/punch', '/me/acme/punch', $dark, $mobile)
         ->assertSee('Marcar su jornada')
         ->assertSee('Entrada')
         ->assertSee('Salida')
@@ -175,7 +175,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     });
     linkThePhone($page, test()->ana->id);
     standingAt($page, 19.4327, -99.1332);
-    $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText('Regresar de comer')
         ->press('button:has-text("Entrada")')
         ->waitForText('Entrada registrada')
@@ -187,7 +187,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     $clearKeys();
     linkThePhone($page->navigate(accessLinkPath($bob->id)), $bob->id);
 
-    return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    return $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true)
         ->assertDontSee('Su día');
 }
@@ -245,7 +245,7 @@ it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', funct
 });
 
 it('keeps the steps compact at the foot of a phone, so the content is seen first (hallazgo 16)', function (): void {
-    visitPage('attendance/punch', '/a/acme', mobile: true)
+    visitPage('attendance/punch', '/me/acme/punch', mobile: true)
         // The bar of actions took 353 px of 844; the board's takes about 190.
         ->assertScript('() => document.querySelector(".sticky.bottom-0").getBoundingClientRect().height <= 200', true)
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true);
@@ -263,7 +263,7 @@ it('asks a remote person for no code nor zone, and not for the position (hallazg
     linkThePhone($page, $this->ana->id);
 
     // From her portal: the page knows how she marks before she signs. She never lets the page read her position.
-    $page->navigate('/a/acme')
+    $page->navigate('/me/acme/punch')
         ->waitForText('Marcar su jornada')
         ->assertSee('Marque desde donde esté: no se le pedirá un QR ni estar en una zona.')
         ->assertDontSee('Sobre su ubicación')
@@ -289,7 +289,7 @@ it('accepts the agreement and marks the step that proceeds with one signature, w
     // Linked, without the agreement accepted.
     $page->press('button:has-text("Continuar")')->waitForText('cree su llave de acceso')->press('button:has-text("Crear llave")')->waitForText('Hola,');
     standingAt($page, 19.4327, -99.1332);
-    $page->navigate('/a/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
+    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
         ->waitForText('Regresar de comer')
         ->script(countSignatures());
 

@@ -42,11 +42,11 @@ afterEach(function (): void {
 });
 
 it('opens «Mi semana» showing nothing of anybody until the device signs', function (bool $dark, bool $mobile): void {
-    visitPage('attendance/week', '/a/acme/week', $dark, $mobile)
+    visitPage('attendance/week', '/me/acme/week', $dark, $mobile)
         ->assertSee('Mi semana')
         ->assertSee('Ver mi semana')
         // A state screen, centered, with the way back to Marcar at the top (hallazgo 17): not a button in its body.
-        ->assertPresent('header a[href$="/a/acme"]')
+        ->assertPresent('header a[href$="/me/acme/punch"]')
         ->assertDontSee('Volver a Marcar')
         ->assertDontSee('Ana López')
         ->assertDontSee('Total de la semana')
@@ -65,7 +65,7 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
     $page = visitPage('worker-access/link', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, test()->ana->id);
 
-    return $page->navigate('/a/acme')
+    return $page->navigate('/me/acme/punch')
         ->waitForText('Vea sus marcas y sus horas')
         ->click('Vea sus marcas y sus horas')
         ->waitForText('Ver mi semana')
@@ -196,7 +196,7 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
         ->waitForText('Solicitud aprobada');
 
     $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek(), 'America/Mexico_City')->start()->toDateString();
-    $page->navigate("/a/acme/week/{$monday}")
+    $page->navigate("/me/acme/week/{$monday}")
         ->waitForText('Ver mi semana')
         ->press('Ver mi semana')
         ->waitForText('Total de la semana')
@@ -216,7 +216,7 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
     linkThePhone($page, $this->ana->id);
 
     // On site, with no code of the center's screen: the mark is refused.
-    $page->navigate('/a/acme')
+    $page->navigate('/me/acme/punch')
         ->waitForText('Regresar de comer')
         ->press('button:has-text("Entrada")')
         ->waitForText('Pedir una corrección')

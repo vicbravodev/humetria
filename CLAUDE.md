@@ -84,7 +84,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   sirva más de una vez (`RouteSecurityTest`). El token del enlace es la credencial (con throttle por enlace y por
   dirección) en `survey.php` y `engagement-survey.php`, las encuestas; `complaints-public.php`, el canal de denuncias;
   `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `sso.php`, el inicio de sesión con el proveedor de la empresa (callback con `state`, `nonce` y PKCE); `workers.php`, la página de trabajadores;
-  `attendance-device.php`, los checadores.
+  `attendance-device.php`, los checadores: la pantalla del QR de un centro (`/a/{slug}`, con su cookie) y Marcar y Mi semana de la
+  persona (`/me/{slug}/…`), firmados por acción.
   En `messaging.php` la credencial es la firma del proveedor (Meta, Resend) sobre el cuerpo crudo, con throttle por dirección y
   tamaño máximo.
 

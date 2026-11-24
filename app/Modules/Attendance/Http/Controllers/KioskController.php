@@ -117,7 +117,7 @@ final class KioskController
 
         $token = QrToken::issue($kiosk->tenant_id, $kiosk->work_center_id, $now);
         // The page of Marcar (a GET) reads the code from the address: a phone camera opens it.
-        $url = url("a/{$tenant}/punch").'?'.http_build_query(['q' => $token]);
+        $url = url("me/{$tenant}/punch").'?'.http_build_query(['q' => $token]);
         $expiresAt = QrToken::expiresAt($now);
 
         return response()->json([

@@ -25,8 +25,8 @@ const day = {
 };
 
 const request: PunchRequest = {
-    optionsUrl: '/a/acme/punch/options',
-    punchUrl: '/a/acme/punch',
+    optionsUrl: '/me/acme/punch/options',
+    punchUrl: '/me/acme/punch',
     type: 'start',
     qr: 'abc',
     position: { lat: 19.4, lng: -99.1, accuracy: 12 },

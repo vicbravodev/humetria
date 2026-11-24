@@ -25,8 +25,8 @@ const day = {
 };
 
 const request: PunchRequest = {
-    optionsUrl: '/a/acme/punch/options',
-    punchUrl: '/a/acme/punch',
+    optionsUrl: '/me/acme/punch/options',
+    punchUrl: '/me/acme/punch',
     type: 'start',
     qr: 'abc',
     position: { lat: 19.4, lng: -99.1, accuracy: 12 },
@@ -79,7 +79,7 @@ describe('punch', () => {
             expect.objectContaining({ rpId: 'localhost' }),
         );
         const [url, init] = fetcher.mock.calls[1] ?? [];
-        expect(url).toBe('/a/acme/punch');
+        expect(url).toBe('/me/acme/punch');
         expect(init?.headers).toEqual({
             Accept: 'application/json',
             'Content-Type': 'application/json',
