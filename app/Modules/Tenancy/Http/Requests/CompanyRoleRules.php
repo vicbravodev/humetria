@@ -16,6 +16,8 @@ use Spatie\Permission\Models\Role;
 /** What a role of the company's own is made of, for creating and editing one: checked here, before any action runs. */
 final class CompanyRoleRules
 {
+    public const string NAME_TAKEN = 'Ya hay un rol con ese nombre.';
+
     public const string ACKNOWLEDGE = 'Confirma que quieres dar permisos que abren información sensible.';
 
     /** How the errors name each field: «label» is a device's name elsewhere. */
@@ -43,7 +45,7 @@ final class CompanyRoleRules
     public static function after(Validator $validator, Request $request, Tenant $tenant, ?Role $editing = null, array $held = []): void
     {
         if (! $validator->errors()->has('label') && self::taken($tenant, $request->string('label')->toString(), $editing)) {
-            $validator->errors()->add('label', 'Ya hay un rol con ese nombre.');
+            $validator->errors()->add('label', self::NAME_TAKEN);
         }
 
         self::acknowledged($validator, $request, $held);

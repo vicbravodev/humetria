@@ -13,6 +13,7 @@ use App\Modules\Tenancy\Actions\UpdateCompanyRole;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\CompanyRoleInUse;
 use App\Modules\Tenancy\Exceptions\CompanyRoleLimitReached;
+use App\Modules\Tenancy\Http\Requests\CompanyRoleRules;
 use App\Modules\Tenancy\Http\Requests\StoreRoleRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateRoleRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -22,6 +23,7 @@ use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\Expression;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -105,6 +107,8 @@ final class RoleController extends Controller
             $max = config()->integer('tenancy.max_custom_roles');
 
             throw ValidationException::withMessages(['label' => "Ya tienes {$max} roles propios, el máximo. Borra uno que no uses para crear otro."]);
+        } catch (UniqueConstraintViolationException) {
+            throw self::nameTaken();
         }
 
         return $this->done($tenant, 'Rol creado.');
@@ -133,9 +137,19 @@ final class RoleController extends Controller
 
     public function update(UpdateRoleRequest $request, Tenant $tenant, UpdateCompanyRole $updateCompanyRole, #[CurrentUser] User $user): RedirectResponse
     {
-        $updateCompanyRole->handle($request->role(), $request->label(), $request->permissions(), $user);
+        try {
+            $updateCompanyRole->handle($request->role(), $request->label(), $request->permissions(), $user);
+        } catch (UniqueConstraintViolationException) {
+            throw self::nameTaken();
+        }
 
         return $this->done($tenant, 'Rol actualizado.');
+    }
+
+    /** Another role took the name between the check and the write (the database keeps names unique per company). */
+    private static function nameTaken(): ValidationException
+    {
+        return ValidationException::withMessages(['label' => CompanyRoleRules::NAME_TAKEN]);
     }
 
     /** A role that someone holds, or an invitation not yet accepted names (expired ones too), stays. */

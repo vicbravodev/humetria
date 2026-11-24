@@ -493,3 +493,17 @@ it('keeps a permission of a tool the plan no longer includes when the role is sa
     expect($role->refresh()->permissions->pluck('name')->sort()->values()->all())->toBe(['view-climate', 'view-dashboard', 'view-vacations'])
         ->and(AuditEntry::query()->where('event', 'tenant_role.updated')->sole()->metadata)->toMatchArray(['added' => ['view-climate'], 'removed' => []]);
 });
+
+it('says the name is taken when another role takes it while this one is saved', function (string $action): void {
+    $role = companyRole($this->tenant, $this->owner, 'Auditoría');
+    // Another request names a role «Nómina» between the check and the write.
+    $race = fn () => DB::table('roles')->insert(['name' => 'custom_'.Illuminate\Support\Str::uuid(), 'guard_name' => 'web', 'tenant_id' => $this->tenant->id, 'label' => 'Nómina', 'created_at' => now(), 'updated_at' => now()]);
+    $action === 'store' ? Role::creating($race) : Role::updating($race);
+
+    ($action === 'store'
+        ? $this->actingAs($this->owner)->post(route('tenant.roles.store', $this->tenant), ['label' => 'Nómina', 'permissions' => ['view-dashboard']])
+        : $this->actingAs($this->owner)->put(route('tenant.roles.update', [$this->tenant, $role->id]), ['label' => 'Nómina', 'permissions' => ['view-dashboard']]))
+        ->assertSessionHasErrors(['label' => 'Ya hay un rol con ese nombre.']);
+
+    expect($role->refresh()->getAttribute('label'))->toBe('Auditoría');
+})->with(['store', 'update']);
