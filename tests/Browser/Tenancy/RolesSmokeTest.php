@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+use App\Modules\Tenancy\Actions\CreateCompanyRole;
+use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Models\Tenant;
+
 $looks = [
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -9,11 +14,29 @@ $looks = [
     'dark mobile' => [true, true],
 ];
 
-// Smoke tests of the roles pages while they are placeholders (Task 7a); Task 7b draws them and asserts what they show.
-it('opens the roles of the company', function (bool $dark, bool $mobile): void {
+it('lists the templates, locked, and says how to make the first role of the company', function (bool $dark, bool $mobile): void {
     signInToPanel();
 
-    visitPage('tenancy/roles', '/admin/acme/roles', $dark, $mobile)->assertSee('Roles y permisos');
+    visitPage('tenancy/roles', '/admin/acme/roles', $dark, $mobile)
+        ->assertSee('Roles y permisos')
+        ->assertSee('Plantillas de Humetría')
+        ->assertSee('Ayuda con las rutas')
+        ->assertSee('Copiar y ajustar')
+        ->assertSee('Aún no hay roles propios')
+        ->assertSee('Nuevo rol');
+})->with($looks);
+
+it('lists the roles of the company with their people and pending invitations', function (bool $dark, bool $mobile): void {
+    $owner = User::factory()->create();
+    signInToPanel($owner);
+    app(CreateCompanyRole::class)->handle(Tenant::query()->where('slug', 'acme')->sole(), 'Auditoría', ['view-dashboard', 'view-vacations'], TenantRole::Viewer, $owner);
+
+    visitPage('tenancy/roles', '/admin/acme/roles', $dark, $mobile)
+        ->assertSee('Auditoría')
+        ->assertSee('Basado en Solo consulta')
+        ->assertSee('Propio')
+        ->assertSee('Editar')
+        ->assertSee('1 de 20 roles propios');
 })->with($looks);
 
 it('opens the editor of a new role', function (bool $dark, bool $mobile): void {
