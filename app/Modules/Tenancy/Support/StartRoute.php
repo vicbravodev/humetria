@@ -63,9 +63,10 @@ final readonly class StartRoute
         foreach (self::MENU as $route) {
             // A union has no compliance panel: its panel is Compensación.
             $route = $tenant->isUnion() && $route === 'tenant.dashboard' ? 'tenant.compensation.index' : $route;
-            $needs = $route === 'tenant.dashboard' ? self::PANEL_NEEDS : [RoutePermissions::for($route)];
+            $has = fn (string $permission): bool => isset($permissions[$permission]);
+            $opens = $route === 'tenant.dashboard' ? array_all(self::PANEL_NEEDS, $has) : array_any(RoutePermissions::anyOf($route), $has);
 
-            if (array_all($needs, fn (?string $permission): bool => $permission !== null && isset($permissions[$permission]))
+            if ($opens
                 && ! ($tenant->isUnion() && Str::is(ComplianceRoutes::patterns(), $route))) {
                 return $route;
             }

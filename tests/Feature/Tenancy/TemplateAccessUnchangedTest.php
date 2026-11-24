@@ -22,10 +22,10 @@ mutates(RoutePermissions::class);
  *
  * @return list<string>
  */
-/** The permission a route asks for: the panel's route is exempt from the middleware, and its controller asks for view-dashboard. */
-function permissionOfRoute(string $name): ?string
+/** The permissions any one of which opens a route: the panel's route is exempt from the middleware, and its controller asks for view-dashboard. */
+function permissionsOfRoute(string $name): array
 {
-    return $name === 'tenant.dashboard' ? StartRoute::PANEL_NEEDS[0] : RoutePermissions::for($name);
+    return $name === 'tenant.dashboard' ? [StartRoute::PANEL_NEEDS[0]] : RoutePermissions::anyOf($name);
 }
 
 function routesOpenedBy(string $template): array
@@ -37,7 +37,7 @@ function routesOpenedBy(string $template): array
         array_filter(
             Route::getRoutes()->getRoutes(),
             fn (LaravelRoute $route): bool => in_array(RequireRoutePermission::class, $route->gatherMiddleware(), true)
-                && in_array(permissionOfRoute((string) $route->getName()), $permissions, true),
+                && array_intersect(permissionsOfRoute((string) $route->getName()), $permissions) !== [],
         ),
     ));
 }
@@ -132,7 +132,7 @@ it('lets the owner open every company route and hr all but the owner\'s', functi
         Route::getRoutes()->getRoutes(),
         // The page without access asks for no permission (RoutePermissions::EXEMPT): it is everyone's, not the owner's.
         fn (LaravelRoute $route): bool => in_array(RequireRoutePermission::class, $route->gatherMiddleware(), true)
-            && permissionOfRoute((string) $route->getName()) !== null,
+            && permissionsOfRoute((string) $route->getName()) !== [],
     )));
     $ownerOnly = [
         'tenant.first-steps.hide', 'tenant.first-steps.show', 'tenant.first-steps.welcome', 'tenant.members.destroy',

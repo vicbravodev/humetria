@@ -50,14 +50,14 @@ it('gives every company route a permission of the catalog', function (): void {
     $missing = [];
 
     foreach (companyGroupRoutes() as $route) {
-        $permission = RoutePermissions::for((string) $route->getName());
+        $permissions = RoutePermissions::anyOf((string) $route->getName());
 
         if (RoutePermissions::isExempt((string) $route->getName())) {
             continue;
         }
 
-        if ($permission === null || PermissionCatalog::find($permission) === null) {
-            $missing[] = $route->getName().' => '.($permission ?? 'null');
+        if ($permissions === [] || array_any($permissions, fn (string $permission): bool => PermissionCatalog::find($permission) === null)) {
+            $missing[] = $route->getName().' => '.($permissions === [] ? 'null' : implode(' | ', $permissions));
         }
     }
 
@@ -98,7 +98,7 @@ it('asks to manage for a write, except where writing is part of reading', functi
     foreach (companyGroupRoutes() as $route) {
         $name = (string) $route->getName();
 
-        if (! in_array('GET', $route->methods(), true) && str_starts_with((string) RoutePermissions::for($name), 'view-') && ! in_array($name, $writesByReaders, true)) {
+        if (! in_array('GET', $route->methods(), true) && RoutePermissions::anyOf($name) !== [] && array_all(RoutePermissions::anyOf($name), fn (string $permission): bool => str_starts_with($permission, 'view-')) && ! in_array($name, $writesByReaders, true)) {
             $offenders[] = $name;
         }
     }
@@ -142,6 +142,44 @@ it('opens to a role with only handle-complaints the complaint cases and closes e
         'tenant.dashboard',
     ]);
 });
+
+it('asks for any of two permissions where the controller accepts one or the other', function (string $route, array $either, string $neither): void {
+    $tenant = Tenant::factory()->create();
+    $owner = ownerOf($tenant);
+    workIn($tenant);
+    $passes = function (string $permission) use ($tenant, $owner, $route): bool {
+        $role = app(CreateCompanyRole::class)->handle($tenant, 'Solo '.$permission, [$permission], null, $owner);
+        $person = memberOf($tenant, TenantRole::Viewer);
+        resolve(PermissionRegistrar::class)->setPermissionsTeamId($tenant->id);
+        $person->syncRoles([$role]);
+        $person->unsetRelation('roles')->unsetRelation('permissions');
+        $request = Request::create('/');
+        $request->setRouteResolver(fn (): LaravelRoute => Route::getRoutes()->getByName($route) ?? throw new LogicException("No route $route."));
+        $request->setUserResolver(fn (): User => $person);
+
+        try {
+            (new RequireRoutePermission)->handle($request, fn (): Response => response('ok'));
+
+            return true;
+        } catch (HttpException) {
+            return false;
+        }
+    };
+
+    expect(RoutePermissions::for($route))->toBe($either)
+        ->and(array_map($passes, $either))->toBe([true, true])
+        ->and($passes($neither))->toBeFalse();
+})->with([
+    'seating file' => ['tenant.seating.documents.file', ['manage-seating', 'assess-seating'], 'view-seating'],
+    'seating evidence of a measure' => ['tenant.seating.measures.evidence', ['manage-seating', 'assess-seating'], 'view-seating'],
+    'seating evidence of a pause agreement' => ['tenant.seating.pause-agreements.evidence', ['manage-seating', 'assess-seating'], 'view-seating'],
+    'seating photo of a seat' => ['tenant.seating.seats.photo', ['manage-seating', 'assess-seating'], 'view-seating'],
+    'seating regulation file' => ['tenant.seating.regulation.file', ['manage-seating', 'assess-seating'], 'view-seating'],
+    'seating referral' => ['tenant.seating.referrals.store', ['manage-seating', 'assess-seating'], 'view-seating'],
+    'telework notice review' => ['tenant.telework.notices.review', ['manage-telework', 'review-workplaces'], 'view-telework'],
+    'telework notice evidence' => ['tenant.telework.notices.evidence', ['manage-telework', 'review-workplaces'], 'view-telework'],
+    'org chart people options' => ['tenant.org-chart.people.options', ['manage-organization', 'manage-org-chart'], 'view-org-chart'],
+]);
 
 it('closes the company routes over HTTP to whoever lacks their permission', function (): void {
     $tenant = Tenant::factory()->create();

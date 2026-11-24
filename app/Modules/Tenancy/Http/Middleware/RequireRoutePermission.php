@@ -26,11 +26,13 @@ final class RequireRoutePermission
             return $next($request);
         }
 
-        $permission = RoutePermissions::for($name);
+        $permissions = RoutePermissions::anyOf($name);
 
         // A company route missing from the map is closed to everyone: never open by default (RoutePermissionCoverageTest).
-        abort_if($permission === null, 403);
-        abort_unless($request->user()?->can($permission) === true, RoutePermissions::refusalStatus($name));
+        abort_if($permissions === [], 403);
+
+        $user = $request->user();
+        abort_unless($user !== null && array_any($permissions, fn (string $permission): bool => $user->can($permission)), RoutePermissions::refusalStatus($name));
 
         return $next($request);
     }

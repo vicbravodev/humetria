@@ -13,12 +13,15 @@ use Illuminate\Support\Str;
  * and manage-* to change. A module's catch-all is its manage-* permission, so a route added without thinking asks for
  * the most. RoutePermissionCoverageTest fails with any company route that gets no permission of the catalog.
  *
+ * Where the controller accepts «A or B», the route asks for a list and any one of them opens it. The list is exactly
+ * what the controller's gate accepts: the gate stays as the second barrier.
+ *
  * The account pages (settings.*, logout) and the company switcher live outside the company group; inside it, only the
  * routes of EXEMPT ask for no permission, each for its reason.
  */
 final class RoutePermissions
 {
-    /** @var array<string, string> route name pattern => permission */
+    /** @var array<string, list<string>|string> route name pattern => permission, or the list of which any one opens it */
     private const array PERMISSIONS = [
         // What a company has whatever its modules (the panel itself is in EXEMPT).
         'tenant.work-centers.index' => 'view-work-centers',
@@ -89,6 +92,11 @@ final class RoutePermissions
         'tenant.telework.visit-authorizations.store' => 'review-workplaces',
         'tenant.telework.checklist.*' => 'review-workplaces',
         'tenant.telework.reviews.*' => 'review-workplaces',
+        // Reviewing a notice is RH's or the Comisión's of its center (NoticeAccess), and the inbox and the page are the Comisión's gate.
+        'tenant.telework.notices.review' => ['manage-telework', 'review-workplaces'],
+        'tenant.telework.notices.close' => ['manage-telework', 'review-workplaces'],
+        'tenant.telework.notices.evidence' => ['manage-telework', 'review-workplaces'],
+        'tenant.telework.notices.place-review' => ['manage-telework', 'review-workplaces'],
         'tenant.telework.notices.*' => 'review-workplaces',
         'tenant.telework.evidence.store' => 'review-workplaces',
         'tenant.telework.workplaces.remote-check.store' => 'review-workplaces',
@@ -106,17 +114,17 @@ final class RoutePermissions
         'tenant.seating.assessments.*' => 'assess-seating',
         'tenant.seating.documents.index' => 'assess-seating',
         'tenant.seating.documents.options' => 'assess-seating',
-        'tenant.seating.documents.file' => 'assess-seating',
+        'tenant.seating.documents.file' => ['manage-seating', 'assess-seating'],
         'tenant.seating.dossier' => 'assess-seating',
         'tenant.seating.plan' => 'assess-seating',
         'tenant.seating.reports.index' => 'assess-seating',
         'tenant.seating.regulation.show' => 'assess-seating',
-        'tenant.seating.regulation.file' => 'assess-seating',
+        'tenant.seating.regulation.file' => ['manage-seating', 'assess-seating'],
         'tenant.seating.measures.propose' => 'assess-seating',
-        'tenant.seating.measures.evidence' => 'assess-seating',
-        'tenant.seating.pause-agreements.evidence' => 'assess-seating',
-        'tenant.seating.seats.photo' => 'assess-seating',
-        'tenant.seating.referrals.store' => 'assess-seating',
+        'tenant.seating.measures.evidence' => ['manage-seating', 'assess-seating'],
+        'tenant.seating.pause-agreements.evidence' => ['manage-seating', 'assess-seating'],
+        'tenant.seating.seats.photo' => ['manage-seating', 'assess-seating'],
+        'tenant.seating.referrals.store' => ['manage-seating', 'assess-seating'],
         'tenant.seating.*' => 'manage-seating',
 
         // The complaints channel: the cases are the handlers'; how the channel is set up, its manager's.
@@ -145,6 +153,8 @@ final class RoutePermissions
         'tenant.vacations.settings.show' => 'view-vacations',
         'tenant.vacations.*' => 'manage-vacations',
 
+        // The managers' search: whoever may edit people or the reporting lines.
+        'tenant.org-chart.people.options' => ['manage-organization', 'manage-org-chart'],
         'tenant.org-chart.index' => 'view-org-chart',
         'tenant.org-chart.people.search' => 'view-org-chart',
         'tenant.org-chart.quality' => 'view-org-chart',
@@ -232,8 +242,13 @@ final class RoutePermissions
         return Str::is(self::HIDDEN_WHEN_REFUSED, $routeName) ? 404 : 403;
     }
 
-    /** The permission the route asks for, or null when the name is not a company route of the map. */
-    public static function for(string $routeName): ?string
+    /**
+     * The permission the route asks for (or the list of which any one opens it), or null when the name is not a company
+     * route of the map.
+     *
+     * @return list<string>|string|null
+     */
+    public static function for(string $routeName): array|string|null
     {
         foreach (self::PERMISSIONS as $pattern => $permission) {
             if (Str::is($pattern, $routeName)) {
@@ -242,5 +257,15 @@ final class RoutePermissions
         }
 
         return null;
+    }
+
+    /**
+     * The permissions any one of which opens the route: empty when the name is not in the map (nobody gets in).
+     *
+     * @return list<string>
+     */
+    public static function anyOf(string $routeName): array
+    {
+        return (array) self::for($routeName);
     }
 }

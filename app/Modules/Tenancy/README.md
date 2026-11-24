@@ -32,6 +32,11 @@ Este README cubre lo que no se ve leyendo una sola clase: **quién puede hacer q
 
 - `Support/RoutePermissions` dice qué permiso pide cada ruta `tenant.*`, por nombre (el primer patrón que coincide gana) y
   `Http/Middleware/RequireRoutePermission` lo exige. El `Gate` del FormRequest o del controlador sigue como segunda barrera.
+- **«A o B»:** donde el controlador acepta uno u otro permiso, el valor del mapa es una lista
+  (`['manage-seating', 'assess-seating']`) y basta con tener cualquiera de ellos; `RoutePermissions::for()` devuelve el
+  permiso o la lista, y `RoutePermissions::anyOf()` siempre una lista (vacía si la ruta no está en el mapa: nadie entra).
+  La lista es exactamente la del Gate del controlador, ni más ancha ni más estrecha. Donde el controlador pide A **y** B,
+  la ruta pide uno de los dos y el controlador exige ambos.
 - **Una ruta `tenant.*` nueva va en `RoutePermissions`** (o en su lista `EXEMPT`, con su razón): si no,
   `RoutePermissionCoverageTest` falla en el CI. `TemplateAccessUnchangedTest` cuida que las plantillas no ganen ni pierdan
   páginas.
