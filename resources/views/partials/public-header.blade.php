@@ -95,8 +95,12 @@
         </nav>
 
         <div class="relative flex items-center gap-1 justify-self-end">
+            <button type="button" data-theme-toggle aria-label="{{ __('blog.theme') }}" class="hidden size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted sm:flex">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="size-[18px] dark:hidden"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden size-[18px] dark:block"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
             <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-base font-normal whitespace-nowrap transition-colors hover:bg-accent sm:min-h-9">{{ __('blog.login') }}</a>
-            <a data-test="header-demo" href="/#agenda-una-demo" class="ml-1 inline-flex min-h-11 items-center rounded-full bg-primary px-4 sm:min-h-9 text-sm font-medium whitespace-nowrap text-primary-foreground transition-opacity hover:opacity-90">
+            <a data-test="header-demo" href="/#agenda-una-demo" class="ml-1 inline-flex min-h-11 items-center rounded-full bg-primary px-4 sm:min-h-9 text-base font-medium whitespace-nowrap text-primary-foreground transition-opacity hover:opacity-90">
                 <span class="sm:hidden">Demo</span><span class="hidden sm:inline">{{ __('blog.cta_button') }}</span>
             </a>
             <details class="group ml-1 lg:hidden">
@@ -110,7 +114,7 @@
                            @if ($link['id'] === $current) aria-current="page" @endif
                            class="flex min-h-11 items-center rounded-xl px-3 text-base font-medium {{ $link['id'] === $current ? 'bg-accent text-primary' : 'hover:bg-accent' }}">{{ $link['label'] }}</a>
                     @endforeach
-                    <button type="button" data-theme-toggle class="flex min-h-11 items-center rounded-xl px-3 text-start text-base font-medium hover:bg-accent">{{ __('blog.theme') }}</button>
+                    <button type="button" data-theme-toggle class="flex min-h-11 items-center rounded-xl px-3 text-start text-base font-medium hover:bg-accent sm:hidden">{{ __('blog.theme') }}</button>
                 </nav>
             </details>
         </div>
