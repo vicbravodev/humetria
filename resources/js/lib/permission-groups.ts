@@ -83,3 +83,21 @@ export function switchLook(
         hint: state.locked ? 'Viene de su rol' : null,
     };
 }
+
+/**
+ * Whether «Entiendo y confirmo» still holds after a switch: only while the sensitive permissions added are the same ones the
+ * owner confirmed. Any change in that list asks again.
+ */
+export function keepsAcknowledgement(
+    groups: PermissionGroup[],
+    before: string[],
+    { previous, next }: { previous: string[]; next: string[] },
+): boolean {
+    const confirmed = sensitiveAdded(groups, before, previous);
+    const now = sensitiveAdded(groups, before, next);
+
+    return (
+        confirmed.length === now.length &&
+        confirmed.every((label) => now.includes(label))
+    );
+}

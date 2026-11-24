@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     groupCount,
     heldBy,
+    keepsAcknowledgement,
     sensitiveAdded,
     switchLook,
     toggled,
@@ -138,5 +139,40 @@ describe('switchLook', () => {
                 true,
             ),
         ).toEqual({ on: true, still: true, hint: null });
+    });
+});
+
+describe('keepsAcknowledgement', () => {
+    const more: PermissionGroup[] = [
+        ...groups,
+        {
+            module: 'complaints',
+            label: 'Quejas',
+            permissions: [toggle('handle-complaints', { sensitive: true })],
+        },
+    ];
+
+    it('keeps the confirmation while the sensitive permissions added stay the same', () => {
+        expect(
+            keepsAcknowledgement(more, [], {
+                previous: ['view-trauma-screenings'],
+                next: ['view-trauma-screenings', 'manage-campaigns'],
+            }),
+        ).toBe(true);
+    });
+
+    it('drops it when one sensitive is switched off and another on, or one more is added', () => {
+        expect(
+            keepsAcknowledgement(more, [], {
+                previous: ['view-trauma-screenings'],
+                next: ['handle-complaints'],
+            }),
+        ).toBe(false);
+        expect(
+            keepsAcknowledgement(more, [], {
+                previous: ['view-trauma-screenings'],
+                next: ['view-trauma-screenings', 'handle-complaints'],
+            }),
+        ).toBe(false);
     });
 });

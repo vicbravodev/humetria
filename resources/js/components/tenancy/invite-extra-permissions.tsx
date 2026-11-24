@@ -7,7 +7,11 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { sensitiveAdded, toggled } from '@/lib/permission-groups';
+import {
+    keepsAcknowledgement,
+    sensitiveAdded,
+    toggled,
+} from '@/lib/permission-groups';
 import { countOf } from '@/lib/plural';
 import type { PermissionGroup } from '@/types';
 
@@ -51,9 +55,20 @@ export default function InviteExtraPermissions({
                 <PermissionToggles
                     groups={groups}
                     selection={{ selected, locked: [] }}
-                    onToggle={(name, on) =>
-                        setSelected((current) => toggled(current, name, on))
-                    }
+                    onToggle={(name, on) => {
+                        const next = toggled(selected, name, on);
+
+                        setSelected(next);
+                        // A different set of sensitive permissions asks for the confirmation again.
+                        setAcknowledged(
+                            (was) =>
+                                was &&
+                                keepsAcknowledgement(groups, [], {
+                                    previous: selected,
+                                    next,
+                                }),
+                        );
+                    }}
                     columns={1}
                 />
             </CollapsibleContent>

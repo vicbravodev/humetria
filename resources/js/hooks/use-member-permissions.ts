@@ -1,6 +1,11 @@
 import { useForm } from '@inertiajs/react';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { heldBy, sensitiveAdded, toggled } from '@/lib/permission-groups';
+import {
+    heldBy,
+    keepsAcknowledgement,
+    sensitiveAdded,
+    toggled,
+} from '@/lib/permission-groups';
 import { update } from '@/routes/tenant/members/permissions';
 import type { PermissionGroup } from '@/types';
 
@@ -23,11 +28,21 @@ export function useMemberPermissions(
         processing: form.processing,
         locked: heldBy(groups, 'role'),
         sensitive: sensitiveAdded(groups, before, form.data.permissions),
-        toggle: (name: string, on: boolean) =>
-            form.setData(
-                'permissions',
-                toggled(form.data.permissions, name, on),
-            ),
+        toggle: (name: string, on: boolean) => {
+            const next = toggled(form.data.permissions, name, on);
+
+            form.setData((data) => ({
+                ...data,
+                permissions: next,
+                // A different set of sensitive permissions asks for the confirmation again.
+                acknowledge_sensitive:
+                    data.acknowledge_sensitive &&
+                    keepsAcknowledgement(groups, before, {
+                        previous: data.permissions,
+                        next,
+                    }),
+            }));
+        },
         acknowledge: (checked: boolean) =>
             form.setData('acknowledge_sensitive', checked),
         save: () =>
