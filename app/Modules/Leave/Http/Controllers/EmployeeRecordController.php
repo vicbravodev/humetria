@@ -58,12 +58,12 @@ final readonly class EmployeeRecordController
             $difference = SettleTermination::differenceOf($record);
             $settle->handle($termination, $request->userId());
             Inertia::flash('toast', $difference === 0
-                ? ['type' => 'success', 'message' => 'Días finiquitados.']
-                : ['type' => 'warning', 'message' => 'Se finiquitó el saldo de hoy ('.($record->pending_days + $difference)." días), pero la baja había registrado {$record->pending_days}: revisa el estado de cuenta."]);
+                ? ['type' => 'success', 'message' => 'Vacaciones marcadas como pagadas.']
+                : ['type' => 'warning', 'message' => 'Se marcó como pagado el saldo de hoy ('.($record->pending_days + $difference)." días), pero la baja había registrado {$record->pending_days}: revisa el estado de cuenta."]);
         } catch (PersonWorksHere) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => 'Esta persona está activa: sus días no se finiquitan.']);
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Esta persona está activa: sus vacaciones no se marcan como pagadas.']);
         } catch (AlreadyDecided) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => 'Estos días ya se habían finiquitado o la baja se canceló.']);
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Estas vacaciones ya estaban pagadas o la baja se canceló.']);
         }
 
         return back();

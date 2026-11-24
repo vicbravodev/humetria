@@ -665,9 +665,10 @@ function settled(): string
 }
 
 /**
- * A script that resolves once no calendar popover is left in the page: picking a day closes its popover with a short
- * animation and, when it unmounts, gives focus back to its field. A click that opens the next date field before that
- * would see its calendar closed again by that focus, so this waits for the unmount, not just for the closed state.
+ * A script that resolves once no calendar is left in the page, in a popover (desktop) or in a sheet (phone): picking a day
+ * closes it with a short animation and, when it unmounts, gives focus back to its field. A click that opens the next date
+ * field before that would see its calendar closed again by that focus, so this waits for the unmount, not just for the
+ * closed state. A sheet that holds no calendar (a form's own) is not waited on.
  */
 function calendarClosed(): string
 {
@@ -675,7 +676,7 @@ function calendarClosed(): string
         () => new Promise((resolve) => {
             const start = performance.now();
             const check = () => {
-                const open = document.querySelector('[data-slot="popover-content"]') !== null;
+                const open = document.querySelector('[data-slot="popover-content"], [data-slot="sheet-content"]:has([data-slot="calendar"])') !== null;
                 ! open || performance.now() - start > 3000 ? resolve(! open) : requestAnimationFrame(check);
             };
             check();
