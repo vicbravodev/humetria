@@ -48,6 +48,10 @@ final readonly class WeekController
         return Inertia::render('attendance/week', [
             'company' => $this->companies->current()->tradeName,
             'start' => $start,
+            // The company's segment and where the phone delivers its queue: the page counts the person's marks that wait (it
+            // does not let them confirm the week with any) and delivers them as it opens.
+            'slug' => $tenant,
+            'deliverUrl' => route('attendance.device.punch.offline', $tenant),
             'optionsUrl' => route('attendance.device.week.options', $tenant),
             'weekUrl' => route('attendance.device.week.read', $tenant),
             'punchUrl' => route('attendance.device.punch.show', $tenant),

@@ -72,13 +72,22 @@ final readonly class InstallableAppController
 
     /**
      * The shell the worker keeps (`/me/{slug}/offline`) and the phone opens when there is no network: a static page that
-     * names the company and the way back to the person's start. Never a person, a session, a CSRF token nor the time.
+     * names the company and the way back to the person's start, and (with the registro de jornada) where Marcar, the delivery
+     * of the queue and the tickets are, so the app can mark without a connection. Never a person, a session, a CSRF token nor the time.
      */
     public function offline(string $tenant): View
     {
+        $company = $this->companies->current();
+        // Marcar, the delivery of the queue and the tickets exist only for a company with the registro de jornada: without it
+        // they are empty and the app shows only the person's start.
+        $marks = $company->allows('attendance');
+
         return view('worker-access.offline', [
-            'company' => $this->companies->current()->tradeName,
+            'company' => $company->tradeName,
             'homeUrl' => route('worker.home', $tenant, absolute: false),
+            'punchUrl' => $marks ? route('attendance.device.punch.show', $tenant, absolute: false) : '',
+            'deliverUrl' => $marks ? route('attendance.device.punch.offline', $tenant, absolute: false) : '',
+            'ticketsUrl' => $marks ? route('attendance.device.tickets', $tenant, absolute: false) : '',
             'swKill' => config()->boolean('worker_access.pwa_sw_kill'),
         ]);
     }

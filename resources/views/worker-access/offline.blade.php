@@ -36,6 +36,6 @@
         @vite(['resources/css/app.css', 'resources/js/offline.tsx'])
     </head>
     <body class="font-sans antialiased">
-        <div id="offline-app" data-company="{{ $company }}" data-home-url="{{ $homeUrl }}"></div>
+        <div id="offline-app" data-company="{{ $company }}" data-home-url="{{ $homeUrl }}" data-punch-url="{{ $punchUrl }}" data-deliver-url="{{ $deliverUrl }}" data-tickets-url="{{ $ticketsUrl }}"></div>
     </body>
 </html>

@@ -178,6 +178,28 @@ describe('the shell', function (): void {
             ->and($xpath->query('//link[@rel="manifest"]/@href')->item(0)?->nodeValue)->toEndWith('/me/acme/manifest.webmanifest');
     });
 
+    it('carries the addresses of the queue when the company has the registro de jornada: Marcar, the delivery and the tickets', function (): void {
+        $dom = new DOMDocument;
+        @$dom->loadHTML('<?xml encoding="utf-8"?>'.$this->get(route('worker.app.offline', 'acme'))->assertOk()->getContent(), LIBXML_NOERROR | LIBXML_NOWARNING);
+        $app = (new DOMXPath($dom))->query('//div[@id="offline-app"]')->item(0);
+
+        expect($app->getAttribute('data-punch-url'))->toBe(route('attendance.device.punch.show', 'acme', absolute: false))
+            ->and($app->getAttribute('data-deliver-url'))->toBe(route('attendance.device.punch.offline', 'acme', absolute: false))
+            ->and($app->getAttribute('data-tickets-url'))->toBe(route('attendance.device.tickets', 'acme', absolute: false));
+    });
+
+    it('leaves those addresses empty without the registro de jornada, so the app only shows the start', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+        $dom = new DOMDocument;
+        @$dom->loadHTML('<?xml encoding="utf-8"?>'.$this->get(route('worker.app.offline', 'acme'))->assertOk()->getContent(), LIBXML_NOERROR | LIBXML_NOWARNING);
+        $app = (new DOMXPath($dom))->query('//div[@id="offline-app"]')->item(0);
+
+        expect($app->getAttribute('data-punch-url'))->toBe('')
+            ->and($app->getAttribute('data-deliver-url'))->toBe('')
+            ->and($app->getAttribute('data-tickets-url'))->toBe('')
+            ->and($app->getAttribute('data-home-url'))->toBe(route('worker.home', 'acme', absolute: false));
+    });
+
     it('says the worker is switched off only when it is', function (): void {
         config(['worker_access.pwa_sw_kill' => true]);
 

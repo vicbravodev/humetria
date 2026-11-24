@@ -150,6 +150,9 @@ describe('the page', function (): void {
                 ->where('optionsUrl', route('attendance.device.week.options', 'acme'))
                 ->where('weekUrl', route('attendance.device.week.read', 'acme'))
                 ->where('punchUrl', route('attendance.device.punch.show', 'acme'))
+                // The company's segment and where the phone delivers its queue: the page counts and delivers the person's marks.
+                ->where('slug', 'acme')
+                ->where('deliverUrl', route('attendance.device.punch.offline', 'acme'))
                 ->missing('week')
                 ->missing('days'));
     });
