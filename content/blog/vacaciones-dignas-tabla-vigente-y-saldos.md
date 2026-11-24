@@ -4,7 +4,7 @@ description: 'Cuántos días de vacaciones da la ley por año de servicio desde 
 tool: leave
 published_at: 2026-11-26
 updated_at: 2026-11-26
-reviewed_by: "Equipo Humetría"
+reviewed_by: 'Equipo Humetría'
 reviewed_at: 2026-11-23
 sources:
     - https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf

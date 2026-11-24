@@ -4,7 +4,7 @@ description: 'La Ley Silla no fija cuántos asientos por persona. Qué exige la 
 tool: ley_silla
 published_at: 2026-11-25
 updated_at: 2026-11-25
-reviewed_by: "Equipo Humetría"
+reviewed_by: 'Equipo Humetría'
 reviewed_at: 2026-11-23
 sources:
     - https://dof.gob.mx/nota_detalle.php?codigo=5745676&fecha=19/12/2024

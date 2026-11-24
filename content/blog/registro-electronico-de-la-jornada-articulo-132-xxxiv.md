@@ -4,7 +4,7 @@ description: 'La reforma laboral de 2026 obliga a registrar de forma electrónic
 tool: attendance
 published_at: 2026-11-19
 updated_at: 2026-11-19
-reviewed_by: "Equipo Humetría"
+reviewed_by: 'Equipo Humetría'
 reviewed_at: 2026-11-23
 sources:
     - https://www.diputados.gob.mx/LeyesBiblio/ref/lft/LFT_ref52_01may26.pdf
