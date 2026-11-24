@@ -64,14 +64,17 @@ it('gives every company route a permission of the catalog', function (): void {
     expect($missing)->toBe([]);
 });
 
-it('exempts only the page without access, and asks no permission for it', function (): void {
+it('exempts only the page without access and the panel, which sends whoever may not open it to their start, and asks no permission for them', function (): void {
     $exempt = array_values(array_filter(
         array_map(fn (LaravelRoute $route): string => (string) $route->getName(), companyGroupRoutes()),
         RoutePermissions::isExempt(...),
     ));
 
-    expect($exempt)->toBe(['tenant.no-access'])
+    sort($exempt);
+
+    expect($exempt)->toBe(['tenant.dashboard', 'tenant.no-access'])
         ->and(RoutePermissions::for('tenant.no-access'))->toBeNull()
+        ->and(RoutePermissions::for('tenant.dashboard'))->toBeNull()
         ->and(RoutePermissions::isExempt('tenant.no-access.other'))->toBeFalse()
         ->and(RoutePermissions::isExempt('tenant.made-up.page'))->toBeFalse();
 });
@@ -135,6 +138,8 @@ it('opens to a role with only handle-complaints the complaint cases and closes e
         'tenant.complaints.cases.recuse', 'tenant.complaints.cases.reopen', 'tenant.complaints.cases.review',
         'tenant.complaints.cases.share', 'tenant.complaints.cases.show', 'tenant.complaints.centers.options',
         'tenant.complaints.index', 'tenant.complaints.procedure', 'tenant.no-access',
+        // Past the middleware only: its controller sends whoever may not open the panel to their start (DashboardEntryTest).
+        'tenant.dashboard',
     ]);
 });
 

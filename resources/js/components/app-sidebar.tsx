@@ -60,9 +60,8 @@ export function AppSidebar() {
         >
             <SidebarHeader className="px-3 pt-4 pb-4">
                 <Link
-                    // Without the panel (a role of the company's own), /admin sends the person to their first page instead.
                     href={
-                        tenant === null || !tenant.can.view_dashboard
+                        tenant === null
                             ? dashboard()
                             : tenantDashboard(tenant.slug)
                     }

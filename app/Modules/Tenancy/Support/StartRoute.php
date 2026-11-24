@@ -23,6 +23,9 @@ final readonly class StartRoute
      */
     public const string PANEL_ALSO_NEEDS = 'view-work-centers';
 
+    /** Everything the panel asks for: its own permission (its route is exempt, the controller asks) and the centers. */
+    public const array PANEL_NEEDS = ['view-dashboard', self::PANEL_ALSO_NEEDS];
+
     /**
      * The pages the sidebar links to, in its order (resources/js/lib/nav-sections.ts: the company's own pages, then «Cumple
      * la norma», «Escucha a tu gente» and «Ordena tu operación»). The menu is drawn in the browser, so its order is copied
@@ -58,7 +61,7 @@ final readonly class StartRoute
         $permissions = $this->roles->effectivePermissions($user, $tenant);
 
         foreach (self::MENU as $route) {
-            $needs = [RoutePermissions::for($route), ...($route === 'tenant.dashboard' ? [self::PANEL_ALSO_NEEDS] : [])];
+            $needs = $route === 'tenant.dashboard' ? self::PANEL_NEEDS : [RoutePermissions::for($route)];
 
             if (array_all($needs, fn (?string $permission): bool => $permission !== null && isset($permissions[$permission]))
                 && ! ($tenant->isUnion() && Str::is(ComplianceRoutes::patterns(), $route))) {

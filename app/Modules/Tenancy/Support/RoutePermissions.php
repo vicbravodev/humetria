@@ -20,8 +20,7 @@ final class RoutePermissions
 {
     /** @var array<string, string> route name pattern => permission */
     private const array PERMISSIONS = [
-        // The panel, and what a company has whatever its modules.
-        'tenant.dashboard' => 'view-dashboard',
+        // What a company has whatever its modules (the panel itself is in EXEMPT).
         'tenant.work-centers.index' => 'view-work-centers',
         'tenant.work-centers.options' => 'view-work-centers',
         // The route of one standard in one center sends to its page; the NOM-035 one is the route permission's.
@@ -216,6 +215,9 @@ final class RoutePermissions
     private const array EXEMPT = [
         // Where a person who may open nothing lands (StartRoute): asking for a permission would leave them nowhere to go.
         'tenant.no-access',
+        // The company's address (sign-in, the company switcher, Humi's links): its controller asks for view-dashboard and the
+        // centers it is drawn from, and sends whoever lacks them to StartRoute instead of a 403.
+        'tenant.dashboard',
     ];
 
     /** Whether the route is a company route that asks for no permission. */

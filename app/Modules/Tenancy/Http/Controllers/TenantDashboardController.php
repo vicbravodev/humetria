@@ -27,9 +27,9 @@ final class TenantDashboardController extends Controller
         // The route sits behind the auth middleware: the check only narrows the type.
         abort_if($user === null, 403);
 
-        // Whoever does not land on the panel (StartRoute) is sent where they do: the same rule, so it never loops. The
-        // permissions of the company are already loaded by the permission of the route.
-        if (! $user->can(StartRoute::PANEL_ALSO_NEEDS)) {
+        // Whoever does not land on the panel (StartRoute) is sent where they do, never shown a 403: the same rule (both
+        // permissions), so it never loops. The route is exempt from RequireRoutePermission for this.
+        if (! $user->can('view-dashboard') || ! $user->can(StartRoute::PANEL_ALSO_NEEDS)) {
             return to_route($startRoute->for($user, $tenant), $tenant);
         }
 
