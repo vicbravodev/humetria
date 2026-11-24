@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Notifications;
 
 use App\Modules\Billing\Contracts\MailBag;
+use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use Carbon\CarbonImmutable;
@@ -28,7 +29,7 @@ final class InvitationEmail extends Notification implements MailBag, ShouldBeEnc
         private readonly string $email,
         private readonly string $token,
         private readonly CarbonImmutable $expiresAt,
-        private readonly TenantRole $role,
+        private readonly CompanyRoleSummary $role,
         private readonly ?string $inviter,
         private readonly int $workCenters,
         private readonly int $people,
@@ -57,8 +58,8 @@ final class InvitationEmail extends Notification implements MailBag, ShouldBeEnc
                 'tradeName' => $this->tradeName,
                 'email' => $this->email,
                 'inviter' => $this->inviter,
-                'role' => $this->role->label(),
-                'does' => match ($this->role) {
+                'role' => $this->role->label,
+                'does' => match (TenantRole::tryFrom($this->role->key)) {
                     TenantRole::Owner => $this->union
                         ? 'administrarás la cuenta, sus usuarios y su padrón de personas.'
                         : 'administrarás la cuenta, sus usuarios y las herramientas que tenga contratadas.',
@@ -68,6 +69,8 @@ final class InvitationEmail extends Notification implements MailBag, ShouldBeEnc
                     TenantRole::Committee => 'podrás revisar y validar los lugares de trabajo de la NOM-037 (teletrabajo) de sus centros.',
                     TenantRole::Complaints => 'podrás atender, de forma confidencial, las quejas y denuncias que se te asignen en el canal de la empresa.',
                     TenantRole::Viewer => 'podrás ver sus centros de trabajo y, cuando haya evaluaciones, sus resultados.',
+                    // A role of the company's own: what it allows is whatever the owner switched on.
+                    null => "podrás entrar a {$this->tradeName} con los permisos que te asignaron.",
                 },
                 'initials' => CompanySummary::initialsOf($this->tradeName),
                 'size' => $this->size(),

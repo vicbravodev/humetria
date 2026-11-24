@@ -10,13 +10,14 @@ use App\Modules\Tenancy\Data\OwnerInvitationData;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 final readonly class InviteOwner
 {
-    public function __construct(private RecordAudit $recordAudit, private SendInvitationEmail $sendEmail) {}
+    public function __construct(private RecordAudit $recordAudit, private SendInvitationEmail $sendEmail, private CompanyRoles $roles) {}
 
     /**
      * Invites someone to own the company, replacing the invitation that was open, and emails them the one-time link.
@@ -31,7 +32,7 @@ final readonly class InviteOwner
 
             $token = Str::random(64);
             $invitation = $tenant->invitations()->create([
-                'role' => TenantRole::Owner,
+                'role_id' => $this->roles->template(TenantRole::Owner)->id,
                 'name' => $data->name,
                 'email' => $data->email,
                 'token_hash' => TenantInvitation::hashToken($token),

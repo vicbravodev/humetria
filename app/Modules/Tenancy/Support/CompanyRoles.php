@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Support;
 
 use App\Models\User;
+use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\NotACompanyRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -77,7 +78,47 @@ final readonly class CompanyRoles
     public function inUse(Role $role): bool
     {
         return $this->holders($role) !== []
-            || DB::table('tenant_invitations')->where('role', $role->name)->whereNull('accepted_at')->whereNull('cancelled_at')->exists();
+            || DB::table('tenant_invitations')->where('role_id', $role->id)->whereNull('accepted_at')->whereNull('cancelled_at')->exists();
+    }
+
+    /** The system's role of that template. */
+    public function template(TenantRole $role): Role
+    {
+        return Role::query()->where('name', $role->value)->whereNull('tenant_id')->sole();
+    }
+
+    /**
+     * The role the owner can give someone, by its key: a template the account hands out, or one of the company's own.
+     * Never the owner's, nor a role of another company.
+     */
+    public function assignable(Tenant $tenant, string $key): ?Role
+    {
+        if (($template = TenantRole::tryFrom($key)) !== null) {
+            return in_array($template, $tenant->type->assignableRoles(), true) ? $this->template($template) : null;
+        }
+
+        return Role::query()->where('tenant_id', $tenant->id)->where('name', $key)->where('name', 'like', 'custom\_%')->first();
+    }
+
+    /**
+     * The roles the owner can give, templates first and then the company's own by label.
+     *
+     * @return list<CompanyRoleSummary>
+     */
+    public function assignableSummaries(Tenant $tenant): array
+    {
+        return [
+            ...array_map(fn (TenantRole $role): CompanyRoleSummary => new CompanyRoleSummary($role->value, $role->label(), true), $tenant->type->assignableRoles()),
+            ...$this->customRoles($tenant)->map(fn (Role $role): CompanyRoleSummary => self::summary($role->name, $role->getAttribute('label')))->values()->all(),
+        ];
+    }
+
+    /** How the panel names a role: a template by its own label, one of the company's by the label the owner typed. */
+    public static function summary(string $name, mixed $label): CompanyRoleSummary
+    {
+        $template = TenantRole::tryFrom($name);
+
+        return new CompanyRoleSummary($name, $template?->label() ?? (is_string($label) ? $label : $name), $template !== null);
     }
 
     /**
@@ -105,10 +146,10 @@ final readonly class CompanyRoles
         return array_any($permissions, fn (string $name): bool => $assignable[$name]);
     }
 
-    /** Replaces the person's role in the company with `$role`. */
-    public function assign(User $user, Tenant $tenant, TenantRole $role): void
+    /** Replaces the person's role in the company with `$role`, a template or one of the company's own. */
+    public function assign(User $user, Tenant $tenant, TenantRole|Role $role): void
     {
-        $this->inTeam($user, $tenant, fn () => $user->syncRoles([$role->value]));
+        $this->inTeam($user, $tenant, fn () => $user->syncRoles([$role instanceof Role ? $role : $role->value]));
         $this->forgetMembers();
     }
 

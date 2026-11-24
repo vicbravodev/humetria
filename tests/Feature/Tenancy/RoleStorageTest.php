@@ -112,9 +112,9 @@ it('still allows a single open owner invitation per company', function (): void 
 
 it('rejects an unknown role in an invitation', function (): void {
     expect(fn () => DB::table('tenant_invitations')->insert([
-        ...TenantInvitation::factory()->raw(['tenant_id' => Tenant::factory()->create()->id, 'role' => 'admin']),
+        ...TenantInvitation::factory()->raw(['tenant_id' => Tenant::factory()->create()->id, 'role_id' => 999_999, 'extra_permissions' => '[]']),
         'id' => fake()->uuid(),
-    ]))->toThrow(QueryException::class, 'tenant_invitations_role_known');
+    ]))->toThrow(QueryException::class, 'tenant_invitations_role_id_foreign');
 });
 
 it('forgets who can review as soon as someone loses their role', function (): void {

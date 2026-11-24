@@ -182,7 +182,7 @@ it('tells nobody about an owner change when a non-owner role is accepted', funct
     TenantMembership::factory()->for($tenant)->create();
     $hr = User::factory()->create();
 
-    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $hr->email, 'role' => TenantRole::Hr]), $hr);
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->role(TenantRole::Hr)->create(['email' => $hr->email]), $hr);
 
     Notification::assertNothingSent();
 });

@@ -42,7 +42,7 @@ it('lets the superadmin invite the owner of a company', function (): void {
 
     expect($invitation->tenant_id)->toBe($tenant->id)
         ->and($invitation->invited_by)->toBe($admin->id)
-        ->and($invitation->role)->toBe(TenantRole::Owner)
+        ->and($invitation->role?->name)->toBe(TenantRole::Owner->value)
         ->and($invitation->name)->toBe('Ana Pérez')
         ->and($invitation->email)->toBe('ana@acme.mx')
         ->and($invitation->token_hash)->toMatch('/\A[0-9a-f]{64}\z/')

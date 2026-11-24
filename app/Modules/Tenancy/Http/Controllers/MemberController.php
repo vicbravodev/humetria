@@ -11,6 +11,7 @@ use App\Modules\Tenancy\Actions\ChangeMemberRole;
 use App\Modules\Tenancy\Actions\InviteMember;
 use App\Modules\Tenancy\Actions\RemoveMember;
 use App\Modules\Tenancy\Actions\ResendInvitation;
+use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Http\Requests\ChangeMemberRoleRequest;
@@ -58,15 +59,14 @@ final class MemberController extends Controller
                 ->paginate(self::PER_PAGE, pageName: 'members')
                 ->withQueryString()
                 ->through(fn (TenantMembership $member): array => $this->memberRow($member, $roles[$member->user_id] ?? null, $user)),
-            'invitations' => $tenant->invitations()->open()->where('role', '<>', TenantRole::Owner)->latest()->orderByDesc('id')
+            'invitations' => $tenant->invitations()->open()->forOwner(false)->with('role')->latest()->orderByDesc('id')
                 ->paginate(self::PER_PAGE, pageName: 'invitations')
                 ->withQueryString()
                 ->through(fn (TenantInvitation $invitation): array => [
                     'id' => $invitation->id,
                     'name' => $invitation->name,
                     'email' => $invitation->email,
-                    'role' => $invitation->role->value,
-                    'role_label' => $invitation->role->label(),
+                    ...$this->roleOf($invitation),
                     'status' => $invitation->status()->value,
                     'status_label' => $invitation->status()->label(),
                     'expires_on' => DisplayDate::day($invitation->expires_at),
@@ -158,11 +158,24 @@ final class MemberController extends Controller
     }
 
     /**
+     * An open invitation always names its role.
+     *
+     * @return array{role: string, role_label: string}
+     */
+    private function roleOf(TenantInvitation $invitation): array
+    {
+        $role = $invitation->role ?? throw new LogicException("Invitation [{$invitation->id}] has no role.");
+        $summary = CompanyRoles::summary($role->name, $role->getAttribute('label'));
+
+        return ['role' => $summary->key, 'role_label' => $summary->label];
+    }
+
+    /**
      * @return list<array{value: string, label: string}>
      */
     private function assignable(Tenant $tenant): array
     {
-        return array_map(fn (TenantRole $role): array => ['value' => $role->value, 'label' => $role->label()], $tenant->type->assignableRoles());
+        return array_map(fn (CompanyRoleSummary $role): array => ['value' => $role->key, 'label' => $role->label], $this->roles->assignableSummaries($tenant));
     }
 
     private function authorizeOwner(): void
@@ -182,7 +195,7 @@ final class MemberController extends Controller
 
     private function invitation(Tenant $tenant, string $id): TenantInvitation
     {
-        return $tenant->invitations()->where('role', '<>', TenantRole::Owner)->findOrFail($id);
+        return $tenant->invitations()->forOwner(false)->findOrFail($id);
     }
 
     private function done(Tenant $tenant, string $message): RedirectResponse

@@ -25,7 +25,7 @@ it('invites a member as committee', function (): void {
         ->post(route('tenant.members.invitations.store', $tenant), ['name' => 'Cora Comisión', 'email' => 'cora@acme.mx', 'role' => 'committee'])
         ->assertRedirect();
 
-    expect(TenantInvitation::query()->where('email', 'cora@acme.mx')->sole()->role)->toBe(TenantRole::Committee)
+    expect(TenantInvitation::query()->where('email', 'cora@acme.mx')->sole()->role?->name)->toBe(TenantRole::Committee->value)
         ->and(TenantRole::Committee->label())->toBe('Comisión de seguridad e higiene')
         ->and(TenantRole::Committee->invitedAs('Acme'))->toBe('Te invitaron a la Comisión de seguridad e higiene de Acme');
 });

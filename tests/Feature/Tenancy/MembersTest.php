@@ -108,8 +108,8 @@ it('invites a person with a role and emails them the link', function (TenantRole
 
     $invitation = TenantInvitation::query()->sole();
 
-    expect($invitation->only(['tenant_id', 'role', 'name', 'email', 'invited_by']))->toBe([
-        'tenant_id' => $this->tenant->id, 'role' => $role, 'name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'invited_by' => $this->owner->id,
+    expect($invitation->only(['tenant_id', 'role_id', 'name', 'email', 'invited_by']))->toBe([
+        'tenant_id' => $this->tenant->id, 'role_id' => Spatie\Permission\Models\Role::findByName($role->value)->id, 'name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'invited_by' => $this->owner->id,
     ])->and($invitation->expires_at->toIso8601String())->toBe('2026-11-05T18:00:00+00:00');
 
     $subject = Illuminate\Support\Str::before($this->owner->name, ' ').' te invitó a Acme en Humetría';

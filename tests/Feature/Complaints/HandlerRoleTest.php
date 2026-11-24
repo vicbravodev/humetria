@@ -21,7 +21,7 @@ it('invites a member as complaints handler, who is told what the role is for', f
         ->post(route('tenant.members.invitations.store', $tenant), ['name' => 'Abel Abogado', 'email' => 'abel@bufete.mx', 'role' => 'complaints'])
         ->assertRedirect();
 
-    expect(TenantInvitation::query()->where('email', 'abel@bufete.mx')->sole()->role)->toBe(TenantRole::Complaints)
+    expect(TenantInvitation::query()->where('email', 'abel@bufete.mx')->sole()->role?->name)->toBe(TenantRole::Complaints->value)
         ->and(TenantRole::Complaints->label())->toBe('Atención de quejas')
         ->and(TenantRole::Complaints->invitedAs('Acme'))->toBe('Te invitaron a atender el canal de quejas de Acme');
 });

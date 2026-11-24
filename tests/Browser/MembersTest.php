@@ -77,7 +77,7 @@ it('invites someone as a viewer', function (): void {
         ->assertSee('Diego Luna')
         ->assertNoJavaScriptErrors();
 
-    expect(TenantInvitation::query()->where('email', 'diego@acme.mx')->sole()->role)->toBe(TenantRole::Viewer);
+    expect(TenantInvitation::query()->where('email', 'diego@acme.mx')->sole()->role?->name)->toBe(TenantRole::Viewer->value);
 });
 
 it('invites someone to the Comisión de seguridad e higiene', function (): void {
@@ -93,7 +93,7 @@ it('invites someone to the Comisión de seguridad e higiene', function (): void 
         ->assertSee('Cora Comisión')
         ->assertNoJavaScriptErrors();
 
-    expect(TenantInvitation::query()->where('email', 'cora@acme.mx')->sole()->role)->toBe(TenantRole::Committee);
+    expect(TenantInvitation::query()->where('email', 'cora@acme.mx')->sole()->role?->name)->toBe(TenantRole::Committee->value);
 });
 
 it('says when the person already has access', function (): void {

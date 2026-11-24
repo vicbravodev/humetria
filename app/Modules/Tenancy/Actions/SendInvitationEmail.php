@@ -6,10 +6,12 @@ namespace App\Modules\Tenancy\Actions;
 
 use App\Models\User;
 use App\Modules\Organization\Contracts\Headcount;
+use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Notifications\InvitationEmail;
+use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
@@ -27,9 +29,11 @@ final readonly class SendInvitationEmail
         $union = Tenant::query()->whereKey($invitation->tenant_id)->first()?->isUnion() ?? false;
         $workCenters = WorkCenter::query()->withoutGlobalScopes()->where('tenant_id', $invitation->tenant_id)->whereNull('archived_at')->count();
         $people = $this->headcount->ofCompany($invitation->tenant_id);
+        $role = $invitation->role ?? throw new InvitationNoLongerValid;
+        $summary = CompanyRoles::summary($role->name, $role->getAttribute('label'));
 
         DB::afterCommit(fn () => Notification::route('mail', $invitation->email)->notify(
-            new InvitationEmail($tradeName, $invitation->email, $token, $invitation->expires_at, $invitation->role, $inviter, $workCenters, $people, $union),
+            new InvitationEmail($tradeName, $invitation->email, $token, $invitation->expires_at, $summary, $inviter, $workCenters, $people, $union),
         ));
     }
 }

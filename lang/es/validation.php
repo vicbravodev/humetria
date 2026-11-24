@@ -277,6 +277,7 @@ return [
         'subjects' => 'a quién va dirigida',
         'area_ids' => 'áreas',
         'area_ids.*' => 'área',
+        'permissions.*' => 'permiso adicional',
         'starts_on' => 'fecha de inicio',
         'ends_on' => 'fecha de fin',
         'leave_type_id' => 'tipo de permiso',

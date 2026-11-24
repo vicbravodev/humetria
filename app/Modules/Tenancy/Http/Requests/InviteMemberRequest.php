@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Requests;
 
 use App\Modules\Tenancy\Data\MemberInvitationData;
-use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Container\Attributes\RouteParameter;
 use Illuminate\Contracts\Validation\Validator;
@@ -34,6 +33,7 @@ final class InviteMemberRequest extends FormRequest
             'name' => ['required', 'string', 'max:255', TenantRules::SINGLE_LINE],
             'email' => ['required', 'string', 'email', 'max:255'],
             'role' => MemberRoleRules::role($tenant),
+            ...MemberRoleRules::permissions($tenant),
         ];
     }
 
@@ -51,7 +51,7 @@ final class InviteMemberRequest extends FormRequest
 
             if ($tenant->memberships()->whereHas('user', fn (Builder $user) => $user->whereRaw('lower(email) = ?', [$email]))->exists()) {
                 $validator->errors()->add('email', 'Esa persona ya tiene acceso a esta empresa.');
-            } elseif ($tenant->invitations()->open()->where('role', '<>', TenantRole::Owner)->where('email', $email)->exists()) {
+            } elseif ($tenant->invitations()->open()->forOwner(false)->where('email', $email)->exists()) {
                 $validator->errors()->add('email', 'Ya hay una invitación abierta para ese correo.');
             }
         }];
@@ -62,8 +62,21 @@ final class InviteMemberRequest extends FormRequest
         return new MemberInvitationData(
             name: $this->string('name')->toString(),
             email: $this->string('email')->toString(),
-            role: TenantRole::from($this->string('role')->toString()),
+            role: $this->string('role')->toString(),
+            permissions: $this->permissionNames(),
         );
+    }
+
+    /** @return list<string> */
+    private function permissionNames(): array
+    {
+        $names = [];
+
+        foreach ($this->array('permissions') as $name) {
+            is_string($name) && $names[] = $name;
+        }
+
+        return $names;
     }
 
     protected function prepareForValidation(): void

@@ -143,7 +143,7 @@ it('guards the membership actions themselves, whatever calls them', function ():
     $owner = memberOf($union, TenantRole::Owner);
     $member = TenantMembership::query()->where('user_id', memberOf($union, TenantRole::Hr)->id)->sole();
 
-    expect(fn () => resolve(InviteMember::class)->handle($union, new MemberInvitationData('Vera', 'vera@sindicato.mx', TenantRole::Viewer), $owner))
+    expect(fn () => resolve(InviteMember::class)->handle($union, new MemberInvitationData('Vera', 'vera@sindicato.mx', TenantRole::Viewer->value), $owner))
         ->toThrow(RoleNotAllowedInAccount::class)
         ->and(fn () => resolve(ChangeMemberRole::class)->handle($member, TenantRole::Committee, $owner))
         ->toThrow(RoleNotAllowedInAccount::class)

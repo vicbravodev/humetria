@@ -59,7 +59,7 @@ it('does not bind an invitation to an account whose email was never proven', fun
         ->assertSessionHasNoErrors();
 
     $tenant = Tenant::factory()->create();
-    TenantInvitation::factory()->for($tenant)->withToken('tok')->create(['email' => 'ana@acme.mx', 'name' => 'Ana', 'role' => 'owner']);
+    TenantInvitation::factory()->for($tenant)->withToken('tok')->create(['email' => 'ana@acme.mx', 'name' => 'Ana']);
 
     // The squatter is not the invited account.
     $this->get(route('invitations.show', 'tok'))->assertInertia(fn (Assert $page) => $page->where('state', 'other_account'));

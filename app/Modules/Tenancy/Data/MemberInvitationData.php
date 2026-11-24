@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Data;
 
-use App\Modules\Tenancy\Enums\TenantRole;
-
 final readonly class MemberInvitationData
 {
     /**
      * @param  string  $email  Lowercase, without spaces.
-     * @param  TenantRole  $role  hr, viewer or committee: the owner is invited from the superadmin console.
+     * @param  string  $role  The key of a template the account hands out or of a role of the company's own: never the owner,
+     *                        who is invited from the superadmin console.
+     * @param  list<string>  $permissions  Given besides the role.
      */
     public function __construct(
         public string $name,
         public string $email,
-        public TenantRole $role,
+        public string $role,
+        public array $permissions = [],
     ) {}
 }
