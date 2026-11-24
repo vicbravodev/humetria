@@ -12,10 +12,12 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OfflineRejection;
 use App\Modules\Attendance\Enums\SignerType;
 use App\Modules\Attendance\Enums\TimeBasis;
+use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Events\OfflineMarkAccepted;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceOfflineMark;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\OfflineChallenge;
 use App\Modules\Attendance\Support\OfflineTicket;
 use App\Modules\Attendance\Support\QrToken;
@@ -599,6 +601,14 @@ describe('transaction and records', function (): void {
         expect($audit->subject_id)->toBe($mark->id)
             ->and($audit->metadata)->toEqual(['employee_id' => $this->ana['employee']->id, 'time_basis' => 'declared_interval', 'signer_type' => 'passkey', 'interval_minutes' => 120, 'review_flags' => []]);
     });
+
+    it('reopens the confirmed week an accepted mark falls in, and leaves a disputed one disputed', function (string $state, WeekStatus $after): void {
+        $week = WeeklyConfirmation::factory()->{$state}()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana['employee']->id, 'week_start' => '2026-11-09']);
+
+        romDeliver(romMark());
+
+        expect($week->fresh()?->status)->toBe($after);
+    })->with(['a confirmed week' => ['confirmed', WeekStatus::Pending], 'a disputed week' => ['disputed', WeekStatus::Disputed]]);
 
     it('dispatches nothing for a rejected delivery, a duplicate or a refused signature', function (): void {
         Event::fake([OfflineMarkAccepted::class]);

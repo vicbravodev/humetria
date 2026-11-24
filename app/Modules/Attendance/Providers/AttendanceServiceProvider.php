@@ -8,10 +8,12 @@ use App\Modules\Attendance\Contracts\AttendanceStanding;
 use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Attendance\Contracts\PlaceSearch;
 use App\Modules\Attendance\Events\MarkCorrected;
+use App\Modules\Attendance\Events\OfflineMarkAccepted;
 use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Listeners\AlertDispute;
 use App\Modules\Attendance\Listeners\ReopenOnAbsence;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
+use App\Modules\Attendance\Listeners\ReopenOnOfflineMark;
 use App\Modules\Attendance\Support\CompanyAttendanceStanding;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
@@ -42,6 +44,7 @@ final class AttendanceServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(MarkCorrected::class, ReopenOnCorrection::class);
+        Event::listen(OfflineMarkAccepted::class, ReopenOnOfflineMark::class);
         Event::listen(WeekDisputed::class, AlertDispute::class);
         Event::listen(AbsenceChanged::class, ReopenOnAbsence::class);
 
