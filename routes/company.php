@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Http\Controllers\NoAccessController;
 use App\Modules\Tenancy\Http\Controllers\Nom035DossierController;
 use App\Modules\Tenancy\Http\Controllers\OnboardingController;
 use App\Modules\Tenancy\Http\Controllers\PlanController;
+use App\Modules\Tenancy\Http\Controllers\RoleController;
 use App\Modules\Tenancy\Http\Controllers\RouteController;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterApplicabilityController;
@@ -59,6 +60,9 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnfor
     Route::delete('admin/{tenant:slug}/members/invitations/{invitation}', [MemberController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.cancel');
     Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.update');
     Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.destroy');
+
+    // «Roles y permisos»: the company's own roles, beside the templates. Only the owner; the staff working as one only reads.
+    Route::get('admin/{tenant:slug}/roles', [RoleController::class, 'index'])->where('tenant', $notReserved)->name('tenant.roles.index');
 
     // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
     Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');

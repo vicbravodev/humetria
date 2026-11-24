@@ -39,6 +39,7 @@ final class RoutePermissions
         'tenant.job-grades.*' => 'view-work-centers',
         // The owner's: people and roles, the plan, the privacy minimum, single sign-on and the guided tour.
         'tenant.members.*' => 'manage-members',
+        'tenant.roles.*' => 'manage-members',
         'tenant.plan' => 'manage-members',
         'tenant.privacy.*' => 'manage-members',
         'tenant.sso.*' => 'manage-members',
