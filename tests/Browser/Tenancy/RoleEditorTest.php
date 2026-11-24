@@ -136,6 +136,45 @@ it('marks a chosen «Sin acceso» in a quiet fill, not in the accent of a level 
         ->assertNoJavaScriptErrors();
 });
 
+it('keeps a chosen «Sin acceso» readable and its edge visible, in light and in dark', function (bool $dark): void {
+    signInToPanel();
+
+    $page = $dark ? visit('/admin/acme/roles/create')->inDarkMode() : visit('/admin/acme/roles/create')->inLightMode();
+
+    $page->assertChecked('input[name="level-dashboard"][value="none"]')
+        ->assertScript(<<<'JS'
+            () => {
+                // Any CSS color the browser computes (rgb, oklab, color-mix…) as sRGB, read back from a pixel.
+                const canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 1;
+                const context = canvas.getContext('2d', { willReadFrequently: true });
+                const rgb = (css) => {
+                    context.clearRect(0, 0, 1, 1);
+                    context.fillStyle = css;
+                    context.fillRect(0, 0, 1, 1);
+                    return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3);
+                };
+                const luminance = ([r, g, b]) => [r, g, b]
+                    .map((channel) => channel / 255)
+                    .map((channel) => (channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4))
+                    .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+                const ratio = (a, b) => {
+                    const [light, dark] = [luminance(rgb(a)), luminance(rgb(b))].sort((x, y) => y - x);
+                    return (light + 0.05) / (dark + 0.05);
+                };
+
+                const label = document.querySelector('[data-test="level-dashboard-none"]');
+                const style = getComputedStyle(label);
+                // The ring is the one shadow that paints: the others of the stack are transparent.
+                const ring = (style.boxShadow.match(/(?:rgba?|color|oklab|oklch)\([^)]*\)/g) ?? []).find((color) => !/rgba\(0, 0, 0, 0\)/.test(color)) ?? '';
+                const card = getComputedStyle(label.parentElement).backgroundColor;
+
+                return ring !== '' && ratio(style.color, style.backgroundColor) >= 4.5 && ratio(ring, card) >= 3;
+            }
+            JS, true)
+        ->assertNoJavaScriptErrors();
+})->with([[false], [true]]);
+
 it('says a role someone holds cannot be deleted, and deletes one nobody holds', function (): void {
     acmeRoleHeldBy(1);
 
