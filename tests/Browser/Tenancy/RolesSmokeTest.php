@@ -15,3 +15,9 @@ it('opens the roles of the company', function (bool $dark, bool $mobile): void {
 
     visitPage('tenancy/roles', '/admin/acme/roles', $dark, $mobile)->assertSee('Roles y permisos');
 })->with($looks);
+
+it('opens the editor of a new role', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+
+    visitPage('tenancy/role-editor', '/admin/acme/roles/create', $dark, $mobile)->assertSee('Rol');
+})->with($looks);

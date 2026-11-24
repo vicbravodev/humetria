@@ -6,15 +6,24 @@ namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Impersonation;
+use App\Models\User;
+use App\Modules\Tenancy\Actions\CreateCompanyRole;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Exceptions\CompanyRoleLimitReached;
+use App\Modules\Tenancy\Http\Requests\StoreRoleRequest;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\CompanyRoles;
+use App\Modules\Tenancy\Support\PermissionGroups;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\Expression;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -66,6 +75,58 @@ final class RoleController extends Controller
             'limit' => ['used' => $this->own($tenant)->count(), 'max' => config()->integer('tenancy.max_custom_roles')],
             'can_manage' => ! $this->impersonation->isActive(),
         ]);
+    }
+
+    /** «Nuevo rol»: blank, or (`?from=`) with what a template the account hands out has switched on. */
+    public function create(Request $request, Tenant $tenant, CompanyRoles $roles): Response
+    {
+        Gate::authorize('manage-members');
+        $from = TenantRole::tryFrom($request->string('from')->toString());
+        $from = in_array($from, $tenant->type->assignableRoles(), true) ? $from : null;
+
+        return Inertia::render('tenancy/role-editor', [
+            'role' => null,
+            'from' => $from?->value,
+            'templates' => array_map(fn (TenantRole $template): array => ['key' => $template->value, 'label' => $template->label()], $tenant->type->assignableRoles()),
+            'groups' => PermissionGroups::for($tenant, $from === null ? [] : self::held($roles->template($from))),
+            'can_manage' => ! $this->impersonation->isActive(),
+        ]);
+    }
+
+    public function store(StoreRoleRequest $request, Tenant $tenant, CreateCompanyRole $createCompanyRole, #[CurrentUser] User $user): RedirectResponse
+    {
+        try {
+            $createCompanyRole->handle($tenant, $request->label(), $request->permissions(), $request->basedOn(), $user);
+        } catch (CompanyRoleLimitReached) {
+            $max = config()->integer('tenancy.max_custom_roles');
+
+            throw ValidationException::withMessages(['label' => "Ya tienes {$max} roles propios, el máximo. Borra uno que no uses para crear otro."]);
+        }
+
+        return $this->done($tenant, 'Rol creado.');
+    }
+
+    /**
+     * What the role has switched on, as the editor shows it.
+     *
+     * @return array<string, 'role'>
+     */
+    private static function held(Role $role): array
+    {
+        $held = [];
+
+        foreach ($role->permissions as $permission) {
+            $held[$permission->name] = 'role';
+        }
+
+        return $held;
+    }
+
+    private function done(Tenant $tenant, string $message): RedirectResponse
+    {
+        Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
+
+        return redirect()->route('tenant.roles.index', $tenant);
     }
 
     /**

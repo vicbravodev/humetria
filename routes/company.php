@@ -63,6 +63,8 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnfor
 
     // «Roles y permisos»: the company's own roles, beside the templates. Only the owner; the staff working as one only reads.
     Route::get('admin/{tenant:slug}/roles', [RoleController::class, 'index'])->where('tenant', $notReserved)->name('tenant.roles.index');
+    Route::get('admin/{tenant:slug}/roles/create', [RoleController::class, 'create'])->where('tenant', $notReserved)->name('tenant.roles.create');
+    Route::post('admin/{tenant:slug}/roles', [RoleController::class, 'store'])->where('tenant', $notReserved)->name('tenant.roles.store');
 
     // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
     Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');
