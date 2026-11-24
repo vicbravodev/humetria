@@ -80,12 +80,15 @@ it('lists the templates the company hands out and its own roles, with how many p
                 ['viewer', 'Solo consulta', 1],
                 ['committee', 'Comisión de seguridad e higiene', 0],
                 ['complaints', 'Atención de quejas', 0],
-            ] && collect($templates)->every(fn ($row): bool => $row['permissions'] > 0))
+                // What each switches on, by name: the list says in a sentence what it lets do.
+            ] && collect($templates)->every(fn ($row): bool => $row['permissions'] === Role::findByName($row['key'])->permissions->pluck('name')->sort()->values()->all()))
             ->where('roles.total', 2)
             ->where('roles.data', [
-                ['id' => $audit->id, 'label' => 'Auditoría', 'based_on' => null, 'people' => 2, 'invitations' => 0, 'permissions' => 2],
-                ['id' => $payroll->id, 'label' => 'Nómina', 'based_on' => null, 'people' => 0, 'invitations' => 1, 'permissions' => 1],
+                ['id' => $audit->id, 'label' => 'Auditoría', 'based_on' => null, 'people' => 2, 'invitations' => 0, 'permissions' => ['view-climate', 'view-dashboard']],
+                ['id' => $payroll->id, 'label' => 'Nómina', 'based_on' => null, 'people' => 0, 'invitations' => 1, 'permissions' => ['view-compensation']],
             ])
+            // Which tools the plan has, so the sentence leaves out what the company cannot use.
+            ->where('groups', fn ($groups): bool => toggleOf($groups->toArray(), 'view-vacations') !== null && toggleOf($groups->toArray(), 'manage-members') === null)
             ->where('search', '')
             ->where('limit', ['used' => 2, 'max' => 20])
             ->where('can_manage', true));
@@ -151,7 +154,7 @@ it('reads the list in the same number of queries however many roles and people t
 })->with([1, 4]);
 
 // Measured, then fixed so that a query per role breaks the test.
-const QUERIES_OF_THE_ROLES_PAGE = 17;
+const QUERIES_OF_THE_ROLES_PAGE = 19;
 
 it('sends only roles and counts: nobody\'s name or email', function (): void {
     $role = companyRole($this->tenant, $this->owner);

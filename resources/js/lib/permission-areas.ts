@@ -208,11 +208,20 @@ export function summarize({
     return sentence(subject, verbs, others);
 }
 
+/** «Quien tenga este rol ve…», or without a subject «Ve…». */
+const lead = (subject: string, text: string): string =>
+    subject === ''
+        ? `${text.charAt(0).toUpperCase()}${text.slice(1)}`
+        : `${subject} ${text}`;
+
 function sentence(subject: string, verbs: string[], others: string[]): string {
     if (verbs.length === 0) {
-        return others.length === 0
-            ? `${subject} no tiene acceso a ninguna área.`
-            : `${subject} ${listed(others)}.`;
+        return lead(
+            subject,
+            others.length === 0
+                ? 'no tiene acceso a ninguna área.'
+                : `${listed(others)}.`,
+        );
     }
 
     const [first = '', second] = verbs;
@@ -222,8 +231,8 @@ function sentence(subject: string, verbs: string[], others: string[]): string {
             : `${first}${first.includes(' y ') ? ', y' : ' y'} ${second}`;
 
     return others.length === 0
-        ? `${subject} ${main}.`
-        : `${subject} ${main}. También ${listed(others)}.`;
+        ? lead(subject, `${main}.`)
+        : lead(subject, `${main}. También ${listed(others)}.`);
 }
 
 /** How many of the areas shown have any access, a mixed one included: «10 de 14». */
@@ -251,3 +260,9 @@ export function beyondRole(
         ].some((name) => direct.includes(name)),
     );
 }
+
+/** The areas of the tools the plan has: what a role lets do is said only of those. */
+export const openAreas = (groups: PermissionGroup[]): PermissionArea[] =>
+    areasFor(groups)
+        .filter((item) => item.reason === null)
+        .map((item) => item.area);

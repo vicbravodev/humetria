@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { roleSummary } from '@/lib/roles';
+import { roleSummary, rolesTab } from '@/lib/roles';
 
 describe('roleSummary', () => {
     it('says in a few words what each role does', () => {
@@ -35,5 +35,21 @@ describe('roleSummary', () => {
         expect(roleSummary('custom_3f2a', true)).toBe(
             'entra con los permisos que se le asignaron',
         );
+    });
+});
+
+describe('rolesTab', () => {
+    it('opens the tab the address names', () => {
+        expect(rolesTab('/admin/acme/roles?tab=plantillas', 3)).toBe(
+            'plantillas',
+        );
+        expect(rolesTab('/admin/acme/roles?tab=propios', 0)).toBe('propios');
+    });
+
+    it("opens the company's roles once it has one, and the templates before", () => {
+        expect(rolesTab('/admin/acme/roles', 1)).toBe('propios');
+        expect(rolesTab('/admin/acme/roles?q=aud', 0)).toBe('propios');
+        expect(rolesTab('/admin/acme/roles', 0)).toBe('plantillas');
+        expect(rolesTab('/admin/acme/roles?tab=otra', 0)).toBe('plantillas');
     });
 });

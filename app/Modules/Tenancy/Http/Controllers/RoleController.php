@@ -50,7 +50,7 @@ final class RoleController extends Controller
         $search = $request->string('q')->trim()->limit(100, '')->toString();
         $people = $this->peopleByRole($tenant);
         $invitations = $this->openInvitationsByRole($tenant);
-        $templates = Role::query()->withCount('permissions')->whereNull('tenant_id')
+        $templates = Role::query()->with('permissions')->whereNull('tenant_id')
             ->whereIn('name', array_map(fn (TenantRole $role): string => $role->value, $tenant->type->assignableRoles()))
             ->get()->keyBy('name');
 
@@ -60,10 +60,10 @@ final class RoleController extends Controller
                 'key' => $template->value,
                 'label' => $template->label(),
                 'people' => self::countOf($people, $templates->get($template->value)),
-                'permissions' => $templates->get($template->value)?->getAttribute('permissions_count'),
+                'permissions' => self::names($templates->get($template->value)),
             ], $tenant->type->assignableRoles()),
             'roles' => $this->roles->ownRoles($tenant)
-                ->withCount('permissions')
+                ->with('permissions')
                 ->when($search !== '', fn (Builder $query) => $query->where(new Expression('unaccent(label)'), 'ilike', '%'.addcslashes(Str::ascii($search), '\\%_').'%'))
                 ->orderBy('label')
                 ->orderBy('id')
@@ -75,9 +75,11 @@ final class RoleController extends Controller
                     'based_on' => is_string($basedOn = $role->getAttribute('based_on')) ? TenantRole::tryFrom($basedOn)?->label() : null,
                     'people' => self::countOf($people, $role),
                     'invitations' => self::countOf($invitations, $role),
-                    'permissions' => $role->getAttribute('permissions_count'),
+                    'permissions' => self::names($role),
                 ]),
             'search' => $search,
+            // Which tools the plan has: what each role lets do is said only of those.
+            'groups' => PermissionGroups::for($tenant, []),
             'limit' => ['used' => $this->roles->ownRoles($tenant)->count(), 'max' => config()->integer('tenancy.max_custom_roles')],
             'can_manage' => ! $this->impersonation->isActive(),
         ]);
@@ -154,10 +156,7 @@ final class RoleController extends Controller
     private function templateOptions(Tenant $tenant): array
     {
         return array_map(function (TenantRole $template): array {
-            $permissions = array_keys(self::held($this->roles->template($template)));
-            sort($permissions);
-
-            return ['key' => $template->value, 'label' => $template->label(), 'permissions' => $permissions];
+            return ['key' => $template->value, 'label' => $template->label(), 'permissions' => self::names($this->roles->template($template))];
         }, $tenant->type->assignableRoles());
     }
 
@@ -181,6 +180,19 @@ final class RoleController extends Controller
         }
 
         return $this->done($tenant, 'Rol borrado.');
+    }
+
+    /**
+     * What the role switches on, by name and in order.
+     *
+     * @return list<string>
+     */
+    private static function names(?Role $role): array
+    {
+        $names = $role === null ? [] : array_keys(self::held($role));
+        sort($names);
+
+        return $names;
     }
 
     /**

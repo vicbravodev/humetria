@@ -29,3 +29,18 @@ export function roleSummary(role: CompanyRoleKey, union = false): string {
 
     return (union ? UNION_SUMMARIES[role] : undefined) ?? SUMMARIES[role];
 }
+
+/**
+ * Which tab of «Roles y permisos» is open: the one the address names (`?tab=`), else the company's roles once it has one (or
+ * is searching them), and the templates of Humetría before that, to start from one.
+ */
+export function rolesTab(url: string, own: number): 'propios' | 'plantillas' {
+    const query = new URLSearchParams(url.split('?')[1] ?? '');
+    const named = query.get('tab');
+
+    if (named === 'propios' || named === 'plantillas') {
+        return named;
+    }
+
+    return own > 0 || query.has('q') ? 'propios' : 'plantillas';
+}

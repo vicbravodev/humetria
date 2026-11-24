@@ -6,7 +6,8 @@ export type RoleTemplateRow = {
     label: string;
     /** People of this company who hold it. */
     people: number;
-    permissions: number;
+    /** What it switches on, by name. */
+    permissions: string[];
 };
 
 /** A role of the company's own, as «Roles y permisos» lists it. */
@@ -18,7 +19,8 @@ export type CompanyRoleRow = {
     people: number;
     /** Open invitations that name it, expired ones included. */
     invitations: number;
-    permissions: number;
+    /** What it switches on, by name. */
+    permissions: string[];
 };
 
 /** One switch of the roles screen: a permission of the catalog, on where it is held, off with its reason where the plan lacks its tool. */

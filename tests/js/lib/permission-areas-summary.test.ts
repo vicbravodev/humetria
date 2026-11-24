@@ -165,3 +165,18 @@ describe('what a person has besides their role', () => {
         expect(beyondRole(AREAS, [])).toEqual([]);
     });
 });
+
+describe('the summary without a subject', () => {
+    it('starts with the verb, for a column of a list', () => {
+        expect(
+            summarize({
+                areas: AREAS,
+                held: ['view-vacations', 'handle-complaints'],
+                subject: '',
+            }),
+        ).toBe('Ve Vacaciones. También atiende quejas asignadas.');
+        expect(summarize({ areas: AREAS, held: [], subject: '' })).toBe(
+            'No tiene acceso a ninguna área.',
+        );
+    });
+});

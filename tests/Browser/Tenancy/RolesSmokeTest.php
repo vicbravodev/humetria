@@ -14,16 +14,27 @@ $looks = [
     'dark mobile' => [true, true],
 ];
 
-it('lists the templates, locked, and says how to make the first role of the company', function (bool $dark, bool $mobile): void {
+it('opens on the templates, locked, each with what it lets do, before the company has a role of its own', function (bool $dark, bool $mobile): void {
     signInToPanel();
 
     visitPage('tenancy/roles', '/admin/acme/roles', $dark, $mobile)
         ->assertSee('Roles y permisos')
+        ->assertSee('Roles de tu empresa')
         ->assertSee('Plantillas de Humetría')
         ->assertSee('Ayuda con las rutas')
+        ->assertSee('Qué puede hacer')
+        ->assertSee('Ve Panel. También atiende quejas asignadas.')
         ->assertSee('Copiar y ajustar')
-        ->assertSee('Aún no hay roles propios')
+        ->assertSee('Tienes 0 de 20 roles propios.')
         ->assertSee('Nuevo rol');
+})->with($looks);
+
+it('says in the company\'s tab how to make its first role', function (bool $dark, bool $mobile): void {
+    signInToPanel();
+
+    visitPage('tenancy/roles', '/admin/acme/roles?tab=propios', $dark, $mobile)
+        ->assertSee('Aún no hay roles propios')
+        ->assertDontSee('Copiar y ajustar');
 })->with($looks);
 
 it('lists the roles of the company with their people and pending invitations', function (bool $dark, bool $mobile): void {
@@ -34,7 +45,7 @@ it('lists the roles of the company with their people and pending invitations', f
     visitPage('tenancy/roles', '/admin/acme/roles', $dark, $mobile)
         ->assertSee('Auditoría')
         ->assertSee('Basado en Solo consulta')
-        ->assertSee('Propio')
+        ->assertSee('Ve Panel y Vacaciones.')
         ->assertSee('Editar')
         ->assertSee('1 de 20 roles propios');
 })->with($looks);

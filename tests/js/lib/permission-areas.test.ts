@@ -4,6 +4,7 @@ import {
     AREAS,
     areasFor,
     handOut,
+    openAreas,
     floorOf,
     levelOf,
     withLevel,
@@ -154,5 +155,17 @@ describe('starting from a template', () => {
                 groups,
             ),
         ).toEqual(['view-vacations', 'view-dashboard']);
+    });
+});
+
+describe('the open areas', () => {
+    it('are those the plan has, without the locked ones', () => {
+        expect(openAreas(groups).map((item) => item.key)).toEqual([
+            'dashboard',
+            'assistant',
+            'nom035',
+            'complaints',
+            'vacations',
+        ]);
     });
 });
