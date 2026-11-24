@@ -61,6 +61,8 @@ final readonly class StartRoute
         $permissions = $this->roles->effectivePermissions($user, $tenant);
 
         foreach (self::MENU as $route) {
+            // A union has no compliance panel: its panel is Compensación.
+            $route = $tenant->isUnion() && $route === 'tenant.dashboard' ? 'tenant.compensation.index' : $route;
             $needs = $route === 'tenant.dashboard' ? self::PANEL_NEEDS : [RoutePermissions::for($route)];
 
             if (array_all($needs, fn (?string $permission): bool => $permission !== null && isset($permissions[$permission]))

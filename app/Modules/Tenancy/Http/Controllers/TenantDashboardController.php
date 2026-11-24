@@ -18,14 +18,14 @@ final class TenantDashboardController extends Controller
 {
     public function __invoke(Request $request, Tenant $tenant, DashboardPage $page, CompanyModules $modules, StartRoute $startRoute): Response|RedirectResponse
     {
-        // A union has no compliance panel; its start is Compensación.
-        if ($tenant->isUnion()) {
-            return to_route('tenant.compensation.index', $tenant);
-        }
-
         $user = $request->user();
         // The route sits behind the auth middleware: the check only narrows the type.
         abort_if($user === null, 403);
+
+        // A union has no compliance panel: its start is Compensación for whoever sees it, else where StartRoute says.
+        if ($tenant->isUnion()) {
+            return to_route($startRoute->for($user, $tenant), $tenant);
+        }
 
         // Whoever does not land on the panel (StartRoute) is sent where they do, never shown a 403: the same rule (both
         // permissions), so it never loops. The route is exempt from RequireRoutePermission for this.
