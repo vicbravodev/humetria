@@ -42,7 +42,31 @@ it('lists the roles of the company with their people and pending invitations', f
 it('opens the editor of a new role', function (bool $dark, bool $mobile): void {
     signInToPanel();
 
-    visitPage('tenancy/role-editor', '/admin/acme/roles/create', $dark, $mobile)->assertSee('Rol');
+    visitPage('tenancy/role-editor', '/admin/acme/roles/create', $dark, $mobile)
+        ->assertSee('Nuevo rol')
+        ->assertSee('Empezar desde')
+        ->assertSee('Qué puede hacer')
+        ->assertSee('Ver vacaciones')
+        ->assertSee('Sensible')
+        ->assertSee('Crear rol');
+})->with($looks);
+
+it('opens the editor of a role someone holds, saying so', function (bool $dark, bool $mobile): void {
+    $owner = User::factory()->create();
+    signInToPanel($owner);
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $role = app(CreateCompanyRole::class)->handle($tenant, 'Auditoría', ['view-dashboard', 'view-vacations'], TenantRole::Viewer, $owner);
+    $person = User::factory()->create();
+    App\Modules\Tenancy\Models\TenantMembership::factory()->for($tenant)->for($person)->viewer()->create();
+    resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->assign($person, $tenant, $role);
+
+    visitPage('tenancy/role-editor', "/admin/acme/roles/{$role->id}/edit", $dark, $mobile)
+        ->assertSee('Auditoría')
+        ->assertSee('Basado en Solo consulta.')
+        ->assertSee('Una persona tiene este rol.')
+        ->assertSee('1 de 2')
+        ->assertSee('Guardar cambios')
+        ->assertSee('Borrar rol');
 })->with($looks);
 
 it('opens the permissions a person has besides their role', function (bool $dark, bool $mobile): void {

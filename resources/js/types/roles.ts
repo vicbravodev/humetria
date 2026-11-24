@@ -39,3 +39,21 @@ export type PermissionGroup = {
     label: string;
     permissions: PermissionToggle[];
 };
+
+/** What the editor of a role gets: a new one (`role` null, maybe copied `from` a template) or one of the company's own. */
+export type RoleEditorProps = {
+    role: {
+        id: number;
+        label: string;
+        based_on: string | null;
+        people: number;
+        invitations: number;
+    } | null;
+    from: string | null;
+    templates: RoleTemplateOption[];
+    groups: PermissionGroup[];
+    can_manage: boolean;
+};
+
+/** A template a new role can start from. */
+export type RoleTemplateOption = { key: string; label: string };

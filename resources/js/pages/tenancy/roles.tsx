@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import Notice from '@/components/humetria/notice';
 import PageHeader from '@/components/humetria/page-header';
@@ -28,6 +28,8 @@ export default function Roles({
     const { tenant } = usePage().props;
     const tenantSlug = useTenantSlug();
     const full = limit.used >= limit.max;
+    // Its place in the sidebar: the editor's trail must not stay after saving or deleting there (those visits keep the state).
+    setLayoutProps({ breadcrumbs: [] });
 
     return (
         <>
