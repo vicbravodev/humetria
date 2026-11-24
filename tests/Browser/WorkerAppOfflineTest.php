@@ -243,6 +243,18 @@ it('sends one mark when the button is tapped twice before the screen changes', f
     expect(AttendanceMark::query()->count())->toBe(1);
 });
 
+it('makes one mark without a connection when the button is tapped twice before the screen changes', function (): void {
+    $page = phoneWithTickets();
+    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))->waitForText('Salir a comer');
+    withoutNetwork($page);
+
+    // With a code read there is no sheet: the first tap signs at once, and the second finds it under way.
+    $page->script('() => { const button = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Salir a comer"); button.click(); button.click(); }');
+
+    $page->waitForText('Guardada sin conexión')->assertSee('1 marca sin enviar');
+    $page->assertScript(eventuallyAsync('async () => ('.trim(keptInPhone()).')().then((names) => names.includes("mark/1") && !names.includes("mark/2"))'), true);
+});
+
 it('says how ready the phone is: few tickets, none, and ready', function (): void {
     $page = phoneWithTickets();
 

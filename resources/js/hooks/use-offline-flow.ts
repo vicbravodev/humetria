@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useLocationPermission } from '@/hooks/use-location-permission';
 import { useOfflineMark } from '@/hooks/use-offline-mark';
 import { useOfflineQueue } from '@/hooks/use-offline-queue';
@@ -119,19 +119,37 @@ export function useOfflineFlow({
         remote: false,
     });
 
-    const run = async (attempt: Attempt, useDeviceKey: boolean) => {
-        setLast(attempt);
-        const prepared = await marking.mark({
-            ...attempt,
-            position: await whereAmI(),
-            useDeviceKey,
-        });
+    // A second tap while a mark is under way (reading the position, signing) does nothing: it would read the same ticket and
+    // number again and ask for a second signature.
+    const running = useRef(false);
 
-        setAsking(null);
-        setView(viewOf(prepared));
-        setSaved(
-            prepared.kind === 'saved' ? clockOf(attempt.declaredAt) : null,
-        );
+    const run = async (attempt: Attempt, useDeviceKey: boolean) => {
+        if (running.current) {
+            return;
+        }
+
+        running.current = true;
+        setLast(attempt);
+
+        try {
+            const prepared = await marking.mark({
+                ...attempt,
+                position: await whereAmI(),
+                useDeviceKey,
+            });
+
+            if (prepared !== null) {
+                setAsking(null);
+                setView(viewOf(prepared));
+                setSaved(
+                    prepared.kind === 'saved'
+                        ? clockOf(attempt.declaredAt)
+                        : null,
+                );
+            }
+        } finally {
+            running.current = false;
+        }
     };
 
     return {
