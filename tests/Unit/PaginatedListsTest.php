@@ -19,6 +19,7 @@ const ARRAY_PROPS = [
     'tenancy/members:roles' => 'catálogo fijo: los roles que se pueden dar',
     'tenancy/invite-member:roles' => 'catálogo fijo: los roles que se pueden dar',
     'sso/settings:domains' => 'resumen corto: los dominios de correo de la empresa, cinco a lo más (el formulario los topa)',
+    'dashboard:norms' => 'catálogo fijo: las normas que la persona puede ver (NOM-035, NOM-037, Ley Silla), tres a lo más',
     'dashboard:urgencies' => 'resumen corto: lo que no puede esperar, cinco a lo más',
     'dashboard:week' => 'resumen corto: lo que vence en los próximos 7 días, cinco a lo más',
     'results/screenings:destinations' => 'catálogo fijo: los cinco destinos de una canalización, con su guion y su aviso',
