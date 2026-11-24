@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Http\Requests;
 
+use App\Http\Impersonation;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Container\Attributes\RouteParameter;
 use Illuminate\Foundation\Http\FormRequest;
@@ -15,8 +16,11 @@ use Illuminate\Validation\Rules\In;
  */
 final class ChangeMemberRoleRequest extends FormRequest
 {
+    /** Whoever works as the owner changes a person only to a template: a role of the company's own is the owner's alone (404). */
     public function authorize(): bool
     {
+        abort_if(resolve(Impersonation::class)->isActive() && str_starts_with($this->role(), 'custom_'), 404);
+
         return Gate::allows('manage-members');
     }
 

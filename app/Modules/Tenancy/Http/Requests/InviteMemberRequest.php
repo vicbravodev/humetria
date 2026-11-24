@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Http\Requests;
 
+use App\Http\Impersonation;
 use App\Modules\Tenancy\Data\MemberInvitationData;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Container\Attributes\RouteParameter;
@@ -19,8 +20,14 @@ use Illuminate\Validation\Rules\In;
  */
 final class InviteMemberRequest extends FormRequest
 {
+    /**
+     * Whoever works as the owner (staff impersonating) invites as always, but never hands out a role of the company's own
+     * nor permissions besides the role: the same 404 as the roles screen gives them.
+     */
     public function authorize(): bool
     {
+        abort_if(resolve(Impersonation::class)->isActive() && (str_starts_with($this->string('role')->toString(), 'custom_') || $this->array('permissions') !== []), 404);
+
         return Gate::allows('manage-members');
     }
 

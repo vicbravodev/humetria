@@ -460,3 +460,23 @@ it('names the confirmation of sensitive permissions in Spanish when it is not a 
         ->post(route('tenant.roles.store', $this->tenant), ['label' => 'Nómina', 'permissions' => ['view-dashboard'], 'acknowledge_sensitive' => 'quizá'])
         ->assertSessionHasErrors(['acknowledge_sensitive' => 'El campo confirmación debe ser verdadero o falso.']);
 });
+
+it('lets the staff working as the owner invite and change roles as before, but never with a role of the company\'s own or extra permissions', function (): void {
+    Illuminate\Support\Facades\Notification::fake();
+    $own = companyRole($this->tenant, $this->owner);
+    $viewer = TenantMembership::query()->where('user_id', memberOf($this->tenant, TenantRole::Viewer)->id)->sole();
+    impersonatingOwnerOf($this->tenant);
+    $invite = fn (array $payload) => $this->post(route('tenant.members.invitations.store', $this->tenant), ['name' => 'Ana', 'email' => 'ana@acme.mx', 'role' => 'viewer', ...$payload]);
+
+    $invite(['role' => $own->name])->assertNotFound();
+    $invite(['permissions' => ['manage-vacations']])->assertNotFound();
+    $this->put(route('tenant.members.update', [$this->tenant, $viewer->id]), ['role' => $own->name])->assertNotFound();
+    expect(TenantInvitation::query()->where('tenant_id', $this->tenant->id)->exists())->toBeFalse()
+        ->and(resolve(CompanyRoles::class)->roleOf($viewer->user()->sole(), $this->tenant)?->name)->toBe('viewer');
+
+    // A template and nothing besides it, as always.
+    $invite([])->assertSessionHasNoErrors()->assertRedirect(route('tenant.members.index', $this->tenant));
+    $this->put(route('tenant.members.update', [$this->tenant, $viewer->id]), ['role' => 'hr'])->assertSessionHasNoErrors()->assertRedirect(route('tenant.members.index', $this->tenant));
+    expect(TenantInvitation::query()->where('tenant_id', $this->tenant->id)->sole()->role?->name)->toBe('viewer')
+        ->and(resolve(CompanyRoles::class)->roleOf($viewer->user()->sole(), $this->tenant)?->name)->toBe('hr');
+});
