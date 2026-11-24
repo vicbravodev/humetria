@@ -1,4 +1,4 @@
-import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import CountTabs from '@/components/humetria/count-tabs';
 import Notice from '@/components/humetria/notice';
@@ -42,8 +42,6 @@ export default function Roles({
     const full = limit.used >= limit.max;
     const tab = rolesTab(url, limit.used);
     const areas = openAreas(groups);
-    // Its place in the sidebar: the editor's trail must not stay after saving or deleting there (those visits keep the state).
-    setLayoutProps({ breadcrumbs: [] });
 
     return (
         <>
