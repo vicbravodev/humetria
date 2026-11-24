@@ -16,7 +16,7 @@ return new class extends Migration
 {
     private const array PERMISSIONS = [
         'view-dashboard' => ['owner', 'hr', 'viewer', 'committee', 'complaints'],
-        'view-work-centers' => ['owner', 'hr', 'viewer', 'committee'],
+        'view-work-centers' => ['owner', 'hr', 'viewer'],
         'view-nom035-route' => ['owner', 'hr', 'viewer'],
     ];
 
