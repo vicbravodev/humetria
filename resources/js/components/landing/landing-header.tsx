@@ -92,7 +92,7 @@ export default function LandingHeader({
                         <a
                             data-track="cta_click"
                             data-track-target="header_demo"
-                            href="#agenda-una-demo"
+                            href={`${sectionBase}#agenda-una-demo`}
                             data-test="header-demo"
                         >
                             {/* On a phone the short label leaves room for the logo beside the sign in and the menu. */}

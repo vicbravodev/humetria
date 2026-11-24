@@ -431,6 +431,21 @@ it('opens the tools on a phone from the menu button of the header', function ():
         ->assertMissing('#tools-menu');
 });
 
+it('puts the blog and the roadmap in the header as plain links, beside the tools', function (): void {
+    visitPage('landing', '/')
+        ->assertAttribute('[data-test="header-blog"]', 'href', '/blog')
+        ->assertAttribute('[data-test="header-roadmap"]', 'href', '/roadmap')
+        ->assertScript("() => document.querySelector('[data-test=\"header-blog\"]')?.tagName === 'A' && document.querySelector('[data-test=\"header-roadmap\"]')?.tagName === 'A'");
+});
+
+it('reaches the blog and the roadmap from the phone menu, with room to tap them', function (): void {
+    visitPage('landing', '/', mobile: true)
+        ->click('@tools-menu-mobile')
+        ->assertAttribute('#tools-menu a[data-test="menu-blog"]', 'href', '/blog')
+        ->assertAttribute('#tools-menu a[data-test="menu-roadmap"]', 'href', '/roadmap')
+        ->assertScript("() => document.querySelector('#tools-menu [data-test=\"menu-blog\"]').getBoundingClientRect().height >= 44");
+});
+
 it('lists the nine tools in the footer, each to its page', function (): void {
     visitPage('landing', '/')
         ->assertScript('() => document.querySelectorAll("footer a[href=\'/nom-035\'], footer a[href=\'/registro-de-jornada\'], footer a[href=\'/clima-laboral\']").length', 3);

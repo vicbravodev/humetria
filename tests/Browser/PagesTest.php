@@ -38,6 +38,14 @@ it('renders the public roadmap', function (bool $dark, bool $mobile): void {
         ->assertSee('Explorando');
 })->with('looks');
 
+it('wears the header of the landing on the roadmap, with the way back to its sections and the demo', function (): void {
+    visitPage('roadmap', '/roadmap')
+        ->assertAttribute('[data-test="header-how"]', 'href', '/#como-funciona')
+        ->assertAttribute('[data-test="header-blog"]', 'href', '/blog')
+        ->assertAttribute('[data-test="header-roadmap"]', 'aria-current', 'page')
+        ->assertAttribute('[data-test="header-demo"]', 'href', '/#agenda-una-demo');
+});
+
 it('filters the public roadmap by area and brings everything back', function (bool $dark, bool $mobile): void {
     visitPage('roadmap', '/roadmap', $dark, $mobile, function ($page): void {
         $page->assertSee('Jornada de 40 horas')

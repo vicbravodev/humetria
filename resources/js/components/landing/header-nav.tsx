@@ -1,46 +1,29 @@
+import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import GlideChips from '@/components/humetria/glide-chips';
 import ToolsMenu from '@/components/landing/tools-menu';
 import { useActiveSection } from '@/hooks/use-active-section';
+import publicNav from '@/lib/public-nav.json';
 import { cn } from '@/lib/utils';
 
-// Each link jumps to its heading (`id`) and is marked while its whole section (`section`) is being read.
-const sections = [
-    {
-        id: 'como-funciona',
-        section: 'seccion-como-funciona',
-        label: 'Cómo funciona',
-        test: 'header-how',
-    },
-    {
-        id: 'herramientas',
-        section: 'herramientas',
-        label: 'Herramientas',
-        test: 'header-tools',
-    },
-    {
-        id: 'confidencialidad',
-        section: 'seccion-confidencialidad',
-        label: 'Confidencialidad',
-        test: 'header-privacy',
-    },
-    { id: 'humi', section: 'seccion-humi', label: 'Humi', test: 'header-humi' },
-    {
-        id: 'precios',
-        section: 'seccion-precios',
-        label: 'Precios',
-        test: 'header-pricing',
-    },
-] as const;
+// The links come from one file that the Blade header of the blog reads too. A section jumps to its heading (`id`) and is
+// marked while its whole section (`section`) is being read; a page (Blog, Roadmap) is a plain link and is marked on its own page.
+const links = publicNav;
+const sections = links.filter((link) => link.kind === 'section');
 
 // The hero comes first so nothing is marked until the page reaches a section.
-const watched = ['inicio', ...sections.map((section) => section.section)];
+const watched = [
+    'inicio',
+    ...sections.flatMap((section) =>
+        section.section === undefined ? [] : [section.section],
+    ),
+];
 
 const ITEM =
     'relative flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-1 before:content-[""]';
 
 /**
- * The sections of the landing in one pill: a chip slides under the one being read. «Herramientas» opens the tools menu.
+ * The sections of the landing, then Blog and Roadmap, in one pill: a chip slides under the one being read. «Herramientas» opens the tools menu.
  * Screens of 1,024 px and up only: below that the five sections, the theme, the sign in and the demo do not fit side by side, and the tools menu button takes the nav's place. `sectionBase` is the page the sections live on, for a page that is not the landing.
  */
 export default function HeaderNav({
@@ -49,6 +32,7 @@ export default function HeaderNav({
     sectionBase?: string;
 }) {
     const active = useActiveSection(watched);
+    const { url } = usePage();
     const [hovered, setHovered] = useState<string | null>(null);
 
     return (
@@ -57,8 +41,11 @@ export default function HeaderNav({
                 onMouseLeave={() => setHovered(null)}
                 className="flex items-center rounded-full border bg-muted/70 p-1 backdrop-blur-md"
             >
-                {sections.map((section) => {
-                    const current = active === section.section;
+                {links.map((section) => {
+                    const current =
+                        section.kind === 'page'
+                            ? url.split('?')[0] === section.path
+                            : active === section.section;
                     const tone = current
                         ? 'text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground';
@@ -85,11 +72,21 @@ export default function HeaderNav({
                                 </div>
                             ) : (
                                 <a
-                                    href={`${sectionBase}#${section.id}`}
+                                    href={
+                                        section.kind === 'page'
+                                            ? section.path
+                                            : `${sectionBase}#${section.id}`
+                                    }
                                     data-test={section.test}
                                     data-track="nav_click"
                                     data-track-target={section.id}
-                                    aria-current={current ? 'true' : undefined}
+                                    aria-current={
+                                        current
+                                            ? section.kind === 'page'
+                                                ? 'page'
+                                                : 'true'
+                                            : undefined
+                                    }
                                     {...pointer}
                                     className={cn(ITEM, tone)}
                                 >
