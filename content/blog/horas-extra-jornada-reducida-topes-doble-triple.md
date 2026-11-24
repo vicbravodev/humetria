@@ -1,10 +1,11 @@
 ---
 title: 'Horas extra con la jornada reducida: topes y pago'
 description: 'Cuántas horas extra se permiten por semana en 2027, cuándo se pagan dobles y cuándo triples, con ejemplos en horas tomados del texto de la LFT reformada.'
+tool: attendance
 published_at: 2026-11-20
 updated_at: 2026-11-20
-reviewed_by: null
-reviewed_at: null
+reviewed_by: 'Equipo Humetría'
+reviewed_at: 2026-11-23
 sources:
     - https://www.diputados.gob.mx/LeyesBiblio/ref/lft/LFT_ref52_01may26.pdf
     - https://sidof.segob.gob.mx/notas/docFuente/5786537
@@ -39,6 +40,8 @@ extraordinaria se alcanzará de manera gradual, a partir del 1 de enero de cada 
 Fíjate en que 2027 conserva el tope de 9 horas aunque la jornada ordinaria baje a 46. El cambio entra el 1 de enero, no en
 el aniversario de cada contrato.
 
+[diagrama: topes-horas-extra]
+
 ## Lo que dice el artículo 68
 
 El artículo 68 regula lo que pasa cuando se rebasa el artículo 66:
@@ -70,6 +73,8 @@ Una persona con jornada diurna trabaja horas extra cuatro días de la semana: 3,
 - **Límite del triple:** 2 horas están por debajo de las cuatro horas semanales que permite el artículo 68.
 
 Si esa misma semana fuera de 2030, las 11 horas cabrían dentro del tope de 12 y todas se pagarían dobles.
+
+[diagrama: horas-extra-semana]
 
 ## Ejemplo: cuando las cuentas ya no cierran
 

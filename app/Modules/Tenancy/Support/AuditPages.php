@@ -55,6 +55,8 @@ final class AuditPages
         'employee' => 'Personas',
         'assistant' => 'Humi',
         'sso' => 'Inicio de sesión único',
+        'tenancy' => 'Canales de comunicación',
+        'messaging' => 'WhatsApp',
     ];
 
     /**
@@ -64,6 +66,11 @@ final class AuditPages
      */
     public const array VALUES = [
         'not_started' => 'Sin iniciar',
+        'day' => 'Diurna',
+        'night' => 'Nocturna',
+        'mixed' => 'Mixta',
+        'onsite' => 'Presencial',
+        'remote' => 'Remoto',
         'trial' => 'En prueba',
         'active' => 'Activa',
         'trial_ended' => 'Prueba terminada',
@@ -102,6 +109,7 @@ final class AuditPages
         'pulse' => 'Pulso',
         'climate' => 'Clima',
         'sso' => 'Inicio de sesión único',
+        'whatsapp' => 'WhatsApp',
     ];
 
     /**
@@ -110,6 +118,9 @@ final class AuditPages
      * @var array<string, string>
      */
     public const array KEYS = [
+        'opt_outs' => 'Bajas retiradas',
+        'channel' => 'Canal',
+        'wording_version' => 'Versión del aviso aceptado',
         'user_id' => 'Persona',
         'reason' => 'Motivo',
         'previous' => 'Estado anterior',
@@ -297,6 +308,13 @@ final class AuditPages
         'policy_id' => 'Política',
         'staff_group' => 'Grupo de personal',
         'job_grade_id' => 'Categoría y nivel',
+        'valid_from' => 'Empieza el',
+        'before' => 'Antes',
+        'after' => 'Después',
+        'shift_type' => 'Tipo de jornada',
+        'work_mode' => 'Modalidad',
+        'starts' => 'Hora de entrada',
+        'job_title' => 'Puesto',
     ];
 
     /**

@@ -27,7 +27,7 @@ export default function AttendanceSchedules(props: AttendanceSchedulesProps) {
                 <PageHeader
                     caption={props.center?.name ?? 'Todos tus centros'}
                     title="Horarios"
-                    description={`El horario que cada persona acordó: lo que trabaje de más cuenta como tiempo extra. En ${props.weeklyMaximum.year} la jornada ordinaria es de hasta ${duration(props.weeklyMaximum.minutes)} a la semana.`}
+                    description={`El horario que cada persona acordó: lo que trabaje de más cuenta como tiempo extra. Cada día se cuenta con el horario vigente ese día. En ${props.weeklyMaximum.year} la jornada ordinaria es de hasta ${duration(props.weeklyMaximum.minutes)} a la semana.`}
                 />
                 {!props.canManage && <ReadOnlyNotice />}
                 <SchedulePeople {...props} />

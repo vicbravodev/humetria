@@ -1026,7 +1026,7 @@ html:has([data-smooth-scroll]) {
 
 /* The body of a blog article (resources/views/blog): rendered Markdown, so its elements carry no classes of their own. */
 .blog-prose {
-    font-size: 1.0625rem;
+    font-size: 1.125rem;
     line-height: 1.75;
     color: var(--foreground);
     overflow-wrap: anywhere;
@@ -1037,18 +1037,25 @@ html:has([data-smooth-scroll]) {
 }
 
 .blog-prose h2 {
-    margin-top: 2.5rem;
-    font-size: 1.625rem;
+    scroll-margin-top: 6rem;
+    margin-top: 3rem;
+    font-size: 1.75rem;
     line-height: 1.2;
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     text-wrap: balance;
 }
 
 .blog-prose h3 {
+    scroll-margin-top: 6rem;
     margin-top: 2rem;
-    font-size: 1.25rem;
+    font-size: 1.3125rem;
     line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+}
+
+.blog-prose strong {
     font-weight: 600;
 }
 
@@ -1075,30 +1082,52 @@ html:has([data-smooth-scroll]) {
     margin-top: 0.5rem;
 }
 
-.blog-prose blockquote {
-    border-left: 3px solid var(--primary);
-    padding-left: 1rem;
-    color: var(--muted-foreground);
+.blog-prose li::marker {
+    color: var(--family, var(--primary));
 }
 
+/* A quote (the text of the law) in a tinted box with the family's color: a full box, never a stripe on one side. */
+.blog-prose blockquote {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--family-soft, var(--accent));
+    padding: 1.25rem 1.5rem;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: var(--foreground);
+}
+
+.blog-prose blockquote > * + * {
+    margin-top: 0.75rem;
+}
+
+/* A table scrolls on its own on a phone; lines between rows only, the header in the muted tone, the first column in medium. */
 .blog-prose table {
     display: block;
     width: 100%;
     overflow-x: auto;
     border-collapse: collapse;
     font-size: 0.9375rem;
+    line-height: 1.5;
 }
 
 .blog-prose th,
 .blog-prose td {
-    border: 1px solid var(--border);
-    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
     text-align: left;
+    vertical-align: top;
 }
 
 .blog-prose th {
     background: var(--muted);
+    border-top: 1px solid var(--border);
     font-weight: 600;
+    white-space: nowrap;
+}
+
+.blog-prose td:first-child {
+    font-weight: 500;
 }
 
 .blog-prose code {

@@ -154,7 +154,8 @@ it('saves a hostile comment as the text it is, and drops one of only spaces', fu
 
     submitEngagement(['comments' => ['open.best' => $hostile, 'open.improve' => '   ', 'manager.keep' => str_repeat('ñ', 1000)]])->assertSessionHasNoErrors();
 
-    expect(Comment::query()->pluck('body', 'item_key')->all())->toBe(['open.best' => trim($hostile), 'manager.keep' => str_repeat('ñ', 1000)]);
+    // Each key with its text; the rows of an unordered query come in no promised order.
+    expect(Comment::query()->pluck('body', 'item_key')->all())->toEqual(['open.best' => trim($hostile), 'manager.keep' => str_repeat('ñ', 1000)]);
 });
 
 it('stores minutes between 1 and 60 and nothing otherwise', function (mixed $sent, ?int $stored): void {

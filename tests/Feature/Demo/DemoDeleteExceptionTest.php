@@ -13,6 +13,7 @@ use Database\Factories\Engagement\CommentFactory;
 use Database\Factories\Engagement\ResponseFactory;
 use Database\Factories\Engagement\SurveyFactory;
 use Database\Factories\Leave\LeaveEntryFactory;
+use Database\Factories\Messaging\DeliveryEventFactory;
 use Database\Factories\Responses\AnonymousResponseFactory;
 use Database\Factories\Responses\TraumaScreeningFactory;
 use Database\Factories\Seating\RiskAssessmentFactory;
@@ -90,6 +91,7 @@ function insertOnlyTables(): array
             return $id;
         }, 'attendance_agreement_acceptances is append-only', 'id = id', true],
         'leave_entries' => ['leave_entries', fn (): string => LeaveEntryFactory::new()->createOne()->id, 'leave_entries is append-only', 'id = id', true],
+        'messaging_delivery_events' => ['messaging_delivery_events', fn (): string => DeliveryEventFactory::new()->createOne()->id, 'messaging_delivery_events is append-only', 'status = status', true],
         'usage_events' => ['usage_events', fn (): string => UsageEventFactory::new()->createOne()->id, 'usage_events is append-only', 'id = id', true],
         'disclosure_documents' => ['disclosure_documents', fn (): string => DocumentFactory::new()->published()->createOne()->id, 'a published version is final', 'id = id', false],
         'disclosure_document_centers' => ['disclosure_document_centers', fn (): string => DocumentCenterFactory::new()->createOne()->id, 'a published version is final', 'id = id', false],

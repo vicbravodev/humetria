@@ -2,8 +2,8 @@ import { Link } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import HeaderNav from '@/components/landing/header-nav';
 import { WRAP } from '@/components/landing/landing-layout';
-import LandingThemeMenu from '@/components/landing/landing-theme-menu';
 import ToolsMenu from '@/components/landing/tools-menu';
+import LandingThemeMenu from '@/components/landing/landing-theme-menu';
 import { Button } from '@/components/ui/button';
 import { useScrolled } from '@/hooks/use-scrolled';
 import { cn } from '@/lib/utils';
@@ -92,7 +92,7 @@ export default function LandingHeader({
                         <a
                             data-track="cta_click"
                             data-track-target="header_demo"
-                            href="#agenda-una-demo"
+                            href={`${sectionBase}#agenda-una-demo`}
                             data-test="header-demo"
                         >
                             {/* On a phone the short label leaves room for the logo beside the sign in and the menu. */}

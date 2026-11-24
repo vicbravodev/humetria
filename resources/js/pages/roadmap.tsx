@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import LandingFooter from '@/components/landing/landing-footer';
+import LandingHeader from '@/components/landing/landing-header';
+import MotionFrame from '@/components/landing/motion-frame';
 import { WRAP } from '@/components/landing/landing-layout';
-import PrivacyNoticeHeader from '@/components/landing/privacy-notice-header';
 import { ROADMAP_LANES } from '@/components/landing/roadmap-content';
 import RoadmapCta from '@/components/landing/roadmap-cta';
 import RoadmapFilters from '@/components/landing/roadmap-filters';
@@ -23,9 +24,9 @@ export default function Roadmap({ seo }: { seo: Seo }) {
     const [area, setArea] = useState<AreaFilter>('all');
 
     return (
-        <>
+        <MotionFrame>
             <SeoHead seo={seo} />
-            <PrivacyNoticeHeader />
+            <LandingHeader sectionBase={home().url} />
             <main>
                 <RoadmapHero />
                 <RoadmapFilters
@@ -41,6 +42,6 @@ export default function Roadmap({ seo }: { seo: Seo }) {
                 <RoadmapCta />
             </main>
             <LandingFooter sectionBase={home().url} />
-        </>
+        </MotionFrame>
     );
 }

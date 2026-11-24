@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Billing\Support;
 
+use App\Modules\Billing\Contracts\UsageMeter;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Models\UsageGrant;
 use Carbon\CarbonImmutable;
@@ -27,7 +28,7 @@ final class UsageQuota
         $catalog = Catalog::current();
 
         // Campaign email is per seat of the plan, with a floor; the other meters are a flat amount of the plan.
-        return $meter === 'email_campaign'
+        return $meter === UsageMeter::EMAIL_CAMPAIGN
             ? max($catalog->quota($subscription->plan, 'email_per_seat') * $subscription->seats, $catalog->quota($subscription->plan, 'email_minimum'))
             : $catalog->quota($subscription->plan, $meter);
     }

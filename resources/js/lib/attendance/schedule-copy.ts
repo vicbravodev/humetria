@@ -1,7 +1,7 @@
 import type { Option } from '@/lib/option-search';
-import type { WorkSchedule } from '@/types';
+import type { AgreedWeek, WorkSchedule } from '@/types';
 
-type Copy = { option: Option; schedule: WorkSchedule };
+type Copy = { option: Option; schedule: AgreedWeek };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -19,7 +19,7 @@ const numbers = (value: unknown, orNull: boolean) =>
     );
 
 /** A schedule as the server sends it, read without trusting it. */
-function scheduleOf(value: unknown): WorkSchedule | null {
+function scheduleOf(value: unknown): AgreedWeek | null {
     if (
         !isRecord(value) ||
         !isShift(value['shiftType']) ||
@@ -90,7 +90,7 @@ export function copiesOf(body: unknown): Copy[] {
  * choosing them fills the form with it.
  */
 export function scheduleCopies(url: string) {
-    const found = new Map<string, WorkSchedule>();
+    const found = new Map<string, AgreedWeek>();
 
     return {
         scheduleOf: (id: string) => found.get(id) ?? null,

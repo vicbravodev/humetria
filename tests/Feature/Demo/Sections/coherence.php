@@ -301,6 +301,8 @@ return [
             DemoRoster::HR.' tenant.members.invitations.create' => '403',
             DemoRoster::HR.' tenant.plan' => '403',
             DemoRoster::HR.' tenant.privacy.edit' => '403',
+            // The channels the company writes through, and the words WhatsApp asks to accept, are the owner's too.
+            DemoRoster::HR.' tenant.channels.edit' => '403',
             // The inspection report of NOM-037 is uploaded, not written: it has no template.
             DemoRoster::OWNER.' tenant.telework.writing.show inspection_report' => '404',
             DemoRoster::HR.' tenant.telework.writing.show inspection_report' => '404',
@@ -396,7 +398,7 @@ return [
 
         // Measured on the demo's 84 people of the plant: a fixed count, nothing read per person or per answer (the same pages
         // with a handful of people: tests/Feature/Campaigns/CampaignPagesTest.php, tests/Feature/Results/ResultsPageTest.php).
-        expect($count(route('tenant.campaigns.show', [$tenant, $evaluation(CampaignStatus::Active)])))->toBe(28)
+        expect($count(route('tenant.campaigns.show', [$tenant, $evaluation(CampaignStatus::Active)])))->toBe(31)
             ->and($count(route('tenant.campaigns.results', [$tenant, $evaluation(CampaignStatus::Closed)])))->toBe(24);
 
         auth()->logout();

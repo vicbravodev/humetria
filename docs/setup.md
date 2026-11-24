@@ -32,7 +32,9 @@ ese host y puerto, así que el `.env` puede apuntar a `pgsql`. Los de navegador 
 
 - Cada checkout prueba contra su propia base: `testing` en el principal y `testing_<directorio>_<hash>` en un worktree, que
   `tests/bootstrap.php` crea sola (un `DB_DATABASE` explícito en el shell gana). No deadlockean entre sí.
-- Un worktree nuevo se prepara con `composer worktree:setup` (`.env`, dependencias y build).
+- Un worktree nuevo se prepara con `composer worktree:setup` (`.env`, dependencias y build). Su `.env` copia el del principal pero
+  neutro para pruebas (`scripts/worktree-env.sh`): `POSTHOG_PROJECT_TOKEN` vacío y `POSTHOG_CONSENT_DEFAULT=denied`; con la
+  llave real fallan pruebas de CSP, consentimiento y atribución que no tienen que ver con el cambio. Un `.env` que ya existe no se toca.
 - `composer worktree:prune` lista las bases de worktrees borrados y `composer worktree:prune -- --drop` las elimina
   (revisa la lista antes: otra sesión podría usarlas).
 - La app de Sail en `http://localhost` sirve el checkout principal, no el worktree.

@@ -7,9 +7,15 @@ import {
 } from '@/components/landing/landing-families';
 import { EASE_OUT } from '@/components/landing/landing-motion';
 import { toolPageUrl } from '@/components/landing/tool-page-links';
+import { PUBLIC_LINKS } from '@/lib/public-nav';
 import { cn } from '@/lib/utils';
 import { home } from '@/routes';
 import { workday2027 } from '@/routes/guides';
+
+// Blog and Roadmap are in the header's pill from 1,024 px up; below it the menu button is all the header has room for.
+const PAGES = PUBLIC_LINKS.flatMap((link) => link.items ?? []).filter(
+    (link) => link.kind === 'page',
+);
 
 type Props = {
     /** Under the header word (`true`) or over the page on a phone. */
@@ -87,6 +93,17 @@ export default function ToolsMenuPanel({ floating, onPick }: Props) {
                 >
                     Ver las nueve herramientas
                 </a>
+                {!floating &&
+                    PAGES.map((page) => (
+                        <a
+                            key={page.id}
+                            href={page.path}
+                            data-test={`menu-${page.id}`}
+                            className="inline-flex min-h-11 items-center rounded-xl px-2.5 font-semibold text-primary"
+                        >
+                            {page.label}
+                        </a>
+                    ))}
                 <a
                     href={workday2027().url}
                     className="inline-flex min-h-11 items-center rounded-xl px-2.5 font-semibold text-primary"

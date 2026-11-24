@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Support;
 
+use App\Modules\Billing\Contracts\PlatformCost;
 use App\Modules\Billing\Contracts\PlatformRevenue;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
 
 /**
@@ -19,14 +21,15 @@ final readonly class PlatformOverview
     /** A company nobody has entered for this many days is quiet. */
     private const int QUIET_DAYS = 30;
 
-    public function __construct(private ListTenants $tenants, private PlatformRevenue $revenue, private DemoLeads $demos) {}
+    public function __construct(private ListTenants $tenants, private PlatformRevenue $revenue, private PlatformCost $cost, private DemoLeads $demos) {}
 
     /**
-     * @return array{companies: array<string, int>, trialsEndingSoon: int, revenueCents: int, demos: array<string, int>, inactive: int}
+     * @return array{companies: array<string, int>, trialsEndingSoon: int, revenueCents: int, demos: array<string, int>, inactive: int, whatsApp: array{messages: int, costCents: int, chargedCents: int, marginCents: int}}
      */
     public function handle(): array
     {
         $summary = $this->tenants->summary('');
+        $whatsApp = $this->cost->whatsAppMonth(CarbonImmutable::now());
 
         return [
             'companies' => $summary['counts'],
@@ -34,6 +37,8 @@ final readonly class PlatformOverview
             'revenueCents' => $this->revenue->monthlyContractedCents(),
             'demos' => $this->demos->countsByStatus(),
             'inactive' => $this->inactive(),
+            // The month so far: what Meta charged for the WhatsApp that went out, what the companies were charged, and the difference.
+            'whatsApp' => ['messages' => $whatsApp->messages, 'costCents' => $whatsApp->costCents, 'chargedCents' => $whatsApp->chargedCents, 'marginCents' => $whatsApp->marginCents()],
         ];
     }
 

@@ -6,6 +6,7 @@ namespace App\Modules\Billing\Actions;
 
 use App\Modules\Billing\Models\UsageCounter;
 use App\Modules\Billing\Models\UsageEvent;
+use App\Modules\Billing\Support\UnitCost;
 use App\Modules\Billing\Support\UsagePeriod;
 use App\Modules\Billing\Support\UsageQuota;
 use Carbon\CarbonImmutable;
@@ -20,15 +21,16 @@ final readonly class RecordUsage
 
     /**
      * @param  bool  $fromHold  the use takes its place from what a bulk send held (never below zero).
+     * @param  UnitCost|null  $cost  what the provider charges for one unit and what the company is charged, stored on the line.
      * @return bool false when the key was counted before.
      */
-    public function handle(string $tenantId, string $meter, int $quantity, string $key, bool $fromHold = false): bool
+    public function handle(string $tenantId, string $meter, int $quantity, string $key, bool $fromHold = false, ?UnitCost $cost = null): bool
     {
         $now = CarbonImmutable::now();
         $period = UsagePeriod::containing($now);
 
         // On the connection itself: a mail goes out inside other writers' transactions (and their lock-order tests watch the manager).
-        return DB::connection()->transaction(function () use ($tenantId, $meter, $quantity, $key, $now, $period, $fromHold): bool {
+        return DB::connection()->transaction(function () use ($tenantId, $meter, $quantity, $key, $now, $period, $fromHold, $cost): bool {
             $new = UsageEvent::query()->insertOrIgnore([
                 'id' => Str::uuid()->toString(),
                 'tenant_id' => $tenantId,
@@ -37,6 +39,9 @@ final readonly class RecordUsage
                 'quantity' => $quantity,
                 'idempotency_key' => $key,
                 'occurred_at' => $now,
+                'unit_cost_micros' => $cost?->costMicros,
+                'unit_price_micros' => $cost?->priceMicros,
+                'cost_currency' => $cost?->currency,
             ]);
 
             if ($new === 0) {

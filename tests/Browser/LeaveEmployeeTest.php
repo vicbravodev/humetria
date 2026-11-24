@@ -72,9 +72,15 @@ it('shows RH the record of a person: periods, ledger, requests and statements', 
 it('shows what a person who left is owed, in days', function (bool $dark, bool $mobile): void {
     visitPage('leave/employee', leaveEmployeePanel(left: true)['url'], $dark, $mobile)
         ->assertSee('Baja')
-        ->assertSee('Días al terminar la relación')
+        ->assertSee('Vacaciones al terminar la relación')
+        ->assertDontSee('Días al terminar la relación')
+        ->assertSee('Solo los días de vacaciones que se le deben. El finiquito completo (salario, aguinaldo, prima vacacional en pesos y, si aplica, la liquidación) lo calcula tu nómina.')
         ->assertSee('Por finiquitar')
         ->assertSee('18.5 en total')
+        ->assertSee('Marcar vacaciones como pagadas')
+        ->click('button:has-text("Marcar vacaciones como pagadas")')
+        ->assertSee('¿Marcar como pagadas las vacaciones de esta persona?')
+        ->assertSee('Sí, marcar como pagadas')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 })->with($looks);
@@ -110,11 +116,11 @@ it('lets RH settle the days of a person who left', function (): void {
     $record = leaveEmployeePanel(left: true);
 
     visitPage('leave/employee', $record['url'])
-        ->press('Finiquitar los días')
-        ->click('[role=dialog] button:has-text("Sí, finiquitar")')
-        ->assertSee('Días finiquitados.')
+        ->press('Marcar vacaciones como pagadas')
+        ->click('[role=dialog] button:has-text("Sí, marcar como pagadas")')
+        ->assertSee('Vacaciones marcadas como pagadas.')
         ->assertSee('Finiquitado el')
-        ->assertDontSee('Finiquitar los días')
+        ->assertDontSee('Marcar vacaciones como pagadas')
         ->assertNoJavaScriptErrors();
 
     expect(LeaveTermination::query()->whereNotNull('settled_at')->count())->toBe(1);
@@ -128,7 +134,7 @@ it('does not offer a viewer to adjust or settle', function (): void {
         ->assertSee('Periodo 2026')
         ->assertDontSee('Ajustar días')
         ->assertDontSee('Registrar ausencia')
-        ->assertDontSee('Finiquitar los días');
+        ->assertDontSee('Marcar vacaciones como pagadas');
 });
 
 it('lets RH record an absence for the person from their own record', function (): void {

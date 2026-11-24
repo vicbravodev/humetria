@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Bus;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** The queries of a survey in progress, whatever the number of people or groups (the session and the panel frame included). */
-const CLIMATE_SHOW_QUERIES = 18;
+const CLIMATE_SHOW_QUERIES = 21;
 
 mutates(SurveyController::class, SurveyPages::class, SnapshotAudience::class);
 
@@ -184,6 +184,21 @@ it('previews the questionnaire by section, as a fixed catalog', function (): voi
         ->and($props['draft']['canLaunch'])->toBeFalse();
 });
 
+it('sends the person back with a toast, and the draft stays, when the mail of the launch does not fit the plan', function (): void {
+    Bus::fake();
+    $plant = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    climatePanelStaff($this->tenant, $plant, 6);
+    $survey = Survey::factory()->create(['tenant_id' => $this->tenant->id]);
+    withMailQuota($this->tenant, 5);
+
+    $this->actingAs($this->hr)->post(route('tenant.climate.launch', [$this->tenant, $survey]), ['closes_on' => '2026-11-20'])
+        ->assertRedirect()
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, fn (array $flash): bool => $flash['toast']['type'] === 'error' && str_contains($flash['toast']['message'], 'faltan 1'));
+
+    expect($survey->fresh()?->status)->toBe(SurveyStatus::Draft);
+    Bus::assertNothingBatched();
+});
+
 it('launches the draft with a last day and invites everyone', function (): void {
     Bus::fake();
     $plant = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
@@ -233,7 +248,7 @@ it('shows the survey in progress as counts: who is invited, how many answered, h
     climatePanelInvited($survey, 3, ['answered' => true]);
     climatePanelInvited($survey, 3);
     climatePanelInvited($survey, 1, ['cancelled' => true]);
-    climatePanelInvited($survey, 1, ['invitation_status' => App\Modules\Engagement\Enums\InvitationStatus::NoEmail]);
+    climatePanelInvited($survey, 1, ['invitation_status' => App\Modules\Engagement\Enums\InvitationStatus::Unreachable]);
 
     $props = $this->actingAs($this->viewer)->get(route('tenant.climate.show', [$this->tenant, $survey]))->assertOk()->inertiaProps();
 

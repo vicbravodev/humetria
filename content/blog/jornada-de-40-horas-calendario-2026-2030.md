@@ -1,10 +1,11 @@
 ---
 title: 'Jornada de 40 horas: el calendario 2026-2030'
 description: 'La jornada máxima baja de 48 a 40 horas semanales entre 2026 y 2030. Calendario año por año, qué cambia en horas extra y qué debe revisar RH desde ya.'
+tool: attendance
 published_at: 2026-11-18
 updated_at: 2026-11-18
-reviewed_by: null
-reviewed_at: null
+reviewed_by: 'Equipo Humetría'
+reviewed_at: 2026-11-23
 sources:
     - https://www.diputados.gob.mx/LeyesBiblio/ref/lft/LFT_ref52_01may26.pdf
     - https://sidof.segob.gob.mx/notas/docFuente/5786537
@@ -35,6 +36,10 @@ número no aplica todavía, el segundo transitorio del decreto dice que se alcan
 La primera columna sale del segundo transitorio del decreto y la segunda del cuarto, que fija cuántas horas extra se
 permiten cada año hasta llegar a las doce horas semanales del artículo 66. Los dos cambios entran el 1 de enero de cada
 año, no en la fecha de aniversario de cada contrato.
+
+[diagrama: jornada-escalera]
+
+[diagrama: topes-horas-extra]
 
 ## ¿Y las 35 horas?
 

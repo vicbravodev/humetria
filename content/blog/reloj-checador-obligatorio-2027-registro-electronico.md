@@ -1,10 +1,11 @@
 ---
 title: '¿Reloj checador obligatorio en 2027?'
 description: 'La LFT pide registrar la jornada de forma electrónica, no comprar un reloj checador. Quién debe registrar y cómo: oficina, home office, confianza y campo.'
+tool: attendance
 published_at: 2026-11-19
 updated_at: 2026-11-19
-reviewed_by: null
-reviewed_at: null
+reviewed_by: 'Equipo Humetría'
+reviewed_at: 2026-11-23
 sources:
     - https://www.diputados.gob.mx/LeyesBiblio/ref/lft/LFT_ref52_01may26.pdf
     - https://sidof.segob.gob.mx/notas/docFuente/5786537

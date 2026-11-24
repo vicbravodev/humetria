@@ -132,6 +132,7 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
     visit('/admin/acme')
         ->click('Cumple la norma')
         ->click('NOM-035')
+        ->assertScript(settled(), true)
         ->click('Evaluaciones')
         ->assertScript(pathBecomes('/admin/acme/campaigns'), true)
         ->assertPathIs('/admin/acme/campaigns')
@@ -193,7 +194,7 @@ it('highlights the figures of the launch dialog: the emails that go and the peop
 
     visit("/admin/acme/campaigns/{$campaign->id}")
         ->click('Lanzar e invitar a 16 personas')
-        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] [data-test="launch-figures"] > div\')].map((box) => box.innerText.replace(/\\s+/g, " ").trim()).join("|")', '16 correos|2 sin correo')
+        ->assertScript('() => [...document.querySelectorAll(\'[role="dialog"] [data-test="launch-figures"] > div\')].map((box) => box.innerText.replace(/\\s+/g, " ").trim()).join("|")', '16 correos|2 sin contacto')
         // The figures are big, not running text.
         ->assertScript('() => parseFloat(getComputedStyle(document.querySelector(\'[data-test="launch-figures"] p:first-child\')).fontSize) >= 24', true);
 });

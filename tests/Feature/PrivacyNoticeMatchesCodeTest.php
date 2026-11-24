@@ -81,6 +81,25 @@ it('says the theme preference lasts a year, as the appearance hook writes it', f
         ->and((string) file_get_contents(dirname(__DIR__, 2).'/resources/js/hooks/use-appearance.tsx'))->toContain('days = 365');
 });
 
+it('names Meta and Resend as who delivers the messages, what each receives, the transfer to the United States and the STOP', function (): void {
+    $text = privacyNoticeText();
+
+    expect($text)->toContain('Mensajes por WhatsApp y por correo')
+        ->toContain('Meta')->toContain('WhatsApp')->toContain('Resend')
+        ->toContain('tu número de celular')->toContain('la plantilla del mensaje')
+        ->toContain('tu correo')->toContain('Estados Unidos')
+        ->toContain('STOP')
+        ->toContain('nunca se ligan con el canal')
+        // Written down, with its words, so the notice and the code that sends say the same thing.
+        ->toContain('nunca publicidad');
+});
+
+it('only has WhatsApp templates that are UTILITY, plus the authentication code, which is what the notice promises: never advertising', function (): void {
+    $categories = array_map(fn ($template): string => $template->category->value, (new App\Modules\Messaging\Support\TemplateRegistry)->all());
+
+    expect($categories)->not->toBe([])->and(array_values(array_unique($categories)))->toEqualCanonicalizing(['UTILITY', 'AUTHENTICATION']);
+});
+
 it('keeps the legal items marked as pending review', function (): void {
     expect(substr_count(privacyNoticeText(), 'pendiente de revisión legal'))->toBe(1)
         ->and(privacyNoticeText())->toContain('${REVIEW}');

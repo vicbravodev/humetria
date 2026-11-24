@@ -160,7 +160,7 @@ it('lets RH choose people and fix the same schedule for all of them, from a temp
         ->click('Fijar el mismo horario')
         ->assertSee('Horario para 2 personas')
         ->assertSee('Bob Díaz y Carla Ruiz')
-        ->assertDontSee('se reemplaza')
+        ->assertDontSee('queda en su historial')
         ->click('Lunes a sábado')
         ->assertSee('48 h a la semana')
         ->click('Nocturno')
@@ -177,14 +177,44 @@ it('lets RH choose people and fix the same schedule for all of them, from a temp
         ->and(AttendanceSchedule::query()->where('shift_type', ShiftType::Day)->count())->toBe(3);
 });
 
-it('tells RH who loses the schedule they had, and lets them clear the choice', function (): void {
+it('shows what a person has today, coming and before, and starts a new schedule today without erasing the old one', function (bool $dark, bool $mobile): void {
+    $url = schedulesPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    workIn($tenant);
+    $ana = Employee::query()->where('name', 'Ana López')->sole();
+    AttendanceSchedule::factory()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'valid_from' => now()->subDays(30)->toDateString(), 'minutes_by_weekday' => [1 => 420, 2 => 420, 3 => 420, 4 => 420, 5 => 420, 6 => 0, 7 => 0]]);
+    AttendanceSchedule::factory()->create(['tenant_id' => $tenant->id, 'employee_id' => $ana->id, 'valid_from' => now()->addDays(20)->toDateString(), 'minutes_by_weekday' => [1 => 360, 2 => 360, 3 => 360, 4 => 360, 5 => 360, 6 => 0, 7 => 0]]);
+
+    visitPage('attendance/schedules', "{$url}/attendance/schedules", $dark, $mobile)
+        ->assertSee('Cambia el')
+        ->click('[aria-label="Acciones de Ana López"]')
+        ->click('Cambiar horario')
+        ->assertSee('Horarios de Ana López')
+        ->assertSee('Próximo')
+        ->assertSee('Vigente')
+        ->assertSee('Anterior')
+        ->assertSee('Desde siempre')
+        ->assertSee('Empieza el')
+        ->assertScript('() => document.querySelector(\'[name="valid_from"]\').value', now(config()->string('app.display_timezone'))->toDateString())
+        ->click('Guardar horario')
+        ->waitForText('Horario de Ana López guardado.')
+        ->assertNoJavaScriptErrors();
+
+    expect(AttendanceSchedule::query()->where('employee_id', $ana->id)->count())->toBe(4)
+        ->and(AttendanceSchedule::query()->where('employee_id', $ana->id)->where('valid_from', now(config()->string('app.display_timezone'))->toDateString())->exists())->toBeTrue();
+})->with([
+    'light, desktop' => [false, false],
+    'dark, phone' => [true, true],
+]);
+
+it('tells RH that the schedule someone had stays in their history, and lets them clear the choice', function (): void {
     $url = schedulesPanel();
 
     visit("{$url}/attendance/schedules")
         ->click('[aria-label="Elegir a Ana López"]')
         ->click('[aria-label="Elegir a Bob Díaz"]')
         ->click('Fijar el mismo horario')
-        ->assertSee('1 de ellas ya tiene horario: se reemplaza.')
+        ->assertSee('1 de ellas ya tiene horario: el anterior queda en su historial.')
         ->click('Cancelar')
         ->click('Quitar selección')
         ->assertDontSee('personas elegidas');
@@ -304,7 +334,7 @@ it('fixes a schedule on a phone, for one person and for several', function (bool
         ->click('[aria-label="Elegir a Ana López"]')
         ->click('[aria-label="Elegir a Bob Díaz"]')
         ->click('Fijar el mismo horario')
-        ->assertSee('2 de ellas ya tienen horario: se reemplaza.')
+        ->assertSee('2 de ellas ya tienen horario: el anterior queda en su historial.')
         ->click('Nocturno')
         ->click('[role="dialog"] button[type="submit"]')
         ->waitForText('Horario guardado para 2 personas.')

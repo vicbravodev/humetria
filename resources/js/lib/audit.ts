@@ -65,6 +65,8 @@ const LABELS: Record<string, string> = {
     'worker_access.not_me_reported':
         'Llave anulada por la persona («No fui yo»)',
     'attendance.report_exported': 'Reporte de asistencia exportado',
+    'attendance.schedule_saved': 'Horario de asistencia guardado',
+    'employee.updated': 'Centro, puesto, área o nivel cambiado',
     'employee.manager_changed': 'Jefe directo cambiado',
     'employee.deactivated': 'Persona dada de baja',
     'employee.reactivated': 'Persona reactivada',
@@ -87,6 +89,9 @@ const LABELS: Record<string, string> = {
     'sso.domain_verified': 'Dominio de correo verificado',
     'sso.enabled': 'Inicio de sesión único activado',
     'sso.disabled': 'Inicio de sesión único desactivado',
+    'tenancy.channel_enabled': 'WhatsApp activado',
+    'tenancy.channel_disabled': 'WhatsApp desactivado',
+    'messaging.opt_out_lifted': 'Persona volvió a recibir WhatsApp (ALTA)',
     'sso.enforced': 'Inicio de sesión único exigido',
     'sso.enforcement_lifted': 'Inicio de sesión único ya no se exige',
     'sso.signed_in': 'Inicio de sesión con SSO',

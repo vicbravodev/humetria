@@ -328,6 +328,19 @@ describe('the request in view', function (): void {
         openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.restDay', false));
     });
 
+    it('says how the day is counted by the schedule in effect that day, not by another that began before or after', function (): void {
+        queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');
+        $this->actingAs($this->hr);
+        // Tuesday 10 November: a working day from the 12th on (created first on purpose), a rest day before it.
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'valid_from' => '2026-11-12', 'minutes_by_weekday' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0]]);
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'minutes_by_weekday' => [1 => 480, 2 => 0, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0]]);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.noSchedule', false)->where('detail.effect.restDay', true));
+
+        AttendanceSchedule::query()->where('valid_from', '2026-11-12')->update(['valid_from' => '2026-11-10']);
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.effect.restDay', false));
+    });
+
     it('keeps the detail free of positions and devices', function (): void {
         queued($this->ana, $this->start, MarkType::Start, '2026-11-10 09:00');
         $this->actingAs($this->hr);

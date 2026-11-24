@@ -40,6 +40,8 @@ it('writes no inline style or motion entrance in a landing component the server 
     $exceptions = [
         // AnimatePresence swaps the result of the filter: it sits inside WhenMounted, whose fallback is the result without motion.
         'privacy-demo.tsx',
+        // The menu «Recursos» mounts only when a click opens it, like the tools menu: the server never renders it.
+        'resources-menu.tsx',
         // The pick's answer, the step stage and the bar of the step playing swap with motion inside WhenMounted.
         'tool-page-pick.tsx',
         'tool-page-step-stage.tsx',

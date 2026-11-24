@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Telework\Actions;
 
+use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Telework\Enums\AckChannel;
 use App\Modules\Telework\Models\Acknowledgement;
 use App\Modules\Telework\Models\TeleworkDocument;
@@ -20,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class Acknowledge
 {
+    public function __construct(private Roster $roster) {}
+
     /**
      * @throws ModelNotFoundException when the document was not asked of this person.
      * @throws ValidationException when it was already confirmed.
@@ -44,7 +47,10 @@ final readonly class Acknowledge
         DB::transaction(function () use ($person, $documentId, $channel, $ip): void {
             $request = Acknowledgement::query()->where('document_id', $documentId)->where($person)->lockForUpdate()->firstOrFail();
 
-            if (! TeleworkDocument::query()->inForce()->whereKey($documentId)->exists()) {
+            // An employee confirms what is in force in the center they work in now, not what was asked of them in one they left.
+            $center = isset($person['employee_id']) ? ($this->roster->find($person['employee_id'])->workCenterId ?? '') : null;
+
+            if (! TeleworkDocument::query()->inForce()->when($center !== null, fn ($query) => $query->where('work_center_id', $center))->whereKey($documentId)->exists()) {
                 throw ValidationException::withMessages(['document' => 'Esta versión ya no está vigente: hay una más reciente.']);
             }
 

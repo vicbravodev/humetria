@@ -197,6 +197,11 @@ return [
         'employee_ids' => [
             'max' => 'Elige hasta 100 personas a la vez.',
         ],
+        'valid_from' => [
+            'date_format' => 'Elige una fecha de inicio válida.',
+            'after_or_equal' => 'La fecha de inicio no puede ser anterior al 1 de enero de 2000.',
+            'before_or_equal' => 'La fecha de inicio no puede ser de más de un año adelante.',
+        ],
         'shift_type' => [
             'in' => 'Elige diurna, nocturna o mixta.',
         ],
@@ -236,6 +241,11 @@ return [
     ],
 
     'attributes' => [
+        'mail_enabled' => 'correo',
+        'whatsapp_enabled' => 'WhatsApp',
+        'preferred' => 'canal preferido',
+        'whatsapp_monthly_cap' => 'tope mensual de WhatsApp',
+        'consent_accepted' => 'aceptación del aviso',
         'min_group' => 'mínimo de personas por grupo',
         'plan' => 'plan',
         'seats' => 'personas contratadas',
@@ -273,6 +283,7 @@ return [
         'retention_months' => 'meses de conservación',
         'late_tolerance_minutes' => 'tolerancia de retardo',
         'starts' => 'horas de entrada',
+        'valid_from' => 'fecha de inicio',
         'title' => 'título',
         'level' => 'nivel',
         'subjects' => 'a quién va dirigida',
