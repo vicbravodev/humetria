@@ -147,7 +147,8 @@ export type MemberRow = {
     email: string;
     role: CompanyRoleKey;
     role_label: string;
-    extra_permissions: number; // besides their role
+    /** How many permissions they have besides their role. */
+    extra_permissions: number;
     is_you: boolean;
     /** The day they got access, written for display. */
     since: string;
