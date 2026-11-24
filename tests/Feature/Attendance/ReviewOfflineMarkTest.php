@@ -46,7 +46,7 @@ function review(string $markId, ReviewDecision $decision, ?string $note = null, 
 }
 
 /** The reason a review was refused for. */
-function refusedFor(Closure $review): string
+function reviewRefusedFor(Closure $review): string
 {
     try {
         $review();
@@ -192,7 +192,7 @@ describe('marking it incorrect', function (): void {
         ]);
         $end = OfflineDeliveries::accepted($this->ana, '2026-11-02 18:00', MarkType::End);
 
-        expect(refusedFor(fn () => review($end->mark_id ?? '', ReviewDecision::Incorrect, 'Salió más temprano.', '2026-11-02 08:00')))->toBe('sequence_invalid')
+        expect(reviewRefusedFor(fn () => review($end->mark_id ?? '', ReviewDecision::Incorrect, 'Salió más temprano.', '2026-11-02 08:00')))->toBe('sequence_invalid')
             ->and(MarkReview::query()->count())->toBe(0)
             ->and(AttendanceMark::query()->where('corrects_mark_id', $end->mark_id)->count())->toBe(0)
             ->and(AuditEntry::query()->where('event', 'attendance.offline_mark_reviewed')->count())->toBe(0);
@@ -201,7 +201,7 @@ describe('marking it incorrect', function (): void {
     it('refuses a time that has not come yet', function (): void {
         $delivery = OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00');
 
-        expect(refusedFor(fn () => review($delivery->mark_id ?? '', ReviewDecision::Incorrect, 'Salió más tarde.', '2026-11-11 13:00')))->toBe('future_time')
+        expect(reviewRefusedFor(fn () => review($delivery->mark_id ?? '', ReviewDecision::Incorrect, 'Salió más tarde.', '2026-11-11 13:00')))->toBe('future_time')
             ->and(MarkReview::query()->count())->toBe(0);
     });
 });
@@ -211,14 +211,14 @@ describe('what it reviews', function (): void {
         $delivery = OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00');
         review($delivery->mark_id ?? '', ReviewDecision::Incorrect, 'Entró a las 9:20.', '2026-11-02 09:20');
 
-        expect(refusedFor(fn () => review($delivery->mark_id ?? '', ReviewDecision::Verified)))->toBe('mark_changed')
+        expect(reviewRefusedFor(fn () => review($delivery->mark_id ?? '', ReviewDecision::Verified)))->toBe('mark_changed')
             ->and(MarkReview::query()->count())->toBe(1);
     });
 
     it('refuses a mark that was not made without a connection', function (): void {
         $online = AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id]);
 
-        expect(refusedFor(fn () => review($online->id, ReviewDecision::Verified)))->toBe('not_offline')
+        expect(reviewRefusedFor(fn () => review($online->id, ReviewDecision::Verified)))->toBe('not_offline')
             ->and(MarkReview::query()->count())->toBe(0);
     });
 

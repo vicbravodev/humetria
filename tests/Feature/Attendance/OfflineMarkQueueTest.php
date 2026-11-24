@@ -44,7 +44,7 @@ function rejectedUrl(array $query = []): string
 }
 
 /** Queries a request ran, once the first visit warmed what the session and the permissions keep. */
-function queriesOf(string $url): int
+function offlineQueueQueries(string $url): int
 {
     test()->get($url)->assertOk();
     DB::flushQueryLog();
@@ -192,13 +192,13 @@ describe('the tab of marks made without a connection', function (): void {
     it('reads the same queries with one mark and with thirty', function (): void {
         OfflineDeliveries::accepted($this->ana, '2026-11-09 09:00');
         $this->actingAs($this->hr);
-        $one = queriesOf(offlineUrl());
+        $one = offlineQueueQueries(offlineUrl());
 
         foreach (range(1, 29) as $n) {
             OfflineDeliveries::accepted(personNamed("Persona {$n}"), '2026-11-09 09:00', flags: $n % 2 === 0 ? [ReviewFlag::NoPosition] : []);
         }
 
-        expect(queriesOf(offlineUrl()))->toBe($one);
+        expect(offlineQueueQueries(offlineUrl()))->toBe($one);
     });
 
     it('never sends a position, a key, a ticket, a QR, a challenge or a device', function (): void {
@@ -272,14 +272,14 @@ describe('the tab of deliveries that were not accepted', function (): void {
         $bob = personNamed('Roberto Díaz');
         OfflineDeliveries::rejected($this->ana, '2026-11-09 09:00', OfflineRejection::PassExpired);
         $this->actingAs($this->hr);
-        $one = queriesOf(rejectedUrl());
+        $one = offlineQueueQueries(rejectedUrl());
 
         foreach (range(1, 26) as $n) {
             OfflineDeliveries::rejected(personNamed("Persona {$n}"), '2026-11-09 09:00', OfflineRejection::PersonInactive);
         }
         OfflineDeliveries::rejected($bob, '2026-11-09 09:00', OfflineRejection::TicketExpired);
 
-        expect(queriesOf(rejectedUrl()))->toBe($one);
+        expect(offlineQueueQueries(rejectedUrl()))->toBe($one);
         $this->get(rejectedUrl(['page' => 2]))->assertInertia(fn (AssertableInertia $page) => $page->where('offlineMarks.total', 28)->has('offlineMarks.data', 3));
         $this->get(rejectedUrl(['q' => 'diaz']))->assertInertia(fn (AssertableInertia $page) => $page->where('offlineMarks.total', 1));
     });

@@ -45,7 +45,7 @@ function acceptedMark(AttendanceMark $mark): void
 }
 
 /** The week of the Monday `$monday`, answered (`confirmed` or `disputed`) or pending, for `$employeeId`. */
-function weekOf(string $employeeId, string $monday, string $state = 'confirmed'): WeeklyConfirmation
+function reopenWeekOf(string $employeeId, string $monday, string $state = 'confirmed'): WeeklyConfirmation
 {
     $factory = WeeklyConfirmation::factory();
     $factory = $state === 'pending' ? $factory : $factory->{$state}();
@@ -54,7 +54,7 @@ function weekOf(string $employeeId, string $monday, string $state = 'confirmed')
 }
 
 it('sends a confirmed week back to pending and writes why to the audit trail, with the mark and no time', function (): void {
-    $week = weekOf($this->ana->id, '2026-11-09');
+    $week = reopenWeekOf($this->ana->id, '2026-11-09');
     $mark = offlineMarkAt($this->ana->id, MarkType::Start, '2026-11-10 09:00');
 
     acceptedMark($mark);
@@ -66,7 +66,7 @@ it('sends a confirmed week back to pending and writes why to the audit trail, wi
 });
 
 it('leaves a week the person disputed disputed', function (): void {
-    $week = weekOf($this->ana->id, '2026-11-09', 'disputed');
+    $week = reopenWeekOf($this->ana->id, '2026-11-09', 'disputed');
 
     acceptedMark(offlineMarkAt($this->ana->id, MarkType::Start, '2026-11-10 09:00'));
 
@@ -75,10 +75,10 @@ it('leaves a week the person disputed disputed', function (): void {
 });
 
 it('leaves a week still pending, a week with no row, a week of the mark of another time and one of another person as they are', function (): void {
-    $pending = weekOf($this->ana->id, '2026-11-09', 'pending');
-    $other = weekOf($this->ana->id, '2026-11-02');
+    $pending = reopenWeekOf($this->ana->id, '2026-11-09', 'pending');
+    $other = reopenWeekOf($this->ana->id, '2026-11-02');
     $bruno = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
-    $brunos = weekOf($bruno->id, '2026-11-09');
+    $brunos = reopenWeekOf($bruno->id, '2026-11-09');
 
     // Ana's mark is of 10 November: her week of the 9th is pending, her week of the 2nd and Bruno's are not its own.
     acceptedMark(offlineMarkAt($this->ana->id, MarkType::Start, '2026-11-10 09:00'));
@@ -94,8 +94,8 @@ it('leaves a week still pending, a week with no row, a week of the mark of anoth
 
 it('reopens the week of the Sunday a night shift started on when its end arrives on Monday', function (): void {
     offlineMarkAt($this->ana->id, MarkType::Start, '2026-11-08 22:00');
-    $sunday = weekOf($this->ana->id, '2026-11-02');
-    $later = weekOf($this->ana->id, '2026-11-16');
+    $sunday = reopenWeekOf($this->ana->id, '2026-11-02');
+    $later = reopenWeekOf($this->ana->id, '2026-11-16');
 
     acceptedMark(offlineMarkAt($this->ana->id, MarkType::End, '2026-11-09 06:00'));
 
@@ -105,7 +105,7 @@ it('reopens the week of the Sunday a night shift started on when its end arrives
 });
 
 it('runs inside the transaction of the delivery: if it is rolled back the week is still confirmed', function (): void {
-    $week = weekOf($this->ana->id, '2026-11-09');
+    $week = reopenWeekOf($this->ana->id, '2026-11-09');
     $mark = offlineMarkAt($this->ana->id, MarkType::Start, '2026-11-10 09:00');
 
     try {
