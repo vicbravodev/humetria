@@ -8,6 +8,7 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { areasFor, beyondRole } from '@/lib/permission-areas';
+import { ownLevels } from '@/lib/permission-floor';
 import { keepsAcknowledgement, sensitiveAdded } from '@/lib/permission-groups';
 import { countOf } from '@/lib/plural';
 import type { PermissionGroup } from '@/types';
@@ -30,14 +31,13 @@ export default function InviteExtraPermissions({
         acknowledge: string | undefined;
     };
 }) {
+    const areas = areasFor(groups).map((item) => item.area);
+    // The whole level of each area raised, so changing the role never leaves one half (manage without view).
     const [chosen, setChosen] = useState<string[]>([]);
     const [acknowledged, setAcknowledged] = useState(false);
-    // What the role already brings is not the person's own, whichever role is chosen now.
+    // What the role chosen now already brings is not the person's own.
     const own = chosen.filter((name) => !base.includes(name));
-    const raised = beyondRole(
-        areasFor(groups).map((item) => item.area),
-        own,
-    ).length;
+    const raised = beyondRole(areas, own).length;
 
     return (
         <Collapsible className="flex flex-col gap-4">
@@ -63,11 +63,12 @@ export default function InviteExtraPermissions({
                     held={[...base, ...own]}
                     base={base}
                     onChange={(held) => {
-                        const next = held.filter(
+                        const kept = ownLevels({ areas, held, base });
+                        const next = kept.filter(
                             (name) => !base.includes(name),
                         );
 
-                        setChosen(next);
+                        setChosen(kept);
                         // A different set of sensitive permissions asks for the confirmation again.
                         setAcknowledged(
                             (was) =>

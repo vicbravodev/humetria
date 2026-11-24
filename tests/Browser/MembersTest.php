@@ -214,3 +214,22 @@ it('invites someone with a role of the company\'s own and a sensitive permission
     expect($invitation->role?->name)->toBe($role->name)
         ->and($invitation->extra_permissions)->toBe(['view-trauma-screenings']);
 });
+
+it('keeps a raised area whole when the role of the invitation changes to one without it', function (): void {
+    acmeWithPeople();
+
+    visit('/admin/acme/members/invitations/create')
+        ->type('name', 'Raúl Rol')
+        ->type('email', 'raul@acme.mx')
+        ->radio('role', 'viewer')
+        ->click('@invite-extras')
+        ->click('@level-vacations-manage')
+        ->radio('role', 'complaints')
+        ->assertChecked('input[name="level-vacations"][value="manage"]')
+        ->press('Enviar invitación')
+        ->assertSee('Invitación enviada.')
+        ->assertNoJavaScriptErrors();
+
+    expect(TenantInvitation::query()->where('email', 'raul@acme.mx')->sole()->extra_permissions)
+        ->toEqualCanonicalizing(['view-vacations', 'manage-vacations']);
+});
