@@ -69,3 +69,17 @@ it('shares nothing in course outside a company, without asking the database', fu
 
     expect($campaignQueries)->toBe(0);
 });
+
+it('shares the campaigns in course only with whoever sees the route of NOM-035, whatever their role is called', function (array $permissions, bool $shared): void {
+    $owner = ownerOf($this->tenant);
+    $role = app(App\Modules\Tenancy\Actions\CreateCompanyRole::class)->handle($this->tenant, 'Asistencia', $permissions, null, $owner);
+    $person = App\Models\User::factory()->create();
+    App\Modules\Tenancy\Models\TenantMembership::factory()->for($this->tenant)->for($person)->viewer()->create();
+    resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->assign($person, $this->tenant, $role);
+
+    $this->actingAs($person)->get(route('tenant.attendance.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $shared ? $page->has('inCourse.count') : $page->where('inCourse', null));
+})->with([
+    'without it' => [['view-attendance'], false],
+    'with it' => [['view-attendance', 'view-nom035-route'], true],
+]);
