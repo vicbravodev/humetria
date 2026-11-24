@@ -34,6 +34,7 @@ final class InviteMemberRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255'],
             'role' => MemberRoleRules::role($tenant),
             ...MemberRoleRules::permissions($tenant),
+            'acknowledge_sensitive' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -43,6 +44,9 @@ final class InviteMemberRequest extends FormRequest
     public function after(#[RouteParameter('tenant')] Tenant $tenant): array
     {
         return [function (Validator $validator) use ($tenant): void {
+            // A sensitive permission besides the role asks to be acknowledged, as on a role.
+            CompanyRoleRules::acknowledged($validator, $this, []);
+
             if ($validator->errors()->has('email')) {
                 return;
             }

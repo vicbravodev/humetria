@@ -40,7 +40,7 @@ beforeEach(function (): void {
     TenantMembership::factory()->for($this->tenant)->for($this->owner)->create();
     $this->role = app(CreateCompanyRole::class)->handle($this->tenant, 'Auditoría', ['view-dashboard', 'view-work-centers'], null, $this->owner);
     $this->invite = fn (array $payload = []) => $this->actingAs($this->owner)->post(route('tenant.members.invitations.store', $this->tenant), [
-        'name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'role' => $this->role->name, 'permissions' => ['view-vacations'], ...$payload,
+        'name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'role' => $this->role->name, 'permissions' => ['view-vacations'], 'acknowledge_sensitive' => true, ...$payload,
     ]);
 });
 
@@ -56,6 +56,24 @@ it('invites with a role of the company and extra permissions, and says which one
     expect(AuditEntry::query()->where('event', 'tenant_invitation.sent')->sole()->metadata)->toEqual([
         'tenant_id' => $this->tenant->id, 'role' => $this->role->name, 'permissions' => ['view-vacations', 'view-compensation'], 'sensitive' => true,
     ]);
+});
+
+it('asks to acknowledge a sensitive extra permission before inviting with it', function (): void {
+    ($this->invite)(['permissions' => ['view-vacations', 'view-compensation'], 'acknowledge_sensitive' => false])
+        ->assertSessionHasErrors(['acknowledge_sensitive' => 'Confirma que quieres dar permisos que abren información sensible.']);
+    ($this->invite)(['permissions' => ['view-vacations'], 'acknowledge_sensitive' => false])->assertSessionHasNoErrors();
+
+    expect(TenantInvitation::query()->sole()->extra_permissions)->toBe(['view-vacations']);
+});
+
+it('offers on the invitation page the switches of the permissions besides the role', function (): void {
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.invitations.create', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('groups.0.module', 'general')
+            ->where('groups.0.permissions.0.name', 'view-dashboard')
+            ->where('groups.0.permissions.0.enabled', false)
+            ->where('groups.0.permissions.0.source', null));
 });
 
 it('invites with a template and no extras as before', function (): void {

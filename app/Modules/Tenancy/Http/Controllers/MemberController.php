@@ -89,6 +89,8 @@ final class MemberController extends Controller
         return Inertia::render('tenancy/invite-member', [
             'roles' => $this->assignable($tenant),
             'matrix' => RoleMatrix::for($tenant),
+            // «Permisos adicionales»: what the invitation may bring besides the role.
+            'groups' => PermissionGroups::for($tenant, []),
         ]);
     }
 
