@@ -86,6 +86,16 @@ extraíble y la persona la registra con conexión. Todo es JSON, con sesión y e
   (`tests/Feature/WorkerAccess/PrivacyTest.php`); `RedactSensitiveData` cubre `challenge`, `signature`, `pass` y `device_key_id`.
 - Inicio (`worker.home`) trae `slug` y `deviceKey {optionsUrl, storeUrl, proof}` (null si la empresa no tiene Asistencia).
 
+## App instalable
+
+Cada empresa tiene su app bajo `/me/{slug}` (`InstallableAppController`, rutas `worker.app.*` en `routes/worker-access.php`):
+el manifest, el service worker (`/me/{slug}/sw.js`, alcance `/me/{slug}`, `Service-Worker-Allowed`) y el cascarón sin conexión
+(`/me/{slug}/offline`). Las tres son GET **sin sesión ni cookie** (con `SESSION_DRIVER=database` cada petición sin cookie
+abriría una fila en `sessions`, y un teléfono instalado las pide seguido) y no llevan nada de nadie. El worker guarda solo
+archivos del build y el cascarón, nunca HTML de Inertia ni datos de personas. `PWA_SW_KILL=true` (`worker_access.pwa_sw_kill`)
+lo apaga en todos los teléfonos con un worker que borra sus cachés y se desregistra; nunca apaga la entrega de marcas.
+El worker se compila aparte (`npm run build:sw`, `PWA_WORKER=sw`) a `public/build/pwa/sw.js`, un archivo sin `import`.
+
 ## Panel: «Accesos»
 
 `/admin/{tenant}/access` (`tenant.worker-access.*`, `routes/worker-access-panel.php`), para toda empresa con o sin
