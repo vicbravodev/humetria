@@ -45,6 +45,11 @@ final readonly class GetCampaignProgress implements TellsLiveFacts, Tool
     public function handle(Request $request): string
     {
         $this->guard->check($this->scope);
+
+        if (! $this->scope->canSee('view-nom035-route')) {
+            return ToolCard::withoutAccess('progress', 'Avance de campañas', 'NOM-035')->toJson();
+        }
+
         $id = $request['campaign_id'] ?? null;
 
         if ($id === null) {
@@ -68,6 +73,11 @@ final readonly class GetCampaignProgress implements TellsLiveFacts, Tool
     public function facts(): array
     {
         $this->guard->check($this->scope);
+
+        if (! $this->scope->canSee('view-nom035-route')) {
+            return [];
+        }
+
         $running = array_values(array_filter($this->campaigns->current(), fn (CampaignRecord $campaign): bool => ! $campaign->closed && $campaign->launchedOn !== null));
         $invited = array_sum(array_map(fn (CampaignRecord $campaign): int => array_sum($campaign->invited), $running));
         $answered = array_sum(array_map(fn (CampaignRecord $campaign): int => array_sum($campaign->answered), $running));

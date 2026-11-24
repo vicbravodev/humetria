@@ -42,7 +42,7 @@ it('lets the superadmin invite the owner of a company', function (): void {
 
     expect($invitation->tenant_id)->toBe($tenant->id)
         ->and($invitation->invited_by)->toBe($admin->id)
-        ->and($invitation->role)->toBe(TenantRole::Owner)
+        ->and($invitation->role?->name)->toBe(TenantRole::Owner->value)
         ->and($invitation->name)->toBe('Ana Pérez')
         ->and($invitation->email)->toBe('ana@acme.mx')
         ->and($invitation->token_hash)->toMatch('/\A[0-9a-f]{64}\z/')
@@ -76,6 +76,20 @@ it('cancels the open invitation when inviting again', function (Closure $previou
     'pending' => [fn (Tenant $tenant) => TenantInvitation::factory()->for($tenant)->create()],
     'expired' => [fn (Tenant $tenant) => TenantInvitation::factory()->for($tenant)->expired()->create()],
 ]);
+
+it('leaves the open invitations of members as they were when inviting an owner', function (): void {
+    $tenant = Tenant::factory()->create();
+    $member = TenantInvitation::factory()->for($tenant)->role(TenantRole::Viewer)->create();
+    $owner = TenantInvitation::factory()->for($tenant)->create();
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.invitations.store', $tenant), ['name' => 'Beto', 'email' => 'beto@acme.mx'])
+        ->assertSessionHasNoErrors();
+
+    expect($member->refresh()->cancelled_at)->toBeNull()
+        ->and($owner->refresh()->cancelled_at)->not->toBeNull()
+        ->and(TenantInvitation::query()->open()->count())->toBe(2);
+});
 
 it('leaves the invitations of other companies and the finished ones as they were', function (): void {
     $tenant = Tenant::factory()->create();

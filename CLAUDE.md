@@ -231,8 +231,8 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
 
 ## Normas y documentos
 
-- `docs/normas/` (`nom-035`, `nom-037`, `ley-silla`, `jornada`, `vacaciones`, `compensation`): criterios con su fuente y texto
-  de referencia. **Mandan**: si el código los contradice, se corrige el código o se actualiza el criterio con su justificación.
+- `docs/normas/` (`nom-035`, `nom-037`, `ley-silla`, `jornada`, `vacaciones`, `compensation`; `permisos`, de la plataforma):
+  criterios con su fuente y texto de referencia. **Mandan**: si el código los contradice, se corrige el código o se actualiza el criterio con su justificación.
   Las pruebas de los instrumentos se escriben contra el texto de referencia.
 - NOM-035 aplica **por centro de trabajo**: hasta 15 trabajadores → solo Guía I; 16 a 50 → Guías I y II; más de 50 →
   Guías I y III. El resto (Guía I, muestra, informe, plazos): `docs/normas/nom-035/criterios.md`.

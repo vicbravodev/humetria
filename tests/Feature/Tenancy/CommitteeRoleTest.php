@@ -5,20 +5,18 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Tenancy\Contracts\Members;
+use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Data\MemberSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
-use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
-use App\Modules\Tenancy\Http\Middleware\LimitRestrictedRoles;
-use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
+use App\Modules\Tenancy\Http\Middleware\RequireRoutePermission;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyMembers;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Route;
 
-mutates(LimitRestrictedRoles::class, CompanyMembers::class);
+mutates(RequireRoutePermission::class, CompanyMembers::class);
 
 it('invites a member as committee', function (): void {
     Notification::fake();
@@ -28,7 +26,7 @@ it('invites a member as committee', function (): void {
         ->post(route('tenant.members.invitations.store', $tenant), ['name' => 'Cora Comisión', 'email' => 'cora@acme.mx', 'role' => 'committee'])
         ->assertRedirect();
 
-    expect(TenantInvitation::query()->where('email', 'cora@acme.mx')->sole()->role)->toBe(TenantRole::Committee)
+    expect(TenantInvitation::query()->where('email', 'cora@acme.mx')->sole()->role?->name)->toBe(TenantRole::Committee->value)
         ->and(TenantRole::Committee->label())->toBe('Comisión de seguridad e higiene')
         ->and(TenantRole::Committee->invitedAs('Acme'))->toBe('Te invitaron a la Comisión de seguridad e higiene de Acme');
 });
@@ -53,12 +51,8 @@ it('limits a committee member to the telework routes', function (): void {
     $committee = memberOf($tenant, TenantRole::Committee);
     $owner = memberOf($tenant, TenantRole::Owner);
 
-    Route::middleware(['web', 'auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class])
-        ->get('admin/{tenant:slug}/telework-probe', fn () => 'ok')->name('tenant.telework.probe');
-    Route::getRoutes()->refreshNameLookups();
-
-    $this->actingAs($committee)->get(route('tenant.telework.probe', $tenant))->assertOk();
-    $this->actingAs($owner)->get(route('tenant.telework.probe', $tenant))->assertOk();
+    $this->actingAs($committee)->get(route('tenant.telework.index', $tenant))->assertOk();
+    $this->actingAs($owner)->get(route('tenant.telework.index', $tenant))->assertOk();
 
     foreach (['tenant.employees.index', 'tenant.campaigns.index', 'tenant.members.index', 'tenant.work-centers.index'] as $name) {
         $this->actingAs($committee)->get(route($name, $tenant))->assertForbidden();
@@ -68,13 +62,18 @@ it('limits a committee member to the telework routes', function (): void {
     $this->actingAs($owner)->get(route('tenant.employees.index', $tenant))->assertOk();
 });
 
-it('limits a committee member on the results routes', function (string $name): void {
+it('limits a committee member on the results routes', function (string $name, int $status): void {
     $campaign = Campaign::factory()->create();
     $tenant = tenantOf($campaign->tenant_id);
     $committee = memberOf($tenant, TenantRole::Committee);
 
-    $this->actingAs($committee)->get(route($name, [$tenant, $campaign]))->assertForbidden();
-})->with(['tenant.campaigns.results', 'tenant.campaigns.screenings', 'tenant.campaigns.report']);
+    $this->actingAs($committee)->get(route($name, [$tenant, $campaign]))->assertStatus($status);
+})->with([
+    'results' => ['tenant.campaigns.results', 403],
+    // The list of people to channel of Guía I answers whoever may not see it as if it did not exist.
+    'screenings' => ['tenant.campaigns.screenings', 404],
+    'report' => ['tenant.campaigns.report', 403],
+]);
 
 it('lets a committee member reach the account settings and log out', function (): void {
     $tenant = Tenant::factory()->create();
@@ -98,10 +97,10 @@ it('lists the members of the current company only', function (): void {
     $members = resolve(Members::class);
 
     expect($members->all())->toEqual([
-        new MemberSummary($ana->id, 'Ana', 'ana@acme.mx', TenantRole::Hr),
-        new MemberSummary($cora->id, 'Cora', 'cora@acme.mx', TenantRole::Committee),
+        new MemberSummary($ana->id, 'Ana', 'ana@acme.mx', new CompanyRoleSummary('hr', TenantRole::Hr->label(), true)),
+        new MemberSummary($cora->id, 'Cora', 'cora@acme.mx', new CompanyRoleSummary('committee', TenantRole::Committee->label(), true)),
     ])
-        ->and($members->find($cora->id))->toEqual(new MemberSummary($cora->id, 'Cora', 'cora@acme.mx', TenantRole::Committee))
+        ->and($members->find($cora->id))->toEqual(new MemberSummary($cora->id, 'Cora', 'cora@acme.mx', new CompanyRoleSummary('committee', TenantRole::Committee->label(), true)))
         ->and($members->find($foreign->id))->toBeNull()
         ->and($members->find(0))->toBeNull();
 });

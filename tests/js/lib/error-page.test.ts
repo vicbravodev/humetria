@@ -78,6 +78,22 @@ describe('roleLimit', () => {
         });
     });
 
+    it("names a role of the company's own by its label, and by a neutral «Rol propio» when the page carries only its key", () => {
+        const own = { ...tenant, role: 'custom_3f2a-9c' as const };
+
+        expect(roleLimit(403, { ...own, role_label: 'Auditoría' })).toEqual({
+            company: 'Autopartes Demo',
+            role: 'Auditoría',
+            summary: 'entra con los permisos que se le asignaron',
+        });
+        expect(
+            roleLimit(403, { ...own, role_label: 'custom_3f2a-9c' })?.role,
+        ).toBe('Rol propio');
+        expect(roleLimit(403, { ...own, role_label: '' })?.role).toBe(
+            'Rol propio',
+        );
+    });
+
     it('has nothing to say outside a company, for the owner, or for other errors', () => {
         expect(roleLimit(403, null)).toBeNull();
         expect(roleLimit(403, { ...tenant, role: 'owner' })).toBeNull();

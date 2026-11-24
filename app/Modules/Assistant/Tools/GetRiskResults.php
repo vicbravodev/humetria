@@ -55,6 +55,11 @@ final readonly class GetRiskResults implements TellsLiveFacts, Tool
     public function handle(Request $request): string
     {
         $this->guard->check($this->scope);
+
+        if (! $this->scope->canSee('view-nom035-route')) {
+            return ToolCard::withoutAccess('risk_levels', 'Resultados por nivel de riesgo', 'NOM-035')->toJson();
+        }
+
         $id = $request['campaign_id'] ?? null;
         $areaId = $request['area_id'] ?? null;
         $campaign = is_string($id) && Str::isUuid($id) ? $this->campaigns->find($id) : null;
@@ -99,6 +104,11 @@ final readonly class GetRiskResults implements TellsLiveFacts, Tool
     public function facts(): array
     {
         $this->guard->check($this->scope);
+
+        if (! $this->scope->canSee('view-nom035-route')) {
+            return [];
+        }
+
         $latest = $this->campaigns->closedEvaluations(1)->getCollection()->first();
 
         if ($latest === null) {

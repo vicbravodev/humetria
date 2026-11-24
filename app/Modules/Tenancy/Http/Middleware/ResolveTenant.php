@@ -100,8 +100,8 @@ final class ResolveTenant
             'type' => $tenant->type->value,
             // What the company has, for the menu to hide the rest; the routes of the others answer 404 anyway.
             'modules' => $this->modules->enabledKeys($tenant->id),
-            'role' => $role->value,
-            'role_label' => $role->label(),
+            'role' => $role->key,
+            'role_label' => $role->label,
             // What the role allows; a read-only company has every writing one off, and `permissions` keeps the full set for the menu.
             'can' => $this->writable($permissions = [
                 'manage_organization' => $user->can('manage-organization'),
@@ -136,6 +136,11 @@ final class ResolveTenant
                 'manage_pulse' => $user->can('manage-pulse'),
                 'view_worker_access' => $user->can('view-worker-access'),
                 'manage_worker_access' => $user->can('manage-worker-access'),
+                // The pages every template opens, which a role of the company's own may not: the menu hides what would answer 403.
+                'view_dashboard' => $user->can('view-dashboard'),
+                'view_work_centers' => $user->can('view-work-centers'),
+                'view_nom035_route' => $user->can('view-nom035-route'),
+                'view_telework' => $user->can('view-telework'),
             ], $status->isReadOnly()),
             'permissions' => $permissions,
         ]);

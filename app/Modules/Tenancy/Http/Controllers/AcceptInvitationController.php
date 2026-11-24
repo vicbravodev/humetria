@@ -7,10 +7,13 @@ namespace App\Modules\Tenancy\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\AcceptInvitation;
+use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Enums\InvitationStatus;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Http\Requests\AcceptInvitationRequest;
 use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +32,7 @@ final class AcceptInvitationController extends Controller
     {
         $invitation = $this->pendingInvitation($token);
         $state = $invitation === null ? 'invalid' : $this->stateFor($invitation, $request->user());
+        $role = $invitation?->role === null ? null : CompanyRoles::summary($invitation->role->name, $invitation->role->getAttribute('label'));
 
         if ($state === 'sign_in') {
             // Fortify's login sends the account back here once it signs in.
@@ -38,10 +42,10 @@ final class AcceptInvitationController extends Controller
         return Inertia::render('tenancy/accept-invitation', [
             'state' => $state,
             'trade_name' => $invitation?->tenant?->trade_name,
-            'invited_as' => $invitation?->tenant === null ? null : $invitation->role->invitedAs($invitation->tenant->trade_name),
+            'invited_as' => $invitation?->tenant === null || $role === null ? null : $this->invitedAs($role, $invitation->tenant->trade_name),
             'inviter' => $invitation?->inviter?->name,
-            'role' => $invitation?->role->value,
-            'role_label' => $invitation?->role->label(),
+            'role' => $role?->key,
+            'role_label' => $role?->label,
             'union' => $invitation?->tenant?->isUnion() ?? false,
             'email' => $invitation?->email,
             'name' => $invitation?->name,
@@ -107,10 +111,16 @@ final class AcceptInvitationController extends Controller
         return User::query()->whereRaw('lower(email) = ?', [$invitation->email])->whereNotNull('email_verified_at')->exists() ? 'sign_in' : 'new_account';
     }
 
+    /** How the link page says what the person joins as: a template in its own words, a role of the company's by its label. */
+    private function invitedAs(CompanyRoleSummary $role, string $tradeName): string
+    {
+        return TenantRole::tryFrom($role->key)?->invitedAs($tradeName) ?? "Te invitaron como {$role->label} de {$tradeName}";
+    }
+
     private function pendingInvitation(string $token): ?TenantInvitation
     {
         $invitation = TenantInvitation::query()
-            ->with(['tenant', 'inviter:id,name'])
+            ->with(['tenant', 'inviter:id,name', 'role'])
             ->where('token_hash', TenantInvitation::hashToken($token))
             ->first();
 

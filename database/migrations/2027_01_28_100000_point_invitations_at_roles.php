@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * An invitation names its role by id (a template or one of the company's own) and may bring permissions besides it.
+ * The role can only go away once no open invitation names it: a used or cancelled one is left without it. The owner's
+ * indexes name the owner template by its id, which a partial index has to spell out.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $owner = $this->ownerRoleId();
+
+        Schema::table('tenant_invitations', function (Blueprint $table): void {
+            $table->foreignId('role_id')->nullable()->after('tenant_id')->constrained('roles')->nullOnDelete();
+            $table->jsonb('extra_permissions')->default('[]');
+        });
+
+        DB::statement('UPDATE tenant_invitations SET role_id = roles.id FROM roles WHERE roles.name = tenant_invitations.role AND roles.tenant_id IS NULL');
+        DB::statement('DROP INDEX tenant_invitations_one_open_owner');
+        DB::statement('DROP INDEX tenant_invitations_one_open_per_email');
+
+        Schema::table('tenant_invitations', function (Blueprint $table): void {
+            $table->dropColumn('role');
+        });
+
+        DB::statement('ALTER TABLE tenant_invitations ADD CONSTRAINT tenant_invitations_open_has_role CHECK (role_id IS NOT NULL OR accepted_at IS NOT NULL OR cancelled_at IS NOT NULL)');
+        DB::statement("ALTER TABLE tenant_invitations ADD CONSTRAINT tenant_invitations_extra_permissions_list CHECK (jsonb_typeof(extra_permissions) = 'array')");
+        // Postgres takes no subquery in a partial index, so the owner template's id is written in as it is in this database:
+        // it never changes (templates are never deleted or recreated), and a database rebuilt from the migrations gets its own.
+        DB::statement("CREATE UNIQUE INDEX tenant_invitations_one_open_owner ON tenant_invitations (tenant_id) WHERE role_id = {$owner} AND accepted_at IS NULL AND cancelled_at IS NULL");
+        DB::statement("CREATE UNIQUE INDEX tenant_invitations_one_open_per_email ON tenant_invitations (tenant_id, email) WHERE role_id <> {$owner} AND accepted_at IS NULL AND cancelled_at IS NULL");
+        DB::statement('CREATE INDEX tenant_invitations_role_id_index ON tenant_invitations (role_id)');
+    }
+
+    public function down(): void
+    {
+        DB::statement('DROP INDEX tenant_invitations_one_open_owner');
+        DB::statement('DROP INDEX tenant_invitations_one_open_per_email');
+
+        Schema::table('tenant_invitations', function (Blueprint $table): void {
+            $table->string('role', 20)->nullable();
+        });
+
+        // Nothing is deleted. An invitation to a template keeps it; one to a role of the company's own becomes the template
+        // that role was based on (never the owner's), or viewer, the least a role can give (an open one is cancelled, so it gives nothing); a closed one whose role was
+        // deleted since becomes viewer too (it is closed, so it gives nothing). The extra permissions an invitation brought
+        // are lost: the old schema has nowhere to keep them.
+        // An open invitation to a role of the company's own is cancelled first: the old column cannot say what it gave, and
+        // mapping it to a template could widen it (viewer reads NOM-035 results). The role below only satisfies NOT NULL.
+        DB::statement('UPDATE tenant_invitations SET cancelled_at = NOW() FROM roles WHERE roles.id = tenant_invitations.role_id AND roles.tenant_id IS NOT NULL AND tenant_invitations.accepted_at IS NULL AND tenant_invitations.cancelled_at IS NULL');
+        DB::statement("UPDATE tenant_invitations SET role = roles.name FROM roles WHERE roles.id = tenant_invitations.role_id AND roles.tenant_id IS NULL AND roles.name IN ('owner', 'hr', 'viewer', 'committee', 'complaints')");
+        DB::statement("UPDATE tenant_invitations SET role = roles.based_on FROM roles WHERE roles.id = tenant_invitations.role_id AND tenant_invitations.role IS NULL AND roles.based_on IN ('hr', 'viewer', 'committee', 'complaints')");
+        DB::statement("UPDATE tenant_invitations SET role = 'viewer' WHERE role IS NULL");
+
+        Schema::table('tenant_invitations', function (Blueprint $table): void {
+            $table->dropConstrainedForeignId('role_id');
+            $table->dropColumn('extra_permissions');
+        });
+
+        DB::statement('ALTER TABLE tenant_invitations ALTER COLUMN role SET NOT NULL');
+        DB::statement("ALTER TABLE tenant_invitations ADD CONSTRAINT tenant_invitations_role_known CHECK (role IN ('owner', 'hr', 'viewer', 'committee', 'complaints'))");
+        DB::statement("CREATE UNIQUE INDEX tenant_invitations_one_open_owner ON tenant_invitations (tenant_id) WHERE role = 'owner' AND accepted_at IS NULL AND cancelled_at IS NULL");
+        DB::statement("CREATE UNIQUE INDEX tenant_invitations_one_open_per_email ON tenant_invitations (tenant_id, email) WHERE role <> 'owner' AND accepted_at IS NULL AND cancelled_at IS NULL");
+    }
+
+    private function ownerRoleId(): int
+    {
+        $id = DB::table('roles')->where('name', 'owner')->whereNull('tenant_id')->value('id');
+
+        return is_int($id) ? $id : throw new RuntimeException('The owner role is missing.');
+    }
+};

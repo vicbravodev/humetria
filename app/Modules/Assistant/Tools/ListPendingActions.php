@@ -53,6 +53,11 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
     public function handle(Request $request): string
     {
         $this->guard->check($this->scope);
+
+        if (! $this->seesAny()) {
+            return ToolCard::withoutAccess('list', 'Pendientes', 'pendientes de ninguna área')->toJson();
+        }
+
         $items = $this->items();
         $shown = array_slice($items, 0, self::MAX_ITEMS);
         $truncated = count($items) > self::MAX_ITEMS;
@@ -87,23 +92,24 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
     public function facts(): array
     {
         $this->guard->check($this->scope);
-        $names = $this->centerNames();
-        $facts = ['pending' => self::pendingLine($this->items())];
 
-        if ($this->modules->enabled($this->scope->tenantId, 'nom035')) {
-            $closing = array_find($this->closing(), fn (CampaignRecord $campaign): bool => self::missing($campaign) > 0);
-            $programs = count($this->overduePrograms($names));
-            $facts += array_filter([
-                'invite.campaigns' => $closing === null ? null : "Cierra el {$closing->closesOn} y ".(self::missing($closing) === 1 ? 'falta 1 cuestionario' : 'faltan '.self::missing($closing).' cuestionarios').'. ¿Te cuento cómo va?',
-                'invite.interventions' => match (true) {
-                    $programs === 0 => null,
-                    $programs === 1 => '1 programa de intervención tiene acciones vencidas. ¿Lo repasamos?',
-                    default => "{$programs} programas de intervención tienen acciones vencidas. ¿Los repasamos?",
-                },
-            ]);
+        if (! $this->seesAny()) {
+            return [];
         }
 
-        return $this->modules->enabled($this->scope->tenantId, 'nom037') ? $facts + self::teleworkFacts($this->teleworkStanding($names)) : $facts;
+        $names = $this->centerNames();
+        $closing = $this->sees('view-nom035-route', 'nom035') ? array_find($this->closing(), fn (CampaignRecord $campaign): bool => self::missing($campaign) > 0) : null;
+        $programs = $this->sees('view-interventions', 'nom035') ? count($this->overduePrograms($names)) : 0;
+        $facts = ['pending' => self::pendingLine($this->items())] + array_filter([
+            'invite.campaigns' => $closing === null ? null : "Cierra el {$closing->closesOn} y ".(self::missing($closing) === 1 ? 'falta 1 cuestionario' : 'faltan '.self::missing($closing).' cuestionarios').'. ¿Te cuento cómo va?',
+            'invite.interventions' => match (true) {
+                $programs === 0 => null,
+                $programs === 1 => '1 programa de intervención tiene acciones vencidas. ¿Lo repasamos?',
+                default => "{$programs} programas de intervención tienen acciones vencidas. ¿Los repasamos?",
+            },
+        ]);
+
+        return $this->sees('view-telework', 'nom037') ? $facts + self::teleworkFacts($this->teleworkStanding($names)) : $facts;
     }
 
     /**
@@ -151,6 +157,25 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
         ]);
     }
 
+    /** Whether the person sees the area of `$permission` in the panel and the company has its module. */
+    private function sees(string $permission, string $module): bool
+    {
+        return $this->scope->canSee($permission) && $this->modules->enabled($this->scope->tenantId, $module);
+    }
+
+    /**
+     * Whether anything of the person's is reviewed: the first work center (only while the company has none), or NOM-035, its
+     * Programas or NOM-037 in a company that has them.
+     */
+    private function seesAny(): bool
+    {
+        if ($this->centerNames() === []) {
+            return $this->scope->canSee('view-work-centers');
+        }
+
+        return $this->sees('view-nom035-route', 'nom035') || $this->sees('view-interventions', 'nom035') || $this->sees('view-telework', 'nom037');
+    }
+
     /**
      * @return array<string, string> the name of each work center not archived, by id
      */
@@ -175,15 +200,16 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
         $names = $this->centerNames();
 
         if ($names === []) {
-            return [['priority' => 0, 'kind' => 'register_work_center', 'title' => 'Registrar tu primer centro de trabajo', 'detail' => 'Las normas se aplican por centro de trabajo.', 'due' => null, 'link' => $this->links->workCenters()]];
+            return $this->scope->canSee('view-work-centers') ? [['priority' => 0, 'kind' => 'register_work_center', 'title' => 'Registrar tu primer centro de trabajo', 'detail' => 'Las normas se aplican por centro de trabajo.', 'due' => null, 'link' => $this->links->workCenters()]] : [];
         }
 
-        $nom035 = $this->modules->enabled($this->scope->tenantId, 'nom035');
+        // Each kind only to whoever sees its area in the panel (RoutePermissions), in a company that has its module.
+        $nom035 = $this->sees('view-nom035-route', 'nom035');
         $items = [
             ...($nom035 ? $this->evaluations($names) : []),
             ...($nom035 ? $this->campaignItems($names) : []),
-            ...($nom035 ? $this->overduePrograms($names) : []),
-            ...($this->modules->enabled($this->scope->tenantId, 'nom037') ? $this->teleworkGaps($names) : []),
+            ...($this->sees('view-interventions', 'nom035') ? $this->overduePrograms($names) : []),
+            ...($this->sees('view-telework', 'nom037') ? $this->teleworkGaps($names) : []),
         ];
         // Stable: items of the same urgency stay in the order they were found.
         usort($items, fn (array $left, array $right): int => $left['priority'] <=> $right['priority']);

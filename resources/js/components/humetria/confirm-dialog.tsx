@@ -96,7 +96,8 @@ export default function ConfirmDialog(props: Props) {
             {props.trigger !== undefined && (
                 <DialogTrigger asChild>{props.trigger}</DialogTrigger>
             )}
-            <DialogContent>
+            {/* Its form lives in a portal, but React bubbles its submit to the form the dialog is written in: it stops here. */}
+            <DialogContent onSubmit={(event) => event.stopPropagation()}>
                 <DialogTitle>{props.title}</DialogTitle>
                 <DialogDescription>{props.description}</DialogDescription>
                 {props.children}

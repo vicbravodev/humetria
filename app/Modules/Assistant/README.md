@@ -6,18 +6,18 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 
 ## Cómo está hecho
 
-| Pieza                             | Dónde                                                                                                                                                                                                                                         |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agente (SDK `laravel/ai`)         | `Agents/HumiAssistant.php` + `resources/ai/humi.system.md` (instrucciones versionadas)                                                                                                                                                        |
-| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`, `GetFirstSteps`, `OfferChoices`                                                                                        |
-| Quién es la persona en la empresa | `Data/AssistantScope` (empresa, participante, permisos), armado en el servidor por `Support/AssistantScopeFactory`                                                                                                                            |
-| Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                                                                                                                 |
-| Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                                                                                                                     |
-| Cuota del plan (libro de Billing) | `Support/HumiTokens` reserva 9,000 tokens (`humi.reservation_tokens`) por el contrato `UsageMeter` antes de llamar, liquida con el conteo real del SDK y libera si falla; sin cuota, 403 sin llamada                                          |
-| Datos personales                  | `Support/PersonalDataRedactor` (correo, CURP, RFC, NSS, teléfono) antes de enviar y de guardar                                                                                                                                                |
-| Datos vivos                       | `Support/LiveFacts`: cada herramienta que implementa `Contracts\TellsLiveFacts` da frases cortas por llave (`pending`, `participation`, `risk`, `telework`, `invite.{página}`); un minuto en caché por empresa; ruta `tenant.assistant.facts` |
-| Rutas                             | `routes/assistant.php` bajo `admin/{empresa}/assistant/*` (nombre `tenant.assistant.*`); consola del superadmin en `routes/assistant_console.php`                                                                                             |
-| Front                             | `resources/js/components/assistant/*`, `hooks/use-humi-chat.ts`, `lib/assistant/*`, `pages/assistant/index.tsx`                                                                                                                               |
+| Pieza                             | Dónde                                                                                                                                                                                                                                                                    |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Agente (SDK `laravel/ai`)         | `Agents/HumiAssistant.php` + `resources/ai/humi.system.md` (instrucciones versionadas)                                                                                                                                                                                   |
+| Herramientas (solo lectura)       | `Tools/`: `GetComplianceOverview`, `GetCampaignProgress`, `GetRiskResults`, `ListPendingActions`, `SearchRegulations`, `GetFirstSteps`, `OfferChoices`                                                                                                                   |
+| Quién es la persona en la empresa | `Data/AssistantScope` (empresa, participante, permisos), armado en el servidor por `Support/AssistantScopeFactory`                                                                                                                                                       |
+| Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                                                                                                                                            |
+| Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                                                                                                                                                |
+| Cuota del plan (libro de Billing) | `Support/HumiTokens` reserva 9,000 tokens (`humi.reservation_tokens`) por el contrato `UsageMeter` antes de llamar, liquida con el conteo real del SDK y libera si falla; sin cuota, 403 sin llamada                                                                     |
+| Datos personales                  | `Support/PersonalDataRedactor` (correo, CURP, RFC, NSS, teléfono) antes de enviar y de guardar                                                                                                                                                                           |
+| Datos vivos                       | `Support/LiveFacts`: cada herramienta que implementa `Contracts\TellsLiveFacts` da frases cortas por llave (`pending`, `participation`, `risk`, `telework`, `invite.{página}`); un minuto en caché por empresa y por lo que la persona ve; ruta `tenant.assistant.facts` |
+| Rutas                             | `routes/assistant.php` bajo `admin/{empresa}/assistant/*` (nombre `tenant.assistant.*`); consola del superadmin en `routes/assistant_console.php`                                                                                                                        |
+| Front                             | `resources/js/components/assistant/*`, `hooks/use-humi-chat.ts`, `lib/assistant/*`, `pages/assistant/index.tsx`                                                                                                                                                          |
 
 **Preguntar antes de asumir.** Cuando una pregunta puede entenderse de dos maneras que dan datos distintos («¿qué me falta?»
 sin decir de qué norma; «¿cómo va la campaña?» con varias), Humi consulta primero lo que la empresa tiene y llama a
@@ -37,10 +37,11 @@ Humi lee otros módulos **solo por contratos públicos**: `Campaigns\Contracts\{
 `Disclosure\Contracts\DisclosureStanding`, `Seating\Contracts\SeatingRoute`, `Leave\Contracts\PendingRequests`,
 `Complaints\Contracts\{ComplaintChannels,ComplaintsToAcknowledge}`, `Engagement\Contracts\EngagementStanding`,
 `Attendance\Contracts\AttendanceStanding`, `Organization\Contracts\Headcount`, `Compensation\Contracts\CompensationStanding`,
-`Tenancy\Contracts\{Companies,Members,WorkCenters}`.
+`Tenancy\Contracts\{Companies,Members,WorkCenters,CompanyAccess}`.
 
 **Todo módulo de la empresa le llega.** Cada uno tiene su lector en `Support/Readers` (una línea en el estado de
-cumplimiento) y sus criterios de `docs/normas` entran solos al buscador. `ModuleCoverageTest` falla si un módulo nuevo no
+cumplimiento) y sus criterios de `docs/normas` entran solos al buscador. Roles y permisos no son un módulo pero toda empresa
+los tiene: `AccessReader` le dice a cada quien su nivel por área y al dueño los conteos de roles (`docs/normas/permisos`). `ModuleCoverageTest` falla si un módulo nuevo no
 se conecta; eximir uno exige su razón ahí (hoy: Sso, Demos, Responses, WorkerAccess).
 
 **Fuentes, paso siguiente y datos vivos.** Una herramienta pone en su `ToolCard` `sources` (de dónde salió la cifra:
@@ -67,6 +68,9 @@ preguntó. Implementación: `Support/TenantHumiActivity`.
 - **Empresa primero.** El `AssistantScope` viene del servidor y entra por constructor a cada herramienta; ningún esquema de
   herramienta tiene empresa, tenant ni persona (`ToolRegistryTest` lo recorre). Un id de otra empresa se comporta exactamente
   como uno que no existe. `ScopeGuard` impide que una herramienta lea para una empresa distinta a la de la petición.
+- **Cada área, solo a quien la ve en el panel.** El scope lleva los permisos `view-*` de la persona; el resumen
+  (`ComplianceReaders`, mapa `requires`) deja fuera las áreas que no ve, y resultados, avance y pendientes de NOM-035
+  responden «Tu rol no incluye ver…» sin cifras (`AreaPermissionsTest`).
 - **La conversación es de una persona en una empresa** (`ConversationParticipant`, único por empresa y usuario). El mismo
   usuario en dos empresas tiene dos historias. Lo ajeno, lo de otra empresa y lo inexistente dan el mismo 404.
 - **Anonimato.** Los resultados de riesgo pasan por `Results` (`RiskResults` → `RiskDistribution`): personas por nivel,

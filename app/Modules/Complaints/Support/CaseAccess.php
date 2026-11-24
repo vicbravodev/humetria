@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
  */
 final readonly class CaseAccess
 {
-    public function __construct(private Members $members) {}
+    public function __construct(private Members $members, private ExcludingPermissions $excluding) {}
 
     public function find(int $userId, string $complaintId): ?Complaint
     {
@@ -27,9 +27,9 @@ final readonly class CaseAccess
         $case = Complaint::query()
             ->whereIn('id', ComplaintAssignment::query()->where('user_id', $userId)->whereNull('ended_on')->select('complaint_id'))
             ->find($complaintId);
-        $role = $this->members->find($userId)?->role->value;
+        $member = $case === null ? null : $this->members->find($userId);
 
-        // Nobody handles a case against their own role (criterio C-45), also when the role came after the assignment.
-        return $case === null || $role === null || $role === $case->respondent_kind->excludedRole() ? null : $case;
+        // Nobody handles a case against who they are (criterio C-45), also when the role or permission came after the assignment.
+        return $member === null || $case->respondent_kind->excludes($member->role->key, $this->excluding->byMember()[$userId] ?? []) ? null : $case;
     }
 }

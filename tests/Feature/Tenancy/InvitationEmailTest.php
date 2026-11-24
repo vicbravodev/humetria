@@ -26,8 +26,8 @@ beforeEach(function (): void {
 /** The email SendInvitationEmail sends for an invitation to `$email` with `$role`. */
 function invitationEmail(Tenant $tenant, ?User $by, TenantRole $role = TenantRole::Hr, string $email = 'lucia@autopartes.mx'): MailMessage
 {
-    $invitation = TenantInvitation::factory()->for($tenant)->create([
-        'role' => $role, 'email' => $email, 'invited_by' => $by?->id, 'expires_at' => now()->addDays(7),
+    $invitation = TenantInvitation::factory()->for($tenant)->role($role)->create([
+        'email' => $email, 'invited_by' => $by?->id, 'expires_at' => now()->addDays(7),
     ]);
     app(SendInvitationEmail::class)->handle($invitation, $tenant->trade_name, 'tok');
 

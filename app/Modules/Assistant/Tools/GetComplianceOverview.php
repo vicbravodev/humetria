@@ -29,7 +29,7 @@ final readonly class GetComplianceOverview implements Tool
 
     public function description(): string
     {
-        return 'Estado de cumplimiento de la empresa por norma o módulo (NOM-035 y su difusión, NOM-037, Ley Silla, vacaciones, quejas, pulso, clima, asistencia, organigrama y compensación; solo los que la empresa tiene): al día, en curso, pendiente o no aplica, con las cifras que lo explican y el enlace a la pantalla. No recibe argumentos.';
+        return 'Estado de cumplimiento de la empresa por norma o módulo (NOM-035 y su difusión, NOM-037, Ley Silla, vacaciones, quejas, pulso, clima, asistencia, organigrama y compensación; solo los que la empresa tiene): al día, en curso, pendiente o no aplica, con las cifras que lo explican y el enlace a la pantalla. Incluye roles y permisos: qué puede hacer quien pregunta, área por área, y para el dueño cuántos roles propios hay y cuántas personas tienen cada rol. No recibe argumentos.';
     }
 
     public function handle(Request $request): string
@@ -39,10 +39,11 @@ final readonly class GetComplianceOverview implements Tool
         return (new ToolCard(
             'status_list',
             'Estado de cumplimiento',
-            // A norm is a module of the company: one it does not have is not told.
+            // A norm is a module of the company: one it does not have is not told, nor one the person does not see in the panel.
             array_values(array_map(
                 fn (ComplianceReader $reader): array => $reader->status($this->scope)->toArray(),
-                array_filter($this->readers->all(), fn (ComplianceReader $reader): bool => ($module = $this->readers->moduleOf($reader)) === null || $this->modules->enabled($this->scope->tenantId, $module)),
+                array_filter($this->readers->all(), fn (ComplianceReader $reader): bool => (($module = $this->readers->moduleOf($reader)) === null || $this->modules->enabled($this->scope->tenantId, $module))
+                    && $this->readers->tells($reader, $this->scope)),
             )),
             $this->links->dashboard(),
         ))->toJson();

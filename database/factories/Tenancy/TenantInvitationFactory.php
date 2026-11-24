@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<TenantInvitation>
@@ -22,7 +23,8 @@ final class TenantInvitationFactory extends Factory
     {
         return [
             'tenant_id' => Tenant::factory(),
-            'role' => TenantRole::Owner,
+            'role_id' => fn () => self::template(TenantRole::Owner)->id,
+            'extra_permissions' => [],
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'token_hash' => TenantInvitation::hashToken(Str::random(64)),
@@ -35,9 +37,15 @@ final class TenantInvitationFactory extends Factory
         return $this->state(['token_hash' => TenantInvitation::hashToken($token)]);
     }
 
-    public function role(TenantRole $role): self
+    /** A template, or a role of the company's own. */
+    public function role(TenantRole|Role $role): self
     {
-        return $this->state(['role' => $role]);
+        return $this->state(['role_id' => ($role instanceof Role ? $role : self::template($role))->id]);
+    }
+
+    private static function template(TenantRole $role): Role
+    {
+        return Role::query()->where('name', $role->value)->whereNull('tenant_id')->sole();
     }
 
     public function expired(): self

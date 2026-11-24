@@ -1,7 +1,7 @@
 import MemberInvitationRow from '@/components/tenancy/member-invitation-row';
+import StackedTable from '@/components/humetria/stacked-table';
 import MemberRowView from '@/components/tenancy/member-row';
 import {
-    Table,
     TableBody,
     TableCaption,
     TableHead,
@@ -14,7 +14,10 @@ import type {
     RoleOption,
 } from '@/types';
 
-/** Who has access, then the invitations still open, in one table (pantallas: Usuarios). */
+/**
+ * Who has access, then the invitations still open, in one table (pantallas: Usuarios); on a phone each row is a card, the
+ * name first and the role, the access and the actions after it.
+ */
 export default function MembersTable({
     members,
     invitations,
@@ -25,7 +28,7 @@ export default function MembersTable({
     roles: RoleOption[];
 }) {
     return (
-        <Table>
+        <StackedTable>
             <TableCaption className="sr-only">
                 Personas con acceso a la empresa e invitaciones sin aceptar
             </TableCaption>
@@ -54,6 +57,6 @@ export default function MembersTable({
                     />
                 ))}
             </TableBody>
-        </Table>
+        </StackedTable>
     );
 }

@@ -44,14 +44,9 @@ describe('channelSummary', () => {
     });
 });
 
-const row = (
-    kind: string,
-    names: string[],
-    excludedRole: string | null = null,
-): CoverageByKind => ({
+const row = (kind: string, names: string[]): CoverageByKind => ({
     kind,
     label: kind,
-    excludedRole,
     handlers: names.map((name) => ({ name, roleLabel: 'RH' })),
 });
 
@@ -75,8 +70,8 @@ describe('channelGaps', () => {
             channelGaps(
                 [
                     row('coworker', ['Rita']),
-                    row('management', [], 'owner'),
-                    row('hr', [], 'hr'),
+                    row('management', []),
+                    row('hr', []),
                 ],
                 1,
             ),
@@ -138,23 +133,56 @@ describe('channelSince', () => {
 
 describe('eligibleFor', () => {
     const people = [
-        { value: '1', label: 'Olga', role: 'owner', roleLabel: 'Dueño' },
-        { value: '2', label: 'Rita', role: 'hr', roleLabel: 'RH' },
+        {
+            value: '1',
+            label: 'Olga',
+            role: 'owner',
+            roleLabel: 'Dueño',
+            excludedKinds: ['management'],
+        },
+        {
+            value: '2',
+            label: 'Rita',
+            role: 'hr',
+            roleLabel: 'RH',
+            excludedKinds: ['hr'],
+        },
         {
             value: '3',
             label: 'Cris',
             role: 'committee',
             roleLabel: 'Comisión de seguridad e higiene',
+            excludedKinds: [],
         },
     ];
 
     it('splits the team and the committee, and who the conflict leaves out of each', () => {
-        expect(eligibleFor(people, 'owner')).toEqual({
+        expect(eligibleFor(people, 'management')).toEqual({
             team: [{ value: '2', label: 'Rita · RH' }],
             committee: [{ value: '3', label: 'Cris' }],
             excluded: ['Olga'],
         });
         expect(eligibleFor(people, null).team).toHaveLength(2);
+    });
+
+    it('leaves out whoever the server says may not receive the kind, whatever their role is called', () => {
+        const staff = {
+            value: '4',
+            label: 'Paz',
+            role: 'custom_7a1',
+            roleLabel: 'Personal',
+            excludedKinds: ['hr'],
+        };
+
+        expect(eligibleFor([...people, staff], 'hr').excluded).toEqual([
+            'Rita',
+            'Paz',
+        ]);
+        expect(
+            eligibleFor([...people, staff], 'coworker').team.map(
+                (option) => option.value,
+            ),
+        ).toEqual(['1', '2', '4']);
     });
 });
 
@@ -163,7 +191,7 @@ describe('designateWords', () => {
 
     it('asks who handles a kind of complaint, and who may not', () => {
         expect(
-            designateWords(row('management', [], 'owner'), {
+            designateWords(row('management', []), {
                 committee: [{ value: '3', label: 'Cris' }],
                 excluded: ['Olga'],
             }),
@@ -173,7 +201,7 @@ describe('designateWords', () => {
             teamHint: 'Olga no puede: es contra su rol',
             committeeHint: 'Sus integrantes con cuenta',
         });
-        expect(designateWords(row('hr', [], 'hr'), nobody).lead).toContain(
+        expect(designateWords(row('hr', []), nobody).lead).toContain(
             'no sea de recursos humanos',
         );
     });

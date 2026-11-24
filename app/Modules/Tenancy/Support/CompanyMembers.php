@@ -30,6 +30,9 @@ final class CompanyMembers implements Members
     /** @var array<string, list<MemberSummary>> */
     private array $managing = [];
 
+    /** @var array<string, list<MemberSummary>> by company and permission */
+    private array $holders = [];
+
     public function __construct(private readonly CurrentTenant $current, private readonly CompanyRoles $roles) {}
 
     public function all(): array
@@ -46,6 +49,7 @@ final class CompanyMembers implements Members
         $this->reviewing = [];
         $this->handling = [];
         $this->managing = [];
+        $this->holders = [];
     }
 
     /** @return list<MemberSummary> */
@@ -70,36 +74,55 @@ final class CompanyMembers implements Members
 
     public function complaintHandlers(): array
     {
-        return $this->handling[$this->current->id()] ??= $this->withPermission('handle-complaints');
+        return $this->handling[$this->current->id()] ??= $this->holding('handle-complaints');
     }
 
     public function complaintManagers(): array
     {
-        return $this->managing[$this->current->id()] ??= $this->withPermission('manage-complaint-channel');
+        return $this->managing[$this->current->id()] ??= $this->holding('manage-complaint-channel');
     }
 
     public function screeningViewers(): array
     {
-        return $this->withPermission('view-trauma-screenings');
+        return $this->holding('view-trauma-screenings');
     }
 
     /** @return list<MemberSummary> */
     private function loadReviewers(): array
     {
-        return $this->withPermission('review-workplaces');
+        return $this->holding('review-workplaces');
     }
 
-    /** @return list<MemberSummary> The members whose role has the permission. */
-    private function withPermission(string $permission): array
+    public function holding(string $permission): array
     {
-        $names = DB::table('role_has_permissions')
-            ->join('roles', 'roles.id', '=', 'role_has_permissions.role_id')
+        $tenantId = $this->current->id();
+
+        return $this->holders[$tenantId.'|'.$permission] ??= $this->loadHolding($tenantId, $permission);
+    }
+
+    /** @return list<MemberSummary> */
+    private function loadHolding(string $tenantId, string $permission): array
+    {
+        // A tool the company has not contracted counts for nothing, as in a person's effective permissions.
+        if (($definition = PermissionCatalog::find($permission)) !== null && ! PermissionCatalog::available($tenantId, $definition)) {
+            return [];
+        }
+
+        $type = (new User)->getMorphClass();
+        $direct = DB::table('model_has_permissions')
+            ->join('permissions', 'permissions.id', '=', 'model_has_permissions.permission_id')
+            ->where('model_has_permissions.tenant_id', $tenantId)->where('model_has_permissions.model_type', $type)->where('permissions.name', $permission)
+            ->select('model_has_permissions.model_id');
+        $ids = DB::table('role_has_permissions')
+            ->join('model_has_roles', 'model_has_roles.role_id', '=', 'role_has_permissions.role_id')
             ->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
-            ->where('permissions.name', $permission)
-            ->pluck('roles.name')
+            ->where('model_has_roles.tenant_id', $tenantId)->where('model_has_roles.model_type', $type)->where('permissions.name', $permission)
+            ->select('model_has_roles.model_id')
+            ->union($direct)
+            ->pluck('model_id')
             ->all();
 
-        return array_values(array_filter($this->all(), fn (MemberSummary $member): bool => in_array($member->role->value, $names, true)));
+        return array_values(array_filter($this->all(), fn (MemberSummary $member): bool => in_array($member->userId, $ids, true)));
     }
 
     public function find(int $userId): ?MemberSummary

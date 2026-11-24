@@ -1,4 +1,4 @@
-import { createInertiaApp, router } from '@inertiajs/react';
+import { createInertiaApp, resetLayoutProps, router } from '@inertiajs/react';
 import AppErrorBoundary from '@/components/app-error-boundary';
 import { documentTitle } from '@/lib/document-title';
 import { Toaster } from '@/components/ui/sonner';
@@ -18,6 +18,7 @@ import {
     startErrorTracking,
     watchErrors,
 } from '@/lib/error-tracking';
+import { layoutResetter } from '@/lib/layout-reset';
 import { initialPageName } from '@/lib/page-frame';
 import { rememberData } from '@/lib/recording-mask';
 import {
@@ -48,7 +49,12 @@ if (typeof document !== 'undefined') {
     // What an error report says about where it happened: the page and its request id, kept up to date on every visit.
     firstPage = initialPage ? JSON.parse(initialPage) : null;
     setErrorContext(firstPage);
+    const arrives = layoutResetter(
+        initialPageName(initialPage),
+        resetLayoutProps,
+    );
     router.on('navigate', (event) => {
+        arrives(event.detail.page.component);
         setErrorContext(event.detail.page);
         void followPage(event.detail.page);
     });

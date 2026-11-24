@@ -66,7 +66,7 @@ it('finds the owner and the open invitation of a company', function (): void {
     expect($tenant->ownerMembership?->is($membership))->toBeTrue()
         ->and($tenant->openInvitation?->is($open))->toBeTrue()
         ->and($tenant->invitations)->toHaveCount(2)
-        ->and(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole()))->toBe(TenantRole::Owner)
+        ->and(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole())?->key)->toBe(TenantRole::Owner->value)
         ->and($membership->tenant->is($tenant))->toBeTrue()
         ->and($membership->user)->toBeInstanceOf(User::class)
         ->and($open->tenant->is($tenant))->toBeTrue();

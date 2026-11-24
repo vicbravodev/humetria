@@ -21,10 +21,10 @@ mutates(CompanyRoles::class);
 it('defines the company roles and what each one allows', function (): void {
     $permissions = fn (string $role): array => Role::findByName($role)->permissions->pluck('name')->sort()->values()->all();
 
-    expect($permissions('owner'))->toBe(['assess-seating', 'handle-complaints', 'manage-attendance', 'manage-campaigns', 'manage-climate', 'manage-compensation', 'manage-complaint-channel', 'manage-disclosure', 'manage-interventions', 'manage-members', 'manage-org-chart', 'manage-organization', 'manage-pulse', 'manage-seating', 'manage-telework', 'manage-vacations', 'manage-worker-access', 'review-workplaces', 'use-assistant', 'view-attendance', 'view-climate', 'view-compensation', 'view-disclosure', 'view-interventions', 'view-org-chart', 'view-pulse', 'view-seating', 'view-telework', 'view-trauma-screenings', 'view-vacations', 'view-worker-access'])
-        ->and($permissions('hr'))->toBe(['assess-seating', 'handle-complaints', 'manage-attendance', 'manage-campaigns', 'manage-climate', 'manage-compensation', 'manage-complaint-channel', 'manage-disclosure', 'manage-interventions', 'manage-org-chart', 'manage-organization', 'manage-pulse', 'manage-seating', 'manage-telework', 'manage-vacations', 'manage-worker-access', 'review-workplaces', 'use-assistant', 'view-attendance', 'view-climate', 'view-compensation', 'view-disclosure', 'view-interventions', 'view-org-chart', 'view-pulse', 'view-seating', 'view-telework', 'view-trauma-screenings', 'view-vacations', 'view-worker-access'])
-        ->and($permissions('viewer'))->toBe(['use-assistant', 'view-attendance', 'view-climate', 'view-disclosure', 'view-interventions', 'view-org-chart', 'view-pulse', 'view-seating', 'view-telework', 'view-vacations', 'view-worker-access'])
-        ->and($permissions('committee'))->toBe(['assess-seating', 'handle-complaints', 'review-workplaces', 'view-seating', 'view-telework']);
+    expect($permissions('owner'))->toBe(['assess-seating', 'handle-complaints', 'manage-attendance', 'manage-campaigns', 'manage-climate', 'manage-compensation', 'manage-complaint-channel', 'manage-disclosure', 'manage-interventions', 'manage-members', 'manage-org-chart', 'manage-organization', 'manage-pulse', 'manage-seating', 'manage-telework', 'manage-vacations', 'manage-worker-access', 'review-workplaces', 'use-assistant', 'view-attendance', 'view-climate', 'view-compensation', 'view-dashboard', 'view-disclosure', 'view-interventions', 'view-nom035-route', 'view-org-chart', 'view-pulse', 'view-seating', 'view-telework', 'view-trauma-screenings', 'view-vacations', 'view-work-centers', 'view-worker-access'])
+        ->and($permissions('hr'))->toBe(['assess-seating', 'handle-complaints', 'manage-attendance', 'manage-campaigns', 'manage-climate', 'manage-compensation', 'manage-complaint-channel', 'manage-disclosure', 'manage-interventions', 'manage-org-chart', 'manage-organization', 'manage-pulse', 'manage-seating', 'manage-telework', 'manage-vacations', 'manage-worker-access', 'review-workplaces', 'use-assistant', 'view-attendance', 'view-climate', 'view-compensation', 'view-dashboard', 'view-disclosure', 'view-interventions', 'view-nom035-route', 'view-org-chart', 'view-pulse', 'view-seating', 'view-telework', 'view-trauma-screenings', 'view-vacations', 'view-work-centers', 'view-worker-access'])
+        ->and($permissions('viewer'))->toBe(['use-assistant', 'view-attendance', 'view-climate', 'view-dashboard', 'view-disclosure', 'view-interventions', 'view-nom035-route', 'view-org-chart', 'view-pulse', 'view-seating', 'view-telework', 'view-vacations', 'view-work-centers', 'view-worker-access'])
+        ->and($permissions('committee'))->toBe(['assess-seating', 'handle-complaints', 'review-workplaces', 'view-dashboard', 'view-seating', 'view-telework']);
 });
 
 it('keeps each person\'s role per company: hr in one, viewer in another', function (): void {
@@ -35,8 +35,8 @@ it('keeps each person\'s role per company: hr in one, viewer in another', functi
 
     $roles = resolve(CompanyRoles::class);
 
-    expect($roles->of($user, $acme))->toBe(TenantRole::Hr)
-        ->and($roles->of($user, $beta))->toBe(TenantRole::Viewer)
+    expect($roles->of($user, $acme)?->key)->toBe(TenantRole::Hr->value)
+        ->and($roles->of($user, $beta)?->key)->toBe(TenantRole::Viewer->value)
         ->and($roles->of($user, Tenant::factory()->create()))->toBeNull()
         ->and(DB::table('tenant_memberships')->where('user_id', $user->id)->count())->toBe(2);
 });
@@ -44,7 +44,7 @@ it('keeps each person\'s role per company: hr in one, viewer in another', functi
 it('gives a membership the owner role unless told otherwise', function (): void {
     $membership = TenantMembership::factory()->create();
 
-    expect(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole()))->toBe(TenantRole::Owner);
+    expect(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole())?->key)->toBe(TenantRole::Owner->value);
 });
 
 it('changes a role inside one company without touching the others or the superadmin role', function (): void {
@@ -56,8 +56,8 @@ it('changes a role inside one company without touching the others or the superad
 
     $roles->assign($user, $acme, TenantRole::Viewer);
 
-    expect($roles->of($user, $acme))->toBe(TenantRole::Viewer)
-        ->and($roles->of($user, $beta))->toBe(TenantRole::Hr)
+    expect($roles->of($user, $acme)?->key)->toBe(TenantRole::Viewer->value)
+        ->and($roles->of($user, $beta)?->key)->toBe(TenantRole::Hr->value)
         ->and($user->fresh()?->hasRole(User::SUPERADMIN))->toBeTrue();
 });
 
@@ -71,7 +71,7 @@ it('removes the role of a person in one company only', function (): void {
     $roles->remove($user, $acme);
 
     expect($roles->of($user, $acme))->toBeNull()
-        ->and($roles->of($user, $beta))->toBe(TenantRole::Hr);
+        ->and($roles->of($user, $beta)?->key)->toBe(TenantRole::Hr->value);
 });
 
 it('lists the role of everyone in a company with one query', function (): void {
@@ -82,7 +82,7 @@ it('lists the role of everyone in a company with one query', function (): void {
 
     $this->expectsDatabaseQueryCount(1);
 
-    expect(resolve(CompanyRoles::class)->inCompany($tenant))->toBe([$owner->user_id => TenantRole::Owner, $hr->user_id => TenantRole::Hr]);
+    expect(array_map(fn ($role): string => $role->key, resolve(CompanyRoles::class)->inCompany($tenant)))->toBe([$owner->user_id => 'owner', $hr->user_id => 'hr']);
 });
 
 it('allows a single owner per company in the database itself', function (): void {
@@ -112,9 +112,9 @@ it('still allows a single open owner invitation per company', function (): void 
 
 it('rejects an unknown role in an invitation', function (): void {
     expect(fn () => DB::table('tenant_invitations')->insert([
-        ...TenantInvitation::factory()->raw(['tenant_id' => Tenant::factory()->create()->id, 'role' => 'admin']),
+        ...TenantInvitation::factory()->raw(['tenant_id' => Tenant::factory()->create()->id, 'role_id' => 999_999, 'extra_permissions' => '[]']),
         'id' => fake()->uuid(),
-    ]))->toThrow(QueryException::class, 'tenant_invitations_role_known');
+    ]))->toThrow(QueryException::class, 'tenant_invitations_role_id_foreign');
 });
 
 it('forgets who can review as soon as someone loses their role', function (): void {
@@ -127,4 +127,13 @@ it('forgets who can review as soon as someone loses their role', function (): vo
     resolve(CompanyRoles::class)->remove($cora, $tenant);
 
     expect($members->reviewers())->toBe([]);
+});
+
+it('keeps the name of a company\'s own role unique inside the company in the database itself, whatever its case', function (): void {
+    $tenant = Tenant::factory()->create();
+    $role = fn (Tenant $company, string $label): Role => Role::query()->create(['name' => 'custom_'.Illuminate\Support\Str::uuid(), 'guard_name' => 'web', 'tenant_id' => $company->id, 'label' => $label]);
+    $role($tenant, 'Auditoría');
+    $role(Tenant::factory()->create(), 'Auditoría');
+
+    expect(fn () => $role($tenant, 'AUDITORÍA'))->toThrow(UniqueConstraintViolationException::class);
 });

@@ -25,9 +25,13 @@ const UNION_ALLOWED_ROUTES = [
     'tenant.employees.*',
     'tenant.areas.*',
     'tenant.members.*',
+    // A union's own roles, made only of compensation permissions.
+    'tenant.roles.*',
     'tenant.plan',
     'tenant.job-grades.*',
     'tenant.compensation.*',
+    // Where a member with nothing to open lands, a union's as well.
+    'tenant.no-access',
 ];
 
 /** The URL of `$route` inside `$tenant`, with the ids of another account's campaign in every other parameter. */
@@ -92,6 +96,23 @@ it('lets a union reach employees, areas, members and the dashboard redirect to C
     // The panel of a union is Compensación (Task 7 of the calculator plan: it was its roster until then).
     $this->actingAs($owner)->get(route('tenant.dashboard', $union))->assertRedirect(route('tenant.compensation.index', $union));
 });
+
+it('sends whoever of a union opens the dashboard to where they land, never to a 403 nor round in circles', function (string $who, string $lands): void {
+    $union = Tenant::factory()->union()->create();
+    $person = memberOf($union, TenantRole::Viewer);
+
+    if ($who === 'compensation') {
+        // A union's own role that only works on Compensación.
+        $role = app(App\Modules\Tenancy\Actions\CreateCompanyRole::class)->handle($union, 'Tabulador', ['view-compensation', 'manage-compensation'], null, ownerOf($union));
+        resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->assign($person, $union, $role);
+    }
+
+    expect(resolve(App\Modules\Tenancy\Support\StartRoute::class)->for($person, $union))->toBe($lands);
+    $this->actingAs($person)->get(route('tenant.dashboard', $union))->assertRedirect(route($lands, $union));
+})->with([
+    'a role of its own that sees Compensación' => ['compensation', 'tenant.compensation.index'],
+    'a viewer, who sees the panel and the centers but not Compensación' => ['viewer', 'tenant.no-access'],
+]);
 
 it('leaves companies untouched', function (): void {
     $company = Tenant::factory()->create();

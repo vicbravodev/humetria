@@ -1,4 +1,5 @@
-import { Ellipsis, UserMinus } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Ellipsis, KeyRound, UserMinus } from 'lucide-react';
 import { useState } from 'react';
 import RemoveMemberDialog from '@/components/tenancy/remove-member-dialog';
 import { Button } from '@/components/ui/button';
@@ -8,11 +9,14 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { edit } from '@/routes/tenant/members/permissions';
 import type { MemberRow } from '@/types';
 
-/** Behind the "…" of someone's row: taking their access away, after confirming. Their role changes in its own cell. */
+/** Behind the "…" of someone's row: their permissions besides their role, and taking their access away, after confirming. Their role changes in its own cell. */
 export default function MemberRowActions({ member }: { member: MemberRow }) {
     const [removing, setRemoving] = useState(false);
+    const tenantSlug = useTenantSlug();
 
     return (
         <>
@@ -30,6 +34,16 @@ export default function MemberRowActions({ member }: { member: MemberRow }) {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-44">
+                    <DropdownMenuItem
+                        onSelect={() =>
+                            router.visit(
+                                edit({ tenant: tenantSlug, member: member.id }),
+                            )
+                        }
+                    >
+                        <KeyRound />
+                        Permisos adicionales
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                         variant="destructive"
                         onSelect={() => setRemoving(true)}

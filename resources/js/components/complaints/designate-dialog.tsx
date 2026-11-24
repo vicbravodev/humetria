@@ -36,7 +36,7 @@ export default function DesignateDialog({
     candidates: HandlerCandidate[];
 }) {
     const tenantSlug = useTenantSlug();
-    const people = eligibleFor(candidates, row?.excludedRole ?? null);
+    const people = eligibleFor(candidates, row?.kind ?? null);
     const words = designateWords(row, people);
     const [from, setFrom] = useState(
         people.team.length === 0 ? 'committee' : 'team',

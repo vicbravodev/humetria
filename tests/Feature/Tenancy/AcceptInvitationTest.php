@@ -110,7 +110,7 @@ it('creates the owner account, signs it in and lands on the dashboard', function
         ->and(Hash::check('secreto-largo-123', $user->password))->toBeTrue()
         ->and($membership->tenant_id)->toBe($tenant->id)
         ->and($membership->user_id)->toBe($user->id)
-        ->and(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole()))->toBe(TenantRole::Owner)
+        ->and(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole())?->key)->toBe(TenantRole::Owner->value)
         ->and($invitation->fresh()?->accepted_at?->toIso8601String())->toBe('2026-10-28T18:00:00+00:00');
 
     $this->assertAuthenticatedAs($user);

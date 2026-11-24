@@ -14,13 +14,13 @@ export type RouteProgress = {
 /** Where a stage of a route stands on its line: done, the one the center is in, or ahead. */
 export type RouteStageState = 'done' | 'current' | 'pending';
 
-/** A work center of the panel with its place in each route. */
+/** A work center of the panel with its place in each route; only those of the standards the person may see. */
 export type CenterRoutes = {
     id: string;
     name: string;
-    nom035: RouteProgress;
-    nom037: RouteProgress;
-    seating: RouteProgress;
+    nom035?: RouteProgress;
+    nom037?: RouteProgress;
+    seating?: RouteProgress;
 };
 
 /** Something to attend before anything else ("Atiende primero"), with its one action. Never what a complaint says. */

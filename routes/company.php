@@ -6,18 +6,20 @@ use App\Modules\Sso\Http\Middleware\RequireSsoWhenEnforced;
 use App\Modules\Tenancy\Http\Controllers\CompanyChannelsController;
 use App\Modules\Tenancy\Http\Controllers\GroupMinimumController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
+use App\Modules\Tenancy\Http\Controllers\NoAccessController;
 use App\Modules\Tenancy\Http\Controllers\Nom035DossierController;
 use App\Modules\Tenancy\Http\Controllers\OnboardingController;
 use App\Modules\Tenancy\Http\Controllers\PlanController;
+use App\Modules\Tenancy\Http\Controllers\RoleController;
 use App\Modules\Tenancy\Http\Controllers\RouteController;
 use App\Modules\Tenancy\Http\Controllers\TenantDashboardController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterApplicabilityController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterController;
 use App\Modules\Tenancy\Http\Controllers\WorkCenterOptionsController;
 use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
-use App\Modules\Tenancy\Http\Middleware\LimitRestrictedRoles;
 use App\Modules\Tenancy\Http\Middleware\LimitToEnabledModules;
 use App\Modules\Tenancy\Http\Middleware\LimitUnionToCompensation;
+use App\Modules\Tenancy\Http\Middleware\RequireRoutePermission;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
 use App\Modules\Tenancy\Http\Requests\TenantRules;
 use Illuminate\Support\Facades\Route;
@@ -26,8 +28,10 @@ use Illuminate\Support\Facades\Route;
 // A reserved word can never be a company, so it never matches: /admin/register stays a plain 404 for guests too.
 $notReserved = '(?!(?:'.implode('|', array_map(preg_quote(...), TenantRules::RESERVED_SLUGS)).')$)[^/]+';
 
-Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnforced::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class, LimitUnionToCompensation::class, LimitToEnabledModules::class])->group(function () use ($notReserved): void {
+Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnforced::class, BlockSuspendedTenant::class, LimitUnionToCompensation::class, LimitToEnabledModules::class, RequireRoutePermission::class])->group(function () use ($notReserved): void {
     Route::get('admin/{tenant:slug}', TenantDashboardController::class)->where('tenant', $notReserved)->name('tenant.dashboard');
+    // Where a person who may open nothing in the company lands, with whom to ask (StartRoute); it asks for no permission.
+    Route::get('admin/{tenant:slug}/no-access', NoAccessController::class)->where('tenant', $notReserved)->name('tenant.no-access');
 
     Route::get('admin/{tenant:slug}/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.work-centers.options');
     Route::get('admin/{tenant:slug}/work-centers', [WorkCenterController::class, 'index'])->where('tenant', $notReserved)->name('tenant.work-centers.index');
@@ -55,8 +59,19 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnfor
     Route::post('admin/{tenant:slug}/members/invitations', [MemberController::class, 'invite'])->where('tenant', $notReserved)->name('tenant.members.invitations.store');
     Route::post('admin/{tenant:slug}/members/invitations/{invitation}/resend', [MemberController::class, 'resend'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.resend');
     Route::delete('admin/{tenant:slug}/members/invitations/{invitation}', [MemberController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.cancel');
-    Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.update');
-    Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.destroy');
+    Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.update');
+    Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.destroy');
+    Route::get('admin/{tenant:slug}/members/{member}/permissions', [MemberController::class, 'permissions'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.permissions.edit');
+    Route::put('admin/{tenant:slug}/members/{member}/permissions', [MemberController::class, 'updatePermissions'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.permissions.update');
+
+    // «Roles y permisos»: the company's own roles, beside the templates. Only the owner; the staff working as one only reads.
+    Route::get('admin/{tenant:slug}/roles', [RoleController::class, 'index'])->where('tenant', $notReserved)->name('tenant.roles.index');
+    Route::get('admin/{tenant:slug}/roles/create', [RoleController::class, 'create'])->where('tenant', $notReserved)->name('tenant.roles.create');
+    Route::post('admin/{tenant:slug}/roles', [RoleController::class, 'store'])->where('tenant', $notReserved)->name('tenant.roles.store');
+    // Ids of nine digits at most: a longer one is no row, and answers 404 rather than a database error.
+    Route::get('admin/{tenant:slug}/roles/{role}/edit', [RoleController::class, 'edit'])->where('tenant', $notReserved)->where('role', '[0-9]{1,9}')->name('tenant.roles.edit');
+    Route::put('admin/{tenant:slug}/roles/{role}', [RoleController::class, 'update'])->where('tenant', $notReserved)->where('role', '[0-9]{1,9}')->name('tenant.roles.update');
+    Route::delete('admin/{tenant:slug}/roles/{role}', [RoleController::class, 'destroy'])->where('tenant', $notReserved)->where('role', '[0-9]{1,9}')->name('tenant.roles.destroy');
 
     // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
     Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');

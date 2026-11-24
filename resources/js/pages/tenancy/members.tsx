@@ -1,11 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { UserPlus } from 'lucide-react';
+import { ShieldCheck, UserPlus } from 'lucide-react';
 import Pagination from '@/components/humetria/pagination';
 import PageHeader from '@/components/humetria/page-header';
 import MembersTable from '@/components/tenancy/members-table';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { create } from '@/routes/tenant/members/invitations';
+import { index as rolesIndex } from '@/routes/tenant/roles';
 import type {
     MemberInvitationRow,
     MemberRow,
@@ -35,6 +36,12 @@ export default function Members({
                     title="Usuarios"
                     description={`Quién entra a Humetría por ${tradeName} y qué puede hacer.`}
                 >
+                    <Button variant="outline" asChild>
+                        <Link href={rolesIndex(tenantSlug)}>
+                            <ShieldCheck aria-hidden />
+                            Roles y permisos
+                        </Link>
+                    </Button>
                     <Button asChild data-tour="invite-member">
                         <Link href={create(tenantSlug)}>
                             <UserPlus aria-hidden />

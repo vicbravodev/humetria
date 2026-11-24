@@ -16,7 +16,7 @@ use App\Modules\Tenancy\Contracts\Companies;
  */
 final readonly class EvidencePages
 {
-    public function __construct(private Companies $companies, private ActiveHandlers $active, private HandlerCoverage $coverage, private ComplaintStatistics $statistics) {}
+    public function __construct(private Companies $companies, private ActiveHandlers $active, private HandlerCoverage $coverage, private ComplaintStatistics $statistics, private ExcludingPermissions $excluding) {}
 
     /**
      * @return array<string, mixed>
@@ -26,6 +26,7 @@ final readonly class EvidencePages
         $channel = ComplaintChannel::query()->first();
         $handlers = $this->active->all();
         $counts = $this->coverage->counts();
+        $held = $this->excluding->byMember();
 
         return [
             'company' => $this->companies->current()->tradeName,
@@ -40,7 +41,8 @@ final readonly class EvidencePages
             ],
             'handlers' => [
                 'count' => count($handlers),
-                'independent' => array_filter($handlers, fn (array $row): bool => ! in_array($row['member']->role->value, ['hr', 'owner'], true)) !== [],
+                // Independent: no kind of complaint is against them.
+                'independent' => array_any($handlers, fn (array $row): bool => array_all(RespondentKind::cases(), fn (RespondentKind $kind): bool => ! $kind->excludes($row['member']->role->key, $held[$row['member']->userId] ?? []))),
             ],
             'types' => array_map(fn (ComplaintType $type): array => ['value' => $type->value, 'label' => $type->label()], ComplaintType::cases()),
             'coverage' => array_map(fn (RespondentKind $kind): array => ['kind' => $kind->value, 'label' => $kind->shortLabel(), 'count' => $counts[$kind->value]], RespondentKind::cases()),

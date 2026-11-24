@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -31,6 +32,7 @@ final class AuditPages
         'tenant' => 'Empresas',
         'tenant_invitation' => 'Invitaciones',
         'tenant_member' => 'Miembros',
+        'tenant_role' => 'Roles propios',
         'user' => 'Usuarios de la plataforma',
         'impersonation' => 'Impersonación',
         'billing' => 'Cobranza',
@@ -123,6 +125,13 @@ final class AuditPages
         'reason' => 'Motivo',
         'previous' => 'Estado anterior',
         'role' => 'Rol',
+        'permissions' => 'Permisos',
+        'added' => 'Permisos agregados',
+        'removed' => 'Permisos quitados',
+        'sensitive' => 'Incluye permisos sensibles',
+        'label' => 'Nombre del rol',
+        'based_on' => 'Basado en',
+        'holders' => 'Titulares',
         'module' => 'Herramienta',
         'until' => 'Hasta',
         'plan' => 'Plan',
@@ -345,6 +354,7 @@ final class AuditPages
             $companies[$tenant->id] = $tenant->trade_name;
         }
         $timezone = config()->string('app.display_timezone');
+        $roles = $this->roleLabels($entries);
 
         return $page->through(fn (AuditEntry $entry): array => [
             'id' => $entry->id,
@@ -357,7 +367,7 @@ final class AuditPages
                 ? null
                 : ['id' => $id, 'name' => $companies[$id]],
             'subject' => $entry->subject_type,
-            'context' => $this->context($entry, $companies, $people),
+            'context' => $this->context($entry, $companies, $people, $roles),
         ]);
     }
 
@@ -432,9 +442,10 @@ final class AuditPages
      *
      * @param  array<string, string>  $companies
      * @param  array<int, array{name: string, email: string}>  $people
+     * @param  array<string, string>  $roles  the label of each role of a company the page names, by internal key
      * @return array<string, string>
      */
-    private function context(AuditEntry $entry, array $companies, array $people): array
+    private function context(AuditEntry $entry, array $companies, array $people, array $roles): array
     {
         $rows = [];
         $company = $entry->metadata['tenant_id'] ?? null;
@@ -456,24 +467,51 @@ final class AuditPages
 
             $rows[self::KEYS[$key] ?? ucfirst(str_replace('_', ' ', $key))] = $key === 'user_id' && is_int($value) && isset($people[$value])
                 ? $this->person($people[$value])
-                : $this->value($key, $value);
+                : $this->value($key, $value, $roles);
         }
 
         return $rows;
     }
 
-    /** A stored value as a person reads it: yes or no, a state or a module by its name, a date in local time, cents as pesos. */
-    private function value(string $key, mixed $value): string
+    /**
+     * The label of each of the company's own roles the page's entries name (`custom_<uuid>`), in one query.
+     *
+     * @param  \Illuminate\Support\Collection<int, AuditEntry>  $entries
+     * @return array<string, string>
+     */
+    private function roleLabels(\Illuminate\Support\Collection $entries): array
+    {
+        $keys = [];
+        $metadata = $entries->map(fn (AuditEntry $entry): array => $entry->metadata)->all();
+        array_walk_recursive($metadata, function (mixed $value) use (&$keys): void {
+            is_string($value) && str_starts_with($value, 'custom_') && $keys[$value] = true;
+        });
+        $labels = [];
+
+        foreach ($keys === [] ? [] : DB::table('roles')->whereIn('name', array_keys($keys))->get(['name', 'label']) as $role) {
+            is_string($role->name) && is_string($role->label) && $labels[$role->name] = $role->label;
+        }
+
+        return $labels;
+    }
+
+    /**
+     * A stored value as a person reads it: yes or no, a state or a module by its name, a date in local time, cents as pesos,
+     * a role of the company by its label.
+     *
+     * @param  array<string, string>  $roles
+     */
+    private function value(string $key, mixed $value, array $roles): string
     {
         return match (true) {
             $value === null => '—',
             is_bool($value) => $value ? 'Sí' : 'No',
-            is_array($value) && array_is_list($value) => implode(', ', array_map(fn (mixed $item): string => $this->value($key, $item), $value)),
-            is_array($value) => implode(', ', array_map(fn (mixed $item, int|string $name): string => (self::KEYS[$name] ?? ucfirst(str_replace('_', ' ', (string) $name))).': '.$this->value((string) $name, $item), $value, array_keys($value))),
+            is_array($value) && array_is_list($value) => implode(', ', array_map(fn (mixed $item): string => $this->value($key, $item, $roles), $value)),
+            is_array($value) => implode(', ', array_map(fn (mixed $item, int|string $name): string => (self::KEYS[$name] ?? ucfirst(str_replace('_', ' ', (string) $name))).': '.$this->value((string) $name, $item, $roles), $value, array_keys($value))),
             ! is_scalar($value) => '',
             str_ends_with($key, '_cents') && is_numeric($value) => '$'.number_format((int) $value / 100, 2),
             is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:\d{2}))?$/', $value) === 1 => $this->date($value),
-            is_string($value) => self::VALUES[$value] ?? $value,
+            is_string($value) => self::VALUES[$value] ?? $roles[$value] ?? $value,
             default => (string) $value,
         };
     }

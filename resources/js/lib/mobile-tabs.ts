@@ -1,4 +1,5 @@
 import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
+import { handlesCasesOnly } from '@/lib/complaints-navigation';
 import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
 import type { NavItem, NavTenant } from '@/types';
@@ -39,7 +40,7 @@ export function mobileTabs(
     const panel = main.find((item) => item.title === 'Panel');
     const complaints =
         listeningNavItems(tenant).find((item) => item.title === 'Quejas') ??
-        (tenant?.role === 'complaints' ? main[0] : undefined);
+        (tenant !== null && handlesCasesOnly(tenant) ? main[0] : undefined);
 
     const operation = operationItems(tenant, main, compliance);
 

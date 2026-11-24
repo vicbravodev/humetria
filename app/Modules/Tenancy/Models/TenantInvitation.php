@@ -17,13 +17,17 @@ use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Spatie\Permission\Models\Role;
 
 /**
  * An invitation to join a company. Only the hash of its token is stored.
  *
  * @property string $id
  * @property string $tenant_id
- * @property TenantRole $role
+ * @property int|null $role_id null once its role was deleted, which only a used or cancelled invitation allows.
+ * @property list<string> $extra_permissions given besides the role when it is accepted.
+ * @property-read Role|null $role
  * @property string $name
  * @property string $email
  * @property string $token_hash
@@ -34,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'role', 'name', 'email', 'token_hash', 'expires_at', 'accepted_at', 'cancelled_at', 'invited_by'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'role_id', 'extra_permissions', 'name', 'email', 'token_hash', 'expires_at', 'accepted_at', 'cancelled_at', 'invited_by'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantInvitationFactory::class)]
 final class TenantInvitation extends Model
 {
@@ -65,6 +69,12 @@ final class TenantInvitation extends Model
         return $locked;
     }
 
+    /** Whether it invites the company's owner (from the superadmin console) rather than a member. */
+    public function invitesOwner(): bool
+    {
+        return $this->role?->name === TenantRole::Owner->value && $this->role->getAttribute('tenant_id') === null;
+    }
+
     public function status(): InvitationStatus
     {
         if ($this->accepted_at !== null) {
@@ -87,6 +97,29 @@ final class TenantInvitation extends Model
     }
 
     /**
+     * Invitations to own the company, or (`$owner` false) to join it as a member: a closed one whose role was deleted
+     * since has none, and was a member's (the owner's role is never deleted).
+     *
+     * @param  Builder<TenantInvitation>  $query
+     */
+    public function scopeForOwner(Builder $query, bool $owner = true): void
+    {
+        $owner
+            ? $query->whereIn('role_id', self::ownerRole())
+            : $query->where(fn (Builder $member) => $member->whereNull('role_id')->orWhereNotIn('role_id', self::ownerRole()));
+    }
+
+    /**
+     * The role it gives: a template or one of the company's own.
+     *
+     * @return BelongsTo<Role, $this>
+     */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /**
      * @return BelongsTo<Tenant, $this>
      */
     public function tenant(): BelongsTo
@@ -104,13 +137,19 @@ final class TenantInvitation extends Model
         return $this->belongsTo(User::class, 'invited_by');
     }
 
+    /** The owner template's id. */
+    private static function ownerRole(): QueryBuilder
+    {
+        return Role::query()->toBase()->select('id')->where('name', TenantRole::Owner->value)->whereNull('tenant_id');
+    }
+
     /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
-            'role' => TenantRole::class,
+            'extra_permissions' => 'array',
             'expires_at' => 'immutable_datetime',
             'accepted_at' => 'immutable_datetime',
             'cancelled_at' => 'immutable_datetime',

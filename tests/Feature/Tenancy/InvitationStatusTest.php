@@ -43,7 +43,7 @@ it('reads its role and dates back from the database as an enum and immutable dat
 
     $invitation = TenantInvitation::query()->findOrFail($id);
 
-    expect($invitation->role)->toBe(TenantRole::Owner)
+    expect($invitation->role?->name)->toBe(TenantRole::Owner->value)
         ->and($invitation->expires_at)->toBeInstanceOf(CarbonImmutable::class)
         ->and($invitation->accepted_at)->toBeInstanceOf(CarbonImmutable::class)
         ->and($invitation->cancelled_at)->toBeInstanceOf(CarbonImmutable::class);

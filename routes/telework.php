@@ -25,7 +25,7 @@ use App\Modules\Telework\Http\Controllers\WritingController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/telework.
-// Every name starts with tenant.telework.: it is how the committee role (LimitRestrictedRoles) is let in.
+// Each route asks for its permission (RoutePermissions): the Comisión reads and reviews, RH manages.
 /** @var string $notReserved */
 // The entry point: every center the person may see with its progress, and the dashboard of one (the rows of table 10.3).
 Route::get('admin/{tenant:slug}/telework', [TeleworkController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.index');
@@ -50,7 +50,7 @@ Route::put('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController:
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/committee', [CommitteeController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.committee.show');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/committee', [CommitteeController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.committee.store');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members', [CommitteeController::class, 'assign'])->where('tenant', $notReserved)->name('tenant.telework.committee.members.store');
-Route::delete('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members/{user}', [CommitteeController::class, 'unassign'])->where('tenant', $notReserved)->where('user', '[0-9]+')->name('tenant.telework.committee.members.destroy');
+Route::delete('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members/{user}', [CommitteeController::class, 'unassign'])->where('tenant', $notReserved)->where('user', '[0-9]{1,9}')->name('tenant.telework.committee.members.destroy');
 // The act that constituted the Comisión (PDF), through an authorized route: owner, hr and the assigned members.
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/committee/act', [CommitteeController::class, 'act'])->where('tenant', $notReserved)->name('tenant.telework.committee.act');
 

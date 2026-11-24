@@ -3,12 +3,20 @@ import { describe, expect, it } from 'vite-plus/test';
 import { complianceNavItems } from '@/lib/app-navigation';
 import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
-import { can } from '../support/tenant-can';
+import { can, templateCan } from '../support/tenant-can';
 
 const acme = (
     allowed = true,
     role: 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints' = 'owner',
-) => ({ slug: 'acme', role, can: can(allowed, allowed) });
+) => ({
+    slug: 'acme',
+    role,
+    // The Comisión and the outside handler carry what the server gives their templates, nothing more.
+    can:
+        role === 'committee' || role === 'complaints'
+            ? templateCan(role)
+            : can(allowed, allowed),
+});
 
 const links = (items: ReturnType<typeof listeningNavItems>) =>
     items.map((item) => [item.title, toUrl(item.href)]);

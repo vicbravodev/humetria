@@ -12,6 +12,7 @@ use App\Modules\Assistant\Listeners\DeleteMemberConversations;
 use App\Modules\Assistant\Listeners\SendLlmAnalytics;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
+use App\Modules\Assistant\Support\Readers\AccessReader;
 use App\Modules\Assistant\Support\Readers\AttendanceReader;
 use App\Modules\Assistant\Support\Readers\ClimateReader;
 use App\Modules\Assistant\Support\Readers\CompensationReader;
@@ -68,7 +69,13 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(OrgChartReader::class),
             // Compensación is a module of Integral and Enterprise (or hired alone): told only to a company that has it.
             $app->make(CompensationReader::class),
-        ], [Nom035Reader::class => 'nom035', DisclosureReader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart', CompensationReader::class => 'compensation']));
+            // Roles y permisos are not a module: every company has them.
+            $app->make(AccessReader::class),
+        ], [Nom035Reader::class => 'nom035', DisclosureReader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart', CompensationReader::class => 'compensation'], [
+            // What each area asks to be seen in the panel (RoutePermissions). Quejas and Compensación keep their figures
+            // from whoever may not see them themselves; Roles y permisos tells each person their own.
+            Nom035Reader::class => 'view-nom035-route', DisclosureReader::class => 'view-disclosure', Nom037Reader::class => 'view-telework', SeatingReader::class => 'view-seating', VacationsReader::class => 'view-vacations', PulseReader::class => 'view-pulse', ClimateReader::class => 'view-climate', AttendanceReader::class => 'view-attendance', OrgChartReader::class => 'view-org-chart',
+        ]));
 
         // The tools of Humi: a new module adds its own here.
         $this->app->singleton(ToolRegistry::class, fn (Application $app): ToolRegistry => new ToolRegistry($app, [

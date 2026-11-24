@@ -330,3 +330,15 @@ it('links «Plan y uso» from the owner\'s menu only', function (): void {
 
     visit('/admin/acme')->assertDontSee('Plan y uso');
 });
+
+it('tells a person with nothing to open in the company whom to ask', function (bool $dark, bool $mobile): void {
+    // The Comisión of a company that has none of its tools: nothing to open, so it lands on the page without access.
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']);
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($tenant->id, ['vacations'], now(config('app.display_timezone'))->toImmutable());
+    ownerOf($tenant)->forceFill(['name' => 'Rita Dueña'])->save();
+    $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Committee));
+
+    visitPage('tenancy/no-access', '/admin/acme', $dark, $mobile)
+        ->assertSee('Aún no tienes acceso')
+        ->assertSee('Rita Dueña');
+})->with($looks);
