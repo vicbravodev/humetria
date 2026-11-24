@@ -267,6 +267,7 @@ return [
         'trusted_may_use_browser' => 'navegador de confianza',
         'raise_unit' => 'tipo de aumento',
         'procedure' => 'procedimiento',
+        'acknowledge_sensitive' => 'confirmación',
         'acknowledge_within_days' => 'plazo para acusar recibo',
         'resolve_within_days' => 'plazo para responder',
         'retention_months' => 'meses de conservación',

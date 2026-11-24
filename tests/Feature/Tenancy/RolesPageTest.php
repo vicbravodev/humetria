@@ -454,3 +454,9 @@ it('deletes no template nor role of another company, and nothing for anyone but 
 
     expect(Role::query()->whereKey([$theirs->id, $mine->id])->count())->toBe(2)->and(Role::findByName('viewer'))->not->toBeNull();
 });
+
+it('names the confirmation of sensitive permissions in Spanish when it is not a yes or a no', function (): void {
+    $this->actingAs($this->owner)
+        ->post(route('tenant.roles.store', $this->tenant), ['label' => 'Nómina', 'permissions' => ['view-dashboard'], 'acknowledge_sensitive' => 'quizá'])
+        ->assertSessionHasErrors(['acknowledge_sensitive' => 'El campo confirmación debe ser verdadero o falso.']);
+});
