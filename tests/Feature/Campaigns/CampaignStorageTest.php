@@ -61,7 +61,7 @@ it('lists a person once per campaign, with each guide they were given', function
     ParticipantInstrument::factory()->for($participant)->create(['instrument' => 'nom035.guide-ii']);
     workIn(tenantOf($participant->tenant_id));
 
-    expect(Participant::query()->sole()->instruments->pluck('status', 'instrument')->all())->toBe([
+    expect(Participant::query()->sole()->instruments->pluck('status', 'instrument')->all())->toEqual([
         'nom035.guide-i' => InstrumentStatus::Pending,
         'nom035.guide-ii' => InstrumentStatus::Pending,
     ]);

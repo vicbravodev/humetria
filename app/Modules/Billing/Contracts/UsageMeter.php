@@ -17,6 +17,10 @@ interface UsageMeter
 {
     public const string ASSISTANT_TOKENS = 'assistant_tokens';
 
+    public const string EMAIL_CAMPAIGN = 'email_campaign';
+
+    public const string WHATSAPP = 'whatsapp';
+
     /**
      * Holds `$quantity` for the call under `$key`, with one conditional statement: of two requests for the last of the quota the second
      * is refused. A key already reserved or settled is not reserved again (true).

@@ -30,11 +30,11 @@ export function answeredText(card: ClimateSurveyCard): string {
         : `${card.answered} de ${card.invited} contestaron`;
 }
 
-/** "1 persona sin correo no recibió su enlace"; nothing when everyone has one. */
+/** "1 persona sin contacto no recibió su enlace"; nothing when everyone has one. */
 export function withoutLinkText(count: number): string | undefined {
     return count === 0
         ? undefined
-        : `${countOf(count, 'persona sin correo no recibió', 'personas sin correo no recibieron')} su enlace.`;
+        : `${countOf(count, 'persona sin contacto no recibió', 'personas sin contacto no recibieron')} su enlace.`;
 }
 
 /** "Faltan 4 por contestar", or that nobody is missing. */

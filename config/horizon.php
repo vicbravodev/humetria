@@ -98,6 +98,7 @@ return [
 
     'waits' => [
         'redis:default' => 60,
+        'redis:whatsapp' => 60,
     ],
 
     /*
@@ -210,6 +211,20 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+        // WhatsApp sends: one at a time, the job rate-limits itself and decides its own attempts (maxExceptions).
+        'supervisor-whatsapp' => [
+            'connection' => 'redis',
+            'queue' => ['whatsapp'],
+            'balance' => false,
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 0,
+            'timeout' => 30,
+            'nice' => 0,
+        ],
         // Prepares or resets the demo company (up to 600 s per job): one at a time, below redis-long's retry_after (660).
         'supervisor-demo' => [
             'connection' => 'redis-long',
@@ -233,6 +248,7 @@ return [
                 'balanceCooldown' => 3,
             ],
             'supervisor-demo' => [],
+            'supervisor-whatsapp' => [],
         ],
 
         'local' => [
@@ -240,6 +256,7 @@ return [
                 'maxProcesses' => 3,
             ],
             'supervisor-demo' => [],
+            'supervisor-whatsapp' => [],
         ],
     ],
 

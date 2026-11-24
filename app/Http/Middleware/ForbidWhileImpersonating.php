@@ -43,6 +43,8 @@ final class ForbidWhileImpersonating
             'tenant.first-steps.*',
             // How a company's people sign in is the owner's alone: whoever works as them never changes it.
             'tenant.sso.*',
+            // Accepting the words that let the company write to its people through WhatsApp is the owner's: nobody works as them for it.
+            'tenant.channels.update',
         ];
     }
 

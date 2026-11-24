@@ -192,7 +192,7 @@ describe('guideBreakdown', () => {
                 cancelled: 2,
             }),
         ).toBe(
-            '12 pendientes · 3 sin correo · 2 canceladas por bajas o cambios de centro',
+            '12 pendientes · 3 sin contacto · 2 canceladas por bajas o cambios de centro',
         );
         expect(
             guideBreakdown({
@@ -202,7 +202,7 @@ describe('guideBreakdown', () => {
                 cancelled: 1,
             }),
         ).toBe(
-            '1 pendiente · 1 sin correo · 1 cancelada por bajas o cambios de centro',
+            '1 pendiente · 1 sin contacto · 1 cancelada por bajas o cambios de centro',
         );
         expect(guideBreakdown(guide)).toBe('Nadie pendiente');
     });

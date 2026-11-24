@@ -47,8 +47,11 @@ final readonly class ResendInvitations
             foreach ($participants as $participant) {
                 $person = $people[$participant->employee_id] ?? null;
 
-                if ($person !== null && SurveyInvitation::routes($person) !== []) {
-                    $reached[$participant->id] = true;
+                // A reminder goes by mail only: a person with just WhatsApp already has their link and is left out.
+                $channel = $person === null ? null : SurveyInvitation::channel($person, $reminder);
+
+                if ($channel !== null) {
+                    $reached[$participant->id] = $channel;
                 }
             }
 

@@ -29,6 +29,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $token_hash
  * @property InvitationStatus|null $invitation_status
  * @property string|null $invitation_batch
+ * @property string|null $invited_via
+ * @property int $token_version
  * @property CarbonImmutable|null $invited_at
  * @property bool $answered
  * @property bool $cancelled
@@ -41,7 +43,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $created_at
  */
 #[Table('engagement_invitations')]
-#[Fillable(['tenant_id', 'survey_id', 'employee_id', 'token_hash', 'invitation_status', 'invitation_batch', 'invited_at', 'answered', 'cancelled', 'work_center_id', 'area_id', 'tenure_band', 'manager_group_id', 'comment_group_id', 'about_manager_id'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['tenant_id', 'survey_id', 'employee_id', 'token_hash', 'invitation_status', 'invitation_batch', 'invited_via', 'token_version', 'invited_at', 'answered', 'cancelled', 'work_center_id', 'area_id', 'tenure_band', 'manager_group_id', 'comment_group_id', 'about_manager_id'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(InvitationFactory::class)]
 final class Invitation extends Model
 {
@@ -62,7 +64,20 @@ final class Invitation extends Model
      */
     public function surveyToken(): string
     {
-        return hash_hmac('sha256', "engagement-link:{$this->id}", config()->string('app.key'));
+        // A rotated link (the mail took over from WhatsApp) carries its version; version 0 keeps the links already out.
+        $version = $this->token_version > 0 ? ":{$this->token_version}" : '';
+
+        return hash_hmac('sha256', "engagement-link:{$this->id}{$version}", config()->string('app.key'));
+    }
+
+    /** A new link for the person: the one that went out stops working, so nobody has two live links for one invitation. */
+    public function rotateToken(): string
+    {
+        $this->token_version++;
+        $token = $this->surveyToken();
+        $this->update(['token_version' => $this->token_version, 'token_hash' => self::hashToken($token)]);
+
+        return $token;
     }
 
     /**

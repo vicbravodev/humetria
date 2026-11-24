@@ -69,8 +69,9 @@ it('shows the staff the campaign email and the files of the company this month a
 
     foreach ([superadmin(), support()] as $user) {
         $this->actingAs($user)->get(route('companies.show', $tenant))->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->has('other_usage', 2)
+            ->has('other_usage', 3)
             ->where('other_usage.0', ['meter' => 'email_campaign', 'label' => 'Correo de campañas', 'unit' => 'correos', 'used' => 120, 'quota' => 500, 'remaining' => 380])
-            ->where('other_usage.1', ['meter' => 'storage_bytes', 'label' => 'Archivos', 'unit' => 'bytes', 'used' => 1_073_741_824, 'quota' => 5_368_709_120, 'remaining' => 4_294_967_296]));
+            ->where('other_usage.1', ['meter' => 'storage_bytes', 'label' => 'Archivos', 'unit' => 'bytes', 'used' => 1_073_741_824, 'quota' => 5_368_709_120, 'remaining' => 4_294_967_296])
+            ->where('other_usage.2', ['meter' => 'whatsapp', 'label' => 'Mensajes de WhatsApp', 'unit' => 'mensajes', 'used' => 0, 'quota' => 0, 'remaining' => 0]));
     }
 });

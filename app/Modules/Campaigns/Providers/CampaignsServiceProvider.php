@@ -10,11 +10,15 @@ use App\Modules\Campaigns\Contracts\EvaluationSchedule;
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use App\Modules\Campaigns\Listeners\CancelOnDeactivation;
 use App\Modules\Campaigns\Listeners\CancelOnMove;
+use App\Modules\Campaigns\Listeners\FallBackToMail;
+use App\Modules\Campaigns\Support\CampaignInvitationLinks;
 use App\Modules\Campaigns\Support\CompanyCampaignRecords;
 use App\Modules\Campaigns\Support\CompanyCenterSurveys;
 use App\Modules\Campaigns\Support\CompanyEvaluationSchedule;
 use App\Modules\Campaigns\Support\CompanyOpenCampaigns;
 use App\Modules\Campaigns\Support\SurveyWorkerSection;
+use App\Modules\Messaging\Contracts\InvitationLinks;
+use App\Modules\Messaging\Events\WhatsAppMessageFailed;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Organization\Events\EmployeeMoved;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -32,6 +36,7 @@ final class CampaignsServiceProvider extends ServiceProvider
         $this->app->bind(CenterSurveys::class, CompanyCenterSurveys::class);
         $this->app->bind(EvaluationSchedule::class, CompanyEvaluationSchedule::class);
         $this->app->tag([SurveyWorkerSection::class], 'worker.sections');
+        $this->app->tag([CampaignInvitationLinks::class], InvitationLinks::TAG);
     }
 
     public function boot(): void
@@ -54,5 +59,6 @@ final class CampaignsServiceProvider extends ServiceProvider
 
         Event::listen(EmployeeDeactivated::class, CancelOnDeactivation::class);
         Event::listen(EmployeeMoved::class, CancelOnMove::class);
+        Event::listen(WhatsAppMessageFailed::class, FallBackToMail::class);
     }
 }

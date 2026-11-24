@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Billing\Actions;
 
+use App\Modules\Billing\Contracts\UsageMeter;
 use App\Modules\Billing\Data\StatementDraft;
 use App\Modules\Billing\Data\StatementLineData;
 use App\Modules\Billing\Enums\ChargeKind;
@@ -13,6 +14,7 @@ use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Models\SubscriptionCharge;
+use App\Modules\Billing\Models\UsageEvent;
 use App\Modules\Billing\Support\Catalog;
 use App\Modules\Billing\Support\Eligibility;
 use App\Modules\Billing\Support\Money;
@@ -57,6 +59,7 @@ final readonly class BuildStatement
         $lines = [
             ...array_map(fn ($line): StatementLineData => new StatementLineData($line->code, $line->label, $line->amountCents, $line->explanation), $quote->lines),
             ...$this->chargeLines($subscription, $start, $end),
+            ...$this->whatsAppLines($tenantId, $start, $quote->currency),
         ];
 
         $subtotal = array_sum(array_map(fn (StatementLineData $line): int => $line->amountCents, $lines));
@@ -87,6 +90,37 @@ final readonly class BuildStatement
                 'proration' => $proration === null ? null : ['days_remaining' => $proration->daysRemaining, 'period_days' => $proration->periodDays],
             ],
         );
+    }
+
+    /**
+     * The WhatsApp messages the company was charged this month, as one line at the price stored on each usage line.
+     *
+     * @return list<StatementLineData>
+     *
+     * @throws InvalidStatement when a message was priced in another currency than the statement.
+     */
+    private function whatsAppLines(string $tenantId, CarbonImmutable $start, string $currency): array
+    {
+        $totals = UsageEvent::query()->toBase()
+            ->where('tenant_id', $tenantId)
+            ->where('meter', UsageMeter::WHATSAPP)
+            ->whereDate('period_start', $start->toDateString())
+            ->selectRaw('count(*) as messages, coalesce(sum(unit_price_micros), 0) as price, min(cost_currency) as first_currency, max(cost_currency) as last_currency')
+            ->first();
+
+        $messages = is_numeric($totals?->messages) ? (int) $totals->messages : 0;
+
+        if ($totals === null || $messages === 0) {
+            return [];
+        }
+
+        if ($totals->first_currency !== $currency || $totals->last_currency !== $currency) {
+            throw new InvalidStatement('currency', 'Los mensajes de WhatsApp del mes no están en la moneda del estado de cuenta.');
+        }
+
+        $price = is_numeric($totals->price) ? (int) $totals->price : 0;
+
+        return [new StatementLineData('whatsapp', 'Mensajes de WhatsApp', (int) round($price / 10_000), "{$messages} mensajes")];
     }
 
     /** @throws InvalidStatement */

@@ -20,7 +20,7 @@ it('lives at /admin/{slug}/assistant', function (): void {
 
 it('shows the history of the person, a page at a time, the newest first', function (): void {
     foreach (range(1, 16) as $number) {
-        assistantConversation($this->mine, "Conversación {$number}");
+        assistantConversation($this->mine, "Conversación {$number}", now()->startOfDay()->addMinutes($number));
     }
     $colleague = ConversationParticipant::factory()->for(memberOf($this->a, TenantRole::Hr))->create(['tenant_id' => $this->a->id]);
     assistantConversation($colleague, 'De mi colega');

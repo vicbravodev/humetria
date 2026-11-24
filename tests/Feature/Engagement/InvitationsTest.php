@@ -162,7 +162,7 @@ it('marks the person without an email and counts them', function (): void {
     [$survey] = launchedSurvey($this->tenant, $this->plant, $this->area, $this->user, 19);
 
     expect(Invitation::query()->where('survey_id', $survey->id)->get()->countBy(fn (Invitation $i): string => $i->invitation_status->value ?? 'none')->all())
-        ->toEqual(['queued' => 19, 'no_email' => 1]);
+        ->toEqual(['queued' => 19, 'unreachable' => 1]);
 });
 
 it('sends no link while the company is blocked, and marks who was waiting as failed so a reminder reaches them later', function (): void {

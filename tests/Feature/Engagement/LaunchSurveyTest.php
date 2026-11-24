@@ -86,8 +86,8 @@ it('queues one job per block of fifty people with a link, and marks the others a
 
     Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->count() === 3 && $batch->jobs->every(fn (mixed $job): bool => $job instanceof SendInvitations));
     $statuses = Invitation::query()->get()->groupBy(fn (Invitation $i): string => $i->invitation_status->value ?? '')->map->count()->sortKeys()->all();
-    expect($statuses)->toBe(['no_email' => 1, 'queued' => 120])
-        ->and(Invitation::query()->where('employee_id', $withoutEmail->id)->sole()->invitation_status)->toBe(InvitationStatus::NoEmail)
+    expect($statuses)->toBe(['queued' => 120, 'unreachable' => 1])
+        ->and(Invitation::query()->where('employee_id', $withoutEmail->id)->sole()->invitation_status)->toBe(InvitationStatus::Unreachable)
         ->and(Invitation::query()->whereNotNull('invitation_batch')->distinct()->count('invitation_batch'))->toBe(1);
 });
 
@@ -166,7 +166,7 @@ it('launches when the mail fits the quota exactly, counting only whoever has an 
 
     expect($survey->status)->toBe(SurveyStatus::Active)
         ->and(Invitation::query()->where('invitation_status', InvitationStatus::Queued)->count())->toBe(5)
-        ->and(Invitation::query()->where('invitation_status', InvitationStatus::NoEmail)->count())->toBe(1);
+        ->and(Invitation::query()->where('invitation_status', InvitationStatus::Unreachable)->count())->toBe(1);
     Bus::assertBatchCount(1);
 });
 

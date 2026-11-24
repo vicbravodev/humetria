@@ -67,7 +67,12 @@ export type AnswerDay = { date: string; answers: number | null };
 export type AnswersByDay = { minimum: number; days: AnswerDay[] | null };
 
 /** Before launch: how many of the people the links reach by email, and how many they do not. */
-export type DraftContact = { reachable: number; unreachable: number };
+/** `reachable` counts every person a channel reaches; `whatsapp` is how many of them would get WhatsApp (the rest, mail). */
+export type DraftContact = {
+    reachable: number;
+    unreachable: number;
+    whatsapp: number;
+};
 
 export type InstrumentProgress = {
     key: string;
