@@ -498,6 +498,21 @@ it('keeps a permission of a tool the plan no longer includes when the role is sa
         ->and(AuditEntry::query()->where('event', 'tenant_role.updated')->sole()->metadata)->toMatchArray(['added' => ['view-climate'], 'removed' => []]);
 });
 
+it('renames a role whose only permissions are of a tool the plan lost, and still refuses an empty one', function (): void {
+    $role = companyRole($this->tenant, $this->owner, 'Vacaciones', ['view-vacations']);
+    $empty = companyRole($this->tenant, $this->owner, 'Sin nada', ['view-dashboard']);
+    $revoked = TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
+
+    // The editor shows the lost permission off and sends none; the name still changes and the permission stays.
+    $this->actingAs($this->owner)->put(route('tenant.roles.update', [$this->tenant, $role->id]), ['label' => 'Vacaciones 2', 'permissions' => []])->assertSessionHasNoErrors();
+    $this->actingAs($this->owner)->put(route('tenant.roles.update', [$this->tenant, $empty->id]), ['label' => 'Sin nada', 'permissions' => []])->assertSessionHasErrors('permissions');
+    $revoked->delete();
+
+    expect($role->refresh()->getAttribute('label'))->toBe('Vacaciones 2')
+        ->and($role->permissions->pluck('name')->all())->toBe(['view-vacations'])
+        ->and($empty->refresh()->permissions->pluck('name')->all())->toBe(['view-dashboard']);
+});
+
 it('says the name is taken when another role takes it while this one is saved', function (string $action): void {
     $role = companyRole($this->tenant, $this->owner, 'Auditoría');
     // Another request names a role «Nómina» between the check and the write.

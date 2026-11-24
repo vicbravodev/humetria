@@ -38,7 +38,7 @@ final class UpdateRoleRequest extends FormRequest
      */
     public function rules(#[RouteParameter('tenant')] Tenant $tenant): array
     {
-        return CompanyRoleRules::rules($tenant);
+        return CompanyRoleRules::rules($tenant, resolve(CompanyRoles::class)->keptWhileUnavailable($tenant, $this->held()) !== []);
     }
 
     /**
@@ -46,15 +46,19 @@ final class UpdateRoleRequest extends FormRequest
      */
     public function after(#[RouteParameter('tenant')] Tenant $tenant): array
     {
-        $held = $this->role()->permissions->map(fn (Permission $permission): string => $permission->name)->values()->all();
-
-        return [fn (Validator $validator) => CompanyRoleRules::after($validator, $this, $tenant, $this->role(), $held)];
+        return [fn (Validator $validator) => CompanyRoleRules::after($validator, $this, $tenant, $this->role(), $this->held())];
     }
 
     /** @return array<string, string> */
     public function attributes(): array
     {
         return CompanyRoleRules::ATTRIBUTES;
+    }
+
+    /** @return array<int, string> what the role has now. */
+    private function held(): array
+    {
+        return $this->role()->permissions->map(fn (Permission $permission): string => $permission->name)->values()->all();
     }
 
     /** The role being edited, one of the company's own. */

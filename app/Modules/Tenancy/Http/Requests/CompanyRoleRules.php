@@ -24,13 +24,15 @@ final class CompanyRoleRules
     public const array ATTRIBUTES = ['label' => 'nombre del rol', 'permissions' => 'permisos', 'permissions.*' => 'permiso', 'based_on' => 'plantilla'];
 
     /**
+     * @param  bool  $keepsSome  the role already holds permissions it cannot be sent back (of a tool the plan lost): they
+     *                           count toward the minimum, so what is sent may be none.
      * @return array<string, list<(Closure(string, mixed, Closure(string): mixed): void)|string>>
      */
-    public static function rules(Tenant $tenant): array
+    public static function rules(Tenant $tenant, bool $keepsSome = false): array
     {
         return [
             'label' => ['required', 'string', 'max:60', TenantRules::SINGLE_LINE],
-            'permissions' => ['required', 'array', 'min:1'],
+            'permissions' => $keepsSome ? ['array'] : ['required', 'array', 'min:1'],
             'permissions.*' => ['string', 'distinct', self::permission($tenant)],
             'acknowledge_sensitive' => ['sometimes', 'boolean'],
         ];
