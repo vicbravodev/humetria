@@ -42,6 +42,28 @@ export const complaints = (tenant: NavTenant): NavItem => ({
 export const handlesOrManagesComplaints = (tenant: NavTenant): boolean =>
     tenant.can.handle_complaints || tenant.can.manage_complaint_channel;
 
+/** What else of the company a person may open: its own pages and its standards. */
+const ELSEWHERE = [
+    'view_work_centers',
+    'manage_organization',
+    'view_worker_access',
+    'manage_members',
+    'view_nom035_route',
+    'view_telework',
+    'view_seating',
+    'view_attendance',
+] as const;
+
+/**
+ * Whoever handles complaints and opens nothing else of the company, nor its channel (the template of the outside handler,
+ * or a role of the company's own made the same): their cases are their whole menu, with no section of the company around.
+ */
+export const handlesCasesOnly = (tenant: NavTenant): boolean =>
+    tenant.type !== 'union' &&
+    tenant.can.handle_complaints &&
+    !tenant.can.manage_complaint_channel &&
+    !ELSEWHERE.some((permission) => tenant.can[permission]);
+
 /** The outside handler's whole menu (board 40): its cases and how they are handled, or nothing when it may no longer handle them. */
 export const complaintCasesItems = (tenant: NavTenant): NavItem[] =>
     tenant.can.handle_complaints

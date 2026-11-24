@@ -75,18 +75,14 @@ const nom035 = (tenant: NavTenant, inCourse: number): NavItem => {
 
 /**
  * The compliance tools of the current company, for every role: who may change them is the page's to say. Only those whose
- * module the company has. The committee sees only NOM-037 and Ley Silla; the outside handler of complaints has its cases in the
- * main section instead (Quejas, with Clima and Pulso, is in the family «Escucha a tu gente»).
+ * module the company has and whose permission the role holds (the committee's are NOM-037 and Ley Silla). Quejas, with Clima
+ * and Pulso, is in the family «Escucha a tu gente».
  */
 export const complianceNavItems = (
     tenant: NavTenant | null,
     inCourse = 0,
 ): NavItem[] => {
-    if (
-        tenant === null ||
-        tenant.type === 'union' ||
-        tenant.role === 'complaints'
-    ) {
+    if (tenant === null || tenant.type === 'union') {
         return [];
     }
 
@@ -94,7 +90,7 @@ export const complianceNavItems = (
         [
             [
                 'nom035',
-                tenant.role !== 'committee' && tenant.can.view_nom035_route,
+                tenant.can.view_nom035_route,
                 () => [nom035(tenant, inCourse)],
             ],
             ['nom037', tenant.can.view_telework, () => [telework(tenant)]],

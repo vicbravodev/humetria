@@ -9,7 +9,7 @@ import {
     settingsNavItems,
 } from '@/lib/app-navigation';
 import { toUrl } from '@/lib/utils';
-import { can } from '../support/tenant-can';
+import { can, templateCan } from '../support/tenant-can';
 
 const acme = (
     manageOrganization = true,
@@ -18,7 +18,11 @@ const acme = (
 ) => ({
     slug: 'acme',
     role,
-    can: can(manageOrganization, manageMembers),
+    // The Comisión and the outside handler carry what the server gives their templates, nothing more.
+    can:
+        role === 'committee' || role === 'complaints'
+            ? templateCan(role)
+            : can(manageOrganization, manageMembers),
 });
 /** The company's own pages of an owner, in the order of the menu. */
 const ACME_PAGES = [

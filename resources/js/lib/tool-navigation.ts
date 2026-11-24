@@ -2,6 +2,7 @@ import { Activity, Calculator, Gauge, Network } from 'lucide-react';
 
 import {
     complaints,
+    handlesCasesOnly,
     handlesOrManagesComplaints,
 } from '@/lib/complaints-navigation';
 import { vacationsNavItems } from '@/lib/leave-navigation';
@@ -12,9 +13,9 @@ import { index as orgChart, quality } from '@/routes/tenant/org-chart';
 import { index as pulse } from '@/routes/tenant/pulse';
 import type { NavItem, NavTenant } from '@/types';
 
-/** A company's own people: not a union, nor the outside handler of complaints, whose cases are its whole menu. */
+/** A company's own people: not a union, nor whoever only handles complaints, whose cases are its whole menu. */
 const companyStaff = (tenant: NavTenant): boolean =>
-    tenant.type !== 'union' && tenant.role !== 'complaints';
+    tenant.type !== 'union' && !handlesCasesOnly(tenant);
 
 /** A union's roster has no hierarchy, no climate and no pulse: those are a company's only. */
 const inCompany = (tenant: NavTenant): boolean => tenant.type !== 'union';

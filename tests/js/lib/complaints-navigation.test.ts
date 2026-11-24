@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { activeChild, mainNavItems } from '@/lib/app-navigation';
 import { listeningNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
-import { coverage } from '../support/tenant-can';
+import { coverage, templateCan } from '../support/tenant-can';
 import type { CurrentTenant } from '@/types';
 
 const ability = (handle: boolean, manage: boolean): CurrentTenant['can'] => ({
@@ -43,7 +43,15 @@ const tenant = (
     role: CurrentTenant['role'],
     handle: boolean,
     manage: boolean,
-) => ({ slug: 'acme', role, can: ability(handle, manage) });
+) => ({
+    slug: 'acme',
+    role,
+    // The outside handler carries what the server gives its template (handling or not), nothing more.
+    can:
+        role === 'complaints'
+            ? { ...templateCan(role), handle_complaints: handle }
+            : ability(handle, manage),
+});
 
 describe('the complaints in the navigation', () => {
     it('offers whoever handles and manages them the cases first, then the channel and who handles it', () => {

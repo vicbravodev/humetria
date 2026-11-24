@@ -1,21 +1,28 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import { navSections } from '@/lib/nav-sections';
-import { can } from '../support/tenant-can';
+import { can, templateCan } from '../support/tenant-can';
 
 type Role = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
 
 const acme = (role: Role = 'owner', allowed = true, type?: 'union') => ({
     slug: 'acme',
     role,
-    can: can(allowed, allowed),
+    // The Comisión and the outside handler carry what the server gives their templates (without the cases when not allowed).
+    can:
+        role === 'committee' || role === 'complaints'
+            ? {
+                  ...templateCan(role),
+                  ...(allowed ? {} : { handle_complaints: false }),
+              }
+            : can(allowed, allowed),
     ...(type === undefined ? {} : { type }),
 });
 
 // The outside handler of complaints may only handle them: the server shares nothing else with it.
 const outsideHandler = {
     ...acme('complaints', false),
-    can: { ...can(false, false), handle_complaints: true },
+    can: templateCan('complaints'),
 };
 
 const shape = (sections: ReturnType<typeof navSections>) =>

@@ -19,7 +19,10 @@ import { index as members } from '@/routes/tenant/members';
 import { index as roles } from '@/routes/tenant/roles';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import { index as workerAccess } from '@/routes/tenant/worker-access';
-import { complaintCasesItems } from '@/lib/complaints-navigation';
+import {
+    complaintCasesItems,
+    handlesCasesOnly,
+} from '@/lib/complaints-navigation';
 import { hasModule } from '@/lib/modules';
 import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, InCourse, NavItem, NavTenant } from '@/types';
@@ -89,9 +92,8 @@ const companyItems = (tenant: NavTenant): NavItem[] => {
 /**
  * The pages of the panel, as the sidebar and the ⌘K palette list them (board 40, V4-Menu-Roles). Panel is the current
  * company's, or /admin without one; the company's own pages appear only inside a company, and only those its role may
- * open. A superadmin outside a company gets none: /admin sends them to Empresas, which is their start. The committee's
- * only pages are NOM-037's and Ley Silla's (under Cumplimiento); the outside handler of complaints sees its cases and
- * nothing else of the company.
+ * open (by its permissions, never by its name). A superadmin outside a company gets none: /admin sends them to Empresas,
+ * which is their start. Whoever only handles complaints (the outside handler) sees its cases and nothing else of the company.
  */
 export const mainNavItems = (
     tenant: NavTenant | null,
@@ -103,11 +105,7 @@ export const mainNavItems = (
             : [{ title: 'Panel', href: dashboard(), icon: House }];
     }
 
-    if (tenant.role === 'committee') {
-        return [];
-    }
-
-    if (tenant.role === 'complaints') {
+    if (handlesCasesOnly(tenant)) {
         return hasModule(tenant, 'complaints')
             ? complaintCasesItems(tenant)
             : [];
