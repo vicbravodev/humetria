@@ -145,10 +145,14 @@ final class MemberController extends Controller
         $this->authorizeOwner();
         $membership = $this->member($tenant, $member);
         $person = $membership->user()->sole();
+        $effective = $this->roles->effectivePermissions($person, $tenant);
 
         return Inertia::render('tenancy/member-permissions', [
             'member' => ['id' => $membership->id, 'name' => $person->name, 'role_label' => $this->roles->of($person, $tenant)?->label],
-            'groups' => PermissionGroups::for($tenant, $this->roles->effectivePermissions($person, $tenant)),
+            'groups' => PermissionGroups::for($tenant, $effective),
+            // What is stored for the person themselves, also what their role now gives too (the groups show it as the role's):
+            // the page sends it back, so saving never drops it.
+            'direct' => array_values(array_intersect($this->roles->directPermissionsOf($person, $tenant), array_keys($effective))),
             'can_manage' => ! $this->impersonation->isActive(),
         ]);
     }

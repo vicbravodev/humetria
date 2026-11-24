@@ -12,10 +12,12 @@ import type { PermissionGroup } from '@/types';
  */
 export default function MemberPermissions({
     member,
+    direct,
     groups,
     can_manage,
 }: {
     member: { id: number; name: string; role_label: string | null };
+    direct: string[];
     groups: PermissionGroup[];
     can_manage: boolean;
 }) {
@@ -54,6 +56,7 @@ export default function MemberPermissions({
                 )}
                 <MemberPermissionsForm
                     member={member}
+                    direct={direct}
                     groups={groups}
                     canManage={can_manage}
                 />

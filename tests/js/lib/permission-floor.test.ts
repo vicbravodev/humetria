@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { AREAS } from '@/lib/permission-areas';
 import { area } from '../support/permission-areas';
-import { ownLevels, roleMix, summarizeBeyond } from '@/lib/permission-floor';
+import {
+    ownLevels,
+    ownPermissions,
+    roleMix,
+    summarizeBeyond,
+} from '@/lib/permission-floor';
 
 const viewer = [
     'view-vacations',
@@ -82,5 +87,37 @@ describe('an area the role holds as a mix no level names', () => {
         );
         expect(roleMix(vacations, ['view-dashboard'])).toBe(false);
         expect(roleMix(vacations, [])).toBe(false);
+    });
+});
+
+describe('what is sent for a person', () => {
+    it('is what goes past the role, as before', () => {
+        expect(
+            ownPermissions({
+                held: [...viewer, 'manage-vacations'],
+                base: viewer,
+                stored: [],
+            }),
+        ).toEqual(['manage-vacations']);
+    });
+
+    it('keeps what was stored for the person even when their role now gives it too', () => {
+        expect(
+            ownPermissions({
+                held: [...viewer, 'manage-vacations'],
+                base: viewer,
+                stored: ['view-vacations'],
+            }),
+        ).toEqual(['manage-vacations', 'view-vacations']);
+    });
+
+    it('does not repeat a stored permission that is also past the role', () => {
+        expect(
+            ownPermissions({
+                held: [...viewer, 'manage-vacations'],
+                base: viewer,
+                stored: ['manage-vacations'],
+            }),
+        ).toEqual(['manage-vacations']);
     });
 });

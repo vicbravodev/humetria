@@ -227,6 +227,22 @@ it('shows an area the person\'s role holds as a mix no level names as locked, wi
         ->assertNoJavaScriptErrors();
 });
 
+it('keeps a permission stored for the person that their role now gives as well, when another area is raised and saved', function (): void {
+    signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $person = User::factory()->create(['name' => 'Rita Repetida']);
+    $member = TenantMembership::factory()->for($tenant)->for($person)->viewer()->create();
+    resolve(CompanyRoles::class)->syncDirectPermissions($person, $tenant, ['view-nom035-route']);
+
+    visit("/admin/acme/members/{$member->id}/permissions")
+        ->click('@level-vacations-manage')
+        ->press('Guardar permisos')
+        ->assertSee('Permisos actualizados.')
+        ->assertNoJavaScriptErrors();
+
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($person, $tenant))->toEqualCanonicalizing(['manage-vacations', 'view-nom035-route']);
+});
+
 it('offers no new role nor a copy of a template once the company has as many roles as it may', function (): void {
     config(['tenancy.max_custom_roles' => 1]);
     acmeRoleHeldBy(0);

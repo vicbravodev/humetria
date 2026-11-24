@@ -68,3 +68,24 @@ export function roleMix(area: PermissionArea, base: string[]): boolean {
         levelOf(area, base) === null
     );
 }
+
+/**
+ * What the page sends as the person's own: everything held past their role, and what was stored for them (`stored`) even where
+ * the role now gives it too, so a later change of role never takes it from them unseen.
+ */
+export function ownPermissions({
+    held,
+    base,
+    stored,
+}: {
+    held: string[];
+    base: string[];
+    stored: string[];
+}): string[] {
+    const past = held.filter((name) => !base.includes(name));
+
+    return [
+        ...past,
+        ...stored.filter((name) => base.includes(name) && !past.includes(name)),
+    ];
+}

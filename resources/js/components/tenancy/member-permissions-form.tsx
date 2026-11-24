@@ -19,15 +19,21 @@ import type { PermissionGroup } from '@/types';
  */
 export default function MemberPermissionsForm({
     member,
+    direct,
     groups,
     canManage,
 }: {
     member: { id: number; name: string; role_label: string | null };
+    /** What is stored for the person themselves, also where their role now gives it too. */
+    direct: string[];
     groups: PermissionGroup[];
     canManage: boolean;
 }) {
     const tenantSlug = useTenantSlug();
-    const editor = useMemberPermissions(member.id, groups);
+    const editor = useMemberPermissions(
+        { id: member.id, stored: direct },
+        groups,
+    );
     const raised = beyondRole(
         areasFor(groups).map((item) => item.area),
         editor.data.permissions,

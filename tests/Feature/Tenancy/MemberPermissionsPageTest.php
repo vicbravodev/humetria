@@ -62,6 +62,26 @@ it('shows what the person has, and where each permission comes from', function (
             ->where('can_manage', true));
 });
 
+it('sends the permissions stored for the person themselves, also those their role now gives as well, so saving never drops them', function (): void {
+    // view-vacations is stored for the person and the viewer role also brings it: it shows as the role's, and it is still theirs.
+    app(GrantMemberPermissions::class)->handle($this->member, ['view-vacations', 'manage-vacations'], $this->owner);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.permissions.edit', [$this->tenant, $this->member->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('direct', ['manage-vacations', 'view-vacations'])
+            ->where('groups', fn ($groups): bool => memberToggle($groups, 'view-vacations')['source'] === 'role'));
+});
+
+it('leaves out of what it sends the stored permissions of a tool the plan lacks', function (): void {
+    app(GrantMemberPermissions::class)->handle($this->member, ['manage-vacations'], $this->owner);
+    TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.permissions.edit', [$this->tenant, $this->member->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('direct', []));
+});
+
 it('sets the permissions besides the role, and records it', function (): void {
     $this->actingAs($this->owner)
         ->put(route('tenant.members.permissions.update', [$this->tenant, $this->member->id]), ['permissions' => ['manage-vacations']])

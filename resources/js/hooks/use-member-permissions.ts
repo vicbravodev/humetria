@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { afterRender, revealFirstError } from '@/lib/focus';
+import { ownPermissions } from '@/lib/permission-floor';
 import {
     heldBy,
     keepsAcknowledgement,
@@ -11,15 +12,16 @@ import type { PermissionGroup } from '@/types';
 
 /**
  * A person's permissions besides their role, while the owner raises the level of some areas; one send. What the role brings is
- * the floor and is never sent: only the person's own go, so bringing every area back to the role's level sends an empty list.
+ * the floor: only the person's own go, so bringing every area back to the role's level sends an empty list, except what was
+ * stored for them (`stored`) that the role now gives too, which stays theirs.
  */
 export function useMemberPermissions(
-    memberId: number,
+    member: { id: number; stored: string[] },
     groups: PermissionGroup[],
 ) {
     const tenantSlug = useTenantSlug();
     const base = heldBy(groups, 'role');
-    const before = heldBy(groups, 'direct');
+    const before = member.stored;
     const form = useForm({ permissions: before, acknowledge_sensitive: false });
     const errors: Partial<Record<string, string>> = form.errors;
 
@@ -32,7 +34,7 @@ export function useMemberPermissions(
         sensitive: sensitiveAdded(groups, before, form.data.permissions),
         /** Every permission in play with one area changed: what goes past the role is the person's own. */
         change: (held: string[]) => {
-            const next = held.filter((name) => !base.includes(name));
+            const next = ownPermissions({ held, base, stored: before });
 
             form.setData((data) => ({
                 ...data,
@@ -50,7 +52,7 @@ export function useMemberPermissions(
             form.setData('acknowledge_sensitive', checked),
         /** Sends it; a refusal brings the first error into view, which on a phone may be far from the button. */
         save: (root: HTMLFormElement) =>
-            form.put(update.url({ tenant: tenantSlug, member: memberId }), {
+            form.put(update.url({ tenant: tenantSlug, member: member.id }), {
                 onError: () => afterRender(() => revealFirstError(root)),
             }),
     };
