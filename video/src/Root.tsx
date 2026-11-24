@@ -10,6 +10,7 @@ import { LeaveFilm, leave, leaveTimeline } from './presentations/leave';
 import { OrgChartFilm, orgChart, orgChartTimeline } from './presentations/org-chart';
 import { EngagementFilm, engagement, engagementTimeline } from './presentations/engagement';
 import { HeroFilm, hero, heroTimeline } from './presentations/hero';
+import { BlogCoverStills } from './presentations/blog-cover';
 import { HumiFilm, humi, humiTimeline } from './presentations/humi';
 
 export const Root = () => (
@@ -26,5 +27,6 @@ export const Root = () => (
         <Composition id={engagement.id} component={EngagementFilm} durationInFrames={engagementTimeline.total} fps={engagement.fps} width={engagement.width} height={engagement.height} defaultProps={{ theme: 'dark' as const }} />
         <Composition id={hero.id} component={HeroFilm} durationInFrames={heroTimeline.total} fps={hero.fps} width={hero.width} height={hero.height} defaultProps={{ theme: 'dark' as const }} />
         <Composition id={humi.id} component={HumiFilm} durationInFrames={humiTimeline.total} fps={humi.fps} width={humi.width} height={humi.height} defaultProps={{ theme: 'dark' as const }} />
+        <BlogCoverStills />
     </>
 );

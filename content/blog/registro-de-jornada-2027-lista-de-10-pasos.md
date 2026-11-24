@@ -1,6 +1,7 @@
 ---
 title: 'Registro de jornada 2027: lista de 10 pasos'
 description: 'Lista práctica para preparar el registro electrónico de la jornada antes del 1 de enero de 2027: horarios, acuerdo, correcciones, conservación y reporte.'
+tool: attendance
 published_at: 2026-11-20
 updated_at: 2026-11-20
 reviewed_by: null

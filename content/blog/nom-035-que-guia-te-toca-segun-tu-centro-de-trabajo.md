@@ -1,6 +1,7 @@
 ---
 title: 'NOM-035: qué guía te toca según tus trabajadores'
 description: 'La NOM-035 se aplica por centro de trabajo: hasta 15 trabajadores, Guía I; de 16 a 50, Guías I y II; más de 50, Guías I y III. Qué mide cada guía.'
+tool: nom_035
 published_at: 2026-11-21
 updated_at: 2026-11-21
 reviewed_by: null

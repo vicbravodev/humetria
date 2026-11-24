@@ -1,6 +1,7 @@
 ---
 title: 'Ley Silla: cuántos asientos y cómo demostrarlo'
 description: 'La Ley Silla no fija cuántos asientos por persona. Qué exige la LFT, a quién aplica, qué está prohibido y qué evidencia guardar para una inspección.'
+tool: ley_silla
 published_at: 2026-11-25
 updated_at: 2026-11-25
 reviewed_by: null

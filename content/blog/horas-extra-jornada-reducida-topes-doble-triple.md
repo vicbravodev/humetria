@@ -1,6 +1,7 @@
 ---
 title: 'Horas extra con la jornada reducida: topes y pago'
 description: 'Cuántas horas extra se permiten por semana en 2027, cuándo se pagan dobles y cuándo triples, con ejemplos en horas tomados del texto de la LFT reformada.'
+tool: attendance
 published_at: 2026-11-20
 updated_at: 2026-11-20
 reviewed_by: null

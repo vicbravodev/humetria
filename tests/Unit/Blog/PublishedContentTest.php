@@ -40,3 +40,16 @@ it('does not repeat a title', function (): void {
 
     expect($titles)->toBe(array_values(array_unique($titles)));
 });
+
+it('has both covers of every article, at the size they promise', function (): void {
+    foreach (contentFiles() as $file) {
+        $slug = basename($file, '.md');
+
+        foreach (["public/blog/{$slug}.webp", "public/blog/{$slug}-og.jpg"] as $cover) {
+            $size = @getimagesize(dirname(__DIR__, 3).'/'.$cover);
+
+            expect($size)->not->toBeFalse("{$cover} is missing: run `npm run covers:blog` in video/")
+                ->and([$size[0] ?? 0, $size[1] ?? 0])->toBe([1200, 630]);
+        }
+    }
+});

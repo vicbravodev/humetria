@@ -23,6 +23,7 @@ function writeArticle(string $folder, string $slug, array $front = [], string $w
     $lines = [
         'title' => 'title: "Artículo '.$slug.'"',
         'description' => 'description: "'.str_repeat('d', 130).'"',
+        'tool' => 'tool: attendance',
         'published_at' => 'published_at: 2026-11-10',
         'reviewed_by' => 'reviewed_by: "Equipo Humetría"',
         'reviewed_at' => 'reviewed_at: 2026-11-11',

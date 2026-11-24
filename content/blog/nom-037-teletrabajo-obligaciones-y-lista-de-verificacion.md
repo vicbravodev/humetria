@@ -1,6 +1,7 @@
 ---
 title: 'NOM-037 teletrabajo: obligaciones de la empresa'
 description: 'A quién aplica la NOM-037, qué debe hacer la empresa con su personal en teletrabajo, cómo funciona la lista de verificación y qué evidencia conservar.'
+tool: nom_037
 published_at: 2026-11-24
 updated_at: 2026-11-24
 reviewed_by: null

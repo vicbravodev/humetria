@@ -1,6 +1,7 @@
 ---
 title: 'Vacaciones dignas: la tabla vigente y los saldos'
 description: 'Cuántos días de vacaciones da la ley por año de servicio desde 2023, cómo se cuenta la antigüedad, la prima vacacional y cómo llevar los saldos sin errores.'
+tool: leave
 published_at: 2026-11-26
 updated_at: 2026-11-26
 reviewed_by: null

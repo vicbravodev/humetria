@@ -1,6 +1,7 @@
 ---
 title: 'Registro electrónico de la jornada: qué exige la LFT'
 description: 'La reforma laboral de 2026 obliga a registrar de forma electrónica la jornada de cada persona. Qué dice el artículo 132-XXXIV, la multa y cómo dejar evidencia.'
+tool: attendance
 published_at: 2026-11-19
 updated_at: 2026-11-19
 reviewed_by: null

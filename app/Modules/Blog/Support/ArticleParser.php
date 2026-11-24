@@ -53,11 +53,12 @@ final class ArticleParser
         }
 
         $body = $parts[2];
-        $html = Str::markdown($body, ['html_input' => 'strip', 'allow_unsafe_links' => false]);
+        [$html, $headings] = self::withHeadingIds(Str::markdown($body, ['html_input' => 'strip', 'allow_unsafe_links' => false]));
         $words = preg_match_all('/[\p{L}\p{N}][\p{L}\p{N}\'’-]*/u', strip_tags($html));
 
         $title = self::text($front['title'] ?? null);
         $description = self::text($front['description'] ?? null);
+        $tool = BlogTools::find($front['tool'] ?? null);
         $published = self::date($front['published_at'] ?? null);
         $updated = ($front['updated_at'] ?? null) === null ? $published : self::date($front['updated_at']);
         $reviewedAt = ($front['reviewed_at'] ?? null) === null ? null : self::date($front['reviewed_at']);
@@ -68,6 +69,7 @@ final class ArticleParser
             ...$problems,
             ...self::titleProblems($title),
             ...(($description === null || mb_strlen($description) < 120 || mb_strlen($description) > 160) ? ['description must have 120 to 160 characters.'] : []),
+            ...($tool === null ? ['tool must be one of: '.implode(', ', BlogTools::keys()).'.'] : []),
             ...($published === null ? ['published_at must be '.self::DATE_HINT.'.'] : []),
             ...($updated === null ? ['updated_at must be '.self::DATE_HINT.'.'] : []),
             ...($published !== null && $updated !== null && $updated < $published ? ['updated_at cannot be before published_at.'] : []),
@@ -77,7 +79,7 @@ final class ArticleParser
             ...self::bodyProblems($body, (int) $words),
         ];
 
-        if ($problems !== [] || $title === null || $description === null || $published === null || $updated === null) {
+        if ($problems !== [] || $tool === null || $title === null || $description === null || $published === null || $updated === null) {
             throw new InvalidArticle($problems);
         }
 
@@ -85,14 +87,42 @@ final class ArticleParser
             slug: $slug,
             title: $title,
             description: $description,
+            tool: self::text($front['tool'] ?? null) ?? '',
+            toolName: $tool['name'],
+            family: $tool['family'],
+            toolRoute: $tool['route'],
             publishedAt: $published,
             updatedAt: $updated,
             reviewedBy: $reviewedBy,
             reviewedAt: $reviewedAt,
             sources: array_values(array_filter($sources, is_string(...))),
             html: $html,
+            headings: $headings,
             readingMinutes: max(1, (int) ceil($words / self::WORDS_PER_MINUTE)),
         );
+    }
+
+    /**
+     * Each h2 gets an id (its text, as a slug; a repeat gets -2, -3) so the table of contents can link to it.
+     *
+     * @return array{string, list<array{id: string, text: string}>}
+     */
+    private static function withHeadingIds(string $html): array
+    {
+        $headings = [];
+        $seen = [];
+
+        $html = preg_replace_callback('/<h2>(.*?)<\/h2>/s', function (array $match) use (&$headings, &$seen): string {
+            $text = html_entity_decode(strip_tags($match[1]), ENT_QUOTES | ENT_HTML5);
+            $base = Str::slug($text) ?: 'seccion';
+            $seen[$base] = ($seen[$base] ?? 0) + 1;
+            $id = $seen[$base] === 1 ? $base : $base.'-'.$seen[$base];
+            $headings[] = ['id' => $id, 'text' => $text];
+
+            return '<h2 id="'.$id.'">'.$match[1].'</h2>';
+        }, $html) ?? $html;
+
+        return [$html, $headings];
     }
 
     /** @return array<array-key, mixed>|null */

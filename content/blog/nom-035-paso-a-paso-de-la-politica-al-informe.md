@@ -1,6 +1,7 @@
 ---
 title: 'NOM-035 paso a paso: de la política al informe'
 description: 'Las obligaciones de la NOM-035 en orden: política de prevención, Guía I, cuestionarios, Programa de intervención, informe y difusión, y qué evidencia guardar.'
+tool: nom_035
 published_at: 2026-11-21
 updated_at: 2026-11-21
 reviewed_by: null
