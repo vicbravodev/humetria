@@ -175,6 +175,27 @@ it('keeps a chosen «Sin acceso» readable and its edge visible, in light and in
         ->assertNoJavaScriptErrors();
 })->with([[false], [true]]);
 
+it('keeps the phone\'s save bar clear of every button fixed to the screen, first steps and Humi included', function (): void {
+    config(['first_steps.enabled' => true]);
+    signInToPanel();
+
+    visit('/admin/acme/roles/create')->on()->mobile()
+        ->assertPresent('[aria-label^="Primeros pasos"]')
+        ->assertScript(<<<'JS'
+            () => {
+                const bar = document.querySelector('[data-test="save-bar"]').parentElement.getBoundingClientRect();
+                const fixed = [...document.querySelectorAll('body *')].filter((element) => {
+                    const box = element.getBoundingClientRect();
+                    return getComputedStyle(element).position === 'fixed' && box.width > 0 && box.height > 0 && element.dataset.slot !== 'dialog-overlay' && !element.contains(document.querySelector('[data-test="save-bar"]'));
+                });
+                const overlaps = (box) => box.left < bar.right && box.right > bar.left && box.top < bar.bottom && box.bottom > bar.top;
+
+                return fixed.length > 0 && fixed.filter((element) => overlaps(element.getBoundingClientRect())).map((element) => element.outerHTML.slice(0, 80)).join('|');
+            }
+            JS, '')
+        ->assertNoJavaScriptErrors();
+});
+
 it('says a role someone holds cannot be deleted, and deletes one nobody holds', function (): void {
     acmeRoleHeldBy(1);
 
