@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import type { useRoleEditor } from '@/hooks/use-role-editor';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { accessCount, areasFor, summarize } from '@/lib/permission-areas';
+import { plural } from '@/lib/plural';
 import { index } from '@/routes/tenant/roles';
 import type { PermissionGroup, RoleEditorProps } from '@/types';
 
@@ -73,6 +74,15 @@ export default function RoleEditorSummary({
                         <Link href={index(tenantSlug)}>Cancelar</Link>
                     </Button>
                 </div>
+            )}
+            {role !== null && role.people > 0 && (
+                <p className="text-sm text-muted-foreground">
+                    {plural(
+                        role.people,
+                        'Los cambios aplican a la persona con este rol en cuanto guardes.',
+                        `Los cambios aplican a las ${role.people} personas con este rol en cuanto guardes.`,
+                    )}
+                </p>
             )}
             {canManage && role !== null && (
                 <div className="border-t pt-4">

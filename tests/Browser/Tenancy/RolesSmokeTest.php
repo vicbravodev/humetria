@@ -77,6 +77,7 @@ it('opens the editor of a role someone holds, saying so', function (bool $dark, 
         ->assertSee('Basado en Solo consulta.')
         ->assertSee('Una persona tiene este rol.')
         ->assertSee('Quien tenga este rol ve Panel y Vacaciones.')
+        ->assertSee('Los cambios aplican a la persona con este rol en cuanto guardes.')
         ->assertSee('Guardar rol')
         ->assertSee('Borrar rol');
 })->with($looks);
