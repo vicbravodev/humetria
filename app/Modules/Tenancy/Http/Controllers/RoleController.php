@@ -8,8 +8,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\CreateCompanyRole;
+use App\Modules\Tenancy\Actions\DeleteCompanyRole;
 use App\Modules\Tenancy\Actions\UpdateCompanyRole;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Exceptions\CompanyRoleInUse;
 use App\Modules\Tenancy\Exceptions\CompanyRoleLimitReached;
 use App\Modules\Tenancy\Http\Requests\StoreRoleRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateRoleRequest;
@@ -134,6 +136,22 @@ final class RoleController extends Controller
         $updateCompanyRole->handle($request->role(), $request->label(), $request->permissions(), $user);
 
         return $this->done($tenant, 'Rol actualizado.');
+    }
+
+    /** A role that someone holds, or an invitation not yet accepted names (expired ones too), stays. */
+    public function destroy(Tenant $tenant, string $role, DeleteCompanyRole $deleteCompanyRole, #[CurrentUser] User $user): RedirectResponse
+    {
+        Gate::authorize('manage-members');
+
+        try {
+            $deleteCompanyRole->handle($this->roles->own($tenant, $role), $user);
+        } catch (CompanyRoleInUse) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'No puedes borrar un rol que tiene personas o invitaciones sin aceptar, aunque hayan vencido. Pásalas a otro rol o cancela esas invitaciones primero.']);
+
+            return redirect()->route('tenant.roles.index', $tenant);
+        }
+
+        return $this->done($tenant, 'Rol borrado.');
     }
 
     /**

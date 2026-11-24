@@ -412,3 +412,45 @@ it('lets no one but the owner open or change a role', function (TenantRole $as):
     $this->actingAs(memberOf($this->tenant, $as))->get(route('tenant.roles.edit', [$this->tenant, $role->id]))->assertForbidden();
     $this->actingAs(memberOf($this->tenant, $as))->put(route('tenant.roles.update', [$this->tenant, $role->id]), ['label' => 'X', 'permissions' => ['view-dashboard']])->assertForbidden();
 })->with([TenantRole::Hr, TenantRole::Viewer]);
+
+it('deletes a role nobody holds and records it', function (): void {
+    $role = companyRole($this->tenant, $this->owner);
+    TenantInvitation::factory()->for($this->tenant)->role($role)->accepted()->create();
+
+    $this->actingAs($this->owner)
+        ->delete(route('tenant.roles.destroy', [$this->tenant, $role->id]))
+        ->assertRedirect(route('tenant.roles.index', $this->tenant))
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Rol borrado.']]);
+
+    expect(Role::query()->whereKey($role->id)->exists())->toBeFalse()
+        ->and(AuditEntry::query()->where('event', 'tenant_role.deleted')->sole()->metadata)->toEqual(['label' => 'Auditoría']);
+});
+
+it('keeps a role that a person holds or an invitation not yet accepted names, even an expired one, and says what to do', function (Closure $use): void {
+    $role = companyRole($this->tenant, $this->owner);
+    $use($this->tenant, $role);
+
+    $this->actingAs($this->owner)
+        ->delete(route('tenant.roles.destroy', [$this->tenant, $role->id]))
+        ->assertRedirect(route('tenant.roles.index', $this->tenant))
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'error', 'message' => 'No puedes borrar un rol que tiene personas o invitaciones sin aceptar, aunque hayan vencido. Pásalas a otro rol o cancela esas invitaciones primero.']]);
+
+    expect(Role::query()->whereKey($role->id)->exists())->toBeTrue();
+})->with([
+    'a person' => [fn (Tenant $tenant, Role $role) => personHolding($tenant, $role)],
+    'an open invitation' => [fn (Tenant $tenant, Role $role) => TenantInvitation::factory()->for($tenant)->role($role)->create()],
+    'an expired invitation' => [fn (Tenant $tenant, Role $role) => TenantInvitation::factory()->for($tenant)->role($role)->create(['expires_at' => now()->subDay()])],
+]);
+
+it('deletes no template nor role of another company, and nothing for anyone but the owner', function (): void {
+    $theirs = companyRole($other = Tenant::factory()->create(), ownerOf($other));
+    $mine = companyRole($this->tenant, $this->owner);
+
+    $this->actingAs($this->owner)->delete(route('tenant.roles.destroy', [$this->tenant, $theirs->id]))->assertNotFound();
+    $this->actingAs($this->owner)->delete(route('tenant.roles.destroy', [$this->tenant, Role::findByName('viewer')->id]))->assertNotFound();
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr))->delete(route('tenant.roles.destroy', [$this->tenant, $mine->id]))->assertForbidden();
+    impersonatingOwnerOf($this->tenant);
+    $this->delete(route('tenant.roles.destroy', [$this->tenant, $mine->id]))->assertNotFound();
+
+    expect(Role::query()->whereKey([$theirs->id, $mine->id])->count())->toBe(2)->and(Role::findByName('viewer'))->not->toBeNull();
+});

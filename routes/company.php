@@ -67,6 +67,7 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnfor
     Route::post('admin/{tenant:slug}/roles', [RoleController::class, 'store'])->where('tenant', $notReserved)->name('tenant.roles.store');
     Route::get('admin/{tenant:slug}/roles/{role}/edit', [RoleController::class, 'edit'])->where('tenant', $notReserved)->whereNumber('role')->name('tenant.roles.edit');
     Route::put('admin/{tenant:slug}/roles/{role}', [RoleController::class, 'update'])->where('tenant', $notReserved)->whereNumber('role')->name('tenant.roles.update');
+    Route::delete('admin/{tenant:slug}/roles/{role}', [RoleController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('role')->name('tenant.roles.destroy');
 
     // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
     Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');

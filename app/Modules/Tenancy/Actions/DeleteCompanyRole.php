@@ -17,7 +17,10 @@ final readonly class DeleteCompanyRole
 {
     public function __construct(private RecordAudit $recordAudit, private CompanyRoles $roles) {}
 
-    /** @throws NotACompanyRole for a template. @throws CompanyRoleInUse when a person holds the role or an open invitation points at it. */
+    /**
+     * @throws NotACompanyRole for a template.
+     * @throws CompanyRoleInUse when a person holds the role or an open invitation points at it.
+     */
     public function handle(Role $role, User $by): void
     {
         $this->roles->assertCustom($role);
