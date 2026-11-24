@@ -269,3 +269,22 @@ it('says who was impersonated and in which company on an impersonation entry', f
     $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
         ->where('entries.data.0.context', ['Empresa' => 'Acme Demo', 'Persona suplantada' => 'Dueña Acme (duena@acme.mx)']));
 });
+
+it('shows a role of the company by the label its owner typed, never by its internal key, reading the labels once', function (): void {
+    $tenant = Tenant::factory()->create();
+    $by = User::factory()->create();
+    $audit = app(App\Modules\Tenancy\Actions\CreateCompanyRole::class)->handle($tenant, 'Auditoría', ['view-dashboard'], null, $by);
+    $other = app(App\Modules\Tenancy\Actions\CreateCompanyRole::class)->handle($tenant, 'Atención externa', ['view-dashboard'], null, $by);
+    auditRow('tenant_invitation.sent', ['metadata' => ['role' => $audit->name]]);
+    auditRow('tenant_member.role_changed', ['metadata' => ['from' => $audit->name, 'to' => $other->name, 'role' => 'viewer']]);
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data', fn ($entries): bool => collect($entries)->pluck('context')->contains(['Rol' => 'Auditoría'])
+            && collect($entries)->pluck('context')->contains(['Desde' => 'Auditoría', 'Hasta' => 'Atención externa', 'Rol' => 'Consulta'])));
+    $roleReads = collect(DB::getQueryLog())->filter(fn (array $log): bool => str_starts_with((string) $log['query'], 'select "name", "label" from "roles"'));
+    DB::disableQueryLog();
+
+    expect($roleReads)->toHaveCount(1);
+});
