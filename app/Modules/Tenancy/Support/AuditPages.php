@@ -64,6 +64,11 @@ final class AuditPages
      */
     public const array VALUES = [
         'not_started' => 'Sin iniciar',
+        'day' => 'Diurna',
+        'night' => 'Nocturna',
+        'mixed' => 'Mixta',
+        'onsite' => 'Presencial',
+        'remote' => 'Remoto',
         'trial' => 'En prueba',
         'active' => 'Activa',
         'trial_ended' => 'Prueba terminada',
@@ -294,6 +299,13 @@ final class AuditPages
         'policy_id' => 'Política',
         'staff_group' => 'Grupo de personal',
         'job_grade_id' => 'Categoría y nivel',
+        'valid_from' => 'Empieza el',
+        'before' => 'Antes',
+        'after' => 'Después',
+        'shift_type' => 'Tipo de jornada',
+        'work_mode' => 'Modalidad',
+        'starts' => 'Hora de entrada',
+        'job_title' => 'Puesto',
     ];
 
     /**

@@ -46,7 +46,7 @@ final readonly class SetupProgress
         $screens = $this->activeScreens();
         $field = AttendanceCenterMode::fieldCenters();
         $people = array_merge([], ...array_values($byCenter));
-        $scheduled = array_flip(AttendanceSchedule::query()->among('employee_id', $people)->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
+        $scheduled = array_flip(AttendanceSchedule::query()->among('employee_id', $people)->startedBy(CarbonImmutable::now($this->timezones->forTenant())->toDateString())->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
         $linked = array_filter($this->credentials->countsByEmployee($people), fn (CredentialCounts $keys): bool => $keys->active > 0);
 
         $pending = [];

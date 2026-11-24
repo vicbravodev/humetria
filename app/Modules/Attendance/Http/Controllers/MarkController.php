@@ -24,6 +24,7 @@ use App\Modules\Attendance\Support\CurrentAgreement;
 use App\Modules\Attendance\Support\MarkPolicyCheck;
 use App\Modules\Attendance\Support\PunchDay;
 use App\Modules\Attendance\Support\QrToken;
+use App\Modules\Attendance\Support\ScheduleTimeline;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\Companies;
@@ -109,7 +110,7 @@ final readonly class MarkController
             // A mark refused is asked of RH at the time of the center's clock, whatever the phone's zone.
             'timezone' => $timezone,
             // How they mark: a remote person is asked for no code nor zone (their position is dropped); null for nobody known.
-            'mode' => $known === null ? null : ($this->schedule($known->id)?->work_mode === WorkMode::Remote ? 'remote' : 'onsite'),
+            'mode' => $known === null ? null : ($this->schedule($known->id, $timezone)?->work_mode === WorkMode::Remote ? 'remote' : 'onsite'),
             // The server's clock, in milliseconds: the page's clock follows it, not the phone's.
             'now' => CarbonImmutable::now()->getTimestampMs(),
         ]);
@@ -155,6 +156,8 @@ final readonly class MarkController
         // A code that is not of the person's center may be of another one of the company: a trip, not a lie (hallazgo 26).
         $away = $qr !== null && ! $qrValid ? $scan ?? $this->centerOf($qr, $person->workCenterId, $now) : null;
         $zones = AttendanceZone::query()->where('work_center_id', $person->workCenterId)->get()->all();
+        // How they work today, by the schedule in effect today at their center.
+        $schedule = $this->schedule($person->id, $timezone);
 
         try {
             // The agreement first: a person who has not accepted it is not sent to fix the code or the position for nothing.
@@ -164,8 +167,8 @@ final readonly class MarkController
             }
 
             $context = $away !== null
-                ? MarkPolicyCheck::away($this->schedule($person->id), CompanyPolicy::current(), $away->id, $request->position(), $signed->credentialId)
-                : $this->decide($person, $qrValid, $qr !== null && $qrValid === false && QrToken::expired($qr, $this->tenant->id(), $person->workCenterId, $now), $zones, $request->position(), $signed->credentialId);
+                ? MarkPolicyCheck::away($schedule, CompanyPolicy::current(), $away->id, $request->position(), $signed->credentialId)
+                : $this->decide($person, $schedule, $qrValid, $qr !== null && $qrValid === false && QrToken::expired($qr, $this->tenant->id(), $person->workCenterId, $now), $zones, $request->position(), $signed->credentialId);
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {
             Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'key_id' => $signed->credentialId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
@@ -261,11 +264,11 @@ final readonly class MarkController
      *
      * @throws MarkRejected
      */
-    private function decide(RosterEntry $person, ?bool $qrValid, bool $expired, array $zones, ?Position $position, string $credentialId): MarkContext
+    private function decide(RosterEntry $person, ?AttendanceSchedule $schedule, ?bool $qrValid, bool $expired, array $zones, ?Position $position, string $credentialId): MarkContext
     {
         try {
             return MarkPolicyCheck::decide(
-                $this->schedule($person->id),
+                $schedule,
                 CompanyPolicy::current(),
                 $person->trusted,
                 $qrValid,
@@ -300,8 +303,9 @@ final readonly class MarkController
         return $fresh ? array_find($this->workCenters->all(), fn (WorkCenterSummary $center): bool => $center->id === $scan['center']) : null;
     }
 
-    private function schedule(string $employeeId): ?AttendanceSchedule
+    /** The schedule in effect today, in the center's zone, of the person; null with none yet. */
+    private function schedule(string $employeeId, string $timezone): ?AttendanceSchedule
     {
-        return AttendanceSchedule::query()->where('employee_id', $employeeId)->first();
+        return ScheduleTimeline::of([$employeeId])->on($employeeId, CarbonImmutable::now($timezone));
     }
 }

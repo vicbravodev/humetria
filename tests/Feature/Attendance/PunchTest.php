@@ -526,6 +526,28 @@ it('marks remotely with no geofence, keeping no position', function (): void {
     expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::Remote)->latitude->toBeNull()->accuracy_m->toBeNull()->zone_id->toBeNull();
 });
 
+it('marks by the schedule in effect today: a remote one that ended does not make it remote, one that has not started does not yet', function (string $remoteFrom, string $onsiteFrom): void {
+    // Monday 9 November 2026. Created in this order on purpose: the remote one first.
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote, 'valid_from' => $remoteFrom]);
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Onsite, 'valid_from' => $onsiteFrom]);
+
+    punchWith($this->phone, $this->ana->id, PUNCH_OUTSIDE)->assertUnprocessable();
+
+    expect(AttendanceMark::query()->count())->toBe(0);
+})->with([
+    'remote ended last week' => ['1970-01-01', '2026-11-02'],
+    'remote starts tomorrow' => ['2026-11-10', '1970-01-01'],
+]);
+
+it('marks remotely from the day the remote schedule starts, today in the center\'s zone', function (): void {
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Onsite]);
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote, 'valid_from' => '2026-11-09']);
+
+    punchWith($this->phone, $this->ana->id, PUNCH_OUTSIDE)->assertOk();
+
+    expect(AttendanceMark::query()->sole())->method->toBe(MarkMethod::Remote);
+});
+
 it('marks trusted staff from the browser with no QR', function (): void {
     $this->ana->update(['staff_group' => StaffGroup::Trusted]);
 

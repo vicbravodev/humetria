@@ -8,6 +8,7 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\EffectiveMarks;
+use App\Modules\Attendance\Support\ScheduleTimeline;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
@@ -85,9 +86,8 @@ final readonly class CloseDays
         // Bound in UTC: a Carbon binding loses its offset and the database session is UTC.
         $marked = AttendanceMark::query()->where('marked_at', '>=', $day->utc())->where('marked_at', '<', $day->addDay()->utc())->distinct()->get(['employee_id'])
             ->map(fn (AttendanceMark $mark): string => $mark->employee_id);
-        $scheduled = AttendanceSchedule::query()->get(['employee_id', 'minutes_by_weekday'])
-            ->filter(fn (AttendanceSchedule $schedule): bool => ($schedule->minutes_by_weekday[$day->isoWeekday()] ?? 0) > 0)
-            ->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id);
+        // Whoever the schedule in effect that day made a working day.
+        $scheduled = ScheduleTimeline::ofCompany()->working($day);
         $closed = 0;
 
         foreach ($this->peopleOf($workCenterId, [...$marked, ...$scheduled]) as $person) {

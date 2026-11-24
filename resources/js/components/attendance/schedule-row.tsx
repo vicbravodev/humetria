@@ -17,12 +17,14 @@ import type { SchedulePerson, WeeklyMaximum } from '@/types';
 export default function ScheduleRow({
     person,
     weeklyMaximum,
+    today,
     canManage,
     chosen,
     onChoose,
 }: {
     person: SchedulePerson;
     weeklyMaximum: WeeklyMaximum;
+    today: string;
     canManage: boolean;
     chosen: boolean;
     onChoose: (checked: boolean) => void;
@@ -53,7 +55,10 @@ export default function ScheduleRow({
                 </div>
             </TableCell>
             <TableCell className="whitespace-normal">
-                <ScheduleWeekCell schedule={schedule} />
+                <ScheduleWeekCell
+                    schedule={schedule}
+                    upcoming={person.upcoming}
+                />
             </TableCell>
             <TableCell className="min-w-36">
                 <ScheduleHoursCell
@@ -83,6 +88,7 @@ export default function ScheduleRow({
                             onOpenChange={setEditing}
                             people={[person]}
                             weeklyMaximum={weeklyMaximum}
+                            today={today}
                         />
                     )}
                 </TableCell>

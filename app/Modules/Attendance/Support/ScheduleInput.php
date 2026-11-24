@@ -6,12 +6,15 @@ namespace App\Modules\Attendance\Support;
 
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WorkMode;
+use App\Modules\Tenancy\Contracts\Timezones;
+use Carbon\CarbonImmutable;
 use Illuminate\Validation\Rule;
 
 /**
  * An agreed weekly schedule as RH's form sends it (criterio 2.6), for the requests that take one: their kind of shift, where
  * they work and the minutes of each ISO weekday, 1 Monday to 7 Sunday, all seven and no other: 0 is a rest day, 720 (12 h,
- * art. 68) the most; and, optionally, the minute of the day each weekday starts. Rule::in, not Rule::enum: the enum rule ignores the custom messages of lang/es/validation.php.
+ * art. 68) the most; and, optionally, the minute of the day each weekday starts and the day it starts to apply (today when
+ * none comes; from 2000 to a year ahead, so a date in the past can correct the record). Rule::in, not Rule::enum: the enum rule ignores the custom messages of lang/es/validation.php.
  */
 trait ScheduleInput
 {
@@ -25,6 +28,7 @@ trait ScheduleInput
         return [
             'shift_type' => ['required', Rule::in(array_column(ShiftType::cases(), 'value'))],
             'work_mode' => ['required', Rule::in(array_column(WorkMode::cases(), 'value'))],
+            'valid_from' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:2000-01-01', 'before_or_equal:'.CarbonImmutable::now(resolve(Timezones::class)->forTenant())->addYear()->toDateString()],
             'minutes' => ['required', 'array:'.implode(',', $weekdays), 'required_array_keys:'.implode(',', $weekdays)],
             'minutes.*' => ['required', 'integer', 'between:0,720'],
             // The optional start time of each weekday, in minutes from midnight; a blank one is a day with none.
@@ -41,6 +45,12 @@ trait ScheduleInput
     public function workMode(): WorkMode
     {
         return $this->enum('work_mode', WorkMode::class) ?? WorkMode::Onsite;
+    }
+
+    /** The day the schedule starts to apply; null for today. */
+    public function validFrom(): ?CarbonImmutable
+    {
+        return $this->filled('valid_from') ? CarbonImmutable::parse($this->string('valid_from')->toString()) : null;
     }
 
     /**

@@ -51,13 +51,19 @@ export type WeekMinutes = Partial<Record<string, number>>;
 /** The start time of each weekday as minutes from midnight; a day with none is null. */
 export type StartTimes = Partial<Record<string, number | null>>;
 
-/** A person's agreed weekly schedule (criterio 2.6). */
-export type WorkSchedule = {
+/** The week a person agreed (criterio 2.6): the hours of each day, the shift and where they work. */
+export type AgreedWeek = {
     shiftType: 'day' | 'night' | 'mixed';
     workMode: 'onsite' | 'remote';
     minutes: WeekMinutes;
     /** The minute of the day each weekday starts, when RH set any: a day with none is null. */
     starts: StartTimes | null;
+};
+
+/** An agreed week from a day on: each day is read with the one in effect that day. */
+export type WorkSchedule = AgreedWeek & {
+    /** The first day it applies (Y-m-d); null for one that began with no start date: «desde siempre». */
+    validFrom: string | null;
 };
 
 /** A person on the schedules page, with their schedule or null: held to 8 h a day with no rest day until RH sets one. */
@@ -66,7 +72,12 @@ export type SchedulePerson = {
     name: string;
     jobTitle: string;
     center: string;
+    /** The one in effect today. */
     schedule: WorkSchedule | null;
+    /** The ones that have not started, the soonest first. */
+    upcoming: WorkSchedule[];
+    /** The ones that already ended, the newest first. */
+    history: WorkSchedule[];
 };
 
 /**
@@ -85,6 +96,8 @@ export type AttendanceSchedulesProps = {
     filters: { q: string; status: ScheduleView };
     counts: Record<ScheduleView, number>;
     weeklyMaximum: WeeklyMaximum;
+    /** Today in the company's calendar (Y-m-d): where a new schedule starts unless RH picks another day. */
+    today: string;
     people: Paginated<SchedulePerson>;
     canManage: boolean;
 };

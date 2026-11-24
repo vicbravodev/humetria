@@ -13,9 +13,9 @@ import {
 import type { DraftWeek } from '@/lib/attendance/schedule-draft';
 import type { ScheduleTemplate } from '@/lib/attendance/schedule-templates';
 import { matchTemplate } from '@/lib/attendance/schedule-templates';
-import type { WeekMinutes, WorkSchedule } from '@/types';
+import type { AgreedWeek, WeekMinutes } from '@/types';
 
-type Shift = WorkSchedule['shiftType'];
+type Shift = AgreedWeek['shiftType'];
 
 /** Monday to Friday 8 h with no start time: where a new schedule starts. */
 const STARTING: WeekMinutes = { 1: 480, 2: 480, 3: 480, 4: 480, 5: 480 };
@@ -26,7 +26,7 @@ const STARTING: WeekMinutes = { 1: 480, 2: 480, 3: 480, 4: 480, 5: 480 };
  * it to. A template fills the days and hours and keeps the start RH had; another person's schedule fills all of the week.
  */
 export function useScheduleDraft(
-    initial: WorkSchedule | null,
+    initial: AgreedWeek | null,
     templates: readonly ScheduleTemplate[],
 ) {
     const [week, setWeek] = useState<DraftWeek>(() =>
@@ -76,7 +76,7 @@ export function useScheduleDraft(
             })),
         apply: (template: ScheduleTemplate) =>
             fill(withWeek(week, template.minutes), template.shift),
-        copy: (schedule: WorkSchedule) =>
+        copy: (schedule: AgreedWeek) =>
             fill(
                 draftOf(schedule.minutes, schedule.starts),
                 schedule.shiftType,

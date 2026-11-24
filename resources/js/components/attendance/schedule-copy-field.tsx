@@ -4,13 +4,13 @@ import { Label } from '@/components/ui/label';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { scheduleCopies } from '@/lib/attendance/schedule-copy';
 import { options } from '@/routes/tenant/attendance/schedules';
-import type { WorkSchedule } from '@/types';
+import type { AgreedWeek } from '@/types';
 
 /** «Igual que …»: someone who already has a schedule, searched on the server, whose week fills this one. */
 export default function ScheduleCopyField({
     onCopy,
 }: {
-    onCopy: (schedule: WorkSchedule) => void;
+    onCopy: (schedule: AgreedWeek) => void;
 }) {
     const tenantSlug = useTenantSlug();
     const [copies] = useState(() => scheduleCopies(options.url(tenantSlug)));

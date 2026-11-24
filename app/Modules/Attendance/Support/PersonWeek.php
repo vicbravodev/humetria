@@ -9,7 +9,6 @@ use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\OverLimit;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Models\AttendanceMark;
-use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use Carbon\CarbonImmutable;
@@ -24,7 +23,8 @@ use LogicException;
  * week they read (`digest`, sent back with their answer) and why it cannot be confirmed yet (`blocked`: no marks, or its
  * last day still open). Never where a mark was taken, nor the device. Counted from the marks every time. The week is
  * read in the zone of the person's center (the week's own); each mark shows the time of the place it was taken, with
- * that zone when it is another, and whether it was taken at another center (a trip: no lateness that day).
+ * that zone when it is another, and whether it was taken at another center (a trip: no lateness that day). Each day is
+ * read with the schedule in effect that day (ScheduleTimeline), so a change in the middle of the week splits it.
  */
 final class PersonWeek
 {
@@ -35,20 +35,20 @@ final class PersonWeek
     {
         $timezone = $week->timezone();
         $byDay = EffectiveMarks::byDay($employeeId, $week);
-        $schedule = AttendanceSchedule::query()->where('employee_id', $employeeId)->first();
+        $schedules = ScheduleTimeline::of([$employeeId]);
         $latest = EffectiveMarks::of($employeeId)->latest('marked_at')->first(['id'])?->id;
         $yesterday = CarbonImmutable::now($timezone)->subDay()->startOfDay();
         $absences = WeekDigest::absences($employeeId, $week);
         $away = AbsentDays::of($absences, $week)[$employeeId] ?? [];
-        // The tolerance is read only when the schedule has start times: a week without them costs no query more.
-        $tolerance = $schedule?->starts_by_weekday === null ? 0 : CompanyPolicy::current()->late_tolerance_minutes;
+        // The tolerance is read only when a schedule has start times: a week without them costs no query more.
+        $tolerance = $schedules->hasStartTimes() ? CompanyPolicy::current()->late_tolerance_minutes : 0;
         $days = [];
         $hours = [];
 
         foreach (range(0, 6) as $offset) {
             $date = $week->start()->addDays($offset);
             $marks = $byDay[$date->toDateString()] ?? [];
-            $hours[] = $day = WorkedDay::hours($date, $marks, $schedule, $tolerance, isset($away[$offset]));
+            $hours[] = $day = WorkedDay::hours($date, $marks, $schedules->on($employeeId, $date), $tolerance, isset($away[$offset]));
             // The day the person is still working (its last mark is their last one, from yesterday on) is not missing its end yet.
             $stillOpen = $marks !== [] && end($marks)->id === $latest && $date->greaterThanOrEqualTo($yesterday);
 
@@ -65,7 +65,7 @@ final class PersonWeek
             ];
         }
 
-        $summary = HoursCalculator::week($hours, $schedule->shift_type ?? ShiftType::Day, $week->start()->year);
+        $summary = HoursCalculator::week($hours, $schedules->on($employeeId, $week->end())->shift_type ?? ShiftType::Day, $week->start()->year);
         // Of each day's minutes, how many were overtime (for the bar of the week): the calculator's, never a second count.
         $days = array_map(fn (array $day): array => [...$day, 'overtimeMinutes' => $summary->overtimeByDay[$day['date']] ?? 0], $days);
         $answer = WeeklyConfirmation::query()->where('employee_id', $employeeId)->where('week_start', $week->start()->toDateString())->first();

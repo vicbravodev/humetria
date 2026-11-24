@@ -12,17 +12,21 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Attendance\AttendanceScheduleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * The agreed weekly schedule of a person (criterio 2.6): their kind of shift, where they work and the minutes agreed for
- * each ISO weekday (1 Monday to 7 Sunday). One per person.
+ * each ISO weekday (1 Monday to 7 Sunday). A person has one per start date: each day is read with the one in effect that day
+ * (the latest that started on or before it), and a new one never erases the one before. The ones that existed before
+ * start dates began «since always».
  *
  * @property string $id
  * @property string $tenant_id
  * @property string $employee_id
+ * @property CarbonImmutable $valid_from the first day it applies, in the company's calendar
  * @property ShiftType $shift_type
  * @property WorkMode $work_mode
  * @property array<int, int> $minutes_by_weekday
@@ -30,18 +34,31 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'employee_id', 'shift_type', 'work_mode', 'minutes_by_weekday', 'starts_by_weekday'])]
+#[Fillable(['tenant_id', 'employee_id', 'valid_from', 'shift_type', 'work_mode', 'minutes_by_weekday', 'starts_by_weekday'])]
 #[UseFactory(AttendanceScheduleFactory::class)]
 final class AttendanceSchedule extends Model
 {
+    /** The start date of the schedules that existed before start dates did: they apply «since always». */
+    public const string SINCE_ALWAYS = '1970-01-01';
+
     /** @use HasFactory<AttendanceScheduleFactory> */
     use BelongsToCurrentTenant, HasFactory, HasVersion4Uuids, MatchesManyIds;
+
+    /**
+     * The schedules that have started by the local date (its date only): those that apply on it or already ended.
+     *
+     * @param  Builder<static>  $query
+     */
+    public function scopeStartedBy(Builder $query, string $date): void
+    {
+        $query->where('valid_from', '<=', $date);
+    }
 
     /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
-        return ['shift_type' => ShiftType::class, 'work_mode' => WorkMode::class, 'minutes_by_weekday' => 'array', 'starts_by_weekday' => 'array'];
+        return ['valid_from' => 'immutable_date', 'shift_type' => ShiftType::class, 'work_mode' => WorkMode::class, 'minutes_by_weekday' => 'array', 'starts_by_weekday' => 'array'];
     }
 }
