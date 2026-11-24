@@ -523,8 +523,9 @@ it('keeps «Tiene pendientes en su portal» when the portal asks for more than c
         ->and($mail->actionText)->toBe('Abrir mi portal');
 });
 
-it('holds the mail before it keeps the requests: what does not fit keeps none and says how many are missing', function (): void {
+it('keeps every request when the mail quota runs out: nothing is mailed, nothing is undone', function (): void {
     Queue::fake();
+    Log::spy();
     staffer($this->center);
     staffer($this->center);
     $path = tempnam(sys_get_temp_dir(), 'doc');
@@ -534,9 +535,217 @@ it('holds the mail before it keeps the requests: what does not fit keeps none an
     expect(fn () => resolve(PublishDocument::class)->handle(DocumentKind::Policy, $path, [$this->center->id], [], $this->hr->id))->not->toThrow(Throwable::class);
     $document = TeleworkDocument::query()->sole();
 
-    expect(fn () => resolve(RequestAcknowledgements::class)->handle([$document->id]))
-        ->toThrow(App\Modules\Billing\Exceptions\MailQuotaExceeded::class, 'faltan 1');
+    expect(resolve(RequestAcknowledgements::class)->handle([$document->id]))->toBe(2);
 
-    expect(Acknowledgement::query()->where('document_id', $document->id)->count())->toBe(0);
+    expect(Acknowledgement::query()->where('document_id', $document->id)->count())->toBe(2);
     Queue::assertNotPushed(SendPortalReminder::class);
+    Log::shouldHaveReceived('info')->with('telework.acknowledgement_requested', ['document_ids' => [$document->id], 'employees' => 2, 'users' => 0])->once();
+    Log::shouldHaveReceived('info')->with('telework.acknowledgement_mail_withheld', ['document_ids' => [$document->id], 'employees' => 2, 'users' => 0])->once();
+});
+
+it('holds the mail only for who can be mailed: employees with an address and the Comisión', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center, ['email' => 'ana@acme.test']);
+    $paper = staffer($this->center, ['email' => null]);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id]);
+    TeleworkerFactory::new()->active()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $paper->id]);
+    $member = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $member->id]);
+    [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
+    Acknowledgement::query()->delete();
+    Queue::fake();
+    withMailQuota($this->tenant, 2);
+
+    expect(resolve(RequestAcknowledgements::class)->handle([$risk->id]))->toBe(3);
+
+    expect(Acknowledgement::query()->count())->toBe(3);
+    Queue::assertPushed(SendPortalReminder::class, 2);
+    Queue::assertNotPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $paper->id);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $ana->id);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->userId === $member->id);
+});
+
+it('keeps the request of someone who joins the roster when the quota is gone: joining is never undone by the mail', function (): void {
+    Queue::fake();
+    $person = staffer($this->center);
+    publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->delete();
+    Queue::fake();
+    withMailQuota($this->tenant, 1);
+    resolve(App\Modules\Billing\Contracts\MailQuota::class)->reserve(1);
+
+    resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeCreated($this->tenant->id, $person->id, $this->center->id));
+
+    expect(Acknowledgement::query()->where('employee_id', $person->id)->count())->toBe(1);
+    Queue::assertNotPushed(SendPortalReminder::class);
+});
+
+it('asks nobody while the company has no NOM-037: the module is off, so no request and no mail are made', function (string $event): void {
+    Queue::fake();
+    [$policy] = publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->delete();
+    $person = staffer($this->center);
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    match ($event) {
+        'publication' => resolve(RequestOnPublication::class)->handle(new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id])),
+        'created' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeCreated($this->tenant->id, $person->id, $this->center->id)),
+        'reactivated' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeReactivated($this->tenant->id, $person->id, $this->center->id)),
+        'moved' => resolve(RequestPolicyFromNewStaff::class)->handle(new EmployeeMoved($this->tenant->id, $person->id, $this->other->id, $this->center->id)),
+    };
+
+    expect(Acknowledgement::query()->count())->toBe(0);
+    Queue::assertNotPushed(SendPortalReminder::class);
+})->with(['publication', 'created', 'reactivated', 'moved']);
+
+it('asks again when the company gets NOM-037 back: the guard only holds while the module is off', function (): void {
+    Queue::fake();
+    [$policy] = publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->delete();
+    $person = staffer($this->center);
+    $modules = resolve(App\Modules\Tenancy\Contracts\CompanyModules::class);
+    $modules->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+    resolve(RequestOnPublication::class)->handle(new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id]));
+    $modules->syncPlan($this->tenant->id, ['nom037'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    resolve(RequestOnPublication::class)->handle(new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id]));
+
+    expect(Acknowledgement::query()->where('employee_id', $person->id)->count())->toBe(1);
+});
+
+it('keeps the document of the center a person left out of their portal, their start and their email', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center, ['email' => 'ana@acme.test']);
+    [$old] = publishDocument(DocumentKind::Policy, $this->center);
+    [$new] = publishDocument(DocumentKind::Policy, $this->other);
+    $ana->update(['work_center_id' => $this->other->id]);
+    $portal = teleworkPortalOf($ana->id);
+    $titles = fn (): array => array_map(fn (PendingDocument $document): string => $document->id, resolve(App\Modules\Telework\Support\PortalPending::class)->for($portal)->documents);
+
+    // Asked of her when she arrives at the new center, as the listener does.
+    Acknowledgement::query()->where('employee_id', $ana->id)->where('document_id', $new->id)->delete();
+    expect($titles())->toBe([]);
+
+    resolve(RequestAcknowledgements::class)->forEmployee($ana->id, $this->other->id, DocumentKind::Policy);
+    expect($titles())->toBe([$new->id])
+        ->and(Acknowledgement::query()->where('employee_id', $ana->id)->where('document_id', $old->id)->whereNull('acknowledged_at')->count())->toBe(1);
+
+    $link = resolve(App\Modules\Telework\Support\TeleworkWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $ana->id, 'Acme', 'Ana'));
+    expect($link?->pending)->toBe(1);
+});
+
+it('does not let a person acknowledge the version of the center they left, though it was asked of them', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center);
+    [$old] = publishDocument(DocumentKind::Policy, $this->center);
+    $ana->update(['work_center_id' => $this->other->id]);
+
+    expect(fn () => resolve(Acknowledge::class)->handle(teleworkPortalOf($ana->id), $old->id, null))->toThrow(ValidationException::class);
+
+    expect(Acknowledgement::query()->where('document_id', $old->id)->sole()->acknowledged_at)->toBeNull();
+});
+
+it('still lets the Comisión confirm in the panel the version asked of them, whatever center they work in', function (): void {
+    Queue::fake();
+    $member = memberOf($this->tenant, TenantRole::Hr);
+    [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
+    Acknowledgement::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $risk->id, 'employee_id' => null, 'user_id' => $member->id]);
+
+    resolve(Acknowledge::class)->inPanel($member->id, $risk->id, null);
+
+    expect(Acknowledgement::query()->where('user_id', $member->id)->sole()->acknowledged_at)->not->toBeNull();
+});
+
+it('keeps the document of the center they left out of the reminder email', function (): void {
+    $ana = staffer($this->center, ['email' => 'ana@acme.test']);
+    publishDocument(DocumentKind::Policy, $this->center);
+    $ana->update(['work_center_id' => $this->other->id]);
+    // The queue here is synchronous: only what the job does from now on is watched.
+    Notification::fake();
+
+    SendPortalReminder::dispatchSync($this->tenant->id, $ana->id, null);
+
+    Notification::assertNothingSent();
+});
+
+it('retries a failed request by itself: three tries, waiting a minute and then five, whatever Horizon says', function (string $event, string $listener): void {
+    [$policy] = publishDocument(DocumentKind::Policy, $this->center);
+    $person = staffer($this->center);
+    Queue::fake();
+
+    Event::dispatch(match ($event) {
+        'publication' => new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id]),
+        'created' => new EmployeeCreated($this->tenant->id, $person->id, $this->center->id),
+        'reactivated' => new EmployeeReactivated($this->tenant->id, $person->id, $this->center->id),
+        'moved' => new EmployeeMoved($this->tenant->id, $person->id, $this->other->id, $this->center->id),
+    });
+
+    $jobs = Queue::pushed(Illuminate\Events\CallQueuedListener::class, fn (Illuminate\Events\CallQueuedListener $job): bool => $job->class === $listener);
+    expect($jobs)->toHaveCount(1)
+        ->and($jobs->first()->tries)->toBe(3)
+        ->and($jobs->first()->backoff)->toBe([60, 300]);
+})->with([
+    'publication' => ['publication', RequestOnPublication::class],
+    'created' => ['created', RequestPolicyFromNewStaff::class],
+    'reactivated' => ['reactivated', RequestPolicyFromNewStaff::class],
+    'moved' => ['moved', RequestPolicyFromNewStaff::class],
+]);
+
+/** A listener running as the worker's second try would: the first one failed. */
+function asTeleworkRetry(object $listener): object
+{
+    $job = Mockery::mock(Illuminate\Contracts\Queue\Job::class);
+    $job->shouldReceive('attempts')->andReturn(2);
+    $listener->setJob($job);
+
+    return $listener;
+}
+
+it('mails on the retry the ones whose request a failed first try left unmailed, and nobody who confirmed or has no address', function (): void {
+    $waiting = staffer($this->center, ['email' => 'espera@acme.test']);
+    $confirmed = staffer($this->center);
+    $paper = staffer($this->center, ['email' => null]);
+    [$policy] = publishDocument(DocumentKind::Policy, $this->center);
+    Acknowledgement::query()->where('employee_id', $confirmed->id)->update(['acknowledged_at' => now(), 'channel' => AckChannel::Portal]);
+    Queue::fake();
+    $event = new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$policy->id]);
+
+    // Everything is already kept, as a try that died before queueing the mail leaves it: asking again, without a retry, mails nobody.
+    resolve(RequestOnPublication::class)->handle($event);
+    Queue::assertNotPushed(SendPortalReminder::class);
+
+    asTeleworkRetry(resolve(RequestOnPublication::class))->handle($event);
+
+    Queue::assertPushed(SendPortalReminder::class, 1);
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $waiting->id);
+    expect(Acknowledgement::query()->count())->toBe(3)->and($paper->email)->toBeNull();
+});
+
+it('mails on the retry the Comisión member whose request was kept but not mailed', function (): void {
+    $member = memberOf($this->tenant, TenantRole::Committee);
+    CommitteeAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'user_id' => $member->id]);
+    [$risk] = publishDocument(DocumentKind::RiskInformation, $this->center);
+    Queue::fake();
+    $event = new App\Modules\Telework\Events\DocumentPublished($this->tenant->id, [$risk->id]);
+
+    asTeleworkRetry(resolve(RequestOnPublication::class))->handle($event);
+
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->userId === $member->id && $job->employeeId === null);
+});
+
+it('mails on the retry the newcomer whose request was kept but not mailed, and holds the quota for that one mail', function (): void {
+    $person = staffer($this->center);
+    publishDocument(DocumentKind::Policy, $this->center);
+    Queue::fake();
+    // The first request was mailed when the policy was published (the queue here is synchronous): one of the two is spent.
+    withMailQuota($this->tenant, 2);
+    $event = new EmployeeCreated($this->tenant->id, $person->id, $this->center->id);
+
+    resolve(RequestPolicyFromNewStaff::class)->handle($event);
+    Queue::assertNothingPushed();
+
+    asTeleworkRetry(resolve(RequestPolicyFromNewStaff::class))->handle($event);
+
+    Queue::assertPushed(SendPortalReminder::class, fn (SendPortalReminder $job): bool => $job->employeeId === $person->id);
+    expect(App\Modules\Billing\Models\UsageCounter::query()->where('meter', 'email_campaign')->sole()->reserved)->toBe(1);
 });

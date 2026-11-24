@@ -19,4 +19,10 @@ interface MailQuota
      * @throws \App\Modules\Billing\Exceptions\MailQuotaExceeded when they do not fit.
      */
     public function reserve(int $count): void;
+
+    /**
+     * The same hold for a send that must not fail when it does not fit (the mail is a courtesy on top of a record that is kept
+     * anyway): true when it was held, false, holding nothing, when it does not fit.
+     */
+    public function tryReserve(int $count): bool;
 }
