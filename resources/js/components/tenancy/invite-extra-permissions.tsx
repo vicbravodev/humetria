@@ -21,22 +21,24 @@ import type { PermissionGroup } from '@/types';
 export default function InviteExtraPermissions({
     groups,
     base,
+    chosen,
     errors,
 }: {
     groups: PermissionGroup[];
     /** What the chosen role already switches on. */
     base: string[];
+    /** The whole level of each area raised, kept by the form so its summary reads it too. */
+    chosen: { value: string[]; onChange: (value: string[]) => void };
     errors: {
         permissions: string | undefined;
         acknowledge: string | undefined;
     };
 }) {
     const areas = areasFor(groups).map((item) => item.area);
-    // The whole level of each area raised, so changing the role never leaves one half (manage without view).
-    const [chosen, setChosen] = useState<string[]>([]);
     const [acknowledged, setAcknowledged] = useState(false);
     // What the role chosen now already brings is not the person's own.
-    const own = chosen.filter((name) => !base.includes(name));
+    // The whole level of each area raised, so changing the role never leaves one half (manage without view).
+    const own = chosen.value.filter((name) => !base.includes(name));
     const raised = beyondRole(areas, own).length;
 
     return (
@@ -68,7 +70,7 @@ export default function InviteExtraPermissions({
                             (name) => !base.includes(name),
                         );
 
-                        setChosen(kept);
+                        chosen.onChange(kept);
                         // A different set of sensitive permissions asks for the confirmation again.
                         setAcknowledged(
                             (was) =>

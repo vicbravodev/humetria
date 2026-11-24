@@ -44,25 +44,32 @@ it('lists who has access and the pending invitations', function (bool $dark, boo
         ->assertSee('Pendiente');
 })->with($looks);
 
-it('invites from its own page, with what each role can do beside the form (board V3-Roles)', function (bool $dark, bool $mobile): void {
+it('invites from its own page, with a summary of what the chosen role and extras let do beside the form', function (bool $dark, bool $mobile): void {
     acmeWithPeople();
 
-    $page = visitPage('tenancy/invite-member', '/admin/acme/members/invitations/create', $dark, $mobile)
+    visitPage('tenancy/invite-member', '/admin/acme/members/invitations/create', $dark, $mobile)
         ->assertSee('Invitar a alguien')
         ->assertSee('Qué hará en Humetría')
         ->assertSee('Ayuda con las rutas')
         ->assertSee('Permisos adicionales')
-        ->assertSee('Qué puede hacer cada quien')
+        ->assertSee('Resumen')
+        ->assertDontSee('Qué puede hacer cada quien')
         ->assertSee('Le llegará un correo con un enlace de un solo uso, válido por 7 días.');
-
-    // On a phone the matrix is one folded row per role, not a table of dozens of rows: opening one lists what it can do.
-    if ($mobile) {
-        $page->assertDontSee('Ver tamizajes de la Guía I')
-            ->click('summary:has-text("Ayuda con las rutas")');
-    }
-
-    $page->assertSee('Ver tamizajes de la Guía I');
 })->with($looks);
+
+it('says in the summary what the invited person will be able to do, as the role and the extras change', function (): void {
+    acmeWithPeople();
+
+    visit('/admin/acme/members/invitations/create')
+        ->assertSeeIn('@access-sentence', 'Quien acepte la invitación')
+        ->radio('role', 'viewer')
+        ->assertSeeIn('@access-sentence', 'Quien acepte la invitación ve')
+        ->assertDontSeeIn('@access-sentence', 'administra Vacaciones')
+        ->click('@invite-extras')
+        ->click('@level-vacations-manage')
+        ->assertSeeIn('@access-sentence', 'administra Vacaciones')
+        ->assertNoJavaScriptErrors();
+});
 
 it('passes the checks with a row menu open', function (bool $dark, bool $mobile): void {
     acmeWithPeople();

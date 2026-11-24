@@ -170,12 +170,6 @@ export type RoleOption = { value: CompanyRoleKey; label: string };
 /** A role an invitation can give, with what it switches on: the floor of its «Permisos adicionales». */
 export type InvitableRole = RoleOption & { permissions: string[] };
 
-/** «Qué puede hacer cada quien» (board V3-Roles): one column per role, one cell per row and role. */
-export type RoleMatrix = {
-    columns: string[];
-    rows: { label: string; cells: string[] }[];
-};
-
 /** Where a module of a company comes from: its plan, what it had before the plan, a person's grant, or a person's revocation. */
 export type ModuleSource = 'plan' | 'legacy' | 'grant' | 'revoke';
 
