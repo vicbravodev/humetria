@@ -50,6 +50,15 @@ no tiene los campos de arriba o están fuera de límite; la fuente no es `https`
 (el título ya es el h1) o HTML crudo; tiene menos de 500 palabras; no enlaza a una página de Humetría (por ejemplo
 `/#agenda-una-demo`); el slug no es minúsculas con guiones, o el título se repite.
 
+## Diagramas
+
+Donde un diagrama explica mejor que el texto, se pide en su propio párrafo con `[diagrama: nombre]`; la página lo dibuja ahí, con
+el color de la familia de la herramienta del artículo y con su texto en el HTML del servidor (listas, no imágenes). Cada nombre es
+el archivo de un componente en `resources/js/components/blog/diagrams/` (`nom035-paso-a-paso.tsx`) y se registra en su `index.ts`;
+un artículo que pide un diagrama sin componente rompe el CI. Hoy hay: `nom035-guias-por-centro`, `nom035-paso-a-paso`,
+`jornada-escalera`, `topes-horas-extra`, `horas-extra-semana`, `registro-diez-pasos` y `vacaciones-por-antiguedad`. Un diagrama
+solo dice lo que dice el artículo (cada uno cita su fuente al pie): si cambia la norma, se cambian los dos.
+
 ## Cómo se ve y se renderiza
 
 El blog son dos páginas de Inertia (`resources/js/pages/blog/index.tsx` y `show.tsx`) con el header y el pie de la landing, y
