@@ -13,6 +13,7 @@ use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
+use App\Modules\Attendance\Http\Middleware\AttachOfflineTickets;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
 use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -100,6 +101,9 @@ final readonly class MarkController
             'optionsUrl' => route('attendance.device.punch.options', $tenant),
             'punchUrl' => route('attendance.device.punch.store', $tenant),
             'forgetUrl' => route('attendance.device.punch.forget', $tenant),
+            // The company's address segment and where the phone swaps a ticket for a new batch (it keeps them to mark without a connection).
+            'slug' => $tenant,
+            'ticketsUrl' => route('attendance.device.tickets', $tenant),
             'weekUrl' => route('attendance.device.week.show', $tenant),
             // Where a person without a key here adds one from a session; the first one comes only from RH's link.
             'enterUrl' => route('worker.home', $tenant),
@@ -143,6 +147,8 @@ final readonly class MarkController
 
         $person = $this->roster->find($signed->employeeId);
         abort_if($person === null || ! $person->active, 404);
+        // Whoever answers from here on (the mark, a refusal) hands the phone its tickets and context.
+        AttachOfflineTickets::signedBy($person->id);
         $timezone = $this->timezones->forCenter($person->workCenterId);
         $request->session()->put(self::SESSION_KEY, ['id' => $person->id, 'at' => CarbonImmutable::now()->getTimestamp()]);
 

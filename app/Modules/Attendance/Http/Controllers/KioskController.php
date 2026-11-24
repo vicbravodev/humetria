@@ -115,6 +115,8 @@ final class KioskController
             $kiosk->update(['last_seen_at' => $now]);
         }
 
+        // `{window}.{hmac}`: the window travels with the code, so a phone that reads it without a connection can be believed
+        // about when the window began (criterio 3.3.1).
         $token = QrToken::issue($kiosk->tenant_id, $kiosk->work_center_id, $now);
         // The page of Marcar (a GET) reads the code from the address: a phone camera opens it.
         $url = url("me/{$tenant}/punch").'?'.http_build_query(['q' => $token]);

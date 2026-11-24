@@ -19,9 +19,9 @@ function qrAt(int $seconds): CarbonImmutable
     return CarbonImmutable::parse('2026-11-07 12:00:00', 'UTC')->addSeconds($seconds);
 }
 
-it('is the HMAC-SHA256 with the app key of its own domain, the company, the center and the 30 s window', function (): void {
+it('is its window and the HMAC-SHA256 with the app key of its own domain, the company, the center and the 30 s window', function (): void {
     $window = intdiv(qrAt(0)->getTimestamp(), 30);
-    $expected = hash_hmac('sha256', 'attendance-qr|'.QR_TENANT.'|'.QR_CENTER.'|'.$window, config()->string('app.key'));
+    $expected = $window.'.'.hash_hmac('sha256', 'attendance-qr|'.QR_TENANT.'|'.QR_CENTER.'|'.$window, config()->string('app.key'));
 
     expect(QrToken::issue(QR_TENANT, QR_CENTER, qrAt(0)))->toBe($expected)
         ->and(QrToken::issue(QR_TENANT, QR_CENTER, qrAt(29)))->toBe($expected)
@@ -59,6 +59,47 @@ it('rejects a code with one character changed, cut or empty', function (): void 
     expect(QrToken::verify($tampered, QR_TENANT, QR_CENTER, qrAt(0)))->toBeFalse()
         ->and(QrToken::verify(substr($token, 0, -1), QR_TENANT, QR_CENTER, qrAt(0)))->toBeFalse()
         ->and(QrToken::verify('', QR_TENANT, QR_CENTER, qrAt(0)))->toBeFalse();
+});
+
+it('rejects a code whose window, HMAC or shape was altered', function (string $kind): void {
+    [$window, $hmac] = explode('.', QrToken::issue(QR_TENANT, QR_CENTER, qrAt(0)));
+    $token = match ($kind) {
+        'another window with the same HMAC' => (intdiv(qrAt(0)->getTimestamp(), 30) - 1).'.'.$hmac,
+        'the HMAC of another window' => $window.'.'.explode('.', QrToken::issue(QR_TENANT, QR_CENTER, qrAt(-30)))[1],
+        'no dot' => $window.$hmac,
+        'the old format, the HMAC alone' => $hmac,
+        'a non numeric window' => 'abc.'.$hmac,
+        'a negative window' => '-1.'.$hmac,
+        'a window with a sign' => '+'.$window.'.'.$hmac,
+        'a short HMAC' => $window.'.'.substr($hmac, 0, 63),
+        'an upper case HMAC' => $window.'.'.strtoupper($hmac),
+        'two dots' => $window.'.'.$hmac.'.x',
+        'a line break at the end' => $window.'.'.$hmac."\n",
+    };
+
+    expect(QrToken::verify($token, QR_TENANT, QR_CENTER, qrAt(0)))->toBeFalse()
+        ->and(QrToken::expired($token, QR_TENANT, QR_CENTER, qrAt(0)))->toBeFalse()
+        ->and(QrToken::windowStart($token, QR_TENANT, QR_CENTER, qrAt(0)))->toBeNull();
+})->with(['another window with the same HMAC', 'the HMAC of another window', 'no dot', 'the old format, the HMAC alone', 'a non numeric window', 'a negative window', 'a window with a sign', 'a short HMAC', 'an upper case HMAC', 'two dots', 'a line break at the end']);
+
+it('gives the start of the window it signed, as the server can prove it, whatever its age', function (): void {
+    $token = QrToken::issue(QR_TENANT, QR_CENTER, qrAt(47));
+
+    expect(QrToken::windowStart($token, QR_TENANT, QR_CENTER, qrAt(47)))->toEqual(qrAt(30))
+        // Exactly its start is not after it; one second before is.
+        ->and(QrToken::windowStart($token, QR_TENANT, QR_CENTER, qrAt(30)))->toEqual(qrAt(30))
+        ->and(QrToken::windowStart($token, QR_TENANT, QR_CENTER, qrAt(29)))->toBeNull()
+        // The age is judged by OfflineTime, not here: a code of 30 days ago still gives its window.
+        ->and(QrToken::windowStart($token, QR_TENANT, QR_CENTER, qrAt(47)->addDays(30)))->toEqual(qrAt(30));
+});
+
+it('gives no window to a code of another center, another company or that does not verify', function (): void {
+    $token = QrToken::issue(QR_TENANT, QR_CENTER, qrAt(0));
+
+    expect(QrToken::windowStart($token, QR_TENANT, '11111111-2222-4333-8444-555555555555', qrAt(0)))->toBeNull()
+        ->and(QrToken::windowStart($token, '11111111-2222-4333-8444-555555555555', QR_CENTER, qrAt(0)))->toBeNull()
+        ->and(QrToken::windowStart(substr($token, 0, -1).($token[-1] === 'a' ? 'b' : 'a'), QR_TENANT, QR_CENTER, qrAt(0)))->toBeNull()
+        ->and(QrToken::windowStart('', QR_TENANT, QR_CENTER, qrAt(0)))->toBeNull();
 });
 
 it('expires at the end of the window after its own', function (): void {

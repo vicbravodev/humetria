@@ -22,6 +22,18 @@ return [
     ],
 
     /*
+    | Marking without a connection (criterio 3.3.1). `enabled` is the only switch: it turns the phone's queue and screens off
+    | (the phone reads it from the context it receives) and never the delivery. The rest are constants, not settings: the
+    | tickets that bound the time of such a mark are signed with the app key (and APP_PREVIOUS_KEYS).
+    */
+    'offline' => [
+        'enabled' => (bool) env('ATTENDANCE_OFFLINE_ENABLED', true),
+        // Tickets handed to the phone at a time, and how old one may be and still serve (the horizon of a correction).
+        'ticket_batch' => 8,
+        'ticket_horizon_days' => 35,
+    ],
+
+    /*
     | Minutes the Marcar page of a browser remembers who marked last, to offer their next step.
     */
     'punch' => [

@@ -18,4 +18,12 @@ final readonly class AgreementStatus
             ->where('agreement_id', $this->agreement->get()->id)
             ->exists();
     }
+
+    /** The version of the current agreement the person accepted: null when they accepted only an older one, or none. */
+    public function acceptedVersion(string $employeeId): ?int
+    {
+        $current = $this->agreement->get();
+
+        return AgreementAcceptance::query()->where('employee_id', $employeeId)->where('agreement_id', $current->id)->exists() ? $current->version : null;
+    }
 }

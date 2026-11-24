@@ -115,6 +115,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'respondent_kind',
             'respondent_text',
             'ticket',
+            // Registro de jornada, marks made without a connection: the list of tickets a phone keeps.
+            'tickets',
             // NOM-035 policy and disclosure: the link of the page of the workers (a credential), a person's own link, the words of a
             // policy and the note of a paper acknowledgment never reach a log.
             'acknowledgment_note',

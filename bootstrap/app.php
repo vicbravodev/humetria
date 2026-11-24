@@ -126,6 +126,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->respond(fn (Response $response, Throwable $exception, Request $request): Response => app(ErrorPage::class)->respond($response, $request, $exception));
 
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+            // What a phone calls to mark without a connection (the tickets, and the delivery of marks) answers JSON whatever it asks for.
+            fn (Request $request) => $request->is('api/*', 'me/*/tickets') || $request->expectsJson(),
         );
     })->create();

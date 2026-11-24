@@ -6,6 +6,7 @@ namespace App\Http;
 
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Inertia\Inertia;
@@ -38,6 +39,8 @@ final class ErrorPage
         if ($exception instanceof HttpResponseException
             || ! in_array($status, self::SHOWN, true)
             || $request->expectsJson()
+            // The handler already rendered JSON (shouldRenderJsonWhen): the routes a phone calls without a connection keep it.
+            || $response instanceof JsonResponse
             || ($status >= 500 && config('app.debug') === true)) {
             return $response;
         }
