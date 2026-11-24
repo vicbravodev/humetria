@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Modules\Engagement\Models\Survey;
 use Database\Factories\Attendance\AttendanceMarkFactory;
+use Database\Factories\Attendance\AttendanceOfflineMarkFactory;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Billing\UsageEventFactory;
 use Database\Factories\Disclosure\AcknowledgmentFactory;
 use Database\Factories\Disclosure\DisseminationRecordFactory;
@@ -82,6 +84,8 @@ function insertOnlyTables(): array
             return CommentFactory::new()->createOne(['tenant_id' => $survey->tenant_id, 'survey_id' => $survey->id])->id;
         }, 'engagement_comments is insert-only', 'id = id', true],
         'attendance_marks' => ['attendance_marks', fn (): string => AttendanceMarkFactory::new()->createOne()->id, 'attendance_marks is append-only', 'id = id', true],
+        'attendance_offline_marks' => ['attendance_offline_marks', fn (): string => AttendanceOfflineMarkFactory::new()->createOne()->id, 'attendance_offline_marks is append-only', 'id = id', true],
+        'attendance_mark_reviews' => ['attendance_mark_reviews', fn (): string => MarkReviewFactory::new()->createOne()->id, 'attendance_mark_reviews is insert-only', 'id = id', true],
         'attendance_agreements' => ['attendance_agreements', fn (): string => attendanceAgreement(TenantFactory::new()->createOne()->id), 'attendance_agreements is append-only', 'id = id', true],
         'attendance_agreement_acceptances' => ['attendance_agreement_acceptances', function (): string {
             $key = WorkerCredentialFactory::new()->createOne();

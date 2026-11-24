@@ -7,10 +7,12 @@ use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
 use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceMark;
+use App\Modules\Attendance\Models\AttendanceOfflineMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Attendance\Models\MarkReview;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
@@ -121,4 +123,28 @@ it('does not read the correction requests of another company with a query', func
 
     workIn($b);
     expect(CorrectionRequest::query()->count())->toBe(1);
+});
+
+it('does not read the offline deliveries of another company with a query', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    $deliveryOfB = AttendanceOfflineMark::factory()->create(['tenant_id' => $b->id]);
+
+    workIn($a);
+    expect(AttendanceOfflineMark::query()->find($deliveryOfB->id))->toBeNull();
+
+    workIn($b);
+    expect(AttendanceOfflineMark::query()->count())->toBe(1);
+});
+
+it('does not read the reviews of another company with a query', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    $reviewOfB = MarkReview::factory()->create(['tenant_id' => $b->id]);
+
+    workIn($a);
+    expect(MarkReview::query()->find($reviewOfB->id))->toBeNull();
+
+    workIn($b);
+    expect(MarkReview::query()->count())->toBe(1);
 });
