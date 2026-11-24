@@ -1,5 +1,6 @@
 import { Bell } from 'lucide-react';
 import { useId } from 'react';
+import IconTile from '@/components/humetria/icon-tile';
 import { Button } from '@/components/ui/button';
 import { usePushOffer } from '@/hooks/use-push-offer';
 
@@ -22,12 +23,7 @@ export default function PushOffer({ slug }: { slug: string }) {
             className="flex flex-col gap-3 card p-4"
         >
             <div className="flex items-center gap-3.5">
-                <span
-                    aria-hidden
-                    className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary"
-                >
-                    <Bell className="size-5" />
-                </span>
+                <IconTile icon={Bell} />
                 <h2 id={headingId} className="text-base font-semibold">
                     ¿Le avisamos?
                 </h2>

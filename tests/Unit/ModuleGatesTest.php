@@ -13,6 +13,7 @@ const MAY_READ_BLOCKED = [
     'app/Modules/FirstSteps/Support/CompanyFirstSteps.php' => 'the first steps guide every owner through the platform: they are no module, only a blocked company loses them',
     'app/Modules/Demos/Support/DemoDoor.php' => 'the demo room\'s door lets visitors into the whole demo company, its personal portal included: it is no module',
     'app/Modules/WorkerAccess/Jobs/SendWorkerInvitation.php' => 'the person\'s identity is every company\'s: it is no module, only a blocked company loses it',
+    'app/Modules/Notifications/Jobs/DeliverPush.php' => 'a notice goes to the person\'s own phone, whichever tool raised it: it is no module, only a blocked company loses it',
     'app/Modules/WorkerAccess/Jobs/SendRequestedLink.php' => 'the person\'s identity is every company\'s: it is no module, only a blocked company loses it',
     'app/Modules/WorkerAccess/Support/WorkerSessionStore.php' => 'the person\'s identity is every company\'s: it is no module, only a blocked company loses it',
 ];
