@@ -1,6 +1,7 @@
 # Permisos granulares por empresa: diseño
 
-Estado: propuesto, pendiente de aprobación de Victor. Fecha: 2026-11-23.
+Estado: implementado en la rama `claude/granular-permissions-system-c2dc19` (2026-11-24), sin PR; las decisiones que
+quedan de Victor están al final («Pendiente de Victor»). Fecha del diseño: 2026-11-23.
 
 ## Intención
 
@@ -187,3 +188,34 @@ empresa, y el orden de los commits (un comportamiento por commit).
    exactamente el acceso actual.
 3. Máximo 20 roles propios por empresa.
 4. Un solo rol por persona, más permisos extra (sin múltiples roles).
+
+## Pendiente de Victor (al cerrar la implementación, 2026-11-24)
+
+Ya construido así; cada punto se cambia si Victor decide otra cosa. Ninguno está confirmado.
+
+1. **Conflicto de quejas (C-45):** `manage-organization` = «es RH» y owner = «es dirección». Implementado: el owner cuenta
+   solo como dirección (no deja las quejas contra RH) y RH es quien tiene `manage-organization`. — pendiente de Victor.
+2. **Permisos nuevos de cobertura** `view-dashboard`, `view-work-centers` y `view-nom035-route`, con las plantillas en
+   exactamente el acceso que tenían (`TemplateAccessUnchangedTest`). — pendiente de Victor.
+3. **Máximo de 20 roles propios** por empresa (`tenancy.max_custom_roles`). — pendiente de Victor.
+4. **Un solo rol por persona, más permisos adicionales** (sin varios roles). — pendiente de Victor.
+5. **Lista de sensibles** (`PermissionCatalog`, `sensitive`): `view-trauma-screenings`, `handle-complaints`,
+   `manage-complaint-channel`, `review-workplaces`, `view-compensation`, `manage-compensation`. — pendiente de Victor.
+6. **Panel y Centros separados** en la pantalla de roles: la Comisión tiene `view-dashboard` sin `view-work-centers`, y el
+   panel solo se abre con los dos. — pendiente de Victor.
+7. **`assess-seating`** como permiso aparte de Ley Silla (otra opción: un nivel intermedio «Evaluar»). — pendiente de Victor.
+8. **Etiquetas** «Canal de quejas» (con niveles «Atender» / «Administrar») y Humi con el nivel «Usar». — pendiente de Victor.
+9. **Textos es-MX** nuevos (validaciones, avisos, correos de invitación, página «Aún no tienes acceso», criterios de
+   `docs/normas/permisos/criterios.md`). — pendiente de Victor.
+10. **Dos avisos de personas** en el editor de roles (el aviso de arriba y la línea del resumen «aplica a N personas»): quizá
+    sobra uno. — pendiente de Victor.
+11. **Soporte suplantando al dueño:** ve roles y permisos y no cambia nada (toda escritura responde 404). — pendiente de Victor.
+12. **Nombre de un rol igual a la etiqueta de una plantilla** («Solo consulta»): no se permite. — pendiente de Victor.
+13. **Invitar con extras sensibles** pide la misma confirmación. — pendiente de Victor.
+14. **La plantilla del owner** no aparece en la lista de roles. — pendiente de Victor.
+15. **«Sin acceso» elegido** se marca con relleno neutro, no con el acento. — pendiente de Victor.
+16. **404 en vez de 403** cuando falta el permiso en las rutas cuyas pruebas de privacidad ya esperaban 404, y siete
+    rutas que piden un solo permiso donde el controlador aceptaba uno u otro (archivos y evidencia de Ley Silla,
+    canalización, aviso de teletrabajo, opciones de personas del organigrama). — pendiente de Victor.
+17. **Humi** le dice al dueño los conteos de roles (cuántos propios de 20, personas por rol, cuántas con extras) y a cada
+    quien su propio nivel por área, como una línea más del estado de cumplimiento. — pendiente de Victor.
