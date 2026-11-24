@@ -8,13 +8,10 @@ use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantModule;
-use App\Modules\Tenancy\Support\PermissionCatalog;
-use App\Modules\Tenancy\Support\PermissionDefinition;
-use App\Modules\Tenancy\Support\RoleMatrix;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
-mutates(MemberController::class, RoleMatrix::class);
+mutates(MemberController::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme', 'trade_name' => 'Acme']);
@@ -38,8 +35,7 @@ it('offers the roles the owner can give and what each one can do (board V3-Roles
                 ['committee', 'Comisión de seguridad e higiene'],
                 ['complaints', 'Atención de quejas'],
             ] && collect($roles)->every(fn ($row): bool => $row['permissions'] === Role::findByName($row['value'])->permissions->pluck('name')->sort()->values()->all()))
-            ->where('matrix.columns', ['Administra todo', 'Ayuda con las rutas', 'Solo consulta', 'Comisión de seguridad e higiene', 'Atención de quejas'])
-            ->where('matrix.rows', fn ($rows): bool => collect($rows)->pluck('label')->all() === array_map(fn (PermissionDefinition $permission): string => $permission->label, PermissionCatalog::all())));
+        );
 });
 
 it('adds the company\'s own roles, and only the permissions of the tools it has', function (): void {
@@ -51,35 +47,17 @@ it('adds the company\'s own roles, and only the permissions of the tools it has'
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('roles.4', ['value' => $role->name, 'label' => 'Auditoría', 'permissions' => ['view-climate', 'view-dashboard']])
-            ->where('matrix.columns.5', 'Auditoría')
-            ->where('matrix.rows', fn ($rows): bool => ! collect($rows)->pluck('label')->contains('Ver vacaciones')
-                && collect($rows)->firstWhere('label', 'Ver clima')['cells'][5] === 'Sí'
-                && collect($rows)->firstWhere('label', 'Ver asistencia')['cells'][5] === 'No'));
+            ->where('groups', fn ($groups): bool => collect($groups)->flatMap(fn (array $group): array => $group['permissions'])->firstWhere('name', 'view-vacations')['unavailableReason'] === 'Tu plan no incluye Vacaciones.'));
 });
 
-it('says of each permission what each role really has', function (): void {
-    $own = app(CreateCompanyRole::class)->handle($this->tenant, 'Auditoría', ['view-dashboard', 'handle-complaints'], null, $this->owner);
-    $matrix = RoleMatrix::for($this->tenant);
-    $roles = [...array_map(fn (string $name): Role => Role::query()->where('name', $name)->whereNull('tenant_id')->sole(), ['owner', 'hr', 'viewer', 'committee', 'complaints']), $own];
-
-    expect($matrix)->not->toBeNull()->and($matrix['rows'] ?? [])->toHaveCount(count(PermissionCatalog::all()));
-
-    foreach (PermissionCatalog::all() as $index => $permission) {
-        foreach ($roles as $column => $role) {
-            expect($matrix['rows'][$index]['cells'][$column] ?? null)->toBe($role->hasPermissionTo($permission->name) ? 'Sí' : 'No', "{$role->name} and {$permission->name}");
-        }
-    }
-});
-
-it('shows a union only its roles and no matrix of the company tools', function (): void {
+it('shows a union only its roles', function (): void {
     $union = Tenant::factory()->create(['type' => TenantType::Union]);
 
     $this->actingAs(ownerOf($union))
         ->get(route('tenant.members.invitations.create', $union))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas', 'permissions' => Role::findByName('hr')->permissions->pluck('name')->sort()->values()->all()]])
-            ->where('matrix', null));
+            ->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas', 'permissions' => Role::findByName('hr')->permissions->pluck('name')->sort()->values()->all()]]));
 });
 
 it('is only for the owner', function (TenantRole $role): void {
@@ -100,4 +78,4 @@ it('reads the page in the same number of queries however many roles of its own t
 })->with([1, 4]);
 
 // Measured, then fixed so that a query per role or per permission breaks the test.
-const QUERIES_OF_THE_INVITE_PAGE = 18;
+const QUERIES_OF_THE_INVITE_PAGE = 14;

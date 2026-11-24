@@ -25,7 +25,6 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\DisplayDate;
 use App\Modules\Tenancy\Support\PermissionGroups;
-use App\Modules\Tenancy\Support\RoleMatrix;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -90,7 +89,6 @@ final class MemberController extends Controller
 
         return Inertia::render('tenancy/invite-member', [
             'roles' => $this->invitable($tenant),
-            'matrix' => RoleMatrix::for($tenant),
             // «Permisos adicionales»: what the invitation may bring besides the role.
             'groups' => PermissionGroups::for($tenant, []),
         ]);
