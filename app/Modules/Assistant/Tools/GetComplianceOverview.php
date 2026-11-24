@@ -29,7 +29,7 @@ final readonly class GetComplianceOverview implements Tool
 
     public function description(): string
     {
-        return 'Estado de cumplimiento de la empresa por norma o módulo (NOM-035 y su difusión, NOM-037, Ley Silla, vacaciones, quejas, pulso, clima, asistencia, organigrama y compensación; solo los que la empresa tiene): al día, en curso, pendiente o no aplica, con las cifras que lo explican y el enlace a la pantalla. No recibe argumentos.';
+        return 'Estado de cumplimiento de la empresa por norma o módulo (NOM-035 y su difusión, NOM-037, Ley Silla, vacaciones, quejas, pulso, clima, asistencia, organigrama y compensación; solo los que la empresa tiene): al día, en curso, pendiente o no aplica, con las cifras que lo explican y el enlace a la pantalla. Incluye roles y permisos: qué puede hacer quien pregunta, área por área, y para el dueño cuántos roles propios hay y cuántas personas tienen cada rol. No recibe argumentos.';
     }
 
     public function handle(Request $request): string

@@ -11,6 +11,7 @@ use App\Modules\Assistant\Listeners\DeleteMemberConversations;
 use App\Modules\Assistant\Listeners\SendLlmAnalytics;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\ComplianceReaders;
+use App\Modules\Assistant\Support\Readers\AccessReader;
 use App\Modules\Assistant\Support\Readers\AttendanceReader;
 use App\Modules\Assistant\Support\Readers\ClimateReader;
 use App\Modules\Assistant\Support\Readers\CompensationReader;
@@ -66,6 +67,8 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(OrgChartReader::class),
             // Compensación is a module of Integral and Enterprise (or hired alone): told only to a company that has it.
             $app->make(CompensationReader::class),
+            // Roles y permisos are not a module: every company has them.
+            $app->make(AccessReader::class),
         ], [Nom035Reader::class => 'nom035', DisclosureReader::class => 'nom035', Nom037Reader::class => 'nom037', SeatingReader::class => 'seating', VacationsReader::class => 'vacations', ComplaintsReader::class => 'complaints', PulseReader::class => 'pulse', ClimateReader::class => 'climate', AttendanceReader::class => 'attendance', OrgChartReader::class => 'org_chart', CompensationReader::class => 'compensation']));
 
         // The tools of Humi: a new module adds its own here.

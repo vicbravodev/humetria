@@ -154,7 +154,7 @@ it('does not tell Ley Silla to a company without it, and offers the overview to 
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['seating'], CarbonImmutable::now(config('app.display_timezone')));
 
-    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe(['seating'])
+    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe(['seating', 'access'])
         ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 });
 
@@ -344,7 +344,7 @@ it('does not tell pulse nor climate to a company without them, and offers the ov
 
     resolve(CompanyModules::class)->syncPlan($this->a->id, [$module], CarbonImmutable::now(config('app.display_timezone')));
 
-    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe([$module])
+    expect(array_column(toolCard(GetComplianceOverview::class, $this->scope)['rows'], 'key'))->toBe([$module, 'access'])
         ->and(array_map(fn ($tool): string => $tool::class, resolve(App\Modules\Assistant\Support\ToolRegistry::class)->for($this->scope)))->toContain(GetComplianceOverview::class);
 })->with(['pulse', 'climate']);
 

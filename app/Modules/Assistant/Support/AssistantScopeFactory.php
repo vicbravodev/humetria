@@ -15,6 +15,7 @@ final readonly class AssistantScopeFactory
     /** The permissions that decide what Humi may tell a person. */
     private const array ABILITIES = [
         'use-assistant',
+        'manage-members',
         'manage-organization',
         'manage-campaigns',
         'manage-telework',

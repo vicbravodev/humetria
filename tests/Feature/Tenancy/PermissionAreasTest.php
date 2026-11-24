@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Support\PermissionAreas;
 use App\Modules\Tenancy\Support\PermissionCatalog;
 use Spatie\Permission\Models\Role;
 
@@ -114,3 +115,13 @@ it('reads each template as one clean level per area plus its extras, with nothin
 
     expect(array_diff($held, $placed))->toBe([]);
 })->with([TenantRole::Hr, TenantRole::Viewer, TenantRole::Committee, TenantRole::Complaints]);
+
+it('has the same areas, levels and extras on the server, where Humi reads them, as in areas.json', function (): void {
+    $server = array_map(fn (string $key, array $area): array => [
+        'key' => $key,
+        'levels' => array_map(fn (array $level): array => $level['permissions'], $area['levels']),
+        'extras' => array_keys($area['extras']),
+    ], array_keys(PermissionAreas::all()), PermissionAreas::all());
+
+    expect($server)->toBe(array_map(fn (array $area): array => ['key' => $area['key'], 'levels' => $area['levels'], 'extras' => $area['extras']], permissionAreas()));
+});

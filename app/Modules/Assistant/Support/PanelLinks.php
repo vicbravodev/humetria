@@ -16,6 +16,11 @@ final readonly class PanelLinks
         return $this->path('tenant.dashboard');
     }
 
+    public function roles(): string
+    {
+        return $this->path('tenant.roles.index');
+    }
+
     public function workCenters(): string
     {
         return $this->path('tenant.work-centers.index');
