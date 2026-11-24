@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Http\Controllers;
 
+use App\Modules\Attendance\Actions\RecordOfflineMark;
+use App\Modules\Attendance\Data\OfflineOutcome;
+use App\Modules\Attendance\Data\OfflineSubmission;
 use App\Modules\Attendance\Http\Middleware\AttachOfflineTickets;
+use App\Modules\Attendance\Http\Requests\OfflinePunchRequest;
 use App\Modules\Attendance\Http\Requests\OfflineTicketsRequest;
 use App\Modules\Attendance\Support\OfflineTicket;
 use App\Modules\Organization\Contracts\Roster;
@@ -19,6 +23,24 @@ use Illuminate\Support\Facades\Log;
 final readonly class OfflineController
 {
     public function __construct(private Roster $roster) {}
+
+    /**
+     * The delivery of the marks a phone made without a connection: each one is judged apart, in the order of the phone's own
+     * number, and answered on its own (`results`). The tickets and the context come only when some signature verified, to the
+     * person it named. Never cached: it answers about someone's record.
+     */
+    public function store(OfflinePunchRequest $request, RecordOfflineMark $record): JsonResponse
+    {
+        $receivedAt = CarbonImmutable::now();
+        $outcomes = array_map(fn (OfflineSubmission $mark): OfflineOutcome => $record->handle($mark, $receivedAt), $request->submissions());
+        $signed = array_find(array_map(fn (OfflineOutcome $outcome): ?string => $outcome->signedEmployeeId, $outcomes), fn (?string $id): bool => $id !== null);
+
+        if ($signed !== null) {
+            AttachOfflineTickets::signedBy($signed);
+        }
+
+        return response()->json(['results' => array_map(fn (OfflineOutcome $outcome): array => $outcome->toArray(), $outcomes)])->header('Cache-Control', 'no-store, private');
+    }
 
     /**
      * A new batch of tickets for a valid ticket of the person, of any age within the horizon of a correction. A ticket is

@@ -104,6 +104,7 @@ final readonly class MarkController
             // The company's address segment and where the phone swaps a ticket for a new batch (it keeps them to mark without a connection).
             'slug' => $tenant,
             'ticketsUrl' => route('attendance.device.tickets', $tenant),
+            'deliverUrl' => route('attendance.device.punch.offline', $tenant),
             'weekUrl' => route('attendance.device.week.show', $tenant),
             // Where a person without a key here adds one from a session; the first one comes only from RH's link.
             'enterUrl' => route('worker.home', $tenant),

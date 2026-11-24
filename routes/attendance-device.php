@@ -87,4 +87,7 @@ Route::withoutMiddleware([
 ])->middleware([ResolveDeviceTenant::class, RejectCrossSiteRequests::class, AttachOfflineTickets::class])->group(function (): void {
     // A ticket of the person for a new batch and the context; its own limiter, apart from the screens' (a shift behind a NAT).
     Route::post('me/{tenant:slug}/tickets', [OfflineController::class, 'tickets'])->middleware('throttle:attendance-tickets')->name('attendance.device.tickets');
+    // The delivery of the marks made without a connection: each one is authorized by its own signature and its ticket, of one use.
+    // Its own limiter, per address, that counts requests and not marks.
+    Route::post('me/{tenant:slug}/punch/offline', [OfflineController::class, 'store'])->middleware('throttle:attendance-offline')->name('attendance.device.punch.offline');
 });

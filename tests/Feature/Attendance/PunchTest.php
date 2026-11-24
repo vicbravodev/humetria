@@ -159,6 +159,12 @@ describe('the page', function (): void {
                 ->where('ticketsUrl', route('attendance.device.tickets', 'acme')));
     });
 
+    it('gives the page the delivery url', function (): void {
+        $this->get(route('attendance.device.punch.show', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->component('attendance/punch')
+                ->where('deliverUrl', route('attendance.device.punch.offline', 'acme')));
+    });
+
     it('brings tickets and context with a mark and with a refusal, and none with a signature that does not verify', function (): void {
         $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline']];
 

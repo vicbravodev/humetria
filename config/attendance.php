@@ -31,6 +31,16 @@ return [
         // Tickets handed to the phone at a time, and how old one may be and still serve (the horizon of a correction).
         'ticket_batch' => 8,
         'ticket_horizon_days' => 35,
+        // The time a person declares counts up to this many hours after the ticket was issued; past them only what is proven.
+        'count_declared_max_hours' => 72,
+        // An interval wider than this (receipt minus ticket) is flagged `wide_interval`.
+        'wide_interval_minutes' => 240,
+        // A QR read more than this before the declared time is treated as having none (`old_window`).
+        'qr_old_window_minutes' => 30,
+        // A copy in the queue of a mark made with a connection, within this of the same type, is «ya registrada».
+        'already_recorded_window_minutes' => 10,
+        // Marks in one delivery.
+        'delivery_batch_max' => 20,
     ],
 
     /*

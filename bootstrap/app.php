@@ -127,6 +127,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->shouldRenderJsonWhen(
             // What a phone calls to mark without a connection (the tickets, and the delivery of marks) answers JSON whatever it asks for.
-            fn (Request $request) => $request->is('api/*', 'me/*/tickets') || $request->expectsJson(),
+            fn (Request $request) => $request->is('api/*', 'me/*/tickets', 'me/*/punch/offline') || $request->expectsJson(),
         );
     })->create();

@@ -111,6 +111,15 @@ final class AuditPages
         'sso' => 'Inicio de sesión único',
         'whatsapp' => 'WhatsApp',
         'replaced' => 'Reemplazada',
+        'qr_window' => 'Ventana del QR',
+        'declared_interval' => 'Intervalo declarado',
+        'passkey' => 'Llave de acceso',
+        'device_key' => 'Llave del teléfono',
+        'wide_interval' => 'Intervalo ancho',
+        'old_window' => 'QR viejo',
+        'no_position' => 'Sin posición',
+        'outside_zone' => 'Fuera de zona',
+        'declared_adjusted' => 'Hora ajustada',
     ];
 
     /**
@@ -153,6 +162,10 @@ final class AuditPages
         'corrects_mark_id' => 'Marca que corrige',
         'employee_id' => 'Persona',
         'employee_ids' => 'Personas',
+        'time_basis' => 'Base de la hora',
+        'signer_type' => 'Firmante',
+        'interval_minutes' => 'Minutos del intervalo',
+        'review_flags' => 'Banderas de revisión',
         'delivered_by_rh' => 'Entregado por RH',
         'mark_id' => 'Marca',
         'sent' => 'Enviados',

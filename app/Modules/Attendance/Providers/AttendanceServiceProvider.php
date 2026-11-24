@@ -53,6 +53,10 @@ final class AttendanceServiceProvider extends ServiceProvider
         // shift behind one NAT. Its own counter, not the screens'.
         RateLimiter::for('attendance-tickets', fn (Request $request): Limit => Limit::perMinute(300)->by('attendance-tickets:'.$request->ip()));
 
+        // A phone delivers its queue of marks in a request of up to 20: per address 600 a minute counts requests and not marks, a
+        // whole shift behind one NAT. There is none per person: each mark spends a ticket of one use and asks for a new signature.
+        RateLimiter::for('attendance-offline', fn (Request $request): Limit => Limit::perMinute(600)->by('attendance-offline:'.$request->ip()));
+
         // Marking takes three requests (the page, the options, the signature). Per address 300 a minute: a shift of a hundred
         // people behind one router marking in the same minute fits. Per key 12 a minute: a person marks a few times a day,
         // so a key hammering the endpoint is stopped whatever the address. Only the key id's hash names its counter.

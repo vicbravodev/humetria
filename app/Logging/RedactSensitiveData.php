@@ -155,6 +155,12 @@ final class RedactSensitiveData implements ProcessorInterface
             'device_key_id',
             'pass',
             'signature',
+            // Registro de jornada, marks made without a connection: the screen's code, the note of the person (it may speak of their
+            // health) and the position in the integers the phone signs.
+            'qr',
+            'justification',
+            'lat_e5',
+            'lng_e5',
         ];
 
         foreach ($data as $key => $value) {

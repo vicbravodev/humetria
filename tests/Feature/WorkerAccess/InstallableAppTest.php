@@ -149,6 +149,12 @@ describe('the service worker', function (): void {
         expect($content)->toContain('humetria-pwa-boreal-')
             ->and($content)->not->toContain('humetria-pwa-acme-');
     });
+
+    it('switched off, never switches off the delivery of marks: an empty batch is still a 422, not a 404 or a 503', function (): void {
+        config(['worker_access.pwa_sw_kill' => true]);
+
+        $this->postJson(route('attendance.device.punch.offline', 'acme'), ['items' => []])->assertUnprocessable();
+    });
 });
 
 describe('the shell', function (): void {

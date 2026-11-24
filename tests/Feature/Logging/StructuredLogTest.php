@@ -112,6 +112,9 @@ it('redacts each sensitive key', function (string $key): void {
     'phone', 'mobile', 'wa_id', 'msisdn', 'recipient_hash', 'app_secret', 'verify_token', 'hub_verify_token', 'components',
     // Llave del dispositivo (plan B de las marcas sin conexión): the possession challenge, the signature, the pass and the key's id.
     'challenge', 'signature', 'pass', 'device_key_id',
+    // Registro de jornada, marks made without a connection: the screen's code, the note of the person and the position, in the
+    // integers the phone signs (the delivery's body).
+    'qr', 'justification', 'lat_e5', 'lng_e5',
 ]);
 
 it('redacts every salary key at any depth', function (): void {
