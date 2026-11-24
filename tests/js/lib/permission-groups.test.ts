@@ -108,4 +108,19 @@ describe('keepsAcknowledgement', () => {
             }),
         ).toBe(false);
     });
+
+    it('keeps it when sensitive permissions are only taken away, the others still confirmed', () => {
+        expect(
+            keepsAcknowledgement(more, [], {
+                previous: ['view-trauma-screenings', 'handle-complaints'],
+                next: ['view-trauma-screenings'],
+            }),
+        ).toBe(true);
+        expect(
+            keepsAcknowledgement(more, [], {
+                previous: ['view-trauma-screenings'],
+                next: [],
+            }),
+        ).toBe(true);
+    });
 });

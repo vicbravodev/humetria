@@ -42,8 +42,8 @@ export function toggled(
 }
 
 /**
- * Whether «Entiendo y confirmo» still holds after a switch: only while the sensitive permissions added are the same ones the
- * owner confirmed. Any change in that list asks again.
+ * Whether «Entiendo y confirmo» still holds after a switch: while no sensitive permission is added that the owner had not
+ * confirmed. Taking some away keeps it (the rest stay confirmed); adding one, or swapping one for another, asks again.
  */
 export function keepsAcknowledgement(
     groups: PermissionGroup[],
@@ -53,8 +53,5 @@ export function keepsAcknowledgement(
     const confirmed = sensitiveAdded(groups, before, previous);
     const now = sensitiveAdded(groups, before, next);
 
-    return (
-        confirmed.length === now.length &&
-        confirmed.every((label) => now.includes(label))
-    );
+    return now.every((label) => confirmed.includes(label));
 }
