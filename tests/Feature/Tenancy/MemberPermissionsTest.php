@@ -115,3 +115,17 @@ it('removes only this company\'s direct permissions when the person leaves it', 
     expect(DB::table('model_has_permissions')->where('model_id', $this->person->id)->pluck('tenant_id')->all())->toBe([$other->id])
         ->and(resolve(CompanyRoles::class)->directPermissionsOf($this->person, $other))->toBe(['manage-vacations']);
 });
+
+it('gives a person of a union only permissions of compensation', function (): void {
+    $union = Tenant::factory()->union()->create();
+    $owner = ownerOf($union);
+    $person = memberOf($union, TenantRole::Hr);
+    $membership = TenantMembership::query()->where('tenant_id', $union->id)->where('user_id', $person->id)->sole();
+
+    expect(fn () => app(GrantMemberPermissions::class)->handle($membership, ['view-compensation', 'view-dashboard'], $owner))->toThrow(InvalidArgumentException::class)
+        ->and(resolve(CompanyRoles::class)->directPermissionsOf($person, $union))->toBe([]);
+
+    app(GrantMemberPermissions::class)->handle($membership, ['manage-compensation'], $owner);
+
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($person, $union))->toBe(['manage-compensation']);
+});
