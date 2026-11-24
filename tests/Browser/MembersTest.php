@@ -52,7 +52,7 @@ it('invites from its own page, with what each role can do beside the form (board
         ->assertSee('Qué hará en Humetría')
         ->assertSee('Ayuda con las rutas')
         ->assertSee('Qué puede hacer cada quien')
-        ->assertSee('Canalización y datos de salud')
+        ->assertSee('Ver tamizajes de la Guía I')
         ->assertSee('Le llegará un correo con un enlace de un solo uso, válido por 7 días.');
 })->with($looks);
 

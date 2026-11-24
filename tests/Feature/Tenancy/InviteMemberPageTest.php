@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Modules\Tenancy\Actions\CreateCompanyRole;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantModule;
+use App\Modules\Tenancy\Support\PermissionCatalog;
+use App\Modules\Tenancy\Support\PermissionDefinition;
 use App\Modules\Tenancy\Support\RoleMatrix;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
@@ -34,19 +38,36 @@ it('offers the roles the owner can give and what each one can do (board V3-Roles
                 ['value' => 'complaints', 'label' => 'Atención de quejas'],
             ])
             ->where('matrix.columns', ['Administra todo', 'Ayuda con las rutas', 'Solo consulta', 'Comisión de seguridad e higiene', 'Atención de quejas'])
-            ->where('matrix.rows', fn ($rows): bool => collect($rows)->pluck('label')->all() === [
-                'Ver rutas y expedientes',
-                'Avanzar tareas y documentos',
-                'Resultados NOM-035 agregados',
-                'Canalización y datos de salud',
-                'Avisos de accidentes',
-                'Contenido de quejas y denuncias',
-                'Canal de quejas: quién atiende y conteos',
-                'Compensación: salarios y escenarios',
-                'Usuarios y configuración',
-            ])
-            ->where('matrix.rows.3.cells', ['Sí', 'Sí', 'No', 'No', 'No'])
-            ->where('matrix.rows.8.cells', ['Sí', 'No', 'No', 'No', 'No']));
+            ->where('matrix.rows', fn ($rows): bool => collect($rows)->pluck('label')->all() === array_map(fn (PermissionDefinition $permission): string => $permission->label, PermissionCatalog::all())));
+});
+
+it('adds the company\'s own roles, and only the permissions of the tools it has', function (): void {
+    $role = app(CreateCompanyRole::class)->handle($this->tenant, 'Auditoría', ['view-dashboard', 'view-climate'], null, $this->owner);
+    TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.invitations.create', $this->tenant))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('roles.4', ['value' => $role->name, 'label' => 'Auditoría'])
+            ->where('matrix.columns.5', 'Auditoría')
+            ->where('matrix.rows', fn ($rows): bool => ! collect($rows)->pluck('label')->contains('Ver vacaciones')
+                && collect($rows)->firstWhere('label', 'Ver clima')['cells'][5] === 'Sí'
+                && collect($rows)->firstWhere('label', 'Ver asistencia')['cells'][5] === 'No'));
+});
+
+it('says of each permission what each role really has', function (): void {
+    $own = app(CreateCompanyRole::class)->handle($this->tenant, 'Auditoría', ['view-dashboard', 'handle-complaints'], null, $this->owner);
+    $matrix = RoleMatrix::for($this->tenant);
+    $roles = [...array_map(fn (string $name): Role => Role::query()->where('name', $name)->whereNull('tenant_id')->sole(), ['owner', 'hr', 'viewer', 'committee', 'complaints']), $own];
+
+    expect($matrix)->not->toBeNull()->and($matrix['rows'] ?? [])->toHaveCount(count(PermissionCatalog::all()));
+
+    foreach (PermissionCatalog::all() as $index => $permission) {
+        foreach ($roles as $column => $role) {
+            expect($matrix['rows'][$index]['cells'][$column] ?? null)->toBe($role->hasPermissionTo($permission->name) ? 'Sí' : 'No', "{$role->name} and {$permission->name}");
+        }
+    }
 });
 
 it('shows a union only its roles and no matrix of the company tools', function (): void {
@@ -65,20 +86,3 @@ it('is only for the owner', function (TenantRole $role): void {
         ->get(route('tenant.members.invitations.create', $this->tenant))
         ->assertForbidden();
 })->with([TenantRole::Hr, TenantRole::Viewer]);
-
-it('says of each permission what the role really has', function (string $permission, int $row): void {
-    $cells = RoleMatrix::ROWS[$row]['cells'];
-
-    foreach (RoleMatrix::COLUMNS as $index => $role) {
-        $granted = Role::findByName($role->value)->hasPermissionTo($permission);
-
-        expect($cells[$index] !== 'No')->toBe($granted, "{$role->value} and {$permission}");
-    }
-})->with([
-    'canalización' => ['view-trauma-screenings', 3],
-    'avisos' => ['review-workplaces', 4],
-    'contenido de quejas' => ['handle-complaints', 5],
-    'canal de quejas' => ['manage-complaint-channel', 6],
-    'compensación' => ['manage-compensation', 7],
-    'usuarios' => ['manage-members', 8],
-]);

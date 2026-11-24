@@ -82,7 +82,7 @@ final class MemberController extends Controller
 
         return Inertia::render('tenancy/invite-member', [
             'roles' => $this->assignable($tenant),
-            'matrix' => RoleMatrix::for($tenant->type),
+            'matrix' => RoleMatrix::for($tenant),
         ]);
     }
 
