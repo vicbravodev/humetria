@@ -7,18 +7,15 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Data\MemberSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
-use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
-use App\Modules\Tenancy\Http\Middleware\LimitRestrictedRoles;
-use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
+use App\Modules\Tenancy\Http\Middleware\RequireRoutePermission;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyMembers;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Route;
 
-mutates(LimitRestrictedRoles::class, CompanyMembers::class);
+mutates(RequireRoutePermission::class, CompanyMembers::class);
 
 it('invites a member as committee', function (): void {
     Notification::fake();
@@ -53,12 +50,8 @@ it('limits a committee member to the telework routes', function (): void {
     $committee = memberOf($tenant, TenantRole::Committee);
     $owner = memberOf($tenant, TenantRole::Owner);
 
-    Route::middleware(['web', 'auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class])
-        ->get('admin/{tenant:slug}/telework-probe', fn () => 'ok')->name('tenant.telework.probe');
-    Route::getRoutes()->refreshNameLookups();
-
-    $this->actingAs($committee)->get(route('tenant.telework.probe', $tenant))->assertOk();
-    $this->actingAs($owner)->get(route('tenant.telework.probe', $tenant))->assertOk();
+    $this->actingAs($committee)->get(route('tenant.telework.index', $tenant))->assertOk();
+    $this->actingAs($owner)->get(route('tenant.telework.index', $tenant))->assertOk();
 
     foreach (['tenant.employees.index', 'tenant.campaigns.index', 'tenant.members.index', 'tenant.work-centers.index'] as $name) {
         $this->actingAs($committee)->get(route($name, $tenant))->assertForbidden();
@@ -68,13 +61,18 @@ it('limits a committee member to the telework routes', function (): void {
     $this->actingAs($owner)->get(route('tenant.employees.index', $tenant))->assertOk();
 });
 
-it('limits a committee member on the results routes', function (string $name): void {
+it('limits a committee member on the results routes', function (string $name, int $status): void {
     $campaign = Campaign::factory()->create();
     $tenant = tenantOf($campaign->tenant_id);
     $committee = memberOf($tenant, TenantRole::Committee);
 
-    $this->actingAs($committee)->get(route($name, [$tenant, $campaign]))->assertForbidden();
-})->with(['tenant.campaigns.results', 'tenant.campaigns.screenings', 'tenant.campaigns.report']);
+    $this->actingAs($committee)->get(route($name, [$tenant, $campaign]))->assertStatus($status);
+})->with([
+    'results' => ['tenant.campaigns.results', 403],
+    // The list of people to channel of Guía I answers whoever may not see it as if it did not exist.
+    'screenings' => ['tenant.campaigns.screenings', 404],
+    'report' => ['tenant.campaigns.report', 403],
+]);
 
 it('lets a committee member reach the account settings and log out', function (): void {
     $tenant = Tenant::factory()->create();

@@ -40,20 +40,6 @@ enum TenantRole: string
         };
     }
 
-    /**
-     * The route names a restricted role may open inside a company (LimitRestrictedRoles); null when the role is not restricted.
-     *
-     * @return list<string>|null
-     */
-    public function allowedRoutes(): ?array
-    {
-        return match ($this) {
-            self::Committee => ['tenant.telework.*', 'tenant.seating.*', 'tenant.complaints.*'],
-            self::Complaints => ['tenant.complaints.*'],
-            self::Owner, self::Hr, self::Viewer => null,
-        };
-    }
-
     /** Where a person of the role starts: the panel, or the tool a restricted role is limited to. */
     public function startRoute(): string
     {

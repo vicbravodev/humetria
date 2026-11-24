@@ -21,7 +21,7 @@ use App\Modules\Seating\Http\Controllers\SurveyResultsController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/seating.
-// Every name starts with tenant.seating.: it is how the committee role (LimitRestrictedRoles) is let in.
+// Each route asks for its permission (RoutePermissions): the Comisión reads and assesses, RH manages.
 // Nothing of Ley Silla is deleted (criterio C-17): the only DELETE routes end an assignment or cancel a measure.
 /** @var string $notReserved */
 Route::get('admin/{tenant:slug}/seating', [SeatingController::class, 'index'])->where('tenant', $notReserved)->name('tenant.seating.index');

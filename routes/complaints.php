@@ -14,7 +14,7 @@ use App\Modules\Complaints\Http\Controllers\UnassignedController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/complaints.
-// Every name starts with tenant.complaints.: it is how the restricted roles (LimitRestrictedRoles) are let in. A route to a
+// Each route asks for its permission (RoutePermissions): handle-complaints the cases, the channel its manager. A route to a
 // case is found only among the cases assigned to the person (a 404 otherwise); nothing here deletes a complaint.
 /** @var string $notReserved */
 Route::get('admin/{tenant:slug}/complaints/channel', [ChannelController::class, 'show'])->where('tenant', $notReserved)->name('tenant.complaints.channel.show');

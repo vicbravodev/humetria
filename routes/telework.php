@@ -25,7 +25,7 @@ use App\Modules\Telework\Http\Controllers\WritingController;
 use Illuminate\Support\Facades\Route;
 
 // Required from routes/company.php, inside the company group: these routes live under /admin/{tenant}/telework.
-// Every name starts with tenant.telework.: it is how the committee role (LimitRestrictedRoles) is let in.
+// Each route asks for its permission (RoutePermissions): the Comisión reads and reviews, RH manages.
 /** @var string $notReserved */
 // The entry point: every center the person may see with its progress, and the dashboard of one (the rows of table 10.3).
 Route::get('admin/{tenant:slug}/telework', [TeleworkController::class, 'index'])->where('tenant', $notReserved)->name('tenant.telework.index');

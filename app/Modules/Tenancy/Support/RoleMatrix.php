@@ -8,8 +8,8 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantType;
 
 /**
- * «Qué puede hacer cada quien» (board V3-Roles), as the roles really are today: Spatie's permissions, and the routes a
- * restricted role may open (LimitRestrictedRoles). A cell that is not «No» is a role that has the permission of its row;
+ * «Qué puede hacer cada quien» (board V3-Roles), as the roles really are today: Spatie's permissions, which open each
+ * route (RoutePermissions). A cell that is not «No» is a role that has the permission of its row;
  * InviteMemberPageTest checks it against the permissions table. HR keeps channeling, the channel and compensation, and
  * nothing is per center yet (decision A6: only the labels change).
  */
