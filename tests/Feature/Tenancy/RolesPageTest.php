@@ -517,3 +517,25 @@ it('answers 404, not an error, to a role id too large to be one', function (): v
     $this->actingAs($this->owner)->put('/admin/acme/roles/99999999999999999999', ['label' => 'X', 'permissions' => ['view-dashboard']])->assertNotFound();
     $this->actingAs($this->owner)->delete('/admin/acme/roles/99999999999999999999')->assertNotFound();
 });
+
+it('reads the editor of a new role from a template in a fixed number of queries', function (): void {
+    $role = companyRole($this->tenant, $this->owner);
+    personHolding($this->tenant, $role);
+    $this->actingAs($this->owner->fresh());
+
+    $this->expectsDatabaseQueryCount(QUERIES_OF_THE_NEW_ROLE_EDITOR);
+    $this->get(route('tenant.roles.create', [$this->tenant, 'from' => 'viewer']))->assertOk();
+});
+
+it('reads the editor of a role already made in a fixed number of queries', function (): void {
+    $role = companyRole($this->tenant, $this->owner);
+    personHolding($this->tenant, $role);
+    $this->actingAs($this->owner->fresh());
+
+    $this->expectsDatabaseQueryCount(QUERIES_OF_THE_ROLE_EDITOR);
+    $this->get(route('tenant.roles.edit', [$this->tenant, $role->id]))->assertOk();
+});
+
+// Measured, then fixed: the templates of «Empezar desde» come in one query with their permissions, not one per template.
+const QUERIES_OF_THE_NEW_ROLE_EDITOR = 15;
+const QUERIES_OF_THE_ROLE_EDITOR = 17;

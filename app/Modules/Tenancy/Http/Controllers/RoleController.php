@@ -155,9 +155,16 @@ final class RoleController extends Controller
      */
     private function templateOptions(Tenant $tenant): array
     {
-        return array_map(function (TenantRole $template): array {
-            return ['key' => $template->value, 'label' => $template->label(), 'permissions' => self::names($this->roles->template($template))];
-        }, $tenant->type->assignableRoles());
+        $assignable = $tenant->type->assignableRoles();
+        $roles = Role::query()->with('permissions')->whereNull('tenant_id')
+            ->whereIn('name', array_map(fn (TenantRole $template): string => $template->value, $assignable))
+            ->get()->keyBy('name');
+
+        return array_map(fn (TenantRole $template): array => [
+            'key' => $template->value,
+            'label' => $template->label(),
+            'permissions' => self::names($roles->get($template->value)),
+        ], $assignable);
     }
 
     /** Another role took the name between the check and the write (the database keeps names unique per company). */
