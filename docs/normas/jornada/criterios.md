@@ -78,6 +78,19 @@ de descanso con goce de salario íntegro») y art. 71 (prima dominical de «un v
 **2.6 Distribución del horario por acuerdo** · Norma · art. 58, segundo párrafo: la jornada «podrá ser distribuida de
 común acuerdo». El horario de cada persona es un dato propio, no uno por empresa.
 
+*Vigencia del horario* · Humetría · decisión del dueño, 2026-11-23 · el horario de una persona **tiene fecha de inicio** y
+un horario nuevo **no borra el anterior**: cada día se calcula con el horario vigente ese día (el último que empezó en esa
+fecha o antes). Así el reporte para la autoridad de un periodo pasado da lo mismo hoy que dentro de un año, aunque el
+horario cambie después. RH elige la fecha de inicio (hoy por omisión, en el calendario de la empresa); puede ser una fecha
+pasada, para corregir un registro, y entonces la bitácora guarda el horario que regía ese día y el que quedó. Un horario **no puede empezar** dentro de una semana que la persona ya confirmó u objetó, ni antes de ella (cambiaría lo
+que firmó y el reporte de esas semanas); la primera fecha posible es el lunes siguiente a la última semana confirmada u
+objetada, y las semanas sin responder sí se pueden corregir. Un lote de personas empieza todo en una sola fecha. Los
+horarios que existían antes de las fechas de inicio valen «desde siempre». Un día anterior al primer horario de una persona
+no tiene horario (se cuenta como quien no lo tiene: 8 h diarias sin descanso). Un turno que cruza la medianoche el día del
+cambio pertenece al día en que empezó, y se lee con el horario de ese día. **Fuera de la vigencia**, por ahora: la
+tolerancia de retardo y la política de la empresa (4.1), que se leen siempre con su valor de hoy. El tipo de turno de una
+semana con cambio a mitad se toma del horario vigente su domingo (hoy no cambia ningún cálculo, 2.9).
+
 *Hora de entrada y retardo* · Interpretación · la LFT no fija una tolerancia de retardo ni obliga a registrar la hora de
 entrada. Humetría deja que RH escriba, si quiere, la hora de entrada de cada día del horario y que la empresa fije una
 **tolerancia** (por omisión 10 minutos, de 0 a 120). El retardo es la diferencia entre esa hora y la **primera marca de
@@ -250,3 +263,5 @@ exige, pero sin esto no se puede hablar de «acuerdo».
   reabre la semana, y la huella de la semana incluye sus ausencias. El reporte para la autoridad (6.1) no marca retardo
   en un día con ausencia aprobada (2.6), dice «Vacaciones» o «Permiso» (nunca el tipo de permiso) y señala «Marcó durante
   una ausencia».
+- 2026-11-23 · v0.4 · **2.6** agrega la vigencia del horario por fecha de inicio (decisión del dueño); el cambio de horario y
+  el de centro, puesto, área o nivel del expediente quedan en la bitácora con su antes y su después.

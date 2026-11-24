@@ -1,14 +1,5 @@
 import { useState } from 'react';
-import ScheduleCopyField from '@/components/attendance/schedule-copy-field';
-import ScheduleDaysTable from '@/components/attendance/schedule-days-table';
-import SchedulePeopleInputs from '@/components/attendance/schedule-people-inputs';
-import SchedulePreview from '@/components/attendance/schedule-preview';
-import ScheduleRemoteField from '@/components/attendance/schedule-remote-field';
-import ScheduleShiftTag from '@/components/attendance/schedule-shift-tag';
-import ScheduleStartField from '@/components/attendance/schedule-start-field';
-import ScheduleTemplates from '@/components/attendance/schedule-templates';
-import ScheduleWarnings from '@/components/attendance/schedule-warnings';
-import ScheduleWeekInputs from '@/components/attendance/schedule-week-inputs';
+import ScheduleFields from '@/components/attendance/schedule-fields';
 import FormSheet from '@/components/humetria/form-sheet';
 import { useScheduleDraft } from '@/hooks/use-schedule-draft';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -28,11 +19,13 @@ export default function ScheduleDialog({
     onOpenChange,
     people,
     weeklyMaximum,
+    today,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     people: SchedulePerson[];
     weeklyMaximum: WeeklyMaximum;
+    today: string;
 }) {
     const tenantSlug = useTenantSlug();
     const [only] = people;
@@ -69,51 +62,14 @@ export default function ScheduleDialog({
             }
         >
             {(errors) => (
-                <>
-                    <SchedulePeopleInputs people={people} />
-                    <ScheduleWeekInputs week={draft.week} mode={draft.mode} />
-                    <ScheduleTemplates
-                        templates={templates}
-                        chosen={draft.template}
-                        onPick={draft.apply}
-                    />
-                    <ScheduleCopyField onCopy={draft.copy} />
-                    <ScheduleStartField
-                        start={draft.start}
-                        differs={draft.startsDiffer}
-                        onChange={draft.setStart}
-                    />
-                    <div className="grid gap-3">
-                        <SchedulePreview
-                            minutes={draft.minutes}
-                            total={draft.total}
-                            weeklyMaximum={weeklyMaximum}
-                        />
-                        <ScheduleShiftTag
-                            shift={draft.shift}
-                            onChange={draft.setShift}
-                            error={errors['shift_type']}
-                        />
-                        <ScheduleWarnings
-                            minutes={draft.minutes}
-                            total={draft.total}
-                            shift={draft.shift}
-                            weeklyMaximum={weeklyMaximum}
-                            errors={errors}
-                        />
-                    </div>
-                    <ScheduleDaysTable
-                        draft={draft}
-                        defaultOpen={draft.customized}
-                        errors={errors}
-                    />
-                    <ScheduleRemoteField
-                        remote={draft.mode === 'remote'}
-                        onChange={(remote) =>
-                            draft.setMode(remote ? 'remote' : 'onsite')
-                        }
-                    />
-                </>
+                <ScheduleFields
+                    people={people}
+                    draft={draft}
+                    templates={templates}
+                    weeklyMaximum={weeklyMaximum}
+                    today={today}
+                    errors={errors}
+                />
             )}
         </FormSheet>
     );

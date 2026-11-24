@@ -8,10 +8,12 @@ import type { SchedulePerson, WeeklyMaximum } from '@/types';
 export default function ScheduleSelectionBar({
     chosen,
     weeklyMaximum,
+    today,
     onClear,
 }: {
     chosen: SchedulePerson[];
     weeklyMaximum: WeeklyMaximum;
+    today: string;
     onClear: () => void;
 }) {
     const [fixing, setFixing] = useState(false);
@@ -36,6 +38,7 @@ export default function ScheduleSelectionBar({
                     onOpenChange={setFixing}
                     people={chosen}
                     weeklyMaximum={weeklyMaximum}
+                    today={today}
                 />
             )}
         </div>

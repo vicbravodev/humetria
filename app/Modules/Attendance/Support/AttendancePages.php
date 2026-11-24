@@ -76,6 +76,7 @@ final readonly class AttendancePages
         // Who of the page has an agreed schedule: without one they are held to 8 h a day with no rest day. One query.
         $scheduled = array_flip(AttendanceSchedule::query()
             ->among('employee_id', array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items())))
+            ->startedBy($period->end()->toDateString())
             ->get(['employee_id'])->map(fn (AttendanceSchedule $schedule): string => $schedule->employee_id)->all());
         // The days each person of the page was away with vacations or a leave: not days they missed. One query.
         $away = AbsentDays::of($this->absences->between($period->start(), $period->end(), array_values(array_map(fn (RosterEntry $person): string => $person->id, $page->items()))), $period);

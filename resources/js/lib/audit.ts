@@ -61,6 +61,8 @@ const LABELS: Record<string, string> = {
     'worker_access.not_me_reported':
         'Llave anulada por la persona («No fui yo»)',
     'attendance.report_exported': 'Reporte de asistencia exportado',
+    'attendance.schedule_saved': 'Horario de asistencia guardado',
+    'employee.updated': 'Centro, puesto, área o nivel cambiado',
     'employee.manager_changed': 'Jefe directo cambiado',
     'employee.deactivated': 'Persona dada de baja',
     'employee.reactivated': 'Persona reactivada',
