@@ -36,10 +36,13 @@ final readonly class UpdateCompanyRole
             $added = array_values(array_diff($permissions, $before));
             $removed = array_values(array_diff($before, $permissions));
 
+            $holders = $this->roles->holders($role);
+
             $role->update(['label' => $label]);
             $role->syncPermissions($permissions);
 
-            foreach ($this->roles->holders($role) as $holder) {
+            // One event per holder, and each listener reads that person's permissions: batch it if a role ever holds hundreds.
+            foreach ($added === [] && $removed === [] ? [] : $holders as $holder) {
                 event(new MemberPermissionsChanged($tenant->id, $holder));
             }
 
@@ -48,7 +51,7 @@ final readonly class UpdateCompanyRole
                 'label' => $label,
                 'added' => $added,
                 'removed' => $removed,
-                'holders' => $this->roles->holders($role),
+                'holders' => $holders,
                 'sensitive' => array_any($added, fn (string $name): bool => PermissionCatalog::find($name)?->sensitive === true),
             ]);
         });
