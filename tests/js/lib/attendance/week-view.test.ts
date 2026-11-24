@@ -167,6 +167,8 @@ describe('a day folded', () => {
         corrected: false,
         reason: null,
         evidence: 'strong',
+        offline: false,
+        review: null,
         ...extra,
     });
 

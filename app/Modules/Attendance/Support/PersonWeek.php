@@ -7,9 +7,11 @@ namespace App\Modules\Attendance\Support;
 use App\Modules\Attendance\Actions\ConfirmWeek;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\OverLimit;
+use App\Modules\Attendance\Enums\ReviewDecision;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
+use App\Modules\Attendance\Models\MarkReview;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Organization\Contracts\Roster;
@@ -49,6 +51,7 @@ final class PersonWeek
         );
         // The tolerance is read only when a schedule has start times: a week without them costs no query more.
         $tolerance = $schedules->hasStartTimes() ? CompanyPolicy::current()->late_tolerance_minutes : 0;
+        $reviews = self::reviews($byDay);
         $days = [];
         $hours = [];
 
@@ -61,7 +64,7 @@ final class PersonWeek
 
             $days[] = [
                 'date' => $date->toDateString(),
-                'marks' => array_map(fn (AttendanceMark $mark): array => self::mark($mark, $date, $timezone), $marks),
+                'marks' => array_map(fn (AttendanceMark $mark): array => self::mark($mark, $date, $timezone, $reviews[$mark->id] ?? null), $marks),
                 'workedMinutes' => $day->workedMinutes,
                 'scheduledMinutes' => $day->scheduledMinutes,
                 'restDay' => $day->restDay,
@@ -113,9 +116,28 @@ final class PersonWeek
     }
 
     /**
-     * @return array{id: string, type: string, time: string, clock: string|null, away: bool, nextDay: bool, corrected: bool, reason: string|null, evidence: string}
+     * Where RH's review of each mark made without a connection stands: the decision in force, by mark id, in one query that a
+     * week with none does not make.
+     *
+     * @param  array<string, list<AttendanceMark>>  $byDay
+     * @return array<string, MarkReview>
      */
-    private static function mark(AttendanceMark $mark, CarbonImmutable $date, string $timezone): array
+    private static function reviews(array $byDay): array
+    {
+        $offline = array_filter(array_merge([], ...array_values($byDay)), fn (AttendanceMark $mark): bool => self::offline($mark));
+
+        return MarkReview::latestByMark(array_values(array_map(fn (AttendanceMark $mark): string => $mark->id, $offline)));
+    }
+
+    private static function offline(AttendanceMark $mark): bool
+    {
+        return in_array($mark->method, [MarkMethod::OfflineQr, MarkMethod::OfflineDeclared], true);
+    }
+
+    /**
+     * @return array{id: string, type: string, time: string, clock: string|null, away: bool, nextDay: bool, corrected: bool, reason: string|null, evidence: string, offline: bool, review: string|null, reviewNote: string|null}
+     */
+    private static function mark(AttendanceMark $mark, CarbonImmutable $date, string $timezone, ?MarkReview $review): array
     {
         $at = ($mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time."))->setTimezone($mark->timezone);
         $corrected = $mark->method === MarkMethod::Correction;
@@ -133,6 +155,11 @@ final class PersonWeek
             'reason' => $corrected ? $mark->reason : null,
             // How much the mark proves, to say it in words (criterio 5.3).
             'evidence' => $mark->method->evidence()->value,
+            // Made without a connection, and where RH's review of it stands (criterio 5.4): every one waits for it, with a QR or
+            // without; the note is shown with `incorrect`, the way RH told the person what was wrong.
+            'offline' => self::offline($mark),
+            'review' => self::offline($mark) ? ($review?->decision->value ?? 'pending') : null,
+            'reviewNote' => $review?->decision === ReviewDecision::Incorrect ? $review->note : null,
         ];
     }
 

@@ -216,6 +216,7 @@ final class AuditPages
         'workplace_id' => 'Lugar de trabajo',
         'application_id' => 'Solicitud',
         'decision' => 'Decisión',
+        'corrected' => 'Corregida',
         'method' => 'Método',
         'joined_by' => 'Incorporó',
         'has_teleworkers' => 'Con personas en teletrabajo',

@@ -11,7 +11,9 @@ use App\Modules\Attendance\Enums\EvidenceLevel;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OverLimit;
+use App\Modules\Attendance\Enums\ReviewDecision;
 use App\Modules\Attendance\Enums\ShiftType;
+use App\Modules\Attendance\Enums\SignerType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
@@ -27,10 +29,12 @@ use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Organization\Data\RosterQuery;
+use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Contracts\Timezones;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use LogicException;
 
@@ -45,8 +49,11 @@ use LogicException;
  * A day of approved vacations or leave (Vacaciones) says which of the two, never the type of the leave (C-22), has no
  * lateness (criterio 2.6) and, when the person marked in it, a flag: vacations worked are RH's to notice (art. 81).
  *
- * Streamed: the people go in chunks, each read in the same eight queries (marks in two, what was corrected, schedules,
- * answers, absences, and the roster's two), so memory holds one chunk.
+ * A day with a mark made without a connection says so (criterio 6.1), with the key that signed it, even after RH corrected
+ * it (the root of its chain of corrections says); says it still waits for RH's review, or that RH verified it.
+ *
+ * Streamed: the people go in chunks, each read in the same nine queries (marks in two, what was corrected, the origin of the
+ * marks, schedules, answers, absences, and the roster's two), so memory holds one chunk.
  */
 final readonly class BuildAuthorityReport
 {
@@ -61,6 +68,20 @@ final readonly class BuildAuthorityReport
 
     /** A day the person marked while away with approved vacations or leave. */
     public const string MARKED_WHILE_AWAY = 'Marcó durante una ausencia';
+
+    /** A day with a mark made without a connection, or one RH corrected that was; the key that signed it goes after. */
+    public const string OFFLINE = 'Marcó sin conexión';
+
+    /** A day with a mark made without a connection that RH has not reviewed. */
+    public const string TO_VERIFY = 'Con marcas sin conexión por verificar';
+
+    /** A day with a mark made without a connection whose review in force is «verified». */
+    public const string VERIFIED = 'Marca sin conexión verificada por RH';
+
+    private const array SIGNED_WITH = [
+        SignerType::Passkey->value => 'firmó con su llave de acceso',
+        SignerType::DeviceKey->value => 'con la llave del dispositivo',
+    ];
 
     /** At most the people of attendance.report.chunk_size per chunk, and at most this many person-weeks of marks held at once: a long period takes fewer people per chunk. */
     private const int PERSON_WEEKS = 1000;
@@ -152,6 +173,7 @@ final readonly class BuildAuthorityReport
     {
         $byPerson = EffectiveMarks::byDayBetween($employeeIds, $weeks[0]->start(), $weeks[1]->end());
         // A day of slack each side: a night's end, or the end a void points to, may fall past the weeks.
+        $offline = self::offlineMarks($byPerson);
         $history = CorrectionHistory::of($employeeIds, $weeks[0]->startUtc()->subDay(), $weeks[1]->nextStartUtc()->addDay());
         $schedules = ScheduleTimeline::of($employeeIds);
         $tolerance = $schedules->hasStartTimes() ? CompanyPolicy::current()->late_tolerance_minutes : 0;
@@ -193,7 +215,7 @@ final readonly class BuildAuthorityReport
                     if (($marks !== [] || $dayVoids !== []) && $date >= $period[0] && $date <= $period[1] && $center === $workCenterId) {
                         $notes = [...$history->notesFor($marks), ...array_map(fn (array $void): array => [$void['at']->getTimestamp(), $void['text']], $dayVoids)];
                         usort($notes, fn (array $a, array $b): int => $a[0] <=> $b[0]);
-                        $rows[] = self::row($person, $marks, $day, [$overtime, $double], $summary, $answer, array_column($notes, 1), $away[$id][$date] ?? null);
+                        $rows[] = self::row($person, $marks, $day, [$overtime, $double], $summary, $answer, array_column($notes, 1), $away[$id][$date] ?? null, $offline);
                     }
                 }
             }
@@ -289,8 +311,9 @@ final readonly class BuildAuthorityReport
      * @param  array{int, int}  $overtime  the day's overtime minutes and how many of them are paid double
      * @param  list<string>  $corrections  what was corrected or voided in the day, in order
      * @param  'vacation'|'leave'|null  $absence
+     * @param  array<string, array{signer: string, decision: string|null}>  $offline  by mark id: see offlineMarks()
      */
-    private static function row(RosterEntry $person, array $marks, DayHours $day, array $overtime, WeekSummary $week, ?WeeklyConfirmation $answer, array $corrections, ?string $absence): AuthorityRow
+    private static function row(RosterEntry $person, array $marks, DayHours $day, array $overtime, WeekSummary $week, ?WeeklyConfirmation $answer, array $corrections, ?string $absence, array $offline): AuthorityRow
     {
         $first = $marks[0] ?? null;
         $last = $marks === [] ? null : $marks[count($marks) - 1];
@@ -322,7 +345,7 @@ final readonly class BuildAuthorityReport
                 default => 'sin confirmar',
             },
             weekDigest: $confirmed ? ($answer->digest ?? '') : '',
-            flags: [...self::flags($marks, $day, $minutes, $minutes - $double, $week), ...($absence !== null && $marks !== [] ? [self::MARKED_WHILE_AWAY] : [])],
+            flags: [...self::flags($marks, $day, $minutes, $minutes - $double, $week, $offline), ...($absence !== null && $marks !== [] ? [self::MARKED_WHILE_AWAY] : [])],
             lateMinutes: $day->lateMinutes,
             timezone: self::zoneOf($first, $ended ? $last : null),
             absence: $absence,
@@ -348,6 +371,67 @@ final readonly class BuildAuthorityReport
     }
 
     /**
+     * «Marcó sin conexión (firmó con su llave de acceso)»: with the key that signed each of the day's marks made without a
+     * connection, once each.
+     *
+     * @param  array<array-key, array{signer: string, decision: string|null}>  $fromOffline
+     */
+    private static function offlineFlag(array $fromOffline): string
+    {
+        $signed = array_values(array_unique(array_map(fn (array $mark): string => self::SIGNED_WITH[$mark['signer']] ?? '', $fromOffline)));
+
+        return self::OFFLINE.' ('.implode(' y ', array_filter($signed)).')';
+    }
+
+    /**
+     * Of the marks that count, the ones made without a connection or that correct one (down their whole chain of
+     * corrections: the root says who signed it), with the key that signed the original and where RH's review of the mark
+     * itself stands (`verified`, `incorrect`, or none): one query for everyone.
+     *
+     * @param  array<string, array<string, list<AttendanceMark>>>  $byPerson
+     * @return array<string, array{signer: string, decision: string|null}> by mark id
+     */
+    private static function offlineMarks(array $byPerson): array
+    {
+        $ids = [];
+        foreach ($byPerson as $days) {
+            foreach ($days as $marks) {
+                foreach ($marks as $mark) {
+                    $ids[] = $mark->id;
+                }
+            }
+        }
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $tenant = resolve(CurrentTenant::class)->id();
+        $rows = DB::select(
+            'with recursive chain (mark_id, current_id, corrects_id) as (
+                select id, id, corrects_mark_id from attendance_marks where tenant_id = ? and id = any(?::uuid[])
+                union all
+                select chain.mark_id, marks.id, marks.corrects_mark_id from chain
+                    join attendance_marks marks on marks.tenant_id = ? and marks.id = chain.corrects_id
+            )
+            select chain.mark_id, deliveries.signer_type,
+                (select reviews.decision from attendance_mark_reviews reviews where reviews.tenant_id = ? and reviews.mark_id = chain.mark_id order by reviews.seq desc limit 1) as decision
+            from chain join attendance_offline_marks deliveries on deliveries.tenant_id = ? and deliveries.mark_id = chain.current_id
+            where chain.corrects_id is null',
+            [$tenant, '{'.implode(',', $ids).'}', $tenant, $tenant, $tenant],
+        );
+        $marks = [];
+
+        foreach ($rows as $row) {
+            if (is_object($row) && property_exists($row, 'mark_id') && is_string($row->mark_id) && property_exists($row, 'signer_type') && is_string($row->signer_type)) {
+                $marks[$row->mark_id] = ['signer' => $row->signer_type, 'decision' => property_exists($row, 'decision') && is_string($row->decision) ? $row->decision : null];
+            }
+        }
+
+        return $marks;
+    }
+
+    /**
      * The weakest evidence of the day's marks (criterio 5.3): a day is as strong as its weakest mark.
      *
      * @param  list<AttendanceMark>  $marks
@@ -365,9 +449,10 @@ final readonly class BuildAuthorityReport
 
     /**
      * @param  list<AttendanceMark>  $marks
+     * @param  array<string, array{signer: string, decision: string|null}>  $offline
      * @return list<string>
      */
-    private static function flags(array $marks, DayHours $day, int $overtime, int $triple, WeekSummary $week): array
+    private static function flags(array $marks, DayHours $day, int $overtime, int $triple, WeekSummary $week, array $offline): array
     {
         if ($marks === []) {
             return ['Sin marcas vigentes'];
@@ -377,9 +462,16 @@ final readonly class BuildAuthorityReport
         $today = CarbonImmutable::now($marks[0]->timezone)->toDateString();
         $open = WorkedDay::missingEnd($marks) && $marks[0]->type === MarkType::Start && $day->date->toDateString() === $today;
 
+        $fromOffline = array_filter(array_map(fn (AttendanceMark $mark): ?array => $offline[$mark->id] ?? null, $marks));
+        // Only a mark that is itself made without a connection waits for review (or was verified): a correction of one does not.
+        $waiting = array_filter($marks, fn (AttendanceMark $mark): bool => in_array($mark->method, [MarkMethod::OfflineQr, MarkMethod::OfflineDeclared], true));
+
         return array_keys(array_filter([
             // Its own method (criterio 4.5): no zone nor QR was asked, the position proves where.
             self::FIELD => array_filter($marks, fn (AttendanceMark $mark): bool => in_array($mark->method, [MarkMethod::Field, MarkMethod::FieldUnlocated], true)) !== [],
+            self::offlineFlag($fromOffline) => $fromOffline !== [],
+            self::TO_VERIFY => array_filter($waiting, fn (AttendanceMark $mark): bool => ($offline[$mark->id]['decision'] ?? null) === null) !== [],
+            self::VERIFIED => array_filter($waiting, fn (AttendanceMark $mark): bool => ($offline[$mark->id]['decision'] ?? null) === ReviewDecision::Verified->value) !== [],
             'Sin marca de inicio' => $marks[0]->type !== MarkType::Start,
             self::IN_PROGRESS => $open,
             self::MISSING_END => WorkedDay::missingEnd($marks) && ! $open,

@@ -36,6 +36,8 @@ const week: WeekView = {
                     corrected: true,
                     reason: 'El QR no cargaba.',
                     evidence: 'corrected',
+                    offline: false,
+                    review: null,
                 },
             ],
             workedMinutes: 540,

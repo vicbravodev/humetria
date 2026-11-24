@@ -29,8 +29,17 @@ final class EffectiveMarks
      */
     public static function of(string $employeeId): Builder
     {
+        return self::query()->where('employee_id', $employeeId);
+    }
+
+    /**
+     * The marks of the company no correction replaced, of everyone.
+     *
+     * @return Builder<AttendanceMark>
+     */
+    public static function query(): Builder
+    {
         return AttendanceMark::query()
-            ->where('employee_id', $employeeId)
             ->whereNotNull('marked_at')
             ->whereNotExists(fn (QueryBuilder $query) => $query->from('attendance_marks', 'corrections')->whereColumn('corrections.corrects_mark_id', 'attendance_marks.id'));
     }

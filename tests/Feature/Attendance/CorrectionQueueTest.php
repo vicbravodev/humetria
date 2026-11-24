@@ -22,8 +22,8 @@ use Inertia\Testing\AssertableInertia;
 
 mutates(CorrectionController::class, CorrectionPages::class, CorrectionPreview::class, TouchedWeeks::class);
 
-/** The queries of the queue, whatever its rows: the counts, the page, its people and marks, the zones of their centers, and the request in view with its day, weeks and schedule. */
-const QUEUE_QUERIES = 26;
+/** The queries of the queue, whatever its rows: the counts (two of them of the marks made without a connection), the page, its people and marks, the zones of their centers, and the request in view with its day, weeks and schedule. */
+const QUEUE_QUERIES = 28;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City.
@@ -64,7 +64,7 @@ describe('the queue', function (): void {
             ->component('attendance/corrections')
             ->where('status', 'pending')
             ->where('filters', ['q' => ''])
-            ->where('counts', ['pending' => 2, 'approved' => 0, 'rejected' => 0])
+            ->where('counts', ['pending' => 2, 'approved' => 0, 'rejected' => 0, 'offline' => 0, 'not_accepted' => 0])
             ->where('canResolve', true)
             ->where('requests.total', 2)
             ->where('requests.per_page', 25)
@@ -94,7 +94,7 @@ describe('the queue', function (): void {
 
         $this->get(queueUrl(['status' => 'rejected']))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('status', 'rejected')
-            ->where('counts', ['pending' => 1, 'approved' => 0, 'rejected' => 1])
+            ->where('counts', ['pending' => 1, 'approved' => 0, 'rejected' => 1, 'offline' => 0, 'not_accepted' => 0])
             ->where('requests.total', 1)
             ->where('requests.data.0.note', 'Llegaste a las 9:20.'));
         $this->get(queueUrl(['status' => 'everything']))->assertInertia(fn (AssertableInertia $page) => $page->where('status', 'pending')->where('requests.total', 1));

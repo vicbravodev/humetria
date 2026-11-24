@@ -15,8 +15,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * RH's queue of the people's requests to correct their record (criterio 5.4): owner, hr and viewer read it; owner and hr
- * approve or reject. A request of another company is a 404, as is any of it for a union.
+ * RH's queue of the people's requests to correct their record (criterio 5.4), in four tabs: the requests waiting, approved and
+ * rejected, and the marks made without a connection to verify (`offline`) and the deliveries not accepted (`not_accepted`,
+ * read-only; those are resolved by OfflineMarkController). Owner, hr and viewer read it; owner and hr approve or reject. A request of another company is a 404, as is any of it for a union.
  */
 final readonly class CorrectionController
 {
@@ -30,7 +31,12 @@ final readonly class CorrectionController
     {
         Gate::authorize('view-attendance');
 
-        return Inertia::render('attendance/corrections', $pages->index($request->string('status')->toString(), $request->string('q')->trim()->toString(), $request->string('request')->toString()));
+        return Inertia::render('attendance/corrections', $pages->index(
+            $request->string('status')->toString(),
+            $request->string('q')->trim()->toString(),
+            $request->string('request')->toString(),
+            $request->string('flags')->toString(),
+        ));
     }
 
     public function approve(ResolveCorrectionRequest $request, mixed $tenant, string $correction, ResolveCorrection $resolve): RedirectResponse

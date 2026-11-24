@@ -157,6 +157,17 @@ describe('markHow', () => {
         expect(markHow('strong', 'outside_zone')).toBe('Con QR y ubicación');
     });
 
+    it('says a mark made without a connection was, with the QR of the center or only by its declared time', () => {
+        expect(markHow('medium', 'offline')).toBe(
+            'Sin conexión, no antes del QR del centro',
+        );
+        expect(markHow('basic', 'offline')).toBe(
+            'Sin conexión, hora declarada',
+        );
+        expect(markHow('strong', 'offline')).toBeNull();
+        expect(markHow(null, 'offline')).toBeNull();
+    });
+
     it('says nothing when the server gave none or one it does not know', () => {
         expect(markHow(null)).toBeNull();
         expect(markHow('x')).toBeNull();

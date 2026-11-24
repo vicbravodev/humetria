@@ -18,7 +18,16 @@ export type WeekMark = {
     evidence: string | null;
     /** The zone of a mark taken away from the person's center: «07:00 · hora de Tijuana». */
     clock?: string;
+    /** Made without a connection and delivered later. */
+    offline: boolean;
+    /** Where RH's review of a mark made without a connection stands; null for any other mark. */
+    review: MarkReview | null;
+    /** Why RH said it was incorrect; only with that review. */
+    reviewNote?: string;
 };
+
+/** Every mark made without a connection waits for RH (`pending`), which verifies it or says it is incorrect. */
+export type MarkReview = 'pending' | 'verified' | 'incorrect';
 
 export type WeekDay = {
     date: string;
@@ -98,12 +107,25 @@ function mark(json: unknown): WeekMark[] {
                   corrected: json['corrected'] === true,
                   reason: text(json['reason']),
                   evidence: text(json['evidence']),
+                  offline: json['offline'] === true,
+                  review: review(json['review']),
+                  ...(typeof json['reviewNote'] === 'string' &&
+                  review(json['review']) === 'incorrect'
+                      ? { reviewNote: json['reviewNote'] }
+                      : {}),
                   ...(typeof json['clock'] === 'string'
                       ? { clock: json['clock'] }
                       : {}),
               },
           ]
         : [];
+}
+
+/** RH's review of a mark as the server tells it; anything else is none. */
+function review(value: unknown): MarkReview | null {
+    return value === 'pending' || value === 'verified' || value === 'incorrect'
+        ? value
+        : null;
 }
 
 /** Only vacations or leave: anything else is not an absence. */

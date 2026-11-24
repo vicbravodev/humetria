@@ -17,7 +17,9 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Organization\EmployeeFactory;
+use Tests\Support\OfflineDeliveries;
 
 mutates(ReportController::class, AuthorityCsv::class);
 
@@ -100,6 +102,20 @@ describe('the file', function (): void {
             ->and($lines[2])->toEndWith(',Marcó durante una ausencia,Permiso')
             ->and($lines[3])->toEndWith(',sin confirmar,,,')
             ->and(implode("\n", $lines))->not->toContain('Maternidad');
+    });
+
+    it('puts the marks made without a connection in the «Avisos» column, with who signed and whether RH has verified them', function (): void {
+        OfflineDeliveries::accepted($this->ana, '2027-01-05 08:00', qr: true);
+        csvMark($this->ana, MarkType::End, '2027-01-05 16:00');
+        $verified = OfflineDeliveries::accepted($this->ana, '2027-01-06 08:00');
+        csvMark($this->ana, MarkType::End, '2027-01-06 16:00');
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $verified->mark_id]);
+        $this->actingAs($this->hr);
+
+        $lines = explode("\n", $this->get(exportUrl(plantWeek($this)))->streamedContent());
+
+        expect($lines[1])->toContain(',Media,')->toEndWith(',Marcó sin conexión (firmó con su llave de acceso); Con marcas sin conexión por verificar,')
+            ->and($lines[2])->toContain(',Básica,')->toEndWith(',Marcó sin conexión (firmó con su llave de acceso); Marca sin conexión verificada por RH,');
     });
 
     it('sends it as a download nobody keeps, named after the center and the period with safe characters only', function (): void {

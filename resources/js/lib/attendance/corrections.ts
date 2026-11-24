@@ -1,4 +1,4 @@
-import type { CorrectionCounts } from '@/types';
+import type { CorrectionStatus } from '@/types';
 
 const MONTHS = [
     'ene',
@@ -15,16 +15,23 @@ const MONTHS = [
     'dic',
 ];
 
-/** The queue's search as the server reads it: only the text, and only when there is some. */
+/**
+ * The queue's search as the server reads it: the text, only when there is some; the tab, unless it is the first; and, in the
+ * tab of the marks made without a connection, the filter of those with no flags.
+ */
 export function correctionsQuery(filters: {
     q: string;
     status: string;
-}): Partial<Record<'q' | 'status', string>> {
+    flags?: string;
+}): Partial<Record<'q' | 'status' | 'flags', string>> {
     const q = filters.q.trim();
 
     return {
         ...(filters.status === 'pending' ? {} : { status: filters.status }),
         ...(q === '' ? {} : { q }),
+        ...(filters.status === 'offline' && filters.flags === 'none'
+            ? { flags: 'none' }
+            : {}),
     };
 }
 
@@ -46,7 +53,7 @@ export function waitingFor(days: number): string {
 }
 
 /** The way from an empty queue to the requests already resolved: the tab to open and what its button says; none if no request was ever resolved. */
-export function resolvedShortcut(counts: CorrectionCounts): {
+export function resolvedShortcut(counts: Record<CorrectionStatus, number>): {
     status: 'approved' | 'rejected';
     label: string;
 } | null {

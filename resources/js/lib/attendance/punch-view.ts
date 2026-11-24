@@ -117,15 +117,27 @@ const FIELD_HOW: Record<string, string> = {
     medium: 'En campo, sin ubicación precisa',
 };
 
+/** Made without a connection: a QR proves it was not before it; with none, the time is the person's word within what the server checks. */
+const OFFLINE_HOW: Record<string, string> = {
+    medium: 'Sin conexión, no antes del QR del centro',
+    basic: 'Sin conexión, hora declarada',
+};
+
+const HOW_BY_FLAG: Record<string, Record<string, string>> = {
+    field: FIELD_HOW,
+    offline: OFFLINE_HOW,
+};
+
 /**
  * How the mark was taken, in words and without a measure (the dots are for the authority's report); said for the field
- * when its flag is «field». Null when the server named no level or one the screen does not say.
+ * or for a mark made without a connection when its flag is «field» or «offline». Null when the server named no level or
+ * one the screen does not say.
  */
 export function markHow(
     level: string | null,
     flag: string | null = null,
 ): string | null {
-    return (flag === 'field' ? FIELD_HOW : HOW)[level ?? ''] ?? null;
+    return (HOW_BY_FLAG[flag ?? ''] ?? HOW)[level ?? ''] ?? null;
 }
 
 /** The city that names each zone of Mexico (Tenancy's MexicanTimezones); another zone by its own last part. */

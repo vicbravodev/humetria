@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditEntry;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceZone;
@@ -27,6 +28,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use Tests\Support\OfflineDeliveries;
 use Tests\Support\SoftAuthenticator;
 use Tests\Support\SoftDeviceKey;
 
@@ -198,4 +200,30 @@ it('logs no ticket, screen code, position, note, pass, signature or credential a
         ->not->toContain('19.43')->not->toContain('-99.13')->not->toContain('1943271')->not->toContain('-9913320')
         ->not->toContain($pass['pass'])->not->toContain($byKey['signature'])->not->toContain($forged['credential']['response']['signature'])
         ->not->toContain($accepted['credential']['response']['signature'])->not->toContain($credential->credential_id)->not->toContain($key->id);
+});
+
+it('logs and audits nothing of what RH writes when it reviews the marks made without a connection', function (): void {
+    $this->travelTo(CarbonImmutable::parse('2026-11-11 18:00:00', 'UTC'));
+    $tenant = Tenant::factory()->create(['slug' => 'acme']);
+    workIn($tenant);
+    $plant = WorkCenter::factory()->for($tenant)->create();
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'name' => 'Ana López']);
+    $hr = memberOf($tenant, TenantRole::Hr);
+    $verified = OfflineDeliveries::accepted($ana, '2026-11-02 08:13', justification: 'Estuve en urgencias con mi hijo');
+    $many = [OfflineDeliveries::accepted($ana, '2026-11-03 08:13')->mark_id, OfflineDeliveries::accepted($ana, '2026-11-04 08:13')->mark_id];
+    $incorrect = OfflineDeliveries::accepted(EmployeeFactory::new()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'name' => 'Beatriz Soto']), '2026-11-05 08:13');
+    $this->actingAs($hr)->from(route('tenant.attendance.corrections.index', 'acme'));
+
+    $this->post(route('tenant.attendance.offline.verify', ['acme', $verified->mark_id]), ['note' => 'Confirmado con su jefa Marisol'])->assertSessionHasNoErrors();
+    $this->post(route('tenant.attendance.offline.verify-many', 'acme'), ['ids' => $many])->assertSessionHasNoErrors();
+    $this->post(route('tenant.attendance.offline.reject', ['acme', $incorrect->mark_id]), ['note' => 'La cámara la muestra entrando tarde', 'corrected_at' => '2026-11-05 07:41'])->assertSessionHasNoErrors();
+
+    $log = File::get($this->logPath);
+    $audit = json_encode(AuditEntry::query()->get(), JSON_THROW_ON_ERROR);
+    expect(substr_count($log, '"attendance.offline_mark_reviewed"'))->toBe(4)
+        ->and(AuditEntry::query()->where('event', 'attendance.offline_mark_reviewed')->count())->toBe(4);
+    foreach ([$log, $audit] as $text) {
+        expect($text)->not->toContain('urgencias')->not->toContain('Marisol')->not->toContain('cámara')->not->toContain('07:41')->not->toContain('08:13')
+            ->not->toContain('13:41')->not->toContain('14:13');
+    }
 });

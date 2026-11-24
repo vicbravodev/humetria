@@ -493,6 +493,8 @@ return [
         'centers.*.standing' => 'alguien trabaja de pie',
         'centers.*.sector' => 'sector',
         'note' => 'nota',
+        'corrected_at' => 'hora correcta',
+        'ids' => 'marcas',
         'notes' => 'notas',
         'objective' => 'objetivo',
         'password' => 'contraseña',

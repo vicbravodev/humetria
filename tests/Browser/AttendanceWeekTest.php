@@ -14,10 +14,12 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Playwright\Playwright;
+use Tests\Support\OfflineDeliveries;
 
 beforeEach(function (): void {
     Playwright::setHost('localhost');
@@ -83,6 +85,22 @@ it('tells Ana how late she marked her start, when her schedule has a start time,
     anaSeesHerWeek()->assertSee('Retardo de 1 h')
         ->assertDontSee('Retardo de 2 h')
         ->assertNoJavaScriptErrors();
+});
+
+it('tells Ana which of her marks were made without a connection and where RH\'s review of each stands', function (): void {
+    $wednesday = WeekPeriod::containing(CarbonImmutable::now()->subWeek(), 'America/Mexico_City')->start()->addDays(2)->format('Y-m-d');
+    OfflineDeliveries::accepted($this->ana, "{$wednesday} 09:00", qr: true);
+    $end = OfflineDeliveries::accepted($this->ana, "{$wednesday} 17:00", MarkType::End);
+    MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $end->mark_id]);
+
+    anaSeesHerWeek()->click('summary:has-text("09:00 a 17:00")')
+        ->assertSee('Sin conexión · por verificar')
+        ->assertSee('Sin conexión, no antes del QR del centro')
+        ->assertSee('Verificada')
+        ->assertSee('Sin conexión, hora declarada')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1);
 });
 
 it('shows Ana her week with its hours and notices, and confirms it with her fingerprint', function (bool $dark): void {

@@ -9,6 +9,7 @@ use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
+use App\Modules\Attendance\Events\CorrectionResolved;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Exceptions\CorrectionRejected;
 use App\Modules\Attendance\Models\AttendanceMark;
@@ -211,6 +212,27 @@ describe('rejecting', function (): void {
         expect(fn () => resolveAs($request, false, $note))->toThrow(InvalidArgumentException::class)
             ->and($request->fresh()?->status)->toBe(CorrectionStatus::Pending);
     })->with([null, '   ', 'No.']);
+});
+
+describe('telling it', function (): void {
+    it('raises CorrectionResolved with ids and whether it was approved, on approving and on rejecting', function (bool $approve): void {
+        Event::fake([CorrectionResolved::class]);
+        $request = anaRequest($this->start, MarkType::Start, '2026-11-02 09:00');
+
+        resolveAs($request, $approve, 'Lo confirmó su jefa.');
+
+        Event::assertDispatched(CorrectionResolved::class, fn (CorrectionResolved $event): bool => $event->requestId === $request->id
+            && $event->employeeId === $this->ana->id && $event->approved === $approve);
+    })->with([true, false]);
+
+    it('does not raise it for an approval refused for leaving the day out of order', function (): void {
+        Event::fake([CorrectionResolved::class]);
+        $request = anaRequest($this->end, MarkType::End, '2026-11-02 08:00');
+
+        expect(fn () => resolveAs($request, true))->toThrow(CorrectionRejected::class);
+
+        Event::assertNotDispatched(CorrectionResolved::class);
+    });
 });
 
 describe('once', function (): void {

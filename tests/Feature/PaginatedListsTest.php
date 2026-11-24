@@ -108,6 +108,8 @@ it('sends each list of records as a paginator', function (string $component, Clo
     }, ['measures', 'agreements']],
     'the people\'s access: the people with their keys and invitations' => ['worker-access/access', fn () => route('tenant.worker-access.index', listsCompany()[0]), ['people']],
     'time clock correction requests' => ['attendance/corrections', fn () => route('tenant.attendance.corrections.index', listsCompany()[0]), ['requests']],
+    'time clock offline marks' => ['attendance/corrections', fn () => route('tenant.attendance.corrections.index', [listsCompany()[0], 'status' => 'offline']), ['offlineMarks']],
+    'time clock offline marks not accepted' => ['attendance/corrections', fn () => route('tenant.attendance.corrections.index', [listsCompany()[0], 'status' => 'not_accepted']), ['offlineMarks']],
     'time clock overview: the people of a week and the centers' => ['attendance/index', fn () => route('tenant.attendance.index', listsCompany()[0]), ['people', 'centers']],
     'time clock center: its zones and its QR screens' => ['attendance/center', function () {
         [$tenant, $plant] = listsCompany();

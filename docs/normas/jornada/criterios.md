@@ -239,8 +239,11 @@ vigente es la última. «Correcta» solo agrega esa revisión y no cambia la hor
 
 **6.1** · Norma (1.1) · Un reporte por centro de trabajo y periodo con: persona, fecha, hora de inicio y de fin, pausas,
 horas ordinarias y extra, nivel de evidencia, correcciones con su motivo y estado de la conformidad. Cada descarga se
-registra en la bitácora (acción sensible). El reporte muestra la etiqueta «Sin conexión» (también en una marca corregida, por
-su marca original), cuántas siguen por verificar, quién revisó y cuándo, y las marcas no aceptadas que quedaron registradas.
+registra en la bitácora (acción sensible). El reporte muestra la etiqueta «Sin conexión» con la llave que firmó (también en
+una marca corregida, por su marca original), si la marca sigue por verificar o Recursos Humanos ya la verificó, y cuántos días
+siguen por verificar (cuentan en las horas mientras tanto). No nombra a quien revisó, como tampoco nombra a quien corrige
+(dice «por RH»): ese dato queda en la bitácora de la empresa. Una entrega no aceptada no es una marca y no entra al reporte;
+Recursos Humanos la ve en Correcciones, con su motivo.
 
 ## 7. Conservación
 

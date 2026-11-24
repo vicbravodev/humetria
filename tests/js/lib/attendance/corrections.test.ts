@@ -50,3 +50,24 @@ describe('resolvedShortcut', () => {
         ).toEqual({ status: 'rejected', label: 'Ver la resuelta' });
     });
 });
+
+describe('correctionsQuery of the marks made without a connection', () => {
+    it('keeps the tab and the filter of the marks with no flags', () => {
+        expect(
+            correctionsQuery({ q: '', status: 'offline', flags: 'none' }),
+        ).toEqual({ status: 'offline', flags: 'none' });
+        expect(correctionsQuery({ q: 'Ana', status: 'not_accepted' })).toEqual({
+            q: 'Ana',
+            status: 'not_accepted',
+        });
+    });
+
+    it('does not send an empty filter, nor one the other tabs do not have', () => {
+        expect(
+            correctionsQuery({ q: '', status: 'offline', flags: '' }),
+        ).toEqual({ status: 'offline' });
+        expect(
+            correctionsQuery({ q: '', status: 'pending', flags: 'none' }),
+        ).toEqual({});
+    });
+});

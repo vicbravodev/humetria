@@ -21,13 +21,16 @@ use App\Modules\WorkerAccess\Actions\RevokeCredential;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Support\WebAuthnCeremony;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
+use Tests\Support\OfflineDeliveries;
 use Tests\Support\OfflineTickets;
 use Tests\Support\SoftAuthenticator;
 
@@ -191,10 +194,10 @@ describe('reading the week', function (): void {
             ->assertJsonPath('days.0', [
                 'date' => '2026-11-02',
                 'marks' => [
-                    ['id' => $ids[0], 'type' => 'start', 'time' => '09:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
-                    ['id' => $ids[1], 'type' => 'break_start', 'time' => '14:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
-                    ['id' => $ids[2], 'type' => 'break_end', 'time' => '15:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
-                    ['id' => $ids[3], 'type' => 'end', 'time' => '19:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
+                    ['id' => $ids[0], 'type' => 'start', 'time' => '09:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong', 'offline' => false, 'review' => null, 'reviewNote' => null],
+                    ['id' => $ids[1], 'type' => 'break_start', 'time' => '14:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong', 'offline' => false, 'review' => null, 'reviewNote' => null],
+                    ['id' => $ids[2], 'type' => 'break_end', 'time' => '15:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong', 'offline' => false, 'review' => null, 'reviewNote' => null],
+                    ['id' => $ids[3], 'type' => 'end', 'time' => '19:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong', 'offline' => false, 'review' => null, 'reviewNote' => null],
                 ],
                 'workedMinutes' => 540, 'scheduledMinutes' => 480, 'restDay' => false, 'lateMinutes' => null, 'missingEnd' => false, 'absence' => null,
                 'required' => true, 'uncovered' => false, 'overtimeMinutes' => 60,
@@ -204,7 +207,7 @@ describe('reading the week', function (): void {
             // The day on the person's rest day is all worked, none of it overtime (it is paid apart).
             ->assertJsonPath('days.6.overtimeMinutes', 0)
             ->assertJsonPath('days.2', ['date' => '2026-11-04', 'marks' => [], 'workedMinutes' => 0, 'scheduledMinutes' => 480, 'restDay' => false, 'lateMinutes' => null, 'missingEnd' => false, 'absence' => null, 'required' => true, 'uncovered' => true, 'overtimeMinutes' => 0])
-            ->assertJsonPath('days.6.marks.1', ['id' => $ids[7], 'type' => 'end', 'time' => '06:00', 'clock' => null, 'away' => false, 'nextDay' => true, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'])
+            ->assertJsonPath('days.6.marks.1', ['id' => $ids[7], 'type' => 'end', 'time' => '06:00', 'clock' => null, 'away' => false, 'nextDay' => true, 'corrected' => false, 'reason' => null, 'evidence' => 'strong', 'offline' => false, 'review' => null, 'reviewNote' => null])
             ->assertJsonPath('days.6.restDay', true)
             ->assertJsonPath('summary', [
                 'ordinaryMinutes' => 960, 'overtimeMinutes' => 420, 'doubleMinutes' => 420, 'tripleMinutes' => 0, 'restDayMinutes' => 480,
@@ -302,9 +305,46 @@ describe('reading the week', function (): void {
         weekPunch($this->ana, MarkType::End, '2026-11-05 17:00');
 
         anaReadsWeek(['start' => '2026-11-02'])->assertOk()
-            ->assertJsonPath('days.1.marks', [['id' => $correction->id, 'type' => 'start', 'time' => '09:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => true, 'reason' => 'La persona olvidó marcar a tiempo.', 'evidence' => 'corrected']])
+            ->assertJsonPath('days.1.marks', [['id' => $correction->id, 'type' => 'start', 'time' => '09:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => true, 'reason' => 'La persona olvidó marcar a tiempo.', 'evidence' => 'corrected', 'offline' => false, 'review' => null, 'reviewNote' => null]])
             ->assertJsonPath('days.1.missingEnd', true)
             ->assertJsonPath('days.3.missingEnd', false);
+    });
+
+    it('tells a mark made without a connection and where its review stands, with or without a QR', function (bool $qr): void {
+        $pending = OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00', qr: $qr);
+        $verified = OfflineDeliveries::accepted($this->ana, '2026-11-03 09:00', qr: $qr);
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $verified->mark_id]);
+        $incorrect = OfflineDeliveries::accepted($this->ana, '2026-11-04 09:00', qr: $qr);
+        MarkReviewFactory::new()->incorrect('Entró a las 9:20.')->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $incorrect->mark_id]);
+        $online = weekPunch($this->ana, MarkType::Start, '2026-11-05 09:00');
+
+        $response = anaReadsWeek(['start' => '2026-11-02'])->assertOk();
+
+        $mark = fn (int $day): array => $response->json("days.{$day}.marks.0");
+        expect($mark(0))->toMatchArray(['id' => $pending->mark_id, 'offline' => true, 'review' => 'pending', 'reviewNote' => null, 'evidence' => $qr ? 'medium' : 'basic'])
+            ->and($mark(1))->toMatchArray(['offline' => true, 'review' => 'verified', 'reviewNote' => null])
+            ->and($mark(2))->toMatchArray(['offline' => true, 'review' => 'incorrect', 'reviewNote' => 'Entró a las 9:20.'])
+            ->and($mark(3))->toMatchArray(['id' => $online->id, 'offline' => false, 'review' => null, 'reviewNote' => null]);
+    })->with(['with a QR' => true, 'without one' => false]);
+
+    it('shows the last decision when RH reviewed a mark twice', function (): void {
+        $delivery = OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00');
+        MarkReviewFactory::new()->incorrect('Entró a las 9:20.')->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $delivery->mark_id]);
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $delivery->mark_id]);
+
+        anaReadsWeek(['start' => '2026-11-02'])->assertOk()->assertJsonPath('days.0.marks.0.review', 'verified')->assertJsonPath('days.0.marks.0.reviewNote', null);
+    });
+
+    it('does not read the reviews of a week with no mark made without a connection', function (): void {
+        weekPunch($this->ana, MarkType::Start, '2026-11-02 09:00');
+        $reviews = 0;
+        DB::listen(function ($query) use (&$reviews): void {
+            $reviews += str_contains($query->sql, 'attendance_mark_reviews') ? 1 : 0;
+        });
+
+        anaReadsWeek(['start' => '2026-11-02'])->assertOk();
+
+        expect($reviews)->toBe(0);
     });
 
     it('tells the answer already given, with its moment and the person\'s own reason', function (): void {
@@ -412,7 +452,7 @@ describe('answering', function (): void {
         anaAnswers($answer, body: ['digest' => $seen, 'reason' => 'El martes salí a las 20:00.'])->assertUnprocessable()
             ->assertJsonPath('reason', 'week_changed')
             ->assertJsonPath('week.digest', anaDigest())
-            ->assertJsonPath('week.days.0.marks.3', ['id' => $correction->id, 'type' => 'end', 'time' => '18:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => true, 'reason' => 'La persona olvidó marcar a tiempo.', 'evidence' => 'corrected']);
+            ->assertJsonPath('week.days.0.marks.3', ['id' => $correction->id, 'type' => 'end', 'time' => '18:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => true, 'reason' => 'La persona olvidó marcar a tiempo.', 'evidence' => 'corrected', 'offline' => false, 'review' => null, 'reviewNote' => null]);
 
         expect(WeeklyConfirmation::query()->count())->toBe(0);
     })->with(['confirm', 'dispute']);

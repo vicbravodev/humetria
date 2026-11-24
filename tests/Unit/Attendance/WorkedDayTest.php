@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -21,6 +22,15 @@ function dayOfMarks(array $marks, string $timezone = 'America/Mexico_City', ?str
 {
     return array_map(fn (array $mark): AttendanceMark => new AttendanceMark(['type' => $mark[0], 'marked_at' => CarbonImmutable::parse($mark[1], 'UTC'), 'timezone' => $timezone, 'away_center_id' => $awayCenterId]), $marks);
 }
+
+it('counts the minutes of a day with marks made without a connection as those of any other', function (MarkMethod $method): void {
+    $day = [
+        new AttendanceMark(['type' => MarkType::Start, 'marked_at' => CarbonImmutable::parse('2027-01-05 14:00', 'UTC'), 'timezone' => 'America/Mexico_City', 'method' => $method]),
+        new AttendanceMark(['type' => MarkType::End, 'marked_at' => CarbonImmutable::parse('2027-01-05 22:30', 'UTC'), 'timezone' => 'America/Mexico_City', 'method' => $method]),
+    ];
+
+    expect(WorkedDay::hours(CarbonImmutable::parse('2027-01-05'), $day, null)->workedMinutes)->toBe(510);
+})->with([MarkMethod::OfflineQr, MarkMethod::OfflineDeclared]);
 
 it('counts the breaks of a day, a break the day ended in included', function (array $marks, int $breaks, int $worked): void {
     $day = dayOfMarks($marks);

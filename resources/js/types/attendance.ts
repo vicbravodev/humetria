@@ -202,6 +202,8 @@ export type ReportSummary = {
     /** People with at least one flagged day / at least one day of a week no one answered. */
     flaggedPeople: number;
     unconfirmedPeople: number;
+    /** Days with a mark made without a connection that RH has not reviewed. */
+    toVerify: number;
 };
 
 /** Which people the report lists: all, those with a flagged day or those with a week no one answered. */

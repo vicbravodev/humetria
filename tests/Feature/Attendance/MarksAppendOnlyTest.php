@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Modules\Attendance\Enums\EvidenceLevel;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Models\AttendanceMark;
+use Database\Factories\Attendance\AttendanceOfflineMarkFactory;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
@@ -88,4 +90,14 @@ it('rejects a method the database does not know', function (): void {
             select gen_random_uuid(), tenant_id, employee_id, work_center_id, type, now(), 'offline_x', timezone from attendance_marks where id = ?",
         [$mark->id],
     ))->toThrow(QueryException::class, 'attendance_marks_method_known');
+});
+
+it('does not change a mark made without a connection when RH reviews it: the review is a row of its own', function (): void {
+    $delivery = AttendanceOfflineMarkFactory::new()->accepted()->createOne();
+    $before = DB::table('attendance_marks')->where('id', $delivery->mark_id)->first();
+
+    MarkReviewFactory::new()->createOne(['tenant_id' => $delivery->tenant_id, 'mark_id' => $delivery->mark_id]);
+
+    expect(DB::table('attendance_marks')->where('id', $delivery->mark_id)->first())->toEqual($before)
+        ->and(DB::table('attendance_marks')->count())->toBe(1);
 });

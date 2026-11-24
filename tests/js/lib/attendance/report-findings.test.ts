@@ -20,6 +20,7 @@ const summary = (overrides: Partial<ReportSummary> = {}): ReportSummary => ({
     withoutEndDays: 0,
     flaggedPeople: 0,
     unconfirmedPeople: 0,
+    toVerify: 0,
     ...overrides,
 });
 
@@ -64,6 +65,24 @@ describe('inspectionFindings', () => {
         expect(findings[0]?.text).toContain('art. 68');
         expect(findings[1]?.text).toContain('no suma horas');
         expect(findings[0]?.action).toBe('Ver a las 3 personas');
+    });
+
+    it('warns of the days with marks made without a connection that RH has not verified, which count in the hours meanwhile', () => {
+        expect(
+            inspectionFindings(summary({ toVerify: 2, flaggedPeople: 2 })),
+        ).toEqual([
+            {
+                key: 'to-verify',
+                title: '2 días con marcas sin conexión por verificar',
+                text: 'Cuentan en las horas; verifícalas antes de una inspección.',
+                action: 'Ver a las 2 personas',
+                show: 'flagged',
+            },
+        ]);
+        expect(
+            inspectionFindings(summary({ toVerify: 1, flaggedPeople: 1 }))[0]
+                ?.title,
+        ).toBe('1 día con marcas sin conexión por verificar');
     });
 
     it('says «Ver a 1 persona» for one', () => {
