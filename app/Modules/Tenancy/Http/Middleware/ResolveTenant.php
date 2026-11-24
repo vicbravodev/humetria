@@ -100,8 +100,8 @@ final class ResolveTenant
             'type' => $tenant->type->value,
             // What the company has, for the menu to hide the rest; the routes of the others answer 404 anyway.
             'modules' => $this->modules->enabledKeys($tenant->id),
-            'role' => $role->value,
-            'role_label' => $role->label(),
+            'role' => $role->key,
+            'role_label' => $role->label,
             // What the role allows; a read-only company has every writing one off, and `permissions` keeps the full set for the menu.
             'can' => $this->writable($permissions = [
                 'manage_organization' => $user->can('manage-organization'),

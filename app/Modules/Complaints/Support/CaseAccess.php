@@ -30,6 +30,6 @@ final readonly class CaseAccess
         $member = $case === null ? null : $this->members->find($userId);
 
         // Nobody handles a case against who they are (criterio C-45), also when the role or permission came after the assignment.
-        return $member === null || $case->respondent_kind->excludes($member->role->value, $this->excluding->byMember()[$userId] ?? []) ? null : $case;
+        return $member === null || $case->respondent_kind->excludes($member->role->key, $this->excluding->byMember()[$userId] ?? []) ? null : $case;
     }
 }

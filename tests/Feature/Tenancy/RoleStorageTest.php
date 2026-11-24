@@ -35,8 +35,8 @@ it('keeps each person\'s role per company: hr in one, viewer in another', functi
 
     $roles = resolve(CompanyRoles::class);
 
-    expect($roles->of($user, $acme))->toBe(TenantRole::Hr)
-        ->and($roles->of($user, $beta))->toBe(TenantRole::Viewer)
+    expect($roles->of($user, $acme)?->key)->toBe(TenantRole::Hr->value)
+        ->and($roles->of($user, $beta)?->key)->toBe(TenantRole::Viewer->value)
         ->and($roles->of($user, Tenant::factory()->create()))->toBeNull()
         ->and(DB::table('tenant_memberships')->where('user_id', $user->id)->count())->toBe(2);
 });
@@ -44,7 +44,7 @@ it('keeps each person\'s role per company: hr in one, viewer in another', functi
 it('gives a membership the owner role unless told otherwise', function (): void {
     $membership = TenantMembership::factory()->create();
 
-    expect(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole()))->toBe(TenantRole::Owner);
+    expect(resolve(CompanyRoles::class)->of($membership->user()->sole(), $membership->tenant()->sole())?->key)->toBe(TenantRole::Owner->value);
 });
 
 it('changes a role inside one company without touching the others or the superadmin role', function (): void {
@@ -56,8 +56,8 @@ it('changes a role inside one company without touching the others or the superad
 
     $roles->assign($user, $acme, TenantRole::Viewer);
 
-    expect($roles->of($user, $acme))->toBe(TenantRole::Viewer)
-        ->and($roles->of($user, $beta))->toBe(TenantRole::Hr)
+    expect($roles->of($user, $acme)?->key)->toBe(TenantRole::Viewer->value)
+        ->and($roles->of($user, $beta)?->key)->toBe(TenantRole::Hr->value)
         ->and($user->fresh()?->hasRole(User::SUPERADMIN))->toBeTrue();
 });
 
@@ -71,7 +71,7 @@ it('removes the role of a person in one company only', function (): void {
     $roles->remove($user, $acme);
 
     expect($roles->of($user, $acme))->toBeNull()
-        ->and($roles->of($user, $beta))->toBe(TenantRole::Hr);
+        ->and($roles->of($user, $beta)?->key)->toBe(TenantRole::Hr->value);
 });
 
 it('lists the role of everyone in a company with one query', function (): void {
@@ -82,7 +82,7 @@ it('lists the role of everyone in a company with one query', function (): void {
 
     $this->expectsDatabaseQueryCount(1);
 
-    expect(resolve(CompanyRoles::class)->inCompany($tenant))->toBe([$owner->user_id => TenantRole::Owner, $hr->user_id => TenantRole::Hr]);
+    expect(array_map(fn ($role): string => $role->key, resolve(CompanyRoles::class)->inCompany($tenant)))->toBe([$owner->user_id => 'owner', $hr->user_id => 'hr']);
 });
 
 it('allows a single owner per company in the database itself', function (): void {

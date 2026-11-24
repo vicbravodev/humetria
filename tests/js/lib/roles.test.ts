@@ -27,4 +27,13 @@ describe('roleSummary', () => {
         );
         expect(roleSummary('viewer', true)).toBe(roleSummary('viewer'));
     });
+
+    it("says of a role of the company's own that it opens what was given to it", () => {
+        expect(roleSummary('custom_3f2a')).toBe(
+            'entra con los permisos que se le asignaron',
+        );
+        expect(roleSummary('custom_3f2a', true)).toBe(
+            'entra con los permisos que se le asignaron',
+        );
+    });
 });

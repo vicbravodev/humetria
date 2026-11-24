@@ -44,7 +44,7 @@ it('removes the previous owner from the company when the new one accepts', funct
     $owner = $tenant->ownerMembership()->sole();
 
     expect($owner->user_id)->toBe($next->id)
-        ->and(array_keys(resolve(CompanyRoles::class)->inCompany($tenant), TenantRole::Owner, true))->toBe([$next->id])
+        ->and(array_keys(array_map(fn ($role): string => $role->key, resolve(CompanyRoles::class)->inCompany($tenant)), TenantRole::Owner->value, true))->toBe([$next->id])
         ->and($previous->fresh())->not->toBeNull()
         ->and(TenantMembership::query()->where('tenant_id', $other->id)->sole()->user_id)->toBe($previous->id);
 });

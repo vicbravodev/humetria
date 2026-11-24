@@ -1,6 +1,6 @@
 import Initials from '@/components/humetria/initials';
 import { roleSummary } from '@/lib/roles';
-import type { TenantRole } from '@/types/tenancy';
+import type { CompanyRoleKey } from '@/types/tenancy';
 
 /** Who invites the person, to which company and as what (pantalla: Invitacion), above whatever the link asks. */
 export default function InvitationCard({
@@ -9,7 +9,7 @@ export default function InvitationCard({
     invitation: {
         inviter: string | null;
         trade_name: string;
-        role: TenantRole;
+        role: CompanyRoleKey;
         role_label: string;
         union: boolean;
     };

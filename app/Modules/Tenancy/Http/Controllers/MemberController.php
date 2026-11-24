@@ -44,7 +44,7 @@ final class MemberController extends Controller
         $this->authorizeOwner();
         $roles = $this->roles->inCompany($tenant);
 
-        $owner = array_search(TenantRole::Owner, $roles, true);
+        $owner = array_find_key($roles, fn (CompanyRoleSummary $role): bool => $role->key === TenantRole::Owner->value);
 
         return Inertia::render('tenancy/members', [
             'members' => $tenant->memberships()
@@ -52,7 +52,7 @@ final class MemberController extends Controller
                 ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
                 ->whereIn('tenant_memberships.user_id', array_keys($roles))
                 // The owner first, then by name.
-                ->orderByRaw('tenant_memberships.user_id = ? desc', [$owner === false ? 0 : $owner])
+                ->orderByRaw('tenant_memberships.user_id = ? desc', [$owner ?? 0])
                 ->orderBy('users.name')
                 ->orderBy('tenant_memberships.id')
                 ->select('tenant_memberships.*')
@@ -142,7 +142,7 @@ final class MemberController extends Controller
      *
      * @return array{id: int, name: string, email: string, role: string, role_label: string, is_you: bool, since: string}
      */
-    private function memberRow(TenantMembership $member, ?TenantRole $role, User $you): array
+    private function memberRow(TenantMembership $member, ?CompanyRoleSummary $role, User $you): array
     {
         $user = $member->user ?? throw new LogicException("Membership [{$member->id}] has no user.");
         $role ??= throw new LogicException("Membership [{$member->id}] has no role.");
@@ -151,8 +151,8 @@ final class MemberController extends Controller
             'id' => $member->id,
             'name' => $user->name,
             'email' => $user->email,
-            'role' => $role->value,
-            'role_label' => $role->label(),
+            'role' => $role->key,
+            'role_label' => $role->label,
             'is_you' => $user->id === $you->id,
             'since' => DisplayDate::day($member->created_at),
         ];
@@ -189,7 +189,7 @@ final class MemberController extends Controller
     {
         $member = $tenant->memberships()->findOrFail($id);
 
-        abort_if(($this->roles->inCompany($tenant)[$member->user_id] ?? null) === TenantRole::Owner, 404);
+        abort_if(($this->roles->inCompany($tenant)[$member->user_id] ?? null)?->key === TenantRole::Owner->value, 404);
 
         return $member;
     }

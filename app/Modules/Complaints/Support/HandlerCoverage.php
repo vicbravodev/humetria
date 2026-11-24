@@ -34,7 +34,7 @@ final readonly class HandlerCoverage
         foreach ($this->active->all() as ['handler' => $handler, 'member' => $member]) {
             $inScope = $handler->work_center_id === null || $handler->work_center_id === $workCenterId;
 
-            if ($inScope && ! $kind->excludes($member->role->value, $held[$member->userId] ?? [])) {
+            if ($inScope && ! $kind->excludes($member->role->key, $held[$member->userId] ?? [])) {
                 $ids[$member->userId] = $member->userId;
             }
         }

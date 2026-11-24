@@ -25,7 +25,8 @@ final readonly class CompanyRoles
 {
     public function __construct(private PermissionRegistrar $registrar) {}
 
-    public function of(User $user, Tenant $tenant): ?TenantRole
+    /** The person's role in the company, a template or one of its own; null when they have none. */
+    public function of(User $user, Tenant $tenant): ?CompanyRoleSummary
     {
         return $this->inCompany($tenant)[$user->id] ?? null;
     }
@@ -218,9 +219,9 @@ final readonly class CompanyRoles
     }
 
     /**
-     * Everyone's role in the company, by user id, in one query.
+     * Everyone's role in the company, a template or one of its own, by user id, in one query.
      *
-     * @return array<int, TenantRole>
+     * @return array<int, CompanyRoleSummary>
      */
     public function inCompany(Tenant $tenant): array
     {
@@ -231,11 +232,9 @@ final readonly class CompanyRoles
             ->where('model_has_roles.tenant_id', $tenant->id)
             ->where('model_has_roles.model_type', (new User)->getMorphClass())
             ->orderBy('model_has_roles.model_id')
-            ->get(['model_has_roles.model_id', 'roles.name']) as $row) {
-            $role = is_string($row->name) ? TenantRole::tryFrom($row->name) : null;
-
-            if ($role !== null && is_int($row->model_id)) {
-                $roles[$row->model_id] = $role;
+            ->get(['model_has_roles.model_id', 'roles.name', 'roles.label']) as $row) {
+            if (is_string($row->name) && is_int($row->model_id)) {
+                $roles[$row->model_id] = self::summary($row->name, $row->label);
             }
         }
 

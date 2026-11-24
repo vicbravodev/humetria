@@ -34,11 +34,11 @@ final readonly class HandlerPages
             'handlers' => array_map(fn (array $row): array => [
                 'id' => $row['handler']->id,
                 'name' => $row['member']->name,
-                'roleLabel' => $row['member']->role->label(),
+                'roleLabel' => $row['member']->role->label,
                 'scope' => $row['handler']->work_center_id === null ? 'Toda la empresa' : ($centers[$row['handler']->work_center_id] ?? 'Un centro'),
                 'designatedOn' => $row['handler']->designated_at->setTimezone(config()->string('app.display_timezone'))->toDateString(),
             ], $this->active->all()),
-            'candidates' => array_map(fn (MemberSummary $member): array => ['value' => (string) $member->userId, 'label' => $member->name, 'role' => $member->role->value, 'roleLabel' => $member->role->label()], $this->members->complaintHandlers()),
+            'candidates' => array_map(fn (MemberSummary $member): array => ['value' => (string) $member->userId, 'label' => $member->name, 'role' => $member->role->key, 'roleLabel' => $member->role->label], $this->members->complaintHandlers()),
         ];
     }
 }

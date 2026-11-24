@@ -1,4 +1,4 @@
-import type { TenantRole } from './tenancy';
+import type { CompanyRoleKey } from './tenancy';
 
 type PendingInvitation = {
     trade_name: string;
@@ -6,7 +6,7 @@ type PendingInvitation = {
     invited_as: string;
     /** Who sent it; null when no sender was recorded. */
     inviter: string | null;
-    role: TenantRole;
+    role: CompanyRoleKey;
     role_label: string;
     /** The account is a union: its invitation speaks of the padrón, not of evaluations. */
     union: boolean;

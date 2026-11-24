@@ -69,7 +69,7 @@ final readonly class ChannelPages
         $people = [];
 
         foreach ($active as ['member' => $member]) {
-            $people[$member->userId] = ['name' => $member->name, 'roleLabel' => $member->role->label()];
+            $people[$member->userId] = ['name' => $member->name, 'roleLabel' => $member->role->label];
         }
 
         return [
@@ -83,8 +83,8 @@ final readonly class ChannelPages
             'candidates' => array_map(fn (MemberSummary $member): array => [
                 'value' => (string) $member->userId,
                 'label' => $member->name,
-                'role' => $member->role->value,
-                'roleLabel' => $member->role->label(),
+                'role' => $member->role->key,
+                'roleLabel' => $member->role->label,
             ], $this->members->complaintHandlers()),
         ];
     }

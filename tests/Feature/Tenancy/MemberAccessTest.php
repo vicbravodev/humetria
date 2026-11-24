@@ -34,7 +34,7 @@ function membershipOf(Tenant $tenant, TenantRole $role): TenantMembership
 
 function roleIn(Tenant $tenant, User|int $user): ?TenantRole
 {
-    return resolve(CompanyRoles::class)->of($user instanceof User ? $user : User::query()->findOrFail($user), $tenant);
+    return TenantRole::tryFrom(resolve(CompanyRoles::class)->of($user instanceof User ? $user : User::query()->findOrFail($user), $tenant)?->key ?? '');
 }
 
 it('lives at /admin/{slug}/members/{id}', function (): void {

@@ -1,5 +1,5 @@
 import { roleSummary } from '@/lib/roles';
-import type { TenantRole } from '@/types/tenancy';
+import type { CompanyRoleKey } from '@/types/tenancy';
 
 export type ErrorMessage = { caption: string; title: string; body: string };
 
@@ -94,7 +94,11 @@ export function errorMessage(
  */
 export function roleLimit(
     status: number,
-    tenant: { trade_name: string; role: TenantRole; role_label: string } | null,
+    tenant: {
+        trade_name: string;
+        role: CompanyRoleKey;
+        role_label: string;
+    } | null,
 ): { company: string; role: string; summary: string } | null {
     if (status !== 403 || tenant === null || tenant.role === 'owner') {
         return null;

@@ -174,3 +174,24 @@ it('ends the cases against HR of the people of a role of its own when manage-org
 
     expect($againstHr->refresh()->end_reason)->toBe('role_conflict');
 });
+
+it('lets a person with a role of their own that handles complaints be designated and open their cases', function (): void {
+    $person = customRoleMember($this->tenant, $this->owner);
+    $owner = memberOf($this->tenant, TenantRole::Owner);
+
+    expect(collect(resolve(App\Modules\Tenancy\Contracts\Members::class)->complaintHandlers())->pluck('userId')->all())->toContain($person->id);
+    $this->actingAs($owner)->post(route('tenant.complaints.handlers.store', $this->tenant), ['user_id' => $person->id, 'work_center_id' => ''])->assertSessionHasNoErrors();
+    expect(ComplaintHandler::query()->where('user_id', $person->id)->exists())->toBeTrue();
+
+    $case = caseHeldBy($this->tenant, RespondentKind::Coworker, $person);
+    expect(resolve(CaseAccess::class)->find($person->id, $case->complaint_id)?->id)->toBe($case->complaint_id);
+});
+
+it('keeps a person whose role of their own has manage-organization out of the cases against HR', function (): void {
+    $person = customRoleMember($this->tenant, $this->owner, ['handle-complaints', 'manage-organization']);
+    $againstHr = caseHeldBy($this->tenant, RespondentKind::Hr, $person);
+    $other = caseHeldBy($this->tenant, RespondentKind::Coworker, $person);
+
+    expect(resolve(CaseAccess::class)->find($person->id, $againstHr->complaint_id))->toBeNull()
+        ->and(resolve(CaseAccess::class)->find($person->id, $other->complaint_id)?->id)->toBe($other->complaint_id);
+});

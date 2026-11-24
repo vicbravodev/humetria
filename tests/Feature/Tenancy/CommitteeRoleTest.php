@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Tenancy\Contracts\Members;
+use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Data\MemberSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Middleware\RequireRoutePermission;
@@ -96,10 +97,10 @@ it('lists the members of the current company only', function (): void {
     $members = resolve(Members::class);
 
     expect($members->all())->toEqual([
-        new MemberSummary($ana->id, 'Ana', 'ana@acme.mx', TenantRole::Hr),
-        new MemberSummary($cora->id, 'Cora', 'cora@acme.mx', TenantRole::Committee),
+        new MemberSummary($ana->id, 'Ana', 'ana@acme.mx', new CompanyRoleSummary('hr', TenantRole::Hr->label(), true)),
+        new MemberSummary($cora->id, 'Cora', 'cora@acme.mx', new CompanyRoleSummary('committee', TenantRole::Committee->label(), true)),
     ])
-        ->and($members->find($cora->id))->toEqual(new MemberSummary($cora->id, 'Cora', 'cora@acme.mx', TenantRole::Committee))
+        ->and($members->find($cora->id))->toEqual(new MemberSummary($cora->id, 'Cora', 'cora@acme.mx', new CompanyRoleSummary('committee', TenantRole::Committee->label(), true)))
         ->and($members->find($foreign->id))->toBeNull()
         ->and($members->find(0))->toBeNull();
 });

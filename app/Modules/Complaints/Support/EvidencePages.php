@@ -42,7 +42,7 @@ final readonly class EvidencePages
             'handlers' => [
                 'count' => count($handlers),
                 // Independent: no kind of complaint is against them.
-                'independent' => array_any($handlers, fn (array $row): bool => array_all(RespondentKind::cases(), fn (RespondentKind $kind): bool => ! $kind->excludes($row['member']->role->value, $held[$row['member']->userId] ?? []))),
+                'independent' => array_any($handlers, fn (array $row): bool => array_all(RespondentKind::cases(), fn (RespondentKind $kind): bool => ! $kind->excludes($row['member']->role->key, $held[$row['member']->userId] ?? []))),
             ],
             'types' => array_map(fn (ComplaintType $type): array => ['value' => $type->value, 'label' => $type->label()], ComplaintType::cases()),
             'coverage' => array_map(fn (RespondentKind $kind): array => ['kind' => $kind->value, 'label' => $kind->shortLabel(), 'count' => $counts[$kind->value]], RespondentKind::cases()),
