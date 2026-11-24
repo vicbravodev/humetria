@@ -7,6 +7,7 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\GrantMemberPermissions;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -156,6 +157,21 @@ it('keeps a permission of a tool the plan no longer includes when the person\'s 
 
     expect(resolve(CompanyRoles::class)->directPermissionsOf($this->person, $this->tenant))->toBe(['manage-attendance', 'manage-vacations'])
         ->and(AuditEntry::query()->where('event', 'tenant_member.permissions_changed')->latest('id')->first()->metadata)->toMatchArray(['added' => ['manage-attendance'], 'removed' => []]);
+});
+
+it('does not send a stored permission the account type no longer admits, so saving the rest does not fail and the stored one survives', function (): void {
+    app(GrantMemberPermissions::class)->handle($this->member, ['manage-seating'], $this->owner);
+    $this->tenant->update(['type' => TenantType::Union]);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.permissions.edit', [$this->tenant, $this->member->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('direct', []));
+
+    $this->actingAs($this->owner)
+        ->put(route('tenant.members.permissions.update', [$this->tenant, $this->member->id]), ['permissions' => ['manage-compensation'], 'acknowledge_sensitive' => true])
+        ->assertSessionHasNoErrors();
+
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($this->person, $this->tenant))->toBe(['manage-compensation', 'manage-seating']);
 });
 
 it('answers 404, not an error, to a person id too large to be one', function (): void {

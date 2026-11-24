@@ -149,8 +149,9 @@ final class MemberController extends Controller
             'member' => ['id' => $membership->id, 'name' => $person->name, 'email' => $person->email, 'role_label' => $this->roles->of($person, $tenant)?->label],
             'groups' => PermissionGroups::for($tenant, $effective),
             // What is stored for the person themselves, also what their role now gives too (the groups show it as the role's):
-            // the page sends it back, so saving never drops it.
-            'direct' => array_values(array_intersect($this->roles->directPermissionsOf($person, $tenant), array_keys($effective))),
+            // the page sends it back, so saving never drops it. Only what a save accepts: one the account type no longer admits
+            // stays stored (GrantMemberPermissions keeps it) but is not sent, or the form would fail on it every time.
+            'direct' => array_values(array_intersect($this->roles->directPermissionsOf($person, $tenant), array_keys($effective), array_keys($this->roles->assignablePermissions($tenant)))),
             'can_manage' => ! $this->impersonation->isActive(),
         ]);
     }
