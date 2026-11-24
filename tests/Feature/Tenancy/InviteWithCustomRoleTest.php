@@ -97,6 +97,17 @@ it('gives the role and the extras when the invitation is accepted, as the role i
         ->and(AuditEntry::query()->where('event', 'tenant_invitation.accepted')->sole()->metadata)->toEqual(['permissions' => ['view-vacations']]);
 });
 
+it('leaves out at acceptance an extra permission the company can no longer hand out', function (): void {
+    ($this->invite)(['permissions' => ['view-vacations', 'view-compensation']])->assertSessionHasNoErrors();
+    TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
+    resolve(App\Modules\Tenancy\Support\ModuleStates::class)->forget();
+
+    $ana = app(AcceptInvitation::class)->handle(TenantInvitation::query()->sole(), new NewAccountData('Ana Pérez', 'secreto-largo-123'));
+
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($ana, $this->tenant))->toBe(['view-compensation'])
+        ->and(AuditEntry::query()->where('event', 'tenant_invitation.accepted')->sole()->metadata)->toEqual(['permissions' => ['view-compensation']]);
+});
+
 it('leaves someone who already had access with what they have', function (): void {
     ($this->invite)()->assertSessionHasNoErrors();
     $ana = User::factory()->create(['email' => 'ana@acme.mx']);

@@ -132,6 +132,23 @@ final readonly class CompanyRoles
      */
     public function assertAssignable(Tenant $tenant, array $permissions): bool
     {
+        $assignable = $this->assignablePermissions($tenant);
+
+        foreach ($permissions as $name) {
+            isset($assignable[$name]) || throw new InvalidArgumentException("The company cannot hand out [$name].");
+        }
+
+        return array_any($permissions, fn (string $name): bool => $assignable[$name]);
+    }
+
+    /**
+     * What the company can hand out now (not the owner's own, admitted by the account, of a module it has), each with
+     * whether it is sensitive.
+     *
+     * @return array<string, bool>
+     */
+    public function assignablePermissions(Tenant $tenant): array
+    {
         $assignable = [];
 
         foreach (PermissionCatalog::assignable($tenant) as $definition) {
@@ -140,11 +157,7 @@ final readonly class CompanyRoles
             }
         }
 
-        foreach ($permissions as $name) {
-            isset($assignable[$name]) || throw new InvalidArgumentException("The company cannot hand out [$name].");
-        }
-
-        return array_any($permissions, fn (string $name): bool => $assignable[$name]);
+        return $assignable;
     }
 
     /** Replaces the person's role in the company with `$role`, a template or one of the company's own. */

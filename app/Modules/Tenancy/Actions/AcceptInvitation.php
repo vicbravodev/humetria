@@ -102,8 +102,8 @@ final readonly class AcceptInvitation
     }
 
     /**
-     * Gives a new member the invited role, as it is now, and the permissions besides it. Someone who got access in the
-     * meantime keeps what they have.
+     * Gives a new member the invited role, as it is now, and the permissions besides it that the company can still hand
+     * out (a module may have gone since the invitation). Someone who got access in the meantime keeps what they have.
      *
      * @return list<string> the permissions given besides the role.
      */
@@ -115,11 +115,13 @@ final readonly class AcceptInvitation
 
         $this->roles->assign($user, $tenant, $invitation->role ?? throw new InvitationNoLongerValid);
 
-        if ($invitation->extra_permissions !== []) {
-            $this->roles->syncDirectPermissions($user, $tenant, $invitation->extra_permissions);
+        $given = array_values(array_intersect($invitation->extra_permissions, array_keys($this->roles->assignablePermissions($tenant))));
+
+        if ($given !== []) {
+            $this->roles->syncDirectPermissions($user, $tenant, $given);
         }
 
-        return $invitation->extra_permissions;
+        return $given;
     }
 
     /**
