@@ -1,0 +1,179 @@
+{
+    "about": "Shared vectors of the canonical offline-mark challenge v1 (docs/superpowers/specs/2026-11-20-worker-pwa-offline-design.md, «Reto canónico v1»). canonical is the exact UTF-8 string `humetria-offline-mark-v1|tenant|employee|center|type|basis|qr|declared_at|lat_e5|lng_e5|accuracy_m|agreement|seq|pass_id|ticket`; sha256_hex is the SHA-256 of that string in lowercase hex (the 32 raw bytes are what a passkey or a device key signs). basis is qr_window when qr is present, declared_interval otherwise. A missing optional value (qr, position, pass_id) is an empty field, never 0. Read by Pest (tests/Unit/Attendance/OfflineChallengeTest.php) and by Vitest (the client challenge, commit 19). The hashes were computed outside the code under test (shasum).",
+    "valid": [
+        {
+            "name": "qr_with_position",
+            "description": "Passkey signer, QR read at the center and a position: basis qr_window, every field filled, pass_id empty.",
+            "input": {
+                "tenant_id": "0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d",
+                "employee_id": "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "work_center_id": "3f2e1d0c-9b8a-4766-a554-433221100ffe",
+                "mark_type": "start",
+                "basis": "qr_window",
+                "qr": "29652320.abababababababababababababababababababababababababababababababab",
+                "declared_at": 1795611600,
+                "lat_e5": 1916543,
+                "lng_e5": -9913270,
+                "accuracy_m": 12,
+                "agreement_version": 3,
+                "seq": 1,
+                "pass_id": null,
+                "ticket": "v1.cGF5bG9hZA.aG1hYw"
+            },
+            "canonical": "humetria-offline-mark-v1|0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d|7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f|3f2e1d0c-9b8a-4766-a554-433221100ffe|start|qr_window|29652320.abababababababababababababababababababababababababababababababab|1795611600|1916543|-9913270|12|3|1||v1.cGF5bG9hZA.aG1hYw",
+            "sha256_hex": "690641bb70c7124b6e89973d8cd6bc9a72bf8d35608666af6fe439510d31efb4"
+        },
+        {
+            "name": "no_qr_with_position",
+            "description": "No QR: basis declared_interval and the qr field empty (two adjacent pipes).",
+            "input": {
+                "tenant_id": "0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d",
+                "employee_id": "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "work_center_id": "3f2e1d0c-9b8a-4766-a554-433221100ffe",
+                "mark_type": "end",
+                "basis": "declared_interval",
+                "qr": null,
+                "declared_at": 1795640400,
+                "lat_e5": 1916543,
+                "lng_e5": -9913270,
+                "accuracy_m": 35,
+                "agreement_version": 3,
+                "seq": 2,
+                "pass_id": null,
+                "ticket": "v1.cGF5bG9hZA.aG1hYw"
+            },
+            "canonical": "humetria-offline-mark-v1|0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d|7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f|3f2e1d0c-9b8a-4766-a554-433221100ffe|end|declared_interval||1795640400|1916543|-9913270|35|3|2||v1.cGF5bG9hZA.aG1hYw",
+            "sha256_hex": "6dc134059765a42d33b490db71d9f474e980b80f42463a2cd3bf20ce587b8579"
+        },
+        {
+            "name": "no_position",
+            "description": "No position: lat_e5, lng_e5 and accuracy_m are three empty fields, never zeros.",
+            "input": {
+                "tenant_id": "0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d",
+                "employee_id": "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "work_center_id": "3f2e1d0c-9b8a-4766-a554-433221100ffe",
+                "mark_type": "break_start",
+                "basis": "declared_interval",
+                "qr": null,
+                "declared_at": 1795626000,
+                "lat_e5": null,
+                "lng_e5": null,
+                "accuracy_m": null,
+                "agreement_version": 3,
+                "seq": 3,
+                "pass_id": null,
+                "ticket": "v1.cGF5bG9hZA.aG1hYw"
+            },
+            "canonical": "humetria-offline-mark-v1|0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d|7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f|3f2e1d0c-9b8a-4766-a554-433221100ffe|break_start|declared_interval||1795626000||||3|3||v1.cGF5bG9hZA.aG1hYw",
+            "sha256_hex": "9e97feb4d05e2b2dff7834f2ca9f593d345c4b8553ff3c6a4ae70ce9a408b512"
+        },
+        {
+            "name": "negative_coordinates",
+            "description": "Southern and western hemispheres: negative integers keep their minus sign, no rounding or padding.",
+            "input": {
+                "tenant_id": "0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d",
+                "employee_id": "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "work_center_id": "3f2e1d0c-9b8a-4766-a554-433221100ffe",
+                "mark_type": "break_end",
+                "basis": "qr_window",
+                "qr": "29652320.abababababababababababababababababababababababababababababababab",
+                "declared_at": 1795629600,
+                "lat_e5": -3385678,
+                "lng_e5": -7064432,
+                "accuracy_m": 8,
+                "agreement_version": 4,
+                "seq": 4,
+                "pass_id": null,
+                "ticket": "v1.cGF5bG9hZA.aG1hYw"
+            },
+            "canonical": "humetria-offline-mark-v1|0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d|7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f|3f2e1d0c-9b8a-4766-a554-433221100ffe|break_end|qr_window|29652320.abababababababababababababababababababababababababababababababab|1795629600|-3385678|-7064432|8|4|4||v1.cGF5bG9hZA.aG1hYw",
+            "sha256_hex": "cd6dc208ef8a636674e05f01d245c26dc69b98ad9cabc6975e6b07d805575df4"
+        },
+        {
+            "name": "device_key_pass_id",
+            "description": "Device key (plan B): pass_id sits right before the ticket.",
+            "input": {
+                "tenant_id": "0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d",
+                "employee_id": "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "work_center_id": "3f2e1d0c-9b8a-4766-a554-433221100ffe",
+                "mark_type": "start",
+                "basis": "declared_interval",
+                "qr": null,
+                "declared_at": 1795611600,
+                "lat_e5": 1916543,
+                "lng_e5": -9913270,
+                "accuracy_m": 20,
+                "agreement_version": 3,
+                "seq": 5,
+                "pass_id": "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a",
+                "ticket": "v1.cGF5bG9hZA.aG1hYw"
+            },
+            "canonical": "humetria-offline-mark-v1|0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d|7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f|3f2e1d0c-9b8a-4766-a554-433221100ffe|start|declared_interval||1795611600|1916543|-9913270|20|3|5|5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a|v1.cGF5bG9hZA.aG1hYw",
+            "sha256_hex": "5531b1ed974c37c6b7bd04116845081ad3cfd987c7b2ada915c854e73360388f"
+        },
+        {
+            "name": "full_length_ticket",
+            "description": "Ticket of the real length (235 characters; synthetic, same shape v1.{payload}.{hmac}) as the last field.",
+            "input": {
+                "tenant_id": "0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d",
+                "employee_id": "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "work_center_id": "3f2e1d0c-9b8a-4766-a554-433221100ffe",
+                "mark_type": "end",
+                "basis": "qr_window",
+                "qr": "29652320.abababababababababababababababababababababababababababababababab",
+                "declared_at": 1795640400,
+                "lat_e5": 1916543,
+                "lng_e5": -9913270,
+                "accuracy_m": 12,
+                "agreement_version": 7,
+                "seq": 16,
+                "pass_id": "5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a",
+                "ticket": "v1.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+            },
+            "canonical": "humetria-offline-mark-v1|0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d|7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f|3f2e1d0c-9b8a-4766-a554-433221100ffe|end|qr_window|29652320.abababababababababababababababababababababababababababababababab|1795640400|1916543|-9913270|12|7|16|5d4c3b2a-1f0e-4d9c-8b7a-6f5e4d3c2b1a|v1.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
+            "sha256_hex": "c0c9ca6b07026a330829e671bc8e97412f8f7615d7ad574d7649e350b3de7464"
+        }
+    ],
+    "invalid": [
+        {
+            "name": "pipe_in_qr",
+            "description": "A '|' inside the QR would shift every later field: the string is refused, never built.",
+            "input": {
+                "tenant_id": "0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d",
+                "employee_id": "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "work_center_id": "3f2e1d0c-9b8a-4766-a554-433221100ffe",
+                "mark_type": "start",
+                "basis": "qr_window",
+                "qr": "29652320.ab|cd",
+                "declared_at": 1795611600,
+                "lat_e5": 1916543,
+                "lng_e5": -9913270,
+                "accuracy_m": 12,
+                "agreement_version": 3,
+                "seq": 1,
+                "pass_id": null,
+                "ticket": "v1.cGF5bG9hZA.aG1hYw"
+            }
+        },
+        {
+            "name": "pipe_in_ticket",
+            "description": "A '|' inside the ticket is refused too (no field may contain it).",
+            "input": {
+                "tenant_id": "0b9a1e5c-6f0e-4d3a-9d0e-1c2f3a4b5c6d",
+                "employee_id": "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+                "work_center_id": "3f2e1d0c-9b8a-4766-a554-433221100ffe",
+                "mark_type": "start",
+                "basis": "qr_window",
+                "qr": "29652320.abababababababababababababababababababababababababababababababab",
+                "declared_at": 1795611600,
+                "lat_e5": 1916543,
+                "lng_e5": -9913270,
+                "accuracy_m": 12,
+                "agreement_version": 3,
+                "seq": 1,
+                "pass_id": null,
+                "ticket": "v1.pay|load.hmac"
+            }
+        }
+    ]
+}

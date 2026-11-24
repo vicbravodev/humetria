@@ -13,6 +13,7 @@ use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Closure;
 use Cose\Algorithms;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
@@ -53,6 +54,9 @@ use Webauthn\TrustPath\EmptyTrustPath;
  * eligibility it was linked with, and its
  * device must not be revoked nor its person gone. Every failure gives the same InvalidCredential, and nothing here logs:
  * no credential id, public key or challenge reaches a log.
+ *
+ * `verifyChallenge` verifies a challenge the caller built (the offline mark): no cache, no counter, nothing written; a key
+ * revoked after the ticket was issued still verifies and its revocation date is returned.
  */
 final readonly class WebAuthnCeremony
 {
@@ -147,6 +151,43 @@ final readonly class WebAuthnCeremony
 
             return new SignedBy($device->id, $device->employee_id);
         });
+    }
+
+    /**
+     * Whose device signed `$expected`, a challenge the caller built (the offline mark): the origin, the relying party, the
+     * person verified, the signature and the backup eligibility are checked as in `verifyAssertion`, but no cache entry is
+     * consumed, the counter is neither checked nor moved and nothing is written. A device revoked after `$ticketIssuedAt`
+     * still verifies, and its revocation date comes back; one revoked at that instant or before does not. Whether the person
+     * is still active is not asked here.
+     *
+     * @param  string  $expected  the 32 raw bytes of the challenge
+     * @param  array<mixed>  $response  the browser's PublicKeyCredential as JSON
+     *
+     * @throws InvalidCredential for any answer that does not verify
+     */
+    public function verifyChallenge(string $expected, array $response, CarbonImmutable $ticketIssuedAt): SignedBy
+    {
+        $credential = $this->credential($response);
+        $assertion = $credential->response;
+
+        if (! $assertion instanceof AuthenticatorAssertionResponse) {
+            throw new InvalidCredential;
+        }
+
+        $device = WorkerCredential::query()
+            ->where('credential_id', self::encode($credential->rawId))
+            ->where(fn (Builder $revoked) => $revoked->whereNull('revoked_at')->orWhere('revoked_at', '>', $ticketIssuedAt))
+            ->first();
+
+        if ($device === null) {
+            throw new InvalidCredential;
+        }
+
+        // The library's checks, minus the counter: synced keys report 0 and a delivery out of order would break the other keys'.
+        self::verified(fn (): CredentialRecord => AuthenticatorAssertionResponseValidator::create($this->steps(countless: true)->requestCeremony())
+            ->check($this->record($device), $assertion, $this->requestOptions($expected), $this->rpId(), null));
+
+        return new SignedBy($device->id, $device->employee_id, $device->revoked_at);
     }
 
     private function creationOptions(string $employeeId, string $name, string $challenge): PublicKeyCredentialCreationOptions
@@ -267,10 +308,14 @@ final readonly class WebAuthnCeremony
         return is_array($json) ? $json : [];
     }
 
-    private function steps(): CeremonyStepManagerFactory
+    private function steps(bool $countless = false): CeremonyStepManagerFactory
     {
         $factory = new CeremonyStepManagerFactory;
         $factory->setAllowedOrigins(array_values(array_filter(config()->array('fortify.passkeys.allowed_origins'), is_string(...))));
+
+        if ($countless) {
+            $factory->setCounterChecker(new IgnoreCounter);
+        }
 
         return $factory;
     }

@@ -83,3 +83,8 @@ muestra una vez en el flash `accessLink`; la bitácora (`worker_access.link_issu
   módulo etiqueta la suya `worker.sections`; `Support/WorkerSections` las junta en un orden fijo y una que falla se reporta
   y se omite sin tumbar el inicio.
 - `WorkerSignatures` y `WorkerCredentials`: firmar y leer llaves (los usa Attendance). `WorkerKeys`: crear una llave.
+  `WorkerSignatures::verifyChallenge($expected, $response, $ticketIssuedAt)` verifica un reto que armó quien llama (la marca
+  sin conexión; `$expected` son los 32 bytes crudos del SHA-256 de su cadena canónica): sin caché, sin contador y sin escribir
+  nada, así que verificar dos veces la misma firma da lo mismo. Una llave revocada después de `$ticketIssuedAt` todavía
+  verifica y `SignedBy::$revokedAt` lo dice; una revocada en ese instante o antes da null. No pregunta si la persona sigue
+  activa: eso es de quien llama.

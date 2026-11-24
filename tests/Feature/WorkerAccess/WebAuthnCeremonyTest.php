@@ -282,12 +282,102 @@ describe('assertion', function (): void {
     ]);
 });
 
+/** The phone's answer to the 32 raw bytes of `$expected`, given as the WebAuthn challenge. */
+function signedChallenge(SoftAuthenticator $phone, string $employeeId, string $expected, bool $userVerified = true, ?string $origin = null, ?string $rpId = null, bool $tamper = false): array
+{
+    return $phone->get(['challenge' => Base64UrlSafe::encodeUnpadded($expected)], $employeeId, userVerified: $userVerified, origin: $origin, rpId: $rpId, tamper: $tamper);
+}
+
+describe('verifyChallenge', function (): void {
+    beforeEach(function (): void {
+        $this->expected = hash('sha256', 'humetria-offline-mark-v1|a mark', true);
+        $this->issuedAt = CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC');
+    });
+
+    it('verifies counters that arrive out of order and leaves the stored counter where it was', function (): void {
+        $device = enrolledDevice($this->phone, $this->ana->id);
+        $this->phone->counter = 4;
+        $later = signedChallenge($this->phone, $this->ana->id, $this->expected);
+        $this->phone->counter = 2;
+        $earlier = signedChallenge($this->phone, $this->ana->id, $this->expected);
+
+        expect($this->ceremony->verifyChallenge($this->expected, $later, $this->issuedAt)->credentialId)->toBe($device->id)
+            ->and($this->ceremony->verifyChallenge($this->expected, $earlier, $this->issuedAt)->credentialId)->toBe($device->id)
+            ->and($device->fresh())->sign_count->toBe(0);
+    });
+
+    it('verifies a synced key, whose counter is always 0', function (): void {
+        $phone = new SoftAuthenticator(countsSignatures: false);
+        $device = enrolledDevice($phone, $this->ana->id);
+
+        expect($this->ceremony->verifyChallenge($this->expected, signedChallenge($phone, $this->ana->id, $this->expected), $this->issuedAt)->credentialId)->toBe($device->id);
+    });
+
+    it('refuses a signature without verifying the person, or for another site or relying party', function (array $bend): void {
+        enrolledDevice($this->phone, $this->ana->id);
+
+        expectRefused(fn () => $this->ceremony->verifyChallenge($this->expected, signedChallenge($this->phone, $this->ana->id, $this->expected, ...$bend), $this->issuedAt));
+    })->with([
+        'not verified' => [['userVerified' => false]],
+        'another origin' => [['origin' => 'https://evil.test']],
+        'another relying party' => [['rpId' => 'evil.test']],
+    ]);
+
+    it('refuses a key that changes whether it is backup eligible after it was linked', function (bool $eligible): void {
+        $this->phone->backupEligible = $eligible;
+        enrolledDevice($this->phone, $this->ana->id);
+        $this->phone->backupEligible = ! $eligible;
+        $this->phone->backedUp = false;
+
+        expectRefused(fn () => $this->ceremony->verifyChallenge($this->expected, signedChallenge($this->phone, $this->ana->id, $this->expected), $this->issuedAt));
+    })->with(['device-bound turns synced' => [false], 'synced turns device-bound' => [true]]);
+
+    it('refuses a signature that was altered, and anything that is not a signature, with the same answer', function (): void {
+        enrolledDevice($this->phone, $this->ana->id);
+        $broken = ['id' => 'AQ', 'rawId' => 'AQ', 'type' => 'public-key', 'response' => ['clientDataJSON' => 'e30', 'authenticatorData' => 'AA', 'signature' => 'AA']];
+
+        expectRefused(fn () => $this->ceremony->verifyChallenge($this->expected, signedChallenge($this->phone, $this->ana->id, $this->expected, tamper: true), $this->issuedAt));
+        expectRefused(fn () => $this->ceremony->verifyChallenge($this->expected, [], $this->issuedAt));
+        expectRefused(fn () => $this->ceremony->verifyChallenge($this->expected, $broken, $this->issuedAt));
+    });
+
+    it('refuses a challenge other than the one expected', function (): void {
+        enrolledDevice($this->phone, $this->ana->id);
+
+        expectRefused(fn () => $this->ceremony->verifyChallenge(hash('sha256', 'another', true), signedChallenge($this->phone, $this->ana->id, $this->expected), $this->issuedAt));
+    });
+
+    it('leaves verifyAssertion, the online one, refusing a counter below the last one after a verifyChallenge', function (): void {
+        $device = enrolledDevice($this->phone, $this->ana->id);
+        $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id));
+        $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id));
+        $this->phone->counter = 0;
+        $this->ceremony->verifyChallenge($this->expected, signedChallenge($this->phone, $this->ana->id, $this->expected), $this->issuedAt);
+        $this->phone->counter = 0;
+
+        expectRefused(fn () => $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id)));
+        expect($device->fresh()->sign_count)->toBe(2);
+    });
+
+    it('consumes nothing: the same answer verifies again', function (): void {
+        enrolledDevice($this->phone, $this->ana->id);
+        $answer = signedChallenge($this->phone, $this->ana->id, $this->expected);
+
+        $this->ceremony->verifyChallenge($this->expected, $answer, $this->issuedAt);
+
+        expect($this->ceremony->verifyChallenge($this->expected, $answer, $this->issuedAt))->not->toBeNull();
+    });
+});
+
 it('writes nothing to the log, so no credential id, public key or challenge reaches it', function (): void {
     Log::spy();
 
     enrolledDevice($this->phone, $this->ana->id);
     $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id));
     expectRefused(fn () => $this->ceremony->verifyAssertion('s', $this->phone->get($this->ceremony->assertionOptions('s'), $this->ana->id, tamper: true)));
+    $expected = hash('sha256', 'humetria-offline-mark-v1|a mark', true);
+    $this->ceremony->verifyChallenge($expected, signedChallenge($this->phone, $this->ana->id, $expected), CarbonImmutable::now());
+    expectRefused(fn () => $this->ceremony->verifyChallenge($expected, [], CarbonImmutable::now()));
 
     foreach (['debug', 'info', 'notice', 'warning', 'error', 'log'] as $level) {
         Log::shouldNotHaveReceived($level);

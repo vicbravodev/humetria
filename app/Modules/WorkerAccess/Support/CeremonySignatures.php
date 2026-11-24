@@ -7,6 +7,7 @@ namespace App\Modules\WorkerAccess\Support;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use App\Modules\WorkerAccess\Data\SignedBy;
 use App\Modules\WorkerAccess\Exceptions\InvalidCredential;
+use Carbon\CarbonImmutable;
 
 final readonly class CeremonySignatures implements WorkerSignatures
 {
@@ -21,6 +22,15 @@ final readonly class CeremonySignatures implements WorkerSignatures
     {
         try {
             return $this->ceremony->verifyAssertion($context, $response);
+        } catch (InvalidCredential) {
+            return null;
+        }
+    }
+
+    public function verifyChallenge(string $expected, array $response, CarbonImmutable $ticketIssuedAt): ?SignedBy
+    {
+        try {
+            return $this->ceremony->verifyChallenge($expected, $response, $ticketIssuedAt);
         } catch (InvalidCredential) {
             return null;
         }
