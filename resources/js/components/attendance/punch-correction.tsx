@@ -11,11 +11,14 @@ export default function PunchCorrection({
     url,
     asking,
     onClose,
+    onSent,
 }: {
     optionsUrl: string;
     url: string;
     asking: { date: string; time: string } | null;
     onClose: () => void;
+    /** The request reached RH (before the sheet closes): what the caller does once it was asked. */
+    onSent?: () => void;
 }) {
     const { working, feedback, ask } = usePunchCorrection({ optionsUrl, url });
 
@@ -34,7 +37,12 @@ export default function PunchCorrection({
                 }
                 working={working}
                 onSend={(draft) =>
-                    void ask(draft).then((sent) => sent && onClose())
+                    void ask(draft).then((sent) => {
+                        if (sent) {
+                            onSent?.();
+                            onClose();
+                        }
+                    })
                 }
                 onClose={onClose}
             />

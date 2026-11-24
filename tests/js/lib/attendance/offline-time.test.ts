@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     clockOf,
+    dayOf,
     declaredFromTime,
     secondsOf,
 } from '@/lib/attendance/offline-time';
@@ -47,6 +48,14 @@ describe('clockOf', () => {
         expect(clockOf(secondsOf(at(8, 2)))).toBe('08:02');
         expect(clockOf(secondsOf(at(17, 45)))).toBe('17:45');
         expect(clockOf(secondsOf(at(0, 5)))).toBe('00:05');
+    });
+});
+
+describe('dayOf', () => {
+    it("writes the unix seconds as the phone's date, Y-m-d", () => {
+        expect(dayOf(secondsOf(at(8, 2)))).toBe('2026-11-25');
+        expect(dayOf(secondsOf(at(23, 59, 30)))).toBe('2026-11-30');
+        expect(dayOf(secondsOf(sharp(0, 0, 1)))).toBe('2026-11-01');
     });
 });
 

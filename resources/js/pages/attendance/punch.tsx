@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import PunchScreen from '@/components/attendance/punch-screen';
-import { usePunch } from '@/hooks/use-punch';
+import { useOfflineAwarePunch } from '@/hooks/use-offline-aware-punch';
 import { useServerNow } from '@/hooks/use-server-now';
 import type { PunchMode, Signer } from '@/lib/attendance/punch';
 
@@ -12,6 +12,7 @@ import type { PunchMode, Signer } from '@/lib/attendance/punch';
  */
 export default function Punch({
     company,
+    slug,
     qr,
     person,
     mode,
@@ -20,6 +21,8 @@ export default function Punch({
     optionsUrl,
     punchUrl,
     forgetUrl,
+    ticketsUrl,
+    deliverUrl,
     weekUrl,
     enterUrl,
     correctionOptionsUrl,
@@ -27,6 +30,8 @@ export default function Punch({
     timezone,
 }: {
     company: string;
+    /** The company's address segment: the phone keeps what it needs to mark without a connection under it. */
+    slug: string;
     qr: string | null;
     person: Signer | null;
     mode: PunchMode;
@@ -36,6 +41,9 @@ export default function Punch({
     optionsUrl: string;
     punchUrl: string;
     forgetUrl: string;
+    /** Where the phone swaps a ticket for a new batch, and where it delivers the marks it made without a connection. */
+    ticketsUrl: string;
+    deliverUrl: string;
     weekUrl: string;
     /** The person's portal: where a person without a key here adds one, and where «Atrás» goes. */
     enterUrl: string;
@@ -43,7 +51,10 @@ export default function Punch({
     correctionUrl: string;
     timezone: string;
 }) {
-    const punch = usePunch({
+    const punch = useOfflineAwarePunch({
+        slug,
+        ticketsUrl,
+        deliverUrl,
         optionsUrl,
         punchUrl,
         forgetUrl,
@@ -60,6 +71,7 @@ export default function Punch({
                 company={company}
                 punch={punch}
                 page={{
+                    slug,
                     mode,
                     scannedAt,
                     weekUrl,

@@ -39,3 +39,11 @@ export function clockOf(seconds: number): string {
 
     return `${pad(instant.getHours())}:${pad(instant.getMinutes())}`;
 }
+
+/** Unix seconds as the phone's date, `Y-m-d`: the day a mark says it was made. */
+export function dayOf(seconds: number): string {
+    const instant = new Date(seconds * 1000);
+    const pad = (value: number) => String(value).padStart(2, '0');
+
+    return `${instant.getFullYear()}-${pad(instant.getMonth() + 1)}-${pad(instant.getDate())}`;
+}

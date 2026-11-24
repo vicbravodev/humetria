@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import DayMarks from '@/components/attendance/day-marks';
 import DayStatusCard from '@/components/attendance/day-status-card';
 import LinkDeviceNote from '@/components/attendance/link-device-note';
@@ -34,6 +35,7 @@ export default function PunchReady({
     timezone,
     now,
     readInApp,
+    notes,
     onMark,
     onCode,
     onForget,
@@ -51,6 +53,8 @@ export default function PunchReady({
     now: number;
     /** The code was read with the app's camera. */
     readInApp: boolean;
+    /** What the screen says of the marks made without a connection: the queue, the ones not accepted, the readiness. */
+    notes?: ReactNode;
     onMark: (type: MarkType) => void;
     /** The camera read the code of the screen of the person's center. */
     onCode: (code: string) => void;
@@ -90,6 +94,7 @@ export default function PunchReady({
                     </>
                 )}
                 <PunchFeedback feedback={feedback} />
+                {notes}
                 {/* In the content, not in the bar of steps: that bar stays compact (hallazgo 16). */}
                 {mode !== 'remote' && (
                     <PunchScanButton read={readInApp} onCode={onCode} />

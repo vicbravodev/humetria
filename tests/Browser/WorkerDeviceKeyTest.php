@@ -29,21 +29,6 @@ afterEach(function (): void {
     Playwright::setHost(null);
 });
 
-/** What the phone keeps for the device key of the company `acme`, as the names of its records in IndexedDB. */
-function keptInPhone(): string
-{
-    return <<<'JS'
-        () => new Promise((resolve) => {
-            const open = indexedDB.open('humetria-me-acme', 1);
-            open.onerror = () => resolve('none');
-            open.onsuccess = () => {
-                const request = open.result.transaction('kv').objectStore('kv').getAllKeys();
-                request.onsuccess = () => resolve(request.result.sort().join(','));
-            };
-        })
-        JS;
-}
-
 it('prepares this phone from Cuenta after the proof, keeps the key in the phone and says it is ready', function (bool $dark, bool $mobile): void {
     $page = visitPage('worker-access/home', '/me/acme', $dark, $mobile, enteringTo($this->ana->id, 'Hola, Ana López'))
         ->assertNoAccessibilityIssues(1);

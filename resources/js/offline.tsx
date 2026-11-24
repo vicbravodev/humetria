@@ -1,9 +1,11 @@
 import { createRoot } from 'react-dom/client';
 import AppErrorBoundary from '@/components/app-error-boundary';
 import OfflineApp from '@/components/attendance/offline-app';
+import type { OfflineQueueUrls } from '@/components/attendance/offline-app';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { cspNonce } from '@/lib/csp-nonce';
 import { killedIn, registerWorkerApp, revisionOf } from '@/lib/pwa/register';
+import { workerSlug } from '@/lib/pwa/sw-rules';
 
 /*
  * The entry of the shell the service worker keeps (`/me/{slug}/offline`, see resources/views/worker-access/offline.blade.php):
@@ -15,6 +17,22 @@ import { killedIn, registerWorkerApp, revisionOf } from '@/lib/pwa/register';
 globalThis.__webpack_nonce__ = cspNonce;
 
 const root = document.getElementById('offline-app');
+
+/** The queue's addresses, when the company has the registro de jornada (without it the page leaves them empty). */
+function queueOf(data: DOMStringMap): OfflineQueueUrls | null {
+    const slug = workerSlug(location.pathname);
+    const { punchUrl, deliverUrl, ticketsUrl } = data;
+
+    return slug !== null &&
+        punchUrl !== undefined &&
+        punchUrl !== '' &&
+        deliverUrl !== undefined &&
+        deliverUrl !== '' &&
+        ticketsUrl !== undefined &&
+        ticketsUrl !== ''
+        ? { slug, punchUrl, deliverUrl, ticketsUrl }
+        : null;
+}
 
 initializeTheme();
 void registerWorkerApp({
@@ -33,9 +51,13 @@ if (root instanceof HTMLElement) {
     createRoot(root).render(
         <AppErrorBoundary>
             {company === undefined || homeUrl === undefined ? (
-                <OfflineApp company="Humetría" homeUrl="/" />
+                <OfflineApp company="Humetría" homeUrl="/" queue={null} />
             ) : (
-                <OfflineApp company={company} homeUrl={homeUrl} />
+                <OfflineApp
+                    company={company}
+                    homeUrl={homeUrl}
+                    queue={queueOf(root.dataset)}
+                />
             )}
         </AppErrorBoundary>,
     );

@@ -88,17 +88,15 @@ function permissionRow(
     state: PermissionState | 'unknown',
 ): ReadinessRow {
     const ok = state === 'granted';
-    const what = key === 'camera' ? 'La cámara' : 'La ubicación';
+    const what = key === 'camera' ? 'la cámara' : 'la ubicación';
+    const text = {
+        granted: `Ya permitió ${what}`,
+        denied: `No permitió ${what}: puede marcar sin ella, pero Recursos Humanos lo verá`,
+        prompt: `Aún no permitió ${what}: puede marcar sin ella, pero Recursos Humanos lo verá`,
+        unknown: `Puede permitir ${what} para que su marca lleve más respaldo`,
+    }[state];
 
-    return {
-        key,
-        ok,
-        blocking: false,
-        text: ok
-            ? `${what} está permitida`
-            : `${what} no está permitida: se puede marcar sin ella, pero Recursos Humanos lo verá`,
-        fix: ok ? null : key,
-    };
+    return { key, ok, blocking: false, text, fix: ok ? null : key };
 }
 
 function signerRow({

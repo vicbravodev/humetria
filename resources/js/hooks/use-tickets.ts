@@ -8,7 +8,7 @@ import { useWhenBack } from '@/hooks/use-when-back';
 import type { Practice } from '@/lib/pwa/offline-store';
 import { postJson } from '@/lib/pwa/post';
 import { requestTickets } from '@/lib/pwa/request-tickets';
-import { stock } from '@/lib/pwa/tickets';
+import { passUsable, stock } from '@/lib/pwa/tickets';
 import type { OfflineContext, Pass, Ticket } from '@/lib/pwa/tickets';
 
 /** How long a request for tickets may take. */
@@ -19,6 +19,8 @@ type Held = {
     context: OfflineContext | null;
     pass: Pass | null;
     practice: Practice | null;
+    /** The pass is still good by the phone's clock, read when the storage was. */
+    passValid: boolean;
 };
 
 const NOTHING: Held = {
@@ -26,6 +28,7 @@ const NOTHING: Held = {
     context: null,
     pass: null,
     practice: null,
+    passValid: false,
 };
 
 /**
@@ -58,7 +61,13 @@ export function useTickets({
             store.practice(),
         ]).then(([tickets, context, pass, practice]) => {
             if (alive) {
-                setHeld({ tickets, context, pass, practice });
+                setHeld({
+                    tickets,
+                    context,
+                    pass,
+                    practice,
+                    passValid: passUsable(pass, Date.now()),
+                });
             }
         });
 
@@ -90,6 +99,7 @@ export function useTickets({
         count: held.tickets.length,
         context: held.context,
         pass: held.pass,
+        passValid: held.passValid,
         practice: held.practice,
         refresh,
     };
