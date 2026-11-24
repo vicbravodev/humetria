@@ -45,7 +45,7 @@ it('has both covers of every article, at the size they promise', function (): vo
     foreach (contentFiles() as $file) {
         $slug = basename($file, '.md');
 
-        foreach (["public/blog/{$slug}.webp", "public/blog/{$slug}-og.jpg"] as $cover) {
+        foreach (["public/images/blog/{$slug}.webp", "public/images/blog/{$slug}-og.jpg"] as $cover) {
             $size = @getimagesize(dirname(__DIR__, 3).'/'.$cover);
 
             expect($size)->not->toBeFalse("{$cover} is missing: run `npm run covers:blog` in video/")

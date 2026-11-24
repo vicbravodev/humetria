@@ -36,16 +36,16 @@ final readonly class Article
         public int $readingMinutes,
     ) {}
 
-    /** The cover shown on the page and the cards: public/blog/{slug}.webp, 1200x630, made by `npm run covers:blog` in video/. */
+    /** The cover shown on the page and the cards: public/images/blog/{slug}.webp, 1200x630, made by `npm run covers:blog` in video/. */
     public function cover(): string
     {
-        return '/blog/'.$this->slug.'.webp';
+        return '/images/blog/'.$this->slug.'.webp';
     }
 
     /** The cover with the title on it, for Open Graph and the JSON-LD image (a JPEG: not every crawler reads WebP). */
     public function ogImage(): string
     {
-        return '/blog/'.$this->slug.'-og.jpg';
+        return '/images/blog/'.$this->slug.'-og.jpg';
     }
 
     /** Published means reviewed by the owner and dated today or earlier. */
