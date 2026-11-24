@@ -1,11 +1,14 @@
 import {
     NETWORK_TIMEOUT_MS,
+    NOTICE,
     cacheName,
     fallsBackToShell,
+    punchUrl,
     routeOf,
     shellAssets,
     shellUrl,
     staleCaches,
+    windowInScope,
     workerSlug,
 } from '@/lib/pwa/sw-rules';
 
@@ -13,6 +16,7 @@ import {
  * The service worker of a company's app (`/me/{slug}/sw.js`, scope `/me/{slug}`). It keeps only the files of the build and
  * the shell (`/me/{slug}/offline`): never the HTML of a page, never data of a person, never a request that is not a GET.
  * A page is always asked of the network first; the shell answers only when there is no network or it took too long.
+ * A push arrives with no body and always shows the same fixed text; a tap on it opens Marcar (see the notices in sw-rules).
  * It imports nothing but sw-rules: it is served as one classic file (see vite.config.ts).
  */
 declare const self: ServiceWorkerGlobalScope;
@@ -101,4 +105,37 @@ self.addEventListener('fetch', (event) => {
     } else if (route === 'navigation') {
         event.respondWith(pageOf(request));
     }
+});
+
+// Every push shows the notice, whatever arrives (and nothing is read from it): iOS revokes a subscription whose push shows nothing.
+self.addEventListener('push', (event) => {
+    event.waitUntil(
+        self.registration.showNotification(NOTICE.title, { body: NOTICE.body }),
+    );
+});
+
+// A tap goes to a window of the company's app that is already open, or opens Marcar (the icon's own address).
+async function openApp(): Promise<void> {
+    const windows = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+    });
+    const open =
+        windows[
+            windowInScope(
+                windows.map((win) => win.url),
+                scopePath,
+            )
+        ];
+
+    if (open === undefined) {
+        await self.clients.openWindow(punchUrl(scope));
+    } else {
+        await open.focus();
+    }
+}
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(openApp());
 });

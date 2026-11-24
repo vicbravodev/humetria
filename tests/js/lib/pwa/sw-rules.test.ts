@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     NETWORK_TIMEOUT_MS,
+    NOTICE,
     cacheName,
     fallsBackToShell,
     inScope,
@@ -9,6 +10,7 @@ import {
     shellAssets,
     shellUrl,
     staleCaches,
+    windowInScope,
     workerSlug,
 } from '@/lib/pwa/sw-rules';
 
@@ -179,5 +181,39 @@ describe('caches', () => {
             'humetria-pwa-acme-old111',
         ]);
         expect(staleCaches(keys, 'acme-industrial', 'old111')).toEqual([]);
+    });
+});
+
+describe('NOTICE', () => {
+    it('is the fixed text every push shows: the notice arrives with no body and says nothing of anyone', () => {
+        expect(NOTICE).toEqual({
+            title: 'Humetría',
+            body: 'Tiene un aviso en Humetría',
+        });
+    });
+});
+
+describe('windowInScope', () => {
+    it('finds the first open window of the company, wherever it is in the app', () => {
+        expect(
+            windowInScope(
+                [
+                    'https://app.test/admin',
+                    'https://app.test/me/acme/week',
+                    'https://app.test/me/acme',
+                ],
+                '/me/acme',
+            ),
+        ).toBe(1);
+    });
+
+    it('does not take a window of another company with the same beginning', () => {
+        expect(
+            windowInScope(['https://app.test/me/acme-industrial'], '/me/acme'),
+        ).toBe(-1);
+    });
+
+    it('says there is none when nothing is open', () => {
+        expect(windowInScope([], '/me/acme')).toBe(-1);
     });
 });

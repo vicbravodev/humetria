@@ -15,6 +15,7 @@ import type { WorkerSection } from '@/types';
 export default function HomeScreen({
     company,
     name,
+    slug,
     sections,
     keyUrl,
     hasKey,
@@ -22,6 +23,7 @@ export default function HomeScreen({
 }: {
     company: string;
     name: string;
+    slug: string;
     sections: WorkerSection[];
     keyUrl: string | null;
     hasKey: boolean;
@@ -51,6 +53,7 @@ export default function HomeScreen({
                     <HomeStart
                         company={company}
                         name={name}
+                        slug={slug}
                         waiting={waiting}
                         tools={tools}
                     />
@@ -60,6 +63,7 @@ export default function HomeScreen({
                     <HomeAccount
                         company={company}
                         name={name}
+                        slug={slug}
                         keyUrl={keyUrl}
                         hasKey={hasKey}
                         leaveUrl={leaveUrl}

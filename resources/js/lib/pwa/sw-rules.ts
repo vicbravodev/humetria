@@ -59,9 +59,23 @@ export function shellUrl(scope: string): string {
     return `${scope}/offline`;
 }
 
+/**
+ * The notice every push shows. The push arrives with no body and the text is fixed here: nothing of the person, the company or
+ * the mark can reach the lock screen (and iOS revokes a subscription whose push shows nothing, so every push shows this).
+ */
+export const NOTICE = {
+    title: 'Humetría',
+    body: 'Tiene un aviso en Humetría',
+} as const;
+
 /** Where the icon opens and where a tap on a notice goes. */
 export function punchUrl(scope: string): string {
     return `${scope}/punch`;
+}
+
+/** The index of the first open window that is in the company's app (a tap on a notice focuses it); -1 when there is none. */
+export function windowInScope(urls: string[], scopePath: string): number {
+    return urls.findIndex((url) => inScope(new URL(url).pathname, scopePath));
 }
 
 /** The files of the build the shell loads: its module scripts, stylesheets and preloads, from this origin. */

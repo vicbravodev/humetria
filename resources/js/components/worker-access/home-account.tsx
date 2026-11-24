@@ -12,12 +12,14 @@ const CAPTION =
 export default function HomeAccount({
     company,
     name,
+    slug,
     keyUrl,
     hasKey,
     leaveUrl,
 }: {
     company: string;
     name: string;
+    slug: string;
     keyUrl: string | null;
     hasKey: boolean;
     leaveUrl: string;
@@ -66,7 +68,7 @@ export default function HomeAccount({
             )}
             <section className="flex flex-col gap-2">
                 <h2 className={CAPTION}>Al terminar</h2>
-                <LeaveButton url={leaveUrl} />
+                <LeaveButton url={leaveUrl} slug={slug} />
                 <p className="text-base text-muted-foreground">
                     Sobre todo si usa un dispositivo compartido.
                 </p>

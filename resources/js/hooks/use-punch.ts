@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { forgetPushHere, rememberMarkHere } from '@/hooks/use-push-offer';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import { currentPosition } from '@/lib/attendance/geolocation';
 import type { LocationError } from '@/lib/attendance/geolocation';
@@ -10,6 +11,7 @@ import type { PunchPhase } from '@/lib/attendance/punch-phase';
 import type { PunchMode, Signer } from '@/lib/attendance/punch';
 import { stateAfter } from '@/lib/attendance/punch-state';
 import type { PunchState } from '@/lib/attendance/punch-state';
+import { workerSlug } from '@/lib/pwa/sw-rules';
 import type { SignedKey } from '@/lib/webauthn';
 
 /** `navigator.credentials.get()` for a signature; null when the browser gave something else. */
@@ -43,6 +45,27 @@ async function locate(ask: boolean) {
     return located.ok
         ? { position: located.position, error: null }
         : { position: null, error: located.error };
+}
+
+/**
+ * «¿No es usted?»: this phone gives the notices of the person up first (best effort), then the browser forgets them. The company
+ * is the one in the address.
+ */
+async function forgetHere(
+    forgetUrl: string,
+    onForgotten: () => void,
+): Promise<void> {
+    const slug = workerSlug(window.location.pathname);
+
+    if (slug !== null) {
+        await forgetPushHere(slug);
+    }
+
+    router.post(
+        forgetUrl,
+        {},
+        { preserveScroll: true, onSuccess: onForgotten },
+    );
 }
 
 /**
@@ -127,6 +150,11 @@ export function usePunch({
                 (outcome.kind === 'failed' && outcome.reason === 'no_location'),
         );
         setState(stateAfter(outcome));
+
+        if (outcome.kind === 'done') {
+            // The first accepted mark is when the start may offer the notices.
+            rememberMarkHere();
+        }
     };
 
     const next = state.person?.next ?? [];
@@ -144,12 +172,7 @@ export function usePunch({
         mark,
         accept: (version: number) =>
             void mark(stepThatProceeds(tapped, next), version),
-        forget: () =>
-            router.post(
-                forgetUrl,
-                {},
-                { preserveScroll: true, onSuccess: () => setState(NOBODY) },
-            ),
+        forget: () => forgetHere(forgetUrl, () => setState(NOBODY)),
         retry: () =>
             stepThatProceeds(tapped, next) === tapped
                 ? void mark(tapped)

@@ -6,6 +6,7 @@ import type { WorkerSection } from '@/types';
 export default function Home(props: {
     company: string;
     name: string;
+    slug: string;
     sections: WorkerSection[];
     keyUrl: string | null;
     hasKey: boolean;

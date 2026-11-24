@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Modules\Notifications\Models\PushSubscription;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
+use Minishlink\WebPush\VAPID;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\On;
 use Pest\Browser\Api\PendingAwaitablePage;
@@ -196,4 +198,135 @@ it('does not show the install guide on a computer', function (): void {
     anaStartOn(visit('/me/acme/link/install-token')->inLightMode())
         ->assertDontSee('Instale la app en su teléfono')
         ->assertDontSee('Ábralo en Safari o Chrome');
+});
+
+/**
+ * Makes the page behave as a phone that can push: the system's permission is `default` (or the one given), its box answers «granted»
+ * and the worker's registration is a double that keeps what is subscribed in `window` (a real push manager does not exist in the
+ * test). `$marked` says whether a mark was accepted in this browser, as use-punch writes it. The start reads all this when it opens,
+ * so the test leaves it and comes back (Cuenta, then Inicio).
+ */
+function pushPhone(AwaitableWebpage $page, bool $marked = true, string $permission = 'default', ?string $subscribedTo = null): void
+{
+    $marked = $marked ? 'true' : 'false';
+    $subscribed = $subscribedTo === null ? 'null' : json_encode($subscribedTo, JSON_THROW_ON_ERROR);
+
+    $page->script(<<<JS
+        () => {
+            if ({$marked}) localStorage.setItem('humetria-push-marked', '1');
+            Object.defineProperty(Notification, 'permission', { get: () => '{$permission}', configurable: true });
+            Notification.requestPermission = () => Promise.resolve('granted');
+            const make = (endpoint) => ({
+                endpoint,
+                options: { applicationServerKey: null },
+                toJSON: () => ({ endpoint, keys: { p256dh: 'x'.repeat(87), auth: 'y'.repeat(22) } }),
+                unsubscribe: () => { window.unsubscribed = true; return Promise.resolve(true); },
+            });
+            // How many requests that change the notices (POST or DELETE of .../push) have finished: the test waits on it, then looks at the server.
+            const real = window.fetch;
+            window.pushSent = 0;
+            window.fetch = (url, init) => real(url, init).finally(() => {
+                if ((init?.method ?? 'GET') !== 'GET' && String(url).endsWith('/push')) window.pushSent++;
+            });
+            window.subscribed = {$subscribed} === null ? null : make({$subscribed});
+            navigator.serviceWorker.getRegistration = () => Promise.resolve({
+                pushManager: {
+                    getSubscription: () => Promise.resolve(window.subscribed),
+                    subscribe: () => { window.subscribed = make('https://fcm.googleapis.com/fcm/send/ana-phone'); return Promise.resolve(window.subscribed); },
+                },
+            });
+        }
+        JS);
+}
+
+/** Leaves the start and comes back, so it reads the phone again. */
+function reopenStart(AwaitableWebpage $page): AwaitableWebpage
+{
+    return $page->press('Cuenta')->waitForText('Su cuenta')->press('Inicio')->waitForText('Hola, Ana López');
+}
+
+/** Waits until the page's request to the notices is over (the server then has what it will keep), and says how many phones Ana has. */
+function anaPhones(AwaitableWebpage $page): int
+{
+    $page->assertScript(eventually('() => window.pushSent > 0'), true);
+
+    return PushSubscription::query()->where('employee_id', test()->ana->id)->count();
+}
+
+beforeEach(function (): void {
+    $keys = VAPID::createVapidKeys();
+    config(['services.vapid' => ['public_key' => $keys['publicKey'], 'private_key' => $keys['privateKey'], 'subject' => 'mailto:soporte@acme.mx']]);
+});
+
+it('does not offer the notices before a first mark was accepted', function (): void {
+    $page = anaStartOn(visit('/me/acme/link/install-token')->inLightMode());
+    pushPhone($page, marked: false);
+
+    reopenStart($page)->assertDontSee('¿Le avisamos?')->assertDontSee('Sí, avisarme');
+});
+
+it('offers the notices after a first mark, saying what they will say before the system asks', function (bool $dark, bool $mobile): void {
+    $pending = $mobile ? visit('/me/acme/link/install-token')->on()->mobile() : visit('/me/acme/link/install-token');
+    $page = anaStartOn($dark ? $pending->inDarkMode() : $pending->inLightMode());
+    pushPhone($page);
+
+    reopenStart($page)
+        ->assertSee('¿Le avisamos?')
+        ->assertSee('¿Le avisamos cuando Recursos Humanos revise sus marcas sin internet o responda sus correcciones?')
+        ->assertSee('Tiene un aviso en Humetría')
+        ->assertSee('Sí, avisarme')
+        ->assertSee('Ahora no')
+        ->assertScript(spilledOut(), '')
+        ->assertScript(settled(), true)
+        ->assertNoAccessibilityIssues(1);
+})->with([
+    'light desktop' => [false, false],
+    'dark mobile' => [true, true],
+]);
+
+it('hides the offer with «Ahora no» and does not bring it back for 14 days', function (): void {
+    $page = anaStartOn(visit('/me/acme/link/install-token')->inLightMode());
+    pushPhone($page);
+    reopenStart($page)->assertSee('¿Le avisamos?')->press('Ahora no')->assertDontSee('¿Le avisamos?');
+
+    $page->assertScript("() => localStorage.getItem('humetria-push-dismissed') !== null", true);
+    reopenStart($page)->assertDontSee('¿Le avisamos?');
+    expect(PushSubscription::query()->count())->toBe(0);
+});
+
+it('subscribes the phone when the person says yes, for the person of the session', function (): void {
+    $page = anaStartOn(visit('/me/acme/link/install-token')->inLightMode());
+    pushPhone($page);
+
+    // The comma makes the text look like a list of selectors, so the button is named by a selector.
+    reopenStart($page)->press('button:has-text("Sí, avisarme")')->assertScript(eventually('() => !document.body.innerText.includes("¿Le avisamos?")'), true);
+
+    expect(anaPhones($page))->toBe(1)
+        ->and(PushSubscription::query()->sole()->endpoint)->toBe('https://fcm.googleapis.com/fcm/send/ana-phone');
+});
+
+it('subscribes by itself, with no offer, when the system already allowed the notices', function (): void {
+    $page = anaStartOn(visit('/me/acme/link/install-token')->inLightMode());
+    pushPhone($page, marked: false, permission: 'granted');
+
+    reopenStart($page)->assertDontSee('¿Le avisamos?');
+
+    expect(anaPhones($page))->toBe(1);
+});
+
+it('gives the phone up when the person taps «Salir»: the server forgets it and the browser drops it', function (): void {
+    PushSubscription::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'endpoint' => 'https://fcm.googleapis.com/fcm/send/ana-phone']);
+    $page = anaStartOn(visit('/me/acme/link/install-token')->inLightMode());
+    pushPhone($page, subscribedTo: 'https://fcm.googleapis.com/fcm/send/ana-phone');
+
+    $page->press('Cuenta')->waitForText('Su cuenta')->press('Salir')->waitForText('Entre a su portal');
+
+    $page->assertScript('() => window.unsubscribed === true', true);
+    expect(PushSubscription::query()->count())->toBe(0);
+});
+
+it('leaves even when the phone has no push at all', function (): void {
+    $page = anaStartOn(visit('/me/acme/link/install-token')->inLightMode());
+
+    $page->press('Cuenta')->waitForText('Su cuenta')->press('Salir')->waitForText('Entre a su portal')->assertDontSee('Ana López');
 });

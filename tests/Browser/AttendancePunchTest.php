@@ -10,6 +10,7 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Support\QrToken;
+use App\Modules\Notifications\Models\PushSubscription;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -242,6 +243,45 @@ it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', funct
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Bob")', true)
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
+});
+
+it('remembers in the browser that a mark was accepted, only then: that is when the start may offer the notices', function (): void {
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4327, -99.1332);
+    $page->assertScript("() => localStorage.getItem('humetria-push-marked')", null);
+
+    $page->press('button:has-text("Entrada")')->waitForText('Entrada registrada');
+
+    $page->assertScript("() => localStorage.getItem('humetria-push-marked')", '1');
+});
+
+it('does not remember a mark that was refused', function (): void {
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4336, -99.1332);
+
+    $page->press('button:has-text("Entrada")')->waitForText('Está fuera de la zona');
+
+    $page->assertScript("() => localStorage.getItem('humetria-push-marked')", null);
+});
+
+it('gives the phone\'s notices up with «¿No es usted?»: the server forgets it and the browser drops it', function (): void {
+    PushSubscription::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'endpoint' => 'https://fcm.googleapis.com/fcm/send/ana-phone']);
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4327, -99.1332);
+    $page->press('button:has-text("Entrada")')->waitForText('Entrada registrada')->press('Listo')->waitForText('Está trabajando');
+    // The worker's registration is a double (a real push manager does not exist in the test): this phone is subscribed as Ana's.
+    $page->script(<<<'JS'
+        () => {
+            const endpoint = 'https://fcm.googleapis.com/fcm/send/ana-phone';
+            const subscription = { endpoint, options: { applicationServerKey: null }, unsubscribe: () => { window.unsubscribed = true; return Promise.resolve(true); } };
+            navigator.serviceWorker.getRegistration = () => Promise.resolve({ pushManager: { getSubscription: () => Promise.resolve(subscription) } });
+        }
+        JS);
+
+    $page->press('¿No es usted?')->waitForText('Marcar su jornada');
+
+    $page->assertScript('() => window.unsubscribed === true', true);
+    expect(PushSubscription::query()->count())->toBe(0);
 });
 
 it('keeps the steps compact at the foot of a phone, so the content is seen first (hallazgo 16)', function (): void {
