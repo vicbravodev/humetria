@@ -40,7 +40,7 @@ final readonly class CurrentAgreement
     private static function text(int $retentionMonths): string
     {
         return implode("\n\n", [
-            'Cómo se registra. Usted registra el inicio y el fin de su jornada, y el inicio y el fin de sus pausas, con este dispositivo y su huella, su rostro o el PIN de su teléfono. La hora la pone el servidor, no su teléfono.',
+            'Cómo se registra. Usted registra el inicio y el fin de su jornada, y el inicio y el fin de sus pausas, con este dispositivo y su huella, su rostro o el PIN de su teléfono. En una marca hecha con conexión, la hora la pone el servidor. En una marca hecha sin conexión, la hora que usted indica se acota con lo que el servidor sí puede comprobar y la revisa Recursos Humanos.',
             'Qué se guarda. El tipo de marca, la hora y la ubicación: las coordenadas, su precisión y la zona del centro de trabajo donde marcó, tomadas solo en el momento en que usted marca. Si su centro de trabajo marca en campo, la ubicación se guarda aunque usted marque fuera de las zonas del centro. Nunca se toma su ubicación en otro momento ni en segundo plano.',
             'Quién lo ve. Usted siempre puede ver su propio registro. Además, solo lo ven Recursos Humanos y las personas que su empresa autorice.',
             'Cómo se corrige. Si una marca está mal, se pide una corrección. La corrección es una marca nueva que dice quién la hizo y por qué; la marca original no se borra ni se cambia. Cada semana usted revisa su registro y lo confirma u objeta.',

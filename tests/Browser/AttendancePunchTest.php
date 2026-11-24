@@ -297,6 +297,8 @@ it('accepts the agreement and marks the step that proceeds with one signature, w
         ->waitForText('Antes de marcar, acepte el acuerdo')
         ->assertSee('Acuerdo de registro · versión 1')
         ->assertSee('Valor de prueba')
+        ->assertSee('En una marca hecha sin conexión, la hora que usted indica se acota')
+        ->assertDontSee('La hora la pone el servidor, no su teléfono')
         ->assertSee('Ahora no')
         ->assertScript(smallTouchTargets(), '')
         ->assertNoAccessibilityIssues(1)
