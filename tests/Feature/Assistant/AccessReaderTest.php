@@ -66,7 +66,7 @@ it('tells the owner how many own roles the company has of the maximum, how many 
 
     $line = accessLine(accessScopeOf($this->a, $this->owner));
 
-    expect($line)->toMatchArray(['label' => 'Roles y permisos', 'state' => 'up_to_date', 'stateLabel' => 'Al día', 'link' => "/admin/{$this->a->slug}/roles"])
+    expect($line)->toMatchArray(['label' => 'Roles y permisos', 'state' => 'not_applicable', 'stateLabel' => 'Informativo', 'link' => "/admin/{$this->a->slug}/roles"])
         ->and($line['summary'])->toBe('Tienes 2 de 20 roles propios. Personas por rol: Administra todo, 1; Ayuda con las rutas, 1; Auditoría, 2. 1 persona tiene permisos además de su rol. Tú administras todo lo que incluye tu plan, también los roles y las personas.');
 });
 
@@ -146,4 +146,10 @@ it('tells the model the overview also answers who can do what', function (): voi
     $description = (string) resolve(GetComplianceOverview::class, ['scope' => accessScopeOf($this->a, $this->owner)])->description();
 
     expect($description)->toContain('roles y permisos')->toContain('qué puede hacer quien pregunta');
+});
+
+it('does not call the access line up to date for anyone: it only informs, as it is no norm to comply with', function (): void {
+    $viewer = memberOf($this->a, TenantRole::Viewer);
+
+    expect(accessLine(accessScopeOf($this->a, $viewer)))->toMatchArray(['state' => 'not_applicable', 'stateLabel' => 'Informativo']);
 });

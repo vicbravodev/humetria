@@ -60,6 +60,7 @@ final readonly class AccessReader implements ComplianceReader
 
     private function line(string $summary, string $link): ComplianceStatus
     {
-        return new ComplianceStatus('access', 'Roles y permisos', 'up_to_date', 'Al día', $summary, $link);
+        // Roles are not a norm to comply with: a neutral badge that only informs, never «Al día».
+        return new ComplianceStatus('access', 'Roles y permisos', 'not_applicable', 'Informativo', $summary, $link);
     }
 }
