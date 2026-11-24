@@ -33,6 +33,8 @@ return new class extends Migration
 
         DB::statement('ALTER TABLE tenant_invitations ADD CONSTRAINT tenant_invitations_open_has_role CHECK (role_id IS NOT NULL OR accepted_at IS NOT NULL OR cancelled_at IS NOT NULL)');
         DB::statement("ALTER TABLE tenant_invitations ADD CONSTRAINT tenant_invitations_extra_permissions_list CHECK (jsonb_typeof(extra_permissions) = 'array')");
+        // Postgres takes no subquery in a partial index, so the owner template's id is written in as it is in this database:
+        // it never changes (templates are never deleted or recreated), and a database rebuilt from the migrations gets its own.
         DB::statement("CREATE UNIQUE INDEX tenant_invitations_one_open_owner ON tenant_invitations (tenant_id) WHERE role_id = {$owner} AND accepted_at IS NULL AND cancelled_at IS NULL");
         DB::statement("CREATE UNIQUE INDEX tenant_invitations_one_open_per_email ON tenant_invitations (tenant_id, email) WHERE role_id <> {$owner} AND accepted_at IS NULL AND cancelled_at IS NULL");
         DB::statement('CREATE INDEX tenant_invitations_role_id_index ON tenant_invitations (role_id)');
@@ -47,7 +49,8 @@ return new class extends Migration
             $table->string('role', 20)->nullable();
         });
 
-        // Invitations to a role of the company's own have no place in the old column.
+        // Invitations to a role of the company's own, and closed ones whose role was deleted, have no place in the old
+        // column: going back DELETES them, open or not.
         DB::statement("UPDATE tenant_invitations SET role = roles.name FROM roles WHERE roles.id = tenant_invitations.role_id AND roles.name IN ('owner', 'hr', 'viewer', 'committee', 'complaints')");
         DB::statement('DELETE FROM tenant_invitations WHERE role IS NULL');
 
