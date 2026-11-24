@@ -30,6 +30,7 @@ export type * from './tool-page';
 export type * from './platform-users';
 export type * from './tenancy';
 export type * from './roles';
+export type * from './tenant-can';
 export type * from './nom035-dossier';
 export type * from './ui';
 export type * from './results';

@@ -136,6 +136,11 @@ final class ResolveTenant
                 'manage_pulse' => $user->can('manage-pulse'),
                 'view_worker_access' => $user->can('view-worker-access'),
                 'manage_worker_access' => $user->can('manage-worker-access'),
+                // The pages every template opens, which a role of the company's own may not: the menu hides what would answer 403.
+                'view_dashboard' => $user->can('view-dashboard'),
+                'view_work_centers' => $user->can('view-work-centers'),
+                'view_nom035_route' => $user->can('view-nom035-route'),
+                'view_telework' => $user->can('view-telework'),
             ], $status->isReadOnly()),
             'permissions' => $permissions,
         ]);

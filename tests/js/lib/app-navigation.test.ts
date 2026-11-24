@@ -27,6 +27,7 @@ const ACME_PAGES = [
     '/admin/acme/employees',
     '/admin/acme/access',
     '/admin/acme/members',
+    '/admin/acme/roles',
     '/admin/acme/plan',
     '/admin/acme/privacy',
 ];
@@ -63,6 +64,7 @@ describe('mainNavItems', () => {
             'Empleados',
             'Accesos',
             'Usuarios',
+            'Roles',
             'Plan y uso',
             'Privacidad',
         ]);

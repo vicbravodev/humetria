@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { activeChild, mainNavItems } from '@/lib/app-navigation';
 import { listeningNavItems } from '@/lib/tool-navigation';
 import { toUrl } from '@/lib/utils';
+import { coverage } from '../support/tenant-can';
 import type { CurrentTenant } from '@/types';
 
 const ability = (handle: boolean, manage: boolean): CurrentTenant['can'] => ({
@@ -26,6 +27,7 @@ const ability = (handle: boolean, manage: boolean): CurrentTenant['can'] => ({
     handle_complaints: handle,
     view_worker_access: false,
     manage_worker_access: false,
+    ...coverage,
     view_attendance: false,
     manage_attendance: false,
     view_org_chart: false,

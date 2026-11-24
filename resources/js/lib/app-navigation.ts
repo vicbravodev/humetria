@@ -4,6 +4,7 @@ import {
     KeyRound,
     Layers,
     ShieldCheck,
+    IdCard,
     UserCog,
     Users,
 } from 'lucide-react';
@@ -15,6 +16,7 @@ import { dashboard as tenantDashboard, plan } from '@/routes/tenant';
 import { edit as privacy } from '@/routes/tenant/privacy';
 import { index as employees } from '@/routes/tenant/employees';
 import { index as members } from '@/routes/tenant/members';
+import { index as roles } from '@/routes/tenant/roles';
 import { index as workCenters } from '@/routes/tenant/work-centers';
 import { index as workerAccess } from '@/routes/tenant/worker-access';
 import { complaintCasesItems } from '@/lib/complaints-navigation';
@@ -28,54 +30,61 @@ export { complianceNavItems } from '@/lib/compliance-navigation';
 /** A union has no compliance tools (the server answers 404 to them); everything else is a company's. */
 const isUnion = (tenant: NavTenant): boolean => tenant.type === 'union';
 
-/** The company's own pages the role may open: a union has no work centers, and its people are its members. */
-const companyItems = (tenant: NavTenant): NavItem[] => [
-    { title: 'Panel', href: tenantDashboard(tenant.slug), icon: House },
-    ...(isUnion(tenant)
-        ? []
-        : [
-              {
-                  title: 'Centros de trabajo',
-                  href: workCenters(tenant.slug),
-                  icon: Factory,
-              },
-          ]),
-    ...(tenant.can.manage_organization
-        ? [
-              {
-                  title: isUnion(tenant) ? 'Agremiados' : 'Empleados',
-                  href: employees(tenant.slug),
-                  icon: Users,
-              },
-          ]
-        : []),
-    // The people's keys and invitations: every company has it, whatever its tools; a union has no people of its own here.
-    ...(tenant.can.view_worker_access && !isUnion(tenant)
-        ? [
-              {
-                  title: 'Accesos',
-                  href: workerAccess(tenant.slug),
-                  icon: KeyRound,
-              },
-          ]
-        : []),
-    ...(tenant.can.manage_members
-        ? [
-              { title: 'Usuarios', href: members(tenant.slug), icon: UserCog },
-              { title: 'Plan y uso', href: plan(tenant.slug), icon: Layers },
-          ]
-        : []),
-    // The minimum per group of the anonymous tools (criterio C-23): a union has none of them.
-    ...(tenant.can.manage_members && !isUnion(tenant)
-        ? [
-              {
-                  title: 'Privacidad',
-                  href: privacy(tenant.slug),
-                  icon: ShieldCheck,
-              },
-          ]
-        : []),
-];
+/**
+ * The company's own pages the role may open: a union has no work centers, and its people are its members. Each shows only
+ * where its permission is, so a role of the company's own sees no link that answers 403.
+ */
+const companyItems = (tenant: NavTenant): NavItem[] => {
+    const { can, slug } = tenant;
+    const union = isUnion(tenant);
+    const pages: [visible: boolean, item: NavItem][] = [
+        // The panel is drawn from the work centers: without them it is not where anyone starts (StartRoute::PANEL_ALSO_NEEDS).
+        [
+            can.view_dashboard && can.view_work_centers,
+            { title: 'Panel', href: tenantDashboard(slug), icon: House },
+        ],
+        [
+            !union && can.view_work_centers,
+            {
+                title: 'Centros de trabajo',
+                href: workCenters(slug),
+                icon: Factory,
+            },
+        ],
+        [
+            can.manage_organization,
+            {
+                title: union ? 'Agremiados' : 'Empleados',
+                href: employees(slug),
+                icon: Users,
+            },
+        ],
+        // The people's keys and invitations: every company has it, whatever its tools; a union has no people of its own here.
+        [
+            can.view_worker_access && !union,
+            { title: 'Accesos', href: workerAccess(slug), icon: KeyRound },
+        ],
+        [
+            can.manage_members,
+            { title: 'Usuarios', href: members(slug), icon: UserCog },
+        ],
+        [
+            can.manage_members,
+            { title: 'Roles', href: roles(slug), icon: IdCard },
+        ],
+        [
+            can.manage_members,
+            { title: 'Plan y uso', href: plan(slug), icon: Layers },
+        ],
+        // The minimum per group of the anonymous tools (criterio C-23): a union has none of them.
+        [
+            can.manage_members && !union,
+            { title: 'Privacidad', href: privacy(slug), icon: ShieldCheck },
+        ],
+    ];
+
+    return pages.filter(([visible]) => visible).map(([, item]) => item);
+};
 
 /**
  * The pages of the panel, as the sidebar and the ⌘K palette list them (board 40, V4-Menu-Roles). Panel is the current

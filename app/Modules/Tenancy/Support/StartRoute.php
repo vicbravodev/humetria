@@ -35,6 +35,7 @@ final readonly class StartRoute
         'tenant.employees.index',
         'tenant.worker-access.index',
         'tenant.members.index',
+        'tenant.roles.index',
         'tenant.plan',
         'tenant.privacy.edit',
         'tenant.campaigns.index',

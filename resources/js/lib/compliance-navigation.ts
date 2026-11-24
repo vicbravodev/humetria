@@ -94,10 +94,10 @@ export const complianceNavItems = (
         [
             [
                 'nom035',
-                tenant.role !== 'committee',
+                tenant.role !== 'committee' && tenant.can.view_nom035_route,
                 () => [nom035(tenant, inCourse)],
             ],
-            ['nom037', true, () => [telework(tenant)]],
+            ['nom037', tenant.can.view_telework, () => [telework(tenant)]],
             ['seating', tenant.can.view_seating, () => [seating(tenant)]],
             [
                 'attendance',

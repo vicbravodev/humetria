@@ -1,3 +1,11 @@
+/** The pages every template opens (dashboard, work centers, NOM-035's route, NOM-037), which a role of a company's own may not. */
+export const coverage = {
+    view_dashboard: true,
+    view_work_centers: true,
+    view_nom035_route: true,
+    view_telework: true,
+};
+
 /** What a role may do in a company, as the server shares it with every page (`tenant.can`). */
 export const can = (manage_organization: boolean, manage_members: boolean) => ({
     manage_organization,
@@ -30,4 +38,5 @@ export const can = (manage_organization: boolean, manage_members: boolean) => ({
     manage_pulse: manage_organization,
     view_worker_access: true,
     manage_worker_access: manage_organization,
+    ...coverage,
 });

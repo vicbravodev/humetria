@@ -43,6 +43,7 @@ describe('navSections', () => {
                     'Empleados',
                     'Accesos',
                     'Usuarios',
+                    'Roles',
                     'Plan y uso',
                     'Privacidad',
                 ],
@@ -104,7 +105,10 @@ describe('navSections', () => {
                 }),
             ),
         ).toEqual([
-            ['Humetría', ['Panel', 'Agremiados', 'Usuarios', 'Plan y uso']],
+            [
+                'Humetría',
+                ['Panel', 'Agremiados', 'Usuarios', 'Roles', 'Plan y uso'],
+            ],
             ['Ordena tu operación', ['Compensación']],
         ]);
     });
@@ -121,5 +125,46 @@ describe('navSections', () => {
             sections.find((section) => section.key === 'compliance')?.items[0]
                 ?.badge,
         ).toBe(2);
+    });
+});
+
+describe("navSections for a role of the company's own", () => {
+    // A role of the company's own with only these permissions on.
+    const only = (allowed: Record<string, boolean>) =>
+        shape(
+            navSections({
+                tenant: {
+                    slug: 'acme',
+                    role: 'custom_5b0c',
+                    can: {
+                        ...can(false, false),
+                        ...Object.fromEntries(
+                            Object.keys(can(false, false)).map((key) => [
+                                key,
+                                false,
+                            ]),
+                        ),
+                        ...allowed,
+                    },
+                },
+                isStaff: false,
+                home: 'Acme',
+            }),
+        );
+
+    it("shows a role of the company's own only the pages its permissions open, so no link answers 403", () => {
+        expect(only({ view_vacations: true })).toEqual([
+            ['Ordena tu operación', ['Vacaciones']],
+        ]);
+    });
+
+    it('shows the panel only with the work centers it is made of, as where a person lands', () => {
+        expect(only({ view_dashboard: true })).toEqual([]);
+        expect(only({ view_dashboard: true, view_work_centers: true })).toEqual(
+            [['Acme', ['Panel', 'Centros de trabajo']]],
+        );
+        expect(only({ view_nom035_route: true, view_telework: true })).toEqual([
+            ['Cumple la norma', ['NOM-035', 'NOM-037']],
+        ]);
     });
 });
