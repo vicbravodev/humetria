@@ -54,7 +54,7 @@ it('shows what the person has, and where each permission comes from', function (
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('tenancy/member-permissions')
-            ->where('member', ['id' => $this->member->id, 'name' => 'Beto Ramírez', 'role_label' => 'Solo consulta'])
+            ->where('member', ['id' => $this->member->id, 'name' => 'Beto Ramírez', 'email' => $this->person->email, 'role_label' => 'Solo consulta'])
             ->where('groups', fn ($groups): bool => memberToggle($groups, 'view-dashboard')['source'] === 'role'
                 && memberToggle($groups, 'view-vacations')['source'] === 'role'
                 && memberToggle($groups, 'manage-vacations')['source'] === 'direct'

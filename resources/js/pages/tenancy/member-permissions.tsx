@@ -1,6 +1,7 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import PageHeader from '@/components/humetria/page-header';
 import ReadOnlyNotice from '@/components/humetria/read-only-notice';
+import MemberIdentity from '@/components/tenancy/member-identity';
 import MemberPermissionsForm from '@/components/tenancy/member-permissions-form';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/members';
@@ -16,7 +17,12 @@ export default function MemberPermissions({
     groups,
     can_manage,
 }: {
-    member: { id: number; name: string; role_label: string | null };
+    member: {
+        id: number;
+        name: string;
+        email: string;
+        role_label: string | null;
+    };
     direct: string[];
     groups: PermissionGroup[];
     can_manage: boolean;
@@ -33,20 +39,10 @@ export default function MemberPermissions({
         <>
             <Head title="Permisos adicionales" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+                <MemberIdentity member={member} />
                 <PageHeader
                     title={`Permisos adicionales de ${member.name}`}
-                    description={
-                        <>
-                            {member.role_label !== null && (
-                                <strong className="font-medium text-foreground">
-                                    Su rol: {member.role_label}.{' '}
-                                </strong>
-                            )}
-                            Lo que trae su rol queda fijo. Sube el nivel solo
-                            donde necesite más que su rol; para que tenga menos,
-                            cámbiale el rol.
-                        </>
-                    }
+                    description="Lo que trae su rol queda fijo. Sube el nivel solo donde necesite más que su rol; para que tenga menos, cámbiale el rol."
                 />
                 {!can_manage && (
                     <ReadOnlyNotice>

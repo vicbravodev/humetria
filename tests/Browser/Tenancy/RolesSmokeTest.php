@@ -86,12 +86,14 @@ it('opens the permissions a person has besides their role', function (bool $dark
     signInToPanel();
     $member = App\Modules\Tenancy\Models\TenantMembership::factory()
         ->for(Tenant::query()->where('slug', 'acme')->sole())
-        ->for(User::factory()->create())
+        ->for(User::factory()->create(['name' => 'María López', 'email' => 'maria.lopez@acme.mx']))
         ->viewer()->create();
 
     visitPage('tenancy/member-permissions', "/admin/acme/members/{$member->id}/permissions", $dark, $mobile)
         ->assertSee('Permisos adicionales')
-        ->assertSee('Su rol: Solo consulta')
+        ->assertSeeIn('@member-identity', 'ML')
+        ->assertSeeIn('@member-identity', 'maria.lopez@acme.mx')
+        ->assertSeeIn('@member-identity', 'Solo consulta')
         ->assertSee('· su rol')
         ->assertSee('Guardar permisos');
 })->with($looks);
