@@ -72,6 +72,75 @@ function humiServes(string $body): string
     return "() => { if (!window.humiServes) { window.humiServes = true; const real = window.fetch.bind(window); window.fetch = (input, init) => String(input instanceof Request ? input.url : input).endsWith('/assistant/chat') ? Promise.resolve(new Response({$body}, { headers: { 'Content-Type': 'text/event-stream' } })) : real(input, init); } return 'ready'; }";
 }
 
+/** An answer that asks which part the person meant, with buttons, and stops there. */
+function humiChoicesStream(): string
+{
+    $card = ['render' => 'choices', 'title' => '¿De qué parte?', 'rows' => [
+        ['label' => 'De todo', 'text' => 'Quiero ver todos mis pendientes'],
+        ['label' => 'NOM-035', 'text' => 'Quiero ver mis pendientes de NOM-035'],
+    ], 'link' => null, 'note' => null, 'truncated' => false];
+    $parts = [
+        ['type' => 'start', 'messageId' => 'a1'],
+        ['type' => 'start-step'],
+        // What Humi consulted to know what to offer: its card must not be drawn over the question.
+        ['type' => 'tool-input-available', 'toolCallId' => 't0', 'toolName' => 'GetComplianceOverview', 'input' => []],
+        ['type' => 'tool-output-available', 'toolCallId' => 't0', 'output' => json_encode(['render' => 'status_list', 'title' => 'Resumen consultado oculto', 'rows' => [], 'link' => null, 'note' => null, 'truncated' => false])],
+        ['type' => 'tool-input-available', 'toolCallId' => 't1', 'toolName' => 'OfferChoices', 'input' => []],
+        ['type' => 'tool-output-available', 'toolCallId' => 't1', 'output' => json_encode($card)],
+        ['type' => 'finish-step'],
+        ['type' => 'finish', 'finishReason' => 'stop'],
+    ];
+
+    return implode('', array_map(fn (array $part): string => 'data: '.json_encode($part)."\n\n", $parts))."data: [DONE]\n\n";
+}
+
+/** The plain answer that follows a click on a button. */
+function humiAfterChoiceStream(): string
+{
+    $parts = [
+        ['type' => 'start', 'messageId' => 'a2'],
+        ['type' => 'start-step'],
+        ['type' => 'text-start', 'id' => 'x1'],
+        ['type' => 'text-delta', 'id' => 'x1', 'delta' => 'Estos son tus pendientes de NOM-035.'],
+        ['type' => 'text-end', 'id' => 'x1'],
+        ['type' => 'finish-step'],
+        ['type' => 'finish', 'finishReason' => 'stop'],
+    ];
+
+    return implode('', array_map(fn (array $part): string => 'data: '.json_encode($part)."\n\n", $parts))."data: [DONE]\n\n";
+}
+
+/** Serves each answer of the chat in turn: the first call gets the first body, the second the second. */
+function humiServesInOrder(string ...$bodies): string
+{
+    $bodies = json_encode($bodies, JSON_THROW_ON_ERROR);
+
+    return "() => { if (!window.humiServes) { window.humiServes = true; const bodies = {$bodies}; let call = 0; const real = window.fetch.bind(window); window.fetch = (input, init) => String(input instanceof Request ? input.url : input).endsWith('/assistant/chat') ? Promise.resolve(new Response(bodies[Math.min(call++, bodies.length - 1)], { headers: { 'Content-Type': 'text/event-stream' } })) : real(input, init); } return 'ready'; }";
+}
+
+it('asks with buttons, sends the option as the person\'s message, and keeps the buttons as a record, in both themes and on a phone', function (bool $dark, bool $mobile): void {
+    visitPage('dashboard', humiPanelCompany(), $dark, $mobile)
+        ->assertScript(humiServesInOrder(humiChoicesStream(), humiAfterChoiceStream()), 'ready')
+        ->click('[aria-label="Abrir a Humi"]')
+        ->click('¿Cómo va la participación?')
+        ->assertSee('¿De qué parte?')
+        ->assertSee('Consulté el estado de cumplimiento')
+        ->assertDontSee('Resumen consultado oculto')
+        ->assertScript('() => [...document.querySelectorAll(\'[role="group"][aria-label="¿De qué parte?"] button\')].map((button) => button.disabled).join()', 'false,false')
+        ->click('NOM-035')
+        ->assertSee('Quiero ver mis pendientes de NOM-035')
+        ->assertSee('Estos son tus pendientes de NOM-035.')
+        ->assertScript('() => JSON.stringify([...document.querySelectorAll(\'[role="group"][aria-label="¿De qué parte?"] button\')].map((button) => [button.disabled, button.getAttribute(\'aria-pressed\')]))', '[[true,"false"],[true,"true"]]')
+        ->assertScript(cspViolations(), '[]')
+        ->assertScript(humiSettled(), true)
+        ->assertNoAccessibilityIssues(1)
+        ->assertNoJavaScriptErrors();
+})->with([
+    'light' => [false, false],
+    'dark' => [true, false],
+    'phone' => [false, true],
+]);
+
 it('opens from the launcher, shows the answer with what it looked at, its card and its text, and closes, in both themes', function (bool $dark): void {
     visitPage('dashboard', humiPanelCompany(), $dark)
         ->assertScript(humiServes(humiStream()), 'ready')

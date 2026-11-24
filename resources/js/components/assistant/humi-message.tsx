@@ -8,6 +8,7 @@ import HumiUserMessage from '@/components/assistant/humi-user-message';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Rating } from '@/lib/assistant/api';
 import { answerLinksOf } from '@/lib/assistant/answer-links';
+import { choiceStateOf } from '@/lib/assistant/chosen-choice';
 import { viewOf } from '@/lib/assistant/message-view';
 import { followUpsFor } from '@/lib/assistant/suggestions';
 
@@ -19,6 +20,7 @@ export default function HumiMessage({
     message,
     streaming,
     last,
+    following,
     rating,
     canRate,
     onRate,
@@ -28,6 +30,8 @@ export default function HumiMessage({
     message: UIMessage;
     streaming: boolean;
     last: boolean;
+    /** The message after this one, when there is one: the person's answer to a question of buttons. */
+    following: UIMessage | undefined;
     rating: Rating | null;
     canRate: boolean;
     onRate: (rating: Rating) => void;
@@ -61,7 +65,20 @@ export default function HumiMessage({
                     item.kind === 'text' ? (
                         <HumiMarkdown key={index} text={item.text} />
                     ) : (
-                        <HumiResultCard key={index} card={item.card} />
+                        <HumiResultCard
+                            key={index}
+                            card={item.card}
+                            choice={choiceStateOf({
+                                rows:
+                                    item.card.render === 'choices'
+                                        ? item.card.rows
+                                        : [],
+                                last,
+                                streaming,
+                                next: following,
+                                onPick,
+                            })}
+                        />
                     ),
                 )}
                 {finished && view.text !== '' && (

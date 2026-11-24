@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use App\Modules\Assistant\Support\ToolRegistry;
+use App\Modules\Assistant\Tools\OfferChoices;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request as ToolRequest;
 
 /** A company with a center, a closed evaluation with results and a running one: everything a tool may name or lead to. */
@@ -31,7 +33,8 @@ it('never names a source nor leads to a page of another company, whatever id the
     $arguments = [[], ['campaign_id' => $closedA->id], ['campaign_id' => $runningA->id], ['campaign_id' => $closedB->id], ['campaign_id' => $runningB->id], ['query' => 'mínimo por grupo']];
     $named = [];
 
-    foreach (resolve(ToolRegistry::class)->for($scope) as $tool) {
+    // OfferChoices reads nothing of the company: it only draws the buttons the model wrote, with no source and no next page.
+    foreach (array_filter(resolve(ToolRegistry::class)->for($scope), fn (Tool $tool): bool => ! $tool instanceof OfferChoices) as $tool) {
         foreach ($arguments as $argument) {
             $card = json_decode((string) $tool->handle(new ToolRequest($argument)), true, flags: JSON_THROW_ON_ERROR);
             $named[] = json_encode([$card['sources'], $card['next']], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

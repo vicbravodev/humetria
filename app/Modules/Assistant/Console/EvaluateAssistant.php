@@ -11,6 +11,7 @@ use App\Modules\Assistant\Data\Attempt;
 use App\Modules\Assistant\Support\AdversarialAttempts;
 use App\Modules\Assistant\Support\AssistantScopeFactory;
 use App\Modules\Assistant\Support\PersonalDataRedactor;
+use App\Modules\Assistant\Tools\OfferChoices;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\WorkCenters;
@@ -18,7 +19,9 @@ use App\Modules\Tenancy\Data\WorkCenterSummary;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
+use Laravel\Ai\Responses\Data\ToolCall;
 use Throwable;
 
 /**
@@ -94,10 +97,37 @@ final class EvaluateAssistant extends Command
     private function answerTo(Attempt $attempt, AssistantScope $scope, PersonalDataRedactor $redactor): ?string
     {
         try {
-            return HumiAssistant::make(scope: $scope, page: $attempt->page)->prompt($redactor->redact($attempt->message))->text;
+            $answer = HumiAssistant::make(scope: $scope, page: $attempt->page)->prompt($redactor->redact($attempt->message));
+
+            // What the buttons say is also said to the person: the patterns read it as part of the answer, one line each.
+            return implode("\n", [$answer->text, ...$this->buttonsOf($answer->toolCalls)]);
         } catch (Throwable) {
             return null;
         }
+    }
+
+    /**
+     * The question and the label and text of every option the model offered as buttons, as the model wrote them.
+     *
+     * @param  Collection<int, ToolCall>  $calls
+     * @return list<string>
+     */
+    private function buttonsOf(Collection $calls): array
+    {
+        $lines = [];
+
+        foreach ($calls->where('name', OfferChoices::NAME) as $call) {
+            $question = $call->arguments['question'] ?? null;
+            $options = $call->arguments['options'] ?? [];
+            $lines[] = is_string($question) ? $question : '';
+
+            foreach (is_array($options) ? $options : [] as $option) {
+                $lines[] = is_array($option) && is_string($option['label'] ?? null) ? $option['label'] : '';
+                $lines[] = is_array($option) && is_string($option['text'] ?? null) ? $option['text'] : '';
+            }
+        }
+
+        return array_values(array_filter($lines, fn (string $line): bool => $line !== ''));
     }
 
     /**

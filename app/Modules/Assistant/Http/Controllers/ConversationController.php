@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Modules\Assistant\Actions\DeleteConversation;
 use App\Modules\Assistant\Exceptions\ConversationNotFound;
 use App\Modules\Assistant\Support\AssistantScopeFactory;
+use App\Modules\Assistant\Support\ChoicesOffered;
 use App\Modules\Assistant\Support\Conversations;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,7 @@ final readonly class ConversationController
                 'id' => $message->id,
                 'role' => $message->role,
                 'content' => $message->content,
+                'choices' => ChoicesOffered::cardIn($message),
                 'created_at' => $message->createdAt?->toIso8601String(),
             ], $page->items()),
             'next_cursor' => $page->nextCursor()?->encode(),

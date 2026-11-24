@@ -47,6 +47,9 @@ export type ListRow = {
     link: string | null;
 };
 
+/** One button of a question: what it says and the message a click sends. */
+export type ChoiceRow = { label: string; text: string };
+
 type Base = {
     title: string;
     link: string | null;
@@ -63,7 +66,8 @@ export type ToolCard =
           minGroup: number | null;
       })
     | (Base & { render: 'status_list'; rows: readonly StatusRow[] })
-    | (Base & { render: 'list'; rows: readonly ListRow[] });
+    | (Base & { render: 'list'; rows: readonly ListRow[] })
+    | (Base & { render: 'choices'; rows: readonly ChoiceRow[] });
 
 function asObject(value: unknown): object | null {
     return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -196,6 +200,13 @@ function listRow(row: object): ListRow | null {
     };
 }
 
+function choiceRow(row: object): ChoiceRow | null {
+    const label = text(row, 'label');
+    const message = text(row, 'text');
+
+    return label === null || message === null ? null : { label, text: message };
+}
+
 function payloadOf(output: unknown): object | null {
     if (typeof output !== 'string') {
         return asObject(output);
@@ -250,6 +261,12 @@ export function parseToolCard(output: unknown): ToolCard | null {
                 ...base,
                 render: 'list',
                 rows: rows.flatMap((row) => listRow(row) ?? []),
+            };
+        case 'choices':
+            return {
+                ...base,
+                render: 'choices',
+                rows: rows.flatMap((row) => choiceRow(row) ?? []),
             };
         default:
             return null;

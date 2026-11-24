@@ -119,6 +119,8 @@ final readonly class ChatController
             $this->stop->requested($scope->participantId),
             $answer->meta->provider,
             $answer->meta->model,
+            $answer->usage->cacheReadInputTokens,
+            $answer->usage->cacheWriteInputTokens,
         );
         $this->stop->clear($scope->participantId);
     }

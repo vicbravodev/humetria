@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
+import { viewOf } from '@/lib/assistant/message-view';
 import {
     dayLabel,
     groupByDay,
@@ -41,6 +42,28 @@ describe('groupByDay', () => {
 });
 
 describe('uiMessagesFrom', () => {
+    it('brings back the buttons of a turn that ended asking, so a reopened conversation shows the question and not an empty answer', () => {
+        const choices = JSON.stringify({
+            render: 'choices',
+            title: '¿De qué parte?',
+            link: null,
+            note: null,
+            truncated: false,
+            rows: [{ label: 'De todo', text: 'Quiero ver todo' }],
+        });
+        const [answer] = uiMessagesFrom({
+            messages: [{ id: 'm-3', role: 'assistant', content: '', choices }],
+        });
+
+        expect(answer).toBeDefined();
+
+        const view = viewOf(answer ?? { id: '', role: 'assistant', parts: [] });
+
+        expect(view.renders).toEqual(['choices']);
+        expect(view.items.map((item) => item.kind)).toEqual(['card']);
+        expect(view.steps).toEqual([]);
+    });
+
     it('turns what the server keeps (latest first) into the messages of the conversation, oldest first', () => {
         const body = {
             messages: [
