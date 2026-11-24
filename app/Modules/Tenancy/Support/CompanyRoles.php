@@ -10,6 +10,8 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\NotACompanyRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -38,7 +40,27 @@ final readonly class CompanyRoles
      */
     public function customRoles(Tenant $tenant): Collection
     {
-        return Role::query()->where('tenant_id', $tenant->id)->where('name', 'like', 'custom\_%')->orderBy('label')->get();
+        return $this->ownRoles($tenant)->orderBy('label')->get();
+    }
+
+    /**
+     * The company's own roles, to be read: never a template nor another company's.
+     *
+     * @return Builder<Role>
+     */
+    public function ownRoles(Tenant $tenant): Builder
+    {
+        return Role::query()->where('tenant_id', $tenant->id)->where('name', 'like', 'custom\_%');
+    }
+
+    /**
+     * One of the company's own roles, by id; a template, another company's or none is not found (a 404 over HTTP).
+     *
+     * @throws ModelNotFoundException<Role>
+     */
+    public function own(Tenant $tenant, string $id): Role
+    {
+        return $this->ownRoles($tenant)->findOrFail($id);
     }
 
     /** The person's role in the company, a template or one of its own. */

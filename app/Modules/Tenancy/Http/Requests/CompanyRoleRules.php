@@ -38,7 +38,7 @@ final class CompanyRoleRules
      * The name is the company's only once, a template's included, whatever its case; and a sensitive permission switched
      * on asks to be acknowledged.
      *
-     * @param  list<string>  $held  what the role has now: only what is added asks for the acknowledgement.
+     * @param  array<int, string>  $held  what the role has now: only what is added asks for the acknowledgement.
      */
     public static function after(Validator $validator, Request $request, Tenant $tenant, ?Role $editing = null, array $held = []): void
     {

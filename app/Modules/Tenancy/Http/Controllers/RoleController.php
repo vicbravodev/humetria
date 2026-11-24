@@ -8,9 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\CreateCompanyRole;
+use App\Modules\Tenancy\Actions\UpdateCompanyRole;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\CompanyRoleLimitReached;
 use App\Modules\Tenancy\Http\Requests\StoreRoleRequest;
+use App\Modules\Tenancy\Http\Requests\UpdateRoleRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\PermissionGroups;
@@ -36,7 +38,7 @@ final class RoleController extends Controller
 {
     private const int PER_PAGE = 25;
 
-    public function __construct(private readonly Impersonation $impersonation) {}
+    public function __construct(private readonly Impersonation $impersonation, private readonly CompanyRoles $roles) {}
 
     public function index(Request $request, Tenant $tenant): Response
     {
@@ -56,7 +58,7 @@ final class RoleController extends Controller
                 'people' => self::countOf($people, $templates->get($template->value)),
                 'permissions' => $templates->get($template->value)?->getAttribute('permissions_count'),
             ], $tenant->type->assignableRoles()),
-            'roles' => $this->own($tenant)
+            'roles' => $this->roles->ownRoles($tenant)
                 ->withCount('permissions')
                 ->when($search !== '', fn (Builder $query) => $query->where(new Expression('unaccent(label)'), 'ilike', '%'.addcslashes(Str::ascii($search), '\\%_').'%'))
                 ->orderBy('label')
@@ -72,13 +74,13 @@ final class RoleController extends Controller
                     'permissions' => $role->getAttribute('permissions_count'),
                 ]),
             'search' => $search,
-            'limit' => ['used' => $this->own($tenant)->count(), 'max' => config()->integer('tenancy.max_custom_roles')],
+            'limit' => ['used' => $this->roles->ownRoles($tenant)->count(), 'max' => config()->integer('tenancy.max_custom_roles')],
             'can_manage' => ! $this->impersonation->isActive(),
         ]);
     }
 
     /** «Nuevo rol»: blank, or (`?from=`) with what a template the account hands out has switched on. */
-    public function create(Request $request, Tenant $tenant, CompanyRoles $roles): Response
+    public function create(Request $request, Tenant $tenant): Response
     {
         Gate::authorize('manage-members');
         $from = TenantRole::tryFrom($request->string('from')->toString());
@@ -88,7 +90,7 @@ final class RoleController extends Controller
             'role' => null,
             'from' => $from?->value,
             'templates' => array_map(fn (TenantRole $template): array => ['key' => $template->value, 'label' => $template->label()], $tenant->type->assignableRoles()),
-            'groups' => PermissionGroups::for($tenant, $from === null ? [] : self::held($roles->template($from))),
+            'groups' => PermissionGroups::for($tenant, $from === null ? [] : self::held($this->roles->template($from))),
             'can_manage' => ! $this->impersonation->isActive(),
         ]);
     }
@@ -104,6 +106,34 @@ final class RoleController extends Controller
         }
 
         return $this->done($tenant, 'Rol creado.');
+    }
+
+    public function edit(Tenant $tenant, string $role): Response
+    {
+        Gate::authorize('manage-members');
+        $editing = $this->roles->own($tenant, $role);
+        $id = $editing->getKey();
+
+        return Inertia::render('tenancy/role-editor', [
+            'role' => [
+                'id' => $id,
+                'label' => $editing->getAttribute('label'),
+                'based_on' => is_string($basedOn = $editing->getAttribute('based_on')) ? TenantRole::tryFrom($basedOn)?->label() : null,
+                'people' => count($this->roles->holders($editing)),
+                'invitations' => $tenant->invitations()->open()->where('role_id', $id)->count(),
+            ],
+            'from' => null,
+            'templates' => array_map(fn (TenantRole $template): array => ['key' => $template->value, 'label' => $template->label()], $tenant->type->assignableRoles()),
+            'groups' => PermissionGroups::for($tenant, self::held($editing)),
+            'can_manage' => ! $this->impersonation->isActive(),
+        ]);
+    }
+
+    public function update(UpdateRoleRequest $request, Tenant $tenant, UpdateCompanyRole $updateCompanyRole, #[CurrentUser] User $user): RedirectResponse
+    {
+        $updateCompanyRole->handle($request->role(), $request->label(), $request->permissions(), $user);
+
+        return $this->done($tenant, 'Rol actualizado.');
     }
 
     /**
@@ -127,16 +157,6 @@ final class RoleController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
 
         return redirect()->route('tenant.roles.index', $tenant);
-    }
-
-    /**
-     * The company's own roles: never a template nor another company's, so a role id from elsewhere is not found here.
-     *
-     * @return Builder<Role>
-     */
-    private function own(Tenant $tenant): Builder
-    {
-        return Role::query()->where('tenant_id', $tenant->id)->where('name', 'like', 'custom\_%');
     }
 
     /**

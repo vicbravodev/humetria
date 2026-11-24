@@ -50,6 +50,7 @@ function impersonatingOwnerOf(Tenant $tenant): void
 
 it('lives at /admin/{slug}/roles, only for the owner, and impersonating changes nothing there', function (): void {
     expect(route('tenant.roles.index', ['tenant' => 'acme'], absolute: false))->toBe('/admin/acme/roles')
+        ->and(route('tenant.roles.edit', ['tenant' => 'acme', 'role' => 7], absolute: false))->toBe('/admin/acme/roles/7/edit')
         ->and(collect(['tenant.roles.index', 'tenant.roles.create', 'tenant.roles.store', 'tenant.roles.edit', 'tenant.roles.update', 'tenant.roles.destroy'])
             ->map(RoutePermissions::for(...))->unique()->all())->toBe(['manage-members'])
         ->and(collect(['tenant.roles.create', 'tenant.roles.store', 'tenant.roles.update', 'tenant.roles.destroy'])->every(ForbidWhileImpersonating::guards(...)))->toBeTrue()
@@ -323,3 +324,91 @@ it('creates no role for anyone but the owner, nor for the staff working as the o
 
     expect(Role::query()->where('tenant_id', $this->tenant->id)->exists())->toBeFalse();
 });
+
+it('opens a role of the company with what it has switched on, and a permission of a tool the plan lost as off', function (): void {
+    $role = companyRole($this->tenant, $this->owner, 'Auditoría', ['view-dashboard', 'view-vacations']);
+    personHolding($this->tenant, $role);
+    TenantInvitation::factory()->for($this->tenant)->role($role)->create();
+    TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.roles.edit', [$this->tenant, $role->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('tenancy/role-editor')
+            ->where('role', ['id' => $role->id, 'label' => 'Auditoría', 'based_on' => null, 'people' => 1, 'invitations' => 1])
+            ->where('from', null)
+            ->where('groups', fn ($groups): bool => toggleOf($groups->toArray(), 'view-dashboard')['enabled'] === true
+                && toggleOf($groups->toArray(), 'view-dashboard')['source'] === 'role'
+                && toggleOf($groups->toArray(), 'view-climate')['enabled'] === false
+                && toggleOf($groups->toArray(), 'view-vacations')['enabled'] === false
+                && toggleOf($groups->toArray(), 'view-vacations')['unavailableReason'] === 'Tu plan no incluye Vacaciones.')
+            ->where('can_manage', true));
+});
+
+it('finds no role of another company nor a template to edit, change or delete: the same 404 as one that does not exist', function (Closure $id): void {
+    $id = $id($this);
+
+    $this->actingAs($this->owner)->get(route('tenant.roles.edit', [$this->tenant, $id]))->assertNotFound();
+    $this->actingAs($this->owner)->put(route('tenant.roles.update', [$this->tenant, $id]), ['label' => 'Mío', 'permissions' => ['view-dashboard']])->assertNotFound();
+})->with([
+    'another company\'s' => [fn ($test): int => companyRole($other = Tenant::factory()->create(), ownerOf($other))->id],
+    'a template' => [fn ($test): int => Role::findByName('viewer')->id],
+    'the owner\'s' => [fn ($test): int => Role::findByName('owner')->id],
+    'none' => [fn ($test): int => 999999],
+]);
+
+it('renames a role and changes what it has, recording what was added and removed and who holds it', function (): void {
+    $role = companyRole($this->tenant, $this->owner, 'Auditoría', ['view-dashboard', 'view-climate']);
+    $person = personHolding($this->tenant, $role);
+
+    $this->actingAs($this->owner)
+        ->put(route('tenant.roles.update', [$this->tenant, $role->id]), ['label' => 'Auditoría externa', 'permissions' => ['view-dashboard', 'view-pulse']])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('tenant.roles.index', $this->tenant))
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'success', 'message' => 'Rol actualizado.']]);
+
+    expect($role->refresh()->getAttribute('label'))->toBe('Auditoría externa')
+        ->and($role->permissions->pluck('name')->sort()->values()->all())->toBe(['view-dashboard', 'view-pulse'])
+        ->and(AuditEntry::query()->where('event', 'tenant_role.updated')->sole()->metadata)->toEqual([
+            'label' => 'Auditoría externa', 'added' => ['view-pulse'], 'removed' => ['view-climate'], 'holders' => [$person->id], 'sensitive' => false,
+        ]);
+});
+
+it('asks to acknowledge only a sensitive permission it adds, not one the role already had', function (): void {
+    $role = companyRole($this->tenant, $this->owner, 'Nómina', ['view-compensation']);
+    $send = fn (array $permissions) => $this->actingAs($this->owner)->put(route('tenant.roles.update', [$this->tenant, $role->id]), ['label' => 'Nómina', 'permissions' => $permissions]);
+
+    $send(['view-compensation', 'view-dashboard'])->assertSessionHasNoErrors();
+    $send(['view-compensation', 'view-dashboard', 'handle-complaints'])->assertSessionHasErrors(['acknowledge_sensitive' => 'Confirma que quieres dar permisos que abren información sensible.']);
+
+    expect($role->refresh()->permissions->pluck('name')->sort()->values()->all())->toBe(['view-compensation', 'view-dashboard']);
+});
+
+it('keeps its own name when saved, and refuses one another role has or no permission at all', function (): void {
+    $role = companyRole($this->tenant, $this->owner, 'Auditoría');
+    companyRole($this->tenant, $this->owner, 'Nómina');
+    $send = fn (array $payload) => $this->actingAs($this->owner)->put(route('tenant.roles.update', [$this->tenant, $role->id]), [...['label' => 'Auditoría', 'permissions' => ['view-dashboard']], ...$payload]);
+
+    $send([])->assertSessionHasNoErrors();
+    $send(['label' => 'nómina'])->assertSessionHasErrors(['label' => 'Ya hay un rol con ese nombre.']);
+    $send(['permissions' => []])->assertSessionHasErrors('permissions');
+    $send(['permissions' => ['view-dashboard', 'manage-members']])->assertSessionHasErrors(['permissions.1' => 'Ese permiso no se puede dar en esta empresa.']);
+});
+
+it('lets the staff working as the owner read a role, and change nothing', function (): void {
+    $role = companyRole($this->tenant, $this->owner);
+    impersonatingOwnerOf($this->tenant);
+
+    $this->get(route('tenant.roles.edit', [$this->tenant, $role->id]))->assertOk()->assertInertia(fn (Assert $page) => $page->where('can_manage', false));
+    $this->put(route('tenant.roles.update', [$this->tenant, $role->id]), ['label' => 'Otro', 'permissions' => ['view-dashboard']])->assertNotFound();
+
+    expect($role->refresh()->getAttribute('label'))->toBe('Auditoría');
+});
+
+it('lets no one but the owner open or change a role', function (TenantRole $as): void {
+    $role = companyRole($this->tenant, $this->owner);
+
+    $this->actingAs(memberOf($this->tenant, $as))->get(route('tenant.roles.edit', [$this->tenant, $role->id]))->assertForbidden();
+    $this->actingAs(memberOf($this->tenant, $as))->put(route('tenant.roles.update', [$this->tenant, $role->id]), ['label' => 'X', 'permissions' => ['view-dashboard']])->assertForbidden();
+})->with([TenantRole::Hr, TenantRole::Viewer]);
