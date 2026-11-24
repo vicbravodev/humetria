@@ -132,6 +132,21 @@ export function useOfflineStore(slug: string): OfflineStore | null {
 }
 
 /**
+ * «¿No es usted?» and «Salir»: takes the person's tickets, pass, device key, practice and context out of the phone; the marks
+ * that wait stay and are still delivered. Nothing is revoked at the server. Best effort, like the rest of the storage.
+ */
+export async function forgetPerson(slug: string): Promise<void> {
+    try {
+        const store = offlineStore(await openIdbStore(offlineDatabase(slug)));
+
+        await store.forgetPerson();
+        announceStoreChange();
+    } catch {
+        // No storage: nothing was kept.
+    }
+}
+
+/**
  * Keeps the tickets and the context that came in an answer the person's signature earned (marking, the week, a correction,
  * the agreement). Best effort: a phone with no storage simply marks online.
  */
