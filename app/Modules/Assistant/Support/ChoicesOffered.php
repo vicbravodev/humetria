@@ -7,6 +7,7 @@ namespace App\Modules\Assistant\Support;
 use App\Modules\Assistant\Tools\OfferChoices;
 use Laravel\Ai\PendingStep;
 use Laravel\Ai\Responses\Data\ToolResult;
+use Laravel\Ai\Storage\StoredMessage;
 
 /**
  * Whether the step that just ended put buttons in front of the person: the run stops there, because the question is the
@@ -22,6 +23,23 @@ final class ChoicesOffered
         return $last !== null && array_any($last->toolResults, fn (ToolResult $result): bool => $result->name === OfferChoices::NAME
             && ! $result->failed
             && self::isCard($result->result));
+    }
+
+    /**
+     * The card of the buttons a stored turn ended with, as the JSON the tool answered, or null: what lets a reopened
+     * conversation draw the question again instead of an answer with nothing in it.
+     */
+    public static function cardIn(StoredMessage $message): ?string
+    {
+        foreach ($message->toolResults() as $result) {
+            $card = $result['result'] ?? null;
+
+            if (($result['name'] ?? null) === OfferChoices::NAME && ($result['failed'] ?? false) !== true && is_string($card) && self::isCard($card)) {
+                return $card;
+            }
+        }
+
+        return null;
     }
 
     private static function isCard(mixed $result): bool

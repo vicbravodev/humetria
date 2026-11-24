@@ -23,6 +23,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Ai\Middleware\Stop;
 use Laravel\Ai\Prompts\AgentPrompt;
+use Laravel\Ai\Responses\AgentResponse;
+use Laravel\Ai\Responses\Data\Meta;
+use Laravel\Ai\Responses\Data\TextUsage;
+use Laravel\Ai\Responses\Data\ToolCall;
 
 mutates(ChatController::class, StopSwitch::class, SendLlmAnalytics::class);
 
@@ -104,6 +108,34 @@ it('records the usage of the message for the company, with no text in it', funct
         ->and($usage->participant_id)->toBe(humiParticipantOf($this->hr, $this->a)->id)
         ->and($usage->stopped)->toBeFalse()
         ->and($usage->conversation_id)->toBe(ChatConversation::query()->sole()->id);
+});
+
+it('records the tokens the provider read from and wrote to its prompt cache, each in its own column', function (): void {
+    HumiAssistant::fake(fn (string $prompt): AgentResponse => new AgentResponse('inv-1', 'Listo.', new TextUsage(100, 20, cacheReadInputTokens: 250, cacheWriteInputTokens: 40), new Meta('anthropic', 'claude')));
+
+    chat(['message' => 'Hola'])->streamedContent();
+    $usage = AiUsage::query()->withoutGlobalScopes()->sole();
+
+    expect($usage->cache_read_tokens)->toBe(250)->and($usage->cache_write_tokens)->toBe(40);
+});
+
+it('ends the run after the buttons, never marks it as stopped by the person, and the next message continues that conversation', function (): void {
+    $buttons = new ToolCall('c-1', 'OfferChoices', ['question' => '¿De qué parte?', 'options' => [
+        ['label' => 'De todo', 'text' => 'Quiero ver todo'],
+        ['label' => 'NOM-035', 'text' => 'Quiero ver NOM-035'],
+    ]]);
+    HumiAssistant::fake(fn (string $prompt): string|ToolCall => $prompt === 'Quiero ver NOM-035' ? 'Esto falta en NOM-035.' : $buttons);
+
+    chat(['message' => '¿Qué me falta?'])->streamedContent();
+    $conversation = ChatConversation::query()->sole();
+
+    expect(AiUsage::query()->withoutGlobalScopes()->sole()->stopped)->toBeFalse()
+        ->and(ChatMessage::query()->where('conversation_id', $conversation->id)->where('role', 'assistant')->sole()->steps)->toContain('OfferChoices');
+
+    chat(['message' => 'Quiero ver NOM-035', 'conversationId' => $conversation->id])->streamedContent();
+
+    expect(ChatMessage::query()->where('conversation_id', $conversation->id)->orderBy('created_at')->pluck('role')->all())->toBe(['user', 'assistant', 'user', 'assistant']);
+    HumiAssistant::assertPrompted(fn (AgentPrompt $prompt): bool => $prompt->prompt === 'Quiero ver NOM-035' && count($prompt->agent->messages()) >= 3);
 });
 
 it('continues a conversation of the person when it is asked for by its id', function (): void {

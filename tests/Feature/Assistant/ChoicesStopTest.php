@@ -54,6 +54,14 @@ it('only looks at the last step, so a card offered earlier does not stop a later
     expect(ChoicesOffered::in(stepAfter([['tool' => OfferChoices::NAME, 'result' => A_CARD], ['tool' => 'ListPendingActions', 'result' => '{}']])))->toBeFalse();
 });
 
+it('wires its second stop to the buttons: true right after a card, false before one', function (): void {
+    $middleware = HumiAssistant::make(scope: assistantScopeIn(Tenant::factory()->create()))->middleware();
+    $condition = (new ReflectionProperty(Stop::class, 'condition'))->getValue($middleware[1]);
+
+    expect(value($condition, stepAfter([['tool' => OfferChoices::NAME, 'result' => A_CARD]])))->toBeTrue()
+        ->and(value($condition, stepAfter([['tool' => 'GetComplianceOverview', 'result' => '{}']])))->toBeFalse();
+});
+
 it('is one of the two stops of Humi: the one of the person is the other', function (): void {
     $middleware = HumiAssistant::make(scope: assistantScopeIn(Tenant::factory()->create()))->middleware();
 
