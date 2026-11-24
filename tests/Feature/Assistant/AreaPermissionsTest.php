@@ -137,7 +137,20 @@ it('lists only the pending things of the areas the person sees, and refuses the 
 
     expect(array_column(toolCard(ListPendingActions::class, assistantScopeIn($this->a))['rows'], 'kind'))->toContain('evaluation_missing')
         ->and(array_column(toolCard(ListPendingActions::class, $telework)['rows'], 'kind'))->not->toContain('evaluation_missing')
-        ->and(toolCard(ListPendingActions::class, $nothing))->toMatchArray(['rows' => [], 'note' => 'Tu rol no incluye ver ninguna de las áreas con pendientes: pídele acceso a quien administra los roles de tu empresa.']);
+        ->and(toolCard(ListPendingActions::class, $nothing))->toMatchArray(['rows' => [], 'note' => 'Tu rol no incluye ver pendientes de ninguna área: pídele acceso a quien administra los roles de tu empresa.']);
+});
+
+it('refuses the list to whoever sees only the work centers of a company that already has them, as nothing of theirs is reviewed', function (): void {
+    WorkCenter::factory()->create(['tenant_id' => $this->a->id]);
+    $centers = humiScopeOf($this->a, humiPersonWith($this->a, $this->owner, ['use-assistant', 'view-work-centers']));
+
+    expect(toolCard(ListPendingActions::class, $centers))->toMatchArray(['rows' => [], 'note' => 'Tu rol no incluye ver pendientes de ninguna área: pídele acceso a quien administra los roles de tu empresa.']);
+});
+
+it('still asks whoever sees the work centers of a company with none to register the first', function (): void {
+    $centers = humiScopeOf($this->a, humiPersonWith($this->a, $this->owner, ['use-assistant', 'view-work-centers']));
+
+    expect(array_column(toolCard(ListPendingActions::class, $centers)['rows'], 'kind'))->toBe(['register_work_center']);
 });
 
 it('tells a role that may only use Humi no live fact, whoever of the company asked first', function (): void {

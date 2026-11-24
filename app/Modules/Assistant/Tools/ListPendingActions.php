@@ -55,7 +55,7 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
         $this->guard->check($this->scope);
 
         if (! $this->seesAny()) {
-            return ToolCard::withoutAccess('list', 'Pendientes', 'ninguna de las áreas con pendientes')->toJson();
+            return ToolCard::withoutAccess('list', 'Pendientes', 'pendientes de ninguna área')->toJson();
         }
 
         $items = $this->items();
@@ -163,10 +163,17 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
         return $this->scope->canSee($permission) && $this->modules->enabled($this->scope->tenantId, $module);
     }
 
-    /** Whether the person sees any area this tool tells about: the centers, NOM-035, its Programas or NOM-037. */
+    /**
+     * Whether anything of the person's is reviewed: the first work center (only while the company has none), or NOM-035, its
+     * Programas or NOM-037 in a company that has them.
+     */
     private function seesAny(): bool
     {
-        return array_any(['view-work-centers', 'view-nom035-route', 'view-interventions', 'view-telework'], $this->scope->canSee(...));
+        if ($this->centerNames() === []) {
+            return $this->scope->canSee('view-work-centers');
+        }
+
+        return $this->sees('view-nom035-route', 'nom035') || $this->sees('view-interventions', 'nom035') || $this->sees('view-telework', 'nom037');
     }
 
     /**
