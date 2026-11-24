@@ -239,7 +239,7 @@ return [
             'policy' => [LeavePolicy::query()->sole()->id],
             'statement' => [LeaveStatement::query()->orderBy($byPerson('leave_statements'))->orderBy('issued_at')->firstOrFail()->id],
             // The person whose extra permissions the page edits: HR (the owner's cannot be edited).
-            'member' => [(string) collect(resolve(Members::class)->all())->firstWhere('email', DemoRoster::person(DemoRoster::HR)->email)->userId],
+            'member' => [(string) $tenant->memberships()->where('user_id', collect(resolve(Members::class)->all())->firstWhere('email', DemoRoster::person(DemoRoster::HR)->email)->userId)->sole()->id],
             'norm' => ['nom035', 'nom037', 'seating'],
             'field' => ['category', 'level'],
         ];
