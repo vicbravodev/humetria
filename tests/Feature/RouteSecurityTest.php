@@ -87,6 +87,8 @@ function publicRouteNames(): array
         'worker.not-me.show', // guest: «No fui yo» desde el correo de una llave nueva; la dirección firmada por la app (30 días) es la credencial: sin firma o alterada 403, llave de otra empresa 404; solo muestra la confirmación; throttled por IP
         'worker.not-me.confirm', // guest: confirma «No fui yo» con la misma dirección firmada: anula la llave, cierra las sesiones de la persona (valid_after), anula sus enlaces, avisa al contacto de la empresa y queda en la bitácora; una vez; throttled por IP
         'worker.app.manifest', // guest: el manifest de la app instalable de una empresa (nombre comercial, íconos y dirección de inicio); sin sesión, sin cookies ni persona en la respuesta; el mismo 404 para una empresa que no existe y una bloqueada; throttled por IP
+        'worker.app.sw', // guest: el service worker de la app instalable de una empresa; sin sesión ni cookies; no lee datos: solo guarda archivos del build y el cascarón; con PWA_SW_KILL se desregistra; throttled por IP
+        'worker.app.offline', // guest: el cascarón de la app instalable (sin conexión): sin sesión ni cookies, sin scripts en línea ni datos de nadie; el mismo 404 para una empresa que no existe y una bloqueada; throttled por IP
         'sso.start', // guest: starts the sign-in with the identity provider of the company in the address; the same 404 for a company that does not exist, has no SSO in its plan, switched it off or proved no domain; state, nonce and PKCE in the session; throttled per address
         'sso.callback', // guest: the identity provider comes back here with a code; the session of the start (state, nonce, PKCE verifier, company) is the credential, the ID token must name our issuer, client and nonce, and its email must be a verified one at a domain the company proved, of someone who is already a member; never creates an account; the same generic refusal for everything else; throttled per address
         'sso.staff.start', // guest: starts the sign-in of Humetría's staff with the platform provider (state, nonce, PKCE in the session); 404 when none is configured; throttled per address
@@ -156,6 +158,17 @@ test('the public allowlist has no stale entries', function () {
     expect(array_values(array_diff(publicRouteNames(), $names)))->toBe([])
         ->and(array_values(array_diff(unnamedPublicUris(), $uris)))->toBe([]);
 });
+
+test('the sessionless routes take no session, cookies nor forgery check', function (string $name) {
+    $route = Route::getRoutes()->getByName($name) ?? throw new LogicException("No route named {$name}.");
+    $middleware = Route::gatherRouteMiddleware($route);
+
+    expect($middleware)->not->toContain(Illuminate\Session\Middleware\StartSession::class)
+        ->and($middleware)->not->toContain(Illuminate\Cookie\Middleware\EncryptCookies::class)
+        ->and($middleware)->not->toContain(Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class)
+        ->and($middleware)->not->toContain(Illuminate\View\Middleware\ShareErrorsFromSession::class)
+        ->and($middleware)->not->toContain(Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
+})->with(['worker.app.manifest', 'worker.app.sw', 'worker.app.offline']);
 
 test('the person\'s pages that take their session also enter the company of their address first', function () {
     $pages = collect(appRoutes())->filter(fn (LaravelRoute $route): bool => in_array(RequireWorkerSession::class, Route::gatherRouteMiddleware($route), true));

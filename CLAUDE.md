@@ -80,7 +80,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - Toda ruta tiene nombre y exige autenticación, salvo las de la lista pública de `tests/Feature/RouteSecurityTest.php`;
   agregar ahí una ruta exige una razón.
 - Sin cuenta: `*-portal.php` son el **portal** de la persona trabajadora (`/me/{slug}/...`), que lee su sesión
-  (`worker-access.php`: entra con su llave o con un enlace de un solo uso); ninguna dirección suya lleva una credencial que
+  (`worker-access.php`, que además sirve, sin sesión, el manifest, el service worker y el cascarón de la app instalable:
+  entra con su llave o con un enlace de un solo uso); ninguna dirección suya lleva una credencial que
   sirva más de una vez (`RouteSecurityTest`). El token del enlace es la credencial (con throttle por enlace y por
   dirección) en `survey.php` y `engagement-survey.php`, las encuestas; `complaints-public.php`, el canal de denuncias;
   `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `sso.php`, el inicio de sesión con el proveedor de la empresa (callback con `state`, `nonce` y PKCE); `workers.php`, la página de trabajadores;

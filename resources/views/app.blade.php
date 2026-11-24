@@ -52,6 +52,10 @@
         @if (request()->is('me/*') && ($page['component'] ?? '') !== 'error' && is_string($appSlug = request()->route('tenant')))
             {{-- The installable app of the company of the person's pages (WorkerAccess): only under /me/{slug}. --}}
             <link rel="manifest" href="{{ route('worker.app.manifest', $appSlug) }}">
+            @if (config('worker_access.pwa_sw_kill'))
+                {{-- The service worker is switched off (PWA_SW_KILL): the page neither registers it nor keeps the one that is there. --}}
+                <meta name="pwa-sw-kill" content="1">
+            @endif
         @endif
 
         @fonts

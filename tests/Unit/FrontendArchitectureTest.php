@@ -231,3 +231,20 @@ it('loads the app frame on demand', function (string $layout): void {
 
     expect($app)->not->toContain("from '@/layouts/{$layout}");
 })->with(['app', 'auth', 'settings']);
+
+it('rejects the service worker importing anything but its rules', function (string $import): void {
+    $result = lintFrontendProbe([
+        'sw/'.probeId().'.ts' => "import { thing } from '{$import}';\n\nexport const worker = thing;\n",
+    ]);
+
+    expect($result['passed'])->toBeFalse()
+        ->and($result['output'])->toContain('no-restricted-imports');
+})->with(['@/lib/utils', '@/lib/pwa/register', 'react', 'qr']);
+
+it('lets the service worker import its rules', function (): void {
+    $result = lintFrontendProbe([
+        'sw/'.probeId().'.ts' => "import { NETWORK_TIMEOUT_MS } from '@/lib/pwa/sw-rules';\n\nexport const worker = NETWORK_TIMEOUT_MS;\n",
+    ]);
+
+    expect($result['passed'])->toBeTrue($result['output']);
+});

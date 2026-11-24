@@ -209,3 +209,18 @@ it('links the manifest of its company only in the person\'s pages', function ():
 
     expect($this->actingAs(User::factory()->create())->get('/admin/login')->getContent())->not->toContain('rel="manifest"');
 });
+
+it('tells the person\'s pages the worker is switched off', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    expect(xpathOf($this->get('/me/acme')->assertOk()->getContent())->query('//head/meta[@name="pwa-sw-kill"]')->length)->toBe(0);
+
+    config(['worker_access.pwa_sw_kill' => true]);
+
+    foreach (['/me/acme', '/me/acme/punch'] as $url) {
+        expect(headValue(xpathOf($this->get($url)->assertOk()->getContent()), '//head/meta[@name="pwa-sw-kill"]'))->toBe('1');
+    }
+
+    expect($this->get('/')->getContent())->not->toContain('pwa-sw-kill');
+});

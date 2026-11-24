@@ -48,4 +48,10 @@ return [
     */
     'max_keys' => (int) env('WORKER_ACCESS_MAX_KEYS', 3),
 
+    /*
+    | Switches the installed app's service worker off in every phone (/me/{slug}/sw.js then answers a worker that deletes its
+    | caches and unregisters, and the pages stop registering it). It never switches off the delivery of offline marks.
+    */
+    'pwa_sw_kill' => (bool) env('PWA_SW_KILL', false),
+
 ];

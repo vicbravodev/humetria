@@ -21,6 +21,7 @@ import {
 import { layoutResetter } from '@/lib/layout-reset';
 import { initialPageName } from '@/lib/page-frame';
 import { rememberData } from '@/lib/recording-mask';
+import { killedIn, registerWorkerApp, revisionOf } from '@/lib/pwa/register';
 import {
     followPage,
     startSessionRecording,
@@ -42,6 +43,22 @@ if (typeof document !== 'undefined') {
     // Before anything creates an observer: a callback that resizes what it observes is not a crash.
     deferResizeObserver(window);
 
+    // The installed app of a company's people: any page under /me/{slug} puts its service worker in charge (idempotent), the
+    // first load and every visit, so the start_url is covered without each page asking.
+    const watchWorker = () =>
+        void registerWorkerApp({
+            pathname: location.pathname,
+            revision: revisionOf(document),
+            killed: killedIn(document),
+            container:
+                'serviceWorker' in navigator
+                    ? navigator.serviceWorker
+                    : undefined,
+            dev: import.meta.env.DEV,
+            caches: 'caches' in window ? window.caches : undefined,
+        });
+    watchWorker();
+
     const initialPage = document.querySelector(
         'script[data-page="app"]',
     )?.textContent;
@@ -57,6 +74,7 @@ if (typeof document !== 'undefined') {
         arrives(event.detail.page.component);
         setErrorContext(event.detail.page);
         void followPage(event.detail.page);
+        watchWorker();
     });
     // A partial reload brings more data without a new page: the recording hides it too.
     router.on('success', (event) => rememberData(event.detail.page));

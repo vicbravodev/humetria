@@ -111,6 +111,24 @@ export const frontendArchitecture = {
                 }),
             },
         },
+        {
+            // Served from /me/{slug}/sw.js as one classic file: an import would break it (see vite.config.ts).
+            files: ['resources/js/sw/**'],
+            rules: {
+                'no-restricted-imports': restrictImports({
+                    group: [
+                        '@/**',
+                        '!@/lib/pwa/sw-rules',
+                        'qr',
+                        'qr/**',
+                        'react',
+                        'react/**',
+                    ],
+                    message:
+                        'El service worker solo importa lib/pwa/sw-rules: su compilación debe quedar en un archivo sin import.',
+                }),
+            },
+        },
         ...moduleBoundaries(),
     ],
 };

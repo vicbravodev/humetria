@@ -70,12 +70,15 @@ Route::middleware(['throttle:worker-proof', ResolveWorkerTenant::class, RequireW
     Route::post('code/check', [ProofController::class, 'checkCode'])->name('worker.proof.code.check');
 });
 
-// The installable app: its manifest, with no session and no cookie (with SESSION_DRIVER=database each request without a
-// cookie would open a row in `sessions`, and an installed phone asks for these often); nothing of anyone is in it.
+// The installable app: its manifest, its service worker and its shell, with no session and no cookie (with
+// SESSION_DRIVER=database each request without a cookie would open a row in `sessions`, and an installed phone asks for
+// these often); nothing of anyone is in them.
 Route::withoutMiddleware([
     EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class, ShareErrorsFromSession::class,
     PreventRequestForgery::class, EndRevokedImpersonation::class, AssignRequestContext::class, ForbidWhileImpersonating::class,
     HandleAppearance::class, HandleInertiaRequests::class,
 ])->middleware(['throttle:worker-enter', ResolveWorkerTenant::class])->group(function (): void {
     Route::get('me/{tenant:slug}/manifest.webmanifest', [InstallableAppController::class, 'manifest'])->name('worker.app.manifest');
+    Route::get('me/{tenant:slug}/sw.js', [InstallableAppController::class, 'serviceWorker'])->name('worker.app.sw');
+    Route::get('me/{tenant:slug}/offline', [InstallableAppController::class, 'offline'])->name('worker.app.offline');
 });

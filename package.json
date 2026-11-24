@@ -3,13 +3,14 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vp build",
-        "build:ssr": "vp build && vp build --ssr",
+        "build": "vp build && npm run build:sw",
+        "build:sw": "PWA_WORKER=sw vp build",
+        "build:ssr": "vp build && npm run build:sw && vp build --ssr",
         "dev": "vp dev",
         "check": "vp check",
         "check:fix": "vp check --fix",
         "test:js": "LARAVEL_BYPASS_ENV_CHECK=1 vp test run --coverage",
-        "types:check": "tsc --noEmit"
+        "types:check": "tsc --noEmit && tsc --noEmit -p resources/js/sw"
     },
     "dependencies": {
         "@ai-sdk/react": "^4.0.164",
