@@ -5,7 +5,9 @@ export default function MemberPermissions() {
     return (
         <>
             <Head title="Permisos adicionales" />
-            <h1 className="px-4 py-6 text-xl font-semibold">Permisos adicionales</h1>
+            <h1 className="px-4 py-6 text-xl font-semibold">
+                Permisos adicionales
+            </h1>
         </>
     );
 }

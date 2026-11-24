@@ -5,7 +5,9 @@ export default function Roles() {
     return (
         <>
             <Head title="Roles y permisos" />
-            <h1 className="px-4 py-6 text-xl font-semibold">Roles y permisos</h1>
+            <h1 className="px-4 py-6 text-xl font-semibold">
+                Roles y permisos
+            </h1>
         </>
     );
 }
