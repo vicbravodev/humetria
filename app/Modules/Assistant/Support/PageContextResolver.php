@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Assistant\Support;
 
+use App\Modules\Assistant\Data\AssistantScope;
 use App\Modules\Assistant\Data\PageContext;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Tenancy\Contracts\WorkCenters;
@@ -11,13 +12,14 @@ use Illuminate\Support\Str;
 
 /**
  * Checks the page the browser says the person has open: a campaign or a work center of the current company. Anything
- * else, including one of another company, is no context at all, exactly like one that does not exist.
+ * else, including one of another company, or one the person's role does not let them open (the NOM-035 route for a campaign,
+ * the work centers for a center), is no context at all, exactly like one that does not exist.
  */
 final readonly class PageContextResolver
 {
     public function __construct(private CampaignRecords $campaigns, private WorkCenters $workCenters) {}
 
-    public function resolve(mixed $raw): ?PageContext
+    public function resolve(mixed $raw, AssistantScope $scope): ?PageContext
     {
         if (! is_array($raw)) {
             return null;
@@ -31,8 +33,8 @@ final readonly class PageContextResolver
         }
 
         return match ($kind) {
-            'campaign' => $this->campaign($id),
-            'work_center' => $this->workCenter($id),
+            'campaign' => $scope->canSee('view-nom035-route') ? $this->campaign($id) : null,
+            'work_center' => $scope->canSee('view-work-centers') ? $this->workCenter($id) : null,
             default => null,
         };
     }
