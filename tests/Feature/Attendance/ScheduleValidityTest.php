@@ -7,7 +7,9 @@ use App\Modules\Attendance\Actions\SaveSchedule;
 use App\Modules\Attendance\Actions\SaveSchedules;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WorkMode;
+use App\Modules\Attendance\Exceptions\ScheduleStartLocked;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
@@ -107,6 +109,73 @@ describe('saving a schedule with a start date', function (): void {
             ->and($entries[1]->metadata['after'])->toEqual(['valid_from' => '2026-03-01', 'shift_type' => 'mixed', 'work_mode' => 'remote', 'minutes' => [420, 420, 420, 420, 420, 0, 0], 'starts' => null])
             ->and($before->id)->not->toBe($after->id)
             ->and(collect($entries)->map(fn (AuditEntry $entry): string => auditContent($entry))->implode(' '))->not->toContain($this->ana->name);
+    });
+});
+
+describe('a start date in a week the person already answered', function (): void {
+    // Confirmed week of Monday 2 November: its Sunday is the 8th and the next Monday the 9th.
+    it('refuses it inside the last week confirmed or disputed, or before it, and takes the Monday after', function (string $status, string $date, bool $accepted): void {
+        WeeklyConfirmation::factory()->{$status}()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02']);
+        $save = fn () => resolve(SaveSchedule::class)->handle($this->ana->id, ShiftType::Day, WorkMode::Onsite, WEEK_9_TO_6, null, CarbonImmutable::parse($date));
+
+        if ($accepted) {
+            expect($save()->valid_from->toDateString())->toBe($date);
+
+            return;
+        }
+
+        expect($save(...))->toThrow(ScheduleStartLocked::class);
+        expect(AttendanceSchedule::query()->count())->toBe(0)
+            ->and(AuditEntry::query()->where('event', 'attendance.schedule_saved')->count())->toBe(0);
+    })->with([
+        'confirmed, its Monday' => ['confirmed', '2026-11-02', false],
+        'confirmed, its Sunday' => ['confirmed', '2026-11-08', false],
+        'confirmed, the Monday after' => ['confirmed', '2026-11-09', true],
+        'confirmed, long before' => ['confirmed', '2026-01-05', false],
+        'disputed, its Sunday' => ['disputed', '2026-11-08', false],
+        'disputed, the Monday after' => ['disputed', '2026-11-09', true],
+    ]);
+
+    it('says which Monday is the first it takes, after the latest answered week of any status among several', function (): void {
+        foreach ([['confirmed', '2026-10-05'], ['disputed', '2026-11-02'], ['confirmed', '2026-09-07']] as [$status, $week]) {
+            WeeklyConfirmation::factory()->{$status}()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => $week]);
+        }
+
+        try {
+            resolve(SaveSchedule::class)->handle($this->ana->id, ShiftType::Day, WorkMode::Onsite, WEEK_9_TO_6, null, CarbonImmutable::parse('2026-11-05'));
+            $this->fail('A date in an answered week was accepted.');
+        } catch (ScheduleStartLocked $locked) {
+            expect($locked->employeeId)->toBe($this->ana->id)
+                ->and($locked->from->toDateString())->toBe('2026-11-09');
+        }
+    });
+
+    it('lets RH correct the past in weeks nobody answered, and weeks pending or of another person never block', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+        WeeklyConfirmation::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02']);
+        WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $bob->id, 'week_start' => '2026-11-02']);
+
+        $schedule = resolve(SaveSchedule::class)->handle($this->ana->id, ShiftType::Day, WorkMode::Onsite, WEEK_9_TO_6, null, CarbonImmutable::parse('2026-03-02'));
+
+        expect($schedule->valid_from->toDateString())->toBe('2026-03-02');
+    });
+
+    it('does not mind the weeks of another company', function (): void {
+        $other = Tenant::factory()->create();
+        $stranger = EmployeeFactory::new()->create(['tenant_id' => $other->id]);
+        WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $other->id, 'employee_id' => $stranger->id, 'week_start' => '2026-11-02']);
+        workIn($this->tenant);
+
+        expect(resolve(SaveSchedule::class)->handle($this->ana->id, ShiftType::Day, WorkMode::Onsite, WEEK_9_TO_6, null, CarbonImmutable::parse('2026-11-03'))->valid_from->toDateString())->toBe('2026-11-03');
+    });
+
+    it('refuses the whole batch when one person is locked, leaving nobody changed', function (): void {
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+        WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $bob->id, 'week_start' => '2026-11-02']);
+
+        expect(fn () => resolve(SaveSchedules::class)->handle([$this->ana->id, $bob->id], ShiftType::Day, WorkMode::Onsite, WEEK_9_TO_6, null, CarbonImmutable::parse('2026-11-05')))
+            ->toThrow(ScheduleStartLocked::class);
+        expect(AttendanceSchedule::query()->count())->toBe(0);
     });
 });
 

@@ -7,6 +7,7 @@ namespace App\Modules\Attendance\Actions;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\EmployeeNotAvailable;
+use App\Modules\Attendance\Exceptions\ScheduleStartLocked;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\Timezones;
@@ -30,6 +31,7 @@ final readonly class SaveSchedules
      * @return list<RosterEntry> the people saved, in the order given
      *
      * @throws EmployeeNotAvailable when any of them is not of the company
+     * @throws ScheduleStartLocked when the date falls in a week one of them already confirmed or disputed: nobody is changed
      */
     public function handle(array $employeeIds, ShiftType $shiftType, WorkMode $workMode, array $minutesByWeekday, ?array $startsByWeekday = null, ?CarbonImmutable $validFrom = null): array
     {

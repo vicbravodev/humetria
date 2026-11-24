@@ -444,6 +444,26 @@ describe('with a start date', function (): void {
         expect(AttendanceSchedule::query()->withoutGlobalScopes()->where('valid_from', '2026-12-01')->exists())->toBeFalse();
     });
 
+    it('refuses, in Spanish and naming the first Monday it takes, a date in a week the person already confirmed or disputed', function (string $status): void {
+        $this->actingAs($this->hr);
+        App\Modules\Attendance\Models\WeeklyConfirmation::factory()->{$status}()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'week_start' => '2026-11-02']);
+
+        saveSchedule($this->ana->id, scheduleInput(['valid_from' => '2026-11-08']))->assertSessionHasErrors(['valid_from' => 'Ana López ya confirmó u objetó su registro hasta el domingo 8 de noviembre de 2026: elige el lunes 9 de noviembre de 2026 o una fecha posterior.']);
+        saveSchedule($this->ana->id, scheduleInput(['valid_from' => '2026-11-09']))->assertSessionHasNoErrors();
+
+        expect(AttendanceSchedule::query()->where('employee_id', $this->ana->id)->pluck('valid_from')->map->toDateString()->sort()->values()->all())->toBe(['1970-01-01', '2026-11-09']);
+    })->with(['confirmed', 'disputed']);
+
+    it('refuses the whole batch for one person locked, naming them, and changes nobody', function (): void {
+        $this->actingAs($this->hr);
+        App\Modules\Attendance\Models\WeeklyConfirmation::factory()->confirmed()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->bob->id, 'week_start' => '2026-11-02']);
+
+        saveSchedules([$this->ana->id, $this->bob->id], ['valid_from' => '2026-11-05'])->assertSessionHasErrors(['valid_from' => 'Bob Díaz ya confirmó u objetó su registro hasta el domingo 8 de noviembre de 2026: elige el lunes 9 de noviembre de 2026 o una fecha posterior.']);
+
+        expect(AttendanceSchedule::query()->where('employee_id', $this->ana->id)->count())->toBe(1)
+            ->and(AttendanceSchedule::query()->where('employee_id', $this->bob->id)->count())->toBe(0);
+    });
+
     it('takes the same queries however many schedules each person has', function (): void {
         foreach (EmployeeFactory::new()->count(30)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->office->id]) as $person) {
             foreach (['1970-01-01', '2026-03-01', '2026-09-01', '2026-12-01'] as $date) {

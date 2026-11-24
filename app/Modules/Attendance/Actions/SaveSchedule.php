@@ -6,8 +6,11 @@ namespace App\Modules\Attendance\Actions;
 
 use App\Actions\RecordAudit;
 use App\Modules\Attendance\Enums\ShiftType;
+use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Enums\WorkMode;
+use App\Modules\Attendance\Exceptions\ScheduleStartLocked;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\ScheduleTimeline;
 use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -21,7 +24,8 @@ use InvalidArgumentException;
  * Saves the agreed weekly schedule of a person of the company (criterio 2.6), set by RH, from a date on: it never erases
  * the one before, each day is read with the schedule in effect that day. One per start date: saving again for the same
  * date changes it. The date may be in the past, to correct a record; either way the audit trail keeps what was in effect
- * that day and what is now.
+ * that day and what is now. It cannot start inside, or before, a week the person already confirmed or disputed: that would
+ * change what they signed (its digest stops matching) and the report of those weeks; the weeks nobody answered can still be corrected.
  */
 final readonly class SaveSchedule
 {
@@ -31,6 +35,8 @@ final readonly class SaveSchedule
      * @param  array<int, int>  $minutesByWeekday  minutes agreed by ISO weekday, 1 Monday to 7 Sunday
      * @param  array<int, int|null>|null  $startsByWeekday  the minute of the day each ISO weekday starts; null for none
      * @param  CarbonImmutable|null  $validFrom  the first day it applies (its date only); null for today in the company's zone
+     *
+     * @throws ScheduleStartLocked when it would start in a week the person already confirmed or disputed, or before one
      */
     public function handle(string $employeeId, ShiftType $shiftType, WorkMode $workMode, array $minutesByWeekday, ?array $startsByWeekday = null, ?CarbonImmutable $validFrom = null): AttendanceSchedule
     {
@@ -39,6 +45,11 @@ final readonly class SaveSchedule
         }
 
         $from = ($validFrom ?? CarbonImmutable::now($this->timezones->forTenant()))->toDateString();
+        $answered = WeeklyConfirmation::query()->where('employee_id', $employeeId)->whereIn('status', [WeekStatus::Confirmed, WeekStatus::Disputed])->max('week_start');
+
+        if (is_string($answered) && $from < ($free = CarbonImmutable::parse($answered)->addWeek())->toDateString()) {
+            throw new ScheduleStartLocked($employeeId, $free);
+        }
 
         return DB::transaction(function () use ($employeeId, $shiftType, $workMode, $minutesByWeekday, $startsByWeekday, $from): AttendanceSchedule {
             $before = ScheduleTimeline::of([$employeeId])->on($employeeId, CarbonImmutable::parse($from));

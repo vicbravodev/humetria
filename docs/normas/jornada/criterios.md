@@ -82,7 +82,9 @@ común acuerdo». El horario de cada persona es un dato propio, no uno por empre
 un horario nuevo **no borra el anterior**: cada día se calcula con el horario vigente ese día (el último que empezó en esa
 fecha o antes). Así el reporte para la autoridad de un periodo pasado da lo mismo hoy que dentro de un año, aunque el
 horario cambie después. RH elige la fecha de inicio (hoy por omisión, en el calendario de la empresa); puede ser una fecha
-pasada, para corregir un registro, y entonces la bitácora guarda el horario que regía ese día y el que quedó. Los
+pasada, para corregir un registro, y entonces la bitácora guarda el horario que regía ese día y el que quedó. Un horario **no puede empezar** dentro de una semana que la persona ya confirmó u objetó, ni antes de ella (cambiaría lo
+que firmó y el reporte de esas semanas); la primera fecha posible es el lunes siguiente a la última semana confirmada u
+objetada, y las semanas sin responder sí se pueden corregir. Un lote de personas empieza todo en una sola fecha. Los
 horarios que existían antes de las fechas de inicio valen «desde siempre». Un día anterior al primer horario de una persona
 no tiene horario (se cuenta como quien no lo tiene: 8 h diarias sin descanso). Un turno que cruza la medianoche el día del
 cambio pertenece al día en que empezó, y se lee con el horario de ese día. **Fuera de la vigencia**, por ahora: la
