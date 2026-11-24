@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useMemberPermissions } from '@/hooks/use-member-permissions';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { areasFor, beyondRole, summarize } from '@/lib/permission-areas';
+import { areasFor, beyondRole } from '@/lib/permission-areas';
+import { summarizeBeyond } from '@/lib/permission-floor';
 import { countOf } from '@/lib/plural';
 import { index } from '@/routes/tenant/members';
 import type { PermissionGroup } from '@/types';
@@ -52,9 +53,10 @@ export default function MemberPermissionsForm({
                 sentence={
                     raised.length === 0
                         ? 'Por ahora solo tiene lo que trae su rol.'
-                        : summarize({
+                        : summarizeBeyond({
                               areas: raised,
                               held: editor.held,
+                              base: editor.base,
                               subject: `Además de lo que trae su rol, ${member.name}`,
                           })
                 }
