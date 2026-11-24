@@ -5,12 +5,16 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\AcceptInvitation;
+use App\Modules\Tenancy\Actions\ChangeMemberRole;
 use App\Modules\Tenancy\Actions\CreateCompanyRole;
 use App\Modules\Tenancy\Actions\DeleteCompanyRole;
+use App\Modules\Tenancy\Actions\GrantMemberPermissions;
 use App\Modules\Tenancy\Actions\InviteMember;
 use App\Modules\Tenancy\Actions\UpdateCompanyRole;
 use App\Modules\Tenancy\Data\MemberInvitationData;
 use App\Modules\Tenancy\Data\NewAccountData;
+use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Events\MemberRoleChanged;
 use App\Modules\Tenancy\Exceptions\CompanyRoleInUse;
 use App\Modules\Tenancy\Exceptions\RoleNotAllowedInAccount;
 use App\Modules\Tenancy\Models\Tenant;
@@ -20,13 +24,14 @@ use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Notifications\InvitationEmail;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
-mutates(InviteMember::class, AcceptInvitation::class, InvitationEmail::class);
+mutates(InviteMember::class, AcceptInvitation::class, InvitationEmail::class, ChangeMemberRole::class);
 
 beforeEach(function (): void {
     Notification::fake();
@@ -160,4 +165,43 @@ it('keeps a role with an open invitation, and lets it go once the invitation is 
 
     expect(Role::query()->whereKey($this->role->id)->exists())->toBeFalse()
         ->and(TenantInvitation::query()->sole()->role)->toBeNull();
+});
+
+it('changes a person to a role of the company, keeping their extras, and says which role by its internal name', function (): void {
+    Event::fake([MemberRoleChanged::class]);
+    $ana = memberOf($this->tenant, TenantRole::Viewer);
+    $membership = TenantMembership::query()->where('user_id', $ana->id)->sole();
+    app(GrantMemberPermissions::class)->handle($membership, ['view-vacations'], $this->owner);
+
+    $this->actingAs($this->owner)->put(route('tenant.members.update', [$this->tenant, $membership->id]), ['role' => $this->role->name])
+        ->assertSessionHasNoErrors()->assertRedirect();
+
+    $roles = resolve(CompanyRoles::class);
+    expect($roles->roleOf($ana, $this->tenant)?->is($this->role))->toBeTrue()
+        ->and($roles->directPermissionsOf($ana, $this->tenant))->toBe(['view-vacations'])
+        ->and(AuditEntry::query()->where('event', 'tenant_member.role_changed')->sole()->metadata)->toEqual(['member_user_id' => $ana->id, 'from' => 'viewer', 'to' => $this->role->name]);
+    Event::assertDispatched(MemberRoleChanged::class, fn (MemberRoleChanged $event): bool => $event->role === $this->role->name && $event->userId === $ana->id);
+});
+
+it('does not change a person to a role of another company', function (): void {
+    $membership = TenantMembership::query()->where('user_id', memberOf($this->tenant, TenantRole::Viewer)->id)->sole();
+    $theirs = app(CreateCompanyRole::class)->handle(Tenant::factory()->create(), 'De otra', ['view-dashboard'], null, $this->owner);
+
+    $this->actingAs($this->owner)->put(route('tenant.members.update', [$this->tenant, $membership->id]), ['role' => $theirs->name])->assertSessionHasErrors('role');
+    expect(fn () => app(ChangeMemberRole::class)->handle($membership, $theirs, $this->owner))->toThrow(RoleNotAllowedInAccount::class);
+    expect(resolve(CompanyRoles::class)->roleOf($membership->user()->sole(), $this->tenant)?->name)->toBe('viewer');
+});
+
+it('lets a union change a person only to a role of compensation', function (): void {
+    $union = Tenant::factory()->union()->create();
+    $owner = ownerOf($union);
+    $membership = TenantMembership::query()->where('user_id', memberOf($union, TenantRole::Hr)->id)->sole();
+    $compensation = app(CreateCompanyRole::class)->handle($union, 'Tesorería', ['view-compensation'], null, $owner);
+    $compliance = Role::query()->create(['name' => 'custom_'.Str::uuid(), 'guard_name' => 'web', 'tenant_id' => $union->id, 'label' => 'Cumplimiento']);
+    $compliance->givePermissionTo('view-dashboard');
+
+    expect(fn () => app(ChangeMemberRole::class)->handle($membership, $compliance, $owner))->toThrow(RoleNotAllowedInAccount::class);
+    app(ChangeMemberRole::class)->handle($membership, $compensation, $owner);
+
+    expect(resolve(CompanyRoles::class)->roleOf($membership->user()->sole(), $union)?->is($compensation))->toBeTrue();
 });

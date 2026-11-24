@@ -123,7 +123,8 @@ final class MemberController extends Controller
     public function update(ChangeMemberRoleRequest $request, Tenant $tenant, string $member, ChangeMemberRole $changeMemberRole, #[CurrentUser] User $user): RedirectResponse
     {
         $this->authorizeOwner();
-        $changeMemberRole->handle($this->member($tenant, $member), $request->role(), $user);
+        // Validated against the same list: only a role deleted meanwhile is missing.
+        $changeMemberRole->handle($this->member($tenant, $member), $this->roles->assignable($tenant, $request->role()) ?? abort(404), $user);
 
         return $this->done($tenant, 'Rol actualizado.');
     }
