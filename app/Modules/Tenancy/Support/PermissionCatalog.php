@@ -88,7 +88,7 @@ final class PermissionCatalog
     {
         return array_values(array_filter(
             self::all(),
-            fn (PermissionDefinition $permission): bool => ! $permission->ownerOnly && ($permission->unionAllowed || ! $tenant->isUnion()),
+            fn (PermissionDefinition $permission): bool => ! $permission->ownerOnly && $tenant->type->admits([$permission->name]),
         ));
     }
 
