@@ -7,15 +7,15 @@ import {
 } from '@/components/landing/landing-families';
 import { EASE_OUT } from '@/components/landing/landing-motion';
 import { toolPageUrl } from '@/components/landing/tool-page-links';
-import publicNav from '@/lib/public-nav.json';
+import { PUBLIC_LINKS } from '@/lib/public-nav';
 import { cn } from '@/lib/utils';
 import { home } from '@/routes';
 import { workday2027 } from '@/routes/guides';
 
 // Blog and Roadmap are in the header's pill from 1,024 px up; below it the menu button is all the header has room for.
-const PAGES = publicNav.links
-    .flatMap((link) => link.items ?? [])
-    .filter((link) => link.kind === 'page');
+const PAGES = PUBLIC_LINKS.flatMap((link) => link.items ?? []).filter(
+    (link) => link.kind === 'page',
+);
 
 type Props = {
     /** Under the header word (`true`) or over the page on a phone. */

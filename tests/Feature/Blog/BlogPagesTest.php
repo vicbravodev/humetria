@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
+use Inertia\Testing\AssertableInertia as Assert;
 
 require_once __DIR__.'/BlogTestHelpers.php';
 
@@ -15,17 +16,22 @@ it('lists the published articles on the index, with its title and canonical', fu
 
     $this->get(route('blog.index'))
         ->assertOk()
-        ->assertSee('Jornada de 40 horas')
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('blog/index')
+            ->has('articles', 1)
+            ->where('articles.0.title', 'Jornada de 40 horas')
+            ->where('articles.0.url', route('blog.show', 'jornada-40-horas', false))
+            ->where('seo.title', 'Blog de cumplimiento laboral')
+            ->where('seo.canonical', 'http://localhost/blog'))
         ->assertDontSee('Artículo draft')
-        ->assertSee('href="'.route('blog.show', 'jornada-40-horas').'"', false)
-        ->assertSee('<link rel="canonical" href="http://localhost/blog">', false)
-        ->assertSee('<h1', false);
+        ->assertSee('<link data-inertia="canonical" rel="canonical" href="http://localhost/blog">', false)
+        ->assertSee('<title data-inertia="">Blog de cumplimiento laboral - Humetría</title>', false);
 });
 
 it('says there are no articles yet when there are none', function (): void {
     blogFolder();
 
-    $this->get(route('blog.index'))->assertOk()->assertSee('Todavía no hay artículos');
+    $this->get(route('blog.index'))->assertOk()->assertInertia(fn (Assert $page) => $page->component('blog/index')->has('articles', 0));
 });
 
 it('paginates the index on the server', function (): void {
@@ -35,11 +41,13 @@ it('paginates the index on the server', function (): void {
     writeArticle($folder, 'two', ['published_at' => 'published_at: 2026-11-02']);
     writeArticle($folder, 'three', ['published_at' => 'published_at: 2026-11-01']);
 
-    $this->get(route('blog.index'))->assertSee('Artículo one')->assertSee('Artículo two')->assertDontSee('Artículo three')
-        ->assertSee('rel="next"', false);
-    $this->get(route('blog.index', ['page' => 2]))->assertSee('Artículo three')->assertDontSee('Artículo one')
-        ->assertSee('<link rel="canonical" href="http://localhost/blog?page=2">', false)
-        ->assertSee('rel="prev"', false);
+    $this->get(route('blog.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('articles.0.title', 'Artículo one')->where('articles.1.title', 'Artículo two')->has('articles', 2)
+        ->where('pagination.previous', null)->where('pagination.next', '/blog?page=2'));
+    $this->get(route('blog.index', ['page' => 2]))->assertInertia(fn (Assert $page) => $page
+        ->where('articles.0.title', 'Artículo three')->has('articles', 1)
+        ->where('seo.canonical', 'http://localhost/blog?page=2')
+        ->where('pagination.previous', '/blog')->where('pagination.next', null));
 });
 
 it('shows an article with the tags of its head', function (): void {
@@ -48,24 +56,25 @@ it('shows an article with the tags of its head', function (): void {
 
     $this->get(route('blog.show', 'jornada-40-horas'))
         ->assertOk()
-        ->assertSee('<title>Jornada de 40 horas - Humetría</title>', false)
-        ->assertSee('<meta name="description" content="'.str_repeat('d', 130).'">', false)
-        ->assertSee('<link rel="canonical" href="http://localhost/blog/jornada-40-horas">', false)
-        ->assertSee('<meta property="og:type" content="article">', false)
-        ->assertSee('<h1', false)
-        ->assertSee('Qué dice la ley')
-        ->assertSee('Revisado el 11 de noviembre de 2026')
-        ->assertSee('3 min de lectura')
-        ->assertSee('href="https://dof.gob.mx/nota_detalle.php?codigo=1"', false)
-        ->assertSee('href="/#agenda-una-demo"', false);
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('blog/show')
+            ->where('article.title', 'Jornada de 40 horas')
+            ->where('article.reviewedOn', '11 de noviembre de 2026')
+            ->where('article.updatedOn', '12 de noviembre de 2026')
+            ->where('article.readingMinutes', 3)
+            ->where('article.sources', ['https://dof.gob.mx/nota_detalle.php?codigo=1'])
+            ->where('article.html', fn (string $html) => str_contains($html, 'Qué dice la ley')))
+        ->assertSee('<title data-inertia="">Jornada de 40 horas - Humetría</title>', false)
+        ->assertSee('<meta data-inertia="description" name="description" content="'.str_repeat('d', 130).'">', false)
+        ->assertSee('<link data-inertia="canonical" rel="canonical" href="http://localhost/blog/jornada-40-horas">', false);
 });
 
-it('describes the article in JSON-LD', function (): void {
+it('describes the article in JSON-LD, with its dates, so the dates survive without the article: tags', function (): void {
     $folder = blogFolder();
     writeArticle($folder, 'jornada-40-horas', ['updated_at' => 'updated_at: 2026-11-12']);
 
     $html = $this->get(route('blog.show', 'jornada-40-horas'))->getContent();
-    preg_match('~<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>~s', (string) $html, $match);
+    preg_match('~<script data-inertia="json-ld"[^>]*>(.*?)</script>~s', (string) $html, $match);
     $data = json_decode($match[1] ?? '', true);
 
     expect($data['@type'])->toBe('Article')
@@ -83,8 +92,7 @@ it('cannot be closed early by a title that carries a script tag', function (): v
 
     $content = (string) $this->get(route('blog.show', 'tricky'))->assertOk()->getContent();
 
-    expect($content)->not->toContain('</script><b>')
-        ->and($content)->toContain('Hola &lt;/script&gt;&lt;b&gt;x&lt;/b&gt;');
+    expect($content)->not->toContain('</script><b>');
 });
 
 it('answers 404 for a draft, a future article, an unknown one and a slug that is not one', function (string $slug): void {
@@ -134,13 +142,13 @@ it('answers 404 for a page of the index past the last one, and reads a junk page
     writeArticle($folder, 'only');
 
     $this->get(route('blog.index', ['page' => 2]))->assertNotFound();
-    $this->get(route('blog.index', ['page' => 'abc']))->assertOk()->assertSee('Artículo only');
-    $this->get(route('blog.index', ['page' => -3]))->assertOk()->assertSee('Artículo only');
+    $this->get(route('blog.index', ['page' => 'abc']))->assertOk()->assertInertia(fn (Assert $page) => $page->where('articles.0.title', 'Artículo only'));
+    $this->get(route('blog.index', ['page' => -3]))->assertOk()->assertInertia(fn (Assert $page) => $page->where('articles.0.title', 'Artículo only'));
 });
 
 it('shows no review line for a draft that is only read, and no update line when nothing changed after publishing', function (): void {
     $folder = blogFolder();
     writeArticle($folder, 'plain');
 
-    $this->get(route('blog.show', 'plain'))->assertOk()->assertDontSee('Actualizado el');
+    $this->get(route('blog.show', 'plain'))->assertOk()->assertInertia(fn (Assert $page) => $page->where('article.updatedOn', null));
 });

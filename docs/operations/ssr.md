@@ -27,13 +27,15 @@ ver en producción está en la última sección, como verificación manual. El d
 - Las dos imágenes se construyen del mismo commit en `.github/workflows/deploy.yml` y llevan dos etiquetas: `latest` y `sha-<commit>`.
   Las dos van siempre a la misma `HUMETRIA_TAG`.
 
-Solo se renderiza en Node lo que dice `App\Http\SsrPages` (`/` y `/privacy-notice`) y solo para visitantes sin sesión.
+Solo se renderiza en Node lo que dice `App\Http\SsrPages` (la landing, el aviso de privacidad, cada herramienta, la guía y el blog) y solo para visitantes sin sesión.
 Si Node no responde, la página sale igual: `web` responde 200 con las etiquetas del `<head>` y React la pinta en el navegador.
 `web` no depende de `ssr`: nunca se cae por él.
 
-El blog y el roadmap no pasan por Node: el blog es Blade y el roadmap es una página de Inertia sin SSR. Su header es el de la
-landing (`resources/js/lib/public-nav.json`, leído por React y por `partials/public-header.blade.php`), con Blog y Roadmap como
-enlaces `<a href>` planos.
+El blog (`blog.index` y `blog.show`) sí pasa por Node, igual que la landing y las páginas de cada herramienta: son páginas de Inertia
+con el header y el pie de la landing, y el texto del artículo sale en el HTML que Node renderiza (`tests/Ssr/BlogSsrTest.php`).
+Si Node no responde, la página sale con las etiquetas del `<head>` (incluido el JSON-LD `Article`, con sus fechas) y React la pinta
+en el navegador: ese es el único momento en que un rastreador sin JavaScript no vería el cuerpo del artículo. El roadmap es una
+página de Inertia sin SSR.
 
 ## 2. Variables
 

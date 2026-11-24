@@ -30,7 +30,7 @@ function requestFor(?string $routeName, ?User $user = null): Request
 
 it('renders the allowed pages for a visitor', function (string $route, string $component): void {
     expect(SsrPages::allows(requestFor($route), ['component' => $component]))->toBeTrue();
-})->with([['home', 'landing'], ['privacy-notice', 'privacy-notice']]);
+})->with([['home', 'landing'], ['privacy-notice', 'privacy-notice'], ['blog.index', 'blog/index'], ['blog.show', 'blog/show']]);
 
 it('does not render when the switch is off', function (): void {
     config(['inertia.ssr.enabled' => false]);

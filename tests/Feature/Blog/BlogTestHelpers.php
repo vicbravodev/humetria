@@ -30,7 +30,7 @@ function writeArticle(string $folder, string $slug, array $front = [], string $w
         'sources' => "sources:\n  - https://dof.gob.mx/nota_detalle.php?codigo=1",
         ...$front,
     ];
-    $body = "## Qué dice la ley\n\n".trim(str_repeat('palabra ', 520))."\n\n".($words === '' ? '' : $words."\n\n")."[Agenda una demo](/#agenda-una-demo)\n\n{$extra}";
+    $body = "## Qué dice la ley\n\n".trim(str_repeat('palabra ', 520))."\n\n".($words === '' ? '' : $words."\n\n")."Si quieres verlo, [agenda una demo](/#agenda-una-demo) hoy.\n\n{$extra}";
 
     File::put("{$folder}/{$slug}.md", "---\n".implode("\n", array_filter($lines, fn (string $line): bool => $line !== ''))."\n---\n{$body}");
 }

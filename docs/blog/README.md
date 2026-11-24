@@ -50,14 +50,17 @@ no tiene los campos de arriba o están fuera de límite; la fuente no es `https`
 (el título ya es el h1) o HTML crudo; tiene menos de 500 palabras; no enlaza a una página de Humetría (por ejemplo
 `/#agenda-una-demo`); el slug no es minúsculas con guiones, o el título se repite.
 
-## Para el SEO
+## Cómo se ve y se renderiza
 
-El artículo sale como HTML del servidor (sin React ni Node), con título, descripción, canonical, Open Graph y JSON-LD
-`Article`. Entra solo al sitemap `/blog/sitemap.xml` (declarado en `robots.txt`); `/blog` está en `public/sitemap.xml`.
-Un artículo con la jornada o una norma cambiante se revisa cuando cambie la fuente y se sube `updated_at`.
+El blog son dos páginas de Inertia (`resources/js/pages/blog/index.tsx` y `show.tsx`) con el header y el pie de la landing, y
+pasan por Node (`App\Http\SsrPages`): el texto del artículo sale en el HTML del servidor, con título, descripción, canonical,
+Open Graph y JSON-LD `Article` (con `datePublished` y `dateModified`). El cuerpo es el HTML que `ArticleParser` saca del
+Markdown; la página lo pinta tal cual. Entra solo al sitemap `/blog/sitemap.xml` (declarado en `robots.txt`); `/blog` está en
+`public/sitemap.xml`. Un artículo con la jornada o una norma cambiante se revisa cuando cambie la fuente y se sube `updated_at`.
 
-La landing y las páginas de cada herramienta enlazan al blog desde el navbar (`header-blog`) y desde el pie (`footer-blog`), los dos un `<a href="/blog">` plano, que es lo que reparte el peso de todo el sitio hacia él.
+Si Node se cae, la página responde 200 con las etiquetas del `<head>` y React la pinta en el navegador; el cuerpo solo falta
+para un rastreador que no ejecuta JavaScript. Lo vigila `tests/Ssr/BlogSsrTest.php` (`composer test:ssr`).
 
-El header del blog (`resources/views/partials/public-header.blade.php`) es el de la landing: los dos leen sus enlaces de
-`resources/js/lib/public-nav.json` (`App\Http\PublicNav` en PHP), así que agregar un enlace se hace en ese solo archivo.
-El blog sigue siendo HTML del servidor: «Herramientas» es un enlace a su sección y el menú del teléfono es un `<details>`. Los artículos enlazan a la demo (`/#agenda-una-demo`).
+La landing y las páginas de cada herramienta enlazan al blog desde el navbar (el menú «Recursos», `header-blog`) y desde el pie
+(`footer-blog`), los dos un `<a href="/blog">` plano, que es lo que reparte el peso de todo el sitio hacia él. Los artículos
+enlazan a la demo (`/#agenda-una-demo`) y a la página de su herramienta.

@@ -2,16 +2,16 @@ import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import GlideChips from '@/components/humetria/glide-chips';
 import ResourcesMenu from '@/components/landing/resources-menu';
-import type { ResourceLink } from '@/components/landing/resource-link';
+import type { ResourceLink } from '@/types/public-nav';
 import ToolsMenu from '@/components/landing/tools-menu';
 import { useActiveSection } from '@/hooks/use-active-section';
-import publicNav from '@/lib/public-nav.json';
+import { PUBLIC_LINKS } from '@/lib/public-nav';
 import { cn } from '@/lib/utils';
 
 // The links come from one file that the Blade header of the blog reads too. A section jumps to its heading (`id`) and is
 // marked while its whole section (`section`) is being read; a page is a plain link, marked on its own page. «Recursos»
 // is a group: Blog, Roadmap, the guide, Confidencialidad and Humi live inside it so the bar keeps to four things.
-const links = publicNav.links;
+const links = PUBLIC_LINKS;
 const resourceItems = links.flatMap((link) => link.items ?? []);
 
 // The hero comes first so nothing is marked until the page reaches a section.
@@ -38,12 +38,15 @@ export default function HeaderNav({
     const active = useActiveSection(watched);
     const { url } = usePage();
     const [hovered, setHovered] = useState<string | null>(null);
-    const path = url.split('?')[0];
+    const path = url.split('?')[0] ?? '';
     const hrefOf = (link: Pick<ResourceLink, 'id' | 'kind' | 'path'>) =>
         link.kind === 'page' ? (link.path ?? '') : `${sectionBase}#${link.id}`;
     const currentItem =
         resourceItems.find((item) =>
-            item.kind === 'page' ? item.path === path : item.section === active,
+            item.kind === 'page'
+                ? item.path !== undefined &&
+                  (path === item.path || path.startsWith(`${item.path}/`))
+                : item.section === active,
         )?.id ?? null;
 
     return (

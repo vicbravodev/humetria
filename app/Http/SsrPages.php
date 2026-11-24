@@ -28,6 +28,8 @@ final class SsrPages
         'tools.org_chart' => 'tool',
         'tools.engagement' => 'tool',
         'guides.workday-2027' => 'guide',
+        'blog.index' => 'blog/index',
+        'blog.show' => 'blog/show',
     ];
 
     /** Set for a few seconds after Node could not be reached, so a stuck Node does not cost every visit its timeout. */

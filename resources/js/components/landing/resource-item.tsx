@@ -1,4 +1,4 @@
-import type { ResourceLink } from '@/components/landing/resource-link';
+import type { ResourceLink } from '@/types/public-nav';
 import { cn } from '@/lib/utils';
 
 /** One link of the menu «Recursos»: its icon (or Humi's own face), its name and what it is for. */

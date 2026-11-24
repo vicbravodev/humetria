@@ -16,7 +16,7 @@ export type ToolIconName =
  * Humetría's own icon for each tool: one family of 24 px line drawings (1.75 stroke, round ends) so a tool is recognised
  * by its mark wherever it is named. Each path draws what the tool is about, not a generic symbol.
  */
-export const PATHS: Record<ToolIconName, string[]> = {
+const PATHS: Record<ToolIconName, string[]> = {
     // A head with a pulse inside: what people feel at work (psychosocial risk).
     nom_035: [
         'M9.5 21v-3.2A7 7 0 1 1 18 11l1.6 2.8a.6.6 0 0 1-.5.9H18v2.1a2 2 0 0 1-2 2h-1.5V21',

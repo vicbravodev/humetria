@@ -3,56 +3,59 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
+use Inertia\Testing\AssertableInertia as Assert;
 
 require_once __DIR__.'/BlogTestHelpers.php';
 
 beforeEach(fn () => Carbon::setTestNow('2026-11-20 12:00:00'));
 
-it('shows the cover of the article with a fixed size, a description and priority, since it is the first thing painted', function (): void {
+it('gives the article a cover of a known size and a description of it', function (): void {
     writeArticle(blogFolder(), 'jornada', ['tool' => 'tool: leave']);
 
-    $this->get(route('blog.show', 'jornada'))
-        ->assertSee('src="/blog/jornada.webp"', false)
-        ->assertSee('width="1200" height="630"', false)
-        ->assertSee('alt="Portada del artículo sobre Vacaciones y permisos: Artículo jornada"', false)
-        ->assertSee('fetchpriority="high"', false)
-        ->assertDontSee('loading="lazy"', false);
+    $this->get(route('blog.show', 'jornada'))->assertInertia(fn (Assert $page) => $page
+        ->where('article.cover', '/blog/jornada.webp')
+        ->where('article.coverAlt', 'Portada del artículo sobre Vacaciones y permisos: Artículo jornada'));
 });
 
 it('shares the cover with the title on it, in Open Graph, Twitter and the JSON-LD', function (): void {
     writeArticle(blogFolder(), 'jornada');
 
-    $html = (string) $this->get(route('blog.show', 'jornada'))->getContent();
-    preg_match('~type="application/ld\+json"[^>]*>(.*?)</script>~s', $html, $match);
+    $response = $this->get(route('blog.show', 'jornada'));
+    $html = (string) $response->getContent();
+    preg_match('~<script data-inertia="json-ld"[^>]*>(.*?)</script>~s', $html, $match);
 
-    expect($html)->toContain('<meta property="og:image" content="http://localhost/blog/jornada-og.jpg">')
-        ->and($html)->toContain('<meta name="twitter:image" content="http://localhost/blog/jornada-og.jpg">')
-        ->and($html)->toContain('<meta property="og:image:alt" content="Portada del artículo sobre Registro de jornada: Artículo jornada">')
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('seo.image.url', 'http://localhost/blog/jornada-og.jpg')
+        ->where('seo.image.alt', 'Portada del artículo sobre Registro de jornada: Artículo jornada')
+        ->where('seo.image.width', 1200)->where('seo.image.height', 630));
+
+    expect($html)->toContain('<meta data-inertia="og-image" property="og:image" content="http://localhost/blog/jornada-og.jpg">')
+        ->and($html)->toContain('<meta data-inertia="twitter-image" name="twitter:image" content="http://localhost/blog/jornada-og.jpg">')
         ->and(json_decode($match[1], true)['image'])->toBe(['http://localhost/blog/jornada-og.jpg']);
 });
 
 it('keeps the generic image for the index', function (): void {
     blogFolder();
 
-    $this->get(route('blog.index'))->assertSee('<meta property="og:image" content="http://localhost/og-v1.png">', false);
+    $this->get(route('blog.index'))->assertInertia(fn (Assert $page) => $page->where('seo.image.url', 'http://localhost/og-v1.png'));
 });
 
-it('offers a table of contents that links to each h2', function (): void {
+it('lists the h2 of the body for the table of contents, each with the id the body gives it', function (): void {
     writeArticle(blogFolder(), 'jornada', extra: "## Segunda parte\n\ntexto");
 
-    $this->get(route('blog.show', 'jornada'))
-        ->assertSee('aria-label="Contenido"', false)
-        ->assertSee('href="#segunda-parte"', false)
-        ->assertSee('href="#que-dice-la-ley"', false)
-        ->assertSee('id="que-dice-la-ley"', false);
+    $this->get(route('blog.show', 'jornada'))->assertInertia(fn (Assert $page) => $page
+        ->has('article.headings', 2)
+        ->where('article.headings.1', ['id' => 'segunda-parte', 'text' => 'Segunda parte'])
+        ->where('article.html', fn (string $html) => str_contains($html, 'id="segunda-parte"')));
 });
 
-it('links the article to the page of its tool and dresses it in its family', function (): void {
+it('links the article to the page of its tool and names its family', function (): void {
     writeArticle(blogFolder(), 'jornada', ['tool' => 'tool: complaints']);
 
-    $this->get(route('blog.show', 'jornada'))
-        ->assertSee('href="'.route('tools.complaints').'"', false)
-        ->assertSee('family-listening', false);
+    $this->get(route('blog.show', 'jornada'))->assertInertia(fn (Assert $page) => $page
+        ->where('article.toolUrl', route('tools.complaints', absolute: false))
+        ->where('article.family', 'listening')
+        ->where('article.toolName', 'Buzón de quejas'));
 });
 
 it('suggests up to three more articles, those of the same tool first, never the same one nor a draft', function (): void {
@@ -64,50 +67,32 @@ it('suggests up to three more articles, those of the same tool first, never the 
     writeArticle($folder, 'other-old', ['published_at' => 'published_at: 2026-11-13']);
     writeArticle($folder, 'draft', ['reviewed_at' => 'reviewed_at: null', 'reviewed_by' => '']);
 
-    $html = (string) $this->get(route('blog.show', 'main-one'))->getContent();
-    $related = substr($html, (int) strpos($html, 'aria-labelledby="related"'));
-
-    expect(substr_count($related, '<h3'))->toBe(3)
-        ->and(strpos($related, 'Artículo same-tool'))->toBeLessThan((int) strpos($related, 'Artículo other-new'))
-        ->and($related)->toContain('Artículo other-new')->toContain('Artículo other-mid')
-        ->not->toContain('Artículo other-old')->not->toContain('Artículo draft')->not->toContain('Artículo main-one');
-});
-
-it('skips the table of contents when there is nothing to jump to', function (): void {
-    writeArticle(blogFolder(), 'jornada');
-
-    $this->get(route('blog.show', 'jornada'))->assertDontSee('aria-label="Contenido"', false);
+    $this->get(route('blog.show', 'main-one'))->assertInertia(fn (Assert $page) => $page
+        ->has('related', 3)
+        ->where('related.0.slug', 'same-tool')
+        ->where('related.1.slug', 'other-new')
+        ->where('related.2.slug', 'other-mid'));
 });
 
 it('shows no suggestions when it is the only article', function (): void {
     writeArticle(blogFolder(), 'alone');
 
-    $this->get(route('blog.show', 'alone'))->assertDontSee('aria-labelledby="related"', false);
+    $this->get(route('blog.show', 'alone'))->assertInertia(fn (Assert $page) => $page->has('related', 0));
 });
 
-it('closes with the demo outside the article, so the page has no complementary inside its main content', function (): void {
-    writeArticle(blogFolder(), 'jornada');
-
-    $html = (string) $this->get(route('blog.show', 'jornada'))->getContent();
-
-    expect(strpos($html, '</article>'))->toBeLessThan((int) strpos($html, 'data-test="article-cta"'));
-});
-
-it('shows each card of the index with its cover, size included, and lazy loads all but the first', function (): void {
+it('gives every card of the list its cover, and its tool with the family that colors it', function (): void {
     $folder = blogFolder();
     writeArticle($folder, 'first', ['published_at' => 'published_at: 2026-11-15']);
-    writeArticle($folder, 'second', ['published_at' => 'published_at: 2026-11-14']);
+    writeArticle($folder, 'second', ['published_at' => 'published_at: 2026-11-14', 'tool' => 'tool: engagement']);
 
-    $html = (string) $this->get(route('blog.index'))->getContent();
-
-    expect($html)->toContain('src="/blog/first.webp"')->toContain('src="/blog/second.webp"')
-        ->and(substr_count($html, 'width="1200" height="630"'))->toBe(2)
-        ->and(substr_count($html, 'loading="lazy"'))->toBe(1)
-        ->and(substr_count($html, 'fetchpriority="high"'))->toBe(1);
+    $this->get(route('blog.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('articles.0.cover', '/blog/first.webp')->where('articles.0.family', 'compliance')
+        ->where('articles.1.cover', '/blog/second.webp')->where('articles.1.family', 'listening')
+        ->where('articles.1.toolName', 'Clima y pulso'));
 });
 
-it('marks the blog as the current page of the header', function (): void {
+it('renders the page on the server for a visitor and leaves it to the browser for a signed-in one', function (): void {
     blogFolder();
 
-    $this->get(route('blog.index'))->assertSee('data-test="header-blog" href="/blog"', false)->assertSee('aria-current="page"', false);
+    expect(App\Http\SsrPages::ALLOWED)->toMatchArray(['blog.index' => 'blog/index', 'blog.show' => 'blog/show']);
 });

@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { EASE_OUT } from '@/components/landing/landing-motion';
 import { useDismiss } from '@/hooks/use-dismiss';
 import ResourceItem from '@/components/landing/resource-item';
-import type { ResourceLink } from '@/components/landing/resource-link';
+import type { ResourceLink } from '@/types/public-nav';
 import { cn } from '@/lib/utils';
 
 type Props = {

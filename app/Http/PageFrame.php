@@ -18,6 +18,8 @@ final class PageFrame
         'roadmap',
         'tool',
         'guide',
+        'blog/index',
+        'blog/show',
         'campaigns/survey',
         'engagement/survey',
         'engagement/portal-feedback',
