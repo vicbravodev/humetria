@@ -19,7 +19,7 @@ export default function SaveBar({
     return (
         <div className="sticky bottom-(--tab-bar-clearance) z-20 mr-14 flex items-center justify-between gap-3 rounded-xl border bg-card py-2 pr-2 pl-4 shadow-float md:bottom-4 md:mr-16 lg:hidden">
             <p className="text-sm text-muted-foreground">{status}</p>
-            <Button type="submit" disabled={processing}>
+            <Button type="submit" disabled={processing} data-test="save-bar">
                 {processing && <Spinner />}
                 {label}
             </Button>

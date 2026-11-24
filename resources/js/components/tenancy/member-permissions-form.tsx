@@ -40,7 +40,7 @@ export default function MemberPermissionsForm({
             className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]"
             onSubmit={(event) => {
                 event.preventDefault();
-                editor.save();
+                editor.save(event.currentTarget);
             }}
         >
             <AreaSections

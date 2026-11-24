@@ -36,7 +36,7 @@ export default function RoleEditorForm({
                 }
 
                 event.preventDefault();
-                editor.save();
+                editor.save(event.currentTarget);
             }}
         >
             <div className="flex min-w-0 flex-col gap-7">

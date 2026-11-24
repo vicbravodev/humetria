@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { afterRender, revealFirstError } from '@/lib/focus';
 import { handOut } from '@/lib/permission-areas';
 import {
     heldBy,
@@ -57,9 +58,20 @@ export function useRoleEditor(
             ),
         acknowledge: (checked: boolean) =>
             form.setData('acknowledge_sensitive', checked),
-        save: () =>
-            role === null
-                ? form.post(store.url(tenantSlug))
-                : form.put(update.url({ tenant: tenantSlug, role: role.id })),
+        /** Sends it; a refusal brings the first error into view, which on a phone may be far from the button. */
+        save: (root: HTMLFormElement) => {
+            const options = {
+                onError: () => afterRender(() => revealFirstError(root)),
+            };
+
+            if (role === null) {
+                form.post(store.url(tenantSlug), options);
+            } else {
+                form.put(
+                    update.url({ tenant: tenantSlug, role: role.id }),
+                    options,
+                );
+            }
+        },
     };
 }

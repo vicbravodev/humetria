@@ -104,6 +104,19 @@ it('shows a set saved before levels as it is, and keeps it when another area is 
     expect($role->fresh()?->permissions->pluck('name')->all())->toEqualCanonicalizing(['view-dashboard', 'manage-vacations', 'use-assistant']);
 });
 
+it('brings the first error into view on a phone when the save at the bottom is refused', function (): void {
+    signInToPanel();
+
+    visit('/admin/acme/roles/create')->on()->mobile()
+        ->type('label', 'Canalización')
+        ->click('@level-complaints-handle')
+        ->click('@save-bar')
+        ->assertSee('Confirma que quieres dar permisos que abren información sensible.')
+        ->assertScript('() => document.activeElement?.id', 'acknowledge-sensitive')
+        ->assertScript('() => { const box = document.getElementById("acknowledge-sensitive").getBoundingClientRect(); return box.top >= 0 && box.bottom <= window.innerHeight; }', true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('says a role someone holds cannot be deleted, and deletes one nobody holds', function (): void {
     acmeRoleHeldBy(1);
 

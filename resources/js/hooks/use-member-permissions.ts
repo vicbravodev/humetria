@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { afterRender, revealFirstError } from '@/lib/focus';
 import {
     heldBy,
     keepsAcknowledgement,
@@ -47,7 +48,10 @@ export function useMemberPermissions(
         },
         acknowledge: (checked: boolean) =>
             form.setData('acknowledge_sensitive', checked),
-        save: () =>
-            form.put(update.url({ tenant: tenantSlug, member: memberId })),
+        /** Sends it; a refusal brings the first error into view, which on a phone may be far from the button. */
+        save: (root: HTMLFormElement) =>
+            form.put(update.url({ tenant: tenantSlug, member: memberId }), {
+                onError: () => afterRender(() => revealFirstError(root)),
+            }),
     };
 }
