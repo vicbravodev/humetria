@@ -135,7 +135,7 @@ it('lets the owner open every company route and hr all but the owner\'s', functi
             && permissionsOfRoute((string) $route->getName()) !== [],
     )));
     $ownerOnly = [
-        'tenant.first-steps.hide', 'tenant.first-steps.show', 'tenant.first-steps.welcome', 'tenant.members.destroy',
+        'tenant.channels.edit', 'tenant.channels.update', 'tenant.first-steps.hide', 'tenant.first-steps.show', 'tenant.first-steps.welcome', 'tenant.members.destroy',
         'tenant.members.index', 'tenant.members.invitations.cancel', 'tenant.members.invitations.create',
         'tenant.members.invitations.resend', 'tenant.members.invitations.store', 'tenant.members.update', 'tenant.plan',
         'tenant.members.permissions.edit', 'tenant.members.permissions.update', 'tenant.roles.create', 'tenant.roles.destroy',

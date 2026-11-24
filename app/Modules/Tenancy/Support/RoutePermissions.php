@@ -46,6 +46,7 @@ final class RoutePermissions
         'tenant.privacy.*' => 'manage-members',
         'tenant.sso.*' => 'manage-members',
         'tenant.first-steps.*' => 'manage-members',
+        'tenant.channels.*' => 'manage-members',
         'tenant.assistant.*' => 'use-assistant',
         'tenant.worker-access.index' => 'view-worker-access',
         'tenant.worker-access.*' => 'manage-worker-access',
