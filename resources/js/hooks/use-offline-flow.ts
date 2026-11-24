@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useLocationPermission } from '@/hooks/use-location-permission';
 import { useOfflineMark } from '@/hooks/use-offline-mark';
 import { useOfflineQueue } from '@/hooks/use-offline-queue';
+import { rememberMarkHere } from '@/hooks/use-push-offer';
 import { useTickets } from '@/hooks/use-tickets';
 import { currentPosition } from '@/lib/attendance/geolocation';
 import type { MarkType } from '@/lib/attendance/next-step';
@@ -139,6 +140,11 @@ export function useOfflineFlow({
             });
 
             if (prepared !== null) {
+                if (prepared.kind === 'saved') {
+                    // A mark saved here is the person's first mark too: the start may offer the notices.
+                    rememberMarkHere();
+                }
+
                 setAsking(null);
                 setView(viewOf(prepared));
                 setSaved(

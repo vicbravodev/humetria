@@ -121,6 +121,8 @@ function markOffline(AwaitableWebpage $page, string $button, string $sheet): voi
 
 it('marks without a connection, keeps the mark through a reload and delivers it by itself when the network is back', function (bool $dark): void {
     $page = phoneWithTickets();
+    // The online mark that brought the tickets already remembered a first mark: only the offline one counts here.
+    $page->script("() => localStorage.removeItem('humetria-push-marked')");
     withoutNetwork($page);
 
     markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
@@ -132,7 +134,9 @@ it('marks without a connection, keeps the mark through a reload and delivers it 
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
         ->assertScript(smallTouchTargets(), '')
-        ->assertNoAccessibilityIssues(1);
+        ->assertNoAccessibilityIssues(1)
+        // A mark saved without a connection is the person's first mark too: the start may offer the notices from now on.
+        ->assertScript("() => localStorage.getItem('humetria-push-marked')", '1');
 
     // The mark is in the phone, signed, and nothing reached the server.
     expect(AttendanceMark::query()->count())->toBe(1)->and(AttendanceOfflineMark::query()->count())->toBe(0);
