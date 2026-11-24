@@ -3,7 +3,7 @@
     from the first response. Same tokens as the app (resources/css/app.css), no script but the theme switch and JSON-LD.
 --}}
 <!DOCTYPE html>
-<html lang="es-MX">
+<html lang="es-MX"@if (($appearance ?? 'system') === 'dark') class="dark"@endif>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -26,7 +26,8 @@
         <meta name="twitter:image" content="{{ App\Modules\Blog\Support\BlogSeo::imageUrl() }}">
 
         <script nonce="{{ Vite::cspNonce() }}">
-            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            // The person's choice in the app (cookie `appearance`) wins; without one the system decides, as in the app.
+            if ('{{ $appearance ?? 'system' }}' === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 document.documentElement.classList.add('dark');
             }
         </script>
@@ -43,19 +44,7 @@
         @vite('resources/css/app.css')
     </head>
     <body class="min-h-screen bg-background font-sans text-foreground antialiased">
-        <header class="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-xl backdrop-saturate-150">
-            <div class="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between gap-3 px-5 sm:px-8 lg:px-10">
-                <a href="/" aria-label="Humetría, inicio" class="flex min-h-11 items-center rounded-md">
-                    <img src="/brand/humetria-horizontal-color.svg" alt="Humetría" class="h-7 w-auto dark:hidden">
-                    <img src="/brand/humetria-horizontal-color-oscuro.svg" alt="Humetría" class="hidden h-7 w-auto dark:block">
-                </a>
-                <nav aria-label="Principal" class="flex items-center gap-1">
-                    <a href="{{ route('blog.index') }}" class="inline-flex min-h-11 items-center rounded-md px-3 text-meta text-muted-foreground transition-colors hover:text-foreground">Blog</a>
-                    <a href="{{ route('login') }}" class="hidden min-h-11 items-center rounded-md px-3 text-meta text-muted-foreground transition-colors hover:text-foreground sm:inline-flex">{{ __('blog.login') }}</a>
-                    <a href="/#agenda-una-demo" class="ml-1 inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-meta font-medium text-primary-foreground transition-opacity hover:opacity-90">{{ __('blog.cta_button') }}</a>
-                </nav>
-            </div>
-        </header>
+        @include('partials.public-header', ['current' => $current ?? ''])
 
         <main>
             @yield('content')
@@ -66,10 +55,20 @@
                 <p>© {{ now()->year }} {{ config('app.name') }}</p>
                 <nav aria-label="Pie" class="flex flex-wrap gap-x-5">
                     <a href="/" class="inline-flex min-h-11 items-center hover:text-foreground">Inicio</a>
+                    <a href="{{ route('blog.index') }}" data-test="footer-blog" class="inline-flex min-h-11 items-center hover:text-foreground">Blog</a>
+                    <a href="{{ route('roadmap') }}" data-test="footer-roadmap" class="inline-flex min-h-11 items-center hover:text-foreground">Roadmap</a>
                     <a href="{{ route('privacy-notice') }}" class="inline-flex min-h-11 items-center hover:text-foreground">{{ __('blog.privacy') }}</a>
                     <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center hover:text-foreground">{{ __('blog.login') }}</a>
                 </nav>
             </div>
         </footer>
+        <script nonce="{{ Vite::cspNonce() }}">
+            // The theme button: flips light and dark and remembers it in the same cookie the app reads.
+            document.querySelectorAll('[data-theme-toggle]').forEach((button) => button.addEventListener('click', () => {
+                const dark = document.documentElement.classList.toggle('dark');
+                document.cookie = `appearance=${dark ? 'dark' : 'light'};path=/;max-age=31536000;SameSite=Lax`;
+                try { localStorage.setItem('appearance', dark ? 'dark' : 'light'); } catch (e) {}
+            }));
+        </script>
     </body>
 </html>

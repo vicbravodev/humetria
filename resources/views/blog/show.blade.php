@@ -1,4 +1,4 @@
-@extends('blog.layout', ['title' => $article->title, 'description' => $article->description])
+@extends('blog.layout', ['title' => $article->title, 'description' => $article->description, 'current' => 'blog'])
 
 @section('head')
     <meta property="og:type" content="article">

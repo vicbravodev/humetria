@@ -20,5 +20,7 @@ return [
     'cta_text' => 'Agenda una demo y te mostramos cómo Humetría lo resuelve con tu gente.',
     'cta_button' => 'Agenda una demo',
     'login' => 'Iniciar sesión',
+    'theme' => 'Cambiar tema',
+    'menu' => 'Menú',
     'privacy' => 'Aviso de privacidad',
 ];

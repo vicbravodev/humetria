@@ -1,0 +1,9 @@
+[
+    { "id": "como-funciona", "label": "Cómo funciona", "kind": "section", "section": "seccion-como-funciona", "test": "header-how" },
+    { "id": "herramientas", "label": "Herramientas", "kind": "section", "section": "herramientas", "test": "header-tools" },
+    { "id": "confidencialidad", "label": "Confidencialidad", "kind": "section", "section": "seccion-confidencialidad", "test": "header-privacy" },
+    { "id": "humi", "label": "Humi", "kind": "section", "section": "seccion-humi", "test": "header-humi" },
+    { "id": "precios", "label": "Precios", "kind": "section", "section": "seccion-precios", "test": "header-pricing" },
+    { "id": "blog", "label": "Blog", "kind": "page", "route": "blog.index", "path": "/blog", "test": "header-blog" },
+    { "id": "roadmap", "label": "Roadmap", "kind": "page", "route": "roadmap", "path": "/roadmap", "test": "header-roadmap" }
+]
