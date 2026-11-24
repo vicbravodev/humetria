@@ -30,4 +30,23 @@ describe('layoutResetter', () => {
 
         expect(reset).toHaveBeenCalledTimes(2);
     });
+
+    // The contract: the reset runs after the new page rendered and cleared what it set, so the page must set its props in
+    // its render body (it renders again after the reset), not in an effect (which would not run again).
+    it('leaves a page its props only if it sets them again when it renders after the reset', () => {
+        let props = 'old page crumbs';
+        const arrives = layoutResetter('old', () => {
+            props = '';
+        });
+        const renderBody = () => {
+            props = 'new page crumbs';
+        };
+
+        renderBody();
+        arrives('new');
+        expect(props).toBe('');
+
+        renderBody();
+        expect(props).toBe('new page crumbs');
+    });
 });
