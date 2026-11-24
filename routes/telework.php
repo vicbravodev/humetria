@@ -50,7 +50,7 @@ Route::put('admin/{tenant:slug}/telework/settings', [TeleworkSettingsController:
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/committee', [CommitteeController::class, 'show'])->where('tenant', $notReserved)->name('tenant.telework.committee.show');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/committee', [CommitteeController::class, 'store'])->where('tenant', $notReserved)->name('tenant.telework.committee.store');
 Route::post('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members', [CommitteeController::class, 'assign'])->where('tenant', $notReserved)->name('tenant.telework.committee.members.store');
-Route::delete('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members/{user}', [CommitteeController::class, 'unassign'])->where('tenant', $notReserved)->where('user', '[0-9]+')->name('tenant.telework.committee.members.destroy');
+Route::delete('admin/{tenant:slug}/telework/centers/{workCenter}/committee/members/{user}', [CommitteeController::class, 'unassign'])->where('tenant', $notReserved)->where('user', '[0-9]{1,9}')->name('tenant.telework.committee.members.destroy');
 // The act that constituted the Comisión (PDF), through an authorized route: owner, hr and the assigned members.
 Route::get('admin/{tenant:slug}/telework/centers/{workCenter}/committee/act', [CommitteeController::class, 'act'])->where('tenant', $notReserved)->name('tenant.telework.committee.act');
 

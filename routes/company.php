@@ -58,8 +58,8 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnfor
     Route::post('admin/{tenant:slug}/members/invitations', [MemberController::class, 'invite'])->where('tenant', $notReserved)->name('tenant.members.invitations.store');
     Route::post('admin/{tenant:slug}/members/invitations/{invitation}/resend', [MemberController::class, 'resend'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.resend');
     Route::delete('admin/{tenant:slug}/members/invitations/{invitation}', [MemberController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.cancel');
-    Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.update');
-    Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.destroy');
+    Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.update');
+    Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.destroy');
     Route::get('admin/{tenant:slug}/members/{member}/permissions', [MemberController::class, 'permissions'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.permissions.edit');
     Route::put('admin/{tenant:slug}/members/{member}/permissions', [MemberController::class, 'updatePermissions'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.permissions.update');
 
