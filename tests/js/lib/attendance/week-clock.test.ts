@@ -20,6 +20,7 @@ const week = {
     resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
+    uncoveredDays: [],
     requests: [],
     summary: {
         ordinaryMinutes: 0,

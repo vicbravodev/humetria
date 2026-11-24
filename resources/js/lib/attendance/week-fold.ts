@@ -71,6 +71,7 @@ export function dayRange(day: WeekDay): string {
 export function dayNeedsLook(day: WeekDay): boolean {
     return (
         day.missingEnd ||
+        day.uncovered ||
         (day.lateMinutes ?? 0) > 0 ||
         day.marks.some((mark) => mark.corrected)
     );

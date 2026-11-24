@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+    confirmBlock,
+    confirmBlockText,
     dayTitle,
     duration,
     statusText,
@@ -17,6 +19,7 @@ const day: WeekDay = {
     overtimeMinutes: 0,
     restDay: false,
     missingEnd: false,
+    uncovered: false,
 };
 
 const week: WeekView = {
@@ -28,6 +31,7 @@ const week: WeekView = {
     resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
+    uncoveredDays: [],
     days: [day],
     requests: [],
     summary: {
@@ -162,5 +166,76 @@ describe('weekFeedback', () => {
             text: 'Llegó.',
         });
         expect(weekFeedback(null, null)).toBeNull();
+    });
+});
+
+describe('confirmBlock', () => {
+    it('is nothing without a block, and nothing for a block that is not about days without cover', () => {
+        expect(confirmBlock(week)).toBeNull();
+        expect(confirmBlock({ ...week, blocked: 'day_open' })).toBeNull();
+        expect(confirmBlock({ ...week, blocked: 'no_marks' })).toBeNull();
+    });
+
+    it('names the days without cover with their title', () => {
+        expect(
+            confirmBlock({
+                ...week,
+                blocked: 'uncovered_days',
+                uncoveredDays: ['2026-11-04'],
+            }),
+        ).toEqual({
+            reason: 'uncovered_days',
+            dates: ['Miércoles 4 de noviembre'],
+        });
+        expect(
+            confirmBlock({
+                ...week,
+                blocked: 'uncovered_days',
+                uncoveredDays: ['2026-11-04', '2026-11-05', '2026-11-06'],
+            })?.dates,
+        ).toEqual([
+            'Miércoles 4 de noviembre',
+            'Jueves 5 de noviembre',
+            'Viernes 6 de noviembre',
+        ]);
+    });
+});
+
+describe('confirmBlockText', () => {
+    it.each([
+        [['Miércoles 4 de noviembre'], 'Falta el miércoles 4 de noviembre'],
+        [
+            ['Miércoles 4 de noviembre', 'Jueves 5 de noviembre'],
+            'Faltan el miércoles 4 de noviembre y el jueves 5 de noviembre',
+        ],
+        [
+            [
+                'Miércoles 4 de noviembre',
+                'Jueves 5 de noviembre',
+                'Viernes 6 de noviembre',
+            ],
+            'Faltan el miércoles 4 de noviembre, el jueves 5 de noviembre y el viernes 6 de noviembre',
+        ],
+    ])(
+        'says what is missing, one day or several, as «usted»: %j',
+        (dates, text) => {
+            expect(confirmBlockText({ reason: 'uncovered_days', dates })).toBe(
+                text,
+            );
+        },
+    );
+});
+
+describe('statusText of a week with days without cover', () => {
+    it('says what to do: a correction or a leave RH records', () => {
+        const text = statusText({
+            status: 'pending',
+            answeredAt: null,
+            blocked: 'uncovered_days',
+        });
+
+        expect(text.label).toBe('Sin confirmar');
+        expect(text.detail).toContain('corrección');
+        expect(text.detail).toContain('Recursos Humanos');
     });
 });

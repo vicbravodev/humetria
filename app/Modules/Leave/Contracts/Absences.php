@@ -29,4 +29,13 @@ interface Absences
      * @return list<AbsenceData>
      */
     public function between(CarbonImmutable $from, CarbonImmutable $to, array $employeeIds): array;
+
+    /**
+     * The days nobody of the company works in the range, both ends included: those of LFT art. 74 and the ones the company
+     * added, for the company and not per work center. They are here because they answer the same question as the absences,
+     * who does not work that day; a contract of their own is made if another module asks for holidays alone. One query.
+     *
+     * @return list<string> Y-m-d, in order
+     */
+    public function holidaysBetween(CarbonImmutable $from, CarbonImmutable $to): array;
 }

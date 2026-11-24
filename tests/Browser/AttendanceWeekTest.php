@@ -26,7 +26,8 @@ beforeEach(function (): void {
     workIn($this->tenant);
     $this->plant = WorkCenter::factory()->for($this->tenant)->create();
     $this->ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'name' => 'Ana López']);
-    AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    // Eight hours on Monday and Tuesday, the two days she marked: Wednesday to Friday are rest days, so no day is left without cover.
+    AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'minutes_by_weekday' => [1 => 480, 2 => 480, 3 => 0, 4 => 0, 5 => 0, 6 => 0, 7 => 0]]);
     // Last week: Monday 9:00 to 19:00 with an hour's break (an hour over), Tuesday 7:00 to 21:00 (14 hours).
     $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek(), 'America/Mexico_City')->start();
     foreach ([[MarkType::Start, 0, '09:00'], [MarkType::BreakStart, 0, '14:00'], [MarkType::BreakEnd, 0, '15:00'], [MarkType::End, 0, '19:00'], [MarkType::Start, 1, '07:00'], [MarkType::End, 1, '21:00']] as [$type, $day, $time]) {
@@ -128,6 +129,28 @@ it('shows Ana a day of approved vacations as vacations, not as a day without mar
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
         ->assertNoAccessibilityIssues(1);
+})->with(['light' => [false], 'dark' => [true]]);
+
+it('turns off «Confirmar mi semana» while a working day has no marks, says which and how to cover it, and still lets Ana object', function (bool $dark): void {
+    // Wednesday to Friday are working days again, and she marked none of them.
+    AttendanceSchedule::query()->update(['minutes_by_weekday' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0]]);
+
+    anaSeesHerWeek($dark)
+        ->assertSee('Días sin cubrir')
+        ->assertSee('Faltan el miércoles')
+        ->assertSee('Si ese día no trabajó, pida a Recursos Humanos que lo registre como permiso.')
+        ->assertSee('Día sin cubrir')
+        ->assertPresent('button:has-text("Confirmar mi semana")[disabled]')
+        ->assertPresent('button:has-text("No estoy de acuerdo"):not([disabled])')
+        ->assertNoJavaScriptErrors()
+        ->assertScript(cspViolations(), '[]')
+        ->assertScript(smallTouchTargets(), '')
+        ->assertNoAccessibilityIssues(1)
+        // «Me faltó una marca» of the first day opens the sheet to add it, for that day.
+        ->click('section[aria-labelledby="week-uncovered-title"] li:first-child button')
+        ->waitForText('Agregar una marca que faltó')
+        ->assertSee('Día: miércoles')
+        ->assertNoJavaScriptErrors();
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('lets Ana say what is not right, with her reason', function (): void {

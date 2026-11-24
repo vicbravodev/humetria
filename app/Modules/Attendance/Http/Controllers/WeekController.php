@@ -118,10 +118,10 @@ final readonly class WeekController
         return response()->json($this->view($signed, $week, $tenant))->header('Cache-Control', 'no-store, private');
     }
 
-    /** Why the answer was refused; a week that changed since it was read goes back as it is now, to be read again. */
+    /** Why the answer was refused; a week that changed since it was read, or that has days without cover, goes back as it is now. */
     private function rejected(WeekRejected $rejected, SignedBy $signed, ?CarbonImmutable $week, string $tenant): JsonResponse
     {
-        $body = ['reason' => $rejected->reason, ...($rejected->reason === 'week_changed' ? ['week' => $this->view($signed, $week, $tenant)] : [])];
+        $body = ['reason' => $rejected->reason, ...(in_array($rejected->reason, ['week_changed', 'uncovered_days'], true) ? ['week' => $this->view($signed, $week, $tenant)] : [])];
 
         return response()->json($body, 422)->header('Cache-Control', 'no-store, private');
     }

@@ -247,3 +247,12 @@ it('finds the active people of the company by email, whatever the case or the sp
         ->and(resolve(Roster::class)->idsByEmail(''))->toBe([])
         ->and(resolve(Roster::class)->idsByEmail('nobody@acme.mx'))->toBe([]);
 });
+
+it('gives the date a person was hired, or null when the company did not capture it', function (): void {
+    $hired = rosterEmployee($this->tenant, $this->plant, $this->production, ['hired_on' => '2026-11-04']);
+    $unknown = rosterEmployee($this->tenant, $this->plant, $this->production, ['hired_on' => null]);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->find($hired->id)?->hiredOn?->toDateString())->toBe('2026-11-04')
+        ->and(resolve(Roster::class)->find($unknown->id)?->hiredOn)->toBeNull();
+});

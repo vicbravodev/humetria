@@ -12,6 +12,8 @@ use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\PersonWeek;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
+use App\Modules\Leave\Models\LeaveHoliday;
+use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -128,6 +130,12 @@ function anaWorkedLastWeek(): void
     weekPunch($ana, MarkType::End, '2026-11-09 06:00');
 }
 
+/** Ana with no schedule: no day is asked of her (criterio 5.2), so her marks alone decide whether the week can be confirmed. */
+function anaWithoutSchedule(): void
+{
+    AttendanceSchedule::query()->delete();
+}
+
 describe('the page', function (): void {
     it('opens with nothing of anybody until a key signs', function (): void {
         $this->get(route('attendance.device.week.show', 'acme'))
@@ -187,13 +195,14 @@ describe('reading the week', function (): void {
                     ['id' => $ids[2], 'type' => 'break_end', 'time' => '15:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
                     ['id' => $ids[3], 'type' => 'end', 'time' => '19:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'],
                 ],
-                'workedMinutes' => 540, 'scheduledMinutes' => 480, 'restDay' => false, 'lateMinutes' => null, 'missingEnd' => false, 'absence' => null, 'overtimeMinutes' => 60,
+                'workedMinutes' => 540, 'scheduledMinutes' => 480, 'restDay' => false, 'lateMinutes' => null, 'missingEnd' => false, 'absence' => null,
+                'required' => true, 'uncovered' => false, 'overtimeMinutes' => 60,
             ])
             ->assertJsonPath('days.1.workedMinutes', 840)
             ->assertJsonPath('days.1.overtimeMinutes', 360)
             // The day on the person's rest day is all worked, none of it overtime (it is paid apart).
             ->assertJsonPath('days.6.overtimeMinutes', 0)
-            ->assertJsonPath('days.2', ['date' => '2026-11-04', 'marks' => [], 'workedMinutes' => 0, 'scheduledMinutes' => 480, 'restDay' => false, 'lateMinutes' => null, 'missingEnd' => false, 'absence' => null, 'overtimeMinutes' => 0])
+            ->assertJsonPath('days.2', ['date' => '2026-11-04', 'marks' => [], 'workedMinutes' => 0, 'scheduledMinutes' => 480, 'restDay' => false, 'lateMinutes' => null, 'missingEnd' => false, 'absence' => null, 'required' => true, 'uncovered' => true, 'overtimeMinutes' => 0])
             ->assertJsonPath('days.6.marks.1', ['id' => $ids[7], 'type' => 'end', 'time' => '06:00', 'clock' => null, 'away' => false, 'nextDay' => true, 'corrected' => false, 'reason' => null, 'evidence' => 'strong'])
             ->assertJsonPath('days.6.restDay', true)
             ->assertJsonPath('summary', [
@@ -201,8 +210,11 @@ describe('reading the week', function (): void {
                 'flags' => ['day_over_12_hours', 'daily_overtime_over_4'],
             ])
             ->assertJsonPath('digest', anaDigest())
-            ->assertJsonPath('blocked', null)
-            ->assertJsonPath('confirmUrl', route('attendance.device.week.confirm', ['acme', '2026-11-02']))
+            ->assertJsonPath('days.6.required', false)
+            ->assertJsonPath('uncoveredDays', ['2026-11-04', '2026-11-05', '2026-11-06'])
+            // Wednesday to Friday are working days of the schedule with no marks: the week cannot be confirmed yet.
+            ->assertJsonPath('blocked', 'uncovered_days')
+            ->assertJsonPath('confirmUrl', null)
             ->assertJsonPath('disputeUrl', route('attendance.device.week.dispute', ['acme', '2026-11-02']))
             ->assertJsonPath('previousUrl', route('attendance.device.week.show', ['acme', '2026-10-26']))
             ->assertJsonPath('nextUrl', route('attendance.device.week.show', ['acme', '2026-11-09']))
@@ -210,6 +222,32 @@ describe('reading the week', function (): void {
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('99.1332')->not->toContain('latitude')
             ->not->toContain('accuracy')->not->toContain('zone')->not->toContain('distance')->not->toContain($this->device->id);
+    });
+
+    it('still lists the days without cover when the block is off, and then offers the confirmation', function (): void {
+        config(['attendance.week.block_uncovered_days' => false]);
+        anaWorkedLastWeek();
+
+        anaReadsWeek(['start' => '2026-11-02'])->assertOk()
+            ->assertJsonPath('uncoveredDays', ['2026-11-04', '2026-11-05', '2026-11-06'])
+            ->assertJsonPath('days.2.uncovered', true)
+            ->assertJsonPath('blocked', null)
+            ->assertJsonPath('confirmUrl', route('attendance.device.week.confirm', ['acme', '2026-11-02']));
+    });
+
+    it('covers a holiday and approved vacations, and asks nothing of a person with no schedule', function (): void {
+        anaWorkedLastWeek();
+        LeaveHoliday::factory()->create(['tenant_id' => $this->tenant->id, 'date' => '2026-11-04']);
+        LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => '2026-11-05', 'ends_on' => '2026-11-05', 'working_days' => 1]);
+
+        anaReadsWeek(['start' => '2026-11-02'])->assertOk()
+            ->assertJsonPath('uncoveredDays', ['2026-11-06'])
+            ->assertJsonPath('days.2.required', false)
+            ->assertJsonPath('days.2.uncovered', false)
+            ->assertJsonPath('days.3.uncovered', false)
+            ->assertJsonPath('blocked', 'uncovered_days');
+        anaWithoutSchedule();
+        anaReadsWeek(['start' => '2026-11-02'])->assertOk()->assertJsonPath('uncoveredDays', [])->assertJsonPath('days.2.required', false)->assertJsonPath('blocked', null);
     });
 
     it('shows the lateness of the days that have a start time, without touching the hours', function (): void {
@@ -289,6 +327,7 @@ describe('reading the week', function (): void {
 
 describe('answering', function (): void {
     it('confirms the week with its own signature and gives the week back confirmed', function (): void {
+        anaWithoutSchedule();
         anaWorkedLastWeek();
 
         anaAnswers('confirm')->assertOk()
@@ -317,6 +356,7 @@ describe('answering', function (): void {
     })->with(['confirm', 'dispute']);
 
     it('offers no confirmation, and rejects one, while the last night of the week is still open', function (): void {
+        anaWithoutSchedule();
         weekPunch($this->ana, MarkType::Start, '2026-11-08 22:00');
         $this->travelTo(CarbonImmutable::parse('2026-11-09 00:30', 'America/Mexico_City'));
 
@@ -331,6 +371,18 @@ describe('answering', function (): void {
         anaAnswers('confirm')->assertOk()->assertJsonPath('status', 'confirmed');
     });
 
+    it('offers no confirmation of a week with days without cover, rejects one with the week as it is, and lets the person dispute it', function (): void {
+        anaWorkedLastWeek();
+
+        anaAnswers('confirm')->assertUnprocessable()
+            ->assertJsonPath('reason', 'uncovered_days')
+            ->assertJsonPath('week.uncoveredDays', ['2026-11-04', '2026-11-05', '2026-11-06'])
+            ->assertJsonPath('week.blocked', 'uncovered_days')
+            ->assertJsonPath('week.days.2.uncovered', true);
+        anaAnswers('dispute', body: ['reason' => 'Los otros días también trabajé.'])->assertOk()->assertJsonPath('status', 'disputed');
+        expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Disputed);
+    });
+
     it('offers no confirmation of a week with no marks, and rejects one, while letting the person dispute it', function (): void {
         anaReadsWeek()->assertOk()->assertJsonPath('blocked', 'no_marks')->assertJsonPath('confirmUrl', null);
         anaAnswers('confirm')->assertUnprocessable()->assertExactJson(['reason' => 'no_marks']);
@@ -338,6 +390,7 @@ describe('answering', function (): void {
     });
 
     it('rejects an answer on a version of the week that changed since it was read, giving the week as it is now', function (string $answer): void {
+        anaWithoutSchedule();
         anaWorkedLastWeek();
         $seen = anaDigest();
         $end = AttendanceMark::query()->where('type', MarkType::End)->orderBy('marked_at')->firstOrFail();

@@ -13,6 +13,11 @@ describe('weekMessage', () => {
         ['week_changed', 'Su semana cambió'],
         ['day_open', 'cuando marque su salida'],
         ['no_marks', 'No estoy de acuerdo'],
+        ['uncovered_days', 'Pida una corrección'],
+        [
+            'uncovered_days',
+            'pida a Recursos Humanos que registre su ausencia como permiso',
+        ],
         ['unsupported', 'llaves de acceso'],
         ['anything', 'Intente de nuevo'],
     ])('words %s', (reason, text) => {

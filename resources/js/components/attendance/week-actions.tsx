@@ -1,14 +1,16 @@
 import { Fingerprint } from 'lucide-react';
+import WeekConfirmButton from '@/components/attendance/week-confirm-button';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import type { WeekAction } from '@/hooks/use-week';
 import type { WeekView } from '@/lib/attendance/week';
-import { weekActions } from '@/lib/attendance/week-text';
+import { confirmBlock, weekActions } from '@/lib/attendance/week-text';
 
 /**
  * The buttons at the foot of «Mi semana»: first the one that opens the week with the person's fingerprint, face or PIN; then
  * «Confirmar mi semana» and «No estoy de acuerdo», of the same size. Each asks the device again; nothing is answered for
- * the person.
+ * the person. With days without cover «Confirmar mi semana» is turned off and the line under it says which days are missing;
+ * «No estoy de acuerdo» stays.
  */
 export default function WeekActions({
     week,
@@ -25,6 +27,7 @@ export default function WeekActions({
 }) {
     const actions = weekActions(week, false);
     const confirmUrl = week?.confirmUrl ?? null;
+    const block = week === null ? null : confirmBlock(week);
 
     return (
         <>
@@ -42,15 +45,14 @@ export default function WeekActions({
                     Ver mi semana
                 </Button>
             )}
-            {actions.includes('confirm') && confirmUrl !== null && (
-                <Button
-                    className="h-14 w-full text-[17px] font-semibold"
-                    disabled={working !== null}
-                    onClick={() => onConfirm(confirmUrl)}
-                >
-                    <Fingerprint aria-hidden className="size-5" />
-                    Confirmar mi semana
-                </Button>
+            {actions.includes('confirm') && (
+                <WeekConfirmButton
+                    block={block}
+                    busy={working !== null}
+                    onConfirm={() =>
+                        confirmUrl !== null && onConfirm(confirmUrl)
+                    }
+                />
             )}
             {actions.includes('dispute') && (
                 <Button

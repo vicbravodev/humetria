@@ -11,6 +11,8 @@ use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Leave\Contracts\Absences;
+use App\Modules\Organization\Contracts\Roster;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use LogicException;
@@ -20,8 +22,9 @@ use LogicException;
  * it falls on the next day and whether RH corrected it), whether they were away that day with approved vacations or a
  * leave (never its type), the minutes of each day and of the week as criterio 2.9 splits
  * them, the limits broken, a day left with no end (unless it is the one still open now), their answer, the version of the
- * week they read (`digest`, sent back with their answer) and why it cannot be confirmed yet (`blocked`: no marks, or its
- * last day still open). Never where a mark was taken, nor the device. Counted from the marks every time. The week is
+ * week they read (`digest`, sent back with their answer) and why it cannot be confirmed yet (`blocked`: no marks, its
+ * last day still open, or days without cover; those days are also listed in `uncoveredDays`, and each day says whether a
+ * mark is `required` of it and `uncovered`: WeekCompleteness). Never where a mark was taken, nor the device. Counted from the marks every time. The week is
  * read in the zone of the person's center (the week's own); each mark shows the time of the place it was taken, with
  * that zone when it is another, and whether it was taken at another center (a trip: no lateness that day). Each day is
  * read with the schedule in effect that day (ScheduleTimeline), so a change in the middle of the week splits it.
@@ -40,6 +43,10 @@ final class PersonWeek
         $yesterday = CarbonImmutable::now($timezone)->subDay()->startOfDay();
         $absences = WeekDigest::absences($employeeId, $week);
         $away = AbsentDays::of($absences, $week)[$employeeId] ?? [];
+        $completeness = WeekCompleteness::of(
+            $week, $byDay, $schedules, $employeeId, $away,
+            resolve(Absences::class)->holidaysBetween($week->start(), $week->end()), resolve(Roster::class)->find($employeeId)?->hiredOn,
+        );
         // The tolerance is read only when a schedule has start times: a week without them costs no query more.
         $tolerance = $schedules->hasStartTimes() ? CompanyPolicy::current()->late_tolerance_minutes : 0;
         $days = [];
@@ -62,6 +69,8 @@ final class PersonWeek
                 'missingEnd' => WorkedDay::missingEnd($marks) && ! $stillOpen,
                 // Approved vacations or a leave: the day is not one they missed. Its marks, if any, still count.
                 'absence' => $away[$offset] ?? null,
+                // Whether a mark is asked of this day (criterio 5.2) and it is still missing; a rest day, a holiday, a day away or one not over is not.
+                ...$completeness->day($offset),
             ];
         }
 
@@ -72,7 +81,7 @@ final class PersonWeek
         $status = $answer?->status->value ?? ($week->isOver() ? 'pending' : 'open');
         $start = $week->start()->toDateString();
         $marks = array_merge([], ...array_values($byDay));
-        $blocked = $status === 'pending' ? ConfirmWeek::blocker($marks) : null;
+        $blocked = $status === 'pending' ? ConfirmWeek::blocker($marks, $completeness) : null;
 
         return [
             'name' => $name,
@@ -84,6 +93,8 @@ final class PersonWeek
             'resolution' => $answer?->resolution_note,
             'digest' => WeekDigest::ofMarks($marks, $absences),
             'blocked' => $blocked,
+            // The days to cover, also with the block off: the person sees what is missing even if they can confirm.
+            'uncoveredDays' => $completeness->uncoveredDays(),
             'days' => $days,
             'requests' => self::requests($employeeId, $week, $marks, $timezone),
             'summary' => [

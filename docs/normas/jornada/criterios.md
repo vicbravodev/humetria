@@ -209,7 +209,8 @@ semana la reabre, y la persona la confirma de nuevo.
 
 *Días sin cubrir* · Humetría · no se confirma una semana con **días sin cubrir**: un día laborable de su horario vigente
 ese día, ya terminado, sin marcas (o con una entrada sin salida), que no sea de descanso, festivo ni anterior a su fecha
-de alta, ni tenga una ausencia aprobada en Vacaciones y permisos. Se suma a los bloqueos que ya existen (`no_marks`, y «Día
+de alta, ni tenga una ausencia aprobada en Vacaciones y permisos. Una entrada sin salida del día de ayer aún no cuenta como día
+sin cubrir: puede ser un turno de noche en curso, y «Día abierto» detiene la semana hasta que se marque la salida. Se suma a los bloqueos que ya existen (`no_marks`, y «Día
 abierto», `day_open`: la última jornada sin marca de fin): «Día abierto» habla de una jornada empezada; «día sin cubrir», de un
 día sin ninguna marca. Aplica a **toda empresa**; la plataforma puede apagar el bloqueo (`attendance.week.block_uncovered_days`)
 y entonces solo lo registra. La persona puede objetar la semana, pedir una corrección (agregar la marca que falta) o pedir a

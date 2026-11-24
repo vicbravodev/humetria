@@ -159,6 +159,7 @@ final class CompanyRoster implements Roster
             $employee->job_grade_id,
             $employee->staff_group?->value,
             $employee->mobile,
+            hiredOn: $employee->hired_on,
         );
     }
 }

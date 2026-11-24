@@ -49,4 +49,13 @@ return [
         'export_max_days' => (int) env('ATTENDANCE_REPORT_EXPORT_MAX_DAYS', 366),
         'chunk_size' => (int) env('ATTENDANCE_REPORT_CHUNK_SIZE', 200),
     ],
+
+    /*
+    | «Mi semana»: a person cannot confirm a week with days left without cover (a working day of their schedule, already
+    | over, with no marks and no holiday, hire date or approved absence: criterio 5.2). It holds for every company. With
+    | `false` the days are still computed and logged (`attendance.week_uncovered_days_computed`), but nothing is blocked.
+    */
+    'week' => [
+        'block_uncovered_days' => (bool) env('ATTENDANCE_WEEK_BLOCK_UNCOVERED', true),
+    ],
 ];

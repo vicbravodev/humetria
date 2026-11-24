@@ -21,6 +21,7 @@ const day: WeekDay = {
     overtimeMinutes: 0,
     restDay: false,
     missingEnd: false,
+    uncovered: false,
 };
 
 const week: WeekView = {
@@ -32,6 +33,7 @@ const week: WeekView = {
     resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
+    uncoveredDays: [],
     days: [day],
     requests: [],
     summary: {
@@ -200,6 +202,7 @@ describe('a day folded', () => {
         expect(dayNeedsLook({ ...day, lateMinutes: 15 })).toBe(true);
         expect(dayNeedsLook({ ...day, lateMinutes: 0 })).toBe(false);
         expect(dayNeedsLook({ ...day, missingEnd: true })).toBe(true);
+        expect(dayNeedsLook({ ...day, uncovered: true })).toBe(true);
     });
 });
 
@@ -221,6 +224,32 @@ describe('weekActions', () => {
         expect(
             weekActions({ ...week, confirmUrl: null, disputeUrl: null }, false),
         ).toEqual([]);
+    });
+
+    it('still offers to confirm, turned off, while days without cover block it: the server sends no address then', () => {
+        expect(
+            weekActions(
+                {
+                    ...week,
+                    confirmUrl: null,
+                    disputeUrl: '/d',
+                    blocked: 'uncovered_days',
+                    uncoveredDays: ['2026-11-04'],
+                },
+                false,
+            ),
+        ).toEqual(['confirm', 'dispute']);
+        expect(
+            weekActions(
+                {
+                    ...week,
+                    confirmUrl: null,
+                    disputeUrl: '/d',
+                    blocked: 'day_open',
+                },
+                false,
+            ),
+        ).toEqual(['dispute']);
     });
 
     it('offers nothing while the person writes what is not right: the form has its own buttons', () => {

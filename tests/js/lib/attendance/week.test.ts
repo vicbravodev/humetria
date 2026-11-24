@@ -23,6 +23,7 @@ const week: WeekView = {
     resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
+    uncoveredDays: [],
     days: [
         {
             date: '2026-11-02',
@@ -42,6 +43,7 @@ const week: WeekView = {
             overtimeMinutes: 60,
             restDay: false,
             missingEnd: false,
+            uncovered: false,
         },
     ],
     requests: [
