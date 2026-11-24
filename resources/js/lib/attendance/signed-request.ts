@@ -54,7 +54,7 @@ export async function post(
 export async function sign(
     options: PublicKeyCredentialRequestOptions,
     deps: Pick<SignDeps, 'getKey'>,
-): Promise<SignedKey | string> {
+): Promise<SignedKey | 'cancelled' | 'failed'> {
     try {
         return (await deps.getKey(options)) ?? 'failed';
     } catch (error) {
