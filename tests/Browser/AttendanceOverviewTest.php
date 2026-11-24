@@ -126,6 +126,7 @@ it('takes RH from the sidebar to the overview and to the corrections', function 
     visit($url)
         ->click('Cumple la norma')
         ->click('[data-sidebar="sidebar"] >> text=Asistencia')
+        ->assertScript(settled(), true)
         ->click('[data-sidebar="sidebar"] >> text=Resumen')
         ->waitForText('Persona por persona')
         ->assertPathIs("{$url}/attendance")

@@ -147,6 +147,21 @@ it('skips the cycle and moves on when the company cannot take it', function (str
     'a suspended company' => ['company_blocked', fn (Tenant $tenant) => DB::table('tenants')->where('id', $tenant->id)->update(['restriction' => 'suspended', 'restriction_reason' => 'Prueba', 'restricted_at' => now()])],
 ]);
 
+it('leaves a company whose mail quota does not fit its people with no draft and its schedule due, and launches the one with no limit', function (): void {
+    Log::spy();
+    $short = pulseDueCompany();
+    withMailQuota($short, 5);
+    // A company with no plan is not limited.
+    $roomy = pulseDueCompany();
+
+    expect(pulseLaunchRun())->toBe(1);
+
+    expect(pulseOf($short))->toBeNull()
+        ->and(pulseScheduleOf($short)->next_run_on->toDateString())->toBe('2026-11-15')
+        ->and(pulseOf($roomy)?->status)->toBe(SurveyStatus::Active);
+    Log::shouldHaveReceived('error')->withArgs(fn (string $message, array $context): bool => $message === 'engagement.pulse_launch_failed' && $context['tenant_id'] === $short->id && $context['exception'] === App\Modules\Billing\Exceptions\MailQuotaExceeded::class)->once();
+});
+
 it('leaves no survey and no draft in a company of four people', function (): void {
     Log::spy();
     $tenant = pulseDueCompany(people: 4);

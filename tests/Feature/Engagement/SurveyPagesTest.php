@@ -184,6 +184,21 @@ it('previews the questionnaire by section, as a fixed catalog', function (): voi
         ->and($props['draft']['canLaunch'])->toBeFalse();
 });
 
+it('sends the person back with a toast, and the draft stays, when the mail of the launch does not fit the plan', function (): void {
+    Bus::fake();
+    $plant = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    climatePanelStaff($this->tenant, $plant, 6);
+    $survey = Survey::factory()->create(['tenant_id' => $this->tenant->id]);
+    withMailQuota($this->tenant, 5);
+
+    $this->actingAs($this->hr)->post(route('tenant.climate.launch', [$this->tenant, $survey]), ['closes_on' => '2026-11-20'])
+        ->assertRedirect()
+        ->assertSessionHas(Inertia\Support\SessionKey::FLASH_DATA, fn (array $flash): bool => $flash['toast']['type'] === 'error' && str_contains($flash['toast']['message'], 'faltan 1'));
+
+    expect($survey->fresh()?->status)->toBe(SurveyStatus::Draft);
+    Bus::assertNothingBatched();
+});
+
 it('launches the draft with a last day and invites everyone', function (): void {
     Bus::fake();
     $plant = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();

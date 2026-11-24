@@ -145,6 +145,24 @@ it('opens the calendar as a sheet from the bottom on a phone, where the day can 
     expect($ana->fresh()?->hired_on?->toDateString())->toBe('2018-10-07');
 })->with(['light' => false, 'dark' => true]);
 
+// calendarClosed() is what the tests wait on before opening the next date field: on a phone the calendar is a sheet, not a
+// popover, and the next field must not be opened while that sheet is still sliding out and giving the focus back.
+it('waits for the phone\'s sheet to be gone, not only for a popover, in calendarClosed()', function (): void {
+    pickerEmployee();
+
+    $page = visitPage('organization/employees', '/admin/acme/employees', false, true)
+        ->click('[aria-label="Acciones de Ana López"]')->click('Editar')
+        ->click('#employee-hired_on')
+        ->assertVisible('[data-slot="sheet-content"] [data-slot="calendar"]')
+        // A slow runner, made certain: the sheet takes 1.5 s to slide out.
+        ->assertScript('() => { const slow = new CSSStyleSheet(); slow.replaceSync("[data-slot=sheet-content][data-state=closed] { animation-duration: 1500ms !important; }"); document.adoptedStyleSheets = [...document.adoptedStyleSheets, slow]; return true; }', true)
+        ->click('[data-slot="sheet-content"] [data-day] button[tabindex="0"]');
+
+    // `script()` answers once (assertScript asks again until it is told what it expects): where calendarClosed() answers,
+    // no calendar may be left in the page.
+    expect($page->script('() => ('.calendarClosed().')().then((closed) => closed && document.querySelector("[data-slot=sheet-content] [data-slot=calendar]") === null)'))->toBeTrue();
+});
+
 it('keeps the calendar day cells at 44 px on a phone', function (): void {
     pickerEmployee();
 

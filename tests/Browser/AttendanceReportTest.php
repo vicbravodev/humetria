@@ -108,7 +108,11 @@ it('takes RH from the sidebar to the report, a center and its days, with the CSV
 
     visit($url)
         ->click('Cumple la norma')
+        // Each fold unfolds with a 200 ms animation, the family's tools and then Asistencia's pages: the next click waits for it.
+        ->assertScript(settled(), true)
         ->click('[data-sidebar="sidebar"] >> text=Asistencia')
+        ->assertScript(eventually('() => document.querySelector(\'[data-sidebar="sidebar"] a[href$="/attendance/report"]\')?.checkVisibility() === true'), true)
+        ->assertScript(settled(), true)
         ->click('[data-sidebar="sidebar"] >> text=Reporte para la autoridad')
         ->waitForText('Elige un centro de trabajo')
         ->assertPathIs("{$url}/attendance/report")

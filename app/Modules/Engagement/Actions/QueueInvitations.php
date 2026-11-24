@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Actions;
 
+use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Billing\Contracts\WhatsAppQuota;
 use App\Modules\Engagement\Enums\InvitationStatus;
 use App\Modules\Engagement\Jobs\SendInvitations;
@@ -18,13 +19,14 @@ use Illuminate\Support\Str;
 /**
  * Leaves the survey links of some invitations to the queue: those with an email wait in a new batch of jobs, one per
  * block of people, dispatched once the surrounding transaction commits; those without one, and no link from before,
- * are marked so. The request that does it sends nothing.
+ * are marked so. The mail of those with an email is held from the company's monthly quota first (all or none, like the
+ * campaigns'). The request that does it sends nothing.
  */
 final readonly class QueueInvitations
 {
     public const int BLOCK = 50;
 
-    public function __construct(private Roster $roster, private WhatsAppQuota $whatsApp) {}
+    public function __construct(private Roster $roster, private MailQuota $mail, private WhatsAppQuota $whatsApp) {}
 
     /**
      * @param  list<string>  $invitationIds
@@ -38,8 +40,10 @@ final readonly class QueueInvitations
         $channels = $invitations->mapWithKeys(fn (Invitation $invitation): array => [$invitation->id => isset($people[$invitation->employee_id]) ? SurveyInvitation::channel($people[$invitation->employee_id], $invitation->invited_at !== null) : null]);
         $reached = $invitations->filter(fn (Invitation $invitation): bool => $channels[$invitation->id] !== null);
 
-        // Held before anything is marked or queued: if they do not all fit, nothing goes out. (The mail of a survey is not held, as it never was.)
+        // Held before anything is marked or queued: if they do not all fit, nothing goes out and the person is told how many are missing.
+        $this->mail->reserve($channels->filter(fn (?string $channel): bool => $channel === 'mail')->count());
         $this->whatsApp->reserve($channels->filter(fn (?string $channel): bool => $channel === 'whatsapp')->count());
+
         // Who already holds a link keeps it: it works again as soon as they are reached.
         $unreached = $invitations->diffKeys($reached)->filter(fn (Invitation $invitation): bool => $invitation->token_hash === null);
 

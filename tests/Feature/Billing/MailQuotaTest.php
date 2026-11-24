@@ -149,3 +149,22 @@ it('answers a form with a toast and the same page, and a JSON client with a 422'
     $this->from('/previous')->post('probe-mail')->assertRedirect('/previous');
     $this->postJson('probe-mail')->assertStatus(422)->assertJsonPath('message', fn (string $message): bool => str_contains($message, 'correos de campaña'));
 });
+
+it('says whether a hold fits without throwing: what fits is held, what does not fit holds nothing', function (): void {
+    $tenant = mailQuotaCompany(100);
+
+    expect(resolve(MailQuota::class)->tryReserve(60))->toBeTrue()
+        ->and(mailCounter($tenant)->reserved)->toBe(60)
+        ->and(resolve(MailQuota::class)->tryReserve(41))->toBeFalse()
+        ->and(mailCounter($tenant)->reserved)->toBe(60)
+        ->and(resolve(MailQuota::class)->tryReserve(40))->toBeTrue()
+        ->and(mailCounter($tenant)->reserved)->toBe(100);
+});
+
+it('lets a company with no plan, or nobody to mail, pass through tryReserve', function (): void {
+    $tenant = Tenant::factory()->create();
+    resolve(Companies::class)->enter($tenant->id);
+
+    expect(resolve(MailQuota::class)->tryReserve(1000))->toBeTrue()
+        ->and(resolve(MailQuota::class)->tryReserve(0))->toBeTrue();
+});
