@@ -15,7 +15,7 @@ Este README cubre lo que no se ve leyendo una sola clase: **quién puede hacer q
 - **Roles propios**: filas de `roles` con el `tenant_id` de la empresa, nombre interno `custom_<uuid>` (ninguna etiqueta
   choca con una plantilla), `label` (lo que escribió el dueño) y `based_on` (informativo). Máximo
   `tenancy.max_custom_roles` (20). Un rol con personas o invitaciones sin aceptar no se borra. Todo pasa por
-  `Support/CompanyRoles`, que cambia al *team* de Spatie de la empresa y deja el de la petición como estaba.
+  `Support/CompanyRoles`, que cambia al _team_ de Spatie de la empresa y deja el de la petición como estaba.
 - **Una persona, un rol** por empresa, más **permisos directos** (`model_has_permissions` con `tenant_id`): solo suman.
   `CompanyRoles::effectivePermissions` da el resultado (rol + extras) sin los de herramientas que el plan no incluye; uno
   así se guarda y vuelve a valer si la herramienta regresa.
