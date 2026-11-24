@@ -8,6 +8,7 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { sensitiveAdded, toggled } from '@/lib/permission-groups';
+import { countOf } from '@/lib/plural';
 import type { PermissionGroup } from '@/types';
 
 /**
@@ -38,7 +39,7 @@ export default function InviteExtraPermissions({
                     <span className="text-sm font-normal text-muted-foreground">
                         Opcional: lo que tendrá además de su rol
                         {selected.length > 0 &&
-                            ` · ${selected.length} elegidos`}
+                            ` · ${countOf(selected.length, 'elegido', 'elegidos')}`}
                     </span>
                 </span>
                 <ChevronDown

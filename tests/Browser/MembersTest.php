@@ -198,6 +198,8 @@ it('invites someone with a role of the company\'s own and a sensitive permission
         ->assertSee('Rol propio de tu empresa')
         ->click('@invite-extras')
         ->click('@permission-view-trauma-screenings')
+        ->assertSee('Opcional: lo que tendrá además de su rol · 1 elegido')
+        ->assertDontSee('1 elegidos')
         ->click('Entiendo y confirmo')
         ->press('Enviar invitación')
         ->assertSee('Invitación enviada.')
