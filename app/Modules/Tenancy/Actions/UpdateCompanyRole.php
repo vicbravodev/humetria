@@ -23,6 +23,8 @@ final readonly class UpdateCompanyRole
     /**
      * @param  list<string>  $permissions
      *
+     * Permissions the role holds of a tool the plan no longer includes are kept, and not recorded as removed.
+     *
      * @throws InvalidArgumentException when a permission is not one the company can hand out.
      */
     public function handle(Role $role, string $label, array $permissions, User $by): void
@@ -33,6 +35,8 @@ final readonly class UpdateCompanyRole
 
         DB::transaction(function () use ($role, $tenant, $label, $permissions, $by): void {
             $before = $role->permissions->map(fn (Permission $permission): string => $permission->name)->values()->all();
+            // What the role holds of a tool the plan lost stays: the panel cannot send it back.
+            $permissions = array_values(array_unique([...$permissions, ...$this->roles->keptWhileUnavailable($tenant, $before)]));
             $added = array_values(array_diff($permissions, $before));
             $removed = array_values(array_diff($before, $permissions));
 

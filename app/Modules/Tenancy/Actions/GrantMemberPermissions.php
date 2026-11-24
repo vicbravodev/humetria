@@ -22,6 +22,8 @@ final readonly class GrantMemberPermissions
     /**
      * @param  list<string>  $permissions
      *
+     * Permissions the person holds of a tool the plan no longer includes are kept, and not recorded as removed.
+     *
      * @throws InvalidArgumentException when a permission is not one the company can hand out.
      */
     public function handle(TenantMembership $member, array $permissions, User $by): void
@@ -32,6 +34,8 @@ final readonly class GrantMemberPermissions
 
         DB::transaction(function () use ($member, $person, $tenant, $permissions, $by): void {
             $before = $this->roles->directPermissionsOf($person, $tenant);
+            // What the person holds of a tool the plan lost stays: the panel cannot send it back.
+            $permissions = array_values(array_unique([...$permissions, ...$this->roles->keptWhileUnavailable($tenant, $before)]));
             $added = array_values(array_diff($permissions, $before));
 
             $this->roles->syncDirectPermissions($person, $tenant, $permissions);

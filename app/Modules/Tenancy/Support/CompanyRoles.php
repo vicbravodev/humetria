@@ -182,6 +182,19 @@ final readonly class CompanyRoles
         return $assignable;
     }
 
+    /**
+     * Of `$held`, those of a tool the company's plan no longer includes: they count for nothing now, and a save that cannot
+     * send them (the panel shows them off) keeps them for when the tool comes back.
+     *
+     * @param  array<int, string>  $held
+     * @return list<string>
+     */
+    public function keptWhileUnavailable(Tenant $tenant, array $held): array
+    {
+        return array_values(array_filter($held, fn (string $name): bool => ($definition = PermissionCatalog::find($name)) !== null
+            && PermissionCatalog::unavailableReason($tenant, $definition) !== null));
+    }
+
     /** Replaces the person's role in the company with `$role`, a template or one of the company's own. */
     public function assign(User $user, Tenant $tenant, TenantRole|Role $role): void
     {

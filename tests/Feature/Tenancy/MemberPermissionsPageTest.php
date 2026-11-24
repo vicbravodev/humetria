@@ -124,3 +124,16 @@ it('lets no one but the owner open or change it, and the staff working as the ow
 
     expect(resolve(CompanyRoles::class)->directPermissionsOf($this->person, $this->tenant))->toBe([]);
 });
+
+it('keeps a permission of a tool the plan no longer includes when the person\'s are saved, and does not record it as removed', function (): void {
+    app(GrantMemberPermissions::class)->handle($this->member, ['manage-vacations'], $this->owner);
+    $revoked = TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
+
+    $this->actingAs($this->owner)
+        ->put(route('tenant.members.permissions.update', [$this->tenant, $this->member->id]), ['permissions' => ['manage-attendance']])
+        ->assertSessionHasNoErrors();
+    $revoked->delete();
+
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($this->person, $this->tenant))->toBe(['manage-attendance', 'manage-vacations'])
+        ->and(AuditEntry::query()->where('event', 'tenant_member.permissions_changed')->latest('id')->first()->metadata)->toMatchArray(['added' => ['manage-attendance'], 'removed' => []]);
+});

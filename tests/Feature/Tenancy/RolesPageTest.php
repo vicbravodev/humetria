@@ -480,3 +480,16 @@ it('lets the staff working as the owner invite and change roles as before, but n
     expect(TenantInvitation::query()->where('tenant_id', $this->tenant->id)->sole()->role?->name)->toBe('viewer')
         ->and(resolve(CompanyRoles::class)->roleOf($viewer->user()->sole(), $this->tenant)?->name)->toBe('hr');
 });
+
+it('keeps a permission of a tool the plan no longer includes when the role is saved, and does not record it as removed', function (): void {
+    $role = companyRole($this->tenant, $this->owner, 'Auditoría', ['view-dashboard', 'view-vacations']);
+    $revoked = TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
+
+    $this->actingAs($this->owner)
+        ->put(route('tenant.roles.update', [$this->tenant, $role->id]), ['label' => 'Auditoría', 'permissions' => ['view-dashboard', 'view-climate']])
+        ->assertSessionHasNoErrors();
+    $revoked->delete();
+
+    expect($role->refresh()->permissions->pluck('name')->sort()->values()->all())->toBe(['view-climate', 'view-dashboard', 'view-vacations'])
+        ->and(AuditEntry::query()->where('event', 'tenant_role.updated')->sole()->metadata)->toMatchArray(['added' => ['view-climate'], 'removed' => []]);
+});
