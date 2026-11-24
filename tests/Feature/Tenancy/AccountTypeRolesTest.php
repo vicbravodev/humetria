@@ -16,7 +16,9 @@ mutates(TenantType::class);
 /** A role of the company's own with `$permissions`, written straight to the tables as an old row or another path could. */
 function ownRole(Tenant $tenant, array $permissions): Role
 {
-    $role = app(CreateCompanyRole::class)->handle($tenant, 'Propio', ['view-compensation'], null, User::factory()->create());
+    // A company names each of its roles once.
+    $label = 'Propio '.(Role::query()->where('tenant_id', $tenant->id)->count() + 1);
+    $role = app(CreateCompanyRole::class)->handle($tenant, $label, ['view-compensation'], null, User::factory()->create());
 
     return $role->syncPermissions($permissions);
 }

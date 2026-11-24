@@ -128,3 +128,12 @@ it('forgets who can review as soon as someone loses their role', function (): vo
 
     expect($members->reviewers())->toBe([]);
 });
+
+it('keeps the name of a company\'s own role unique inside the company in the database itself, whatever its case', function (): void {
+    $tenant = Tenant::factory()->create();
+    $role = fn (Tenant $company, string $label): Role => Role::query()->create(['name' => 'custom_'.Illuminate\Support\Str::uuid(), 'guard_name' => 'web', 'tenant_id' => $company->id, 'label' => $label]);
+    $role($tenant, 'Auditoría');
+    $role(Tenant::factory()->create(), 'Auditoría');
+
+    expect(fn () => $role($tenant, 'AUDITORÍA'))->toThrow(UniqueConstraintViolationException::class);
+});
