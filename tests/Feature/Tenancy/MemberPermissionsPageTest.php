@@ -137,3 +137,8 @@ it('keeps a permission of a tool the plan no longer includes when the person\'s 
     expect(resolve(CompanyRoles::class)->directPermissionsOf($this->person, $this->tenant))->toBe(['manage-attendance', 'manage-vacations'])
         ->and(AuditEntry::query()->where('event', 'tenant_member.permissions_changed')->latest('id')->first()->metadata)->toMatchArray(['added' => ['manage-attendance'], 'removed' => []]);
 });
+
+it('answers 404, not an error, to a person id too large to be one', function (): void {
+    $this->actingAs($this->owner)->get('/admin/acme/members/99999999999999999999/permissions')->assertNotFound();
+    $this->actingAs($this->owner)->put('/admin/acme/members/99999999999999999999/permissions', ['permissions' => []])->assertNotFound();
+});

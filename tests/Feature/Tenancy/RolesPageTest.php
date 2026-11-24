@@ -507,3 +507,9 @@ it('says the name is taken when another role takes it while this one is saved', 
 
     expect($role->refresh()->getAttribute('label'))->toBe('Auditoría');
 })->with(['store', 'update']);
+
+it('answers 404, not an error, to a role id too large to be one', function (): void {
+    $this->actingAs($this->owner)->get('/admin/acme/roles/99999999999999999999/edit')->assertNotFound();
+    $this->actingAs($this->owner)->put('/admin/acme/roles/99999999999999999999', ['label' => 'X', 'permissions' => ['view-dashboard']])->assertNotFound();
+    $this->actingAs($this->owner)->delete('/admin/acme/roles/99999999999999999999')->assertNotFound();
+});

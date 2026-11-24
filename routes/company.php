@@ -60,16 +60,17 @@ Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnfor
     Route::delete('admin/{tenant:slug}/members/invitations/{invitation}', [MemberController::class, 'cancel'])->where('tenant', $notReserved)->whereUuid('invitation')->name('tenant.members.invitations.cancel');
     Route::put('admin/{tenant:slug}/members/{member}', [MemberController::class, 'update'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.update');
     Route::delete('admin/{tenant:slug}/members/{member}', [MemberController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.destroy');
-    Route::get('admin/{tenant:slug}/members/{member}/permissions', [MemberController::class, 'permissions'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.permissions.edit');
-    Route::put('admin/{tenant:slug}/members/{member}/permissions', [MemberController::class, 'updatePermissions'])->where('tenant', $notReserved)->whereNumber('member')->name('tenant.members.permissions.update');
+    Route::get('admin/{tenant:slug}/members/{member}/permissions', [MemberController::class, 'permissions'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.permissions.edit');
+    Route::put('admin/{tenant:slug}/members/{member}/permissions', [MemberController::class, 'updatePermissions'])->where('tenant', $notReserved)->where('member', '[0-9]{1,9}')->name('tenant.members.permissions.update');
 
     // «Roles y permisos»: the company's own roles, beside the templates. Only the owner; the staff working as one only reads.
     Route::get('admin/{tenant:slug}/roles', [RoleController::class, 'index'])->where('tenant', $notReserved)->name('tenant.roles.index');
     Route::get('admin/{tenant:slug}/roles/create', [RoleController::class, 'create'])->where('tenant', $notReserved)->name('tenant.roles.create');
     Route::post('admin/{tenant:slug}/roles', [RoleController::class, 'store'])->where('tenant', $notReserved)->name('tenant.roles.store');
-    Route::get('admin/{tenant:slug}/roles/{role}/edit', [RoleController::class, 'edit'])->where('tenant', $notReserved)->whereNumber('role')->name('tenant.roles.edit');
-    Route::put('admin/{tenant:slug}/roles/{role}', [RoleController::class, 'update'])->where('tenant', $notReserved)->whereNumber('role')->name('tenant.roles.update');
-    Route::delete('admin/{tenant:slug}/roles/{role}', [RoleController::class, 'destroy'])->where('tenant', $notReserved)->whereNumber('role')->name('tenant.roles.destroy');
+    // Ids of nine digits at most: a longer one is no row, and answers 404 rather than a database error.
+    Route::get('admin/{tenant:slug}/roles/{role}/edit', [RoleController::class, 'edit'])->where('tenant', $notReserved)->where('role', '[0-9]{1,9}')->name('tenant.roles.edit');
+    Route::put('admin/{tenant:slug}/roles/{role}', [RoleController::class, 'update'])->where('tenant', $notReserved)->where('role', '[0-9]{1,9}')->name('tenant.roles.update');
+    Route::delete('admin/{tenant:slug}/roles/{role}', [RoleController::class, 'destroy'])->where('tenant', $notReserved)->where('role', '[0-9]{1,9}')->name('tenant.roles.destroy');
 
     // «Plan y uso»: the owner's read-only page about the plan, the limits and the tools of the company.
     Route::get('admin/{tenant:slug}/plan', PlanController::class)->where('tenant', $notReserved)->name('tenant.plan');
