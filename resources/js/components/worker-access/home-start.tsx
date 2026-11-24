@@ -1,8 +1,9 @@
-import HomeSections from '@/components/worker-access/home-sections';
+import InstallGuide from '@/components/humetria/install-guide';
 import PersonHeading from '@/components/humetria/person-heading';
+import HomeSections from '@/components/worker-access/home-sections';
 import type { WorkerSection } from '@/types';
 
-/** «Inicio»: who the person is, what waits for their answer first, and the rest of their tools. */
+/** «Inicio»: who the person is, what waits for their answer first, the rest of their tools and, last, how to install the app. */
 export default function HomeStart({
     company,
     name,
@@ -21,6 +22,7 @@ export default function HomeStart({
             </PersonHeading>
             <HomeSections sections={waiting} label="Esperan su respuesta" />
             <HomeSections sections={tools} label="Sus herramientas" />
+            <InstallGuide />
         </>
     );
 }

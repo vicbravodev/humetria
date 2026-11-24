@@ -6,6 +6,9 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\On;
+use Pest\Browser\Api\PendingAwaitablePage;
 
 /*
  * The person's own pages, with no account: the screen to enter, a one-time link and their start.
@@ -136,3 +139,61 @@ it('asks before «No fui yo» revokes a key, then says it is done', function (bo
     'light desktop' => [false, false],
     'dark mobile' => [true, true],
 ]);
+
+/** Ana's start, opened from her link on the phone the device preset says, and with the session open. */
+function anaStartOn(On|PendingAwaitablePage $pending): AwaitableWebpage
+{
+    anaLink('install-token', requested: true);
+
+    $page = $pending->assertNoJavaScriptErrors();
+    $page->press('Continuar')->waitForText('Hola, Ana López');
+
+    return $page;
+}
+
+// The device presets set only the screen: the agent says which phone it is.
+const SAFARI_IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1';
+const GMAIL_IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/321.0.636 Mobile/15E148 Safari/604.1';
+const CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36';
+
+it('shows an iPhone the steps to add the app to its home screen, as the last thing in the start', function (bool $dark): void {
+    $pending = visit('/me/acme/link/install-token')->on()->iPhone14Pro()->withUserAgent(SAFARI_IPHONE);
+
+    anaStartOn($dark ? $pending->inDarkMode() : $pending->inLightMode())
+        ->assertSee('Instale la app en su teléfono')
+        ->assertSee('Toque Compartir')
+        ->assertSee('Agregar a pantalla de inicio')
+        ->assertSee('El ícono abre Marcar.')
+        ->assertDontSee('Ábralo en Safari o Chrome')
+        ->assertScript(spilledOut(), '')
+        ->assertScript(settled(), true)
+        ->assertNoAccessibilityIssues(1);
+})->with([
+    'light' => [false],
+    'dark' => [true],
+]);
+
+it('shows an Android phone how to install the app', function (): void {
+    anaStartOn(visit('/me/acme/link/install-token')->on()->pixel8()->withUserAgent(CHROME_ANDROID)->inLightMode())
+        ->assertSee('Instale la app en su teléfono')
+        ->assertSee('El ícono abre Marcar.')
+        ->assertDontSee('Agregar a pantalla de inicio')
+        ->assertScript(settled(), true)
+        ->assertNoAccessibilityIssues(1);
+});
+
+it('asks to open the link in Safari or Chrome from the browser inside another app, instead of the install steps', function (): void {
+    anaStartOn(visit('/me/acme/link/install-token')->on()->iPhone14Pro()->withUserAgent(GMAIL_IPHONE)->inLightMode())
+        ->assertSee('Ábralo en Safari o Chrome')
+        ->assertSee('Copiar el enlace')
+        ->assertDontSee('Agregar a pantalla de inicio')
+        ->assertScript(spilledOut(), '')
+        ->assertScript(settled(), true)
+        ->assertNoAccessibilityIssues(1);
+});
+
+it('does not show the install guide on a computer', function (): void {
+    anaStartOn(visit('/me/acme/link/install-token')->inLightMode())
+        ->assertDontSee('Instale la app en su teléfono')
+        ->assertDontSee('Ábralo en Safari o Chrome');
+});
