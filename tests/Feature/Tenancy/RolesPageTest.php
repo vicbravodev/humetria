@@ -573,3 +573,13 @@ it('reads the editor of a role already made in a fixed number of queries', funct
 // Measured, then fixed: the templates of «Empezar desde» come in one query with their permissions, not one per template.
 const QUERIES_OF_THE_NEW_ROLE_EDITOR = 15;
 const QUERIES_OF_THE_ROLE_EDITOR = 17;
+
+it('shows a template whose row is missing as holding nobody and switching nothing on, instead of failing', function (): void {
+    DB::table('roles')->whereNull('tenant_id')->where('name', 'viewer')->delete();
+
+    foreach (['tenant.roles.index', 'tenant.roles.create'] as $route) {
+        $this->actingAs($this->owner)->get(route($route, $this->tenant))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('templates', fn ($templates): bool => collect($templates)->contains(fn (array $row): bool => $row['key'] === 'viewer' && $row['permissions'] === []
+                && ($route === 'tenant.roles.create' || $row['people'] === 0))));
+    }
+});
