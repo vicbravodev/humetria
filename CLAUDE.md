@@ -150,6 +150,10 @@ No hay SMS. WhatsApp sale solo por `Messaging`.
 - CSP con nonce (`App\Http\Middleware\SecurityHeaders`): todo `<script>`/`<style>` inline lleva `nonce="{{ Vite::cspNonce() }}"`
   y las librerías que inyectan estilos reciben `cspNonce` (`@/lib/csp-nonce`). Aflojar la CSP exige su motivo en el PR.
 - Una ruta nueva de la cuenta personal (perfil, contraseña, 2FA, passkeys) va en `ForbidWhileImpersonating::protectedRoutes()`.
+- La app instalable de la persona (`docs/operations/pwa.md`): el service worker vive en `/me/{slug}/sw.js` con alcance
+  `/me/{slug}`, guarda solo archivos del build y el cascarón, nunca HTML de Inertia ni datos de personas; `PWA_SW_KILL` lo apaga
+  sin apagar la entrega. Todo `GET` bajo `/me/` permite cámara y ubicación a su propio origen (`SecurityHeaders`); el resto de la
+  app las cierra.
 - Toda respuesta lleva `X-Robots-Tag: noindex, nofollow`, salvo las rutas de `App\Http\IndexablePages` (con su test en
   `tests/Feature/IndexablePagesTest.php`) que responden 200 en producción; staging y local nunca se indexan.
 - Solo las páginas de `App\Http\SsrPages` pasan por Node, y solo sin sesión; una ruta nueva no activa SSR. Si Node falla
