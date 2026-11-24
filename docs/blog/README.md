@@ -25,7 +25,7 @@ texto de la portada. La lista vive en `app/Modules/Blog/Support/BlogTools.php` y
 
 ## Portadas
 
-Cada artículo tiene dos imágenes de 1200×630 en `public/blog/`: `{slug}.webp` (la de la página y las tarjetas) y
+Cada artículo tiene dos imágenes de 1200×630 en `public/images/blog/`: `{slug}.webp` (la de la página y las tarjetas) y
 `{slug}-og.jpg` (con el título, para Open Graph y el JSON-LD; un JPEG porque no todos los rastreadores leen WebP).
 Se generan con Remotion y los tokens de marca, desde `video/` (necesita `cwebp`: `brew install webp`):
 
