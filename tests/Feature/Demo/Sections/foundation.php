@@ -124,7 +124,7 @@ return [
             ->and($tenant->status())->toBe(TenantStatus::Active)
             ->and(resolve(CompanyModules::class)->enabledKeys($tenant->id))->toBe($everyModule)
             ->and(resolve(CompanyLimits::class)->usage($tenant->id))->toBe([])
-            ->and($members->where('role', TenantRole::Owner)->pluck('email')->all())->toBe([DemoRoster::person(DemoRoster::OWNER)->email])
-            ->and($members->where('role', TenantRole::Hr)->pluck('email')->all())->toBe([DemoRoster::person(DemoRoster::HR)->email]);
+            ->and($members->where('role.key', TenantRole::Owner->value)->pluck('email')->all())->toBe([DemoRoster::person(DemoRoster::OWNER)->email])
+            ->and($members->where('role.key', TenantRole::Hr->value)->pluck('email')->all())->toBe([DemoRoster::person(DemoRoster::HR)->email]);
     },
 ];
