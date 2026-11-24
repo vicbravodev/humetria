@@ -75,7 +75,7 @@ final readonly class LaunchTraumaCampaign
 
             foreach ($chosen as $employeeId) {
                 $person = $active->get($employeeId);
-                $queue[$participants[$employeeId]] = $person !== null && SurveyInvitation::routes($person) !== [];
+                $queue[$participants[$employeeId]] = $person === null ? null : SurveyInvitation::channel($person);
             }
 
             $invited = $this->queueInvitations->handle($campaign, $queue);

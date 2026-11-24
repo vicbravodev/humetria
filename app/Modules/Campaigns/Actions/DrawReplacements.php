@@ -51,7 +51,7 @@ final readonly class DrawReplacements
             $drawn = [];
 
             foreach (array_slice((new Randomizer)->shuffleArray($available), 0, $count) as $person) {
-                $drawn[$this->enroll($campaign, $person)->id] = SurveyInvitation::routes($person) !== [];
+                $drawn[$this->enroll($campaign, $person)->id] = SurveyInvitation::channel($person);
             }
 
             $this->queueInvitations->handle($campaign, $drawn);

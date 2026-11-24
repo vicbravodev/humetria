@@ -57,6 +57,8 @@ final readonly class Conversations
         return $this->ofParticipant($scope)
             ->matching(['title'], $search)
             ->orderByDesc('updated_at')
+            // updated_at has second precision and the id is a random UUID, so it is no recency: it only makes the order total.
+            ->orderByDesc('id')
             ->paginate($perPage)
             ->through(fn (ChatConversation $conversation): array => [
                 'id' => $conversation->id,

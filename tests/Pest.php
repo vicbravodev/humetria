@@ -22,6 +22,7 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\TenantContext;
+use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -336,13 +337,14 @@ function toolCard(string $tool, AssistantScope $scope, array $arguments = []): a
 }
 
 /** A conversation with one message that the participant owns. */
-function assistantConversation(ConversationParticipant $participant, string $title = 'Avance'): Conversation
+function assistantConversation(ConversationParticipant $participant, string $title = 'Avance', ?CarbonInterface $updatedAt = null): Conversation
 {
     $conversation = Conversation::query()->create([
         'id' => (string) Str::uuid(),
         'participant_type' => 'assistant_participant',
         'participant_id' => $participant->id,
         'title' => $title,
+        ...($updatedAt === null ? [] : ['created_at' => $updatedAt, 'updated_at' => $updatedAt]),
     ]);
     $conversation->messages()->create([
         'id' => (string) Str::uuid(),
@@ -947,6 +949,12 @@ require_once __DIR__.'/Unit/Compensation/ScenarioHelpers.php';
 | The time clock's browser helpers (a phone's fingerprint reader and its position), shared by its browser tests.
 */
 require_once __DIR__.'/Browser/attendance-helpers.php';
+
+/*
+| The signed POST to Meta's webhook (postMeta), shared by the webhook, STOP, ALTA and service-reply tests: a file run on its own
+| (or in another parallel process) must not depend on the one that used to define it.
+*/
+require_once __DIR__.'/Feature/Messaging/meta-helpers.php';
 
 /**
  * Issues `$employeeId` the link RH sends to enter and create their key, and gives its path: the one emailed to them (the

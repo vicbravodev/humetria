@@ -94,3 +94,53 @@ it('gives in the demo manual the figures the code has', function (): void {
         expect(str_contains($manual, $figure))->toBeTrue("The demo manual does not say «{$figure}»");
     }
 });
+
+/** Everything under app/Modules/Messaging, as one text: the signals and the commands the manuals name must be spelled in it. */
+function messagingCode(): string
+{
+    $code = repoFile('routes/console.php');
+
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__, 2).'/app/Modules/Messaging', FilesystemIterator::SKIP_DOTS)) as $file) {
+        if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
+            $code .= (string) file_get_contents($file->getPathname());
+        }
+    }
+
+    return $code;
+}
+
+it('documents in the observability manual every WhatsApp signal the alerts read, as the code spells it', function (): void {
+    $manual = repoFile('docs/operations/observability.md');
+    $code = messagingCode();
+
+    foreach (['whatsapp.paused_automatically', 'whatsapp.quality_changed', 'whatsapp.daily_cap_reached', 'whatsapp.webhook_malformed', 'whatsapp.orphans_discarded', 'mail.webhook_malformed', 'mail.webhook_secret_invalid'] as $signal) {
+        expect(str_contains($code, $signal))->toBeTrue("The code no longer says {$signal}")
+            ->and(str_contains($manual, $signal))->toBeTrue("The observability manual does not mention {$signal}");
+    }
+
+    expect($manual)->toContain('sin eventos en 24 horas');
+});
+
+it('documents in the WhatsApp manual the variables, the commands and the phases the code has', function (): void {
+    $manual = repoFile('docs/operations/whatsapp.md');
+    $config = repoFile('config/whatsapp.php').repoFile('config/messaging.php');
+    $code = messagingCode();
+
+    foreach ([
+        'WHATSAPP_ENABLED', 'WHATSAPP_PAUSED', 'WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID', 'WHATSAPP_APP_SECRET', 'WHATSAPP_APP_SECRET_PREVIOUS',
+        'WHATSAPP_VERIFY_TOKEN', 'WHATSAPP_API_VERSION', 'WHATSAPP_MAX_PER_SECOND', 'WHATSAPP_DAILY_CAP_PER_COMPANY', 'WHATSAPP_PLATFORM_MONTHLY_CAP',
+        'MESSAGING_RECIPIENT_KEYS', 'MESSAGING_RETENTION_MONTHS',
+    ] as $variable) {
+        expect(str_contains($config, $variable))->toBeTrue("The config no longer reads {$variable}")
+            ->and(str_contains($manual, $variable))->toBeTrue("The WhatsApp manual does not mention {$variable}");
+    }
+
+    foreach (['messaging:resume', 'messaging:forget', 'messaging:purge', 'messaging:watch-failures', 'messaging:reconcile-unknown', 'messaging:replay-orphans', 'billing:whatsapp-reconcile'] as $command) {
+        expect(str_contains($code, $command))->toBeTrue("The code has no command {$command}")
+            ->and(str_contains($manual, $command))->toBeTrue("The WhatsApp manual does not mention {$command}");
+    }
+
+    foreach (['survey_invite_v1', 'engagement_invite_v1', 'UTILITY', 'Fase 2', 'Fase 3', 'x-hub-signature-256'] as $topic) {
+        expect(str_contains(mb_strtolower($manual), mb_strtolower($topic)))->toBeTrue("The WhatsApp manual does not mention {$topic}");
+    }
+});

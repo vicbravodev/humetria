@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 import CutParticipation from '@/components/engagement/cut-participation';
 import ParticipationCard from '@/components/engagement/participation-card';
+import ChannelReachCard from '@/components/humetria/channel-reach-card';
 import { Button } from '@/components/ui/button';
 import type { ClimateParticipation } from '@/types';
 
@@ -26,6 +27,7 @@ export default function ClosedFollowUp({
                     overall={participation.rate}
                 />
             </div>
+            <ChannelReachCard reach={participation.reach} />
             {resultsUrl !== null && (
                 <section
                     aria-labelledby="results-title"

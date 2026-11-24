@@ -50,6 +50,16 @@ final class RedactSensitiveData implements ProcessorInterface
             'two_factor_secret',
             // A phone number reaches a person directly: never log one, whatever event carries it.
             'whatsapp',
+            // WhatsApp: a phone number reaches a person, and what Meta sends or asks for is a credential or a person's data.
+            'app_secret',
+            'components',
+            'hub_verify_token',
+            'mobile',
+            'msisdn',
+            'phone',
+            'recipient_hash',
+            'verify_token',
+            'wa_id',
             // NOM-037: a person's home, marital status, free-text notes and the address they answered from.
             'action_plan',
             'confirmed_ip',

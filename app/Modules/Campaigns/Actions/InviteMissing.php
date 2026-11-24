@@ -43,7 +43,7 @@ final readonly class InviteMissing
             foreach ($this->owed($campaign) as [$person, $participant]) {
                 $people += self::updates($person, $participant) ? 1 : 0;
                 $participant = $participant === null ? $this->join($campaign, $person) : $this->restore($participant);
-                $owed[$participant->id] = SurveyInvitation::routes($person) !== [];
+                $owed[$participant->id] = SurveyInvitation::channel($person);
             }
 
             return ['people' => $people, 'links' => $this->queueInvitations->handle($campaign, $owed)];
@@ -99,7 +99,7 @@ final readonly class InviteMissing
         foreach ($this->roster->activeIn($campaign->work_center_id) as $person) {
             $participant = $participants->get($person->id);
             $returned = $participant?->instruments->contains('status', InstrumentStatus::Cancelled) ?? false;
-            $neverInvited = $participant !== null && in_array($participant->invitation_status, [null, InvitationStatus::NoEmail], true)
+            $neverInvited = $participant !== null && in_array($participant->invitation_status, [null, InvitationStatus::Unreachable], true)
                 && $participant->instruments->contains('status', InstrumentStatus::Pending);
 
             if ($participant === null || $returned || $neverInvited) {

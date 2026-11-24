@@ -53,6 +53,8 @@ final class AuditPages
         'employee' => 'Personas',
         'assistant' => 'Humi',
         'sso' => 'Inicio de sesión único',
+        'tenancy' => 'Canales de comunicación',
+        'messaging' => 'WhatsApp',
     ];
 
     /**
@@ -105,6 +107,7 @@ final class AuditPages
         'pulse' => 'Pulso',
         'climate' => 'Clima',
         'sso' => 'Inicio de sesión único',
+        'whatsapp' => 'WhatsApp',
     ];
 
     /**
@@ -113,6 +116,9 @@ final class AuditPages
      * @var array<string, string>
      */
     public const array KEYS = [
+        'opt_outs' => 'Bajas retiradas',
+        'channel' => 'Canal',
+        'wording_version' => 'Versión del aviso aceptado',
         'user_id' => 'Persona',
         'reason' => 'Motivo',
         'previous' => 'Estado anterior',

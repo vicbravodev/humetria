@@ -14,6 +14,7 @@ import type {
     CampaignDetail,
     CampaignPerson,
     CampaignSending,
+    ChannelReach,
     DraftContact,
     InstrumentProgress,
     InviteMissingCount,
@@ -32,6 +33,7 @@ export default function Campaign(props: {
     areas: AreaParticipation[] | null;
     answersByDay: AnswersByDay | null;
     contact: DraftContact | null;
+    reach: ChannelReach | null;
     filters: PeopleFilters;
     sending: CampaignSending | null;
     sample: Paginated<SampledPerson> | null;
@@ -85,6 +87,7 @@ export default function Campaign(props: {
                         sending={props.sending}
                         areas={props.areas}
                         answersByDay={props.answersByDay}
+                        reach={props.reach}
                     />
                 )}
                 {campaign.status === 'closed' && (

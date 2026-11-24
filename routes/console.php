@@ -6,7 +6,8 @@ use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Attendance\Actions\DispatchCloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
 use App\Modules\Billing\Actions\MeasureStorage;
-use App\Modules\Billing\Actions\ReleaseMailHolds;
+use App\Modules\Billing\Actions\ReconcileWhatsApp;
+use App\Modules\Billing\Actions\ReleaseBulkHolds;
 use App\Modules\Billing\Actions\RenewSubscriptions;
 use App\Modules\Billing\Actions\SendBillingNotices;
 use App\Modules\Campaigns\Actions\CloseExpiredCampaigns;
@@ -24,6 +25,12 @@ use App\Modules\Engagement\Support\Results\ItemStatisticsReport;
 use App\Modules\Interventions\Actions\SendProgramDigests;
 use App\Modules\Leave\Actions\GrantEntitlements;
 use App\Modules\Leave\Actions\RouteRequests;
+use App\Modules\Messaging\Actions\ForgetRecipient;
+use App\Modules\Messaging\Actions\PurgeMessaging;
+use App\Modules\Messaging\Actions\ReconcileUnknown;
+use App\Modules\Messaging\Actions\ReplayOrphanEvents;
+use App\Modules\Messaging\Actions\ResumeWhatsApp;
+use App\Modules\Messaging\Actions\WatchFailures;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -31,6 +38,11 @@ use App\Modules\Seating\Actions\SendSeatingDigests;
 use App\Modules\Telework\Actions\RemindUnansweredAccidents;
 use App\Modules\Telework\Actions\ScheduleReviews;
 use App\Modules\Telework\Actions\SendTeleworkDigests;
+use App\Modules\Tenancy\Contracts\CompanyRegistry;
+use App\Support\PhoneNumber;
+use Carbon\CarbonImmutable;
+use Carbon\Exceptions\InvalidFormatException;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
@@ -192,12 +204,40 @@ Artisan::command('billing:notify', function (SendBillingNotices $notices): void 
 })->purpose('Email each account the next amount and the loss of the channel discount before the cut, and a balance past due; once each');
 
 Schedule::command('billing:notify')->dailyAt('09:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
-Artisan::command('billing:release-mail-holds', function (ReleaseMailHolds $release): void {
-    $this->info('Correos liberados: '.$release->handle());
-})->purpose('Give back the campaign mail a bulk send held and nobody used');
+// By hand, once a month, when Meta's invoice is in: it writes nothing, it says what to credit and what the platform spent.
+Artisan::command('billing:whatsapp-reconcile {month : El mes, como 2026-11}', function (ReconcileWhatsApp $reconcile, CompanyRegistry $companies): int {
+    $argument = $this->argument('month');
 
-// After the day's mail has gone out: what a send held and no mail took (people without an address) goes back to the quota.
-Schedule::command('billing:release-mail-holds')->dailyAt('03:50')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+    try {
+        $month = CarbonImmutable::createFromFormat('!Y-m', is_string($argument) ? $argument : '', config()->string('app.display_timezone'));
+    } catch (InvalidFormatException) {
+        $month = null;
+    }
+
+    if ($month === null) {
+        $this->error('El mes se escribe como 2026-11.');
+
+        return Command::FAILURE;
+    }
+
+    $report = $reconcile->handle($month);
+    $names = $companies->many(array_column($report['companies'], 'tenantId'));
+
+    foreach ($report['companies'] as $row) {
+        $this->line(($names[$row['tenantId']]->tradeName ?? $row['tenantId']).": {$row['charged']} cobrados, {$row['undelivered']} sin entregar, crédito sugerido {$row['creditCents']} centavos");
+    }
+
+    $this->info("Costo de Meta del mes: {$report['platformCostCents']} centavos");
+
+    return Command::SUCCESS;
+})->purpose('For a month, per company: WhatsApp messages charged, the ones never delivered and the credit that suggests; and the platform cost to compare with Meta\'s invoice');
+
+Artisan::command('billing:release-holds', function (ReleaseBulkHolds $release): void {
+    $this->info('Reservas liberadas: '.$release->handle());
+})->purpose('Give back the campaign mail and WhatsApp messages a bulk send held and nobody used');
+
+// After the day's messages have gone out: what a send held and nothing took (people without an address or a phone) goes back to the quota.
+Schedule::command('billing:release-holds')->dailyAt('03:50')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // After local midnight, so the anniversary of the day is granted on its day; a run again grants nothing twice and a day
 // it did not run is made up the next one.
 Schedule::command('leave:grant-entitlements')->dailyAt('00:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
@@ -208,6 +248,54 @@ Schedule::command('engagement:close-expired')->hourly()->onOneServer()->withoutO
 Schedule::command('engagement:launch-pulses')->dailyAt('08:00')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // Ten minutes later, and three days ahead of the run: the date of a heads-up is the day the launch command will find due.
 Schedule::command('engagement:announce-pulses')->dailyAt('08:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Artisan::command('messaging:reconcile-unknown', function (ReconcileUnknown $reconcile): void {
+    $this->info('Mensajes resueltos: '.$reconcile->handle());
+})->purpose('Settle as used the WhatsApp messages that stayed unknown for a day with no status from Meta');
+
+Schedule::command('messaging:reconcile-unknown')->hourly()->onOneServer()->withoutOverlapping();
+Artisan::command('messaging:replay-orphans', function (ReplayOrphanEvents $replay): void {
+    $this->info('Estados aplicados: '.$replay->handle());
+})->purpose('Apply the WhatsApp statuses that arrived before their message had its id, and drop the ones that stayed alone for an hour');
+
+Schedule::command('messaging:replay-orphans')->everyMinute()->onOneServer()->withoutOverlapping();
+
+Artisan::command('messaging:watch-failures', function (WatchFailures $watch): void {
+    $this->info($watch->handle() ? 'WhatsApp en pausa: demasiados bloqueos.' : 'Sin cambios.');
+})->purpose('Pause every WhatsApp send when blocks and spam reports reach the threshold of the window; only messaging:resume lifts it');
+
+Schedule::command('messaging:watch-failures')->everyFiveMinutes()->onOneServer()->withoutOverlapping();
+
+Artisan::command('messaging:purge', function (PurgeMessaging $purge): void {
+    $deleted = $purge->handle();
+
+    $this->info("Mensajes borrados: {$deleted['deliveries']}; eventos de proveedor borrados: {$deleted['webhook_events']}");
+})->purpose('Delete the WhatsApp and mail messages older than the retention, with their history, and the provider events past their window');
+
+// After the day's mail and the nightly holds, in the quiet of the display time.
+Schedule::command('messaging:purge')->dailyAt('03:25')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+
+// A data request of a person (ARCO): by hand, with the phone asked for on a hidden prompt so it stays out of the terminal history.
+Artisan::command('messaging:forget', function (ForgetRecipient $forget): int {
+    $answer = $this->secret('Teléfono de la persona');
+    $phone = PhoneNumber::e164(is_string($answer) ? $answer : null);
+
+    if ($phone === null) {
+        $this->error('Ese teléfono no es válido.');
+
+        return Command::FAILURE;
+    }
+
+    $this->info('Mensajes borrados: '.$forget->handle($phone));
+
+    return Command::SUCCESS;
+})->purpose('Delete every message written to a phone, in every company (ARCO); the opt-out stays');
+
+// By hand, after looking at why it paused: closes the open pause and sends nothing by itself.
+Artisan::command('messaging:resume', function (ResumeWhatsApp $resume): void {
+    $closed = $resume->handle();
+
+    $this->info($closed > 0 ? 'Pausa cerrada: WhatsApp vuelve a enviar.' : 'No había ninguna pausa abierta.');
+})->purpose('Close the open pause of WhatsApp (after checking why it paused); nothing unsent is resent');
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('schedule:heartbeat')->everyFiveMinutes();
 // DB-IP publishes at the start of each month. On every server: each reads its own copy.

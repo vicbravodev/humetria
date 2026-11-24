@@ -10,8 +10,11 @@ use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Enums\TenureBand;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Messaging\Contracts\DeliverySummary;
+use App\Modules\Messaging\Data\InvitationReference;
 use App\Modules\Organization\Contracts\Areas;
 use App\Modules\Tenancy\Contracts\WorkCenters;
+use App\Support\SmallCells;
 
 /**
  * How far a survey has come, for RH: only counts of people, never who. The company as a whole, and by work center, area
@@ -21,21 +24,22 @@ use App\Modules\Tenancy\Contracts\WorkCenters;
  *
  * @phpstan-type Group array{label: string, invited: int, answered: int}
  * @phpstan-type Cut array{key: string, title: string, groups: list<Group>}
- * @phpstan-type Totals array{invited: int, answered: int, rate: int|null, pending: int, withoutLink: int, canRemind: bool, minGroup: int, cuts: list<Cut>}
+ * @phpstan-type Reach array{channels: list<array{channel: string, total: int|null, delivered: int|null, undelivered: int|null, undeliveredBelowMinimum: bool}>, answeredByChannel: list<array{channel: string, answered: int, unanswered: int}>|null, minGroup: int}
+ * @phpstan-type Totals array{invited: int, answered: int, rate: int|null, pending: int, withoutLink: int, canRemind: bool, minGroup: int, cuts: list<Cut>, reach: Reach}
  */
 final readonly class Participation
 {
     /** The cuts of the panel, in the order they are read. The manager groups are the manager feedback's to show. */
     private const array CUTS = [CutAttribute::WorkCenter, CutAttribute::Area, CutAttribute::Tenure];
 
-    public function __construct(private Thresholds $thresholds, private WorkCenters $workCenters, private Areas $areas) {}
+    public function __construct(private Thresholds $thresholds, private WorkCenters $workCenters, private Areas $areas, private DeliverySummary $deliveries) {}
 
     /**
      * @return Totals
      */
     public function of(Survey $survey, bool $canManage): array
     {
-        $counts = Invitation::query()->toBase()->where('survey_id', $survey->id)->selectRaw('count(*) filter (where answered) as answered, count(*) filter (where not answered and not cancelled) as pending, count(*) filter (where invitation_status = ?) as without_link', [InvitationStatus::NoEmail->value])->first();
+        $counts = Invitation::query()->toBase()->where('survey_id', $survey->id)->selectRaw('count(*) filter (where answered) as answered, count(*) filter (where not answered and not cancelled) as pending, count(*) filter (where invitation_status = ?) as without_link', [InvitationStatus::Unreachable->value])->first();
         $invited = $survey->invited ?? 0;
         $answered = self::int($counts->answered ?? 0);
         $pending = self::int($counts->pending ?? 0);
@@ -49,6 +53,31 @@ final readonly class Participation
             'canRemind' => $canManage && $survey->status === SurveyStatus::Active && $pending > 0,
             'minGroup' => $survey->groupMinimum(),
             'cuts' => array_map(fn (CutAttribute $cut): array => $this->cut($survey, $cut), self::CUTS),
+            'reach' => $this->reach($survey),
+        ];
+    }
+
+    /**
+     * How the messages went and who answered, by channel: aggregates under the minimum of 5, never a person.
+     *
+     * @return Reach
+     */
+    private function reach(Survey $survey): array
+    {
+        $rows = Invitation::query()->toBase()->where('survey_id', $survey->id)->whereNotNull('invited_via')->groupBy('invited_via')
+            ->selectRaw('invited_via, count(*) filter (where answered) as answered, count(*) filter (where not answered) as unanswered')->get();
+        $cells = [];
+
+        foreach ($rows as $row) {
+            if (is_string($row->invited_via)) {
+                $cells[$row->invited_via] = ['answered' => self::int($row->answered), 'unanswered' => self::int($row->unanswered)];
+            }
+        }
+
+        return [
+            'channels' => array_map(fn ($tally): array => $tally->toArray(), $this->deliveries->forSource(InvitationReference::ENGAGEMENT_SURVEY, $survey->id, $survey->groupMinimum())),
+            'answeredByChannel' => SmallCells::answeredByChannel($cells, $survey->groupMinimum()),
+            'minGroup' => $survey->groupMinimum(),
         ];
     }
 

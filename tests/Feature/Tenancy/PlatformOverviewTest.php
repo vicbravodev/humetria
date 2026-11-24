@@ -148,3 +148,19 @@ it('shows each user in the platform list with the day they last signed in', func
         ->assertInertia(fn (Assert $page) => $page->where('users.data', fn ($rows) => collect($rows)->firstWhere('id', $person->id)['lastLogin'] === '10 nov 2026'
             && collect($rows)->firstWhere('name', 'Nunca Entró')['lastLogin'] === null));
 });
+
+it('shows the month of WhatsApp: messages, what Meta charged, what the companies were charged and the margin', function (): void {
+    $tenant = Tenant::factory()->create();
+    foreach (range(1, 4) as $index) {
+        DB::table('usage_events')->insert(['id' => (string) Illuminate\Support\Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-11-01', 'quantity' => 1, 'idempotency_key' => "wamid-{$index}", 'occurred_at' => '2026-11-10 12:00:00', 'unit_cost_micros' => 170_000, 'unit_price_micros' => 221_000, 'cost_currency' => 'MXN']);
+    }
+    DB::table('usage_events')->insert(['id' => (string) Illuminate\Support\Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-10-01', 'quantity' => 1, 'idempotency_key' => 'last-month', 'occurred_at' => '2026-10-10 12:00:00', 'unit_cost_micros' => 170_000, 'unit_price_micros' => 221_000, 'cost_currency' => 'MXN']);
+
+    $this->actingAs(superadmin())->get(route('overview.index'))->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('whatsApp', ['messages' => 4, 'costCents' => 68, 'chargedCents' => 88, 'marginCents' => 20]));
+});
+
+it('shows zeros for WhatsApp when nothing went out', function (): void {
+    $this->actingAs(superadmin())->get(route('overview.index'))->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('whatsApp', ['messages' => 0, 'costCents' => 0, 'chargedCents' => 0, 'marginCents' => 0]));
+});

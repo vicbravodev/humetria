@@ -68,7 +68,8 @@ it('sends the link again to everyone with a guide pending and an email, the same
     $after = Participant::query()->withoutGlobalScopes()->where('id', '!=', $done?->id)->pluck('token_hash', 'id');
 
     // Someone halfway through the survey keeps going on the link they opened.
-    expect($after->all())->toBe($before->all());
+    // Every id with its hash; the rows of an unordered query come in no promised order.
+    expect($after->all())->toEqual($before->all());
 });
 
 it('keeps the link someone already opened working after a reminder, and still single-use once they answer', function (): void {

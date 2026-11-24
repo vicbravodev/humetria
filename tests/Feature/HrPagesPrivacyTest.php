@@ -122,3 +122,18 @@ it('gives whoever opens a shared report no individual response', function (): vo
         ->assertOk()
         ->assertInertia(fn (Assert $page) => expectNoIndividualResponses($page->toArray()['props']));
 });
+
+it('gives HR no delivery data of any person on the pages of a campaign and of a survey', function (string $page): void {
+    $survey = App\Modules\Engagement\Models\Survey::factory()->active()->create(['tenant_id' => $this->tenant->id, 'invited' => 40]);
+    Participant::query()->withoutGlobalScopes()->where('campaign_id', $this->active->id)->update(['invited_via' => 'whatsapp']);
+    foreach (range(1, 6) as $ignored) {
+        Database\Factories\Messaging\DeliveryFactory::new()->create(['tenant_id' => $this->tenant->id, 'source_type' => 'campaign', 'source_id' => $this->active->id, 'status' => 'failed']);
+        Database\Factories\Messaging\DeliveryFactory::new()->create(['tenant_id' => $this->tenant->id, 'source_type' => 'engagement_survey', 'source_id' => $survey->id, 'invitation_type' => 'engagement_invitation', 'status' => 'failed']);
+    }
+    $url = $page === 'campaign' ? route('tenant.campaigns.show', [$this->tenant, $this->active->id]) : route('tenant.climate.show', [$this->tenant, $survey]);
+
+    $json = json_encode($this->actingAs(memberOf($this->tenant, TenantRole::Hr))->get($url)->assertOk()->inertiaProps(), JSON_THROW_ON_ERROR);
+
+    expect($json)->not->toContain('invited_via')->not->toContain('invitedVia')
+        ->not->toContain('recipient_hash')->not->toContain('provider_message_id')->not->toContain('occurred_at');
+})->with(['campaign', 'survey']);

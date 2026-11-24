@@ -106,6 +106,8 @@ it('redacts each sensitive key', function (string $key): void {
     'rejection_reason',
     // Inicio de sesión único: the secret of a company's identity provider and what it hands back are credentials.
     'client_secret', 'id_token', 'access_token', 'code_verifier',
+    // WhatsApp: a phone number reaches a person, and what the provider sends or asks for is a credential or a person's data.
+    'phone', 'mobile', 'wa_id', 'msisdn', 'recipient_hash', 'app_secret', 'verify_token', 'hub_verify_token', 'components',
 ]);
 
 it('redacts every salary key at any depth', function (): void {

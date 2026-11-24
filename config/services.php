@@ -22,6 +22,9 @@ return [
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),
+        // The signing secret of the Resend webhook (Svix); during a rotation both are accepted.
+        'webhook_secrets' => array_values(array_filter([env('RESEND_WEBHOOK_SECRET'), env('RESEND_WEBHOOK_SECRET_PREVIOUS')])),
+        'webhook_tolerance_seconds' => 300,
     ],
 
     'ses' => [

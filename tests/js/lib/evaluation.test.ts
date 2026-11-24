@@ -139,7 +139,7 @@ describe('the days of the chart', () => {
 describe('visibleStandings', () => {
     const standings = [
         { value: 'pending', label: 'Pendientes', count: 0 },
-        { value: 'unreachable', label: 'Sin correo', count: 2 },
+        { value: 'unreachable', label: 'Sin contacto', count: 2 },
         { value: 'failed', label: 'Envío fallido', count: 0 },
         { value: 'answered', label: 'Contestaron', count: 0 },
         { value: 'cancelled', label: 'Canceladas', count: 0 },

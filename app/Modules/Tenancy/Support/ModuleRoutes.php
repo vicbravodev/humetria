@@ -41,6 +41,7 @@ final class ModuleRoutes
             'tenant.dashboard',
             'tenant.areas.*',
             'tenant.assistant.*',
+            'tenant.channels.*',
             'tenant.employees.*',
             'tenant.first-steps.*',
             'tenant.job-grades.*',

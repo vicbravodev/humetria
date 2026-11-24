@@ -1,5 +1,6 @@
 import CutParticipation from '@/components/engagement/cut-participation';
 import ParticipationCard from '@/components/engagement/participation-card';
+import ChannelReachCard from '@/components/humetria/channel-reach-card';
 import { progressReading } from '@/lib/engagement/panel';
 import type { ClimateParticipation } from '@/types';
 
@@ -31,6 +32,7 @@ export default function ActiveFollowUp({
                     overall={participation.rate}
                 />
             </div>
+            <ChannelReachCard reach={participation.reach} />
         </>
     );
 }
