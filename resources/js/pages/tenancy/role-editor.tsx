@@ -5,20 +5,10 @@ import RoleEditorForm from '@/components/tenancy/role-editor-form';
 import { Badge } from '@/components/ui/badge';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { index } from '@/routes/tenant/roles';
-import type {
-    PermissionGroup,
-    RoleEditorProps,
-    RoleTemplateOption,
-} from '@/types';
+import type { RoleEditorProps } from '@/types';
 
 /** A role of the company's own, new (blank or copied from a template) or already made: its name and what it can do. */
-export default function RoleEditor(props: {
-    role: RoleEditorProps['role'];
-    from: string | null;
-    templates: RoleTemplateOption[];
-    groups: PermissionGroup[];
-    can_manage: boolean;
-}) {
+export default function RoleEditor(props: RoleEditorProps) {
     const { role, can_manage } = props;
     const tenantSlug = useTenantSlug();
     const title = role?.label ?? 'Nuevo rol';
