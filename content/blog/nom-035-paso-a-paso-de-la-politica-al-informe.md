@@ -21,6 +21,8 @@ Antes de empezar, una frase sobre el tamaño: la norma se aplica por centro de t
 de trabajadores (hasta 15, Guía I; de 16 a 50, se suma la Guía II; más de 50, la Guía III). Los centros de hasta 15
 trabajadores tienen menos obligaciones, como se indica abajo.
 
+[diagrama: nom035-paso-a-paso]
+
 ## 1. La política de prevención, por escrito
 
 El numeral 5.1 pide «establecer por escrito, implantar, mantener y difundir» una política de prevención de riesgos

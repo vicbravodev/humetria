@@ -63,7 +63,7 @@ it('shows an article with the tags of its head', function (): void {
             ->where('article.updatedOn', '12 de noviembre de 2026')
             ->where('article.readingMinutes', 3)
             ->where('article.sources', ['https://dof.gob.mx/nota_detalle.php?codigo=1'])
-            ->where('article.html', fn (string $html) => str_contains($html, 'Qué dice la ley')))
+            ->where('article.body.0.html', fn (string $html) => str_contains($html, 'Qué dice la ley')))
         ->assertSee('<title data-inertia="">Jornada de 40 horas - Humetría</title>', false)
         ->assertSee('<meta data-inertia="description" name="description" content="'.str_repeat('d', 130).'">', false)
         ->assertSee('<link data-inertia="canonical" rel="canonical" href="http://localhost/blog/jornada-40-horas">', false);

@@ -17,7 +17,7 @@ beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 12:00:00');
 
     $folder = blogFolder();
-    writeArticle($folder, 'jornada-40-horas', ['title' => 'title: "Jornada de 40 horas"', 'published_at' => 'published_at: 2026-11-15', 'updated_at' => 'updated_at: 2026-11-18'], extra: "## Segunda parte\n\ntexto\n\n| Año | Horas |\n| --- | --- |\n| 2026 | 48 |\n\n> «Texto de la ley.»");
+    writeArticle($folder, 'jornada-40-horas', ['title' => 'title: "Jornada de 40 horas"', 'published_at' => 'published_at: 2026-11-15', 'updated_at' => 'updated_at: 2026-11-18'], extra: "## Segunda parte\n\ntexto\n\n| Año | Horas |\n| --- | --- |\n| 2026 | 48 |\n\n> «Texto de la ley.»\n\n[diagrama: jornada-escalera]\n\n[diagrama: nom035-paso-a-paso]");
     writeArticle($folder, 'otro', ['tool' => 'tool: leave', 'published_at' => 'published_at: 2026-11-14']);
 });
 
@@ -62,3 +62,11 @@ it('jumps from the table of contents to its section', function (): void {
         ->assertAttribute('nav[aria-label="Contenido"] a[href="#segunda-parte"]', 'href', '#segunda-parte')
         ->assertPresent('#segunda-parte');
 });
+
+it('draws the diagrams where the text asks for them, readable as text and with no axe issue', function (bool $dark, bool $mobile): void {
+    visitPage('blog/show', '/blog/jornada-40-horas', $dark, $mobile)
+        ->assertSee('La jornada ordinaria máxima baja cada año')
+        ->assertSee('Las siete obligaciones, en orden')
+        ->assertScript("() => document.querySelectorAll('article figure').length", 2)
+        ->assertScript("() => document.querySelector('article figure svg[role=\"img\"]').getAttribute('aria-label')", '2026: 48 h');
+})->with('blogLooks');

@@ -37,6 +37,10 @@ La primera columna sale del segundo transitorio del decreto y la segunda del cua
 permiten cada año hasta llegar a las doce horas semanales del artículo 66. Los dos cambios entran el 1 de enero de cada
 año, no en la fecha de aniversario de cada contrato.
 
+[diagrama: jornada-escalera]
+
+[diagrama: topes-horas-extra]
+
 ## ¿Y las 35 horas?
 
 El decreto no contempla una jornada de 35 horas. El destino que fija la ley es de 40 horas semanales en 2030. Si lees

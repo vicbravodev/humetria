@@ -48,7 +48,7 @@ final class BlogPresenter
             'updatedOn' => $article->updatedAt->gt($article->publishedAt) ? $article->updatedAt->translatedFormat(self::DATE) : null,
             'reviewedOn' => $article->reviewedAt?->translatedFormat(self::DATE),
             'headings' => $article->headings,
-            'html' => $article->html,
+            'body' => $article->body,
             'sources' => $article->sources,
         ];
     }

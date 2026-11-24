@@ -23,6 +23,8 @@ trabajadores, y el numeral 4.4 define el centro de trabajo como el lugar o lugar
 instalaciones y áreas, donde laboran personas sujetas a una relación de trabajo. No se cuenta la plantilla total de la
 empresa: se cuenta cada centro por separado.
 
+[diagrama: nom035-guias-por-centro]
+
 | Trabajadores del centro | Guías que aplican                           |
 | ----------------------- | ------------------------------------------- |
 | Hasta 15                | Guía I                                      |

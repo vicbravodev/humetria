@@ -170,3 +170,30 @@ it('gives each h2 an id and lists them for the table of contents', function (): 
             ['id' => 'cuanto-cuesta-si-y-no-2', 'text' => '¿Cuánto cuesta? Sí y no'],
         ]);
 });
+
+it('splits the body where a diagram goes, so the page can draw it in its place', function (): void {
+    $article = ArticleParser::parse('a', articleSource(body: articleBody(extra: "## Pasos\n\n[diagrama: siete-pasos]\n\nDespués del diagrama.\n\n## Otro\n\ntexto")));
+
+    expect($article->body)->toHaveCount(3)
+        ->and($article->body[0])->toBe(['type' => 'html', 'html' => $article->body[0]['html'] ?? ''])
+        ->and($article->body[0]['html'])->toContain('<h2 id="que-dice-la-ley">')->toContain('<h2 id="pasos">Pasos</h2>')
+        ->and($article->body[1])->toBe(['type' => 'diagram', 'name' => 'siete-pasos'])
+        ->and($article->body[2]['html'])->toContain('Después del diagrama.')->toContain('<h2 id="otro">')
+        ->and($article->diagrams)->toBe(['siete-pasos']);
+});
+
+it('keeps the whole body in one piece when it has no diagram', function (): void {
+    $article = ArticleParser::parse('a', articleSource());
+
+    expect($article->body)->toHaveCount(1)->and($article->body[0]['type'])->toBe('html')->and($article->diagrams)->toBe([]);
+});
+
+it('leaves a marker that is not alone in its paragraph as text, and counts no word of a marker', function (): void {
+    $article = ArticleParser::parse('a', articleSource(body: articleBody(extra: 'Mira [diagrama: siete-pasos] aquí.')));
+
+    expect($article->diagrams)->toBe([])->and($article->body[0]['html'])->toContain('[diagrama: siete-pasos]');
+});
+
+it('leaves a marker with a name that is not a slug as text', function (): void {
+    expect(ArticleParser::parse('a', articleSource(body: articleBody(extra: "[diagrama: Siete Pasos]\n\ntexto")))->diagrams)->toBe([]);
+});

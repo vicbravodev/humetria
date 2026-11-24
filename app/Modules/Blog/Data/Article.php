@@ -13,6 +13,8 @@ final readonly class Article
     /**
      * @param  list<string>  $sources  official sources the article cites (https URLs of gob.mx)
      * @param  list<array{id: string, text: string}>  $headings  the h2 of the body, for the table of contents
+     * @param  list<array{type: 'html', html: string}|array{type: 'diagram', name: string}>  $body  `html` without the diagrams, cut where each one goes
+     * @param  list<string>  $diagrams  the names of the diagrams the body asks for (components/blog/diagrams)
      */
     public function __construct(
         public string $slug,
@@ -29,6 +31,8 @@ final readonly class Article
         public array $sources,
         public string $html,
         public array $headings,
+        public array $body,
+        public array $diagrams,
         public int $readingMinutes,
     ) {}
 

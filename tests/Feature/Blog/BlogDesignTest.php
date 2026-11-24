@@ -46,7 +46,7 @@ it('lists the h2 of the body for the table of contents, each with the id the bod
     $this->get(route('blog.show', 'jornada'))->assertInertia(fn (Assert $page) => $page
         ->has('article.headings', 2)
         ->where('article.headings.1', ['id' => 'segunda-parte', 'text' => 'Segunda parte'])
-        ->where('article.html', fn (string $html) => str_contains($html, 'id="segunda-parte"')));
+        ->where('article.body.0.html', fn (string $html) => str_contains($html, 'id="segunda-parte"')));
 });
 
 it('links the article to the page of its tool and names its family', function (): void {
@@ -95,4 +95,12 @@ it('renders the page on the server for a visitor and leaves it to the browser fo
     blogFolder();
 
     expect(App\Http\SsrPages::ALLOWED)->toMatchArray(['blog.index' => 'blog/index', 'blog.show' => 'blog/show']);
+});
+
+it('hands the body to the page in pieces, with the diagrams where the text asks for them', function (): void {
+    writeArticle(blogFolder(), 'jornada', extra: "## Pasos\n\n[diagrama: siete-pasos]\n\nDespués.");
+
+    $this->get(route('blog.show', 'jornada'))->assertInertia(fn (Assert $page) => $page
+        ->has('article.body', 3)
+        ->where('article.body.1', ['type' => 'diagram', 'name' => 'siete-pasos']));
 });

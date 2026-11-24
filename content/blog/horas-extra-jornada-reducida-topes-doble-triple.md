@@ -40,6 +40,8 @@ extraordinaria se alcanzará de manera gradual, a partir del 1 de enero de cada 
 Fíjate en que 2027 conserva el tope de 9 horas aunque la jornada ordinaria baje a 46. El cambio entra el 1 de enero, no en
 el aniversario de cada contrato.
 
+[diagrama: topes-horas-extra]
+
 ## Lo que dice el artículo 68
 
 El artículo 68 regula lo que pasa cuando se rebasa el artículo 66:
@@ -71,6 +73,8 @@ Una persona con jornada diurna trabaja horas extra cuatro días de la semana: 3,
 - **Límite del triple:** 2 horas están por debajo de las cuatro horas semanales que permite el artículo 68.
 
 Si esa misma semana fuera de 2030, las 11 horas cabrían dentro del tope de 12 y todas se pagarían dobles.
+
+[diagrama: horas-extra-semana]
 
 ## Ejemplo: cuando las cuentas ya no cierran
 

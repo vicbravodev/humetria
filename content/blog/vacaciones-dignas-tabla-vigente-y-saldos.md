@@ -36,6 +36,8 @@ artículo 56 dice que las condiciones de trabajo no pueden ser inferiores a las 
 decreto aplica la reforma a los contratos individuales y colectivos vigentes «siempre que resulten más favorables» a las
 personas trabajadoras.
 
+[diagrama: vacaciones-por-antiguedad]
+
 ## Cómo se cuenta la antigüedad
 
 El derecho es de quien tiene más de un año de servicios, así que la referencia es el aniversario de cada persona, no el

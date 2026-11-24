@@ -54,6 +54,8 @@ final class ArticleParser
 
         $body = $parts[2];
         [$html, $headings] = self::withHeadingIds(Str::markdown($body, ['html_input' => 'strip', 'allow_unsafe_links' => false]));
+        [$segments, $diagrams] = self::diagrams($html);
+        $html = implode('', array_map(fn (array $segment): string => $segment['type'] === 'html' ? $segment['html'] : '', $segments));
         $words = preg_match_all('/[\p{L}\p{N}][\p{L}\p{N}\'’-]*/u', strip_tags($html));
 
         $title = self::text($front['title'] ?? null);
@@ -98,8 +100,33 @@ final class ArticleParser
             sources: array_values(array_filter($sources, is_string(...))),
             html: $html,
             headings: $headings,
+            body: $segments,
+            diagrams: $diagrams,
             readingMinutes: max(1, (int) ceil($words / self::WORDS_PER_MINUTE)),
         );
+    }
+
+    /**
+     * Cuts the body where a paragraph holds only `[diagrama: name]`: the page draws the diagram (a React component) in that place.
+     *
+     * @return array{list<array{type: 'html', html: string}|array{type: 'diagram', name: string}>, list<string>}
+     */
+    private static function diagrams(string $html): array
+    {
+        $parts = preg_split('/<p>\[diagrama: ([a-z0-9]+(?:-[a-z0-9]+)*)\]<\/p>\R?/', $html, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$html];
+        $segments = [];
+        $names = [];
+
+        foreach ($parts as $index => $part) {
+            if ($index % 2 === 1) {
+                $segments[] = ['type' => 'diagram', 'name' => $part];
+                $names[] = $part;
+            } elseif (trim($part) !== '') {
+                $segments[] = ['type' => 'html', 'html' => $part];
+            }
+        }
+
+        return [$segments, $names];
     }
 
     /**

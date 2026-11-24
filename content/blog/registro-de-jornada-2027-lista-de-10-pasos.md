@@ -17,6 +17,8 @@ La reforma a la Ley Federal del Trabajo publicada el 1 de mayo de 2026 trae dos 
 finalización». Incumplir esa obligación se multa con 250 a 5,000 UMA (artículo 994, fracción IV Bis). Esta lista
 ordena el trabajo en diez pasos. Distinguimos en cada uno lo que dice la ley de lo que es **recomendación de Humetría**.
 
+[diagrama: registro-diez-pasos]
+
 ## 1. Actualiza los horarios a 46 horas
 
 El segundo transitorio del decreto fija 46 horas semanales para 2027, a partir del 1 de enero. Revisa a cada persona con

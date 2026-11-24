@@ -21,14 +21,19 @@ export type BlogCardData = {
 
 export type BlogHeading = { id: string; text: string };
 
-/** The whole article: its body is HTML the server rendered from Markdown. */
+/** A piece of the body: HTML the server rendered from Markdown, or the place of a diagram the text asks for. */
+export type BlogSegment =
+    | { type: 'html'; html: string }
+    | { type: 'diagram'; name: string };
+
+/** The whole article: its body is cut where each diagram goes. */
 export type BlogArticleData = BlogCardData & {
     coverAlt: string;
     toolUrl: string;
     updatedOn: string | null;
     reviewedOn: string | null;
     headings: BlogHeading[];
-    html: string;
+    body: BlogSegment[];
     sources: string[];
 };
 

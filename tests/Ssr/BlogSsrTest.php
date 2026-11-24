@@ -18,7 +18,7 @@ beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 12:00:00');
 
     $folder = blogFolder();
-    writeArticle($folder, 'jornada-40-horas', ['title' => 'title: "Jornada de 40 horas"'], extra: "## Segunda parte\n\ntexto");
+    writeArticle($folder, 'jornada-40-horas', ['title' => 'title: "Jornada de 40 horas"'], extra: "## Segunda parte\n\ntexto\n\n[diagrama: nom035-paso-a-paso]");
     writeArticle($folder, 'otro', ['tool' => 'tool: leave', 'published_at' => 'published_at: 2026-11-09']);
 });
 
@@ -28,6 +28,7 @@ it('puts the text of the article in the HTML Node rendered, with the header of t
     expect($html)->toContain('data-server-rendered')
         ->and($html)->toContain('<h1')->toContain('Jornada de 40 horas')
         ->and($html)->toContain('id="segunda-parte"')->toContain('Qué dice la ley')
+        ->and($html)->toContain('Las siete obligaciones, en orden')->toContain('Identificar y canalizar con la Guía I')
         ->and($html)->toContain('data-test="header-resources"')
         ->and($html)->toContain('href="/#agenda-una-demo"');
 });

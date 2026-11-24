@@ -53,3 +53,14 @@ it('has both covers of every article, at the size they promise', function (): vo
         }
     }
 });
+
+it('has a component for every diagram an article asks for', function (): void {
+    foreach (contentFiles() as $file) {
+        $article = ArticleParser::parse(basename($file, '.md'), (string) file_get_contents($file));
+
+        foreach ($article->diagrams as $name) {
+            expect(is_file(dirname(__DIR__, 3)."/resources/js/components/blog/diagrams/{$name}.tsx"))
+                ->toBeTrue(basename($file).": the diagram [{$name}] has no resources/js/components/blog/diagrams/{$name}.tsx");
+        }
+    }
+});
