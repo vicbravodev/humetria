@@ -116,8 +116,11 @@ it('does not send a person with only a permission to change something to a page 
 
 it('sends a role with no permissions to the page without access', function (): void {
     $tenant = Tenant::factory()->create();
+    $person = landingMemberWithOwnRole($tenant, ['view-vacations']);
+    // CreateCompanyRole refuses a role without permissions: one left empty is emptied by hand.
+    resolve(CompanyRoles::class)->roleOf($person, $tenant)?->syncPermissions([]);
 
-    expect(app(StartRoute::class)->for(landingMemberWithOwnRole($tenant, []), $tenant))->toBe('tenant.no-access');
+    expect(app(StartRoute::class)->for($person, $tenant))->toBe('tenant.no-access');
 });
 
 it('tells a person with nothing to open whom to ask, without sending them in a loop', function (): void {

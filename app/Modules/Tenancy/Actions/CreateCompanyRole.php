@@ -25,10 +25,12 @@ final readonly class CreateCompanyRole
      * @param  list<string>  $permissions
      *
      * @throws CompanyRoleLimitReached
-     * @throws InvalidArgumentException when a permission is not one the company can hand out.
+     * @throws InvalidArgumentException when there is no permission, or one is not one the company can hand out.
      */
     public function handle(Tenant $tenant, string $label, array $permissions, ?TenantRole $basedOn, User $by): Role
     {
+        // A role without permissions would let whoever holds it do nothing.
+        $permissions !== [] || throw new InvalidArgumentException('A role needs at least one permission.');
         $sensitive = $this->roles->assertAssignable($tenant, $permissions);
 
         return DB::transaction(function () use ($tenant, $label, $permissions, $basedOn, $by, $sensitive): Role {

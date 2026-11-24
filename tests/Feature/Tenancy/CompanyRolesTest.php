@@ -59,6 +59,11 @@ it('rejects permissions the company cannot hand out', function (array $permissio
     'unknown' => [['fly-to-moon']],
 ]);
 
+it('refuses a role without any permission: it would let nobody do anything', function (): void {
+    expect(fn () => ($this->create)('Vacío', []))->toThrow(InvalidArgumentException::class);
+    expect(Role::query()->where('tenant_id', $this->tenant->id)->exists())->toBeFalse();
+});
+
 it('rejects a permission of a module the company did not contract', function (): void {
     TenantModule::factory()->for($this->tenant)->create(['module' => 'vacations', 'source' => 'revoke', 'reason' => 'Prueba']);
 
