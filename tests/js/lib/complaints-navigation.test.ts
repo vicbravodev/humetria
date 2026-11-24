@@ -139,6 +139,17 @@ describe('the complaints in the navigation', () => {
         expect(lit('/admin/acme/complaints/cases/9')).toBe('Casos');
         expect(lit('/admin/acme/complaints')).toBe('Casos');
     });
+});
+
+describe("a role of the company's own that handles complaints", () => {
+    const holder = (
+        role: CurrentTenant['role'],
+        can: CurrentTenant['can'],
+    ) => ({
+        slug: 'acme',
+        role,
+        can,
+    });
 
     // A role of the company's own that handles complaints plus any other page keeps that page: «cases only» is read from the
     // whole `can`, not from a list of pages that can go stale.
@@ -150,22 +161,20 @@ describe('the complaints in the navigation', () => {
     ])(
         'keeps what %s opens for a role that also handles complaints',
         (permission) => {
-            const custom = {
-                slug: 'acme',
-                role: 'custom:7',
-                can: templateCan('complaints', [permission]),
-            };
+            const custom = holder(
+                'custom_7',
+                templateCan('complaints', [permission]),
+            );
 
             expect(handlesCasesOnly(custom)).toBe(false);
         },
     );
 
     it('keeps Vacaciones in the menu of a custom role that handles complaints and views vacations', () => {
-        const custom = {
-            slug: 'acme',
-            role: 'custom:7',
-            can: templateCan('complaints', ['view_vacations']),
-        };
+        const custom = holder(
+            'custom_7',
+            templateCan('complaints', ['view_vacations']),
+        );
 
         expect(operationsNavItems(custom).map((item) => item.title)).toContain(
             'Vacaciones',
@@ -174,29 +183,27 @@ describe('the complaints in the navigation', () => {
 
     it('still reduces the complaints template and a custom role made the same to their cases', () => {
         expect(
-            handlesCasesOnly({
-                slug: 'acme',
-                role: 'complaints',
-                can: templateCan('complaints'),
-            }),
+            handlesCasesOnly(holder('complaints', templateCan('complaints'))),
         ).toBe(true);
         expect(
-            handlesCasesOnly({
-                slug: 'acme',
-                role: 'custom:7',
-                can: templateCan('complaints', ['use_assistant']),
-            }),
+            handlesCasesOnly(
+                holder(
+                    'custom_7',
+                    templateCan('complaints', ['use_assistant']),
+                ),
+            ),
         ).toBe(true);
     });
 
     it('does not reduce the templates that open more than complaints', () => {
-        for (const template of ['owner', 'hr', 'viewer', 'committee']) {
+        for (const template of [
+            'owner',
+            'hr',
+            'viewer',
+            'committee',
+        ] as const) {
             expect(
-                handlesCasesOnly({
-                    slug: 'acme',
-                    role: template,
-                    can: templateCan(template),
-                }),
+                handlesCasesOnly(holder(template, templateCan(template))),
             ).toBe(false);
         }
     });
