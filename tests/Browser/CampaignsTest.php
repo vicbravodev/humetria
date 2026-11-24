@@ -132,6 +132,7 @@ it('prepares an evaluation from the panel, reached from the sidebar', function (
     visit('/admin/acme')
         ->click('Cumple la norma')
         ->click('NOM-035')
+        ->assertScript(settled(), true)
         ->click('Evaluaciones')
         ->assertScript(pathBecomes('/admin/acme/campaigns'), true)
         ->assertPathIs('/admin/acme/campaigns')

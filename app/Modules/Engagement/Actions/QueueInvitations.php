@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Engagement\Actions;
 
+use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Engagement\Enums\InvitationStatus;
 use App\Modules\Engagement\Jobs\SendInvitations;
 use App\Modules\Engagement\Models\Invitation;
@@ -16,13 +17,14 @@ use Illuminate\Support\Str;
 /**
  * Leaves the survey links of some invitations to the queue: those with an email wait in a new batch of jobs, one per
  * block of people, dispatched once the surrounding transaction commits; those without one, and no link from before,
- * are marked so. The request that does it sends nothing.
+ * are marked so. The mail of those with an email is held from the company's monthly quota first (all or none, like the
+ * campaigns'). The request that does it sends nothing.
  */
 final readonly class QueueInvitations
 {
     public const int BLOCK = 50;
 
-    public function __construct(private Roster $roster) {}
+    public function __construct(private Roster $roster, private MailQuota $mail) {}
 
     /**
      * @param  list<string>  $invitationIds
@@ -33,6 +35,9 @@ final readonly class QueueInvitations
         $invitations = Invitation::query()->among('id', $invitationIds)->get(['id', 'employee_id', 'token_hash']);
         $people = $this->roster->findMany(array_values($invitations->map(fn (Invitation $invitation): string => $invitation->employee_id)->all()));
         $reached = $invitations->filter(fn (Invitation $invitation): bool => ($people[$invitation->employee_id]->email ?? '') !== '');
+        // Held before anything is marked or queued: if they do not all fit, nothing goes out and the person is told how many are missing.
+        $this->mail->reserve($reached->count());
+
         // Who already holds a link keeps it: it works again as soon as they are reached.
         $unreached = $invitations->diffKeys($reached)->filter(fn (Invitation $invitation): bool => $invitation->token_hash === null);
 

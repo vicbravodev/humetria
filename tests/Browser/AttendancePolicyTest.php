@@ -87,6 +87,7 @@ it('takes RH from the sidebar to the schedules and the policy, lighting each', f
     visit($url)
         ->click('Cumple la norma')
         ->click('[data-sidebar="sidebar"] >> text=Asistencia')
+        ->assertScript(settled(), true)
         ->click('[data-sidebar="sidebar"] >> text=Horarios')
         ->waitForText('lo que trabaje de más cuenta como tiempo extra')
         ->assertPathIs("{$url}/attendance/schedules")

@@ -227,3 +227,38 @@ it('tells the person, in their start, how many policies wait for their confirmat
     resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
     expect($section())->toBeNull();
 });
+
+it('counts in their start only the version in force at their center: an older version still unconfirmed is not a second pending', function (): void {
+    $ana = new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz');
+    policyAskedOfAna(1);
+    policyAskedOfAna(2);
+
+    expect(resolve(PolicyWorkerSection::class)->for($ana)?->pending)->toBe(1);
+});
+
+it('tells nothing in their start about the policy of the center they left: the page shows none of it', function (): void {
+    $ana = new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz');
+    $policy = policyAskedOfAna();
+    $office = WorkCenter::factory()->for($this->tenant)->create();
+    $this->ana->update(['work_center_id' => $office->id]);
+
+    expect(resolve(PolicyWorkerSection::class)->for($ana))->toBeNull();
+    $this->get(route('portal.policy.show', $this->slug))->assertInertia(fn (Assert $page) => $page->where('policy', null)->where('acknowledgment', null));
+    expect(fn () => resolve(Acknowledge::class)->handle($this->ana->id, $policy->id))->toThrow(Illuminate\Validation\ValidationException::class);
+    expect(Acknowledgment::query()->sole()->acknowledged_at)->toBeNull();
+});
+
+it('counts in their start the policy of the center they moved to, asked or not yet', function (): void {
+    $ana = new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $this->ana->id, 'Acme', 'Ana Ruiz');
+    policyAskedOfAna();
+    $office = WorkCenter::factory()->for($this->tenant)->create();
+    $forOffice = Document::factory()->published()->policy()->create(['tenant_id' => $this->tenant->id, 'version' => 2, 'published_by' => $this->hr->id]);
+    DocumentCenter::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $forOffice->id, 'work_center_id' => $office->id]);
+    $this->ana->update(['work_center_id' => $office->id]);
+
+    expect(resolve(PolicyWorkerSection::class)->for($ana))->toBeNull();
+
+    Acknowledgment::factory()->create(['tenant_id' => $this->tenant->id, 'document_id' => $forOffice->id, 'employee_id' => $this->ana->id]);
+
+    expect(resolve(PolicyWorkerSection::class)->for($ana)?->pending)->toBe(1);
+});
