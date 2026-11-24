@@ -23,7 +23,7 @@ final readonly class ChangeMemberRole
     /**
      * @param  TenantRole|Role  $role  a template, or a role of the person's company.
      *
-     * @throws RoleNotAllowedInAccount when the role is another company's or holds what the account cannot have.
+     * @throws RoleNotAllowedInAccount when the role is the owner's, another company's, or holds what the account cannot have.
      */
     public function handle(TenantMembership $member, TenantRole|Role $role, User $by): void
     {
@@ -31,7 +31,8 @@ final readonly class ChangeMemberRole
         $tenant = $member->tenant()->sole();
         $role = $role instanceof TenantRole ? $this->roles->template($role) : $role;
         $ownedBy = $role->getAttribute('tenant_id');
-        (($ownedBy === null || $ownedBy === $tenant->id) && $tenant->type->allows($role)) || throw new RoleNotAllowedInAccount;
+        // The owner changes only through its own invitation, never by changing someone's role.
+        (($ownedBy === null || $ownedBy === $tenant->id) && $role->name !== TenantRole::Owner->value && $tenant->type->allows($role)) || throw new RoleNotAllowedInAccount;
         $from = $this->roles->roleOf($person, $tenant);
 
         if ($from?->is($role) === true) {

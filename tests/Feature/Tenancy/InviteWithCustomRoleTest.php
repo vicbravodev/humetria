@@ -203,6 +203,14 @@ it('does not change a person to a role of another company', function (): void {
     expect(resolve(CompanyRoles::class)->roleOf($membership->user()->sole(), $this->tenant)?->name)->toBe('viewer');
 });
 
+it('never makes a person the owner by changing their role: the owner changes through its own invitation', function (): void {
+    $membership = TenantMembership::query()->where('user_id', memberOf($this->tenant, TenantRole::Viewer)->id)->sole();
+
+    expect(fn () => app(ChangeMemberRole::class)->handle($membership, TenantRole::Owner, $this->owner))->toThrow(RoleNotAllowedInAccount::class)
+        ->and(fn () => app(ChangeMemberRole::class)->handle($membership, resolve(CompanyRoles::class)->template(TenantRole::Owner), $this->owner))->toThrow(RoleNotAllowedInAccount::class);
+    expect(resolve(CompanyRoles::class)->roleOf($membership->user()->sole(), $this->tenant)?->name)->toBe('viewer');
+});
+
 it('lets a union change a person only to a role of compensation', function (): void {
     $union = Tenant::factory()->union()->create();
     $owner = ownerOf($union);
