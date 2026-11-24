@@ -306,6 +306,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
     'compensation start' => ['compensation/index', fn () => route('tenant.compensation.index', listsCompany()[0]), ['scenarios']],
     'scenarios' => ['compensation/scenarios', fn () => route('tenant.compensation.scenarios.index', listsCompany()[0]), ['scenarios']],
     'users' => ['tenancy/members', fn () => route('tenant.members.index', listsCompany()[0]), ['members', 'invitations']],
+    'roles' => ['tenancy/roles', fn () => route('tenant.roles.index', listsCompany()[0]), ['roles']],
     'work centers' => ['tenancy/work-centers', fn () => route('tenant.work-centers.index', listsCompany()[0]), ['workCenters']],
     'companies' => ['tenancy/companies', function () {
         $user = App\Models\User::factory()->create();

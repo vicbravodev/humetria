@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import DashboardRouteNorm from '@/components/tenancy/dashboard-route-norm';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
@@ -9,10 +9,11 @@ import type { CenterRoutes, Paginated } from '@/types';
 /** "Dónde vas" (board V2-Panel): each standard that applies, with the first five centers and its six stages; «Ver todos» goes to the whole list. */
 export default function DashboardRoutes({
     centers,
+    norms,
 }: {
     centers: Paginated<CenterRoutes>;
+    norms: string[];
 }) {
-    const modules = usePage().props.tenant?.modules;
     const tenantSlug = useTenantSlug();
 
     return (
@@ -21,7 +22,7 @@ export default function DashboardRoutes({
                 Dónde vas
             </h2>
             <div className="@container overflow-hidden card">
-                {normsInUse(centers.data, modules).map(({ norm, rows }) => (
+                {normsInUse(centers.data, norms).map(({ norm, rows }) => (
                     <DashboardRouteNorm
                         key={norm.key}
                         norm={norm}

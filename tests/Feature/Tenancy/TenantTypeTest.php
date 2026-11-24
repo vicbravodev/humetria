@@ -124,7 +124,7 @@ it('refuses to change a union member to a viewer or a committee member', functio
         ->put(route('tenant.members.update', [$union, $member->id]), ['role' => $role->value])
         ->assertSessionHasErrors('role');
 
-    expect(resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->of($member->user()->sole(), $union))->toBe(TenantRole::Hr);
+    expect(resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->of($member->user()->sole(), $union)?->key)->toBe(TenantRole::Hr->value);
 })->with([TenantRole::Viewer, TenantRole::Committee, TenantRole::Complaints]);
 
 it('still lets a company invite and change to every role', function (TenantRole $role): void {
@@ -143,7 +143,7 @@ it('guards the membership actions themselves, whatever calls them', function ():
     $owner = memberOf($union, TenantRole::Owner);
     $member = TenantMembership::query()->where('user_id', memberOf($union, TenantRole::Hr)->id)->sole();
 
-    expect(fn () => resolve(InviteMember::class)->handle($union, new MemberInvitationData('Vera', 'vera@sindicato.mx', TenantRole::Viewer), $owner))
+    expect(fn () => resolve(InviteMember::class)->handle($union, new MemberInvitationData('Vera', 'vera@sindicato.mx', TenantRole::Viewer->value), $owner))
         ->toThrow(RoleNotAllowedInAccount::class)
         ->and(fn () => resolve(ChangeMemberRole::class)->handle($member, TenantRole::Committee, $owner))
         ->toThrow(RoleNotAllowedInAccount::class)

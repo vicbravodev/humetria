@@ -103,7 +103,7 @@ function inventory(): array
         'company reactivated' => [fn () => new CompanyReactivated($company, 'soporte@humetria.mx'), true],
         'tools changed' => [fn () => new ToolsChanged($company, ['Ley Silla'], ['Asistencia'], '1 dic 2026', false, 'soporte@humetria.mx'), true],
         'owner replaced' => [fn () => new OwnerReplaced($company, 'Pedro'), true],
-        'invitation' => [fn () => new InvitationEmail('Autopartes Demo', 'ana@x.mx', 'tok', CarbonImmutable::now()->addDays(7), TenantRole::Hr, null, 1, 3), false],
+        'invitation' => [fn () => new InvitationEmail('Autopartes Demo', 'ana@x.mx', 'tok', CarbonImmutable::now()->addDays(7), new App\Modules\Tenancy\Data\CompanyRoleSummary('hr', TenantRole::Hr->label(), true), null, 1, 3), false],
     ];
 }
 

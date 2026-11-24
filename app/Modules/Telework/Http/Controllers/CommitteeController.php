@@ -46,7 +46,7 @@ final class CommitteeController extends Controller
         $assigned = array_values(CommitteeAssignment::query() // @pest-mutate-ignore: UnwrapArrayValues
             ->where('work_center_id', $center->id)->get(['user_id'])->map(fn (CommitteeAssignment $assignment): int => $assignment->user_id)->all());
         $reviewers = $members->reviewers();
-        $row = fn (MemberSummary $member): array => ['id' => $member->userId, 'name' => $member->name, 'email' => $member->email, 'role' => $member->role->label(), 'active' => true];
+        $row = fn (MemberSummary $member): array => ['id' => $member->userId, 'name' => $member->name, 'email' => $member->email, 'role' => $member->role->label, 'active' => true];
 
         return Inertia::render('telework/committee', [
             'workCenter' => ['id' => $center->id, 'name' => $center->name],

@@ -69,7 +69,7 @@ final readonly class ChatController
         $startedAt = hrtime(true);
 
         try {
-            $stream = HumiAssistant::make(scope: $scope, page: $this->pages->resolve($request->input('pageContext')))
+            $stream = HumiAssistant::make(scope: $scope, page: $this->pages->resolve($request->input('pageContext'), $scope))
                 ->continueOrStart($conversationId, as: ConversationParticipant::query()->findOrFail($scope->participantId))
                 ->stream($this->redactor->redact($request->messageText()))
                 ->usingVercelDataProtocol()

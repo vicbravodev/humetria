@@ -1,3 +1,4 @@
+import type { TenantCan } from './tenant-can';
 export type TenantOwner = {
     name: string;
     email: string;
@@ -74,7 +75,7 @@ export type CurrentTenant = TenantSummary &
         /** The modules the company has (attendance, nom035, nom037, seating, complaints…); the others are hidden. */
         modules: string[];
         trial_days_left: number | null;
-        role: TenantRole;
+        role: CompanyRoleKey;
         role_label: string;
         /** What the person's role allows, so the page hides what the server would refuse: in a read-only company, nothing that writes. */
         can: TenantCan;
@@ -82,41 +83,10 @@ export type CurrentTenant = TenantSummary &
         permissions: TenantCan;
     };
 
-/** The permissions of a person's role in a company. */
-export type TenantCan = {
-    manage_organization: boolean;
-    manage_members: boolean;
-    manage_campaigns: boolean;
-    view_trauma_screenings: boolean;
-    manage_telework: boolean;
-    review_workplaces: boolean;
-    view_seating: boolean;
-    view_attendance: boolean;
-    manage_attendance: boolean;
-    view_org_chart: boolean;
-    manage_org_chart: boolean;
-    view_vacations: boolean;
-    manage_vacations: boolean;
-    view_climate: boolean;
-    manage_climate: boolean;
-    view_pulse: boolean;
-    manage_pulse: boolean;
-    manage_seating: boolean;
-    assess_seating: boolean;
-    view_compensation: boolean;
-    manage_compensation: boolean;
-    view_interventions: boolean;
-    manage_interventions: boolean;
-    view_disclosure: boolean;
-    manage_disclosure: boolean;
-    use_assistant: boolean;
-    manage_complaint_channel: boolean;
-    handle_complaints: boolean;
-    view_worker_access: boolean;
-    manage_worker_access: boolean;
-};
-
 export type TenantRole = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
+
+/** A role a person holds in a company: a template, or one of the company's own (`custom_<uuid>`, shown by its label). */
+export type CompanyRoleKey = TenantRole | `custom_${string}`;
 
 /** One row of the list /admin shows a person who belongs to zero or several companies. */
 export type CompanyLink = TenantSummary &
@@ -175,8 +145,10 @@ export type MemberRow = {
     id: number;
     name: string;
     email: string;
-    role: TenantRole;
+    role: CompanyRoleKey;
     role_label: string;
+    /** How many permissions they have besides their role. */
+    extra_permissions: number;
     is_you: boolean;
     /** The day they got access, written for display. */
     since: string;
@@ -187,20 +159,17 @@ export type MemberInvitationRow = {
     id: string;
     name: string;
     email: string;
-    role: TenantRole;
+    role: CompanyRoleKey;
     role_label: string;
     status: 'pending' | 'expired';
     status_label: string;
     expires_on: string;
 };
 
-export type RoleOption = { value: TenantRole; label: string };
+export type RoleOption = { value: CompanyRoleKey; label: string };
 
-/** «Qué puede hacer cada quien» (board V3-Roles): one column per role, one cell per row and role. */
-export type RoleMatrix = {
-    columns: string[];
-    rows: { label: string; cells: string[] }[];
-};
+/** A role an invitation can give, with what it switches on: the floor of its «Permisos adicionales». */
+export type InvitableRole = RoleOption & { permissions: string[] };
 
 /** Where a module of a company comes from: its plan, what it had before the plan, a person's grant, or a person's revocation. */
 export type ModuleSource = 'plan' | 'legacy' | 'grant' | 'revoke';

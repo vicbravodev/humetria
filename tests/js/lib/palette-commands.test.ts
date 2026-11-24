@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 import { paletteCommands } from '@/lib/palette-commands';
 import { toUrl } from '@/lib/utils';
 
-import { can } from '../support/tenant-can';
+import { can, coverage } from '../support/tenant-can';
 
 /** The tools beyond compliance, all off: the palette tests look at the compliance pages. */
 const noTools = {
@@ -142,6 +142,7 @@ describe('paletteCommands inside a company', () => {
                         handle_complaints: manage,
                         view_worker_access: false,
                         manage_worker_access: false,
+                        ...coverage,
                         ...noTools,
                     },
                 },
@@ -217,6 +218,7 @@ describe('paletteCommands inside a union', () => {
                     handle_complaints: true,
                     view_worker_access: false,
                     manage_worker_access: false,
+                    ...coverage,
                     ...noTools,
                 },
             },
@@ -263,6 +265,7 @@ describe('paletteCommands for Compensación', () => {
                     handle_complaints: true,
                     view_worker_access: false,
                     manage_worker_access: false,
+                    ...coverage,
                     ...noTools,
                 },
             },

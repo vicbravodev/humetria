@@ -8,9 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\ListUserTenants;
-use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
-use App\Modules\Tenancy\Support\CompanyRoles;
+use App\Modules\Tenancy\Support\StartRoute;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -19,7 +18,7 @@ use Inertia\Response;
 /** Where /admin leads: the console for the superadmin, the company's panel for a person with one, a list otherwise. */
 final class HomeController extends Controller
 {
-    public function __invoke(#[CurrentUser] User $user, ListUserTenants $listUserTenants, CompanyRoles $roles, Impersonation $impersonation): RedirectResponse|Response
+    public function __invoke(#[CurrentUser] User $user, ListUserTenants $listUserTenants, StartRoute $startRoute, Impersonation $impersonation): RedirectResponse|Response
     {
         if ($user->isStaff()) {
             return redirect()->route('companies.index');
@@ -30,8 +29,8 @@ final class HomeController extends Controller
         if ($companies->total() === 1) {
             $company = $companies->getCollection()->sole();
 
-            // A restricted role starts in its own tool, not on a page that would answer 403.
-            return redirect()->route(($roles->of($user, $company) ?? TenantRole::Viewer)->startRoute(), $company);
+            // The first page the person may open, never one that would answer 403.
+            return redirect()->route($startRoute->for($user, $company), $company);
         }
 
         return Inertia::render('tenancy/companies', [

@@ -180,3 +180,28 @@ describe('standards the company does not have', () => {
         expect(nextStep(centers, ['nom035'])).toBeNull();
     });
 });
+
+describe('standards the person may not see', () => {
+    // The server leaves out the route of a standard the person may not see: the center comes without it.
+    const plant: CenterRoutes = {
+        id: 'Planta',
+        name: 'Planta',
+        nom037: at(1),
+        seating: unanswered,
+    };
+
+    it('leave the center out of that standard, and never ask or recommend it', () => {
+        expect(
+            normsInUse([plant]).map(({ norm, rows }) => [
+                norm.key,
+                rows.length,
+            ]),
+        ).toEqual([
+            ['nom035', 0],
+            ['nom037', 1],
+            ['seating', 1],
+        ]);
+        expect(unansweredCenters([{ id: 'Bodega', name: 'Bodega' }])).toBe(0);
+        expect(nextStep([plant])?.norm).toBe('nom037');
+    });
+});

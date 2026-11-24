@@ -14,6 +14,6 @@ final readonly class FirstStepsStatePolicy
 
     public function manage(User $user): bool
     {
-        return $this->members->find($user->id)?->role->value === 'owner';
+        return $this->members->find($user->id)?->role->key === 'owner';
     }
 }

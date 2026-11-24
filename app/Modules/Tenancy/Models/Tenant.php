@@ -167,7 +167,7 @@ final class Tenant extends Model
     public function openInvitation(): HasOne
     {
         // The owner's: member invitations are the owner's to handle, from the company.
-        return $this->hasOne(TenantInvitation::class)->open()->where('role', TenantRole::Owner);
+        return $this->hasOne(TenantInvitation::class)->open()->forOwner();
     }
 
     /**

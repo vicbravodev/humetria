@@ -1,14 +1,21 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { currentTab, mobileTabs } from '@/lib/mobile-tabs';
 import { toUrl } from '@/lib/utils';
-import { can } from '../support/tenant-can';
+import { can, templateCan } from '../support/tenant-can';
 
 type Role = 'owner' | 'hr' | 'viewer' | 'committee' | 'complaints';
 
 const acme = (role: Role, allowed = true, type?: 'union') => ({
     slug: 'acme',
     role,
-    can: can(allowed, allowed),
+    // The Comisión and the outside handler carry what the server gives their templates (without the cases when not allowed).
+    can:
+        role === 'committee' || role === 'complaints'
+            ? {
+                  ...templateCan(role),
+                  ...(allowed ? {} : { handle_complaints: false }),
+              }
+            : can(allowed, allowed),
     ...(type === undefined ? {} : { type }),
 });
 

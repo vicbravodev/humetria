@@ -10,7 +10,8 @@ use Illuminate\Contracts\Cache\Repository;
 
 /**
  * The live facts of a company, from the tools Humi has there (so a module it lacks tells nothing), kept a minute by
- * company: opening the panel on every page stays cheap. No tool tells a fact that depends on the person.
+ * company and by what the person may see (a tool tells nothing of an area the person does not see): opening the panel on
+ * every page stays cheap. No tool tells a fact that depends on who the person is.
  */
 final readonly class LiveFacts
 {
@@ -23,7 +24,7 @@ final readonly class LiveFacts
      */
     public function for(AssistantScope $scope): array
     {
-        return $this->cache->remember("assistant.live_facts.{$scope->tenantId}", self::SECONDS, function () use ($scope): array {
+        return $this->cache->remember("assistant.live_facts.{$scope->tenantId}.".hash('xxh3', implode(',', $scope->abilities)), self::SECONDS, function () use ($scope): array {
             $facts = [];
 
             foreach ($this->tools->for($scope) as $tool) {

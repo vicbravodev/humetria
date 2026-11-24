@@ -63,7 +63,8 @@ final class HandleInertiaRequests extends Middleware
             'tenants' => [],
             // The NOM-035 count and the next deadline in the sidebar. Read when the page renders, after ResolveTenant
             // has shared the company: outside one, nothing is asked.
-            // The Comisión and the handlers of complaints see nothing of NOM-035's evaluations (criterio C-25), not even its counts.
+            // Only whoever sees NOM-035's route is told its evaluations, not even their counts: the Comisión and the handlers
+            // of complaints never are (NOM-037, criterio C-25), nor a role of the company's own without that permission.
             'inCourse' => fn (): ?array => $this->seesNom035() ? $this->inCourse() : null,
             // The guided tour of the company's owner: nobody else is asked anything, and outside a company nothing is.
             'firstSteps' => fn (): ?array => $this->firstSteps($request),
@@ -142,7 +143,7 @@ final class HandleInertiaRequests extends Middleware
     {
         $tenant = Inertia::getShared('tenant');
 
-        return is_array($tenant) && ! in_array($tenant['role'] ?? null, ['committee', 'complaints'], true);
+        return is_array($tenant) && is_array($tenant['permissions'] ?? null) && ($tenant['permissions']['view_nom035_route'] ?? false) === true;
     }
 
     /**

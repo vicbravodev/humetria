@@ -26,7 +26,7 @@ final readonly class RemoveMember
         $tenant = $member->tenant()->sole();
 
         DB::transaction(function () use ($member, $person, $tenant, $by): void {
-            $removed = ['member_user_id' => $person->id, 'role' => $this->roles->of($person, $tenant)?->value];
+            $removed = ['member_user_id' => $person->id, 'role' => $this->roles->of($person, $tenant)?->key];
 
             // Recorded before the row goes, so the entry can still name it as its subject.
             Log::info('tenant_member.removed', ['tenant_id' => $tenant->id, 'user_id' => $by->id, ...$removed]);

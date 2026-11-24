@@ -1,61 +1,57 @@
-import { Form, Link } from '@inertiajs/react';
-import { Send } from 'lucide-react';
-import MemberRoleChoice from '@/components/tenancy/member-role-choice';
-import TenantField from '@/components/tenancy/tenant-field';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { Form } from '@inertiajs/react';
+import { useState } from 'react';
+import InviteFields from '@/components/tenancy/invite-fields';
+import InviteSummary from '@/components/tenancy/invite-summary';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/members';
 import { store } from '@/routes/tenant/members/invitations';
-import type { RoleOption } from '@/types';
+import type { InvitableRole, PermissionGroup } from '@/types';
 
 /**
- * Who is invited and what they will do (board V3-Roles). The link goes by email, single use, for 7 days; the people of a
- * center never come in here: they get their personal link from the route.
+ * Who is invited and what they will do (board V3-Roles), with beside it a summary of what the role and extras chosen let them
+ * do. The link goes by email, single use, for 7 days; the people of a center never come in here: they get their personal link
+ * from the route.
  */
-export default function InviteMemberForm({ roles }: { roles: RoleOption[] }) {
+export default function InviteMemberForm({
+    roles,
+    groups,
+}: {
+    roles: InvitableRole[];
+    groups: PermissionGroup[];
+}) {
     const tenantSlug = useTenantSlug();
+    // «Ayuda con las rutas» to begin with, where the account hands it out.
+    const [role, setRole] = useState(
+        roles.find((option) => option.value === 'hr')?.value ??
+            roles[0]?.value ??
+            '',
+    );
+    const [chosen, setChosen] = useState<string[]>([]);
+    const picked = roles.find((option) => option.value === role);
+    const base = picked?.permissions ?? [];
 
     return (
         <Form
             {...store.form(tenantSlug)}
             noValidate
-            className="flex flex-col gap-6"
+            className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]"
         >
             {({ processing, errors }) => (
                 <>
-                    <TenantField
-                        name="name"
-                        label="Nombre"
-                        required
-                        maxLength={255}
-                        error={errors['name']}
+                    <InviteFields
+                        roles={roles}
+                        groups={groups}
+                        state={{
+                            role: { value: role, onChange: setRole },
+                            chosen: { value: chosen, onChange: setChosen },
+                            processing,
+                            errors,
+                        }}
                     />
-                    <TenantField
-                        name="email"
-                        label="Correo"
-                        type="email"
-                        required
-                        maxLength={255}
-                        error={errors['email']}
+                    <InviteSummary
+                        groups={groups}
+                        role={{ label: picked?.label ?? '', base }}
+                        own={chosen.filter((name) => !base.includes(name))}
                     />
-                    <MemberRoleChoice roles={roles} error={errors['role']} />
-                    <p className="text-sm text-pretty text-muted-foreground">
-                        Le llegará un correo con un enlace de un solo uso,
-                        válido por 7 días. Las personas trabajadoras no se
-                        invitan aquí: reciben su enlace personal desde la ruta.
-                        A quien atiende quejas se le invita primero aquí y luego
-                        se le designa desde el canal de quejas.
-                    </p>
-                    <div className="flex flex-wrap gap-2.5">
-                        <Button type="submit" disabled={processing}>
-                            {processing ? <Spinner /> : <Send aria-hidden />}
-                            Enviar invitación
-                        </Button>
-                        <Button variant="outline" asChild>
-                            <Link href={index(tenantSlug)}>Cancelar</Link>
-                        </Button>
-                    </div>
                 </>
             )}
         </Form>

@@ -6,16 +6,13 @@ use App\Modules\Telework\Contracts\Committee;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Support\CommitteeGate;
 use App\Modules\Tenancy\Enums\TenantRole;
-use App\Modules\Tenancy\Http\Middleware\BlockSuspendedTenant;
-use App\Modules\Tenancy\Http\Middleware\LimitRestrictedRoles;
-use App\Modules\Tenancy\Http\Middleware\ResolveTenant;
+use App\Modules\Tenancy\Http\Middleware\RequireRoutePermission;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(LimitRestrictedRoles::class, CommitteeGate::class);
+mutates(RequireRoutePermission::class, CommitteeGate::class);
 
 it('gives each role the Ley Silla permissions of the spec', function (TenantRole $role, bool $view, bool $manage, bool $assess): void {
     $tenant = Tenant::factory()->create();
@@ -36,11 +33,7 @@ it('lets the committee reach tenant.seating routes and still 403 on others', fun
     $tenant = Tenant::factory()->create();
     $committee = memberOf($tenant, TenantRole::Committee);
 
-    Route::middleware(['web', 'auth', 'verified', ResolveTenant::class, BlockSuspendedTenant::class, LimitRestrictedRoles::class])
-        ->get('admin/{tenant:slug}/seating-probe', fn () => 'ok')->name('tenant.seating.probe');
-    Route::getRoutes()->refreshNameLookups();
-
-    $this->actingAs($committee)->get(route('tenant.seating.probe', $tenant))->assertOk();
+    $this->actingAs($committee)->get(route('tenant.seating.index', $tenant))->assertOk();
     $this->actingAs($committee)->get(route('tenant.employees.index', $tenant))->assertForbidden();
 });
 

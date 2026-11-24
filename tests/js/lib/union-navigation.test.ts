@@ -28,6 +28,7 @@ describe('a union account', () => {
             'Panel',
             'Agremiados',
             'Usuarios',
+            'Roles',
             'Plan y uso',
         ]);
     });

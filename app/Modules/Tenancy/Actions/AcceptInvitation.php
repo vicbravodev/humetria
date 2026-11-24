@@ -12,6 +12,7 @@ use App\Modules\Tenancy\Enums\InvitationStatus;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Events\MemberRemoved;
+use App\Modules\Tenancy\Events\MemberRoleChanged;
 use App\Modules\Tenancy\Exceptions\InvitationForAnotherAccount;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Models\Tenant;
@@ -62,19 +63,14 @@ final readonly class AcceptInvitation
             $tenant = Tenant::query()->lockForUpdate()->findOrFail($invitation->tenant_id);
             $user = $accepter instanceof User ? $accepter : $this->createUser($invitation->email, $accepter);
 
-            $previousOwnerId = $invitation->role === TenantRole::Owner ? $this->makeOwner($tenant, $user) : null;
+            $forOwner = $invitation->invitesOwner();
+            $previousOwnerId = $forOwner ? $this->makeOwner($tenant, $user) : null;
 
             $invitation->update(['accepted_at' => now()]);
-
-            if ($invitation->role !== TenantRole::Owner) {
-                // Someone who got access in the meantime keeps the role they have.
-                if ($tenant->memberships()->firstOrCreate(['user_id' => $user->id])->wasRecentlyCreated) {
-                    $this->roles->assign($user, $tenant, $invitation->role);
-                }
-            }
+            $given = $forOwner ? [] : $this->join($invitation, $tenant, $user);
 
             // Only the owner's first access starts the trial; by the time the owner invites anyone, it has started.
-            $startsTrial = $invitation->role === TenantRole::Owner && $tenant->status() === TenantStatus::NotStarted;
+            $startsTrial = $forOwner && $tenant->status() === TenantStatus::NotStarted;
             $changesOwner = is_int($previousOwnerId) && $previousOwnerId !== $user->id;
 
             if ($startsTrial) {
@@ -82,13 +78,13 @@ final readonly class AcceptInvitation
             }
 
             // The accepter is the actor and the company is the tenant of what follows. Ids only, never the email or name.
-            Context::scope(function () use ($invitation, $tenant, $user, $startsTrial, $changesOwner, $previousOwnerId): void {
+            Context::scope(function () use ($invitation, $tenant, $user, $startsTrial, $changesOwner, $previousOwnerId, $given): void {
                 Log::info('tenant_invitation.accepted', [
                     'tenant_id' => $tenant->id,
                     'invitation_id' => $invitation->id,
                     'user_id' => $user->id,
                 ]);
-                $this->recordAudit->handle('tenant_invitation.accepted', $invitation);
+                $this->recordAudit->handle('tenant_invitation.accepted', $invitation, $given === [] ? [] : ['permissions' => $given]);
 
                 if ($changesOwner) {
                     $change = ['previous_user_id' => $previousOwnerId, 'user_id' => $user->id];
@@ -104,6 +100,29 @@ final readonly class AcceptInvitation
 
             return $user;
         });
+    }
+
+    /**
+     * Gives a new member the invited role, as it is now, and the permissions besides it that the company can still hand
+     * out (a module may have gone since the invitation). Someone who got access in the meantime keeps what they have.
+     *
+     * @return list<string> the permissions given besides the role.
+     */
+    private function join(TenantInvitation $invitation, Tenant $tenant, User $user): array
+    {
+        if (! $tenant->memberships()->firstOrCreate(['user_id' => $user->id])->wasRecentlyCreated) {
+            return [];
+        }
+
+        $this->roles->assign($user, $tenant, $invitation->role ?? throw new InvitationNoLongerValid);
+
+        $given = array_values(array_intersect($invitation->extra_permissions, array_keys($this->roles->assignablePermissions($tenant))));
+
+        if ($given !== []) {
+            $this->roles->syncDirectPermissions($user, $tenant, $given);
+        }
+
+        return $given;
     }
 
     /**
@@ -126,15 +145,36 @@ final readonly class AcceptInvitation
             }
 
             $previous->delete();
+            $this->cancelInvitationsOf($tenant, $previous->user_id);
             // Same event as RemoveMember: their complaint cases, designation and Humi conversations end with their access.
             event(new MemberRemoved($tenant->id, $previous->user_id));
         }
 
         $tenant->memberships()->firstOrCreate(['user_id' => $user->id]);
-        // Replaces the role a member had: a person holds one role per company.
+        // Replaces the role a member had: a person holds one role per company. The owner already has everything, so
+        // what they had besides their former role goes too (else Humi counts them among those with extras).
         $this->roles->assign($user, $tenant, TenantRole::Owner);
+        $this->roles->syncDirectPermissions($user, $tenant, []);
+        // A member who becomes owner is management now: what that ends (their cases against management, C-45) ends here.
+        event(new MemberRoleChanged($tenant->id, $user->id, TenantRole::Owner->value));
 
         return $previous?->user_id;
+    }
+
+    /**
+     * What the outgoing owner left open (a member invitation, perhaps with a sensitive role) must not outlive the handover:
+     * it was sent with an authority that ends here. The invitations of the staff that stays remain.
+     */
+    private function cancelInvitationsOf(Tenant $tenant, int $ownerId): void
+    {
+        $ids = $tenant->invitations()->open()->forOwner(false)->where('invited_by', $ownerId)->pluck('id')->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        TenantInvitation::query()->whereIn('id', $ids)->update(['cancelled_at' => now()]);
+        Log::info('tenant_invitation.cancelled_on_owner_change', ['tenant_id' => $tenant->id, 'invitation_ids' => $ids]);
     }
 
     private function createUser(string $email, NewAccountData $data): User

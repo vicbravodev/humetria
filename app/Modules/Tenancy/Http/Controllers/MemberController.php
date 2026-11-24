@@ -5,28 +5,34 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Tenancy\Actions\CancelInvitation;
 use App\Modules\Tenancy\Actions\ChangeMemberRole;
+use App\Modules\Tenancy\Actions\GrantMemberPermissions;
 use App\Modules\Tenancy\Actions\InviteMember;
 use App\Modules\Tenancy\Actions\RemoveMember;
 use App\Modules\Tenancy\Actions\ResendInvitation;
+use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Exceptions\InvitationNoLongerValid;
 use App\Modules\Tenancy\Http\Requests\ChangeMemberRoleRequest;
 use App\Modules\Tenancy\Http\Requests\InviteMemberRequest;
+use App\Modules\Tenancy\Http\Requests\UpdateMemberPermissionsRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Support\CompanyRoles;
 use App\Modules\Tenancy\Support\DisplayDate;
-use App\Modules\Tenancy\Support\RoleMatrix;
+use App\Modules\Tenancy\Support\PermissionGroups;
 use Illuminate\Container\Attributes\CurrentUser;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use LogicException;
+use Spatie\Permission\Models\Role;
 
 /**
  * «Usuarios»: who has access to the company and with which role. Only its owner manages it; the owner's own
@@ -36,37 +42,38 @@ final class MemberController extends Controller
 {
     private const int PER_PAGE = 25;
 
-    public function __construct(private readonly CompanyRoles $roles) {}
+    public function __construct(private readonly CompanyRoles $roles, private readonly Impersonation $impersonation) {}
 
     public function index(Tenant $tenant, #[CurrentUser] User $user): Response
     {
         $this->authorizeOwner();
         $roles = $this->roles->inCompany($tenant);
 
-        $owner = array_search(TenantRole::Owner, $roles, true);
+        $owner = array_find_key($roles, fn (CompanyRoleSummary $role): bool => $role->key === TenantRole::Owner->value);
+
+        $members = $tenant->memberships()
+            ->with('user')
+            ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
+            ->whereIn('tenant_memberships.user_id', array_keys($roles))
+            // The owner first, then by name.
+            ->orderByRaw('tenant_memberships.user_id = ? desc', [$owner ?? 0])
+            ->orderBy('users.name')
+            ->orderBy('tenant_memberships.id')
+            ->select('tenant_memberships.*')
+            ->paginate(self::PER_PAGE, pageName: 'members')
+            ->withQueryString();
+        $extras = $this->roles->directPermissionCounts($tenant, array_values(array_map(fn (TenantMembership $member): int => $member->user_id, $members->items())));
 
         return Inertia::render('tenancy/members', [
-            'members' => $tenant->memberships()
-                ->with('user')
-                ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
-                ->whereIn('tenant_memberships.user_id', array_keys($roles))
-                // The owner first, then by name.
-                ->orderByRaw('tenant_memberships.user_id = ? desc', [$owner === false ? 0 : $owner])
-                ->orderBy('users.name')
-                ->orderBy('tenant_memberships.id')
-                ->select('tenant_memberships.*')
-                ->paginate(self::PER_PAGE, pageName: 'members')
-                ->withQueryString()
-                ->through(fn (TenantMembership $member): array => $this->memberRow($member, $roles[$member->user_id] ?? null, $user)),
-            'invitations' => $tenant->invitations()->open()->where('role', '<>', TenantRole::Owner)->latest()->orderByDesc('id')
+            'members' => $members->through(fn (TenantMembership $member): array => $this->memberRow($member, $roles[$member->user_id] ?? null, $user, $extras[$member->user_id] ?? 0)),
+            'invitations' => $tenant->invitations()->open()->forOwner(false)->with('role')->latest()->orderByDesc('id')
                 ->paginate(self::PER_PAGE, pageName: 'invitations')
                 ->withQueryString()
                 ->through(fn (TenantInvitation $invitation): array => [
                     'id' => $invitation->id,
                     'name' => $invitation->name,
                     'email' => $invitation->email,
-                    'role' => $invitation->role->value,
-                    'role_label' => $invitation->role->label(),
+                    ...$this->roleOf($invitation),
                     'status' => $invitation->status()->value,
                     'status_label' => $invitation->status()->label(),
                     'expires_on' => DisplayDate::day($invitation->expires_at),
@@ -81,8 +88,9 @@ final class MemberController extends Controller
         $this->authorizeOwner();
 
         return Inertia::render('tenancy/invite-member', [
-            'roles' => $this->assignable($tenant),
-            'matrix' => RoleMatrix::for($tenant->type),
+            'roles' => $this->invitable($tenant),
+            // «Permisos adicionales»: what the invitation may bring besides the role.
+            'groups' => PermissionGroups::for($tenant, []),
         ]);
     }
 
@@ -123,9 +131,36 @@ final class MemberController extends Controller
     public function update(ChangeMemberRoleRequest $request, Tenant $tenant, string $member, ChangeMemberRole $changeMemberRole, #[CurrentUser] User $user): RedirectResponse
     {
         $this->authorizeOwner();
-        $changeMemberRole->handle($this->member($tenant, $member), $request->role(), $user);
+        // Validated against the same list: only a role deleted meanwhile is missing.
+        $changeMemberRole->handle($this->member($tenant, $member), $this->roles->assignable($tenant, $request->role()) ?? abort(404), $user);
 
         return $this->done($tenant, 'Rol actualizado.');
+    }
+
+    /** «Permisos adicionales»: what the person has besides their role, and where each permission comes from. */
+    public function permissions(Tenant $tenant, string $member): Response
+    {
+        $this->authorizeOwner();
+        $membership = $this->member($tenant, $member);
+        $person = $membership->user()->sole();
+        $effective = $this->roles->effectivePermissions($person, $tenant);
+
+        return Inertia::render('tenancy/member-permissions', [
+            'member' => ['id' => $membership->id, 'name' => $person->name, 'email' => $person->email, 'role_label' => $this->roles->of($person, $tenant)?->label],
+            'groups' => PermissionGroups::for($tenant, $effective),
+            // What is stored for the person themselves, also what their role now gives too (the groups show it as the role's):
+            // the page sends it back, so saving never drops it. Only what a save accepts: one the account type no longer admits
+            // stays stored (GrantMemberPermissions keeps it) but is not sent, or the form would fail on it every time.
+            'direct' => array_values(array_intersect($this->roles->directPermissionsOf($person, $tenant), array_keys($effective), array_keys($this->roles->assignablePermissions($tenant)))),
+            'can_manage' => ! $this->impersonation->isActive(),
+        ]);
+    }
+
+    public function updatePermissions(UpdateMemberPermissionsRequest $request, Tenant $tenant, GrantMemberPermissions $grantMemberPermissions, #[CurrentUser] User $user): RedirectResponse
+    {
+        $grantMemberPermissions->handle($request->member(), $request->permissions(), $user);
+
+        return $this->done($tenant, 'Permisos actualizados.');
     }
 
     public function destroy(Tenant $tenant, string $member, RemoveMember $removeMember, #[CurrentUser] User $user): RedirectResponse
@@ -139,9 +174,9 @@ final class MemberController extends Controller
     /**
      * Only people with a role in the company are listed, so both are there; anything else is broken data.
      *
-     * @return array{id: int, name: string, email: string, role: string, role_label: string, is_you: bool, since: string}
+     * @return array{id: int, name: string, email: string, role: string, role_label: string, extra_permissions: int, is_you: bool, since: string}
      */
-    private function memberRow(TenantMembership $member, ?TenantRole $role, User $you): array
+    private function memberRow(TenantMembership $member, ?CompanyRoleSummary $role, User $you, int $extras): array
     {
         $user = $member->user ?? throw new LogicException("Membership [{$member->id}] has no user.");
         $role ??= throw new LogicException("Membership [{$member->id}] has no role.");
@@ -150,11 +185,26 @@ final class MemberController extends Controller
             'id' => $member->id,
             'name' => $user->name,
             'email' => $user->email,
-            'role' => $role->value,
-            'role_label' => $role->label(),
+            'role' => $role->key,
+            'role_label' => $role->label,
+            // How many permissions they have besides their role («Permisos adicionales»).
+            'extra_permissions' => $extras,
             'is_you' => $user->id === $you->id,
             'since' => DisplayDate::day($member->created_at),
         ];
+    }
+
+    /**
+     * An open invitation always names its role.
+     *
+     * @return array{role: string, role_label: string}
+     */
+    private function roleOf(TenantInvitation $invitation): array
+    {
+        $role = $invitation->role ?? throw new LogicException("Invitation [{$invitation->id}] has no role.");
+        $summary = CompanyRoles::summary($role->name, $role->getAttribute('label'));
+
+        return ['role' => $summary->key, 'role_label' => $summary->label];
     }
 
     /**
@@ -162,7 +212,30 @@ final class MemberController extends Controller
      */
     private function assignable(Tenant $tenant): array
     {
-        return array_map(fn (TenantRole $role): array => ['value' => $role->value, 'label' => $role->label()], $tenant->type->assignableRoles());
+        return array_map(fn (CompanyRoleSummary $role): array => ['value' => $role->key, 'label' => $role->label], $this->roles->assignableSummaries($tenant));
+    }
+
+    /**
+     * The roles an invitation can give, each with what it switches on: the floor of «Permisos adicionales».
+     *
+     * @return list<array{value: string, label: string, permissions: list<string>}>
+     */
+    private function invitable(Tenant $tenant): array
+    {
+        $held = [];
+
+        foreach (Role::query()->with('permissions')->where(fn (Builder $query) => $query->whereNull('tenant_id')->orWhere('tenant_id', $tenant->id))->get() as $role) {
+            $names = [];
+
+            foreach ($role->permissions as $permission) {
+                $names[] = $permission->name;
+            }
+
+            sort($names);
+            $held[$role->name] = $names;
+        }
+
+        return array_map(fn (array $role): array => [...$role, 'permissions' => $held[$role['value']] ?? []], $this->assignable($tenant));
     }
 
     private function authorizeOwner(): void
@@ -175,14 +248,14 @@ final class MemberController extends Controller
     {
         $member = $tenant->memberships()->findOrFail($id);
 
-        abort_if(($this->roles->inCompany($tenant)[$member->user_id] ?? null) === TenantRole::Owner, 404);
+        abort_if(($this->roles->inCompany($tenant)[$member->user_id] ?? null)?->key === TenantRole::Owner->value, 404);
 
         return $member;
     }
 
     private function invitation(Tenant $tenant, string $id): TenantInvitation
     {
-        return $tenant->invitations()->where('role', '<>', TenantRole::Owner)->findOrFail($id);
+        return $tenant->invitations()->forOwner(false)->findOrFail($id);
     }
 
     private function done(Tenant $tenant, string $message): RedirectResponse

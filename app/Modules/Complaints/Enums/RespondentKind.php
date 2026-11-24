@@ -42,13 +42,26 @@ enum RespondentKind: string
         };
     }
 
-    /** The company role (by name) that must not handle a complaint against this kind; null when none is left out. */
-    public function excludedRole(): ?string
+    /** The permission whose holder counts as the people a complaint of this kind is against (criterio C-45); null when none does. */
+    public function excludedPermission(): ?string
     {
-        return match ($this) {
-            self::Hr => 'hr',
-            self::Management => 'owner',
-            default => null,
-        };
+        return $this === self::Hr ? 'manage-organization' : null;
+    }
+
+    /**
+     * Whether someone with that role and those permissions is who a complaint of this kind is against (criterio C-45): the
+     * owner is management and only management; anyone else is HR when holding its permission.
+     *
+     * @param  list<string>  $permissions
+     */
+    public function excludes(?string $role, array $permissions): bool
+    {
+        if ($role === 'owner') {
+            return $this === self::Management;
+        }
+
+        $permission = $this->excludedPermission();
+
+        return $permission !== null && in_array($permission, $permissions, true);
     }
 }

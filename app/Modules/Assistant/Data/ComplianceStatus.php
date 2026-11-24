@@ -6,7 +6,7 @@ namespace App\Modules\Assistant\Data;
 
 /**
  * One norm in the company's compliance overview. `state` is up_to_date, in_progress, pending or not_applicable;
- * `stateLabel` says it in the panel's words; `summary` gives the counts behind it and `link` the screen to act on it.
+ * `stateLabel` says it in the panel's words (a line that only informs, like roles and permissions, is not_applicable and says «Informativo»); `summary` gives the counts behind it and `link` the screen to act on it.
  */
 final readonly class ComplianceStatus
 {

@@ -1,4 +1,4 @@
-import type { TenantRole } from '@/types/tenancy';
+import type { CompanyRoleKey, TenantRole } from '@/types/tenancy';
 
 const SUMMARIES: Record<TenantRole, string> = {
     owner: 'administra la cuenta, sus usuarios y evaluaciones',
@@ -14,7 +14,33 @@ const UNION_SUMMARIES: Partial<Record<TenantRole, string>> = {
     hr: 'administra el padrón y la compensación',
 };
 
+// A role of the company's own allows whatever its owner switched on.
+const OWN_ROLE_SUMMARY = 'entra con los permisos que se le asignaron';
+
+function isTemplate(role: CompanyRoleKey): role is TenantRole {
+    return Object.hasOwn(SUMMARIES, role);
+}
+
 /** What a role in a company does, to follow its name: "RH · opera evaluaciones, centros y empleados". */
-export function roleSummary(role: TenantRole, union = false): string {
+export function roleSummary(role: CompanyRoleKey, union = false): string {
+    if (!isTemplate(role)) {
+        return OWN_ROLE_SUMMARY;
+    }
+
     return (union ? UNION_SUMMARIES[role] : undefined) ?? SUMMARIES[role];
+}
+
+/**
+ * Which tab of «Roles y permisos» is open: the one the address names (`?tab=`), else the company's roles once it has one (or
+ * is searching them), and the templates of Humetría before that, to start from one.
+ */
+export function rolesTab(url: string, own: number): 'propios' | 'plantillas' {
+    const query = new URLSearchParams(url.split('?')[1] ?? '');
+    const named = query.get('tab');
+
+    if (named === 'propios' || named === 'plantillas') {
+        return named;
+    }
+
+    return own > 0 || query.has('q') ? 'propios' : 'plantillas';
 }

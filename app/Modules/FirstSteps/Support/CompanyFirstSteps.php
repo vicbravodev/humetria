@@ -34,7 +34,7 @@ final readonly class CompanyFirstSteps implements FirstSteps
             return null;
         }
 
-        if ($this->members->find($userId)?->role->value !== 'owner') {
+        if ($this->members->find($userId)?->role->key !== 'owner') {
             return null;
         }
 

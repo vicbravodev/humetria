@@ -1,0 +1,59 @@
+import { useForm } from '@inertiajs/react';
+import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { afterRender, revealFirstError } from '@/lib/focus';
+import { ownPermissions } from '@/lib/permission-floor';
+import {
+    heldBy,
+    keepsAcknowledgement,
+    sensitiveAdded,
+} from '@/lib/permission-groups';
+import { update } from '@/routes/tenant/members/permissions';
+import type { PermissionGroup } from '@/types';
+
+/**
+ * A person's permissions besides their role, while the owner raises the level of some areas; one send. What the role brings is
+ * the floor: only the person's own go, so bringing every area back to the role's level sends an empty list, except what was
+ * stored for them (`stored`) that the role now gives too, which stays theirs.
+ */
+export function useMemberPermissions(
+    member: { id: number; stored: string[] },
+    groups: PermissionGroup[],
+) {
+    const tenantSlug = useTenantSlug();
+    const base = heldBy(groups, 'role');
+    const before = member.stored;
+    const form = useForm({ permissions: before, acknowledge_sensitive: false });
+    const errors: Partial<Record<string, string>> = form.errors;
+
+    return {
+        data: form.data,
+        errors,
+        processing: form.processing,
+        base,
+        held: [...base, ...form.data.permissions],
+        sensitive: sensitiveAdded(groups, before, form.data.permissions),
+        /** Every permission in play with one area changed: what goes past the role is the person's own. */
+        change: (held: string[]) => {
+            const next = ownPermissions({ held, base, stored: before });
+
+            form.setData((data) => ({
+                ...data,
+                permissions: next,
+                // A different set of sensitive permissions asks for the confirmation again.
+                acknowledge_sensitive:
+                    data.acknowledge_sensitive &&
+                    keepsAcknowledgement(groups, before, {
+                        previous: data.permissions,
+                        next,
+                    }),
+            }));
+        },
+        acknowledge: (checked: boolean) =>
+            form.setData('acknowledge_sensitive', checked),
+        /** Sends it; a refusal brings the first error into view, which on a phone may be far from the button. */
+        save: (root: HTMLFormElement) =>
+            form.put(update.url({ tenant: tenantSlug, member: member.id }), {
+                onError: () => afterRender(() => revealFirstError(root)),
+            }),
+    };
+}

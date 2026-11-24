@@ -78,7 +78,7 @@ final readonly class OrganizationStory implements DemoStory
         $hr = $this->user(DemoRoster::person(DemoRoster::HR));
 
         $this->acceptInvitation->handle($this->inviteOwner->handle($tenant, new OwnerInvitationData($owner->name, $owner->email), $owner), $owner);
-        $this->acceptInvitation->handle($this->inviteMember->handle($tenant, new MemberInvitationData($hr->name, $hr->email, TenantRole::Hr), $owner), $hr);
+        $this->acceptInvitation->handle($this->inviteMember->handle($tenant, new MemberInvitationData($hr->name, $hr->email, TenantRole::Hr->value), $owner), $hr);
 
         return new DemoContext($tenant->id, $owner, $hr);
     }

@@ -53,7 +53,7 @@ it('lists the people with access, the owner first, and the open invitations', fu
             ->where('members.data.0.is_you', true)
             ->where('members.data.0.role_label', 'Administra todo')
             ->where('members.data.2', fn ($row): bool => collect($row)->except('id')->all() === [
-                'name' => 'Beto RH', 'email' => 'beto@acme.mx', 'role' => 'hr', 'role_label' => 'Ayuda con las rutas', 'is_you' => false, 'since' => '29 oct 2026',
+                'name' => 'Beto RH', 'email' => 'beto@acme.mx', 'role' => 'hr', 'role_label' => 'Ayuda con las rutas', 'extra_permissions' => 0, 'is_you' => false, 'since' => '29 oct 2026',
             ])
             ->where('invitations.total', 1)
             ->where('invitations.data.0', [
@@ -61,6 +61,21 @@ it('lists the people with access, the owner first, and the open invitations', fu
                 'status' => 'pending', 'status_label' => 'Invitación enviada', 'expires_on' => '5 nov 2026',
             ])
             ->where('roles', [['value' => 'hr', 'label' => 'Ayuda con las rutas'], ['value' => 'viewer', 'label' => 'Solo consulta'], ['value' => 'committee', 'label' => 'Comisión de seguridad e higiene'], ['value' => 'complaints', 'label' => 'Atención de quejas']]));
+});
+
+it('says how many permissions each person has besides their role, here only', function (): void {
+    $ana = User::factory()->create(['name' => 'Ana Lectora']);
+    $membership = TenantMembership::factory()->for($this->tenant)->for($ana)->viewer()->create();
+    TenantMembership::factory()->for($other = Tenant::factory()->create())->for($ana)->viewer()->create();
+    app(App\Modules\Tenancy\Actions\GrantMemberPermissions::class)->handle($membership, ['manage-vacations', 'manage-attendance'], $this->owner);
+    app(App\Modules\Tenancy\Actions\GrantMemberPermissions::class)->handle(TenantMembership::query()->where('tenant_id', $other->id)->sole(), ['manage-climate'], $this->owner);
+
+    $this->actingAs($this->owner)
+        ->get(route('tenant.members.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('members.data.0.extra_permissions', 0)
+            ->where('members.data.1.name', 'Ana Lectora')
+            ->where('members.data.1.extra_permissions', 2));
 });
 
 it('pages the people with access and the invitations, each on its own, the owner always first', function (): void {
@@ -108,8 +123,8 @@ it('invites a person with a role and emails them the link', function (TenantRole
 
     $invitation = TenantInvitation::query()->sole();
 
-    expect($invitation->only(['tenant_id', 'role', 'name', 'email', 'invited_by']))->toBe([
-        'tenant_id' => $this->tenant->id, 'role' => $role, 'name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'invited_by' => $this->owner->id,
+    expect($invitation->only(['tenant_id', 'role_id', 'name', 'email', 'invited_by']))->toBe([
+        'tenant_id' => $this->tenant->id, 'role_id' => Spatie\Permission\Models\Role::findByName($role->value)->id, 'name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'invited_by' => $this->owner->id,
     ])->and($invitation->expires_at->toIso8601String())->toBe('2026-11-05T18:00:00+00:00');
 
     $subject = Illuminate\Support\Str::before($this->owner->name, ' ').' te invitó a Acme en Humetría';
@@ -199,6 +214,16 @@ it('answers 404 to the invitation of another company or to the owner invitation'
         ->and($ownerInvitation->refresh()->cancelled_at)->toBeNull();
 })->with(['resend', 'cancel']);
 
+it('says an invitation is no longer open once it closed and its role was deleted', function (string $action): void {
+    $closed = TenantInvitation::factory()->for($this->tenant)->cancelled()->create(['role_id' => null]);
+
+    ($action === 'resend'
+        ? $this->actingAs($this->owner)->post(route('tenant.members.invitations.resend', [$this->tenant, $closed->id]))
+        : $this->actingAs($this->owner)->delete(route('tenant.members.invitations.cancel', [$this->tenant, $closed->id])))
+        ->assertRedirect(route('tenant.members.index', $this->tenant))
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['toast' => ['type' => 'error', 'message' => 'Esta invitación ya no está abierta.']]);
+})->with(['resend', 'cancel']);
+
 it('names each company role by what it does (rediseño v2, decisión A6)', function (): void {
     expect(array_map(fn (TenantRole $role): string => $role->label(), TenantRole::cases()))->toBe([
         'Administra todo', 'Ayuda con las rutas', 'Solo consulta', 'Comisión de seguridad e higiene', 'Atención de quejas',
@@ -215,3 +240,20 @@ it('counts the open invitations of the company, not the accepted, cancelled, exp
 
     expect(resolve(Members::class)->pendingInvitations())->toBe(1);
 });
+
+it('reads the list in the same number of queries however many people and invitations it shows', function (int $people): void {
+    $own = app(App\Modules\Tenancy\Actions\CreateCompanyRole::class)->handle($this->tenant, 'Auditoría', ['view-dashboard'], null, $this->owner);
+
+    foreach (range(1, $people) as $index) {
+        TenantMembership::factory()->for($this->tenant)->for(User::factory()->create())->viewer()->create();
+        TenantInvitation::factory()->for($this->tenant)->role($index % 2 === 0 ? $own : TenantRole::Hr)->create(['email' => "persona{$index}@acme.mx"]);
+    }
+
+    $this->actingAs($this->owner->fresh());
+    $this->expectsDatabaseQueryCount(QUERIES_OF_THE_MEMBERS_PAGE);
+
+    $this->get(route('tenant.members.index', $this->tenant))->assertOk();
+})->with([1, 4]);
+
+// Measured, then fixed so that a query per person, invitation or role breaks the test. +1: the permissions besides the role.
+const QUERIES_OF_THE_MEMBERS_PAGE = 20;

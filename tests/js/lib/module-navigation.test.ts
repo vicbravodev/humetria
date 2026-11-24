@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
 import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
-import { can } from '../support/tenant-can';
+import { can, templateCan } from '../support/tenant-can';
 
 const acme = (role: 'owner' | 'complaints' = 'owner') => ({
     slug: 'acme',
     role,
-    can: can(true, true),
+    // The outside handler carries what the server gives its template, nothing more.
+    can: role === 'complaints' ? templateCan(role) : can(true, true),
 });
 
 describe('the menu of a company with only some modules', () => {

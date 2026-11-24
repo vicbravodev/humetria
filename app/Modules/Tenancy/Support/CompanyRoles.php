@@ -5,10 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Support;
 
 use App\Models\User;
+use App\Modules\Tenancy\Data\CompanyRoleSummary;
 use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Exceptions\NotACompanyRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -20,29 +27,316 @@ final readonly class CompanyRoles
 {
     public function __construct(private PermissionRegistrar $registrar) {}
 
-    public function of(User $user, Tenant $tenant): ?TenantRole
+    /** The person's role in the company, a template or one of its own; null when they have none. */
+    public function of(User $user, Tenant $tenant): ?CompanyRoleSummary
     {
         return $this->inCompany($tenant)[$user->id] ?? null;
     }
 
-    /** Replaces the person's role in the company with `$role`. */
-    public function assign(User $user, Tenant $tenant, TenantRole $role): void
+    /**
+     * The company's own roles, by label.
+     *
+     * @return Collection<int, Role>
+     */
+    public function customRoles(Tenant $tenant): Collection
     {
-        $this->inTeam($user, $tenant, fn () => $user->syncRoles([$role->value]));
-        $this->forgetMembers();
+        return $this->ownRoles($tenant)->orderBy('label')->get();
     }
 
-    /** Takes the person's role in the company away; their roles elsewhere, and the superadmin one, stay. */
-    public function remove(User $user, Tenant $tenant): void
+    /**
+     * The company's own roles, to be read: never a template nor another company's.
+     *
+     * @return Builder<Role>
+     */
+    public function ownRoles(Tenant $tenant): Builder
     {
-        $this->inTeam($user, $tenant, fn () => $user->syncRoles([]));
+        return Role::query()->where('tenant_id', $tenant->id)->where('name', 'like', 'custom\_%');
+    }
+
+    /**
+     * One of the company's own roles, by id; a template, another company's or none is not found (a 404 over HTTP).
+     *
+     * @throws ModelNotFoundException<Role>
+     */
+    public function own(Tenant $tenant, string $id): Role
+    {
+        return $this->ownRoles($tenant)->findOrFail($id);
+    }
+
+    /** The person's role in the company, a template or one of its own. */
+    public function roleOf(User $user, Tenant $tenant): ?Role
+    {
+        $id = DB::table('model_has_roles')
+            ->where('tenant_id', $tenant->id)
+            ->where('model_type', $user->getMorphClass())
+            ->where('model_id', $user->id)
+            ->value('role_id');
+
+        return is_int($id) ? Role::query()->find($id) : null;
+    }
+
+    /**
+     * Ids of the people who hold the role.
+     *
+     * @return list<int>
+     */
+    public function holders(Role $role): array
+    {
+        $ids = [];
+
+        foreach (DB::table('model_has_roles')->where('role_id', $role->id)->orderBy('model_id')->get(['model_id']) as $row) {
+            is_int($row->model_id) && $ids[] = $row->model_id;
+        }
+
+        return $ids;
+    }
+
+    /** @throws NotACompanyRole when the role is a template or belongs to no company. */
+    public function assertCustom(Role $role): void
+    {
+        (str_starts_with($role->name, 'custom_') && $role->getAttribute('tenant_id') !== null) || throw new NotACompanyRole;
+    }
+
+    /** Whether a person holds the role or an open invitation names it. */
+    public function inUse(Role $role): bool
+    {
+        return $this->holders($role) !== []
+            || DB::table('tenant_invitations')->where('role_id', $role->id)->whereNull('accepted_at')->whereNull('cancelled_at')->exists();
+    }
+
+    /** The system's role of that template. */
+    public function template(TenantRole $role): Role
+    {
+        return Role::query()->where('name', $role->value)->whereNull('tenant_id')->sole();
+    }
+
+    /**
+     * The role the owner can give someone, by its key: a template the account hands out, or one of the company's own.
+     * Never the owner's, nor a role of another company.
+     */
+    public function assignable(Tenant $tenant, string $key): ?Role
+    {
+        if (($template = TenantRole::tryFrom($key)) !== null) {
+            return in_array($template, $tenant->type->assignableRoles(), true) ? $this->template($template) : null;
+        }
+
+        return Role::query()->where('tenant_id', $tenant->id)->where('name', $key)->where('name', 'like', 'custom\_%')->first();
+    }
+
+    /**
+     * The roles the owner can give, templates first and then the company's own by label.
+     *
+     * @return list<CompanyRoleSummary>
+     */
+    public function assignableSummaries(Tenant $tenant): array
+    {
+        return [
+            ...array_map(fn (TenantRole $role): CompanyRoleSummary => new CompanyRoleSummary($role->value, $role->label(), true), $tenant->type->assignableRoles()),
+            ...$this->customRoles($tenant)->map(fn (Role $role): CompanyRoleSummary => self::summary($role->name, $role->getAttribute('label')))->values()->all(),
+        ];
+    }
+
+    /** How the panel names a role: a template by its own label, one of the company's by the label the owner typed. */
+    public static function summary(string $name, mixed $label): CompanyRoleSummary
+    {
+        $template = TenantRole::tryFrom($name);
+
+        return new CompanyRoleSummary($name, $template?->label() ?? (is_string($label) ? $label : $name), $template !== null);
+    }
+
+    /**
+     * Checks every permission is one the company can hand out (not the owner's own, not a module it did not contract).
+     *
+     * @param  list<string>  $permissions
+     * @return bool whether any of them is sensitive.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function assertAssignable(Tenant $tenant, array $permissions): bool
+    {
+        $assignable = $this->assignablePermissions($tenant);
+
+        foreach ($permissions as $name) {
+            isset($assignable[$name]) || throw new InvalidArgumentException("The company cannot hand out [$name].");
+        }
+
+        return array_any($permissions, fn (string $name): bool => $assignable[$name]);
+    }
+
+    /**
+     * What the company can hand out now (not the owner's own, admitted by the account, of a module it has), each with
+     * whether it is sensitive.
+     *
+     * @return array<string, bool>
+     */
+    public function assignablePermissions(Tenant $tenant): array
+    {
+        $assignable = [];
+
+        foreach (PermissionCatalog::assignable($tenant) as $definition) {
+            if (PermissionCatalog::unavailableReason($tenant, $definition) === null) {
+                $assignable[$definition->name] = $definition->sensitive;
+            }
+        }
+
+        return $assignable;
+    }
+
+    /**
+     * Of `$held`, those that count for nothing now and that a save cannot send back (the panel shows them off): of a tool
+     * the company's plan no longer includes, or that its account type cannot have (a role made when it was another type).
+     * They are kept for when they come back; only what is already stored is kept, never added, and never an owner's own.
+     *
+     * @param  array<int, string>  $held
+     * @return list<string>
+     */
+    public function keptWhileUnavailable(Tenant $tenant, array $held): array
+    {
+        return array_values(array_filter($held, fn (string $name): bool => ($definition = PermissionCatalog::find($name)) !== null
+            && (PermissionCatalog::unavailableReason($tenant, $definition) !== null || (! $definition->ownerOnly && ! $tenant->type->admits([$name])))));
+    }
+
+    /** Replaces the person's role in the company with `$role`, a template or one of the company's own. */
+    public function assign(User $user, Tenant $tenant, TenantRole|Role $role): void
+    {
+        $this->inTeam($user, $tenant, fn () => $user->syncRoles([$role instanceof Role ? $role : $role->value]));
         $this->forgetMembers();
     }
 
     /**
-     * Everyone's role in the company, by user id, in one query.
+     * The permissions given to the person themselves in the company, by name.
      *
-     * @return array<int, TenantRole>
+     * @return list<string>
+     */
+    public function directPermissionsOf(User $user, Tenant $tenant): array
+    {
+        $names = [];
+
+        foreach (DB::table('model_has_permissions')
+            ->join('permissions', 'permissions.id', '=', 'model_has_permissions.permission_id')
+            ->where('model_has_permissions.tenant_id', $tenant->id)
+            ->where('model_has_permissions.model_type', $user->getMorphClass())
+            ->where('model_has_permissions.model_id', $user->id)
+            ->orderBy('permissions.name')
+            ->get(['permissions.name']) as $row) {
+            is_string($row->name) && $names[] = $row->name;
+        }
+
+        return $names;
+    }
+
+    /**
+     * How many permissions each of these people has in the company besides their role, by user id, in one query.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, int>
+     */
+    public function directPermissionCounts(Tenant $tenant, array $userIds): array
+    {
+        $counts = [];
+
+        foreach (DB::table('model_has_permissions')
+            ->where('tenant_id', $tenant->id)
+            ->where('model_type', (new User)->getMorphClass())
+            ->whereIn('model_id', $userIds)
+            ->groupBy('model_id')
+            ->get(['model_id', DB::raw('count(*) as total')]) as $row) {
+            if (is_int($row->model_id) && is_int($row->total)) {
+                $counts[$row->model_id] = $row->total;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Every permission the person has in the company and where it comes from (the role wins when both give it),
+     * leaving out those of a module the company does not have.
+     *
+     * @return array<string, 'role'|'direct'>
+     */
+    public function effectivePermissions(User $user, Tenant $tenant): array
+    {
+        $effective = [];
+
+        foreach ($this->roleOf($user, $tenant)?->permissions->all() ?? [] as $permission) {
+            $effective[$permission->name] = 'role';
+        }
+
+        foreach ($this->directPermissionsOf($user, $tenant) as $name) {
+            $effective[$name] ??= 'direct';
+        }
+
+        return array_filter($effective, fn (string $source, string $name): bool => $this->offered($tenant, $name), ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * The same as effectivePermissions for many people at once, in three queries: the permission names of each, by user id.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, list<string>>
+     */
+    public function effectivePermissionNames(Tenant $tenant, array $userIds): array
+    {
+        $morph = (new User)->getMorphClass();
+        $names = array_fill_keys($userIds, []);
+        $roleOf = [];
+
+        foreach (DB::table('model_has_roles')->where('tenant_id', $tenant->id)->where('model_type', $morph)->whereIn('model_id', $userIds)->get(['model_id', 'role_id']) as $row) {
+            is_int($row->model_id) && is_int($row->role_id) && $roleOf[$row->model_id] = $row->role_id;
+        }
+
+        $byRole = [];
+
+        foreach (DB::table('role_has_permissions')->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+            ->whereIn('role_has_permissions.role_id', array_values(array_unique($roleOf)))->get(['role_has_permissions.role_id', 'permissions.name']) as $row) {
+            is_int($row->role_id) && is_string($row->name) && $byRole[$row->role_id][] = $row->name;
+        }
+
+        foreach ($roleOf as $userId => $roleId) {
+            $names[$userId] = $byRole[$roleId] ?? [];
+        }
+
+        foreach (DB::table('model_has_permissions')->join('permissions', 'permissions.id', '=', 'model_has_permissions.permission_id')
+            ->where('model_has_permissions.tenant_id', $tenant->id)->where('model_has_permissions.model_type', $morph)->whereIn('model_has_permissions.model_id', $userIds)
+            ->get(['model_has_permissions.model_id', 'permissions.name']) as $row) {
+            is_int($row->model_id) && is_string($row->name) && $names[$row->model_id][] = $row->name;
+        }
+
+        return array_map(fn (array $held): array => array_values(array_filter(array_unique($held), fn (string $name): bool => $this->offered($tenant, $name))), $names);
+    }
+
+    /** Whether a permission counts for the company: of a tool it has, or of none. */
+    private function offered(Tenant $tenant, string $name): bool
+    {
+        return ($definition = PermissionCatalog::find($name)) === null || PermissionCatalog::unavailableReason($tenant, $definition) === null;
+    }
+
+    /**
+     * Replaces the person's direct permissions in the company with `$permissions`.
+     *
+     * @param  list<string>  $permissions
+     */
+    public function syncDirectPermissions(User $user, Tenant $tenant, array $permissions): void
+    {
+        $this->inTeam($user, $tenant, fn () => $user->syncPermissions($permissions));
+        $this->forgetMembers();
+    }
+
+    /** Takes the person's role and direct permissions in the company away; what they have elsewhere, and the superadmin role, stay. */
+    public function remove(User $user, Tenant $tenant): void
+    {
+        $this->inTeam($user, $tenant, function () use ($user): void {
+            $user->syncRoles([]);
+            $user->syncPermissions([]);
+        });
+        $this->forgetMembers();
+    }
+
+    /**
+     * Everyone's role in the company, a template or one of its own, by user id, in one query.
+     *
+     * @return array<int, CompanyRoleSummary>
      */
     public function inCompany(Tenant $tenant): array
     {
@@ -53,11 +347,9 @@ final readonly class CompanyRoles
             ->where('model_has_roles.tenant_id', $tenant->id)
             ->where('model_has_roles.model_type', (new User)->getMorphClass())
             ->orderBy('model_has_roles.model_id')
-            ->get(['model_has_roles.model_id', 'roles.name']) as $row) {
-            $role = is_string($row->name) ? TenantRole::tryFrom($row->name) : null;
-
-            if ($role !== null && is_int($row->model_id)) {
-                $roles[$row->model_id] = $role;
+            ->get(['model_has_roles.model_id', 'roles.name', 'roles.label']) as $row) {
+            if (is_string($row->name) && is_int($row->model_id)) {
+                $roles[$row->model_id] = self::summary($row->name, $row->label);
             }
         }
 
@@ -65,7 +357,7 @@ final readonly class CompanyRoles
     }
 
     /** The request's memo of the company's people is stale once a role changes. */
-    private function forgetMembers(): void
+    public function forgetMembers(): void
     {
         resolve(CompanyMembers::class)->forget();
     }

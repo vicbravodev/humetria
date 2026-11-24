@@ -44,7 +44,7 @@ it('removes the previous owner from the company when the new one accepts', funct
     $owner = $tenant->ownerMembership()->sole();
 
     expect($owner->user_id)->toBe($next->id)
-        ->and(array_keys(resolve(CompanyRoles::class)->inCompany($tenant), TenantRole::Owner, true))->toBe([$next->id])
+        ->and(array_keys(array_map(fn ($role): string => $role->key, resolve(CompanyRoles::class)->inCompany($tenant)), TenantRole::Owner->value, true))->toBe([$next->id])
         ->and($previous->fresh())->not->toBeNull()
         ->and(TenantMembership::query()->where('tenant_id', $other->id)->sole()->user_id)->toBe($previous->id);
 });
@@ -182,7 +182,54 @@ it('tells nobody about an owner change when a non-owner role is accepted', funct
     TenantMembership::factory()->for($tenant)->create();
     $hr = User::factory()->create();
 
-    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $hr->email, 'role' => TenantRole::Hr]), $hr);
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->role(TenantRole::Hr)->create(['email' => $hr->email]), $hr);
 
     Notification::assertNothingSent();
+});
+
+it('takes away the permissions a member had besides their role when they become the owner, who already has everything', function (): void {
+    $tenant = Tenant::factory()->create();
+    ownerOf($tenant);
+    $member = memberOf($tenant, TenantRole::Viewer);
+    resolve(CompanyRoles::class)->syncDirectPermissions($member, $tenant, ['manage-climate']);
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $member->email]), $member);
+
+    workIn($tenant);
+    $access = array_values(array_filter(
+        toolCard(App\Modules\Assistant\Tools\GetComplianceOverview::class, resolve(App\Modules\Assistant\Support\AssistantScopeFactory::class)->make($member))['rows'],
+        fn (array $row): bool => $row['key'] === 'access',
+    ))[0]['summary'];
+
+    expect(resolve(CompanyRoles::class)->directPermissionsOf($member, $tenant))->toBe([])
+        ->and($access)->toContain('Nadie tiene permisos además de su rol.');
+});
+
+// An owner about to be replaced could invite another address with a sensitive role that outlives the handover.
+it('cancels the open member invitations the previous owner sent when the owner changes, and leaves those of other staff', function (): void {
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create();
+    $previous = ownerOf($tenant);
+    $staff = memberOf($tenant, TenantRole::Hr);
+    $byPrevious = TenantInvitation::factory()->for($tenant)->role(TenantRole::Committee)->create(['invited_by' => $previous->id]);
+    $byStaff = TenantInvitation::factory()->for($tenant)->role(TenantRole::Viewer)->create(['invited_by' => $staff->id]);
+    $accepted = TenantInvitation::factory()->for($tenant)->role(TenantRole::Viewer)->accepted()->create(['invited_by' => $previous->id]);
+    $next = User::factory()->create();
+
+    app(AcceptInvitation::class)->handle(TenantInvitation::factory()->for($tenant)->create(['email' => $next->email, 'invited_by' => $previous->id]), $next);
+
+    expect($byPrevious->fresh()->cancelled_at)->not->toBeNull()
+        ->and($byStaff->fresh()->cancelled_at)->toBeNull()
+        ->and($accepted->fresh()->cancelled_at)->toBeNull();
+});
+
+it('leaves every member invitation open when the owner stays the same', function (): void {
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create();
+    $owner = ownerOf($tenant);
+    $member = TenantInvitation::factory()->for($tenant)->role(TenantRole::Viewer)->create(['invited_by' => $owner->id]);
+    $ownerInvitation = TenantInvitation::factory()->for($tenant)->create(['email' => $owner->email, 'invited_by' => $owner->id]);
+    $owner->forceFill(['email_verified_at' => now()])->save();
+
+    app(AcceptInvitation::class)->handle($ownerInvitation, $owner);
+
+    expect($member->fresh()->cancelled_at)->toBeNull();
 });

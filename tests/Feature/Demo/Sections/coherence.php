@@ -39,6 +39,7 @@ use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
+use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -237,6 +238,8 @@ return [
             'teleworker' => [Teleworker::query()->where('status', TeleworkerStatus::Active)->orderBy($byPerson('teleworkers'))->firstOrFail()->id],
             'policy' => [LeavePolicy::query()->sole()->id],
             'statement' => [LeaveStatement::query()->orderBy($byPerson('leave_statements'))->orderBy('issued_at')->firstOrFail()->id],
+            // The person whose extra permissions the page edits: HR (the owner's cannot be edited).
+            'member' => [(string) $tenant->memberships()->where('user_id', collect(resolve(Members::class)->all())->firstWhere('email', DemoRoster::person(DemoRoster::HR)->email)->userId)->sole()->id],
             'norm' => ['nom035', 'nom037', 'seating'],
             'field' => ['category', 'level'],
         ];
@@ -258,6 +261,7 @@ return [
             'tenant.seating.certificate' => 'only for a center with nobody standing; the offices have three positions',
             'tenant.telework.certificate' => 'only for a center with nobody teleworking; the offices have twelve',
             'tenant.assistant.conversations.show' => 'the demo has no conversation with Humi',
+            'tenant.roles.edit' => 'the demo has no role of its own to edit: its people hold the templates',
             'tenant.sso.show' => 'single sign-on is an Enterprise module: the demo has no plan, so the page is a 404',
             'tenant.telework.notices.show' => 'the demo has no notice of a teleworker',
             // ponytail: the «Por jefe» list of such a pulse still links each manager to this 404 (Engagement, not the demo).
@@ -289,8 +293,11 @@ return [
             // The reviews of NOM-037 are the Comisión's: HR sits on the offices' one, the owner does not.
             DemoRoster::OWNER.' tenant.telework.reviews.index' => '403',
             DemoRoster::OWNER.' tenant.telework.reviews.show' => '403',
-            // The members and the plan are the owner's.
+            // The members, their roles and permissions, and the plan are the owner's.
             DemoRoster::HR.' tenant.members.index' => '403',
+            DemoRoster::HR.' tenant.members.permissions.edit' => '403',
+            DemoRoster::HR.' tenant.roles.index' => '403',
+            DemoRoster::HR.' tenant.roles.create' => '403',
             DemoRoster::HR.' tenant.members.invitations.create' => '403',
             DemoRoster::HR.' tenant.plan' => '403',
             DemoRoster::HR.' tenant.privacy.edit' => '403',

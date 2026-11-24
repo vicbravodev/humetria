@@ -62,19 +62,37 @@ it('says who receives each kind of complaint by name, for the whole company, and
         ->get(route('tenant.complaints.channel.show', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page
             ->has('coverage', 6)
-            ->where('coverage.1', ['kind' => 'coworker', 'label' => 'Compañera o compañero', 'excludedRole' => null, 'handlers' => [
+            ->where('coverage', fn ($rows): bool => collect($rows)->pluck('kind')->all() === ['direct_supervisor', 'coworker', 'hr', 'management', 'third_party', 'unknown'])
+            ->where('coverage.1', ['kind' => 'coworker', 'label' => 'Compañera o compañero', 'handlers' => [
                 ['name' => $this->owner->name, 'roleLabel' => 'Administra todo'],
                 ['name' => $hr->name, 'roleLabel' => 'Ayuda con las rutas'],
             ]])
             ->where('coverage.2.kind', 'hr')
-            ->where('coverage.2.excludedRole', 'hr')
             ->where('coverage.2.handlers', [['name' => $this->owner->name, 'roleLabel' => 'Administra todo']])
-            ->where('coverage.3.excludedRole', 'owner')
+            ->where('coverage.3.kind', 'management')
             ->where('coverage.3.handlers', [['name' => $hr->name, 'roleLabel' => 'Ayuda con las rutas']])
             ->where('handlersCount', 3)
             ->has('candidates', 3)
-            ->where('candidates', fn ($candidates) => collect($candidates)->contains(['value' => (string) $committee->id, 'label' => $committee->name, 'role' => 'committee', 'roleLabel' => 'Comisión de seguridad e higiene']))
+            ->where('candidates', fn ($candidates) => collect($candidates)->contains(['value' => (string) $committee->id, 'label' => $committee->name, 'role' => 'committee', 'roleLabel' => 'Comisión de seguridad e higiene', 'excludedKinds' => []]))
             ->where('channel.qr', fn (string $qr): bool => str_starts_with($qr, 'data:image/')));
+});
+
+it('tells, for each person who could be designated, the kinds of complaint they may not receive by what they hold, whatever their role is called (criterio C-45)', function (): void {
+    $role = app(App\Modules\Tenancy\Actions\CreateCompanyRole::class)->handle($this->tenant, 'Personal y quejas', ['manage-organization', 'handle-complaints', 'view-work-centers'], null, $this->owner);
+    $people = App\Models\User::factory()->create(['name' => 'Persona de personal']);
+    App\Modules\Tenancy\Models\TenantMembership::factory()->for($this->tenant)->for($people)->viewer()->create();
+    resolve(App\Modules\Tenancy\Support\CompanyRoles::class)->assign($people, $this->tenant, $role);
+    $committee = memberOf($this->tenant, TenantRole::Committee);
+    $excluded = fn (iterable $candidates, int $userId): mixed => collect($candidates)->firstWhere('value', (string) $userId)['excludedKinds'] ?? 'absent';
+
+    foreach (['tenant.complaints.channel.show', 'tenant.complaints.handlers.index'] as $page) {
+        $this->actingAs($this->owner)
+            ->get(route($page, $this->tenant))
+            ->assertInertia(fn (Assert $inertia) => $inertia
+                ->where('candidates', fn ($candidates): bool => $excluded($candidates, $people->id) === ['hr']
+                    && $excluded($candidates, $this->owner->id) === ['management']
+                    && $excluded($candidates, $committee->id) === []));
+    }
 });
 
 it('gives no QR for a channel that was never activated', function (): void {

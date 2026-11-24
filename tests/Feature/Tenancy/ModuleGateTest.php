@@ -138,6 +138,15 @@ it('leaves a read-only company reading the modules it has, and still hides the o
     $this->get(route('tenant.seating.index', $tenant))->assertNotFound();
 });
 
+it('answers 404, not 403, to a person without the permission on a route of a module or tool the company does not have', function (): void {
+    // The page of a module the company does not have must not be told apart from one that does not exist, whoever asks.
+    $tenant = companyWithOnly(['nom035']);
+    $this->actingAs(memberOf($tenant, TenantRole::Viewer))->get(route('tenant.vacations.import.show', $tenant))->assertNotFound();
+
+    $union = Tenant::factory()->union()->create();
+    $this->actingAs(memberOf($union, TenantRole::Viewer))->get(route('tenant.work-centers.onboarding', $union))->assertNotFound();
+});
+
 it('keeps a union on its own limiter: it never sees the compliance tools and keeps its compensation', function (): void {
     $union = Tenant::factory()->union()->create();
     $owner = memberOf($union, TenantRole::Owner);
