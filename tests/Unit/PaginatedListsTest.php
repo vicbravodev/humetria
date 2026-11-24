@@ -21,6 +21,8 @@ const ARRAY_PROPS = [
     'tenancy/member-permissions:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog)',
     'tenancy/member-permissions:direct' => 'resumen corto: los nombres de permisos que la persona tiene guardados por su cuenta, a lo más los del catálogo (PermissionCatalog)',
     'tenancy/invite-member:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog)',
+    'tenancy/role-editor:templates' => 'catálogo fijo: las plantillas de Humetría que la cuenta da (cuatro a lo más)',
+    'tenancy/role-editor:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog)',
     'tenancy/roles:templates' => 'catálogo fijo: las plantillas de Humetría que la cuenta da (cuatro a lo más)',
     'tenancy/roles:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog), para decir qué puede hacer cada rol',
     'sso/settings:domains' => 'resumen corto: los dominios de correo de la empresa, cinco a lo más (el formulario los topa)',
@@ -157,6 +159,21 @@ const ARRAY_PROPS = [
     'billing/statement:adjustments' => 'resumen corto: los ajustes de un estado de cuenta, pocos',
 ];
 
+/** Pages whose props are declared as an exported type in resources/js/types, not in the page: page => the type. */
+const PAGE_PROP_TYPES = ['tenancy/role-editor' => 'RoleEditorProps'];
+
+/** The source of an exported props type of resources/js/types, so what the page takes through it is scanned too. */
+function propsType(string $name): string
+{
+    foreach (glob(__DIR__.'/../../resources/js/types/*.ts') ?: [] as $types) {
+        if (preg_match('/^export type '.$name.' = \{.*?^\};$/ms', (string) file_get_contents($types), $block) === 1) {
+            return "\n".$block[0];
+        }
+    }
+
+    return '';
+}
+
 /** @return array<string, string> page => its source */
 function pageSources(): array
 {
@@ -165,7 +182,8 @@ function pageSources(): array
 
     foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)) as $file) {
         if ($file instanceof SplFileInfo && str_ends_with($file->getPathname(), '.tsx')) {
-            $sources[substr($file->getPathname(), strlen($root), -strlen('.tsx'))] = (string) file_get_contents($file->getPathname());
+            $page = substr($file->getPathname(), strlen($root), -strlen('.tsx'));
+            $sources[$page] = (string) file_get_contents($file->getPathname()).propsType(PAGE_PROP_TYPES[$page] ?? '-');
         }
     }
 
