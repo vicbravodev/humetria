@@ -18,7 +18,9 @@ export default function ResourceItem({
             href={href}
             data-test={item.test}
             onClick={onPick}
-            aria-current={current ? 'page' : undefined}
+            aria-current={
+                current ? (item.kind === 'page' ? 'page' : 'true') : undefined
+            }
             className={cn(
                 'grid min-h-11 grid-cols-[40px_minmax(0,1fr)] items-center gap-3 rounded-xl px-2.5 py-2 hover:bg-accent',
                 current && 'bg-accent',

@@ -289,14 +289,19 @@ it('opens the tools from the header pill and takes «Ver las nueve herramientas�
         ->assertScript($landed);
 });
 
-it('takes the header section links to how it works, confidentiality and Humi', function (string $link, string $hash): void {
-    visitPage('landing', '/')
-        ->click($link)
-        ->assertScript('() => window.location.hash', $hash);
+it('takes the header section links to how it works, confidentiality and Humi', function (string $link, string $hash, bool $inResources): void {
+    $page = visitPage('landing', '/');
+
+    // Confidencialidad and Humi live inside the menu «Recursos»: it opens first.
+    if ($inResources) {
+        $page->click('@header-resources');
+    }
+
+    $page->click($link)->assertScript('() => window.location.hash', $hash);
 })->with([
-    'how it works' => ['@header-how', '#como-funciona'],
-    'confidentiality' => ['@header-privacy', '#confidencialidad'],
-    'Humi' => ['@header-humi', '#humi'],
+    'how it works' => ['@header-how', '#como-funciona', false],
+    'confidentiality' => ['@header-privacy', '#confidencialidad', true],
+    'Humi' => ['@header-humi', '#humi', true],
 ]);
 
 it('lists what an inspector would ask for, one line per tool', function (): void {
@@ -542,9 +547,10 @@ it('jumps at once when the visitor asks for reduced motion', function (): void {
 it('marks in the header the section being read, and none over the hero', function (): void {
     visitPage('landing', '/')
         ->assertScript('() => document.querySelectorAll("header nav [aria-current]").length', 0)
+        ->click('@header-resources')
         ->click('@header-humi')
-        // The mark follows the scroll a frame later: wait for it.
-        ->assertScript('() => new Promise((resolve) => { const marked = () => document.querySelector("[data-test=header-humi]").getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })')
+        // The mark follows the scroll a frame later: wait for it, with the menu open again to see the item marked.
+        ->assertScript('() => new Promise((resolve) => { document.querySelector("[data-test=header-resources]").click(); const marked = () => document.querySelector("[data-test=header-humi]")?.getAttribute("aria-current") === "true" ? resolve(true) : requestAnimationFrame(marked); marked(); })')
         ->assertAttributeMissing('@header-tools', 'aria-current');
 });
 
