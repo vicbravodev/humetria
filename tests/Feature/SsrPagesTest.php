@@ -68,13 +68,16 @@ it('does not render while the circuit breaker is open, and does again when it cl
 it('lists only public GET routes with a name, no parameters and no auth', function (): void {
     expect(SsrPages::ALLOWED)->not->toBeEmpty();
 
+    // The one parameter allowed is the slug of a blog article: public text in the address, never a credential.
+    $parameters = ['blog.show' => ['slug']];
+
     foreach (array_keys(SsrPages::ALLOWED) as $name) {
         expect(Route::has($name))->toBeTrue();
 
         $route = Route::getRoutes()->getRoutesByName()[$name];
 
         expect($route->methods())->toContain('GET')
-            ->and($route->parameterNames())->toBe([])
+            ->and($route->parameterNames())->toBe($parameters[$name] ?? [])
             ->and($route->gatherMiddleware())->not->toContain('auth');
     }
 });
@@ -138,6 +141,7 @@ it('sends to Node only the pages on the list, for a visitor: every GET route', f
         'organigrama' => 1,
         'clima-laboral' => 1,
         'guias/registro-de-jornada-2027' => 1,
+        'blog' => 1,
     ]);
 });
 
