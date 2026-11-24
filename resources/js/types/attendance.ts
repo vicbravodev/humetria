@@ -96,6 +96,8 @@ export type AttendanceOverviewProps = {
     filters: { q: string; status: OverviewView };
     counts: Record<OverviewView, number>;
     pendingCorrections: number;
+    /** Marks made without a connection that nobody reviewed and have flags or are over a week old. */
+    offlineNeedsReview: number;
     centersWithoutZones: number;
     setup: AttendanceSetup;
     /** The hours of everyone in scope, ordinary and overtime, in minutes. */

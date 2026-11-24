@@ -13,6 +13,8 @@ export type AttentionInput = {
     center: string;
     counts: AttendanceOverviewProps['counts'];
     pendingCorrections: number;
+    /** Marks made without a connection that nobody reviewed and have flags or are over a week old. */
+    offlineNeedsReview: number;
     centersWithoutZones: number;
     findings: AttendanceOverviewProps['setup']['findings'];
 };
@@ -74,6 +76,18 @@ export function attentionItems(
                   href: tab('disputed'),
               }
             : null,
+        input.offlineNeedsReview > 0
+            ? {
+                  key: 'offline',
+                  tone: 'alert',
+                  title: `${plural(input.offlineNeedsReview, 'marca', 'marcas')} sin conexión por verificar`,
+                  text: 'Tienen banderas o llevan más de 7 días. Cuentan en las horas mientras tanto.',
+                  action: 'Verificar marcas',
+                  href: corrections(tenantSlug, {
+                      query: { status: 'offline' },
+                  }).url,
+              }
+            : null,
         counts.at_risk > 0
             ? {
                   key: 'at_risk',
@@ -101,6 +115,13 @@ export function attentionItems(
 
     return [
         ...items.filter((item) => item !== null),
+        ...zoneItems(tenantSlug, input),
+    ];
+}
+
+/** What is missing in the centers' zones: the ones too small for the policy's precision, and the centers with none. */
+function zoneItems(tenantSlug: string, input: AttentionInput): AttentionItem[] {
+    return [
         ...input.findings.map((finding): AttentionItem => ({
             key: `zone-${finding.center.id}`,
             tone: 'warn',

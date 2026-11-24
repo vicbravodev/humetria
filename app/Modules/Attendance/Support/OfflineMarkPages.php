@@ -60,7 +60,18 @@ final readonly class OfflineMarkPages
      */
     public function counts(): array
     {
-        return ['offline' => $this->pending()->count(), 'not_accepted' => $this->rejected()->count()];
+        return ['offline' => self::pending()->count(), 'not_accepted' => $this->rejected()->count()];
+    }
+
+    /**
+     * The marks that ask for RH's attention (the count of «Necesita tu atención» and of Humi): of the ones to verify, those
+     * with flags or that arrived more than `attendance.offline.review_age_days` ago. One query; a number only.
+     */
+    public static function needsReviewCount(): int
+    {
+        return self::pending()->where(fn (Builder $query) => $query
+            ->whereRaw('jsonb_array_length(review_flags) > 0')
+            ->orWhere('received_at', '<', CarbonImmutable::now()->subDays(config()->integer('attendance.offline.review_age_days'))))->count();
     }
 
     /**
@@ -68,7 +79,7 @@ final readonly class OfflineMarkPages
      *
      * @return Builder<AttendanceOfflineMark>
      */
-    private function pending(): Builder
+    private static function pending(): Builder
     {
         return AttendanceOfflineMark::query()->where('outcome', 'accepted')->whereIn(
             'mark_id',
@@ -91,14 +102,14 @@ final readonly class OfflineMarkPages
      */
     private function toVerify(string $view, string $search, bool $unflaggedOnly, string $markId): array
     {
-        $page = $this->pending()
+        $page = self::pending()
             ->when($unflaggedOnly, fn (Builder $query) => $query->whereRaw('jsonb_array_length(review_flags) = 0'))
             ->when($search !== '', fn (Builder $query) => $query->whereIn('employee_id', $this->roster->matchingIds(new RosterQuery(search: $search))))
             ->with('mark')
             // Flagged first (false sorts before true), then the one that has waited longest.
             ->orderByRaw('jsonb_array_length(review_flags) = 0')->orderBy('received_at')->orderBy('id')
             ->paginate(self::PER_PAGE)->appends(['status' => $view, 'q' => $search, 'flags' => $unflaggedOnly ? 'none' : '']);
-        $asked = Str::isUuid($markId) ? $this->pending()->with('mark')->where('mark_id', $markId)->first() : null;
+        $asked = Str::isUuid($markId) ? self::pending()->with('mark')->where('mark_id', $markId)->first() : null;
         $selected = $asked ?? $page->items()[0] ?? null;
         $people = $this->roster->findMany(array_values(array_unique(array_map(fn (AttendanceOfflineMark $row): string => $row->employee_id, [...$page->items(), ...($selected === null ? [] : [$selected])]))));
         $row = fn (AttendanceOfflineMark $delivery): array => $this->row($delivery, $people[$delivery->employee_id]->name ?? '—', $people[$delivery->employee_id]->jobTitle ?? '');

@@ -41,6 +41,9 @@ return [
         'already_recorded_window_minutes' => 10,
         // Marks in one delivery.
         'delivery_batch_max' => 20,
+        // A mark made without a connection that arrived more than this many days ago and nobody reviewed asks for RH's attention
+        // (like one with flags): «Necesita tu atención» and Humi count it.
+        'review_age_days' => 7,
     ],
 
     /*

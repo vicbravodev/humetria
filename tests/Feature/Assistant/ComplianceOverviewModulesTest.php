@@ -409,9 +409,77 @@ it('sends to the setup while someone lacks a schedule, and puts attendance up to
     expect(overviewLine($this, 'attendance'))->toMatchArray([
         'state' => 'up_to_date',
         'stateLabel' => 'Al día',
-        'summary' => 'Tu política está revisada, todas las personas tienen horario y no hay correcciones ni objeciones por atender.',
+        'summary' => 'Tu política está revisada, todas las personas tienen horario y no hay correcciones ni objeciones por atender ni marcas sin conexión por verificar.',
         'link' => "/admin/{$this->a->slug}/attendance",
     ]);
+});
+
+describe('marks made without a connection', function (): void {
+    /** A company with its policy and one person with a schedule: only what the test adds is left to attend. */
+    function attendanceReady(object $test): Employee
+    {
+        App\Modules\Attendance\Models\AttendancePolicy::factory()->create(['tenant_id' => $test->a->id]);
+        $zafiro = Employee::factory()->create(['tenant_id' => $test->a->id, 'name' => 'Zafiro Luna']);
+        App\Modules\Attendance\Models\AttendanceSchedule::factory()->create(['tenant_id' => $test->a->id, 'employee_id' => $zafiro->id]);
+
+        return $zafiro;
+    }
+
+    it('counts the ones that need review and sends to them, never whose they are, their note nor their flags', function (): void {
+        $zafiro = attendanceReady($this);
+        $flag = [App\Modules\Attendance\Enums\ReviewFlag::NoPosition];
+        Tests\Support\OfflineDeliveries::accepted($zafiro, '2026-11-02 09:00', flags: $flag, justification: 'Cita médica Zafiro');
+        workIn($this->a);
+
+        $line = overviewLine($this, 'attendance');
+
+        expect($line)->toMatchArray([
+            'state' => 'pending',
+            'summary' => 'Hay 1 marca sin conexión por verificar con banderas o con más de 7 días.',
+            'link' => "/admin/{$this->a->slug}/attendance/corrections?status=offline",
+        ])->and(json_encode($line, JSON_THROW_ON_ERROR))->not->toContain('Zafiro')->not->toContain('Cita médica')->not->toContain('no_position');
+
+        Tests\Support\OfflineDeliveries::accepted($zafiro, '2026-11-03 09:00', receivedAt: CarbonImmutable::now()->subDays(9));
+
+        expect(overviewLine($this, 'attendance')['summary'])->toBe('Hay 2 marcas sin conexión por verificar con banderas o con más de 7 días.');
+    });
+
+    it('does not put attendance pending for a recent mark with no flags, a reviewed one, or another company\'s', function (): void {
+        $zafiro = attendanceReady($this);
+        Tests\Support\OfflineDeliveries::accepted($zafiro, '2026-11-02 09:00', receivedAt: CarbonImmutable::now()->subHour());
+        $reviewed = Tests\Support\OfflineDeliveries::accepted($zafiro, '2026-11-03 09:00', flags: [App\Modules\Attendance\Enums\ReviewFlag::WideInterval]);
+        Database\Factories\Attendance\MarkReviewFactory::new()->createOne(['tenant_id' => $this->a->id, 'mark_id' => $reviewed->mark_id]);
+        workIn($this->b);
+        Tests\Support\OfflineDeliveries::accepted(Employee::factory()->create(['tenant_id' => $this->b->id]), '2026-11-02 09:00', flags: [App\Modules\Attendance\Enums\ReviewFlag::NoPosition]);
+        workIn($this->a);
+
+        expect(overviewLine($this, 'attendance'))->toMatchArray(['state' => 'up_to_date', 'stateLabel' => 'Al día']);
+    });
+
+    it('puts the queue of corrections, then the disputed weeks, before the marks to review', function (): void {
+        $zafiro = attendanceReady($this);
+        Tests\Support\OfflineDeliveries::accepted($zafiro, '2026-11-02 09:00', flags: [App\Modules\Attendance\Enums\ReviewFlag::NoPosition]);
+        App\Modules\Attendance\Models\WeeklyConfirmation::factory()->disputed()->create(['tenant_id' => $this->a->id, 'employee_id' => $zafiro->id]);
+        workIn($this->a);
+
+        expect(overviewLine($this, 'attendance')['link'])->toBe("/admin/{$this->a->slug}/attendance?status=disputed");
+
+        App\Modules\Attendance\Models\CorrectionRequest::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $zafiro->id]);
+
+        expect(overviewLine($this, 'attendance'))->toMatchArray([
+            'link' => "/admin/{$this->a->slug}/attendance/corrections",
+            'summary' => 'Hay 1 solicitud de corrección por atender. Hay 1 semana objetada por resolver. Hay 1 marca sin conexión por verificar con banderas o con más de 7 días.',
+        ]);
+    });
+
+    it('sends to the marks before the setup when both are missing', function (): void {
+        App\Modules\Attendance\Models\AttendancePolicy::factory()->create(['tenant_id' => $this->a->id]);
+        $person = Employee::factory()->create(['tenant_id' => $this->a->id]);
+        Tests\Support\OfflineDeliveries::accepted($person, '2026-11-02 09:00', flags: [App\Modules\Attendance\Enums\ReviewFlag::NoPosition]);
+        workIn($this->a);
+
+        expect(overviewLine($this, 'attendance')['link'])->toBe("/admin/{$this->a->slug}/attendance/corrections?status=offline");
+    });
 });
 
 it('does not tell attendance to a company without it, and offers the overview to a company with only attendance', function (): void {

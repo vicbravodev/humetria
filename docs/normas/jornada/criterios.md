@@ -234,6 +234,9 @@ alteraciones, y explicar quién puede modificar y qué controles lo impiden.
 *Revisión de una marca sin conexión* · Humetría · la revisión es un registro nuevo enlazado a la marca, de solo inserción; la
 vigente es la última. «Correcta» solo agrega esa revisión y no cambia la hora. «Incorrecta» siempre va con su corrección
 (anular la marca o una marca nueva a la hora que escribe Recursos Humanos), en una sola operación.
+Mientras no se revisa, la marca cuenta. Recursos Humanos se entera de las que tienen banderas o llevan más de 7 días sin
+verificar (`attendance.offline.review_age_days`) en «Necesita tu atención» del panel y por Humi, que solo da el conteo;
+no hay correo.
 
 ## 6. Reporte para la autoridad
 

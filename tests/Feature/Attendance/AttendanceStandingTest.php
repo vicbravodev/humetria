@@ -66,3 +66,20 @@ it('counts the weeks disputed and waiting for RH, of anyone and any week, never 
 
     expect($this->standing->current()->disputedWeeks)->toBe(2);
 });
+
+it('counts the marks made without a connection that need RH, with flags or from over 7 days ago, never of another company', function (): void {
+    Tests\Support\OfflineDeliveries::accepted(offlinePerson($this->a), '2026-11-02 09:00', flags: [App\Modules\Attendance\Enums\ReviewFlag::NoPosition]);
+    Tests\Support\OfflineDeliveries::accepted(offlinePerson($this->a), '2026-11-02 09:01', receivedAt: Carbon\CarbonImmutable::now()->subDays(8));
+    Tests\Support\OfflineDeliveries::accepted(offlinePerson($this->a), '2026-11-02 09:02', receivedAt: Carbon\CarbonImmutable::now()->subDays(6));
+    Tests\Support\OfflineDeliveries::accepted(offlinePerson($this->b), '2026-11-02 09:00', flags: [App\Modules\Attendance\Enums\ReviewFlag::NoPosition]);
+    workIn($this->a);
+
+    expect($this->standing->current()->offlineNeedsReview)->toBe(2);
+});
+
+function offlinePerson(Tenant $tenant): Employee
+{
+    workIn($tenant);
+
+    return Employee::factory()->create(['tenant_id' => $tenant->id, 'work_center_id' => WorkCenter::factory()->for($tenant)->create()->id]);
+}

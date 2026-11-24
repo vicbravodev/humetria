@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Actions\ResolveDispute;
 use App\Modules\Attendance\Enums\MarkType;
+use App\Modules\Attendance\Enums\ReviewFlag;
 use App\Modules\Attendance\Http\Controllers\AttendanceController;
 use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceMark;
@@ -19,13 +20,15 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia;
+use Tests\Support\OfflineDeliveries;
 
 mutates(AttendanceController::class, AttendancePages::class, PanelScope::class);
 
-/** The queries of the overview, whatever the number of people, centers or marks (35: the page's schedules, for «Sin horario», the road to the first mark, and one for the absences of the page's people; one more: the zone of its week). */
-const OVERVIEW_QUERIES = 38;
+/** The queries of the overview, whatever the number of people, centers or marks (35: the page's schedules, for «Sin horario», the road to the first mark, and one for the absences of the page's people; one more: the zone of its week; one more: the marks made without a connection that need RH). */
+const OVERVIEW_QUERIES = 39;
 
 beforeEach(function (): void {
     // Wednesday 11 November 2026, 12:00 in Mexico City: the last week that ended is 2 to 8 November.
@@ -204,6 +207,32 @@ describe('the summary', function (): void {
             ->where('counts.all', 4));
     });
 
+    it('counts the marks made without a connection that need RH: with flags, or that arrived more than 7 days ago; never a reviewed one nor another company\'s', function (): void {
+        $arrived = fn (string $ago): CarbonImmutable => CarbonImmutable::now()->sub($ago);
+        // Flagged and just arrived; with no flags, 8 days and 7 days and a minute ago: all three count.
+        OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00', flags: [ReviewFlag::NoPosition], receivedAt: $arrived('1 hour'));
+        OfflineDeliveries::accepted($this->ana, '2026-11-02 09:01', receivedAt: $arrived('8 days'));
+        OfflineDeliveries::accepted($this->bob, '2026-11-02 09:02', receivedAt: $arrived('7 days 1 minute'));
+        // No flags, 6 days and exactly 7 days ago: not yet.
+        OfflineDeliveries::accepted($this->bob, '2026-11-02 09:03', receivedAt: $arrived('6 days'));
+        OfflineDeliveries::accepted($this->carla, '2026-11-02 09:04', receivedAt: $arrived('7 days'));
+        // Flagged but already reviewed; a delivery that was not accepted.
+        $reviewed = OfflineDeliveries::accepted($this->carla, '2026-11-02 09:05', flags: [ReviewFlag::WideInterval], receivedAt: $arrived('9 days'));
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $reviewed->mark_id]);
+        OfflineDeliveries::rejected($this->dan, '2026-11-02 09:06', App\Modules\Attendance\Enums\OfflineRejection::TicketExpired, $arrived('9 days'));
+        // Another company's, old and flagged.
+        $globex = Tenant::factory()->create();
+        workIn($globex);
+        OfflineDeliveries::accepted(EmployeeFactory::new()->create(['tenant_id' => $globex->id, 'work_center_id' => WorkCenter::factory()->for($globex)->create()->id]), '2026-11-02 09:00', flags: [ReviewFlag::NoPosition], receivedAt: $arrived('9 days'));
+        workIn($this->tenant);
+        $this->actingAs($this->hr);
+
+        $response = $this->get(overviewUrl())->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('offlineNeedsReview', 3));
+
+        // Only a number: nobody's name, no time, no flag.
+        expect((string) $response->getContent())->not->toContain('no_position');
+    });
+
     it('pages the people 25 at a time', function (): void {
         EmployeeFactory::new()->count(22)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
         $this->actingAs($this->hr);
@@ -320,6 +349,7 @@ it('shows an empty company with nothing to count', function (): void {
     $this->get(route('tenant.attendance.index', 'nueva'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
         ->where('counts', ['all' => 0, 'pending' => 0, 'disputed' => 0, 'confirmed' => 0, 'at_risk' => 0])
         ->where('pendingCorrections', 0)
+        ->where('offlineNeedsReview', 0)
         ->where('centersWithoutZones', 0)
         ->where('people.total', 0)
         ->where('centers.total', 0));

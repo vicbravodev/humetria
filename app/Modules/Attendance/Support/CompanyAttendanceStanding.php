@@ -17,7 +17,7 @@ use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use Carbon\CarbonImmutable;
 
-/** The counts of «Puesta en marcha» (who has no schedule in effect today), of the queue of corrections and of the disputed weeks, in six queries whatever the size of the company. */
+/** The counts of «Puesta en marcha» (who has no schedule in effect today), of the queue of corrections, of the disputed weeks and of the marks made without a connection that need review, in seven queries whatever the size of the company. */
 final readonly class CompanyAttendanceStanding implements AttendanceStanding
 {
     public function __construct(private WorkCenters $workCenters, private Roster $roster, private Timezones $timezones) {}
@@ -31,6 +31,7 @@ final readonly class CompanyAttendanceStanding implements AttendanceStanding
             count($people) - ($people === [] ? 0 : AttendanceSchedule::query()->among('employee_id', $people)->startedBy(CarbonImmutable::now($this->timezones->forTenant())->toDateString())->distinct()->count('employee_id')),
             CorrectionRequest::query()->where('status', CorrectionStatus::Pending)->count(),
             WeeklyConfirmation::query()->where('status', WeekStatus::Disputed)->count(),
+            OfflineMarkPages::needsReviewCount(),
         );
     }
 }
