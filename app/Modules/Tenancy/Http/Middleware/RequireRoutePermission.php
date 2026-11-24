@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Every company route asks for its permission (RoutePermissions): the person's role in the company plus their own
- * permissions. Without it, 403 (404 where the page must not be known to exist); the few exempt routes ask for none. Runs after ResolveTenant, which has set the company as the team of Spatie's roles.
+ * permissions. Without it, 403 (404 where the page must not be known to exist); the few exempt routes ask for none. Runs after ResolveTenant, which has set the company as the team of Spatie's roles, and after the union and module limits, so a page the company does not have answers their 404 to anyone.
  */
 final class RequireRoutePermission
 {

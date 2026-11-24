@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 // A reserved word can never be a company, so it never matches: /admin/register stays a plain 404 for guests too.
 $notReserved = '(?!(?:'.implode('|', array_map(preg_quote(...), TenantRules::RESERVED_SLUGS)).')$)[^/]+';
 
-Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnforced::class, BlockSuspendedTenant::class, RequireRoutePermission::class, LimitUnionToCompensation::class, LimitToEnabledModules::class])->group(function () use ($notReserved): void {
+Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnforced::class, BlockSuspendedTenant::class, LimitUnionToCompensation::class, LimitToEnabledModules::class, RequireRoutePermission::class])->group(function () use ($notReserved): void {
     Route::get('admin/{tenant:slug}', TenantDashboardController::class)->where('tenant', $notReserved)->name('tenant.dashboard');
     // Where a person who may open nothing in the company lands, with whom to ask (StartRoute); it asks for no permission.
     Route::get('admin/{tenant:slug}/no-access', NoAccessController::class)->where('tenant', $notReserved)->name('tenant.no-access');
