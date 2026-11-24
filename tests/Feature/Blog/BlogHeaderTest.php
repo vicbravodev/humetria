@@ -17,13 +17,21 @@ it('has the same links as the landing header, plain and in the same order', func
     expect($html)->toContain('aria-label="Principal"');
 
     $previous = -1;
-    foreach (PublicNav::links() as $link) {
-        $href = $link['kind'] === 'page' ? $link['path'] : '/#'.$link['id'];
-        $position = strpos((string) $html, 'data-test="'.$link['test'].'" href="'.$href.'"');
+    foreach (PublicNav::flat() as $link) {
+        $position = strpos((string) $html, 'data-test="'.$link['test'].'" href="'.PublicNav::href($link).'"');
 
         expect($position)->not->toBeFalse()->and($position)->toBeGreaterThan($previous);
         $previous = (int) $position;
     }
+});
+
+it('keeps Blog and Roadmap inside the group Recursos, which is in the page for a crawler even when closed', function (): void {
+    blogFolder();
+
+    $html = (string) $this->get(route('blog.index'))->getContent();
+    $group = substr($html, (int) strpos($html, 'data-test="header-resources"'));
+
+    expect($group)->toContain('data-test="header-blog" href="/blog"')->toContain('data-test="header-roadmap" href="/roadmap"');
 });
 
 it('keeps the footer links to the blog and the roadmap that hand weight to them', function (): void {
@@ -43,4 +51,17 @@ it('opens the demo from the landing, since the blog has no demo form', function 
     blogFolder();
 
     $this->get(route('blog.index'))->assertSee('data-test="header-demo" href="/#agenda-una-demo"', false);
+});
+
+it('opens a menu of the nine tools by family, as the landing does, with plain links to each page', function (): void {
+    blogFolder();
+
+    $html = (string) $this->get(route('blog.index'))->getContent();
+
+    foreach (PublicNav::tools() as $tool) {
+        expect($html)->toContain('href="'.route($tool['route'], absolute: false).'"')->toContain($tool['name']);
+    }
+
+    expect($html)->toContain('family-compliance')->toContain('family-listening')->toContain('family-operations')
+        ->toContain('Cumple la norma')->toContain('Escucha a tu gente')->toContain('Personas y sueldos');
 });

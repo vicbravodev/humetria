@@ -2,7 +2,6 @@ import { Link } from '@inertiajs/react';
 import Logo from '@/components/humetria/logo';
 import HeaderNav from '@/components/landing/header-nav';
 import { WRAP } from '@/components/landing/landing-layout';
-import LandingThemeMenu from '@/components/landing/landing-theme-menu';
 import ToolsMenu from '@/components/landing/tools-menu';
 import { Button } from '@/components/ui/button';
 import { useScrolled } from '@/hooks/use-scrolled';
@@ -65,10 +64,6 @@ export default function LandingHeader({
                 )}
                 <HeaderNav sectionBase={sectionBase} />
                 <div className="flex items-center gap-1 justify-self-end">
-                    {/* On a phone the theme lives in the footer: the header only fits the logo and the two ways in. */}
-                    <span className="hidden sm:block">
-                        <LandingThemeMenu />
-                    </span>
                     <Button
                         asChild
                         variant="ghost"

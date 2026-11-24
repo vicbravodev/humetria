@@ -13,7 +13,9 @@ import { home } from '@/routes';
 import { workday2027 } from '@/routes/guides';
 
 // Blog and Roadmap are in the header's pill from 1,024 px up; below it the menu button is all the header has room for.
-const PAGES = publicNav.filter((link) => link.kind === 'page');
+const PAGES = publicNav.links
+    .flatMap((link) => link.items ?? [])
+    .filter((link) => link.kind === 'page');
 
 type Props = {
     /** Under the header word (`true`) or over the page on a phone. */

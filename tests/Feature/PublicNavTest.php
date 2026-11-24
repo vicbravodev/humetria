@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 use App\Http\PublicNav;
 
-it('lists the sections of the landing and the two pages that were only in the footer', function (): void {
+it('keeps the bar to four things: three links and a Recursos group that holds the rest', function (): void {
     $links = collect(PublicNav::links());
 
-    expect($links->pluck('id')->all())->toBe(['como-funciona', 'herramientas', 'confidencialidad', 'humi', 'precios', 'blog', 'roadmap'])
-        ->and($links->firstWhere('id', 'blog'))->toMatchArray(['kind' => 'page', 'path' => '/blog', 'label' => 'Blog'])
-        ->and($links->firstWhere('id', 'roadmap'))->toMatchArray(['kind' => 'page', 'path' => '/roadmap', 'label' => 'Roadmap'])
-        ->and($links->firstWhere('id', 'precios'))->toMatchArray(['kind' => 'section', 'section' => 'seccion-precios']);
+    expect($links->pluck('id')->all())->toBe(['herramientas', 'como-funciona', 'precios', 'recursos'])
+        ->and($links->firstWhere('id', 'recursos')['kind'])->toBe('group')
+        ->and(collect($links->firstWhere('id', 'recursos')['items'])->pluck('id')->all())
+        ->toBe(['blog', 'roadmap', 'guia-jornada', 'confidencialidad', 'humi']);
 });
 
-it('points every page link at a real route, so the header cannot link to a page that moved', function (): void {
-    foreach (collect(PublicNav::links())->where('kind', 'page') as $link) {
-        expect(route($link['route'], absolute: false))->toBe($link['path']);
+it('lists the pages that were only in the footer, as plain links to their real routes', function (): void {
+    $pages = collect(PublicNav::flat())->where('kind', 'page');
+
+    expect($pages->pluck('path', 'id')->all())->toBe(['blog' => '/blog', 'roadmap' => '/roadmap', 'guia-jornada' => '/guias/registro-de-jornada-2027']);
+
+    foreach ($pages as $page) {
+        expect(route($page['route'], absolute: false))->toBe($page['path']);
     }
+});
+
+it('flattens the group for the phone menu, in the order of the bar', function (): void {
+    expect(collect(PublicNav::flat())->pluck('id')->all())
+        ->toBe(['herramientas', 'como-funciona', 'precios', 'blog', 'roadmap', 'guia-jornada', 'confidencialidad', 'humi']);
 });

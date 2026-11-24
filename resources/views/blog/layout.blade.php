@@ -59,10 +59,15 @@
                     <a href="{{ route('roadmap') }}" data-test="footer-roadmap" class="inline-flex min-h-11 items-center hover:text-foreground">Roadmap</a>
                     <a href="{{ route('privacy-notice') }}" class="inline-flex min-h-11 items-center hover:text-foreground">{{ __('blog.privacy') }}</a>
                     <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center hover:text-foreground">{{ __('blog.login') }}</a>
+                    <button type="button" data-theme-toggle class="inline-flex min-h-11 items-center hover:text-foreground">{{ __('blog.theme') }}</button>
                 </nav>
             </div>
         </footer>
         <script nonce="{{ Vite::cspNonce() }}">
+            // The group Recursos is a native <details>: it also closes with Escape or a click outside, as the React one does.
+            const closeMenus = (except) => document.querySelectorAll('details[data-menu][open]').forEach((menu) => { if (menu !== except) menu.removeAttribute('open'); });
+            document.addEventListener('click', (event) => closeMenus(event.target.closest('details[data-menu]')));
+            document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenus(null); });
             // The theme button: flips light and dark and remembers it in the same cookie the app reads.
             document.querySelectorAll('[data-theme-toggle]').forEach((button) => button.addEventListener('click', () => {
                 const dark = document.documentElement.classList.toggle('dark');

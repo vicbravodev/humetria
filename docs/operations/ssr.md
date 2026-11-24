@@ -31,6 +31,10 @@ Solo se renderiza en Node lo que dice `App\Http\SsrPages` (`/` y `/privacy-notic
 Si Node no responde, la página sale igual: `web` responde 200 con las etiquetas del `<head>` y React la pinta en el navegador.
 `web` no depende de `ssr`: nunca se cae por él.
 
+El blog y el roadmap no pasan por Node: el blog es Blade y el roadmap es una página de Inertia sin SSR. Su header es el de la
+landing (`resources/js/lib/public-nav.json`, leído por React y por `partials/public-header.blade.php`), con Blog y Roadmap como
+enlaces `<a href>` planos.
+
 ## 2. Variables
 
 Se ponen en la pestaña Environment del servicio de Dokploy. La plantilla es `.env.production.example`; la lista completa, `.env.example`.

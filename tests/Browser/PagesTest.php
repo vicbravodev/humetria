@@ -41,6 +41,7 @@ it('renders the public roadmap', function (bool $dark, bool $mobile): void {
 it('wears the header of the landing on the roadmap, with the way back to its sections and the demo', function (): void {
     visitPage('roadmap', '/roadmap')
         ->assertAttribute('[data-test="header-how"]', 'href', '/#como-funciona')
+        ->click('@header-resources')
         ->assertAttribute('[data-test="header-blog"]', 'href', '/blog')
         ->assertAttribute('[data-test="header-roadmap"]', 'aria-current', 'page')
         ->assertAttribute('[data-test="header-demo"]', 'href', '/#agenda-una-demo');

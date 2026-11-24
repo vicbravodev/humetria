@@ -431,11 +431,16 @@ it('opens the tools on a phone from the menu button of the header', function ():
         ->assertMissing('#tools-menu');
 });
 
-it('puts the blog and the roadmap in the header as plain links, beside the tools', function (): void {
+it('keeps the bar to four things and puts the blog and the roadmap in Recursos, as plain links', function (): void {
     visitPage('landing', '/')
+        ->assertScript("() => document.querySelectorAll('header nav[aria-label=\"Secciones\"] > ul > li').length", 4)
+        ->click('@header-resources')
         ->assertAttribute('[data-test="header-blog"]', 'href', '/blog')
         ->assertAttribute('[data-test="header-roadmap"]', 'href', '/roadmap')
-        ->assertScript("() => document.querySelector('[data-test=\"header-blog\"]')?.tagName === 'A' && document.querySelector('[data-test=\"header-roadmap\"]')?.tagName === 'A'");
+        ->assertAttribute('[data-test="header-guide"]', 'href', '/guias/registro-de-jornada-2027')
+        ->assertScript("() => document.querySelector('[data-test=\"header-blog\"]')?.tagName === 'A'")
+        ->keys('@header-resources', 'Escape')
+        ->assertMissing('#resources-menu');
 });
 
 it('reaches the blog and the roadmap from the phone menu, with room to tap them', function (): void {
