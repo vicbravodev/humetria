@@ -57,6 +57,7 @@ return [
         'Ley Silla' => 'docs/normas/ley-silla/criterios.md',
         'Jornada' => 'docs/normas/jornada/criterios.md',
         'Compensación' => 'docs/normas/compensation/criterios.md',
+        'Roles y permisos' => 'docs/normas/permisos/criterios.md',
     ],
 
 ];
