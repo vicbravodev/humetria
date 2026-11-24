@@ -31,7 +31,8 @@ final class ModuleRoutes
     }
 
     /**
-     * What every company has whatever its modules: the panel, its people, their access and centers, and Humi.
+     * What every company has whatever its modules: the panel, its people, their access and centers, Humi, and the page for
+     * whoever may open nothing yet.
      *
      * @return list<string>
      */
@@ -45,6 +46,7 @@ final class ModuleRoutes
             'tenant.first-steps.*',
             'tenant.job-grades.*',
             'tenant.members.*',
+            'tenant.no-access',
             'tenant.plan',
             'tenant.privacy.*',
             'tenant.work-centers.*',

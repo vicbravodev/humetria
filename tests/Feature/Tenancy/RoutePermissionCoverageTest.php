@@ -21,7 +21,8 @@ mutates(RoutePermissions::class, RequireRoutePermission::class);
 /**
  * Every page of a company asks for a permission: a role of the company's own with few permissions must not open a page that
  * nobody protected. The account pages (settings.*, logout) and the company switcher live outside the company group, so they
- * have no tenant.* name and need no permission; inside the group there is no exception.
+ * have no tenant.* name and need no permission; inside the group the only exception is the page that says the person has
+ * no access yet (RoutePermissions::EXEMPT), where a person with no permission at all lands.
  *
  * @return list<LaravelRoute>
  */
@@ -51,12 +52,28 @@ it('gives every company route a permission of the catalog', function (): void {
     foreach (companyGroupRoutes() as $route) {
         $permission = RoutePermissions::for((string) $route->getName());
 
+        if (RoutePermissions::isExempt((string) $route->getName())) {
+            continue;
+        }
+
         if ($permission === null || PermissionCatalog::find($permission) === null) {
             $missing[] = $route->getName().' => '.($permission ?? 'null');
         }
     }
 
     expect($missing)->toBe([]);
+});
+
+it('exempts only the page without access, and asks no permission for it', function (): void {
+    $exempt = array_values(array_filter(
+        array_map(fn (LaravelRoute $route): string => (string) $route->getName(), companyGroupRoutes()),
+        RoutePermissions::isExempt(...),
+    ));
+
+    expect($exempt)->toBe(['tenant.no-access'])
+        ->and(RoutePermissions::for('tenant.no-access'))->toBeNull()
+        ->and(RoutePermissions::isExempt('tenant.no-access.other'))->toBeFalse()
+        ->and(RoutePermissions::isExempt('tenant.made-up.page'))->toBeFalse();
 });
 
 it('answers null for a name it does not know, so the middleware closes it', function (): void {
@@ -117,7 +134,7 @@ it('opens to a role with only handle-complaints the complaint cases and closes e
         'tenant.complaints.cases.hold', 'tenant.complaints.cases.messages.store', 'tenant.complaints.cases.notes.store',
         'tenant.complaints.cases.recuse', 'tenant.complaints.cases.reopen', 'tenant.complaints.cases.review',
         'tenant.complaints.cases.share', 'tenant.complaints.cases.show', 'tenant.complaints.centers.options',
-        'tenant.complaints.index', 'tenant.complaints.procedure',
+        'tenant.complaints.index', 'tenant.complaints.procedure', 'tenant.no-access',
     ]);
 });
 

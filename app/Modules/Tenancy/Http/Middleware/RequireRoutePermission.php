@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Every company route asks for its permission (RoutePermissions): the person's role in the company plus their own
- * permissions. Without it, 403 (404 where the page must not be known to exist). Runs after ResolveTenant, which has set the company as the team of Spatie's roles.
+ * permissions. Without it, 403 (404 where the page must not be known to exist); the few exempt routes ask for none. Runs after ResolveTenant, which has set the company as the team of Spatie's roles.
  */
 final class RequireRoutePermission
 {
@@ -21,6 +21,11 @@ final class RequireRoutePermission
     public function handle(Request $request, Closure $next): Response
     {
         $name = $request->route()?->getName() ?? '';
+
+        if (RoutePermissions::isExempt($name)) {
+            return $next($request);
+        }
+
         $permission = RoutePermissions::for($name);
 
         // A company route missing from the map is closed to everyone: never open by default (RoutePermissionCoverageTest).

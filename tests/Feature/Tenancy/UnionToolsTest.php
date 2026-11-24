@@ -28,6 +28,8 @@ const UNION_ALLOWED_ROUTES = [
     'tenant.plan',
     'tenant.job-grades.*',
     'tenant.compensation.*',
+    // Where a member with nothing to open lands, a union's as well.
+    'tenant.no-access',
 ];
 
 /** The URL of `$route` inside `$tenant`, with the ids of another account's campaign in every other parameter. */

@@ -40,9 +40,10 @@ final readonly class DashboardPage
     ) {}
 
     /**
+     * @param  list<string>  $norms  the standards the person may see (nom035, nom037, seating): the others are left out.
      * @return array<string, mixed>
      */
-    public function props(string $tenantSlug, int $userId, bool $seesScreenings, bool $reviewsNotices, bool $handlesComplaints, bool $managesVacations = false): array
+    public function props(string $tenantSlug, int $userId, array $norms, bool $seesScreenings, bool $reviewsNotices, bool $handlesComplaints, bool $managesVacations = false): array
     {
         $page = WorkCenter::query()->whereNull('archived_at')->orderBy('name')->orderBy('id')
             ->paginate(self::CENTERS_PER_PAGE, ['id', 'name'], 'centers')->withQueryString();
@@ -54,11 +55,12 @@ final readonly class DashboardPage
         $launched = array_filter($current, fn (CampaignRecord $campaign): bool => $campaign->launchedOn !== null);
         $evaluations = array_values(array_unique(array_map(fn (CampaignRecord $campaign): string => $campaign->id, [...array_values($latest), ...$launched])));
         $toChannel = $seesScreenings && $evaluations !== [] ? $this->nom035->toChannel($evaluations) : [];
-        $routes = $ids === [] ? ['nom035' => [], 'nom037' => [], 'seating' => []] : [
-            'nom035' => $this->nom035->progress($ids, $current, $latest, $toChannel),
-            'nom037' => $this->telework->progress($ids),
-            'seating' => $this->seating->progress($ids),
-        ];
+        $sees = array_fill_keys($norms, true);
+        $routes = array_intersect_key($ids === [] ? ['nom035' => [], 'nom037' => [], 'seating' => []] : [
+            'nom035' => isset($sees['nom035']) ? $this->nom035->progress($ids, $current, $latest, $toChannel) : [],
+            'nom037' => isset($sees['nom037']) ? $this->telework->progress($ids) : [],
+            'seating' => isset($sees['seating']) ? $this->seating->progress($ids) : [],
+        ], $sees);
         $urgencies = [
             ...($reviewsNotices ? array_map(fn (UnreviewedAccidents $accidents): array => $this->urgencies->accident($accidents, $names, $tenantSlug), $this->telework->accidents()) : []),
             ...$this->urgencies->screenings($toChannel, [...array_values($latest), ...$launched], $names, $tenantSlug),
@@ -70,18 +72,17 @@ final readonly class DashboardPage
             'today' => ucfirst($this->today()->isoFormat('dddd D [de] MMMM')),
             // Every route hangs from a work center: until there is one, the panel points there first.
             'hasWorkCenters' => $page->total() > 0,
+            'norms' => array_keys($routes),
             'summary' => [
-                'norms' => ($ids === [] ? 0 : 1) + (self::anyApplies($routes['nom037']) ? 1 : 0) + (self::anyApplies($routes['seating']) ? 1 : 0),
+                'norms' => ($ids === [] || ! isset($routes['nom035']) ? 0 : 1) + (self::anyApplies($routes['nom037'] ?? []) ? 1 : 0) + (self::anyApplies($routes['seating'] ?? []) ? 1 : 0),
                 'centers' => $page->total(),
             ],
             'urgencies' => array_slice($urgencies, 0, self::URGENCIES),
-            'week' => $this->week($current, $names),
+            'week' => isset($routes['nom035']) ? $this->week($current, $names) : [],
             'centers' => $page->through(fn (WorkCenter $center): array => [
                 'id' => $center->id,
                 'name' => $center->name,
-                'nom035' => self::route($routes['nom035'][$center->id]),
-                'nom037' => self::route($routes['nom037'][$center->id]),
-                'seating' => self::route($routes['seating'][$center->id]),
+                ...array_map(fn (array $progress): array => self::route($progress[$center->id]), $routes),
             ]),
         ];
     }

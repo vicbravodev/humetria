@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Sso\Http\Middleware\RequireSsoWhenEnforced;
 use App\Modules\Tenancy\Http\Controllers\GroupMinimumController;
 use App\Modules\Tenancy\Http\Controllers\MemberController;
+use App\Modules\Tenancy\Http\Controllers\NoAccessController;
 use App\Modules\Tenancy\Http\Controllers\Nom035DossierController;
 use App\Modules\Tenancy\Http\Controllers\OnboardingController;
 use App\Modules\Tenancy\Http\Controllers\PlanController;
@@ -27,6 +28,8 @@ $notReserved = '(?!(?:'.implode('|', array_map(preg_quote(...), TenantRules::RES
 
 Route::middleware(['auth', 'verified', ResolveTenant::class, RequireSsoWhenEnforced::class, BlockSuspendedTenant::class, RequireRoutePermission::class, LimitUnionToCompensation::class, LimitToEnabledModules::class])->group(function () use ($notReserved): void {
     Route::get('admin/{tenant:slug}', TenantDashboardController::class)->where('tenant', $notReserved)->name('tenant.dashboard');
+    // Where a person who may open nothing in the company lands, with whom to ask (StartRoute); it asks for no permission.
+    Route::get('admin/{tenant:slug}/no-access', NoAccessController::class)->where('tenant', $notReserved)->name('tenant.no-access');
 
     Route::get('admin/{tenant:slug}/work-centers/options', WorkCenterOptionsController::class)->where('tenant', $notReserved)->name('tenant.work-centers.options');
     Route::get('admin/{tenant:slug}/work-centers', [WorkCenterController::class, 'index'])->where('tenant', $notReserved)->name('tenant.work-centers.index');

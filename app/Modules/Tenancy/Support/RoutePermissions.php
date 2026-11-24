@@ -13,8 +13,8 @@ use Illuminate\Support\Str;
  * and manage-* to change. A module's catch-all is its manage-* permission, so a route added without thinking asks for
  * the most. RoutePermissionCoverageTest fails with any company route that gets no permission of the catalog.
  *
- * Nothing inside the company group is exempt: the account pages (settings.*, logout) and the company switcher live
- * outside it.
+ * The account pages (settings.*, logout) and the company switcher live outside the company group; inside it, only the
+ * routes of EXEMPT ask for no permission, each for its reason.
  */
 final class RoutePermissions
 {
@@ -210,6 +210,18 @@ final class RoutePermissions
         'tenant.telework.workplaces.remote-check.store',
         'tenant.telework.workplaces.visit.store',
     ];
+
+    /** Company routes that ask for no permission, each with its reason; RoutePermissionCoverageTest pins the list. */
+    private const array EXEMPT = [
+        // Where a person who may open nothing lands (StartRoute): asking for a permission would leave them nowhere to go.
+        'tenant.no-access',
+    ];
+
+    /** Whether the route is a company route that asks for no permission. */
+    public static function isExempt(string $routeName): bool
+    {
+        return in_array($routeName, self::EXEMPT, true);
+    }
 
     /** What the route answers to whoever lacks its permission. */
     public static function refusalStatus(string $routeName): int

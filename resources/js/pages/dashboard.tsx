@@ -18,6 +18,8 @@ type Props = {
     /** "Viernes 30 de octubre", in Mexico City. */
     today: string;
     hasWorkCenters: boolean;
+    /** The standards the person may see, of those the company has. */
+    norms: string[];
     summary: DashboardSummary;
     urgencies: Urgency[];
     week: WeekItem[];
@@ -44,11 +46,15 @@ export default function Dashboard(props: Props) {
                     <div className="grid items-start gap-8 min-[1240px]:grid-cols-[minmax(0,1fr)_340px]">
                         <div className="flex min-w-0 flex-col gap-9">
                             <DashboardUrgencies items={props.urgencies} />
-                            <DashboardRoutes centers={props.centers} />
+                            <DashboardRoutes
+                                centers={props.centers}
+                                norms={props.norms}
+                            />
                         </div>
                         <aside className="flex flex-col gap-4">
                             <DashboardNextStep
                                 centers={props.centers.data}
+                                norms={props.norms}
                                 setsUp={
                                     tenant?.can.manage_telework === true &&
                                     tenant.can.manage_seating

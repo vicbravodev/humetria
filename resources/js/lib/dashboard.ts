@@ -88,11 +88,13 @@ export function normsInUse(
         ? []
         : normsOf(modules).map((norm) => ({
               norm,
-              rows: centers.map((center) => ({
-                  id: center.id,
-                  name: center.name,
-                  route: center[norm.key],
-              })),
+              rows: centers.flatMap((center) => {
+                  const route = center[norm.key];
+
+                  return route === undefined
+                      ? []
+                      : [{ id: center.id, name: center.name, route }];
+              }),
           }));
 }
 
@@ -102,7 +104,7 @@ export function unansweredCenters(
     modules?: string[],
 ): number {
     return centers.filter((center) =>
-        normsOf(modules).some((norm) => !center[norm.key].answered),
+        normsOf(modules).some((norm) => center[norm.key]?.answered === false),
     ).length;
 }
 
@@ -129,7 +131,7 @@ export function nextStep(
     for (const norm of normsOf(modules)) {
         const stages = centers
             .map((center) => center[norm.key])
-            .filter((route) => route.applies)
+            .filter((route): route is RouteProgress => route?.applies === true)
             .map((route) => route.done.indexOf(false))
             .filter((index) => index !== -1);
         const earliest = Math.min(...stages);

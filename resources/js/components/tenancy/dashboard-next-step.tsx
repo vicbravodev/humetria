@@ -11,13 +11,13 @@ import type { CenterRoutes } from '@/types';
  */
 export default function DashboardNextStep(props: {
     centers: CenterRoutes[];
+    norms: string[];
     setsUp: boolean;
 }) {
-    const { firstSteps, tenant } = usePage().props;
-    const modules = tenant?.modules;
-    const step = nextStep(props.centers, modules);
+    const { firstSteps } = usePage().props;
+    const step = nextStep(props.centers, props.norms);
     const questions =
-        props.setsUp && unansweredCenters(props.centers, modules) > 0;
+        props.setsUp && unansweredCenters(props.centers, props.norms) > 0;
     const evaluation = firstSteps?.steps.find(
         (each) => each.key === 'evaluation',
     );

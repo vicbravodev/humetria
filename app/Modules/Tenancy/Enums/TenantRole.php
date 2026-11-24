@@ -39,14 +39,4 @@ enum TenantRole: string
             self::Complaints => "Te invitaron a atender el canal de quejas de {$tradeName}",
         };
     }
-
-    /** Where a person of the role starts: the panel, or the tool a restricted role is limited to. */
-    public function startRoute(): string
-    {
-        return match ($this) {
-            self::Committee => 'tenant.telework.index',
-            self::Complaints => 'tenant.complaints.index',
-            self::Owner, self::Hr, self::Viewer => 'tenant.dashboard',
-        };
-    }
 }

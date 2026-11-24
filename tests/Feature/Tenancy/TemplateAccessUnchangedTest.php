@@ -123,7 +123,9 @@ it('keeps the Comisión and the handlers of complaints inside the tools they wer
 it('lets the owner open every company route and hr all but the owner\'s', function (): void {
     $all = array_map(fn (LaravelRoute $route): string => (string) $route->getName(), array_values(array_filter(
         Route::getRoutes()->getRoutes(),
-        fn (LaravelRoute $route): bool => in_array(RequireRoutePermission::class, $route->gatherMiddleware(), true),
+        // The page without access asks for no permission (RoutePermissions::EXEMPT): it is everyone's, not the owner's.
+        fn (LaravelRoute $route): bool => in_array(RequireRoutePermission::class, $route->gatherMiddleware(), true)
+            && ! RoutePermissions::isExempt((string) $route->getName()),
     )));
     $ownerOnly = [
         'tenant.first-steps.hide', 'tenant.first-steps.show', 'tenant.first-steps.welcome', 'tenant.members.destroy',
