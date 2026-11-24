@@ -109,6 +109,7 @@ it('takes RH from the sidebar to the report, a center and its days, with the CSV
     visit($url)
         ->click('Cumple la norma')
         ->click('[data-sidebar="sidebar"] >> text=Asistencia')
+        ->assertScript(settled(), true)
         ->click('[data-sidebar="sidebar"] >> text=Reporte para la autoridad')
         ->waitForText('Elige un centro de trabajo')
         ->assertPathIs("{$url}/attendance/report")
