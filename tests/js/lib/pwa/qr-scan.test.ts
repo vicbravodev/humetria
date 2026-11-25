@@ -58,8 +58,9 @@ describe('punchCode', () => {
         ['a code with a space', 'https://app.test/me/acme/punch?q=a%20b'],
         ['text that is not an address', 'hello'],
         ['an address of nowhere', ''],
-    ])('takes nothing from %s', (_name, text) => {
-        expect(punchCode(text, where)).toBeNull();
+    ])('says it is not the code of the screen when it is %s', (_name, text) => {
+        // A code that was read but is not the center's is said, not passed over in silence: the person sees why nothing happens.
+        expect(punchCode(text, where)).toBe('unrecognized');
     });
 
     it('takes a code of 128 characters and no more', () => {
@@ -74,13 +75,13 @@ describe('punchCode', () => {
                 `https://app.test/me/acme/punch?q=${'a'.repeat(129)}`,
                 where,
             ),
-        ).toBeNull();
+        ).toBe('unrecognized');
     });
 
     it('does not take the code of another company with a code that is not one', () => {
-        expect(
-            punchCode('https://app.test/me/otra/punch?q=a%7Cb', where),
-        ).toBeNull();
+        expect(punchCode('https://app.test/me/otra/punch?q=a%7Cb', where)).toBe(
+            'unrecognized',
+        );
     });
 });
 

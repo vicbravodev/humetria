@@ -100,14 +100,38 @@ it('says a code of another company is not theirs and goes on reading', function 
         ->assertNoAccessibilityIssues(1);
 });
 
-it('does not take the old address of Marcar for a code and goes on reading', function (): void {
+it('does not take the old address of Marcar for a code: it says it is not the center\'s and goes on reading', function (): void {
     $page = punchScreenSeeing('/a/acme/punch?q=abc123def');
 
     $page->press('button:has-text("Leer el código de la pantalla")')
-        ->waitForText('Apunte al código de la pantalla de su centro.')
+        ->waitForText('Ese código no es el de la pantalla de su centro. Apunte al de la pantalla.')
         // Long enough for the camera to have seen the code several times.
         ->assertScript('() => new Promise((resolve) => setTimeout(resolve, 2000)).then(() => document.body.innerText.includes("Código leído"))', false)
-        ->assertPresent('[role="dialog"]');
+        ->assertPresent('[role="dialog"]')
+        ->assertScript('() => window.__camera.getTracks().every((track) => track.readyState === "live")', true);
+});
+
+it('says a code of another address is not the center\'s, which is what a screen opened from another address shows', function (): void {
+    // The screen of the center was opened from `localhost` while this phone is at another address: the code carries that one.
+    $page = visit('/me/acme/punch')->waitForText('Leer el código de la pantalla');
+    withCameraShowing($page, 'https://another-address.test/me/acme/punch?q=59852987.926f3b58d6b5586c');
+
+    $page->press('button:has-text("Leer el código de la pantalla")')
+        ->waitForText('Ese código no es el de la pantalla de su centro. Apunte al de la pantalla.')
+        ->assertNoAccessibilityIssues(1);
+});
+
+it('says it cannot read anything when no code shows for a while, and goes on looking', function (): void {
+    $page = visit('/me/acme/punch')->waitForText('Leer el código de la pantalla');
+    withCameraShowingNoCode($page);
+
+    $page->press('button:has-text("Leer el código de la pantalla")')
+        ->waitForText('Apunte al código de la pantalla de su centro.')
+        ->assertDontSee('No logro leer el código')
+        ->waitForText('No logro leer el código. Acérquese o aléjese un poco, sin reflejos, y mantenga el teléfono quieto.', 15)
+        ->assertPresent('[role="dialog"]')
+        ->assertScript('() => window.__camera.getTracks().every((track) => track.readyState === "live")', true)
+        ->assertNoAccessibilityIssues(1);
 });
 
 it('turns the camera off when it is closed and when the page is left', function (): void {

@@ -9,6 +9,10 @@ const TEXT: Record<ScanStatus, string> = {
     idle: '',
     opening: 'Abriendo la cámara…',
     scanning: 'Apunte al código de la pantalla de su centro.',
+    unreadable:
+        'No logro leer el código. Acérquese o aléjese un poco, sin reflejos, y mantenga el teléfono quieto.',
+    unrecognized:
+        'Ese código no es el de la pantalla de su centro. Apunte al de la pantalla.',
     'other-company': 'Ese código es de otra empresa.',
     denied: 'Permita el uso de la cámara para leer el código.',
     unavailable: 'Este teléfono no pudo abrir la cámara.',
@@ -29,7 +33,13 @@ export default function QrScanner({
     onClose: () => void;
 }) {
     const { videoRef, start, stop, status } = useQrScanner({ slug, onCode });
-    const seeing = ['opening', 'scanning', 'other-company'].includes(status);
+    const seeing = [
+        'opening',
+        'scanning',
+        'unreadable',
+        'unrecognized',
+        'other-company',
+    ].includes(status);
 
     useEffect(() => {
         void start();
