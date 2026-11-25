@@ -45,7 +45,7 @@ export default function DemoBoardColumn({
             {hidden > 0 && (
                 <Link
                     href={index.url({ query: { status: column.status } })}
-                    className="px-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                    className="inline-flex min-h-11 w-fit items-center px-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
                 >
                     Ver todas ({column.total})
                 </Link>

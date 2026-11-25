@@ -5,6 +5,7 @@ import {
     DEMO_VIEWS,
     demoEmptyText,
     demoListQuery,
+    demoMetricTiles,
     firstResponseText,
     unattendedText,
     demoQuery,
@@ -88,7 +89,7 @@ describe('demoListQuery', () => {
 
 describe('the figures of the console', () => {
     it('writes the time to the first answer in hours, then in days', () => {
-        expect(firstResponseText(null)).toBe('Sin dato');
+        expect(firstResponseText(null)).toBe('—');
         expect(firstResponseText(0.4)).toBe('Menos de 1 h');
         expect(firstResponseText(9.2)).toBe('9 h');
         expect(firstResponseText(47.6)).toBe('48 h');
@@ -100,5 +101,45 @@ describe('the figures of the console', () => {
         expect(unattendedText(0)).toBe('Ninguna con más de 48 h');
         expect(unattendedText(1)).toBe('1 con más de 48 h');
         expect(unattendedText(3)).toBe('3 con más de 48 h');
+    });
+});
+
+describe('demoMetricTiles', () => {
+    it('holds the four tiles while the figures arrive', () => {
+        expect(demoMetricTiles(undefined).map((tile) => tile.title)).toEqual([
+            'Nuevas',
+            'Tiempo de primera respuesta',
+            'Conversión a empresa',
+            'Fuente principal',
+        ]);
+        expect(demoMetricTiles(undefined)[0]?.figure).toBeNull();
+    });
+
+    it('writes each figure, and a dash where there is nothing to know yet', () => {
+        const tiles = demoMetricTiles({
+            new: 3,
+            unattended: 1,
+            first_response_hours: 9,
+            conversion: 31,
+            source: { label: 'google', share: 58 },
+        });
+
+        expect(tiles.map((tile) => [tile.figure, tile.caption])).toEqual([
+            ['3', '1 con más de 48 h'],
+            ['9 h', 'Mediana, últimos 90 días'],
+            ['31 %', 'Últimos 90 días'],
+            ['google', '58 % de las solicitudes, 90 días'],
+        ]);
+
+        const empty = demoMetricTiles({
+            new: 0,
+            unattended: 0,
+            first_response_hours: null,
+            conversion: null,
+            source: null,
+        });
+
+        expect(empty.map((tile) => tile.figure)).toEqual(['0', '—', '—', '—']);
+        expect(empty[3]?.caption).toBe('Ninguna dijo de dónde llegó');
     });
 });

@@ -1,4 +1,4 @@
-import type { DemoFilters, DemoStatus, DemoView } from '@/types';
+import type { DemoFilters, DemoMetrics, DemoStatus, DemoView } from '@/types';
 
 const LIST = new Intl.ListFormat('es-MX', { type: 'conjunction' });
 
@@ -60,10 +60,13 @@ export function demoEmptyText(view: DemoView): string {
         : 'Ninguna solicitud está en este estado. Cuando cambies una, aparecerá aquí.';
 }
 
+/** A figure with nothing to count yet. «Sin dato» is the channel's word: it means nobody knows where one came from. */
+const NOTHING_YET = '—';
+
 /** The median time to the first answer: hours under two days, then days. */
 export function firstResponseText(hours: number | null): string {
     if (hours === null) {
-        return 'Sin dato';
+        return NOTHING_YET;
     }
 
     if (hours < 1) {
@@ -80,4 +83,60 @@ export function unattendedText(unattended: number): string {
     return unattended === 0
         ? 'Ninguna con más de 48 h'
         : `${unattended} con más de 48 h`;
+}
+
+export type DemoMetricTile = {
+    title: string;
+    /** Null while the figures arrive. */
+    figure: string | null;
+    caption: string;
+};
+
+/** The four figures at the top of the console, in order; while they arrive, their titles alone. */
+export function demoMetricTiles(
+    metrics: DemoMetrics | undefined,
+): DemoMetricTile[] {
+    return [
+        {
+            title: 'Nuevas',
+            figure: metrics === undefined ? null : String(metrics.new),
+            caption:
+                metrics === undefined ? '' : unattendedText(metrics.unattended),
+        },
+        {
+            title: 'Tiempo de primera respuesta',
+            figure:
+                metrics === undefined
+                    ? null
+                    : firstResponseText(metrics.first_response_hours),
+            caption: 'Mediana, últimos 90 días',
+        },
+        {
+            title: 'Conversión a empresa',
+            figure:
+                metrics === undefined
+                    ? null
+                    : metrics.conversion === null
+                      ? NOTHING_YET
+                      : `${metrics.conversion} %`,
+            caption: 'Últimos 90 días',
+        },
+        sourceTile(metrics),
+    ];
+}
+
+function sourceTile(metrics: DemoMetrics | undefined): DemoMetricTile {
+    const title = 'Fuente principal';
+
+    if (metrics === undefined) {
+        return { title, figure: null, caption: '' };
+    }
+
+    return metrics.source === null
+        ? { title, figure: NOTHING_YET, caption: 'Ninguna dijo de dónde llegó' }
+        : {
+              title,
+              figure: metrics.source.label,
+              caption: `${metrics.source.share} % de las solicitudes, 90 días`,
+          };
 }
