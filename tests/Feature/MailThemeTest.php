@@ -108,9 +108,11 @@ it('paints the email of a company with its accent, in the button, the links and 
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false, brandColor: '#e91e63');
     $html = (string) genericMail()->markdown('notifications::email', ['company' => $company])->render();
 
+    $accent = App\Modules\Tenancy\Data\BrandPalette::from('#e91e63')->light;
+
     expect($html)
-        ->toContain('background-color: #e01d5f')
-        ->toContain('border-bottom: 16px solid #e01d5f')
+        ->toContain("background-color: {$accent}")
+        ->toContain("border-bottom: 16px solid {$accent}")
         ->not->toContain('background-color: #0b7a6f')
         ->not->toContain('border-bottom: 16px solid #0b7a6f');
 });

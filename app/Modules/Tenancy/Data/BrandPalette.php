@@ -60,7 +60,8 @@ final readonly class BrandPalette
 
     private static function variables(string $primary, string $foreground, string $soft, string $softText): string
     {
-        return "--primary:{$primary};--primary-foreground:{$foreground};--ring:{$primary};--accent:{$soft};--accent-foreground:{$softText};";
+        return "--primary:{$primary};--primary-foreground:{$foreground};--ring:{$primary};--accent:{$soft};--accent-foreground:{$softText};"
+            ."--sidebar-primary:{$primary};--sidebar-primary-foreground:{$foreground};--sidebar-ring:{$primary};--sidebar-accent:{$soft};--sidebar-accent-foreground:{$softText};--chart-1:{$primary};";
     }
 
     /** Moves the color toward $toward in 4 % steps until it reads at 4.5:1 against $against. */

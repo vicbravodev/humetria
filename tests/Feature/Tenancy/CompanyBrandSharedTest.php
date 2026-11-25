@@ -87,7 +87,9 @@ it('paints the page with the accent of the company, after the stylesheet so it w
 
     $html = $this->get($shared)->getContent();
 
-    expect(preg_match('/<style nonce="[^"]+">:root\{--primary:#e01d5f[^<]*\.dark\{[^<]*<\/style>/', (string) $html, $style, PREG_OFFSET_CAPTURE))->toBe(1)
+    $accent = App\Modules\Tenancy\Data\BrandPalette::from('#e91e63')->light;
+
+    expect(preg_match('/<style nonce="[^"]+">:root\{--primary:'.$accent.'[^<]*\.dark\{[^<]*<\/style>/', (string) $html, $style, PREG_OFFSET_CAPTURE))->toBe(1)
         ->and($style[0][1])->toBeGreaterThan((int) strpos((string) $html, 'apple-touch-icon'));
 });
 

@@ -51,7 +51,9 @@ it('writes the variables the design system reads, for light and for dark', funct
     $css = BrandPalette::from('#e91e63')->css();
 
     expect($css)->toContain(':root{')->toContain('.dark{')
-        ->toContain('--primary:')->toContain('--primary-foreground:')->toContain('--accent:')->toContain('--ring:');
+        ->toContain('--primary:')->toContain('--primary-foreground:')->toContain('--accent:')->toContain('--ring:')
+        // The sidebar and the charts have tokens of their own: left alone, they stay Humetría's green.
+        ->toContain('--sidebar-primary:')->toContain('--sidebar-primary-foreground:')->toContain('--sidebar-accent:')->toContain('--sidebar-ring:')->toContain('--chart-1:');
 });
 
 it('refuses what is not a six-digit hex color', function (string $value): void {
