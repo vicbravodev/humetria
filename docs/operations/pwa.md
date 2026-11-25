@@ -147,7 +147,7 @@ La lista consolidada del PR. Quien la corre anota resultado y fecha.
 
 | Teléfono / sistema | Acción | Resultado esperado | Umbral | Resultado y fecha |
 |---|---|---|---|---|
-| ≥ 2 Android (uno viejo o con Play services desactualizado), app instalada | Firmar sin conexión con la llave de acceso, con «reintentar una vez» | Firma | ≥ 4 de 5 intentos por teléfono; si no, solo llave del dispositivo en Android | |
+| ≥ 2 Android (uno viejo o con Play services desactualizado), app instalada | Firmar sin conexión con la llave de acceso, con «reintentar una vez» | Firma | ≥ 4 de 5 intentos por teléfono; si no, solo llave del dispositivo en Android | Validado por el dueño con los datos del 2026-11-20; no se repite. |
 | Android, app instalada | `navigator.storage.persist()` y cerrar la app con marcas en cola | Concedido; el contador sigue | 3 de 3 | |
 | iPhone (Safari, manual) y Android (Chrome) | Instalar | Nombre de la empresa; ícono 192 y maskable sin recorte | 1 de 1 por sistema | |
 | iPhone y Android, instalada | Cerrar la app, modo avión, abrir desde el ícono | Abre Marcar sin conexión (el cascarón) | 3 de 3 | |
