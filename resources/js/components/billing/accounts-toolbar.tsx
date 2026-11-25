@@ -7,12 +7,13 @@ import type { AccountFilters, AccountView } from '@/types';
 
 const VIEWS: { value: AccountView; label: string }[] = [
     { value: 'all', label: 'Todas' },
+    { value: 'receivable', label: 'Por cobrar' },
+    { value: 'overdue', label: 'Vencidas' },
     { value: 'direct', label: 'Directas' },
     { value: 'consultant', label: 'Consultores' },
-    { value: 'overdue', label: 'Con saldo vencido' },
 ];
 
-/** Narrows the accounts: text in their name, RFC or contact, and one kind at a time with how many each holds. */
+/** Narrows the accounts: text in their name, RFC or contact, and one view at a time (all, with something to collect, past due, or of one kind) with how many each holds. */
 export default function AccountsToolbar({
     filters,
     counts,
@@ -31,7 +32,7 @@ export default function AccountsToolbar({
                 className="w-full md:w-[380px]"
             />
             <CountTabs
-                label="Tipo de cuenta"
+                label="Vista de cuentas"
                 tabs={VIEWS.map((view) => ({
                     label: view.label,
                     count: counts[view.value],

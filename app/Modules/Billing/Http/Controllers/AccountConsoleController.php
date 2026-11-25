@@ -28,24 +28,31 @@ use Inertia\Response;
 
 final class AccountConsoleController extends Controller
 {
-    public function index(Request $request, ListAccounts $listAccounts): Response
+    public function index(Request $request, ListAccounts $listAccounts, SummarizeReceivable $receivable): Response
     {
         Gate::authorize('view-billing');
 
         $search = trim($request->string('q')->toString());
-        $overdue = $request->string('kind')->toString() === 'overdue';
-        $kind = $overdue ? null : AccountKind::tryFrom($request->string('kind')->toString());
-        $accounts = $listAccounts->handle($search, $kind, $overdue);
-        $owed = $listAccounts->overdueAmounts(array_values($accounts->getCollection()->map(fn (BillingAccount $account): string => $account->id)->all()));
+        $view = $request->string('kind')->toString();
+        $kind = AccountKind::tryFrom($view);
+        $view = $kind !== null || in_array($view, ['overdue', 'receivable'], true) ? $view : 'all';
+        $accounts = $listAccounts->handle($search, $kind, $view === 'overdue', $view === 'receivable');
+        $ids = array_values($accounts->getCollection()->map(fn (BillingAccount $account): string => $account->id)->all());
+        $standing = $listAccounts->standing($ids);
+        $paid = $listAccounts->lastPayments($ids);
 
         return Inertia::render('billing/accounts', [
             ...$this->satCatalogs(),
-            'filters' => ['q' => $search, 'kind' => $overdue ? 'overdue' : ($kind->value ?? 'all')],
+            'filters' => ['q' => $search, 'kind' => $view],
             'counts' => $listAccounts->counts($search),
+            'receivable' => $receivable->portfolio(),
             'accounts' => $accounts->through(fn (BillingAccount $account): array => [
                 ...$this->summary($account),
                 'companies' => $account->getAttribute('current_companies_count'),
-                'overdue' => $owed[$account->id] ?? null,
+                'outstanding' => $standing[$account->id]['outstanding'] ?? null,
+                'overdue' => $standing[$account->id]['overdue'] ?? null,
+                'aging' => $standing[$account->id]['aging'] ?? null,
+                'last_payment' => $paid[$account->id] ?? null,
             ]),
         ]);
     }

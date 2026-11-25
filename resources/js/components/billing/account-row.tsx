@@ -1,12 +1,14 @@
 import { Link } from '@inertiajs/react';
+import AccountSuggestedAction from '@/components/billing/account-suggested-action';
 import Initials from '@/components/humetria/initials';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { agingBadge, agingLabel } from '@/lib/billing-aging';
 import { countOf } from '@/lib/plural';
 import { show } from '@/routes/billing/accounts';
 import type { AccountRow as Account } from '@/types';
 
-/** An account of the list: who pays, their RFC and contact, and how many companies they pay. */
+/** An account of the list: who pays and who to talk to, how many companies it pays, what it owes, how old that is and what to do next. */
 export default function AccountRowView({ account }: { account: Account }) {
     return (
         <TableRow>
@@ -20,8 +22,10 @@ export default function AccountRowView({ account }: { account: Account }) {
                         >
                             {account.legal_name}
                         </Link>
-                        <span className="text-caption text-muted-foreground tabular-nums">
-                            {account.rfc}
+                        <span className="text-caption text-muted-foreground">
+                            <span className="tabular-nums">{account.rfc}</span>
+                            {' · '}
+                            {account.contact_name}
                         </span>
                     </div>
                 </div>
@@ -38,18 +42,19 @@ export default function AccountRowView({ account }: { account: Account }) {
             <TableCell className="text-sm tabular-nums">
                 {countOf(account.companies, 'empresa', 'empresas')}
             </TableCell>
-            <TableCell className="whitespace-normal">
-                <div className="flex flex-col">
-                    <span>{account.contact_name}</span>
-                    <span className="text-caption text-muted-foreground">
-                        {account.contact_email}
-                    </span>
-                </div>
+            <TableCell className="text-right text-sm font-medium tabular-nums">
+                {account.outstanding ?? '$0'}
             </TableCell>
-            <TableCell className="text-sm tabular-nums">
-                {account.overdue ?? (
-                    <span className="text-muted-foreground">Al corriente</span>
-                )}
+            <TableCell>
+                <Badge variant={agingBadge(account.aging)}>
+                    {agingLabel(account.aging)}
+                </Badge>
+            </TableCell>
+            <TableCell className="text-sm text-muted-foreground tabular-nums">
+                {account.last_payment ?? '—'}
+            </TableCell>
+            <TableCell>
+                <AccountSuggestedAction account={account} />
             </TableCell>
         </TableRow>
     );

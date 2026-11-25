@@ -6,26 +6,30 @@ import AccountsTable from '@/components/billing/accounts-table';
 import AccountsToolbar from '@/components/billing/accounts-toolbar';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
+import ReceivableOverview from '@/components/billing/receivable-overview';
 import { accountsSummary } from '@/lib/billing';
 import type {
     AccountFilters,
     AccountRow,
     AccountView,
     Paginated,
+    ReceivablePortfolio,
     SatOption,
 } from '@/types';
 
-/** Who pays what (pantalla Consola-Empresas): the accounts, direct or a consultant's, with how many companies each pays. */
+/** Who pays what and what is left to collect (tablero Cuentas y cobranza): the balance by age, then the accounts with what each owes and the next step. */
 export default function Accounts({
     accounts,
     filters,
     counts,
+    receivable,
     taxRegimes,
     cfdiUses,
 }: {
     accounts: Paginated<AccountRow>;
     filters: AccountFilters;
     counts: Record<AccountView, number>;
+    receivable: ReceivablePortfolio;
     taxRegimes: SatOption[];
     cfdiUses: SatOption[];
 }) {
@@ -33,11 +37,11 @@ export default function Accounts({
 
     return (
         <>
-            <Head title="Cuentas de facturación" />
+            <Head title="Cuentas y cobranza" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
-                    caption="Cobranza"
-                    title="Cuentas"
+                    caption="Clientes"
+                    title="Cuentas y cobranza"
                     description={accountsSummary(counts.all)}
                 >
                     <AccountsExports />
@@ -49,6 +53,9 @@ export default function Accounts({
                         />
                     )}
                 </PageHeader>
+                {counts.all > 0 && (
+                    <ReceivableOverview receivable={receivable} />
+                )}
                 {counts.all > 0 && (
                     <AccountsToolbar filters={filters} counts={counts} />
                 )}

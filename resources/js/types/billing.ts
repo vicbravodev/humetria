@@ -1,11 +1,11 @@
 import type { ModulesChange } from '@/types/billing-parts';
+import type { AccountAging } from '@/types/billing-receivable';
 import type { TenantRow } from '@/types/tenancy';
 
 export type AccountKind = 'direct' | 'consultant';
 
-/** The kinds the console's tabs choose among: one, or all. */
-/** A kind of account, all of them, or the queue of those with a balance past due. */
-export type AccountView = AccountKind | 'all' | 'overdue';
+/** A kind of account, all of them, those with something to collect, or the queue of those with a balance past due. */
+export type AccountView = AccountKind | 'all' | 'receivable' | 'overdue';
 
 export type AccountFilters = { q: string; kind: AccountView };
 
@@ -19,12 +19,21 @@ export type AccountRow = {
     contact_name: string;
     contact_email: string;
     companies: number;
+    /** What it owes in all, written as pesos; null when nothing is. */
+    outstanding: string | null;
     /** What it owes past due, written as pesos; null when nothing is. */
     overdue: string | null;
+    /** How old its oldest open statement is; null when it owes nothing. */
+    aging: AccountAging | null;
+    /** The day of its last payment that stands; null when it never paid. */
+    last_payment: string | null;
 };
 
 /** An account with the fiscal data a CFDI will need and the contract notes. */
-export type AccountDetail = Omit<AccountRow, 'companies' | 'overdue'> & {
+export type AccountDetail = Omit<
+    AccountRow,
+    'companies' | 'outstanding' | 'overdue' | 'aging' | 'last_payment'
+> & {
     tax_regime: string | null;
     postal_code: string | null;
     cfdi_use: string | null;

@@ -24,8 +24,10 @@ export default function AccountsTable({
                     <TableHead>Cuenta</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Empresas</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Saldo vencido</TableHead>
+                    <TableHead className="text-right">Por cobrar</TableHead>
+                    <TableHead>Antigüedad</TableHead>
+                    <TableHead>Último pago</TableHead>
+                    <TableHead>Acción sugerida</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
