@@ -119,6 +119,7 @@ final class AuditPages
         'old_window' => 'QR viejo',
         'no_position' => 'Sin posición',
         'outside_zone' => 'Fuera de zona',
+        'zones_not_configured' => 'Centro sin zonas',
         'declared_adjusted' => 'Hora ajustada',
     ];
 

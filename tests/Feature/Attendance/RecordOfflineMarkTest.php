@@ -315,7 +315,7 @@ describe('the edges', function (): void {
             ->and(AttendanceMark::query()->where('type', 'end')->sole()->method)->toBe(MarkMethod::OfflineDeclared);
     });
 
-    it('does not flag the position outside the zone in a center with no zone', function (): void {
+    it('flags a position in a center with no zones as zones_not_configured, never outside_zone, and takes the mark', function (): void {
         $other = WorkCenter::factory()->for($this->tenant)->create();
         $person = romPerson($this->tenant, $other);
         agreementAccepted($person['employee']->id);
@@ -323,7 +323,17 @@ describe('the edges', function (): void {
         romDeliver(romMark(['who' => $person, 'center' => $other->id]));
 
         expect(AttendanceMark::query()->sole())->zone_id->toBeNull()->latitude->not->toBeNull()
-            ->and(AttendanceOfflineMark::query()->sole()->review_flags->map->value->all())->toBe([]);
+            ->and(AttendanceOfflineMark::query()->sole()->review_flags->map->value->all())->toBe(['zones_not_configured']);
+    });
+
+    it('keeps no_position for a mark with no position, in a center with zones or without them', function (): void {
+        $other = WorkCenter::factory()->for($this->tenant)->create();
+        $person = romPerson($this->tenant, $other);
+        agreementAccepted($person['employee']->id);
+
+        romDeliver(romMark(['who' => $person, 'center' => $other->id, 'position' => null]));
+
+        expect(AttendanceOfflineMark::query()->sole()->review_flags->map->value->all())->toBe(['no_position']);
     });
 
     it('serves a ticket of 35 days exactly and refuses one of 35 days and a second', function (): void {

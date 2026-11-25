@@ -55,6 +55,7 @@ export type OfflineFlag =
     | 'old_window'
     | 'no_position'
     | 'outside_zone'
+    | 'zones_not_configured'
     | 'declared_adjusted';
 
 /** A row of the tab «Sin conexión»: a mark that counts and no one reviewed. Never a position, a key, a ticket nor a device. */

@@ -67,7 +67,8 @@ function opkItem(array $o = []): array
     $ticket = $o['ticket'] ?? resolve(OfflineTicket::class)->batch($who['employee']->id)[0]['ticket'];
     test()->travelTo($now);
     $seq = $o['seq'] ?? 0;
-    $challenge = OfflineChallenge::hash(OfflineChallenge::canonical(test()->tenant->id, $who['employee']->id, test()->plant->id, $type, null, $declared, null, null, null, 1, $seq, null, $ticket));
+    $position = $o['position'] ?? [null, null, null];
+    $challenge = OfflineChallenge::hash(OfflineChallenge::canonical(test()->tenant->id, $who['employee']->id, test()->plant->id, $type, null, $declared, $position[0], $position[1], $position[2], 1, $seq, null, $ticket));
 
     return [
         'seq' => $seq,
@@ -76,6 +77,7 @@ function opkItem(array $o = []): array
         'center_id' => test()->plant->id,
         'declared_at' => $declared,
         'agreement_version' => 1,
+        ...($position[0] === null ? [] : ['lat_e5' => $position[0], 'lng_e5' => $position[1], 'accuracy_m' => $position[2]]),
         'signer' => 'passkey',
         'credential' => $who['phone']->get(['challenge' => Base64UrlSafe::encodeUnpadded($challenge)], $who['employee']->id, tamper: $o['tamper'] ?? false),
     ];
@@ -99,6 +101,13 @@ it('delivers with no session, no cookie and no forgery check, and answers the re
         ->and($response->json('context.employeeId'))->toBe($this->ana['employee']->id)
         ->and(DB::table('sessions')->count())->toBe(0)
         ->and(AttendanceMark::query()->count())->toBe(1);
+});
+
+it('delivers a position from a center with no zones flagged zones_not_configured, and one with no position flagged no_position', function (): void {
+    opkDeliver(['items' => [opkItem(['position' => [1943271, -9913320, 10]]), opkItem(['seq' => 1, 'type' => MarkType::End, 'declared' => '14:30:00'])]])->assertOk();
+
+    expect(AttendanceOfflineMark::query()->orderBy('seq')->get()->map(fn (AttendanceOfflineMark $mark): array => $mark->review_flags->map->value->all())->all())
+        ->toBe([['zones_not_configured'], ['no_position']]);
 });
 
 it('does not hand out tickets nor context when no signature verified', function (): void {

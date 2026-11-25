@@ -92,6 +92,16 @@ describe('the tab of marks made without a connection', function (): void {
             ->where('offlineMarks.data.1.ageDays', 2));
     });
 
+    it('lists the mark of a center with no zones with its own flag, among the flagged', function (): void {
+        $calm = OfflineDeliveries::accepted($this->ana, '2026-11-09 09:00', receivedAt: CarbonImmutable::parse('2026-11-09 11:00', 'America/Mexico_City'));
+        $noZones = OfflineDeliveries::accepted($this->ana, '2026-11-10 09:00', MarkType::End, flags: [ReviewFlag::ZonesNotConfigured], receivedAt: CarbonImmutable::parse('2026-11-10 11:00', 'America/Mexico_City'));
+        $this->actingAs($this->hr);
+
+        $this->get(offlineUrl())->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('offlineMarks.data.0.id', $noZones->mark_id)->where('offlineMarks.data.0.flags', ['zones_not_configured'])
+            ->where('offlineMarks.data.1.id', $calm->mark_id)->where('offlineMarks.data.1.flags', []));
+    });
+
     it('puts the oldest first among those with the same flags', function (): void {
         $newer = OfflineDeliveries::accepted($this->ana, '2026-11-10 09:00', receivedAt: CarbonImmutable::parse('2026-11-10 11:00', 'America/Mexico_City'));
         $older = OfflineDeliveries::accepted($this->ana, '2026-11-05 09:00', receivedAt: CarbonImmutable::parse('2026-11-05 11:00', 'America/Mexico_City'));

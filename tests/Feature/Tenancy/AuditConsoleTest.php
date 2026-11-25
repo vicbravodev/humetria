@@ -265,7 +265,7 @@ it('writes an offline mark entry with its time basis, signer and flags in Spanis
         'time_basis' => 'qr_window',
         'signer_type' => 'device_key',
         'interval_minutes' => 120,
-        'review_flags' => ['wide_interval', 'no_position'],
+        'review_flags' => ['wide_interval', 'no_position', 'zones_not_configured'],
     ]]);
 
     $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
@@ -273,7 +273,7 @@ it('writes an offline mark entry with its time basis, signer and flags in Spanis
             'Base de la hora' => 'Ventana del QR',
             'Firmante' => 'Llave del teléfono',
             'Minutos del intervalo' => '120',
-            'Banderas de revisión' => 'Intervalo ancho, Sin posición',
+            'Banderas de revisión' => 'Intervalo ancho, Sin posición, Centro sin zonas',
         ]));
 });
 

@@ -63,6 +63,7 @@ final class OfflineTime
                 $oldWindow ? ReviewFlag::OldWindow : null,
                 $position === OfflinePosition::Unknown ? ReviewFlag::NoPosition : null,
                 $position === OfflinePosition::Outside ? ReviewFlag::OutsideZone : null,
+                $position === OfflinePosition::NoZones ? ReviewFlag::ZonesNotConfigured : null,
                 $countedAt->notEqualTo($declaredAt) ? ReviewFlag::DeclaredAdjusted : null,
             ])),
         );

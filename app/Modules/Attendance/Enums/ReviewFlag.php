@@ -16,6 +16,8 @@ enum ReviewFlag: string
     case OldWindow = 'old_window';
     case NoPosition = 'no_position';
     case OutsideZone = 'outside_zone';
+    /** There is a position, but the center has no zones to be inside or outside of: nothing could be checked. */
+    case ZonesNotConfigured = 'zones_not_configured';
     /** The counted time differs from the declared one. */
     case DeclaredAdjusted = 'declared_adjusted';
 }

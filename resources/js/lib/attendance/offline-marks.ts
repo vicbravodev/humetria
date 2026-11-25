@@ -10,6 +10,7 @@ const FLAGS: Record<string, string> = {
     old_window: 'QR de más de 30 min antes',
     no_position: 'Sin posición',
     outside_zone: 'Fuera de la zona del centro',
+    zones_not_configured: 'El centro no tiene zonas configuradas',
     declared_adjusted: 'La hora contada no es la declarada',
 };
 

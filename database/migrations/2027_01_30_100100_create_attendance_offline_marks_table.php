@@ -70,7 +70,7 @@ return new class extends Migration
                 ADD CONSTRAINT attendance_offline_marks_counted_between CHECK (counted_at IS NULL OR (counted_at >= ticket_issued_at AND counted_at <= received_at)),
                 ADD CONSTRAINT attendance_offline_marks_flags_known CHECK (
                     jsonb_typeof(review_flags) = 'array'
-                    AND review_flags <@ '["wide_interval", "old_window", "no_position", "outside_zone", "declared_adjusted"]'::jsonb
+                    AND review_flags <@ '["wide_interval", "old_window", "no_position", "outside_zone", "zones_not_configured", "declared_adjusted"]'::jsonb
                 ),
                 ADD CONSTRAINT attendance_offline_marks_seq_not_negative CHECK (seq >= 0);
 

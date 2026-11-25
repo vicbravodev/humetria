@@ -150,7 +150,7 @@ intervalo, si entre el boleto y la recepción pasaron hasta 72 horas; si pasaron
 posible) hasta que Recursos Humanos la verifique o la corrija. La hora declarada es **no probada**. Un QR leído más de 30
 minutos antes de la hora declarada no sube la evidencia (la marca queda como sin QR). Si el intervalo queda vacío, la marca no
 se acepta. Se señalan para revisión primero las marcas con intervalo de más de 240 minutos, con un QR viejo, sin posición,
-fuera de la zona del centro o cuya hora contada difiere de la declarada. El boleto vale hasta 35 días (el horizonte de la
+fuera de la zona del centro, en un centro sin zonas configuradas (`zones_not_configured`: hay posición, pero nada contra qué compararla) o cuya hora contada difiere de la declarada. El boleto vale hasta 35 días (el horizonte de la
 corrección); más viejo, no se acepta. Una marca declarada después de que se revocó la llave que la firmó no se acepta. Toda
 marca no aceptada queda en el teléfono como «No aceptada» con su motivo; si traía boleto y firma válidos, también queda
 registrada para Recursos Humanos. Nada aceptable se pierde en silencio (salvo que se borren los datos del teléfono antes de
@@ -174,7 +174,7 @@ personal de confianza siguen siendo de la empresa.
 **4.2 Presencial** · el método fuerte es **QR rotativo del centro + geocerca** a la vez; solo uno de los dos es evidencia
 más débil (criterio 5.3). **Por defecto se bloquea marcar fuera de toda zona**; la empresa puede cambiar su política a
 «permitir y señalar» (la marca queda como evidencia media y señalada). Aun bloqueando, la persona puede pedir una corrección. Sin conexión **no se bloquea** fuera de zona: la marca se señala
-(3.3.1), porque la persona no puede saber si la zona la aceptaría.
+(3.3.1; en un centro sin zonas, como «sin zonas configuradas»), porque la persona no puede saber si la zona la aceptaría.
 
 **4.3 Teletrabajo (NOM-037)** · sin geocerca; marca desde su dispositivo con la confirmación del dispositivo vinculado.
 

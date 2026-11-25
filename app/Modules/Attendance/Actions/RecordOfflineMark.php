@@ -292,7 +292,7 @@ final readonly class RecordOfflineMark
 
     /**
      * Where the position falls against the zones of the center the mark was made at, only to flag it: never to block. A center
-     * with no zone has nothing to be outside of.
+     * with no zone has nothing to be inside or outside of: `zones_not_configured`, not `outside_zone`.
      *
      * @return array{position: OfflinePosition, zoneId: string|null, distance: float|null}
      */
@@ -307,7 +307,7 @@ final readonly class RecordOfflineMark
         $zones = AttendanceZone::query()->where('work_center_id', $centerId)->get()->all();
 
         if ($zones === []) {
-            return ['position' => OfflinePosition::Inside, 'zoneId' => null, 'distance' => null];
+            return ['position' => OfflinePosition::NoZones, 'zoneId' => null, 'distance' => null];
         }
 
         $reading = Geofence::evaluate($zones, $position->latitude, $position->longitude, $position->accuracyM, CompanyPolicy::current()->max_accuracy_m);

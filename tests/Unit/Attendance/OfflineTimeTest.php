@@ -171,6 +171,10 @@ describe('the flags', function (): void {
             ->and(flagValues(decideOffline('08:30:00', '08:00:00', '09:00:00', ['position' => OfflinePosition::Inside])))->toBe([]);
     });
 
+    it('says the center has no zones, when there is a position but nothing to be inside or outside of (decisión del dueño, 2026-11-24)', function (): void {
+        expect(flagValues(decideOffline('08:30:00', '08:00:00', '09:00:00', ['position' => OfflinePosition::NoZones])))->toBe(['zones_not_configured']);
+    });
+
     it('says the time was adjusted only when the counted time differs from the declared one', function (): void {
         expect(flagValues(decideOffline('08:30:00', '08:00:00', '09:00:00')))->not->toContain('declared_adjusted')
             ->and(flagValues(decideOffline('07:30:00', '08:00:00', '09:00:00')))->toContain('declared_adjusted');
@@ -178,7 +182,9 @@ describe('the flags', function (): void {
 
     it('lists the flags in the order of the enum', function (): void {
         $decision = decideOffline('08:30:01', '08:00:00', '13:00:00', ['window' => '08:00:00', 'position' => OfflinePosition::Unknown, 'previous' => '08:30:00']);
+        $noZones = decideOffline('08:30:01', '08:00:00', '13:00:00', ['window' => '08:00:00', 'position' => OfflinePosition::NoZones, 'previous' => '08:30:00']);
 
-        expect(flagValues($decision))->toBe(['wide_interval', 'old_window', 'no_position']);
+        expect(flagValues($decision))->toBe(['wide_interval', 'old_window', 'no_position'])
+            ->and(flagValues($noZones))->toBe(['wide_interval', 'old_window', 'zones_not_configured']);
     });
 });
