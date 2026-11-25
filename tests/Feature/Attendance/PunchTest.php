@@ -166,7 +166,7 @@ describe('the page', function (): void {
     });
 
     it('brings tickets and context with a mark and with a refusal, and none with a signature that does not verify', function (): void {
-        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline']];
+        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline', 'qrTypes']];
 
         $marked = anaPunches()->assertOk()->assertJsonStructure($shape);
         $refused = anaPunches(PUNCH_OUTSIDE)->assertUnprocessable()->assertJsonStructure($shape);

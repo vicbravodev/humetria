@@ -43,7 +43,7 @@ it('swaps a valid ticket for a new batch and the context, without a session, a c
 
     expect($response->json('tickets'))->toHaveCount(8)
         ->and($response->json('tickets.0'))->toHaveKeys(['ticket', 'issuedAt'])
-        ->and($response->json('context'))->toBe(['tenantId' => $this->tenant->id, 'employeeId' => $this->ana->id, 'centerId' => $this->plant->id, 'agreementVersion' => null, 'rpId' => 'localhost', 'offline' => true])
+        ->and($response->json('context'))->toBe(['tenantId' => $this->tenant->id, 'employeeId' => $this->ana->id, 'centerId' => $this->plant->id, 'agreementVersion' => null, 'rpId' => 'localhost', 'offline' => true, 'qrTypes' => ['start', 'break_start', 'break_end', 'end']])
         ->and(DB::table('sessions')->count())->toBe(0);
 });
 

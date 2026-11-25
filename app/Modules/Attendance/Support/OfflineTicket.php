@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Support;
 
+use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Organization\Data\RosterEntry;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\Timezones;
 use Carbon\CarbonImmutable;
 
 /**
@@ -20,7 +22,7 @@ final readonly class OfflineTicket
 {
     private const string VERSION = 'v1';
 
-    public function __construct(private CurrentTenant $tenant, private AgreementStatus $agreements) {}
+    public function __construct(private CurrentTenant $tenant, private AgreementStatus $agreements, private Timezones $timezones) {}
 
     /**
      * A new batch for a person, each with the second it was issued.
@@ -66,9 +68,9 @@ final readonly class OfflineTicket
     /**
      * What the phone needs to mark without a connection, besides the tickets: who it is, where it works, which version of
      * the agreement they accepted (null if not the current one), the relying party its passkey signs for, and the only
-     * switch the phone reads (`attendance.offline.enabled`).
+     * switch the phone reads (`attendance.offline.enabled`), and the marks that ask this person for the QR (as the page of Marcar says).
      *
-     * @return array{tenantId: string, employeeId: string, centerId: string, agreementVersion: int|null, rpId: string, offline: bool}
+     * @return array{tenantId: string, employeeId: string, centerId: string, agreementVersion: int|null, rpId: string, offline: bool, qrTypes: list<string>}
      */
     public function context(RosterEntry $person): array
     {
@@ -80,6 +82,7 @@ final readonly class OfflineTicket
             // The same source as the ceremony that makes the passkeys.
             'rpId' => config()->string('fortify.passkeys.relying_party_id'),
             'offline' => config()->boolean('attendance.offline.enabled'),
+            'qrTypes' => array_map(fn (MarkType $type): string => $type->value, MarkPolicyCheck::qrTypesOf($person, $this->timezones->forCenter($person->workCenterId))),
         ];
     }
 

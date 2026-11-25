@@ -11,9 +11,12 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\MarkRejected;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Organization\Data\RosterEntry;
+use Carbon\CarbonImmutable;
 
 /**
  * How a mark is taken under the company's policy (criterios 4.2 to 4.4 and 5.3), or why not. Pure: the QR is verified and
@@ -121,6 +124,23 @@ final class MarkPolicyCheck
         }
 
         return new MarkContext(MarkMethod::Qr, null, $position?->latitude, $position?->longitude, $position?->accuracyM, null, $credentialId, $centerId);
+    }
+
+    /**
+     * The types of mark that ask a known person for the QR today, at their center's clock: the page of Marcar offers the reader
+     * for them, and the phone keeps them to do the same without a connection.
+     *
+     * @return list<MarkType>
+     */
+    public static function qrTypesOf(RosterEntry $person, string $timezone): array
+    {
+        return self::qrTypes(
+            ScheduleTimeline::of([$person->id])->on($person->id, CarbonImmutable::now($timezone)),
+            CompanyPolicy::current(),
+            $person->trusted,
+            AttendanceZone::query()->where('work_center_id', $person->workCenterId)->get()->all(),
+            AttendanceCenterMode::isField($person->workCenterId),
+        );
     }
 
     /**
