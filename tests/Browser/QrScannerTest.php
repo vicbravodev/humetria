@@ -69,6 +69,16 @@ it('reads the code of the screen, turns the camera off and says so', function ()
         ->assertNoJavaScriptErrors();
 });
 
+it('reads the branded code of Humetría too: rounded squares, level H and the arch of the logo in the middle', function (): void {
+    config(['attendance.qr.branded' => true]);
+    // The length of a real code of a screen: the densest the reader will see.
+    $page = punchScreenSeeing('/me/acme/punch?q=59852987.926f3b58d6b5586c8f0247230f593794be03e98f3361b7897d50b11e56045277');
+
+    $page->press('button:has-text("Leer el código de la pantalla")')
+        ->waitForText('Código leído. Marque ahora.')
+        ->assertScript(cameraIsOff(), true);
+});
+
 it('marks with the code the camera read: the mark counts with the QR and the zone', function (): void {
     AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     $enroll = accessLinkPath($this->ana->id);
