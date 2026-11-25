@@ -27,6 +27,8 @@ describe('navSections for the console', () => {
         expect(titles('platform', staff)).toEqual([
             'Equipo Humetría',
             'Bitácora',
+            'Salud del sistema',
+            'Mensajería',
             'Planes y precios',
             'Colas',
         ]);
