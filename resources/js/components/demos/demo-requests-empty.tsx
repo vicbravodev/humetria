@@ -1,19 +1,31 @@
-import { Inbox } from 'lucide-react';
+import { Inbox, SearchX } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import { demoEmptyText } from '@/lib/demo-requests';
-import type { DemoView } from '@/types';
+import type { DemoFilters } from '@/types';
 
-export default function DemoRequestsEmpty({ view }: { view: DemoView }) {
+export default function DemoRequestsEmpty({
+    filters,
+}: {
+    filters: DemoFilters;
+}) {
+    if (filters.q.trim() !== '') {
+        return (
+            <EmptyState icon={SearchX} title="Ninguna solicitud coincide">
+                Prueba con otro nombre, correo, empresa o WhatsApp.
+            </EmptyState>
+        );
+    }
+
     return (
         <EmptyState
             icon={Inbox}
             title={
-                view === 'all'
+                filters.status === 'all'
                     ? 'Aún no hay solicitudes'
                     : 'No hay solicitudes en este estado'
             }
         >
-            {demoEmptyText(view)}
+            {demoEmptyText(filters.status)}
         </EmptyState>
     );
 }

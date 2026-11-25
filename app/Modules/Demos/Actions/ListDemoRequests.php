@@ -11,15 +11,17 @@ use Illuminate\Pagination\LengthAwarePaginator;
 final class ListDemoRequests
 {
     /**
-     * The requests, newest first, a page at a time; one status only when it is given.
+     * The requests, newest first, a page at a time; one status only when it is given, and only those that match what was
+     * searched: the contact, the email, the company or the WhatsApp.
      *
      * @return LengthAwarePaginator<int, DemoRequest>
      */
-    public function handle(?DemoStatus $status = null): LengthAwarePaginator
+    public function handle(?DemoStatus $status = null, string $search = ''): LengthAwarePaginator
     {
         return DemoRequest::query()
             ->with('owner:id,name')
             ->when($status !== null, fn ($query) => $query->where('status', $status?->value))
+            ->matching(['name', 'email', 'company'], $search, ['whatsapp'])
             ->latest()
             ->paginate(25)
             ->withQueryString();

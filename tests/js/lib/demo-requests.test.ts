@@ -4,6 +4,7 @@ import {
     DEMO_CHOICES,
     DEMO_VIEWS,
     demoEmptyText,
+    demoListQuery,
     demoQuery,
     profileText,
     toolsText,
@@ -61,5 +62,18 @@ describe('demo views', () => {
     it('says why a tab is empty', () => {
         expect(demoEmptyText('all')).toContain('formulario de la landing');
         expect(demoEmptyText('new')).toContain('en este estado');
+    });
+});
+
+describe('demoListQuery', () => {
+    it('carries the status and what was searched, and nothing that is empty', () => {
+        expect(demoListQuery({ status: 'all', q: '' })).toEqual({});
+        expect(demoListQuery({ status: 'new', q: ' acme ' })).toEqual({
+            status: 'new',
+            q: 'acme',
+        });
+        expect(demoListQuery({ status: 'all', q: 'acme' })).toEqual({
+            q: 'acme',
+        });
     });
 });

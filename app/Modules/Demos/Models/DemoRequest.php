@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Demos\Models;
 
+use App\Concerns\SearchesText;
 use App\Models\User;
 use App\Modules\Demos\Enums\AdClickType;
 use App\Modules\Demos\Enums\DemoProfile;
@@ -62,7 +63,7 @@ use Illuminate\Support\Collection;
 final class DemoRequest extends Model
 {
     /** @use HasFactory<DemoRequestFactory> */
-    use HasFactory, HasVersion4Uuids;
+    use HasFactory, HasVersion4Uuids, SearchesText;
 
     public const null UPDATED_AT = null;
 

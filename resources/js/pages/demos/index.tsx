@@ -36,11 +36,11 @@ export default function DemoRequests({
                     <DemoRequestsToolbar filters={filters} counts={counts} />
                 )}
                 {demoRequests.data.length === 0 ? (
-                    <DemoRequestsEmpty view={filters.status} />
+                    <DemoRequestsEmpty filters={filters} />
                 ) : (
                     // Keyed by page and view: a new one opens on its newest request.
                     <DemoRequestsInbox
-                        key={`${filters.status}-${demoRequests.current_page}`}
+                        key={`${filters.status}-${filters.q}-${demoRequests.current_page}`}
                         requests={demoRequests.data}
                         canManage={canManage}
                     />

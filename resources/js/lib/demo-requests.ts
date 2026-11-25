@@ -1,4 +1,4 @@
-import type { DemoStatus, DemoView } from '@/types';
+import type { DemoFilters, DemoStatus, DemoView } from '@/types';
 
 const LIST = new Intl.ListFormat('es-MX', { type: 'conjunction' });
 
@@ -41,6 +41,15 @@ export const DEMO_CHOICES: { value: DemoStatus; label: string }[] =
 /** The console's view as its address carries it: the default, all of them, carries nothing. */
 export function demoQuery(view: DemoView): { status?: DemoView } {
     return view === 'all' ? {} : { status: view };
+}
+
+/** The list's address: the status and what was searched, each only when there is one. */
+export function demoListQuery(
+    filters: DemoFilters,
+): Partial<Record<keyof DemoFilters, string>> {
+    const q = filters.q.trim();
+
+    return { ...demoQuery(filters.status), ...(q === '' ? {} : { q }) };
 }
 
 /** What an empty tab says: nothing arrived at all, or nothing is in that state. */

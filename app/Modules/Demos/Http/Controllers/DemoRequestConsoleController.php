@@ -32,13 +32,14 @@ final class DemoRequestConsoleController extends Controller
         Gate::authorize('view-demo-requests');
 
         $status = DemoStatus::tryFrom($request->string('status')->toString());
+        $search = $request->string('q')->trim()->limit(100, '')->toString();
 
         return Inertia::render('demos/index', [
-            'filters' => ['status' => $status->value ?? 'all'],
+            'filters' => ['status' => $status->value ?? 'all', 'q' => $search],
             'counts' => $listDemoRequests->counts(),
             'can_manage' => Gate::allows('manage-demo-requests'),
             'can_open_room' => Gate::allows('manage-demo'),
-            'demoRequests' => $listDemoRequests->handle($status)->through($this->row(...)),
+            'demoRequests' => $listDemoRequests->handle($status, $search)->through($this->row(...)),
             // Who of the staff may own a request: only for the form, after the page shows.
             'staff' => Inertia::defer(fn (): array => $owners->options()),
         ]);

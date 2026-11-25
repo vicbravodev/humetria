@@ -40,7 +40,7 @@ export type DemoStatus =
 
 export type DemoView = 'all' | DemoStatus;
 
-export type DemoFilters = { status: DemoView };
+export type DemoFilters = { status: DemoView; q: string };
 
 /** The part of a Laravel LengthAwarePaginator the console reads. */
 export type Paginated<T> = {
