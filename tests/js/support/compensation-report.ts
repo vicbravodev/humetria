@@ -199,6 +199,7 @@ export function boardReport(): ScenarioReport {
             trusted_raise: '3',
             raise_text: '5 % sindicalizados · 3 % confianza',
             raise_unit: 'percent',
+            pay_basis: 'daily',
             source: 'roster',
             average: null,
         },

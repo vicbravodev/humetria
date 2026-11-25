@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import Notice from '@/components/humetria/notice';
 import { Button } from '@/components/ui/button';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { reportAccuracy } from '@/lib/compensation/report-notes';
 import { index as tabulator } from '@/routes/tenant/compensation/tabulator';
@@ -18,6 +19,8 @@ export default function ReportAccuracy({
     canComplete: boolean;
 }) {
     const tenantSlug = useTenantSlug();
+    const { edit } = useScenarioRoutes();
+    const average = report.scenario.source === 'average';
     const accuracy = reportAccuracy(report);
 
     if (accuracy === null) {
@@ -33,8 +36,20 @@ export default function ReportAccuracy({
                         asChild
                         className="max-sm:w-full print:hidden"
                     >
-                        <Link href={tabulator(tenantSlug)}>
-                            Completar datos
+                        {/* An average payroll has no roster or tabulator to complete: what it lacks is typed in the scenario. */}
+                        <Link
+                            href={
+                                average
+                                    ? edit({
+                                          tenant: tenantSlug,
+                                          scenario: report.scenario.id,
+                                      })
+                                    : tabulator(tenantSlug)
+                            }
+                        >
+                            {average
+                                ? 'Completar en el escenario'
+                                : 'Completar datos'}
                         </Link>
                     </Button>
                 ) : undefined

@@ -102,6 +102,17 @@ describe('waterfallBars', () => {
     });
 });
 
+describe('raiseGroups of a salary paid monthly', () => {
+    it('counts a month as the 30 days of the law, not as 30.4', () => {
+        const report = boardReport();
+        report.scenario = { ...report.scenario, pay_basis: 'monthly' };
+
+        expect(raiseGroups(report, false).scaleText).toBe(
+            'Escala común de $0 a $600 al mes. Sueldo mensual = salario diario × 30.',
+        );
+    });
+});
+
 describe('raiseGroups', () => {
     it('groups the categories by sindicalizados and confianza on one scale of hundreds of pesos', () => {
         const { groups, scaleText } = raiseGroups(boardReport(), false);

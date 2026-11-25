@@ -31,7 +31,7 @@ it('opens the report of an average payroll with its one row, the same report as 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('compensation/report')
-            ->where('scenario.name', 'Promedio 2027')->where('scenario.source', 'average')
+            ->where('scenario.name', 'Promedio 2027')->where('scenario.source', 'average')->where('scenario.pay_basis', 'monthly')
             ->where('scenario.average', ['workers' => 500, 'monthly_salary_text' => '$15,000.00', 'tenure_years' => 1, 'group' => 'Sindicalizados'])
             ->where('headline.people', 500)
             ->where('coverage.total', 500)->where('coverage.costed', 500)->where('coverage.missing', [])
@@ -61,7 +61,7 @@ it('does not tell it of a scenario of the roster', function (): void {
     $scenario = Scenario::factory()->create(['tenant_id' => $this->tenant->id]);
 
     $this->get(route('tenant.compensation.scenarios.report', [$this->tenant, $scenario->id]))
-        ->assertInertia(fn (Assert $page) => $page->where('scenario.source', 'roster')->where('scenario.average', null)->where('warnings.class_one_premium', false));
+        ->assertInertia(fn (Assert $page) => $page->where('scenario.source', 'roster')->where('scenario.pay_basis', 'daily')->where('scenario.average', null)->where('warnings.class_one_premium', false));
 });
 
 it('shares the report of an average payroll from a link, with its row when the group reaches the minimum', function (): void {

@@ -6,13 +6,13 @@ import type { ScenarioReport } from '@/types';
 const LIST = new Intl.ListFormat('es-MX', { type: 'conjunction' });
 
 /** The datum an employer line could not be calculated without. */
-function lineDatum(line: string): string {
+function lineDatum(line: string, average: boolean): string {
     if (line === 'IMSS: riesgo de trabajo') {
         return 'tu prima de riesgo de trabajo';
     }
 
     return line === 'Impuesto sobre nómina'
-        ? 'el estado de las personas, para el impuesto sobre nómina'
+        ? `el estado ${average ? 'donde trabajan' : 'de las personas'}, para el impuesto sobre nómina`
         : line.charAt(0).toLocaleLowerCase('es-MX') + line.slice(1);
 }
 
@@ -41,7 +41,9 @@ export function reportAccuracy(
                   ),
               ]
             : []),
-        ...uncalculated.map(lineDatum),
+        ...uncalculated.map((line) =>
+            lineDatum(line, report.scenario.source === 'average'),
+        ),
     ];
     const missing = left + uncosted.length + uncalculated.length;
 

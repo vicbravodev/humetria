@@ -246,6 +246,31 @@ describe('reportSubtitle of an average payroll', () => {
     });
 });
 
+describe('reportAccuracy of an average payroll', () => {
+    it('asks for the state where they work, not for the state of the people', () => {
+        const report = boardReport();
+        report.coverage = { ...report.coverage, costed: 91 };
+        report.warnings = {
+            ...report.warnings,
+            uncalculated: ['Impuesto sobre nómina'],
+        };
+        report.scenario = {
+            ...report.scenario,
+            source: 'average',
+            average: {
+                workers: 91,
+                monthly_salary_text: '$15,000.00',
+                tenure_years: 1,
+                group: 'Sindicalizados',
+            },
+        };
+
+        expect(reportAccuracy(report)?.detail).toBe(
+            'el estado donde trabajan, para el impuesto sobre nómina.',
+        );
+    });
+});
+
 describe('premiumNotice', () => {
     it('says that the premium of work risk is the one of class I, and that the real one may be higher', () => {
         const report = boardReport();

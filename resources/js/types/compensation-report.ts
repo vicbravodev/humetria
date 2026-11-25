@@ -6,6 +6,7 @@ import type {
     AssumptionField,
     Paginated,
     ReportShareRow,
+    PayBasis,
     ScenarioSource,
 } from '@/types';
 
@@ -93,6 +94,8 @@ export type ScenarioReport = {
         raise_unit: RaiseUnit;
         /** What it is costed on: the people of the company, or an average payroll typed in the scenario. */
         source: ScenarioSource;
+        /** How its salaries are paid: a month is 30 days of the daily salary when paid monthly, 30.4 when paid by the day. */
+        pay_basis: PayBasis;
         /** The average payroll, null for a scenario of the roster. */
         average: {
             workers: number;

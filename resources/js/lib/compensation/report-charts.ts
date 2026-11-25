@@ -151,7 +151,7 @@ export function raiseGroups(
 
     return {
         groups: groups.filter((group) => group.rows.length > 0),
-        scaleText: `Escala común de $0 a ${wholePesos(scale * 100)} al mes. Sueldo mensual = salario diario × 30.4.`,
+        scaleText: `Escala común de $0 a ${wholePesos(scale * 100)} al mes. Sueldo mensual = salario diario × ${report.scenario.pay_basis === 'monthly' ? '30' : '30.4'}.`,
     };
 }
 

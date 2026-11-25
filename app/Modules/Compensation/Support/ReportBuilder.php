@@ -69,7 +69,7 @@ final readonly class ReportBuilder
                 'unionized_raise' => PercentBasisPoints::format($scenario->group_changes['unionized'] ?? 0),
                 'trusted_raise' => ($scenario->group_changes['trusted'] ?? null) === null ? null : PercentBasisPoints::format($scenario->group_changes['trusted']),
                 'raise_text' => RaiseText::of($scenario), 'raise_unit' => $scenario->raise_unit->value,
-                'source' => $scenario->source->value, 'average' => $this->average($scenario),
+                'source' => $scenario->source->value, 'average' => $this->average($scenario), 'pay_basis' => $scenario->pay_basis->value,
             ],
             'coverage' => $this->coverage($cost, $shared),
             'headline' => [
