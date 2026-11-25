@@ -32,6 +32,27 @@ export function needsQr(
     return next.some((step) => qrTypes.includes(step));
 }
 
+/** Whether the next steps ask for the code (the hint under the buttons says so); null while the policy or the person is not known. */
+export function nextAsksQr(
+    qrTypes: readonly string[] | null,
+    next: readonly string[] | null,
+): boolean | null {
+    return qrTypes === null || next === null ? null : needsQr(qrTypes, next);
+}
+
+/**
+ * Whether tapping this mark first reads the screen's code: the policy asks for it on this type (`qrTypes`) and no code is in
+ * hand yet. The code then travels with the mark, and the key comes after. Where the policy is not known (nobody known), the
+ * server says when one is missing.
+ */
+export function needsScanFirst(
+    qrTypes: readonly string[] | null,
+    type: string,
+    hasCode: boolean,
+): boolean {
+    return qrTypes !== null && !hasCode && qrTypes.includes(type);
+}
+
 /** A title or degree some people write before their name: «Ing.», «Lic.», «Dr.», «Dra.», «Mtro.», «Mtra.», «C.P.». */
 const TITLE = /^(ing|lic|dr|dra|mtro|mtra|c\.p)\.?$/i;
 

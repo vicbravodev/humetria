@@ -8,6 +8,8 @@ import {
     markClock,
     markHow,
     needsQr,
+    needsScanFirst,
+    nextAsksQr,
 } from '@/lib/attendance/punch-view';
 
 describe('greeting', () => {
@@ -217,5 +219,34 @@ describe('needsQr', () => {
         expect(needsQr(qrTypes, ['break_end'])).toBe(false);
         expect(needsQr(qrTypes, [])).toBe(false);
         expect(needsQr([], ['start'])).toBe(false);
+    });
+});
+
+describe('needsScanFirst', () => {
+    const qrTypes = ['start', 'end'];
+
+    it('reads the code before the key on the marks the policy asks it for: entry and exit', () => {
+        expect(needsScanFirst(qrTypes, 'start', false)).toBe(true);
+        expect(needsScanFirst(qrTypes, 'end', false)).toBe(true);
+    });
+
+    it('goes straight to the key on the marks that do not ask for it: the meal', () => {
+        expect(needsScanFirst(qrTypes, 'break_start', false)).toBe(false);
+        expect(needsScanFirst(qrTypes, 'break_end', false)).toBe(false);
+    });
+
+    it('does not read again when a code is already in hand, and leaves it to the server when the policy is not known', () => {
+        expect(needsScanFirst(qrTypes, 'start', true)).toBe(false);
+        expect(needsScanFirst(null, 'start', false)).toBe(false);
+        expect(needsScanFirst([], 'start', false)).toBe(false);
+    });
+});
+
+describe('nextAsksQr', () => {
+    it('says whether the next steps ask for the code, and nothing while the policy or the person is not known', () => {
+        expect(nextAsksQr(['start', 'end'], ['break_start'])).toBe(false);
+        expect(nextAsksQr(['start', 'end'], ['break_start', 'end'])).toBe(true);
+        expect(nextAsksQr(null, ['start'])).toBeNull();
+        expect(nextAsksQr(['start'], null)).toBeNull();
     });
 });

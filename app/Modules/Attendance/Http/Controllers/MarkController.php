@@ -122,8 +122,9 @@ final readonly class MarkController
             'timezone' => $timezone,
             // How they mark: a remote person is asked for no code nor zone (their position is dropped); null for nobody known.
             'mode' => $known === null ? null : ($this->schedule($known->id, $timezone)?->work_mode === WorkMode::Remote ? 'remote' : 'onsite'),
-            // The marks that ask for the code, so the reader is offered only there; null for nobody known (it is offered).
-            'qrTypes' => $known === null ? null : array_map(fn (MarkType $type): string => $type->value, MarkPolicyCheck::qrTypes(
+            // The marks that ask for the code: tapping one reads the screen's code first, and the key comes after. Nobody known: what the
+            // company's policy says, the rest the server tells when marking.
+            'qrTypes' => array_map(fn (MarkType $type): string => $type->value, $known === null ? MarkPolicyCheck::policyTypes(CompanyPolicy::current()) : MarkPolicyCheck::qrTypes(
                 $this->schedule($known->id, $timezone),
                 CompanyPolicy::current(),
                 $known->trusted,

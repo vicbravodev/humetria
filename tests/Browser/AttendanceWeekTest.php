@@ -6,8 +6,10 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\QrToken;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -282,8 +284,10 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
     $page = visitPage('worker-access/link', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, $this->ana->id);
 
-    // On site, with no code of the center's screen: the mark is refused.
-    $page->navigate('/me/acme/punch')
+    // On site, outside the zone of the center (a code read, so the key comes straight after): the mark is refused.
+    AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    standingAt($page, 19.4336, -99.1332);
+    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
         ->waitForText(', Ana')
         ->press('button:has-text("Entrada")')
         ->waitForText('Pedir una corrección')

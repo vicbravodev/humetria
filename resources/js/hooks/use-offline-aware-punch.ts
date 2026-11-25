@@ -29,11 +29,12 @@ export function useOfflineAwarePunch({
     return {
         ...punch,
         offline,
-        mark: (type: MarkType) => {
+        /** `scanned` is the code the app's camera just read for this very mark (the state has not caught up yet). */
+        mark: (type: MarkType, scanned?: string) => {
             if (enabled && !navigator.onLine) {
-                offline.start(type, punch.code);
+                offline.start(type, scanned ?? punch.code);
             } else {
-                void punch.mark(type);
+                void punch.mark(type, scanned === undefined ? {} : { scanned });
             }
         },
         forget: () => {

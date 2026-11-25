@@ -241,7 +241,8 @@ describe('the page', function (): void {
 
     it('says which marks ask for the code, so the page offers the reader only where it is needed (criterios 4.2.1)', function (): void {
         $show = fn (string $session) => $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'));
-        $this->get(route('attendance.device.punch.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('qrTypes', null));
+        // Nobody known: the company's policy, taking that its center has zones (a center without them asks the server's `qr_required`).
+        $this->get(route('attendance.device.punch.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('qrTypes', ['start', 'end']));
 
         $session = punchSession();
         anaPunches([], $session)->assertOk();

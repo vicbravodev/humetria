@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import DayMarks from '@/components/attendance/day-marks';
 import DayStatusCard from '@/components/attendance/day-status-card';
@@ -9,7 +10,7 @@ import PersonHeading from '@/components/humetria/person-heading';
 import PunchButton from '@/components/attendance/punch-button';
 import PunchFeedback from '@/components/attendance/punch-feedback';
 import PunchHint from '@/components/attendance/punch-hint';
-import PunchScanButton from '@/components/attendance/punch-scan-button';
+import PunchScanFirst from '@/components/attendance/punch-scan-first';
 import PunchWeekLink from '@/components/attendance/punch-week-link';
 import { clockNow } from '@/lib/attendance/correction';
 import type { MarkType } from '@/lib/attendance/next-step';
@@ -19,8 +20,10 @@ import {
     dayStatus,
     firstName,
     greeting,
-    needsQr,
+    needsScanFirst,
+    nextAsksQr,
 } from '@/lib/attendance/punch-view';
+import { workerSlug } from '@/lib/pwa/sw-rules';
 import { dayTitle } from '@/lib/attendance/week-text';
 
 /**
@@ -63,13 +66,22 @@ export default function PunchReady({
     readInApp: boolean;
     /** What the screen says of the marks made without a connection: the queue, the ones not accepted, the readiness. */
     notes?: ReactNode;
-    onMark: (type: MarkType) => void;
+    /** `scanned` is the code the camera just read for this mark. */
+    onMark: (type: MarkType, scanned?: string) => void;
     /** The camera read the code of the screen of the person's center. */
     onCode: (code: string) => void;
     onForget: () => void;
 }) {
     const today = clockNow(new Date(now), timezone);
-    const asksQr = needsQr(qrTypes, person?.next ?? null);
+    const [scanning, setScanning] = useState<MarkType | null>(null);
+    const slug = workerSlug(location.pathname);
+    const hasCode = readInApp || scannedAt !== null;
+    // A policy that asks for the code on this mark: tapping it reads the screen's code first, and the key comes after.
+    const start = (type: MarkType) =>
+        slug !== null && needsScanFirst(qrTypes, type, hasCode)
+            ? setScanning(type)
+            : onMark(type);
+    const asksQr = nextAsksQr(qrTypes, person?.next ?? null);
 
     return (
         <PersonFrame
@@ -77,7 +89,7 @@ export default function PunchReady({
             back={enterUrl}
             actions={
                 <>
-                    <PunchButton person={person} onMark={onMark} />
+                    <PunchButton person={person} onMark={start} />
                     <PunchHint
                         mode={mode}
                         scannedAt={scannedAt}
@@ -105,15 +117,23 @@ export default function PunchReady({
                 )}
                 <PunchFeedback feedback={feedback} />
                 {notes}
-                {/* In the content, not in the bar of steps: that bar stays compact (hallazgo 16). */}
-                {mode !== 'remote' && asksQr && (
-                    <PunchScanButton read={readInApp} onCode={onCode} />
-                )}
                 <PunchWeekLink href={weekUrl} />
                 {marks !== null && <DayMarks marks={marks} />}
                 {mode !== 'remote' && <LocationNote />}
                 {person === null && <LinkDeviceNote enterUrl={enterUrl} />}
             </div>
+            {scanning !== null && slug !== null && (
+                <PunchScanFirst
+                    type={scanning}
+                    slug={slug}
+                    onRead={(code, type) => {
+                        setScanning(null);
+                        onCode(code);
+                        onMark(type, code);
+                    }}
+                    onClose={() => setScanning(null)}
+                />
+            )}
         </PersonFrame>
     );
 }

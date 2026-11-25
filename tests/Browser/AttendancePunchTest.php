@@ -381,7 +381,7 @@ it('tells an expired code apart and opens Marcar again without it, to scan the o
         ->assertNoAccessibilityIssues(1)
         ->press('Escanee de nuevo')
         // The page that remembers her for a few minutes, now without the old code: it says how to scan the new one.
-        ->waitForText('Si su centro tiene una pantalla QR')
+        ->waitForText('Al marcar, primero lea el código de la pantalla de su centro')
         ->assertScript('() => window.location.search', '')
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true);
 });

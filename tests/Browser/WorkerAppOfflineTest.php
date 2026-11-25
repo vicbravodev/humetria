@@ -204,7 +204,10 @@ it('keeps only the mark the server cannot read as not accepted, and delivers the
     withoutNetwork($page);
     markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
     $page->press('Listo');
-    markOffline($page, 'Marcar salida', 'Salida sin internet');
+    // The exit asks for the screen's code: the tap opens the reader (the camera is a canvas that draws it), and the key follows.
+    withCameraShowing($page, originOf($page).'/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()));
+    // With a code read there is no sheet: the key signs at once and the mark is kept.
+    $page->press('button:has-text("Marcar salida")')->waitForText('Guardada sin conexión');
     $page->press('Listo')->assertSee('2 marcas sin enviar');
     damageMark($page, 1);
 

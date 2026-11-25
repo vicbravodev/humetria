@@ -303,6 +303,22 @@ describe('the QR by type of mark (criterios 4.2.1)', function (): void {
             ->and(decideMark(qrValid: null, type: MarkType::BreakEnd)->method)->toBe(MarkMethod::Geofence);
     });
 
+    it('says which types the policy asks the QR for, so the page reads the code before the key only there', function (): void {
+        $types = fn (AttendancePolicy $policy, ?array $zones = null, ?AttendanceSchedule $schedule = null, bool $trusted = false, bool $field = false): array => array_map(
+            fn (MarkType $type): string => $type->value,
+            $zones === null ? MarkPolicyCheck::policyTypes($policy) : MarkPolicyCheck::qrTypes($schedule, $policy, $trusted, $zones, $field),
+        );
+        $zone = [(new AttendanceZone)->forceFill(['id' => 'zone-a'])];
+
+        expect($types(markPolicy()))->toBe(['start', 'end'])
+            ->and($types(markPolicy(requireQrBreaks: true)))->toBe(['start', 'break_start', 'break_end', 'end'])
+            ->and($types(markPolicy(requireQr: false)))->toBe([])
+            ->and($types(markPolicy(requireQr: false), []))->toBe(['start', 'break_start', 'break_end', 'end'])
+            ->and($types(markPolicy(), $zone, field: true))->toBe([])
+            ->and($types(markPolicy(), $zone, trusted: true))->toBe([])
+            ->and($types(markPolicy(), $zone, (new AttendanceSchedule)->forceFill(['work_mode' => WorkMode::Remote])))->toBe([]);
+    });
+
     it('takes a break by geofence with its zone, position and distance', function (): void {
         $context = decideMark(qrValid: null, type: MarkType::BreakStart);
 

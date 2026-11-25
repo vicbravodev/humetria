@@ -137,9 +137,24 @@ final class MarkPolicyCheck
             return [];
         }
 
-        $order = [MarkType::Start, MarkType::BreakStart, MarkType::BreakEnd, MarkType::End];
+        return $zones === [] ? self::allTypes() : self::policyTypes($policy);
+    }
 
-        return array_values(array_filter($order, fn (MarkType $type): bool => $zones === [] || self::requiresQr($policy, $type)));
+    /**
+     * The types of mark the company's policy asks the QR for, taking that the center has zones: all there is to say of a person who
+     * is not known yet (a center without zones asks for every type, which the server says when marking).
+     *
+     * @return list<MarkType>
+     */
+    public static function policyTypes(AttendancePolicy $policy): array
+    {
+        return array_values(array_filter(self::allTypes(), fn (MarkType $type): bool => self::requiresQr($policy, $type)));
+    }
+
+    /** @return list<MarkType> the marks of a day, in order */
+    private static function allTypes(): array
+    {
+        return [MarkType::Start, MarkType::BreakStart, MarkType::BreakEnd, MarkType::End];
     }
 
     /** Whether the policy makes the QR obligatory for this type of mark: the start and the end, or a break (criterios 4.2.1). */
