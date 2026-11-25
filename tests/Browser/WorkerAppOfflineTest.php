@@ -285,7 +285,10 @@ it('without a ticket, the mark without a connection says what is missing instead
     $page->navigate('/me/acme/punch');
     withoutNetwork($page);
 
-    $page->press('button:has-text("Salir a comer")')->waitForText('Aún no está listo: ábrala con internet');
+    // «¿Puedo marcar sin internet?» is there only once the phone has read its context from IndexedDB: a tap before that goes the
+    // online way and finds no offline flow to start (a slow runner reads it late).
+    $page->waitForText('¿Puedo marcar sin internet?')
+        ->press('button:has-text("Salir a comer")')->waitForText('Aún no está listo: ábrala con internet');
     expect(AttendanceOfflineMark::query()->count())->toBe(0);
 });
 

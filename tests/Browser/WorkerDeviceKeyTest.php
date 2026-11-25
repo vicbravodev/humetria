@@ -36,6 +36,8 @@ it('prepares this phone from Cuenta after the proof, keeps the key in the phone 
     $page->press('Cuenta')->waitForText('Marcar sin internet con este teléfono')
         ->assertSee('Puede preparar hasta 3 teléfonos')
         ->assertScript(spilledOut(), '')
+        // The section fades in: axe must judge the settled page, not a frame mid-transition (a slow runner shows it).
+        ->assertScript(settled(), true)
         ->assertNoAccessibilityIssues(1);
 
     // The server asks for a recent proof first; once given, the preparing goes by itself.
