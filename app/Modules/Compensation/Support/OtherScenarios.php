@@ -21,7 +21,7 @@ final readonly class OtherScenarios
     public function __construct(private ScenarioInputBuilder $inputs) {}
 
     /**
-     * @return list<array{id: string, name: string, first_year_cents: int, first_year_text: string}>
+     * @return list<array{id: string, name: string, first_year_cents: int, first_year_text: string, raise_text: string, payroll_growth_bp: int, per_person_month_cents: int}>
      */
     public function except(?Scenario $scenario, ScenarioSource $source): array
     {
@@ -36,8 +36,12 @@ final readonly class OtherScenarios
         $rows = [];
 
         foreach ($others as $other) {
-            $cents = ScenarioCost::firstYear($this->inputs->build($other))->firstYearCents();
-            $rows[] = ['id' => $other->id, 'name' => $other->name, 'first_year_cents' => $cents, 'first_year_text' => Money::pesos($cents)];
+            $cost = ScenarioCost::firstYear($this->inputs->build($other));
+            $impact = ReportImpact::of($cost, 0);
+            $rows[] = [
+                'id' => $other->id, 'name' => $other->name, 'first_year_cents' => $cost->firstYearCents(), 'first_year_text' => Money::pesos($cost->firstYearCents()),
+                'raise_text' => RaiseText::of($other), 'payroll_growth_bp' => $impact['payroll_growth_bp'], 'per_person_month_cents' => $impact['per_person_month_cents'],
+            ];
         }
 
         return $rows;

@@ -126,7 +126,7 @@ final readonly class ReportBuilder
             'type' => $concept->type->value, 'key' => $concept->key, 'label' => $this->labels->label($concept->type, $concept->key, $names),
             'before_text' => Money::format($concept->beforeCents), 'after_text' => Money::format($concept->afterCents),
             'delta_text' => Money::format($concept->deltaCents()), 'first_year_text' => Money::format($concept->firstYearCents()),
-            'first_year_cents' => $concept->firstYearCents(),
+            'first_year_cents' => $concept->firstYearCents(), 'recurring_cents' => $concept->recurringCents,
         ];
     }
 
