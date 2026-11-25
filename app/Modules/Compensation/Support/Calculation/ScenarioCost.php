@@ -12,6 +12,7 @@ use App\Modules\Compensation\Data\CostCut;
 use App\Modules\Compensation\Data\CostSubject;
 use App\Modules\Compensation\Data\CostUnit;
 use App\Modules\Compensation\Data\GradeRaise;
+use App\Modules\Compensation\Data\LawTerms;
 use App\Modules\Compensation\Data\MonthlyCost;
 use App\Modules\Compensation\Data\ScenarioInput;
 use App\Modules\Compensation\Data\SideCost;
@@ -184,7 +185,7 @@ final class ScenarioCost
     /**
      * @param  list<BenefitSpec>  $benefits
      * @param  list<CarbonImmutable>  $days  the first day of each month
-     * @param  array<string, array{lines: array<string, int>, uncalculated: list<string>}>  $cache  the persons already costed on this side
+     * @param  array<string, array{lines: array<string, int>, uncalculated: list<string>, sbc: int, terms: LawTerms}>  $cache  the persons already costed on this side
      */
     private static function side(CostUnit $unit, int $salary, array $benefits, ScenarioInput $in, array $days, array &$cache): SideCost
     {
@@ -218,9 +219,9 @@ final class ScenarioCost
      * One person for a full year on one day, by concept id: "salary:salary", "benefit:{key}", "contribution:{line}".
      *
      * @param  list<BenefitSpec>  $benefits
-     * @return array{lines: array<string, int>, uncalculated: list<string>}
+     * @return array{lines: array<string, int>, uncalculated: list<string>, sbc: int, terms: LawTerms}
      */
-    private static function person(CostSubject $subject, array $benefits, ScenarioInput $in, ?string $state): array
+    public static function person(CostSubject $subject, array $benefits, ScenarioInput $in, ?string $state): array
     {
         $salary = $subject->dailySalaryCents;
         $terms = BenefitCost::lawTerms($benefits, $subject, $in->fiscal);
@@ -266,7 +267,7 @@ final class ScenarioCost
             }
         }
 
-        return ['lines' => $lines, 'uncalculated' => $uncalculated];
+        return ['lines' => $lines, 'uncalculated' => $uncalculated, 'sbc' => $sbc, 'terms' => $terms];
     }
 
     /**

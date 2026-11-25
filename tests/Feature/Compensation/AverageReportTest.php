@@ -96,3 +96,78 @@ it('does not let an annex of people be asked of an average payroll', function ()
 
     $this->get(route('tenant.compensation.scenarios.annex', [$this->tenant, $scenario->id]))->assertNotFound();
 });
+
+function averageReportProps(Tenant $tenant, Scenario $scenario): array
+{
+    return test()->get(route('tenant.compensation.quick.report', [$tenant, $scenario->id]))->assertOk()->viewData('page')['props'];
+}
+
+it('answers what the raise really costs: the payroll growth, the drag of each peso and the raise against inflation', function (): void {
+    $props = averageReportProps($this->tenant, averageReportScenario($this->tenant));
+    $recurring = $props['headline']['recurring_cents'];
+
+    // A 5 % raise of the salary alone: $750 a month to each of 500 people for 12 months, and 3 % of inflation by default.
+    expect($props['impact'])->toMatchArray(['salary_growth_bp' => 500, 'inflation_bp' => 300, 'real_raise_bp' => 194])
+        ->and($props['impact']['per_person_month_cents'])->toBe(intdiv(intdiv($recurring, 500), 12))
+        ->and($props['impact']['drag_hundredths'])->toBe((int) round($recurring / 450_000_000 * 100))
+        ->and($props['impact']['payroll_growth_bp'])->toBe((int) round($recurring / $props['headline']['before_cents'] * 10_000))
+        // The fixed quota of the IMSS does not grow with the salary, so the payroll grows less than the raise.
+        ->and($props['impact']['payroll_growth_bp'])->toBeLessThan(500);
+});
+
+it('walks one average worker through the cost step by step, from the engine', function (): void {
+    $props = averageReportProps($this->tenant, averageReportScenario($this->tenant));
+    $example = $props['example'];
+
+    expect($example)->toMatchArray([
+        'monthly_salary_cents' => 1_500_000, 'monthly_raise_cents' => 75_000,
+        'aguinaldo_days' => '15', 'vacation_days' => '12', 'vacation_premium_percent' => '25',
+        'bonus_extra_year_cents' => 37_500, 'premium_extra_year_cents' => 7_500, 'salary_extra_year_cents' => 900_000,
+        // 15 / 365 + 12 × 25 % / 365 on top of 1.
+        'factor' => '1.0493',
+        // $500 a day × 1.0493150… = $524.65; $525 × 1.0493150… = $550.89 (the cent is truncated).
+        'sbc_before_cents' => 52_465, 'sbc_after_cents' => 55_089,
+    ])->and($example['total_extra_year_cents'] * 500)->toBe($props['headline']['recurring_cents'])
+        ->and($example['contributions_extra_year_cents'])->toBe($example['total_extra_year_cents'] - 900_000 - 37_500 - 7_500)
+        ->and($example['total_extra_month_cents'])->toBe(intdiv($example['total_extra_year_cents'], 12));
+});
+
+it('has no worker to walk through for the roster, only its totals', function (): void {
+    $scenario = Scenario::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    $this->get(route('tenant.compensation.scenarios.report', [$this->tenant, $scenario->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('example', null)->has('impact'));
+});
+
+it('puts the raise on a ladder of two points apart, the current one among them', function (): void {
+    $scenario = averageReportScenario($this->tenant, ['group_changes' => ['unionized' => 600, 'trusted' => null]]);
+    $props = averageReportProps($this->tenant, $scenario);
+    $ladder = $props['ladder'];
+
+    expect(array_column($ladder, 'raise_text'))->toBe(['4 %', '6 %', '8 %', '10 %'])
+        ->and(array_column($ladder, 'current'))->toBe([false, true, false, false])
+        // Every rung costs more than the one below, and the current one is the scenario.
+        ->and($ladder[1]['first_year_cents'])->toBe($props['headline']['first_year_cents'])
+        ->and($ladder[0]['first_year_cents'])->toBeLessThan($ladder[1]['first_year_cents'])
+        ->and($ladder[3]['first_year_cents'])->toBeGreaterThan($ladder[2]['first_year_cents'])
+        ->and(array_column($ladder, 'salary_growth_bp'))->toBe([400, 600, 800, 1000]);
+});
+
+it('does not put a raise of a fixed amount on a ladder, nor one near zero below zero', function (): void {
+    $low = averageReportProps($this->tenant, averageReportScenario($this->tenant, ['group_changes' => ['unionized' => 100, 'trusted' => null]]));
+
+    expect(array_column($low['ladder'], 'raise_text'))->toBe(['1 %', '3 %', '5 %', '7 %']);
+
+    $amount = averageReportProps($this->tenant, averageReportScenario($this->tenant, ['raise_unit' => 'amount', 'group_changes' => ['unionized' => 50_000, 'trusted' => null]]));
+
+    expect($amount['ladder'])->toBe([]);
+});
+
+it('keeps the ladder out of a report shared by a link', function (): void {
+    $scenario = averageReportScenario($this->tenant);
+    $token = str_repeat('c', 64);
+    ReportShare::factory()->create(['scenario_id' => $scenario->id, 'tenant_id' => $this->tenant->id, 'token_hash' => hash('sha256', $token), 'created_at' => now(), 'expires_at' => now()->addDays(2)]);
+
+    $this->get(route('compensation.report.shared', $token))
+        ->assertInertia(fn (Assert $page) => $page->where('report.ladder', [])->has('report.impact')->has('report.example'));
+});
