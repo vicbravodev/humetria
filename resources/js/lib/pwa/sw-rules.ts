@@ -7,7 +7,18 @@
 export const NETWORK_TIMEOUT_MS = 4_000;
 
 const ASSETS = '/build/assets/';
+/** The images of the brand (the «hecho con Humetría» seal at the foot of the pages): kept too, or the shell shows a broken picture. */
+const BRAND = '/brand/';
 const CACHE_PREFIX = 'humetria-pwa-';
+
+/**
+ * The seals the shell draws at its foot («hecho con Humetría», light and dark): images the HTML of the shell does not name
+ * (React draws them), so they are kept at install with the rest, not left to a second visit.
+ */
+export const SHELL_IMAGES = [
+    '/brand/humetria-sello-hecho-con-gris.svg',
+    '/brand/humetria-sello-hecho-con-blanco.svg',
+];
 
 /** The `{slug}` of `/me/{slug}` and of what hangs from it; null for any other address. */
 export function workerSlug(pathname: string): string | null {
@@ -38,7 +49,7 @@ export function routeOf(request: {
         return 'pass';
     }
 
-    if (url.pathname.startsWith(ASSETS)) {
+    if (url.pathname.startsWith(ASSETS) || url.pathname.startsWith(BRAND)) {
         return 'asset';
     }
 

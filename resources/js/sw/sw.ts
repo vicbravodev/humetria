@@ -1,6 +1,7 @@
 import {
     NETWORK_TIMEOUT_MS,
     NOTICE,
+    SHELL_IMAGES,
     cacheName,
     fallsBackToShell,
     punchUrl,
@@ -37,7 +38,10 @@ async function saveShell(): Promise<void> {
 
     const html = await response.clone().text();
     await cache.put(shellUrl(scope), response);
-    await cache.addAll(shellAssets(html, self.location.origin));
+    await cache.addAll([
+        ...shellAssets(html, self.location.origin),
+        ...SHELL_IMAGES,
+    ]);
 }
 
 async function dropOldCaches(): Promise<void> {
