@@ -368,7 +368,7 @@ it('shows support the console and the way into a company, and nothing that chang
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile)
         ->assertSee('Con owner')
-        ->assertSee('Entrar como owner')
+        ->assertSee('Entrar como soporte')
         ->assertDontSee('Dar de alta empresa')
         ->assertMissing('@tenant-actions')
         ->assertDontSee('Reenviar');
@@ -391,7 +391,7 @@ it('lets support enter a company as its owner', function (): void {
         ->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visit('/admin/companies')
-        ->click('Entrar como owner')
+        ->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertPathBeginsWith('/admin/acme')
         ->assertSee('Estás viendo Humetría como Ana Pérez')
         ->assertNoJavaScriptErrors();
@@ -532,10 +532,10 @@ it('enters as the owner from the console, shows the banner on every page, and co
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visit('/admin/companies')
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertScript(pathBecomes('/admin/grupo-ejemplo'), true)
         ->assertPathIs('/admin/grupo-ejemplo')
-        ->assertSee('Estás viendo Humetría como Ana Pérez · Salir')
+        ->assertSee('Estás viendo Humetría como Ana Pérez · Quedan 30 min · Salir')
         // Settings has its own layout inside the frame: the banner is there too.
         ->navigate('/admin/settings/appearance')
         ->assertSee('Estás viendo Humetría como Ana Pérez')
@@ -552,7 +552,7 @@ it('leaves only the appearance settings while impersonating', function (): void 
     TenantMembership::factory()->for(Tenant::factory()->create())->create();
 
     visit('/admin/companies')
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->navigate('/admin/settings/appearance')
         ->assertSee('Apariencia')
         ->assertDontSee('Perfil')
@@ -566,7 +566,7 @@ it('offers to enter as the owner only when the company has one', function (): vo
 
     visit('/admin/companies')
         ->click('@tenant-actions')
-        ->assertDontSee('Entrar como owner');
+        ->assertDontSee('Entrar como soporte');
 });
 
 it('passes the accessibility and CSP checks with the impersonation banner', function (bool $dark, bool $mobile): void {
@@ -574,7 +574,7 @@ it('passes the accessibility and CSP checks with the impersonation banner', func
     TenantMembership::factory()->for(Tenant::factory()->create())->create();
 
     visitPage('dashboard', '/admin/companies', $dark, $mobile, fn ($page) => $page
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Estás viendo Humetría como'));
 })->with($looks);
 

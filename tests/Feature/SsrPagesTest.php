@@ -162,7 +162,7 @@ it('sends nothing to Node for a superadmin working as a company owner', function
     $tenant = Tenant::factory()->create();
     ownerOf($tenant);
 
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant), supportEntry());
     $this->get('/')->assertOk();
 
     expect(nodeRenders())->toBe(0);

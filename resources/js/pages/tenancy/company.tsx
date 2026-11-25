@@ -6,6 +6,7 @@ import CompanyContactCard from '@/components/tenancy/company-contact-card';
 import CompanyMain from '@/components/tenancy/company-main';
 import CompanyNotes from '@/components/tenancy/company-notes';
 import CompanyRiskZone from '@/components/tenancy/company-risk-zone';
+import TenantSupportActions from '@/components/tenancy/tenant-support-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { tenantStatusVariant } from '@/lib/tenant-status';
@@ -65,6 +66,12 @@ export default function Company(props: CompanyPage) {
                     }
                     description={`${company.legal_name} · ${company.rfc}`}
                 >
+                    <TenantSupportActions
+                        tenantId={company.id}
+                        tradeName={company.trade_name}
+                        hasOwner={company.owner !== null}
+                        variant="outline"
+                    />
                     {props.can_audit && (
                         <Button asChild variant="outline">
                             <Link

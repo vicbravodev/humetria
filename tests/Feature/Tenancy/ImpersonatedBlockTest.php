@@ -25,7 +25,7 @@ it('gives an impersonating superadmin the real page of a suspended company, told
     $tenant = Tenant::factory()->suspended()->create();
     ownerOf($tenant);
 
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant), supportEntry());
 
     $this->get(route('tenant.dashboard', $tenant))
         ->assertOk()
@@ -69,7 +69,7 @@ function twoCompaniesOfOneOwner(): array
 
 it('opens only the company the impersonation started from, and answers 404 for the owner\'s other company', function (): void {
     [$superadmin, $a, $b, $owner] = twoCompaniesOfOneOwner();
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $a));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $a), supportEntry());
 
     $this->get(route('tenant.dashboard', $a))->assertOk();
     $this->get(route('tenant.dashboard', $b))->assertNotFound();
@@ -77,7 +77,7 @@ it('opens only the company the impersonation started from, and answers 404 for t
 
 it('lists only that company in the switcher', function (): void {
     [$superadmin, $a, $b, $owner] = twoCompaniesOfOneOwner();
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $a));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $a), supportEntry());
 
     $this->get(route('tenant.dashboard', $a))
         ->assertInertia(fn (Assert $page) => $page->where('tenants.total', 1)->has('tenants.data', 1)->where('tenants.data.0.slug', $a->slug));
@@ -85,14 +85,14 @@ it('lists only that company in the switcher', function (): void {
 
 it('takes the impersonator straight into that company from /admin instead of asking which one', function (): void {
     [$superadmin, $a, $b, $owner] = twoCompaniesOfOneOwner();
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $a));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $a), supportEntry());
 
     $this->get(route('dashboard'))->assertRedirect(route('tenant.dashboard', $a));
 });
 
 it('forgets the company when the impersonation ends, and gives the superadmin back to the console', function (): void {
     [$superadmin, $a, $b, $owner] = twoCompaniesOfOneOwner();
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $a));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $a), supportEntry());
     expect(session(Impersonation::TENANT_KEY))->toBe($a->id);
 
     $this->post(route('impersonation.stop'))->assertRedirect(route('companies.index'));
@@ -103,7 +103,7 @@ it('forgets the company when the impersonation ends, and gives the superadmin ba
 
 it('takes the company from the console row, never from the request', function (): void {
     [$superadmin, $a, $b, $owner] = twoCompaniesOfOneOwner();
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $a), ['tenant_id' => $b->id]);
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $a), [...supportEntry(), 'tenant_id' => $b->id]);
 
     expect(session(Impersonation::TENANT_KEY))->toBe($a->id);
 });

@@ -24,6 +24,7 @@ const LABELS: Record<string, string> = {
     'tenant_role.deleted': 'Rol propio borrado',
     'impersonation.started': 'Inicio de impersonación',
     'impersonation.stopped': 'Fin de impersonación',
+    'impersonation.expired': 'Impersonación terminada por tiempo',
     'user.password_reset_sent': 'Enlace de contraseña enviado',
     'user.two_factor_removed': 'Verificación en dos pasos quitada',
     'user.support_granted': 'Rol de soporte dado',

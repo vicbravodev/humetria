@@ -23,7 +23,7 @@ beforeEach(function (): void {
 
 function impersonateOwnerOf(Tenant $tenant): void
 {
-    test()->actingAs(superadmin())->post(route('companies.impersonate', $tenant))->assertRedirect();
+    test()->actingAs(superadmin())->post(route('companies.impersonate', $tenant), supportEntry())->assertRedirect();
 }
 
 it('lets the owner see the list of people to channel', function (): void {

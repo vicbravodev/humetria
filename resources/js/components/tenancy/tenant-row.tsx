@@ -99,7 +99,11 @@ export default function TenantRowView({
                             activationMinDate={activationMinDate}
                         />
                     ) : (
-                        <TenantSupportActions tenant={tenant} />
+                        <TenantSupportActions
+                            tenantId={tenant.id}
+                            tradeName={tenant.trade_name}
+                            hasOwner={tenant.owner !== null}
+                        />
                     )}
                 </div>
             </TableCell>

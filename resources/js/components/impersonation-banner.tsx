@@ -1,12 +1,13 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import { ImpersonationCountdown } from '@/components/impersonation-countdown';
 import { stop } from '@/routes/impersonation';
 
 /**
- * While a superadmin works as someone else, a strip over the frame says as whom, with the way back.
+ * While a superadmin works as someone else, a strip over the frame says as whom, how long is left, with the way back.
  * Leaving flushes the prefetched pages: they were the impersonated user's.
  */
 export function ImpersonationBanner() {
-    const { impersonator, auth } = usePage().props;
+    const { impersonator, impersonationLeft, auth } = usePage().props;
 
     if (impersonator === null) {
         return null;
@@ -18,6 +19,12 @@ export function ImpersonationBanner() {
             className="sticky top-0 z-30 bg-primary px-4 py-1.5 text-center text-sm text-primary-foreground"
         >
             Estás viendo Humetría como {auth.user.name} ·{' '}
+            {impersonationLeft !== undefined && (
+                <>
+                    <ImpersonationCountdown seconds={impersonationLeft} />{' '}
+                    ·{' '}
+                </>
+            )}
             <Link
                 href={stop()}
                 as="button"

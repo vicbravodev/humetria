@@ -171,6 +171,16 @@ function suspension(): array
     return ['restriction' => 'suspended', 'restriction_reason' => 'Suspendida', 'restricted_at' => now()];
 }
 
+/**
+ * What entering a real company as support asks: the reason and how long (the demo company asks neither).
+ *
+ * @return array{reason: string, minutes: int}
+ */
+function supportEntry(): array
+{
+    return ['reason' => 'Revisar una invitación rebotada', 'minutes' => 30];
+}
+
 function signInAsSuperadmin(): void
 {
     test()->actingAs(superadmin());

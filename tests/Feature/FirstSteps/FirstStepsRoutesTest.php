@@ -107,7 +107,7 @@ it('logs first_steps.welcomed, first_steps.hidden and first_steps.shown with ten
 });
 
 it('refuses the three posts while a superadmin works as the owner', function (string $name): void {
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant), supportEntry());
 
     $this->post(route($name, $this->tenant))->assertNotFound();
 

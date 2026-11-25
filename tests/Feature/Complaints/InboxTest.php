@@ -279,7 +279,7 @@ it('lets in the people who can handle complaints and keeps out the rest', functi
 
 it('keeps the case routes closed to a superadmin acting as the owner', function (): void {
     $complaint = heldBy($this, [$this->owner]);
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant), supportEntry());
 
     $this->get(route('tenant.complaints.index', $this->tenant))->assertNotFound();
     $this->get(route('tenant.complaints.cases.show', [$this->tenant, $complaint->id]))->assertNotFound();

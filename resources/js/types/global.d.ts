@@ -35,6 +35,8 @@ declare module '@inertiajs/core' {
             auth: Auth;
             /** The superadmin working as auth.user; null outside an impersonation. */
             impersonator: string | null;
+            /** Seconds before that entry as support ends by itself; only while impersonating. */
+            impersonationLeft?: number | undefined;
             tenant: CurrentTenant | null;
             /** The user's first companies, for the switcher, and how many they have. */
             tenants: { data: TenantSummary[]; total: number };

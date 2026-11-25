@@ -26,6 +26,9 @@ final readonly class Impersonation
     /** The company the superadmin entered from: the impersonated owner works in that one, though they may own others. */
     public const string TENANT_KEY = 'impersonated_tenant_id';
 
+    /** When the entry ends by itself, as a Unix timestamp: support works inside a company for a set time, never open-ended. */
+    public const string ENDS_AT_KEY = 'impersonation_ends_at';
+
     /** Laravel's mark of a recently confirmed password: it belongs to whoever typed it, never to the other side. */
     private const string PASSWORD_CONFIRMED_KEY = 'auth.password_confirmed_at';
 
@@ -58,20 +61,51 @@ final readonly class Impersonation
         return $this->impersonatorId() !== null;
     }
 
-    /**
-     * Signs in as the target, recorded first as the superadmin. The tenant the console row
-     * belongs to, if any, comes from the Context. Logging in gives the session a new id.
-     */
-    public function start(User $impersonator, User $target, ?string $tenantId = null): void
+    /** Seconds left before the entry ends by itself; null when nobody is impersonating or it has no end. */
+    public function secondsLeft(): ?int
     {
-        Context::scope(function () use ($target): void {
-            $this->recordAudit->handle('impersonation.started', $target, ['tenant_id' => Context::get('tenant_id')]);
+        $endsAt = $this->session->get(self::ENDS_AT_KEY);
+
+        return $this->isActive() && is_int($endsAt) ? max(0, $endsAt - now()->getTimestamp()) : null;
+    }
+
+    public function hasExpired(): bool
+    {
+        return $this->secondsLeft() === 0;
+    }
+
+    /**
+     * Ends an entry whose time is up, recorded first as the person it worked as, and gives the staff member back like stop().
+     */
+    public function expire(): ?User
+    {
+        Context::scope(function (): void {
+            $this->recordAudit->handle('impersonation.expired', $this->guard->user());
+            Log::info('impersonation.expired', ['subject_id' => $this->guard->id()]);
+        }, ['user_id' => $this->guard->id(), 'impersonator_id' => $this->impersonatorId()]);
+
+        return $this->stop();
+    }
+
+    /**
+     * Signs in as the target, recorded first as the superadmin with why and for how long. The tenant the console row
+     * belongs to, if any, comes from the Context. Logging in gives the session a new id. It ends by itself after `$minutes`.
+     */
+    public function start(User $impersonator, User $target, ?string $tenantId = null, ?string $reason = null, int $minutes = 120): void
+    {
+        Context::scope(function () use ($target, $reason, $minutes): void {
+            $why = $reason === null ? [] : ['reason' => $reason, 'minutes' => $minutes];
+            $this->recordAudit->handle('impersonation.started', $target, ['tenant_id' => Context::get('tenant_id'), ...$why]);
             Log::info('impersonation.started', ['subject_id' => $target->id]);
         }, ['user_id' => $impersonator->id, 'impersonator_id' => $impersonator->id]);
 
         $this->switchTo($target);
         $this->session->forget(self::PASSWORD_CONFIRMED_KEY);
-        $this->session->put([self::SESSION_KEY => $impersonator->id, self::IMPERSONATED_KEY => $target->id]);
+        $this->session->put([
+            self::SESSION_KEY => $impersonator->id,
+            self::IMPERSONATED_KEY => $target->id,
+            self::ENDS_AT_KEY => now()->addMinutes($minutes)->getTimestamp(),
+        ]);
         $tenantId === null ? $this->session->forget(self::TENANT_KEY) : $this->session->put(self::TENANT_KEY, $tenantId);
     }
 
@@ -89,7 +123,7 @@ final readonly class Impersonation
             Log::info('impersonation.stopped', ['subject_id' => $ownerId]);
         }, ['user_id' => $ownerId, 'impersonator_id' => $impersonatorId]);
 
-        $this->session->forget([self::SESSION_KEY, self::IMPERSONATED_KEY, self::TENANT_KEY, self::PASSWORD_CONFIRMED_KEY]);
+        $this->session->forget([self::SESSION_KEY, self::IMPERSONATED_KEY, self::TENANT_KEY, self::ENDS_AT_KEY, self::PASSWORD_CONFIRMED_KEY]);
         $impersonator = User::query()->find($impersonatorId);
 
         if ($impersonator === null || ! $impersonator->isStaff()) {

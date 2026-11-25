@@ -1,31 +1,43 @@
-import { Link, router } from '@inertiajs/react';
 import { LogIn } from 'lucide-react';
+import { useState } from 'react';
+import SupportEntryDialog from '@/components/tenancy/support-entry-dialog';
 import { Button } from '@/components/ui/button';
-import { impersonate } from '@/routes/companies';
-import type { TenantRow } from '@/types';
 
-/** What support does with a company: enter as its owner, when it has one. It changes nothing about the company. */
+/** Entering a company as support, when it has an owner to work as: it asks why and for how long. It changes nothing about the company. */
 export default function TenantSupportActions({
-    tenant,
+    tenantId,
+    tradeName,
+    hasOwner,
+    variant = 'ghost',
 }: {
-    tenant: TenantRow;
+    tenantId: string;
+    tradeName: string;
+    hasOwner: boolean;
+    variant?: 'ghost' | 'outline';
 }) {
-    if (tenant.owner === null) {
+    const [open, setOpen] = useState(false);
+
+    if (!hasOwner) {
         return null;
     }
 
     return (
-        <Button asChild variant="ghost" size="sm">
-            {/* Another person's session: nothing prefetched as the staff member carries over. */}
-            <Link
-                href={impersonate(tenant.id)}
-                as="button"
-                onClick={() => router.flushAll()}
-                aria-label={`Entrar como owner de ${tenant.trade_name}`}
+        <>
+            <Button
+                variant={variant}
+                size={variant === 'ghost' ? 'sm' : 'default'}
+                onClick={() => setOpen(true)}
+                aria-label={`Entrar como soporte a ${tradeName}`}
             >
                 <LogIn />
-                Entrar como owner
-            </Link>
-        </Button>
+                Entrar como soporte
+            </Button>
+            <SupportEntryDialog
+                tenantId={tenantId}
+                tradeName={tradeName}
+                open={open}
+                onOpenChange={setOpen}
+            />
+        </>
     );
 }

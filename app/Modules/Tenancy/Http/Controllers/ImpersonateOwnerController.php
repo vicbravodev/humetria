@@ -7,7 +7,6 @@ namespace App\Modules\Tenancy\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Impersonation;
 use App\Models\User;
-use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Http\Requests\ImpersonateRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Container\Attributes\CurrentUser;
@@ -24,8 +23,6 @@ final class ImpersonateOwnerController extends Controller
     {
         $role = $request->role();
 
-        abort_if($role === TenantRole::Hr && ! $tenant->is_demo, 404);
-
         // Never another member of the staff: that would hand over the console under someone else's name.
         $target = $tenant->membershipsWithRole($role)->with('user')->orderBy('id')->get()
             ->map(fn ($membership): ?User => $membership->user)
@@ -33,7 +30,7 @@ final class ImpersonateOwnerController extends Controller
 
         abort_if($target === null, 404);
 
-        Context::scope(fn () => $impersonation->start($user, $target, $tenant->id), ['tenant_id' => $tenant->id]);
+        Context::scope(fn () => $impersonation->start($user, $target, $tenant->id, $request->reason(), $request->minutes()), ['tenant_id' => $tenant->id]);
 
         return redirect()->route('dashboard');
     }

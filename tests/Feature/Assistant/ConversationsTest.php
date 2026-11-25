@@ -169,7 +169,7 @@ it('serves the viewer and refuses the committee', function (): void {
 
 it('is closed while a superadmin impersonates the owner, whose conversations are not theirs', function (): void {
     $owner = ownerOf($this->a);
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->a));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->a), supportEntry());
 
     $this->getJson(conversationsUrl($this->a))->assertNotFound();
 });

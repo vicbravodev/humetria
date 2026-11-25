@@ -45,7 +45,7 @@ function personHolding(Tenant $tenant, Role $role): User
 /** Signs a staff member in as the company's owner, from the console. */
 function impersonatingOwnerOf(Tenant $tenant): void
 {
-    test()->actingAs(support())->post(route('companies.impersonate', $tenant))->assertRedirect();
+    test()->actingAs(support())->post(route('companies.impersonate', $tenant), supportEntry())->assertRedirect();
 }
 
 it('lives at /admin/{slug}/roles, only for the owner, and impersonating changes nothing there', function (): void {

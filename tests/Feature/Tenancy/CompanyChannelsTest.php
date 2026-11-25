@@ -196,7 +196,7 @@ it('does not touch the channels of another company', function (): void {
 
 it('answers 404 to the guarded save while the staff works as the owner', function (): void {
     $staff = superadmin();
-    $this->actingAs($staff)->post(route('companies.impersonate', $this->tenant));
+    $this->actingAs($staff)->post(route('companies.impersonate', $this->tenant), supportEntry());
 
     $this->put(route('tenant.channels.update', $this->tenant), channelsForm())->assertNotFound();
 
