@@ -74,7 +74,8 @@ final class AuditPages
     public const array KINDS = [
         'support' => ['impersonation.%'],
         'billing' => ['billing.%', 'tenant.trial_started', 'tenant.module_%', 'tenant.modules_synced'],
-        'results' => ['%viewed', '%exported', '%.share_opened'],
+        // Anchored at the dot or the underscore before the verb: «reviewed» is not «viewed».
+        'results' => ['%.viewed', '%\\_viewed', '%.exported', '%\\_exported', '%.share\\_opened'],
         'roles' => ['tenant_role.%', 'tenant_member.role_changed', 'tenant_member.permissions_changed', 'user.support_%', 'user.superadmin_created'],
     ];
 

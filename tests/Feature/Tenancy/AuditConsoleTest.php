@@ -97,6 +97,8 @@ it('splits the trail in views by what matters most, each with how many it holds 
         'results.viewed', 'engagement.results_exported', 'results.share_opened',
         'tenant_role.created', 'tenant_member.role_changed', 'user.support_granted',
         'tenant.created',
+        // Reviewed is not viewed: it stays out of the results.
+        'telework.notice_reviewed', 'attendance.offline_mark_reviewed',
     ] as $event) {
         auditRow($event, ['tenant_id' => $acme->id]);
     }
@@ -105,7 +107,7 @@ it('splits the trail in views by what matters most, each with how many it holds 
     $this->actingAs(superadmin())->get(route('audit.index', ['kind' => $kind, 'company' => $acme->id]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('filters.kind', $kind)
-            ->where('counts', ['all' => 12, 'support' => 2, 'billing' => 3, 'results' => 3, 'roles' => 3])
+            ->where('counts', ['all' => 14, 'support' => 2, 'billing' => 3, 'results' => 3, 'roles' => 3])
             ->where('entries.data', fn ($rows): bool => collect($rows)->pluck('event')->sort()->values()->all() === $events));
 })->with([
     'support' => ['support', ['impersonation.started', 'impersonation.stopped']],
