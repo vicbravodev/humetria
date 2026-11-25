@@ -1,10 +1,14 @@
 import { Link, usePage } from '@inertiajs/react';
 import Initials from '@/components/humetria/initials';
 import TenantOwnerCell from '@/components/tenancy/tenant-owner-cell';
+import TenantSelectCell from '@/components/tenancy/tenant-select-cell';
 import TenantRowActions from '@/components/tenancy/tenant-row-actions';
+import TenantQuickView from '@/components/tenancy/tenant-quick-view';
 import TenantSupportActions from '@/components/tenancy/tenant-support-actions';
+import TenantWorkCells from '@/components/tenancy/tenant-work-cells';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
+import type { IdSelection } from '@/hooks/use-id-selection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { tenantStatusVariant } from '@/lib/tenant-status';
 import { show } from '@/routes/companies';
@@ -14,16 +18,23 @@ import type { TenantRow as Tenant } from '@/types';
 export default function TenantRowView({
     tenant,
     activationMinDate,
+    selection,
 }: {
     tenant: Tenant;
     activationMinDate: string;
+    selection: IdSelection | null;
 }) {
     const { auth } = usePage().props;
     // On a phone the owner column gives its place to the name cell: the table fits, and the invitation's buttons stay in reach.
     const mobile = useIsMobile();
 
     return (
-        <TableRow>
+        <TableRow
+            data-state={
+                selection?.isChosen(tenant.id) === true ? 'selected' : undefined
+            }
+        >
+            <TenantSelectCell tenant={tenant} selection={selection} />
             <TableCell className="whitespace-normal max-md:px-2 md:min-w-48">
                 <div className="flex items-center gap-2.5">
                     <Initials name={tenant.trade_name} kind="company" />
@@ -42,7 +53,7 @@ export default function TenantRowView({
                         <span className="text-caption text-muted-foreground">
                             {tenant.legal_name}
                         </span>
-                        <span className="text-caption text-muted-foreground tabular-nums md:hidden">
+                        <span className="text-caption text-muted-foreground tabular-nums">
                             {tenant.rfc}
                         </span>
                     </div>
@@ -52,9 +63,6 @@ export default function TenantRowView({
                         <TenantOwnerCell tenant={tenant} />
                     </div>
                 )}
-            </TableCell>
-            <TableCell className="hidden text-sm tabular-nums md:table-cell">
-                {tenant.rfc}
             </TableCell>
             <TableCell className="whitespace-normal max-md:px-2">
                 <div className="flex flex-col items-start gap-1">
@@ -76,20 +84,24 @@ export default function TenantRowView({
             <TableCell className="hidden whitespace-normal md:table-cell">
                 {!mobile && <TenantOwnerCell tenant={tenant} />}
             </TableCell>
+            <TenantWorkCells tenant={tenant} />
             <TableCell className="hidden text-sm whitespace-normal tabular-nums lg:table-cell">
                 {tenant.last_access ?? (
                     <span className="text-muted-foreground">Nunca</span>
                 )}
             </TableCell>
             <TableCell className="w-px text-right max-md:px-2">
-                {auth.isSuperadmin ? (
-                    <TenantRowActions
-                        tenant={tenant}
-                        activationMinDate={activationMinDate}
-                    />
-                ) : (
-                    <TenantSupportActions tenant={tenant} />
-                )}
+                <div className="flex items-center justify-end gap-1">
+                    <TenantQuickView tenant={tenant} />
+                    {auth.isSuperadmin ? (
+                        <TenantRowActions
+                            tenant={tenant}
+                            activationMinDate={activationMinDate}
+                        />
+                    ) : (
+                        <TenantSupportActions tenant={tenant} />
+                    )}
+                </div>
             </TableCell>
         </TableRow>
     );

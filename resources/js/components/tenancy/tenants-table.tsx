@@ -1,4 +1,5 @@
 import TenantRowView from '@/components/tenancy/tenant-row';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Table,
     TableBody,
@@ -7,14 +8,18 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import type { IdSelection } from '@/hooks/use-id-selection';
 import type { TenantRow } from '@/types';
 
 export default function TenantsTable({
     tenants,
     activationMinDate,
+    selection,
 }: {
     tenants: TenantRow[];
     activationMinDate: string;
+    /** Only the superadmin chooses companies to act on several at once. */
+    selection: IdSelection | null;
 }) {
     return (
         <Table>
@@ -23,11 +28,28 @@ export default function TenantsTable({
             </TableCaption>
             <TableHeader>
                 <TableRow>
+                    {selection !== null && (
+                        <TableHead className="w-px">
+                            <Checkbox
+                                checked={selection.allChosen}
+                                onCheckedChange={(checked) =>
+                                    selection.toggleAll(checked === true)
+                                }
+                                aria-label="Elegir todas las empresas de esta página"
+                                className="touch-hit"
+                            />
+                        </TableHead>
+                    )}
                     <TableHead>Empresa</TableHead>
-                    <TableHead className="hidden md:table-cell">RFC</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="hidden md:table-cell">
                         Dueño
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                        Asientos
+                    </TableHead>
+                    <TableHead className="hidden 2xl:table-cell">
+                        Responsable
                     </TableHead>
                     <TableHead className="hidden lg:table-cell">
                         Último acceso
@@ -43,6 +65,7 @@ export default function TenantsTable({
                         key={tenant.id}
                         tenant={tenant}
                         activationMinDate={activationMinDate}
+                        selection={selection}
                     />
                 ))}
             </TableBody>

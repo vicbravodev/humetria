@@ -45,7 +45,11 @@ use Illuminate\Database\Query\Builder;
  * @property int|null $logo_width
  * @property int|null $logo_height
  * @property int|null $min_group The company's minimum of people per group (C-23); null follows the platform's.
+ * @property int|null $owner_user_id Who at Humetría answers for the company (its account manager); never one of its members.
  * @property CarbonImmutable|null $last_access_at Only on the console's list: the latest sign-in of anyone who belongs to it.
+ * @property int|null $seats_used Only on the console's list: the seats it uses; null without a plan.
+ * @property int|null $seats_amount Only on the console's list: the seats its plan covers; null without a plan.
+ * @property string|null $account_manager_name Only on the console's list: the name of who answers for it.
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
@@ -57,6 +61,9 @@ final class Tenant extends Model
     use HasFactory, HasVersion4Uuids, SearchesText;
 
     public const int TRIAL_DAYS = 14;
+
+    /** Days without anyone of the company signing in before the console asks why. */
+    public const int DORMANT_DAYS = 30;
 
     public function isUnion(): bool
     {
@@ -98,6 +105,13 @@ final class Tenant extends Model
             TenantView::Archived => $query->where('restriction', TenantRestriction::Archived),
             TenantView::Active => $query->whereNull('restriction')->where('active_until', '>', now()),
             TenantView::Trial => $query->whereNull('restriction')->whereNull('active_until')->where('trial_started_at', '>', $trialCutoff),
+            TenantView::TrialEnding => $query->inView(TenantView::Trial)->where('trial_started_at', '<=', now()->subDays(self::TRIAL_DAYS - 7)),
+            // Nobody who belongs to it signed in within thirty days; one never entered counts once it is thirty days old.
+            TenantView::Dormant => $query->whereNull('restriction')->where('created_at', '<=', now()->subDays(self::DORMANT_DAYS))
+                ->whereNotExists(fn (Builder $recent): Builder => $recent->from('tenant_memberships')
+                    ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
+                    ->whereColumn('tenant_memberships.tenant_id', 'tenants.id')
+                    ->where('users.last_login_at', '>', now()->subDays(self::DORMANT_DAYS))),
             TenantView::Expired => $query->whereNull('restriction')->where(fn (EloquentBuilder $expired) => $expired
                 ->where('active_until', '<=', now())
                 ->orWhere(fn (EloquentBuilder $ended) => $ended->whereNull('active_until')->where('trial_started_at', '<=', $trialCutoff))),
@@ -195,6 +209,9 @@ final class Tenant extends Model
             'logo_width' => 'integer',
             'logo_height' => 'integer',
             'min_group' => 'integer',
+            'owner_user_id' => 'integer',
+            'seats_used' => 'integer',
+            'seats_amount' => 'integer',
         ];
     }
 }

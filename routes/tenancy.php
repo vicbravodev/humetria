@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Tenancy\Http\Controllers\AcceptInvitationController;
 use App\Modules\Tenancy\Http\Controllers\AuditConsoleController;
 use App\Modules\Tenancy\Http\Controllers\CompanyModulesController;
+use App\Modules\Tenancy\Http\Controllers\CompanySelectionController;
 use App\Modules\Tenancy\Http\Controllers\ImpersonateOwnerController;
 use App\Modules\Tenancy\Http\Controllers\InvitationConsoleController;
 use App\Modules\Tenancy\Http\Controllers\PlatformOverviewController;
@@ -39,6 +40,15 @@ Route::get('admin/companies', [TenantConsoleController::class, 'index'])
 Route::post('admin/companies', [TenantConsoleController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('companies.store');
+
+// What the superadmin does at once with the companies chosen in the list.
+Route::post('admin/companies/account-manager', [CompanySelectionController::class, 'assignManager'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.account-manager');
+
+Route::post('admin/companies/trial-extension', [CompanySelectionController::class, 'extendTrials'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.trial-extension');
 
 // One company in the console with its modules: the staff reads them, the superadmin changes them.
 Route::get('admin/companies/{tenant}', [CompanyModulesController::class, 'show'])

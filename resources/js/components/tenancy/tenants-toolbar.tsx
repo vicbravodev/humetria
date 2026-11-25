@@ -9,6 +9,8 @@ const VIEWS: { value: TenantView; label: string }[] = [
     { value: 'all', label: 'Todas' },
     { value: 'active', label: 'Activas' },
     { value: 'trial', label: 'En prueba' },
+    { value: 'trial_ending', label: 'Prueba por vencer' },
+    { value: 'dormant', label: 'Sin entrar 30 días' },
     { value: 'expired', label: 'Vencidas' },
     { value: 'read_only', label: 'Solo lectura' },
     { value: 'suspended', label: 'Suspendidas' },

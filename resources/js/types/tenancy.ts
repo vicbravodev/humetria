@@ -46,14 +46,23 @@ export type TenantRow = {
     /** The prospect of the demo request it was created from, to prefill the owner's invitation; null when it did not come from one. */
     demo_contact: { name: string; email: string } | null;
     owner: TenantOwner | null;
+    /** Who at Humetría answers for it; null when nobody does yet. */
+    account_manager: StaffMember | null;
+    /** The seats it uses of its plan; null without a plan. */
+    seats: { used: number; amount: number } | null;
     invitation: TenantInvitation | null;
 };
+
+/** Someone of Humetría's staff, who a company can be handed to. */
+export type StaffMember = { id: number; name: string };
 
 /** The views of the console's companies. */
 export type TenantView =
     | 'all'
     | 'active'
     | 'trial'
+    | 'trial_ending'
+    | 'dormant'
     | 'expired'
     | 'read_only'
     | 'suspended'

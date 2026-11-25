@@ -24,6 +24,7 @@ use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\DisplayDate;
+use App\Modules\Tenancy\Support\StaffDirectory;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ use Inertia\Response;
 
 final class TenantConsoleController extends Controller
 {
-    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads): Response
+    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads, StaffDirectory $staff): Response
     {
         Gate::authorize('view-console');
 
@@ -55,6 +56,8 @@ final class TenantConsoleController extends Controller
             'filters' => ['q' => $search, 'status' => $view->value],
             'counts' => $summary['counts'],
             'trialsEndingSoon' => $summary['trialsEndingSoon'],
+            // Who a company can be handed to: Humetría's own people.
+            'staff' => $staff->all(),
             'tenants' => $tenants->through(function (Tenant $tenant) use ($usingAttendance, $leads): array {
                 $status = $tenant->status();
 
@@ -76,6 +79,8 @@ final class TenantConsoleController extends Controller
                     'last_access' => $this->day($tenant->last_access_at),
                     'demo_contact' => isset($leads[$tenant->id]) ? ['name' => $leads[$tenant->id]->contactName, 'email' => $leads[$tenant->id]->email] : null,
                     'owner' => $this->owner($tenant),
+                    'account_manager' => $tenant->owner_user_id === null ? null : ['id' => $tenant->owner_user_id, 'name' => $tenant->account_manager_name],
+                    'seats' => $tenant->seats_amount === null ? null : ['used' => $tenant->seats_used ?? 0, 'amount' => $tenant->seats_amount],
                     'invitation' => $this->invitation($tenant),
                 ];
             }),

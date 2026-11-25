@@ -150,6 +150,7 @@ const ARRAY_PROPS = [
     'tenancy/company:limits' => 'resumen corto: los dos cupos del plan (personas y centros)',
     'tenancy/company:modules' => 'catálogo fijo: los nueve módulos del catálogo, cada uno con su estado',
     'tenancy/company:other_usage' => 'resumen fijo: correo de campañas, archivos y WhatsApp del mes (tres medidores)',
+    'tenancy/index:staff' => 'el equipo de Humetría a quien se asigna una empresa: un puñado de personas, no registros que crecen',
     'billing/accounts:taxRegimes' => 'catálogo fijo del SAT: los regímenes fiscales (c_RegimenFiscal)',
     'billing/accounts:cfdiUses' => 'catálogo fijo del SAT: los usos de CFDI (c_UsoCFDI)',
     'billing/account:taxRegimes' => 'catálogo fijo del SAT: los regímenes fiscales (c_RegimenFiscal)',

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Actions;
 
+use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Enums\TenantView;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +30,10 @@ final class ListTenants
                 ->join('users', 'users.id', '=', 'tenant_memberships.user_id')
                 ->whereColumn('tenant_memberships.tenant_id', 'tenants.id')
                 ->selectRaw('max(users.last_login_at)'), 'last_access_at')
+            // The seats it uses of its plan and who at Humetría answers for it, in the same query too.
+            ->selectSub($this->seats('used'), 'seats_used')
+            ->selectSub($this->seats('amount'), 'seats_amount')
+            ->selectSub(DB::table('users')->whereColumn('users.id', 'tenants.owner_user_id')->select('name'), 'account_manager_name')
             ->with(['ownerMembership.user', 'openInvitation'])
             ->latest()
             ->orderByDesc('id')
@@ -49,9 +55,7 @@ final class ListTenants
             $query->selectSub($this->matching($search, $view)->toBase()->selectRaw('count(*)'), $view->value);
         }
 
-        $query->selectSub($this->matching('', TenantView::Trial)
-            ->where('trial_started_at', '<=', now()->subDays(Tenant::TRIAL_DAYS)->addWeek())
-            ->toBase()->selectRaw('count(*)'), 'ending_soon');
+        $query->selectSub($this->matching('', TenantView::TrialEnding)->toBase()->selectRaw('count(*)'), 'ending_soon');
 
         $row = (array) $query->first();
         $count = fn (string $key): int => is_int($row[$key] ?? null) ? $row[$key] : 0;
@@ -63,6 +67,12 @@ final class ListTenants
             ),
             'trialsEndingSoon' => $count('ending_soon'),
         ];
+    }
+
+    private function seats(string $column): QueryBuilder
+    {
+        return DB::table('tenant_limits')->whereColumn('tenant_limits.tenant_id', 'tenants.id')
+            ->where('resource', CompanyLimits::SEATS)->select($column);
     }
 
     /**
