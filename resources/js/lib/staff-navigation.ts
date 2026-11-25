@@ -49,7 +49,7 @@ export const salesNavItems = (isSuperadmin: boolean): NavItem[] => [
 export const platformNavItems = (isSuperadmin: boolean): NavItem[] =>
     isSuperadmin
         ? [
-              { title: 'Usuarios', href: users(), icon: UserCog },
+              { title: 'Equipo Humetría', href: users(), icon: UserCog },
               { title: 'Bitácora', href: audit(), icon: ScrollText },
               { title: 'Planes y precios', href: plans(), icon: ReceiptText },
               // Horizon's own dashboard, outside the panel: a plain address, not an Inertia visit.

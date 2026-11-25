@@ -25,7 +25,7 @@ describe('navSections for the console', () => {
             'Sala de demo',
         ]);
         expect(titles('platform', staff)).toEqual([
-            'Usuarios',
+            'Equipo Humetría',
             'Bitácora',
             'Planes y precios',
             'Colas',
