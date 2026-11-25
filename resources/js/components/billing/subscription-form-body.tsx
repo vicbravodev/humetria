@@ -19,6 +19,7 @@ import type {
 export default function SubscriptionFormBody({
     defaults,
     accountKind,
+    union,
     choice,
     status,
     preview,
@@ -29,6 +30,7 @@ export default function SubscriptionFormBody({
 }: {
     defaults: PlanDefaults;
     accountKind: AccountKind;
+    union: boolean;
     choice: { plan: Plan; profile: PriceProfile };
     status: SubscriptionStatus;
     preview: SubscriptionPreview | null;
@@ -43,12 +45,14 @@ export default function SubscriptionFormBody({
                 <div className="grid gap-5">
                     <SubscriptionPlanFields
                         accountKind={accountKind}
+                        union={union}
                         plan={choice.plan}
                         profile={choice.profile}
                         onChange={onChoice}
                         errors={errors}
                     />
                     <SubscriptionSizeFields
+                        union={union}
                         seats={defaults.seats}
                         centers={defaults.centers}
                         status={status}

@@ -5,12 +5,15 @@ import type { SubscriptionStatus } from '@/types';
 
 /** What the company pays for: the people and centers it contracted (a cap, not the month's peak), and where the plan stands. */
 export default function SubscriptionSizeFields({
+    union,
     seats,
     centers,
     status,
     onStatus,
     errors,
 }: {
+    /** A union's fee is the same for everyone: it counts neither people nor centers. */
+    union: boolean;
     seats: string;
     centers: string;
     status: SubscriptionStatus;
@@ -19,28 +22,30 @@ export default function SubscriptionSizeFields({
 }) {
     return (
         <div className="grid gap-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-                <FormField
-                    idPrefix="plan"
-                    name="seats"
-                    label="Personas contratadas"
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    defaultValue={seats}
-                    error={errors['seats']}
-                />
-                <FormField
-                    idPrefix="plan"
-                    name="centers"
-                    label="Centros de trabajo"
-                    type="number"
-                    inputMode="numeric"
-                    min={1}
-                    defaultValue={centers}
-                    error={errors['centers']}
-                />
-            </div>
+            {!union && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                        idPrefix="plan"
+                        name="seats"
+                        label="Personas contratadas"
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        defaultValue={seats}
+                        error={errors['seats']}
+                    />
+                    <FormField
+                        idPrefix="plan"
+                        name="centers"
+                        label="Centros de trabajo"
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        defaultValue={centers}
+                        error={errors['centers']}
+                    />
+                </div>
+            )}
             <ChoiceField
                 name="status"
                 legend="Estado del plan"

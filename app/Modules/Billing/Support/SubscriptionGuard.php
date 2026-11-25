@@ -6,11 +6,13 @@ namespace App\Modules\Billing\Support;
 
 use App\Modules\Billing\Data\SubscriptionData;
 use App\Modules\Billing\Enums\AccountKind;
+use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Exceptions\InvalidSubscription;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Tenancy\Contracts\CompanyRegistry;
 
 /** What billing does not allow in a plan, whether it is being saved or only priced: the same rules for both. */
 final class SubscriptionGuard
@@ -27,6 +29,17 @@ final class SubscriptionGuard
 
         if ($link === null) {
             throw new InvalidSubscription('plan', 'Vincula la empresa a una cuenta antes de asignarle un plan.');
+        }
+
+        // A union holds the plan made for it and only that one; a company holds any but that one.
+        $union = resolve(CompanyRegistry::class)->find($tenantId)?->union === true;
+
+        if ($union && $data->plan !== Plan::Sindicato) {
+            throw new InvalidSubscription('plan', 'Un sindicato solo puede tener el plan Sindicato.');
+        }
+
+        if (! $union && $data->plan === Plan::Sindicato) {
+            throw new InvalidSubscription('plan', 'El plan Sindicato es solo para sindicatos.');
         }
 
         $account = BillingAccount::query()->findOrFail($link->billing_account_id);
@@ -53,7 +66,8 @@ final class SubscriptionGuard
         }
 
         // "Zero people does not activate a plan; one already active pays its minimum."
-        if ($data->status === SubscriptionStatus::Active && $current?->status !== SubscriptionStatus::Active && $data->seats < 1) {
+        // A union's flat fee does not count people.
+        if ($data->plan !== Plan::Sindicato && $data->status === SubscriptionStatus::Active && $current?->status !== SubscriptionStatus::Active && $data->seats < 1) {
             throw new InvalidSubscription('seats', 'Para activar un plan hace falta al menos una persona.');
         }
     }

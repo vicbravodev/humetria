@@ -1,7 +1,7 @@
 import ChoiceField from '@/components/humetria/choice-field';
 import {
-    PLANS,
     planAfterProfile,
+    planChoices,
     profileAfterPlan,
     profileChoices,
 } from '@/lib/billing-form';
@@ -13,12 +13,15 @@ import type { AccountKind, Plan, PriceProfile } from '@/types';
  */
 export default function SubscriptionPlanFields({
     accountKind,
+    union,
     plan,
     profile,
     onChange,
     errors,
 }: {
     accountKind: AccountKind;
+    /** A union's account: its plan is its own, and it is the only one it can have. */
+    union: boolean;
     plan: Plan;
     profile: PriceProfile;
     onChange: (next: { plan: Plan; profile: PriceProfile }) => void;
@@ -29,9 +32,9 @@ export default function SubscriptionPlanFields({
             <ChoiceField
                 name="plan"
                 legend="Plan"
-                options={PLANS}
+                options={planChoices(union)}
                 value={plan}
-                columns={3}
+                columns={union ? 1 : 3}
                 error={errors['plan']}
                 onChange={(value) =>
                     onChange({
@@ -43,7 +46,7 @@ export default function SubscriptionPlanFields({
             <ChoiceField
                 name="profile"
                 legend="Cómo se cobra"
-                options={profileChoices(accountKind)}
+                options={profileChoices(accountKind, union)}
                 value={profile}
                 columns={2}
                 error={errors['profile']}

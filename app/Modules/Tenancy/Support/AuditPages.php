@@ -85,6 +85,8 @@ final class AuditPages
         'cumplimiento' => 'Cumplimiento',
         'integral' => 'Integral',
         'enterprise' => 'Enterprise',
+        'sindicato' => 'Sindicato',
+        'union' => 'Cuota fija de sindicato',
         'direct' => 'Directo',
         'consultant' => 'Consultor',
         'channel_compliance' => 'Canal Cumplimiento',

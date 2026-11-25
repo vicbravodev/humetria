@@ -63,6 +63,12 @@ final readonly class Catalog
         return $this->integer("plans.{$plan->value}.rate_cents");
     }
 
+    /** The monthly fee of a plan that is one amount for everyone (a union's), whatever its size. */
+    public function flatCents(Plan $plan): int
+    {
+        return $this->integer("plans.{$plan->value}.flat_cents");
+    }
+
     public function minimumCents(Plan $plan): int
     {
         return $this->integer("plans.{$plan->value}.minimum_cents");
