@@ -10,6 +10,7 @@ use App\Modules\Billing\Http\Controllers\ChargeConsoleController;
 use App\Modules\Billing\Http\Controllers\ExportConsoleController;
 use App\Modules\Billing\Http\Controllers\LinkableCompaniesController;
 use App\Modules\Billing\Http\Controllers\PaymentConsoleController;
+use App\Modules\Billing\Http\Controllers\ReminderConsoleController;
 use App\Modules\Billing\Http\Controllers\StatementConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionPreviewController;
@@ -148,6 +149,11 @@ Route::post('admin/billing/payments/{payment}/reversal', [PaymentConsoleControll
     ->middleware(['auth', 'verified'])
     ->whereUuid('payment')
     ->name('billing.payments.reverse');
+
+// A reminder of what is past due, to the accounts chosen in the list, at most once a day each: the superadmin's.
+Route::post('admin/billing/reminders', [ReminderConsoleController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('billing.reminders.store');
 
 // The three reports of the console as CSV (portfolio, balances, renewals): read by the staff, each download logged and audited.
 Route::get('admin/billing/exports/{report}', [ExportConsoleController::class, 'show'])

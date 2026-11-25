@@ -2,10 +2,12 @@ import { Head, usePage } from '@inertiajs/react';
 import AccountDialog from '@/components/billing/account-dialog';
 import AccountsEmpty from '@/components/billing/accounts-empty';
 import AccountsExports from '@/components/billing/accounts-exports';
+import AccountsBulkBar from '@/components/billing/accounts-bulk-bar';
 import AccountsTable from '@/components/billing/accounts-table';
 import AccountsToolbar from '@/components/billing/accounts-toolbar';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
+import { useIdSelection } from '@/hooks/use-id-selection';
 import ReceivableOverview from '@/components/billing/receivable-overview';
 import { accountsSummary } from '@/lib/billing';
 import type {
@@ -34,6 +36,7 @@ export default function Accounts({
     cfdiUses: SatOption[];
 }) {
     const { auth } = usePage().props;
+    const selection = useIdSelection(accounts.data.map(({ id }) => id));
 
     return (
         <>
@@ -62,7 +65,19 @@ export default function Accounts({
                 {accounts.data.length === 0 ? (
                     <AccountsEmpty filtered={counts.all > 0} />
                 ) : (
-                    <AccountsTable accounts={accounts.data} />
+                    <div className="overflow-hidden card p-0">
+                        <AccountsTable
+                            accounts={accounts.data}
+                            selection={selection}
+                            canManage={auth.isSuperadmin}
+                        />
+                        {auth.isSuperadmin && (
+                            <AccountsBulkBar
+                                chosen={selection.chosen}
+                                onDone={selection.clear}
+                            />
+                        )}
+                    </div>
                 )}
                 <Pagination
                     previous="Ver más recientes"
