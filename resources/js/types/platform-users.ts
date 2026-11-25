@@ -10,4 +10,9 @@ export type PlatformUserRow = {
     lastLogin: string | null;
 };
 
-export type PlatformUserFilters = { q: string };
+/** The views of «Equipo Humetría»: the staff, and everyone with an account. */
+export type PlatformUserTab = 'team' | 'people';
+
+export type PlatformUserFilters = { q: string; tab: PlatformUserTab };
+
+export type PlatformUserCounts = { team: number; people: number };

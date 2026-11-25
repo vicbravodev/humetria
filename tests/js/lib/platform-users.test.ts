@@ -4,6 +4,7 @@ import {
     actionCopy,
     platformRoleLabel,
     userActions,
+    usersQuery,
 } from '@/lib/platform-users';
 import type { PlatformUserRow } from '@/types';
 
@@ -80,5 +81,15 @@ describe('actionCopy', () => {
         expect(member.description).toContain('todas las empresas');
         expect(member.confirm).toBe('Sí, dar soporte a esta persona');
         expect(actionCopy('grant_support', user()).confirm).toBe('Dar soporte');
+    });
+});
+
+describe('usersQuery', () => {
+    it('keeps the view and the search in the address, and leaves out what is the default', () => {
+        expect(usersQuery({ q: ' ana ', tab: 'team' })).toEqual({
+            q: 'ana',
+            tab: 'team',
+        });
+        expect(usersQuery({ q: '', tab: 'people' })).toEqual({});
     });
 });

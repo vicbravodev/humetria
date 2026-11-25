@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Support;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -16,10 +18,9 @@ final class UserPages
     /**
      * @return LengthAwarePaginator<int, array{id: int, name: string, email: string, platformRole: string|null, companies: string, twoFactor: bool, verified: bool, lastLogin: string|null}>
      */
-    public function handle(string $search): LengthAwarePaginator
+    public function handle(string $search, bool $staffOnly = false): LengthAwarePaginator
     {
-        $page = User::query()
-            ->matching(['name', 'email'], $search)
+        $page = $this->matching($search, $staffOnly)
             ->latest('created_at')
             ->orderByDesc('id')
             ->paginate(self::PER_PAGE)
@@ -39,6 +40,30 @@ final class UserPages
             'verified' => $user->email_verified_at !== null,
             'lastLogin' => $user->last_login_at === null ? null : DisplayDate::day($user->last_login_at),
         ]);
+    }
+
+    /**
+     * How many people the search finds in each view: Humetría's staff, and everyone with an account.
+     *
+     * @return array{team: int, people: int}
+     */
+    public function counts(string $search): array
+    {
+        return ['team' => $this->matching($search, true)->count(), 'people' => $this->matching($search, false)->count()];
+    }
+
+    /** @return Builder<User> */
+    private function matching(string $search, bool $staffOnly): Builder
+    {
+        return User::query()
+            ->matching(['name', 'email'], $search)
+            ->when($staffOnly, fn (Builder $query) => $query->whereExists(fn (QueryBuilder $roles) => $roles
+                ->from('model_has_roles')
+                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                ->whereIn('roles.name', [User::SUPERADMIN, User::SUPPORT])
+                ->whereNull('model_has_roles.tenant_id')
+                ->where('model_has_roles.model_type', (new User)->getMorphClass())
+                ->whereColumn('model_has_roles.model_id', 'users.id')));
     }
 
     /**

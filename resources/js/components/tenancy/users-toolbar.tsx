@@ -1,13 +1,8 @@
 import SearchField from '@/components/humetria/search-field';
 import { useQueryFilters } from '@/hooks/use-query-filters';
+import { usersQuery } from '@/lib/platform-users';
 import { index } from '@/routes/platform-users';
 import type { PlatformUserFilters } from '@/types';
-
-const toQuery = (filters: PlatformUserFilters) => {
-    const q = filters.q.trim();
-
-    return q === '' ? {} : { q };
-};
 
 /** Finds a user by name or email, in any order of the words and without accents. */
 export default function UsersToolbar({
@@ -15,7 +10,7 @@ export default function UsersToolbar({
 }: {
     filters: PlatformUserFilters;
 }) {
-    const { text, type } = useQueryFilters(index.url(), filters, toQuery);
+    const { text, type } = useQueryFilters(index.url(), filters, usersQuery);
 
     return (
         <div role="search">

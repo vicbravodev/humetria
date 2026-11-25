@@ -4,26 +4,36 @@ import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import UsersTable from '@/components/tenancy/users-table';
+import UsersTabs from '@/components/tenancy/users-tabs';
 import UsersToolbar from '@/components/tenancy/users-toolbar';
-import { countOf } from '@/lib/plural';
-import type { Paginated, PlatformUserFilters, PlatformUserRow } from '@/types';
+import type {
+    Paginated,
+    PlatformUserCounts,
+    PlatformUserFilters,
+    PlatformUserRow,
+} from '@/types';
 
 export default function PlatformUsers({
     users,
+    counts,
     filters,
 }: {
     users: Paginated<PlatformUserRow>;
+    counts: PlatformUserCounts;
     filters: PlatformUserFilters;
 }) {
     return (
         <>
-            <Head title="Usuarios de la plataforma" />
+            <Head title="Equipo Humetría" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
-                    title="Usuarios"
-                    description={`${countOf(users.total, 'persona', 'personas')} con cuenta. Ayuda a quien no entra y da o quita el rol de soporte; crear un superadmin sigue siendo por terminal.`}
+                    title="Equipo Humetría"
+                    description="Quién del equipo entra a la consola y qué puede hacer, y ayuda para cualquier persona con cuenta que no logra entrar. El rol de soporte se da y se quita aquí; crear un superadmin sigue siendo por terminal."
                 />
-                <UsersToolbar filters={filters} />
+                <div className="flex flex-col gap-4">
+                    <UsersTabs filters={filters} counts={counts} />
+                    <UsersToolbar filters={filters} />
+                </div>
                 {users.data.length === 0 ? (
                     <EmptyState
                         icon={Users}
@@ -38,7 +48,7 @@ export default function PlatformUsers({
                     previous="Ver más recientes"
                     next="Ver más antiguos"
                     page={users}
-                    label="Páginas de usuarios"
+                    label="Páginas de personas"
                 />
             </div>
         </>

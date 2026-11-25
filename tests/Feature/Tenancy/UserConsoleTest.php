@@ -250,3 +250,31 @@ it('answers 404, not a database error, to a user id that is not a number', funct
     $this->post(route('platform-users.support.store', 'abc'))->assertNotFound();
     $this->delete(route('platform-users.support.destroy', 'abc'))->assertNotFound();
 });
+
+it('shows the team apart: only Humetría staff, with how many each view holds', function (): void {
+    User::factory()->create(['name' => 'Cliente Uno']);
+    support()->forceFill(['name' => 'Soporte Uno'])->save();
+
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'team']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.tab', 'team')
+            ->where('counts', ['team' => 2, 'people' => 3])
+            ->where('users.total', 2)
+            ->where('users.data', fn ($rows) => collect($rows)->pluck('platformRole')->sort()->values()->all() === ['superadmin', 'support']));
+});
+
+it('keeps the search across the views, and counts what it finds in each', function (): void {
+    User::factory()->create(['name' => 'Ana Cliente']);
+    support()->forceFill(['name' => 'Ana Soporte'])->save();
+
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'team', 'q' => 'ana']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('counts', ['team' => 1, 'people' => 2])
+            ->where('users.total', 1)
+            ->where('users.data.0.name', 'Ana Soporte'));
+});
+
+it('opens on the people with an account, also for a view it does not know', function (?string $tab): void {
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => $tab]))
+        ->assertInertia(fn (Assert $page) => $page->where('filters.tab', 'people'));
+})->with(['none' => null, 'unknown' => 'everyone']);

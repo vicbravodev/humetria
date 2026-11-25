@@ -25,10 +25,12 @@ final class UserConsoleController extends Controller
         Gate::authorize('manage-platform-users');
 
         $search = trim($request->string('q')->toString());
+        $tab = $request->string('tab')->toString() === 'team' ? 'team' : 'people';
 
         return Inertia::render('tenancy/users', [
-            'users' => $pages->handle($search),
-            'filters' => ['q' => $search],
+            'users' => $pages->handle($search, $tab === 'team'),
+            'counts' => $pages->counts($search),
+            'filters' => ['q' => $search, 'tab' => $tab],
         ]);
     }
 

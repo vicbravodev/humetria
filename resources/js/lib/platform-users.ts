@@ -1,10 +1,22 @@
-import type { PlatformUserRow } from '@/types';
+import type { PlatformUserFilters, PlatformUserRow } from '@/types';
 
 export type UserAction =
     | 'reset'
     | 'two_factor'
     | 'grant_support'
     | 'revoke_support';
+
+/** The address of a view of «Equipo Humetría»: its search and its view, each left out when it is the default. */
+export function usersQuery(
+    filters: PlatformUserFilters,
+): Partial<Record<keyof PlatformUserFilters, string>> {
+    const q = filters.q.trim();
+
+    return {
+        ...(q === '' ? {} : { q }),
+        ...(filters.tab === 'people' ? {} : { tab: filters.tab }),
+    };
+}
 
 /** The platform role as the list says it. */
 export function platformRoleLabel(
