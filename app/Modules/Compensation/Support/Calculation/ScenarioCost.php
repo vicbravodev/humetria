@@ -42,9 +42,6 @@ final class ScenarioCost
 
     private const int DAYS_IN_YEAR = 365;
 
-    /** The month of the salary, 30.4 days, in tenths of a day. */
-    private const int MONTH_DAYS_TENTHS = 304;
-
     public static function firstYear(ScenarioInput $in): CostBreakdown
     {
         $afterBenefits = self::benefitsAfter($in);
@@ -146,11 +143,12 @@ final class ScenarioCost
 
     /**
      * The daily salary after the change of the group, settled to the cent once: the salary plus the daily share of the fixed
-     * amount (a month of 30.4 days), raised by the percent.
+     * amount (a month of 30.4 days, or 30 when the salary is paid monthly), raised by the percent.
      */
     public static function raised(int $salary, PayGroup $group, ScenarioInput $in): int
     {
-        $withAmount = Rate::fraction($salary * self::MONTH_DAYS_TENTHS + self::amountFor($group, $in) * 10, self::MONTH_DAYS_TENTHS);
+        $tenths = $in->payBasis->monthDaysTenths();
+        $withAmount = Rate::fraction($salary * $tenths + self::amountFor($group, $in) * 10, $tenths);
 
         return Rate::one()->plus(self::raiseFor($group, $in) ?? Rate::zero())->times($withAmount)->of(1);
     }
@@ -174,7 +172,7 @@ final class ScenarioCost
 
             $group = PayGroup::from($cell->group->value);
             $key = "{$cell->jobGradeId}|{$group->value}";
-            $monthly = Rate::fraction(self::MONTH_DAYS_TENTHS, 10)->of(self::raised($salary, $group, $in) - $salary);
+            $monthly = Rate::fraction($in->payBasis->monthDaysTenths(), 10)->of(self::raised($salary, $group, $in) - $salary);
             $raises[$key] = new GradeRaise($cell->jobGradeId, $group, ($raises[$key]->people ?? 0) + $cell->count, $salary, $monthly);
         }
 

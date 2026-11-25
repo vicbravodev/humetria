@@ -13,6 +13,18 @@ enum PayBasis: string
     case Daily = 'daily';
     case Monthly = 'monthly';
 
+    /**
+     * The days of a month of this salary, in tenths of a day, to turn a fixed amount a month into a daily one: 30 for a monthly
+     * pay (LSS art. 29), 30.4 (365 ÷ 12) for a daily rate, whose year is 365 days.
+     */
+    public function monthDaysTenths(): int
+    {
+        return match ($this) {
+            self::Daily => 304,
+            self::Monthly => 300,
+        };
+    }
+
     /** The days of salary a year costs for one person. */
     public function paidDays(): int
     {

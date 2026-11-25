@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Compensation\Data\GradeRaise;
+use App\Modules\Compensation\Enums\PayBasis;
 use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Support\Calculation\Rate;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
@@ -20,6 +21,14 @@ it('costs a fixed monthly amount as its daily share of 30.4 days, the same as th
     expect(deltasOf($amount)['salary:salary'])->toBe(2_000 * 365)
         ->and($amount->deltaCents())->toBe($percent->deltaCents())
         ->and($amount->beforeCents)->toBe($percent->beforeCents);
+});
+
+it('turns a fixed monthly amount into a daily one with the 30 days of the law when the salary is paid monthly', function (): void {
+    // LSS art. 29: a monthly pay is divided by 30. $500 a month is 1,666.6… cents a day: the salary of 51,666.6… is settled to
+    // 51,667, and the 12 months cost 360 days of it (a month of 30.4 would give 1,645 × 360 = $5,922).
+    $cost = ScenarioCost::firstYear(scenarioInput(['amounts' => ['unionized' => 50_000], 'payBasis' => PayBasis::Monthly]));
+
+    expect(deltasOf($cost)['salary:salary'])->toBe(1_667 * 360);
 });
 
 it('settles the daily salary with the amount to the cent once', function (): void {
