@@ -1,14 +1,23 @@
-import { Bell, House, UserRound } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { Bell, Fingerprint, House, UserRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { domMax, LazyMotion, MotionConfig } from 'motion/react';
 import GlideChips from '@/components/humetria/glide-chips';
+import PortalTabContent from '@/components/worker-access/portal-tab-content';
 import { cspNonce } from '@/lib/csp-nonce';
 import { cn } from '@/lib/utils';
 
 export type PortalTab = 'start' | 'pending' | 'account';
 
-const TABS: { key: PortalTab; label: string; icon: LucideIcon }[] = [
+/** `punch` is not a screen of the home: it is a link to Marcar, where the company has attendance. */
+type BarTab = { label: string; icon: LucideIcon } & (
+    | { key: PortalTab }
+    | { key: 'punch' }
+);
+
+const TABS: BarTab[] = [
     { key: 'start', label: 'Inicio', icon: House },
+    { key: 'punch', label: 'Marcar', icon: Fingerprint },
     { key: 'pending', label: 'Pendientes', icon: Bell },
     { key: 'account', label: 'Cuenta', icon: UserRound },
 ];
@@ -18,16 +27,19 @@ const TAB =
 
 /**
  * The tabs of the person's portal (finding 3): the frosted pill of RH's phone menu, with the chip that glides to the tab
- * open, and how many things wait on «Pendientes». Only on the portal's top-level screens, never on a task or on anything
- * anonymous.
+ * open, and how many things wait on «Pendientes». Marcar, where the company has attendance, takes the person to its own
+ * screen. Only on the portal's top-level screens, never on a task or on anything anonymous.
  */
 export default function PortalTabBar({
     current,
     pending,
+    punchUrl,
     onSelect,
 }: {
     current: PortalTab;
     pending: number;
+    /** Where Marcar is; null where the company has no attendance, and the tab is not there. */
+    punchUrl: string | null;
     onSelect: (tab: PortalTab) => void;
 }) {
     return (
@@ -42,6 +54,30 @@ export default function PortalTabBar({
                 >
                     {TABS.map((tab) => {
                         const here = tab.key === current;
+                        const content = (
+                            <PortalTabContent
+                                icon={tab.icon}
+                                label={tab.label}
+                                badge={tab.key === 'pending' ? pending : 0}
+                                here={here}
+                            />
+                        );
+
+                        if (tab.key === 'punch') {
+                            return punchUrl === null ? null : (
+                                <div
+                                    key="punch"
+                                    className="relative flex flex-1"
+                                >
+                                    <Link
+                                        href={punchUrl}
+                                        className={cn(TAB, 'text-foreground')}
+                                    >
+                                        {content}
+                                    </Link>
+                                </div>
+                            );
+                        }
 
                         return (
                             <div key={tab.key} className="relative flex flex-1">
@@ -62,31 +98,7 @@ export default function PortalTabBar({
                                             : 'text-foreground',
                                     )}
                                 >
-                                    <span className="relative flex">
-                                        <tab.icon
-                                            aria-hidden
-                                            className="size-5"
-                                        />
-                                        {tab.key === 'pending' &&
-                                            pending > 0 && (
-                                                <span
-                                                    className={cn(
-                                                        'absolute -top-2 -right-3.5 min-w-5 rounded-full px-1.5 text-center text-caption leading-5 font-semibold',
-                                                        here
-                                                            ? 'bg-primary-foreground text-primary'
-                                                            : 'bg-primary text-primary-foreground',
-                                                    )}
-                                                >
-                                                    {pending}
-                                                    <span className="sr-only">
-                                                        {pending === 1
-                                                            ? ' pendiente'
-                                                            : ' pendientes'}
-                                                    </span>
-                                                </span>
-                                            )}
-                                    </span>
-                                    {tab.label}
+                                    {content}
                                 </button>
                             </div>
                         );

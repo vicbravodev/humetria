@@ -167,3 +167,18 @@ describe('the device key of the app (plan B)', function (): void {
         $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->component('worker-access/enter')->missing('deviceKey')->missing('slug')->etc());
     });
 });
+
+describe('the Marcar tab', function (): void {
+    it('gives the start where Marcar is when the company has attendance', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations', 'attendance'], CarbonImmutable::now(config('app.display_timezone')));
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertOk()->assertInertia(fn (Assert $page) => $page->where('punchUrl', route('attendance.device.punch.show', 'acme'))->etc());
+    });
+
+    it('gives it nothing for a company without attendance: the tab does not exist there', function (): void {
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->where('punchUrl', null)->etc());
+    });
+});

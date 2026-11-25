@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Modules\Notifications\Models\PushSubscription;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
+use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
 use Minishlink\WebPush\VAPID;
@@ -103,6 +105,17 @@ it('shows the start with the session open, its three tabs, and «Salir» in Cuen
     'dark desktop' => [true, false],
     'light mobile' => [false, true],
 ]);
+
+it('has Marcar as a tab where the company has attendance, and it takes the person to mark', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+    anaLink('marcar-token', requested: true);
+
+    $page = visitPage('worker-access/home', '/me/acme/link/marcar-token', mobile: true, reach: fn ($page) => $page->press('Continuar')->waitForText('Hola, Ana López'))
+        ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Marcar')
+        ->assertScript('() => document.querySelectorAll(\'nav[aria-label="Secciones del portal"] > div\').length', 4);
+
+    $page->click('nav[aria-label="Secciones del portal"] a')->assertPathIs('/me/acme/punch');
+});
 
 it('shows one screen for a link that does not work', function (): void {
     visitPage('worker-access/link', '/me/acme/link/unknown', mobile: true)

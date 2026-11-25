@@ -16,6 +16,8 @@ export default function Home(props: {
         storeUrl: string;
         proof: ProofStep;
     } | null;
+    /** Where Marcar is (the tab of the bar); null for a company without the registro de jornada. */
+    punchUrl: string | null;
     leaveUrl: string;
 }) {
     return (

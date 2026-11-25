@@ -49,6 +49,8 @@ final readonly class HomeController
                 'storeUrl' => route('worker.device-key.store', $tenant),
                 'proof' => $steps->for($session, $tenant),
             ] : null,
+            // Marcar is a tab of the bar only where the company has attendance.
+            'punchUrl' => $this->companies->current()->allows('attendance') ? route('attendance.device.punch.show', $tenant) : null,
             'leaveUrl' => route('worker.leave', $tenant),
         ]);
     }

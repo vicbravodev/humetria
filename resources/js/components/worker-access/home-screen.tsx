@@ -10,7 +10,7 @@ import { pendingTotal, splitSections } from '@/lib/worker-access/portal';
 import type { ProofStep, WorkerSection } from '@/types';
 
 /**
- * The person's portal (findings 3 and 29): three tabs, the same for everyone. Inicio, with what waits for them first; Pendientes,
+ * The person's portal (findings 3 and 29): four tabs (three where the company has no attendance). Inicio, with what waits for them first; Pendientes,
  * what waits across their tools; Cuenta, their key for this device and «Salir». Each tab fades in as it opens.
  */
 export default function HomeScreen({
@@ -21,6 +21,7 @@ export default function HomeScreen({
     keyUrl,
     hasKey,
     deviceKey,
+    punchUrl,
     leaveUrl,
 }: {
     company: string;
@@ -34,6 +35,7 @@ export default function HomeScreen({
         storeUrl: string;
         proof: ProofStep;
     } | null;
+    punchUrl: string | null;
     leaveUrl: string;
 }) {
     usePassRenewal(slug);
@@ -49,6 +51,7 @@ export default function HomeScreen({
                 <PortalTabBar
                     current={tab}
                     pending={pendingTotal(sections)}
+                    punchUrl={punchUrl}
                     onSelect={setTab}
                 />
             }
