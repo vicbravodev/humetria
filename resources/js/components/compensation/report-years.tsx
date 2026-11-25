@@ -3,7 +3,7 @@ import ReportPart from '@/components/compensation/report-part';
 import ColumnChart from '@/components/humetria/column-chart';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { yearColumns } from '@/lib/compensation/report-charts';
-import { edit } from '@/routes/tenant/compensation/scenarios';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
 import type { ScenarioReport } from '@/types';
 
 /** «Los próximos años»: what the proposal adds each year of its horizon with the engine's projection, and the assumptions behind it. */
@@ -17,6 +17,7 @@ export default function ReportYears({
     canChange: boolean;
 }) {
     const tenantSlug = useTenantSlug();
+    const { edit } = useScenarioRoutes();
     const { columns, totalText } = yearColumns(report);
 
     return (

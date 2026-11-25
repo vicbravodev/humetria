@@ -47,15 +47,21 @@ Route::middleware(BlockWhileImpersonating::class)->group(function () use ($notRe
     Route::delete('admin/{tenant:slug}/compensation/overrides/{override}', [SalaryOverrideController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('override')->name('tenant.compensation.overrides.destroy');
     Route::get('admin/{tenant:slug}/compensation/overrides/import/template', [SalaryOverrideImportController::class, 'template'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.template');
     Route::post('admin/{tenant:slug}/compensation/overrides/import', [SalaryOverrideImportController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.overrides.import');
-    Route::get('admin/{tenant:slug}/compensation/scenarios', [ScenarioController::class, 'index'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.index');
-    Route::get('admin/{tenant:slug}/compensation/scenarios/create', [ScenarioController::class, 'create'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.create');
-    Route::get('admin/{tenant:slug}/compensation/scenarios/compare', ScenarioComparisonController::class)->where('tenant', $notReserved)->name('tenant.compensation.scenarios.compare');
+    // The pages of a scenario exist twice with the same names: under scenarios for the ones costed on the roster, under quick
+    // («Cotizador rápido») for the ones costed on an average payroll. The route says which kind it is for.
+    foreach (['scenarios' => 'roster', 'quick' => 'average'] as $prefix => $source) {
+        Route::get("admin/{tenant:slug}/compensation/{$prefix}", [ScenarioController::class, 'index'])->where('tenant', $notReserved)->defaults('source', $source)->name("tenant.compensation.{$prefix}.index");
+        Route::get("admin/{tenant:slug}/compensation/{$prefix}/create", [ScenarioController::class, 'create'])->where('tenant', $notReserved)->defaults('source', $source)->name("tenant.compensation.{$prefix}.create");
+        Route::get("admin/{tenant:slug}/compensation/{$prefix}/compare", ScenarioComparisonController::class)->where('tenant', $notReserved)->defaults('source', $source)->name("tenant.compensation.{$prefix}.compare");
+        Route::post("admin/{tenant:slug}/compensation/{$prefix}/preview", ScenarioPreviewController::class)->where('tenant', $notReserved)->defaults('source', $source)->middleware('throttle:compensation-preview')->name("tenant.compensation.{$prefix}.preview");
+        Route::post("admin/{tenant:slug}/compensation/{$prefix}", [ScenarioController::class, 'store'])->where('tenant', $notReserved)->defaults('source', $source)->name("tenant.compensation.{$prefix}.store");
+        Route::get("admin/{tenant:slug}/compensation/{$prefix}/{scenario}", [ScenarioController::class, 'edit'])->where('tenant', $notReserved)->whereUuid('scenario')->defaults('source', $source)->name("tenant.compensation.{$prefix}.edit");
+        Route::put("admin/{tenant:slug}/compensation/{$prefix}/{scenario}", [ScenarioController::class, 'update'])->where('tenant', $notReserved)->whereUuid('scenario')->defaults('source', $source)->name("tenant.compensation.{$prefix}.update");
+        Route::get("admin/{tenant:slug}/compensation/{$prefix}/{scenario}/report", [ReportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('scenario')->defaults('source', $source)->name("tenant.compensation.{$prefix}.report");
+    }
+
+    // What does not have a page of its own is the same for both kinds, and the annex lists people, so it is the roster's alone.
     Route::get('admin/{tenant:slug}/compensation/scenarios/benefits', BenefitOptionsController::class)->where('tenant', $notReserved)->name('tenant.compensation.scenarios.benefits');
-    Route::post('admin/{tenant:slug}/compensation/scenarios/preview', ScenarioPreviewController::class)->where('tenant', $notReserved)->middleware('throttle:compensation-preview')->name('tenant.compensation.scenarios.preview');
-    Route::post('admin/{tenant:slug}/compensation/scenarios', [ScenarioController::class, 'store'])->where('tenant', $notReserved)->name('tenant.compensation.scenarios.store');
-    Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'edit'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.edit');
-    Route::put('admin/{tenant:slug}/compensation/scenarios/{scenario}', [ScenarioController::class, 'update'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.update');
-    Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}/report', [ReportController::class, 'show'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.report');
     Route::get('admin/{tenant:slug}/compensation/scenarios/{scenario}/annex', AnnexController::class)->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.annex');
     Route::post('admin/{tenant:slug}/compensation/scenarios/{scenario}/shares', [ReportShareController::class, 'store'])->where('tenant', $notReserved)->whereUuid('scenario')->name('tenant.compensation.scenarios.shares.store');
     Route::delete('admin/{tenant:slug}/compensation/scenarios/{scenario}/shares/{share}', [ReportShareController::class, 'destroy'])->where('tenant', $notReserved)->whereUuid('scenario')->whereUuid('share')->name('tenant.compensation.scenarios.shares.destroy');

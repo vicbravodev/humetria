@@ -7,7 +7,9 @@ namespace App\Modules\Compensation\Actions;
 use App\Modules\Compensation\Data\ScenarioData;
 use App\Modules\Compensation\Data\TermChange;
 use App\Modules\Compensation\Enums\AssumptionKey;
+use App\Modules\Compensation\Enums\PayBasis;
 use App\Modules\Compensation\Enums\RaiseUnit;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
@@ -33,6 +35,13 @@ final readonly class SaveScenario
     private const int MAX_RAISE_CENTS = 10_000_000;
 
     private const int MAX_YEARS_AHEAD = 10;
+
+    private const int MAX_WORKERS = 1_000_000;
+
+    /** The largest average monthly salary, $10,000,000, in cents. */
+    private const int MAX_MONTHLY_SALARY_CENTS = 1_000_000_000;
+
+    private const int MAX_TENURE_YEARS = 60;
 
     /** The range of each assumption, in basis points. */
     private const array RANGES = [
@@ -83,6 +92,7 @@ final readonly class SaveScenario
             ...$this->nameProblem(trim($data->name)),
             ...$this->periodProblems($data),
             ...$this->raiseProblems($data),
+            ...$this->averageProblems($data),
             ...$this->assumptionProblems($data),
             ...$this->termProblems($data),
             ...($data->defaultState !== null && ! array_key_exists($data->defaultState, $this->workCenters->states()) ? ['default_state' => 'Elige un estado de la lista.'] : []),
@@ -105,6 +115,29 @@ final readonly class SaveScenario
             'group_changes' => ['unionized' => $data->unionizedRaiseBp, 'trusted' => $data->trustedRaiseBp],
             'term_changes' => array_map(fn (TermChange $change): array => ['benefit_id' => $change->benefitId, 'value' => $change->value, 'tenure_table' => $change->tenureTable], $data->termChanges),
             'default_state' => $data->defaultState,
+            ...$this->payroll($data),
+        ];
+    }
+
+    /**
+     * What a scenario is costed on: an average payroll (always paid monthly) or the roster, which keeps none of the average's
+     * fields whatever the data carries.
+     *
+     * @return array<model-property<Scenario>, mixed>
+     */
+    private function payroll(ScenarioData $data): array
+    {
+        if ($data->source === ScenarioSource::Roster) {
+            return ['source' => ScenarioSource::Roster, 'pay_basis' => $data->payBasis, 'average_workers' => null, 'average_monthly_salary_cents' => null, 'average_tenure_years' => null, 'average_group' => null];
+        }
+
+        return [
+            'source' => ScenarioSource::Average,
+            'pay_basis' => PayBasis::Monthly,
+            'average_workers' => $data->averageWorkers,
+            'average_monthly_salary_cents' => $data->averageMonthlySalaryCents,
+            'average_tenure_years' => $data->averageTenureYears,
+            'average_group' => $data->averageGroup,
         ];
     }
 
@@ -180,6 +213,34 @@ final readonly class SaveScenario
             if ($raise !== null && ($raise < 0 || $raise > $max)) {
                 $errors[$field] = $message;
             }
+        }
+
+        return $errors;
+    }
+
+    /** @return array<string, string> only a scenario of an average payroll has these fields to check */
+    private function averageProblems(ScenarioData $data): array
+    {
+        if ($data->source !== ScenarioSource::Average) {
+            return [];
+        }
+
+        $errors = [];
+
+        if ($data->averageWorkers === null || $data->averageWorkers < 1 || $data->averageWorkers > self::MAX_WORKERS) {
+            $errors['average_workers'] = 'Escribe cuántas personas son: de 1 a '.number_format(self::MAX_WORKERS).'.';
+        }
+
+        if ($data->averageMonthlySalaryCents === null || $data->averageMonthlySalaryCents < 1 || $data->averageMonthlySalaryCents > self::MAX_MONTHLY_SALARY_CENTS) {
+            $errors['average_monthly_salary'] = 'El sueldo mensual promedio va de más de $0 a $10,000,000.';
+        }
+
+        if ($data->averageTenureYears === null || $data->averageTenureYears < 0 || $data->averageTenureYears > self::MAX_TENURE_YEARS) {
+            $errors['average_tenure_years'] = 'Los años de servicio van de 0 a '.self::MAX_TENURE_YEARS.'.';
+        }
+
+        if ($data->averageGroup === null) {
+            $errors['average_group'] = 'Elige si son sindicalizados o de confianza.';
         }
 
         return $errors;

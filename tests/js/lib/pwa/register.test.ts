@@ -16,7 +16,9 @@ function cacheStore(keys: string[]) {
 
     return {
         removed,
-        keys: () => Promise.resolve(keys),
+        // As the real `caches`: what was deleted is no longer listed (the sweep runs twice).
+        keys: () =>
+            Promise.resolve(keys.filter((key) => !removed.includes(key))),
         delete: (key: string) => {
             removed.push(key);
 
@@ -166,6 +168,38 @@ function documentWith(metas: Record<string, string>) {
         },
     };
 }
+
+describe('registerWorkerApp, switched off', () => {
+    it('switched off, sweeps the caches again once the old worker has had its last word: it may write a file after the first sweep', async () => {
+        vi.useFakeTimers();
+        const removed: string[] = [];
+        // The first sweep finds the cache; the old worker, still in charge of the page's last requests, writes it back.
+        const sweeps = [['humetria-pwa-acme-abc'], ['humetria-pwa-acme-abc']];
+        const store = {
+            keys: () => Promise.resolve(sweeps.shift() ?? []),
+            delete: (key: string) => {
+                removed.push(key);
+
+                return Promise.resolve(true);
+            },
+        };
+
+        const done = registerWorkerApp({
+            ...base,
+            killed: true,
+            container: container(),
+            caches: store,
+        });
+        await vi.advanceTimersByTimeAsync(5_000);
+        await done;
+        vi.useRealTimers();
+
+        expect(removed).toEqual([
+            'humetria-pwa-acme-abc',
+            'humetria-pwa-acme-abc',
+        ]);
+    });
+});
 
 describe('revisionOf', () => {
     it('is the revision the page says it runs', () => {

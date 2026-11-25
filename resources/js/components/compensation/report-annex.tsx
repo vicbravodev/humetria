@@ -1,5 +1,4 @@
 import { ChevronDown } from 'lucide-react';
-import ReportAssumptions from '@/components/compensation/report-assumptions';
 import ReportConceptTable from '@/components/compensation/report-concept-table';
 import ReportCoverage from '@/components/compensation/report-coverage';
 import ReportCuts from '@/components/compensation/report-cuts';
@@ -28,33 +27,36 @@ export default function ReportAnnex({
             description="Antes y después, a 12 meses de vigencia. El cambio con retroactivo es lo que suma al primer año."
             pageBreak
         >
-            <div className="overflow-hidden card">
+            <div data-splittable className="overflow-hidden card">
                 <ReportConceptTable report={report} />
             </div>
             <p className="text-caption text-muted-foreground">
                 {annexNote(report)}
             </p>
-            <details className="group card print:hidden">
+            <details className="group card">
                 <summary
                     data-test="report-detail"
                     className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-medium [&::-webkit-details-marker]:hidden"
                 >
-                    Más detalle: mes a mes, dónde pesa, prima de antigüedad y
-                    supuestos
+                    Más detalle: mes a mes, dónde pesa y prima de antigüedad
                     <ChevronDown
                         aria-hidden
                         className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-open:rotate-180"
                     />
                 </summary>
-                <div className="flex flex-col gap-4 border-t p-4 sm:p-5">
+                <div className="flex flex-col gap-4 border-t p-4 sm:p-5 print:border-t-0 print:p-0">
                     <ReportCoverage report={report} />
                     {personValue && (
                         <ReportPersonValue value={report.person_value} />
                     )}
                     <ReportTimeline report={report} />
-                    <ReportCuts cuts={report.cuts} />
-                    <ReportLiability report={report} />
-                    <ReportAssumptions assumptions={report.assumptions} />
+                    {/* An average payroll is one row and has no dates of hire: where it weighs and the liability say nothing. */}
+                    {report.scenario.source !== 'average' && (
+                        <>
+                            <ReportCuts cuts={report.cuts} />
+                            <ReportLiability report={report} />
+                        </>
+                    )}
                 </div>
             </details>
         </ReportPart>

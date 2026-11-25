@@ -34,9 +34,13 @@ it('counts the people the cost covers, the categories without a salary and the a
     JobGrade::factory()->create(['tenant_id' => $this->a->id]);
     Scenario::factory()->create(['tenant_id' => $this->a->id]);
     Scenario::factory()->archived()->create(['tenant_id' => $this->a->id]);
+    // The scenarios of an average payroll are counted apart: they are not of the roster.
+    Scenario::factory()->average()->count(2)->create(['tenant_id' => $this->a->id]);
+    Scenario::factory()->average()->archived()->create(['tenant_id' => $this->a->id]);
     Employee::factory()->count(4)->create(['tenant_id' => $this->b->id]);
     Scenario::factory()->count(2)->create(['tenant_id' => $this->b->id]);
+    Scenario::factory()->average()->create(['tenant_id' => $this->b->id]);
     workIn($this->a);
 
-    expect($this->standing->current())->toEqual(new ContractStanding(3, 2, 1, 1));
+    expect($this->standing->current())->toEqual(new ContractStanding(3, 2, 1, 1, 2));
 });

@@ -6,7 +6,10 @@ use App\Modules\Compensation\Actions\SaveScenario;
 use App\Modules\Compensation\Data\ScenarioData;
 use App\Modules\Compensation\Data\TermChange;
 use App\Modules\Compensation\Enums\AssumptionKey;
+use App\Modules\Compensation\Enums\PayBasis;
+use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Enums\RaiseUnit;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
@@ -238,4 +241,68 @@ it('saves a raise as a fixed amount a month per group, in cents, and refuses one
         // $500 a month is 50,000 cents: over 100 % as a percent, an ordinary amount.
         ->and(scenarioRefusedWith(scenarioData(['raiseUnit' => RaiseUnit::Amount, 'unionizedRaiseBp' => 10_000_000])))->toBe([])
         ->and(resolve(SaveScenario::class)->handle(scenarioData(['name' => 'Por ciento']))->raise_unit)->toBe(RaiseUnit::Percent);
+});
+
+/**
+ * The fields of a scenario of an average payroll: 500 workers at $15,000 a month, one year of service, unionized.
+ *
+ * @param  array<string, mixed>  $override
+ * @return array<string, mixed>
+ */
+function averageData(array $override = []): array
+{
+    return [
+        'source' => ScenarioSource::Average,
+        'averageWorkers' => 500,
+        'averageMonthlySalaryCents' => 1_500_000,
+        'averageTenureYears' => 1,
+        'averageGroup' => PayGroup::Unionized,
+        ...$override,
+    ];
+}
+
+it('saves a scenario of an average payroll, which is always paid monthly', function (): void {
+    $scenario = resolve(SaveScenario::class)->handle(scenarioData(averageData(['payBasis' => PayBasis::Daily, 'defaultState' => 'JAL'])));
+    $saved = Scenario::query()->findOrFail($scenario->id);
+
+    expect($saved->source)->toBe(ScenarioSource::Average)
+        ->and($saved->average_workers)->toBe(500)
+        ->and($saved->average_monthly_salary_cents)->toBe(1_500_000)
+        ->and($saved->average_tenure_years)->toBe(1)
+        ->and($saved->average_group)->toBe(PayGroup::Unionized)
+        ->and($saved->pay_basis)->toBe(PayBasis::Monthly)
+        ->and($saved->default_state)->toBe('JAL');
+});
+
+it('refuses an average payroll that cannot be costed, by field', function (array $override, string $field): void {
+    expect(array_keys(scenarioRefusedWith(scenarioData(averageData($override)))))->toBe([$field]);
+})->with([
+    'no workers' => [['averageWorkers' => 0], 'average_workers'],
+    'a million and one workers' => [['averageWorkers' => 1_000_001], 'average_workers'],
+    'a salary of zero' => [['averageMonthlySalaryCents' => 0], 'average_monthly_salary'],
+    'a salary over $10,000,000 a month' => [['averageMonthlySalaryCents' => 1_000_000_001], 'average_monthly_salary'],
+    'negative years of service' => [['averageTenureYears' => -1], 'average_tenure_years'],
+    'sixty-one years of service' => [['averageTenureYears' => 61], 'average_tenure_years'],
+    'no group' => [['averageGroup' => null], 'average_group'],
+]);
+
+it('accepts the limits of an average payroll', function (): void {
+    expect(scenarioRefusedWith(scenarioData(averageData(['averageWorkers' => 1, 'averageMonthlySalaryCents' => 1, 'averageTenureYears' => 0]))))->toBe([])
+        ->and(scenarioRefusedWith(scenarioData(averageData(['averageWorkers' => 1_000_000, 'averageMonthlySalaryCents' => 1_000_000_000, 'averageTenureYears' => 60]))))->toBe([]);
+});
+
+it('keeps a roster scenario on its pay basis and without an average payroll, whatever the data carries', function (): void {
+    $scenario = resolve(SaveScenario::class)->handle(scenarioData([...averageData(), 'source' => ScenarioSource::Roster, 'payBasis' => PayBasis::Monthly]));
+    $saved = Scenario::query()->findOrFail($scenario->id);
+
+    expect($saved->source)->toBe(ScenarioSource::Roster)
+        ->and($saved->pay_basis)->toBe(PayBasis::Monthly)
+        ->and($saved->average_workers)->toBeNull()
+        ->and($saved->average_monthly_salary_cents)->toBeNull()
+        ->and($saved->average_tenure_years)->toBeNull()
+        ->and($saved->average_group)->toBeNull();
+});
+
+it('does not check the average payroll of a roster scenario', function (): void {
+    expect(scenarioRefusedWith(scenarioData(['averageWorkers' => 0, 'averageGroup' => null])))->toBe([]);
 });

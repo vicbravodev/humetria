@@ -25,4 +25,14 @@ final readonly class HeadcountCell
         public CarbonImmutable $hireMonth,
         public int $count,
     ) {}
+
+    /**
+     * A headcount that is assumed, not read from the roster (an average payroll): unionized unless said trusted, in no area.
+     *
+     * @param  int<1, max>  $count
+     */
+    public static function assumed(string $jobGradeId, ?string $state, CarbonImmutable $hireMonth, int $count, bool $trusted = false): self
+    {
+        return new self($jobGradeId, null, $trusted ? StaffGroup::Trusted : StaffGroup::Unionized, $state, $hireMonth, $count);
+    }
 }

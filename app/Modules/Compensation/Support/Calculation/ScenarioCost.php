@@ -12,6 +12,7 @@ use App\Modules\Compensation\Data\CostCut;
 use App\Modules\Compensation\Data\CostSubject;
 use App\Modules\Compensation\Data\CostUnit;
 use App\Modules\Compensation\Data\GradeRaise;
+use App\Modules\Compensation\Data\LawTerms;
 use App\Modules\Compensation\Data\MonthlyCost;
 use App\Modules\Compensation\Data\ScenarioInput;
 use App\Modules\Compensation\Data\SideCost;
@@ -41,9 +42,6 @@ final class ScenarioCost
     private const int MONTHS = 12;
 
     private const int DAYS_IN_YEAR = 365;
-
-    /** The month of the salary, 30.4 days, in tenths of a day. */
-    private const int MONTH_DAYS_TENTHS = 304;
 
     public static function firstYear(ScenarioInput $in): CostBreakdown
     {
@@ -146,11 +144,12 @@ final class ScenarioCost
 
     /**
      * The daily salary after the change of the group, settled to the cent once: the salary plus the daily share of the fixed
-     * amount (a month of 30.4 days), raised by the percent.
+     * amount (a month of 30.4 days, or 30 when the salary is paid monthly), raised by the percent.
      */
     public static function raised(int $salary, PayGroup $group, ScenarioInput $in): int
     {
-        $withAmount = Rate::fraction($salary * self::MONTH_DAYS_TENTHS + self::amountFor($group, $in) * 10, self::MONTH_DAYS_TENTHS);
+        $tenths = $in->payBasis->monthDaysTenths();
+        $withAmount = Rate::fraction($salary * $tenths + self::amountFor($group, $in) * 10, $tenths);
 
         return Rate::one()->plus(self::raiseFor($group, $in) ?? Rate::zero())->times($withAmount)->of(1);
     }
@@ -174,7 +173,7 @@ final class ScenarioCost
 
             $group = PayGroup::from($cell->group->value);
             $key = "{$cell->jobGradeId}|{$group->value}";
-            $monthly = Rate::fraction(self::MONTH_DAYS_TENTHS, 10)->of(self::raised($salary, $group, $in) - $salary);
+            $monthly = Rate::fraction($in->payBasis->monthDaysTenths(), 10)->of(self::raised($salary, $group, $in) - $salary);
             $raises[$key] = new GradeRaise($cell->jobGradeId, $group, ($raises[$key]->people ?? 0) + $cell->count, $salary, $monthly);
         }
 
@@ -186,7 +185,7 @@ final class ScenarioCost
     /**
      * @param  list<BenefitSpec>  $benefits
      * @param  list<CarbonImmutable>  $days  the first day of each month
-     * @param  array<string, array{lines: array<string, int>, uncalculated: list<string>}>  $cache  the persons already costed on this side
+     * @param  array<string, array{lines: array<string, int>, uncalculated: list<string>, sbc: int, terms: LawTerms}>  $cache  the persons already costed on this side
      */
     private static function side(CostUnit $unit, int $salary, array $benefits, ScenarioInput $in, array $days, array &$cache): SideCost
     {
@@ -220,15 +219,15 @@ final class ScenarioCost
      * One person for a full year on one day, by concept id: "salary:salary", "benefit:{key}", "contribution:{line}".
      *
      * @param  list<BenefitSpec>  $benefits
-     * @return array{lines: array<string, int>, uncalculated: list<string>}
+     * @return array{lines: array<string, int>, uncalculated: list<string>, sbc: int, terms: LawTerms}
      */
-    private static function person(CostSubject $subject, array $benefits, ScenarioInput $in, ?string $state): array
+    public static function person(CostSubject $subject, array $benefits, ScenarioInput $in, ?string $state): array
     {
         $salary = $subject->dailySalaryCents;
         $terms = BenefitCost::lawTerms($benefits, $subject, $in->fiscal);
         $aguinaldo = $terms->aguinaldoCost($salary);
         $premium = $terms->premiumCost($salary);
-        $lines = ['salary:salary' => $salary * self::DAYS_IN_YEAR, 'benefit:christmas_bonus' => $aguinaldo, 'benefit:vacation_premium' => $premium];
+        $lines = ['salary:salary' => $salary * $in->payBasis->paidDays(), 'benefit:christmas_bonus' => $aguinaldo, 'benefit:vacation_premium' => $premium];
         $taxable = $lines['salary:salary'] + ($terms->aguinaldoTaxable ? $aguinaldo : 0) + ($terms->premiumTaxable ? $premium : 0);
         $integrating = Rate::zero();
         $deferred = [];
@@ -268,7 +267,7 @@ final class ScenarioCost
             }
         }
 
-        return ['lines' => $lines, 'uncalculated' => $uncalculated];
+        return ['lines' => $lines, 'uncalculated' => $uncalculated, 'sbc' => $sbc, 'terms' => $terms];
     }
 
     /**

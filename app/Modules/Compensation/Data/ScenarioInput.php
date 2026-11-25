@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Compensation\Data;
 
+use App\Modules\Compensation\Enums\PayBasis;
 use App\Modules\Compensation\Support\Calculation\Rate;
 use App\Modules\Organization\Data\HeadcountCell;
 use App\Modules\Organization\Data\RosterGaps;
@@ -42,6 +43,7 @@ final readonly class ScenarioInput
         public ?string $defaultState,
         public RosterGaps $gaps,
         public array $monthlyAmounts = [],
+        public PayBasis $payBasis = PayBasis::Daily,
     ) {}
 
     /**
@@ -55,7 +57,7 @@ final readonly class ScenarioInput
     {
         return new self(
             $this->effectiveOn, $this->retroMonths, $this->fiscal, $this->cells, $this->individuals, $this->gradeSalaries,
-            $this->benefits, $raises, $proposed, $this->workRiskPremium, $this->defaultState, $this->gaps, $monthlyAmounts,
+            $this->benefits, $raises, $proposed, $this->workRiskPremium, $this->defaultState, $this->gaps, $monthlyAmounts, $this->payBasis,
         );
     }
 }

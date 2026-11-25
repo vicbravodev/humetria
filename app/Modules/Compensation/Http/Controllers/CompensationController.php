@@ -6,6 +6,7 @@ namespace App\Modules\Compensation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Compensation\Actions\ListScenarios;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Support\BaseCatalog;
 use App\Modules\Compensation\Support\CompensationStart;
 use App\Modules\Compensation\Support\ContractStatus;
@@ -36,8 +37,8 @@ final class CompensationController extends Controller
         return Inertia::render('compensation/index', [
             'status' => $contract,
             'first_time' => $contract['roster']['people'] === 0,
-            'scenarios' => $rows->through($list->handle(false)),
-            'counts' => $list->counts(),
+            'scenarios' => $rows->through($list->handle(false, ScenarioSource::Roster)),
+            'counts' => $list->counts(ScenarioSource::Roster),
             'today' => $now === null ? null : $now['today'],
             'negotiation' => $now === null || $now['today']['people'] === 0 ? null : $now['negotiation'],
         ]);

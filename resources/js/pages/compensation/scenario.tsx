@@ -1,30 +1,31 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
 import ScenarioEditor from '@/components/compensation/scenario-editor';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
+import { useScenarioCrumbs } from '@/hooks/use-scenario-routes';
 import type { ScenarioDefaults } from '@/lib/compensation/raise-draft';
 import type { OtherScenario } from '@/lib/compensation/scenario-draft';
-import { index } from '@/routes/tenant/compensation';
-import type { AssumptionField, ChoiceOption, ScenarioDetail } from '@/types';
+import type {
+    AssumptionField,
+    ChoiceOption,
+    ScenarioDetail,
+    ScenarioPayroll,
+    ScenarioSource,
+} from '@/types';
 
 /** A scenario with its cost as it is moved (board V4-Comp-Escenario). */
 export default function Scenario(props: {
+    source: ScenarioSource;
     scenario: ScenarioDetail | null;
     assumptions: AssumptionField[];
     states: ChoiceOption[];
-    defaults: ScenarioDefaults;
+    defaults: ScenarioDefaults & ScenarioPayroll;
     horizons: number[];
     others: OtherScenario[];
     vacation_notice: string | null;
 }) {
-    const tenantSlug = useTenantSlug();
     const title =
         props.scenario === null ? 'Nuevo escenario' : props.scenario.name;
-    setLayoutProps({
-        breadcrumbs: [
-            { title: 'Compensación', href: index(tenantSlug) },
-            { title },
-        ],
-    });
+    const breadcrumbs = useScenarioCrumbs({ title });
+    setLayoutProps({ breadcrumbs });
 
     return (
         <>

@@ -174,9 +174,14 @@ function changeInPhone(AwaitableWebpage $page, string $change): void
     })");
 }
 
-/** The phone keeps only this many of its tickets (the newest first): to see «Pocos boletos» or «Aún no está listo». */
+/**
+ * The phone keeps only this many of its tickets (the newest first): to see «Pocos boletos» or «Aún no está listo». The page
+ * the phone was on may still be swapping a ticket for a new batch (it does so on opening) and would write the batch back after
+ * this, undoing it: so it is left first, for a document with no app in it, and the caller opens Marcar again afterwards.
+ */
 function keepTickets(AwaitableWebpage $page, int $count): void
 {
+    $page->navigate('/favicon.svg');
     changeInPhone($page, "(store) => {
         const read = store.get('tickets');
         read.onsuccess = () => store.put(read.result.slice(0, {$count}), 'tickets');

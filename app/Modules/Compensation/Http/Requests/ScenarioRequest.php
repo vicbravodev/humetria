@@ -6,10 +6,15 @@ namespace App\Modules\Compensation\Http\Requests;
 
 use App\Modules\Compensation\Data\ScenarioData;
 use App\Modules\Compensation\Data\TermChange;
+use App\Modules\Compensation\Enums\PayBasis;
+use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Enums\RaiseUnit;
+use App\Modules\Compensation\Enums\ScenarioSource;
+use App\Modules\Compensation\Http\ScenarioRoute;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Support\BenefitValue;
 use App\Modules\Compensation\Support\PercentBasisPoints;
+use App\Modules\Compensation\Support\SalaryRules;
 use App\Modules\Compensation\Support\TenureTable;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -52,6 +57,27 @@ final class ScenarioRequest extends FormRequest
             'default_state' => ['nullable', 'string', 'max:3'],
             'assumptions' => ['nullable', 'array'],
             'term_changes' => ['nullable', 'array', 'max:'.TenureTable::MAX_ROWS],
+            'pay_basis' => ['nullable', 'in:'.implode(',', array_column(PayBasis::cases(), 'value'))],
+            ...$this->averageRules(),
+        ];
+    }
+
+    /**
+     * The fields of an average payroll: asked of a scenario of that kind and left alone in one of the roster.
+     *
+     * @return array<string, list<string|ValidationRule>>
+     */
+    private function averageRules(): array
+    {
+        if ($this->source() !== ScenarioSource::Average) {
+            return [];
+        }
+
+        return [
+            'average_workers' => ['required', 'integer', 'min:1', 'max:1000000'],
+            'average_monthly_salary' => ['required', 'string', new MonthlySalaryRule],
+            'average_tenure_years' => ['required', 'integer', 'min:0', 'max:60'],
+            'average_group' => ['required', 'in:'.implode(',', array_column(PayGroup::cases(), 'value'))],
         ];
     }
 
@@ -62,7 +88,8 @@ final class ScenarioRequest extends FormRequest
     {
         return [
             'effective_on' => 'vigencia', 'retroactive_months' => 'retroactividad', 'horizon_years' => 'horizonte',
-            'raise_unit' => 'tipo de aumento', 'unionized_raise' => 'aumento de sindicalizados', 'trusted_raise' => 'aumento de confianza', 'default_state' => 'estado',
+            'raise_unit' => 'tipo de aumento', 'unionized_raise' => $this->source() === ScenarioSource::Average ? 'aumento' : 'aumento de sindicalizados', 'trusted_raise' => 'aumento de confianza', 'default_state' => 'estado',
+            'pay_basis' => 'base del sueldo', 'average_workers' => 'número de personas', 'average_monthly_salary' => 'sueldo mensual promedio', 'average_tenure_years' => 'años de servicio', 'average_group' => 'grupo',
         ];
     }
 
@@ -102,24 +129,41 @@ final class ScenarioRequest extends FormRequest
             $assumptions[$key] = PercentBasisPoints::parse($text) ?? 0;
         }
 
+        $average = $this->source() === ScenarioSource::Average;
+        $group = $average ? PayGroup::tryFrom($this->string('average_group')->toString()) : null;
+        $raise = $this->raise('unionized_raise');
+
         return new ScenarioData(
             $id,
             $this->string('name')->toString(),
             $this->date('effective_on', 'Y-m-d')?->toImmutable() ?? CarbonImmutable::now(),
             $this->integer('retroactive_months'),
             $this->integer('horizon_years'),
-            $this->raise('unionized_raise'),
-            $this->filled('trusted_raise') ? $this->raise('trusted_raise') : null,
+            // An average payroll has one group and one raise: it goes to that group, whichever it is.
+            $average && $group === PayGroup::Trusted ? null : $raise,
+            $average ? ($group === PayGroup::Trusted ? $raise : null) : ($this->filled('trusted_raise') ? $this->raise('trusted_raise') : null),
             $this->termChanges() ?? [],
             $assumptions,
             $this->filled('default_state') ? $this->string('default_state')->toString() : null,
             $this->unit(),
+            $this->source(),
+            $average ? $this->integer('average_workers') : null,
+            $average ? SalaryRules::pesos($this->string('average_monthly_salary')->toString()) : null,
+            $average ? $this->integer('average_tenure_years') : null,
+            $group,
+            $this->enum('pay_basis', PayBasis::class) ?? PayBasis::Daily,
         );
+    }
+
+    /** What the scenario is costed on, as the route says. */
+    public function source(): ScenarioSource
+    {
+        return ScenarioRoute::source($this);
     }
 
     private function isPreview(): bool
     {
-        return $this->routeIs('tenant.compensation.scenarios.preview');
+        return $this->routeIs('tenant.compensation.scenarios.preview', 'tenant.compensation.quick.preview');
     }
 
     private function unit(): RaiseUnit

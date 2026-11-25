@@ -258,6 +258,10 @@ return [
             'tenant.attendance.places' => 'answers the address the page sends (a 422 bare)',
             'tenant.attendance.report.export' => 'exports the center and dates the page sends (a 422 bare)',
             'tenant.compensation.scenarios.compare' => 'compares the proposals the page sends (a 422 bare)',
+            'tenant.compensation.quick.compare' => 'compares the proposals the page sends (a 422 bare)',
+            // The demo costs its contract on its roster: it has no scenario of an average payroll, and the roster ones are sent to their own pages.
+            'tenant.compensation.quick.edit' => 'the demo has no scenario of an average payroll to open',
+            'tenant.compensation.quick.report' => 'the demo has no scenario of an average payroll to open',
             'tenant.seating.certificate' => 'only for a center with nobody standing; the offices have three positions',
             'tenant.telework.certificate' => 'only for a center with nobody teleworking; the offices have twelve',
             'tenant.assistant.conversations.show' => 'the demo has no conversation with Humi',

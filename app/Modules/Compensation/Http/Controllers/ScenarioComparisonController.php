@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Compensation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Compensation\Http\ScenarioRoute;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Support\ScenarioComparison;
 use Illuminate\Http\Request;
@@ -27,7 +28,11 @@ final class ScenarioComparisonController extends Controller
         $scenarios = [];
 
         foreach ($data['ids'] as $id) {
-            $scenarios[] = Scenario::query()->findOrFail($id);
+            $found = Scenario::query()->findOrFail($id);
+
+            // A scenario of an average payroll and one of the roster are not weighed against each other.
+            abort_unless($found->source === ScenarioRoute::source($request), 404);
+            $scenarios[] = $found;
         }
 
         return Inertia::render('compensation/scenario-compare', $comparison->handle($scenarios));

@@ -115,6 +115,7 @@ final class Projection
             $in->defaultState,
             $in->gaps,
             $amounts,
+            $in->payBasis,
         );
     }
 

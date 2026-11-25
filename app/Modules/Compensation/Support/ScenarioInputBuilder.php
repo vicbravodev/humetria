@@ -9,14 +9,15 @@ use App\Modules\Compensation\Data\IndividualSalary;
 use App\Modules\Compensation\Data\ScenarioInput;
 use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Enums\RaiseUnit;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Models\Scenario;
-use App\Modules\Compensation\Models\WorkRiskPremium;
 use App\Modules\Compensation\Support\Calculation\Rate;
 use App\Modules\Organization\Contracts\CompensationRoster;
+use App\Modules\Organization\Data\RosterGaps;
 use Carbon\CarbonImmutable;
 
 /**
@@ -26,12 +27,14 @@ use Carbon\CarbonImmutable;
  */
 final readonly class ScenarioInputBuilder
 {
-    public function __construct(private CompensationRoster $roster, private FiscalParameters $fiscal) {}
+    public function __construct(private CompensationRoster $roster, private FiscalParameters $fiscal, private CurrentRiskPremium $riskPremium) {}
 
     public function build(Scenario $scenario): ScenarioInput
     {
         $on = $scenario->effective_on;
-        $overrides = $this->overridesInForce($on);
+        $average = $scenario->source === ScenarioSource::Average;
+        // An average payroll has no people: no individual salaries, no tabulator, no roster to count.
+        $overrides = $average ? [] : $this->overridesInForce($on);
         $individuals = [];
 
         foreach ($this->roster->individuals(array_column($overrides, 'number')) as $number => $person) {
@@ -48,16 +51,18 @@ final readonly class ScenarioInputBuilder
             effectiveOn: $on,
             retroMonths: $scenario->retroactive_months,
             fiscal: $this->fiscal->at($on),
-            cells: $this->roster->cells($on, array_column($overrides, 'number')),
+            cells: $average ? [AveragePayroll::cell($scenario)] : $this->roster->cells($on, array_column($overrides, 'number')),
             individuals: $individuals,
-            gradeSalaries: $this->gradeSalaries($on),
+            gradeSalaries: $average ? [AveragePayroll::GRADE_ID => AveragePayroll::dailySalaryCents($scenario)] : $this->gradeSalaries($on),
             benefits: $this->currentSpecs($benefits, $on),
             raises: $scenario->raise_unit === RaiseUnit::Percent ? $this->raises($scenario) : [],
             proposed: $this->proposed($scenario, $benefits),
-            workRiskPremium: $this->riskPremium($on),
+            // A company that has not captured its premium costs an average payroll with the one of class I; the report says so.
+            workRiskPremium: $this->riskPremium->at($on) ?? ($average ? CurrentRiskPremium::classOne() : null),
             defaultState: $scenario->default_state,
-            gaps: $this->roster->gaps(),
+            gaps: $average ? new RosterGaps(AveragePayroll::workers($scenario), AveragePayroll::workers($scenario), [], 0, 0) : $this->roster->gaps(),
             monthlyAmounts: $scenario->raise_unit === RaiseUnit::Amount ? $this->amounts($scenario) : [],
+            payBasis: $scenario->pay_basis,
         );
     }
 
@@ -172,12 +177,5 @@ final readonly class ScenarioInputBuilder
         }
 
         return $amounts;
-    }
-
-    private function riskPremium(CarbonImmutable $on): ?Rate
-    {
-        $premium = WorkRiskPremium::query()->where('effective_from', '<=', $on->toDateString())->orderByDesc('effective_from')->first();
-
-        return $premium === null ? null : Rate::scaled($premium->rate_scaled, WorkRiskPremium::SCALE);
     }
 }
