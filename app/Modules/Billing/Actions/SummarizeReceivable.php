@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Billing\Actions;
 
-use App\Modules\Billing\Enums\SubscriptionStatus;
+use App\Modules\Billing\Contracts\Receivables;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Payment;
 use App\Modules\Billing\Models\Statement;
-use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\Money;
 use App\Modules\Billing\Support\OpenBalances;
 use App\Modules\Billing\Support\StatementBalances;
@@ -16,7 +15,7 @@ use Carbon\CarbonImmutable;
 
 final readonly class SummarizeReceivable
 {
-    public function __construct(private StatementBalances $balances, private OpenBalances $open) {}
+    public function __construct(private StatementBalances $balances, private OpenBalances $open, private Receivables $receivables) {}
 
     /**
      * What the account owes across its issued statements, how many still have a balance, what of it is past due and how old its
@@ -66,10 +65,10 @@ final readonly class SummarizeReceivable
             'overdue' => Money::format($total - $byBucket['current']),
             'open_statements' => count($open),
             'overdue_accounts' => count($late),
-            'aging' => array_map(fn (string $key): array => ['key' => $key, 'amount' => Money::format($byBucket[$key]), 'share' => $total === 0 ? 0 : (int) round($byBucket[$key] * 100 / $total)], OpenBalances::BUCKETS),
-            'collected' => Money::format((int) Payment::query()->standing()->whereBetween('paid_on', [$today->startOfMonth()->toDateString(), $today->endOfMonth()->toDateString()])->sum('amount_cents')),
+            'aging' => array_map(fn (string $key): array => ['key' => $key, 'amount' => Money::format($byBucket[$key]), 'share' => $total === 0 ? 0 : intdiv($byBucket[$key] * 200 + $total, $total * 2)], OpenBalances::BUCKETS),
+            'collected' => Money::format(array_sum(Payment::query()->standing()->whereBetween('paid_on', [$today->startOfMonth()->toDateString(), $today->endOfMonth()->toDateString()])->pluck('amount_cents')->all())),
             'month' => $today->isoFormat('MMMM'),
-            'renewing' => Subscription::query()->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::PastDue])->where('renews_on', '<=', $today->addDays(30)->toDateString())->count(),
+            'renewing' => $this->receivables->renewingWithin(30),
         ];
     }
 }
