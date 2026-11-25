@@ -433,6 +433,85 @@ html:has([data-smooth-scroll]) {
     animation: 150ms var(--ease-out) both calendar-fade-out;
 }
 
+/*
+ * The QR reader of Marcar: the camera fills the screen and a window cut out of a dark scrim marks where to point. The colors are
+ * the same in the light and the dark theme because they sit over the camera, never over the page: white corners, a teal line
+ * that sweeps while it looks, the teal of the brand when the code is read, an amber when something needs the person's hand.
+ */
+:root {
+    --scanner-scrim: rgb(15 23 22 / 0.66);
+    --scanner-ink: #ffffff;
+    --scanner-ok: #3ccfbd;
+    --scanner-warn: #f5b84d;
+}
+
+.scanner-window {
+    box-shadow: 0 0 0 100vmax var(--scanner-scrim);
+}
+
+.scanner-corner {
+    border-color: var(--scanner-ink);
+    /* A soft dark edge, so the corners do not vanish over a bright picture. */
+    filter: drop-shadow(0 0 3px rgb(15 23 22 / 0.6));
+    transition: border-color 200ms var(--ease-out);
+
+    [data-state='found'] & {
+        border-color: var(--scanner-ok);
+    }
+
+    [data-state='problem'] & {
+        border-color: var(--scanner-warn);
+    }
+}
+
+@keyframes scanner-sweep {
+    from {
+        top: 8%;
+    }
+    to {
+        top: 92%;
+    }
+}
+
+.scanner-sweep {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--scanner-ok) 20%,
+        var(--scanner-ok) 80%,
+        transparent
+    );
+    box-shadow: 0 0 14px 2px var(--scanner-ok);
+    animation: scanner-sweep 1.8s ease-in-out infinite alternate;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        top: 50%;
+    }
+}
+
+@keyframes scanner-found {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+    60% {
+        transform: scale(1.08);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.scanner-found {
+    animation: 320ms var(--ease-out) both scanner-found;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
 /* «Verificando» of Marcar: a stretch of the arch of the logo runs along it while the mark is checked; still with reduced motion. */
 @keyframes arc-chase {
     from {
