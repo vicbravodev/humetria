@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Notifications\Enums\PushKind;
 use App\Modules\Notifications\Jobs\DeliverPush;
 use App\Modules\Notifications\Models\PushSubscription;
 use App\Modules\Notifications\Support\PushNotifier;
@@ -33,16 +34,16 @@ it('sends a job for each phone of the person and none for another person', funct
     $phones = PushSubscription::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     PushSubscription::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->beto->id]);
 
-    resolve(PushNotifier::class)->notify($this->ana->id);
+    resolve(PushNotifier::class)->notify($this->ana->id, PushKind::CorrectionResolved);
 
     Queue::assertPushed(DeliverPush::class, 2);
     foreach ($phones as $phone) {
-        Queue::assertPushed(DeliverPush::class, fn (DeliverPush $job): bool => $job->subscriptionId === $phone->id && $job->tenantId === $this->tenant->id);
+        Queue::assertPushed(DeliverPush::class, fn (DeliverPush $job): bool => $job->subscriptionId === $phone->id && $job->tenantId === $this->tenant->id && $job->kind === PushKind::CorrectionResolved);
     }
 });
 
 it('sends nothing for a person with no phone', function (): void {
-    resolve(PushNotifier::class)->notify($this->ana->id);
+    resolve(PushNotifier::class)->notify($this->ana->id, PushKind::MarkReviewed);
 
     Queue::assertNothingPushed();
 });
@@ -52,7 +53,7 @@ it('sends nothing, saying so, when the keys are missing', function (): void {
     PushSubscription::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     Log::spy();
 
-    resolve(PushNotifier::class)->notify($this->ana->id);
+    resolve(PushNotifier::class)->notify($this->ana->id, PushKind::MarkReviewed);
 
     Queue::assertNothingPushed();
     Log::shouldHaveReceived('warning')->with('push.unconfigured', ['reason' => 'missing_keys'])->once();
@@ -63,7 +64,7 @@ it('refuses a subject that is not mailto: or https://, and takes one that is', f
     PushSubscription::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     Log::spy();
 
-    resolve(PushNotifier::class)->notify($this->ana->id);
+    resolve(PushNotifier::class)->notify($this->ana->id, PushKind::MarkReviewed);
 
     $sends ? Queue::assertPushed(DeliverPush::class) : Queue::assertNothingPushed();
     if (! $sends) {
@@ -84,7 +85,7 @@ it('does not notify the demo company: nothing leaves it', function (): void {
     PushSubscription::factory()->create(['tenant_id' => $demo->id, 'employee_id' => $person->id]);
     Log::spy();
 
-    resolve(PushNotifier::class)->notify($person->id);
+    resolve(PushNotifier::class)->notify($person->id, PushKind::MarkReviewed);
 
     Queue::assertNothingPushed();
     Log::shouldHaveReceived('debug')->with('push.demo_blocked')->once();
@@ -92,15 +93,15 @@ it('does not notify the demo company: nothing leaves it', function (): void {
 
 // The fake queue does not wait for a commit (the real one does, by this interface), so what is checked is that the job asks for it.
 it('waits for the commit of the transaction that said it: if that is undone, nothing is sent', function (): void {
-    expect(new DeliverPush($this->tenant->id, 'any'))->toBeInstanceOf(ShouldQueueAfterCommit::class);
+    expect(new DeliverPush($this->tenant->id, 'any', PushKind::MarkReviewed))->toBeInstanceOf(ShouldQueueAfterCommit::class);
 });
 
 it('fails outside a company', function (): void {
     Context::forget('tenant_id');
 
-    expect(fn () => resolve(PushNotifier::class)->notify($this->ana->id))->toThrow(NoCurrentTenant::class);
+    expect(fn () => resolve(PushNotifier::class)->notify($this->ana->id, PushKind::MarkReviewed))->toThrow(NoCurrentTenant::class);
 });
 
 it('has no parameter for content: it takes the person and nothing else', function (): void {
-    expect((new ReflectionMethod(PushNotifier::class, 'notify'))->getNumberOfParameters())->toBe(1);
+    expect((new ReflectionMethod(PushNotifier::class, 'notify'))->getNumberOfParameters())->toBe(2);
 });

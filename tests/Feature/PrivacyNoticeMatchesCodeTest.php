@@ -137,9 +137,11 @@ it('says what the workers\' app keeps on the phone and what a push says', functi
 
     expect($text)->toContain('La app de las personas trabajadoras')
         ->toContain('Tiene un aviso en Humetría')->and($worker)->toContain('Tiene un aviso en Humetría')
+        ->toContain('Recursos Humanos revisó una de sus marcas')->and($worker)->toContain('Recursos Humanos revisó una de sus marcas')
+        ->toContain('Respondieron su solicitud de corrección')->and($worker)->toContain('Respondieron su solicitud de corrección')
         ->and($text)->toContain('almacenamiento del navegador del teléfono')->and($store)->toContain('indexedDB.open(')
         ->and($text)->toContain('nunca en segundo plano')
-        ->and($text)->toContain('vacío')
-        // A push carries no content because there is nowhere to pass it: notify() takes a single argument.
-        ->and((new ReflectionMethod(App\Modules\Notifications\Support\PushNotifier::class, 'notify'))->getNumberOfParameters())->toBe(1);
+        ->and($text)->toContain('cifrado')
+        // A push says which of the two kinds it is and nothing else: notify() takes the person and the kind, no free text.
+        ->and((new ReflectionMethod(App\Modules\Notifications\Support\PushNotifier::class, 'notify'))->getParameters()[1]->getType()?->getName())->toBe(App\Modules\Notifications\Enums\PushKind::class);
 });

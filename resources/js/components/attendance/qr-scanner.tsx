@@ -1,23 +1,20 @@
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import QrStatusLine from '@/components/attendance/qr-status-line';
+import QrViewfinder from '@/components/attendance/qr-viewfinder';
 import { Button } from '@/components/ui/button';
 import { useQrScanner } from '@/hooks/use-qr-scanner';
-import type { ScanStatus } from '@/hooks/use-qr-scanner';
+import { scanView } from '@/lib/pwa/qr-scan-view';
 import { cn } from '@/lib/utils';
 
-const TEXT: Record<ScanStatus, string> = {
-    idle: '',
-    opening: 'Abriendo la cámara…',
-    scanning: 'Apunte al código de la pantalla de su centro.',
-    'other-company': 'Ese código es de otra empresa.',
-    denied: 'Permita el uso de la cámara para leer el código.',
-    unavailable: 'Este teléfono no pudo abrir la cámara.',
-};
+/** How long the check is shown before the reader gives way to Marcar: enough to see the code was read. */
+const FOUND_MS = 550;
 
 /**
- * The camera over the page, to read the QR of the screen of the person's center: the video, one line that says what to do
- * or what went wrong, and the way to close it. It opens when it appears and the camera is off the moment the code is read,
- * it is closed, or the page is left.
+ * The camera over the page, to read the QR of the screen of the person's center: the video full screen with a window that shows
+ * where to point (it sweeps while it looks, turns amber when something needs the person's hand and shows a check when the code
+ * is read), one line that says what to do or what went wrong, and the way to close it. It opens when it appears and the
+ * camera is off the moment the code is read (the check stays a moment), it is closed, or the page is left.
  */
 export default function QrScanner({
     slug,
@@ -28,48 +25,59 @@ export default function QrScanner({
     onCode: (code: string) => void;
     onClose: () => void;
 }) {
-    const { videoRef, start, stop, status } = useQrScanner({ slug, onCode });
-    const seeing = ['opening', 'scanning', 'other-company'].includes(status);
+    const [read, setRead] = useState(false);
+    const pending = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined,
+    );
+    const { videoRef, start, stop, status } = useQrScanner({
+        slug,
+        onCode: (code) => {
+            setRead(true);
+            navigator.vibrate?.(40);
+            pending.current = setTimeout(() => onCode(code), FOUND_MS);
+        },
+    });
+    const view = scanView(status, read);
 
     useEffect(() => {
         void start();
     }, [start]);
+
+    useEffect(() => () => clearTimeout(pending.current), []);
 
     return (
         <div
             role="dialog"
             aria-modal="true"
             aria-label="Leer el código de la pantalla"
-            className="fixed inset-0 z-50 flex flex-col gap-4 bg-background p-4"
+            className="fixed inset-0 z-50 flex flex-col bg-background"
         >
-            <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4">
-                <video
-                    ref={videoRef}
-                    playsInline
-                    muted
-                    aria-label="Vista de la cámara"
-                    className={cn(
-                        'min-h-0 w-full flex-1 rounded-lg bg-muted object-cover',
-                        !seeing && 'hidden',
-                    )}
+            <video
+                ref={videoRef}
+                playsInline
+                muted
+                aria-label="Vista de la cámara"
+                className={cn(
+                    'absolute inset-0 size-full object-cover',
+                    !view.seeing && 'hidden',
+                )}
+            />
+            <div className="relative flex flex-1 items-center justify-center">
+                {(view.seeing || read) && <QrViewfinder state={view.state} />}
+            </div>
+            <div className="relative mx-auto flex w-full max-w-md flex-col gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <QrStatusLine
+                    text={view.text}
+                    opening={status === 'opening' && !read}
+                    problem={view.problem}
+                    shown={view.seeing || read}
                 />
-                <p
-                    role="status"
-                    className={cn(
-                        'text-center text-lg',
-                        status === 'scanning' || status === 'opening'
-                            ? 'text-muted-foreground'
-                            : 'text-foreground',
-                        !seeing && 'my-auto',
-                    )}
-                >
-                    {TEXT[status]}
-                </p>
                 <Button
                     variant="outline"
                     size="lg"
-                    className="w-full"
+                    className="w-full bg-background"
                     onClick={() => {
+                        clearTimeout(pending.current);
                         stop();
                         onClose();
                     }}

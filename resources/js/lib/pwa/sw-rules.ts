@@ -7,7 +7,18 @@
 export const NETWORK_TIMEOUT_MS = 4_000;
 
 const ASSETS = '/build/assets/';
+/** The images of the brand (the «hecho con Humetría» seal at the foot of the pages): kept too, or the shell shows a broken picture. */
+const BRAND = '/brand/';
 const CACHE_PREFIX = 'humetria-pwa-';
+
+/**
+ * The seals the shell draws at its foot («hecho con Humetría», light and dark): images the HTML of the shell does not name
+ * (React draws them), so they are kept at install with the rest, not left to a second visit.
+ */
+export const SHELL_IMAGES = [
+    '/brand/humetria-sello-hecho-con-gris.svg',
+    '/brand/humetria-sello-hecho-con-blanco.svg',
+];
 
 /** The `{slug}` of `/me/{slug}` and of what hangs from it; null for any other address. */
 export function workerSlug(pathname: string): string | null {
@@ -38,7 +49,7 @@ export function routeOf(request: {
         return 'pass';
     }
 
-    if (url.pathname.startsWith(ASSETS)) {
+    if (url.pathname.startsWith(ASSETS) || url.pathname.startsWith(BRAND)) {
         return 'asset';
     }
 
@@ -60,13 +71,53 @@ export function shellUrl(scope: string): string {
 }
 
 /**
- * The notice every push shows. The push arrives with no body and the text is fixed here: nothing of the person, the company or
- * the mark can reach the lock screen (and iOS revokes a subscription whose push shows nothing, so every push shows this).
+ * What a push shows when it says nothing the app knows (an old push, one that does not decrypt, an unknown kind). iOS revokes a
+ * subscription whose push shows nothing, so a push always shows something.
  */
 export const NOTICE = {
     title: 'Humetría',
     body: 'Tiene un aviso en Humetría',
 } as const;
+
+/**
+ * The text of each kind of push (`PushKind` on the server). The push carries only the kind, encrypted to the phone; the text is fixed
+ * here, so nothing of the person, the company, the mark or the decision can reach the lock screen.
+ */
+const NOTICES = new Map<string, { title: string; body: string }>([
+    [
+        'mark_reviewed',
+        {
+            title: 'Humetría',
+            body: 'Recursos Humanos revisó una de sus marcas',
+        },
+    ],
+    [
+        'correction_resolved',
+        { title: 'Humetría', body: 'Respondieron su solicitud de corrección' },
+    ],
+]);
+
+/** The notice for the data of a push event: the browser has already decrypted it; `NOTICE` when there is none or it is not JSON. */
+export function noticeOfPush(data: { json(): unknown } | null | undefined): {
+    title: string;
+    body: string;
+} {
+    try {
+        return noticeOf(data?.json());
+    } catch {
+        return NOTICE;
+    }
+}
+
+/** The notice for a decrypted push body (already parsed); `NOTICE` for anything that is not a known kind. */
+export function noticeOf(payload: unknown): { title: string; body: string } {
+    const kind =
+        typeof payload === 'object' && payload !== null && 'kind' in payload
+            ? payload.kind
+            : null;
+
+    return (typeof kind === 'string' ? NOTICES.get(kind) : undefined) ?? NOTICE;
+}
 
 /** Where the icon opens and where a tap on a notice goes. */
 export function punchUrl(scope: string): string {

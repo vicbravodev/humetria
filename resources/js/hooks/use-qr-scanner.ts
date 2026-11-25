@@ -1,14 +1,10 @@
 import { QRCanvas, frameLoop, rearCamera } from 'qr/dom.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cameraFailure, firstText, punchCode } from '@/lib/pwa/qr-scan';
+import type { ScanStatus } from '@/lib/pwa/qr-scan';
+import { quietWatch } from '@/lib/pwa/quiet-watch';
 
-export type ScanStatus =
-    | 'idle'
-    | 'opening'
-    | 'scanning'
-    | 'other-company'
-    | 'denied'
-    | 'unavailable';
+export type { ScanStatus };
 
 /**
  * Opens the rear camera on `video` and reads a frame at a time (never two at once) until stopped. Gives what stops it: the
@@ -28,8 +24,10 @@ async function openCamera(
         }
 
         busy = true;
+        // The camera's own pixels (`true`), not the size the video is drawn at on the screen: a dense code seen from a phone is
+        // only a few pixels per square at that size.
         camera
-            .readFrame(canvas)
+            .readFrame(canvas, true)
             .then((read) => {
                 const text = firstText(read);
 
@@ -69,12 +67,19 @@ export function useQrScanner({
     const generation = useRef(0);
     const found = useRef(onCode);
     const [status, setStatus] = useState<ScanStatus>('idle');
+    // Nothing read for a while: said, and the reading goes on. Anything read, right or wrong, ends the wait.
+    const quiet = useRef(
+        quietWatch(() =>
+            setStatus((now) => (now === 'scanning' ? 'unreadable' : now)),
+        ),
+    );
 
     useEffect(() => {
         found.current = onCode;
     });
 
     const stop = useCallback(() => {
+        quiet.current.clear();
         generation.current += 1;
         release.current();
         release.current = () => undefined;
@@ -106,9 +111,11 @@ export function useQrScanner({
                     slug,
                 });
 
-                if (read === 'other-company') {
-                    setStatus('other-company');
-                } else if (read !== null) {
+                quiet.current.clear();
+
+                if (read === 'other-company' || read === 'unrecognized') {
+                    setStatus(read);
+                } else {
                     stop();
                     found.current(read.code);
                 }
@@ -122,6 +129,7 @@ export function useQrScanner({
 
             release.current = off;
             setStatus('scanning');
+            quiet.current.arm();
         } catch (error) {
             if (generation.current === mine) {
                 setStatus(

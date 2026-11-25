@@ -1,7 +1,10 @@
+import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
     NETWORK_TIMEOUT_MS,
     NOTICE,
+    noticeOf,
+    noticeOfPush,
     cacheName,
     fallsBackToShell,
     inScope,
@@ -12,6 +15,7 @@ import {
     staleCaches,
     windowInScope,
     workerSlug,
+    SHELL_IMAGES,
 } from '@/lib/pwa/sw-rules';
 
 const origin = 'https://app.test';
@@ -83,6 +87,19 @@ describe('routeOf', () => {
         expect(
             route(`${origin}/build/assets/app-x.css`, { mode: 'no-cors' }),
         ).toBe('asset');
+    });
+
+    it('caches the images of the brand too: the seal at the foot of the shell is one, and without it the shell shows a broken picture', () => {
+        expect(
+            route(`${origin}/brand/humetria-sello-hecho-con-gris.svg`, {
+                mode: 'no-cors',
+            }),
+        ).toBe('asset');
+        expect(
+            route(`${origin}/brand/humetria-sello-hecho-con-blanco.svg`),
+        ).toBe('asset');
+        expect(route('https://elsewhere.test/brand/logo.svg')).toBe('pass');
+        expect(route(`${origin}/branding/other.svg`)).toBe('pass');
     });
 
     it('answers the pages of its own company by the network, with the shell as a fallback', () => {
@@ -185,11 +202,61 @@ describe('caches', () => {
 });
 
 describe('NOTICE', () => {
-    it('is the fixed text every push shows: the notice arrives with no body and says nothing of anyone', () => {
+    it('is the text a push shows when it says nothing it knows: also what an old or unreadable push shows', () => {
         expect(NOTICE).toEqual({
             title: 'Humetría',
             body: 'Tiene un aviso en Humetría',
         });
+    });
+});
+
+describe('noticeOf', () => {
+    it('shows a text of its own for each of the two kinds, and nothing of the person, the mark or the decision', () => {
+        expect(noticeOf({ kind: 'mark_reviewed' })).toEqual({
+            title: 'Humetría',
+            body: 'Recursos Humanos revisó una de sus marcas',
+        });
+        expect(noticeOf({ kind: 'correction_resolved' })).toEqual({
+            title: 'Humetría',
+            body: 'Respondieron su solicitud de corrección',
+        });
+    });
+
+    it.each([
+        ['no body at all', undefined],
+        ['null', null],
+        ['a string', 'mark_reviewed'],
+        ['an empty object', {}],
+        ['a kind it does not know', { kind: 'something_else' }],
+        ['a kind that is not text', { kind: 7 }],
+        ['an array', ['mark_reviewed']],
+        ['the name of an object property', { kind: 'constructor' }],
+    ])(
+        'falls back to the fixed notice with %s: a push that shows nothing makes iOS drop the subscription',
+        (_, payload) => {
+            expect(noticeOf(payload)).toEqual(NOTICE);
+        },
+    );
+});
+
+describe('noticeOfPush', () => {
+    it('reads the kind from the data of the push event', () => {
+        expect(
+            noticeOfPush({ json: () => ({ kind: 'correction_resolved' }) })
+                .body,
+        ).toBe('Respondieron su solicitud de corrección');
+    });
+
+    it('shows the fixed notice when the push has no data or it is not JSON', () => {
+        expect(noticeOfPush(undefined)).toEqual(NOTICE);
+        expect(noticeOfPush(null)).toEqual(NOTICE);
+        expect(
+            noticeOfPush({
+                json: () => {
+                    throw new SyntaxError('Unexpected token');
+                },
+            }),
+        ).toEqual(NOTICE);
     });
 });
 
@@ -215,5 +282,18 @@ describe('windowInScope', () => {
 
     it('says there is none when nothing is open', () => {
         expect(windowInScope([], '/me/acme')).toBe(-1);
+    });
+});
+
+describe('SHELL_IMAGES', () => {
+    it('are the seals the shell draws at its foot, and every one is a file of the app', () => {
+        expect(SHELL_IMAGES).toEqual([
+            '/brand/humetria-sello-hecho-con-gris.svg',
+            '/brand/humetria-sello-hecho-con-blanco.svg',
+        ]);
+
+        for (const image of SHELL_IMAGES) {
+            expect(existsSync(`public${image}`)).toBe(true);
+        }
     });
 });

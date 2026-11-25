@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * The push subscription of one phone of a person: where the push service of the browser (Apple, Google, Mozilla) delivers a
- * notice with no body. `endpoint`, `p256dh` and `auth` identify that phone and never reach a page, a log or the audit trail.
+ * notice whose body is encrypted to its keys. `endpoint`, `p256dh` and `auth` identify that phone and never reach a page, a log or the audit trail.
  * `tenant_id` is given when it is made: the trait only filters.
  *
  * @property string $id

@@ -11,6 +11,7 @@ use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Events\OfflineMarkReviewed;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
+use App\Modules\Notifications\Enums\PushKind;
 use App\Modules\Notifications\Jobs\DeliverPush;
 use App\Modules\Notifications\Listeners\ForgetOnAccessRevoked;
 use App\Modules\Notifications\Listeners\NotifyCorrectionResolved;
@@ -56,6 +57,7 @@ describe('telling the person', function (): void {
         event(new OfflineMarkReviewed('mark-1', $this->ana->id, $decision));
 
         Queue::assertPushed(DeliverPush::class, 2);
+        Queue::assertPushed(DeliverPush::class, fn (DeliverPush $job): bool => $job->kind === PushKind::MarkReviewed);
         Queue::assertNotPushed(DeliverPush::class, fn (DeliverPush $job): bool => $job->subscriptionId === $this->betoPhone->id);
     })->with(['verified', 'incorrect']);
 
@@ -63,6 +65,7 @@ describe('telling the person', function (): void {
         event(new CorrectionResolved('request-1', $this->ana->id, $approved));
 
         Queue::assertPushed(DeliverPush::class, 2);
+        Queue::assertPushed(DeliverPush::class, fn (DeliverPush $job): bool => $job->kind === PushKind::CorrectionResolved);
     })->with([true, false]);
 
     it('does not notify for a correction RH made on its own, nor for the one that follows an approval: the approval says it', function (): void {

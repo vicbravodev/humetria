@@ -1,5 +1,16 @@
 import type { QRCanvasResult } from 'qr/dom.js';
 
+/** What the reader is doing: opening the camera, reading, saying something needs the person's hand, or why it cannot. */
+export type ScanStatus =
+    | 'idle'
+    | 'opening'
+    | 'scanning'
+    | 'unreadable'
+    | 'unrecognized'
+    | 'other-company'
+    | 'denied'
+    | 'unavailable';
+
 /** What a frame gave: the text of the first code that could be read, if any (the others in the list are discarded). */
 export function firstText(
     read: QRCanvasResult | undefined,
@@ -39,18 +50,18 @@ function punchAddress(
 
 /**
  * The code the screen of a center shows as a QR: the address of Marcar of a company with the code in `q`. Of this company
- * it gives the code; of another company, `'other-company'`; anything else (another origin, the old `/a/{slug}/punch`, no
- * code, a code that cannot be one) is nothing. A code of another center of the same company passes: the server decides
- * whether it counts.
+ * it gives the code; of another company, `'other-company'`; anything else that was read (another origin, the old
+ * `/a/{slug}/punch`, no code, a code that cannot be one) is `'unrecognized'`: said to the person, never passed over in
+ * silence. A code of another center of the same company passes: the server decides whether it counts.
  */
 export function punchCode(
     text: string,
     { origin, slug }: { origin: string; slug: string },
-): { code: string } | 'other-company' | null {
+): { code: string } | 'other-company' | 'unrecognized' {
     const address = punchAddress(text, origin);
 
     if (address === null) {
-        return null;
+        return 'unrecognized';
     }
 
     return address.company === slug ? { code: address.code } : 'other-company';
