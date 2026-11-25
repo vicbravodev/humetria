@@ -88,6 +88,7 @@ export default function HomeScreen({
                         keyUrl={keyUrl}
                         hasKey={hasKey}
                         deviceKey={deviceKey}
+                        weekUrl={weekUrl}
                         leaveUrl={leaveUrl}
                     />
                 )}

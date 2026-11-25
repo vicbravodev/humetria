@@ -143,6 +143,22 @@ it('opens the start on the moment of the person\'s day, with what they did and t
     'dark mobile' => [true, true],
 ]);
 
+it('offers «Mis marcas» in Cuenta where the company has attendance, and it leads to the weeks; nowhere else', function (bool $attendance): void {
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, [$attendance ? 'attendance' : 'vacations'], CarbonImmutable::now(config('app.display_timezone')));
+    anaLink('history-token', requested: true);
+
+    $page = visitPage('worker-access/home', '/me/acme/link/history-token', mobile: true, reach: fn ($page) => $page->press('Continuar')->waitForText('Pendientes'))
+        ->click('Cuenta');
+
+    if (! $attendance) {
+        $page->assertDontSee('Mis marcas');
+
+        return;
+    }
+
+    $page->assertSee('Mis marcas')->click('Mis marcas')->assertPathIs('/me/acme/week');
+})->with(['with attendance' => [true], 'without attendance' => [false]]);
+
 it('greets by the hour of the day in a company without attendance too, by first name', function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-25 14:00:00', 'UTC'));
     resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
