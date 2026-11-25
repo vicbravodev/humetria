@@ -7,6 +7,7 @@ namespace App\Modules\Attendance\Support;
 use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use LogicException;
 
 /**
@@ -19,10 +20,12 @@ use LogicException;
 final class PunchDay
 {
     /**
+     * The marks of the person's day, in order of time (see the class).
+     *
      * @param  string  $timezone  the zone of the person's center
-     * @return array{marks: list<array{type: string, time: string, date: string, clock: string|null}>, next: list<string>}
+     * @return Collection<int, AttendanceMark>
      */
-    public static function of(string $employeeId, string $timezone): array
+    public static function models(string $employeeId, string $timezone): Collection
     {
         // Bound in UTC: a Carbon binding loses its offset and the database session is UTC.
         $from = CarbonImmutable::now($timezone)->startOfDay()->utc();
@@ -33,7 +36,17 @@ final class PunchDay
             $from = $start !== null && $start->lessThan($from) ? $start->utc() : $from;
         }
 
-        $marks = EffectiveMarks::of($employeeId)->where('marked_at', '>=', $from)->orderBy('marked_at')->get(['type', 'marked_at', 'timezone']);
+        return EffectiveMarks::of($employeeId)->where('marked_at', '>=', $from)->orderBy('marked_at')->get(['type', 'marked_at', 'timezone']);
+    }
+
+    /**
+     * @param  string  $timezone  the zone of the person's center
+     * @return array{marks: list<array{type: string, time: string, date: string, clock: string|null}>, next: list<string>}
+     */
+    public static function of(string $employeeId, string $timezone): array
+    {
+        $last = EffectiveMarks::of($employeeId)->latest('marked_at')->first(['type', 'marked_at']);
+        $marks = self::models($employeeId, $timezone);
 
         return [
             'marks' => array_values($marks->map(function (AttendanceMark $mark) use ($timezone): array {
