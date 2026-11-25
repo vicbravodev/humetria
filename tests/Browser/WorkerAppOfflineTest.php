@@ -68,6 +68,8 @@ it('puts a worker in charge of the company\'s pages that keeps the shell and its
 
     $page->assertScript(workerReady(), true)
         ->assertScript(eventuallyAsync(acmeCache("urls.includes('/me/acme/offline') && urls.some((url) => url.startsWith('/build/assets/'))")), true)
+        // The seal at the foot of the pages is an image of the brand: kept too, or the shell shows a broken picture with no network.
+        ->assertScript(eventuallyAsync(acmeCache("urls.some((url) => url.startsWith('/brand/humetria-sello-hecho-con'))")), true)
         ->assertScript(eventuallyAsync("async () => (await navigator.serviceWorker.getRegistration('/me/acme'))?.scope === location.origin + '/me/acme'"), true);
 });
 

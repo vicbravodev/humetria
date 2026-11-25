@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
     NETWORK_TIMEOUT_MS,
@@ -12,6 +13,7 @@ import {
     staleCaches,
     windowInScope,
     workerSlug,
+    SHELL_IMAGES,
 } from '@/lib/pwa/sw-rules';
 
 const origin = 'https://app.test';
@@ -83,6 +85,19 @@ describe('routeOf', () => {
         expect(
             route(`${origin}/build/assets/app-x.css`, { mode: 'no-cors' }),
         ).toBe('asset');
+    });
+
+    it('caches the images of the brand too: the seal at the foot of the shell is one, and without it the shell shows a broken picture', () => {
+        expect(
+            route(`${origin}/brand/humetria-sello-hecho-con-gris.svg`, {
+                mode: 'no-cors',
+            }),
+        ).toBe('asset');
+        expect(
+            route(`${origin}/brand/humetria-sello-hecho-con-blanco.svg`),
+        ).toBe('asset');
+        expect(route('https://elsewhere.test/brand/logo.svg')).toBe('pass');
+        expect(route(`${origin}/branding/other.svg`)).toBe('pass');
     });
 
     it('answers the pages of its own company by the network, with the shell as a fallback', () => {
@@ -215,5 +230,18 @@ describe('windowInScope', () => {
 
     it('says there is none when nothing is open', () => {
         expect(windowInScope([], '/me/acme')).toBe(-1);
+    });
+});
+
+describe('SHELL_IMAGES', () => {
+    it('are the seals the shell draws at its foot, and every one is a file of the app', () => {
+        expect(SHELL_IMAGES).toEqual([
+            '/brand/humetria-sello-hecho-con-gris.svg',
+            '/brand/humetria-sello-hecho-con-blanco.svg',
+        ]);
+
+        for (const image of SHELL_IMAGES) {
+            expect(existsSync(`public${image}`)).toBe(true);
+        }
     });
 });
