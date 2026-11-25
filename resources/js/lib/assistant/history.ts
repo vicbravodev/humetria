@@ -49,6 +49,38 @@ export function groupByDay(
     }, []);
 }
 
+/** The card of the buttons a turn ended with, as the JSON text the server keeps, when it ended asking. */
+function choicesOf(item: object): string | null {
+    const choices = 'choices' in item ? item.choices : null;
+
+    return typeof choices === 'string' ? choices : null;
+}
+
+/** A turn that ended asking has no text: it brings the card of its buttons, drawn as the stream would have drawn it. */
+function partsOf(
+    id: string,
+    content: string,
+    choices: string | null,
+): UIMessage['parts'] {
+    if (choices === null) {
+        return [{ type: 'text', text: content }];
+    }
+
+    const buttons: UIMessage['parts'] = [
+        {
+            type: 'tool-OfferChoices',
+            toolCallId: `${id}-choices`,
+            state: 'output-available',
+            input: {},
+            output: choices,
+        },
+    ];
+
+    return content === ''
+        ? buttons
+        : [{ type: 'text', text: content }, ...buttons];
+}
+
 function messageOf(item: unknown): UIMessage | null {
     if (
         typeof item !== 'object' ||
@@ -70,10 +102,10 @@ function messageOf(item: unknown): UIMessage | null {
         return null;
     }
 
-    return { id, role, parts: [{ type: 'text', text: content }] };
+    return { id, role, parts: partsOf(id, content, choicesOf(item)) };
 }
 
-/** The messages of a conversation as the chat shows them, from what the server answers (latest first): oldest first, text only. */
+/** The messages of a conversation as the chat shows them, from what the server answers (latest first): oldest first, their text and the buttons of a question. */
 export function uiMessagesFrom(body: unknown): UIMessage[] {
     if (
         typeof body !== 'object' ||

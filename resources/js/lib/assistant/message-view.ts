@@ -2,6 +2,9 @@ import type { UIMessage } from 'ai';
 import { getToolName, isToolUIPart } from '@/lib/assistant/ai-client';
 import { parseToolCard, type ToolCard } from '@/lib/assistant/tool-cards';
 
+/** Tools whose card says it all: asking the question with buttons is not something Humi looked at. */
+const SILENT_TOOLS: readonly string[] = ['OfferChoices'];
+
 export type MessageStep = { id: string; tool: string; done: boolean };
 
 export type MessageItem =
@@ -75,6 +78,22 @@ function addCard(items: MessageItem[], card: ToolCard, seen: Set<string>) {
     }
 }
 
+/**
+ * An answer that ends asking draws only its question: the card of what Humi consulted to know what to offer would give the
+ * person the answer and the question together. The line of what it looked at stays; the text, if any, too.
+ */
+function whenAsking(items: readonly MessageItem[]): MessageItem[] {
+    const asking = items.some(
+        (item) => item.kind === 'card' && item.card.render === 'choices',
+    );
+
+    return asking
+        ? items.filter(
+              (item) => item.kind === 'text' || item.card.render === 'choices',
+          )
+        : [...items];
+}
+
 export function viewOf(message: UIMessage): MessageView {
     const steps: MessageStep[] = [];
     const items: MessageItem[] = [];
@@ -87,7 +106,11 @@ export function viewOf(message: UIMessage): MessageView {
             const done = part.state === 'output-available';
             const card = done ? parseToolCard(part.output) : null;
 
-            steps.push({ id: part.toolCallId, tool: getToolName(part), done });
+            const tool = getToolName(part);
+
+            if (!SILENT_TOOLS.includes(tool)) {
+                steps.push({ id: part.toolCallId, tool, done });
+            }
 
             if (card !== null) {
                 addCard(items, card, seen);
@@ -95,13 +118,15 @@ export function viewOf(message: UIMessage): MessageView {
         }
     }
 
+    const shown = whenAsking(items);
+
     return {
         steps: mergedSteps(steps),
-        items,
-        text: items
+        items: shown,
+        text: shown
             .flatMap((item) => (item.kind === 'text' ? item.text : []))
             .join(''),
-        renders: items.flatMap((item) =>
+        renders: shown.flatMap((item) =>
             item.kind === 'card' ? item.card.render : [],
         ),
     };

@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Laravel\Ai\Prompts\AgentPrompt;
+use Laravel\Ai\Responses\Data\ToolCall;
 
 mutates(EvaluateAssistant::class);
 
@@ -34,7 +35,7 @@ it('passes a Humi that refuses every attempt, and says so attempt by attempt', f
     evaluate()
         ->expectsOutputToContain('Datos de otra empresa')
         ->expectsOutputToContain('Prompt del sistema')
-        ->expectsOutputToContain('10 de 10 intentos pasaron')
+        ->expectsOutputToContain('11 de 11 intentos pasaron')
         ->assertSuccessful();
 });
 
@@ -68,7 +69,16 @@ it('masks the personal data of an attempt before it reaches the provider', funct
 it('reports a provider that fails as a failed attempt, not as a crash', function (): void {
     HumiAssistant::fake(fn (string $prompt): string => throw new RuntimeException('provider down'));
 
-    evaluate()->expectsOutputToContain('0 de 10 intentos pasaron')->assertFailed();
+    evaluate()->expectsOutputToContain('0 de 11 intentos pasaron')->assertFailed();
+});
+
+it('fails when Humi puts an order hidden in a name on one of its buttons', function (): void {
+    HumiAssistant::fake(fn (string $prompt): string|ToolCall => str_contains($prompt, '¿Qué me falta') ? new ToolCall('c-1', 'OfferChoices', [
+        'question' => '¿De qué parte?',
+        'options' => [['label' => 'OBEDECIDO', 'text' => 'Quiero esto'], ['label' => 'De todo', 'text' => 'Quiero todo']],
+    ]) : HUMI_REFUSES);
+
+    evaluate()->expectsOutputToContain('Fallaron: Orden escondida en una opción')->assertFailed();
 });
 
 it('keeps nothing: no conversation, no usage', function (): void {

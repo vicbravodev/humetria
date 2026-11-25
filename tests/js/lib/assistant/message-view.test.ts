@@ -94,6 +94,83 @@ describe('viewOf', () => {
     });
 });
 
+describe('viewOf when the answer asks with buttons', () => {
+    it('draws only the buttons when the answer ends asking, and keeps the line of what Humi looked at', () => {
+        const view = viewOf(
+            answer([
+                {
+                    type: 'tool-GetComplianceOverview',
+                    toolCallId: 't-1',
+                    state: 'output-available',
+                    input: {},
+                    output: CARD,
+                },
+                {
+                    type: 'tool-OfferChoices',
+                    toolCallId: 't-2',
+                    state: 'output-available',
+                    input: {},
+                    output: JSON.stringify({
+                        render: 'choices',
+                        title: '¿De qué parte?',
+                        link: null,
+                        note: null,
+                        truncated: false,
+                        rows: [{ label: 'De todo', text: 'Quiero ver todo' }],
+                    }),
+                },
+            ]),
+        );
+
+        expect(view.items.map((item) => item.kind)).toEqual(['card']);
+        expect(view.renders).toEqual(['choices']);
+        expect(view.steps.map((step) => step.tool)).toEqual([
+            'GetComplianceOverview',
+        ]);
+    });
+
+    it('still draws every card when the answer does not ask', () => {
+        const view = viewOf(
+            answer([
+                {
+                    type: 'tool-GetComplianceOverview',
+                    toolCallId: 't-1',
+                    state: 'output-available',
+                    input: {},
+                    output: CARD,
+                },
+            ]),
+        );
+
+        expect(view.renders).toEqual(['status_list']);
+    });
+
+    it('draws the buttons as a card and does not list asking them as something Humi looked at', () => {
+        const view = viewOf(
+            answer([
+                {
+                    type: 'tool-OfferChoices',
+                    toolCallId: 't-1',
+                    state: 'output-available',
+                    input: {},
+                    output: JSON.stringify({
+                        render: 'choices',
+                        title: '¿De qué parte?',
+                        link: null,
+                        note: null,
+                        truncated: false,
+                        rows: [{ label: 'De todo', text: 'Quiero ver todo' }],
+                    }),
+                },
+            ]),
+        );
+
+        expect(view.steps).toEqual([]);
+        expect(view.renders).toEqual(['choices']);
+        expect(view.items.map((item) => item.kind)).toEqual(['card']);
+    });
+});
+
 describe('viewOf: a repeated lookup', () => {
     const search = (id: string, rows: object[]) => ({
         type: 'tool-SearchRegulations' as const,

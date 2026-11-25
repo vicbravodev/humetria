@@ -11,6 +11,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Support\Str;
 use Laravel\Ai\Models\Conversation;
+use Laravel\Ai\Models\ConversationMessage;
 
 mutates(Conversations::class, DeleteConversation::class);
 
@@ -108,6 +109,22 @@ it('answers 404, the same, to a conversation of a colleague, of another company 
     );
 
     expect(array_unique($answers))->toHaveCount(1);
+});
+
+it('gives the buttons of a turn that ended asking, and nothing of the kind for any other answer', function (): void {
+    $conversation = assistantConversation($this->mine);
+    $card = '{"render":"choices","title":"¿De qué parte?","rows":[{"label":"De todo","text":"Quiero todo"},{"label":"NOM-035","text":"Quiero NOM-035"}]}';
+    $asked = ConversationMessage::query()->create([
+        'id' => (string) Str::uuid(), 'conversation_id' => $conversation->id, 'participant_type' => 'assistant_participant', 'participant_id' => $this->mine->id,
+        'agent' => 'HumiAssistant', 'role' => 'assistant', 'content' => '', 'attachments' => '[]', 'usage' => '[]', 'meta' => '[]', 'status' => 'completed',
+        'steps' => [['text' => '', 'tool_calls' => [['id' => 'c-1', 'name' => 'OfferChoices', 'arguments' => [], 'result' => $card]]]],
+    ]);
+    $plain = assistantAnswer($this->mine, $conversation->id);
+
+    $messages = collect($this->actingAs($this->hr)->getJson(conversationsUrl($this->a, $conversation->id))->assertOk()->json('messages'))->keyBy('id');
+
+    expect($messages[$asked->id]['choices'])->toBe($card)
+        ->and($messages[$plain]['choices'])->toBeNull();
 });
 
 it('does not let the same person read the history they have in another company through this one', function (): void {

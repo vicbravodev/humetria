@@ -34,8 +34,18 @@ it('records the tokens, the tools and the time of a message for the person and t
         ->and($usage->created_at->toDateTimeString())->toBe('2026-11-18 18:00:00');
 });
 
+it('records the tokens read from and written to the prompt cache, null when the provider reports none', function (): void {
+    $cached = resolve(RecordUsage::class)->handle($this->scope, null, 300, 120, [], 900, false, cacheReadTokens: 250, cacheWriteTokens: 40);
+    $plain = resolve(RecordUsage::class)->handle($this->scope, null, 300, 120, [], 900, false);
+
+    expect($cached->cache_read_tokens)->toBe(250)
+        ->and($cached->cache_write_tokens)->toBe(40)
+        ->and($plain->cache_read_tokens)->toBeNull()
+        ->and($plain->cache_write_tokens)->toBeNull();
+});
+
 it('keeps no column that could hold what was said', function (): void {
-    expect(Schema::getColumnListing('ai_usage'))->toBe(['id', 'tenant_id', 'participant_id', 'conversation_id', 'agent', 'input_tokens', 'output_tokens', 'tools', 'latency_ms', 'stopped', 'created_at', 'provider', 'model']);
+    expect(Schema::getColumnListing('ai_usage'))->toBe(['id', 'tenant_id', 'participant_id', 'conversation_id', 'agent', 'input_tokens', 'output_tokens', 'tools', 'latency_ms', 'stopped', 'created_at', 'provider', 'model', 'cache_read_tokens', 'cache_write_tokens']);
 });
 
 it('logs the message by its ids and counts, and a stopped one as stopped', function (): void {

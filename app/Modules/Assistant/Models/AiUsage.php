@@ -25,12 +25,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $model
  * @property int $input_tokens
  * @property int $output_tokens
+ * @property int|null $cache_read_tokens
+ * @property int|null $cache_write_tokens
  * @property list<string> $tools
  * @property int $latency_ms
  * @property bool $stopped
  * @property CarbonImmutable $created_at
  */
-#[Fillable(['tenant_id', 'participant_id', 'conversation_id', 'agent', 'provider', 'model', 'input_tokens', 'output_tokens', 'tools', 'latency_ms', 'stopped', 'created_at'])]
+#[Fillable(['tenant_id', 'participant_id', 'conversation_id', 'agent', 'provider', 'model', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_write_tokens', 'tools', 'latency_ms', 'stopped', 'created_at'])]
 #[UseFactory(AiUsageFactory::class)]
 final class AiUsage extends Model
 {
