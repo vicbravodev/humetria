@@ -1,6 +1,6 @@
 import InstallGuide from '@/components/humetria/install-guide';
+import HomeGreeting from '@/components/worker-access/home-greeting';
 import HomeDay from '@/components/worker-access/home-day';
-import PersonHeading from '@/components/humetria/person-heading';
 import HomeSections from '@/components/worker-access/home-sections';
 import PushOffer from '@/components/worker-access/push-offer';
 import type { WorkerDay, WorkerSection } from '@/types';
@@ -39,9 +39,11 @@ export default function HomeStart({
                     serverNow={serverNow}
                 />
             ) : (
-                <PersonHeading title={`Hola, ${name}`}>
-                    Este es su portal de {company}.
-                </PersonHeading>
+                <HomeGreeting
+                    name={name}
+                    where={company}
+                    serverNow={serverNow}
+                />
             )}
             <HomeSections sections={waiting} label="Esperan su respuesta" />
             <HomeSections

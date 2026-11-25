@@ -143,6 +143,15 @@ it('opens the start on the moment of the person\'s day, with what they did and t
     'dark mobile' => [true, true],
 ]);
 
+it('greets by the hour of the day in a company without attendance too, by first name', function (): void {
+    $this->travelTo(CarbonImmutable::parse('2026-11-25 14:00:00', 'UTC'));
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+    anaLink('greeting-token', requested: true);
+
+    visitPage('worker-access/home', '/me/acme/link/greeting-token', mobile: true, reach: fn ($page) => $page->press('Continuar')->waitForText('Pendientes'))
+        ->assertScript('() => /^Buen(os días|as tardes|as noches), Ana$/.test(document.querySelector("h1").textContent)', true);
+});
+
 it('shows one screen for a link that does not work', function (): void {
     visitPage('worker-access/link', '/me/acme/link/unknown', mobile: true)
         ->assertSee('Este enlace ya no sirve')

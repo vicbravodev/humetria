@@ -1,14 +1,8 @@
 import HomeDayCard from '@/components/worker-access/home-day-card';
+import HomeGreeting from '@/components/worker-access/home-greeting';
 import HomeDayMarks from '@/components/worker-access/home-day-marks';
-import { greeting, firstName } from '@/lib/attendance/punch-view';
 import { useServerNow } from '@/hooks/use-server-now';
 import type { WorkerDay } from '@/types';
-
-const DATE = new Intl.DateTimeFormat('es-MX', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-});
 
 /**
  * The person's start by the moment of their day (board «Inicio»): the greeting and the date at their center, where the day
@@ -32,14 +26,11 @@ export default function HomeDay({
 
     return (
         <>
-            <div className="flex flex-col gap-1">
-                <h1 className="text-2xl leading-8 font-semibold tracking-tight text-balance">
-                    {greeting(new Date(now).getHours())}, {firstName(name)}
-                </h1>
-                <p className="text-muted-foreground">
-                    {DATE.format(now)} · {day.center}
-                </p>
-            </div>
+            <HomeGreeting
+                name={name}
+                where={day.center}
+                serverNow={serverNow}
+            />
             <HomeDayCard
                 day={day}
                 punchUrl={punchUrl}
