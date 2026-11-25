@@ -195,6 +195,7 @@ describe('the page', function (): void {
                     ['id' => $first->id, 'type' => 'start', 'date' => '2027-01-26', 'time' => '08:00'],
                     ['id' => AttendanceMark::query()->where('employee_id', $this->ana->id)->where('type', MarkType::End)->orderBy('marked_at')->value('id'), 'type' => 'end', 'date' => '2027-01-26', 'time' => '18:00'],
                 ],
+                'reviews' => [],
             ])
             // The marks in force: the correction, not the mark it replaced.
             ->where('people.data.0.days.1.marks.0.time', '08:00')
@@ -225,6 +226,24 @@ describe('the page', function (): void {
             ->where('people.data.0.days.0.evidence', 'Media'));
         $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31', 'show' => 'flagged']))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('people.total', 1)->where('people.data.0.name', 'Ana López'));
+    });
+
+    // Decisión del dueño, 2026-11-24: the page names who reviewed each mark made without a connection, and when.
+    it('says on each day who reviewed its marks made without a connection, what they decided and when, and nothing else of the review', function (): void {
+        $verified = OfflineDeliveries::accepted($this->ana, '2027-01-26 08:00', qr: true);
+        pageDay($this->ana, null, '2027-01-26 16:00');
+        OfflineDeliveries::accepted($this->bob, '2027-01-27 08:00');
+        pageDay($this->bob, null, '2027-01-27 16:00');
+        $this->hr->update(['name' => 'Rosa Revisora']);
+        MarkReviewFactory::new()->incorrect('Nota privada de RH.')->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $verified->mark_id, 'reviewer_id' => $this->hr->id, 'created_at' => '2027-01-28 16:30:00']);
+        AttendanceMark::factory()->correcting(AttendanceMark::query()->findOrFail($verified->mark_id))->create(['marked_at' => CarbonImmutable::parse('2027-01-26 08:20', 'America/Mexico_City')->utc(), 'reason' => 'Entró a las 8:20.']);
+        $this->actingAs($this->hr);
+
+        $response = $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.days.0.reviews', [['time' => '08:00', 'decision' => 'incorrect', 'reviewer' => 'Rosa Revisora', 'reviewedAt' => '2027-01-28 10:30']])
+            ->where('people.data.1.days.0.reviews', []));
+
+        expect($response->getContent())->not->toContain('Nota privada');
     });
 
     it('says which day the person was away with vacations or a leave, never its type', function (): void {
@@ -306,6 +325,22 @@ describe('the page', function (): void {
         $this->actingAs($this->hr);
 
         $this->expectsDatabaseQueryCount(REPORT_PAGE_QUERIES);
+        $this->get(authorityReportUrl(['center' => $this->plant->id]))->assertOk();
+    })->with(['3 people' => [2], '40 people' => [39]]);
+});
+
+describe('naming the reviewers', function (): void {
+    it('reads the names of whoever reviewed in the same extra queries, however many reviewed marks and reviewers', function (int $more): void {
+        foreach (EmployeeFactory::new()->count($more)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]) as $person) {
+            $delivery = OfflineDeliveries::accepted($person, '2027-01-26 08:00', qr: true);
+            pageDay($person, null, '2027-01-26 17:00');
+            MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $delivery->mark_id, 'reviewer_id' => memberOf($this->tenant, TenantRole::Hr)->id]);
+        }
+        pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 17:00');
+        $this->actingAs($this->hr);
+
+        // The company's members, asked once for the request (the company, its roles and its users), and nothing per mark nor per reviewer.
+        $this->expectsDatabaseQueryCount(REPORT_PAGE_QUERIES + 3);
         $this->get(authorityReportUrl(['center' => $this->plant->id]))->assertOk();
     })->with(['3 people' => [2], '40 people' => [39]]);
 });

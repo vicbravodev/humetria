@@ -220,6 +220,7 @@ final readonly class ReportPages
             'timezone' => $row->timezone,
             'absence' => $row->absence,
             'marks' => $row->marks,
+            'reviews' => $row->reviews,
         ];
     }
 }

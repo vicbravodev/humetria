@@ -105,17 +105,18 @@ final readonly class CorrectionHistory
     }
 
     /**
-     * A person's voided marks: when the original was, what it was, its center and the line that says so.
+     * A person's voided marks: the id of the voiding correction, when the original was, what it was, its center and the line that says so.
      *
-     * @return list<array{at: CarbonImmutable, type: string, center: string, timezone: string, text: string}>
+     * @return list<array{id: string, at: CarbonImmutable, type: string, center: string, timezone: string, text: string}>
      */
     public function voidsOf(string $employeeId): array
     {
         $voids = [];
-        foreach ($this->corrections as $correction) {
+        foreach ($this->corrections as $id => $correction) {
             if ($correction['employee'] === $employeeId && $correction['at'] === null && $correction['originalAt'] !== null) {
                 $type = $correction['originalType'] ?? '';
                 $voids[] = [
+                    'id' => (string) $id,
                     'at' => $correction['originalAt'],
                     'type' => $type,
                     'center' => $correction['originalCenter'] ?? '',

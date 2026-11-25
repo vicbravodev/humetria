@@ -5,6 +5,7 @@ import {
     endText,
     evidenceDots,
     reportQuery,
+    reviewText,
     shortenedPeriod,
     summaryHint,
 } from '@/lib/attendance/report';
@@ -132,5 +133,33 @@ describe('shortenedPeriod', () => {
         expect(shortenedPeriod('2026-08-01', 93)).toBe('2026-11-01');
         expect(shortenedPeriod('2026-08-01', 1)).toBe('2026-08-01');
         expect(shortenedPeriod('2027-12-20', 14)).toBe('2028-01-02');
+    });
+});
+
+describe('reviewText', () => {
+    it('says who verified the mark of that time and when', () => {
+        expect(
+            reviewText({
+                time: '08:00',
+                decision: 'verified',
+                reviewer: 'Rosa Revisora',
+                reviewedAt: '2027-01-06 10:30',
+            }),
+        ).toBe(
+            'Marca sin conexión de las 08:00: verificada por Rosa Revisora el 2027-01-06 10:30',
+        );
+    });
+
+    it('says who judged it incorrect, and that it was corrected', () => {
+        expect(
+            reviewText({
+                time: '16:00',
+                decision: 'incorrect',
+                reviewer: 'Persona de RH (ya no tiene acceso)',
+                reviewedAt: '2027-01-07 01:05',
+            }),
+        ).toBe(
+            'Marca sin conexión de las 16:00: declarada incorrecta y corregida por Persona de RH (ya no tiene acceso) el 2027-01-07 01:05',
+        );
     });
 });

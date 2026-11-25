@@ -244,8 +244,12 @@ no hay correo.
 horas ordinarias y extra, nivel de evidencia, correcciones con su motivo y estado de la conformidad. Cada descarga se
 registra en la bitácora (acción sensible). El reporte muestra la etiqueta «Sin conexión» con la llave que firmó (también en
 una marca corregida, por su marca original), si la marca sigue por verificar o Recursos Humanos ya la verificó, y cuántos días
-siguen por verificar (cuentan en las horas mientras tanto). No nombra a quien revisó, como tampoco nombra a quien corrige
-(dice «por RH»): ese dato queda en la bitácora de la empresa. Una entrega no aceptada no es una marca y no entra al reporte;
+siguen por verificar (cuentan en las horas mientras tanto). **Nombra a quien revisó cada marca sin conexión y cuándo**
+(decisión del dueño, 2026-11-24): la persona de RH, la decisión (verificada o incorrecta, esta última siempre con su
+corrección) y la fecha y hora local de esa revisión, la última vigente, por marca, en la pantalla y en el CSV (columnas
+«Revisión sin conexión», «Revisó» y «Revisada el»); si esa persona ya no es miembro de la empresa dice «Persona de RH (ya
+no tiene acceso)». Nunca la nota de la persona ni la de RH. A quien corrige no se le nombra (dice «por RH»), y la bitácora
+de la empresa no cambia. Una entrega no aceptada no es una marca y no entra al reporte;
 Recursos Humanos la ve en Correcciones, con su motivo.
 
 ## 7. Conservación

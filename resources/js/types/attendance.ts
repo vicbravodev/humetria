@@ -168,6 +168,16 @@ export type ReportDay = {
     absence?: 'vacation' | 'leave' | null;
     /** The day's marks in force, for RH to correct one. */
     marks?: ReportMark[];
+    /** Who reviewed each of the day's marks made without a connection, and when: one per reviewed mark. */
+    reviews?: ReportReview[];
+};
+
+/** The review in force of a mark made without a connection: the mark's time, the decision, who made it and when (local). */
+export type ReportReview = {
+    time: string;
+    decision: 'verified' | 'incorrect';
+    reviewer: string;
+    reviewedAt: string;
 };
 
 /** A mark in force of a day of the report, at the local time of where it was taken. */

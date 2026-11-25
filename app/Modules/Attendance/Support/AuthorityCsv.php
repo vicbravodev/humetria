@@ -8,7 +8,10 @@ use App\Modules\Attendance\Data\AuthorityRow;
 
 /**
  * The report for the authority as a spreadsheet opens it: UTF-8 with a BOM (Excel reads the accents), commas, LF, a header
- * of stable names in Spanish and one row per person-day; a day away says Vacaciones or Permiso, never the type of the leave. Minutes as integers and again as h:mm for people. Free text
+ * of stable names in Spanish and one row per person-day; a day away says Vacaciones or Permiso, never the type of the leave.
+ * The review of its marks made without a connection goes in the last three columns, one entry per reviewed mark and in the
+ * same order in each, separated by «; »: what was decided (with the mark's time), who reviewed it and when (owner's
+ * decision, 2026-11-24). Minutes as integers and again as h:mm for people. Free text
  * (names, job titles, reasons) cannot run as a formula: a cell that starts with =, +, -, @, a tab or a carriage return
  * gets a single quote first (OWASP, CSV injection).
  */
@@ -20,7 +23,10 @@ final class AuthorityCsv
         'Extra doble (min)', 'Extra doble (h:mm)', 'Extra triple (min)', 'Extra triple (h:mm)',
         'Día de descanso (min)', 'Día de descanso (h:mm)',
         'Evidencia', 'Correcciones', 'Detalle de correcciones', 'Conformidad', 'Huella de la semana confirmada', 'Avisos', 'Ausencia',
+        'Revisión sin conexión', 'Revisó', 'Revisada el',
     ];
+
+    private const array DECISIONS = ['verified' => 'Verificada', 'incorrect' => 'Incorrecta'];
 
     /**
      * Writes the whole file to `$out`, row by row as they come.
@@ -59,6 +65,9 @@ final class AuthorityCsv
                 'leave' => 'Permiso',
                 default => '',
             },
+            implode('; ', array_map(fn (array $review): string => self::DECISIONS[$review['decision']]." ({$review['time']})", $row->reviews)),
+            implode('; ', array_column($row->reviews, 'reviewer')),
+            implode('; ', array_column($row->reviews, 'reviewedAt')),
         ];
     }
 
