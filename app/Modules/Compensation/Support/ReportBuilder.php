@@ -84,7 +84,7 @@ final readonly class ReportBuilder
             ], $cost->months),
             'cuts' => $this->cuts($cuts),
             'raises' => $this->raises(ScenarioCost::monthlyRaises($input), $shared),
-            'others' => $shared ? [] : $this->others->except($scenario),
+            'others' => $shared ? [] : $this->others->except($scenario, $scenario->source),
             'projection' => array_map(fn (ProjectionYear $year): array => $this->year($year), $years),
             'seniority' => $this->seniority($input),
             'sensitivity' => $this->sensitivity($input),

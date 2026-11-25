@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Compensation\Support;
 
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Support\Calculation\Money;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 
 /**
- * The latest active scenarios of the account but one, with what each costs in its first year: what the editor and the report
- * weigh a scenario against. Only this account's: a union is another account, so its proposals never show here (D1).
+ * The latest active scenarios of the account of the same kind but one (roster or average payroll: they are never weighed against each
+ * other), with what each costs in its first year: what the editor and the report weigh a scenario against. Only this account's: a union is another account, so its proposals never show here (D1).
  */
 final readonly class OtherScenarios
 {
@@ -22,9 +23,10 @@ final readonly class OtherScenarios
     /**
      * @return list<array{id: string, name: string, first_year_cents: int, first_year_text: string}>
      */
-    public function except(?Scenario $scenario): array
+    public function except(?Scenario $scenario, ScenarioSource $source): array
     {
         $others = Scenario::query()
+            ->where('source', $source->value)
             ->whereNull('archived_at')
             ->when($scenario !== null, fn ($query) => $query->whereKeyNot($scenario?->id))
             ->orderByDesc('created_at')->orderByDesc('id')
