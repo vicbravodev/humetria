@@ -132,7 +132,7 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
     $page->press('Confirmar mi semana')
         ->waitForText('La confirmó el')
         ->assertSee('Confirmada')
-        ->assertSee('RH ya puede ver su confirmación. Si algo cambia, pida una corrección y le avisaremos cuando respondan.')
+        ->assertSee('RH ya puede ver su confirmación. Si algo cambia, pida una corrección y, si activó los avisos, le avisamos cuando respondan.')
         ->assertDontSee('Al confirmar, RH ve')
         ->assertDontSee('Confirmar mi semana')
         ->assertSee('No estoy de acuerdo')

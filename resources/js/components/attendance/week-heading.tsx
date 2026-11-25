@@ -40,7 +40,8 @@ export default function WeekHeading({ week }: { week: WeekView }) {
             {week.status === 'confirmed' && (
                 <p className="text-base text-pretty text-muted-foreground">
                     RH ya puede ver su confirmación. Si algo cambia, pida una
-                    corrección y le avisaremos cuando respondan.
+                    corrección y, si activó los avisos, le avisamos cuando
+                    respondan.
                 </p>
             )}
             {week.disputeReason !== null && (
