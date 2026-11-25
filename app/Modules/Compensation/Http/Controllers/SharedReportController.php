@@ -11,6 +11,7 @@ use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Support\ReportBuilder;
 use App\Modules\Compensation\Support\ShareMoments;
 use App\Modules\Tenancy\Contracts\Companies;
+use App\Modules\Tenancy\Contracts\GroupMinimums;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class SharedReportController extends Controller
 {
-    public function show(Request $request, string $token, Companies $companies, ReportBuilder $builder, RecordAudit $audit): Response
+    public function show(Request $request, string $token, Companies $companies, GroupMinimums $minimums, ReportBuilder $builder, RecordAudit $audit): Response
     {
         // Read past the company scope: until the link is known, no company is.
         $share = ReportShare::query()->withoutGlobalScopes()->open()->where('token_hash', ReportShare::hashToken($token))->first();
@@ -31,7 +32,7 @@ final class SharedReportController extends Controller
         $scenario = $share === null || $company === null || $company->blocked ? null : Scenario::query()->find($share->scenario_id);
 
         if ($share === null || $company === null || $scenario === null) {
-            return self::private(Inertia::render('compensation/shared-report', ['company' => null, 'expiresAt' => null, 'report' => null])->toResponse($request)->setStatusCode(404));
+            return self::private(Inertia::render('compensation/shared-report', ['company' => null, 'expiresAt' => null, 'minimum' => null, 'report' => null])->toResponse($request)->setStatusCode(404));
         }
 
         $audit->handle('compensation.share_opened', metadata: ['scenario_id' => $scenario->id, 'share_id' => $share->id]);
@@ -39,6 +40,8 @@ final class SharedReportController extends Controller
         return self::private(Inertia::render('compensation/shared-report', [
             'company' => $company->tradeName,
             'expiresAt' => ShareMoments::text($share->expires_at),
+            // What the company folds into «Otros» below, so the notice can say it with the real number.
+            'minimum' => $minimums->current(),
             'report' => [...$builder->build($scenario, shared: true), 'can_annex' => false, 'can_manage' => false, 'shares' => null],
         ])->toResponse($request));
     }
