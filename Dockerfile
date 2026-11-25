@@ -12,9 +12,11 @@ ARG NODE_IMAGE=node:24-trixie-slim
 FROM ${NODE_IMAGE} AS node
 
 # --- base: extensiones que pide composer.json además de las de la imagen ----
+# gd y exif son de la app; gmp y bcmath no son obligatorias, pero minishlink/web-push (llaves VAPID, JWT) las usa para ir más
+# rápido y la imagen no las trae (curl, mbstring y openssl, que sí exige, ya vienen). Los avisos push salen de este proceso.
 FROM ${PHP_IMAGE} AS base
 USER root
-RUN install-php-extensions gd exif
+RUN install-php-extensions gd exif gmp bcmath
 USER www-data
 WORKDIR /var/www/html
 

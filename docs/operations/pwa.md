@@ -80,8 +80,9 @@ configuración se cachea al arrancar).
 - **Hosts permitidos de push** (`PushHosts`): `fcm.googleapis.com`, `push.services.mozilla.com`, `push.apple.com` y
   `notify.windows.com`, o un subdominio de ellos, siempre `https`, sin usuario ni puerto. Una suscripción a otro host se rechaza:
   el servidor no publica a donde la persona escriba.
-- `minishlink/web-push` usa `ext-gmp` o `ext-bcmath` solo «para rendimiento», no la exige; el `Dockerfile`
-  instala `gd` y `exif` y ninguna de las dos. NO VERIFICADO en producción: se comprueba con el primer envío real (sección 9).
+- `minishlink/web-push` usa `ext-gmp` o `ext-bcmath` «para rendimiento»; no las exige (sí exige `curl`, `mbstring` y `openssl`,
+  que la imagen base ya trae). El `Dockerfile` las instala junto con `gd` y `exif` (etapa `base`); se comprobó construyendo esa
+  etapa y listando las extensiones (`php -m`). Falta solo el primer envío real a FCM, Apple y Mozilla (sección 9).
 
 ## 5. Señales en logs
 
