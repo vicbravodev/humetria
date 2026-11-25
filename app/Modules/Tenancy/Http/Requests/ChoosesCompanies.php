@@ -35,6 +35,14 @@ trait ChoosesCompanies
     }
 
     /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return ['companies' => 'empresas', 'user_id' => 'responsable'];
+    }
+
+    /**
      * @return list<string>
      */
     public function companies(): array

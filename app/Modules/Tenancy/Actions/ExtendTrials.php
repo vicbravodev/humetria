@@ -32,7 +32,7 @@ final readonly class ExtendTrials
                 $endsAt = $tenant->trialEndsAt();
                 $from = $endsAt === null || $endsAt->isPast() ? now()->toImmutable() : $endsAt;
                 $tenant->update(['trial_started_at' => $from->addDays($days - Tenant::TRIAL_DAYS)]);
-                $this->recordAudit->handle('tenancy.trial_extended', $tenant, ['days' => $days, 'ends_at' => $from->addDays($days)->toIso8601String()]);
+                $this->recordAudit->handle('tenant.trial_extended', $tenant, ['days' => $days, 'ends_at' => $from->addDays($days)->toIso8601String()]);
             }
         });
 

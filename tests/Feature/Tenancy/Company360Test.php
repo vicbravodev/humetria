@@ -106,7 +106,7 @@ it('refuses a note to anyone outside the staff before reading it, and an empty o
     $tenant = Tenant::factory()->create();
 
     $this->actingAs(memberOf($tenant, TenantRole::Owner))->post(route('companies.notes.store', $tenant), [])->assertNotFound();
-    $this->actingAs(superadmin())->post(route('companies.notes.store', $tenant), ['body' => ''])->assertSessionHasErrors('body');
+    $this->actingAs(superadmin())->post(route('companies.notes.store', $tenant), ['body' => ''])->assertSessionHasErrors(['body' => 'El campo nota es obligatorio.']);
     $this->actingAs(superadmin())->post(route('companies.notes.store', $tenant), ['body' => str_repeat('a', 2001)])->assertSessionHasErrors('body');
     $this->actingAs(superadmin())->post(route('companies.notes.store', 'a5f0e7d6-0000-4000-8000-000000000000'), ['body' => 'Nota'])->assertNotFound();
 
@@ -120,6 +120,10 @@ it('suspends or archives from the risk zone only with a reason and the company n
         ->post(route('companies.risk', $tenant), ['restriction' => $restriction, 'reason' => 'Saldo vencido', 'confirmation' => 'Textiles del Nor'])
         ->assertSessionHasErrors('confirmation');
     expect($tenant->fresh()?->restriction)->toBeNull();
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.risk', $tenant), ['restriction' => $restriction, 'reason' => 'Saldo vencido'])
+        ->assertSessionHasErrors(['confirmation' => 'El campo nombre de la empresa es obligatorio.']);
 
     $this->actingAs(superadmin())
         ->post(route('companies.risk', $tenant), ['restriction' => $restriction, 'reason' => 'Saldo vencido', 'confirmation' => ' Textiles del Norte '])

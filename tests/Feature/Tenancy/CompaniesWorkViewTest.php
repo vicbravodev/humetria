@@ -111,7 +111,7 @@ it('takes at most a page of companies and never the demo company', function (): 
 
     $this->actingAs(superadmin())
         ->post(route('companies.account-manager'), ['companies' => Tenant::factory()->count(26)->create()->pluck('id')->all(), 'user_id' => $manager->id])
-        ->assertSessionHasErrors('companies');
+        ->assertSessionHasErrors(['companies' => 'El campo empresas no debe tener más de 25 elementos.']);
 
     $this->actingAs(superadmin())->post(route('companies.account-manager'), ['companies' => [$demo->id], 'user_id' => $manager->id]);
 
@@ -155,7 +155,7 @@ it('extends the trials chosen: a running one from its end, an ended one from tod
         ->and($paid->fresh()?->trial_started_at)->toBeNull()
         ->and($suspended->fresh()?->trial_started_at?->toIso8601String())->toBe(now()->subDays(3)->toIso8601String())
         ->and($unstarted->fresh()?->trial_started_at)->toBeNull()
-        ->and(AuditEntry::query()->where('event', 'tenancy.trial_extended')->pluck('tenant_id')->sort()->values()->all())
+        ->and(AuditEntry::query()->where('event', 'tenant.trial_extended')->pluck('tenant_id')->sort()->values()->all())
         ->toBe(collect([$running->id, $ended->id])->sort()->values()->all());
     Log::shouldHaveReceived('info')->with('tenancy.trial_extended', ['companies' => 2, 'days' => 7])->once();
 });
@@ -172,3 +172,11 @@ it('extends a trial by one to thirty days', function (int $days, bool $valid): v
     'thirty' => [30, true],
     'thirty-one' => [31, false],
 ]);
+
+it('carries no individual answer in its props', function (): void {
+    memberOf(Tenant::factory()->create(), App\Modules\Tenancy\Enums\TenantRole::Owner);
+
+    $props = $this->actingAs(superadmin())->get(route('companies.index'))->inertiaProps();
+
+    expect(individualAnswersIn($props))->toBe([]);
+});

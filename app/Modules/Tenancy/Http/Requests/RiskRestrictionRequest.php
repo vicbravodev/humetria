@@ -44,6 +44,14 @@ final class RiskRestrictionRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return ['confirmation' => 'nombre de la empresa'];
+    }
+
     public function restriction(): TenantRestriction
     {
         return TenantRestriction::from($this->string('restriction')->toString());

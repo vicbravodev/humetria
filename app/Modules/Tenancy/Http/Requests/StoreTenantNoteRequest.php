@@ -26,6 +26,14 @@ final class StoreTenantNoteRequest extends FormRequest
         return ['body' => ['required', 'string', 'max:2000']];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return ['body' => 'nota'];
+    }
+
     public function body(): string
     {
         return $this->string('body')->trim()->toString();

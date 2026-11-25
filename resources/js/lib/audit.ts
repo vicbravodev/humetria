@@ -6,6 +6,7 @@ const LABELS: Record<string, string> = {
     'tenant.activated': 'Empresa activada',
     'tenant.reactivated': 'Empresa reactivada',
     'tenant.trial_started': 'Prueba iniciada',
+    'tenant.trial_extended': 'Prueba extendida',
     'tenant.owner_changed': 'Dueño cambiado',
     'tenant.module_granted': 'Herramienta concedida',
     'tenant.module_revoked': 'Herramienta quitada',
