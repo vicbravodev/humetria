@@ -75,6 +75,9 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
                 // Where it came from (piece 8): nobody knew, so "no data", which is not direct traffic.
                 'arrived_by' => null,
                 'first_contact' => null,
+                // The funnel: who of the staff owns it and what comes next; nobody yet.
+                'owner' => null,
+                'next_step' => null,
             ]]));
 });
 

@@ -496,6 +496,7 @@ return [
         'centers.*.standing' => 'alguien trabaja de pie',
         'centers.*.sector' => 'sector',
         'note' => 'nota',
+        'next_step' => 'siguiente paso',
         'corrected_at' => 'hora correcta',
         'ids' => 'marcas',
         'notes' => 'notas',

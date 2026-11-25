@@ -18,6 +18,7 @@ final class ListDemoRequests
     public function handle(?DemoStatus $status = null): LengthAwarePaginator
     {
         return DemoRequest::query()
+            ->with('owner:id,name')
             ->when($status !== null, fn ($query) => $query->where('status', $status?->value))
             ->latest()
             ->paginate(25)

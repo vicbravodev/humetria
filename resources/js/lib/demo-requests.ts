@@ -21,14 +21,21 @@ export const DEMO_VIEWS: { value: DemoView; label: string }[] = [
     { value: 'all', label: 'Todas' },
     { value: 'new', label: 'Nuevas' },
     { value: 'contacted', label: 'Contactadas' },
+    { value: 'scheduled', label: 'Demo agendada' },
+    { value: 'trial', label: 'Prueba activa' },
     { value: 'converted', label: 'Convertidas' },
     { value: 'discarded', label: 'Descartadas' },
 ];
 
-/** What a person may choose by hand: «Convertida» is only reached by creating the company from the request. */
+/** Not a state to choose: «Convertida» comes from creating the company, «Demo agendada» from scheduling it with its day. */
+const NOT_BY_HAND: DemoStatus[] = ['converted', 'scheduled'];
+
+/** What a person may choose by hand. */
 export const DEMO_CHOICES: { value: DemoStatus; label: string }[] =
     DEMO_VIEWS.flatMap(({ value, label }) =>
-        value === 'all' || value === 'converted' ? [] : [{ value, label }],
+        value === 'all' || NOT_BY_HAND.includes(value)
+            ? []
+            : [{ value, label }],
     );
 
 /** The console's view as its address carries it: the default, all of them, carries nothing. */

@@ -19,9 +19,21 @@ export type DemoRequestRow = {
     arrived_by: string | null;
     /** The first known channel, only when it is not the one it arrived by. */
     first_contact: string | null;
+    /** The person of the staff who owns it, if anyone. */
+    owner: DemoOwner | null;
+    next_step: string | null;
 };
 
-export type DemoStatus = 'new' | 'contacted' | 'converted' | 'discarded';
+/** Someone of Humetría's staff who may own a request. */
+export type DemoOwner = { id: number; name: string };
+
+export type DemoStatus =
+    | 'new'
+    | 'contacted'
+    | 'scheduled'
+    | 'trial'
+    | 'converted'
+    | 'discarded';
 
 export type DemoView = 'all' | DemoStatus;
 

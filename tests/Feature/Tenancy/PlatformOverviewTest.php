@@ -51,7 +51,7 @@ it('counts the demo requests by status', function (): void {
     DemoRequest::factory()->create(['status' => DemoStatus::Contacted]);
 
     $this->actingAs(superadmin())->get(route('overview.index'))
-        ->assertInertia(fn (Assert $page) => $page->where('demos', ['all' => 3, 'new' => 2, 'contacted' => 1, 'converted' => 0, 'discarded' => 0]));
+        ->assertInertia(fn (Assert $page) => $page->where('demos', ['all' => 3, 'new' => 2, 'contacted' => 1, 'scheduled' => 0, 'trial' => 0, 'converted' => 0, 'discarded' => 0]));
 });
 
 it('adds up the monthly income the paying subscriptions contract, before VAT', function (): void {

@@ -34,17 +34,21 @@ describe('workforceText and profileText', () => {
 });
 
 describe('demo views', () => {
-    it('lists all the views, and offers by hand all but converted', () => {
+    it('lists all the views, and offers by hand all but converted and scheduled', () => {
         expect(DEMO_VIEWS.map((view) => view.value)).toEqual([
             'all',
             'new',
             'contacted',
+            'scheduled',
+            'trial',
             'converted',
             'discarded',
         ]);
+        // «Demo agendada» asks for its day: it is reached by scheduling, not by choosing it.
         expect(DEMO_CHOICES.map((choice) => choice.value)).toEqual([
             'new',
             'contacted',
+            'trial',
             'discarded',
         ]);
     });

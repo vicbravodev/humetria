@@ -53,13 +53,20 @@ export default function DemoRequestHandling({
             {canManage ? (
                 <DemoRequestForm request={request} />
             ) : (
-                <p className="text-sm whitespace-pre-line">
-                    {request.note ?? (
-                        <span className="text-muted-foreground">
-                            Sin nota interna
-                        </span>
-                    )}
-                </p>
+                <>
+                    <p className="text-sm">
+                        {request.owner?.name ?? 'Sin responsable'}
+                        {request.next_step !== null &&
+                            ` · Sigue: ${request.next_step}`}
+                    </p>
+                    <p className="text-sm whitespace-pre-line">
+                        {request.note ?? (
+                            <span className="text-muted-foreground">
+                                Sin nota interna
+                            </span>
+                        )}
+                    </p>
+                </>
             )}
         </section>
     );
