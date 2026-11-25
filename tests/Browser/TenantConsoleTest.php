@@ -743,6 +743,35 @@ it('shows the superadmin the platform users, each with a menu that asks before i
         ->assertSee('ana@acme.mx');
 })->with($looks);
 
+it('shows the team with its support entries, and what each platform role may do', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    support()->forceFill(['name' => 'Soporte Uno'])->save();
+
+    visitPage('tenancy/users', '/admin/platform-users?tab=team', $dark, $mobile)
+        ->assertSee('Equipo Humetría')
+        ->assertSee('Soporte Uno')
+        ->click('Permisos por rol')
+        ->assertSee('Leer la bitácora')
+        ->assertSee('Superadmin');
+})->with($looks);
+
+it('opens the detail of an entry in a side panel with what it changed, and offers the export', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'event' => 'employee.updated',
+        'metadata' => ['changes' => ['job_title' => ['before' => 'Analista', 'after' => 'Gerente']]],
+        'created_at' => now(),
+    ]);
+
+    visitPage('tenancy/audit', '/admin/audit', $dark, $mobile)
+        ->assertSee('Exportar CSV')
+        ->assertSee('Roles y permisos')
+        ->click('[aria-label^="Detalle: "]')
+        ->assertSee('Antes: Analista')
+        ->assertSee('Después: Gerente');
+})->with($looks);
+
 it('says so when no user matches the search', function (bool $dark): void {
     signInAsSuperadmin();
 
