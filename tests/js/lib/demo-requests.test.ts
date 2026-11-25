@@ -67,12 +67,18 @@ describe('demo views', () => {
 
 describe('demoListQuery', () => {
     it('carries the status and what was searched, and nothing that is empty', () => {
-        expect(demoListQuery({ status: 'all', q: '' })).toEqual({});
-        expect(demoListQuery({ status: 'new', q: ' acme ' })).toEqual({
+        expect(demoListQuery({ status: 'all', q: '', view: 'list' })).toEqual(
+            {},
+        );
+        expect(
+            demoListQuery({ status: 'new', q: ' acme ', view: 'list' }),
+        ).toEqual({
             status: 'new',
             q: 'acme',
         });
-        expect(demoListQuery({ status: 'all', q: 'acme' })).toEqual({
+        expect(
+            demoListQuery({ status: 'all', q: 'acme', view: 'list' }),
+        ).toEqual({
             q: 'acme',
         });
     });

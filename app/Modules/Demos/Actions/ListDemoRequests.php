@@ -6,6 +6,7 @@ namespace App\Modules\Demos\Actions;
 
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 final class ListDemoRequests
@@ -25,6 +26,35 @@ final class ListDemoRequests
             ->latest()
             ->paginate(25)
             ->withQueryString();
+    }
+
+    /**
+     * The newest requests of each open stage of the funnel, a few per stage, in one query: the rest are in the list.
+     *
+     * @return array<string, list<DemoRequest>> by status, in the funnel's order
+     */
+    public function board(int $perStage = 5): array
+    {
+        $open = [DemoStatus::New, DemoStatus::Contacted, DemoStatus::Scheduled, DemoStatus::Trial];
+        $board = array_fill_keys(array_map(fn (DemoStatus $status): string => $status->value, $open), []);
+
+        $ranked = DemoRequest::query()
+            ->select('*')
+            ->selectRaw('row_number() over (partition by status order by created_at desc, id) as position')
+            ->whereIn('status', array_keys($board));
+
+        $cards = DemoRequest::query()->fromSub($ranked, 'demo_requests')
+            ->where(new Expression('position'), '<=', $perStage)
+            ->with('owner:id,name')
+            ->orderByDesc('created_at')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($cards as $card) {
+            $board[$card->status->value][] = $card;
+        }
+
+        return $board;
     }
 
     /**

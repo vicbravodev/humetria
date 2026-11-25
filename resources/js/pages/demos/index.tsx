@@ -1,19 +1,28 @@
 import { Head } from '@inertiajs/react';
 import AdConversionsDownload from '@/components/demos/ad-conversions-download';
-import DemoRequestsEmpty from '@/components/demos/demo-requests-empty';
-import DemoRequestsInbox from '@/components/demos/demo-requests-inbox';
-import DemoRequestsToolbar from '@/components/demos/demo-requests-toolbar';
+import DemoBoard from '@/components/demos/demo-board';
+import DemoRequestsList from '@/components/demos/demo-requests-list';
+import DemoViewTabs from '@/components/demos/demo-view-tabs';
 import PageHeader from '@/components/humetria/page-header';
-import Pagination from '@/components/humetria/pagination';
-import type { DemoFilters, DemoRequestRow, DemoView, Paginated } from '@/types';
+import type {
+    DemoBoardColumn,
+    DemoFilters,
+    DemoRequestRow,
+    DemoView,
+    Paginated,
+} from '@/types';
 
 export default function DemoRequests({
     demoRequests,
+    board,
     filters,
     counts,
     can_manage: canManage,
 }: {
-    demoRequests: Paginated<DemoRequestRow>;
+    /** The list, only when it is the view shown. */
+    demoRequests: Paginated<DemoRequestRow> | null;
+    /** The funnel, only when it is the view shown. */
+    board: DemoBoardColumn[] | null;
     filters: DemoFilters;
     counts: Record<DemoView, number>;
     can_manage: boolean;
@@ -32,25 +41,18 @@ export default function DemoRequests({
                 >
                     <AdConversionsDownload />
                 </PageHeader>
-                {counts.all > 0 && (
-                    <DemoRequestsToolbar filters={filters} counts={counts} />
+                <DemoViewTabs view={filters.view} />
+                {board !== null && (
+                    <DemoBoard columns={board} canManage={canManage} />
                 )}
-                {demoRequests.data.length === 0 ? (
-                    <DemoRequestsEmpty filters={filters} />
-                ) : (
-                    // Keyed by page and view: a new one opens on its newest request.
-                    <DemoRequestsInbox
-                        key={`${filters.status}-${filters.q}-${demoRequests.current_page}`}
-                        requests={demoRequests.data}
+                {demoRequests !== null && (
+                    <DemoRequestsList
+                        demoRequests={demoRequests}
+                        filters={filters}
+                        counts={counts}
                         canManage={canManage}
                     />
                 )}
-                <Pagination
-                    previous="Ver más recientes"
-                    next="Ver más antiguas"
-                    page={demoRequests}
-                    label="Páginas de solicitudes"
-                />
             </div>
         </>
     );

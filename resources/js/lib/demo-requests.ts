@@ -47,6 +47,7 @@ export function demoQuery(view: DemoView): { status?: DemoView } {
 export function demoListQuery(
     filters: DemoFilters,
 ): Partial<Record<keyof DemoFilters, string>> {
+    // The list is the page's default view: its address does not name it.
     const q = filters.q.trim();
 
     return { ...demoQuery(filters.status), ...(q === '' ? {} : { q }) };

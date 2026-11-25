@@ -40,7 +40,18 @@ export type DemoStatus =
 
 export type DemoView = 'all' | DemoStatus;
 
-export type DemoFilters = { status: DemoView; q: string };
+/** The list (paged and searched) or the funnel. */
+export type DemoLayout = 'list' | 'board';
+
+export type DemoFilters = { status: DemoView; q: string; view: DemoLayout };
+
+/** An open stage of the funnel: how many requests it holds and the newest few. */
+export type DemoBoardColumn = {
+    status: DemoStatus;
+    label: string;
+    total: number;
+    cards: DemoRequestRow[];
+};
 
 /** The part of a Laravel LengthAwarePaginator the console reads. */
 export type Paginated<T> = {

@@ -28,4 +28,17 @@ enum DemoStatus: string
             self::Discarded => 'Descartada',
         };
     }
+
+    /** The stage as a column of the funnel names it, for all the requests in it. */
+    public function stageLabel(): string
+    {
+        return match ($this) {
+            self::New => 'Nuevas',
+            self::Contacted => 'Contactadas',
+            self::Scheduled => 'Demo agendada',
+            self::Trial => 'Prueba activa',
+            self::Converted => 'Convertidas',
+            self::Discarded => 'Descartadas',
+        };
+    }
 }

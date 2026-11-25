@@ -33,16 +33,40 @@ final class DemoRequestConsoleController extends Controller
 
         $status = DemoStatus::tryFrom($request->string('status')->toString());
         $search = $request->string('q')->trim()->limit(100, '')->toString();
+        // The list (paged and searched) or the funnel (a few cards per open stage): only the one shown is read.
+        $board = $request->string('view')->toString() === 'board';
+        $counts = $listDemoRequests->counts();
 
         return Inertia::render('demos/index', [
-            'filters' => ['status' => $status->value ?? 'all', 'q' => $search],
-            'counts' => $listDemoRequests->counts(),
+            'filters' => ['status' => $status->value ?? 'all', 'q' => $search, 'view' => $board ? 'board' : 'list'],
+            'counts' => $counts,
             'can_manage' => Gate::allows('manage-demo-requests'),
             'can_open_room' => Gate::allows('manage-demo'),
-            'demoRequests' => $listDemoRequests->handle($status, $search)->through($this->row(...)),
+            'demoRequests' => $board ? null : $listDemoRequests->handle($status, $search)->through($this->row(...)),
+            'board' => $board ? $this->board($listDemoRequests, $counts) : null,
             // Who of the staff may own a request: only for the form, after the page shows.
             'staff' => Inertia::defer(fn (): array => $owners->options()),
         ]);
+    }
+
+    /**
+     * @param  array<string, int>  $counts
+     * @return list<array{status: string, label: string, total: int, cards: list<array<string, mixed>>}>
+     */
+    private function board(ListDemoRequests $listDemoRequests, array $counts): array
+    {
+        $columns = [];
+
+        foreach ($listDemoRequests->board() as $status => $cards) {
+            $columns[] = [
+                'status' => $status,
+                'label' => DemoStatus::from($status)->stageLabel(),
+                'total' => $counts[$status] ?? 0,
+                'cards' => array_map($this->row(...), $cards),
+            ];
+        }
+
+        return $columns;
     }
 
     /** @return array<string, mixed> */
