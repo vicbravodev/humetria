@@ -45,7 +45,6 @@ final class PunchDay
      */
     public static function of(string $employeeId, string $timezone): array
     {
-        $last = EffectiveMarks::of($employeeId)->latest('marked_at')->first(['type', 'marked_at']);
         $marks = self::models($employeeId, $timezone);
 
         return [
@@ -60,7 +59,7 @@ final class PunchDay
                     'clock' => $mark->timezone === $timezone ? null : $mark->timezone,
                 ];
             })->all()),
-            'next' => array_map(fn (MarkType $type): string => $type->value, MarkType::allowedAfter($last?->type)),
+            'next' => array_map(fn (MarkType $type): string => $type->value, MarkType::allowedAfter($marks->last()?->type)),
         ];
     }
 }

@@ -120,6 +120,8 @@ it('has Marcar as a tab where the company has attendance, and it takes the perso
 });
 
 it('opens the start on the moment of the person\'s day, with what they did and the step that follows', function (array $marks, string $title, string $step, bool $dark, bool $mobile): void {
+    // Midday in Mexico City: the marks, minutes before now, never fall on the day before.
+    $this->travelTo(CarbonImmutable::parse('2026-11-25 18:00:00', 'UTC'));
     resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
 
     foreach ($marks as $index => $type) {
