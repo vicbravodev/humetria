@@ -16,7 +16,7 @@ const STEPS: { icon: LucideIcon; title: string; detail: string }[] = [
     {
         icon: MousePointerClick,
         title: 'Marque su primera entrada',
-        detail: 'Le mostramos cómo, paso a paso',
+        detail: 'Desde su inicio, con un solo toque',
     },
 ];
 

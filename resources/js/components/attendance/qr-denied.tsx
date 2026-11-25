@@ -25,10 +25,9 @@ export default function QrDenied({
                     La cámara está apagada
                 </h2>
                 <p className="text-base text-pretty text-muted-foreground">
-                    Humetría no puede leer el código sin la cámara. En iPhone:
-                    Ajustes › Humetría › Cámara. En Android: Ajustes › Apps ›
-                    Humetría › Permisos. Después regrese y toque «Intentar de
-                    nuevo».
+                    Humetría no puede leer el código sin la cámara. Permítala en
+                    los ajustes de su teléfono, para Humetría o para su
+                    navegador. Después regrese y toque «Intentar de nuevo».
                 </p>
                 <p className="rounded-xl bg-muted/50 p-3 text-base text-pretty">
                     <span className="font-medium">
