@@ -20,6 +20,8 @@ export type OfflineContext = {
     rpId: string;
     /** The company's switch: the only one the phone reads. */
     offline: boolean;
+    /** The marks that ask this person for the QR of the center's screen; none for a context kept before they were known. */
+    qrTypes: string[];
 };
 
 /** The pass of a device key: the server's text, its id, the key's id and when it expires (an ISO 8601 date). */
@@ -52,6 +54,13 @@ export function ticketsIn(json: unknown): Ticket[] {
         : [];
 }
 
+/** The names in a list, and none of what else it holds; an empty list when it is not one. */
+function namesIn(value: unknown): string[] {
+    return Array.isArray(value)
+        ? value.filter((name): name is string => typeof name === 'string')
+        : [];
+}
+
 /** The context of an answer; null when it carries none or it is damaged. */
 export function contextIn(json: unknown): OfflineContext | null {
     const context = isJson(json) ? json['context'] : null;
@@ -77,6 +86,7 @@ export function contextIn(json: unknown): OfflineContext | null {
               agreementVersion: version,
               rpId: context['rpId'],
               offline: context['offline'],
+              qrTypes: namesIn(context['qrTypes']),
           }
         : null;
 }

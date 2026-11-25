@@ -10,6 +10,7 @@ const context = {
     agreementVersion: 3,
     rpId: 'humetria.test',
     offline: true,
+    qrTypes: ['start', 'end'],
 };
 
 const answer = (employeeId = 'ana', ...names: string[]) => ({

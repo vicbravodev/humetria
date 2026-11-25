@@ -308,7 +308,7 @@ it('marks from the shell of the installed app, with no page of the server: the s
     $page->waitForText('Marcar sin internet')
         ->assertSee('Entrada')
         ->assertSee('Salir a comer')
-        ->assertSee('Leer el código de la pantalla')
+        ->assertDontSee('Leer el código de la pantalla')
         ->assertSee('Reintentar con internet')
         ->assertDontSee('Ana')
         ->assertNoJavaScriptErrors()
@@ -327,6 +327,23 @@ it('marks from the shell of the installed app, with no page of the server: the s
 
     expect(AttendanceOfflineMark::query()->sole()->outcome)->toBe('accepted');
 })->with(['light' => [false]]);
+
+it('asks the shell for the screen\'s code only on the marks the policy asks it for, as Marcar does with a connection', function (): void {
+    $page = phoneWithTickets();
+    $page->navigate('/me/acme/offline')->waitForText('No hay internet');
+    withoutNetwork($page);
+    $page->script("() => { history.pushState({}, '', '/me/acme/punch'); window.dispatchEvent(new PopStateEvent('popstate')); }");
+    $page->waitForText('Marcar sin internet')->assertDontSee('Leer el código de la pantalla');
+
+    // A mark the policy does not ask the code for goes on to the hour, with no reader in between.
+    markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
+    $page->press('Listo')->assertMissing('[role="dialog"][aria-label="Leer el código de la pantalla"]');
+
+    // One it asks for opens the reader first (the camera is a canvas that draws the code), and with the code read the key signs at once.
+    withCameraShowing($page, originOf($page).'/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()));
+    $page->press('button:has-text("Salida")')->waitForText('Guardada sin conexión');
+    $page->press('Listo')->assertSee('2 marcas sin enviar');
+});
 
 it('opens the shell with the count of the marks that wait and the way to Marcar', function (): void {
     $page = phoneWithTickets();
