@@ -89,6 +89,26 @@ it('opens a link with «Continuar», and its start names the person', function (
     'dark mobile' => [true, true],
 ]);
 
+it('welcomes a person with the link RH issued by the three steps that follow, naming nobody', function (bool $dark, bool $mobile): void {
+    anaLink('first-token');
+
+    $page = visitPage('worker-access/link', '/me/acme/link/first-token', $dark, $mobile)
+        ->assertSee('Le damos la bienvenida')
+        ->assertSee('Cree su llave')
+        ->assertSee('Póngala en su inicio')
+        ->assertSee('Marque su primera entrada')
+        ->assertSee('Su huella nunca sale del teléfono')
+        ->assertDontSee('Su enlace está listo')
+        ->assertDontSee('Ana')
+        ->assertScript(spilledOut(), '')
+        ->assertNoAccessibilityIssues(1);
+
+    $page->press('Continuar')->waitForText('cree su llave de acceso');
+})->with([
+    'light mobile' => [false, true],
+    'dark mobile' => [true, true],
+]);
+
 it('shows the start with the session open, its three tabs, and «Salir» in Cuenta leaves no name behind', function (bool $dark, bool $mobile): void {
     anaLink('home-token', requested: true);
 

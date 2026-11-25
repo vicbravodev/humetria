@@ -37,10 +37,14 @@ final readonly class AccessLinkController
 
     public function show(string $tenant, string $token): Response
     {
+        $link = $this->opening($token);
+
         return Inertia::render('worker-access/link', [
             'company' => $this->companies->current()->tradeName,
             // The token stays in the address only: «Continuar» posts to the page's own address.
-            'opens' => $this->opens($token),
+            'opens' => $link !== null,
+            // The link RH issued is the person's first use (a key comes first); it names nobody before it is spent.
+            'firstUse' => $link?->kind === LinkKind::Issued,
             'homeUrl' => route('worker.home', $tenant),
         ]);
     }
@@ -61,12 +65,12 @@ final readonly class AccessLinkController
         return $link->kind === LinkKind::Issued ? redirect()->route('worker.key.show', $tenant) : redirect()->to($destination->pull($tenant));
     }
 
-    /** Whether the link would still open, without spending it: the same rule as OpenAccessLink. */
-    private function opens(string $token): bool
+    /** The link when it would still open, without spending it: the same rule as OpenAccessLink. */
+    private function opening(string $token): ?WorkerAccessLink
     {
         $link = WorkerAccessLink::findPending($token);
         $person = $link === null ? null : $this->roster->find($link->employee_id);
 
-        return $person !== null && $person->active;
+        return $person !== null && $person->active ? $link : null;
     }
 }
