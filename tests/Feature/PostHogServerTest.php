@@ -173,6 +173,18 @@ describe('the errors of the server', function (): void {
             ->and(collect($frames)->firstWhere(fn (array $frame): bool => str_starts_with($frame['filename'], 'vendor/'))['in_app'] ?? false)->toBeFalse();
     });
 
+    it('sends no null in any frame: PostHog rejects the whole exception when a frame function is null', function (): void {
+        serverMeasuring();
+        throwingRoute(new RuntimeException('x'));
+
+        $this->get('/_boom');
+
+        $frames = sentToPostHog()[0]['properties']['$exception_list'][0]['stacktrace']['frames'];
+
+        expect(collect($frames)->flatMap(fn (array $frame): array => array_keys(array_filter($frame, is_null(...))))->all())->toBe([])
+            ->and(is_string($frames[array_key_last($frames)]['function']))->toBeTrue();
+    });
+
     it('reports a failed query by its class, never with its bindings', function (): void {
         serverMeasuring();
         throwingRoute(new QueryException('pgsql', 'select * from users where email = ?', ['ana@empresa.mx'], new Exception('boom')));
