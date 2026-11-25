@@ -273,7 +273,33 @@ Premio de asistencia o puntualidad «hasta el tope de la ley» (sin tope captura
 el premio (LSS art. 27 fr. VII y el párrafo final, que integra el excedente). El 10 % se toma del SBC de la persona sin el premio, con el que
 el premio no se cuenta a sí mismo; si el contrato captura un tope, rige ese tope. Sin dato del SBC integra completo.
 
-## 8. Historial
+## 8. Cotizador rápido (plantilla promedio)
+
+Un escenario puede costearse sobre una **plantilla promedio** en vez de las personas de la empresa: un número de personas, su sueldo
+mensual promedio, los años de servicio de la persona promedio y su grupo (sindicalizado o de confianza). Es el mismo cálculo, con las
+mismas tasas, el mismo SBC y el mismo redondeo que un escenario de la plantilla; solo cambia de dónde salen las personas y el sueldo.
+
+- **El sueldo mensual se divide entre 30** para el salario diario ([LSS] art. 29: «se dividirá la remuneración correspondiente entre
+  siete, quince o treinta»), y el año cuesta **12 meses de 30 días** (360 días de ese salario), no 365. El aguinaldo, la prima vacacional
+  y el SBC corren sobre el salario diario; las cuotas se calculan por los 365 días del año. Con un sueldo mensual de $15,000, un aumento
+  de 6 % cuesta $5,400,000 al año de salario para 500 personas (12 × $450,000).
+- **Siempre mensual.** Un escenario de la plantilla dice si sus sueldos se pactan por día (365 días) o por mes (12 meses); uno de
+  plantilla promedio siempre es mensual. Un monto fijo al mes se vuelve diario entre 30 si el sueldo es mensual y entre 30.4 si es diario.
+- **Las prestaciones son las de la empresa** (Prestaciones): si no ha capturado ninguna rige el mínimo de ley (15 días de aguinaldo,
+  vacaciones según la antigüedad y 25 % de prima vacacional). Un escenario puede proponer cambios, como cualquier otro.
+- **Prima de riesgo de trabajo:** la que la empresa capturó; si no ha capturado la suya se usa la **prima media de clase I (0.54355 %,
+  [LSS] art. 73)** y el reporte lo avisa, porque la real puede ser mayor.
+- **Los años de servicio** deciden los días de vacaciones y se mantienen los doce meses del costo.
+- **Ejemplo de 2026** (el de la infografía «Negociación salarial del CCT»): 500 personas a $15,000 al mes, un año de servicio, un aumento
+  de 6 %: $450,000 al mes de salario más $270,000 al año de aguinaldo y prima ($540 por persona), más $1,186,740 al año de cuotas
+  ($197.79 por persona al mes, con la prima de clase I): $13,713.48 por persona al año y **$6,856,740** en total, que es 5.81 % del
+  costo actual de la nómina, no 6 %, porque la cuota fija del IMSS (20.40 % de la UMA) no sube con el salario.
+- **Límites:** no hay personas, así que no hay anexo persona por persona; el reporte tiene un solo renglón («Plantilla promedio») donde
+  el de la plantilla corta por área, categoría y grupo; con menos personas que el mínimo de la empresa, ese renglón no se muestra en un
+  reporte compartido por enlace. Un escenario de plantilla promedio nunca se compara con uno de la plantilla.
+
+## 9. Historial
 
 - 1.0 · 2026-11-03: primera versión. UMA, salario mínimo, cuotas IMSS e Infonavit, cesantía y vejez 2023-2030, mínimos de ley, prima de
   antigüedad, ejemplos de 2026 y los 32 ISN con fuente oficial.
+- 1.1 · 2026-11-24: cotizador rápido (sección 8): escenarios sobre una plantilla promedio, sueldo mensual entre 30 y 12 meses al año.

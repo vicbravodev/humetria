@@ -102,6 +102,11 @@ final readonly class PanelLinks
         return $this->path('tenant.compensation.index');
     }
 
+    public function compensationQuick(): string
+    {
+        return $this->path('tenant.compensation.quick.index');
+    }
+
     public function policy(): string
     {
         return $this->path('tenant.disclosure.policy');
