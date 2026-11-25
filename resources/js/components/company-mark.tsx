@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import CompanyInitialsMark from '@/components/company-initials-mark';
 import CompanyLogoImage from '@/components/company-logo-image';
 import Initials from '@/components/humetria/initials';
 import Logo from '@/components/humetria/logo';
@@ -13,6 +14,7 @@ export default function CompanyMark({
     kind = 'logo',
     badge = false,
     className,
+    humetriaClassName = className,
 }: {
     /** The company's name where the page already carries it; without it, outside a company, the mark is Humetría's. */
     name?: string;
@@ -21,12 +23,14 @@ export default function CompanyMark({
     badge?: boolean;
     /** The height of the logo (`h-8`), the size of the initials (`size-8`). */
     className?: string | undefined;
+    /** The size of Humetría's own logo, where no company's takes its place (its logo is wide and short: it wants less height). */
+    humetriaClassName?: string | undefined;
 }) {
     const { brand } = usePage().props;
 
     if (brand === null) {
         return name === undefined ? (
-            <Logo kind={kind} className={className} />
+            <Logo kind={kind} className={humetriaClassName} />
         ) : badge ? (
             <span className="flex min-w-0 items-center gap-3">
                 <Initials name={name} kind="company" />
@@ -49,15 +53,10 @@ export default function CompanyMark({
     }
 
     return (
-        <span className="flex min-w-0 items-center gap-2.5">
-            <Initials
-                name={brand.name}
-                kind="company"
-                className={kind === 'symbol' ? className : undefined}
-            />
-            {kind === 'logo' && (
-                <span className="truncate font-semibold">{brand.name}</span>
-            )}
-        </span>
+        <CompanyInitialsMark
+            name={brand.name}
+            kind={kind}
+            className={className}
+        />
     );
 }
