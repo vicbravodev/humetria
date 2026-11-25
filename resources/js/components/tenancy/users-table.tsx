@@ -9,7 +9,13 @@ import {
 } from '@/components/ui/table';
 import type { PlatformUserRow } from '@/types';
 
-export default function UsersTable({ users }: { users: PlatformUserRow[] }) {
+export default function UsersTable({
+    users,
+    team,
+}: {
+    users: PlatformUserRow[];
+    team: boolean;
+}) {
     return (
         <Table>
             <TableCaption className="sr-only">
@@ -20,7 +26,7 @@ export default function UsersTable({ users }: { users: PlatformUserRow[] }) {
                     <TableHead>Persona</TableHead>
                     <TableHead>Rol de plataforma</TableHead>
                     <TableHead className="hidden md:table-cell">
-                        Empresas
+                        {team ? 'Entró como soporte (30 días)' : 'Empresas'}
                     </TableHead>
                     <TableHead className="hidden md:table-cell">
                         Verificación en dos pasos
@@ -35,7 +41,7 @@ export default function UsersTable({ users }: { users: PlatformUserRow[] }) {
             </TableHeader>
             <TableBody>
                 {users.map((user) => (
-                    <UserRowView key={user.id} user={user} />
+                    <UserRowView key={user.id} user={user} team={team} />
                 ))}
             </TableBody>
         </Table>

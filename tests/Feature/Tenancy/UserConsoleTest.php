@@ -274,6 +274,23 @@ it('keeps the search across the views, and counts what it finds in each', functi
             ->where('users.data.0.name', 'Ana Soporte'));
 });
 
+it('says how many times each person entered a company as support in the last 30 days', function (): void {
+    $help = support();
+    $help->forceFill(['name' => 'Soporte Uno'])->save();
+    $entered = fn (User $who, int $daysAgo) => AuditEntry::query()->forceCreate(['id' => (string) Illuminate\Support\Str::uuid(), 'event' => 'impersonation.started', 'actor_id' => $who->id, 'impersonator_id' => $who->id, 'metadata' => [], 'created_at' => now()->subDays($daysAgo)]);
+    $entered($help, 1);
+    $entered($help, 29);
+    $entered($help, 31);
+    AuditEntry::query()->create(['event' => 'impersonation.stopped', 'actor_id' => $help->id, 'metadata' => []]);
+
+    $admin = superadmin();
+    $admin->forceFill(['name' => 'Admin Uno'])->save();
+
+    $this->actingAs($admin)->get(route('platform-users.index', ['tab' => 'team']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('users.data', fn ($rows) => collect($rows)->pluck('supportEntries', 'name')->sortKeys()->all() === ['Admin Uno' => 0, 'Soporte Uno' => 2]));
+});
+
 it('opens on the people with an account, also for a view it does not know', function (?string $tab): void {
     $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => $tab]))
         ->assertInertia(fn (Assert $page) => $page->where('filters.tab', 'people'));

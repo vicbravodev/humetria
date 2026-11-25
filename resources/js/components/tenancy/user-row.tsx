@@ -4,10 +4,20 @@ import UserRowActions from '@/components/tenancy/user-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { platformRoleLabel } from '@/lib/platform-users';
+import { countOf } from '@/lib/plural';
 import type { PlatformUserRow } from '@/types';
 
-/** A person of the platform: who they are, their platform role, whether they use two-factor, and where they work. */
-export default function UserRowView({ user }: { user: PlatformUserRow }) {
+/**
+ * A person of the platform: who they are, their platform role, whether they use two-factor, and where they work; on the
+ * team, how many times they entered a company as support instead.
+ */
+export default function UserRowView({
+    user,
+    team,
+}: {
+    user: PlatformUserRow;
+    team: boolean;
+}) {
     return (
         <TableRow>
             <TableCell className="whitespace-normal max-md:px-2 md:min-w-60">
@@ -38,7 +48,17 @@ export default function UserRowView({ user }: { user: PlatformUserRow }) {
                 )}
             </TableCell>
             <TableCell className="hidden whitespace-normal md:table-cell">
-                {user.companies === '' ? (
+                {team ? (
+                    <span className="tabular-nums">
+                        {user.supportEntries === 0 ? (
+                            <span className="text-muted-foreground">
+                                Ninguna
+                            </span>
+                        ) : (
+                            countOf(user.supportEntries, 'entrada', 'entradas')
+                        )}
+                    </span>
+                ) : user.companies === '' ? (
                     <span className="text-muted-foreground">Sin empresas</span>
                 ) : (
                     user.companies

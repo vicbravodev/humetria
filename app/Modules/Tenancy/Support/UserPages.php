@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Support;
 
+use App\Models\AuditEntry;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -16,7 +17,7 @@ final class UserPages
     private const int PER_PAGE = 25;
 
     /**
-     * @return LengthAwarePaginator<int, array{id: int, name: string, email: string, platformRole: string|null, companies: string, twoFactor: bool, verified: bool, lastLogin: string|null}>
+     * @return LengthAwarePaginator<int, array{id: int, name: string, email: string, platformRole: string|null, companies: string, twoFactor: bool, verified: bool, lastLogin: string|null, supportEntries: int}>
      */
     public function handle(string $search, bool $staffOnly = false): LengthAwarePaginator
     {
@@ -29,6 +30,7 @@ final class UserPages
         $ids = array_values($page->getCollection()->map(fn (User $user): int => $user->id)->all());
         $platform = $this->platformRoles($ids);
         $companies = $this->companies($ids);
+        $entries = $this->supportEntries($ids);
 
         return $page->through(fn (User $user): array => [
             'id' => $user->id,
@@ -39,7 +41,33 @@ final class UserPages
             'twoFactor' => $user->two_factor_confirmed_at !== null,
             'verified' => $user->email_verified_at !== null,
             'lastLogin' => $user->last_login_at === null ? null : DisplayDate::day($user->last_login_at),
+            'supportEntries' => $entries[$user->id] ?? 0,
         ]);
+    }
+
+    /**
+     * How many times each person entered a company as its owner in the last 30 days, as the audit trail recorded it.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, int>
+     */
+    private function supportEntries(array $ids): array
+    {
+        $entries = [];
+
+        foreach (AuditEntry::query()
+            ->toBase()
+            ->where('event', 'impersonation.started')
+            ->whereIn('actor_id', $ids)
+            ->where('created_at', '>=', now()->subDays(30))
+            ->groupBy('actor_id')
+            ->get(['actor_id', DB::raw('count(*) as entries')]) as $row) {
+            if (is_int($row->actor_id) && is_int($row->entries)) {
+                $entries[$row->actor_id] = $row->entries;
+            }
+        }
+
+        return $entries;
     }
 
     /**

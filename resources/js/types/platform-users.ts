@@ -8,6 +8,8 @@ export type PlatformUserRow = {
     verified: boolean;
     /** The day they last signed in; null when they never have. */
     lastLogin: string | null;
+    /** How many times they entered a company as support in the last 30 days. */
+    supportEntries: number;
 };
 
 /** The views of «Equipo Humetría»: the staff, and everyone with an account. */

@@ -42,7 +42,10 @@ export default function PlatformUsers({
                         Prueba con otro nombre o con una parte del correo.
                     </EmptyState>
                 ) : (
-                    <UsersTable users={users.data} />
+                    <UsersTable
+                        users={users.data}
+                        team={filters.tab === 'team'}
+                    />
                 )}
                 <Pagination
                     previous="Ver más recientes"
