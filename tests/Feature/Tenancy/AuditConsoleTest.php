@@ -88,6 +88,38 @@ it('filters by family of event, by prefix and not by what merely contains it', f
             ->where('filters.family', 'tenant'));
 });
 
+it('splits the trail in views by what matters most, each with how many it holds under the other filters', function (string $kind, array $events): void {
+    $acme = Tenant::factory()->create();
+    foreach ([
+        'impersonation.started', 'impersonation.stopped',
+        'billing.payment_recorded', 'tenant.trial_started', 'tenant.module_granted',
+        'results.viewed', 'engagement.results_exported', 'results.share_opened',
+        'tenant_role.created', 'tenant_member.role_changed', 'user.support_granted',
+        'tenant.created',
+    ] as $event) {
+        auditRow($event, ['tenant_id' => $acme->id]);
+    }
+    auditRow('billing.payment_recorded'); // another company's: outside the filter, outside the counts
+
+    $this->actingAs(superadmin())->get(route('audit.index', ['kind' => $kind, 'company' => $acme->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.kind', $kind)
+            ->where('counts', ['all' => 12, 'support' => 2, 'billing' => 3, 'results' => 3, 'roles' => 3])
+            ->where('entries.data', fn ($rows): bool => collect($rows)->pluck('event')->sort()->values()->all() === $events));
+})->with([
+    'support' => ['support', ['impersonation.started', 'impersonation.stopped']],
+    'billing and plans' => ['billing', ['billing.payment_recorded', 'tenant.module_granted', 'tenant.trial_started']],
+    'results seen or exported' => ['results', ['engagement.results_exported', 'results.share_opened', 'results.viewed']],
+    'roles and permissions' => ['roles', ['tenant_member.role_changed', 'tenant_role.created', 'user.support_granted']],
+]);
+
+it('shows everything for a view it does not know', function (): void {
+    auditRow('tenant.created');
+
+    $this->actingAs(superadmin())->get(route('audit.index', ['kind' => 'x%']))
+        ->assertInertia(fn (Assert $page) => $page->where('filters.kind', '')->where('entries.total', 1));
+});
+
 it('ignores a family that is not in the catalog', function (): void {
     auditRow('tenant.created');
     auditRow('billing.payment_recorded');

@@ -60,6 +60,20 @@ final class AuditPages
     ];
 
     /**
+     * The views of the trail by what matters most, each the events it holds as patterns (`like`): entering a company as
+     * support; what is charged and what a company may use; results and other sensitive records seen or exported; and who
+     * may do what.
+     *
+     * @var array<string, list<string>>
+     */
+    public const array KINDS = [
+        'support' => ['impersonation.%'],
+        'billing' => ['billing.%', 'tenant.trial_started', 'tenant.module_%', 'tenant.modules_synced'],
+        'results' => ['%viewed', '%exported', '%.share_opened'],
+        'roles' => ['tenant_role.%', 'tenant_member.role_changed', 'tenant_member.permissions_changed', 'user.support_%', 'user.superadmin_created'],
+    ];
+
+    /**
      * The Spanish name of the states, plans, kinds and tools the detail stores by their code; one not here is shown as stored.
      *
      * @var array<string, string>
@@ -338,12 +352,13 @@ final class AuditPages
     ];
 
     /**
-     * @return array{q: string, family: string, company: string, from: string, to: string}
+     * @return array{q: string, kind: string, family: string, company: string, from: string, to: string}
      */
-    public function filters(string $q, string $family, string $company, string $from, string $to): array
+    public function filters(string $q, string $kind, string $family, string $company, string $from, string $to): array
     {
         return [
             'q' => trim($q),
+            'kind' => array_key_exists($kind, self::KINDS) ? $kind : '',
             'family' => array_key_exists($family, self::FAMILIES) ? $family : '',
             'company' => Str::isUuid($company) ? $company : '',
             'from' => $this->day($from)?->toDateString() ?? '',
@@ -352,7 +367,7 @@ final class AuditPages
     }
 
     /**
-     * @param  array{q: string, family: string, company: string, from: string, to: string}  $filters
+     * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
      * @return LengthAwarePaginator<int, array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>}>
      */
     public function handle(array $filters): LengthAwarePaginator
@@ -406,6 +421,23 @@ final class AuditPages
         return $entry->subject_type === (new Tenant)->getMorphClass() ? $entry->subject_id : null;
     }
 
+    /**
+     * How many entries each view holds under the rest of the filters, the whole trail first.
+     *
+     * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
+     * @return array<string, int>
+     */
+    public function counts(array $filters): array
+    {
+        $counts = ['all' => $this->matching([...$filters, 'kind' => ''])->count()];
+
+        foreach (array_keys(self::KINDS) as $kind) {
+            $counts[$kind] = $this->matching([...$filters, 'kind' => $kind])->count();
+        }
+
+        return $counts;
+    }
+
     /** The name of a company, for the chip that says the trail is narrowed to it. */
     public function companyName(string $company): ?string
     {
@@ -413,7 +445,7 @@ final class AuditPages
     }
 
     /**
-     * @param  array{q: string, family: string, company: string, from: string, to: string}  $filters
+     * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
      * @return Builder<AuditEntry>
      */
     private function matching(array $filters): Builder
@@ -421,6 +453,11 @@ final class AuditPages
         $timezone = config()->string('app.display_timezone');
 
         return AuditEntry::query()
+            ->when($filters['kind'] !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($filters): void {
+                foreach (self::KINDS[$filters['kind']] as $pattern) {
+                    $query->orWhere('event', 'like', $pattern);
+                }
+            }))
             ->when($filters['family'] !== '', fn (Builder $query) => $query->where('event', 'like', $filters['family'].'.%'))
             ->when($filters['company'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
                 ->where('tenant_id', $filters['company'])

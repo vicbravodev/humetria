@@ -13,6 +13,8 @@ export type AuditEntryRow = {
 
 export type AuditFilters = {
     q: string;
+    /** The view of the trail: '' for all of it, or one of AuditPages::KINDS. */
+    kind: string;
     family: string;
     company: string;
     from: string;
@@ -20,3 +22,12 @@ export type AuditFilters = {
 };
 
 export type AuditFamily = { value: string; label: string };
+
+/** How many entries each view of the trail holds under the other filters. */
+export type AuditCounts = {
+    all: number;
+    support: number;
+    billing: number;
+    results: number;
+    roles: number;
+};

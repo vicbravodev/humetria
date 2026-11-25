@@ -20,6 +20,7 @@ final class AuditConsoleController extends Controller
 
         $filters = $pages->filters(
             $request->string('q')->toString(),
+            $request->string('kind')->toString(),
             $request->string('family')->toString(),
             $request->string('company')->toString(),
             $request->string('from')->toString(),
@@ -28,6 +29,7 @@ final class AuditConsoleController extends Controller
 
         return Inertia::render('tenancy/audit', [
             'entries' => $pages->handle($filters),
+            'counts' => $pages->counts($filters),
             'filters' => $filters,
             'company' => $pages->companyName($filters['company']),
             'families' => array_map(

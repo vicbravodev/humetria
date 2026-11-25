@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import { auditFiltered, auditQuery, eventLabel } from '@/lib/audit';
 
-const NONE = { q: '', family: '', company: '', from: '', to: '' };
+const NONE = { q: '', kind: '', family: '', company: '', from: '', to: '' };
 
 describe('eventLabel', () => {
     it('writes a known event as a person reads it', () => {
@@ -24,6 +24,7 @@ describe('auditQuery', () => {
         expect(
             auditQuery({
                 q: ' ana ',
+                kind: 'support',
                 family: 'tenant',
                 company: 'c1',
                 from: '2026-11-01',
@@ -31,6 +32,7 @@ describe('auditQuery', () => {
             }),
         ).toEqual({
             q: 'ana',
+            kind: 'support',
             family: 'tenant',
             company: 'c1',
             from: '2026-11-01',

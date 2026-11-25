@@ -247,6 +247,7 @@ export function auditQuery(
 
     return {
         ...(q === '' ? {} : { q }),
+        ...(filters.kind === '' ? {} : { kind: filters.kind }),
         ...(filters.family === '' ? {} : { family: filters.family }),
         ...(filters.company === '' ? {} : { company: filters.company }),
         ...(filters.from === '' ? {} : { from: filters.from }),

@@ -4,12 +4,14 @@ import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
 import AuditTable from '@/components/tenancy/audit-table';
+import AuditTabs from '@/components/tenancy/audit-tabs';
 import AuditToolbar from '@/components/tenancy/audit-toolbar';
 import { Button } from '@/components/ui/button';
 import { auditFiltered } from '@/lib/audit';
 import { countOf } from '@/lib/plural';
 import { index } from '@/routes/audit';
 import type {
+    AuditCounts,
     AuditEntryRow,
     AuditFamily,
     AuditFilters,
@@ -18,11 +20,13 @@ import type {
 
 export default function Audit({
     entries,
+    counts,
     filters,
     company,
     families,
 }: {
     entries: Paginated<AuditEntryRow>;
+    counts: AuditCounts;
     filters: AuditFilters;
     company: string | null;
     families: AuditFamily[];
@@ -37,11 +41,14 @@ export default function Audit({
                     title="Bitácora"
                     description={`${countOf(entries.total, 'registro', 'registros')}, el más reciente primero. Solo se lee: nada de aquí se edita ni se borra.`}
                 />
-                <AuditToolbar
-                    filters={filters}
-                    families={families}
-                    company={company}
-                />
+                <div className="flex flex-col gap-4">
+                    <AuditTabs filters={filters} counts={counts} />
+                    <AuditToolbar
+                        filters={filters}
+                        families={families}
+                        company={company}
+                    />
+                </div>
                 {entries.data.length === 0 ? (
                     <EmptyState
                         icon={ScrollText}
