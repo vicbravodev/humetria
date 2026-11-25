@@ -38,6 +38,19 @@ final class ScenarioFactory extends Factory
         ];
     }
 
+    /** An average payroll: 500 workers at $15,000 a month, one year of service, unionized, paid monthly. */
+    public function average(): self
+    {
+        return $this->state([
+            'source' => 'average',
+            'average_workers' => 500,
+            'average_monthly_salary_cents' => 1_500_000,
+            'average_tenure_years' => 1,
+            'average_group' => 'unionized',
+            'pay_basis' => 'monthly',
+        ]);
+    }
+
     public function archived(): self
     {
         return $this->state(['archived_at' => now()]);
