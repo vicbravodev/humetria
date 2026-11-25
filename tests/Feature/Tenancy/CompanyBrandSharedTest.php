@@ -89,14 +89,14 @@ it('paints the page with the accent of the company, after the stylesheet so it w
 
     $accent = App\Modules\Tenancy\Data\BrandPalette::from('#e91e63')->light;
 
-    expect(preg_match('/<style nonce="[^"]+">:root\{--primary:'.$accent.'[^<]*\.dark\{[^<]*<\/style>/', (string) $html, $style, PREG_OFFSET_CAPTURE))->toBe(1)
+    expect(preg_match('/<style id="brand-accent" nonce="[^"]+">:root\{--primary:'.$accent.'[^<]*\.dark\{[^<]*<\/style>/', (string) $html, $style, PREG_OFFSET_CAPTURE))->toBe(1)
         ->and($style[0][1])->toBeGreaterThan((int) strpos((string) $html, 'apple-touch-icon'));
 });
 
 it('adds no accent style for a company that keeps the accent of Humetría', function (): void {
     [, $shared] = brandedReportOf(Tenant::factory()->create());
 
-    expect((string) $this->get($shared)->getContent())->not->toMatch('/<style nonce="[^"]+">:root\{--primary/');
+    expect((string) $this->get($shared)->getContent())->not->toMatch('/<style id="brand-accent" nonce="[^"]+">:root\{--primary/');
 });
 
 it('shares the brand only of the company the request itself resolved, never one entered before it', function (): void {

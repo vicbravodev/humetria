@@ -52,3 +52,24 @@ it('puts the company, not Humetría, at the head of a report opened by link, wit
         ->assertScript('() => document.querySelectorAll("img[src*=\"humetria-horizontal\"]").length', 0)
         ->assertScript('() => document.querySelectorAll("img[src*=\"humetria-sello\"]").length > 0', true);
 })->with($looks);
+
+it('keeps the accent of a company on its own pages: going from one to another, or back to a page of no company, changes it', function (bool $dark): void {
+    $user = App\Models\User::factory()->create();
+    foreach ([['Acme', 'acme', '#e91e63'], ['Verde', 'verde', null]] as [$name, $slug, $color]) {
+        $tenant = Tenant::factory()->create(['trade_name' => $name, 'slug' => $slug, 'brand_color' => $color]);
+        App\Modules\Tenancy\Models\TenantMembership::factory()->for($tenant)->for($user)->create();
+    }
+    $this->actingAs($user);
+    // A visit changes the page without loading it again: the accent follows the visit, not the first load.
+    $page = visitPage('tenancy/companies', '/admin', $dark);
+    $page->assertScript('() => document.querySelectorAll("#brand-accent").length', 0);
+
+    $page->click('Acme')->wait(1)->assertScript('() => document.querySelectorAll("#brand-accent").length', 1);
+
+    // Back to a page of no company (what a logout lands on): Humetría's accent again, not the company's.
+    $page->script('() => history.back()');
+    $page->wait(1)->assertScript('() => document.querySelectorAll("#brand-accent").length', 0);
+
+    // From one company to another that has none of its own.
+    $page->click('Verde')->wait(1)->assertScript('() => document.querySelectorAll("#brand-accent").length', 0);
+})->with([[false], [true]]);

@@ -65,7 +65,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx", ...App\Http\PageFrame::layouts($page['component'] ?? '')])
         @if (is_string($brandCss = data_get($page['props']['brand'] ?? null, 'css')))
             {{-- White label: the accent of the company of the page (BrandPalette, always readable), after the stylesheet so it wins. Only hex colors we wrote. --}}
-            <style nonce="{{ Vite::cspNonce() }}">{!! $brandCss !!}</style>
+            <style id="brand-accent" nonce="{{ Vite::cspNonce() }}">{!! $brandCss !!}</style>
         @endif
         <x-inertia::head>
             @if (isset($page['props']['seo']))

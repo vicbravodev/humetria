@@ -10,6 +10,7 @@ import {
     startAnalytics,
     type AnalyticsEngine,
 } from '@/lib/analytics';
+import { applyBrandAccent, brandCssOf } from '@/lib/brand-accent';
 import { cspNonce } from '@/lib/csp-nonce';
 import { deferResizeObserver } from '@/lib/defer-resize-observer';
 import {
@@ -72,6 +73,12 @@ if (typeof document !== 'undefined') {
     );
     router.on('navigate', (event) => {
         arrives(event.detail.page.component);
+        // The server paints the accent of the first load only: every visit puts the one of its page, or none.
+        applyBrandAccent<HTMLStyleElement>(
+            document,
+            brandCssOf(event.detail.page.props),
+            cspNonce,
+        );
         setErrorContext(event.detail.page);
         void followPage(event.detail.page);
         watchWorker();
