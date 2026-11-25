@@ -10,6 +10,7 @@ use App\Modules\Billing\Http\Controllers\ChargeConsoleController;
 use App\Modules\Billing\Http\Controllers\ExportConsoleController;
 use App\Modules\Billing\Http\Controllers\LinkableCompaniesController;
 use App\Modules\Billing\Http\Controllers\PaymentConsoleController;
+use App\Modules\Billing\Http\Controllers\PlanConsoleController;
 use App\Modules\Billing\Http\Controllers\ReminderConsoleController;
 use App\Modules\Billing\Http\Controllers\StatementConsoleController;
 use App\Modules\Billing\Http\Controllers\SubscriptionConsoleController;
@@ -149,6 +150,11 @@ Route::post('admin/billing/payments/{payment}/reversal', [PaymentConsoleControll
     ->middleware(['auth', 'verified'])
     ->whereUuid('payment')
     ->name('billing.payments.reverse');
+
+// The catalog in force and the prices agreed by hand, read only: the superadmin's (the catalog changes in code, with its version).
+Route::get('admin/billing/plans', [PlanConsoleController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('billing.plans.index');
 
 // A reminder of what is past due, to the accounts chosen in the list, at most once a day each: the superadmin's.
 Route::post('admin/billing/reminders', [ReminderConsoleController::class, 'store'])

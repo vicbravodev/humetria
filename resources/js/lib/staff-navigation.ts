@@ -4,12 +4,14 @@ import {
     ChartNoAxesColumn,
     Inbox,
     Presentation,
+    ReceiptText,
     ScrollText,
     UserCog,
     WalletCards,
 } from 'lucide-react';
 import { index as audit } from '@/routes/audit';
 import { index as accounts } from '@/routes/billing/accounts';
+import { index as plans } from '@/routes/billing/plans';
 import { index as companies } from '@/routes/companies';
 import { index as demoRequests } from '@/routes/demo-requests';
 import { show as demoRoom } from '@/routes/demo-room';
@@ -43,12 +45,13 @@ export const salesNavItems = (isSuperadmin: boolean): NavItem[] => [
         : []),
 ];
 
-// The platform itself: its people, its audit trail and its queues are the superadmin's alone, support does not see them.
+// The platform itself: its people, its audit trail, its catalog of plans and its queues are the superadmin's alone, support does not see them.
 export const platformNavItems = (isSuperadmin: boolean): NavItem[] =>
     isSuperadmin
         ? [
               { title: 'Usuarios', href: users(), icon: UserCog },
               { title: 'Bitácora', href: audit(), icon: ScrollText },
+              { title: 'Planes y precios', href: plans(), icon: ReceiptText },
               // Horizon's own dashboard, outside the panel: a plain address, not an Inertia visit.
               {
                   title: 'Colas',

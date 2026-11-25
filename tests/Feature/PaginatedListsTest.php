@@ -329,6 +329,12 @@ it('sends each list of records as a paginator', function (string $component, Clo
 
         return route('billing.accounts.index');
     }, ['accounts']],
+    'the catalog and the negotiated prices' => ['billing/plans', function () {
+        App\Modules\Billing\Models\Subscription::factory()->create(['negotiated_price_cents' => 300_000]);
+        signInAsSuperadmin();
+
+        return route('billing.plans.index');
+    }, ['negotiated']],
     'a billing account and the companies it pays' => ['billing/account', function () {
         $account = App\Modules\Billing\Models\BillingAccount::factory()->create();
         App\Modules\Billing\Models\AccountCompany::factory()->for($account, 'account')->create();
