@@ -6,6 +6,7 @@ use App\Modules\Tenancy\Http\Controllers\AcceptInvitationController;
 use App\Modules\Tenancy\Http\Controllers\AuditConsoleController;
 use App\Modules\Tenancy\Http\Controllers\CompanyModulesController;
 use App\Modules\Tenancy\Http\Controllers\CompanySelectionController;
+use App\Modules\Tenancy\Http\Controllers\CompanyStaffController;
 use App\Modules\Tenancy\Http\Controllers\ImpersonateOwnerController;
 use App\Modules\Tenancy\Http\Controllers\InvitationConsoleController;
 use App\Modules\Tenancy\Http\Controllers\PlatformOverviewController;
@@ -62,6 +63,15 @@ Route::post('admin/companies/{tenant}/modules/grant', [CompanyModulesController:
 Route::post('admin/companies/{tenant}/modules/revoke', [CompanyModulesController::class, 'revoke'])
     ->middleware(['auth', 'verified'])
     ->name('companies.modules.revoke');
+
+// The staff's internal notes about a company, and the superadmin's risk zone (suspend or archive, with the name typed).
+Route::post('admin/companies/{tenant}/notes', [CompanyStaffController::class, 'storeNote'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.notes.store');
+
+Route::post('admin/companies/{tenant}/risk', [CompanyStaffController::class, 'restrict'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.risk');
 
 Route::put('admin/companies/{tenant}', [TenantConsoleController::class, 'update'])
     ->middleware(['auth', 'verified'])

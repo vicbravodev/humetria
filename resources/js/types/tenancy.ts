@@ -259,7 +259,12 @@ export type CompanyDetail = Pick<
     | 'status'
     | 'status_label'
     | 'restriction_reason'
->;
+    | 'owner'
+    | 'account_manager'
+> & {
+    /** The day it was registered, written for display. */
+    created_on: string;
+};
 
 /** A Mexican time zone to choose for a work center, named with its offset today. */
 export type TimezoneOption = { value: string; label: string };

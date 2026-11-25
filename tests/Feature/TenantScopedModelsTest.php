@@ -31,6 +31,7 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
+use App\Modules\Tenancy\Models\TenantNote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
@@ -66,6 +67,7 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     UsageEvent::class => 'read across companies by the console',
     UsageGrant::class => 'read across companies by the console',
     TenantLimit::class => 'read across companies by the console and the reconciliation',
+    TenantNote::class => 'the staff\'s notes about a company, written and read only from the console, which has no current company',
     // Single sign-on is read by the public sign-in routes before any company is resolved; every query of the module names its company.
     SsoConnection::class => 'read by the sign-in routes before a company is resolved',
     SsoDomain::class => 'read by the sign-in routes before a company is resolved',

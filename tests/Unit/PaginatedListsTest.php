@@ -161,7 +161,7 @@ const ARRAY_PROPS = [
 ];
 
 /** Pages whose props are declared as an exported type in resources/js/types, not in the page: page => the type. */
-const PAGE_PROP_TYPES = ['tenancy/role-editor' => 'RoleEditorProps'];
+const PAGE_PROP_TYPES = ['tenancy/role-editor' => 'RoleEditorProps', 'tenancy/company' => 'CompanyPage'];
 
 /** The source of an exported props type of resources/js/types, so what the page takes through it is scanned too. */
 function propsType(string $name): string

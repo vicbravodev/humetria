@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Query\Builder;
@@ -165,6 +166,16 @@ final class Tenant extends Model
             ->whereColumn('model_has_roles.tenant_id', 'tenant_memberships.tenant_id')
             ->whereColumn('model_has_roles.model_id', 'tenant_memberships.user_id')
             ->where('model_has_roles.model_type', (new User)->getMorphClass());
+    }
+
+    /**
+     * Who at Humetría answers for the company.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function accountManager(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_user_id');
     }
 
     /**

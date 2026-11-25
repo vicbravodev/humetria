@@ -18,6 +18,8 @@ use App\Modules\Tenancy\Exceptions\InvalidModuleChange;
 use App\Modules\Tenancy\Http\Requests\GrantModuleRequest;
 use App\Modules\Tenancy\Http\Requests\RevokeModuleRequest;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\AuditPages;
+use App\Modules\Tenancy\Support\CompanyConsolePage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -26,7 +28,7 @@ use Inertia\Response;
 /** One company in the console, with its modules and what it has used of its plan's limits: the staff reads them, the superadmin grants and takes them away by hand. */
 final class CompanyModulesController extends Controller
 {
-    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits, UsageMeter $usage): Response
+    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits, UsageMeter $usage, CompanyConsolePage $page, AuditPages $audit): Response
     {
         Gate::authorize('view-console');
 
@@ -43,7 +45,16 @@ final class CompanyModulesController extends Controller
                 'status' => $status->value,
                 'status_label' => $status->label(),
                 'restriction_reason' => $tenant->restriction_reason,
+                ...$page->contact($tenant),
             ],
+            // What Billing says of its plan, in words and dates; never money.
+            'plan' => $page->plan($tenant),
+            'members' => $page->members($tenant),
+            'invitations' => $page->invitations($tenant),
+            // The staff's own notes: the company never sees them.
+            'notes' => $page->notes($tenant),
+            // The latest of its audit trail, for whoever may read the trail.
+            'activity' => Gate::allows('view-audit') ? $audit->handle($audit->filters('', '', $tenant->id, '', '')) : null,
             'modules' => array_map(fn (ModuleRow $row): array => [
                 'key' => $row->key,
                 'label' => $row->label,

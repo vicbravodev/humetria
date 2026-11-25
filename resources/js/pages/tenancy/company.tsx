@@ -1,45 +1,39 @@
-import { Head, Link, setLayoutProps } from '@inertiajs/react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
 import { ScrollText } from 'lucide-react';
 import PageHeader from '@/components/humetria/page-header';
-import CompanyUsage from '@/components/tenancy/company-usage';
-import CompanyLimits from '@/components/tenancy/company-limits';
-import CompanyModules from '@/components/tenancy/company-modules';
-import CompanyOtherUsage from '@/components/tenancy/company-other-usage';
+import SectionTabs from '@/components/humetria/section-tabs';
+import CompanyContactCard from '@/components/tenancy/company-contact-card';
+import CompanyMain from '@/components/tenancy/company-main';
+import CompanyNotes from '@/components/tenancy/company-notes';
+import CompanyRiskZone from '@/components/tenancy/company-risk-zone';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { tenantStatusVariant } from '@/lib/tenant-status';
 import { index as audit } from '@/routes/audit';
 import { index } from '@/routes/companies';
-import type {
-    CompanyDetail,
-    LimitRow,
-    ModuleRow,
-    OtherUsage,
-    Paginated,
-    UsageMonth,
-    UsageSummary,
-} from '@/types';
+import type { CompanyPage } from '@/types';
 
-/** One company in the console: who it is, where it stands and which modules it has, with where each comes from, and what it has used of its plan's limits. */
-export default function Company({
-    company,
-    modules,
-    limits,
-    usage,
-    other_usage: otherUsage,
-    usage_history: usageHistory,
-    can_manage: canManage,
-    can_audit: canAudit,
-}: {
-    company: CompanyDetail;
-    modules: ModuleRow[];
-    limits: LimitRow[];
-    usage: UsageSummary;
-    other_usage: OtherUsage[];
-    usage_history: Paginated<UsageMonth>;
-    can_manage: boolean;
-    can_audit: boolean;
-}) {
+const SECTIONS = [
+    { id: 'resumen', label: 'Resumen' },
+    { id: 'modulos', label: 'Módulos' },
+    { id: 'uso', label: 'Uso y límites' },
+    { id: 'facturacion', label: 'Facturación' },
+    { id: 'miembros', label: 'Miembros' },
+    { id: 'invitaciones', label: 'Invitaciones' },
+    { id: 'actividad', label: 'Actividad' },
+];
+
+/**
+ * One company in the console (tablero Empresa 360): where it stands, its modules, what it uses, its plan, its people and
+ * invitations, and its activity, each a tab away; at the side who to talk to, the staff's notes and the risk zone.
+ */
+export default function Company(props: CompanyPage) {
+    const { company, plan, activity } = props;
+    const { auth } = usePage().props;
+    const sections = SECTIONS.filter(
+        (section) => section.id !== 'actividad' || activity !== null,
+    );
+
     setLayoutProps({
         breadcrumbs: [
             { title: 'Empresas', href: index() },
@@ -50,7 +44,7 @@ export default function Company({
     return (
         <>
             <Head title={company.trade_name} />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     caption="Empresa"
                     title={company.trade_name}
@@ -61,6 +55,9 @@ export default function Company({
                             >
                                 {company.status_label}
                             </Badge>
+                            {plan !== null && (
+                                <Badge variant="outline">{plan.name}</Badge>
+                            )}
                             {company.type === 'union' && (
                                 <Badge variant="outline">Sindicato</Badge>
                             )}
@@ -68,7 +65,7 @@ export default function Company({
                     }
                     description={`${company.legal_name} · ${company.rfc}`}
                 >
-                    {canAudit && (
+                    {props.can_audit && (
                         <Button asChild variant="outline">
                             <Link
                                 href={audit.url({
@@ -81,19 +78,24 @@ export default function Company({
                         </Button>
                     )}
                 </PageHeader>
-                <CompanyLimits limits={limits} />
-                <CompanyUsage
-                    companyId={company.id}
-                    usage={usage}
-                    history={usageHistory}
-                    canManage={canManage}
+                <SectionTabs
+                    label="Partes de la empresa"
+                    sections={sections}
+                    className="top-0"
                 />
-                <CompanyOtherUsage rows={otherUsage} />
-                <CompanyModules
-                    companyId={company.id}
-                    modules={modules}
-                    canManage={canManage}
-                />
+                <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+                    <CompanyMain page={props} />
+                    <aside className="grid gap-6 lg:sticky lg:top-16">
+                        <CompanyContactCard company={company} plan={plan} />
+                        <CompanyNotes
+                            companyId={company.id}
+                            notes={props.notes}
+                        />
+                        {auth.isSuperadmin && (
+                            <CompanyRiskZone company={company} />
+                        )}
+                    </aside>
+                </div>
             </div>
         </>
     );
