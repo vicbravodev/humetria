@@ -42,18 +42,10 @@ describe('navSections', () => {
                 }),
             ),
         ).toEqual([
+            ['Acme', ['Panel', 'Centros de trabajo', 'Empleados', 'Accesos']],
             [
-                'Acme',
-                [
-                    'Panel',
-                    'Centros de trabajo',
-                    'Empleados',
-                    'Accesos',
-                    'Usuarios',
-                    'Roles',
-                    'Plan y uso',
-                    'Privacidad',
-                ],
+                'Administración',
+                ['Usuarios', 'Roles', 'Plan y uso', 'Privacidad'],
             ],
             [
                 'Cumple la norma',
@@ -72,7 +64,7 @@ describe('navSections', () => {
             navSections({ tenant: acme(), isStaff: false }).map(
                 (section) => section.key,
             ),
-        ).toEqual(['main', 'compliance', 'listening', 'operations']);
+        ).toEqual(['main', 'admin', 'compliance', 'listening', 'operations']);
     });
 
     it('leaves out a family the role has nothing to open in', () => {
@@ -112,10 +104,8 @@ describe('navSections', () => {
                 }),
             ),
         ).toEqual([
-            [
-                'Humetría',
-                ['Panel', 'Agremiados', 'Usuarios', 'Roles', 'Plan y uso'],
-            ],
+            ['Humetría', ['Panel', 'Agremiados']],
+            ['Administración', ['Usuarios', 'Roles', 'Plan y uso']],
             ['Ordena tu operación', ['Compensación']],
         ]);
     });
@@ -124,10 +114,14 @@ describe('navSections', () => {
         const sections = navSections({
             tenant: acme(),
             isStaff: true,
+            isSuperadmin: true,
             inCourse: 2,
         });
 
-        expect(sections.at(-1)?.label).toBe('Plataforma');
+        expect(sections.map((section) => section.label).slice(-2)).toEqual([
+            'Ventas',
+            'Plataforma',
+        ]);
         expect(
             sections.find((section) => section.key === 'compliance')?.items[0]
                 ?.badge,

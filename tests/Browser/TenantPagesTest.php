@@ -313,7 +313,7 @@ it('links «Privacidad de los resultados» from the owner\'s menu only', functio
     $tenant = Tenant::factory()->create(['slug' => 'acme']);
     $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
 
-    visit('/admin/acme')->click('Privacidad')->assertPathIs('/admin/acme/privacy');
+    visit('/admin/acme')->click('Administración')->click('Privacidad')->assertPathIs('/admin/acme/privacy');
 
     $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr));
 
@@ -324,7 +324,7 @@ it('links «Plan y uso» from the owner\'s menu only', function (): void {
     $tenant = Tenant::factory()->create(['slug' => 'acme']);
     $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Owner));
 
-    visit('/admin/acme')->click('Plan y uso')->assertPathIs('/admin/acme/plan');
+    visit('/admin/acme')->click('Administración')->click('Plan y uso')->assertPathIs('/admin/acme/plan');
 
     $this->actingAs(memberOf($tenant, App\Modules\Tenancy\Enums\TenantRole::Hr));
 

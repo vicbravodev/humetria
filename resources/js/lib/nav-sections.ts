@@ -1,9 +1,14 @@
 import {
+    adminNavItems,
     complianceNavItems,
     mainNavItems,
     type NavSection,
 } from '@/lib/app-navigation';
-import { platformNavItems } from '@/lib/staff-navigation';
+import {
+    consoleNavItems,
+    platformNavItems,
+    salesNavItems,
+} from '@/lib/staff-navigation';
 import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
 import type { NavTenant } from '@/types';
 
@@ -19,9 +24,10 @@ type Options = {
 };
 
 /**
- * The panel's pages in the groups the sidebar shows, the trail names and the ⌘K palette lists: the company's own pages,
- * then the three families the landing offers (Cumple la norma, Escucha a tu gente, Ordena tu operación) and the
- * platform for Humetría staff. A group the role has nothing to open in is left out.
+ * The panel's pages in the groups the sidebar shows, the trail names and the ⌘K palette lists: the company's daily
+ * pages, the three families the landing offers (Cumple la norma, Escucha a tu gente, Ordena tu operación), the
+ * company's administration and, for Humetría staff in the console, Ventas and Plataforma. A group the role has
+ * nothing to open in is left out.
  */
 export function navSections({
     tenant,
@@ -31,7 +37,17 @@ export function navSections({
     home = 'Humetría',
 }: Options): NavSection[] {
     const sections: NavSection[] = [
-        { key: 'main', label: home, items: mainNavItems(tenant, isStaff) },
+        {
+            key: 'main',
+            label: home,
+            // Outside a company, staff's daily pages are the console's: the customers.
+            items:
+                tenant === null && isStaff
+                    ? consoleNavItems(isSuperadmin)
+                    : mainNavItems(tenant, isStaff),
+        },
+        // Right after the daily pages, where they always were: the menu's order is a contract with StartRoute.
+        { key: 'admin', label: 'Administración', items: adminNavItems(tenant) },
         {
             key: 'compliance',
             label: 'Cumple la norma',
@@ -46,6 +62,18 @@ export function navSections({
             key: 'operations',
             label: 'Ordena tu operación',
             items: operationsNavItems(tenant),
+        },
+        // Staff inside a company still reach the console from here; outside one, these are the main pages.
+        {
+            key: 'console',
+            label: 'Consola',
+            items:
+                isStaff && tenant !== null ? consoleNavItems(isSuperadmin) : [],
+        },
+        {
+            key: 'sales',
+            label: 'Ventas',
+            items: isStaff ? salesNavItems(isSuperadmin) : [],
         },
         {
             key: 'platform',
