@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Messaging\Enums\DeliveryStatus;
 use App\Modules\Messaging\Models\Delivery;
+use App\Modules\Tenancy\Models\Tenant;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Laravel\Horizon\Contracts\WorkloadRepository;
 
@@ -30,4 +31,19 @@ it('shows the superadmin how the platform is running', function (bool $dark, boo
         ->assertSee('Sin latido')
         ->assertSee('Correos hoy')
         ->assertSee('Ningún trabajo falló en los últimos 7 días.');
+})->with($looks);
+
+it('shows the superadmin the messaging of the whole platform, never a message', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Textiles del Norte']);
+    Delivery::factory()->count(5)->create(['tenant_id' => $tenant->id, 'status' => DeliveryStatus::Failed]);
+    Delivery::factory()->create(['status' => DeliveryStatus::Read]);
+
+    visitPage('operations/messaging', '/admin/operations/messaging', $dark, $mobile)
+        ->assertSee('Mensajería')
+        ->assertSee('Plantillas de WhatsApp')
+        ->assertSee('Invitación a la evaluación NOM-035 · v1')
+        ->assertSee('Textiles del Norte')
+        ->assertSee('Conexión con Meta')
+        ->assertSee('Rechazos hoy');
 })->with($looks);

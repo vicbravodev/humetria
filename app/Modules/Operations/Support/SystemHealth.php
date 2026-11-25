@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Operations\Support;
 
 use App\Modules\Messaging\Contracts\PlatformDeliveries;
-use App\Modules\Messaging\Data\ChannelTraffic;
 use App\Modules\Operations\Contracts\SchedulerHeartbeat;
 use Carbon\CarbonImmutable;
 
@@ -31,7 +30,7 @@ final readonly class SystemHealth
     public function handle(): array
     {
         $now = CarbonImmutable::now();
-        $startOfToday = $now->setTimezone(config()->string('app.display_timezone'))->startOfDay()->utc();
+        $startOfToday = LocalCalendar::startOfToday();
         $beat = $this->heartbeat->lastBeatAt();
         $connection = $this->deliveries->connection();
 
@@ -51,10 +50,7 @@ final readonly class SystemHealth
                 'paused' => $connection->pausedByOperator || $connection->pauseReason !== null,
                 'pauseReason' => $connection->pauseReason,
             ],
-            'today' => array_map(
-                fn (ChannelTraffic $traffic): array => ['channel' => $traffic->channel, 'total' => $traffic->total, 'delivered' => $traffic->delivered, 'read' => $traffic->read, 'rejected' => $traffic->rejected],
-                $this->deliveries->byChannel($startOfToday, $startOfToday->addDay()),
-            ),
+            'today' => TrafficRows::of($this->deliveries->byChannel($startOfToday, $startOfToday->addDay())),
         ];
     }
 }

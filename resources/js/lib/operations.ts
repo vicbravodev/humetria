@@ -1,15 +1,10 @@
 import type {
     ChannelTraffic,
     HorizonStatus,
+    ServiceState,
     SystemHealthData,
     WhatsAppState,
 } from '@/types';
-
-/** The badge of a service: the variant carries the tone, the label always names the state. */
-export type ServiceState = {
-    variant: 'success' | 'warning' | 'destructive' | 'secondary';
-    label: string;
-};
 
 export type Service = { name: string; detail: string; state: ServiceState };
 
