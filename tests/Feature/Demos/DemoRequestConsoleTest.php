@@ -78,6 +78,9 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
                 // The funnel: who of the staff owns it and what comes next; nobody yet.
                 'owner' => null,
                 'next_step' => null,
+                // Not scheduled nor discarded.
+                'scheduled_for' => null,
+                'discard_reason' => null,
             ]]));
 });
 

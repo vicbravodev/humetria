@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Demos\Actions\DiscardDemoRequest;
 use App\Modules\Demos\Actions\ExportAdConversions;
 use App\Modules\Demos\Actions\ListDemoRequests;
+use App\Modules\Demos\Actions\ScheduleDemo;
 use App\Modules\Demos\Actions\UpdateDemoRequest;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Enums\Tool;
+use App\Modules\Demos\Http\Requests\DiscardDemoRequestRequest;
+use App\Modules\Demos\Http\Requests\ScheduleDemoRequest;
 use App\Modules\Demos\Http\Requests\UpdateDemoRequestRequest;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Demos\Support\DemoOwners;
@@ -33,6 +37,7 @@ final class DemoRequestConsoleController extends Controller
             'filters' => ['status' => $status->value ?? 'all'],
             'counts' => $listDemoRequests->counts(),
             'can_manage' => Gate::allows('manage-demo-requests'),
+            'can_open_room' => Gate::allows('manage-demo'),
             'demoRequests' => $listDemoRequests->handle($status)->through($this->row(...)),
             // Who of the staff may own a request: only for the form, after the page shows.
             'staff' => Inertia::defer(fn (): array => $owners->options()),
@@ -63,6 +68,8 @@ final class DemoRequestConsoleController extends Controller
             'received_at' => str_replace('.', '', $demoRequest->created_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY, HH:mm')),
             'owner' => $demoRequest->owner === null ? null : ['id' => $demoRequest->owner->id, 'name' => $demoRequest->owner->name],
             'next_step' => $demoRequest->next_step,
+            'scheduled_for' => $demoRequest->scheduled_at === null ? null : str_replace('.', '', $demoRequest->scheduled_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('ddd D MMM, HH:mm')),
+            'discard_reason' => $demoRequest->discard_reason,
         ];
     }
 
@@ -96,6 +103,24 @@ final class DemoRequestConsoleController extends Controller
         $updateDemoRequest->handle($demoRequest, $request->status(), $request->note(), $request->ownerId(), $request->nextStep());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud actualizada.']);
+
+        return back();
+    }
+
+    public function schedule(ScheduleDemoRequest $request, DemoRequest $demoRequest, ScheduleDemo $scheduleDemo): RedirectResponse
+    {
+        $scheduleDemo->handle($demoRequest, $request->at());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Demo agendada.']);
+
+        return back();
+    }
+
+    public function discard(DiscardDemoRequestRequest $request, DemoRequest $demoRequest, DiscardDemoRequest $discardDemoRequest): RedirectResponse
+    {
+        $discardDemoRequest->handle($demoRequest, $request->reason());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud descartada.']);
 
         return back();
     }

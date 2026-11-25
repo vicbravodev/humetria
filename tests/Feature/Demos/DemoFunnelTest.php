@@ -8,6 +8,7 @@ use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -142,3 +143,99 @@ it('offers the staff, and nobody else, to own a request, once the page asks for 
                 ->where('staff', [['id' => $help->id, 'name' => 'Ana'], ['id' => $boss->id, 'name' => 'Beto']])));
 });
 
+it('schedules the demo of a request on a day in Mexico City time, and logs and audits it', function (): void {
+    Log::spy();
+    $this->travelTo('2026-12-01 18:00 UTC');
+    $request = DemoRequest::factory()->create(['status' => DemoStatus::Contacted]);
+
+    $this->actingAs(superadmin())->post(route('demo-requests.schedule', $request), ['scheduled_at' => '2026-12-03T11:00'])
+        ->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($request->fresh())
+        ->status->toBe(DemoStatus::Scheduled)
+        ->scheduled_at->toEqual(Carbon::parse('2026-12-03 17:00 UTC'))
+        ->handled_at->toEqual(now());
+    Log::shouldHaveReceived('info')->with('demo.scheduled', ['demo_request_id' => $request->id])->once();
+    expect(AuditEntry::query()->where('event', 'demo.scheduled')->sole()->subject_id)->toBe($request->id);
+});
+
+it('shows the day of a scheduled demo', function (): void {
+    DemoRequest::factory()->create(['status' => DemoStatus::Scheduled, 'scheduled_at' => '2026-12-03 17:00 UTC']);
+
+    $this->actingAs(superadmin())->get(route('demo-requests.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('demoRequests.data.0.scheduled_for', 'jue 3 dic, 11:00'));
+});
+
+it('asks for a day ahead to schedule a demo', function (array $body): void {
+    $this->travelTo('2026-12-01 18:00 UTC');
+    $request = DemoRequest::factory()->create();
+
+    $this->actingAs(superadmin())->post(route('demo-requests.schedule', $request), $body)->assertSessionHasErrors('scheduled_at');
+
+    expect($request->fresh()->status)->toBe(DemoStatus::New);
+})->with([
+    'no day' => [[]],
+    'not a day' => [['scheduled_at' => 'mañana']],
+    'a day gone by' => [['scheduled_at' => '2026-12-01T11:00']],
+]);
+
+it('discards a request with its reason, and logs and audits it without the reason', function (): void {
+    Log::spy();
+    $request = DemoRequest::factory()->create();
+
+    $this->actingAs(superadmin())->post(route('demo-requests.discard', $request), ['reason' => 'Buscaba empleo, no una demo'])
+        ->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($request->fresh())->status->toBe(DemoStatus::Discarded)->discard_reason->toBe('Buscaba empleo, no una demo')->handled_at->not->toBeNull();
+    Log::shouldHaveReceived('info')->with('demo.discarded', ['demo_request_id' => $request->id])->once();
+    $entry = AuditEntry::query()->where('event', 'demo.discarded')->sole();
+    expect(json_encode($entry->metadata))->not->toContain('empleo');
+});
+
+it('asks why a request is discarded, in up to 500 characters', function (array $body): void {
+    $request = DemoRequest::factory()->create();
+
+    $this->actingAs(superadmin())->post(route('demo-requests.discard', $request), $body)->assertSessionHasErrors('reason');
+})->with([
+    'no reason' => [[]],
+    'only spaces' => [['reason' => '   ']],
+    '501 characters' => [['reason' => str_repeat('a', 501)]],
+]);
+
+it('neither schedules nor discards a request that is already a company', function (string $route, array $body, string $field): void {
+    $this->travelTo('2026-12-01 18:00 UTC');
+    $request = DemoRequest::factory()->create(['status' => DemoStatus::Converted, 'tenant_id' => Tenant::factory()->create()->id]);
+
+    $this->actingAs(superadmin())->post(route($route, $request), $body)->assertSessionHasErrors($field);
+
+    expect($request->fresh()->status)->toBe(DemoStatus::Converted);
+})->with([
+    'schedule' => ['demo-requests.schedule', ['scheduled_at' => '2026-12-03T11:00'], 'scheduled_at'],
+    'discard' => ['demo-requests.discard', ['reason' => 'No'], 'reason'],
+]);
+
+it('lets only the superadmin schedule or discard', function (string $route, array $body): void {
+    $request = DemoRequest::factory()->create();
+
+    $this->actingAs(support())->post(route($route, $request), $body)->assertNotFound();
+
+    expect($request->fresh()->status)->toBe(DemoStatus::New);
+})->with([
+    'schedule' => ['demo-requests.schedule', ['scheduled_at' => '2030-12-03T11:00']],
+    'discard' => ['demo-requests.discard', ['reason' => 'No']],
+]);
+
+it('shows why a request was discarded', function (): void {
+    DemoRequest::factory()->create(['status' => DemoStatus::Discarded, 'discard_reason' => 'Sin presupuesto']);
+
+    $this->actingAs(superadmin())->get(route('demo-requests.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('demoRequests.data.0.discard_reason', 'Sin presupuesto'));
+});
+
+it('tells the page whether the user may open the demo room', function (string $role, bool $can): void {
+    $this->actingAs($role === 'superadmin' ? superadmin() : support())->get(route('demo-requests.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('can_open_room', $can));
+})->with([
+    'the superadmin' => ['superadmin', true],
+    'support' => ['support', false],
+]);

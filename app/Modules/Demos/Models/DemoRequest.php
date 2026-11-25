@@ -39,6 +39,8 @@ use Illuminate\Support\Collection;
  * @property string|null $tenant_id
  * @property int|null $owner_user_id The person of the staff who owns it.
  * @property string|null $next_step
+ * @property Carbon|null $scheduled_at When its demo is, once scheduled.
+ * @property string|null $discard_reason
  * @property-read User|null $owner
  * @property string|null $utm_source The campaign this request is credited to: the last known channel, else the first.
  * @property string|null $utm_medium
@@ -76,6 +78,7 @@ final class DemoRequest extends Model
             'status' => DemoStatus::class,
             'ad_click_type' => AdClickType::class,
             'handled_at' => 'datetime',
+            'scheduled_at' => 'datetime',
             'created_at' => 'datetime',
         ];
     }

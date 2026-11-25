@@ -22,6 +22,9 @@ export type DemoRequestRow = {
     /** The person of the staff who owns it, if anyone. */
     owner: DemoOwner | null;
     next_step: string | null;
+    /** When its demo is, as the console writes it: "jue 3 dic, 11:00". */
+    scheduled_for: string | null;
+    discard_reason: string | null;
 };
 
 /** Someone of Humetría's staff who may own a request. */
