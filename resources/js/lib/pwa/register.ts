@@ -65,8 +65,12 @@ export async function registerWorkerApp({
 
     try {
         if (killed) {
-            await dropCaches(caches, slug);
             await (await container.getRegistration(scope))?.unregister();
+            await dropCaches(caches, slug);
+            // The old worker keeps answering the page's last requests until it is gone, and one of them may write a file back into
+            // a cache just swept (the cache is made again): a second sweep once it has had its last word.
+            await settle(caches);
+            await dropCaches(caches, slug);
 
             return;
         }
@@ -74,6 +78,16 @@ export async function registerWorkerApp({
         await container.register(`${scope}/sw.js?v=${revision}`, { scope });
     } catch {
         // Offline marks are an extra: a browser that refuses the worker keeps working online.
+    }
+}
+
+/** How long the old worker is given before the caches are swept the second time. */
+const LAST_WORD_MS = 1_000;
+
+/** Waits only when there are caches to sweep: a page with no `caches` has nothing the old worker could write into. */
+async function settle(caches: CacheStore | undefined): Promise<void> {
+    if (caches !== undefined) {
+        await new Promise<void>((done) => setTimeout(done, LAST_WORD_MS));
     }
 }
 
