@@ -208,6 +208,7 @@ const LABELS: Record<string, string> = {
     'billing.charge_removed': 'Cargo eliminado',
     'billing.statement_adjusted': 'Estado de cuenta ajustado',
     'billing.report_exported': 'Reporte de cobranza exportado',
+    'audit.exported': 'Bitácora exportada',
     'billing.payment_reversed': 'Pago revertido',
     'billing.statement_discarded': 'Estado de cuenta descartado',
     'billing.subscription_set': 'Plan de la empresa definido',

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ScrollText } from 'lucide-react';
+import { Download, ScrollText } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
@@ -7,9 +7,9 @@ import AuditTable from '@/components/tenancy/audit-table';
 import AuditTabs from '@/components/tenancy/audit-tabs';
 import AuditToolbar from '@/components/tenancy/audit-toolbar';
 import { Button } from '@/components/ui/button';
-import { auditFiltered } from '@/lib/audit';
+import { auditFiltered, auditQuery } from '@/lib/audit';
 import { countOf } from '@/lib/plural';
-import { index } from '@/routes/audit';
+import { exportMethod, index } from '@/routes/audit';
 import type {
     AuditCounts,
     AuditEntryRow,
@@ -39,8 +39,22 @@ export default function Audit({
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     title="Bitácora"
-                    description={`${countOf(entries.total, 'registro', 'registros')}, el más reciente primero. Solo se lee: nada de aquí se edita ni se borra.`}
-                />
+                    description={`${countOf(entries.total, 'registro', 'registros')}, el más reciente primero. Solo se lee: nada de aquí se edita ni se borra, y nunca guarda respuestas de encuestas.`}
+                >
+                    {entries.total > 0 && (
+                        <Button asChild variant="outline">
+                            {/* A file, not a page: a plain download that also goes to the trail. */}
+                            <a
+                                href={exportMethod.url({
+                                    query: auditQuery(filters),
+                                })}
+                            >
+                                <Download aria-hidden />
+                                Exportar CSV
+                            </a>
+                        </Button>
+                    )}
+                </PageHeader>
                 <div className="flex flex-col gap-4">
                     <AuditTabs filters={filters} counts={counts} />
                     <AuditToolbar

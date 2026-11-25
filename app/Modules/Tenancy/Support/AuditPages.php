@@ -58,6 +58,7 @@ final class AuditPages
         'sso' => 'Inicio de sesión único',
         'tenancy' => 'Canales de comunicación',
         'messaging' => 'WhatsApp',
+        'audit' => 'Bitácora',
     ];
 
     /** The keys that store what an entry changed: the detail shows them as before and after, not as rows of their own. */
@@ -353,6 +354,7 @@ final class AuditPages
         'work_mode' => 'Modalidad',
         'starts' => 'Hora de entrada',
         'job_title' => 'Puesto',
+        'family' => 'Tipo de evento',
     ];
 
     /**
@@ -377,8 +379,30 @@ final class AuditPages
     public function handle(array $filters): LengthAwarePaginator
     {
         $page = $this->matching($filters)->latest('created_at')->orderByDesc('id')->paginate(self::PER_PAGE)->withQueryString();
+        $rows = $this->present($page->getCollection());
 
-        $entries = $page->getCollection();
+        return $page->through(fn (AuditEntry $entry, int $key): array => $rows[$key]);
+    }
+
+    /**
+     * The newest entries the filters find, up to a limit, as the console reads them: for the export.
+     *
+     * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
+     * @return list<array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
+     */
+    public function rows(array $filters, int $limit): array
+    {
+        return $this->present($this->matching($filters)->latest('created_at')->orderByDesc('id')->limit($limit)->get());
+    }
+
+    /**
+     * Each entry as the console reads it, the people, companies and role labels of all of them read once.
+     *
+     * @param  \Illuminate\Support\Collection<int, AuditEntry>  $entries
+     * @return list<array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
+     */
+    private function present(\Illuminate\Support\Collection $entries): array
+    {
         $people = $this->people(
             $entries->pluck('actor_id')->merge($entries->pluck('impersonator_id'))
                 ->merge($entries->map(fn (AuditEntry $entry): mixed => $this->namedUser($entry)))
@@ -395,7 +419,7 @@ final class AuditPages
         $timezone = config()->string('app.display_timezone');
         $roles = $this->roleLabels($entries);
 
-        return $page->through(fn (AuditEntry $entry): array => [
+        return array_values($entries->map(fn (AuditEntry $entry): array => [
             'id' => $entry->id,
             // Carbon's Spanish months end in a dot ("nov."); the design system writes "12 nov 2026".
             'at' => str_replace('.', '', $entry->created_at->setTimezone($timezone)->isoFormat('D MMM YYYY, HH:mm')),
@@ -408,7 +432,7 @@ final class AuditPages
             'subject' => $entry->subject_type,
             'context' => $this->context($entry, $companies, $people, $roles),
             'change' => $this->change($entry, $roles),
-        ]);
+        ])->all());
     }
 
     private function companyId(AuditEntry $entry): ?string

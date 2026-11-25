@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\AuditPages;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -250,6 +251,46 @@ it('reads a page in the same number of queries however many entries it holds', f
 
     expect($count())->toBe($few);
 });
+
+it('exports what the filters find as CSV, newest first, and records the export in the trail itself', function (): void {
+    $acme = Tenant::factory()->create(['trade_name' => 'Acme']);
+    // A name a spreadsheet would run as a formula goes out as text.
+    $ana = User::factory()->create(['name' => '=Ana López', 'email' => 'ana@acme.mx']);
+    auditRow('tenant.updated', ['tenant_id' => $acme->id, 'actor_id' => $ana->id, 'created_at' => now()->subHour(), 'metadata' => ['reason' => 'Cambio de razón social']]);
+    auditRow('tenant.created', ['tenant_id' => $acme->id, 'metadata' => ['changes' => ['plan' => ['before' => 'trial', 'after' => 'integral']]]]);
+    auditRow('billing.payment_recorded', ['tenant_id' => $acme->id]);
+    $admin = superadmin();
+    Log::spy();
+
+    $response = $this->actingAs($admin)->get(route('audit.export', ['family' => 'tenant', 'company' => $acme->id]));
+
+    $response->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
+    $lines = explode("\n", trim(str_replace("\xEF\xBB\xBF", '', $response->streamedContent())));
+    expect($lines)->toHaveCount(3)
+        ->and($lines[0])->toBe('"Fecha y hora",Evento,Quién,Correo,"Actuó como",Empresa,Detalle,Cambio')
+        ->and($lines[1])->toContain('tenant.created')->toContain('Plan: En prueba → Integral')
+        ->and($lines[2])->toContain('tenant.updated')->toContain("'=Ana López")->toContain('ana@acme.mx')->toContain('Motivo: Cambio de razón social');
+
+    $entry = AuditEntry::query()->where('event', 'audit.exported')->sole();
+    expect($entry->actor_id)->toBe($admin->id)
+        ->and($entry->tenant_id)->toBe($acme->id)
+        ->and($entry->metadata)->toMatchArray(['family' => 'tenant', 'rows' => 2]);
+    Log::shouldHaveReceived('info')->with('audit.exported', Mockery::on(fn (array $context): bool => $context['rows'] === 2));
+
+    $this->get(route('audit.index', ['family' => 'audit']))->assertInertia(fn (Assert $page) => $page
+        ->where('filters.family', 'audit')
+        ->where('entries.data.0.event', 'audit.exported')
+        ->where('entries.data.0.context', ['Empresa' => 'Acme', 'Tipo de evento' => 'tenant', 'Filas' => '2']));
+});
+
+it('lets only the superadmin export the trail', function (User $user): void {
+    $this->actingAs($user)->get(route('audit.export'))->assertForbidden();
+
+    expect(AuditEntry::query()->where('event', 'audit.exported')->exists())->toBeFalse();
+})->with([
+    'support' => fn () => support(),
+    'someone with no role' => fn () => User::factory()->create(),
+]);
 
 it('has no route that changes or deletes an entry', function (): void {
     $writes = collect(Route::getRoutes()->getRoutes())
