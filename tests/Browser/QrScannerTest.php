@@ -52,7 +52,7 @@ it('keeps the camera open to the person\'s pages when they move from the start t
     $page = visitPage('worker-access/link', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, $this->ana->id);
 
-    $page->click('a[href$="/me/acme/punch"]')
+    $page->click('nav[aria-label="Secciones del portal"] a[href$="/me/acme/punch"]')
         ->waitForText(', Ana')
         ->assertScript('() => (document.permissionsPolicy ?? document.featurePolicy).allowsFeature("camera")', true)
         ->assertScript('() => (document.permissionsPolicy ?? document.featurePolicy).allowsFeature("geolocation")', true);

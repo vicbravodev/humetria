@@ -212,16 +212,16 @@ it('lets a person cancel a request of theirs, after asking', function (bool $dar
 it('leads from the start of the person\'s pages to vacations and back', function (bool $dark, bool $mobile): void {
     $portal = leaveVacationsPortal();
     $home = preg_replace('#/vacations$#', '', $portal['url']) ?? '';
-    $enter = enteringTo($portal['ana']->id, 'Hola, Ana Solís');
+    $enter = enteringTo($portal['ana']->id, ', Ana');
 
     visitPage('worker-access/home', $home, $dark, $mobile, $enter)
-        ->assertSee('Hola, Ana Solís')
+        ->assertSee(', Ana')
         ->assertSee('Mis vacaciones')
         ->assertDontSee('teletrabajo')
         ->click('Mis vacaciones')
         ->assertSee('Días disponibles')
         ->click('Atrás')
-        ->assertSee('Hola, Ana Solís')
+        ->assertSee(', Ana')
         ->assertSee('Mis vacaciones')
         ->assertNoJavaScriptErrors();
 })->with($looks);

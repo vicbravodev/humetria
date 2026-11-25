@@ -305,7 +305,7 @@ function enteringProvedTo(string $employeeId, string $text): Closure
 
         $page = $enter($pending);
         $there = $page->url();
-        provedWithCode($page->navigate("/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Hola,');
+        provedWithCode($page->navigate("/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Pendientes');
 
         return $page->navigate($there)->waitForText($text);
     };

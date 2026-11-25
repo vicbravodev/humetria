@@ -93,7 +93,7 @@ function linkThePhone(AwaitableWebpage $page, string $employeeId): AwaitableWebp
     $page->press('button:has-text("Continuar")')
         ->waitForText('cree su llave de acceso')
         ->press('button:has-text("Crear llave")')
-        ->waitForText('Hola,');
+        ->waitForText('Pendientes');
     $key = App\Modules\WorkerAccess\Models\WorkerCredential::query()->withoutGlobalScopes()->where('employee_id', $employeeId)->latest('registered_at')->firstOrFail();
     agreementAccepted($employeeId, $key->id);
 

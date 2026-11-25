@@ -37,6 +37,12 @@ export default function WeekHeading({ week }: { week: WeekView }) {
             <p role="status" className="text-muted-foreground">
                 {detail}
             </p>
+            {week.status === 'confirmed' && (
+                <p className="text-base text-pretty text-muted-foreground">
+                    RH ya puede ver su confirmación. Si algo cambia, pida una
+                    corrección y le avisaremos cuando respondan.
+                </p>
+            )}
             {week.disputeReason !== null && (
                 <blockquote className="mt-1 border-l-2 pl-3 text-base text-muted-foreground">
                     {week.disputeReason}

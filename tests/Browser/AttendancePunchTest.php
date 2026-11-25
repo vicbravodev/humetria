@@ -327,7 +327,7 @@ it('accepts the agreement and marks the step that proceeds with one signature, w
     $enroll = accessLinkPath($this->ana->id);
     $page = visitPage('worker-access/link', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     // Linked, without the agreement accepted.
-    $page->press('button:has-text("Continuar")')->waitForText('cree su llave de acceso')->press('button:has-text("Crear llave")')->waitForText('Hola,');
+    $page->press('button:has-text("Continuar")')->waitForText('cree su llave de acceso')->press('button:has-text("Crear llave")')->waitForText('Pendientes');
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
         ->waitForText(', Ana')
