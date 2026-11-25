@@ -227,8 +227,9 @@ it('passes the accessibility and CSP checks with the brand dialog open', functio
     Tenant::factory()->create();
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Logo y color')
-        ->assertSee('Arrastra aquí el logo o elígelo')
+        ->assertSee('Arrastra aquí el archivo o elígelo')
         ->assertSee('PNG, JPG o WebP de hasta 2 MB')
+        ->assertSee('Logo para modo oscuro (opcional)')
         ->assertSee('Color de acento'));
 })->with($looks);
 

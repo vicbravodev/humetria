@@ -1,7 +1,7 @@
 import { usePage } from '@inertiajs/react';
+import CompanyLogoImage from '@/components/company-logo-image';
 import Initials from '@/components/humetria/initials';
 import Logo from '@/components/humetria/logo';
-import { cn } from '@/lib/utils';
 
 /**
  * Whose pages these are (white label): inside a company, its logo, or its initials and name while it has none; outside
@@ -39,12 +39,11 @@ export default function CompanyMark({
 
     if (brand.logo !== null && kind === 'logo') {
         return (
-            <img
-                src={brand.logo.url}
-                alt={brand.name}
-                width={brand.logo.width}
-                height={brand.logo.height}
-                className={cn('w-auto max-w-full object-contain', className)}
+            <CompanyLogoImage
+                name={brand.name}
+                logo={brand.logo}
+                darkLogo={brand.darkLogo}
+                className={className}
             />
         );
     }
