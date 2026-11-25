@@ -130,6 +130,8 @@ it('walks one average worker through the cost step by step, from the engine', fu
         // $500 a day × 1.0493150… = $524.65; $525 × 1.0493150… = $550.89 (the cent is truncated).
         'sbc_before_cents' => 52_465, 'sbc_after_cents' => 55_089,
     ])->and($example['total_extra_year_cents'] * 500)->toBe($props['headline']['recurring_cents'])
+        // Without a state there is no payroll tax to calculate, and the quotas are all of the rest.
+        ->and($example['payroll_tax_extra_year_cents'])->toBe(0)
         ->and($example['contributions_extra_year_cents'])->toBe($example['total_extra_year_cents'] - 900_000 - 37_500 - 7_500)
         ->and($example['total_extra_month_cents'])->toBe(intdiv($example['total_extra_year_cents'], 12));
 });
@@ -172,4 +174,14 @@ it('keeps the ladder out of a report shared by a link', function (): void {
 
     $this->get(route('compensation.report.shared', $token))
         ->assertInertia(fn (Assert $page) => $page->where('report.ladder', [])->has('report.impact')->has('report.example'));
+});
+
+it('keeps the payroll tax of the state apart from the quotas of the worker, so each line says what it adds', function (): void {
+    $without = averageReportProps($this->tenant, averageReportScenario($this->tenant))['example'];
+    $with = averageReportProps($this->tenant, averageReportScenario($this->tenant, ['default_state' => 'JAL']))['example'];
+
+    // The tax is on the payroll that is taxable: the salary, with the quotas of the SBC untouched by it.
+    expect($with['payroll_tax_extra_year_cents'])->toBeGreaterThan(0)
+        ->and($with['contributions_extra_year_cents'])->toBe($without['contributions_extra_year_cents'])
+        ->and($with['total_extra_year_cents'])->toBe($with['salary_extra_year_cents'] + $with['bonus_extra_year_cents'] + $with['premium_extra_year_cents'] + $with['contributions_extra_year_cents'] + $with['payroll_tax_extra_year_cents']);
 });

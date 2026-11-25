@@ -45,8 +45,10 @@ final class AverageExample
         $salaryYear = self::extra($before['lines'], $after['lines'], 'salary:salary');
         $bonusYear = self::extra($before['lines'], $after['lines'], 'benefit:christmas_bonus');
         $premiumYear = self::extra($before['lines'], $after['lines'], 'benefit:vacation_premium');
-        $contributionsYear = self::contributions($after['lines']) - self::contributions($before['lines']);
-        $totalYear = $salaryYear + $bonusYear + $premiumYear + $contributionsYear;
+        $taxYear = self::extra($before['lines'], $after['lines'], 'contribution:payroll_tax');
+        // The quotas of the SBC (IMSS, retirement, severance, Infonavit) without the state's payroll tax, which grows with the salary and not with the SBC.
+        $contributionsYear = self::contributions($after['lines']) - self::contributions($before['lines']) - $taxYear;
+        $totalYear = $salaryYear + $bonusYear + $premiumYear + $contributionsYear + $taxYear;
 
         return [
             'workers' => $unit->count,
@@ -63,6 +65,7 @@ final class AverageExample
             'sbc_before_cents' => $before['sbc'],
             'sbc_after_cents' => $after['sbc'],
             'contributions_extra_year_cents' => $contributionsYear,
+            'payroll_tax_extra_year_cents' => $taxYear,
             'total_extra_year_cents' => $totalYear,
             'total_extra_month_cents' => intdiv($totalYear, 12),
         ];
