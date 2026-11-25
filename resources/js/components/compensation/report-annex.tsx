@@ -1,5 +1,4 @@
 import { ChevronDown } from 'lucide-react';
-import ReportAssumptions from '@/components/compensation/report-assumptions';
 import ReportConceptTable from '@/components/compensation/report-concept-table';
 import ReportCoverage from '@/components/compensation/report-coverage';
 import ReportCuts from '@/components/compensation/report-cuts';
@@ -39,8 +38,7 @@ export default function ReportAnnex({
                     data-test="report-detail"
                     className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-medium [&::-webkit-details-marker]:hidden"
                 >
-                    Más detalle: mes a mes, dónde pesa, prima de antigüedad y
-                    supuestos
+                    Más detalle: mes a mes, dónde pesa y prima de antigüedad
                     <ChevronDown
                         aria-hidden
                         className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-open:rotate-180"
@@ -54,7 +52,6 @@ export default function ReportAnnex({
                     <ReportTimeline report={report} />
                     <ReportCuts cuts={report.cuts} />
                     <ReportLiability report={report} />
-                    <ReportAssumptions assumptions={report.assumptions} />
                 </div>
             </details>
         </ReportPart>

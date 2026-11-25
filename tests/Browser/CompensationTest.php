@@ -348,21 +348,25 @@ it('shows the report of a scenario with its analysis, one notice of accuracy and
 
     visitPage('compensation/report', "{$url}/compensation/scenarios/{$scenario->id}/report", $dark, $mobile)
         ->assertSee('Revisión 2027')
-        ->assertSee('para que el número sea exacto')
-        ->assertSee('Costo del primer año')
-        ->assertSee('Hallazgos clave')
+        ->assertSee('Lo que cuesta este aumento')
+        ->assertSee('Cada $1 de aumento cuesta')
         ->assertSee('1. De dónde sale el costo')
-        ->assertSee('2. Quién recibe el aumento')
+        ->assertSee('2. El cálculo paso a paso')
+        ->assertSee('3. Quién recibe el aumento')
         ->assertSee('Operador · A')
-        ->assertSee('3. Los próximos años')
-        ->assertSee('4. Anexo: detalle por concepto')
+        ->assertSee('4. Frente a otros niveles de aumento')
+        ->assertSee('5. Los próximos años')
+        ->assertSee('6. Qué más evaluar')
+        ->assertSee('7. Supuestos y salvedades')
+        ->assertSee('8. Anexo: detalle por concepto')
         ->assertSee('2 de 3 personas costeadas')
         ->assertDontSee('Frente a las otras propuestas')
+        // The assumptions and what is missing live in one place, not folded.
+        ->assertSee('para que el número sea exacto')
+        ->assertSee('Meta de inflación del Banco de México')
         ->click('[data-test="report-detail"]')
         ->assertSee('E-900')
         ->assertSee('Prima de antigüedad')
-        ->assertSee('Supuestos y alcance')
-        ->assertSee('Meta de inflación del Banco de México')
         ->assertDontSee('Valor para la persona y costo para la empresa');
 })->with($looks);
 
@@ -390,7 +394,7 @@ it('weighs the report against the other proposals of the account and tells each 
     Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027 · 4 %', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
 
     visit("{$url}/compensation/scenarios/{$scenario->id}/report")
-        ->assertSee('4. Frente a las otras propuestas')
+        ->assertSee('4. Frente a otros niveles y otras propuestas')
         ->assertSee('Revisión 2027 (esta)')
         ->assertSee('Ver la comparación completa')
         // The keyboard reaches each bar and its tooltip opens; so does the cursor. The chart is on screen first: a tooltip
@@ -412,7 +416,7 @@ it('fits the report and the comparison in the page when another scenario has a l
     $scenario = reportScenario($tenant);
     $other = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2026: contrapropuesta de la empresa al pliego del sindicato', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
 
-    $report = visit("{$url}/compensation/scenarios/{$scenario->id}/report")->assertSee('4. Frente a las otras propuestas');
+    $report = visit("{$url}/compensation/scenarios/{$scenario->id}/report")->assertSee('4. Frente a otros niveles y otras propuestas');
     $compare = visit("{$url}/compensation/scenarios/compare?ids[]={$scenario->id}&ids[]={$other->id}")->assertSee('Comparar escenarios');
 
     foreach ([$report, $compare] as $page) {
@@ -512,6 +516,9 @@ it('opens the shared report with no account, the small groups folded into Others
         ->assertSee('Acme compartió este reporte contigo')
         // Finding 37: the common header of the reports by a link, and only one way to print.
         ->assertSee('Vence el')
+        ->assertSee('hora de la Ciudad de México')
+        ->assertSee('Por privacidad, los grupos con menos de')
+        ->assertDontSee('Si el aumento fuera distinto')
         ->assertSeeIn('[data-slot="report-link-bar"]', 'Imprimir')
         ->assertScript('() => Math.round(document.querySelector("[data-slot=report-link-bar]").getBoundingClientRect().height)', 60)
         ->assertScript('() => [...document.querySelectorAll("button")].filter((button) => button.textContent.includes("Imprimir")).length', 1)
@@ -877,6 +884,11 @@ it('shows the report of an average payroll with the notice of the premium of cla
         ->assertSee('plantilla promedio de 500 personas a $15,000.00 al mes')
         ->assertSee('Riesgo de trabajo con la prima media de clase I.')
         ->assertSee('Capturar mi prima')
+        // The step by step of one average worker and the ladder of raises, from the engine; no «Quién recibe» for one row.
+        ->assertSee('2. El cálculo paso a paso')
+        ->assertSee('Factor de integración')
+        ->assertSee('3. Frente a otros niveles de aumento')
+        ->assertDontSee('Quién recibe el aumento')
         ->assertScript('() => [...document.querySelectorAll("a")].every((link) => !link.href.includes("/annex"))', true);
 })->with($looks);
 

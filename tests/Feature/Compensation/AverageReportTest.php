@@ -120,6 +120,8 @@ it('walks one average worker through the cost step by step, from the engine', fu
     $example = $props['example'];
 
     expect($example)->toMatchArray([
+        // 500 people at $15,000 a month: the base example of the negotiation.
+        'workers' => 500, 'monthly_payroll_cents' => 750_000_000,
         'monthly_salary_cents' => 1_500_000, 'monthly_raise_cents' => 75_000,
         'aguinaldo_days' => '15', 'vacation_days' => '12', 'vacation_premium_percent' => '25',
         'bonus_extra_year_cents' => 37_500, 'premium_extra_year_cents' => 7_500, 'salary_extra_year_cents' => 900_000,

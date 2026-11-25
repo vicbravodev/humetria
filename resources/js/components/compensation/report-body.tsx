@@ -1,10 +1,11 @@
-import ReportAccuracy from '@/components/compensation/report-accuracy';
 import ReportAnnex from '@/components/compensation/report-annex';
-import ReportPremiumNotice from '@/components/compensation/report-premium-notice';
+import ReportCaveats from '@/components/compensation/report-caveats';
 import ReportCost from '@/components/compensation/report-cost';
-import ReportOthers from '@/components/compensation/report-others';
+import ReportEvaluate from '@/components/compensation/report-evaluate';
 import ReportRaises from '@/components/compensation/report-raises';
-import ReportSummary from '@/components/compensation/report-summary';
+import ReportScenarios from '@/components/compensation/report-scenarios';
+import ReportSteps from '@/components/compensation/report-steps';
+import ReportVerdict from '@/components/compensation/report-verdict';
 import ReportYears from '@/components/compensation/report-years';
 import PrintButton from '@/components/humetria/print-button';
 import SectionTabs from '@/components/humetria/section-tabs';
@@ -12,8 +13,9 @@ import { reportSections } from '@/lib/compensation/report-notes';
 import type { ScenarioReport } from '@/types';
 
 /**
- * The report of impact with its analysis (board V4-Comp-Reporte), inside the account or by a link: one notice of accuracy, the
- * tabs that stay on top, the summary and the parts. By a link (`shared`) it changes nothing and weighs against no other scenario.
+ * The report of impact (board V4-Comp-Reporte), inside the account or by a link, in the order a company decides in: the answer,
+ * where the cost comes from, the calculation step by step, who receives it, what it is weighed against, the next years, what else
+ * to evaluate, the assumptions and the annex. By a link (`shared`) it changes nothing and weighs against no other scenario.
  */
 export default function ReportBody({
     report,
@@ -28,15 +30,16 @@ export default function ReportBody({
     stickyClassName: string;
 }) {
     const manages = !shared && report.can_manage;
-    const withOthers = !shared && report.others.length > 0;
-    const sections = reportSections(withOthers);
+    const others = !shared && report.others.length > 0;
+    const ladder = report.ladder.length > 0;
+    // A payroll of one kind of worker has one row to say who receives the raise: the steps already say it.
+    const quien = report.scenario.source !== 'average';
+    const sections = reportSections({ quien, ladder, others });
     const title = (id: string): string =>
         sections.find((section) => section.id === id)?.title ?? '';
 
     return (
         <>
-            <ReportAccuracy report={report} canComplete={manages} />
-            <ReportPremiumNotice report={report} canCapture={manages} />
             <SectionTabs
                 label="Secciones del reporte"
                 sections={sections}
@@ -44,22 +47,31 @@ export default function ReportBody({
             >
                 {shared ? undefined : <PrintButton />}
             </SectionTabs>
-            <ReportSummary report={report} union={union} />
+            <ReportVerdict report={report} union={union} />
             <ReportCost report={report} title={title('costo')} />
-            <ReportRaises
-                report={report}
-                title={title('quien')}
-                union={union}
-                canTry={manages}
-            />
+            <ReportSteps report={report} title={title('calculo')} />
+            {quien && (
+                <ReportRaises
+                    report={report}
+                    title={title('quien')}
+                    union={union}
+                    canTry={manages}
+                />
+            )}
+            {(ladder || others) && (
+                <ReportScenarios report={report} title={title('frente')} />
+            )}
             <ReportYears
                 report={report}
                 title={title('anios')}
                 canChange={manages}
             />
-            {withOthers && (
-                <ReportOthers report={report} title={title('frente')} />
-            )}
+            <ReportEvaluate title={title('evaluar')} />
+            <ReportCaveats
+                report={report}
+                title={title('supuestos')}
+                canFix={manages}
+            />
             <ReportAnnex
                 report={report}
                 title={title('anexo')}

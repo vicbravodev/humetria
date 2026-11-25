@@ -49,6 +49,8 @@ final class AverageExample
         $totalYear = $salaryYear + $bonusYear + $premiumYear + $contributionsYear;
 
         return [
+            'workers' => $unit->count,
+            'monthly_payroll_cents' => intdiv($before['lines']['salary:salary'] ?? 0, 12) * $unit->count,
             'monthly_salary_cents' => intdiv($before['lines']['salary:salary'] ?? 0, 12),
             'monthly_raise_cents' => intdiv($salaryYear, 12),
             'aguinaldo_days' => self::plain($after['terms']->aguinaldoDays, 2),

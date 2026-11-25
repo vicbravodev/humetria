@@ -1,7 +1,5 @@
 import { cascade, niceCeiling, percentOf } from '@/lib/chart';
 import { amountText, percentText, wholePesos } from '@/lib/compensation/money';
-import { compareBars } from '@/lib/compensation/scenario-draft';
-import type { CompareBar } from '@/lib/compensation/scenario-draft';
 import { countOf } from '@/lib/plural';
 import type { ReportConcept, ReportRaise, ScenarioReport } from '@/types';
 
@@ -256,16 +254,6 @@ export function yearColumns(report: ScenarioReport): {
             report.projection.reduce((sum, year) => sum + year.cost_cents, 0),
         ),
     };
-}
-
-/** «Frente a las otras propuestas»: this one and the others of the account, from the cheapest; nothing without others. */
-export function otherBars(report: ScenarioReport): CompareBar[] {
-    return compareBars(report.others, {
-        cents: report.headline.first_year_cents,
-        text: wholePesos(report.headline.first_year_cents),
-    }).map((bar) =>
-        bar.current ? { ...bar, name: `${report.scenario.name} (esta)` } : bar,
-    );
 }
 
 /** The scenarios «Ver la comparación completa» opens: this one and the first three others, as many as it compares. */

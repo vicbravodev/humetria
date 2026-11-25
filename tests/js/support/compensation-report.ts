@@ -4,6 +4,7 @@ import type { ReportConcept, ScenarioReport } from '@/types';
 export function concept(
     { type, key, label }: Pick<ReportConcept, 'type' | 'key' | 'label'>,
     cents: number,
+    recurring: number = cents,
 ): ReportConcept {
     return {
         type,
@@ -14,6 +15,7 @@ export function concept(
         delta_text: '$0.00',
         first_year_text: '$0.00',
         first_year_cents: cents,
+        recurring_cents: recurring,
     };
 }
 
@@ -239,6 +241,9 @@ export function boardReport(): ScenarioReport {
                 name: 'Revisión 2027 · 4 %',
                 first_year_cents: 71_006_200,
                 first_year_text: '$710,062',
+                raise_text: '4 % sindicalizados · 2 % confianza',
+                payroll_growth_bp: 365,
+                per_person_month_cents: 65_000,
             },
         ],
         projection: boardProjection(),
@@ -248,8 +253,18 @@ export function boardReport(): ScenarioReport {
             after_text: '',
             delta_text: '',
         },
+        impact: {
+            salary_growth_bp: 500,
+            payroll_growth_bp: 457,
+            drag_hundredths: 119,
+            inflation_bp: 300,
+            real_raise_bp: 194,
+            per_person_month_cents: 81_200,
+        },
+        ladder: [],
+        example: null,
         sensitivity: {
-            one_point_text: '',
+            one_point_text: '$210,000',
             base_text: '',
             minus_text: '',
             plus_text: '',

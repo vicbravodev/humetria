@@ -1,9 +1,10 @@
+import ReportCostGroups from '@/components/compensation/report-cost-groups';
 import ReportPart from '@/components/compensation/report-part';
 import WaterfallChart from '@/components/humetria/waterfall-chart';
 import { waterfallBars } from '@/lib/compensation/report-charts';
 import type { ScenarioReport } from '@/types';
 
-/** «De dónde sale el costo»: the cascade of the first year, a bar per concept stacked to the total. */
+/** «De dónde sale el costo»: the cascade of the first year, a bar per concept stacked to the total, and why each one moves. */
 export default function ReportCost({
     report,
     title,
@@ -24,10 +25,10 @@ export default function ReportCost({
                     bars={waterfallBars(report)}
                 />
             </div>
+            <ReportCostGroups report={report} />
             <p className="text-caption text-muted-foreground">
                 Las cuotas del IMSS incluyen enfermedad y maternidad, invalidez
-                y vida, guarderías, riesgo de trabajo, retiro y cesantía. La
-                cuota fija no cambia porque no depende del salario.
+                y vida, guarderías, riesgo de trabajo, retiro y cesantía.
             </p>
         </ReportPart>
     );

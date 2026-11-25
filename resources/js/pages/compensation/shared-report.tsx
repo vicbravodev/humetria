@@ -6,7 +6,7 @@ import Logo from '@/components/humetria/logo';
 import PrintButton from '@/components/humetria/print-button';
 import ReportLinkBar from '@/components/humetria/report-link-bar';
 import ReportLinkNotice from '@/components/humetria/report-link-notice';
-import { reportSubtitle } from '@/lib/compensation/report-notes';
+import { reportSubtitle, sharedNotice } from '@/lib/compensation/report-notes';
 import type { ScenarioReport } from '@/types';
 
 /**
@@ -17,10 +17,13 @@ import type { ScenarioReport } from '@/types';
 export default function SharedReport({
     company,
     expiresAt,
+    minimum,
     report,
 }: {
     company: string | null;
     expiresAt: string | null;
+    /** The minimum of people per group the company applies. */
+    minimum: number | null;
     report: ScenarioReport | null;
 }) {
     if (report === null) {
@@ -48,9 +51,7 @@ export default function SharedReport({
             </ReportLinkBar>
             <main className="mx-auto flex min-h-svh w-full max-w-[1240px] flex-col gap-8 px-4 py-4 md:px-10 print:p-0">
                 <ReportLinkNotice>
-                    {company} compartió este reporte contigo. Vence el{' '}
-                    {expiresAt}. Los grupos de pocas personas se muestran juntos
-                    como «Otros».
+                    {sharedNotice(report, company, { expiresAt, minimum })}
                 </ReportLinkNotice>
                 <CompensationHeader
                     eyebrow="Reporte de impacto · Compensación"

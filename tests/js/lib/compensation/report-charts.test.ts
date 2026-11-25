@@ -3,7 +3,6 @@ import {
     compareIds,
     costSteps,
     fixedAlternative,
-    otherBars,
     raiseGroups,
     waterfallBars,
     yearColumns,
@@ -252,34 +251,6 @@ describe('yearColumns', () => {
     });
 });
 
-describe('otherBars', () => {
-    it('weighs this proposal against the others, from the cheapest, this one named', () => {
-        expect(otherBars(boardReport())).toEqual([
-            {
-                key: 'scenario-0',
-                name: 'Revisión 2027 · 4 %',
-                text: '$710,062',
-                percent: 69.4,
-                current: false,
-            },
-            {
-                key: 'current',
-                name: 'Revisión 2027 · 5 % (esta)',
-                text: '$1,023,676',
-                percent: 100,
-                current: true,
-            },
-        ]);
-    });
-
-    it('has nothing to weigh without others', () => {
-        const report = boardReport();
-        report.others = [];
-
-        expect(otherBars(report)).toEqual([]);
-    });
-});
-
 describe('compareIds', () => {
     it('compares this one with the first three others at most', () => {
         const report = boardReport();
@@ -288,6 +259,9 @@ describe('compareIds', () => {
             name: id,
             first_year_cents: 1,
             first_year_text: '$0',
+            raise_text: '1 %',
+            payroll_growth_bp: 1,
+            per_person_month_cents: 1,
         }));
 
         expect(compareIds(report)).toEqual(['scenario-1', 'a', 'b', 'c']);
