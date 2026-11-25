@@ -30,7 +30,7 @@ export default function ScenarioPayrollCard({
             title="La plantilla promedio"
             description="Dime cuántas personas son y cuánto ganan en promedio, y ve lo que cuesta de verdad el aumento. Sin cargar plantilla ni tabulador."
         >
-            <div className="grid items-start gap-5 sm:grid-cols-3">
+            <div className="grid items-start gap-5 sm:grid-cols-2">
                 <FormField
                     name="average_workers"
                     idPrefix="scenario"

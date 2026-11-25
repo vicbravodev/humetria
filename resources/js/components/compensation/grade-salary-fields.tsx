@@ -1,6 +1,7 @@
 import FormSection from '@/components/compensation/form-section';
 import SalaryDateField from '@/components/compensation/salary-date-field';
 import FormField from '@/components/form-field';
+import PesosField from '@/components/pesos-field';
 import type { TabulatorRow } from '@/types';
 
 /**
@@ -37,13 +38,11 @@ export default function GradeSalaryFields({
                 />
             </div>
             <div className="grid items-start gap-4 sm:grid-cols-2">
-                <FormField
+                <PesosField
                     name="daily_salary"
                     idPrefix="salary"
-                    label="Salario diario ($)"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    placeholder="Como 524.65"
+                    label="Salario diario"
+                    placeholder="524.65"
                     defaultValue={grade?.current?.daily_salary}
                     error={errors['daily_salary']}
                 />

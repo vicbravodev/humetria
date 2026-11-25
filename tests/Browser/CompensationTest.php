@@ -237,7 +237,7 @@ it('saves the individual salary of a person from its sheet', function (): void {
     visit("{$url}/compensation/overrides")
         ->press('Nuevo sueldo')
         ->fill('employee_number', 'E-404')
-        ->fill('daily_salary', '650.25')
+        ->type('#override-daily_salary', '650.25')
         ->press('Guardar sueldo')
         ->assertSee('No hay una persona activa con este ID de la empresa.')
         ->fill('employee_number', 'e-001')

@@ -24,7 +24,7 @@ export default function PesosField({
     label: string;
     idPrefix?: string;
     /** The plain amount it starts with: "15000". */
-    defaultValue?: string;
+    defaultValue?: string | undefined;
     placeholder?: string;
     error?: string | undefined;
 }) {
@@ -56,7 +56,7 @@ export default function PesosField({
                         )
                     }
                 />
-                <InputGroupText>MXN</InputGroupText>
+                <InputGroupText className="pr-4">MXN</InputGroupText>
             </InputGroup>
             <input type="hidden" name={name} value={rawPesos(text)} />
             <InputError id={errorId} message={error} />
