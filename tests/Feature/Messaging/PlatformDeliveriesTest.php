@@ -108,3 +108,38 @@ it('counts the opt-outs: from every company, from one, and the last 30 days', fu
 
     expect((array) deliveries()->optOuts())->toMatchArray(['everyCompany' => 1, 'oneCompany' => 3, 'lastThirtyDays' => 3]);
 });
+
+it('counts a message created right at the start of the range and leaves out one right at its end', function (): void {
+    $from = CarbonImmutable::parse('2026-11-25 06:00:00');
+    $to = $from->addDay();
+    $tenant = Tenant::factory()->create();
+    delivered(5, DeliveryStatus::Failed, ['tenant_id' => $tenant->id, 'created_at' => $from]);
+    delivered(5, DeliveryStatus::Failed, ['tenant_id' => $tenant->id, 'created_at' => $to]);
+
+    expect(deliveries()->byChannel($from, $to)[0]->total ?? null)->toBe(5)
+        ->and(collect(deliveries()->byTemplate($from, $to))->firstWhere('key', 'survey_invite_v1')?->total)->toBe(5)
+        ->and(deliveries()->mostRejected($from, $to, 10))->toEqual([new CompanyRejections($tenant->id, 5)]);
+});
+
+it('counts only WhatsApp under the templates, never a mail that names one', function (): void {
+    Delivery::factory()->mail()->create(['template' => 'survey_invite_v1']);
+
+    expect(collect(deliveries()->byTemplate(now()->subDay()->toImmutable(), now()->addMinute()->toImmutable()))->sum('total'))->toBe(0);
+});
+
+it('takes the latest webhook event whatever order they came in', function (): void {
+    WebhookEvent::factory()->create(['provider' => 'resend', 'received_at' => now()->subMinutes(30)]);
+    WebhookEvent::factory()->create(['provider' => 'resend', 'received_at' => now()->subMinutes(5)]);
+    WebhookEvent::factory()->create(['provider' => 'resend', 'received_at' => now()->subMinutes(50)]);
+
+    expect(deliveries()->lastWebhookAt('resend'))->toEqual(CarbonImmutable::now()->subMinutes(5));
+});
+
+it('orders the companies with as many rejections by their id', function (): void {
+    $ids = collect([Tenant::factory()->create(), Tenant::factory()->create()])->pluck('id')->sort()->values();
+    delivered(5, DeliveryStatus::Failed, ['tenant_id' => $ids[1]]);
+    delivered(5, DeliveryStatus::Failed, ['tenant_id' => $ids[0]]);
+
+    expect(array_map(fn (CompanyRejections $row): string => $row->tenantId, deliveries()->mostRejected(now()->subDay()->toImmutable(), now()->addMinute()->toImmutable(), 10)))
+        ->toBe($ids->all());
+});

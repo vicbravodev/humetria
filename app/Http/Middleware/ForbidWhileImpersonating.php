@@ -38,7 +38,7 @@ final class ForbidWhileImpersonating
             // What is paid and by whom is the staff's, never the owner's: nothing of billing is reached while acting as one.
             'billing.*',
             // The platform's own tools (audit trail, users, demos): the owner's role never reaches them.
-            'audit.*', 'platform-users.*', 'overview.*',
+            'audit.*', 'platform-users.*', 'overview.*', 'operations.*',
             // The owner's own preferences about the guided tour: whoever works as them changes none of it.
             'tenant.first-steps.*',
             // How a company's people sign in is the owner's alone: whoever works as them never changes it.

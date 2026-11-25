@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Models\User;
 use App\Modules\Messaging\Enums\DeliveryStatus;
 use App\Modules\Messaging\Models\Delivery;
@@ -150,4 +151,16 @@ it('counts the mail and WhatsApp of the day in Mexico City by status, never a me
         ['channel' => 'whatsapp', 'total' => 1, 'delivered' => 0, 'read' => 0, 'rejected' => 1],
     ]));
     expect($response->getContent())->not->toContain('recipient_hash')->not->toContain('wamid.');
+});
+
+it('is forbidden while impersonating', function (): void {
+    expect(ForbidWhileImpersonating::guards('operations.health'))->toBeTrue()
+        ->and(ForbidWhileImpersonating::guards('operations.messaging'))->toBeTrue();
+});
+
+it('says the scheduler is late only after 15 whole minutes', function (): void {
+    app(SchedulerHeartbeat::class)->beat();
+    $this->travel(15)->minutes();
+
+    health()->assertInertia(fn (Assert $page) => $page->where('heartbeat.late', false));
 });

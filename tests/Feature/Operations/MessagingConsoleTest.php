@@ -67,6 +67,20 @@ it('names the companies with five or more rejections in 7 days, with the way int
         ->where('companies', [['id' => $textiles->id, 'name' => 'Textiles del Norte', 'rejected' => 5]]));
 });
 
+it('takes whole days of Mexico City: the rejections from 6 days ago and the templates from 29, today included', function (): void {
+    $in = Tenant::factory()->create(['trade_name' => 'Dentro']);
+    $out = Tenant::factory()->create(['trade_name' => 'Fuera']);
+    Delivery::factory()->count(5)->create(['tenant_id' => $in->id, 'status' => DeliveryStatus::Failed, 'created_at' => '2026-11-19 06:00:00']);
+    Delivery::factory()->count(5)->create(['tenant_id' => $out->id, 'status' => DeliveryStatus::Failed, 'created_at' => '2026-11-19 05:59:59']);
+    Delivery::factory()->create(['template' => 'seating_invite_v1', 'created_at' => '2026-10-27 06:00:00']);
+    Delivery::factory()->create(['template' => 'seating_invite_v1', 'created_at' => '2026-10-27 05:59:59']);
+    Delivery::factory()->create(['template' => 'seating_invite_v1', 'created_at' => '2026-11-25 23:00:00']);
+
+    messagingConsole()->assertInertia(fn (Assert $page) => $page
+        ->where('companies', [['id' => $in->id, 'name' => 'Dentro', 'rejected' => 5]])
+        ->where('templates.1.total', 2));
+});
+
 it('tells the state of the connection with Meta and the opt-outs, in counts', function (): void {
     config(['whatsapp.enabled' => true, 'whatsapp.paused' => false]);
     Pause::query()->create(['reason' => 'platform_cap', 'started_at' => now()->subHour()]);

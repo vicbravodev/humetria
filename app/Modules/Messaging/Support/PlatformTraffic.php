@@ -111,7 +111,7 @@ final readonly class PlatformTraffic implements PlatformDeliveries
      */
     private function tallied(CarbonImmutable $from, CarbonImmutable $to, string $column, ?callable $scope = null): array
     {
-        $query = Delivery::query()->toBase()->where('created_at', '>=', $from)->where('created_at', '<', $to)->whereNotNull($column);
+        $query = Delivery::query()->toBase()->where('created_at', '>=', $from)->where('created_at', '<', $to);
         $rows = ($scope === null ? $query : $scope($query))
             ->groupBy($column)
             ->selectRaw(
