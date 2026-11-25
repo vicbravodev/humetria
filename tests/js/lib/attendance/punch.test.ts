@@ -25,8 +25,8 @@ const day = {
 };
 
 const request: PunchRequest = {
-    optionsUrl: '/a/acme/punch/options',
-    punchUrl: '/a/acme/punch',
+    optionsUrl: '/me/acme/punch/options',
+    punchUrl: '/me/acme/punch',
     type: 'start',
     qr: 'abc',
     position: { lat: 19.4, lng: -99.1, accuracy: 12 },
@@ -79,7 +79,7 @@ describe('punch', () => {
             expect.objectContaining({ rpId: 'localhost' }),
         );
         const [url, init] = fetcher.mock.calls[1] ?? [];
-        expect(url).toBe('/a/acme/punch');
+        expect(url).toBe('/me/acme/punch');
         expect(init?.headers).toEqual({
             Accept: 'application/json',
             'Content-Type': 'application/json',
@@ -201,16 +201,6 @@ describe('punch, when the mark is not taken', () => {
             punch(request, {
                 fetcher: serverAnswering(),
                 getKey: () => Promise.reject(new Error('x')),
-                xsrf: null,
-            }),
-        ).resolves.toEqual({ kind: 'failed', reason: 'failed', person: null });
-    });
-
-    it('fails when the network does', async () => {
-        await expect(
-            punch(request, {
-                fetcher: () => Promise.reject(new TypeError('offline')),
-                getKey: signs,
                 xsrf: null,
             }),
         ).resolves.toEqual({ kind: 'failed', reason: 'failed', person: null });

@@ -32,7 +32,7 @@ describe('retryDelay', () => {
 describe('parseKioskCode', () => {
     const body = {
         token: 'abc',
-        url: 'https://humetria.test/a/acme/punch?q=abc',
+        url: 'https://humetria.test/me/acme/punch?q=abc',
         qr: 'data:image/svg+xml;base64,PHN2Zz4=',
         expiresAt: '2026-11-07T12:00:30+00:00',
         expiresIn: 20,
@@ -63,7 +63,7 @@ describe('parseKioskCode', () => {
 
 describe('fetchKioskCode', () => {
     const code = {
-        url: 'https://humetria.test/a/acme/punch?q=abc',
+        url: 'https://humetria.test/me/acme/punch?q=abc',
         qr: 'data:image/svg+xml;base64,PHN2Zz4=',
         expiresIn: 20,
         now: 1_794_484_810_000,
@@ -143,7 +143,7 @@ describe('fetchKioskCode', () => {
 
 describe('kioskView', () => {
     const code = {
-        url: 'https://humetria.test/a/acme/punch?q=abc',
+        url: 'https://humetria.test/me/acme/punch?q=abc',
         qr: 'data:image/svg+xml;base64,PHN2Zz4=',
         expiresIn: 20,
         now: 1_794_484_810_000,

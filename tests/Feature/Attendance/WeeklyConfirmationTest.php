@@ -20,7 +20,11 @@ use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
+use App\Modules\Leave\Models\LeaveHoliday;
+use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -404,6 +408,178 @@ describe('the nightly close', function (): void {
         resolve(CloseDays::class)->handle();
 
         expect(WeeklyConfirmation::query()->sole()->week_start->toDateString())->toBe(LAST_WEEK);
+    });
+});
+
+/** The days of the week of LAST_WEEK from Monday to Friday, local. */
+const WORKING_DAYS = ['2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06'];
+
+/** What `confirmWeek` rejects with, or null when it confirms. */
+function confirmReason(object $test): ?string
+{
+    try {
+        confirmWeek($test);
+    } catch (WeekRejected $rejected) {
+        return $rejected->reason;
+    }
+
+    return null;
+}
+
+describe('days without cover (criterio 5.2)', function (): void {
+    beforeEach(function (): void {
+        // Eight hours Monday to Friday, weekends off, in effect since always.
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    });
+
+    it('rejects a week with a working day left empty, changing nothing, and says which days', function (): void {
+        foreach (['2026-11-02', '2026-11-03', '2026-11-05', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+
+        expect(confirmReason($this))->toBe('uncovered_days')
+            ->and(WeeklyConfirmation::query()->where('status', WeekStatus::Confirmed)->count())->toBe(0)
+            ->and(AuditEntry::query()->where('event', 'attendance.week_confirmed')->count())->toBe(0);
+    });
+
+    it('confirms once the missing marks are added by a correction', function (): void {
+        foreach (['2026-11-02', '2026-11-03', '2026-11-05', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+        expect(confirmReason($this))->toBe('uncovered_days');
+
+        workedOn($this, '2026-11-04');
+
+        expect(confirmWeek($this)->status)->toBe(WeekStatus::Confirmed);
+    });
+
+    it('rejects a day with a start and no end', function (): void {
+        foreach (['2026-11-02', '2026-11-03', '2026-11-05', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+        weekMark($this->ana, MarkType::Start, '2026-11-04 09:00');
+
+        expect(confirmReason($this))->toBe('uncovered_days');
+    });
+
+    it('does not ask for the day of approved vacations, of an approved leave that RH registered, or of a holiday', function (string $cover): void {
+        foreach (['2026-11-02', '2026-11-03', '2026-11-05', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+        $day = ['starts_on' => '2026-11-04', 'ends_on' => '2026-11-04', 'working_days' => 1];
+
+        match ($cover) {
+            'vacations' => LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, ...$day]),
+            'leave' => LeaveRequest::factory()->ofType(LeaveType::factory()->create(['tenant_id' => $this->tenant->id]))->approved()->create(['employee_id' => $this->ana->id, ...$day]),
+            'holiday' => LeaveHoliday::factory()->create(['tenant_id' => $this->tenant->id, 'date' => '2026-11-04']),
+        };
+
+        expect(confirmWeek($this)->status)->toBe(WeekStatus::Confirmed);
+    })->with(['vacations', 'leave', 'holiday']);
+
+    it('does not take a request nobody approved as cover', function (): void {
+        foreach (['2026-11-02', '2026-11-03', '2026-11-05', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+        LeaveRequest::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => '2026-11-04', 'ends_on' => '2026-11-04', 'working_days' => 1]);
+
+        expect(confirmReason($this))->toBe('uncovered_days');
+    });
+
+    it('does not ask for the days before the person was hired', function (): void {
+        $this->ana->update(['hired_on' => '2026-11-05']);
+        workedOn($this, '2026-11-05');
+        workedOn($this, '2026-11-06');
+
+        expect(confirmWeek($this)->status)->toBe(WeekStatus::Confirmed);
+    });
+
+    it('asks for the day of the hire itself', function (): void {
+        $this->ana->update(['hired_on' => '2026-11-05']);
+        workedOn($this, '2026-11-06');
+
+        expect(confirmReason($this))->toBe('uncovered_days');
+    });
+
+    it('reads each day with the schedule in effect that day: a new one that starts on Thursday', function (array $worked, ?string $reason): void {
+        // Until Wednesday they worked Monday to Wednesday; from Thursday on, Thursday and Friday.
+        AttendanceSchedule::query()->update(['minutes_by_weekday' => [1 => 480, 2 => 480, 3 => 480, 4 => 0, 5 => 0, 6 => 0, 7 => 0]]);
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'valid_from' => '2026-11-05', 'minutes_by_weekday' => [1 => 0, 2 => 0, 3 => 0, 4 => 480, 5 => 480, 6 => 0, 7 => 0]]);
+        array_map(fn (string $date) => workedOn($this, $date), $worked);
+
+        expect(confirmReason($this))->toBe($reason);
+    })->with([
+        'all the days of each schedule' => [['2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06'], null],
+        'the new schedule only' => [['2026-11-05', '2026-11-06'], 'uncovered_days'],
+        'the old schedule only' => [['2026-11-02', '2026-11-03', '2026-11-04'], 'uncovered_days'],
+        'the rest days of each are not asked for' => [['2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07'], null],
+    ]);
+
+    it('lets the person dispute a week with days without cover', function (): void {
+        workedOn($this, '2026-11-02');
+
+        expect(disputeWeek($this)->status)->toBe(WeekStatus::Disputed);
+    });
+
+    it('confirms without Vacaciones y permisos, where nobody can justify the day, and still counts the days', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+        foreach (['2026-11-02', '2026-11-03', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+        Log::spy();
+
+        expect(confirmWeek($this)->status)->toBe(WeekStatus::Confirmed);
+        Log::shouldHaveReceived('info')->with('attendance.week_uncovered_days_computed', ['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'uncovered_days' => 2])->once();
+    });
+
+    it('rejects with Vacaciones y permisos too, as when the company has every module', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance', 'vacations'], CarbonImmutable::now(config('app.display_timezone')));
+        foreach (['2026-11-02', '2026-11-03', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+
+        expect(confirmReason($this))->toBe('uncovered_days');
+    });
+
+    it('confirms and only counts the days when the switch is off', function (): void {
+        config(['attendance.week.block_uncovered_days' => false]);
+        foreach (['2026-11-02', '2026-11-03', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+        Log::spy();
+
+        $week = confirmWeek($this);
+
+        expect($week->status)->toBe(WeekStatus::Confirmed);
+        // The count, never the dates.
+        Log::shouldHaveReceived('info')->with('attendance.week_uncovered_days_computed', ['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'uncovered_days' => 2])->once();
+    });
+
+    it('does not log the count of a week with every day covered or of one that is rejected', function (): void {
+        config(['attendance.week.block_uncovered_days' => false]);
+        foreach (WORKING_DAYS as $date) {
+            workedOn($this, $date);
+        }
+        Log::spy();
+
+        confirmWeek($this);
+
+        Log::shouldNotHaveReceived('info', ['attendance.week_uncovered_days_computed', Mockery::any()]);
+    });
+
+    it('blocks no_marks and day_open before uncovered_days', function (): void {
+        expect(confirmReason($this))->toBe('no_marks');
+
+        weekMark($this->ana, MarkType::Start, '2026-11-08 22:00');
+        $this->travelTo(CarbonImmutable::parse('2026-11-09 00:30', 'America/Mexico_City'));
+        expect(confirmReason($this))->toBe('day_open');
+    });
+
+    it('blocks the week of a person with no schedule in no new way', function (): void {
+        AttendanceSchedule::query()->delete();
+        workedOn($this, '2026-11-03');
+
+        expect(confirmWeek($this)->status)->toBe(WeekStatus::Confirmed);
     });
 });
 

@@ -100,6 +100,8 @@ it('redacts each sensitive key', function (string $key): void {
     'page_url', 'worker_page_link', 'personal_link', 'acknowledgment_note', 'sections', 'policy_text',
     // Registro de jornada: the key of a person's linked device, and where they stood when they marked.
     'credential_id', 'public_key', 'latitude', 'longitude',
+    // Registro de jornada, marks made without a connection: the tickets a phone keeps.
+    'tickets',
     // ...and what the Marcar page sends: the signed assertion, the position, the screen's code; and a stored token's hash.
     'credential', 'lat', 'lng', 'q', 'token_hash',
     // Vacaciones: why a request was turned down is written by a person, about a person.
@@ -108,6 +110,13 @@ it('redacts each sensitive key', function (string $key): void {
     'client_secret', 'id_token', 'access_token', 'code_verifier',
     // WhatsApp: a phone number reaches a person, and what the provider sends or asks for is a credential or a person's data.
     'phone', 'mobile', 'wa_id', 'msisdn', 'recipient_hash', 'app_secret', 'verify_token', 'hub_verify_token', 'components',
+    // Llave del dispositivo (plan B de las marcas sin conexión): the possession challenge, the signature, the pass and the key's id.
+    'challenge', 'signature', 'pass', 'device_key_id',
+    // Registro de jornada, marks made without a connection: the screen's code, the note of the person and the position, in the
+    // integers the phone signs (the delivery's body).
+    'qr', 'justification', 'lat_e5', 'lng_e5',
+    // Avisos push: the address of a phone's push service and its keys identify the phone.
+    'endpoint', 'p256dh', 'auth',
 ]);
 
 it('redacts every salary key at any depth', function (): void {

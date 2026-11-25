@@ -5,6 +5,7 @@ import PunchFeedback from '@/components/attendance/punch-feedback';
 import WeekActions from '@/components/attendance/week-actions';
 import WeekDisputeSheet from '@/components/attendance/week-dispute-sheet';
 import WeekGate from '@/components/attendance/week-gate';
+import WeekQueue from '@/components/attendance/week-queue';
 import WeekRead from '@/components/attendance/week-read';
 import type { useWeek } from '@/hooks/use-week';
 import { correctionTarget } from '@/lib/attendance/correction';
@@ -40,6 +41,7 @@ export default function WeekScreen({
                     <WeekActions
                         week={week}
                         working={working}
+                        queued={state.queue.pending}
                         onRead={() => void state.read()}
                         onConfirm={(url) => void state.confirm(url)}
                         onDispute={() => setDisputing(true)}
@@ -48,6 +50,10 @@ export default function WeekScreen({
             }
         >
             <div className="flex w-full max-w-md flex-col items-center gap-4">
+                <WeekQueue
+                    pending={state.queue.pending}
+                    notices={state.queue.notices}
+                />
                 {week === null ? (
                     <WeekGate />
                 ) : (

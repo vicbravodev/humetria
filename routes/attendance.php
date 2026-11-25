@@ -10,6 +10,7 @@ use App\Modules\Attendance\Http\Controllers\CenterModeController;
 use App\Modules\Attendance\Http\Controllers\CorrectionController;
 use App\Modules\Attendance\Http\Controllers\KioskController;
 use App\Modules\Attendance\Http\Controllers\MarkCorrectionController;
+use App\Modules\Attendance\Http\Controllers\OfflineMarkController;
 use App\Modules\Attendance\Http\Controllers\PlaceController;
 use App\Modules\Attendance\Http\Controllers\PolicyController;
 use App\Modules\Attendance\Http\Controllers\ReportController;
@@ -47,6 +48,12 @@ Route::delete('admin/{tenant:slug}/attendance/kiosks/{kiosk}', [KioskController:
 Route::get('admin/{tenant:slug}/attendance/corrections', [CorrectionController::class, 'index'])->where('tenant', $notReserved)->name('tenant.attendance.corrections.index');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/approve', [CorrectionController::class, 'approve'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.approve');
 Route::post('admin/{tenant:slug}/attendance/corrections/{correction}/reject', [CorrectionController::class, 'reject'])->where('tenant', $notReserved)->whereUuid('correction')->name('tenant.attendance.corrections.reject');
+
+// The marks made without a connection (criterio 5.4): their tabs are those of the queue above (?status=offline|not_accepted).
+// Owner and hr verify one, the selected ones, or say one is incorrect (a correction with the person's note).
+Route::post('admin/{tenant:slug}/attendance/offline-marks/verify', [OfflineMarkController::class, 'verifyMany'])->where('tenant', $notReserved)->name('tenant.attendance.offline.verify-many');
+Route::post('admin/{tenant:slug}/attendance/offline-marks/{mark}/verify', [OfflineMarkController::class, 'verify'])->where('tenant', $notReserved)->whereUuid('mark')->name('tenant.attendance.offline.verify');
+Route::post('admin/{tenant:slug}/attendance/offline-marks/{mark}/reject', [OfflineMarkController::class, 'reject'])->where('tenant', $notReserved)->whereUuid('mark')->name('tenant.attendance.offline.reject');
 
 // RH corrects a mark with no request first, from the report: to another time or voided, always with a note (criterio 5.4).
 Route::post('admin/{tenant:slug}/attendance/marks/{mark}/correct', MarkCorrectionController::class)->where('tenant', $notReserved)->whereUuid('mark')->name('tenant.attendance.marks.correct');

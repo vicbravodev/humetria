@@ -7,10 +7,13 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Organization\EmployeeFactory;
+use Tests\Support\OfflineDeliveries;
 
 /** RH's panel with a center whose last week that ended has two days of Ana (one confirmed week) and one of Bob with no end. */
 function reportPanel(): array
@@ -79,6 +82,25 @@ it('shows RH the lateness of a day and the count of each person, apart from the 
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 });
+
+it('shows RH who reviewed a mark made without a connection and when, on its day', function (bool $dark, bool $mobile): void {
+    [$url, $plant] = reportPanel();
+    $ana = Employee::query()->where('name', 'Ana López')->sole();
+    $monday = CarbonImmutable::now('America/Mexico_City')->startOfWeek()->subWeek();
+    $delivery = OfflineDeliveries::accepted($ana, $monday->addDays(3)->setTime(8, 0)->format('Y-m-d H:i'));
+    AttendanceMark::factory()->create(['tenant_id' => $plant->tenant_id, 'employee_id' => $ana->id, 'work_center_id' => $plant->id, 'type' => MarkType::End, 'marked_at' => $monday->addDays(3)->setTime(16, 0)->utc()]);
+    $reviewer = memberOf($plant->tenant, TenantRole::Hr);
+    $reviewer->update(['name' => 'Rosa Revisora']);
+    MarkReviewFactory::new()->createOne(['tenant_id' => $plant->tenant_id, 'mark_id' => $delivery->mark_id, 'reviewer_id' => $reviewer->id, 'created_at' => $monday->addDays(4)->setTime(10, 30)->utc()]);
+
+    visitPage('attendance/report', "{$url}/attendance/report?center={$plant->id}", $dark, $mobile)
+        ->assertSee('Marca sin conexión de las 08:00: verificada por Rosa Revisora el '.$monday->addDays(4)->format('Y-m-d').' 10:30');
+})->with([
+    'light, desktop' => [false, false],
+    'dark, desktop' => [true, false],
+    'light, phone' => [false, true],
+    'dark, phone' => [true, true],
+]);
 
 it('offers only the CSV for a period too long for the screen, saying why', function (): void {
     [$url, $plant] = reportPanel();

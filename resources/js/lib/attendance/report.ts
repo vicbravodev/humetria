@@ -1,5 +1,5 @@
 import { duration } from '@/lib/attendance/week-text';
-import type { ReportDay, ReportShow } from '@/types';
+import type { ReportDay, ReportReview, ReportShow } from '@/types';
 
 export type ReportFilters = {
     center: string;
@@ -83,4 +83,14 @@ export function shortenedPeriod(from: string, days: number): string {
     );
 
     return end.toISOString().slice(0, 10);
+}
+
+const DECISIONS: Record<ReportReview['decision'], string> = {
+    verified: 'verificada',
+    incorrect: 'declarada incorrecta y corregida',
+};
+
+/** «Marca sin conexión de las 08:00: verificada por Rosa el 2027-01-06 10:30»: who reviewed it and when, never their note. */
+export function reviewText(review: ReportReview): string {
+    return `Marca sin conexión de las ${review.time}: ${DECISIONS[review.decision]} por ${review.reviewer} el ${review.reviewedAt}`;
 }

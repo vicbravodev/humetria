@@ -43,7 +43,7 @@ export default function WeekDay({
                     />
                 </summary>
                 <div className="flex flex-col gap-0.5 pt-1 pb-3.5 pl-1">
-                    {(late !== null || day.missingEnd) && (
+                    {(late !== null || day.missingEnd || day.uncovered) && (
                         <div className="flex flex-wrap gap-2 pb-1 pl-[22px]">
                             {late !== null && (
                                 <Badge variant="warning">{late}</Badge>
@@ -52,6 +52,9 @@ export default function WeekDay({
                                 <Badge variant="warning">
                                     Sin salida marcada
                                 </Badge>
+                            )}
+                            {day.uncovered && (
+                                <Badge variant="warning">Día sin cubrir</Badge>
                             )}
                         </div>
                     )}

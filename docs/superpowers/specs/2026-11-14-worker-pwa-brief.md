@@ -1,5 +1,7 @@
 # App instalable para la persona trabajadora (PWA)
 
+> **Superado** por `2026-11-20-worker-pwa-offline-design.md` (marcas sin conexión, boleto, push): donde choquen, manda el diseño nuevo, el código y las pruebas.
+
 * **Author:** Victor Jesus Bravo de la Peña
 * **Date:** 2026-11-14
 * **Revisión:** 7 de 7 revisores corrieron (diseño y seguridad, exactitud del código, alcance mínimo, comprensión y experiencia, puesta en producción, estructura, ideas alternativas). Varios avisaron que no abrieron todos los archivos sugeridos; lo que afirman del código se contrastó con el revisor de exactitud, que sí citó archivo y línea. Después hubo tres revisiones dirigidas: seguridad de la marca por la pantalla del centro, y seguridad y estructura de la identidad única. Todos los revisores corrieron en Sonnet.

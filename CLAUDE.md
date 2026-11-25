@@ -79,19 +79,23 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   `routes/company.php`, el resto desde `routes/web.php`.
 - Toda ruta tiene nombre y exige autenticación, salvo las de la lista pública de `tests/Feature/RouteSecurityTest.php`;
   agregar ahí una ruta exige una razón.
-- Sin cuenta: `*-portal.php` son el **portal** de la persona trabajadora (`/me/{slug}/...`), que lee su sesión
-  (`worker-access.php`: entra con su llave o con un enlace de un solo uso); ninguna dirección suya lleva una credencial que
+- Sin cuenta: `*-portal.php` son el **portal** de la persona trabajadora (`/me/{slug}/...`; también `notifications-portal.php`, la
+  suscripción a avisos push), que lee su sesión
+  (`worker-access.php`, que además sirve, sin sesión, el manifest, el service worker y el cascarón de la app instalable:
+  entra con su llave o con un enlace de un solo uso); ninguna dirección suya lleva una credencial que
   sirva más de una vez (`RouteSecurityTest`). El token del enlace es la credencial (con throttle por enlace y por
   dirección) en `survey.php` y `engagement-survey.php`, las encuestas; `complaints-public.php`, el canal de denuncias;
   `shared-report.php` y `compensation-shared.php`, reportes por enlace temporal; `sso.php`, el inicio de sesión con el proveedor de la empresa (callback con `state`, `nonce` y PKCE); `workers.php`, la página de trabajadores;
-  `attendance-device.php`, los checadores.
+  `attendance-device.php`, los checadores: la pantalla del QR de un centro (`/a/{slug}`, con su cookie) y Marcar y Mi semana de la
+  persona (`/me/{slug}/…`), firmados por acción; los boletos y la entrega de marcas sin conexión van sin sesión, cookies ni
+  CSRF, como `complaints-public.php` (`RejectCrossSiteRequests`), autorizados por la firma de cada marca y un boleto de un solo uso.
   En `messaging.php` la credencial es la firma del proveedor (Meta, Resend) sobre el cuerpo crudo, con throttle por dirección y
   tamaño máximo.
 
 ### Módulos
 
 - `Assistant`: Humi, el asistente de IA (ver su README).
-- `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones.
+- `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones, marcas sin conexión y su revisión.
 - `Billing`: cuentas, suscripciones, cargos, estados de cuenta y pagos.
 - `Blog`: blog público para SEO: artículos en `content/blog/*.md`, validados en CI y publicados solo con el visto bueno del dueño
   (`reviewed_at`); páginas de Inertia con SSR y el header de la landing, sin base de datos (ver `docs/blog/README.md`).
@@ -108,6 +112,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Leave`: vacaciones y permisos: políticas, saldos, solicitudes, días festivos.
 - `Messaging`: transporte de WhatsApp y de eventos de correo: gateway, webhooks, plantillas, consentimiento, historial de
   estados (ver su README).
+- `Notifications`: avisos push (Web Push con VAPID) sin contenido a la persona trabajadora: suscripciones y envío; reacciona a
+  eventos públicos de Attendance y WorkerAccess; nunca manda correo (ver su README).
 - `Organization`: áreas, empleados, niveles de puesto, líneas de reporte (organigrama).
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
@@ -118,7 +124,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso, sesión y prueba reciente;
   el inicio de su portal en `/me/{slug}` (ver su README).
 
-No hay módulo de notificaciones: cada módulo manda sus correos con `Notifications/`. No hay SMS. WhatsApp sale solo por `Messaging`.
+Cada módulo manda sus correos con su carpeta `Notifications/`; el módulo `Notifications` solo manda avisos push, nunca correo ni WhatsApp.
+No hay SMS. WhatsApp sale solo por `Messaging`.
 
 ## Arquitectura del frontend
 
@@ -143,6 +150,10 @@ No hay módulo de notificaciones: cada módulo manda sus correos con `Notificati
 - CSP con nonce (`App\Http\Middleware\SecurityHeaders`): todo `<script>`/`<style>` inline lleva `nonce="{{ Vite::cspNonce() }}"`
   y las librerías que inyectan estilos reciben `cspNonce` (`@/lib/csp-nonce`). Aflojar la CSP exige su motivo en el PR.
 - Una ruta nueva de la cuenta personal (perfil, contraseña, 2FA, passkeys) va en `ForbidWhileImpersonating::protectedRoutes()`.
+- La app instalable de la persona (`docs/operations/pwa.md`): el service worker vive en `/me/{slug}/sw.js` con alcance
+  `/me/{slug}`, guarda solo archivos del build y el cascarón, nunca HTML de Inertia ni datos de personas; `PWA_SW_KILL` lo apaga
+  sin apagar la entrega. Todo `GET` bajo `/me/` permite cámara y ubicación a su propio origen (`SecurityHeaders`); el resto de la
+  app las cierra.
 - Toda respuesta lleva `X-Robots-Tag: noindex, nofollow`, salvo las rutas de `App\Http\IndexablePages` (con su test en
   `tests/Feature/IndexablePagesTest.php`) que responden 200 en producción; staging y local nunca se indexan.
 - Solo las páginas de `App\Http\SsrPages` pasan por Node, y solo sin sesión; una ruta nueva no activa SSR. Si Node falla

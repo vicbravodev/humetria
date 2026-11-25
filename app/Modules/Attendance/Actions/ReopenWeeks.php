@@ -35,6 +35,19 @@ final readonly class ReopenWeeks
     }
 
     /**
+     * A mark made without a connection that is accepted after the person answered reopens the week it falls in (criterio 5.2):
+     * a confirmed one goes back to pending. One the person disputed stays disputed: it is already on Recursos Humanos'
+     * desk, who see the new mark there, and the person's reason would be lost by reopening it.
+     */
+    public function forOfflineMark(string $markId): void
+    {
+        $mark = AttendanceMark::query()->findOrFail($markId);
+        $weeks = TouchedWeeks::of($mark->employee_id, $mark->marked_at === null ? [] : [$mark->marked_at], $this->timezones->of($mark->employee_id));
+
+        $this->reopen($mark->employee_id, $weeks, ['mark_id' => $mark->id], [WeekStatus::Confirmed]);
+    }
+
+    /**
      * An absence approved or cancelled reopens the answered weeks of its days (local dates, Y-m-d, both included): the
      * absences are part of what the person agreed to (criterio 1.3).
      */
@@ -51,8 +64,9 @@ final readonly class ReopenWeeks
     /**
      * @param  list<string>  $weeks  their Mondays, Y-m-d
      * @param  array<string, string>  $cause  what reopened them, for the audit trail: ids only
+     * @param  list<WeekStatus>  $answered  the answers that go back to pending: a confirmed and a disputed week unless said otherwise
      */
-    private function reopen(string $employeeId, array $weeks, array $cause): void
+    private function reopen(string $employeeId, array $weeks, array $cause, array $answered = [WeekStatus::Confirmed, WeekStatus::Disputed]): void
     {
         // Locked whatever their state: a confirmation holding its row (it checks the digest under that lock) is waited for and
         // then seen confirmed; one that comes after waits for this change and counts it. A week with no row yet is
@@ -61,7 +75,7 @@ final readonly class ReopenWeeks
         $rows = WeeklyConfirmation::query()->where('employee_id', $employeeId)
             ->whereIn('week_start', $weeks)->lockForUpdate()->get();
 
-        foreach ($rows->whereIn('status', [WeekStatus::Confirmed, WeekStatus::Disputed]) as $week) {
+        foreach ($rows->whereIn('status', $answered) as $week) {
             $week->update(['status' => WeekStatus::Pending, 'confirmed_at' => null, 'disputed_at' => null, 'reason' => null, 'credential_id' => null, 'digest' => null]);
             $ids = ['employee_id' => $week->employee_id, 'week_start' => $week->week_start->toDateString()];
             $this->audit->handle('attendance.week_reopened', $week, [...$ids, ...$cause]);

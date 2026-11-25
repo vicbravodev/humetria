@@ -514,6 +514,16 @@ function visitPage(string $component, string $url, bool $dark = false, bool $mob
     // Inertia keeps the current page object in the history state; before it boots, only in the initial <script data-page>.
     $page->assertScript('() => (window.history.state?.page ?? JSON.parse(document.querySelector("script[data-page]").textContent)).component', $component);
 
+    return pageIsHealthy($page, $mobile);
+}
+
+/**
+ * What every screen has to be once it is open, Inertia or not (the shell of the installed app is not): no English left,
+ * no JavaScript errors, no CSP violations, a settled page, touch targets a finger can hit (on a phone) and no
+ * accessibility issues (axe, level 1). `visitPage` and the shell's `visitShell` both end here.
+ */
+function pageIsHealthy(AwaitableWebpage $page, bool $mobile): AwaitableWebpage
+{
     $page->assertScript(englishWords(), '[]');
 
     $page->assertNoJavaScriptErrors()
@@ -949,6 +959,11 @@ require_once __DIR__.'/Unit/Compensation/ScenarioHelpers.php';
 | The time clock's browser helpers (a phone's fingerprint reader and its position), shared by its browser tests.
 */
 require_once __DIR__.'/Browser/attendance-helpers.php';
+
+/*
+| The installed app's browser helpers (its shell, its service worker, a camera that shows a QR), shared by its browser tests.
+*/
+require_once __DIR__.'/Browser/pwa-helpers.php';
 
 /*
 | The signed POST to Meta's webhook (postMeta), shared by the webhook, STOP, ALTA and service-reply tests: a file run on its own

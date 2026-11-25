@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Tests\Support\OfflineDeliveries;
 
 /** RH's panel with a center whose people worked last week: Ana confirmed, Carla worked 13 h on Tuesday; only Ana has a schedule. */
 function overviewPanel(): string
@@ -54,6 +55,21 @@ it('shows RH the week by state, its people and the centers', function (bool $dar
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],
     'light, phone' => [false, true],
+    'dark, phone' => [true, true],
+]);
+
+it('asks RH to verify the marks made without a connection that have flags, with a number and the way to them', function (bool $dark, bool $mobile): void {
+    $url = overviewPanel();
+    $ana = App\Modules\Organization\Models\Employee::query()->where('name', 'Ana López')->sole();
+    OfflineDeliveries::accepted($ana, CarbonImmutable::now('America/Mexico_City')->subDays(2)->setTime(9, 0)->format('Y-m-d H:i'), flags: [App\Modules\Attendance\Enums\ReviewFlag::NoPosition]);
+
+    visitPage('attendance/index', "{$url}/attendance", $dark, $mobile)
+        ->assertSee('1 marca sin conexión por verificar')
+        ->assertSee('Cuentan en las horas mientras tanto.')
+        ->assertSee('Verificar marcas')
+        ->assertDontSee('Ana López marcó');
+})->with([
+    'light, desktop' => [false, false],
     'dark, phone' => [true, true],
 ]);
 

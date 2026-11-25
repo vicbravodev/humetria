@@ -2,8 +2,9 @@ import PunchAgreement from '@/components/attendance/punch-agreement';
 import PunchDone from '@/components/attendance/punch-done';
 import PunchProblemView from '@/components/attendance/punch-problem-view';
 import PunchProgress from '@/components/attendance/punch-progress';
-import PunchReady from '@/components/attendance/punch-ready';
-import type { usePunch } from '@/hooks/use-punch';
+import PunchScreenReady from '@/components/attendance/punch-screen-ready';
+import PunchOfflineScreen from '@/components/attendance/punch-offline-screen';
+import type { useOfflineAwarePunch } from '@/hooks/use-offline-aware-punch';
 import type { PunchMode } from '@/lib/attendance/punch';
 import { feedbackProblem } from '@/lib/attendance/punch-problem';
 import { feedbackAgreement } from '@/lib/attendance/punch-state';
@@ -20,8 +21,9 @@ export default function PunchScreen({
     now,
 }: {
     company: string;
-    punch: ReturnType<typeof usePunch>;
+    punch: ReturnType<typeof useOfflineAwarePunch>;
     page: {
+        slug: string;
         mode: PunchMode;
         scannedAt: string | null;
         weekUrl: string;
@@ -39,6 +41,17 @@ export default function PunchScreen({
 
     if (phase !== null) {
         return <PunchProgress company={company} phase={phase} />;
+    }
+
+    if (punch.offline.view !== null) {
+        return (
+            <PunchOfflineScreen
+                company={company}
+                slug={page.slug}
+                flow={punch.offline}
+                prepareUrl={page.enterUrl}
+            />
+        );
     }
 
     if (feedback?.kind === 'done' && marks !== null) {
@@ -83,19 +96,11 @@ export default function PunchScreen({
     }
 
     return (
-        <PunchReady
+        <PunchScreenReady
             company={company}
-            person={punch.person}
-            marks={marks}
-            feedback={feedback}
-            mode={page.mode}
-            scannedAt={page.scannedAt}
-            weekUrl={page.weekUrl}
-            enterUrl={page.enterUrl}
-            timezone={page.timezone}
+            punch={punch}
+            page={page}
             now={now}
-            onMark={(type) => void punch.mark(type)}
-            onForget={punch.forget}
         />
     );
 }

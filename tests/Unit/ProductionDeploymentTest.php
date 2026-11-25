@@ -67,6 +67,16 @@ describe('Dockerfile', function (): void {
             ->and(array_search('ssr', $stages[1], true))->toBeLessThan(array_search('app', $stages[1], true));
     });
 
+    it('installs on the base every PHP extension composer.json asks for and the ones the push library is faster with', function (): void {
+        $base = dockerStage('base');
+
+        // gd and exif are the app's; gmp and bcmath are what web-push (VAPID keys, JWT) uses when present: the image does not bring them.
+        expect($base)->toMatch('/install-php-extensions[^\n]*\bgd\b/')
+            ->toMatch('/install-php-extensions[^\n]*\bexif\b/')
+            ->toMatch('/install-php-extensions[^\n]*\bgmp\b/')
+            ->toMatch('/install-php-extensions[^\n]*\bbcmath\b/');
+    });
+
     it('stamps the app image with the same commit', function (): void {
         expect(dockerStage('app'))->toContain('ARG GIT_SHA=unknown')->toContain('ENV APP_REVISION=${GIT_SHA}');
     });

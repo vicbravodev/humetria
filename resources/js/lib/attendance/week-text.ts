@@ -1,4 +1,5 @@
 import type { PunchFeedback } from '@/lib/attendance/punch-state';
+import { weekMessage } from '@/lib/attendance/week-messages';
 import type { RibbonDay } from '@/lib/attendance/week-ribbon';
 import type { WeekDay, WeekView } from '@/lib/attendance/week';
 
@@ -111,6 +112,8 @@ const BLOCKED: Record<string, string> = {
         'Su último turno de esta semana sigue abierto: podrá confirmarla cuando marque su salida.',
     no_marks:
         'Esta semana no tiene marcas suyas. Si faltan, use «No estoy de acuerdo» para decirlo.',
+    uncovered_days:
+        'Le faltan marcas de días que le tocaba trabajar: pida una corrección, o un permiso a Recursos Humanos si no trabajó.',
 };
 
 /** A week nobody answered: what to do with it, or why it cannot be confirmed yet. */
@@ -223,9 +226,50 @@ export function absenceLabel(absence: WeekDay['absence']): string | null {
     return absence === 'leave' ? 'Permiso' : null;
 }
 
-/** The buttons at the foot of «Mi semana»: read it, then confirm it or say what is not right; none while the person writes. */
+/** Why «Confirmar» is turned off: the block and the titles of the days it names. */
+export type ConfirmBlock = { reason: string; dates: string[] };
+
+/**
+ * What keeps the person from confirming a week the server did offer to read: marks of theirs that wait in the phone (the
+ * server cannot know of them, so the app holds the confirmation until they are sent), or the days without cover, each with
+ * its title. Null when nothing does.
+ */
+export function confirmBlock(
+    view: Pick<WeekView, 'blocked' | 'uncoveredDays'>,
+    queued = 0,
+): ConfirmBlock | null {
+    if (queued > 0) {
+        return { reason: 'queued_marks', dates: [] };
+    }
+
+    return view.blocked === 'uncovered_days'
+        ? { reason: view.blocked, dates: view.uncoveredDays.map(dayTitle) }
+        : null;
+}
+
+/** The line under the turned-off «Confirmar mi semana»: «Falta el miércoles 4 de noviembre», or several in one list. */
+export function confirmBlockText(block: ConfirmBlock): string {
+    if (block.reason === 'queued_marks') {
+        return weekMessage('queued_marks');
+    }
+
+    const list = new Intl.ListFormat('es', {
+        style: 'long',
+        type: 'conjunction',
+    }).format(block.dates.map((date) => `el ${date.toLowerCase()}`));
+
+    return `${block.dates.length === 1 ? 'Falta' : 'Faltan'} ${list}`;
+}
+
+/**
+ * The buttons at the foot of «Mi semana»: read it, then confirm it or say what is not right; none while the person writes.
+ * «Confirmar» stays, turned off, while days without cover block it: the server sends no address for it then.
+ */
 export function weekActions(
-    view: Pick<WeekView, 'confirmUrl' | 'disputeUrl'> | null,
+    view: Pick<
+        WeekView,
+        'confirmUrl' | 'disputeUrl' | 'blocked' | 'uncoveredDays'
+    > | null,
     disputing: boolean,
 ): ('read' | 'confirm' | 'dispute')[] {
     if (view === null) {
@@ -237,7 +281,9 @@ export function weekActions(
     }
 
     return [
-        ...(view.confirmUrl === null ? [] : (['confirm'] as const)),
+        ...(view.confirmUrl === null && confirmBlock(view) === null
+            ? []
+            : (['confirm'] as const)),
         ...(view.disputeUrl === null ? [] : (['dispute'] as const)),
     ];
 }

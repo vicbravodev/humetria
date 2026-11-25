@@ -115,6 +115,8 @@ final class RedactSensitiveData implements ProcessorInterface
             'respondent_kind',
             'respondent_text',
             'ticket',
+            // Registro de jornada, marks made without a connection: the list of tickets a phone keeps.
+            'tickets',
             // NOM-035 policy and disclosure: the link of the page of the workers (a credential), a person's own link, the words of a
             // policy and the note of a paper acknowledgment never reach a log.
             'acknowledgment_note',
@@ -147,6 +149,22 @@ final class RedactSensitiveData implements ProcessorInterface
             'id_token',
             'access_token',
             'code_verifier',
+            // Llave del dispositivo (plan B de las marcas sin conexión): the possession challenge, the signature, the pass and the
+            // key's id are credentials of a person's phone.
+            'challenge',
+            'device_key_id',
+            'pass',
+            'signature',
+            // Registro de jornada, marks made without a connection: the screen's code, the note of the person (it may speak of their
+            // health) and the position in the integers the phone signs.
+            'qr',
+            'justification',
+            'lat_e5',
+            'lng_e5',
+            // Avisos push: where a person's phone receives them (the address of its push service and its keys) identifies the phone.
+            'endpoint',
+            'p256dh',
+            'auth',
         ];
 
         foreach ($data as $key => $value) {

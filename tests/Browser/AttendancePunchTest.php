@@ -10,6 +10,7 @@ use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Support\QrToken;
+use App\Modules\Notifications\Models\PushSubscription;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -41,12 +42,12 @@ function phoneAtThePunchScreen(bool $dark = false): AwaitableWebpage
     linkThePhone($page, test()->ana->id);
 
     // The test goes on once the screen of Marcar is really there, not while the browser is still settling the navigation.
-    return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    return $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText('Marcar su jornada');
 }
 
 it('opens the screen of Marcar for a device not known yet: every step compact, «Mi semana» on top, why the position is asked and how to link, to open', function (bool $dark, bool $mobile): void {
-    visitPage('attendance/punch', '/a/acme', $dark, $mobile)
+    visitPage('attendance/punch', '/me/acme/punch', $dark, $mobile)
         ->assertSee('Marcar su jornada')
         ->assertSee('Entrada')
         ->assertSee('Salida')
@@ -175,7 +176,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     });
     linkThePhone($page, test()->ana->id);
     standingAt($page, 19.4327, -99.1332);
-    $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText('Regresar de comer')
         ->press('button:has-text("Entrada")')
         ->waitForText('Entrada registrada')
@@ -187,7 +188,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     $clearKeys();
     linkThePhone($page->navigate(accessLinkPath($bob->id)), $bob->id);
 
-    return $page->navigate('/a/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    return $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true)
         ->assertDontSee('Su día');
 }
@@ -244,8 +245,47 @@ it('forgets Ana at once when Bob says it is not him («¿No es usted?»)', funct
         ->assertScript(cspViolations(), '[]');
 });
 
+it('remembers in the browser that a mark was accepted, only then: that is when the start may offer the notices', function (): void {
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4327, -99.1332);
+    $page->assertScript("() => localStorage.getItem('humetria-push-marked')", null);
+
+    $page->press('button:has-text("Entrada")')->waitForText('Entrada registrada');
+
+    $page->assertScript("() => localStorage.getItem('humetria-push-marked')", '1');
+});
+
+it('does not remember a mark that was refused', function (): void {
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4336, -99.1332);
+
+    $page->press('button:has-text("Entrada")')->waitForText('Está fuera de la zona');
+
+    $page->assertScript("() => localStorage.getItem('humetria-push-marked')", null);
+});
+
+it('gives the phone\'s notices up with «¿No es usted?»: the server forgets it and the browser drops it', function (): void {
+    PushSubscription::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'endpoint' => 'https://fcm.googleapis.com/fcm/send/ana-phone']);
+    $page = phoneAtThePunchScreen();
+    standingAt($page, 19.4327, -99.1332);
+    $page->press('button:has-text("Entrada")')->waitForText('Entrada registrada')->press('Listo')->waitForText('Está trabajando');
+    // The worker's registration is a double (a real push manager does not exist in the test): this phone is subscribed as Ana's.
+    $page->script(<<<'JS'
+        () => {
+            const endpoint = 'https://fcm.googleapis.com/fcm/send/ana-phone';
+            const subscription = { endpoint, options: { applicationServerKey: null }, unsubscribe: () => { window.unsubscribed = true; return Promise.resolve(true); } };
+            navigator.serviceWorker.getRegistration = () => Promise.resolve({ pushManager: { getSubscription: () => Promise.resolve(subscription) } });
+        }
+        JS);
+
+    $page->press('¿No es usted?')->waitForText('Marcar su jornada');
+
+    $page->assertScript('() => window.unsubscribed === true', true);
+    expect(PushSubscription::query()->count())->toBe(0);
+});
+
 it('keeps the steps compact at the foot of a phone, so the content is seen first (hallazgo 16)', function (): void {
-    visitPage('attendance/punch', '/a/acme', mobile: true)
+    visitPage('attendance/punch', '/me/acme/punch', mobile: true)
         // The bar of actions took 353 px of 844; the board's takes about 190.
         ->assertScript('() => document.querySelector(".sticky.bottom-0").getBoundingClientRect().height <= 200', true)
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true);
@@ -263,7 +303,7 @@ it('asks a remote person for no code nor zone, and not for the position (hallazg
     linkThePhone($page, $this->ana->id);
 
     // From her portal: the page knows how she marks before she signs. She never lets the page read her position.
-    $page->navigate('/a/acme')
+    $page->navigate('/me/acme/punch')
         ->waitForText('Marcar su jornada')
         ->assertSee('Marque desde donde esté: no se le pedirá un QR ni estar en una zona.')
         ->assertDontSee('Sobre su ubicación')
@@ -289,7 +329,7 @@ it('accepts the agreement and marks the step that proceeds with one signature, w
     // Linked, without the agreement accepted.
     $page->press('button:has-text("Continuar")')->waitForText('cree su llave de acceso')->press('button:has-text("Crear llave")')->waitForText('Hola,');
     standingAt($page, 19.4327, -99.1332);
-    $page->navigate('/a/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
+    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
         ->waitForText('Regresar de comer')
         ->script(countSignatures());
 
@@ -297,6 +337,8 @@ it('accepts the agreement and marks the step that proceeds with one signature, w
         ->waitForText('Antes de marcar, acepte el acuerdo')
         ->assertSee('Acuerdo de registro · versión 1')
         ->assertSee('Valor de prueba')
+        ->assertSee('En una marca hecha sin conexión, la hora que usted indica se acota')
+        ->assertDontSee('La hora la pone el servidor, no su teléfono')
         ->assertSee('Ahora no')
         ->assertScript(smallTouchTargets(), '')
         ->assertNoAccessibilityIssues(1)

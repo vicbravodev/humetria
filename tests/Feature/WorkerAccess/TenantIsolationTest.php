@@ -3,8 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Contracts\DeviceKeySignatures;
+use App\Modules\WorkerAccess\Enums\EntryVia;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerAccessState;
+use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
+use App\Modules\WorkerAccess\Support\OfflinePasses;
+use Database\Factories\Organization\EmployeeFactory;
 
 /*
  * Company A reads and changes none of company B's links or access states. By address: tests/Feature/WorkerAccess/AccessLinkTest.php.
@@ -66,4 +71,41 @@ it('refuses a link whose kind and issuer disagree', function (): void {
     workIn($tenant = Tenant::factory()->create());
 
     expect(fn () => WorkerAccessLink::factory()->create(['tenant_id' => $tenant->id, 'issued_by' => null]))->toThrow(Illuminate\Database\QueryException::class);
+});
+
+it('does not read nor revoke the device keys of another company', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    $key = WorkerDeviceKey::factory()->create(['tenant_id' => $b->id]);
+
+    workIn($a);
+    expect(WorkerDeviceKey::query()->count())->toBe(0)
+        ->and(WorkerDeviceKey::revokeAllOf($key->employee_id, 'reissued'))->toBe(0);
+
+    workIn($b);
+    expect(WorkerDeviceKey::query()->sole()->revoked_at)->toBeNull();
+});
+
+it('does not renew the pass of a device key of another company, by address (404)', function (): void {
+    $a = Tenant::factory()->create(['slug' => 'acme-a']);
+    $b = Tenant::factory()->create(['slug' => 'acme-b']);
+    $foreign = WorkerDeviceKey::factory()->create(['tenant_id' => $b->id]);
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $a->id]);
+    enteredAs($ana->id, EntryVia::Key, 'key-1');
+
+    $this->postJson(route('worker.device-key.pass', 'acme-a'), ['device_key_id' => $foreign->id])->assertNotFound();
+
+    workIn($b);
+    expect($foreign->refresh()->last_used_at)->toBeNull();
+});
+
+it('does not read the id of a pass of another company', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+    workIn($b);
+    $pass = OfflinePasses::issue(WorkerDeviceKey::factory()->create(['tenant_id' => $b->id]))['pass'];
+
+    workIn($a);
+
+    expect(resolve(DeviceKeySignatures::class)->passId($pass))->toBeNull();
 });

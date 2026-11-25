@@ -25,7 +25,7 @@ final class Attendance
             'chip' => 'Desde el 1 de enero de 2027 · LFT, art. 132, fr. XXXIV',
             'h1' => 'El registro de jornada que pide la ley, desde el celular de tu gente',
             'lead' => 'Desde 2027 la ley pide registrar de forma electrónica el inicio y el fin de la jornada de cada persona. Tu gente marca desde su teléfono, sin reloj checador; tú tienes un registro que no se puede alterar y el reporte para la autoridad con un botón.',
-            'proof' => 'La hora la pone el servidor, ninguna marca se edita ni se borra, y cada persona confirma su semana.',
+            'proof' => 'La hora la pone el servidor (sin conexión, la acota entre el último contacto y la entrega), ninguna marca se edita ni se borra, y cada persona confirma su semana.',
             'norm' => [
                 'title' => 'Qué pide la ley',
                 'lead' => 'La reforma a la Ley Federal del Trabajo del 1 de mayo de 2026 obliga a registrar la jornada y reduce la jornada semanal año con año.',
@@ -208,8 +208,8 @@ final class Attendance
                         'text' => 'Nunca en segundo plano ni entre marcas, y solo la ven los roles autorizados.',
                     ],
                     [
-                        'title' => 'La hora es la del servidor',
-                        'text' => 'El reloj del teléfono no cuenta: nadie adelanta ni atrasa una marca.',
+                        'title' => 'El reloj del teléfono no es prueba',
+                        'text' => 'Con conexión, la hora es la del servidor. Sin conexión, la persona declara la hora y el servidor la acota; la marca queda por verificar para Recursos Humanos.',
                     ],
                     [
                         'title' => 'Cada persona ve su registro',

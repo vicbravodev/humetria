@@ -7,6 +7,7 @@ use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Models\AgreementAcceptance;
 use App\Modules\Attendance\Models\AttendanceAgreement;
 use App\Modules\Attendance\Models\AttendancePolicy;
+use App\Modules\Attendance\Support\AgreementStatus;
 use App\Modules\Attendance\Support\CurrentAgreement;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
@@ -42,6 +43,30 @@ it('tells that in a center in the field the location is kept even outside every 
     expect(resolve(CurrentAgreement::class)->get()->body)
         ->toContain('Si su centro de trabajo marca en campo, la ubicación se guarda aunque usted marque fuera de las zonas del centro')
         ->toContain('Nunca se toma su ubicación en otro momento ni en segundo plano');
+});
+
+it('tells that a mark made with a connection takes the server\'s time and one made without takes the time the person gives, bounded and reviewed (criterio 5.1)', function (): void {
+    expect(resolve(CurrentAgreement::class)->get()->body)
+        ->not->toContain('La hora la pone el servidor, no su teléfono.')
+        ->toContain('En una marca hecha con conexión, la hora la pone el servidor.')
+        ->toContain('En una marca hecha sin conexión, la hora que usted indica se acota con lo que el servidor sí puede comprobar y la revisa Recursos Humanos.');
+});
+
+it('publishes a new version when the text changes, and whoever accepted the old one has to accept again', function (): void {
+    $ana = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    $old = AttendanceAgreement::query()->create([
+        'tenant_id' => $this->tenant->id,
+        'version' => 1,
+        'body' => implode("\n\n", [
+            'Cómo se registra. Usted registra el inicio y el fin de su jornada, y el inicio y el fin de sus pausas, con este dispositivo y su huella, su rostro o el PIN de su teléfono. La hora la pone el servidor, no su teléfono.',
+        ]),
+    ]);
+    AgreementAcceptance::query()->create(['tenant_id' => $this->tenant->id, 'agreement_id' => $old->id, 'employee_id' => $ana->id, 'credential_id' => WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $ana->id])->id, 'accepted_at' => now()]);
+
+    $current = resolve(CurrentAgreement::class)->get();
+
+    expect($current)->version->toBe(2)->and($current->id)->not->toBe($old->id)
+        ->and(resolve(AgreementStatus::class)->accepted($ana->id))->toBeFalse();
 });
 
 it('says the retention of the company\'s policy, and writes a new version when it changes, keeping the old one', function (): void {

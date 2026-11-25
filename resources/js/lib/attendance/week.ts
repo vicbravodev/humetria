@@ -18,7 +18,16 @@ export type WeekMark = {
     evidence: string | null;
     /** The zone of a mark taken away from the person's center: «07:00 · hora de Tijuana». */
     clock?: string;
+    /** Made without a connection and delivered later. */
+    offline: boolean;
+    /** Where RH's review of a mark made without a connection stands; null for any other mark. */
+    review: MarkReview | null;
+    /** Why RH said it was incorrect; only with that review. */
+    reviewNote?: string;
 };
+
+/** Every mark made without a connection waits for RH (`pending`), which verifies it or says it is incorrect. */
+export type MarkReview = 'pending' | 'verified' | 'incorrect';
 
 export type WeekDay = {
     date: string;
@@ -29,6 +38,8 @@ export type WeekDay = {
     overtimeMinutes: number;
     restDay: boolean;
     missingEnd: boolean;
+    /** A working day, already over, with no marks and nothing that covers it: the week cannot be confirmed with it. */
+    uncovered: boolean;
     /** Minutes late against the schedule's start time and the tolerance: shown, never sanctioned; null with nothing to compare. */
     lateMinutes?: number | null;
     /** Away that day with approved vacations or a leave (never its type): not a day they missed. Its marks still count. */
@@ -55,8 +66,10 @@ export type WeekView = {
     resolution: string | null;
     /** The version of the week read; sent back with the answer, so it is about this week and not a changed one. */
     digest: string;
-    /** Why it cannot be confirmed yet (`day_open`, `no_marks`); null when it can. */
+    /** Why it cannot be confirmed yet (`day_open`, `no_marks`, `uncovered_days`); null when it can. */
     blocked: string | null;
+    /** The days (Y-m-d) of the week left without cover, also when the block is off and the person can confirm. */
+    uncoveredDays: string[];
     days: WeekDay[];
     requests: WeekRequest[];
     summary: WeekSummary;
@@ -94,12 +107,25 @@ function mark(json: unknown): WeekMark[] {
                   corrected: json['corrected'] === true,
                   reason: text(json['reason']),
                   evidence: text(json['evidence']),
+                  offline: json['offline'] === true,
+                  review: review(json['review']),
+                  ...(typeof json['reviewNote'] === 'string' &&
+                  review(json['review']) === 'incorrect'
+                      ? { reviewNote: json['reviewNote'] }
+                      : {}),
                   ...(typeof json['clock'] === 'string'
                       ? { clock: json['clock'] }
                       : {}),
               },
           ]
         : [];
+}
+
+/** RH's review of a mark as the server tells it; anything else is none. */
+function review(value: unknown): MarkReview | null {
+    return value === 'pending' || value === 'verified' || value === 'incorrect'
+        ? value
+        : null;
 }
 
 /** Only vacations or leave: anything else is not an absence. */
@@ -128,6 +154,7 @@ function day(json: unknown): WeekDay[] {
                   overtimeMinutes: json['overtimeMinutes'],
                   restDay: json['restDay'] === true,
                   missingEnd: json['missingEnd'] === true,
+                  uncovered: json['uncovered'] === true,
                   ...away(json['absence']),
                   ...late(json['lateMinutes']),
               },
@@ -164,6 +191,13 @@ function summary(json: unknown): WeekSummary | null {
         : null;
 }
 
+/** The dates of the days without cover; anything that is not a date text is left out. */
+function dates(json: unknown): string[] {
+    return Array.isArray(json)
+        ? json.filter((date: unknown) => typeof date === 'string')
+        : [];
+}
+
 function period(json: unknown): WeekView['week'] | null {
     return isJson(json) &&
         typeof json['start'] === 'string' &&
@@ -182,25 +216,26 @@ export function weekView(json: unknown): WeekView | null {
     const status = text(json['status']);
     const previousUrl = text(json['previousUrl']);
     const digest = text(json['digest']);
-    const dates = period(json['week']);
+    const range = period(json['week']);
     const hours = summary(json['summary']);
 
     return name === null ||
         status === null ||
         previousUrl === null ||
         digest === null ||
-        dates === null ||
+        range === null ||
         hours === null
         ? null
         : {
               name,
-              week: dates,
+              week: range,
               status,
               answeredAt: text(json['answeredAt']),
               disputeReason: text(json['disputeReason']),
               resolution: text(json['resolution']),
               digest,
               blocked: text(json['blocked']),
+              uncoveredDays: dates(json['uncoveredDays']),
               days: json['days'].flatMap(day),
               requests: weekRequests(json['requests']),
               summary: hours,

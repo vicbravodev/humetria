@@ -100,6 +100,8 @@ final readonly class AttendancePages
                 'at_risk' => count($atRisk),
             ],
             'pendingCorrections' => CorrectionRequest::query()->where('status', CorrectionStatus::Pending)->count(),
+            // Marks made without a connection with flags or waiting over a week: a number, no person (criterio 5.4).
+            'offlineNeedsReview' => OfflineMarkPages::needsReviewCount(),
             'centersWithoutZones' => count(array_diff($scope, array_keys($zones), array_keys($field))),
             'people' => $page->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,

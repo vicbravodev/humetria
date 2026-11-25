@@ -57,7 +57,7 @@ final class SecurityHeaders
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'DENY',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
-            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+            'Permissions-Policy' => $this->permissions($request),
         ];
 
         if ($this->isDebugExceptionPage($response)) {
@@ -79,6 +79,19 @@ final class SecurityHeaders
         }
 
         return $response;
+    }
+
+    /**
+     * Closed for the whole app, except the documents the person who works opens under `/me/{slug}`: their own origin may
+     * use the camera (Marcar reads the QR of the center's screen) and the position (Marcar checks the zone). The policy only
+     * allows: the browser still asks the person, and a page that never calls either asks nothing. Setting it on every GET
+     * document under `/me` (not on Marcar alone) is what lets Inertia move from the start to Marcar without a full load.
+     */
+    private function permissions(Request $request): string
+    {
+        $own = $request->isMethod('GET') && $request->is('me/*');
+
+        return 'camera='.($own ? '(self)' : '()').', microphone=(), geolocation='.($own ? '(self)' : '()').', payment=(), usb=()';
     }
 
     /**

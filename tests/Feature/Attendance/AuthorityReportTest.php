@@ -8,6 +8,7 @@ use App\Modules\Attendance\Data\AuthorityRow;
 use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\MarkType;
+use App\Modules\Attendance\Enums\SignerType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -18,12 +19,15 @@ use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Contracts\CompanyModules;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Support\OfflineDeliveries;
 
 mutates(BuildAuthorityReport::class, CorrectionHistory::class);
 
@@ -36,6 +40,15 @@ beforeEach(function (): void {
     $this->ana = reportPerson($this->plant, 'Ana López', 'Operadora');
     AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
 });
+
+/** A member of the company with the Recursos Humanos role and this name. */
+function hrNamed(Tenant $tenant, string $name): User
+{
+    $user = memberOf($tenant, TenantRole::Hr);
+    $user->update(['name' => $name]);
+
+    return $user;
+}
 
 /** A correction of `$original` to a local time (null voids it), with its reason. */
 function authorityReportCorrection(AttendanceMark $original, ?string $local, string $reason): AttendanceMark
@@ -202,6 +215,191 @@ it('lists each correction of the day with its reason, and the day\'s evidence is
         fn ($row) => $row->evidence->toBe('Fuerte')->corrections->toBe([]),
         fn ($row) => $row->evidence->toBe('Básica'),
     );
+});
+
+const OFFLINE_WITH_PASSKEY = 'Marcó sin conexión (firmó con su llave de acceso)';
+const OFFLINE_WITH_DEVICE = 'Marcó sin conexión (con la llave del dispositivo)';
+const WAITING_FOR_RH = 'Con marcas sin conexión por verificar';
+const VERIFIED_BY_RH = 'Marca sin conexión verificada por RH';
+
+/** The only day of Ana's week in the report: a start made without a connection and an end at the door. */
+function offlineDay(Employee $person, bool $qr, string $signer = 'passkey'): AttendanceMark
+{
+    $delivery = OfflineDeliveries::accepted($person, '2027-01-05 08:00', qr: $qr, with: ['signer_type' => SignerType::from($signer)]);
+    reportMark($person, MarkType::End, '2027-01-05 16:00');
+
+    return AttendanceMark::query()->findOrFail($delivery->mark_id);
+}
+
+describe('marks made without a connection', function (): void {
+    it('says so, with who signed, and weighs its evidence: medium with a QR, basic without one, as long as nobody verified it', function (bool $qr, string $evidence, string $signer, string $text): void {
+        offlineDay($this->ana, $qr, $signer);
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->evidence->toBe($evidence)->flags->toBe([$text, WAITING_FOR_RH])->start->toBe('08:00'),
+        );
+    })->with([
+        'a QR and a passkey' => [true, 'Media', 'passkey', OFFLINE_WITH_PASSKEY],
+        'no QR and the key of the device' => [false, 'Básica', 'device_key', OFFLINE_WITH_DEVICE],
+    ]);
+
+    it('stops waiting for RH once it is verified, and says so', function (): void {
+        $mark = offlineDay($this->ana, true);
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id]);
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->evidence->toBe('Media')->flags->toBe([OFFLINE_WITH_PASSKEY, VERIFIED_BY_RH]),
+        );
+    });
+
+    it('takes the last review as the one in force', function (): void {
+        $mark = offlineDay($this->ana, true);
+        MarkReviewFactory::new()->incorrect()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id]);
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id]);
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row->flags->toBe([OFFLINE_WITH_PASSKEY, VERIFIED_BY_RH]));
+    });
+
+    it('keeps saying it was made without a connection after RH corrected it, one correction or two, with the corrected evidence', function (int $corrections): void {
+        $mark = offlineDay($this->ana, false, 'device_key');
+        MarkReviewFactory::new()->incorrect()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id]);
+        $last = authorityReportCorrection($mark, '2027-01-05 08:20', 'Entró a las 8:20.');
+        $last = $corrections === 2 ? authorityReportCorrection($last, '2027-01-05 08:30', 'Mejor a las 8:30.') : $last;
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->evidence->toBe('Corregida')->flags->toBe([OFFLINE_WITH_DEVICE])->start->toBe($corrections === 2 ? '08:30' : '08:20'),
+        );
+    })->with(['one correction' => 1, 'a correction of the correction' => 2]);
+
+    it('says nothing of a day made online, nor names RH', function (): void {
+        reportDay($this->ana, '2027-01-05 08:00', '2027-01-05 16:00');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row->flags->toBe([]));
+    });
+
+    // Decisión del dueño, 2026-11-24: the report names who reviewed each mark made without a connection, and when.
+    it('says who verified it and when, at the local time of the center', function (): void {
+        $mark = offlineDay($this->ana, true);
+        $reviewer = hrNamed($this->tenant, 'Rosa Revisora');
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => $reviewer->id, 'created_at' => '2027-01-06 16:30:00']);
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->reviews->toBe([['time' => '08:00', 'decision' => 'verified', 'reviewer' => 'Rosa Revisora', 'reviewedAt' => '2027-01-06 10:30']]),
+        );
+    });
+
+    it('says who judged it incorrect, with the time the mark had before RH corrected it', function (): void {
+        $mark = offlineDay($this->ana, true);
+        $reviewer = hrNamed($this->tenant, 'Rosa Revisora');
+        MarkReviewFactory::new()->incorrect()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => $reviewer->id, 'created_at' => '2027-01-06 16:30:00']);
+        authorityReportCorrection($mark, '2027-01-05 08:20', 'Entró a las 8:20.');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->start->toBe('08:20')->reviews->toBe([['time' => '08:00', 'decision' => 'incorrect', 'reviewer' => 'Rosa Revisora', 'reviewedAt' => '2027-01-06 10:30']]),
+        );
+    });
+
+    it('says who judged it incorrect when RH voided it instead of correcting it, on the day it was part of', function (): void {
+        $mark = offlineDay($this->ana, true);
+        MarkReviewFactory::new()->incorrect()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => hrNamed($this->tenant, 'Rosa Revisora')->id, 'created_at' => '2027-01-06 16:30:00']);
+        authorityReportCorrection($mark, null, 'No estaba en la planta.');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->start->toBeNull()->corrections->toHaveCount(1)
+                ->reviews->toBe([['time' => '08:00', 'decision' => 'incorrect', 'reviewer' => 'Rosa Revisora', 'reviewedAt' => '2027-01-06 10:30']]),
+        );
+    });
+
+    it('names the reviewer of the review in force, the last', function (): void {
+        $mark = offlineDay($this->ana, true);
+        MarkReviewFactory::new()->incorrect()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => hrNamed($this->tenant, 'Primera Revisora')->id]);
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => hrNamed($this->tenant, 'Segunda Revisora')->id]);
+
+        $reviews = authorityRows($this->plant, '2027-01-04', '2027-01-10')[0]->reviews;
+
+        expect($reviews)->toHaveCount(1)->and($reviews[0]['reviewer'])->toBe('Segunda Revisora')->and($reviews[0]['decision'])->toBe('verified');
+    });
+
+    it('has no reviewer nor time on a mark nobody has reviewed, nor on one made online', function (): void {
+        offlineDay($this->ana, true);
+        $bob = reportPerson($this->plant, 'Bob Díaz');
+        reportDay($bob, '2027-01-05 08:00', '2027-01-05 16:00');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(
+            fn ($row) => $row->reviews->toBe([]),
+            fn ($row) => $row->reviews->toBe([]),
+        );
+    });
+
+    it('does not carry a verification over to a mark RH changed afterwards', function (): void {
+        $mark = offlineDay($this->ana, true);
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => hrNamed($this->tenant, 'Rosa Revisora')->id]);
+        authorityReportCorrection($mark, '2027-01-05 08:20', 'Entró a las 8:20.');
+
+        expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row->reviews->toBe([]));
+    });
+
+    it('says the reviewer no longer has access when they are not a member of the company, and never names someone of another company', function (): void {
+        $mark = offlineDay($this->ana, true);
+        $left = User::factory()->create(['name' => 'Revisora Secreta']);
+        $other = hrNamed(Tenant::factory()->create(), 'Revisora De Otra Empresa');
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => $left->id]);
+        $first = authorityRows($this->plant, '2027-01-04', '2027-01-10');
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => $other->id]);
+        $second = authorityRows($this->plant, '2027-01-04', '2027-01-10');
+
+        expect($first[0]->reviews[0]['reviewer'])->toBe('Persona de RH (ya no tiene acceso)')
+            ->and($second[0]->reviews[0]['reviewer'])->toBe('Persona de RH (ya no tiene acceso)')
+            ->and(json_encode([$first, $second], JSON_THROW_ON_ERROR))->not->toContain('Secreta')->not->toContain('Otra Empresa');
+    });
+
+    it('never carries the note of the person nor the one of RH', function (): void {
+        $mark = offlineDay($this->ana, true);
+        MarkReviewFactory::new()->incorrect('Nota privada de RH.')->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $mark->id, 'reviewer_id' => hrNamed($this->tenant, 'Rosa Revisora')->id]);
+        authorityReportCorrection($mark, '2027-01-05 08:20', 'Entró a las 8:20.');
+
+        expect(json_encode(authorityRows($this->plant, '2027-01-04', '2027-01-10'), JSON_THROW_ON_ERROR))->not->toContain('Nota privada');
+    });
+
+    it('reads the names of the reviewers in no query per mark', function (): void {
+        $reviewers = array_map(fn (int $n): User => hrNamed($this->tenant, "Revisor {$n}"), range(1, 5));
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => offlineDay($this->ana, true)->id, 'reviewer_id' => $reviewers[0]->id]);
+        authorityRows($this->plant, '2027-01-04', '2027-01-10');
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        authorityRows($this->plant, '2027-01-04', '2027-01-10');
+        $one = count(DB::getQueryLog());
+
+        foreach (range(1, 5) as $n) {
+            $other = reportPerson($this->plant, "Persona {$n}");
+            $delivery = OfflineDeliveries::accepted($other, '2027-01-05 08:00', qr: true);
+            reportMark($other, MarkType::End, '2027-01-05 16:00');
+            MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $delivery->mark_id, 'reviewer_id' => $reviewers[$n - 1]->id]);
+        }
+        DB::flushQueryLog();
+        authorityRows($this->plant, '2027-01-04', '2027-01-10');
+
+        expect(count(DB::getQueryLog()))->toBe($one);
+    });
+
+    it('reads the same queries whatever the number of marks made without a connection', function (): void {
+        offlineDay($this->ana, true);
+        authorityRows($this->plant, '2027-01-04', '2027-01-10');
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        authorityRows($this->plant, '2027-01-04', '2027-01-10');
+        $one = count(DB::getQueryLog());
+
+        foreach (range(1, 5) as $n) {
+            $other = reportPerson($this->plant, "Persona {$n}");
+            OfflineDeliveries::accepted($other, '2027-01-05 08:00', qr: $n % 2 === 0);
+            reportMark($other, MarkType::End, '2027-01-05 16:00');
+        }
+        DB::flushQueryLog();
+        authorityRows($this->plant, '2027-01-04', '2027-01-10');
+
+        expect(count(DB::getQueryLog()))->toBe($one);
+    });
 });
 
 it('names the days marked in the field: strong with a good position, medium without one', function (): void {
@@ -410,8 +608,8 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
     $names = array_map(fn (AuthorityRow $row): string => $row->personName, authorityRows($this->plant, '2027-01-04', '2027-01-10'));
 
     expect($names)->toBe(array_map(fn (int $index): string => sprintf('Persona %03d', $index), range(0, 449)))
-        // Who has days and their order, the center's zone, then eight reads for each of the three chunks of 200 (what was corrected and who was away among them).
-        ->and(count(DB::getQueryLog()))->toBe(3 + 3 * 8);
+        // Who has days and their order, the center's zone, then nine reads for each of the three chunks of 200 (what was corrected, where the marks come from and who was away among them).
+        ->and(count(DB::getQueryLog()))->toBe(3 + 3 * 9);
 });
 
 it('reads its people in chunks of the size of config/attendance.php (200 by default)', function (): void {

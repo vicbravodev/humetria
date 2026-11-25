@@ -61,6 +61,13 @@ return [
         'landing_replay' => (bool) env('POSTHOG_LANDING_REPLAY', false),
     ],
 
+    // Web Push (avisos sin contenido a la persona trabajadora): the VAPID keys and the subject (`mailto:` or `https://`). Without any of the three, no push is sent.
+    'vapid' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

@@ -82,6 +82,11 @@ final readonly class PanelLinks
         return $this->path('tenant.attendance.corrections.index');
     }
 
+    public function attendanceOfflineMarks(): string
+    {
+        return $this->path('tenant.attendance.corrections.index', ['status' => 'offline']);
+    }
+
     public function orgChart(): string
     {
         return $this->path('tenant.org-chart.index');

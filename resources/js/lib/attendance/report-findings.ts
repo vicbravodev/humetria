@@ -3,7 +3,7 @@ import type { ReportShow, ReportSummary } from '@/types';
 
 /** Something that makes the report look weak before an inspection, and the part of the list that shows it. */
 export type Finding = {
-    key: 'unconfirmed' | 'over-twelve' | 'without-end';
+    key: 'unconfirmed' | 'over-twelve' | 'without-end' | 'to-verify';
     title: string;
     text: string;
     action: string;
@@ -52,6 +52,18 @@ export function inspectionFindings(summary: ReportSummary): Finding[] {
                           ? '1 día sin marca de fin'
                           : `${summary.withoutEndDays} días sin marca de fin`,
                   text: 'Un día sin fin no suma horas: la persona o RH pueden corregirlo.',
+                  action: people(summary.flaggedPeople),
+                  show: 'flagged',
+              },
+        summary.toVerify === 0
+            ? null
+            : {
+                  key: 'to-verify',
+                  title:
+                      summary.toVerify === 1
+                          ? '1 día con marcas sin conexión por verificar'
+                          : `${summary.toVerify} días con marcas sin conexión por verificar`,
+                  text: 'Cuentan en las horas; verifícalas antes de una inspección.',
                   action: people(summary.flaggedPeople),
                   show: 'flagged',
               },

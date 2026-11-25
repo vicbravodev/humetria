@@ -13,6 +13,7 @@ use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
 use App\Modules\Attendance\Exceptions\MarkRejected;
+use App\Modules\Attendance\Http\Middleware\AttachOfflineTickets;
 use App\Modules\Attendance\Http\Requests\MarkRequest;
 use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceSchedule;
@@ -69,8 +70,8 @@ final readonly class MarkController
     public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones, private WorkCenters $workCenters, private WorkerSession $session) {}
 
     /**
-     * The one page of the app that reads the device's position: the panel's Permissions-Policy denies geolocation, this
-     * page allows it to its own origin only (SecurityHeaders keeps a header the response already carries).
+     * The page that reads the device's position and the camera (the QR of the center's screen): the panel's
+     * Permissions-Policy denies both, and SecurityHeaders opens them to their own origin for every page under `/me/{slug}`.
      */
     public function show(Request $request, string $tenant): SymfonyResponse
     {
@@ -100,6 +101,10 @@ final readonly class MarkController
             'optionsUrl' => route('attendance.device.punch.options', $tenant),
             'punchUrl' => route('attendance.device.punch.store', $tenant),
             'forgetUrl' => route('attendance.device.punch.forget', $tenant),
+            // The company's address segment and where the phone swaps a ticket for a new batch (it keeps them to mark without a connection).
+            'slug' => $tenant,
+            'ticketsUrl' => route('attendance.device.tickets', $tenant),
+            'deliverUrl' => route('attendance.device.punch.offline', $tenant),
             'weekUrl' => route('attendance.device.week.show', $tenant),
             // Where a person without a key here adds one from a session; the first one comes only from RH's link.
             'enterUrl' => route('worker.home', $tenant),
@@ -115,10 +120,7 @@ final readonly class MarkController
             'now' => CarbonImmutable::now()->getTimestampMs(),
         ]);
 
-        $response = $page->toResponse($request);
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=(), usb=()');
-
-        return $response;
+        return $page->toResponse($request);
     }
 
     /** «¿No es usted?»: this browser forgets who marked in it, at once. */
@@ -146,6 +148,8 @@ final readonly class MarkController
 
         $person = $this->roster->find($signed->employeeId);
         abort_if($person === null || ! $person->active, 404);
+        // Whoever answers from here on (the mark, a refusal) hands the phone its tickets and context.
+        AttachOfflineTickets::signedBy($person->id);
         $timezone = $this->timezones->forCenter($person->workCenterId);
         $request->session()->put(self::SESSION_KEY, ['id' => $person->id, 'at' => CarbonImmutable::now()->getTimestamp()]);
 

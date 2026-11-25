@@ -11,7 +11,7 @@ uses(TestCase::class);
 
 mutates(QrImage::class);
 
-const QR_IMAGE_URL = 'https://humetria.test/a/acme/punch?q=4f9c2a7e1b3d5f6a8c0e2b4d6f8a1c3e5b7d9f0a2c4e6b8d0f1a3c5e7b9d1f3a';
+const QR_IMAGE_URL = 'https://humetria.test/me/acme/punch?q=58000000.4f9c2a7e1b3d5f6a8c0e2b4d6f8a1c3e5b7d9f0a2c4e6b8d0f1a3c5e7b9d1f3a';
 
 function qrSvg(): string
 {

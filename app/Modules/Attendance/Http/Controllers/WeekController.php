@@ -7,6 +7,7 @@ namespace App\Modules\Attendance\Http\Controllers;
 use App\Modules\Attendance\Actions\ConfirmWeek;
 use App\Modules\Attendance\Actions\DisputeWeek;
 use App\Modules\Attendance\Exceptions\WeekRejected;
+use App\Modules\Attendance\Http\Middleware\AttachOfflineTickets;
 use App\Modules\Attendance\Http\Requests\ConfirmRequest;
 use App\Modules\Attendance\Http\Requests\DisputeRequest;
 use App\Modules\Attendance\Http\Requests\WeekRequest;
@@ -47,9 +48,13 @@ final readonly class WeekController
         return Inertia::render('attendance/week', [
             'company' => $this->companies->current()->tradeName,
             'start' => $start,
+            // The company's segment and where the phone delivers its queue: the page counts the person's marks that wait (it
+            // does not let them confirm the week with any) and delivers them as it opens.
+            'slug' => $tenant,
+            'deliverUrl' => route('attendance.device.punch.offline', $tenant),
             'optionsUrl' => route('attendance.device.week.options', $tenant),
             'weekUrl' => route('attendance.device.week.read', $tenant),
-            'punchUrl' => route('attendance.device.punch.home', $tenant),
+            'punchUrl' => route('attendance.device.punch.show', $tenant),
             'correctionOptionsUrl' => route('attendance.device.correction.options', $tenant),
             'correctionUrl' => route('attendance.device.correction.store', $tenant),
         ]);
@@ -109,6 +114,9 @@ final readonly class WeekController
             abort(404);
         }
 
+        // Whoever signed gets new tickets with the answer (a 404 after this still carries none).
+        AttachOfflineTickets::signedBy($signed->employeeId);
+
         return $signed;
     }
 
@@ -118,10 +126,10 @@ final readonly class WeekController
         return response()->json($this->view($signed, $week, $tenant))->header('Cache-Control', 'no-store, private');
     }
 
-    /** Why the answer was refused; a week that changed since it was read goes back as it is now, to be read again. */
+    /** Why the answer was refused; a week that changed since it was read, or that has days without cover, goes back as it is now. */
     private function rejected(WeekRejected $rejected, SignedBy $signed, ?CarbonImmutable $week, string $tenant): JsonResponse
     {
-        $body = ['reason' => $rejected->reason, ...($rejected->reason === 'week_changed' ? ['week' => $this->view($signed, $week, $tenant)] : [])];
+        $body = ['reason' => $rejected->reason, ...(in_array($rejected->reason, ['week_changed', 'uncovered_days'], true) ? ['week' => $this->view($signed, $week, $tenant)] : [])];
 
         return response()->json($body, 422)->header('Cache-Control', 'no-store, private');
     }

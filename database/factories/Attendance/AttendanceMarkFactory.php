@@ -38,6 +38,18 @@ final class AttendanceMarkFactory extends Factory
         ];
     }
 
+    /** Made without a connection, with a QR that bounded its time (no credential: nothing here signs). */
+    public function offlineQr(): self
+    {
+        return $this->state(['method' => MarkMethod::OfflineQr, 'credential_id' => null]);
+    }
+
+    /** Made without a connection, its time declared by the person. */
+    public function offlineDeclared(): self
+    {
+        return $this->state(['method' => MarkMethod::OfflineDeclared, 'credential_id' => null]);
+    }
+
     /** RH's correction of `$original`, to the same time unless a state says otherwise. */
     public function correcting(AttendanceMark $original): self
     {

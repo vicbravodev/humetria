@@ -13,6 +13,7 @@ export default function AttentionList({
     center,
     counts,
     pendingCorrections,
+    offlineNeedsReview,
     centersWithoutZones,
     setup,
 }: Pick<
@@ -21,6 +22,7 @@ export default function AttentionList({
     | 'center'
     | 'counts'
     | 'pendingCorrections'
+    | 'offlineNeedsReview'
     | 'centersWithoutZones'
     | 'setup'
 >) {
@@ -30,6 +32,7 @@ export default function AttentionList({
         center: center?.id ?? '',
         counts,
         pendingCorrections,
+        offlineNeedsReview,
         centersWithoutZones,
         findings: setup.findings,
     });

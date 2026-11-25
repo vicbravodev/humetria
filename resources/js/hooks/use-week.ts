@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useOfflineQueue } from '@/hooks/use-offline-queue';
+import { keepAnswer } from '@/hooks/use-offline-store';
 import { getKey } from '@/hooks/use-punch';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import { correctionBody, correctionReason } from '@/lib/attendance/correction';
@@ -14,18 +16,24 @@ export type WeekAction = 'read' | 'confirm' | 'dispute' | 'correct';
  * the browser, only on screen until the page closes.
  */
 export function useWeek({
+    slug,
+    deliverUrl,
     optionsUrl,
     weekUrl,
     start,
     correctionOptionsUrl,
     correctionUrl,
 }: {
+    slug: string;
+    deliverUrl: string;
     optionsUrl: string;
     weekUrl: string;
     start: string | null;
     correctionOptionsUrl: string;
     correctionUrl: string;
 }) {
+    // The person's marks made without a connection: counted here, and delivered as the week opens.
+    const queue = useOfflineQueue({ slug, deliverUrl });
     const [week, setWeek] = useState<WeekView | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [working, setWorking] = useState<WeekAction | null>(null);
@@ -57,6 +65,7 @@ export function useWeek({
                 fetcher: fetch.bind(window),
                 getKey,
                 xsrf: xsrfToken(document.cookie),
+                onAnswer: keepAnswer,
             },
         );
         setWorking(null);
@@ -90,6 +99,7 @@ export function useWeek({
 
     return {
         week,
+        queue,
         error,
         notice,
         working,

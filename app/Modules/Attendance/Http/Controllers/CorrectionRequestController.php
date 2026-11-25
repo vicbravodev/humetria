@@ -6,6 +6,7 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\RequestCorrection;
 use App\Modules\Attendance\Exceptions\CorrectionRejected;
+use App\Modules\Attendance\Http\Middleware\AttachOfflineTickets;
 use App\Modules\Attendance\Http\Requests\AskCorrectionRequest;
 use App\Modules\Attendance\Support\PersonWeek;
 use App\Modules\Attendance\Support\WeekPeriod;
@@ -45,6 +46,7 @@ final readonly class CorrectionRequestController
         }
 
         $person = $this->roster->find($signed->employeeId) ?? abort(404);
+        AttachOfflineTickets::signedBy($person->id);
         $timezone = $this->timezones->forCenter($person->workCenterId);
         $proposedAt = $request->proposedAt($timezone);
 

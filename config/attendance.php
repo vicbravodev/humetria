@@ -22,6 +22,31 @@ return [
     ],
 
     /*
+    | Marking without a connection (criterio 3.3.1). `enabled` is the only switch: it turns the phone's queue and screens off
+    | (the phone reads it from the context it receives) and never the delivery. The rest are constants, not settings: the
+    | tickets that bound the time of such a mark are signed with the app key (and APP_PREVIOUS_KEYS).
+    */
+    'offline' => [
+        'enabled' => (bool) env('ATTENDANCE_OFFLINE_ENABLED', true),
+        // Tickets handed to the phone at a time, and how old one may be and still serve (the horizon of a correction).
+        'ticket_batch' => 8,
+        'ticket_horizon_days' => 35,
+        // The time a person declares counts up to this many hours after the ticket was issued; past them only what is proven.
+        'count_declared_max_hours' => 72,
+        // An interval wider than this (receipt minus ticket) is flagged `wide_interval`.
+        'wide_interval_minutes' => 240,
+        // A QR read more than this before the declared time is treated as having none (`old_window`).
+        'qr_old_window_minutes' => 30,
+        // A copy in the queue of a mark made with a connection, within this of the same type, is «ya registrada».
+        'already_recorded_window_minutes' => 10,
+        // Marks in one delivery.
+        'delivery_batch_max' => 20,
+        // A mark made without a connection that arrived more than this many days ago and nobody reviewed asks for RH's attention
+        // (like one with flags): «Necesita tu atención» and Humi count it.
+        'review_age_days' => 7,
+    ],
+
+    /*
     | Minutes the Marcar page of a browser remembers who marked last, to offer their next step.
     */
     'punch' => [
@@ -36,5 +61,14 @@ return [
         'page_max_days' => (int) env('ATTENDANCE_REPORT_PAGE_MAX_DAYS', 93),
         'export_max_days' => (int) env('ATTENDANCE_REPORT_EXPORT_MAX_DAYS', 366),
         'chunk_size' => (int) env('ATTENDANCE_REPORT_CHUNK_SIZE', 200),
+    ],
+
+    /*
+    | «Mi semana»: a person cannot confirm a week with days left without cover (a working day of their schedule, already
+    | over, with no marks and no holiday, hire date or approved absence: criterio 5.2). It holds for every company. With
+    | `false` the days are still computed and logged (`attendance.week_uncovered_days_computed`), but nothing is blocked.
+    */
+    'week' => [
+        'block_uncovered_days' => (bool) env('ATTENDANCE_WEEK_BLOCK_UNCOVERED', true),
     ],
 ];

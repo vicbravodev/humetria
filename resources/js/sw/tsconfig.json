@@ -1,0 +1,11 @@
+{
+    // The service worker is checked on its own: the DOM and WebWorker types clash when compiled together.
+    "extends": "../../../tsconfig.json",
+    "compilerOptions": {
+        "lib": ["ESNext", "WebWorker"],
+        "types": []
+    },
+    "include": ["./*.ts", "../lib/pwa/sw-rules.ts"],
+    // TypeScript inherits `exclude` from the extended file: without this the project would be left with no files.
+    "exclude": []
+}

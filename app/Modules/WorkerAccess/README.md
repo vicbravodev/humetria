@@ -8,6 +8,8 @@ es una herramienta del catálogo.
 
 - `worker_credentials`: las llaves. `credential_id` y `public_key` nunca llegan a una página, un log ni la bitácora.
   `registered_via` (`issued_link`, `session`) y `revoked_reason` (`reissued`, `revoked_by_hr`, `not_me`, `left_company`).
+- `worker_device_keys`: la llave del dispositivo de la app (plan B de las marcas sin conexión): solo su llave pública (SPKI),
+  nunca a una página, un log ni la bitácora. `revoked_reason` (`reissued`, `not_me`, `replaced`, `left_company`).
 - `worker_access_links`: enlaces de un solo uso. Solo el hash del token; `issued` (RH, 48 h, permite crear una llave) o
   `requested` (la persona, 30 min, solo abre sesión). Un UPDATE condicional lo gasta una vez.
 - `worker_access_states`: una fila por persona con `valid_after`; toda sesión abierta antes deja de valer.
@@ -51,7 +53,7 @@ Logs: `worker_access.proof_given` (`via`: `key` con `key_id`, o `code`), `worker
 Rutas delicadas: `portal.support.show` (el mensaje de apoyo de la NOM-035); `portal.policy.acknowledge`;
 `portal.seating.acknowledgments.store`; `portal.vacations.requests.store`, `portal.vacations.statements.acknowledge`,
 `portal.vacations.team.approve`, `portal.vacations.team.reject`; `portal.documents.acknowledge`, `portal.equipment.respond`,
-`portal.visits.confirm`.
+`portal.visits.confirm`; `worker.device-key.options` y `worker.device-key.store` (registrar la llave del dispositivo).
 
 ## Reglas
 
@@ -61,6 +63,38 @@ Rutas delicadas: `portal.support.show` (el mensaje de apoyo de la NOM-035); `por
 - Pedir un enlace, fallar una firma y abrir un enlace que no sirve responden igual exista o no la persona. La pantalla
   de entrada no muestra nombres.
 - Ni el token, ni su hash, ni el correo escrito llegan a logs, bitácora o props (`tests/Feature/WorkerAccess/PrivacyTest.php`).
+
+## Llave del dispositivo y pase sin conexión
+
+Plan B de las marcas sin conexión cuando la llave de acceso no firma: la app guarda en el teléfono una llave ECDSA P-256 no
+extraíble y la persona la registra con conexión. Todo es JSON, con sesión y el CSRF normal (`routes/worker-access.php`,
+`DeviceKeyController`, limitador `worker-device-key`):
+
+- `POST device-key/options` da un reto de 32 bytes (en caché 60 s, de una empresa y una sesión, un solo uso) y
+  `POST device-key` registra la llave: la prueba de posesión es la firma de los **32 bytes crudos** del reto. Ambos piden
+  prueba reciente (403 `proofRequired` sin ella, que la app resuelve con el diálogo de prueba). Responde 201
+  `{deviceKeyId, pass, passId, passExpiresAt}`.
+- Hasta 3 en uso por persona (`worker_access.device_keys_max`): la cuarta reemplaza a la menos usada (`replaced`), nunca 409.
+  `RegisterDeviceKey` cuenta bajo el candado de la persona.
+- El **pase** (`Support/OfflinePasses`, sin tabla) es `v1.{payload}.{hmac}`: HMAC con `APP_KEY` y `APP_PREVIOUS_KEYS`, ligado a
+  la llave y la persona, de 24 h (`worker_access.pass_hours`). `POST device-key/pass` lo renueva con sesión al abrir `/me`
+  (sin prueba reciente): quien usa el plan B entra a `/me` con conexión al menos una vez al día. El pase dice quién es; la
+  vigencia la juzga Attendance con la hora declarada de cada marca.
+- «Reemitir», «No fui yo» y la baja de la persona (`left_company`) revocan estas llaves; «Salir» no, y revocar una llave de
+  acceso tampoco. La bitácora de la reemisión y de la baja trae `device_keys_revoked` cuando hubo.
+- Ni la llave pública, ni el reto, ni la firma, ni el pase llegan a logs, bitácora o props
+  (`tests/Feature/WorkerAccess/PrivacyTest.php`); `RedactSensitiveData` cubre `challenge`, `signature`, `pass` y `device_key_id`.
+- Inicio (`worker.home`) trae `slug` y `deviceKey {optionsUrl, storeUrl, proof}` (null si la empresa no tiene Asistencia).
+
+## App instalable
+
+Cada empresa tiene su app bajo `/me/{slug}` (`InstallableAppController`, rutas `worker.app.*` en `routes/worker-access.php`):
+el manifest, el service worker (`/me/{slug}/sw.js`, alcance `/me/{slug}`, `Service-Worker-Allowed`) y el cascarón sin conexión
+(`/me/{slug}/offline`). Las tres son GET **sin sesión ni cookie** (con `SESSION_DRIVER=database` cada petición sin cookie
+abriría una fila en `sessions`, y un teléfono instalado las pide seguido) y no llevan nada de nadie. El worker guarda solo
+archivos del build y el cascarón, nunca HTML de Inertia ni datos de personas. `PWA_SW_KILL=true` (`worker_access.pwa_sw_kill`)
+lo apaga en todos los teléfonos con un worker que borra sus cachés y se desregistra; nunca apaga la entrega de marcas.
+El worker se compila aparte (`npm run build:sw`, `PWA_WORKER=sw`) a `public/build/pwa/sw.js`, un archivo sin `import`.
 
 ## Panel: «Accesos»
 
@@ -83,3 +117,15 @@ muestra una vez en el flash `accessLink`; la bitácora (`worker_access.link_issu
   módulo etiqueta la suya `worker.sections`; `Support/WorkerSections` las junta en un orden fijo y una que falla se reporta
   y se omite sin tumbar el inicio.
 - `WorkerSignatures` y `WorkerCredentials`: firmar y leer llaves (los usa Attendance). `WorkerKeys`: crear una llave.
+  `WorkerSignatures::verifyChallenge($expected, $response, $ticketIssuedAt)` verifica un reto que armó quien llama (la marca
+  sin conexión; `$expected` son los 32 bytes crudos del SHA-256 de su cadena canónica): sin caché, sin contador y sin escribir
+  nada, así que verificar dos veces la misma firma da lo mismo. Una llave revocada después de `$ticketIssuedAt` todavía
+  verifica y `SignedBy::$revokedAt` lo dice; una revocada en ese instante o antes da null. No pregunta si la persona sigue
+  activa: eso es de quien llama.
+- `DeviceKeySignatures`: `passId($pass)` lee el id de un pase de la empresa actual sin mirar vigencia ni revocación (Attendance lo
+  necesita para armar el reto) y `verify($expected, $signature, $pass, $ticketIssuedAt)` dice qué llave del dispositivo firmó
+  (`DeviceSigned`, con `revokedAt` con la misma regla contra el boleto); solo lee.
+- Evento `WorkerAccessRevoked(employeeId, reason, ?credentialId)`: se le quitó el acceso a la persona sin tener su teléfono en la mano.
+  Lo dispara, después del commit y solo si algo cambió, `RevokeCredential` (`revoked_by_hr`, con el id de la llave), `ReissueAccess`
+  (`reissued`), `DisownKey` (`not_me`, con el id) y `RevokeOnDeactivation` (`left_company`, aunque no tuviera llaves: sus sesiones
+  terminan). «Salir» no dispara nada. Lo escucha `Notifications` para borrar las suscripciones push de la persona.

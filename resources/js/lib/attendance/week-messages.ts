@@ -17,6 +17,10 @@ const MESSAGES: Record<string, string> = {
         'Su último turno de esta semana sigue abierto. Podrá confirmar su semana cuando marque su salida.',
     no_marks:
         'Esta semana no tiene marcas suyas. Si faltan, use «No estoy de acuerdo» para decirlo.',
+    uncovered_days:
+        'Le faltan marcas de días que le tocaba trabajar. Pida una corrección para agregar la marca que falta o, si no trabajó, pida a Recursos Humanos que registre su ausencia como permiso.',
+    queued_marks:
+        'Tiene marcas sin enviar en este teléfono. Abra Humetría con internet para enviarlas antes de confirmar.',
     invalid:
         'Escriba qué no está bien en su semana, con al menos 10 caracteres.',
     unsupported:

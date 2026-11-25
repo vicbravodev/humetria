@@ -20,6 +20,9 @@ const EVIDENCE = [
     },
 ];
 
+const OFFLINE_NOTE =
+    'Una marca sin conexión se hizo sin conexión y llegó después. Cuenta a la hora que declaró la persona, acotada por lo que el servidor comprueba (su boleto, sus otras marcas y la hora en que llegó); tras más de 72 h sin conexión cuenta en la cota probada hasta que RH la corrige. Con el QR del centro, reciente, se sabe además que no fue antes de ese código (evidencia media); sin QR, la evidencia es básica. RH la verifica.';
+
 /** How to read the report: what it holds, how its hours are split and what is left out. */
 export default function ReportLegend({
     generatedAt,
@@ -84,6 +87,7 @@ export default function ReportLegend({
                     ahí no se pide zona ni QR y se guarda la ubicación de cada
                     marca. Informa; no es un aviso.
                 </li>
+                <li>{OFFLINE_NOTE}</li>
                 <li>
                     Las horas se reparten con el horario vigente de cada persona
                     al generar el reporte.

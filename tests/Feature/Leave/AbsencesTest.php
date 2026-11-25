@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Leave\Data\AbsenceData;
+use App\Modules\Leave\Models\LeaveHoliday;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Leave\Support\CompanyAbsences;
@@ -143,4 +144,20 @@ it('gives no absence in a company that does not have the vacations module (H08)'
 
     expect(absentOn('2026-11-10', [$this->ana->id]))->toBe([])
         ->and(absencesBetween('2026-11-01', '2026-11-30', [$this->ana->id]))->toBe([]);
+});
+
+it('gives the holidays of the law and of the company between two dates, both ends included, and not those of another company', function (): void {
+    // 2026-11-16 is the third Monday of November (LFT art. 74); the 18th is the company's own.
+    LeaveHoliday::factory()->create(['tenant_id' => $this->tenant->id, 'date' => '2026-11-18']);
+    LeaveHoliday::factory()->create(['tenant_id' => Tenant::factory()->create()->id, 'date' => '2026-11-19']);
+
+    expect(resolve(Absences::class)->holidaysBetween(CarbonImmutable::parse('2026-11-16'), CarbonImmutable::parse('2026-11-18')))->toBe(['2026-11-16', '2026-11-18'])
+        ->and(resolve(Absences::class)->holidaysBetween(CarbonImmutable::parse('2026-11-17'), CarbonImmutable::parse('2026-11-17')))->toBe([])
+        ->and(resolve(Absences::class)->holidaysBetween(CarbonImmutable::parse('2026-11-19'), CarbonImmutable::parse('2026-11-19')))->toBe([]);
+});
+
+it('gives the holidays of a range that crosses a year', function (): void {
+    LeaveHoliday::factory()->create(['tenant_id' => $this->tenant->id, 'date' => '2026-12-31']);
+
+    expect(resolve(Absences::class)->holidaysBetween(CarbonImmutable::parse('2026-12-24'), CarbonImmutable::parse('2027-01-02')))->toBe(['2026-12-25', '2026-12-31', '2027-01-01']);
 });

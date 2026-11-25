@@ -49,5 +49,7 @@ final readonly class AuthorityRow
         public ?string $absence = null,
         /** @var list<array{id: string, type: string, date: string, time: string}> the day's marks in force, local, for RH to correct one: never in the CSV */
         public array $marks = [],
+        /** @var list<array{time: string, decision: string, reviewer: string, reviewedAt: string}> who reviewed each of the day's marks made without a connection, what they decided (verified or incorrect) and when (local Y-m-d H:i), in order of the marks; the mark's own time. Never their note */
+        public array $reviews = [],
     ) {}
 }

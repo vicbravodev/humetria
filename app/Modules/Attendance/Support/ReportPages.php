@@ -103,7 +103,7 @@ final readonly class ReportPages
     private function report(string $slug, WorkCenterSummary $center, CarbonImmutable $from, CarbonImmutable $to, string $search, string $show): array
     {
         $ids = $this->report->people($center->id, $from, $to);
-        $totals = ['days' => 0, 'workedMinutes' => 0, 'confirmed' => 0, 'withCorrections' => 0, 'unconfirmed' => 0, 'ordinary' => 0, 'overtime' => 0, 'overTwelve' => 0, 'withoutEnd' => 0];
+        $totals = ['days' => 0, 'workedMinutes' => 0, 'confirmed' => 0, 'withCorrections' => 0, 'unconfirmed' => 0, 'ordinary' => 0, 'overtime' => 0, 'overTwelve' => 0, 'withoutEnd' => 0, 'toVerify' => 0];
         $flagged = [];
         $unconfirmed = [];
 
@@ -121,8 +121,11 @@ final readonly class ReportPages
             $totals['overTwelve'] += $row->workedMinutes > LegalLimits::DAY_TOTAL_MAX ? 1 : 0;
             $totals['withoutEnd'] += in_array(BuildAuthorityReport::MISSING_END, $row->flags, true) ? 1 : 0;
 
-            // A day still going and one marked in the field only inform.
-            if (array_diff($row->flags, [BuildAuthorityReport::IN_PROGRESS, BuildAuthorityReport::FIELD]) !== []) {
+            $totals['toVerify'] += in_array(BuildAuthorityReport::TO_VERIFY, $row->flags, true) ? 1 : 0;
+
+            // A day still going, one marked in the field, one marked without a connection (it carries the key that signed it) and
+            // one RH verified only inform: what waits for RH's review does mark the person.
+            if (array_filter($row->flags, fn (string $flag): bool => ! in_array($flag, [BuildAuthorityReport::IN_PROGRESS, BuildAuthorityReport::FIELD, BuildAuthorityReport::VERIFIED], true) && ! str_starts_with($flag, BuildAuthorityReport::OFFLINE)) !== []) {
                 $flagged[$row->employeeId] = true;
             }
             if ($row->confirmation === 'sin confirmar') {
@@ -155,6 +158,7 @@ final readonly class ReportPages
                 'withoutEndDays' => $totals['withoutEnd'],
                 'flaggedPeople' => count($flagged),
                 'unconfirmedPeople' => count($unconfirmed),
+                'toVerify' => $totals['toVerify'],
             ],
             'people' => $people->through(fn (RosterEntry $person): array => [
                 'id' => $person->id,
@@ -216,6 +220,7 @@ final readonly class ReportPages
             'timezone' => $row->timezone,
             'absence' => $row->absence,
             'marks' => $row->marks,
+            'reviews' => $row->reviews,
         ];
     }
 }

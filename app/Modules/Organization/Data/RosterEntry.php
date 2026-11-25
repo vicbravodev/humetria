@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Organization\Data;
 
+use Carbon\CarbonImmutable;
+
 /**
  * A person of the company as other modules need them: to invite them, to place them in a work center and an area, and
  * to split a sample by gender ("female", "male" or "other"), to tell them apart by their job title, and whether they are
@@ -26,5 +28,6 @@ final readonly class RosterEntry
         public ?string $jobGradeId = null,
         public ?string $staffGroup = null,
         public ?string $mobile = null,
+        public ?CarbonImmutable $hiredOn = null,
     ) {}
 }

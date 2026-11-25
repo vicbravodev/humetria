@@ -7,10 +7,15 @@ namespace App\Modules\Attendance\Support;
 use App\Modules\Attendance\Actions\ConfirmWeek;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Enums\OverLimit;
+use App\Modules\Attendance\Enums\ReviewDecision;
 use App\Modules\Attendance\Enums\ShiftType;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
+use App\Modules\Attendance\Models\MarkReview;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Leave\Contracts\Absences;
+use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use LogicException;
@@ -20,8 +25,9 @@ use LogicException;
  * it falls on the next day and whether RH corrected it), whether they were away that day with approved vacations or a
  * leave (never its type), the minutes of each day and of the week as criterio 2.9 splits
  * them, the limits broken, a day left with no end (unless it is the one still open now), their answer, the version of the
- * week they read (`digest`, sent back with their answer) and why it cannot be confirmed yet (`blocked`: no marks, or its
- * last day still open). Never where a mark was taken, nor the device. Counted from the marks every time. The week is
+ * week they read (`digest`, sent back with their answer) and why it cannot be confirmed yet (`blocked`: no marks, its
+ * last day still open, or days without cover; those days are also listed in `uncoveredDays`, and each day says whether a
+ * mark is `required` of it and `uncovered`: WeekCompleteness). Never where a mark was taken, nor the device. Counted from the marks every time. The week is
  * read in the zone of the person's center (the week's own); each mark shows the time of the place it was taken, with
  * that zone when it is another, and whether it was taken at another center (a trip: no lateness that day). Each day is
  * read with the schedule in effect that day (ScheduleTimeline), so a change in the middle of the week splits it.
@@ -40,8 +46,15 @@ final class PersonWeek
         $yesterday = CarbonImmutable::now($timezone)->subDay()->startOfDay();
         $absences = WeekDigest::absences($employeeId, $week);
         $away = AbsentDays::of($absences, $week)[$employeeId] ?? [];
+        $completeness = WeekCompleteness::of(
+            $week, $byDay, $schedules, $employeeId, $away,
+            resolve(Absences::class)->holidaysBetween($week->start(), $week->end()), resolve(Roster::class)->find($employeeId)?->hiredOn,
+        );
+        // Without Vacaciones y permisos nobody can justify a day: it is neither asked nor listed (criterio 5.2).
+        $completeness = resolve(Companies::class)->current()->allows('vacations') ? $completeness : $completeness->withoutUncovered();
         // The tolerance is read only when a schedule has start times: a week without them costs no query more.
         $tolerance = $schedules->hasStartTimes() ? CompanyPolicy::current()->late_tolerance_minutes : 0;
+        $reviews = self::reviews($byDay);
         $days = [];
         $hours = [];
 
@@ -54,7 +67,7 @@ final class PersonWeek
 
             $days[] = [
                 'date' => $date->toDateString(),
-                'marks' => array_map(fn (AttendanceMark $mark): array => self::mark($mark, $date, $timezone), $marks),
+                'marks' => array_map(fn (AttendanceMark $mark): array => self::mark($mark, $date, $timezone, $reviews[$mark->id] ?? null), $marks),
                 'workedMinutes' => $day->workedMinutes,
                 'scheduledMinutes' => $day->scheduledMinutes,
                 'restDay' => $day->restDay,
@@ -62,6 +75,8 @@ final class PersonWeek
                 'missingEnd' => WorkedDay::missingEnd($marks) && ! $stillOpen,
                 // Approved vacations or a leave: the day is not one they missed. Its marks, if any, still count.
                 'absence' => $away[$offset] ?? null,
+                // Whether a mark is asked of this day (criterio 5.2) and it is still missing; a rest day, a holiday, a day away or one not over is not.
+                ...$completeness->day($offset),
             ];
         }
 
@@ -72,7 +87,7 @@ final class PersonWeek
         $status = $answer?->status->value ?? ($week->isOver() ? 'pending' : 'open');
         $start = $week->start()->toDateString();
         $marks = array_merge([], ...array_values($byDay));
-        $blocked = $status === 'pending' ? ConfirmWeek::blocker($marks) : null;
+        $blocked = $status === 'pending' ? ConfirmWeek::blocker($marks, $completeness) : null;
 
         return [
             'name' => $name,
@@ -84,6 +99,8 @@ final class PersonWeek
             'resolution' => $answer?->resolution_note,
             'digest' => WeekDigest::ofMarks($marks, $absences),
             'blocked' => $blocked,
+            // The days to cover, also with the block off: the person sees what is missing even if they can confirm.
+            'uncoveredDays' => $completeness->uncoveredDays(),
             'days' => $days,
             'requests' => self::requests($employeeId, $week, $marks, $timezone),
             'summary' => [
@@ -102,9 +119,28 @@ final class PersonWeek
     }
 
     /**
-     * @return array{id: string, type: string, time: string, clock: string|null, away: bool, nextDay: bool, corrected: bool, reason: string|null, evidence: string}
+     * Where RH's review of each mark made without a connection stands: the decision in force, by mark id, in one query that a
+     * week with none does not make.
+     *
+     * @param  array<string, list<AttendanceMark>>  $byDay
+     * @return array<string, MarkReview>
      */
-    private static function mark(AttendanceMark $mark, CarbonImmutable $date, string $timezone): array
+    private static function reviews(array $byDay): array
+    {
+        $offline = array_filter(array_merge([], ...array_values($byDay)), fn (AttendanceMark $mark): bool => self::offline($mark));
+
+        return MarkReview::latestByMark(array_values(array_map(fn (AttendanceMark $mark): string => $mark->id, $offline)));
+    }
+
+    private static function offline(AttendanceMark $mark): bool
+    {
+        return in_array($mark->method, [MarkMethod::OfflineQr, MarkMethod::OfflineDeclared], true);
+    }
+
+    /**
+     * @return array{id: string, type: string, time: string, clock: string|null, away: bool, nextDay: bool, corrected: bool, reason: string|null, evidence: string, offline: bool, review: string|null, reviewNote: string|null}
+     */
+    private static function mark(AttendanceMark $mark, CarbonImmutable $date, string $timezone, ?MarkReview $review): array
     {
         $at = ($mark->marked_at ?? throw new LogicException("Mark [{$mark->id}] has no time."))->setTimezone($mark->timezone);
         $corrected = $mark->method === MarkMethod::Correction;
@@ -122,6 +158,11 @@ final class PersonWeek
             'reason' => $corrected ? $mark->reason : null,
             // How much the mark proves, to say it in words (criterio 5.3).
             'evidence' => $mark->method->evidence()->value,
+            // Made without a connection, and where RH's review of it stands (criterio 5.4): every one waits for it, with a QR or
+            // without; the note is shown with `incorrect`, the way RH told the person what was wrong.
+            'offline' => self::offline($mark),
+            'review' => self::offline($mark) ? ($review?->decision->value ?? 'pending') : null,
+            'reviewNote' => $review?->decision === ReviewDecision::Incorrect ? $review->note : null,
         ];
     }
 

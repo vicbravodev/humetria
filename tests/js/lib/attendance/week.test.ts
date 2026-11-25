@@ -23,6 +23,7 @@ const week: WeekView = {
     resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
+    uncoveredDays: [],
     days: [
         {
             date: '2026-11-02',
@@ -35,6 +36,8 @@ const week: WeekView = {
                     corrected: true,
                     reason: 'El QR no cargaba.',
                     evidence: 'corrected',
+                    offline: false,
+                    review: null,
                 },
             ],
             workedMinutes: 540,
@@ -42,6 +45,7 @@ const week: WeekView = {
             overtimeMinutes: 60,
             restDay: false,
             missingEnd: false,
+            uncovered: false,
         },
     ],
     requests: [
@@ -63,9 +67,9 @@ const week: WeekView = {
         restDayMinutes: 0,
         flags: ['day_over_12_hours'],
     },
-    confirmUrl: '/a/acme/week/2026-11-02/confirm',
-    disputeUrl: '/a/acme/week/2026-11-02/dispute',
-    previousUrl: '/a/acme/week/2026-10-26',
+    confirmUrl: '/me/acme/week/2026-11-02/confirm',
+    disputeUrl: '/me/acme/week/2026-11-02/dispute',
+    previousUrl: '/me/acme/week/2026-10-26',
     nextUrl: null,
 };
 

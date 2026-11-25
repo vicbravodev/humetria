@@ -3,13 +3,14 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vp build",
-        "build:ssr": "vp build && vp build --ssr",
+        "build": "vp build && npm run build:sw",
+        "build:sw": "PWA_WORKER=sw vp build",
+        "build:ssr": "vp build && npm run build:sw && vp build --ssr",
         "dev": "vp dev",
         "check": "vp check",
         "check:fix": "vp check --fix",
         "test:js": "LARAVEL_BYPASS_ENV_CHECK=1 vp test run --coverage",
-        "types:check": "tsc --noEmit"
+        "types:check": "tsc --noEmit && tsc --noEmit -p resources/js/sw"
     },
     "dependencies": {
         "@ai-sdk/react": "^4.0.164",
@@ -47,6 +48,7 @@
         "lucide-react": "^0.475.0",
         "motion": "^14.10.1",
         "posthog-js": "^1.449.2",
+        "qr": "0.7.2",
         "react": "^19.2.0",
         "react-day-picker": "^9.14.0",
         "react-dom": "^19.2.0",

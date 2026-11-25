@@ -132,7 +132,7 @@ it('says which error page is of the time clock screen, for it to ask RH for a ne
     Route::middleware('web')->get('/test/screen-gone', fn () => abort(404))->name($name);
 
     $this->get('/test/screen-gone')->assertNotFound()->assertInertia(fn (Assert $page) => $page->where('screen', $screen));
-})->with([['attendance.device.kiosk.show', true], ['attendance.device.kiosk.activate', true], ['attendance.device.punch.home', false], ['portal.home', false]]);
+})->with([['attendance.device.kiosk.show', true], ['attendance.device.kiosk.activate', true], ['attendance.device.punch.show', false], ['portal.home', false]]);
 
 it('answers a throttled send from the portal with a toast in «usted»', function (): void {
     Route::middleware(['web', 'throttle:1,1'])->post('/test/portal-send', fn () => 'ok')->name('portal.test.send');

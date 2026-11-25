@@ -1,25 +1,38 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, KeyRound } from 'lucide-react';
+import DeviceKeyCard from '@/components/worker-access/device-key-card';
 import LeaveButton from '@/components/worker-access/leave-button';
 import IconTile from '@/components/humetria/icon-tile';
 import PersonHeading from '@/components/humetria/person-heading';
 import { initials } from '@/lib/worker-access/portal';
+import type { ProofStep } from '@/types';
 
 const CAPTION =
     'text-caption font-medium tracking-wide text-muted-foreground uppercase';
 
-/** «Cuenta»: who entered, a key for this device when they may add one, and «Salir». */
+/**
+ * «Cuenta»: who entered, a key for this device when they may add one, the phone's own key to mark without a connection
+ * (plan B) and «Salir».
+ */
 export default function HomeAccount({
     company,
     name,
+    slug,
     keyUrl,
     hasKey,
+    deviceKey,
     leaveUrl,
 }: {
     company: string;
     name: string;
+    slug: string;
     keyUrl: string | null;
     hasKey: boolean;
+    deviceKey: {
+        optionsUrl: string;
+        storeUrl: string;
+        proof: ProofStep;
+    } | null;
     leaveUrl: string;
 }) {
     return (
@@ -64,9 +77,15 @@ export default function HomeAccount({
                     </Link>
                 </section>
             )}
+            {deviceKey !== null && (
+                <section className="flex flex-col gap-2">
+                    <h2 className={CAPTION}>Marcar sin internet</h2>
+                    <DeviceKeyCard slug={slug} {...deviceKey} />
+                </section>
+            )}
             <section className="flex flex-col gap-2">
                 <h2 className={CAPTION}>Al terminar</h2>
-                <LeaveButton url={leaveUrl} />
+                <LeaveButton url={leaveUrl} slug={slug} />
                 <p className="text-base text-muted-foreground">
                     Sobre todo si usa un dispositivo compartido.
                 </p>

@@ -167,7 +167,7 @@ describe('the screen', function (): void {
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertExactJson([
                 'token' => $code,
-                'url' => url("a/{$this->tenant->slug}/punch").'?q='.$code,
+                'url' => url("me/{$this->tenant->slug}/punch").'?q='.$code,
                 'qr' => $response->json('qr'),
                 'expiresAt' => '2026-11-07T12:00:30+00:00',
                 'expiresIn' => 20,
@@ -176,6 +176,16 @@ describe('the screen', function (): void {
             ]);
         expect($response->json('qr'))->toStartWith('data:image/svg+xml;base64,')
             ->and(KioskDevice::query()->sole()->last_seen_at?->toIso8601String())->toBe('2026-11-07T12:00:10+00:00');
+    });
+
+    it('gives a code of the form window.hmac, with the window of the moment it is asked', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-07 12:00:10', 'UTC'));
+        $token = kioskToken();
+
+        $code = $this->withCredentials()->withCookie('attendance_kiosk', $token)->getJson(route('attendance.device.kiosk.qr', $this->tenant->slug))->assertOk()->json('token');
+
+        expect($code)->toMatch('/^\d+\.[0-9a-f]{64}$/')
+            ->and(explode('.', $code)[0])->toBe((string) intdiv(CarbonImmutable::now()->getTimestamp(), 30));
     });
 
     it('writes when it was last seen at most once a minute', function (): void {

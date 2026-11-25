@@ -59,9 +59,19 @@ const IN_PROGRESS = 'En curso';
 /** A day marked in a field center: its mode, not a warning. */
 const FIELD = 'Marcó en campo';
 
-/** A flag RH should act on: «En curso» (today's day, not over yet) and «Marcó en campo» only inform. */
+/** A day with a mark made without a connection (with who signed it after), and one RH verified: they inform. */
+const OFFLINE = 'Marcó sin conexión';
+const VERIFIED = 'Marca sin conexión verificada por RH';
+
+/**
+ * A flag RH should act on: «En curso» (today's day, not over yet), «Marcó en campo», a mark made without a connection and
+ * one RH verified only inform; one that still waits for RH's review is a warning.
+ */
 export const isWarning = (flag: string): boolean =>
-    flag !== IN_PROGRESS && flag !== FIELD;
+    flag !== IN_PROGRESS &&
+    flag !== FIELD &&
+    flag !== VERIFIED &&
+    !flag.startsWith(OFFLINE);
 
 /** What an inspector should notice about the person: each distinct warning of their days, in the order they appear. */
 export function personNotices(days: readonly ReportDay[]): string[] {

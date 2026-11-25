@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Modules\Attendance\Enums\EvidenceLevel;
 use App\Modules\Attendance\Enums\MarkMethod;
 use App\Modules\Attendance\Models\AttendanceMark;
+use Database\Factories\Attendance\AttendanceOfflineMarkFactory;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
@@ -67,8 +69,35 @@ it('grades the evidence of each method (criterio 5.3)', function (MarkMethod $me
     [MarkMethod::Correction, EvidenceLevel::Corrected],
     [MarkMethod::Field, EvidenceLevel::Strong],
     [MarkMethod::FieldUnlocated, EvidenceLevel::Medium],
+    [MarkMethod::OfflineQr, EvidenceLevel::Medium],
+    [MarkMethod::OfflineDeclared, EvidenceLevel::Basic],
 ]);
 
-it('keeps the marks taken in a field center', function (MarkMethod $method): void {
+it('keeps the marks taken in a field center and the ones made without a connection', function (MarkMethod $method): void {
     expect(AttendanceMark::factory()->create(['method' => $method])->refresh()->method)->toBe($method);
-})->with([MarkMethod::Field, MarkMethod::FieldUnlocated]);
+})->with([MarkMethod::Field, MarkMethod::FieldUnlocated, MarkMethod::OfflineQr, MarkMethod::OfflineDeclared]);
+
+it('makes the states of a mark made without a connection', function (): void {
+    expect(AttendanceMark::factory()->offlineQr()->create()->refresh())->method->toBe(MarkMethod::OfflineQr)->credential_id->toBeNull()
+        ->and(AttendanceMark::factory()->offlineDeclared()->create()->refresh())->method->toBe(MarkMethod::OfflineDeclared)->credential_id->toBeNull();
+});
+
+it('rejects a method the database does not know', function (): void {
+    $mark = AttendanceMark::factory()->create();
+
+    expect(fn () => DB::insert(
+        "insert into attendance_marks (id, tenant_id, employee_id, work_center_id, type, marked_at, method, timezone)
+            select gen_random_uuid(), tenant_id, employee_id, work_center_id, type, now(), 'offline_x', timezone from attendance_marks where id = ?",
+        [$mark->id],
+    ))->toThrow(QueryException::class, 'attendance_marks_method_known');
+});
+
+it('does not change a mark made without a connection when RH reviews it: the review is a row of its own', function (): void {
+    $delivery = AttendanceOfflineMarkFactory::new()->accepted()->createOne();
+    $before = DB::table('attendance_marks')->where('id', $delivery->mark_id)->first();
+
+    MarkReviewFactory::new()->createOne(['tenant_id' => $delivery->tenant_id, 'mark_id' => $delivery->mark_id]);
+
+    expect(DB::table('attendance_marks')->where('id', $delivery->mark_id)->first())->toEqual($before)
+        ->and(DB::table('attendance_marks')->count())->toBe(1);
+});

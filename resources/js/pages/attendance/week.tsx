@@ -9,6 +9,8 @@ import { useWeek } from '@/hooks/use-week';
  */
 export default function Week({
     company,
+    slug,
+    deliverUrl,
     start,
     optionsUrl,
     weekUrl,
@@ -17,6 +19,9 @@ export default function Week({
     correctionUrl,
 }: {
     company: string;
+    /** The company's address segment and where the phone delivers the marks it made without a connection. */
+    slug: string;
+    deliverUrl: string;
     start: string | null;
     optionsUrl: string;
     weekUrl: string;
@@ -25,6 +30,8 @@ export default function Week({
     correctionUrl: string;
 }) {
     const state = useWeek({
+        slug,
+        deliverUrl,
         optionsUrl,
         weekUrl,
         start,

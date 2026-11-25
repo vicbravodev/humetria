@@ -17,14 +17,16 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Organization\EmployeeFactory;
+use Tests\Support\OfflineDeliveries;
 
 mutates(ReportController::class, AuthorityCsv::class);
 
 /** The CSV's header row, as a spreadsheet reads it. */
 const AUTHORITY_CSV_HEADER = 'Persona,Puesto,Fecha,Inicio,Fin,Fecha de fin,Zona horaria,Pausas (min),Trabajado (min),Trabajado (h:mm),Ordinarias (min),Ordinarias (h:mm),'
     .'Extra doble (min),Extra doble (h:mm),Extra triple (min),Extra triple (h:mm),Día de descanso (min),Día de descanso (h:mm),'
-    .'Evidencia,Correcciones,Detalle de correcciones,Conformidad,Huella de la semana confirmada,Avisos,Ausencia';
+    .'Evidencia,Correcciones,Detalle de correcciones,Conformidad,Huella de la semana confirmada,Avisos,Ausencia,Revisión sin conexión,Revisó,Revisada el';
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2027-02-01 18:00:00', 'UTC'));
@@ -80,8 +82,8 @@ describe('the file', function (): void {
         $response = $this->get(exportUrl(plantWeek($this)))->assertOk();
 
         expect($response->streamedContent())->toBe("\u{FEFF}".AUTHORITY_CSV_HEADER."\n"
-            .'Ana López,Operadora,2027-01-06,23:50,08:20,2027-01-07,UTC−06:00 · America/Mexico_City,30,480,8:00,480,8:00,0,0:00,0,0:00,0,0:00,Fuerte,0,,objetada,,,'."\n"
-            .'Ana López,Operadora,2027-01-08,08:00,,,UTC−06:00 · America/Mexico_City,0,0,0:00,0,0:00,0,0:00,0,0:00,0,0:00,Corregida,1,"hora corregida de 08:15 a 08:00 (por RH): Llegó a las 8, el lector falló.",objetada,,Sin marca de fin,'."\n");
+            .'Ana López,Operadora,2027-01-06,23:50,08:20,2027-01-07,UTC−06:00 · America/Mexico_City,30,480,8:00,480,8:00,0,0:00,0,0:00,0,0:00,Fuerte,0,,objetada,,,,,,'."\n"
+            .'Ana López,Operadora,2027-01-08,08:00,,,UTC−06:00 · America/Mexico_City,0,0,0:00,0,0:00,0,0:00,0,0:00,0,0:00,Corregida,1,"hora corregida de 08:15 a 08:00 (por RH): Llegó a las 8, el lector falló.",objetada,,Sin marca de fin,,,,'."\n");
     });
 
     it('says Vacaciones or Permiso on a day of an approved absence, never the type of the leave, and that the person marked in it', function (): void {
@@ -96,10 +98,71 @@ describe('the file', function (): void {
 
         $lines = explode("\n", $this->get(exportUrl(plantWeek($this)))->streamedContent());
 
-        expect($lines[1])->toEndWith(',Marcó durante una ausencia,Vacaciones')
-            ->and($lines[2])->toEndWith(',Marcó durante una ausencia,Permiso')
-            ->and($lines[3])->toEndWith(',sin confirmar,,,')
+        expect($lines[1])->toEndWith(',Marcó durante una ausencia,Vacaciones,,,')
+            ->and($lines[2])->toEndWith(',Marcó durante una ausencia,Permiso,,,')
+            ->and($lines[3])->toEndWith(',sin confirmar,,,,,,')
             ->and(implode("\n", $lines))->not->toContain('Maternidad');
+    });
+
+    it('puts the marks made without a connection in the «Avisos» column, with who signed and whether RH has verified them', function (): void {
+        OfflineDeliveries::accepted($this->ana, '2027-01-05 08:00', qr: true);
+        csvMark($this->ana, MarkType::End, '2027-01-05 16:00');
+        $verified = OfflineDeliveries::accepted($this->ana, '2027-01-06 08:00');
+        csvMark($this->ana, MarkType::End, '2027-01-06 16:00');
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $verified->mark_id, 'reviewer_id' => $this->hr->id, 'created_at' => '2027-01-06 16:30:00']);
+        $this->actingAs($this->hr);
+
+        $lines = explode("\n", $this->get(exportUrl(plantWeek($this)))->streamedContent());
+
+        expect($lines[1])->toContain(',Media,')->toEndWith(',Marcó sin conexión (firmó con su llave de acceso); Con marcas sin conexión por verificar,,,,')
+            ->and($lines[2])->toContain(',Básica,')->toEndWith(',Marcó sin conexión (firmó con su llave de acceso); Marca sin conexión verificada por RH,,Verificada (08:00),Miembro hr,2027-01-06 10:30');
+    });
+
+    // Decisión del dueño, 2026-11-24: who reviewed each mark made without a connection, and when, goes in the file too.
+    it('says who reviewed each mark made without a connection, what they decided and when, in three columns of their own', function (): void {
+        $first = OfflineDeliveries::accepted($this->ana, '2027-01-05 08:00', qr: true);
+        $last = OfflineDeliveries::accepted($this->ana, '2027-01-05 16:00', type: MarkType::End);
+        $rosa = memberOf($this->tenant, TenantRole::Hr);
+        $rosa->update(['name' => 'Rosa Revisora']);
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $first->mark_id, 'reviewer_id' => $rosa->id, 'created_at' => '2027-01-06 16:30:00']);
+        MarkReviewFactory::new()->incorrect('Nota privada de RH.')->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $last->mark_id, 'reviewer_id' => $this->hr->id, 'created_at' => '2027-01-07 01:05:00']);
+        AttendanceMark::factory()->correcting(AttendanceMark::query()->findOrFail($last->mark_id))->create(['marked_at' => CarbonImmutable::parse('2027-01-05 17:00', 'America/Mexico_City')->utc(), 'reason' => 'Salió a las 17:00.']);
+        $this->actingAs($this->hr);
+
+        $content = $this->get(exportUrl(plantWeek($this)))->streamedContent();
+        $lines = explode("\n", $content);
+
+        expect($lines[0])->toEndWith(',Revisión sin conexión,Revisó,Revisada el')
+            ->and($lines[1])->toEndWith(',Verificada (08:00); Incorrecta (16:00),Rosa Revisora; Miembro hr,2027-01-06 10:30; 2027-01-06 19:05')
+            ->and($content)->not->toContain('Nota privada');
+    });
+
+    it('says who judged a mark incorrect when RH voided it, on the day it was part of', function (): void {
+        $delivery = OfflineDeliveries::accepted($this->ana, '2027-01-05 08:00', qr: true);
+        csvMark($this->ana, MarkType::End, '2027-01-05 16:00');
+        MarkReviewFactory::new()->incorrect()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $delivery->mark_id, 'reviewer_id' => $this->hr->id, 'created_at' => '2027-01-06 16:30:00']);
+        AttendanceMark::factory()->correcting(AttendanceMark::query()->findOrFail($delivery->mark_id))->create(['marked_at' => null, 'reason' => 'No estaba en la planta.']);
+        $this->actingAs($this->hr);
+
+        $lines = explode("\n", $this->get(exportUrl(plantWeek($this)))->streamedContent());
+
+        expect($lines[1])->toEndWith(',Incorrecta (08:00),Miembro hr,2027-01-06 10:30');
+    });
+
+    it('leaves the review columns empty on a mark nobody reviewed, and says the reviewer no longer has access when they left', function (): void {
+        OfflineDeliveries::accepted($this->ana, '2027-01-05 08:00', qr: true);
+        csvMark($this->ana, MarkType::End, '2027-01-05 16:00');
+        $left = OfflineDeliveries::accepted($this->ana, '2027-01-06 08:00');
+        csvMark($this->ana, MarkType::End, '2027-01-06 16:00');
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $left->mark_id, 'reviewer_id' => User::factory()->create(['name' => 'Revisora Secreta'])->id, 'created_at' => '2027-01-07 16:30:00']);
+        $this->actingAs($this->hr);
+
+        $content = $this->get(exportUrl(plantWeek($this)))->streamedContent();
+        $lines = explode("\n", $content);
+
+        expect($lines[1])->toEndWith('por verificar,,,,')
+            ->and($lines[2])->toEndWith(',Verificada (08:00),Persona de RH (ya no tiene acceso),2027-01-07 10:30')
+            ->and($content)->not->toContain('Secreta');
     });
 
     it('sends it as a download nobody keeps, named after the center and the period with safe characters only', function (): void {

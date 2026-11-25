@@ -1,5 +1,7 @@
 import { Pencil } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { markName } from '@/lib/attendance/next-step';
+import { reviewBadge } from '@/lib/attendance/offline-marks';
 import { markClock, markHow } from '@/lib/attendance/punch-view';
 import type { WeekMark as Mark } from '@/lib/attendance/week';
 
@@ -17,8 +19,12 @@ export default function WeekMark({
     asked: boolean;
     onAsk: () => void;
 }) {
+    const badge = reviewBadge(mark);
     const how = [
-        markHow(mark.corrected ? 'corrected' : mark.evidence),
+        markHow(
+            mark.corrected ? 'corrected' : mark.evidence,
+            !mark.corrected && mark.offline ? 'offline' : null,
+        ),
         mark.nextDay ? 'del día siguiente' : null,
     ].filter((part) => part !== null);
 
@@ -29,7 +35,12 @@ export default function WeekMark({
                     {markClock(mark)}
                 </b>
                 <span className="flex flex-1 flex-col text-base leading-[22px]">
-                    {markName(mark.type)}
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        {markName(mark.type)}
+                        {badge !== null && (
+                            <Badge variant={badge.variant}>{badge.label}</Badge>
+                        )}
+                    </span>
                     {how.length > 0 && (
                         <small className="text-sm text-muted-foreground">
                             {how.join(' · ')}
@@ -47,6 +58,11 @@ export default function WeekMark({
                     </button>
                 )}
             </div>
+            {mark.reviewNote !== undefined && (
+                <p className="pb-2 text-sm text-muted-foreground">
+                    Lo que RH encontró: {mark.reviewNote}
+                </p>
+            )}
             {mark.reason !== null && (
                 <p className="pb-2 text-sm text-muted-foreground">
                     Motivo de la corrección: {mark.reason}

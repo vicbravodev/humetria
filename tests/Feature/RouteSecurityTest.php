@@ -61,8 +61,7 @@ function publicRouteNames(): array
         'attendance.device.kiosk.activate', // guest: la pantalla del QR de un centro (tableta fija, sin cuenta) abre su enlace una sola vez: el token del enlace se cambia por un secreto nuevo que solo guarda una cookie httpOnly y el enlace muere; un enlace ya usado, revocado, ajeno o desconocido da el mismo 404; throttled
         'attendance.device.kiosk.show', // guest: la página de la pantalla del QR; el secreto de su cookie httpOnly es la credencial; el mismo 404 por cualquier causa; throttled
         'attendance.device.kiosk.qr', // guest: la pantalla del QR pide el código vigente de su centro (rota cada 30 s); el secreto de su cookie httpOnly es la credencial; el mismo 404 por cualquier causa; throttled
-        'attendance.device.punch.home', // guest: la pantalla Marcar de la persona en su dispositivo vinculado (sin cuenta), desde la dirección del correo «dispositivo vinculado»; no muestra nada de nadie hasta que una llave verificada marca en esta sesión, y entonces solo el día de esa persona (tipos y horas, nunca ubicación); throttled por IP
-        'attendance.device.punch.show', // guest: la misma pantalla Marcar abierta desde el QR de la pantalla del centro, con su código (que solo vale 60 s); throttled por IP
+        'attendance.device.punch.show', // guest: la pantalla Marcar de la persona en su dispositivo vinculado (sin cuenta), desde su portal `/me/{slug}` o desde el QR de la pantalla del centro, con su código (que solo vale 60 s); no muestra nada de nadie; throttled por IP
         'attendance.device.punch.options', // guest: da las opciones WebAuthn para firmar una marca, sin persona ni llaves listadas; el desafío queda ligado a la sesión del navegador, es de un solo uso y vence en 60 s; throttled por IP
         'attendance.device.punch.store', // guest: registra la marca de la persona cuya llave firmó (firma, origen, verificación de la persona, desafío de esta sesión); la persona sale solo de la firma, la empresa solo del slug y la hora del servidor; una firma inválida, de un dispositivo revocado, de alguien dado de baja o de otra empresa da el mismo 404; throttled por IP y por llave
         'attendance.device.punch.forget', // guest: «¿No es usted?» en la pantalla Marcar: el navegador olvida al instante a quien marcó en él; no recibe datos, no lee ni devuelve nada de nadie; throttled por IP
@@ -73,6 +72,8 @@ function publicRouteNames(): array
         'attendance.device.week.read', // guest: devuelve la semana de la persona cuya llave firmó (sus marcas con hora local, horas y avisos; nunca ubicación ni dispositivo); cada lectura pide su propia firma; firma inválida, dispositivo revocado, persona dada de baja u otra empresa dan el mismo 404; throttled por IP y por llave
         'attendance.device.week.confirm', // guest: la persona confirma su semana ya terminada con una firma propia de esta acción (un solo uso); la persona sale solo de la firma y queda en la bitácora con el dispositivo; el mismo 404 por cualquier firma inválida; throttled por IP y por llave
         'attendance.device.week.dispute', // guest: la persona objeta su semana ya terminada con motivo y una firma propia de esta acción (un solo uso); la persona sale solo de la firma y queda en la bitácora con el dispositivo; el mismo 404 por cualquier firma inválida; throttled por IP y por llave
+        'attendance.device.tickets', // guest: sin sesión, cookies ni CSRF (tras un apagón puede no haberlas): cambia un boleto vigente de la persona, de cualquier edad dentro del horizonte, por un lote nuevo y el contexto; un boleto no sirve sin la firma de una marca y uno más nuevo solo estrecha la cota inferior; la empresa del slug (404 sin el módulo); otro sitio, 403 (RejectCrossSiteRequests); throttled por IP
+        'attendance.device.punch.offline', // guest: sin sesión, cookies ni CSRF (tras un apagón puede no haberlas): cada marca del lote (≤ 20) la autoriza su firma, con llave de acceso o con la llave del dispositivo y su pase, más un boleto HMAC de un solo uso que nombra empresa y persona; la persona sale de la firma, la empresa del slug (404 sin el módulo); otro sitio, 403 (RejectCrossSiteRequests); responde por marca; throttled por IP
         'attendance.device.correction.options', // guest: da las opciones WebAuthn para firmar una solicitud de corrección, sin persona ni llaves listadas; el desafío queda ligado a la sesión del navegador y solo sirve para corregir (no para marcar ni para la semana), es de un solo uso y vence en 60 s; throttled por IP
         'attendance.device.correction.store', // guest: la persona pide a RH corregir una marca suya o una que olvidó, con motivo y una firma propia de esta acción (un solo uso); la persona sale solo de la firma; una firma inválida, un dispositivo revocado, una persona dada de baja, otra empresa o una marca que no es suya dan el mismo 404; nunca ubicación; throttled por IP y por llave
         'worker.home', // guest: la entrada de la persona trabajadora a su empresa (sin cuenta ni credencial en la dirección); sin sesión muestra la pantalla de entrada sin el nombre de nadie; con sesión (validada en cada petición), su inicio; una empresa desconocida o bloqueada da el mismo 404; throttled por IP
@@ -87,6 +88,9 @@ function publicRouteNames(): array
         'worker.key.store', // guest: guarda la llave verificada de la persona de la sesión (mismas reglas que las opciones, el límite contado bajo candado); bitácora, log y aviso con «No fui yo»; throttled por IP
         'worker.not-me.show', // guest: «No fui yo» desde el correo de una llave nueva; la dirección firmada por la app (30 días) es la credencial: sin firma o alterada 403, llave de otra empresa 404; solo muestra la confirmación; throttled por IP
         'worker.not-me.confirm', // guest: confirma «No fui yo» con la misma dirección firmada: anula la llave, cierra las sesiones de la persona (valid_after), anula sus enlaces, avisa al contacto de la empresa y queda en la bitácora; una vez; throttled por IP
+        'worker.app.manifest', // guest: el manifest de la app instalable de una empresa (nombre comercial, íconos y dirección de inicio); sin sesión, sin cookies ni persona en la respuesta; el mismo 404 para una empresa que no existe y una bloqueada; throttled por IP
+        'worker.app.sw', // guest: el service worker de la app instalable de una empresa; sin sesión ni cookies; no lee datos: solo guarda archivos del build y el cascarón; con PWA_SW_KILL se desregistra; throttled por IP
+        'worker.app.offline', // guest: el cascarón de la app instalable (sin conexión): sin sesión ni cookies, sin scripts en línea ni datos de nadie; el mismo 404 para una empresa que no existe y una bloqueada; throttled por IP
         'sso.start', // guest: starts the sign-in with the identity provider of the company in the address; the same 404 for a company that does not exist, has no SSO in its plan, switched it off or proved no domain; state, nonce and PKCE in the session; throttled per address
         'sso.callback', // guest: the identity provider comes back here with a code; the session of the start (state, nonce, PKCE verifier, company) is the credential, the ID token must name our issuer, client and nonce, and its email must be a verified one at a domain the company proved, of someone who is already a member; never creates an account; the same generic refusal for everything else; throttled per address
         'sso.staff.start', // guest: starts the sign-in of Humetría's staff with the platform provider (state, nonce, PKCE in the session); 404 when none is configured; throttled per address
@@ -156,6 +160,17 @@ test('the public allowlist has no stale entries', function () {
     expect(array_values(array_diff(publicRouteNames(), $names)))->toBe([])
         ->and(array_values(array_diff(unnamedPublicUris(), $uris)))->toBe([]);
 });
+
+test('the sessionless routes take no session, cookies nor forgery check', function (string $name) {
+    $route = Route::getRoutes()->getByName($name) ?? throw new LogicException("No route named {$name}.");
+    $middleware = Route::gatherRouteMiddleware($route);
+
+    expect($middleware)->not->toContain(Illuminate\Session\Middleware\StartSession::class)
+        ->and($middleware)->not->toContain(Illuminate\Cookie\Middleware\EncryptCookies::class)
+        ->and($middleware)->not->toContain(Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class)
+        ->and($middleware)->not->toContain(Illuminate\View\Middleware\ShareErrorsFromSession::class)
+        ->and($middleware)->not->toContain(Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
+})->with(['worker.app.manifest', 'worker.app.sw', 'worker.app.offline']);
 
 test('the person\'s pages that take their session also enter the company of their address first', function () {
     $pages = collect(appRoutes())->filter(fn (LaravelRoute $route): bool => in_array(RequireWorkerSession::class, Route::gatherRouteMiddleware($route), true));

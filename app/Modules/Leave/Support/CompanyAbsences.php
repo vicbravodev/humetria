@@ -43,6 +43,11 @@ final readonly class CompanyAbsences implements Absences
             ->all()); // @pest-mutate-ignore: UnwrapArrayValues
     }
 
+    public function holidaysBetween(CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        return Holidays::between($from, $to);
+    }
+
     /**
      * @param  list<string>  $employeeIds
      */

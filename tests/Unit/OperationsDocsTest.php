@@ -144,3 +144,77 @@ it('documents in the WhatsApp manual the variables, the commands and the phases 
         expect(str_contains(mb_strtolower($manual), mb_strtolower($topic)))->toBeTrue("The WhatsApp manual does not mention {$topic}");
     }
 });
+
+/** Everything under app/ and config/ as one text: what the PWA manual names must be spelled in it. */
+function appAndConfigCode(): string
+{
+    $code = '';
+
+    foreach (['app', 'config'] as $folder) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__, 2).'/'.$folder, FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file instanceof SplFileInfo && $file->getExtension() === 'php') {
+                $code .= (string) file_get_contents($file->getPathname());
+            }
+        }
+    }
+
+    return $code;
+}
+
+it('documents in the PWA manual every variable and signal the app installs with', function (): void {
+    $manual = repoFile('docs/operations/pwa.md');
+    $code = appAndConfigCode();
+    $example = repoFile('.env.example');
+
+    foreach ([
+        'PWA_SW_KILL', 'ATTENDANCE_OFFLINE_ENABLED', 'ATTENDANCE_WEEK_BLOCK_UNCOVERED', 'APP_PREVIOUS_KEYS',
+        'VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT',
+        'WORKER_ACCESS_DEVICE_KEYS_MAX', 'WORKER_ACCESS_OFFLINE_PASS_HOURS',
+    ] as $variable) {
+        expect(str_contains($code, "env('{$variable}'"))->toBeTrue("The config no longer reads {$variable}")
+            ->and(str_contains($example, $variable.'='))->toBeTrue(".env.example does not have {$variable}")
+            ->and(str_contains($manual, $variable))->toBeTrue("The PWA manual does not mention {$variable}");
+    }
+
+    foreach ([
+        'push.unconfigured', 'attendance.offline_mark_received', 'attendance.offline_mark_rejected', 'attendance.offline_mark_already_recorded',
+        'attendance.offline_queue_reported', 'attendance.week_uncovered_days_computed', 'interval_minutes', 'queue_age_minutes',
+        'Service-Worker-Allowed', 'notifications:vapid-keys', 'npm run build:sw',
+    ] as $signal) {
+        expect(str_contains($code, $signal))->toBeTrue("The code no longer says {$signal}")
+            ->and(str_contains($manual, $signal))->toBeTrue("The PWA manual does not mention {$signal}");
+    }
+
+    // Every push signal the code writes, as it spells it.
+    preg_match_all("/'(push\\.[a-z_]+)'/", $code, $pushSignals);
+
+    foreach (array_unique($pushSignals[1]) as $signal) {
+        expect(str_contains($manual, $signal))->toBeTrue("The PWA manual does not mention {$signal}");
+    }
+
+    expect(repoFile('CLAUDE.md'))->toContain('docs/operations/pwa.md');
+});
+
+it('gives in the PWA manual the figures the code has', function (): void {
+    // Line breaks as spaces: the manual wraps at 120 columns wherever it falls.
+    $manual = (string) preg_replace('/\s+/', ' ', repoFile('docs/operations/pwa.md'));
+    $offline = (require dirname(__DIR__, 2).'/config/attendance.php')['offline'];
+    $access = require dirname(__DIR__, 2).'/config/worker_access.php';
+
+    foreach ([
+        "{$offline['ticket_batch']} boletos",
+        "{$offline['ticket_horizon_days']} días",
+        "{$offline['wide_interval_minutes']} min",
+        "{$offline['count_declared_max_hours']} h",
+        "{$offline['qr_old_window_minutes']} min",
+        "{$offline['already_recorded_window_minutes']} min",
+        "{$offline['review_age_days']} días",
+        "{$offline['delivery_batch_max']} marcas",
+        "{$access['device_keys_max']} llaves",
+        "{$access['pass_hours']} h",
+        App\Modules\Notifications\Actions\StoreSubscription::MAX_PER_PERSON.' suscripciones',
+        App\Modules\Notifications\Actions\SendPush::TTL.' s',
+    ] as $figure) {
+        expect(str_contains($manual, $figure))->toBeTrue("The PWA manual does not say «{$figure}»");
+    }
+});

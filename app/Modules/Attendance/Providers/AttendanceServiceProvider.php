@@ -8,10 +8,12 @@ use App\Modules\Attendance\Contracts\AttendanceStanding;
 use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Attendance\Contracts\PlaceSearch;
 use App\Modules\Attendance\Events\MarkCorrected;
+use App\Modules\Attendance\Events\OfflineMarkAccepted;
 use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Listeners\AlertDispute;
 use App\Modules\Attendance\Listeners\ReopenOnAbsence;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
+use App\Modules\Attendance\Listeners\ReopenOnOfflineMark;
 use App\Modules\Attendance\Support\CompanyAttendanceStanding;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
@@ -42,12 +44,21 @@ final class AttendanceServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(MarkCorrected::class, ReopenOnCorrection::class);
+        Event::listen(OfflineMarkAccepted::class, ReopenOnOfflineMark::class);
         Event::listen(WeekDisputed::class, AlertDispute::class);
         Event::listen(AbsenceChanged::class, ReopenOnAbsence::class);
 
         // A screen asks for a code about twice a minute: per address, so a center with several screens behind one router fits,
         // and guessing a token is slowed down before any is read.
         RateLimiter::for('attendance-device', fn (Request $request): Limit => Limit::perMinute(120)->by('attendance-device:'.$request->ip()));
+
+        // The phone asks for tickets on opening, on coming back to the front and on reconnecting: per address 300 a minute, a
+        // shift behind one NAT. Its own counter, not the screens'.
+        RateLimiter::for('attendance-tickets', fn (Request $request): Limit => Limit::perMinute(300)->by('attendance-tickets:'.$request->ip()));
+
+        // A phone delivers its queue of marks in a request of up to 20: per address 600 a minute counts requests and not marks, a
+        // whole shift behind one NAT. There is none per person: each mark spends a ticket of one use and asks for a new signature.
+        RateLimiter::for('attendance-offline', fn (Request $request): Limit => Limit::perMinute(600)->by('attendance-offline:'.$request->ip()));
 
         // Marking takes three requests (the page, the options, the signature). Per address 300 a minute: a shift of a hundred
         // people behind one router marking in the same minute fits. Per key 12 a minute: a person marks a few times a day,

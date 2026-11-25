@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+
 import inertia from '@inertiajs/vite';
 import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import babel from '@rolldown/plugin-babel';
@@ -9,10 +11,33 @@ import { defineConfig, lazyPlugins } from 'vite-plus';
 
 import { frontendArchitecture } from './frontend-architecture';
 
-export default defineConfig({
+// The service worker is its own build (`npm run build:sw`): one classic file with no import, named by hand, served from
+// /me/{slug}/sw.js (an import would resolve against that address and the worker would never activate).
+const workerConfig = defineConfig({
+    resolve: {
+        alias: {
+            '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
+        },
+    },
+    build: {
+        outDir: 'public/build/pwa',
+        emptyOutDir: false,
+        copyPublicDir: false,
+        rolldownOptions: {
+            input: 'resources/js/sw/sw.ts',
+            output: { format: 'iife', entryFileNames: 'sw.js' },
+        },
+    },
+});
+
+const appConfig = defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.tsx'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.tsx',
+                'resources/js/offline.tsx',
+            ],
             ssr: 'resources/js/app.tsx',
             refresh: true,
             fonts: [
@@ -120,3 +145,5 @@ export default defineConfig({
         },
     },
 });
+
+export default process.env['PWA_WORKER'] === 'sw' ? workerConfig : appConfig;

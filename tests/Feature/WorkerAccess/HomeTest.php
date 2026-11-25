@@ -56,12 +56,12 @@ it('lists what each tool offers the person, in the fixed order of the start, wit
     workerSection('test.vacations', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('vacations', 'Mis vacaciones', 'Su saldo.', '/me/acme/vacations', 2));
     workerSection('test.telework', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('telework', 'Su teletrabajo', 'Sus pendientes.', '/me/acme/telework'));
     workerSection('test.unknown', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('something-new', 'Algo nuevo', 'Al final.', '/me/acme/new'));
-    workerSection('test.attendance', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('attendance', 'Marcar', 'Su entrada.', '/a/acme'));
+    workerSection('test.attendance', fn (WorkerIdentity $person): WorkerSectionLink => new WorkerSectionLink('attendance', 'Marcar', 'Su entrada.', '/me/acme/punch'));
     enteredAs($this->ana->id);
 
     expect(homeSections())->toBe([
         ['key' => 'telework', 'label' => 'Su teletrabajo', 'description' => 'Sus pendientes.', 'href' => '/me/acme/telework', 'pending' => null],
-        ['key' => 'attendance', 'label' => 'Marcar', 'description' => 'Su entrada.', 'href' => '/a/acme', 'pending' => null],
+        ['key' => 'attendance', 'label' => 'Marcar', 'description' => 'Su entrada.', 'href' => '/me/acme/punch', 'pending' => null],
         ['key' => 'vacations', 'label' => 'Mis vacaciones', 'description' => 'Su saldo.', 'href' => '/me/acme/vacations', 'pending' => 2],
         ['key' => 'something-new', 'label' => 'Algo nuevo', 'description' => 'Al final.', 'href' => '/me/acme/new', 'pending' => null],
     ]);
@@ -117,9 +117,10 @@ it('reads the start with the same queries whatever the tools offer', function (i
  * vacaciones (which also asks whether the company opened Vacaciones), Mi puesto de pie, Política por confirmar, Avisos y
  * resultados de su centro, Nos dijeron / Haremos, Retroalimentación de mi equipo and Apoyo; then the open invitations of the
  * person to a NOM-035 evaluation and to a climate or pulse survey, and the complaints channel, which read the company only
- * when there is something to show.
+ * when there is something to show; and once more the company (its row and its tools) to know whether it has Asistencia, which
+ * is what the device key of the app is for.
  */
-const WORKER_HOME_QUERIES = 32;
+const WORKER_HOME_QUERIES = 34;
 
 it('tells the start whether the person already has a key in use, so it offers another device instead of a first key', function (string $case, bool $has): void {
     match ($case) {
@@ -137,3 +138,32 @@ it('tells the start whether the person already has a key in use, so it offers an
     'only a revoked key' => ['revoked', false],
     'a key of someone else' => ['of someone else', false],
 ]);
+
+describe('the device key of the app (plan B)', function (): void {
+    it('gives the start the slug and the addresses to register a key, with the proof step of the person', function (string $mode): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations', 'attendance'], CarbonImmutable::now(config('app.display_timezone')));
+        $key = $mode === 'key' ? WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]) : null;
+        $this->ana->forceFill(['email' => 'ana@acme.mx'])->save();
+        enteredAs($this->ana->id, $key === null ? EntryVia::IssuedLink : EntryVia::Key, $key?->id);
+
+        $this->get(route('worker.home', 'acme'))->assertOk()->assertInertia(fn (Assert $page) => $page->component('worker-access/home')
+            ->where('slug', 'acme')
+            ->where('deviceKey.optionsUrl', route('worker.device-key.options', 'acme'))
+            ->where('deviceKey.storeUrl', route('worker.device-key.store', 'acme'))
+            ->where('deviceKey.proof.mode', $mode)
+            ->where('deviceKey.proof.optionsUrl', route('worker.proof.options', 'acme'))
+            ->etc());
+    })->with(['key', 'code']);
+
+    it('offers no device key to a company without attendance: it only serves to mark', function (): void {
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->where('slug', 'acme')->where('deviceKey', null)->etc());
+    });
+
+    it('does not bring it to the entrance without a session, which names nobody', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+        $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->component('worker-access/enter')->missing('deviceKey')->missing('slug')->etc());
+    });
+});

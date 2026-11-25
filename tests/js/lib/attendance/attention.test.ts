@@ -8,6 +8,7 @@ const none: AttentionInput = {
     center: '',
     counts: { all: 6, pending: 0, disputed: 0, confirmed: 6, at_risk: 0 },
     pendingCorrections: 0,
+    offlineNeedsReview: 0,
     centersWithoutZones: 0,
     findings: [],
 };
@@ -177,5 +178,43 @@ describe('attentionItems: edge cases', () => {
             action: 'Ajustar la zona',
             href: '/admin/acme/attendance/centers/c1',
         });
+    });
+});
+
+describe('attentionItems: marks made without a connection', () => {
+    it('says nothing with none to review', () => {
+        expect(
+            attentionItems('acme', none).map((item) => item.key),
+        ).not.toContain('offline');
+    });
+
+    it('asks for RH after the corrections and the objections, and sends to the tab of the marks', () => {
+        const items = attentionItems('acme', {
+            ...none,
+            counts: { ...none.counts, disputed: 1 },
+            pendingCorrections: 1,
+            offlineNeedsReview: 3,
+        });
+
+        expect(items.map((item) => item.key)).toEqual([
+            'corrections',
+            'disputed',
+            'offline',
+        ]);
+        expect(items[2]).toEqual({
+            key: 'offline',
+            tone: 'alert',
+            title: '3 marcas sin conexión por verificar',
+            text: 'Tienen banderas o llevan más de 7 días. Cuentan en las horas mientras tanto.',
+            action: 'Verificar marcas',
+            href: '/admin/acme/attendance/corrections?status=offline',
+        });
+    });
+
+    it('speaks of one in the singular', () => {
+        expect(
+            attentionItems('acme', { ...none, offlineNeedsReview: 1 })[0]
+                ?.title,
+        ).toBe('1 marca sin conexión por verificar');
     });
 });

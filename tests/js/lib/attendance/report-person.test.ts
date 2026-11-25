@@ -133,6 +133,14 @@ describe('isWarning', () => {
         expect(isWarning('Sin marca de fin')).toBe(true);
         expect(isWarning('En curso')).toBe(false);
     });
+
+    it('is false for a mark made without a connection and one RH verified, true for one that waits for RH', () => {
+        expect(
+            isWarning('Marcó sin conexión (firmó con su llave de acceso)'),
+        ).toBe(false);
+        expect(isWarning('Marca sin conexión verificada por RH')).toBe(false);
+        expect(isWarning('Con marcas sin conexión por verificar')).toBe(true);
+    });
 });
 
 describe('hasDayInProgress', () => {

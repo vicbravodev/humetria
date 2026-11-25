@@ -20,6 +20,7 @@ const week = {
     resolution: null,
     digest: 'a'.repeat(64),
     blocked: null,
+    uncoveredDays: [],
     requests: [],
     summary: {
         ordinaryMinutes: 0,
@@ -31,7 +32,7 @@ const week = {
     },
     confirmUrl: null,
     disputeUrl: null,
-    previousUrl: '/a/acme/week/2026-10-26',
+    previousUrl: '/me/acme/week/2026-10-26',
     nextUrl: null,
 };
 

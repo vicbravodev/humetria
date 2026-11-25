@@ -21,6 +21,8 @@ use Illuminate\Support\Str;
  * Roster), the time asked and the mark's time before it (local), the type, the reason, how many days it waits, and RH's
  * note once resolved (the reason and the note only for whoever manages attendance: free text that may be medical). Never a position or a device.
  *
+ * With `status` `offline` or `not_accepted` the tab is that of the marks made without a connection (OfflineMarkPages).
+ *
  * One of them is in view (`selectedId`, `detail`): the one asked for by id, of any state, or the first of the page. Its
  * detail is its row plus, while pending, what approving it would do (CorrectionPreview).
  */
@@ -28,15 +30,21 @@ final readonly class CorrectionPages
 {
     private const int PER_PAGE = 25;
 
-    public function __construct(private Roster $roster, private Timezones $zones) {}
+    public function __construct(private Roster $roster, private Timezones $zones, private OfflineMarkPages $offline) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function index(string $status, string $search, string $requestId = ''): array
+    public function index(string $status, string $search, string $requestId = '', string $flags = ''): array
     {
+        $counts = $this->counts();
+
+        // The tabs of the marks made without a connection have their own rows: `offlineMarks`, not `requests`.
+        if (in_array($status, ['offline', 'not_accepted'], true)) {
+            return [...$this->offline->index($status, $search, $flags === 'none', $requestId), 'status' => $status, 'counts' => $counts];
+        }
+
         $state = CorrectionStatus::tryFrom($status) ?? CorrectionStatus::Pending;
-        $counts = CorrectionRequest::query()->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
         $page = CorrectionRequest::query()->where('status', $state)
             ->when($search !== '', fn (Builder $query) => $query->whereIn('employee_id', $this->roster->matchingIds(new RosterQuery(search: $search))))
             ->orderBy('created_at')->orderBy('id')
@@ -47,14 +55,29 @@ final readonly class CorrectionPages
         return [
             'status' => $state->value,
             'filters' => ['q' => $search],
-            'counts' => array_combine(
-                array_map(fn (CorrectionStatus $case): string => $case->value, CorrectionStatus::cases()),
-                array_map(fn (CorrectionStatus $case): int => is_int($counts[$case->value] ?? null) ? $counts[$case->value] : 0, CorrectionStatus::cases()),
-            ),
+            'counts' => $counts,
             'requests' => $page->through(fn (CorrectionRequest $request): array => $rows[$request->id]),
             'selectedId' => $selected?->id,
             'detail' => $selected === null ? null : [...$rows[$selected->id], ...(CorrectionPreview::of($selected, $zones[$selected->id]) ?? ['day' => null, 'effect' => null])],
             'canResolve' => Gate::allows('manage-attendance'),
+        ];
+    }
+
+    /**
+     * How many there are of each tab: the requests of each state and the marks made without a connection.
+     *
+     * @return array<string, int>
+     */
+    private function counts(): array
+    {
+        $byStatus = CorrectionRequest::query()->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+
+        return [
+            ...array_combine(
+                array_map(fn (CorrectionStatus $case): string => $case->value, CorrectionStatus::cases()),
+                array_map(fn (CorrectionStatus $case): int => is_int($byStatus[$case->value] ?? null) ? $byStatus[$case->value] : 0, CorrectionStatus::cases()),
+            ),
+            ...$this->offline->counts(),
         ];
     }
 

@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { punch, punchDay } from '@/lib/attendance/punch';
 import type { PunchRequest } from '@/lib/attendance/punch';
+import {
+    PUNCH_TIMEOUTS,
+    sendSigned,
+    sign,
+} from '@/lib/attendance/signed-request';
 import type { SignedKey } from '@/lib/webauthn';
 
 const options = { challenge: 'AQID', rpId: 'localhost' };
@@ -25,8 +30,8 @@ const day = {
 };
 
 const request: PunchRequest = {
-    optionsUrl: '/a/acme/punch/options',
-    punchUrl: '/a/acme/punch',
+    optionsUrl: '/me/acme/punch/options',
+    punchUrl: '/me/acme/punch',
     type: 'start',
     qr: 'abc',
     position: { lat: 19.4, lng: -99.1, accuracy: 12 },
@@ -144,5 +149,87 @@ describe('punch, a code of another center', () => {
             person: { name: 'Ana López', next: ['start'] },
             center: 'Oficinas Querétaro',
         });
+    });
+});
+
+describe('sign, the signature of the device', () => {
+    const asks = { challenge: new Uint8Array([1]) };
+
+    it('gives the key the device signed with', async () => {
+        await expect(sign(asks, { getKey: signs })).resolves.toBe(key);
+    });
+
+    it('says cancelled when the person did not confirm, and failed for anything else', async () => {
+        const refused = () =>
+            Promise.reject(new DOMException('no', 'NotAllowedError'));
+        const broken = () => Promise.reject(new Error('boom'));
+
+        await expect(sign(asks, { getKey: refused })).resolves.toBe(
+            'cancelled',
+        );
+        await expect(sign(asks, { getKey: broken })).resolves.toBe('failed');
+    });
+
+    it('says failed when the browser gave no signature', async () => {
+        await expect(
+            sign(asks, { getKey: () => Promise.resolve(null) }),
+        ).resolves.toBe('failed');
+    });
+});
+
+describe('sendSigned, how long it waits', () => {
+    const signed = {
+        optionsUrl: request.optionsUrl,
+        url: request.punchUrl,
+        body: { mark_type: 'start' },
+    };
+
+    function signalsOf(fetcher: ReturnType<typeof serverAnswering>) {
+        return fetcher.mock.calls.map(([, init]) => init?.signal ?? null);
+    }
+
+    it('gives each request its time when it is asked to, and none when it is not', async () => {
+        const waiting = serverAnswering();
+        await sendSigned(signed, {
+            fetcher: waiting,
+            getKey: signs,
+            xsrf: null,
+            timeouts: { options: 4_000, request: 20_000 },
+        });
+
+        expect(signalsOf(waiting)).toHaveLength(2);
+        expect(
+            signalsOf(waiting).every((signal) => signal instanceof AbortSignal),
+        ).toBe(true);
+
+        const patient = serverAnswering();
+        await sendSigned(signed, {
+            fetcher: patient,
+            getKey: signs,
+            xsrf: null,
+        });
+
+        expect(signalsOf(patient)).toEqual([null, null]);
+    });
+
+    it('hands the answer of the request that took the mark to whoever keeps the tickets, whatever it said', async () => {
+        for (const markStatus of [200, 422, 409]) {
+            const answers: unknown[] = [];
+
+            await sendSigned(signed, {
+                fetcher: serverAnswering({ markStatus }),
+                getKey: signs,
+                xsrf: null,
+                onAnswer: (json) => answers.push(json),
+            });
+            // Read on a copy, in the background: let it settle.
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(answers, String(markStatus)).toEqual([day]);
+        }
+    });
+
+    it('waits 4 seconds for the server to offer a challenge and 20 for it to take the mark', () => {
+        expect(PUNCH_TIMEOUTS).toEqual({ options: 4_000, request: 20_000 });
     });
 });

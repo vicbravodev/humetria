@@ -260,6 +260,23 @@ it('writes the values of the detail as a person reads them: states, dates in Mex
         ]));
 });
 
+it('writes an offline mark entry with its time basis, signer and flags in Spanish', function (): void {
+    auditRow('attendance.offline_mark_accepted', ['metadata' => [
+        'time_basis' => 'qr_window',
+        'signer_type' => 'device_key',
+        'interval_minutes' => 120,
+        'review_flags' => ['wide_interval', 'no_position', 'zones_not_configured'],
+    ]]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', [
+            'Base de la hora' => 'Ventana del QR',
+            'Firmante' => 'Llave del teléfono',
+            'Minutos del intervalo' => '120',
+            'Banderas de revisión' => 'Intervalo ancho, Sin posición, Centro sin zonas',
+        ]));
+});
+
 it('says who was impersonated and in which company on an impersonation entry', function (): void {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme Demo']);
     $owner = User::factory()->create(['name' => 'Dueña Acme', 'email' => 'duena@acme.mx']);

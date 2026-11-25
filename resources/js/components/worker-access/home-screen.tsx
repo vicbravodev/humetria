@@ -5,8 +5,9 @@ import HomeStart from '@/components/worker-access/home-start';
 import PortalTabBar from '@/components/worker-access/portal-tab-bar';
 import type { PortalTab } from '@/components/worker-access/portal-tab-bar';
 import WorkerFrame from '@/components/worker-access/worker-frame';
+import { usePassRenewal } from '@/hooks/use-pass-renewal';
 import { pendingTotal, splitSections } from '@/lib/worker-access/portal';
-import type { WorkerSection } from '@/types';
+import type { ProofStep, WorkerSection } from '@/types';
 
 /**
  * The person's portal (findings 3 and 29): three tabs, the same for everyone. Inicio, with what waits for them first; Pendientes,
@@ -15,18 +16,27 @@ import type { WorkerSection } from '@/types';
 export default function HomeScreen({
     company,
     name,
+    slug,
     sections,
     keyUrl,
     hasKey,
+    deviceKey,
     leaveUrl,
 }: {
     company: string;
     name: string;
+    slug: string;
     sections: WorkerSection[];
     keyUrl: string | null;
     hasKey: boolean;
+    deviceKey: {
+        optionsUrl: string;
+        storeUrl: string;
+        proof: ProofStep;
+    } | null;
     leaveUrl: string;
 }) {
+    usePassRenewal(slug);
     const [tab, setTab] = useState<PortalTab>('start');
     const { waiting, tools } = splitSections(sections);
     const pending = tab === 'pending' && waiting.length === 0;
@@ -51,6 +61,7 @@ export default function HomeScreen({
                     <HomeStart
                         company={company}
                         name={name}
+                        slug={slug}
                         waiting={waiting}
                         tools={tools}
                     />
@@ -60,8 +71,10 @@ export default function HomeScreen({
                     <HomeAccount
                         company={company}
                         name={name}
+                        slug={slug}
                         keyUrl={keyUrl}
                         hasKey={hasKey}
+                        deviceKey={deviceKey}
                         leaveUrl={leaveUrl}
                     />
                 )}

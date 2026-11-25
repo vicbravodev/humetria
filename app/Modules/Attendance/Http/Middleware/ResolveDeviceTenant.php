@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Context;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The company of a time-clock device's route (a/{tenant:slug}/...), which carries no account: works inside the company
+ * The company of a time-clock device's route (a/{tenant:slug}/... for the center's QR screen, me/{tenant:slug}/... for Marcar, Mi semana and a correction), which carries no account: works inside the company
  * of the slug, as ResolveTenant does for the panel (its data, logs and queued jobs). An unknown company and one that may
  * not be used (suspended, as BlockSuspendedTenant reads it) get the same 404, so the URL reveals nothing; a suspended
  * company is not entered first, so that 404 is not logged under its id.

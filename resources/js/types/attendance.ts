@@ -96,6 +96,8 @@ export type AttendanceOverviewProps = {
     filters: { q: string; status: OverviewView };
     counts: Record<OverviewView, number>;
     pendingCorrections: number;
+    /** Marks made without a connection that nobody reviewed and have flags or are over a week old. */
+    offlineNeedsReview: number;
     centersWithoutZones: number;
     setup: AttendanceSetup;
     /** The hours of everyone in scope, ordinary and overtime, in minutes. */
@@ -166,6 +168,16 @@ export type ReportDay = {
     absence?: 'vacation' | 'leave' | null;
     /** The day's marks in force, for RH to correct one. */
     marks?: ReportMark[];
+    /** Who reviewed each of the day's marks made without a connection, and when: one per reviewed mark. */
+    reviews?: ReportReview[];
+};
+
+/** The review in force of a mark made without a connection: the mark's time, the decision, who made it and when (local). */
+export type ReportReview = {
+    time: string;
+    decision: 'verified' | 'incorrect';
+    reviewer: string;
+    reviewedAt: string;
 };
 
 /** A mark in force of a day of the report, at the local time of where it was taken. */
@@ -202,6 +214,8 @@ export type ReportSummary = {
     /** People with at least one flagged day / at least one day of a week no one answered. */
     flaggedPeople: number;
     unconfirmedPeople: number;
+    /** Days with a mark made without a connection that RH has not reviewed. */
+    toVerify: number;
 };
 
 /** Which people the report lists: all, those with a flagged day or those with a week no one answered. */

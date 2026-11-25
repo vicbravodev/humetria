@@ -1,3 +1,4 @@
+import { NETWORK_TIMEOUT_MS } from '@/lib/pwa/sw-rules';
 import type { SignedKey } from '@/lib/webauthn';
 import { assertionPayload, requestOptions } from '@/lib/webauthn';
 
@@ -8,14 +9,41 @@ export type SignDeps = {
         options: PublicKeyCredentialRequestOptions,
     ) => Promise<SignedKey | null>;
     xsrf: string | null;
+    /**
+     * How long each request may take before it is given up (milliseconds), when the app can go on without the network: the
+     * server's challenge, and the request that takes the mark. Without it, no request has a time limit.
+     */
+    timeouts?: { options: number; request: number };
+    /**
+     * Gets what the request that took the action answered (read on a copy, whatever the status), for the phone to keep the
+     * tickets and the context every answer after a verified signature carries.
+     */
+    onAnswer?: (json: unknown) => void;
+};
+
+/**
+ * Marking waits 4 seconds for the server to offer a challenge (nothing was recorded yet, so the mark can go to the queue)
+ * and 20 for the request that takes it: if that one is cut, the server may already have it, and the delivery of the queued
+ * copy answers «Ya estaba registrada».
+ */
+export const PUNCH_TIMEOUTS = {
+    options: NETWORK_TIMEOUT_MS,
+    request: 20_000,
 };
 
 export async function post(
     url: string,
     body: unknown,
-    { fetcher, xsrf }: SignDeps,
+    {
+        fetcher,
+        xsrf,
+        timeout,
+    }: Pick<SignDeps, 'fetcher' | 'xsrf'> & { timeout?: number | undefined },
 ): Promise<Response> {
     return fetcher(url, {
+        ...(timeout === undefined
+            ? {}
+            : { signal: AbortSignal.timeout(timeout) }),
         method: 'POST',
         credentials: 'same-origin',
         headers: {
@@ -28,10 +56,10 @@ export async function post(
 }
 
 /** The signature of the device, or why there is none. */
-async function sign(
+export async function sign(
     options: PublicKeyCredentialRequestOptions,
-    deps: SignDeps,
-): Promise<SignedKey | string> {
+    deps: Pick<SignDeps, 'getKey'>,
+): Promise<SignedKey | 'cancelled' | 'failed'> {
     try {
         return (await deps.getKey(options)) ?? 'failed';
     } catch (error) {
@@ -56,7 +84,14 @@ export async function sendSigned(
     { optionsUrl, url, body }: SignedRequest,
     deps: SignDeps,
 ): Promise<Response | string> {
-    const response = await post(optionsUrl, {}, deps);
+    const response = await post(
+        optionsUrl,
+        {},
+        {
+            ...deps,
+            timeout: deps.timeouts?.options,
+        },
+    );
 
     if (!response.ok) {
         return response;
@@ -65,7 +100,22 @@ export async function sendSigned(
     const options = requestOptions(await response.json());
     const key = options === null ? 'failed' : await sign(options, deps);
 
-    return typeof key === 'string'
-        ? key
-        : post(url, { ...body, credential: assertionPayload(key) }, deps);
+    if (typeof key === 'string') {
+        return key;
+    }
+
+    const answer = await post(
+        url,
+        { ...body, credential: assertionPayload(key) },
+        { ...deps, timeout: deps.timeouts?.request },
+    );
+
+    if (deps.onAnswer !== undefined) {
+        answer
+            .clone()
+            .json()
+            .then(deps.onAnswer, () => undefined);
+    }
+
+    return answer;
 }

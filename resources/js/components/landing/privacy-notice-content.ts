@@ -123,6 +123,17 @@ const MESSAGING: PrivacySection = {
     ],
 };
 
+const WORKER_APP: PrivacySection = {
+    id: 'app-de-la-persona-trabajadora',
+    title: 'La app de las personas trabajadoras',
+    paragraphs: [
+        'La app de la persona trabajadora (Marcar, Mi semana y el inicio de su portal) puede instalarse en el teléfono como una aplicación. Para poder marcar aunque falle la conexión, guarda en el almacenamiento del navegador del teléfono las marcas hechas sin conexión, los boletos que el servidor le entrega para poder firmarlas y, en algunos teléfonos, una llave propia de la app. Todo eso se queda ahí solo hasta que la marca llega al servidor.',
+        'Además de eso, el teléfono guarda la pantalla de inicio de la app con el nombre de la empresa y los archivos de la propia app. No guarda páginas con datos de la persona ni de otras personas. Todo se borra al borrar los datos del sitio en el navegador, y las marcas que aún no se enviaron se pierden si se borran antes.',
+        'Al marcar, el teléfono toma la posición de la persona en ese momento y la manda con la marca, que se guarda como cualquier otra. La posición se toma solo al marcar, nunca en segundo plano.',
+        'Los avisos al teléfono solo se activan si la persona los permite. El aviso pasa por el servicio de avisos del fabricante del navegador (Apple, Google o Mozilla), que recibe un aviso vacío y la dirección de la suscripción, nunca el nombre de la persona ni el contenido. En la pantalla bloqueada dice solo «Tiene un aviso en Humetría»; el detalle se ve dentro de la app. Los avisos se dan de baja al salir de la app o cuando la empresa retira el acceso a la persona. En un teléfono compartido, los recibe la última persona que los activó.',
+    ],
+};
+
 const CONTROL: PrivacySection = {
     id: 'borrar-o-rechazar-cookies',
     title: 'Cómo borrar o rechazar las cookies',
@@ -151,7 +162,7 @@ const RIGHTS: PrivacySection = {
     ],
 };
 
-/** The ten sections of the notice, in the order the page shows them. */
+/** The eleven sections of the notice, in the order the page shows them. */
 export function privacySections(parties: PrivacyParties): PrivacySection[] {
     return [
         controller(parties),
@@ -162,6 +173,7 @@ export function privacySections(parties: PrivacyParties): PrivacySection[] {
         PLATFORM,
         MESSAGING,
         CONTROL,
+        WORKER_APP,
         RETENTION,
         RIGHTS,
     ];

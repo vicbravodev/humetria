@@ -7,11 +7,14 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerAccessState;
+use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 
 mutates(WorkerSessionStore::class);
 
@@ -142,4 +145,22 @@ it('leaves only the person\'s entry: the rest of the session stays', function ()
     $this->store->end();
 
     expect(session()->get('login_web_x'))->toBe(7)->and($this->store->current())->toBeNull();
+});
+
+it('does not revoke the device key when the person leaves: «Salir» only forgets the session', function (): void {
+    $phoneKey = WorkerDeviceKey::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    $this->store->start($this->ana->id, EntryVia::Key, 'key-1');
+
+    $this->post(route('worker.leave', $this->tenant->slug))->assertRedirect();
+
+    expect($phoneKey->refresh()->revoked_at)->toBeNull()->and($this->store->current())->toBeNull();
+});
+
+it('dispatches no event of WorkerAccess when the person leaves', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+    $this->store->start($this->ana->id, EntryVia::Key, 'key-1');
+
+    $this->post(route('worker.leave', $this->tenant->slug))->assertRedirect();
+
+    Event::assertNotDispatched(WorkerAccessRevoked::class);
 });

@@ -48,4 +48,17 @@ return [
     */
     'max_keys' => (int) env('WORKER_ACCESS_MAX_KEYS', 3),
 
+    /*
+    | Switches the installed app's service worker off in every phone (/me/{slug}/sw.js then answers a worker that deletes its
+    | caches and unregisters, and the pages stop registering it). It never switches off the delivery of offline marks.
+    */
+    'pwa_sw_kill' => (bool) env('PWA_SW_KILL', false),
+
+    /*
+    | The device key of the app (plan B of the offline marks): how many a person may have in use (a fourth replaces the least used),
+    | and the hours a pass for it is good for. The pass is renewed when the person opens their start with a session.
+    */
+    'device_keys_max' => (int) env('WORKER_ACCESS_DEVICE_KEYS_MAX', 3),
+    'pass_hours' => (int) env('WORKER_ACCESS_OFFLINE_PASS_HOURS', 24),
+
 ];

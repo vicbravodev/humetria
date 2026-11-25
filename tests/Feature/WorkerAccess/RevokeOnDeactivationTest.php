@@ -7,13 +7,16 @@ use App\Modules\Organization\Actions\DeactivateEmployee;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Listeners\RevokeOnDeactivation;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
 mutates(RevokeOnDeactivation::class);
@@ -115,4 +118,72 @@ it('undoes the revocation when the deactivation does not go through', function (
     }
 
     expect($this->phone->refresh()->revoked_at)->toBeNull();
+});
+
+it('revokes the device keys of the person who left, with left_company, and not those of other people', function (): void {
+    $phoneKey = WorkerDeviceKey::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    $theirs = WorkerDeviceKey::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $beto->id]);
+    $earlier = WorkerDeviceKey::factory()->revoked('not_me', now()->subDay())->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    Log::spy();
+
+    resolve(DeactivateEmployee::class)->handle($this->ana);
+
+    expect($phoneKey->refresh())->revoked_reason->toBe('left_company')->revoked_at->toIso8601String()->toBe('2026-11-16T15:00:00+00:00')
+        ->and($earlier->refresh()->revoked_reason)->toBe('not_me')
+        ->and($theirs->refresh()->revoked_at)->toBeNull()
+        ->and(AuditEntry::query()->where('event', 'worker_access.access_revoked_on_leaving')->sole()->metadata)->toEqual(['employee_id' => $this->ana->id, 'keys_revoked' => 2, 'device_keys_revoked' => 1]);
+    Log::shouldHaveReceived('info')->with('worker_access.access_revoked_on_leaving', ['employee_id' => $this->ana->id, 'keys_revoked' => 2, 'device_keys_revoked' => 1])->once();
+});
+
+it('leaves an entry in the audit trail for someone whose only access was a device key', function (): void {
+    $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'hired_on' => '2025-01-01']);
+    $phoneKey = WorkerDeviceKey::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $beto->id]);
+
+    resolve(DeactivateEmployee::class)->handle($beto);
+
+    expect($phoneKey->refresh()->revoked_reason)->toBe('left_company')
+        ->and(AuditEntry::query()->where('event', 'worker_access.access_revoked_on_leaving')->sole()->metadata)->toEqual(['employee_id' => $beto->id, 'keys_revoked' => 0, 'device_keys_revoked' => 1]);
+});
+
+it('keeps the device keys active when the deactivation does not go through', function (): void {
+    $phoneKey = WorkerDeviceKey::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+
+    try {
+        DB::transaction(function (): void {
+            resolve(DeactivateEmployee::class)->handle($this->ana);
+
+            throw new RuntimeException('The deactivation failed.');
+        });
+    } catch (RuntimeException) {
+        // Rolled back with the rest.
+    }
+
+    expect($phoneKey->refresh()->revoked_at)->toBeNull();
+});
+
+it('says that the person lost their access after the departure was confirmed, once, even when they had no key', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+    $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id, 'hired_on' => '2025-01-01']);
+
+    resolve(DeactivateEmployee::class)->handle($beto);
+
+    Event::assertDispatchedTimes(WorkerAccessRevoked::class, 1);
+    Event::assertDispatched(WorkerAccessRevoked::class, fn (WorkerAccessRevoked $event): bool => $event->employeeId === $beto->id && $event->reason === 'left_company' && $event->credentialId === null);
+});
+
+it('says nothing when the departure is undone', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+
+    try {
+        DB::transaction(function (): void {
+            resolve(DeactivateEmployee::class)->handle($this->ana);
+
+            throw new RuntimeException('The deactivation failed.');
+        });
+    } catch (RuntimeException) {
+        // Rolled back with the rest.
+    }
+
+    Event::assertNotDispatched(WorkerAccessRevoked::class);
 });

@@ -18,14 +18,16 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\MarkReviewFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Testing\AssertableInertia;
+use Tests\Support\OfflineDeliveries;
 
 mutates(ReportController::class, ReportPages::class);
 
-/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included; the pass over everyone for the figures and the one for the days of the page (eight each, who was away included: 26 before the second), and the zone of the center, read once. */
-const REPORT_PAGE_QUERIES = 35;
+/** The queries of the report's page with a center, whatever the number of people or days: what was corrected and its view to the audit trail included; the pass over everyone for the figures and the one for the days of the page (nine each, who was away and where the marks come from included: 26 before the second), and the zone of the center, read once. */
+const REPORT_PAGE_QUERIES = 37;
 
 beforeEach(function (): void {
     // Monday 1 February 2027, 12:00 in Mexico City: the last week that ended is 25 to 31 January.
@@ -39,7 +41,7 @@ beforeEach(function (): void {
 });
 
 /** A day of `$person` from a start to an end, local times of Mexico City, marked at the plant's door. */
-function pageDay(Employee $person, string $start, ?string $end): AttendanceMark
+function pageDay(Employee $person, ?string $start, ?string $end): AttendanceMark
 {
     $first = null;
     foreach (array_filter([[MarkType::Start, $start], [MarkType::End, $end]], fn (array $mark): bool => $mark[1] !== null) as [$type, $local]) {
@@ -184,7 +186,7 @@ describe('the page', function (): void {
             ->where('period', ['from' => '2027-01-25', 'to' => '2027-01-31'])
             ->where('summary', [
                 'people' => 2, 'days' => 3, 'workedMinutes' => 1080, 'confirmedPercent' => 67, 'withCorrections' => 1, 'unconfirmed' => 1,
-                'confirmedDays' => 2, 'ordinaryMinutes' => 960, 'overtimeMinutes' => 120, 'overTwelveDays' => 0, 'withoutEndDays' => 1, 'flaggedPeople' => 1, 'unconfirmedPeople' => 1,
+                'confirmedDays' => 2, 'ordinaryMinutes' => 960, 'overtimeMinutes' => 120, 'overTwelveDays' => 0, 'withoutEndDays' => 1, 'flaggedPeople' => 1, 'unconfirmedPeople' => 1, 'toVerify' => 0,
             ])
             ->where('people.total', 2)
             ->where('people.per_page', 25)
@@ -198,6 +200,7 @@ describe('the page', function (): void {
                     ['id' => $first->id, 'type' => 'start', 'date' => '2027-01-26', 'time' => '08:00'],
                     ['id' => AttendanceMark::query()->where('employee_id', $this->ana->id)->where('type', MarkType::End)->orderBy('marked_at')->value('id'), 'type' => 'end', 'date' => '2027-01-26', 'time' => '18:00'],
                 ],
+                'reviews' => [],
             ])
             // The marks in force: the correction, not the mark it replaced.
             ->where('people.data.0.days.1.marks.0.time', '08:00')
@@ -211,6 +214,41 @@ describe('the page', function (): void {
 
         expect($response->getContent())->not->toContain('19.4327')->not->toContain('latitude')->not->toContain('longitude')
             ->not->toContain('accuracy')->not->toContain('distance')->not->toContain('credential_id')->not->toContain('credentialId');
+    });
+
+    it('counts the days with marks made without a connection that wait for RH, and points at the person; a verified one only informs', function (): void {
+        OfflineDeliveries::accepted($this->ana, '2027-01-26 08:00', qr: true);
+        pageDay($this->ana, null, '2027-01-26 16:00');
+        $verified = OfflineDeliveries::accepted($this->bob, '2027-01-27 08:00');
+        pageDay($this->bob, null, '2027-01-27 16:00');
+        MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $verified->mark_id]);
+        $this->actingAs($this->hr);
+
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('summary.toVerify', 1)->where('summary.flaggedPeople', 1)
+            ->where('people.data.0.days.0.flags', ['Marcó sin conexión (firmó con su llave de acceso)', 'Con marcas sin conexión por verificar'])
+            ->where('people.data.1.days.0.flags', ['Marcó sin conexión (firmó con su llave de acceso)', 'Marca sin conexión verificada por RH'])
+            ->where('people.data.0.days.0.evidence', 'Media'));
+        $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31', 'show' => 'flagged']))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.total', 1)->where('people.data.0.name', 'Ana López'));
+    });
+
+    // Decisión del dueño, 2026-11-24: the page names who reviewed each mark made without a connection, and when.
+    it('says on each day who reviewed its marks made without a connection, what they decided and when, and nothing else of the review', function (): void {
+        $verified = OfflineDeliveries::accepted($this->ana, '2027-01-26 08:00', qr: true);
+        pageDay($this->ana, null, '2027-01-26 16:00');
+        OfflineDeliveries::accepted($this->bob, '2027-01-27 08:00');
+        pageDay($this->bob, null, '2027-01-27 16:00');
+        $this->hr->update(['name' => 'Rosa Revisora']);
+        MarkReviewFactory::new()->incorrect('Nota privada de RH.')->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $verified->mark_id, 'reviewer_id' => $this->hr->id, 'created_at' => '2027-01-28 16:30:00']);
+        AttendanceMark::factory()->correcting(AttendanceMark::query()->findOrFail($verified->mark_id))->create(['marked_at' => CarbonImmutable::parse('2027-01-26 08:20', 'America/Mexico_City')->utc(), 'reason' => 'Entró a las 8:20.']);
+        $this->actingAs($this->hr);
+
+        $response = $this->get(authorityReportUrl(['center' => $this->plant->id, 'from' => '2027-01-25', 'to' => '2027-01-31']))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('people.data.0.days.0.reviews', [['time' => '08:00', 'decision' => 'incorrect', 'reviewer' => 'Rosa Revisora', 'reviewedAt' => '2027-01-28 10:30']])
+            ->where('people.data.1.days.0.reviews', []));
+
+        expect($response->getContent())->not->toContain('Nota privada');
     });
 
     it('says which day the person was away with vacations or a leave, never its type', function (): void {
@@ -232,7 +270,7 @@ describe('the page', function (): void {
         $this->get(authorityReportUrl(['center' => $this->plant->id]))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->where('summary', [
                 'people' => 0, 'days' => 0, 'workedMinutes' => 0, 'confirmedPercent' => 0, 'withCorrections' => 0, 'unconfirmed' => 0,
-                'confirmedDays' => 0, 'ordinaryMinutes' => 0, 'overtimeMinutes' => 0, 'overTwelveDays' => 0, 'withoutEndDays' => 0, 'flaggedPeople' => 0, 'unconfirmedPeople' => 0,
+                'confirmedDays' => 0, 'ordinaryMinutes' => 0, 'overtimeMinutes' => 0, 'overTwelveDays' => 0, 'withoutEndDays' => 0, 'flaggedPeople' => 0, 'unconfirmedPeople' => 0, 'toVerify' => 0,
             ])
             ->where('people.total', 0));
     });
@@ -292,6 +330,22 @@ describe('the page', function (): void {
         $this->actingAs($this->hr);
 
         $this->expectsDatabaseQueryCount(REPORT_PAGE_QUERIES);
+        $this->get(authorityReportUrl(['center' => $this->plant->id]))->assertOk();
+    })->with(['3 people' => [2], '40 people' => [39]]);
+});
+
+describe('naming the reviewers', function (): void {
+    it('reads the names of whoever reviewed in the same extra queries, however many reviewed marks and reviewers', function (int $more): void {
+        foreach (EmployeeFactory::new()->count($more)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]) as $person) {
+            $delivery = OfflineDeliveries::accepted($person, '2027-01-26 08:00', qr: true);
+            pageDay($person, null, '2027-01-26 17:00');
+            MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $delivery->mark_id, 'reviewer_id' => memberOf($this->tenant, TenantRole::Hr)->id]);
+        }
+        pageDay($this->ana, '2027-01-26 08:00', '2027-01-26 17:00');
+        $this->actingAs($this->hr);
+
+        // The company's members, asked once for the request (the company, its roles and its users), and nothing per mark nor per reviewer.
+        $this->expectsDatabaseQueryCount(REPORT_PAGE_QUERIES + 3);
         $this->get(authorityReportUrl(['center' => $this->plant->id]))->assertOk();
     })->with(['3 people' => [2], '40 people' => [39]]);
 });

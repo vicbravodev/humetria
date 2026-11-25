@@ -6,12 +6,15 @@ use App\Models\AuditEntry;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Actions\DisownKey;
 use App\Modules\WorkerAccess\Enums\EntryVia;
+use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
 use App\Modules\WorkerAccess\Notifications\KeyDisowned;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -117,4 +120,36 @@ it('answers 404 to a key of another company, even with a valid signature', funct
     $this->post(notMeUrl($betoKey->id))->assertNotFound();
 
     expect($betoKey->refresh()->revoked_at)->toBeNull();
+});
+
+it('revokes the device keys of the person: a phone prepared in the intruder\'s session stops signing', function (): void {
+    $prepared = WorkerDeviceKey::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    $beto = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+    $theirs = WorkerDeviceKey::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $beto->id]);
+    $this->travel(1)->seconds();
+
+    $this->post(notMeUrl($this->key->id))->assertRedirect();
+
+    expect($prepared->refresh())->revoked_reason->toBe('not_me')->revoked_at->toIso8601String()->toBe('2026-11-16T15:00:01+00:00')
+        ->and($theirs->refresh()->revoked_at)->toBeNull();
+});
+
+it('does not touch the device keys when the confirmation is said again', function (): void {
+    $this->post(notMeUrl($this->key->id))->assertRedirect();
+    $late = WorkerDeviceKey::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+
+    $this->post(notMeUrl($this->key->id))->assertRedirect();
+
+    expect($late->refresh()->revoked_at)->toBeNull();
+});
+
+it('says that the person disowned a key, once, and not when they confirm again', function (): void {
+    Event::fake([WorkerAccessRevoked::class]);
+    $url = notMeUrl($this->key->id);
+
+    $this->post($url)->assertRedirect();
+    $this->post($url)->assertRedirect();
+
+    Event::assertDispatchedTimes(WorkerAccessRevoked::class, 1);
+    Event::assertDispatched(WorkerAccessRevoked::class, fn (WorkerAccessRevoked $event): bool => $event->employeeId === $this->ana->id && $event->reason === 'not_me' && $event->credentialId === $this->key->id);
 });

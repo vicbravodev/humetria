@@ -1,11 +1,10 @@
-import { Clock, TriangleAlert } from 'lucide-react';
 import ReportCorrectSheet from '@/components/attendance/report-correct-sheet';
+import ReportDayNotes from '@/components/attendance/report-day-notes';
 import ReportEvidence from '@/components/attendance/report-evidence';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { confirmationBadge, dayHours, endText } from '@/lib/attendance/report';
 import { lateLabel } from '@/lib/attendance/late';
-import { isWarning } from '@/lib/attendance/report-person';
 import { absenceLabel, dayTitle, duration } from '@/lib/attendance/week-text';
 import type { ReportDay } from '@/types';
 
@@ -14,7 +13,6 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
     const badge = confirmationBadge(day.confirmation);
     const late = lateLabel(day.lateMinutes);
     const away = absenceLabel(day.absence ?? null);
-    const notes = [...day.corrections, ...day.flags];
 
     return (
         <TableRow>
@@ -43,34 +41,7 @@ export default function ReportDayRow({ day }: { day: ReportDay }) {
                         {late}
                     </Badge>
                 )}
-                {notes.length === 0 ? (
-                    <span className="text-muted-foreground">Sin notas</span>
-                ) : (
-                    <ul className="flex flex-col gap-1 text-sm">
-                        {day.corrections.map((correction) => (
-                            <li key={correction}>{correction}</li>
-                        ))}
-                        {day.flags.map((flag) => (
-                            <li
-                                key={flag}
-                                className={`flex items-start gap-1.5 ${isWarning(flag) ? 'text-destructive' : 'text-muted-foreground'}`}
-                            >
-                                {isWarning(flag) ? (
-                                    <TriangleAlert
-                                        aria-hidden
-                                        className="mt-0.5 size-4 shrink-0"
-                                    />
-                                ) : (
-                                    <Clock
-                                        aria-hidden
-                                        className="mt-0.5 size-4 shrink-0"
-                                    />
-                                )}
-                                {flag}
-                            </li>
-                        ))}
-                    </ul>
-                )}
+                <ReportDayNotes day={day} />
             </TableCell>
             <TableCell>
                 <div className="flex flex-col items-start gap-2">

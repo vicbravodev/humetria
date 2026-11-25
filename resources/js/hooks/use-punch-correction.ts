@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { keepAnswer } from '@/hooks/use-offline-store';
 import { getKey } from '@/hooks/use-punch';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import { correctionBody, correctionReason } from '@/lib/attendance/correction';
@@ -36,6 +37,7 @@ export function usePunchCorrection({
                 fetcher: fetch.bind(window),
                 getKey,
                 xsrf: xsrfToken(document.cookie),
+                onAnswer: keepAnswer,
             },
         );
         setWorking(false);

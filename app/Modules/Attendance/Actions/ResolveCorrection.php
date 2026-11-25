@@ -7,6 +7,7 @@ namespace App\Modules\Attendance\Actions;
 use App\Actions\RecordAudit;
 use App\Modules\Attendance\Enums\CorrectionStatus;
 use App\Modules\Attendance\Enums\MarkMethod;
+use App\Modules\Attendance\Events\CorrectionResolved;
 use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Exceptions\CorrectionRejected;
 use App\Modules\Attendance\Models\AttendanceMark;
@@ -70,6 +71,7 @@ final readonly class ResolveCorrection
         });
 
         Log::info('attendance.correction_resolved', ['request_id' => $request->id, ...$this->ids($request, $approve)]);
+        event(new CorrectionResolved($request->id, $request->employee_id, $approve));
 
         return $request;
     }

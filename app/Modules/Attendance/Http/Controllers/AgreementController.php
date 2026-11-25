@@ -6,6 +6,7 @@ namespace App\Modules\Attendance\Http\Controllers;
 
 use App\Modules\Attendance\Actions\AcceptAgreement;
 use App\Modules\Attendance\Exceptions\AgreementOutdated;
+use App\Modules\Attendance\Http\Middleware\AttachOfflineTickets;
 use App\Modules\Attendance\Http\Requests\AcceptAgreementRequest;
 use App\Modules\Attendance\Support\CurrentAgreement;
 use App\Modules\Organization\Contracts\Roster;
@@ -44,6 +45,7 @@ final readonly class AgreementController
 
         $person = $this->roster->find($signed->employeeId);
         abort_if($person === null || ! $person->active, 404);
+        AttachOfflineTickets::signedBy($person->id);
 
         try {
             $accept->handle($person->id, $signed->credentialId, $request->version());

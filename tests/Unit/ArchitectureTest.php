@@ -47,6 +47,15 @@ it('has the Engagement module registered in the architecture rules', function ()
     expect(modules())->toContain('Engagement');
 });
 
+it('has the Notifications module registered in the architecture rules', function (): void {
+    expect(modules())->toContain('Notifications');
+});
+
+// The push library has one door: no other module talks to it, so what leaves for a push service is always what Notifications builds.
+arch('only Notifications talks to the push library')
+    ->expect('Minishlink\WebPush')
+    ->toOnlyBeUsedIn('App\Modules\Notifications');
+
 // Humi never reads the comments of a climate survey: of Engagement, Assistant uses only the standing of each survey
 // (states and counts of the whole company), never anything else of the module.
 arch('Assistant uses of Engagement only its standing')

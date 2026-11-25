@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
+use Tests\Support\OfflineTickets;
 use Tests\Support\SoftAuthenticator;
 
 mutates(RequestCorrection::class, CorrectionRequestController::class);
@@ -234,7 +235,7 @@ describe('from the device', function (): void {
     ]);
 
     it('tells why a request is not taken', function (array $body, string $reason): void {
-        anaSends($body)->assertUnprocessable()->assertExactJson(['reason' => $reason]);
+        OfflineTickets::without(anaSends($body)->assertUnprocessable())->assertExactJson(['reason' => $reason]);
     })->with([
         'in the future' => [['proposed_at' => '2026-11-11 12:30'], 'future_time'],
         'too old' => [['proposed_at' => '2026-10-01 09:00'], 'too_old'],
@@ -243,10 +244,20 @@ describe('from the device', function (): void {
 
     it('tells the person when they already asked, and when they have ten waiting', function (): void {
         anaSends()->assertOk();
-        anaSends()->assertUnprocessable()->assertExactJson(['reason' => 'already_requested']);
+        OfflineTickets::without(anaSends()->assertUnprocessable())->assertExactJson(['reason' => 'already_requested']);
 
         CorrectionRequest::factory()->count(9)->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
-        anaSends(['mark_id' => null, 'mark_type' => 'end', 'proposed_at' => '2026-11-10 18:00'])->assertUnprocessable()->assertExactJson(['reason' => 'too_many_pending']);
+        OfflineTickets::without(anaSends(['mark_id' => null, 'mark_type' => 'end', 'proposed_at' => '2026-11-10 18:00'])->assertUnprocessable())->assertExactJson(['reason' => 'too_many_pending']);
+    });
+
+    it('brings tickets and context with the answer and with a refusal, and none with a mark that is not the person\'s', function (): void {
+        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline']];
+        $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
+
+        anaSends()->assertOk()->assertJsonStructure($shape);
+        anaSends()->assertUnprocessable()->assertJsonStructure($shape);
+        // A mark that is not hers hides whether it exists: the same 404 as a signature that does not verify, with nothing more.
+        expect(anaSends(['mark_id' => correctionPunch($bob, MarkType::Start, '2026-11-10 08:00')->id])->assertNotFound()->json())->not->toHaveKey('tickets');
     });
 
     it('answers 404 to a mark of another person', function (): void {
@@ -301,10 +312,10 @@ describe('from the device', function (): void {
         $this->get(route($route, 'acme'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('correctionOptionsUrl', route('attendance.device.correction.options', 'acme'))
             ->where('correctionUrl', route('attendance.device.correction.store', 'acme')));
-    })->with(['attendance.device.week.show', 'attendance.device.punch.home']);
+    })->with(['attendance.device.week.show', 'attendance.device.punch.show']);
 
     it('gives Marcar the company\'s time zone, to read the time of a mark refused on its clock', function (): void {
-        $this->get(route('attendance.device.punch.home', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('timezone', 'America/Mexico_City'));
+        $this->get(route('attendance.device.punch.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('timezone', 'America/Mexico_City'));
     });
 
     it('has its own limiter: generous per address and per key', function (): void {
@@ -338,7 +349,7 @@ describe('in Mi semana', function (): void {
         $correction = AttendanceMark::factory()->correcting($this->start)->create(['marked_at' => CarbonImmutable::parse('2026-11-10 09:00', 'America/Mexico_City')->utc(), 'reason' => 'El QR no cargaba.']);
 
         weekReadBy($this->phone, $this->ana->id, '2026-11-09')->assertOk()
-            ->assertJsonPath('days.1.marks.0', ['id' => $correction->id, 'type' => 'start', 'time' => '09:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => true, 'reason' => 'El QR no cargaba.', 'evidence' => 'corrected']);
+            ->assertJsonPath('days.1.marks.0', ['id' => $correction->id, 'type' => 'start', 'time' => '09:00', 'clock' => null, 'away' => false, 'nextDay' => false, 'corrected' => true, 'reason' => 'El QR no cargaba.', 'evidence' => 'corrected', 'offline' => false, 'review' => null, 'reviewNote' => null]);
     });
 });
 
