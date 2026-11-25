@@ -50,6 +50,65 @@ function total(report: ScenarioReport, title: string): ReportStep {
     };
 }
 
+const perYear = (cents: number): string => `+${exactPesos(cents)} al año`;
+
+const TAX_LABEL = 'Impuesto sobre nómina del estado';
+
+/** The state's payroll tax as a line of the worker's cost, only when it is calculated. */
+function taxLine(example: ReportExample): StepLine[] {
+    return example.payroll_tax_extra_year_cents === 0
+        ? []
+        : [
+              {
+                  label: TAX_LABEL,
+                  value: perYear(example.payroll_tax_extra_year_cents),
+              },
+          ];
+}
+
+/** The quotas of the SBC a month, each line saying exactly what it adds: the payroll tax is its own line, not in the quotas. */
+function quotasStep(example: ReportExample): ReportStep {
+    return {
+        key: 'quotas',
+        title: 'Cuotas patronales adicionales',
+        lines: [
+            {
+                label: 'IMSS, retiro, cesantía e Infonavit',
+                value: perYear(example.contributions_extra_year_cents),
+            },
+            ...taxLine(example),
+        ],
+        result: {
+            label: 'Cuotas patronales adicionales',
+            value: `+${exactPesos(Math.round(example.contributions_extra_year_cents / 12))} al mes`,
+        },
+    };
+}
+
+/** The sum for one worker, to the cent: the salary, the benefits, the quotas and the payroll tax add up to the total. */
+function integralStep(example: ReportExample, benefits: number): ReportStep {
+    return {
+        key: 'integral',
+        title: 'Costo integral por persona',
+        lines: [
+            {
+                label: 'Salario',
+                value: perYear(example.salary_extra_year_cents),
+            },
+            { label: 'Prestaciones', value: perYear(benefits) },
+            {
+                label: 'Cuotas',
+                value: perYear(example.contributions_extra_year_cents),
+            },
+            ...taxLine(example),
+        ],
+        result: {
+            label: 'Por persona',
+            value: `${perYear(example.total_extra_year_cents)} (${exactPesos(example.total_extra_month_cents)} al mes)`,
+        },
+    };
+}
+
 /** An average worker, from the engine: the raise, what follows it in benefits, the SBC and its factor, the quotas, the sum. */
 function exampleSteps(
     report: ScenarioReport,
@@ -58,7 +117,6 @@ function exampleSteps(
     const monthly = example.monthly_salary_cents;
     const benefits =
         example.bonus_extra_year_cents + example.premium_extra_year_cents;
-    const quotasMonth = Math.round(example.contributions_extra_year_cents / 12);
 
     return [
         {
@@ -106,42 +164,8 @@ function exampleSteps(
                 value: `${exactPesos(example.sbc_after_cents)} (+${exactPesos(example.sbc_after_cents - example.sbc_before_cents)})`,
             },
         },
-        {
-            key: 'quotas',
-            title: 'Cuotas patronales adicionales',
-            lines: [
-                {
-                    label: 'IMSS, retiro, cesantía e Infonavit con el SBC nuevo',
-                    value: `+${wholePesos(example.contributions_extra_year_cents)} al año`,
-                },
-            ],
-            result: {
-                label: 'Cuotas adicionales',
-                value: `+${wholePesos(quotasMonth)} al mes`,
-            },
-        },
-        {
-            key: 'integral',
-            title: 'Costo integral por persona',
-            lines: [
-                {
-                    label: 'Salario',
-                    value: `+${wholePesos(example.salary_extra_year_cents)} al año`,
-                },
-                {
-                    label: 'Prestaciones',
-                    value: `+${wholePesos(benefits)} al año`,
-                },
-                {
-                    label: 'Cuotas',
-                    value: `+${wholePesos(example.contributions_extra_year_cents)} al año`,
-                },
-            ],
-            result: {
-                label: 'Por persona',
-                value: `+${wholePesos(example.total_extra_year_cents)} al año (${wholePesos(example.total_extra_month_cents)} al mes)`,
-            },
-        },
+        quotasStep(example),
+        integralStep(example, benefits),
         total(report, 'Total de la plantilla'),
     ];
 }

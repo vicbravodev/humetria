@@ -123,6 +123,16 @@ describe('reportCaveats', () => {
         expect(openCaveats(report)).toBe(2);
     });
 
+    it('says the rounding as the calculation does it, and claims nothing the IMSS has not said', () => {
+        const rounding = reportCaveats(boardReport()).find(
+            (caveat) => caveat.key === 'rounding',
+        );
+
+        expect(rounding?.detail).toBe(
+            'Cada monto se calcula al centavo por persona y por mes, y el SBC se trunca al centavo (criterio de cálculo de Humetría): la suma de las partes es el total.',
+        );
+    });
+
     it('keeps only what is always said when the data is complete', () => {
         const report = boardReport();
         report.coverage = { ...report.coverage, costed: 91 };

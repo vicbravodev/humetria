@@ -125,7 +125,10 @@ export type ReportExample = {
     /** The daily SBC before and after. */
     sbc_before_cents: number;
     sbc_after_cents: number;
+    /** The quotas of the SBC: IMSS, retirement, severance and Infonavit. */
     contributions_extra_year_cents: number;
+    /** The state's payroll tax; 0 when it is not calculated (no state). */
+    payroll_tax_extra_year_cents: number;
     total_extra_year_cents: number;
     total_extra_month_cents: number;
 };

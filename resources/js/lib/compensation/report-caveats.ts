@@ -22,7 +22,7 @@ const ALWAYS: Caveat[] = [
     {
         key: 'rounding',
         title: 'Redondeo.',
-        detail: 'Cada monto se calcula al centavo por persona y por mes, y el SBC se trunca al centavo como lo hace el IMSS: la suma de las partes es el total.',
+        detail: 'Cada monto se calcula al centavo por persona y por mes, y el SBC se trunca al centavo (criterio de cálculo de Humetría): la suma de las partes es el total.',
         action: null,
     },
     {

@@ -17,9 +17,10 @@ const example: ReportExample = {
     factor: '1.0493',
     sbc_before_cents: 52_465,
     sbc_after_cents: 55_614,
-    contributions_extra_year_cents: 237_300,
-    total_extra_year_cents: 1_371_300,
-    total_extra_month_cents: 114_275,
+    contributions_extra_year_cents: 237_348,
+    payroll_tax_extra_year_cents: 0,
+    total_extra_year_cents: 1_371_348,
+    total_extra_month_cents: 114_279,
 };
 
 function average(): ScenarioReport {
@@ -62,12 +63,65 @@ describe('reportSteps of an average payroll', () => {
             ],
             result: { value: '$556.14 (+$31.49)' },
         });
-        expect(steps[3]?.result.value).toBe('+$198 al mes');
-        expect(steps[4]?.result.value).toBe('+$13,713 al año ($1,143 al mes)');
+        // Per worker, to the cent: the figures of one person are the ones a reader checks by hand.
+        expect(steps[3]).toMatchObject({
+            lines: [
+                {
+                    label: 'IMSS, retiro, cesantía e Infonavit',
+                    value: '+$2,373.48 al año',
+                },
+            ],
+            result: {
+                label: 'Cuotas patronales adicionales',
+                value: '+$197.79 al mes',
+            },
+        });
+        expect(steps[4]?.lines).toEqual([
+            { label: 'Salario', value: '+$10,800.00 al año' },
+            { label: 'Prestaciones', value: '+$540.00 al año' },
+            { label: 'Cuotas', value: '+$2,373.48 al año' },
+        ]);
+        expect(steps[4]?.result.value).toBe(
+            '+$13,713.48 al año ($1,142.79 al mes)',
+        );
         expect(steps[5]?.result).toEqual({
             label: 'Costo del primer año',
             value: '$6,856,500',
         });
+    });
+
+    it('tells the payroll tax of the state in its own line, apart from the quotas, and adds it to the cost of the worker', () => {
+        const report = average();
+        report.example = {
+            ...example,
+            payroll_tax_extra_year_cents: 34_020,
+            total_extra_year_cents: 1_405_368,
+            total_extra_month_cents: 117_114,
+        };
+        const steps = reportSteps(report);
+
+        expect(steps[3]?.lines).toEqual([
+            {
+                label: 'IMSS, retiro, cesantía e Infonavit',
+                value: '+$2,373.48 al año',
+            },
+            {
+                label: 'Impuesto sobre nómina del estado',
+                value: '+$340.20 al año',
+            },
+        ]);
+        // The highlighted figure is what its label says: the quotas, without the tax.
+        expect(steps[3]?.result).toEqual({
+            label: 'Cuotas patronales adicionales',
+            value: '+$197.79 al mes',
+        });
+        expect(steps[4]?.lines.at(-1)).toEqual({
+            label: 'Impuesto sobre nómina del estado',
+            value: '+$340.20 al año',
+        });
+        expect(steps[4]?.result.value).toBe(
+            '+$14,053.68 al año ($1,171.14 al mes)',
+        );
     });
 
     it('adds the retroactive months to the total', () => {
