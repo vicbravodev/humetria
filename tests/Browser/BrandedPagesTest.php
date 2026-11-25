@@ -64,12 +64,14 @@ it('keeps the accent of a company on its own pages: going from one to another, o
     $page = visitPage('tenancy/companies', '/admin', $dark);
     $page->assertScript('() => document.querySelectorAll("#brand-accent").length', 0);
 
-    $page->click('Acme')->wait(1)->assertScript('() => document.querySelectorAll("#brand-accent").length', 1);
+    $page->click('Acme');
+    $page->assertScript(eventually('() => document.querySelectorAll("#brand-accent").length === 1'), true);
 
     // Back to a page of no company (what a logout lands on): Humetría's accent again, not the company's.
     $page->script('() => history.back()');
-    $page->wait(1)->assertScript('() => document.querySelectorAll("#brand-accent").length', 0);
+    $page->assertScript(eventually('() => document.querySelectorAll("#brand-accent").length === 0'), true);
 
     // From one company to another that has none of its own.
-    $page->click('Verde')->wait(1)->assertScript('() => document.querySelectorAll("#brand-accent").length', 0);
+    $page->click('Verde');
+    $page->assertScript(eventually('() => document.querySelectorAll("#brand-accent").length === 0'), true);
 })->with([[false], [true]]);
