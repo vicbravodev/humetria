@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { countOf } from '@/lib/plural';
+import AccountCompanySize from '@/components/billing/account-company-size';
 import { TableCell } from '@/components/ui/table';
 import type { SubscriptionView } from '@/types';
 
@@ -8,10 +8,13 @@ export default function AccountCompanyPlan({
     subscription,
     people,
     workCenters,
+    union,
 }: {
     subscription: SubscriptionView | null;
     people: number;
     workCenters: number;
+    /** A union has no work centers, and its fee does not count its members. */
+    union: boolean;
 }) {
     if (subscription === null) {
         return (
@@ -20,7 +23,14 @@ export default function AccountCompanyPlan({
                     Sin plan asignado
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground tabular-nums">
-                    {people} {people === 1 ? 'persona' : 'personas'}
+                    {people}{' '}
+                    {union
+                        ? people === 1
+                            ? 'agremiado'
+                            : 'agremiados'
+                        : people === 1
+                          ? 'persona'
+                          : 'personas'}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                     —
@@ -58,22 +68,12 @@ export default function AccountCompanyPlan({
                     )}
                 </div>
             </TableCell>
-            <TableCell className="text-sm whitespace-normal tabular-nums">
-                <div className="flex flex-col">
-                    <span>
-                        {people} de{' '}
-                        {countOf(subscription.seats, 'persona', 'personas')}
-                    </span>
-                    <span className="text-caption text-muted-foreground">
-                        {workCenters} de{' '}
-                        {countOf(
-                            subscription.allowed_centers,
-                            'centro',
-                            'centros',
-                        )}
-                    </span>
-                </div>
-            </TableCell>
+            <AccountCompanySize
+                subscription={subscription}
+                people={people}
+                workCenters={workCenters}
+                union={union}
+            />
             <TableCell className="text-sm whitespace-normal tabular-nums">
                 {quote.requires_quotation ? (
                     <span className="text-muted-foreground">

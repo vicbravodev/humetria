@@ -51,6 +51,7 @@ export default function AccountCompanyRowView({
                 subscription={company.subscription}
                 people={company.people}
                 workCenters={company.work_centers}
+                union={company.union}
             />
             <TableCell className="w-px text-right">
                 {auth.isSuperadmin && (

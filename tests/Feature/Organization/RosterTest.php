@@ -247,3 +247,15 @@ it('finds the active people of the company by email, whatever the case or the sp
         ->and(resolve(Roster::class)->idsByEmail(''))->toBe([])
         ->and(resolve(Roster::class)->idsByEmail('nobody@acme.mx'))->toBe([]);
 });
+
+it('lists the names of everyone in the company, deactivated ones included, and never those of another company', function (): void {
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López']);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Beto Ruiz', 'deactivated_at' => now()]);
+    $other = Tenant::factory()->create();
+    rosterEmployee($other, WorkCenter::factory()->for($other)->create(), Area::factory()->create(['tenant_id' => $other->id]), ['name' => 'Carla Ajena']);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->names())->toEqualCanonicalizing(['Ana López', 'Beto Ruiz']);
+    workIn($other);
+    expect(resolve(Roster::class)->names())->toBe(['Carla Ajena']);
+});

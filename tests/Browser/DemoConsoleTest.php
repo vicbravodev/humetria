@@ -91,6 +91,7 @@ it('links the console from the sidebar only for the superadmin', function (): vo
     signInAsSuperadmin();
 
     visit('/admin')
+        ->click('Ventas')
         ->click('Solicitudes de demo')
         ->assertScript(pathBecomes('/admin/demo-requests'), true)
         ->assertPathIs('/admin/demo-requests');

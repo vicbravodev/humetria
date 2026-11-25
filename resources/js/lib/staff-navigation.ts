@@ -17,28 +17,36 @@ import { index as overview } from '@/routes/overview';
 import { index as users } from '@/routes/platform-users';
 import type { NavItem } from '@/types';
 
-// Platform tools for Humetría staff; the server answers 404 to anyone else anyway.
-const staffNavItems: NavItem[] = [
+// The console's daily pages, for Humetría staff (the server answers 404 to anyone else anyway): the customers.
+// The superadmin starts at the overview; support has no overview.
+export const consoleNavItems = (isSuperadmin: boolean): NavItem[] => [
+    ...(isSuperadmin
+        ? [{ title: 'Resumen', href: overview(), icon: ChartNoAxesColumn }]
+        : []),
     { title: 'Empresas', href: companies(), icon: Building2 },
     { title: 'Cuentas', href: accounts(), icon: WalletCards },
+];
+
+// The sales desk: the demo requests (support too) and the demo room, which is the superadmin's alone.
+export const salesNavItems = (isSuperadmin: boolean): NavItem[] => [
     { title: 'Solicitudes de demo', href: demoRequests(), icon: Inbox },
+    ...(isSuperadmin
+        ? [{ title: 'Sala de demo', href: demoRoom(), icon: Presentation }]
+        : []),
 ];
 
-// The platform's people and its audit trail are the superadmin's alone: support does not see them in the menu.
-const superadminOnlyNavItems: NavItem[] = [
-    { title: 'Sala de demo', href: demoRoom(), icon: Presentation },
-    { title: 'Usuarios', href: users(), icon: UserCog },
-    { title: 'Bitácora', href: audit(), icon: ScrollText },
-    // Horizon's own dashboard, outside the panel: a plain address, not an Inertia visit.
-    { title: 'Colas', href: '/horizon', icon: Activity, external: true },
-];
-
-export function platformNavItems(isSuperadmin: boolean): NavItem[] {
-    return isSuperadmin
+// The platform itself: its people, its audit trail and its queues are the superadmin's alone, support does not see them.
+export const platformNavItems = (isSuperadmin: boolean): NavItem[] =>
+    isSuperadmin
         ? [
-              { title: 'Resumen', href: overview(), icon: ChartNoAxesColumn },
-              ...staffNavItems,
-              ...superadminOnlyNavItems,
+              { title: 'Usuarios', href: users(), icon: UserCog },
+              { title: 'Bitácora', href: audit(), icon: ScrollText },
+              // Horizon's own dashboard, outside the panel: a plain address, not an Inertia visit.
+              {
+                  title: 'Colas',
+                  href: '/horizon',
+                  icon: Activity,
+                  external: true,
+              },
           ]
-        : staffNavItems;
-}
+        : [];

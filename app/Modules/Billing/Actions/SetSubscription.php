@@ -6,6 +6,7 @@ namespace App\Modules\Billing\Actions;
 
 use App\Actions\RecordAudit;
 use App\Modules\Billing\Data\SubscriptionData;
+use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Exceptions\InvalidSubscription;
 use App\Modules\Billing\Models\Subscription;
@@ -74,10 +75,13 @@ final readonly class SetSubscription
             );
 
             // What the plan contracts is what the company may have: its people, and its centers (never fewer than the plan includes).
-            $this->limits->sync($tenantId, [
-                CompanyLimits::SEATS => $split->seats,
-                CompanyLimits::CENTERS => max($split->centers, Catalog::current()->includedCenters($split->plan)),
-            ]);
+            // A union's flat fee contracts neither: it has no work centers, and its members are not counted.
+            if ($split->plan !== Plan::Sindicato) {
+                $this->limits->sync($tenantId, [
+                    CompanyLimits::SEATS => $split->seats,
+                    CompanyLimits::CENTERS => max($split->centers, Catalog::current()->includedCenters($split->plan)),
+                ]);
+            }
 
             Log::info('billing.subscription_set', ['tenant_id' => $tenantId, 'created' => $created]);
             $this->recordAudit->handle('billing.subscription_set', $subscription, [

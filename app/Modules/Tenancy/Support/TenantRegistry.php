@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Support;
 
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use App\Modules\Tenancy\Data\CompanyBrief;
+use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Database\Eloquent\Collection;
@@ -76,6 +77,7 @@ final class TenantRegistry implements CompanyRegistry
                 $status->label(),
                 $status->blocksPanel(),
                 is_numeric($count) ? (int) $count : 0,
+                $tenant->type === TenantType::Union,
             );
         }
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     activeChild,
+    adminNavItems,
     complianceNavItems,
     mainNavItems,
     navTrail,
@@ -24,6 +25,12 @@ const acme = (
             ? templateCan(role)
             : can(manageOrganization, manageMembers),
 });
+/** The company's own pages: the daily ones, then the administration's, which the sidebar folds apart. */
+const companyPages = (tenant: ReturnType<typeof acme>, isStaff: boolean) => [
+    ...mainNavItems(tenant, isStaff),
+    ...adminNavItems(tenant),
+];
+
 /** The company's own pages of an owner, in the order of the menu. */
 const ACME_PAGES = [
     '/admin/acme',
@@ -36,7 +43,9 @@ const ACME_PAGES = [
     '/admin/acme/privacy',
 ];
 const titles = (tenant: ReturnType<typeof acme> | null) =>
-    mainNavItems(tenant, false).map((item) => item.title);
+    [...mainNavItems(tenant, false), ...adminNavItems(tenant)].map(
+        (item) => item.title,
+    );
 
 describe('mainNavItems', () => {
     it("points Panel at the current company's panel", () => {
@@ -57,7 +66,7 @@ describe('mainNavItems', () => {
 
     it('keeps the company pages for a superadmin inside a company they belong to', () => {
         expect(
-            mainNavItems(acme(), true).map((item) => toUrl(item.href)),
+            companyPages(acme(), true).map((item) => toUrl(item.href)),
         ).toEqual(ACME_PAGES);
     });
 
@@ -87,7 +96,7 @@ describe('mainNavItems', () => {
 
     it('points each page at the current company', () => {
         expect(
-            mainNavItems(acme(), false).map((item) => toUrl(item.href)),
+            companyPages(acme(), false).map((item) => toUrl(item.href)),
         ).toEqual(ACME_PAGES);
     });
 });

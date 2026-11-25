@@ -14,7 +14,7 @@ plazos, y explica la normativa. Solo lee y explica: no cambia datos. Diseño: `d
 | Conversaciones                    | `Support/Conversations` decide de quién es una conversación; el SDK **no** verifica propiedad                                                                                                                                                                            |
 | Límites antes del proveedor       | `Actions/CheckAllowance` (apagada por empresa, presupuesto mensual, frecuencia por persona y por empresa)                                                                                                                                                                |
 | Cuota del plan (libro de Billing) | `Support/HumiTokens` reserva 9,000 tokens (`humi.reservation_tokens`) por el contrato `UsageMeter` antes de llamar, liquida con el conteo real del SDK y libera si falla; sin cuota, 403 sin llamada                                                                     |
-| Datos personales                  | `Support/PersonalDataRedactor` (correo, CURP, RFC, NSS, teléfono) antes de enviar y de guardar                                                                                                                                                                           |
+| Datos personales                  | `Support/PersonalDataRedactor` (correo, CURP, RFC, NSS, teléfono) y `Support/PersonNamesRedactor` (nombre completo, o nombre y primer apellido, de una persona de la empresa) antes de enviar y de guardar                                                               |
 | Datos vivos                       | `Support/LiveFacts`: cada herramienta que implementa `Contracts\TellsLiveFacts` da frases cortas por llave (`pending`, `participation`, `risk`, `telework`, `invite.{página}`); un minuto en caché por empresa y por lo que la persona ve; ruta `tenant.assistant.facts` |
 | Rutas                             | `routes/assistant.php` bajo `admin/{empresa}/assistant/*` (nombre `tenant.assistant.*`); consola del superadmin en `routes/assistant_console.php`                                                                                                                        |
 | Front                             | `resources/js/components/assistant/*`, `hooks/use-humi-chat.ts`, `lib/assistant/*`, `pages/assistant/index.tsx`                                                                                                                                                          |
@@ -87,7 +87,7 @@ preguntó. Implementación: `Support/TenantHumiActivity`.
 
 ## Qué sale al proveedor y qué se guarda
 
-- **Sale:** el texto que escribe la persona (ya con correo, teléfono, CURP, RFC y NSS enmascarados), las instrucciones, el
+- **Sale:** el texto que escribe la persona (ya con correo, teléfono, CURP, RFC, NSS y nombres de personas de la empresa enmascarados), las instrucciones, el
   nombre de la página abierta y lo que devuelven las herramientas (agregados por nivel, nombres de centros y áreas, avance de
   campañas, estado de NOM-037 por centro, extractos de los criterios). **Nunca** respuestas individuales ni la Guía I.
 - **Se guarda:** las conversaciones (tablas del SDK, de la persona; ella puede borrarlas), el uso por mensaje y el pulgar

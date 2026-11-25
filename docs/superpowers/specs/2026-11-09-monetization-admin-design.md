@@ -218,6 +218,13 @@ llegue una tercera.
 
 Centros de trabajo y empleados son base de todos los planes. `TenantType::Union` se queda como está.
 
+**Plan Sindicato (2027-01-30).** Un sindicato no cae en ninguno de los planes de arriba: tiene el suyo, `sindicato`, con
+perfil de cobro `union` (o un precio negociado). Cuota fija al mes por sindicato, sin importar cuántos agremiados tenga,
+solo con el módulo `compensation`; sin tarifa por persona, sin centros, sin Humi ni WhatsApp. La cuota vigente
+(`config/billing.php`, `plans.sindicato.flat_cents`) son $1,990 al mes, confirmados por Victor el 2026-11-24. Un sindicato solo puede
+tener este plan y una empresa nunca (lo exigen `SubscriptionGuard` y el CHECK de la tabla); no cuenta ni limita personas ni
+centros. Al asignarlo, la consola ofrece solo ese plan y solo esas dos formas de cobro, y no pide personas ni centros.
+
 ---
 
 ## 5. Especificación de cálculo

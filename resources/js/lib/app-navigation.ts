@@ -37,56 +37,70 @@ const isUnion = (tenant: NavTenant): boolean => tenant.type === 'union';
  * The company's own pages the role may open: a union has no work centers, and its people are its members. Each shows only
  * where its permission is, so a role of the company's own sees no link that answers 403.
  */
-const companyItems = (tenant: NavTenant): NavItem[] => {
+const companyItems = (
+    tenant: NavTenant,
+    group: 'daily' | 'admin',
+): NavItem[] => {
     const { can, slug } = tenant;
     const union = isUnion(tenant);
-    const pages: [visible: boolean, item: NavItem][] = [
-        // The panel is drawn from the work centers: without them it is not where anyone starts (StartRoute::PANEL_ALSO_NEEDS).
+    const pages: [visible: boolean, item: NavItem, group: 'daily' | 'admin'][] =
         [
-            can.view_dashboard && can.view_work_centers,
-            { title: 'Panel', href: tenantDashboard(slug), icon: House },
-        ],
-        [
-            !union && can.view_work_centers,
-            {
-                title: 'Centros de trabajo',
-                href: workCenters(slug),
-                icon: Factory,
-            },
-        ],
-        [
-            can.manage_organization,
-            {
-                title: union ? 'Agremiados' : 'Empleados',
-                href: employees(slug),
-                icon: Users,
-            },
-        ],
-        // The people's keys and invitations: every company has it, whatever its tools; a union has no people of its own here.
-        [
-            can.view_worker_access && !union,
-            { title: 'Accesos', href: workerAccess(slug), icon: KeyRound },
-        ],
-        [
-            can.manage_members,
-            { title: 'Usuarios', href: members(slug), icon: UserCog },
-        ],
-        [
-            can.manage_members,
-            { title: 'Roles', href: roles(slug), icon: IdCard },
-        ],
-        [
-            can.manage_members,
-            { title: 'Plan y uso', href: plan(slug), icon: Layers },
-        ],
-        // The minimum per group of the anonymous tools (criterio C-23): a union has none of them.
-        [
-            can.manage_members && !union,
-            { title: 'Privacidad', href: privacy(slug), icon: ShieldCheck },
-        ],
-    ];
+            // The panel is drawn from the work centers: without them it is not where anyone starts (StartRoute::PANEL_ALSO_NEEDS).
+            [
+                can.view_dashboard && can.view_work_centers,
+                { title: 'Panel', href: tenantDashboard(slug), icon: House },
+                'daily',
+            ],
+            [
+                !union && can.view_work_centers,
+                {
+                    title: 'Centros de trabajo',
+                    href: workCenters(slug),
+                    icon: Factory,
+                },
+                'daily',
+            ],
+            [
+                can.manage_organization,
+                {
+                    title: union ? 'Agremiados' : 'Empleados',
+                    href: employees(slug),
+                    icon: Users,
+                },
+                'daily',
+            ],
+            // The people's keys and invitations: every company has it, whatever its tools; a union has no people of its own here.
+            [
+                can.view_worker_access && !union,
+                { title: 'Accesos', href: workerAccess(slug), icon: KeyRound },
+                'daily',
+            ],
+            [
+                can.manage_members,
+                { title: 'Usuarios', href: members(slug), icon: UserCog },
+                'admin',
+            ],
+            [
+                can.manage_members,
+                { title: 'Roles', href: roles(slug), icon: IdCard },
+                'admin',
+            ],
+            [
+                can.manage_members,
+                { title: 'Plan y uso', href: plan(slug), icon: Layers },
+                'admin',
+            ],
+            // The minimum per group of the anonymous tools (criterio C-23): a union has none of them.
+            [
+                can.manage_members && !union,
+                { title: 'Privacidad', href: privacy(slug), icon: ShieldCheck },
+                'admin',
+            ],
+        ];
 
-    return pages.filter(([visible]) => visible).map(([, item]) => item);
+    return pages
+        .filter(([visible, , own]) => visible && own === group)
+        .map(([, item]) => item);
 };
 
 /**
@@ -111,8 +125,18 @@ export const mainNavItems = (
             : [];
     }
 
-    return companyItems(tenant);
+    return companyItems(tenant, 'daily');
 };
+
+/**
+ * The company's account pages (who has access, with which roles, the plan and the privacy of results): they are rarely
+ * the day's work, so the sidebar folds them under «Administración». They come right after the daily pages, so the menu's
+ * order (menu-order.json, which StartRoute walks) is the same as when they were all in one list.
+ */
+export const adminNavItems = (tenant: NavTenant | null): NavItem[] =>
+    tenant === null || handlesCasesOnly(tenant)
+        ? []
+        : companyItems(tenant, 'admin');
 
 /**
  * The sidebar's "Siguiente obligación": when the soonest evaluation in course closes ("en 11 días", "mañana",
@@ -151,12 +175,18 @@ export const settingsNavItems = (impersonating: boolean): NavItem[] =>
 export const settingsEntryHref = (impersonating: boolean): NavItem['href'] =>
     impersonating ? editAppearance() : editProfile();
 
-/** The sidebar's groups: the company's own pages (no heading), the three families of tools and the platform. */
+/**
+ * The sidebar's groups: the company's daily pages (no heading), the three families of tools, the company's
+ * administration, and for Humetría staff the sales desk and the platform.
+ */
 export type NavSectionKey =
     | 'main'
     | 'compliance'
     | 'listening'
     | 'operations'
+    | 'admin'
+    | 'console'
+    | 'sales'
     | 'platform';
 
 export type NavSection = {

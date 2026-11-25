@@ -35,6 +35,13 @@ interface Roster
      */
     public function activeIdsInMany(array $workCenterIds): array;
 
+    /**
+     * The names of everyone in the company, deactivated ones included: to know a person when a text names one.
+     *
+     * @return list<string>
+     */
+    public function names(): array;
+
     /** A person by id, deactivated ones included; null outside the company. */
     public function find(string $employeeId): ?RosterEntry;
 

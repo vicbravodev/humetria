@@ -69,6 +69,7 @@ final readonly class ListAccountCompanies
                 ShortDate::format($link->starts_on),
                 $subscription === null ? null : SubscriptionView::from($subscription, $this->quoter->quote($subscription, $eligible, $today)),
                 $arrivals[$link->tenant_id] ?? null,
+                $brief->union,
             );
         });
     }

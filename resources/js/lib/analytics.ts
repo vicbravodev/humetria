@@ -169,7 +169,7 @@ function replayOptions(config: AnalyticsConfig): Partial<PostHogConfig> {
         : {};
 }
 
-/** The page view, the lead and the clicks: nothing is captured by itself and nothing loads from outside; the replay only if switched on. */
+/** The page view and its leave, the lead and the clicks: nothing else is captured by itself and nothing loads from outside; the replay only if switched on. */
 export function posthogOptions(
     config: AnalyticsConfig,
 ): Partial<PostHogConfig> {
@@ -177,7 +177,9 @@ export function posthogOptions(
         api_host: config.host,
         autocapture: false,
         capture_pageview: false,
-        capture_pageleave: false,
+        // Without it PostHog cannot tell a bounce from a visit, nor how long one lasted. It carries no more than the
+        // page view does: before_send gives it the same clean address.
+        capture_pageleave: true,
         disable_session_recording: true,
         disable_surveys: true,
         advanced_disable_flags: true,

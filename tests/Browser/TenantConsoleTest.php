@@ -84,7 +84,6 @@ it('links the console from the sidebar only for the superadmin', function (): vo
 
     // /admin itself leads the superadmin to the console, so the link is checked from another page.
     visit('/admin/settings/appearance')
-        ->click('Plataforma')
         ->assertPresent('[data-sidebar="menu-button"][href$="/admin/companies"]')
         ->click('Empresas')
         ->assertScript(pathBecomes('/admin/companies'), true)

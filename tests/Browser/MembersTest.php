@@ -177,6 +177,7 @@ it('shows Usuarios in the sidebar only to the owner', function (): void {
     $this->actingAs(ownerOf($tenant));
 
     visit('/admin/acme')
+        ->click('Administración')
         ->click('Usuarios')
         ->assertScript(pathBecomes('/admin/acme/members'), true)
         ->assertPathIs('/admin/acme/members');

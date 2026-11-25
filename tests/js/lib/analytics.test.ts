@@ -92,14 +92,14 @@ describe('readAnalyticsConfig', () => {
 });
 
 describe('posthogOptions', () => {
-    it('measures only the page view: no autocapture, no recordings, no surveys, no flags, no person profile', () => {
+    it('measures only the page view and its leave: no autocapture, no recordings, no surveys, no flags, no person profile', () => {
         const options = posthogOptions(CONFIG);
 
         expect(options).toMatchObject({
             api_host: HOST,
             autocapture: false,
             capture_pageview: false,
-            capture_pageleave: false,
+            capture_pageleave: true,
             disable_session_recording: true,
             disable_surveys: true,
             advanced_disable_flags: true,

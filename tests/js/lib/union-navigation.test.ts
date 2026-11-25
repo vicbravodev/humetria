@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import type { NavTenant } from '@/lib/app-navigation';
-import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
+import {
+    adminNavItems,
+    complianceNavItems,
+    mainNavItems,
+} from '@/lib/app-navigation';
 import { can } from '../support/tenant-can';
 
 const acme = (): NavTenant => ({
@@ -10,7 +14,9 @@ const acme = (): NavTenant => ({
     can: can(true, true),
 });
 const titles = (tenant: NavTenant) =>
-    mainNavItems(tenant, false).map((item) => item.title);
+    [...mainNavItems(tenant, false), ...adminNavItems(tenant)].map(
+        (item) => item.title,
+    );
 
 describe('a union account', () => {
     const union: NavTenant = { ...acme(), type: 'union' };
