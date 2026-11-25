@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Actions\RegisterKey;
+use App\Modules\WorkerAccess\Actions\ReissueAccess;
 use App\Modules\WorkerAccess\Enums\EntryVia;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Notifications\KeyRegistered;
@@ -80,6 +81,17 @@ it('takes one key per person by default and refuses a second', function (): void
 
     $this->postJson(route('worker.key.options', 'acme'))->assertStatus(409);
     $this->get(route('worker.key.show', 'acme'))->assertInertia(fn (Assert $page) => $page->where('blocked', 'full')->etc());
+});
+
+it('lets a person who changes phone register their one key again once RH reissues their access', function (): void {
+    WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    resolve(ReissueAccess::class)->handle($this->ana->id, ownerOf($this->tenant)->id);
+    $this->travel(1)->seconds();
+    enteredAs($this->ana->id, EntryVia::IssuedLink);
+
+    registerWith($this->phone, 'iPhone nuevo')->assertOk();
+
+    expect(WorkerCredential::query()->whereNull('revoked_at')->sole()->label)->toBe('iPhone nuevo');
 });
 
 it('lets a session opened with a key add another one, registered via the session', function (): void {
