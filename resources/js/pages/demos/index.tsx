@@ -1,12 +1,14 @@
 import { Head } from '@inertiajs/react';
 import AdConversionsDownload from '@/components/demos/ad-conversions-download';
 import DemoBoard from '@/components/demos/demo-board';
+import DemoMetrics from '@/components/demos/demo-metrics';
 import DemoRequestsList from '@/components/demos/demo-requests-list';
 import DemoViewTabs from '@/components/demos/demo-view-tabs';
 import PageHeader from '@/components/humetria/page-header';
 import type {
     DemoBoardColumn,
     DemoFilters,
+    DemoMetrics as Metrics,
     DemoRequestRow,
     DemoView,
     Paginated,
@@ -15,6 +17,7 @@ import type {
 export default function DemoRequests({
     demoRequests,
     board,
+    metrics,
     filters,
     counts,
     can_manage: canManage,
@@ -23,6 +26,8 @@ export default function DemoRequests({
     demoRequests: Paginated<DemoRequestRow> | null;
     /** The funnel, only when it is the view shown. */
     board: DemoBoardColumn[] | null;
+    /** Arrives after the page shows. */
+    metrics?: Metrics;
     filters: DemoFilters;
     counts: Record<DemoView, number>;
     can_manage: boolean;
@@ -41,6 +46,7 @@ export default function DemoRequests({
                 >
                     <AdConversionsDownload />
                 </PageHeader>
+                <DemoMetrics metrics={metrics} />
                 <DemoViewTabs view={filters.view} />
                 {board !== null && (
                     <DemoBoard columns={board} canManage={canManage} />

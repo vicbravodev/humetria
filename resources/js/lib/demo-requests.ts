@@ -59,3 +59,25 @@ export function demoEmptyText(view: DemoView): string {
         ? 'Cuando alguien llene el formulario de la landing, su solicitud aparecerá aquí.'
         : 'Ninguna solicitud está en este estado. Cuando cambies una, aparecerá aquí.';
 }
+
+/** The median time to the first answer: hours under two days, then days. */
+export function firstResponseText(hours: number | null): string {
+    if (hours === null) {
+        return 'Sin dato';
+    }
+
+    if (hours < 1) {
+        return 'Menos de 1 h';
+    }
+
+    return hours < 48
+        ? `${Math.round(hours)} h`
+        : `${Math.round(hours / 24)} d`;
+}
+
+/** How many of the new requests have waited more than 48 hours. */
+export function unattendedText(unattended: number): string {
+    return unattended === 0
+        ? 'Ninguna con más de 48 h'
+        : `${unattended} con más de 48 h`;
+}

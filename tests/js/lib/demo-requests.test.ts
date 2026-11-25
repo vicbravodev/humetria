@@ -5,6 +5,8 @@ import {
     DEMO_VIEWS,
     demoEmptyText,
     demoListQuery,
+    firstResponseText,
+    unattendedText,
     demoQuery,
     profileText,
     toolsText,
@@ -81,5 +83,22 @@ describe('demoListQuery', () => {
         ).toEqual({
             q: 'acme',
         });
+    });
+});
+
+describe('the figures of the console', () => {
+    it('writes the time to the first answer in hours, then in days', () => {
+        expect(firstResponseText(null)).toBe('Sin dato');
+        expect(firstResponseText(0.4)).toBe('Menos de 1 h');
+        expect(firstResponseText(9.2)).toBe('9 h');
+        expect(firstResponseText(47.6)).toBe('48 h');
+        expect(firstResponseText(48)).toBe('2 d');
+        expect(firstResponseText(80)).toBe('3 d');
+    });
+
+    it('says how many new requests wait more than 48 hours', () => {
+        expect(unattendedText(0)).toBe('Ninguna con más de 48 h');
+        expect(unattendedText(1)).toBe('1 con más de 48 h');
+        expect(unattendedText(3)).toBe('3 con más de 48 h');
     });
 });

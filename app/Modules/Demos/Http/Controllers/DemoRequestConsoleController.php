@@ -16,6 +16,7 @@ use App\Modules\Demos\Http\Requests\DiscardDemoRequestRequest;
 use App\Modules\Demos\Http\Requests\ScheduleDemoRequest;
 use App\Modules\Demos\Http\Requests\UpdateDemoRequestRequest;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Demos\Support\DemoMetrics;
 use App\Modules\Demos\Support\DemoOwners;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +28,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class DemoRequestConsoleController extends Controller
 {
-    public function index(Request $request, ListDemoRequests $listDemoRequests, DemoOwners $owners): Response
+    public function index(Request $request, ListDemoRequests $listDemoRequests, DemoOwners $owners, DemoMetrics $metrics): Response
     {
         Gate::authorize('view-demo-requests');
 
@@ -46,6 +47,8 @@ final class DemoRequestConsoleController extends Controller
             'board' => $board ? $this->board($listDemoRequests, $counts) : null,
             // Who of the staff may own a request: only for the form, after the page shows.
             'staff' => Inertia::defer(fn (): array => $owners->options()),
+            // The figures at the top: aggregates of 90 days, after the page shows.
+            'metrics' => Inertia::defer(fn (): array => $metrics->handle()),
         ]);
     }
 
