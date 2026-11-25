@@ -284,7 +284,7 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
 
     // On site, with no code of the center's screen: the mark is refused.
     $page->navigate('/me/acme/punch')
-        ->waitForText('Regresar de comer')
+        ->waitForText(', Ana')
         ->press('button:has-text("Entrada")')
         ->waitForText('Pedir una corrección')
         ->press('Pedir una corrección')

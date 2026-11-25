@@ -19,18 +19,19 @@ final readonly class SavePolicy
 {
     public function __construct(private CurrentTenant $tenant, private RecordAudit $audit) {}
 
-    public function handle(OutOfZoneRule $outOfZone, int $maxAccuracyM, bool $requireQrOnsite, bool $trustedMayUseBrowser, int $retentionMonths, int $lateToleranceMinutes = 10): AttendancePolicy
+    public function handle(OutOfZoneRule $outOfZone, int $maxAccuracyM, bool $requireQrOnsite, bool $trustedMayUseBrowser, int $retentionMonths, int $lateToleranceMinutes = 10, bool $requireQrBreaks = false): AttendancePolicy
     {
-        $policy = DB::transaction(function () use ($outOfZone, $maxAccuracyM, $requireQrOnsite, $trustedMayUseBrowser, $retentionMonths, $lateToleranceMinutes): AttendancePolicy {
+        $policy = DB::transaction(function () use ($outOfZone, $maxAccuracyM, $requireQrOnsite, $requireQrBreaks, $trustedMayUseBrowser, $retentionMonths, $lateToleranceMinutes): AttendancePolicy {
             $policy = AttendancePolicy::query()->updateOrCreate(['tenant_id' => $this->tenant->id()], [
                 'out_of_zone' => $outOfZone,
                 'max_accuracy_m' => $maxAccuracyM,
                 'require_qr_onsite' => $requireQrOnsite,
+                'require_qr_breaks' => $requireQrBreaks,
                 'trusted_may_use_browser' => $trustedMayUseBrowser,
                 'retention_months' => $retentionMonths,
                 'late_tolerance_minutes' => $lateToleranceMinutes,
             ]);
-            $this->audit->handle('attendance.policy_saved', $policy, $policy->only(['out_of_zone', 'max_accuracy_m', 'require_qr_onsite', 'trusted_may_use_browser', 'retention_months', 'late_tolerance_minutes']));
+            $this->audit->handle('attendance.policy_saved', $policy, $policy->only(['out_of_zone', 'max_accuracy_m', 'require_qr_onsite', 'require_qr_breaks', 'trusted_may_use_browser', 'retention_months', 'late_tolerance_minutes']));
 
             return $policy;
         });

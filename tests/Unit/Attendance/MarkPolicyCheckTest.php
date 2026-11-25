@@ -6,6 +6,7 @@ use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Data\Position;
 use App\Modules\Attendance\Enums\EvidenceLevel;
 use App\Modules\Attendance\Enums\MarkMethod;
+use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\MarkRejected;
@@ -20,9 +21,9 @@ mutates(MarkPolicyCheck::class);
 const MPC_METERS_PER_DEGREE = 6371000 * M_PI / 180;
 
 /** The default policy, or one changed. */
-function markPolicy(OutOfZoneRule $outOfZone = OutOfZoneRule::Block, bool $requireQr = true, bool $trustedBrowser = true): AttendancePolicy
+function markPolicy(OutOfZoneRule $outOfZone = OutOfZoneRule::Block, bool $requireQr = true, bool $trustedBrowser = true, bool $requireQrBreaks = false): AttendancePolicy
 {
-    return (new AttendancePolicy)->forceFill(['out_of_zone' => $outOfZone, 'max_accuracy_m' => 100, 'require_qr_onsite' => $requireQr, 'trusted_may_use_browser' => $trustedBrowser]);
+    return (new AttendancePolicy)->forceFill(['out_of_zone' => $outOfZone, 'max_accuracy_m' => 100, 'require_qr_onsite' => $requireQr, 'require_qr_breaks' => $requireQrBreaks, 'trusted_may_use_browser' => $trustedBrowser]);
 }
 
 function markSchedule(WorkMode $mode): AttendanceSchedule
@@ -42,11 +43,11 @@ function northOf(float $meters, float $accuracy = 10.0): Position
  *
  * @param  ?list<AttendanceZone>  $zones  null for the plant's one zone
  */
-function decideMark(?AttendanceSchedule $schedule = null, ?AttendancePolicy $policy = null, bool $trusted = false, ?bool $qrValid = true, ?array $zones = null, ?Position $position = new Position(19.0 + 10 / MPC_METERS_PER_DEGREE, -99.0, 10.0), int $screens = 1, bool $field = false): MarkContext
+function decideMark(?AttendanceSchedule $schedule = null, ?AttendancePolicy $policy = null, bool $trusted = false, ?bool $qrValid = true, ?array $zones = null, ?Position $position = new Position(19.0 + 10 / MPC_METERS_PER_DEGREE, -99.0, 10.0), int $screens = 1, bool $field = false, MarkType $type = MarkType::Start): MarkContext
 {
     $plant = [(new AttendanceZone)->forceFill(['id' => 'zone-a', 'latitude' => 19.0, 'longitude' => -99.0, 'radius_m' => 50])];
 
-    return MarkPolicyCheck::decide($schedule, $policy ?? markPolicy(), $trusted, $qrValid, $zones ?? $plant, $position, 'device-1', $screens, $field);
+    return MarkPolicyCheck::decide($schedule, $policy ?? markPolicy(), $trusted, $qrValid, $zones ?? $plant, $position, 'device-1', $screens, $field, $type);
 }
 
 /**
@@ -291,5 +292,60 @@ describe('a code of another center of the company (a trip; design of time zones 
         $context = MarkPolicyCheck::away(markSchedule(WorkMode::Remote), markPolicy(), 'center-b', northOf(10), 'device-1');
 
         expect($context->method)->toBe(MarkMethod::Remote)->and($context->awayCenterId)->toBeNull()->and($context->latitude)->toBeNull();
+    });
+});
+
+describe('the QR by type of mark (criterios 4.2.1)', function (): void {
+    it('asks for the QR on the start and the end, and not on a break, by default', function (): void {
+        expect(markRejection(fn () => decideMark(qrValid: null, type: MarkType::Start)))->toBe('qr_required')
+            ->and(markRejection(fn () => decideMark(qrValid: null, type: MarkType::End)))->toBe('qr_required')
+            ->and(decideMark(qrValid: null, type: MarkType::BreakStart)->method)->toBe(MarkMethod::Geofence)
+            ->and(decideMark(qrValid: null, type: MarkType::BreakEnd)->method)->toBe(MarkMethod::Geofence);
+    });
+
+    it('takes a break by geofence with its zone, position and distance', function (): void {
+        $context = decideMark(qrValid: null, type: MarkType::BreakStart);
+
+        expect($context->zoneId)->toBe('zone-a')
+            ->and($context->latitude)->toBe(19.0 + 10 / MPC_METERS_PER_DEGREE)
+            ->and($context->distance)->toEqualWithDelta(10.0, 0.01);
+    });
+
+    it('asks for the QR on a break when the policy requires it there', function (): void {
+        $policy = markPolicy(requireQrBreaks: true);
+
+        expect(markRejection(fn () => decideMark(qrValid: null, policy: $policy, type: MarkType::BreakStart)))->toBe('qr_required')
+            ->and(markRejection(fn () => decideMark(qrValid: null, policy: $policy, type: MarkType::BreakEnd)))->toBe('qr_required');
+    });
+
+    it('lets a break take the QR when it is optional: scanned, it is the strong method', function (): void {
+        expect(decideMark(type: MarkType::BreakStart)->method)->toBe(MarkMethod::QrAndGeofence);
+    });
+
+    it('rejects a QR that does not verify on a break, even when the QR is optional there', function (): void {
+        expect(markRejection(fn () => decideMark(qrValid: false, type: MarkType::BreakStart)))->toBe('qr_invalid');
+    });
+
+    it('does not ask for the QR on the start and the end when the policy does not require it there', function (): void {
+        $policy = markPolicy(requireQr: false, requireQrBreaks: true);
+
+        expect(decideMark(qrValid: null, policy: $policy, type: MarkType::Start)->method)->toBe(MarkMethod::Geofence)
+            ->and(decideMark(qrValid: null, policy: $policy, type: MarkType::End)->method)->toBe(MarkMethod::Geofence)
+            ->and(markRejection(fn () => decideMark(qrValid: null, policy: $policy, type: MarkType::BreakStart)))->toBe('qr_required');
+    });
+
+    it('still needs the QR on a break in a center with no zones, as nothing else proves where', function (): void {
+        expect(markRejection(fn () => decideMark(zones: [], qrValid: null, type: MarkType::BreakStart)))->toBe('qr_required')
+            ->and(markRejection(fn () => decideMark(zones: [], qrValid: null, screens: 0, type: MarkType::BreakStart)))->toBe('center_not_ready');
+    });
+
+    it('still asks for the location on a break taken without the QR', function (): void {
+        expect(markRejection(fn () => decideMark(position: null, qrValid: null, type: MarkType::BreakStart)))->toBe('no_location');
+    });
+
+    it('changes nothing for remote work, trusted staff or a field center', function (): void {
+        expect(decideMark(schedule: markSchedule(WorkMode::Remote), qrValid: null, type: MarkType::BreakStart)->method)->toBe(MarkMethod::Remote)
+            ->and(decideMark(trusted: true, qrValid: null, type: MarkType::BreakStart)->method)->toBe(MarkMethod::TrustedBrowser)
+            ->and(decideMark(qrValid: null, field: true, type: MarkType::BreakStart)->method)->toBe(MarkMethod::Field);
     });
 });

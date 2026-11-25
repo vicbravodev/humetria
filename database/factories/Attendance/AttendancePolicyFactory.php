@@ -28,6 +28,7 @@ final class AttendancePolicyFactory extends Factory
             'out_of_zone' => OutOfZoneRule::Block,
             'max_accuracy_m' => 100,
             'require_qr_onsite' => true,
+            'require_qr_breaks' => false,
             'trusted_may_use_browser' => true,
             'retention_months' => 12,
         ];

@@ -25,7 +25,7 @@ beforeEach(function (): void {
 /** The policy as the form sends it. */
 function policyInput(array $overrides = []): array
 {
-    return ['out_of_zone' => 'allow_and_flag', 'max_accuracy_m' => '80', 'require_qr_onsite' => '1', 'trusted_may_use_browser' => '0', 'retention_months' => '24', 'late_tolerance_minutes' => '15', ...$overrides];
+    return ['out_of_zone' => 'allow_and_flag', 'max_accuracy_m' => '80', 'require_qr_onsite' => '1', 'require_qr_breaks' => '0', 'trusted_may_use_browser' => '0', 'retention_months' => '24', 'late_tolerance_minutes' => '15', ...$overrides];
 }
 
 function savePolicy(array $input): Illuminate\Testing\TestResponse
@@ -39,18 +39,18 @@ describe('the page', function (): void {
 
         $this->get(route('tenant.attendance.policy.show', 'acme'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
             ->component('attendance/policy')
-            ->where('policy', ['outOfZone' => 'block', 'maxAccuracyM' => 100, 'requireQrOnsite' => true, 'trustedMayUseBrowser' => true, 'retentionMonths' => 12, 'lateToleranceMinutes' => 10])
+            ->where('policy', ['outOfZone' => 'block', 'maxAccuracyM' => 100, 'requireQrOnsite' => true, 'requireQrBreaks' => false, 'trustedMayUseBrowser' => true, 'retentionMonths' => 12, 'lateToleranceMinutes' => 10])
             ->where('saved', false)
             ->where('canManage', true));
         expect(AttendancePolicy::query()->count())->toBe(0);
     });
 
     it('shows the policy saved, read-only for a viewer', function (): void {
-        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'out_of_zone' => OutOfZoneRule::AllowAndFlag, 'max_accuracy_m' => 50, 'require_qr_onsite' => false, 'trusted_may_use_browser' => false, 'retention_months' => 36, 'late_tolerance_minutes' => 25]);
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'out_of_zone' => OutOfZoneRule::AllowAndFlag, 'max_accuracy_m' => 50, 'require_qr_onsite' => false, 'require_qr_breaks' => true, 'trusted_may_use_browser' => false, 'retention_months' => 36, 'late_tolerance_minutes' => 25]);
         $this->actingAs(memberOf($this->tenant, TenantRole::Viewer));
 
         $this->get(route('tenant.attendance.policy.show', 'acme'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('policy', ['outOfZone' => 'allow_and_flag', 'maxAccuracyM' => 50, 'requireQrOnsite' => false, 'trustedMayUseBrowser' => false, 'retentionMonths' => 36, 'lateToleranceMinutes' => 25])
+            ->where('policy', ['outOfZone' => 'allow_and_flag', 'maxAccuracyM' => 50, 'requireQrOnsite' => false, 'requireQrBreaks' => true, 'trustedMayUseBrowser' => false, 'retentionMonths' => 36, 'lateToleranceMinutes' => 25])
             ->where('saved', true)
             ->where('canManage', false));
     });
@@ -94,12 +94,13 @@ describe('saving it', function (): void {
 
         savePolicy(policyInput())->assertRedirect(route('tenant.attendance.policy.show', 'acme'))
             ->assertSessionHas('inertia.flash_data.toast', ['type' => 'success', 'message' => 'Política guardada. Aplica desde la siguiente marca.']);
-        savePolicy(policyInput(['retention_months' => '18', 'require_qr_onsite' => '0']))->assertSessionHasNoErrors();
+        savePolicy(policyInput(['retention_months' => '18', 'require_qr_onsite' => '0', 'require_qr_breaks' => '1']))->assertSessionHasNoErrors();
 
         expect(AttendancePolicy::query()->sole())
             ->out_of_zone->toBe(OutOfZoneRule::AllowAndFlag)
             ->max_accuracy_m->toBe(80)
             ->require_qr_onsite->toBeFalse()
+            ->require_qr_breaks->toBeTrue()
             ->trusted_may_use_browser->toBeFalse()
             ->retention_months->toBe(18)
             ->late_tolerance_minutes->toBe(15)
@@ -109,9 +110,9 @@ describe('saving it', function (): void {
     it('takes a switch left off as no', function (): void {
         $this->actingAs($this->hr);
 
-        savePolicy(array_diff_key(policyInput(), ['require_qr_onsite' => true, 'trusted_may_use_browser' => true]))->assertSessionHasNoErrors();
+        savePolicy(array_diff_key(policyInput(), ['require_qr_onsite' => true, 'require_qr_breaks' => true, 'trusted_may_use_browser' => true]))->assertSessionHasNoErrors();
 
-        expect(AttendancePolicy::query()->sole())->require_qr_onsite->toBeFalse()->trusted_may_use_browser->toBeFalse();
+        expect(AttendancePolicy::query()->sole())->require_qr_onsite->toBeFalse()->require_qr_breaks->toBeFalse()->trusted_may_use_browser->toBeFalse();
     });
 
     it('takes the exact limits of the accuracy and of the retention', function (array $input): void {
@@ -143,6 +144,7 @@ describe('saving it', function (): void {
         'an unknown rule' => [['out_of_zone' => 'ignore'], 'out_of_zone', 'Elige «Bloquear» o «Permitir y señalar».'],
         'no rule' => [['out_of_zone' => ''], 'out_of_zone', 'El campo fuera de zona es obligatorio.'],
         'a switch that is not yes or no' => [['require_qr_onsite' => 'tal vez'], 'require_qr_onsite', 'El campo QR en el centro debe ser verdadero o falso.'],
+        'the breaks switch that is not yes or no' => [['require_qr_breaks' => 'tal vez'], 'require_qr_breaks', 'El campo QR en las comidas debe ser verdadero o falso.'],
     ]);
 
     it('cannot be done by a viewer', function (): void {

@@ -26,6 +26,7 @@ export default function PunchScreen({
         slug: string;
         mode: PunchMode;
         scannedAt: string | null;
+        qrTypes: string[] | null;
         weekUrl: string;
         enterUrl: string;
         correctionOptionsUrl: string;

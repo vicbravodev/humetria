@@ -17,6 +17,21 @@ export type DayStatus = {
     text: string;
 };
 
+/**
+ * Whether the page offers the QR reader: the company's policy says which marks ask for the code (`qrTypes`), and the person
+ * needs it when one of the marks that may come next is among them. Nobody known, or no policy told: it is offered.
+ */
+export function needsQr(
+    qrTypes: readonly string[] | null,
+    next: readonly string[] | null,
+): boolean {
+    if (qrTypes === null || next === null) {
+        return true;
+    }
+
+    return next.some((step) => qrTypes.includes(step));
+}
+
 /** A title or degree some people write before their name: «Ing.», «Lic.», «Dr.», «Dra.», «Mtro.», «Mtra.», «C.P.». */
 const TITLE = /^(ing|lic|dr|dra|mtro|mtra|c\.p)\.?$/i;
 

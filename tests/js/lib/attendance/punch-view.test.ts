@@ -7,6 +7,7 @@ import {
     greeting,
     markClock,
     markHow,
+    needsQr,
 } from '@/lib/attendance/punch-view';
 
 describe('greeting', () => {
@@ -198,5 +199,23 @@ describe('clockOffset', () => {
         // The phone is 2 hours behind, or a day ahead.
         expect(clockOffset(10_000_000, 2_800_000)).toBe(7_200_000);
         expect(clockOffset(0, 86_400_000)).toBe(-86_400_000);
+    });
+});
+
+describe('needsQr', () => {
+    it('offers the reader when nobody is known or the policy was not told', () => {
+        expect(needsQr(null, ['start'])).toBe(true);
+        expect(needsQr(['start', 'end'], null)).toBe(true);
+    });
+
+    it('offers it only when one of the marks that may come next asks for the code', () => {
+        const qrTypes = ['start', 'end'];
+
+        expect(needsQr(qrTypes, ['start'])).toBe(true);
+        expect(needsQr(qrTypes, ['break_start', 'end'])).toBe(true);
+        expect(needsQr(qrTypes, ['break_start'])).toBe(false);
+        expect(needsQr(qrTypes, ['break_end'])).toBe(false);
+        expect(needsQr(qrTypes, [])).toBe(false);
+        expect(needsQr([], ['start'])).toBe(false);
     });
 });

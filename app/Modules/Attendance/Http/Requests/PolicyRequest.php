@@ -31,6 +31,7 @@ final class PolicyRequest extends FormRequest
             'out_of_zone' => ['required', Rule::in(array_column(OutOfZoneRule::cases(), 'value'))],
             'max_accuracy_m' => ['required', 'integer', 'between:10,500'],
             'require_qr_onsite' => ['boolean'],
+            'require_qr_breaks' => ['boolean'],
             'trusted_may_use_browser' => ['boolean'],
             'retention_months' => ['required', 'integer', 'between:12,120'],
             'late_tolerance_minutes' => ['required', 'integer', 'between:0,120'],
@@ -50,6 +51,11 @@ final class PolicyRequest extends FormRequest
     public function requireQrOnsite(): bool
     {
         return $this->boolean('require_qr_onsite');
+    }
+
+    public function requireQrBreaks(): bool
+    {
+        return $this->boolean('require_qr_breaks');
     }
 
     public function trustedMayUseBrowser(): bool

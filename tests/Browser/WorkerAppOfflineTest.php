@@ -107,7 +107,7 @@ function phoneWithTickets(): AwaitableWebpage
 {
     $page = visitPage('worker-access/link', accessLinkPath(test()->ana->id), mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, test()->ana->id);
-    $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))->waitForText('Marcar su jornada');
+    $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))->waitForText(', Ana');
     standingAt($page, 19.4327, -99.1332);
     $page->press('button:has-text("Entrada")')->waitForText('Entrada registrada')->press('Listo');
     $page->assertScript(eventuallyAsync('async () => ('.trim(keptInPhone()).')().then((names) => names.includes("tickets") && names.includes("context"))'), true);
@@ -240,10 +240,10 @@ it('«¿No es usted?» takes the tickets out of the phone but not the mark that 
 it('sends one mark when the button is tapped twice before the screen changes', function (): void {
     $page = visitPage('worker-access/link', accessLinkPath($this->ana->id), mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, $this->ana->id);
-    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))->waitForText('Marcar su jornada');
+    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))->waitForText(', Ana');
     standingAt($page, 19.4327, -99.1332);
 
-    $page->script('() => { const button = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Entrada"); button.click(); button.click(); }');
+    $page->script('() => { const button = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Marcar entrada"); button.click(); button.click(); }');
     $page->waitForText('Entrada registrada');
 
     expect(AttendanceMark::query()->count())->toBe(1);

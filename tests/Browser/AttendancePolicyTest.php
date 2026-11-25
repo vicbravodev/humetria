@@ -29,7 +29,7 @@ it('lets RH change the policy and keeps it', function (): void {
     visit("{$url}/attendance/policy")
         ->click('Permitir y señalar')
         ->fill('#policy-max_accuracy_m', '60')
-        ->click('Pedir el QR a quien marca en el centro')
+        ->click('Pedir el QR al entrar y al salir')
         ->fill('#policy-retention_months', '24')
         ->fill('#policy-late_tolerance_minutes', '15')
         ->assertSee('Solo se muestra: Humetria no descuenta tiempo ni marca faltas.')

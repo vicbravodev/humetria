@@ -3,6 +3,7 @@
         "policy": {
             "outOfZone": "block",
             "requireQrOnsite": true,
+            "requireQrBreaks": false,
             "trustedMayUseBrowser": true,
             "maxAccuracyM": 100
         },
@@ -11,13 +12,15 @@
             "inside_no_qr": "rejected",
             "qr_inaccurate": "rejected",
             "qr_outside": "rejected",
-            "trusted_browser": "basic"
+            "trusted_browser": "basic",
+            "break_no_qr": "medium"
         }
     },
     {
         "policy": {
             "outOfZone": "block",
             "requireQrOnsite": true,
+            "requireQrBreaks": false,
             "trustedMayUseBrowser": false,
             "maxAccuracyM": 100
         },
@@ -26,13 +29,15 @@
             "inside_no_qr": "rejected",
             "qr_inaccurate": "rejected",
             "qr_outside": "rejected",
-            "trusted_browser": "rejected"
+            "trusted_browser": "rejected",
+            "break_no_qr": "medium"
         }
     },
     {
         "policy": {
             "outOfZone": "block",
             "requireQrOnsite": false,
+            "requireQrBreaks": false,
             "trustedMayUseBrowser": true,
             "maxAccuracyM": 100
         },
@@ -41,13 +46,15 @@
             "inside_no_qr": "medium",
             "qr_inaccurate": "rejected",
             "qr_outside": "rejected",
-            "trusted_browser": "basic"
+            "trusted_browser": "basic",
+            "break_no_qr": "medium"
         }
     },
     {
         "policy": {
             "outOfZone": "block",
             "requireQrOnsite": false,
+            "requireQrBreaks": false,
             "trustedMayUseBrowser": false,
             "maxAccuracyM": 100
         },
@@ -56,13 +63,15 @@
             "inside_no_qr": "medium",
             "qr_inaccurate": "rejected",
             "qr_outside": "rejected",
-            "trusted_browser": "medium"
+            "trusted_browser": "medium",
+            "break_no_qr": "medium"
         }
     },
     {
         "policy": {
             "outOfZone": "allow_and_flag",
             "requireQrOnsite": true,
+            "requireQrBreaks": false,
             "trustedMayUseBrowser": true,
             "maxAccuracyM": 100
         },
@@ -71,13 +80,15 @@
             "inside_no_qr": "rejected",
             "qr_inaccurate": "medium",
             "qr_outside": "medium",
-            "trusted_browser": "basic"
+            "trusted_browser": "basic",
+            "break_no_qr": "medium"
         }
     },
     {
         "policy": {
             "outOfZone": "allow_and_flag",
             "requireQrOnsite": true,
+            "requireQrBreaks": false,
             "trustedMayUseBrowser": false,
             "maxAccuracyM": 100
         },
@@ -86,13 +97,15 @@
             "inside_no_qr": "rejected",
             "qr_inaccurate": "medium",
             "qr_outside": "medium",
-            "trusted_browser": "rejected"
+            "trusted_browser": "rejected",
+            "break_no_qr": "medium"
         }
     },
     {
         "policy": {
             "outOfZone": "allow_and_flag",
             "requireQrOnsite": false,
+            "requireQrBreaks": false,
             "trustedMayUseBrowser": true,
             "maxAccuracyM": 100
         },
@@ -101,13 +114,15 @@
             "inside_no_qr": "medium",
             "qr_inaccurate": "medium",
             "qr_outside": "medium",
-            "trusted_browser": "basic"
+            "trusted_browser": "basic",
+            "break_no_qr": "medium"
         }
     },
     {
         "policy": {
             "outOfZone": "allow_and_flag",
             "requireQrOnsite": false,
+            "requireQrBreaks": false,
             "trustedMayUseBrowser": false,
             "maxAccuracyM": 100
         },
@@ -116,7 +131,42 @@
             "inside_no_qr": "medium",
             "qr_inaccurate": "medium",
             "qr_outside": "medium",
-            "trusted_browser": "medium"
+            "trusted_browser": "medium",
+            "break_no_qr": "medium"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "block",
+            "requireQrOnsite": true,
+            "requireQrBreaks": true,
+            "trustedMayUseBrowser": true,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "rejected",
+            "qr_inaccurate": "rejected",
+            "qr_outside": "rejected",
+            "trusted_browser": "basic",
+            "break_no_qr": "rejected"
+        }
+    },
+    {
+        "policy": {
+            "outOfZone": "allow_and_flag",
+            "requireQrOnsite": false,
+            "requireQrBreaks": true,
+            "trustedMayUseBrowser": false,
+            "maxAccuracyM": 100
+        },
+        "outcomes": {
+            "qr_and_inside": "strong",
+            "inside_no_qr": "medium",
+            "qr_inaccurate": "medium",
+            "qr_outside": "medium",
+            "trusted_browser": "medium",
+            "break_no_qr": "rejected"
         }
     }
 ]

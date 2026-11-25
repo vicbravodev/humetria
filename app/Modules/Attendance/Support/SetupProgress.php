@@ -55,7 +55,7 @@ final readonly class SetupProgress
             // A center in the field needs neither: its people mark from their phone wherever they are.
             $needs = isset($field[$id]) ? [] : array_values(array_filter([
                 isset($zones[$id]) ? null : 'zone',
-                $policy->require_qr_onsite && ! isset($screens[$id]) ? 'screen' : null,
+                ($policy->require_qr_onsite || $policy->require_qr_breaks) && ! isset($screens[$id]) ? 'screen' : null,
             ]));
 
             if ($needs !== []) {
@@ -72,7 +72,7 @@ final readonly class SetupProgress
         return [
             'deadline' => self::DEADLINE,
             'daysLeft' => $this->daysLeft(),
-            'requiresQr' => $policy->require_qr_onsite,
+            'requiresQr' => $policy->require_qr_onsite || $policy->require_qr_breaks,
             'centers' => ['done' => count($names) - count($pending), 'total' => count($names), 'pending' => array_slice($pending, 0, self::LISTED)],
             'schedules' => ['done' => count($people) - count($unscheduled), 'total' => count($people), 'pending' => $this->names($unscheduled)],
             'devices' => ['done' => count($linked), 'total' => count($people)],

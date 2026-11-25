@@ -15,7 +15,12 @@ import { clockNow } from '@/lib/attendance/correction';
 import type { MarkType } from '@/lib/attendance/next-step';
 import type { DayMark, PunchMode, Signer } from '@/lib/attendance/punch';
 import type { PunchFeedback as Feedback } from '@/lib/attendance/punch-state';
-import { dayStatus, firstName, greeting } from '@/lib/attendance/punch-view';
+import {
+    dayStatus,
+    firstName,
+    greeting,
+    needsQr,
+} from '@/lib/attendance/punch-view';
 import { dayTitle } from '@/lib/attendance/week-text';
 
 /**
@@ -30,6 +35,7 @@ export default function PunchReady({
     feedback,
     mode,
     scannedAt,
+    qrTypes,
     weekUrl,
     enterUrl,
     timezone,
@@ -46,6 +52,8 @@ export default function PunchReady({
     feedback: Feedback | null;
     mode: PunchMode;
     scannedAt: string | null;
+    /** The marks that ask for the code (the policy's); null when nobody is known. */
+    qrTypes: string[] | null;
     weekUrl: string;
     enterUrl: string;
     timezone: string;
@@ -61,6 +69,7 @@ export default function PunchReady({
     onForget: () => void;
 }) {
     const today = clockNow(new Date(now), timezone);
+    const asksQr = needsQr(qrTypes, person?.next ?? null);
 
     return (
         <PersonFrame
@@ -73,6 +82,7 @@ export default function PunchReady({
                         mode={mode}
                         scannedAt={scannedAt}
                         readInApp={readInApp}
+                        qr={asksQr}
                     />
                 </>
             }
@@ -96,7 +106,7 @@ export default function PunchReady({
                 <PunchFeedback feedback={feedback} />
                 {notes}
                 {/* In the content, not in the bar of steps: that bar stays compact (hallazgo 16). */}
-                {mode !== 'remote' && (
+                {mode !== 'remote' && asksQr && (
                     <PunchScanButton read={readInApp} onCode={onCode} />
                 )}
                 <PunchWeekLink href={weekUrl} />
