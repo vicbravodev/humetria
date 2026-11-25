@@ -250,6 +250,26 @@ li[data-sonner-toast] {
         font-size: 16px;
         line-height: 24px;
     }
+
+    /* The installed app behaves like one: no pull-down bounce that reloads or scrolls the page behind, no grey flash on a tap, and
+       the interface is not selected by a long press (what people type, and read-only text fields, stay selectable). */
+    @media (display-mode: standalone) {
+        html {
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        input,
+        textarea,
+        [contenteditable] {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+    }
 }
 
 /*
