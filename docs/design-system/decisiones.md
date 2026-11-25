@@ -52,5 +52,5 @@ Una línea por decisión importante, con el porqué frente a la personalidad: c�
 
 ## White label
 
-- **El consultor solo cambia el logo.** Protege la legibilidad y el contraste ya validados; ningún cliente puede romper la accesibilidad.
+- **La empresa cambia el logo y el acento (2026-11-25, decisión del dueño; antes solo el logo).** Donde hubiera un logo de Humetría va el de la empresa (panel, encuesta, reportes, correos); sin logo, sus iniciales y nombre. El acento pasa por `BrandPalette`, que lo ajusta hasta cumplir 4.5:1: ningún cliente puede romper la accesibilidad. Se carga en la consola de superadmin («Logo y color»).
 - **Humetría como sello gris “hecho con” a 16 px.** El consultor es el protagonista frente a su cliente y Humetría acompaña con discreción.

@@ -88,7 +88,7 @@ El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca deco
 
 - Usa siempre los SVG del grupo de recursos **Logo**: `humetria-horizontal-color.svg` sobre claro y `humetria-horizontal-color-oscuro.svg` sobre oscuro (el componente `Logo` los cambia solo). Mínimo 96 px de ancho; por debajo, `humetria-simbolo-*.svg` o el favicon.
 - Área de respeto: la altura del círculo (≈ 1/4 del símbolo) por lado.
-- **White label:** el consultor solo cambia el logo. Colores, tipografía y disposición nunca cambian.
+- **White label:** la empresa (o el consultor) cambia el logo y el color de acento (`brand_color`). Tipografía y disposición nunca cambian. El acento se ajusta solo (`BrandPalette`) para que siga leyéndose a 4.5:1 en claro y en oscuro, también como texto sobre su fondo suave.
 - En reportes, invitaciones y la encuesta, el logo del consultor va en el lugar principal (arriba a la izquierda, ≤ 48 px de alto en reportes y ≤ 32 px en la encuesta). Humetría aparece solo como el sello `humetria-sello-hecho-con-gris.svg` (`#6B7472`, 4.81:1 sobre blanco) a 16 px de alto, o la versión blanca sobre fondo oscuro.
 - En el panel del consultor, el logo de Humetría va arriba del sidebar. Si el consultor activa su marca, su logo lo reemplaza.
 
