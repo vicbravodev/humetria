@@ -18,7 +18,7 @@ export default function AccountSuggestedAction({
     account: AccountRow;
     canRemind: boolean;
 }) {
-    const action = suggestedAction(account.aging);
+    const action = suggestedAction(account.aging, canRemind);
 
     if (action === null) {
         return <span className="text-muted-foreground">—</span>;
@@ -26,7 +26,7 @@ export default function AccountSuggestedAction({
 
     const label = `${LABELS[action]}: ${account.legal_name}`;
 
-    if (action === 'remind' && canRemind) {
+    if (action === 'remind') {
         return (
             <Button
                 size="sm"

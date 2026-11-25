@@ -33,15 +33,19 @@ export function agingBadge(
 
 export type SuggestedAction = 'collect' | 'remind' | 'view';
 
-/** What to do next with an account: collect after 30 days past due, remind before, look while it is not due; nothing when it owes nothing. */
+/**
+ * What to do next with an account: collect after 30 days past due, remind before, look while it is not due; nothing when it
+ * owes nothing. Whoever may not remind nor record payments (support) only looks.
+ */
 export function suggestedAction(
     aging: AccountAging | null,
+    canManage = true,
 ): SuggestedAction | null {
     if (aging === null) {
         return null;
     }
 
-    if (aging.bucket === 'current') {
+    if (aging.bucket === 'current' || !canManage) {
         return 'view';
     }
 

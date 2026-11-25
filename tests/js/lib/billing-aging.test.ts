@@ -45,6 +45,16 @@ describe('suggestedAction', () => {
         expect(suggestedAction({ bucket: 'current', days: 5 })).toBe('view');
         expect(suggestedAction(null)).toBeNull();
     });
+
+    it('only looks for whoever may not remind nor record payments', () => {
+        expect(suggestedAction({ bucket: 'over_60', days: 61 }, false)).toBe(
+            'view',
+        );
+        expect(suggestedAction({ bucket: '1_30', days: 2 }, false)).toBe(
+            'view',
+        );
+        expect(suggestedAction(null, false)).toBeNull();
+    });
 });
 
 describe('BUCKET_LABELS', () => {
