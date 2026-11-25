@@ -44,9 +44,24 @@ final class TenantLogoController extends Controller
             $setLogo->handle($tenant, $logoPath);
         }
 
+        if (($darkPath = $request->darkLogoPath()) !== null) {
+            $setLogo->handle($tenant, $darkPath, dark: true);
+        }
+
         $setColor->handle($tenant, $request->color());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Marca guardada.']);
+
+        return redirect()->route('companies.index');
+    }
+
+    public function destroyDark(Tenant $tenant, RemoveTenantLogo $removeLogo): RedirectResponse
+    {
+        Gate::authorize('manage-tenants');
+
+        $removeLogo->handle($tenant, onlyDark: true);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Logo para modo oscuro quitado.']);
 
         return redirect()->route('companies.index');
     }

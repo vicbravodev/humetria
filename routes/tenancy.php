@@ -65,6 +65,10 @@ Route::put('admin/companies/{tenant}/brand', [TenantLogoController::class, 'bran
     ->middleware(['auth', 'verified'])
     ->name('companies.brand.update');
 
+Route::delete('admin/companies/{tenant}/logo-dark', [TenantLogoController::class, 'destroyDark'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.logo-dark.destroy');
+
 Route::delete('admin/companies/{tenant}/logo', [TenantLogoController::class, 'destroy'])
     ->middleware(['auth', 'verified'])
     ->name('companies.logo.destroy');

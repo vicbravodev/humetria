@@ -22,7 +22,8 @@ final readonly class SetTenantLogo
 
     private const int MAX_WIDTH = 400;
 
-    public function handle(Tenant $tenant, string $imagePath): Tenant
+    /** @param  bool  $dark  the version for dark mode, kept beside the one for light */
+    public function handle(Tenant $tenant, string $imagePath, bool $dark = false): Tenant
     {
         $source = @imagecreatefromstring((string) file_get_contents($imagePath));
 
@@ -46,17 +47,18 @@ final readonly class SetTenantLogo
         $png = (string) ob_get_clean();
 
         $disk = Storage::disk(config()->string('filesystems.tenant_logos'));
+        $column = $dark ? 'logo_dark' : 'logo';
         $path = "logos/{$tenant->id}/".Str::uuid().'.png';
         $disk->put($path, $png, 'public');
-        $previous = $tenant->logo_path;
+        $previous = $tenant->{$column.'_path'};
 
-        $tenant->update(['logo_path' => $path, 'logo_width' => intdiv($width, 2), 'logo_height' => intdiv($height, 2)]);
+        $tenant->update(["{$column}_path" => $path, "{$column}_width" => intdiv($width, 2), "{$column}_height" => intdiv($height, 2)]);
 
         if ($previous !== null) {
             $disk->delete($previous);
         }
 
-        Log::info('tenant.logo_updated', ['tenant_id' => $tenant->id]);
+        Log::info($dark ? 'tenant.logo_dark_updated' : 'tenant.logo_updated', ['tenant_id' => $tenant->id]);
 
         return $tenant;
     }
