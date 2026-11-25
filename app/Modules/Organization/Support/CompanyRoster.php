@@ -47,6 +47,11 @@ final class CompanyRoster implements Roster
         return $byCenter;
     }
 
+    public function names(): array
+    {
+        return array_values(array_filter(Employee::query()->get(['name'])->map(fn (Employee $employee): ?string => $employee->name)->all(), is_string(...)));
+    }
+
     public function find(string $employeeId): ?RosterEntry
     {
         $employee = $this->query()->find($employeeId);

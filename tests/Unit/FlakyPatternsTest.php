@@ -54,8 +54,8 @@ it('waits for what a browser test asserts, not a fixed number of seconds', funct
     // The same for the invitation of Humi: it asks itself every second whether to appear, so «it does not appear» is a
     // window of two ticks after the page clock jumps, not a state the page reaches.
     expect(array_values(array_diff($waits, [
-        'tests/Browser/TenantConsoleTest.php:654',
-        'tests/Browser/TenantConsoleTest.php:672',
+        'tests/Browser/TenantConsoleTest.php:653',
+        'tests/Browser/TenantConsoleTest.php:671',
         'tests/Browser/AssistantInvitationTest.php:97',
         'tests/Browser/AssistantInvitationTest.php:104',
         'tests/Browser/AssistantInvitationTest.php:106',

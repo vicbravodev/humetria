@@ -48,6 +48,7 @@ export default function SubscriptionForm({
                     <SubscriptionFormBody
                         defaults={defaults}
                         accountKind={accountKind}
+                        union={company.union}
                         choice={choice}
                         status={status}
                         preview={live.result}

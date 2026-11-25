@@ -40,6 +40,12 @@ final class SubscriptionRules
     {
         $normalized = $input;
 
+        // A union's fee counts neither people nor centers: whatever the form carried, it is one center and nobody counted.
+        if (($input['plan'] ?? null) === Plan::Sindicato->value) {
+            $normalized['seats'] = 0;
+            $normalized['centers'] = 1;
+        }
+
         foreach (['negotiated_price', 'negotiated_valid_until'] as $field) {
             $value = $input[$field] ?? null;
             $normalized[$field] = is_string($value) && trim($value) !== '' ? trim($value) : null;

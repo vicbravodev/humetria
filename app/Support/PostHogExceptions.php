@@ -91,7 +91,7 @@ final class PostHogExceptions
         return [
             'filename' => $path,
             'lineno' => $line,
-            'function' => $function,
+            'function' => $function ?? '',
             'in_app' => $path !== '' && ! str_starts_with($path, 'vendor/'),
             'platform' => 'custom',
             'lang' => 'php',

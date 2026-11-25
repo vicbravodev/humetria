@@ -7,7 +7,7 @@ namespace App\Modules\Billing\Data;
 use Illuminate\Contracts\Support\Arrayable;
 
 /**
- * A company an account pays, as the account's page lists it: who it is, where it stands and what it contracted (nothing,
+ * A company an account pays, as the account's page lists it (`union` when it is a union's account): who it is, where it stands and what it contracted (nothing,
  * until a plan is assigned).
  *
  * @implements Arrayable<string, mixed>
@@ -30,6 +30,7 @@ final readonly class AccountCompanyRow implements Arrayable
         public string $linkedSince,
         public ?array $subscription,
         public ?string $previousPayer = null,
+        public bool $union = false,
     ) {}
 
     /**
@@ -50,6 +51,7 @@ final readonly class AccountCompanyRow implements Arrayable
             'linked_since' => $this->linkedSince,
             'subscription' => $this->subscription,
             'previous_payer' => $this->previousPayer,
+            'union' => $this->union,
         ];
     }
 }

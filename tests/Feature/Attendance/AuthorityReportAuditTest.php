@@ -95,6 +95,11 @@ it('keeps the audit entry of a download cut off halfway', function (): void {
             return $this->roster->activeIdsInMany($workCenterIds);
         }
 
+        public function names(): array
+        {
+            return $this->roster->names();
+        }
+
         public function find(string $employeeId): ?RosterEntry
         {
             return $this->roster->find($employeeId);

@@ -81,6 +81,10 @@ final class Quote
             throw new InvalidArgumentException("{$profile->label()} solo va con el plan {$required->label()}.");
         }
 
+        if ($plan === Plan::Sindicato && ! in_array($profile, [Profile::Union, Profile::Negotiated], true)) {
+            throw new InvalidArgumentException('El plan Sindicato solo se cobra con su cuota fija o con un precio negociado.');
+        }
+
         if ($profile === Profile::Negotiated && $negotiatedCents === null) {
             throw new InvalidArgumentException('El perfil negociado necesita un precio negociado.');
         }
@@ -89,6 +93,12 @@ final class Quote
     /** The plan line from the table; null when the table does not reach that many people. */
     private static function tableAmount(Catalog $catalog, Plan $plan, Profile $profile, int $seats): ?QuoteLine
     {
+        if ($profile === Profile::Union) {
+            $flat = $catalog->flatCents($plan);
+
+            return new QuoteLine('plan', $plan->label(), $flat, 'Cuota fija mensual: '.Money::format($flat));
+        }
+
         if ($profile === Profile::Negotiated || $seats > $catalog->quotationAbove($profile)) {
             return null;
         }

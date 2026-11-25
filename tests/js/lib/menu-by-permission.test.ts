@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { complianceNavItems, mainNavItems } from '@/lib/app-navigation';
+import {
+    adminNavItems,
+    complianceNavItems,
+    mainNavItems,
+} from '@/lib/app-navigation';
 import { mobileTabs } from '@/lib/mobile-tabs';
 import { listeningNavItems, operationsNavItems } from '@/lib/tool-navigation';
 import { templateCan } from '../support/tenant-can';
@@ -20,7 +24,7 @@ const titles = (items: { title: string }[]) => items.map((item) => item.title);
 
 /** Every place the menu is drawn: the sidebar's four sections and the phone's tabs. */
 const menu = (tenant: ReturnType<typeof acme>) => ({
-    main: titles(mainNavItems(tenant, false)),
+    main: titles([...mainNavItems(tenant, false), ...adminNavItems(tenant)]),
     compliance: titles(complianceNavItems(tenant)),
     listening: titles(listeningNavItems(tenant)),
     operations: titles(operationsNavItems(tenant)),

@@ -2,9 +2,12 @@ import { useCallback } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
     Briefcase,
+    Building2,
     Ear,
+    HandCoins,
     type LucideIcon,
     ServerCog,
+    Settings2,
     ShieldCheck,
 } from 'lucide-react';
 import Logo from '@/components/humetria/logo';
@@ -34,6 +37,9 @@ const familyIcons: Partial<Record<NavSectionKey, LucideIcon>> = {
     compliance: ShieldCheck,
     listening: Ear,
     operations: Briefcase,
+    admin: Settings2,
+    console: Building2,
+    sales: HandCoins,
     platform: ServerCog,
 };
 

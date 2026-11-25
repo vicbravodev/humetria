@@ -44,6 +44,8 @@ use Laravel\Ai\Events\AgentPrompted;
 use Laravel\Ai\Events\AgentStreamed;
 use Laravel\Ai\Events\PromptingAgent;
 use Laravel\Ai\Events\StreamingAgent;
+use Laravel\Ai\Events\ToolFailed;
+use Laravel\Ai\Events\ToolInvoked;
 
 /**
  * Humi, the AI assistant. Its routes live in routes/assistant.php, required from the company group in routes/company.php.
@@ -108,6 +110,8 @@ final class AssistantServiceProvider extends ServiceProvider
         // Both by name: Laravel matches a listener to an event's interfaces, not to its parent class.
         Event::listen([AgentPrompted::class, AgentStreamed::class], [SendLlmAnalytics::class, 'answered']);
         Event::listen(AgentFailed::class, [SendLlmAnalytics::class, 'failed']);
+        Event::listen(ToolInvoked::class, [SendLlmAnalytics::class, 'toolInvoked']);
+        Event::listen(ToolFailed::class, [SendLlmAnalytics::class, 'toolFailed']);
 
         if ($this->app->runningInConsole()) {
             $this->commands([EvaluateAssistant::class, QualityAssistant::class]);

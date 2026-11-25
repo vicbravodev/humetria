@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Billing\Enums;
 
-/** How a subscription is priced: the direct table, a consultant's channel rate (compliance bands or Integral with its discount), or a price agreed by hand. */
+/** How a subscription is priced: the direct table, a consultant's channel rate (compliance bands or Integral with its discount), the flat fee of a union, or a price agreed by hand. */
 enum Profile: string
 {
     case Direct = 'direct';
     case ChannelCompliance = 'channel_compliance';
     case ChannelIntegral = 'channel_integral';
     case Negotiated = 'negotiated';
+    case Union = 'union';
 
     public function label(): string
     {
@@ -19,6 +20,7 @@ enum Profile: string
             self::ChannelCompliance => 'Canal Cumplimiento',
             self::ChannelIntegral => 'Canal Integral',
             self::Negotiated => 'Precio negociado',
+            self::Union => 'Cuota fija de sindicato',
         };
     }
 
@@ -27,16 +29,17 @@ enum Profile: string
     {
         return match ($this) {
             self::ChannelCompliance, self::ChannelIntegral => true,
-            self::Direct, self::Negotiated => false,
+            self::Direct, self::Negotiated, self::Union => false,
         };
     }
 
-    /** The only plan a channel profile can be combined with; null for the others, which take any. */
+    /** The only plan a channel or union profile can be combined with; null for the others, which take any. */
     public function requiredPlan(): ?Plan
     {
         return match ($this) {
             self::ChannelCompliance => Plan::Cumplimiento,
             self::ChannelIntegral => Plan::Integral,
+            self::Union => Plan::Sindicato,
             self::Direct, self::Negotiated => null,
         };
     }

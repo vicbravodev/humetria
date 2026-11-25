@@ -12,11 +12,13 @@ funciona igual. `tests/Unit/OperationsDocsTest.php` exige que este manual nombre
 | Logs | canal `posthog` (`App\Logging\PostHogLogs`), OTLP/HTTP JSON a `https://us.i.posthog.com/i/v1/logs`, en lote al terminar cada petición, job o comando (o cada 100 líneas); nunca por la cola | Logs | el nombre del evento (`modulo.accion`) y su contexto ya redactado (`RedactSensitiveData`); de una excepción, solo su clase, archivo y línea | respuestas, contraseñas, tokens (redactados), el texto de una excepción |
 | Errores del navegador (fuera de la landing) | `$exception` desde `posthog-js` (build sin scripts externos) en modo solo errores (`resources/js/lib/error-tracking.ts`); los mandan el `AppErrorBoundary` (una página que se rompe al pintar), los errores y promesas sin atrapar de `window` y una respuesta fallida de Humi (`HumiStreamError`, no las negativas a propósito) | Error tracking | tipo, mensaje enmascarado (correos, números largos, URLs a su origen), marcos con la ruta del script, `page` (el componente de Inertia), `request_id` (solo en la página de error 5xx), navegador y sistema | la dirección de la página (`$current_url` es solo el origen: las encuestas y el enlace de entrada de la persona llevan un token de un solo uso en la ruta), el referente, la sesión, los pasos previos, el texto de Humi; nada en el navegador (`persistence: 'memory'`), sin perfil ni IP |
 | Llamadas a modelos | evento `$ai_generation` en cola (`App\Modules\Assistant\Listeners\SendLlmAnalytics`), uno por llamada, también si falla | LLM analytics | modelo, proveedor, tokens, latencia en segundos, error (clase), herramientas usadas, `tenant_id`; de **Humi**, además, el prompt completo (instrucciones y mensaje ya enmascarado) y la respuesta | de cualquier otro agente (resumen de comentarios de clima): ningún texto, ni de entrada ni de salida |
+| Herramientas de Humi | evento `$ai_span` en cola, uno por herramienta usada en un turno, colgado de él (`$ai_parent_id`), también si falla | LLM analytics (traza) | nombre de la herramienta, latencia en segundos, error (clase), `tenant_id` | argumentos y resultado de la herramienta: son datos de la empresa |
 
 Notas:
 
 - `distinct_id` de `$ai_generation`: HMAC-SHA256 del id de usuario con `APP_KEY` (seudónimo estable); `$process_person_profile: false`.
-  `$ai_trace_id` es la conversación de Humi, así una conversación se lee completa como traza.
+  `$ai_session_id` es la conversación de Humi (así sus turnos se leen como una sesión) y `$ai_trace_id` es cada turno;
+  los demás agentes mandan `$ai_session_id` en null, porque cada llamada es completa.
 - El prompt y la respuesta de Humi viajan en la carga del job `SendPostHogEvent`: pasan por Valkey y Horizon los muestra
   en "recent jobs" (1 hora). Es lo que decidió el dueño; los comentarios de clima nunca entran ahí.
 - Si Valkey o el limitador fallan al reportar una excepción, se pierde el evento de PostHog, no el log de la excepción:

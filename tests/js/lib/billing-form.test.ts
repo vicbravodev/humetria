@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     planAfterProfile,
+    planChoices,
     planDefaults,
     planOf,
     profileAfterPlan,
@@ -20,6 +21,38 @@ describe('profileChoices', () => {
             'direct',
             'negotiated',
         ]);
+    });
+});
+
+describe('for a union', () => {
+    it('offers only its plan, and its flat fee or a negotiated price', () => {
+        expect(planChoices(true).map(({ value }) => value)).toEqual([
+            'sindicato',
+        ]);
+        expect(
+            profileChoices('direct', true).map(({ value }) => value),
+        ).toEqual(['union', 'negotiated']);
+        // A consultant's channel rates are for companies: a union never takes them.
+        expect(
+            profileChoices('consultant', true).map(({ value }) => value),
+        ).toEqual(['union', 'negotiated']);
+    });
+
+    it('offers a company the four plans and never the union ones', () => {
+        expect(planChoices(false).map(({ value }) => value)).toEqual([
+            'jornada',
+            'cumplimiento',
+            'integral',
+            'enterprise',
+        ]);
+        expect(
+            profileChoices('consultant', false).map(({ value }) => value),
+        ).not.toContain('union');
+    });
+
+    it('goes with the Sindicato plan', () => {
+        expect(planOf('union')).toBe('sindicato');
+        expect(profileAfterPlan('union')).toBe('union');
     });
 });
 
@@ -69,6 +102,7 @@ describe('planDefaults', () => {
         linked_since: '1 dic 2026',
         subscription,
         previous_payer: null,
+        union: false,
     });
 
     it('starts a company without a plan from the people and centers it has, beginning today', () => {
@@ -78,6 +112,24 @@ describe('planDefaults', () => {
             status: 'active',
             seats: '38',
             centers: '2',
+            startsOn: '2026-12-09',
+            price: '',
+            validUntil: '',
+        });
+    });
+
+    it('starts a union without a plan from its own plan and fee, counting nobody', () => {
+        expect(
+            planDefaults(
+                { ...company(null, 38, 0), union: true },
+                '2026-12-09',
+            ),
+        ).toEqual({
+            plan: 'sindicato',
+            profile: 'union',
+            status: 'active',
+            seats: '0',
+            centers: '1',
             startsOn: '2026-12-09',
             price: '',
             validUntil: '',

@@ -256,3 +256,15 @@ it('gives the date a person was hired, or null when the company did not capture 
     expect(resolve(Roster::class)->find($hired->id)?->hiredOn?->toDateString())->toBe('2026-11-04')
         ->and(resolve(Roster::class)->find($unknown->id)?->hiredOn)->toBeNull();
 });
+
+it('lists the names of everyone in the company, deactivated ones included, and never those of another company', function (): void {
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Ana López']);
+    rosterEmployee($this->tenant, $this->plant, $this->production, ['name' => 'Beto Ruiz', 'deactivated_at' => now()]);
+    $other = Tenant::factory()->create();
+    rosterEmployee($other, WorkCenter::factory()->for($other)->create(), Area::factory()->create(['tenant_id' => $other->id]), ['name' => 'Carla Ajena']);
+    workIn($this->tenant);
+
+    expect(resolve(Roster::class)->names())->toEqualCanonicalizing(['Ana López', 'Beto Ruiz']);
+    workIn($other);
+    expect(resolve(Roster::class)->names())->toBe(['Carla Ajena']);
+});

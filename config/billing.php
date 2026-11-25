@@ -96,6 +96,19 @@ return [
                     'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation'],
                     'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
                 ],
+                /*
+                | Sindicato: una cuota fija al mes por sindicato, sea cual sea su número de agremiados, y solo Compensación. $1,990 al mes, confirmado
+                | por Victor (2026-11-24); es el mínimo de Jornada, el plan más barato. Sin tarifa por persona ni centros (un sindicato no los
+                | tiene), ni Humi, WhatsApp ni cuota de correo de campañas. El precio negociado lo sustituye, como en cualquier plan.
+                */
+                'sindicato' => [
+                    'flat_cents' => 199_000,
+                    'rate_cents' => 0,
+                    'minimum_cents' => 0,
+                    'included_centers' => 1,
+                    'modules' => ['compensation'],
+                    'quotas' => ['assistant_tokens' => 0, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 0],
+                ],
                 'enterprise' => [
                     'rate_cents' => 19_900,
                     'minimum_cents' => 999_000,

@@ -6,7 +6,7 @@ namespace App\Modules\Tenancy\Data;
 
 /**
  * A company as the console of another module lists it, outside any company: how to name it, where it stands and how many work
- * centers it uses. `status` is the value of Tenancy's own status. `withdrawn` is set when a person suspended or archived it.
+ * centers it uses. `union` is set for a union's account: it holds a plan of its own. `status` is the value of Tenancy's own status. `withdrawn` is set when a person suspended or archived it.
  */
 final readonly class CompanyBrief
 {
@@ -20,5 +20,6 @@ final readonly class CompanyBrief
         public string $statusLabel,
         public bool $withdrawn,
         public int $workCenters,
+        public bool $union = false,
     ) {}
 }
