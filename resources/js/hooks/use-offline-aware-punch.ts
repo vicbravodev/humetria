@@ -38,7 +38,7 @@ export function useOfflineAwarePunch({
         },
         forget: () => {
             void forgetPerson(slug);
-            punch.forget();
+            void punch.forget();
         },
     };
 }
