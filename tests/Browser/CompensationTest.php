@@ -851,7 +851,7 @@ it('costs an average payroll as it is typed, saves it and opens its report', fun
     visit("{$url}/compensation/quick/create")
         ->fill('name', 'Revisión promedio')
         ->fill('average_workers', '500')
-        ->fill('average_monthly_salary', '15000')
+        ->type('#scenario-average_monthly_salary', '15000')
         ->fill('unionized_raise', '6')
         ->assertSee('500 personas')
         ->assertSee('Costo del primer año')
@@ -898,4 +898,35 @@ it('takes the scenarios of an average payroll and the ones of the roster to thei
 
     visit("{$url}/compensation/quick")->assertSee('Promedio 2027')->assertDontSee('Plantilla 2027')->assertNoJavaScriptErrors();
     visit("{$url}/compensation/scenarios")->assertSee('Plantilla 2027')->assertDontSee('Promedio 2027')->assertNoJavaScriptErrors();
+});
+
+it('writes the average salary as pesos when the field is left, edits it plain and sends it with no commas', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/quick/create")
+        ->fill('name', 'Con formato')
+        ->fill('average_workers', '500')
+        ->type('#scenario-average_monthly_salary', '15,000.5')
+        ->click('#scenario-average_workers')
+        ->assertValue('#scenario-average_monthly_salary', '15,000.50')
+        ->click('#scenario-average_monthly_salary')
+        ->assertValue('#scenario-average_monthly_salary', '15000.50')
+        ->click('#scenario-average_workers')
+        ->assertValue('#scenario-average_monthly_salary', '15,000.50')
+        ->fill('unionized_raise', '6')
+        ->press('Guardar y ver reporte')
+        ->waitForText('Escenario guardado.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Scenario::query()->withoutGlobalScopes()->sole()->average_monthly_salary_cents)->toBe(1_500_050);
+});
+
+it('shows a saved average salary already written as pesos', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $scenario = Scenario::factory()->average()->create(['tenant_id' => $tenant->id, 'average_monthly_salary_cents' => 1_234_567]);
+
+    visit("{$url}/compensation/quick/{$scenario->id}")
+        ->assertValue('#scenario-average_monthly_salary', '12,345.67')
+        ->assertNoJavaScriptErrors();
 });

@@ -1,5 +1,6 @@
 import ScenarioSection from '@/components/compensation/scenario-section';
 import FormField from '@/components/form-field';
+import PesosField from '@/components/pesos-field';
 import PillChoice from '@/components/humetria/pill-choice';
 import type { ScenarioPayroll } from '@/types';
 
@@ -40,14 +41,11 @@ export default function ScenarioPayrollCard({
                     defaultValue={payroll.average_workers}
                     error={errors['average_workers']}
                 />
-                <FormField
+                <PesosField
                     name="average_monthly_salary"
                     idPrefix="scenario"
                     label="Sueldo mensual promedio"
-                    prefix="$"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    placeholder="15000"
+                    placeholder="15,000.00"
                     defaultValue={payroll.average_monthly_salary}
                     error={errors['average_monthly_salary']}
                 />
