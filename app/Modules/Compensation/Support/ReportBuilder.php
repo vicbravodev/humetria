@@ -15,6 +15,7 @@ use App\Modules\Compensation\Data\ScenarioInput;
 use App\Modules\Compensation\Enums\AssumptionKey;
 use App\Modules\Compensation\Enums\CostConcept;
 use App\Modules\Compensation\Enums\PayGroup;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Support\Calculation\Money;
 use App\Modules\Compensation\Support\Calculation\Projection;
@@ -43,6 +44,7 @@ final readonly class ReportBuilder
         private JobGrades $jobGrades,
         private SmallGroups $smallGroups,
         private OtherScenarios $others,
+        private CurrentRiskPremium $premiums,
     ) {}
 
     /**
@@ -67,6 +69,7 @@ final readonly class ReportBuilder
                 'unionized_raise' => PercentBasisPoints::format($scenario->group_changes['unionized'] ?? 0),
                 'trusted_raise' => ($scenario->group_changes['trusted'] ?? null) === null ? null : PercentBasisPoints::format($scenario->group_changes['trusted']),
                 'raise_text' => RaiseText::of($scenario), 'raise_unit' => $scenario->raise_unit->value,
+                'source' => $scenario->source->value, 'average' => $this->average($scenario),
             ],
             'coverage' => $this->coverage($cost, $shared),
             'headline' => [
@@ -89,7 +92,7 @@ final readonly class ReportBuilder
             'seniority' => $this->seniority($input),
             'sensitivity' => $this->sensitivity($input),
             'assumptions' => $assumptions['rows'],
-            'warnings' => $this->warnings($cost, $input, $years, $shared),
+            'warnings' => [...$this->warnings($cost, $input, $years, $shared), 'class_one_premium' => $scenario->source === ScenarioSource::Average && $this->premiums->at($scenario->effective_on) === null],
             'person_value' => $shared ? ['rows' => [], 'person_total_text' => Money::format(0), 'company_total_text' => Money::format(0)] : $this->personValue($cost, $input, $names),
         ];
     }
@@ -130,12 +133,42 @@ final readonly class ReportBuilder
     private function cuts(CostBreakdown $cost): array
     {
         $areaNames = $this->areas->names($this->ids($cost->byArea));
-        $gradeNames = $this->jobGrades->findMany($this->ids($cost->byGrade));
+        $gradeNames = $this->jobGrades->findMany($this->gradeIds($this->ids($cost->byGrade)));
 
         return [
             'areas' => $this->cutRows($cost->byArea, fn (?string $key): string => $key === null ? 'Sin área' : ($key === SharedGroups::OTHERS ? 'Otros' : ($areaNames[$key] ?? 'Área'))),
-            'grades' => $this->cutRows($cost->byGrade, fn (?string $key): string => $key === SharedGroups::OTHERS ? 'Otros' : ($key === null || ! isset($gradeNames[$key]) ? 'Categoría' : "{$gradeNames[$key]->category} · {$gradeNames[$key]->level}")),
+            'grades' => $this->cutRows($cost->byGrade, fn (?string $key): string => $key === SharedGroups::OTHERS ? 'Otros' : ($key === AveragePayroll::GRADE_ID ? AveragePayroll::LABEL : ($key === null || ! isset($gradeNames[$key]) ? 'Categoría' : "{$gradeNames[$key]->category} · {$gradeNames[$key]->level}"))),
             'groups' => $this->cutRows($cost->byGroup, fn (?string $key): string => $key === SharedGroups::OTHERS ? 'Otros' : (PayGroup::tryFrom((string) $key)?->label() ?? 'Grupo')),
+        ];
+    }
+
+    /**
+     * The ids that are a category and level of the company: the one of an average payroll is not, and no table has it.
+     *
+     * @param  list<string>  $ids
+     * @return list<string>
+     */
+    private function gradeIds(array $ids): array
+    {
+        return array_values(array_filter($ids, fn (string $id): bool => $id !== AveragePayroll::GRADE_ID));
+    }
+
+    /**
+     * What an average payroll is made of, for the report to say it; null for a scenario of the roster.
+     *
+     * @return ?array{workers: int, monthly_salary_text: string, tenure_years: int, group: string}
+     */
+    private function average(Scenario $scenario): ?array
+    {
+        if ($scenario->source !== ScenarioSource::Average) {
+            return null;
+        }
+
+        return [
+            'workers' => AveragePayroll::workers($scenario),
+            'monthly_salary_text' => Money::format($scenario->average_monthly_salary_cents ?? 0),
+            'tenure_years' => $scenario->average_tenure_years ?? 0,
+            'group' => ($scenario->average_group ?? PayGroup::Unionized)->label(),
         ];
     }
 
@@ -183,9 +216,9 @@ final readonly class ReportBuilder
 
         $visible = $shared ? array_flip($this->smallGroups->visibleKeys($headcount)) : $headcount;
         $raises = array_values(array_filter($raises, fn (GradeRaise $raise): bool => isset($visible["{$raise->jobGradeId}|{$raise->group->value}"])));
-        $names = $this->jobGrades->findMany(array_values(array_unique(array_map(fn (GradeRaise $raise): string => $raise->jobGradeId, $raises))));
+        $names = $this->jobGrades->findMany($this->gradeIds(array_values(array_unique(array_map(fn (GradeRaise $raise): string => $raise->jobGradeId, $raises)))));
         $rows = array_map(fn (GradeRaise $raise): array => [
-            'label' => isset($names[$raise->jobGradeId]) ? "{$names[$raise->jobGradeId]->category} · {$names[$raise->jobGradeId]->level}" : 'Categoría',
+            'label' => $raise->jobGradeId === AveragePayroll::GRADE_ID ? AveragePayroll::LABEL : (isset($names[$raise->jobGradeId]) ? "{$names[$raise->jobGradeId]->category} · {$names[$raise->jobGradeId]->level}" : 'Categoría'),
             'group' => $raise->group->value, 'people' => $raise->people, 'monthly_raise_cents' => $raise->monthlyRaiseCents,
         ], $raises);
         usort($rows, fn (array $a, array $b): int => [$a['group'] !== PayGroup::Unionized->value, $b['monthly_raise_cents'], $a['label']] <=> [$b['group'] !== PayGroup::Unionized->value, $a['monthly_raise_cents'], $b['label']]);
@@ -264,7 +297,7 @@ final readonly class ReportBuilder
     private function warnings(CostBreakdown $cost, ScenarioInput $input, array $years, bool $shared): array
     {
         $individuals = count($input->individuals);
-        $gradeNames = $this->jobGrades->findMany(array_keys($cost->uncostedGrades));
+        $gradeNames = $this->jobGrades->findMany($this->gradeIds(array_keys($cost->uncostedGrades)));
         $stale = array_values(array_unique([...$cost->staleKeys, ...array_merge([], ...array_map(fn (ProjectionYear $year): array => $year->staleKeys, $years))]));
         $stale = array_values(array_unique(array_map($this->labels->fiscalLabel(...), $stale)));
         sort($stale);

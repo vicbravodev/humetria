@@ -7,6 +7,7 @@ namespace App\Modules\Compensation\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Compensation\Actions\ListReportShares;
 use App\Modules\Compensation\Actions\OpenReport;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Http\ScenarioRoute;
 use App\Modules\Compensation\Models\Scenario;
 use Illuminate\Http\RedirectResponse;
@@ -33,7 +34,8 @@ final class ReportController extends Controller
 
         return Inertia::render('compensation/report', [
             ...$open->handle($found),
-            'can_annex' => $manages,
+            // The annex lists people: an average payroll has none.
+            'can_annex' => $manages && $found->source === ScenarioSource::Roster,
             'shares' => $manages ? $shares->handle($found->id) : null,
         ]);
     }
