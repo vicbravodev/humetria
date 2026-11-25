@@ -81,6 +81,11 @@ function spyOnRosterReads(): ArrayObject
             return $this->roster->activeIdsInMany($workCenterIds);
         }
 
+        public function names(): array
+        {
+            return $this->roster->names();
+        }
+
         public function find(string $employeeId): ?RosterEntry
         {
             return $this->roster->find($employeeId);

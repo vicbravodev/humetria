@@ -13,6 +13,8 @@ use Laravel\Ai\Events\AgentPrompted;
 use Laravel\Ai\Events\AgentStreamed;
 use Laravel\Ai\Events\PromptingAgent;
 use Laravel\Ai\Events\StreamingAgent;
+use Laravel\Ai\Events\ToolFailed;
+use Laravel\Ai\Events\ToolInvoked;
 use Laravel\Ai\Prompts\AgentPrompt;
 use Laravel\Ai\Responses\Data\ToolCall;
 
@@ -39,13 +41,20 @@ final class SendLlmAnalytics
         $tools = array_values(array_unique($response->toolCalls->map(fn (ToolCall $call): string => $call->name)->all()));
 
         $this->send($event->invocationId, $event->prompt, $response->conversationId, [
-            '$ai_input_tokens' => $response->usage->inputTokens,
+            // Anthropic reports the input with the cached tokens inside; PostHog prices them apart, so it wants them out.
+            '$ai_input_tokens' => $event->prompt->provider->name() === 'anthropic' ? $response->usage->uncachedInputTokens() : $response->usage->inputTokens,
             '$ai_output_tokens' => $response->usage->outputTokens,
+            '$ai_cache_read_input_tokens' => $response->usage->cacheReadInputTokens,
+            '$ai_cache_creation_input_tokens' => $response->usage->cacheWriteInputTokens,
+            '$ai_reasoning_tokens' => $response->usage->reasoningTokens,
             '$ai_stream' => $event instanceof AgentStreamed,
             '$ai_is_error' => false,
             'tools_called' => $tools,
         ], [
-            '$ai_output_choices' => [['role' => 'assistant', 'content' => $response->text]],
+            // PostHog reads the Tools column from the calls listed here: the name, never the arguments (company data).
+            '$ai_output_choices' => [['role' => 'assistant', 'content' => $response->text, ...($tools === [] ? [] : ['tool_calls' => $response->toolCalls->map(fn (ToolCall $call): array => [
+                'id' => $call->id, 'type' => 'function', 'function' => ['name' => $call->name, 'arguments' => '{}'],
+            ])->values()->all()])]],
         ]);
     }
 
@@ -53,6 +62,39 @@ final class SendLlmAnalytics
     {
         // The class only: a provider's error can quote the prompt.
         $this->send($event->invocationId, $event->prompt, null, ['$ai_is_error' => true, '$ai_error' => $event->exception::class], []);
+    }
+
+    public function toolInvoked(ToolInvoked $event): void
+    {
+        $this->span($event->invocationId, $event->toolInvocationId, $event->tool, $event->time, ['$ai_is_error' => false]);
+    }
+
+    public function toolFailed(ToolFailed $event): void
+    {
+        // The class only, as in a failed call: an error can quote what the tool was asked.
+        $this->span($event->invocationId, $event->toolInvocationId, $event->tool, $event->time, ['$ai_is_error' => true, '$ai_error' => $event->exception::class]);
+    }
+
+    /**
+     * A tool a model used, as an `$ai_span` under its turn: which tool and how long, never its arguments or what it
+     * returned (that is the company's data, and the answer already says what the person may read).
+     *
+     * @param  array<string, mixed>  $outcome
+     */
+    private function span(string $invocationId, string $toolInvocationId, object $tool, float $milliseconds, array $outcome): void
+    {
+        SendPostHogEvent::safely('$ai_span', self::distinctId(), [
+            '$ai_trace_id' => $invocationId,
+            '$ai_span_id' => $toolInvocationId,
+            '$ai_parent_id' => $invocationId,
+            '$ai_span_name' => class_basename($tool),
+            '$ai_latency' => $milliseconds / 1000,
+            ...$outcome,
+            'tenant_id' => Context::get('tenant_id'),
+            'request_id' => Context::get('request_id'),
+            '$process_person_profile' => false,
+            '$lib' => 'humetria-php',
+        ]);
     }
 
     /**
@@ -65,13 +107,30 @@ final class SendLlmAnalytics
         unset($this->started[$invocationId]);
         $humi = $prompt->agent instanceof HumiAssistant;
 
-        SendPostHogEvent::safely('$ai_generation', self::distinctId(), [
-            '$ai_trace_id' => $conversationId ?? $invocationId,
+        $distinctId = self::distinctId();
+        $latency = $started === null ? null : microtime(true) - $started;
+
+        // The turn's own name: without it PostHog calls the trace after its first event, which is a tool's span.
+        SendPostHogEvent::safely('$ai_trace', $distinctId, [
+            '$ai_trace_id' => $invocationId,
+            '$ai_session_id' => $conversationId,
+            '$ai_span_name' => class_basename($prompt->agent),
+            '$ai_latency' => $latency,
+            'tenant_id' => Context::get('tenant_id'),
+            'request_id' => Context::get('request_id'),
+            '$process_person_profile' => false,
+            '$lib' => 'humetria-php',
+        ]);
+
+        SendPostHogEvent::safely('$ai_generation', $distinctId, [
+            // One trace per turn, and the conversation is the session that groups them; null says "not multi-turn".
+            '$ai_trace_id' => $invocationId,
+            '$ai_session_id' => $conversationId,
             '$ai_span_id' => $invocationId,
             '$ai_span_name' => class_basename($prompt->agent),
             '$ai_model' => $prompt->model,
             '$ai_provider' => $prompt->provider->name(),
-            '$ai_latency' => $started === null ? null : microtime(true) - $started,
+            '$ai_latency' => $latency,
             ...$numbers,
             ...($humi ? [
                 '$ai_input' => [

@@ -11,7 +11,9 @@ use App\Modules\Assistant\Models\ChatMessage;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Models\TenantAiSettings;
 use App\Modules\Assistant\Support\StopSwitch;
+use App\Modules\Assistant\Tools\GetCampaignProgress;
 use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
@@ -21,6 +23,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Laravel\Ai\Events\AgentStreamed;
+use Laravel\Ai\Events\ToolFailed;
+use Laravel\Ai\Events\ToolInvoked;
 use Laravel\Ai\Middleware\Stop;
 use Laravel\Ai\Prompts\AgentPrompt;
 use Laravel\Ai\Responses\AgentResponse;
@@ -315,6 +320,60 @@ describe('LLM analytics in PostHog', function (): void {
             ->all());
     }
 
+    function humiTool(HumiAssistant $agent): GetCampaignProgress
+    {
+        return collect($agent->tools())->first(fn (object $tool): bool => $tool instanceof GetCampaignProgress) ?? throw new LogicException('Humi has no campaign progress tool.');
+    }
+
+    /** @return list<array<string, mixed>> The $ai_span events PostHog received. */
+    function spansSent(): array
+    {
+        return array_values(Http::recorded()
+            ->map(fn (array $pair): array => $pair[0]->data())
+            ->filter(fn (array $body): bool => ($body['event'] ?? null) === '$ai_span')
+            ->all());
+    }
+
+    it('sends each tool Humi used as an $ai_span under its turn, with the tool name and how long it took', function (): void {
+        $agent = HumiAssistant::make(scope: assistantScopeIn($this->a));
+
+        event(new ToolInvoked('turn-1', 'tool-1', $agent, humiTool($agent), ['campaign' => 'Secreto'], 'Ana respondió 12 de 40', 250.0));
+
+        $sent = spansSent();
+        expect($sent)->toHaveCount(1)
+            ->and($sent[0]['properties'])->toMatchArray([
+                '$ai_trace_id' => 'turn-1',
+                '$ai_span_id' => 'tool-1',
+                '$ai_parent_id' => 'turn-1',
+                '$ai_span_name' => 'GetCampaignProgress',
+                '$ai_latency' => 0.25,
+                '$ai_is_error' => false,
+                '$process_person_profile' => false,
+                'tenant_id' => $this->a->id,
+            ])
+            ->and(json_encode($sent, JSON_THROW_ON_ERROR))->not->toContain('Secreto')->not->toContain('Ana respondió');
+    });
+
+    it('sends a tool that failed as an error span, with the class of the error and never its words', function (): void {
+        $agent = HumiAssistant::make(scope: assistantScopeIn($this->a));
+
+        event(new ToolFailed('turn-1', 'tool-2', $agent, humiTool($agent), [], new RuntimeException('falló para juan@acme.mx'), 40.0));
+
+        $sent = spansSent();
+        expect($sent)->toHaveCount(1)
+            ->and($sent[0]['properties'])->toMatchArray(['$ai_span_id' => 'tool-2', '$ai_is_error' => true, '$ai_error' => 'RuntimeException'])
+            ->and(json_encode($sent, JSON_THROW_ON_ERROR))->not->toContain('juan@acme.mx');
+    });
+
+    it('sends no span without a token', function (): void {
+        config(['services.posthog.project_token' => '']);
+        $agent = HumiAssistant::make(scope: assistantScopeIn($this->a));
+
+        event(new ToolInvoked('turn-1', 'tool-1', $agent, humiTool($agent), [], 'x', 1.0));
+
+        expect(spansSent())->toBe([]);
+    });
+
     it('sends each turn of Humi as an $ai_generation, with the whole prompt and answer, model, tokens and time', function (): void {
         HumiAssistant::fake(['Tu campaña va bien.']);
 
@@ -326,7 +385,7 @@ describe('LLM analytics in PostHog', function (): void {
 
         expect($sent[0]['distinct_id'])->toBe(hash_hmac('sha256', 'posthog:'.$this->hr->id, config()->string('app.key')))
             ->and($properties)->toMatchArray([
-                '$ai_trace_id' => ChatConversation::query()->sole()->id,
+                '$ai_session_id' => ChatConversation::query()->sole()->id,
                 '$ai_span_name' => 'HumiAssistant',
                 '$ai_model' => config('humi.model'),
                 '$ai_provider' => config('humi.provider'),
@@ -335,6 +394,7 @@ describe('LLM analytics in PostHog', function (): void {
                 '$process_person_profile' => false,
                 'tenant_id' => $this->a->id,
             ])
+            ->and($properties['$ai_trace_id'])->toBe($properties['$ai_span_id'])->not->toBe($properties['$ai_session_id'])
             ->and($properties['$ai_input_tokens'])->toBeInt()
             ->and($properties['$ai_output_tokens'])->toBeInt()
             ->and($properties['$ai_latency'])->toBeFloat()->toBeGreaterThanOrEqual(0)
@@ -342,6 +402,66 @@ describe('LLM analytics in PostHog', function (): void {
             ->and($properties['$ai_input'][0]['content'])->toBe((string) HumiAssistant::make(scope: assistantScopeIn($this->a))->instructions())
             ->and($properties['$ai_input'][1])->toBe(['role' => 'user', 'content' => '¿Cómo va mi campaña?'])
             ->and($properties['$ai_output_choices'])->toBe([['role' => 'assistant', 'content' => 'Tu campaña va bien.']]);
+    });
+
+    it('sends the cache and reasoning tokens apart, and for Anthropic the input without the cached ones, so PostHog prices the turn right', function (): void {
+        config(['humi.provider' => 'anthropic']);
+        HumiAssistant::fake(fn (string $prompt): AgentResponse => new AgentResponse('inv-1', 'Listo.', new TextUsage(1000, 200, cacheReadInputTokens: 600, cacheWriteInputTokens: 100, reasoningTokens: 50), new Meta('anthropic', 'claude')));
+
+        chat(['message' => 'Hola'])->streamedContent();
+
+        expect(generationsSent()[0]['properties'])->toMatchArray([
+            '$ai_input_tokens' => 300,
+            '$ai_output_tokens' => 200,
+            '$ai_cache_read_input_tokens' => 600,
+            '$ai_cache_creation_input_tokens' => 100,
+            '$ai_reasoning_tokens' => 50,
+        ]);
+    });
+
+    it('lists the tools the turn called inside its output, by name only, so PostHog fills the Tools column', function (): void {
+        HumiAssistant::fake(['Listo.']);
+        $turn = null;
+        Event::listen(AgentStreamed::class, function (AgentStreamed $event) use (&$turn): void {
+            $turn = $event;
+        });
+        chat(['message' => 'Hola'])->streamedContent();
+        Http::fake(['https://us.i.posthog.com/i/v0/e/' => Http::response(['status' => 1])]);
+
+        $turn->response->toolCalls = collect([new ToolCall('c-1', 'GetCampaignProgress', ['campaign' => 'Secreto'])]);
+        app(SendLlmAnalytics::class)->answered($turn);
+
+        $message = generationsSent()[0]['properties']['$ai_output_choices'][0];
+        expect($message['tool_calls'])->toBe([['id' => 'c-1', 'type' => 'function', 'function' => ['name' => 'GetCampaignProgress', 'arguments' => '{}']]])
+            ->and(json_encode(generationsSent(), JSON_THROW_ON_ERROR))->not->toContain('Secreto');
+    });
+
+    it('names the trace of each turn after its agent with an $ai_trace, so it is not called after the first tool', function (): void {
+        HumiAssistant::fake(['Listo.']);
+
+        chat(['message' => 'Hola'])->streamedContent();
+
+        $traces = array_values(Http::recorded()->map(fn (array $pair): array => $pair[0]->data())->filter(fn (array $body): bool => ($body['event'] ?? null) === '$ai_trace')->all());
+        $generation = generationsSent()[0]['properties'];
+        expect($traces)->toHaveCount(1)
+            ->and($traces[0]['properties'])->toMatchArray([
+                '$ai_trace_id' => $generation['$ai_trace_id'],
+                '$ai_session_id' => $generation['$ai_session_id'],
+                '$ai_span_name' => 'HumiAssistant',
+                '$process_person_profile' => false,
+            ])
+            ->and($traces[0]['properties']['$ai_latency'])->toBeFloat();
+    });
+
+    it('masks the name of a person of the company before the provider and PostHog see the message', function (): void {
+        Employee::factory()->create(['tenant_id' => $this->a->id, 'name' => 'Juan Pérez Gómez']);
+        HumiAssistant::fake(['Listo.']);
+
+        chat(['message' => '¿Cómo va Juan Pérez en la planta?'])->streamedContent();
+
+        $body = json_encode(generationsSent(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        expect($body)->toContain('¿Cómo va [persona] en la planta?')->not->toContain('Juan Pérez')
+            ->and(ChatMessage::query()->where('role', 'user')->sole()->content)->not->toContain('Juan');
     });
 
     it('sends the prompt only after the personal data in it was masked', function (): void {

@@ -18,6 +18,7 @@ use App\Modules\Assistant\Support\Conversations;
 use App\Modules\Assistant\Support\HumiTokens;
 use App\Modules\Assistant\Support\PageContextResolver;
 use App\Modules\Assistant\Support\PersonalDataRedactor;
+use App\Modules\Assistant\Support\PersonNamesRedactor;
 use App\Modules\Assistant\Support\StopSwitch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,6 +40,7 @@ final readonly class ChatController
         private CheckAllowance $allowance,
         private PageContextResolver $pages,
         private PersonalDataRedactor $redactor,
+        private PersonNamesRedactor $names,
         private RecordUsage $recordUsage,
         private StopSwitch $stop,
         private HumiTokens $tokens,
@@ -71,7 +73,7 @@ final readonly class ChatController
         try {
             $stream = HumiAssistant::make(scope: $scope, page: $this->pages->resolve($request->input('pageContext'), $scope))
                 ->continueOrStart($conversationId, as: ConversationParticipant::query()->findOrFail($scope->participantId))
-                ->stream($this->redactor->redact($request->messageText()))
+                ->stream($this->redactor->redact($this->names->redact($request->messageText())))
                 ->usingVercelDataProtocol()
                 ->then(fn (StreamedAgentResponse $answer) => $this->finish($scope, $key, $answer, $startedAt))
                 // An answer that fails midway gives its hold back: the quota is for what was used.
