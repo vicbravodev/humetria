@@ -119,6 +119,32 @@ export function noticeOf(payload: unknown): { title: string; body: string } {
     return (typeof kind === 'string' ? NOTICES.get(kind) : undefined) ?? NOTICE;
 }
 
+/** The screen each kind of notice is about, under the scope: the week, where a reviewed mark and an answered correction are seen. */
+const NOTICE_SCREENS = new Map<string, string>([
+    ['mark_reviewed', 'week'],
+    ['correction_resolved', 'week'],
+]);
+
+/**
+ * The tag that groups the notices of a kind (a second one replaces the first instead of piling up) and the address a tap on
+ * it opens. A payload it does not know groups under `notice` and opens Marcar.
+ */
+export function noticeTarget(
+    payload: unknown,
+    scope: string,
+): { tag: string; url: string } {
+    const kind =
+        typeof payload === 'object' && payload !== null && 'kind' in payload
+            ? payload.kind
+            : null;
+    const screen =
+        typeof kind === 'string' ? NOTICE_SCREENS.get(kind) : undefined;
+
+    return screen === undefined || typeof kind !== 'string'
+        ? { tag: 'notice', url: punchUrl(scope) }
+        : { tag: kind, url: `${scope}/${screen}` };
+}
+
 /** Where the icon opens and where a tap on a notice goes. */
 export function punchUrl(scope: string): string {
     return `${scope}/punch`;

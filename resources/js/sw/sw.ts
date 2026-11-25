@@ -4,6 +4,7 @@ import {
     cacheName,
     fallsBackToShell,
     noticeOfPush,
+    noticeTarget,
     punchUrl,
     routeOf,
     shellAssets,
@@ -115,14 +116,30 @@ self.addEventListener('fetch', (event) => {
 // whose push shows nothing). The body is only the kind, encrypted to this phone.
 self.addEventListener('push', (event) => {
     const notice = noticeOfPush(event.data);
+    const target = noticeTarget(payloadOf(event.data), scope);
 
     event.waitUntil(
-        self.registration.showNotification(notice.title, { body: notice.body }),
+        self.registration.showNotification(notice.title, {
+            body: notice.body,
+            tag: target.tag,
+            icon: '/app-icon-192.png',
+            data: { url: target.url },
+        }),
     );
 });
 
-// A tap goes to a window of the company's app that is already open, or opens Marcar (the icon's own address).
-async function openApp(): Promise<void> {
+/** The decrypted body of a push, or undefined when there is none or it is not JSON. */
+function payloadOf(data: PushMessageData | null): unknown {
+    try {
+        return data?.json();
+    } catch {
+        return undefined;
+    }
+}
+
+// A tap opens the screen the notice is about: in a window of the company's app that is already open (which loads it again, so it
+// shows what changed) or in a new one.
+async function openApp(url: string): Promise<void> {
     const windows = await self.clients.matchAll({
         type: 'window',
         includeUncontrolled: true,
@@ -136,13 +153,24 @@ async function openApp(): Promise<void> {
         ];
 
     if (open === undefined) {
-        await self.clients.openWindow(punchUrl(scope));
+        await self.clients.openWindow(url);
     } else {
         await open.focus();
+        await open.navigate(url);
     }
 }
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-    event.waitUntil(openApp());
+    const data: unknown = event.notification.data;
+    const url =
+        typeof data === 'object' &&
+        data !== null &&
+        'url' in data &&
+        typeof data.url === 'string' &&
+        data.url.startsWith(scope)
+            ? data.url
+            : punchUrl(scope);
+
+    event.waitUntil(openApp(url));
 });
