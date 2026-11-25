@@ -186,6 +186,7 @@ export type NavSectionKey =
     | 'operations'
     | 'admin'
     | 'console'
+    | 'clients'
     | 'sales'
     | 'platform';
 

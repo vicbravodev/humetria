@@ -39,6 +39,7 @@ const familyIcons: Partial<Record<NavSectionKey, LucideIcon>> = {
     operations: Briefcase,
     admin: Settings2,
     console: Building2,
+    clients: Building2,
     sales: HandCoins,
     platform: ServerCog,
 };

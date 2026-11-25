@@ -17,14 +17,22 @@ import { index as overview } from '@/routes/overview';
 import { index as users } from '@/routes/platform-users';
 import type { NavItem } from '@/types';
 
-// The console's daily pages, for Humetría staff (the server answers 404 to anyone else anyway): the customers.
-// The superadmin starts at the overview; support has no overview.
-export const consoleNavItems = (isSuperadmin: boolean): NavItem[] => [
-    ...(isSuperadmin
+// Where the superadmin starts: the overview. Support has none.
+export const homeNavItems = (isSuperadmin: boolean): NavItem[] =>
+    isSuperadmin
         ? [{ title: 'Resumen', href: overview(), icon: ChartNoAxesColumn }]
-        : []),
+        : [];
+
+// The customers, for Humetría staff (the server answers 404 to anyone else anyway): who they are and who pays.
+export const clientNavItems = (): NavItem[] => [
     { title: 'Empresas', href: companies(), icon: Building2 },
-    { title: 'Cuentas', href: accounts(), icon: WalletCards },
+    { title: 'Cuentas y cobranza', href: accounts(), icon: WalletCards },
+];
+
+// Staff inside a company reach the whole console from one group.
+export const consoleNavItems = (isSuperadmin: boolean): NavItem[] => [
+    ...homeNavItems(isSuperadmin),
+    ...clientNavItems(),
 ];
 
 // The sales desk: the demo requests (support too) and the demo room, which is the superadmin's alone.
