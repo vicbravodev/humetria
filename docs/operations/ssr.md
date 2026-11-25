@@ -203,7 +203,7 @@ Todos sin datos de la persona; sus propiedades son identificadores o números (`
 |--------|-----------|--------|
 | `$pageview` | `$current_url` limpia | Al abrir la landing |
 | `$pageleave` | `$current_url` limpia, duración y scroll de la visita (números) | Al salir de la página; sin él PostHog no calcula rebote ni duración de sesión |
-| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works`, `sticky_demo`, `guide_tool`, `guide_demo`, `pricing_demo` | Clic en un llamado a la demo o a "cómo funciona" |
+| `cta_click` | `target`: `header_demo`, `hero_demo`, `hero_how_it_works`, `sticky_demo`, `guide_tool`, `guide_demo` | Clic en un llamado a la demo o a "cómo funciona" |
 | `tool_page_click` | `target`: herramienta | Clic en la tarjeta de una herramienta (landing) o en otra herramienta (su página) |
 | `nav_click` | `target`: id de la sección | Clic en el menú de la cabecera |
 | `sign_in_click` | `target`: `header` | Clic en "Iniciar sesión" |

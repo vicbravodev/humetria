@@ -14,7 +14,6 @@ const links = [
     { href: '#herramientas', label: 'Herramientas' },
     { href: '#confidencialidad', label: 'Confidencialidad' },
     { href: '#humi', label: 'Humi' },
-    { href: '#precios', label: 'Precios' },
 ];
 
 const linkClass =
