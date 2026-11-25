@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Modules\Tenancy\Actions\RemoveTwoFactor;
 use App\Modules\Tenancy\Actions\SendPasswordReset;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\PlatformPermissions;
 use App\Modules\Tenancy\Support\UserPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,15 +21,17 @@ use Inertia\Response;
 /** The platform's users for its superadmin: find one, help them back in, and give or take away the support role. */
 final class UserConsoleController extends Controller
 {
-    public function index(Request $request, UserPages $pages): Response
+    public function index(Request $request, UserPages $pages, PlatformPermissions $permissions): Response
     {
         Gate::authorize('manage-platform-users');
 
         $search = trim($request->string('q')->toString());
-        $tab = $request->string('tab')->toString() === 'team' ? 'team' : 'people';
+        $tab = $request->string('tab')->toString();
+        $tab = in_array($tab, ['team', 'permissions'], true) ? $tab : 'people';
 
         return Inertia::render('tenancy/users', [
-            'users' => $pages->handle($search, $tab === 'team'),
+            'users' => $tab === 'permissions' ? null : $pages->handle($search, $tab === 'team'),
+            'permissions' => $tab === 'permissions' ? $permissions->handle() : null,
             'counts' => $pages->counts($search),
             'filters' => ['q' => $search, 'tab' => $tab],
         ]);

@@ -16,7 +16,6 @@ export default function UsersTabs({
     counts: PlatformUserCounts;
 }) {
     const tab = (view: PlatformUserTab) => ({
-        count: counts[view],
         active: filters.tab === view,
         href: index.url({ query: usersQuery({ ...filters, tab: view }) }),
     });
@@ -25,8 +24,13 @@ export default function UsersTabs({
         <CountTabs
             label="Vistas del equipo"
             tabs={[
-                { label: 'Equipo', ...tab('team') },
-                { label: 'Personas con cuenta', ...tab('people') },
+                { label: 'Equipo', count: counts.team, ...tab('team') },
+                {
+                    label: 'Personas con cuenta',
+                    count: counts.people,
+                    ...tab('people'),
+                },
+                { label: 'Permisos por rol', ...tab('permissions') },
             ]}
         />
     );

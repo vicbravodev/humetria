@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\UserPages;
 use App\Notifications\ResetPasswordNotification;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -289,6 +290,28 @@ it('says how many times each person entered a company as support in the last 30 
     $this->actingAs($admin)->get(route('platform-users.index', ['tab' => 'team']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('users.data', fn ($rows) => collect($rows)->pluck('supportEntries', 'name')->sortKeys()->all() === ['Admin Uno' => 0, 'Soporte Uno' => 2]));
+});
+
+it('shows what each platform role may do, read from the gates themselves and not from a list kept by hand', function (): void {
+    Gate::define('test-support-may', fn (User $user): bool => $user->isSupport());
+
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'permissions']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.tab', 'permissions')
+            ->where('users', null)
+            ->where('permissions', fn ($rows) => collect($rows)->keyBy('ability')->only(['view-console', 'manage-tenants', 'manage-platform-users', 'test-support-may'])->map(fn ($row) => [$row['support'], $row['superadmin']])->all() === [
+                'manage-tenants' => [false, true],
+                'view-console' => [true, true],
+                'manage-platform-users' => [false, true],
+                'test-support-may' => [true, true],
+            ]));
+});
+
+it('names every permission of the platform in Spanish', function (): void {
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'permissions']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('permissions', fn ($rows) => collect($rows)->pluck('ability')->sort()->values()->all() === collect(array_keys(Gate::abilities()))->sort()->values()->all()
+                && collect($rows)->every(fn ($row) => $row['label'] !== $row['ability'])));
 });
 
 it('opens on the people with an account, also for a view it does not know', function (?string $tab): void {

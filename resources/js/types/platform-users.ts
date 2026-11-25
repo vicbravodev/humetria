@@ -12,8 +12,16 @@ export type PlatformUserRow = {
     supportEntries: number;
 };
 
-/** The views of «Equipo Humetría»: the staff, and everyone with an account. */
-export type PlatformUserTab = 'team' | 'people';
+/** The views of «Equipo Humetría»: the staff, everyone with an account, and what each platform role may do. */
+export type PlatformUserTab = 'team' | 'people' | 'permissions';
+
+/** One permission of the platform and whether each role holds it, as the gates answer. */
+export type PlatformPermissionRow = {
+    ability: string;
+    label: string;
+    support: boolean;
+    superadmin: boolean;
+};
 
 export type PlatformUserFilters = { q: string; tab: PlatformUserTab };
 

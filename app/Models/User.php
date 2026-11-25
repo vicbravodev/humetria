@@ -63,6 +63,15 @@ final class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return in_array(self::SUPERADMIN, $this->platformRoles(), true);
     }
 
+    /** Someone, never saved, who holds only this platform role: to ask the gates what the role itself may do. */
+    public static function holdingPlatformRole(string $role): self
+    {
+        $user = new self;
+        $user->platformRoles = [$role];
+
+        return $user;
+    }
+
     /** Whether the user holds the platform's support role, read with the superadmin's in the same query. */
     public function isSupport(): bool
     {

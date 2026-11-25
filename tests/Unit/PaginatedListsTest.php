@@ -16,6 +16,7 @@ const ARRAY_PROPS = [
     'organization/org-chart:chain' => 'resumen corto: la cadena de mando de la persona enfocada, un nodo por nivel',
     'organization/org-chart-quality:issues' => 'catálogo fijo: los tres problemas de la línea de reporte (ReportingIssue), cada uno con su conteo',
     'tenancy/work-centers:states' => 'catálogo fijo: las 32 entidades',
+    'tenancy/users:permissions' => 'catálogo fijo: los permisos de la plataforma (los Gate del código), uno por renglón',
     'tenancy/members:roles' => 'catálogo fijo: los roles que se pueden dar',
     'tenancy/invite-member:roles' => 'catálogo fijo: los roles que se pueden dar',
     'tenancy/member-permissions:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog)',

@@ -92,5 +92,8 @@ describe('usersQuery', () => {
             tab: 'team',
         });
         expect(usersQuery({ q: '', tab: 'people' })).toEqual({});
+        expect(usersQuery({ q: '', tab: 'permissions' })).toEqual({
+            tab: 'permissions',
+        });
     });
 });
