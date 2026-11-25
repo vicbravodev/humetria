@@ -28,7 +28,7 @@ export default function CompanyMark({
 }) {
     const { brand } = usePage().props;
 
-    if (brand === null) {
+    if (brand === null || brand === undefined) {
         return name === undefined ? (
             <Logo kind={kind} className={humetriaClassName} />
         ) : badge ? (

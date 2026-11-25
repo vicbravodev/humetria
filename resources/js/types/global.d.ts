@@ -44,8 +44,8 @@ declare module '@inertiajs/core' {
             firstSteps: FirstSteps | null;
             /** Whether the company of the page is the demo: then every page, its reports above all, carries the «DEMO» mark. */
             demo: boolean;
-            /** White label: the logo, name and accent of the company of the page; null outside one. */
-            brand: Brand | null;
+            /** White label: the logo, name and accent of the company of the page; null outside one, absent on the pages that share almost nothing (the public channel, the workers' page). */
+            brand?: Brand | null;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };
