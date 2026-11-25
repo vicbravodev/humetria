@@ -39,4 +39,16 @@ final class AuditConsoleController extends Controller
             ),
         ]);
     }
+
+    /**
+     * The companies the trail can be narrowed to, found on the server as the filter is typed.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function companies(Request $request, AuditPages $pages): array
+    {
+        Gate::authorize('view-audit');
+
+        return $pages->companies($request->string('q')->trim()->limit(100, '')->toString());
+    }
 }

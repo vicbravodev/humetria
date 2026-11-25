@@ -1,8 +1,6 @@
-import { Link } from '@inertiajs/react';
-import { X } from 'lucide-react';
 import DateRangePicker from '@/components/humetria/date-range-picker';
 import SearchField from '@/components/humetria/search-field';
-import { Button } from '@/components/ui/button';
+import AuditCompanyFilter from '@/components/tenancy/audit-company-filter';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -36,72 +34,49 @@ export default function AuditToolbar({
     );
 
     return (
-        <div role="search" className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-end gap-3">
-                <SearchField
-                    label="Buscar por correo de quien actuó"
-                    value={text}
-                    onChange={type}
-                    className="w-full md:w-[320px]"
-                />
-                <div className="grid gap-1.5">
-                    <Label htmlFor="audit-family">Tipo de evento</Label>
-                    <Select
-                        value={filters.family === '' ? ALL : filters.family}
-                        onValueChange={(family) =>
-                            filter({ family: family === ALL ? '' : family })
-                        }
-                    >
-                        <SelectTrigger
-                            id="audit-family"
-                            className="w-full md:w-60"
-                        >
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={ALL}>
-                                Todos los eventos
+        <div role="search" className="flex flex-wrap items-end gap-3">
+            <SearchField
+                label="Buscar por correo de quien actuó"
+                value={text}
+                onChange={type}
+                className="w-full md:w-[320px]"
+            />
+            <AuditCompanyFilter
+                company={
+                    company === null
+                        ? null
+                        : { id: filters.company, name: company }
+                }
+                onChange={(next) => filter({ company: next })}
+            />
+            <div className="grid w-full gap-1.5 md:w-60">
+                <Label htmlFor="audit-family">Tipo de evento</Label>
+                <Select
+                    value={filters.family === '' ? ALL : filters.family}
+                    onValueChange={(family) =>
+                        filter({ family: family === ALL ? '' : family })
+                    }
+                >
+                    <SelectTrigger id="audit-family" className="w-full">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value={ALL}>Todos los eventos</SelectItem>
+                        {families.map((family) => (
+                            <SelectItem key={family.value} value={family.value}>
+                                {family.label}
                             </SelectItem>
-                            {families.map((family) => (
-                                <SelectItem
-                                    key={family.value}
-                                    value={family.value}
-                                >
-                                    {family.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <DateRangePicker
-                    id="audit-period"
-                    label="Periodo"
-                    value={{ from: filters.from, to: filters.to }}
-                    onChange={(period) => filter(period)}
-                    shortcuts={periodShortcuts()}
-                />
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
-            {company !== null && (
-                <p className="flex flex-wrap items-center gap-2 text-meta text-muted-foreground">
-                    Solo lo de{' '}
-                    <strong className="text-foreground">{company}</strong>
-                    <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="touch-hit"
-                    >
-                        <Link
-                            href={index.url({
-                                query: auditQuery({ ...filters, company: '' }),
-                            })}
-                        >
-                            <X aria-hidden />
-                            Quitar empresa
-                        </Link>
-                    </Button>
-                </p>
-            )}
+            <DateRangePicker
+                id="audit-period"
+                label="Periodo"
+                value={{ from: filters.from, to: filters.to }}
+                onChange={(period) => filter(period)}
+                shortcuts={periodShortcuts()}
+            />
         </div>
     );
 }

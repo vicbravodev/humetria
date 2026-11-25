@@ -24,6 +24,9 @@ Route::get('admin/overview', PlatformOverviewController::class)
 Route::get('admin/audit', [AuditConsoleController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('audit.index');
+Route::get('admin/audit/companies', [AuditConsoleController::class, 'companies'])
+    ->middleware(['auth', 'verified'])
+    ->name('audit.companies');
 
 // The platform's people, for the superadmin: help one back in, give or take away support. Never create a superadmin here.
 Route::middleware(['auth', 'verified'])->prefix('admin/platform-users')->name('platform-users.')->where(['user' => '[0-9]{1,9}'])->group(function (): void {

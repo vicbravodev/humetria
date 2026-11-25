@@ -141,6 +141,30 @@ it('filters by company', function (): void {
             ->where('entries.data.0.company.id', $acme->id));
 });
 
+it('finds the companies to narrow the trail to on the server, by any part of their name', function (): void {
+    $acme = Tenant::factory()->create(['trade_name' => 'Aceros Monterrey']);
+    Tenant::factory()->create(['trade_name' => 'Hotel Vía Real']);
+
+    $this->actingAs(superadmin())->getJson(route('audit.companies', ['q' => 'monterrey']))
+        ->assertOk()
+        ->assertExactJson([['value' => $acme->id, 'label' => 'Aceros Monterrey']]);
+});
+
+it('gives the companies of the filter to the superadmin only', function (User $user): void {
+    $this->actingAs($user)->getJson(route('audit.companies'))->assertForbidden();
+})->with([
+    'support' => fn () => support(),
+    'someone with no role' => fn () => User::factory()->create(),
+]);
+
+it('gives at most twenty companies at a time, in order of name', function (): void {
+    Tenant::factory()->count(21)->sequence(fn ($sequence) => ['trade_name' => sprintf('Empresa %02d', $sequence->index)])->create();
+
+    $this->actingAs(superadmin())->getJson(route('audit.companies'))
+        ->assertJsonCount(20)
+        ->assertJsonPath('0.label', 'Empresa 00');
+});
+
 it('filters by a range of local days, both edges included', function (): void {
     // Mexico City is UTC-6 in November: the 10th local runs from 06:00 UTC to 05:59:59 UTC the next day.
     auditRow('tenant.updated', ['metadata' => ['mark' => 'before'], 'created_at' => '2026-11-10 05:59:59+00']);

@@ -438,6 +438,22 @@ final class AuditPages
         return $counts;
     }
 
+    /**
+     * Twenty companies at a time whose name holds what was typed, for the filter that narrows the trail to one.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function companies(string $search): array
+    {
+        return array_values(Tenant::query()
+            ->matching(['trade_name'], $search)
+            ->orderBy('trade_name')
+            ->limit(20)
+            ->get(['id', 'trade_name'])
+            ->map(fn (Tenant $tenant): array => ['value' => $tenant->id, 'label' => $tenant->trade_name])
+            ->all());
+    }
+
     /** The name of a company, for the chip that says the trail is narrowed to it. */
     public function companyName(string $company): ?string
     {
