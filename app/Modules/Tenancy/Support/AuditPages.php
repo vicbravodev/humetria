@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Support;
 
+use App\Logging\RedactSensitiveData;
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
@@ -58,6 +59,9 @@ final class AuditPages
         'tenancy' => 'Canales de comunicación',
         'messaging' => 'WhatsApp',
     ];
+
+    /** The keys that store what an entry changed: the detail shows them as before and after, not as rows of their own. */
+    private const array CHANGE_KEYS = ['before', 'after', 'changes', 'profile_before', 'profile_after'];
 
     /**
      * The views of the trail by what matters most, each the events it holds as patterns (`like`): entering a company as
@@ -368,7 +372,7 @@ final class AuditPages
 
     /**
      * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
-     * @return LengthAwarePaginator<int, array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>}>
+     * @return LengthAwarePaginator<int, array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
      */
     public function handle(array $filters): LengthAwarePaginator
     {
@@ -403,6 +407,7 @@ final class AuditPages
                 : ['id' => $id, 'name' => $companies[$id]],
             'subject' => $entry->subject_type,
             'context' => $this->context($entry, $companies, $people, $roles),
+            'change' => $this->change($entry, $roles),
         ]);
     }
 
@@ -534,16 +539,76 @@ final class AuditPages
         }
 
         foreach ($entry->metadata as $key => $value) {
-            if ($key === 'tenant_id') {
+            if ($key === 'tenant_id' || in_array($key, self::CHANGE_KEYS, true) || ! $this->shown($key)) {
                 continue;
             }
 
-            $rows[self::KEYS[$key] ?? ucfirst(str_replace('_', ' ', $key))] = $key === 'user_id' && is_int($value) && isset($people[$value])
+            $rows[$this->label($key)] = $key === 'user_id' && is_int($value) && isset($people[$value])
                 ? $this->person($people[$value])
                 : $this->value($key, $value, $roles);
         }
 
         return $rows;
+    }
+
+    /**
+     * What an entry changed, field by field, from what it stored as before and after: the two sides of a snapshot
+     * (`before`, `after`), the fields it lists as changed (`changes`), or the two profiles of a transfer. Only what differs.
+     *
+     * @param  array<string, string>  $roles
+     * @return list<array{field: string, before: string, after: string}>
+     */
+    private function change(AuditEntry $entry, array $roles): array
+    {
+        $metadata = $entry->metadata;
+        $pairs = [];
+
+        if (array_key_exists('before', $metadata) || array_key_exists('after', $metadata)) {
+            $before = $metadata['before'] ?? null;
+            $after = $metadata['after'] ?? null;
+
+            if (is_array($before) || is_array($after)) {
+                $before = is_array($before) ? $before : [];
+                $after = is_array($after) ? $after : [];
+
+                foreach (array_unique([...array_keys($before), ...array_keys($after)]) as $key) {
+                    $pairs[(string) $key] = [$before[$key] ?? null, $after[$key] ?? null];
+                }
+            } else {
+                $pairs['value'] = [$before, $after];
+            }
+        }
+
+        foreach (is_array($metadata['changes'] ?? null) ? $metadata['changes'] : [] as $key => $pair) {
+            if (is_array($pair)) {
+                $pairs[(string) $key] = [$pair['before'] ?? null, $pair['after'] ?? null];
+            }
+        }
+
+        if (array_key_exists('profile_before', $metadata) || array_key_exists('profile_after', $metadata)) {
+            $pairs['profile'] = [$metadata['profile_before'] ?? null, $metadata['profile_after'] ?? null];
+        }
+
+        $rows = [];
+
+        foreach ($pairs as $key => [$before, $after]) {
+            if ($before !== $after && $this->shown($key)) {
+                $rows[] = ['field' => $key === 'value' ? 'Valor' : $this->label($key), 'before' => $this->value($key, $before, $roles), 'after' => $this->value($key, $after, $roles)];
+            }
+        }
+
+        return $rows;
+    }
+
+    /** Whether the detail may show a stored key: never one the logs keep out, unless the trail names it on purpose. */
+    private function shown(int|string $key): bool
+    {
+        return isset(self::KEYS[$key]) || ! in_array(strtolower((string) $key), RedactSensitiveData::KEYS, true);
+    }
+
+    private function label(int|string $key): string
+    {
+        return self::KEYS[$key] ?? ucfirst(str_replace('_', ' ', (string) $key));
     }
 
     /**

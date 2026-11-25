@@ -1,4 +1,4 @@
-import type { AuditFilters } from '@/types';
+import type { AuditEntryRow, AuditFilters } from '@/types';
 
 const LABELS: Record<string, string> = {
     'tenant.created': 'Empresa dada de alta',
@@ -258,4 +258,17 @@ export function auditQuery(
 /** Whether any filter narrows the trail: an empty list is then the filters' doing. */
 export function auditFiltered(filters: AuditFilters): boolean {
     return Object.keys(auditQuery(filters)).length > 0;
+}
+
+/** Who acted on an entry, with their email: the system when nobody did, and who worked as whom while impersonating. */
+export function auditActor(entry: AuditEntryRow): string {
+    if (entry.actor === null) {
+        return 'Sistema';
+    }
+
+    const who = `${entry.actor.name} (${entry.actor.email})`;
+
+    return entry.impersonator === null
+        ? who
+        : `${entry.impersonator.name} como ${who}`;
 }

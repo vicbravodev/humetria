@@ -316,6 +316,52 @@ it('writes the values of the detail as a person reads them: states, dates in Mex
         ]));
 });
 
+it('writes the change of an entry as before and after, field by field, and only what changed', function (): void {
+    auditRow('employee.updated', ['metadata' => ['changes' => [
+        'job_title' => ['before' => 'Analista', 'after' => 'Gerente'],
+        'area_id' => ['before' => null, 'after' => 'a1'],
+    ]]]);
+    auditRow('attendance.schedule_saved', ['created_at' => now()->subMinute(), 'metadata' => [
+        'before' => ['shift_type' => 'day', 'work_mode' => 'onsite'],
+        'after' => ['shift_type' => 'night', 'work_mode' => 'onsite'],
+    ]]);
+    auditRow('attendance.schedule_saved', ['created_at' => now()->subMinutes(2), 'metadata' => [
+        'before' => null,
+        'after' => ['shift_type' => 'mixed'],
+    ]]);
+    auditRow('tenant.created', ['created_at' => now()->subMinutes(3), 'metadata' => ['reason' => 'Alta']]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        // In the order the database keeps the keys (jsonb: shorter first).
+        ->where('entries.data.0.change', [
+            ['field' => 'Área', 'before' => '—', 'after' => 'a1'],
+            ['field' => 'Puesto', 'before' => 'Analista', 'after' => 'Gerente'],
+        ])
+        ->where('entries.data.0.context', [])
+        ->where('entries.data.1.change', [['field' => 'Tipo de jornada', 'before' => 'Diurna', 'after' => 'Nocturna']])
+        ->where('entries.data.1.context', [])
+        ->where('entries.data.2.change', [['field' => 'Tipo de jornada', 'before' => '—', 'after' => 'Mixta']])
+        ->where('entries.data.3.change', [])
+        ->where('entries.data.3.context', ['Motivo' => 'Alta']));
+});
+
+it('never shows in the detail a key the logs keep out, even if an entry stored one, unless the trail names it on purpose', function (): void {
+    auditRow('billing.payment_recorded', ['metadata' => [
+        'answers' => ['q1' => 4],
+        'comment' => 'Mi jefe me grita',
+        'email' => 'ana@acme.mx',
+        'amount_cents' => 50000,
+        'changes' => ['note' => ['before' => 'a', 'after' => 'b'], 'job_title' => ['before' => 'A', 'after' => 'B']],
+    ]]);
+
+    $response = $this->actingAs(superadmin())->get(route('audit.index'));
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', ['Monto' => '$500.00'])
+        ->where('entries.data.0.change', [['field' => 'Puesto', 'before' => 'A', 'after' => 'B']]));
+    expect($response->getContent())->not->toContain('Mi jefe me grita')->not->toContain('ana@acme.mx');
+});
+
 it('writes an offline mark entry with its time basis, signer and flags in Spanish', function (): void {
     auditRow('attendance.offline_mark_accepted', ['metadata' => [
         'time_basis' => 'qr_window',

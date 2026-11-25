@@ -9,7 +9,11 @@ export type AuditEntryRow = {
     company: { id: string; name: string } | null;
     subject: string | null;
     context: Record<string, string>;
+    /** What the entry changed, field by field; empty when it stored no before and after. */
+    change: AuditChange[];
 };
+
+export type AuditChange = { field: string; before: string; after: string };
 
 export type AuditFilters = {
     q: string;
