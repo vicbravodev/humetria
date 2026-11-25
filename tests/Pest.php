@@ -1289,7 +1289,7 @@ function assertPrintLetterhead(AwaitableWebpage $page, string $center): void
 
     emulatePrint($page)
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'flex')
-        ->assertScript('() => document.querySelector(\'[data-slot="print-letterhead"] img\').getBoundingClientRect().width > 0', true)
+        ->assertScript('() => document.querySelector(\'[data-slot="print-letterhead"]\').firstElementChild.getBoundingClientRect().width > 0', true)
         ->assertScript('() => /Emitido el \\d{1,2} \\w+ \\d{4}/.test(document.querySelector(\'[data-slot="print-letterhead"]\').innerText)', true)
         ->assertScript("() => document.querySelector('[data-slot=\"print-letterhead\"]').innerText.includes(".json_encode($center).')', true)
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\').parentElement).page', 'dossier');

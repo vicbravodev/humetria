@@ -37,7 +37,7 @@ it('announces a field error as an alert', function (): void {
         ->assertScript('() => new Promise((resolve) => { const look = () => { const alert = document.querySelector(\'p[role="alert"].text-destructive\'); alert === null ? setTimeout(look, 50) : resolve(alert.textContent.length > 0); }; look(); })');
 });
 
-it('renders the dashboard accessibly with the logo in the sidebar', function (bool $dark, bool $mobile): void {
+it('renders the dashboard accessibly with the company\'s mark in the sidebar, not Humetría\'s logo', function (bool $dark, bool $mobile): void {
     $panel = signInToPanel();
 
     visitPage('dashboard', $panel, $dark, $mobile, reach: function (AwaitableWebpage $page) use ($mobile): void {
@@ -46,7 +46,7 @@ it('renders the dashboard accessibly with the logo in the sidebar', function (bo
             $page->click('nav[aria-label="Menú principal"] button:has-text("Más")')
                 ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => document.querySelector(\'[data-mobile="true"][data-state="open"]\') !== null)');
         }
-    })->assertVisible(VISIBLE_LOGO);
+    })->assertScript('() => { const header = document.querySelector(\'[data-slot="sidebar-header"]\'); return header !== null && header.querySelector(\'img[alt="Humetría"]\') === null && header.textContent.trim().length > 0; }');
 })->with($looks);
 
 it('gives every tab of the phone\'s menu, «Más» included, a 44 px touch target', function (bool $dark): void {
