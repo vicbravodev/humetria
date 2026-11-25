@@ -31,6 +31,7 @@ use App\Modules\Messaging\Actions\ReconcileUnknown;
 use App\Modules\Messaging\Actions\ReplayOrphanEvents;
 use App\Modules\Messaging\Actions\ResumeWhatsApp;
 use App\Modules\Messaging\Actions\WatchFailures;
+use App\Modules\Operations\Contracts\SchedulerHeartbeat;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -64,7 +65,10 @@ Artisan::command('engagement:item-stats {survey}', function (string $survey, Ite
 })->purpose('Print, per question of a survey, how many were shown it, answered and skipped it (for the pilot)');
 
 // PostHog alerts when this line stops arriving: the scheduler (or its container) is down (docs/operations/observability.md).
-Artisan::command('schedule:heartbeat', fn () => Log::info('schedule.heartbeat'))->purpose('Log that the scheduler is alive');
+Artisan::command('schedule:heartbeat', function (SchedulerHeartbeat $heartbeat): void {
+    Log::info('schedule.heartbeat');
+    $heartbeat->beat();
+})->purpose('Log that the scheduler is alive');
 
 Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $closeExpired): void {
     $this->info('Evaluaciones cerradas: '.$closeExpired->handle());

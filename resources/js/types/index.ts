@@ -25,6 +25,7 @@ export type * from './disclosure-writing';
 export type * from './disclosure-public';
 export type * from './messaging';
 export type * from './navigation';
+export type * from './operations';
 export type * from './organization';
 export type * from './overview';
 export type * from './plan';

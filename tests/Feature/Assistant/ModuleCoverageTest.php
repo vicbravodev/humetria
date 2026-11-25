@@ -27,6 +27,7 @@ function humiExemptCodeModules(): array
         'Blog' => 'Es contenido público del sitio, sin datos de ninguna empresa: no hay nada de la empresa que Humi informe.',
         'Demos' => 'Solicitudes de demo y la empresa demo: son del superadmin, no de la empresa.',
         'Messaging' => 'Es transporte (WhatsApp y eventos de correo): lo que Humi informa de las invitaciones sale de Campaigns y Engagement, y la entrega por persona no se expone nunca, solo agregados con mínimo.',
+        'Operations' => 'Es la salud de la plataforma (colas, programador, webhooks, mensajería de todas las empresas) para el superadmin: no es algo de una empresa que Humi informe.',
         'Notifications' => 'Solo manda avisos push sin contenido a la persona trabajadora: no guarda nada de la empresa que Humi informe, y Humi nunca ve suscripciones.',
         'Responses' => 'Respuestas anónimas: Humi solo las ve agregadas y con el mínimo por grupo, a través de Results.',
         'Sso' => 'Es un ajuste de cómo se entra a la cuenta, no algo de la empresa que informar.',

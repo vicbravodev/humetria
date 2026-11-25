@@ -37,6 +37,7 @@ final class TenantRules
         'login',
         'logout',
         'passkeys',
+        'operations',
         'overview',
         'password',
         'platform-users',
