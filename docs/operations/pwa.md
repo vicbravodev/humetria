@@ -39,7 +39,7 @@ Fuente única: la configuración. Esta tabla es lo que hoy tiene el código.
 | Marcas por entrega | `attendance.offline.delivery_batch_max` | — | 20 marcas |
 | Cuerpo de la entrega | `OfflinePunchRequest` | — | 64 KB |
 | Nota de la persona | `OfflinePunchRequest` | — | 500 caracteres |
-| Bloqueo por días sin cubrir | `attendance.week.block_uncovered_days` | `ATTENDANCE_WEEK_BLOCK_UNCOVERED` | encendido |
+| Bloqueo por días sin cubrir (solo empresas con Vacaciones y permisos) | `attendance.week.block_uncovered_days` | `ATTENDANCE_WEEK_BLOCK_UNCOVERED` | encendido |
 | Llaves del dispositivo activas | `worker_access.device_keys_max` | `WORKER_ACCESS_DEVICE_KEYS_MAX` | 3 llaves |
 | Vigencia del pase | `worker_access.pass_hours` | `WORKER_ACCESS_OFFLINE_PASS_HOURS` | 24 h |
 | Apagado del service worker | `worker_access.pwa_sw_kill` | `PWA_SW_KILL` | apagado |
@@ -63,7 +63,7 @@ son variables; el resto son constantes del código: cambiarlas es un cambio de c
 |---|---|
 | `ATTENDANCE_OFFLINE_ENABLED=false` | Apaga la cola y la interfaz sin conexión del cliente (lo lee por `context.offline`). |
 | `PWA_SW_KILL=true` | `/me/{slug}/sw.js` sirve el worker de apagado: borra sus cachés y se desregistra. Las páginas dejan de registrarlo. |
-| `ATTENDANCE_WEEK_BLOCK_UNCOVERED=false` | Deja de bloquear «Confirmar» la semana por días sin cubrir; los días se siguen calculando y logueando. |
+| `ATTENDANCE_WEEK_BLOCK_UNCOVERED=false` | Deja de bloquear «Confirmar» la semana por días sin cubrir; los días se siguen calculando y logueando. Sin esto, el bloqueo ya no aplica a una empresa sin el módulo de Vacaciones y permisos (no hay cómo justificar el día): se confirma y solo se loguea el conteo. |
 
 **Ninguno apaga la entrega**: lo que ya está guardado en los teléfonos se entrega igual. Cambiar uno exige reiniciar `web` (la
 configuración se cachea al arrancar).
@@ -95,7 +95,7 @@ el pase ni el QR (los que traen `employee_id` lo traen como cualquier log de asi
 | `attendance.offline_mark_rejected` | Una marca llegó y no se aceptó | `reason`, `queue_age_minutes`, `signer_type`; con fila también `basis`, `interval_minutes` |
 | `attendance.offline_mark_already_recorded` | La copia en la cola era de una marca hecha con conexión | `type` |
 | `attendance.offline_queue_reported` | El teléfono pidió boletos e informó su cola | `count`, `oldest_age_minutes` (nada de personas) |
-| `attendance.week_uncovered_days_computed` | Se confirmó una semana con días sin cubrir (bloqueo apagado) | `uncovered_days` (conteo), `week_start` |
+| `attendance.week_uncovered_days_computed` | Se confirmó una semana con días sin cubrir (bloqueo apagado, o empresa sin Vacaciones y permisos) | `uncovered_days` (conteo), `week_start` |
 | `push.unconfigured` | Faltan llaves VAPID o el sujeto no es válido | `reason`: `missing_keys` o `subject_invalid` |
 | `push.subscribed` | Una suscripción nueva | `replaced` |
 | `push.sent` / `push.expired` / `push.failed` | Resultado de un envío (aceptado; suscripción vencida y borrada; otro rechazo) | `subscription_id`, `status` o `reason` (`invalid_keys`, `exhausted`) |

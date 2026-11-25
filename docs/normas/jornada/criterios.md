@@ -212,9 +212,9 @@ ese día, ya terminado, sin marcas (o con una entrada sin salida), que no sea de
 de alta, ni tenga una ausencia aprobada en Vacaciones y permisos. Una entrada sin salida del día de ayer aún no cuenta como día
 sin cubrir: puede ser un turno de noche en curso, y «Día abierto» detiene la semana hasta que se marque la salida. Se suma a los bloqueos que ya existen (`no_marks`, y «Día
 abierto», `day_open`: la última jornada sin marca de fin): «Día abierto» habla de una jornada empezada; «día sin cubrir», de un
-día sin ninguna marca. Aplica a **toda empresa**; la plataforma puede apagar el bloqueo (`attendance.week.block_uncovered_days`)
+día sin ninguna marca. Aplica a las empresas con el módulo de Vacaciones y permisos (sin él nadie puede justificar el día, y no aplica); la plataforma puede apagar el bloqueo (`attendance.week.block_uncovered_days`)
 y entonces solo lo registra. La persona puede objetar la semana, pedir una corrección (agregar la marca que falta) o pedir a
-Recursos Humanos que registre la ausencia como permiso. *Pendiente de revisión del usuario: el bloqueo para toda empresa.*
+Recursos Humanos que registre la ausencia como permiso. *Decisión del dueño, 2026-11-24: solo con Vacaciones y permisos.*
 
 **5.3 Nivel de evidencia por marca** · Humetría · cada marca guarda cómo se hizo (QR más geocerca, solo geocerca, solo QR,
 navegador de confianza, remoto, en campo, corrección) y el reporte lo muestra. «Fuerte» es la marca **completa para su
@@ -325,5 +325,5 @@ guardada sin enviar, por verificar, verificada, incorrecta (con la nota de Recur
     cada criterio).
   - **5.1**: el plan B con una llave propia del teléfono, con evidencia media. **⚠ pendiente del usuario.** Texto del acuerdo
     nuevo: **⚠ pendiente del usuario.**
-  - **5.2**: el bloqueo por días sin cubrir vale para toda empresa. **⚠ pendiente del usuario.** Una marca sin conexión que
+  - **5.2**: el bloqueo por días sin cubrir vale para las empresas con Vacaciones y permisos (decisión del dueño, 2026-11-24). Una marca sin conexión que
     llega a una semana objetada la deja objetada. **⚠ pendiente del usuario.**

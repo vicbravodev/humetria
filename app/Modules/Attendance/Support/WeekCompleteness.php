@@ -18,7 +18,8 @@ use Carbon\CarbonImmutable;
  * when it is a holiday, when it is before the person's hire date, when they are away with approved vacations or a leave,
  * or when it has not ended: its local date, in the zone of the week, is today or later. Otherwise the day is required, and
  * it is uncovered when it has no marks or its last mark is not an end, except yesterday's: a night shift that started
- * then may still be running (the block `day_open` holds the week until its end is marked).
+ * then may still be running (the block `day_open` holds the week until its end is marked). Only companies with the module
+ * Vacaciones y permisos are asked this (withoutUncovered).
  */
 final readonly class WeekCompleteness
 {
@@ -59,6 +60,15 @@ final readonly class WeekCompleteness
         }
 
         return new self($days, $dates);
+    }
+
+    /**
+     * The same week where no day counts as uncovered: for a company with no Vacaciones y permisos, where the person has no
+     * way to justify a day (RH records a leave there), so nothing is asked, listed or blocked (decisión del dueño, 2026-11-24).
+     */
+    public function withoutUncovered(): self
+    {
+        return new self(array_map(fn (array $day): array => [...$day, 'uncovered' => false], $this->days), $this->dates);
     }
 
     /**

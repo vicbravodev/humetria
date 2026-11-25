@@ -21,6 +21,7 @@ use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -33,14 +34,15 @@ use Illuminate\Support\Facades\Log;
  * started on Sunday ends on Monday: its end would change the week after it was confirmed), and only the version the
  * person read: a week RH changed meanwhile is read again first. Nor is a week with days without cover (a working day of
  * their schedule, already over, with no marks and no holiday, hire date or approved absence: WeekCompleteness): it needs a
- * correction that adds the missing marks, or a leave RH records. That block holds for every company; the setting
+ * correction that adds the missing marks, or a leave RH records. That block holds for companies with the module Vacaciones y
+ * permisos (without it nobody can justify the day: decisión del dueño, 2026-11-24); the setting
  * `attendance.week.block_uncovered_days` turns it off, and then the days are only logged. Confirming again keeps the first
  * moment. A disputed week is not confirmed over the dispute: RH resolves it (ResolveDispute), and then the person
  * confirms what they read.
  */
 final readonly class ConfirmWeek
 {
-    public function __construct(private CurrentTenant $tenant, private RecordAudit $audit, private PersonTimezone $timezones, private Absences $absences, private Roster $roster) {}
+    public function __construct(private CurrentTenant $tenant, private RecordAudit $audit, private PersonTimezone $timezones, private Absences $absences, private Roster $roster, private Companies $companies) {}
 
     /**
      * @throws WeekRejected
@@ -74,13 +76,15 @@ final readonly class ConfirmWeek
                 $week, $byDay, ScheduleTimeline::of([$employeeId]), $employeeId, AbsentDays::of($absences, $week)[$employeeId] ?? [],
                 $this->absences->holidaysBetween($week->start(), $week->end()), $this->roster->find($employeeId)?->hiredOn,
             );
-            $blocked = self::blocker($marks, $completeness) ?? (hash_equals(WeekDigest::ofMarks($marks, $absences), $digest) ? null : 'week_changed');
+            // Without Vacaciones y permisos nobody can justify a day, so none blocks; they are still counted below.
+            $enforced = $this->companies->current()->allows('vacations') ? $completeness : $completeness->withoutUncovered();
+            $blocked = self::blocker($marks, $enforced) ?? (hash_equals(WeekDigest::ofMarks($marks, $absences), $digest) ? null : 'week_changed');
 
             if ($blocked !== null) {
                 throw new WeekRejected($blocked);
             }
 
-            // Only here with the block turned off: how many weeks it would stop, as a count, never the days.
+            // Only here with the block off (the switch, or a company with no Vacaciones y permisos): the days it would stop, as a count, never the dates.
             if ($completeness->uncoveredDays() !== []) {
                 Log::info('attendance.week_uncovered_days_computed', ['employee_id' => $employeeId, 'week_start' => $week->start()->toDateString(), 'uncovered_days' => count($completeness->uncoveredDays())]);
             }

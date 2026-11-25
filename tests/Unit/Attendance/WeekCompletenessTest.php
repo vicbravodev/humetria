@@ -188,6 +188,15 @@ it('does not call a missing end yesterday\'s: a shift that started then may stil
         ->and(completeness($this, $started('2026-11-09'), week: '2026-11-09', schedule: false)->day(0))->toBe(['required' => true, 'uncovered' => true]);
 });
 
+it('can be read with no day uncovered, keeping which are required', function (): void {
+    $missing = completeness($this, workedWeek('2026-11-04'));
+    $week = $missing->withoutUncovered();
+
+    expect($missing->uncoveredDays())->toBe(['2026-11-04'])
+        ->and($week->uncoveredDays())->toBe([])
+        ->and($week->day(2))->toBe(['required' => true, 'uncovered' => false]);
+});
+
 it('asks nothing of a day that is not in the week', function (): void {
     expect(completeness($this, [])->day(7))->toBe(['required' => false, 'uncovered' => false]);
 });

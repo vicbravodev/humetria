@@ -15,6 +15,7 @@ use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Leave\Models\LeaveHoliday;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\WorkerAccess\Actions\RevokeCredential;
@@ -242,6 +243,27 @@ describe('reading the week', function (): void {
             ->assertJsonPath('confirmUrl', route('attendance.device.week.confirm', ['acme', '2026-11-02']));
     });
 
+    it('asks nothing of the days without cover when the company has no Vacaciones y permisos: no list, no flag, no block', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+        anaWorkedLastWeek();
+
+        anaReadsWeek(['start' => '2026-11-02'])->assertOk()
+            ->assertJsonPath('uncoveredDays', [])
+            ->assertJsonPath('days.2.uncovered', false)
+            ->assertJsonPath('blocked', null)
+            ->assertJsonPath('confirmUrl', route('attendance.device.week.confirm', ['acme', '2026-11-02']));
+    });
+
+    it('still blocks the days without cover when the company has Vacaciones y permisos', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance', 'vacations'], CarbonImmutable::now(config('app.display_timezone')));
+        anaWorkedLastWeek();
+
+        anaReadsWeek(['start' => '2026-11-02'])->assertOk()
+            ->assertJsonPath('uncoveredDays', ['2026-11-04', '2026-11-05', '2026-11-06'])
+            ->assertJsonPath('blocked', 'uncovered_days')
+            ->assertJsonPath('confirmUrl', null);
+    });
+
     it('covers a holiday and approved vacations, and asks nothing of a person with no schedule', function (): void {
         anaWorkedLastWeek();
         LeaveHoliday::factory()->create(['tenant_id' => $this->tenant->id, 'date' => '2026-11-04']);
@@ -437,6 +459,13 @@ describe('answering', function (): void {
             ->assertJsonPath('week.days.2.uncovered', true);
         anaAnswers('dispute', body: ['reason' => 'Los otros días también trabajé.'])->assertOk()->assertJsonPath('status', 'disputed');
         expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Disputed);
+    });
+
+    it('confirms a week with days without cover when the company has no Vacaciones y permisos', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+        anaWorkedLastWeek();
+
+        anaAnswers('confirm')->assertOk()->assertJsonPath('status', 'confirmed');
     });
 
     it('offers no confirmation of a week with no marks, and rejects one, while letting the person dispute it', function (): void {

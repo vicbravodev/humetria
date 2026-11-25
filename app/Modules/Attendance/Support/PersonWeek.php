@@ -15,6 +15,7 @@ use App\Modules\Attendance\Models\MarkReview;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Leave\Contracts\Absences;
 use App\Modules\Organization\Contracts\Roster;
+use App\Modules\Tenancy\Contracts\Companies;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use LogicException;
@@ -49,6 +50,8 @@ final class PersonWeek
             $week, $byDay, $schedules, $employeeId, $away,
             resolve(Absences::class)->holidaysBetween($week->start(), $week->end()), resolve(Roster::class)->find($employeeId)?->hiredOn,
         );
+        // Without Vacaciones y permisos nobody can justify a day: it is neither asked nor listed (criterio 5.2).
+        $completeness = resolve(Companies::class)->current()->allows('vacations') ? $completeness : $completeness->withoutUncovered();
         // The tolerance is read only when a schedule has start times: a week without them costs no query more.
         $tolerance = $schedules->hasStartTimes() ? CompanyPolicy::current()->late_tolerance_minutes : 0;
         $reviews = self::reviews($byDay);

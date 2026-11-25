@@ -24,6 +24,7 @@ use App\Modules\Leave\Models\LeaveHoliday;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Leave\Models\LeaveType;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -518,6 +519,26 @@ describe('days without cover (criterio 5.2)', function (): void {
         workedOn($this, '2026-11-02');
 
         expect(disputeWeek($this)->status)->toBe(WeekStatus::Disputed);
+    });
+
+    it('confirms without Vacaciones y permisos, where nobody can justify the day, and still counts the days', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+        foreach (['2026-11-02', '2026-11-03', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+        Log::spy();
+
+        expect(confirmWeek($this)->status)->toBe(WeekStatus::Confirmed);
+        Log::shouldHaveReceived('info')->with('attendance.week_uncovered_days_computed', ['employee_id' => $this->ana->id, 'week_start' => LAST_WEEK, 'uncovered_days' => 2])->once();
+    });
+
+    it('rejects with Vacaciones y permisos too, as when the company has every module', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance', 'vacations'], CarbonImmutable::now(config('app.display_timezone')));
+        foreach (['2026-11-02', '2026-11-03', '2026-11-06'] as $date) {
+            workedOn($this, $date);
+        }
+
+        expect(confirmReason($this))->toBe('uncovered_days');
     });
 
     it('confirms and only counts the days when the switch is off', function (): void {
