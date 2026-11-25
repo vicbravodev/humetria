@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Notifications\Actions;
 
+use App\Modules\Notifications\Enums\PushKind;
 use App\Modules\Notifications\Exceptions\PushRateLimited;
 use App\Modules\Notifications\Exceptions\PushUnavailable;
 use App\Modules\Notifications\Models\PushSubscription;
@@ -15,10 +16,11 @@ use Minishlink\WebPush\Subscription;
 use Throwable;
 
 /**
- * One notice, with no body, to one phone of the current company: a POST to its push service signed with the VAPID keys. A phone
+ * One notice to one phone of the current company: a POST to its push service signed with the VAPID keys, with a body encrypted to
+ * the keys of that phone (`{"kind": …}`, only the kind; the push service and anyone on the way see ciphertext). A phone
  * that is gone (404, 410) is forgotten; a service that says to wait (429) or fails (5xx, no answer) makes the job try again; any other
  * refusal (a 403 is usually a wrong VAPID key) is logged and left alone, because deleting there would empty everyone for one
- * misconfiguration. The logs say the subscription's id and the status, never the address nor a key.
+ * misconfiguration; a phone whose own keys cannot encrypt is forgotten (nothing to retry). The logs say the subscription's id and the status, never the address nor a key.
  */
 final readonly class SendPush
 {
@@ -31,7 +33,7 @@ final readonly class SendPush
      * @throws PushRateLimited when the push service asks to wait
      * @throws PushUnavailable when it fails or does not answer
      */
-    public function handle(string $subscriptionId): void
+    public function handle(string $subscriptionId, PushKind $kind): void
     {
         $subscription = PushSubscription::query()->find($subscriptionId);
         $vapid = VapidConfig::fromConfig();
@@ -49,7 +51,21 @@ final readonly class SendPush
             return;
         }
 
-        $this->settle($subscription, $push->sendOneNotification(Subscription::create(['endpoint' => $subscription->endpoint, 'contentEncoding' => 'aes128gcm'])));
+        try {
+            $report = $push->sendOneNotification(
+                Subscription::create(['endpoint' => $subscription->endpoint, 'publicKey' => $subscription->p256dh, 'authToken' => $subscription->auth, 'contentEncoding' => 'aes128gcm']),
+                json_encode(['kind' => $kind->value], JSON_THROW_ON_ERROR),
+            );
+        } catch (Throwable) {
+            // Keys of the phone that are not a P-256 point and a 16-byte secret (the form checks only their size): the notice cannot be
+            // encrypted now or ever, so the phone is forgotten and the person's app subscribes again when it is opened.
+            $subscription->delete();
+            Log::warning('push.failed', ['subscription_id' => $subscription->id, 'reason' => 'subscription_keys']);
+
+            return;
+        }
+
+        $this->settle($subscription, $report);
     }
 
     private function settle(PushSubscription $subscription, MessageSentReport $report): void

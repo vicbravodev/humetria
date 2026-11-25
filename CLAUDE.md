@@ -112,7 +112,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Leave`: vacaciones y permisos: políticas, saldos, solicitudes, días festivos.
 - `Messaging`: transporte de WhatsApp y de eventos de correo: gateway, webhooks, plantillas, consentimiento, historial de
   estados (ver su README).
-- `Notifications`: avisos push (Web Push con VAPID) sin contenido a la persona trabajadora: suscripciones y envío; reacciona a
+- `Notifications`: avisos push (Web Push con VAPID) a la persona trabajadora, que dicen solo de qué tipo son (cifrado, sin nombres ni datos): suscripciones y envío; reacciona a
   eventos públicos de Attendance y WorkerAccess; nunca manda correo (ver su README).
 - `Organization`: áreas, empleados, niveles de puesto, líneas de reporte (organigrama).
 - `Responses`: respuestas anónimas y tamizaje de Guía I.

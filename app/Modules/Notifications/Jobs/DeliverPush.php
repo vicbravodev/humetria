@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Notifications\Jobs;
 
 use App\Modules\Notifications\Actions\SendPush;
+use App\Modules\Notifications\Enums\PushKind;
 use App\Modules\Notifications\Exceptions\PushRateLimited;
 use App\Modules\Tenancy\Contracts\Companies;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +16,7 @@ use Throwable;
 
 /**
  * The notice to one phone, on the `default` queue and after the commit of whatever said it (if that is undone, nothing is sent). One
- * job per phone, so a 429 for one does not repeat the others. Only ids travel in the queue.
+ * job per phone, so a 429 for one does not repeat the others. Only ids and the kind travel in the queue.
  */
 final class DeliverPush implements ShouldQueue, ShouldQueueAfterCommit
 {
@@ -26,7 +27,7 @@ final class DeliverPush implements ShouldQueue, ShouldQueueAfterCommit
     /** @var list<int> */
     public array $backoff = [60, 300];
 
-    public function __construct(public readonly string $tenantId, public readonly string $subscriptionId) {}
+    public function __construct(public readonly string $tenantId, public readonly string $subscriptionId, public readonly PushKind $kind) {}
 
     public function handle(Companies $companies, SendPush $send): void
     {
@@ -35,7 +36,7 @@ final class DeliverPush implements ShouldQueue, ShouldQueueAfterCommit
         }
 
         try {
-            $send->handle($this->subscriptionId);
+            $send->handle($this->subscriptionId, $this->kind);
         } catch (PushRateLimited $limited) {
             // Waits what the service asked; a failure (PushUnavailable) goes to the queue's backoff.
             $this->release($limited->retryAfter);

@@ -162,7 +162,7 @@ La lista consolidada del PR. Quien la corre anota resultado y fecha.
 | iPhone y Android | Inicio → Marcar y Mi semana → Marcar (navegación de Inertia) | Cámara y ubicación funcionan | 2 de 2 | |
 | iPhone y Android | Semana con un día laborable vacío; Recursos Humanos registra el permiso | «Confirmar» apagado con la fecha; después confirma | 1 de 1 | |
 | iPhone y Android | Semana confirmada y luego entrega de una marca de esos días | La semana queda pendiente otra vez | 1 de 1 | |
-| iPhone (iOS ≥ 16.4, instalada) y Android | Permitir avisos tras la primera marca; Recursos Humanos revisa | Aviso con pantalla bloqueada: solo «Tiene un aviso en Humetría»; tocar abre Marcar | 3 de 3; la suscripción sigue tras varios envíos | |
+| iPhone (iOS ≥ 16.4, instalada) y Android | Permitir avisos tras la primera marca; Recursos Humanos revisa | Aviso con pantalla bloqueada: «Recursos Humanos revisó una de sus marcas» o «Respondieron su solicitud de corrección», sin nombres, hora ni resultado; tocar abre Marcar | 3 de 3; la suscripción sigue tras varios envíos | |
 | iPhone y Android | «Salir» con avisos activos | Ya no llega nada | 1 de 1 | |
 | Producción (Dokploy) | Envío real a FCM, Apple y Mozilla | 201 (`push.sent`) | 1 de 1 por servicio | |
 | iPhone y Android | Dos despliegues seguidos con la app abierta | El worker nuevo toma la versión nueva; el cascarón no queda roto | 2 de 2 | |

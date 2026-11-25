@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Notifications\Actions\SendPush;
+use App\Modules\Notifications\Enums\PushKind;
 use App\Modules\Notifications\Exceptions\PushRateLimited;
 use App\Modules\Notifications\Exceptions\PushUnavailable;
 use App\Modules\Notifications\Jobs\DeliverPush;
@@ -12,6 +13,7 @@ use App\Modules\Notifications\Support\WebPushFactory;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
+use Database\Factories\Notifications\PushSubscriptionFactory;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\File;
@@ -20,11 +22,13 @@ use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\VAPID;
 use Minishlink\WebPush\WebPush;
 use Psr\Log\NullLogger;
+use Tests\Support\PushPayload;
 
 mutates(SendPush::class, DeliverPush::class, WebPushFactory::class);
 
 /*
- * The notice itself: one POST with no body to the push service of the phone. The HTTP client of Laravel is faked, never the network.
+ * The notice itself: one POST to the push service of the phone, with a body only the phone can read (`{"kind": …}`, encrypted to its
+ * keys). The HTTP client of Laravel is faked, never the network.
  */
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-24 15:00:00', 'UTC'));
@@ -33,12 +37,13 @@ beforeEach(function (): void {
     $this->keys = VAPID::createVapidKeys();
     config(['services.vapid' => ['public_key' => $this->keys['publicKey'], 'private_key' => $this->keys['privateKey'], 'subject' => 'mailto:soporte@humetria.com']]);
     $this->phone = PushSubscription::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->pair = PushSubscriptionFactory::keyPair();
 });
 
 /** Runs the job as the queue does, with its interactions faked. */
 function deliver(PushSubscription $phone): DeliverPush
 {
-    $job = new DeliverPush($phone->tenant_id, $phone->id);
+    $job = new DeliverPush($phone->tenant_id, $phone->id, PushKind::MarkReviewed);
     $job->withFakeQueueInteractions();
     $job->handle(resolve(Companies::class), resolve(SendPush::class));
 
@@ -46,10 +51,10 @@ function deliver(PushSubscription $phone): DeliverPush
 }
 
 describe('a notice that arrives (201)', function (): void {
-    it('posts once to the address of the phone, with no body and the headers of a notice without content', function (): void {
+    it('posts once to the address of the phone, encrypted to its keys, with the headers of a notice that has a body', function (): void {
         Http::fake(['*' => Http::response('', 201)]);
 
-        resolve(SendPush::class)->handle($this->phone->id);
+        resolve(SendPush::class)->handle($this->phone->id, PushKind::MarkReviewed);
 
         Http::assertSentCount(1);
         Http::assertSent(function (Request $request): bool {
@@ -57,9 +62,10 @@ describe('a notice that arrives (201)', function (): void {
 
             return $request->method() === 'POST'
                 && $request->url() === $this->phone->endpoint
-                && $request->body() === ''
-                && $request->header('Content-Length') === ['0']
-                && $request->header('Content-Encoding') === []
+                && $request->body() !== ''
+                && $request->header('Content-Length') === [(string) strlen($request->body())]
+                && $request->header('Content-Encoding') === ['aes128gcm']
+                && $request->header('Content-Type') === ['application/octet-stream']
                 && $request->header('TTL') === ['3600']
                 && $request->header('Urgency') === ['normal']
                 && str_starts_with($authorization, 'vapid t=')
@@ -67,11 +73,25 @@ describe('a notice that arrives (201)', function (): void {
         });
     });
 
+    it('says only the kind, and only the phone can read it', function (PushKind $kind, string $json): void {
+        Http::fake(['*' => Http::response('', 201)]);
+        $phone = PushSubscription::factory()->create(['tenant_id' => $this->tenant->id, 'p256dh' => $this->pair['public'], 'auth' => $this->pair['auth']]);
+
+        resolve(SendPush::class)->handle($phone->id, $kind);
+
+        $body = (string) Http::recorded()[0][0]->body();
+        expect(PushPayload::read($body, $this->pair))->toBe($json)
+            ->and($body)->not->toContain($kind->value);
+    })->with([
+        'a mark reviewed' => [PushKind::MarkReviewed, '{"kind":"mark_reviewed"}'],
+        'a correction answered' => [PushKind::CorrectionResolved, '{"kind":"correction_resolved"}'],
+    ]);
+
     it('notes when it arrived and logs it with the id of the subscription only', function (): void {
         Http::fake(['*' => Http::response('', 201)]);
         Log::spy();
 
-        resolve(SendPush::class)->handle($this->phone->id);
+        resolve(SendPush::class)->handle($this->phone->id, PushKind::MarkReviewed);
 
         expect($this->phone->refresh()->last_success_at?->toIso8601String())->toBe('2026-11-24T15:00:00+00:00');
         Log::shouldHaveReceived('info')->with('push.sent', ['subscription_id' => $this->phone->id])->once();
@@ -83,7 +103,7 @@ describe('a phone that is gone (404 and 410)', function (): void {
         Http::fake(['*' => Http::response('', $status)]);
         Log::spy();
 
-        resolve(SendPush::class)->handle($this->phone->id);
+        resolve(SendPush::class)->handle($this->phone->id, PushKind::MarkReviewed);
 
         expect(PushSubscription::query()->count())->toBe(0);
         Log::shouldHaveReceived('info')->with('push.expired', ['subscription_id' => $this->phone->id, 'status' => $status])->once();
@@ -128,7 +148,7 @@ describe('a push service that says to wait (429)', function (): void {
     it('throws what the job catches', function (): void {
         Http::fake(['*' => Http::response('', 429, ['Retry-After' => '7'])]);
 
-        expect(fn () => resolve(SendPush::class)->handle($this->phone->id))->toThrow(PushRateLimited::class);
+        expect(fn () => resolve(SendPush::class)->handle($this->phone->id, PushKind::MarkReviewed))->toThrow(PushRateLimited::class);
     });
 });
 
@@ -136,7 +156,7 @@ describe('a push service that fails (5xx or no answer)', function (): void {
     it('throws so the queue tries again later, keeping the subscription', function (): void {
         Http::fake(['*' => Http::response('', 503)]);
 
-        expect(fn () => resolve(SendPush::class)->handle($this->phone->id))->toThrow(PushUnavailable::class)
+        expect(fn () => resolve(SendPush::class)->handle($this->phone->id, PushKind::MarkReviewed))->toThrow(PushUnavailable::class)
             ->and(PushSubscription::query()->count())->toBe(1);
     });
 
@@ -152,7 +172,7 @@ describe('a notice the service refuses (other 4xx)', function (): void {
         Http::fake(['*' => Http::response('', $status)]);
         Log::spy();
 
-        resolve(SendPush::class)->handle($this->phone->id);
+        resolve(SendPush::class)->handle($this->phone->id, PushKind::MarkReviewed);
 
         expect(PushSubscription::query()->count())->toBe(1);
         Log::shouldHaveReceived('warning')->with('push.failed', ['subscription_id' => $this->phone->id, 'status' => $status])->once();
@@ -180,16 +200,34 @@ describe('nothing to send', function (): void {
         Http::fake();
         Log::spy();
 
-        resolve(SendPush::class)->handle($this->phone->id);
+        resolve(SendPush::class)->handle($this->phone->id, PushKind::MarkReviewed);
 
         Http::assertNothingSent();
         Log::shouldHaveReceived('warning')->with('push.failed', ['subscription_id' => $this->phone->id, 'reason' => 'invalid_keys'])->once();
     });
 });
 
+describe('a subscription whose keys are not a key', function (): void {
+    it('is forgotten without a request and without a retry: it can never be read, so it is not worth another notice', function (string $p256dh, string $auth): void {
+        Http::fake();
+        Log::spy();
+        $phone = PushSubscription::factory()->create(['tenant_id' => $this->tenant->id, 'p256dh' => $p256dh, 'auth' => $auth]);
+
+        resolve(SendPush::class)->handle($phone->id, PushKind::MarkReviewed);
+
+        Http::assertNothingSent();
+        expect(PushSubscription::query()->find($phone->id))->toBeNull()
+            ->and(PushSubscription::query()->find($this->phone->id))->not->toBeNull();
+        Log::shouldHaveReceived('warning')->with('push.failed', ['subscription_id' => $phone->id, 'reason' => 'subscription_keys'])->once();
+    })->with([
+        'not an uncompressed point' => [str_repeat('A', 87), str_repeat('B', 22)],
+        'an uncompressed point that is not on the curve' => [rtrim(strtr(base64_encode("\x04".str_repeat("\x01", 64)), '+/', '-_'), '='), str_repeat('B', 22)],
+    ]);
+});
+
 describe('the job', function (): void {
     it('is tried 3 times, a minute and five minutes apart, and says when it gave up', function (): void {
-        $job = new DeliverPush($this->tenant->id, $this->phone->id);
+        $job = new DeliverPush($this->tenant->id, $this->phone->id, PushKind::MarkReviewed);
         Log::spy();
 
         $job->failed(new RuntimeException('x'));
@@ -199,7 +237,7 @@ describe('the job', function (): void {
     });
 
     it('carries only ids on the queue', function (): void {
-        expect(serialize(new DeliverPush($this->tenant->id, $this->phone->id)))->not->toContain($this->phone->endpoint)->not->toContain($this->phone->employee_id);
+        expect(serialize(new DeliverPush($this->tenant->id, $this->phone->id, PushKind::MarkReviewed)))->not->toContain($this->phone->endpoint)->not->toContain($this->phone->employee_id);
     });
 });
 
@@ -220,7 +258,7 @@ describe('the library', function (): void {
         Log::forgetChannel('single');
         Http::fake(['*' => Http::response('', 201)]);
 
-        resolve(SendPush::class)->handle($this->phone->id);
+        resolve(SendPush::class)->handle($this->phone->id, PushKind::MarkReviewed);
 
         $log = File::get($path);
         File::delete($path);
