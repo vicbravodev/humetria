@@ -10,12 +10,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import {
-    archive,
-    duplicate,
-    edit,
-    report,
-} from '@/routes/tenant/compensation/scenarios';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
+import { archive, duplicate } from '@/routes/tenant/compensation/scenarios';
 import type { ScenarioRow } from '@/types';
 
 type Action = 'duplicate' | 'archive';
@@ -27,6 +23,7 @@ export default function ScenarioRowActions({
     scenario: ScenarioRow;
 }) {
     const tenantSlug = useTenantSlug();
+    const { edit, report } = useScenarioRoutes();
     const [pending, setPending] = useState<Action | null>(null);
     const ids = { tenant: tenantSlug, scenario: scenario.id };
 

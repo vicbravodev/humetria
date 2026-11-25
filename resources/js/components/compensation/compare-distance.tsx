@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { create } from '@/routes/tenant/compensation/scenarios';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
 import type {
     CompareDistance as Distance,
     CompareMidpoint,
@@ -22,6 +22,7 @@ export default function CompareDistance({
     midpoint: CompareMidpoint | null;
 }) {
     const tenantSlug = useTenantSlug();
+    const { create } = useScenarioRoutes();
     const lines = [
         ['1 punto a sindicalizados', `≈ ${moves.unionized_point_text} al año`],
         ...(moves.trusted_point_text === null

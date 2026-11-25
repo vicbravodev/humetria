@@ -56,6 +56,27 @@ export function reportAccuracy(
     };
 }
 
+/** "plantilla promedio de 500 personas a $15,000.00 al mes": what an average payroll is made of; null for a scenario of the roster. */
+function averageText(
+    average: ScenarioReport['scenario']['average'],
+): string | null {
+    return average === null
+        ? null
+        : `plantilla promedio de ${countOf(average.workers, 'persona', 'personas')} a ${average.monthly_salary_text} al mes`;
+}
+
+/** The notice of an estimate made with the work risk premium of class I, because the company has not captured its own; null otherwise. */
+export function premiumNotice(
+    report: ScenarioReport,
+): { title: string; detail: string } | null {
+    return report.warnings.class_one_premium
+        ? {
+              title: 'Riesgo de trabajo con la prima media de clase I.',
+              detail: 'Tu empresa aún no captura la suya: la real puede ser mayor y subir el costo.',
+          }
+        : null;
+}
+
 /** What goes under the annex: who is costed, the fiscal values not yet published and the individual salaries. */
 export function annexNote(report: ScenarioReport): string {
     const { coverage, warnings } = report;
@@ -119,6 +140,7 @@ export function reportSubtitle(
 
     return [
         company,
+        averageText(scenario.average),
         since === undefined ? null : `desde el ${since}`,
         scenario.raise_text,
         retroText(scenario.retroactive_months),

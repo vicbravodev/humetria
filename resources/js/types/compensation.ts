@@ -151,7 +151,23 @@ export type ScenarioRow = {
 };
 
 /** A scenario as its editor types it. */
-export type ScenarioDetail = {
+/** What a scenario is costed on: the people of the company, or an average payroll typed in the scenario («Cotizador rápido»). */
+export type ScenarioSource = 'roster' | 'average';
+
+/** How the salaries of a scenario are agreed: a daily rate pays 365 days a year, a monthly pay 12 months of 30 days. */
+export type PayBasis = 'daily' | 'monthly';
+
+/** The average payroll of a scenario and how its salary is paid, as the editor types them; the average fields are empty in a scenario of the roster. */
+export type ScenarioPayroll = {
+    pay_basis: PayBasis;
+    average_workers: string;
+    /** Pesos a month: "15000". */
+    average_monthly_salary: string;
+    average_tenure_years: string;
+    average_group: 'unionized' | 'trusted';
+};
+
+export type ScenarioDetail = ScenarioPayroll & {
     id: string;
     name: string;
     effective_on: string;

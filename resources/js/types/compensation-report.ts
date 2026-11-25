@@ -2,7 +2,12 @@ import type {
     OtherScenario,
     RaiseUnit,
 } from '@/lib/compensation/scenario-draft';
-import type { AssumptionField, Paginated, ReportShareRow } from '@/types';
+import type {
+    AssumptionField,
+    Paginated,
+    ReportShareRow,
+    ScenarioSource,
+} from '@/types';
 
 /** The cost of one slice of the roster (an area, a category and level, a group) over the first 12 months, written as money. */
 export type ReportCut = {
@@ -56,6 +61,8 @@ export type ReportWarnings = {
     uncalculated: string[];
     /** The fiscal values carried past their vigencia. */
     stale: string[];
+    /** The work risk premium is the one of class I because the company has not captured its own (an average payroll only). */
+    class_one_premium: boolean;
 };
 
 /** The worker's gross against the company's cost, per concept. */
@@ -84,6 +91,17 @@ export type ScenarioReport = {
         /** "5 % sindicalizados · 3 % confianza" or "$608 al mes a sindicalizados y confianza". */
         raise_text: string;
         raise_unit: RaiseUnit;
+        /** What it is costed on: the people of the company, or an average payroll typed in the scenario. */
+        source: ScenarioSource;
+        /** The average payroll, null for a scenario of the roster. */
+        average: {
+            workers: number;
+            /** "$15,000.00". */
+            monthly_salary_text: string;
+            tenure_years: number;
+            /** "Sindicalizados" or "Confianza". */
+            group: string;
+        } | null;
     };
     coverage: {
         total: number;
@@ -142,6 +160,8 @@ export type ScenarioReport = {
     warnings: ReportWarnings;
     person_value: ReportPersonValue;
     can_annex: boolean;
+    /** Whether whoever opens it manages the contract: it keeps the shortcuts to edit and to complete the data, annex or not. */
+    can_manage: boolean;
     /** The links to the report that still open; null for whoever cannot share it. */
     shares: Paginated<ReportShareRow> | null;
 };

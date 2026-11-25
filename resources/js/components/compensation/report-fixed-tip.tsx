@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import type { FixedAlternative } from '@/lib/compensation/report-charts';
-import { create } from '@/routes/tenant/compensation/scenarios';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
 
 /** «Para la negociación»: the fixed amount that costs the same in salary, and «Probar un monto fijo» for whoever manages it. */
 export default function ReportFixedTip({
@@ -16,6 +16,7 @@ export default function ReportFixedTip({
     canTry: boolean;
 }) {
     const tenantSlug = useTenantSlug();
+    const { create } = useScenarioRoutes();
 
     return (
         <aside

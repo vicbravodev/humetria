@@ -1,5 +1,6 @@
 import ReportAccuracy from '@/components/compensation/report-accuracy';
 import ReportAnnex from '@/components/compensation/report-annex';
+import ReportPremiumNotice from '@/components/compensation/report-premium-notice';
 import ReportCost from '@/components/compensation/report-cost';
 import ReportOthers from '@/components/compensation/report-others';
 import ReportRaises from '@/components/compensation/report-raises';
@@ -26,7 +27,7 @@ export default function ReportBody({
     /** Where the tabs stick: under the top bar of the panel, or at the top of a page with none. */
     stickyClassName: string;
 }) {
-    const manages = !shared && report.can_annex;
+    const manages = !shared && report.can_manage;
     const withOthers = !shared && report.others.length > 0;
     const sections = reportSections(withOthers);
     const title = (id: string): string =>
@@ -35,6 +36,7 @@ export default function ReportBody({
     return (
         <>
             <ReportAccuracy report={report} canComplete={manages} />
+            <ReportPremiumNotice report={report} canCapture={manages} />
             <SectionTabs
                 label="Secciones del reporte"
                 sections={sections}

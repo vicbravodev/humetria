@@ -34,6 +34,7 @@ final class ReportController extends Controller
 
         return Inertia::render('compensation/report', [
             ...$open->handle($found),
+            'can_manage' => $manages,
             // The annex lists people: an average payroll has none.
             'can_annex' => $manages && $found->source === ScenarioSource::Roster,
             'shares' => $manages ? $shares->handle($found->id) : null,

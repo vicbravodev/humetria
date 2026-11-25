@@ -5,6 +5,7 @@ import {
     annexNote,
     reportAccuracy,
     reportSections,
+    premiumNotice,
     reportSubtitle,
 } from '@/lib/compensation/report-notes';
 import { boardReport } from '../../support/compensation-report';
@@ -215,5 +216,49 @@ describe('reportSubtitle', () => {
                 null,
             ),
         ).toBe('5 % sindicalizados · 3 % confianza · sin retroactivo');
+    });
+});
+
+describe('reportSubtitle of an average payroll', () => {
+    const average = {
+        workers: 500,
+        monthly_salary_text: '$15,000.00',
+        tenure_years: 1,
+        group: 'Sindicalizados',
+    };
+    const report = (workers: number) => ({
+        ...boardReport(),
+        scenario: {
+            ...boardReport().scenario,
+            source: 'average' as const,
+            average: { ...average, workers },
+            retroactive_months: 0,
+        },
+    });
+
+    it('says what the payroll is made of right after whose it is', () => {
+        expect(reportSubtitle(report(500), 'Autopartes Demo')).toBe(
+            'Autopartes Demo · plantilla promedio de 500 personas a $15,000.00 al mes · desde el 1 de enero de 2027 · 5 % sindicalizados · 3 % confianza · sin retroactivo',
+        );
+        expect(reportSubtitle(report(1), null)).toContain(
+            'plantilla promedio de 1 persona a $15,000.00 al mes',
+        );
+    });
+});
+
+describe('premiumNotice', () => {
+    it('says that the premium of work risk is the one of class I, and that the real one may be higher', () => {
+        const report = boardReport();
+
+        expect(premiumNotice(report)).toBeNull();
+        expect(
+            premiumNotice({
+                ...report,
+                warnings: { ...report.warnings, class_one_premium: true },
+            }),
+        ).toEqual({
+            title: 'Riesgo de trabajo con la prima media de clase I.',
+            detail: 'Tu empresa aún no captura la suya: la real puede ser mayor y subir el costo.',
+        });
     });
 });

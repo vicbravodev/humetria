@@ -825,3 +825,77 @@ it('saves a new benefit that grows with seniority from its page', function (): v
     expect($saved->kind->value)->toBe('salary_percent')->and($saved->sbc_integration->value)->toBe('never')
         ->and($saved->terms()->withoutGlobalScopes()->sole()->tenure_table)->toEqual([['from_years' => 0, 'value' => 1000], ['from_years' => 5, 'value' => 1200]]);
 });
+
+it('shows the Cotizador rápido with its first quote as the next step', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('compensation/scenarios', "{$url}/compensation/quick", $dark, $mobile)
+        ->assertSee('Cotizador rápido')
+        ->assertSee('Todavía no hay cotizaciones')
+        ->assertSee('Nueva cotización');
+})->with($looks);
+
+it('shows the editor of an average payroll, with its own card and one raise', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('compensation/scenario', "{$url}/compensation/quick/create", $dark, $mobile)
+        ->assertSee('La plantilla promedio')
+        ->assertSee('Personas trabajadoras')
+        ->assertSee('El aumento al salario')
+        ->assertScript('() => document.querySelector("[name=trusted_raise]") === null && document.querySelector("[name=average_workers]") !== null', true);
+})->with($looks);
+
+it('costs an average payroll as it is typed, saves it and opens its report', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/quick/create")
+        ->fill('name', 'Revisión promedio')
+        ->fill('average_workers', '500')
+        ->fill('average_monthly_salary', '15000')
+        ->fill('unionized_raise', '6')
+        ->assertSee('500 personas')
+        ->assertSee('Costo del primer año')
+        ->press('Guardar y ver reporte')
+        ->assertPathBeginsWith("{$url}/compensation/quick/")
+        ->waitForText('Escenario guardado.')
+        ->assertSee('Reporte de impacto')
+        ->assertSee('plantilla promedio de 500 personas')
+        ->assertNoJavaScriptErrors();
+
+    $saved = Scenario::query()->withoutGlobalScopes()->sole();
+
+    expect($saved->source->value)->toBe('average')->and($saved->average_workers)->toBe(500)->and($saved->average_monthly_salary_cents)->toBe(1_500_000);
+});
+
+it('shows the report of an average payroll with the notice of the premium of class I and no annex', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $scenario = Scenario::factory()->average()->create(['tenant_id' => $tenant->id, 'name' => 'Promedio 2027', 'effective_on' => '2027-01-01']);
+
+    visitPage('compensation/report', "{$url}/compensation/quick/{$scenario->id}/report", $dark, $mobile)
+        ->assertSee('Reporte de impacto')
+        ->assertSee('plantilla promedio de 500 personas a $15,000.00 al mes')
+        ->assertSee('Riesgo de trabajo con la prima media de clase I.')
+        ->assertSee('Capturar mi prima')
+        ->assertScript('() => [...document.querySelectorAll("a")].every((link) => !link.href.includes("/annex"))', true);
+})->with($looks);
+
+it('fits the editor of an average payroll in a 375 px window', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/quick/create")
+        ->resize(375, 800)
+        ->assertSee('La plantilla promedio')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('takes the scenarios of an average payroll and the ones of the roster to their own lists', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    Scenario::factory()->average()->create(['tenant_id' => $tenant->id, 'name' => 'Promedio 2027']);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Plantilla 2027']);
+
+    visit("{$url}/compensation/quick")->assertSee('Promedio 2027')->assertDontSee('Plantilla 2027')->assertNoJavaScriptErrors();
+    visit("{$url}/compensation/scenarios")->assertSee('Plantilla 2027')->assertDontSee('Promedio 2027')->assertNoJavaScriptErrors();
+});

@@ -39,7 +39,7 @@ final class SharedReportController extends Controller
         return self::private(Inertia::render('compensation/shared-report', [
             'company' => $company->tradeName,
             'expiresAt' => ShareMoments::text($share->expires_at),
-            'report' => [...$builder->build($scenario, shared: true), 'can_annex' => false, 'shares' => null],
+            'report' => [...$builder->build($scenario, shared: true), 'can_annex' => false, 'can_manage' => false, 'shares' => null],
         ])->toResponse($request));
     }
 

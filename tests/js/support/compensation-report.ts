@@ -199,6 +199,8 @@ export function boardReport(): ScenarioReport {
             trusted_raise: '3',
             raise_text: '5 % sindicalizados · 3 % confianza',
             raise_unit: 'percent',
+            source: 'roster',
+            average: null,
         },
         coverage: {
             total: 91,
@@ -257,6 +259,7 @@ export function boardReport(): ScenarioReport {
             uncosted: [],
             uncalculated: ['IMSS: riesgo de trabajo'],
             stale: [],
+            class_one_premium: false,
         },
         person_value: {
             rows: [],
@@ -264,6 +267,7 @@ export function boardReport(): ScenarioReport {
             company_total_text: '$0.00',
         },
         can_annex: true,
+        can_manage: true,
         shares: null,
     };
 }

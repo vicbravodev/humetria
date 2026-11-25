@@ -40,7 +40,8 @@ it('opens the report of an average payroll with its one row, the same report as 
             ->where('raises.0.label', 'Plantilla promedio')->where('raises.0.people', 500)
             // The factory raises 5 %: $750 a month of the $15,000 of each person.
             ->where('raises.0.monthly_raise_cents', 75_000)
-            ->where('can_annex', false)
+            // Whoever manages the contract still can, though an average payroll has no annex to download.
+            ->where('can_annex', false)->where('can_manage', true)
             ->has('concepts')->has('months', 12)->has('projection', 3)->has('assumptions', 5));
 });
 
@@ -73,7 +74,7 @@ it('shares the report of an average payroll from a link, with its row when the g
         ->assertInertia(fn (Assert $page) => $page
             ->component('compensation/shared-report')
             ->where('report.headline.people', 500)
-            ->where('report.can_annex', false)
+            ->where('report.can_annex', false)->where('report.can_manage', false)
             ->where('report.warnings.class_one_premium', true));
 });
 

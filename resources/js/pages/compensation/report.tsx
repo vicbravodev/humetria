@@ -8,22 +8,22 @@ import { Button } from '@/components/ui/button';
 import { useIsUnion } from '@/hooks/use-is-union';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { reportSubtitle } from '@/lib/compensation/report-notes';
-import { index } from '@/routes/tenant/compensation';
-import { annex, edit } from '@/routes/tenant/compensation/scenarios';
+import {
+    useScenarioCrumbs,
+    useScenarioRoutes,
+} from '@/hooks/use-scenario-routes';
+import { annex } from '@/routes/tenant/compensation/scenarios';
 import type { ScenarioReport } from '@/types';
 
 /** The report of impact of a scenario with its analysis (board V4-Comp-Reporte), of a company or of a union with its own data. */
 export default function Report(report: ScenarioReport) {
     const tenantSlug = useTenantSlug();
+    const { edit } = useScenarioRoutes();
     const union = useIsUnion();
     const company = usePage().props.tenant?.trade_name ?? null;
     const { scenario } = report;
-    setLayoutProps({
-        breadcrumbs: [
-            { title: 'Compensación', href: index(tenantSlug) },
-            { title: scenario.name },
-        ],
-    });
+    const breadcrumbs = useScenarioCrumbs({ title: scenario.name });
+    setLayoutProps({ breadcrumbs });
 
     return (
         <>

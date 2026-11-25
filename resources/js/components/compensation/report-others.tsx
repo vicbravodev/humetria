@@ -4,7 +4,7 @@ import BarMeter from '@/components/humetria/bar-meter';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { compareIds, otherBars } from '@/lib/compensation/report-charts';
 import { cn } from '@/lib/utils';
-import { compare } from '@/routes/tenant/compensation/scenarios';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
 import type { ScenarioReport } from '@/types';
 
 /** «Frente a las otras propuestas»: the first year of this one against the other active scenarios of the account (D1). */
@@ -16,6 +16,7 @@ export default function ReportOthers({
     title: string;
 }) {
     const tenantSlug = useTenantSlug();
+    const { compare } = useScenarioRoutes();
 
     return (
         <ReportPart
