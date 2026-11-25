@@ -129,7 +129,8 @@ it('logs no position, credential, screen code, access link or kiosk token along 
         expect($log)->toContain("\"{$event}\"");
     }
     expect($log)
-        ->not->toContain('19.43')->not->toContain('-99.13')
+        // The whole coordinates: a short prefix like '19.43' matches a log timestamp such as `…:19.4312`, with nothing leaked.
+        ->not->toContain('19.4327')->not->toContain('19.4336')->not->toContain('-99.1332')
         ->not->toContain($device->credential_id)->not->toContain($device->public_key)
         ->not->toContain($qr)->not->toContain($qrLater)->not->toContain($badQr)
         ->not->toContain($accessToken)
@@ -197,7 +198,7 @@ it('logs no ticket, screen code, position, note, pass, signature or credential a
     expect($log)->toContain('"queue_age_minutes"')->toContain('"interval_minutes"')
         ->not->toContain($accepted['ticket'])->not->toContain($byKey['ticket'])->not->toContain($wrongCenter['ticket'])->not->toContain($forged['ticket'])
         ->not->toContain($qr)->not->toContain('Me sentí mal')
-        ->not->toContain('19.43')->not->toContain('-99.13')->not->toContain('1943271')->not->toContain('-9913320')
+        ->not->toContain('19.43271')->not->toContain('-99.1332')->not->toContain('1943271')->not->toContain('-9913320')
         ->not->toContain($pass['pass'])->not->toContain($byKey['signature'])->not->toContain($forged['credential']['response']['signature'])
         ->not->toContain($accepted['credential']['response']['signature'])->not->toContain($credential->credential_id)->not->toContain($key->id);
 });
