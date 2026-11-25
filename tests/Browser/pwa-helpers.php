@@ -59,6 +59,24 @@ function withCameraShowing(AwaitableWebpage $page, string $text): void
         JS));
 }
 
+/** Makes the phone's camera show a plain wall, with no code in it: the page's `getUserMedia` answers a stream of a white frame. */
+function withCameraShowingNoCode(AwaitableWebpage $page): void
+{
+    $page->script(runOnce(<<<'JS'
+        () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 360;
+            canvas.height = 780;
+            const context = canvas.getContext('2d');
+            const draw = () => { context.fillStyle = '#fff'; context.fillRect(0, 0, 360, 780); };
+            draw();
+            setInterval(draw, 66);
+            navigator.mediaDevices.getUserMedia = async () => (window.__camera = canvas.captureStream(15));
+            return true;
+        }
+        JS));
+}
+
 /** `http://localhost:1234`: the origin the browser has the app at, for the address a QR carries. */
 function originOf(AwaitableWebpage $page): string
 {
