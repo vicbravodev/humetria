@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import { ChevronLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Logo from '@/components/humetria/logo';
+import { useRefreshOnResume } from '@/hooks/use-refresh-on-resume';
 import { cn } from '@/lib/utils';
 
 /**
@@ -36,6 +37,8 @@ export default function PersonFrame({
     bar?: ReactNode;
     children: ReactNode;
 }) {
+    useRefreshOnResume();
+
     return (
         <div
             className={cn(
