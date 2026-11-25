@@ -22,7 +22,7 @@ it('asks a person who entered with a link to confirm it is them with a code, and
         ->assertDontSee('Confirmar con mi huella')
         ->assertNoAccessibilityIssues(1);
 
-    provedWithCode($page, 'Hola, Ana López');
+    provedWithCode($page, 'Todavía sin marcas');
 })->with([
     'light desktop' => [false, false],
     'dark mobile' => [true, true],

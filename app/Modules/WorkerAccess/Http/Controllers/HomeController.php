@@ -11,6 +11,7 @@ use App\Modules\WorkerAccess\Support\KeyAllowance;
 use App\Modules\WorkerAccess\Support\ProofSteps;
 use App\Modules\WorkerAccess\Support\WorkerSections;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
+use Carbon\CarbonImmutable;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,6 +46,9 @@ final readonly class HomeController
             'sections' => array_map(fn (WorkerSectionLink $link): array => ['key' => $link->key, 'label' => $link->label, 'description' => $link->description, 'href' => $link->href, 'pending' => $link->pending], $sections->for($session->identity)),
             // Their own day (marks and what comes next), where the company keeps one: the start opens on the moment they are in.
             'day' => $day === null ? null : ['center' => $day->center, 'marks' => $day->marks, 'next' => $day->next],
+            // The server's clock, in milliseconds: the hours of the day count with it, not with the phone's.
+            'now' => CarbonImmutable::now()->getTimestampMs(),
+            'weekUrl' => $day !== null ? route('attendance.device.week.show', $tenant) : null,
             'keyUrl' => KeyAllowance::refusal($session, $keys) === null ? route('worker.key.show', $tenant) : null,
             'hasKey' => $keys > 0,
             // The device key of the app (plan B of the offline marks) only serves to mark: a company without attendance has none.

@@ -223,4 +223,21 @@ describe('the day on the start', function (): void {
 
         expect(homeDay())->toBe(['center' => WorkCenter::query()->findOrFail($this->ana->work_center_id)->name, 'marks' => [['type' => 'start', 'time' => '06:00', 'at' => $start->marked_at->getTimestampMs()]], 'next' => ['break_start', 'end']]);
     });
+
+    it('gives the start the server clock and where the week is seen, so the hours count with the server\'s time', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-25 15:00:00', 'UTC'));
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('now', CarbonImmutable::parse('2026-11-25 15:00:00', 'UTC')->getTimestampMs())
+            ->where('weekUrl', route('attendance.device.week.show', 'acme'))
+            ->etc());
+    });
+
+    it('gives no week without attendance', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->where('weekUrl', null)->etc());
+    });
 });

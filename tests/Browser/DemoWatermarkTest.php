@@ -135,7 +135,7 @@ it('keeps the mark clear of the cards and the text of the person\'s pages on a p
     workIn($demo);
     $ana = EmployeeFactory::new()->create(['tenant_id' => $demo->id, 'name' => 'Ana López', 'email' => 'ana@acme.mx']);
 
-    visitPage('worker-access/home', '/me/acme', $dark, true, enteringTo($ana->id, 'Hola, Ana López'))
+    visitPage('worker-access/home', '/me/acme', $dark, true, enteringTo($ana->id, 'Todavía sin marcas'))
         ->assertSeeIn('[data-slot="demo-mark"]', 'DEMO')
         ->assertScript(<<<'JS'
             () => {

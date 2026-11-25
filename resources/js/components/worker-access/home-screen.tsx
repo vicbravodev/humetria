@@ -7,7 +7,7 @@ import type { PortalTab } from '@/components/worker-access/portal-tab-bar';
 import WorkerFrame from '@/components/worker-access/worker-frame';
 import { usePassRenewal } from '@/hooks/use-pass-renewal';
 import { pendingTotal, splitSections } from '@/lib/worker-access/portal';
-import type { ProofStep, WorkerSection } from '@/types';
+import type { ProofStep, WorkerDay, WorkerSection } from '@/types';
 
 /**
  * The person's portal (findings 3 and 29): four tabs (three where the company has no attendance). Inicio, with what waits for them first; Pendientes,
@@ -22,6 +22,9 @@ export default function HomeScreen({
     hasKey,
     deviceKey,
     punchUrl,
+    weekUrl,
+    day,
+    now,
     leaveUrl,
 }: {
     company: string;
@@ -36,6 +39,9 @@ export default function HomeScreen({
         proof: ProofStep;
     } | null;
     punchUrl: string | null;
+    weekUrl: string | null;
+    day: WorkerDay | null;
+    now: number;
     leaveUrl: string;
 }) {
     usePassRenewal(slug);
@@ -67,6 +73,10 @@ export default function HomeScreen({
                         slug={slug}
                         waiting={waiting}
                         tools={tools}
+                        day={day}
+                        punchUrl={punchUrl}
+                        weekUrl={weekUrl}
+                        serverNow={now}
                     />
                 )}
                 {tab === 'pending' && <HomePending waiting={waiting} />}

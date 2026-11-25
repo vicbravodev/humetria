@@ -21,3 +21,10 @@ export type ProofStep = {
     checkCodeUrl: string;
     minutes: number;
 };
+
+/** The person's day in their start: where they work, the marks they made (the time of where it was taken and the instant) and what may come next. */
+export type WorkerDay = {
+    center: string;
+    marks: { type: string; time: string; at: number }[];
+    next: string[];
+};

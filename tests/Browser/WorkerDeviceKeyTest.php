@@ -30,7 +30,7 @@ afterEach(function (): void {
 });
 
 it('prepares this phone from Cuenta after the proof, keeps the key in the phone and says it is ready', function (bool $dark, bool $mobile): void {
-    $page = visitPage('worker-access/home', '/me/acme', $dark, $mobile, enteringTo($this->ana->id, 'Hola, Ana López'))
+    $page = visitPage('worker-access/home', '/me/acme', $dark, $mobile, enteringTo($this->ana->id, 'Todavía sin marcas'))
         ->assertNoAccessibilityIssues(1);
 
     $page->press('Cuenta')->waitForText('Marcar sin internet con este teléfono')
@@ -55,7 +55,7 @@ it('prepares this phone from Cuenta after the proof, keeps the key in the phone 
 ]);
 
 it('«Salir» takes the key and its pass out of the phone and leaves the key standing at the server', function (): void {
-    $page = visitPage('worker-access/home', '/me/acme', reach: enteringTo($this->ana->id, 'Hola, Ana López'));
+    $page = visitPage('worker-access/home', '/me/acme', reach: enteringTo($this->ana->id, 'Todavía sin marcas'));
     $page->press('Cuenta')->waitForText('Marcar sin internet con este teléfono')->press('Preparar este teléfono')->waitForText('Confirme que es usted');
     provedWithCode($page, 'Este teléfono está listo para marcar sin internet');
 
