@@ -381,6 +381,51 @@ it('has the final figures of the report in print without waiting for the count',
     emulatePrint($page)->assertScript("(() => { const figures = [...document.querySelectorAll('dd.tabular-nums')].map((figure) => figure.innerText.trim()); return figures.length >= 3 && figures.every((text) => text !== '' && !/^[$]?0(\\.0)?( %)?$/.test(text)); })()", true);
 });
 
+it('prints the report as a letter document: letterhead, no controls, the folded detail open and the summary on the first sheet', function (): void {
+    $url = signInToPanel();
+    $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
+
+    $page = visit("{$url}/compensation/scenarios/{$scenario->id}/report", ['reducedMotion' => 'reduce'])
+        ->assertSee('Lo que cuesta este aumento')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'none');
+
+    emulatePrint($page)
+        // The letterhead names the company and the scenario and the day it was issued, and the sheet is the `report` named page.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'flex')
+        ->assertScript('() => /Emitido el \\d{1,2} de \\w+ de \\d{4}/.test(document.querySelector(\'[data-slot="print-letterhead"]\').innerText)', true)
+        ->assertScript('() => getComputedStyle(document.querySelector("[data-report-sheet]")).page', 'report')
+        // The running head of the next sheets travels as custom properties of the page.
+        ->assertScript('() => getComputedStyle(document.documentElement).getPropertyValue("--print-report-title").includes("Revisión 2027")', true)
+        // Nothing to press on paper: no tabs, buttons or links that are only for the screen.
+        ->assertScript('() => [...document.querySelectorAll("main button, main nav a, main [role=tab]")].filter((element) => element.offsetParent !== null && element.closest("[data-report-sheet]") !== null).length', 0)
+        // The summary is first, and every part of the report is there, in order.
+        ->assertScript('() => { const ids = ["resumen", "costo", "calculo", "quien", "frente", "anios", "evaluar", "supuestos", "anexo"]; const tops = ids.map((id) => document.getElementById(id)?.getBoundingClientRect().top ?? -1); return tops.every((top, index) => top >= 0 && (index === 0 || top > tops[index - 1])); }', true)
+        // What is folded on screen is open on paper.
+        ->assertScript('() => { const details = document.querySelector("details"); return getComputedStyle(details, "::details-content").contentVisibility; }', 'visible')
+        ->assertScript('() => getComputedStyle(document.querySelector("details > summary")).display', 'none')
+        ->assertScript('() => document.querySelector("#costo").classList.contains("print:break-before-page")', false)
+        ->assertScript('() => document.querySelector("#calculo").classList.contains("print:break-before-page")', true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the columns of the table of raise levels on paper, however narrow the sheet', function (): void {
+    $url = signInToPanel();
+    $scenario = Scenario::factory()->average()->create(['tenant_id' => Tenant::query()->where('slug', 'acme')->sole()->id, 'name' => 'Promedio 2027', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 600, 'trusted' => null]]);
+
+    $page = resizeTo(visit("{$url}/compensation/quick/{$scenario->id}/report", ['reducedMotion' => 'reduce'])->assertSee('Si el aumento fuera distinto'), 620);
+
+    // Narrower than a tablet the table turns into cards on screen; on paper it is always the table of four columns.
+    emulatePrint($page)
+        ->assertScript('() => getComputedStyle(document.querySelector("#frente table")).display', 'table')
+        ->assertScript('() => document.querySelectorAll("#frente thead th").length', 4)
+        // Each figure falls under its heading, and no heading breaks in two lines.
+        ->assertScript('() => { const heads = [...document.querySelectorAll("#frente thead th")]; const cells = [...document.querySelectorAll("#frente tbody tr")[0].children]; return heads.every((head, index) => Math.abs(head.getBoundingClientRect().left - cells[index].getBoundingClientRect().left) < 2 && head.getBoundingClientRect().height < 60); }', true)
+        ->assertScript('() => { const body = document.querySelector("#frente tbody").getBoundingClientRect(); const head = document.querySelector("#frente thead").getBoundingClientRect(); return Math.abs(body.right - head.right) < 2 && Math.abs(body.left - head.left) < 2; }', true)
+        // The proposal in question stands out without color: a thick bar at its side.
+        ->assertScript('() => getComputedStyle(document.querySelector("#frente tbody tr:nth-child(2) td")).borderLeftWidth', '4px')
+        ->assertNoJavaScriptErrors();
+});
+
 /** A script that waits a moment for the tooltip and says whether it opened telling `$start`. */
 function tooltipTells(string $start): string
 {

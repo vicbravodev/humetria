@@ -16,6 +16,7 @@ export default function ReportSteps({
     return (
         <ReportPart
             id="calculo"
+            pageBreak
             title={title}
             description={
                 average
@@ -24,11 +25,11 @@ export default function ReportSteps({
             }
         >
             {base !== null && (
-                <dl className="grid break-inside-avoid gap-px overflow-hidden card bg-border sm:grid-cols-2 lg:grid-cols-4">
+                <dl className="flex break-inside-avoid flex-wrap gap-x-10 gap-y-3 card px-5 py-4">
                     {base.map((fact) => (
                         <div
                             key={fact.label}
-                            className="flex flex-col gap-0.5 bg-card px-4 py-3"
+                            className="flex min-w-[8rem] flex-col gap-0.5"
                         >
                             <dt className="text-caption text-muted-foreground">
                                 {fact.label}
@@ -40,7 +41,7 @@ export default function ReportSteps({
                     ))}
                 </dl>
             )}
-            <ol className="flex flex-col divide-y card">
+            <ol data-splittable className="flex flex-col divide-y card">
                 {reportSteps(report).map((step, index) => (
                     <li
                         key={step.key}

@@ -33,10 +33,11 @@ export default function ReportCaveats({
     return (
         <ReportPart
             id="supuestos"
+            pageBreak
             title={title}
             description="Ninguna cifra va sin sus supuestos. Esto es lo que debes saber antes de confiar en el número."
         >
-            <ul className="flex flex-col divide-y card">
+            <ul data-splittable className="flex flex-col divide-y card">
                 {reportCaveats(report).map((caveat) => (
                     <li
                         key={caveat.key}

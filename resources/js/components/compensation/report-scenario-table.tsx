@@ -10,7 +10,11 @@ import {
 import type { ScenarioRow } from '@/lib/compensation/report-scenarios';
 import { cn } from '@/lib/utils';
 
-/** Scenarios side by side: the raise, a bar for what the first year costs, how much the payroll really grows and a person a month. */
+/**
+ * Scenarios side by side in four fixed columns that also hold on paper: the raise, what the first year costs (the figure and a thin
+ * bar under it), how much the payroll really grows and a person a month. The proposal in question has a bar at its side and is bold,
+ * so it stands out in black and white too.
+ */
 export default function ReportScenarioTable({
     caption,
     rows,
@@ -19,15 +23,20 @@ export default function ReportScenarioTable({
     rows: ScenarioRow[];
 }) {
     return (
-        <StackedTable>
+        <StackedTable className="table-fixed">
             <caption className="sr-only">{caption}</caption>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Escenario</TableHead>
-                    <TableHead className="w-[28%]">Primer año</TableHead>
-                    <TableHead className="text-right">Costo</TableHead>
-                    <TableHead className="text-right">Nómina sube</TableHead>
-                    <TableHead className="text-right">
+                    <TableHead className="w-[20%] whitespace-nowrap">
+                        Escenario
+                    </TableHead>
+                    <TableHead className="w-[38%] whitespace-nowrap">
+                        Primer año
+                    </TableHead>
+                    <TableHead className="w-[18%] text-right whitespace-nowrap">
+                        Nómina sube
+                    </TableHead>
+                    <TableHead className="w-[24%] text-right whitespace-nowrap">
                         Por persona al mes
                     </TableHead>
                 </TableRow>
@@ -38,7 +47,13 @@ export default function ReportScenarioTable({
                         key={row.key}
                         className={cn(row.current && 'bg-accent/40')}
                     >
-                        <TableCell className="font-medium whitespace-normal max-md:w-full">
+                        <TableCell
+                            className={cn(
+                                'font-medium whitespace-normal max-md:w-full',
+                                row.current &&
+                                    'border-l-4 border-l-foreground font-bold',
+                            )}
+                        >
                             {row.name}
                             {!row.name.startsWith(row.raiseText) && (
                                 <span className="block text-sm font-normal text-muted-foreground">
@@ -47,15 +62,17 @@ export default function ReportScenarioTable({
                             )}
                         </TableCell>
                         <TableCell className="max-md:w-full">
-                            <BarMeter
-                                percent={row.percent}
-                                tooltip={`${row.name}: ${row.costText}`}
-                                muted={!row.current}
-                                index={index}
-                            />
-                        </TableCell>
-                        <TableCell className="text-right font-semibold tabular-nums">
-                            {row.costText}
+                            <span className="flex flex-col gap-1.5">
+                                <span className="font-semibold tabular-nums">
+                                    {row.costText}
+                                </span>
+                                <BarMeter
+                                    percent={row.percent}
+                                    tooltip={`${row.name}: ${row.costText}`}
+                                    muted={!row.current}
+                                    index={index}
+                                />
+                            </span>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                             {row.growthText}

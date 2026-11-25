@@ -1,6 +1,7 @@
 import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
 import { Download, Pencil } from 'lucide-react';
 import CompensationHeader from '@/components/compensation/compensation-header';
+import ReportPrintHeader from '@/components/compensation/report-print-header';
 import ReportBody from '@/components/compensation/report-body';
 import ReportShares from '@/components/compensation/report-shares';
 import ShareDialog from '@/components/compensation/share-dialog';
@@ -28,7 +29,11 @@ export default function Report(report: ScenarioReport) {
     return (
         <>
             <Head title={`Reporte · ${scenario.name}`} />
-            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16 print:p-0">
+            <div
+                data-report-sheet
+                className="flex w-full flex-col gap-8 px-4 py-6 [page:report] md:px-10 md:pt-8 md:pb-16 print:gap-6 print:p-0"
+            >
+                <ReportPrintHeader company={company} scenario={scenario.name} />
                 <CompensationHeader
                     eyebrow={
                         union

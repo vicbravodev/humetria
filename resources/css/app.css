@@ -748,6 +748,7 @@ html:has([data-smooth-scroll]) {
     }
 
     [data-slot='sidebar-inset'] {
+        background: white !important;
         margin: 0 !important;
         border: 0 !important;
         box-shadow: none !important;
@@ -759,6 +760,93 @@ html:has([data-smooth-scroll]) {
 
     details {
         break-inside: avoid;
+    }
+}
+
+/*
+ * The report of impact prints as an executive document on a letter sheet (portrait): comfortable margins, the page number and
+ * the line of aggregated data at the foot of each sheet (the running head is `print-running-header`, fixed in the top margin).
+ */
+@page report {
+    size: letter portrait;
+    margin: 2cm 1.5cm 1.9cm;
+
+    @top-left {
+        content: var(--print-report-title);
+        font-size: 8pt;
+        color: var(--muted-foreground);
+    }
+
+    @top-right {
+        content: var(--print-report-issued);
+        font-size: 8pt;
+        color: var(--muted-foreground);
+    }
+
+    @bottom-left {
+        content: 'Datos agregados. Ningún monto identifica a una persona.';
+        font-size: 8pt;
+        color: var(--muted-foreground);
+    }
+
+    @bottom-right {
+        content: 'Página ' counter(page) ' de ' counter(pages);
+        font-size: 8pt;
+        color: var(--muted-foreground);
+    }
+}
+
+/* The first sheet carries the letterhead in the page itself: no running head over it. */
+@page report:first {
+    @top-left {
+        content: none;
+    }
+
+    @top-right {
+        content: none;
+    }
+}
+
+@media print {
+    /* A sheet of the report is white and its text smaller than on screen, so a section fits in a page. */
+    html:has([data-report-sheet]),
+    html:has([data-report-sheet]) body {
+        background: white;
+        font-size: 12px;
+    }
+
+    /* No title is left alone at the foot of a sheet, no card, chart or row of a table is cut in two, and a long table repeats its head. */
+    [data-report-sheet] h2,
+    [data-report-sheet] h3 {
+        break-after: avoid;
+    }
+
+    [data-report-sheet] [data-slot='card']:not([data-splittable]),
+    [data-report-sheet] .card:not([data-splittable]) {
+        break-inside: avoid;
+    }
+
+    [data-report-sheet] tr,
+    [data-report-sheet] li {
+        break-inside: avoid;
+    }
+
+    [data-report-sheet] thead {
+        display: table-header-group;
+    }
+
+    /* What is folded on screen is open on paper: the month by month, where it weighs, the liability. */
+    [data-report-sheet] details::details-content {
+        content-visibility: visible;
+        display: block;
+    }
+
+    [data-report-sheet] details > summary {
+        display: none;
+    }
+
+    [data-report-sheet] details {
+        border: 0;
     }
 }
 

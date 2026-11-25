@@ -30,6 +30,7 @@ export default function ReportScenarios({
     return (
         <ReportPart
             id="frente"
+            pageBreak
             title={title}
             description="Costo del primer año, cuánto sube de verdad la nómina y cuánto cuesta por persona. Tu propuesta está resaltada."
         >
@@ -43,6 +44,9 @@ export default function ReportScenarios({
                             caption="El mismo aumento a otros niveles"
                             rows={ladder}
                         />
+                        <p className="border-t px-4 py-3 text-sm text-muted-foreground">
+                            {pointNote(report)}
+                        </p>
                     </div>
                 </div>
             )}
@@ -65,7 +69,11 @@ export default function ReportScenarios({
                     </Link>
                 </div>
             )}
-            <p className="text-sm text-muted-foreground">{pointNote(report)}</p>
+            {ladder.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                    {pointNote(report)}
+                </p>
+            )}
         </ReportPart>
     );
 }

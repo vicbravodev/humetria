@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import CompensationHeader from '@/components/compensation/compensation-header';
+import ReportPrintHeader from '@/components/compensation/report-print-header';
 import ReportBody from '@/components/compensation/report-body';
 import SharedUnavailable from '@/components/compensation/shared-unavailable';
 import Logo from '@/components/humetria/logo';
@@ -49,7 +50,14 @@ export default function SharedReport({
             >
                 <PrintButton variant="outline" label="Imprimir" />
             </ReportLinkBar>
-            <main className="mx-auto flex min-h-svh w-full max-w-[1240px] flex-col gap-8 px-4 py-4 md:px-10 print:p-0">
+            <main
+                data-report-sheet
+                className="mx-auto flex min-h-svh w-full max-w-[1240px] flex-col gap-8 px-4 py-4 [page:report] md:px-10 print:gap-6 print:p-0"
+            >
+                <ReportPrintHeader
+                    company={company}
+                    scenario={report.scenario.name}
+                />
                 <ReportLinkNotice>
                     {sharedNotice(report, company, { expiresAt, minimum })}
                 </ReportLinkNotice>
