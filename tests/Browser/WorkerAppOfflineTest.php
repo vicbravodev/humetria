@@ -306,10 +306,12 @@ it('marks from the shell of the installed app, with no page of the server: the s
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
         ->assertScript(smallTouchTargets(), '')
+        // The shell fades in when the address changes: axe must judge the settled page, not a frame mid-transition.
+        ->assertScript(settled(), true)
         ->assertNoAccessibilityIssues(1);
 
     markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
-    $page->assertSee('1 marca sin enviar')->assertNoAccessibilityIssues(1);
+    $page->assertSee('1 marca sin enviar')->assertScript(settled(), true)->assertNoAccessibilityIssues(1);
 
     withoutNetwork($page, false);
     $page->press('Listo');
