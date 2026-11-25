@@ -29,7 +29,7 @@ return new class extends Migration
         DB::statement("ALTER TABLE scenarios ADD CONSTRAINT scenarios_source_known CHECK (source IN ('roster', 'average'))");
         DB::statement("ALTER TABLE scenarios ADD CONSTRAINT scenarios_pay_basis_known CHECK (pay_basis IN ('daily', 'monthly'))");
         DB::statement("ALTER TABLE scenarios ADD CONSTRAINT scenarios_average_group_known CHECK (average_group IS NULL OR average_group IN ('unionized', 'trusted'))");
-        DB::statement("ALTER TABLE scenarios ADD CONSTRAINT scenarios_average_complete CHECK (source = 'roster' OR (average_workers > 0 AND average_monthly_salary_cents > 0 AND average_tenure_years IS NOT NULL AND average_group IS NOT NULL AND pay_basis = 'monthly'))");
+        DB::statement("ALTER TABLE scenarios ADD CONSTRAINT scenarios_average_complete CHECK (source <> 'average' OR (average_workers IS NOT NULL AND average_workers > 0 AND average_monthly_salary_cents IS NOT NULL AND average_monthly_salary_cents > 0 AND average_tenure_years IS NOT NULL AND average_group IS NOT NULL AND pay_basis = 'monthly'))");
     }
 
     public function down(): void
