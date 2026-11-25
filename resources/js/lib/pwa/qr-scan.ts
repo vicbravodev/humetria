@@ -1,5 +1,16 @@
 import type { QRCanvasResult } from 'qr/dom.js';
 
+/** What the reader is doing: opening the camera, reading, saying something needs the person's hand, or why it cannot. */
+export type ScanStatus =
+    | 'idle'
+    | 'opening'
+    | 'scanning'
+    | 'unreadable'
+    | 'unrecognized'
+    | 'other-company'
+    | 'denied'
+    | 'unavailable';
+
 /** What a frame gave: the text of the first code that could be read, if any (the others in the list are discarded). */
 export function firstText(
     read: QRCanvasResult | undefined,

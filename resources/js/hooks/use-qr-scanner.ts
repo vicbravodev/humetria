@@ -1,17 +1,10 @@
 import { QRCanvas, frameLoop, rearCamera } from 'qr/dom.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cameraFailure, firstText, punchCode } from '@/lib/pwa/qr-scan';
+import type { ScanStatus } from '@/lib/pwa/qr-scan';
 import { quietWatch } from '@/lib/pwa/quiet-watch';
 
-export type ScanStatus =
-    | 'idle'
-    | 'opening'
-    | 'scanning'
-    | 'unreadable'
-    | 'unrecognized'
-    | 'other-company'
-    | 'denied'
-    | 'unavailable';
+export type { ScanStatus };
 
 /**
  * Opens the rear camera on `video` and reads a frame at a time (never two at once) until stopped. Gives what stops it: the
