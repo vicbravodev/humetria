@@ -58,6 +58,24 @@ it('keeps the camera open to the person\'s pages when they move from the start t
         ->assertScript('() => (document.permissionsPolicy ?? document.featurePolicy).allowsFeature("geolocation")', true);
 });
 
+it('says the camera is off when the phone does not allow it, that Marcar may still work, and lets the person try again or go back', function (): void {
+    $page = visit('/me/acme/punch')->assertNoJavaScriptErrors()->waitForText('Marcar su jornada');
+    $page->script('() => { window.__asked = 0; navigator.mediaDevices.getUserMedia = async () => { window.__asked++; throw new DOMException("no", "NotAllowedError"); }; return true; }');
+
+    $page->press('button:has-text("Entrada")')
+        ->waitForText('La cámara está apagada')
+        ->assertSee('Sin cámara también puede marcar')
+        ->assertSee('En iPhone: Ajustes › Humetría › Cámara')
+        ->assertSee('En Android: Ajustes › Apps › Humetría › Permisos')
+        ->assertNoAccessibilityIssues(1)
+        ->press('[role="dialog"] button:has-text("Intentar de nuevo")')
+        ->assertScript(eventually('() => window.__asked === 2'), true)
+        ->assertSee('La cámara está apagada')
+        ->press('[role="dialog"] button:has-text("Volver a Marcar")')
+        ->assertMissing('[role="dialog"]')
+        ->assertNoJavaScriptErrors();
+});
+
 it('reads the code of the screen, turns the camera off and says so', function (): void {
     $page = punchScreenSeeing('/me/acme/punch?q=abc123def');
 
