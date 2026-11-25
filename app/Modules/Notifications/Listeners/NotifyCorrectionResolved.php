@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Notifications\Listeners;
 
 use App\Modules\Attendance\Events\CorrectionResolved;
+use App\Modules\Notifications\Enums\PushKind;
 use App\Modules\Notifications\Support\PushNotifier;
 
 /**
@@ -17,6 +18,6 @@ final readonly class NotifyCorrectionResolved
 
     public function handle(CorrectionResolved $event): void
     {
-        $this->notifier->notify($event->employeeId);
+        $this->notifier->notify($event->employeeId, PushKind::CorrectionResolved);
     }
 }

@@ -1,9 +1,9 @@
 import {
     NETWORK_TIMEOUT_MS,
-    NOTICE,
     SHELL_IMAGES,
     cacheName,
     fallsBackToShell,
+    noticeOfPush,
     punchUrl,
     routeOf,
     shellAssets,
@@ -17,7 +17,7 @@ import {
  * The service worker of a company's app (`/me/{slug}/sw.js`, scope `/me/{slug}`). It keeps only the files of the build and
  * the shell (`/me/{slug}/offline`): never the HTML of a page, never data of a person, never a request that is not a GET.
  * A page is always asked of the network first; the shell answers only when there is no network or it took too long.
- * A push arrives with no body and always shows the same fixed text; a tap on it opens Marcar (see the notices in sw-rules).
+ * A push carries only its kind, encrypted, and shows the fixed text of that kind; a tap on it opens Marcar (see the notices in sw-rules).
  * It imports nothing but sw-rules: it is served as one classic file (see vite.config.ts).
  */
 declare const self: ServiceWorkerGlobalScope;
@@ -111,10 +111,13 @@ self.addEventListener('fetch', (event) => {
     }
 });
 
-// Every push shows the notice, whatever arrives (and nothing is read from it): iOS revokes a subscription whose push shows nothing.
+// Every push shows a notice: the text of its kind when the body reads, the fixed one when it does not (iOS revokes a subscription
+// whose push shows nothing). The body is only the kind, encrypted to this phone.
 self.addEventListener('push', (event) => {
+    const notice = noticeOfPush(event.data);
+
     event.waitUntil(
-        self.registration.showNotification(NOTICE.title, { body: NOTICE.body }),
+        self.registration.showNotification(notice.title, { body: notice.body }),
     );
 });
 

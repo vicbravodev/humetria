@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Notifications\Actions\ForgetSubscriptions;
+use App\Modules\Notifications\Enums\PushKind;
 use App\Modules\Notifications\Jobs\DeliverPush;
 use App\Modules\Notifications\Models\PushSubscription;
 use App\Modules\Notifications\Support\PushNotifier;
@@ -84,7 +85,7 @@ it('queues nothing in B for a person of A', function (): void {
     Queue::fake();
     workIn($this->b);
 
-    resolve(PushNotifier::class)->notify($this->anaOfA->id);
+    resolve(PushNotifier::class)->notify($this->anaOfA->id, PushKind::MarkReviewed);
 
     Queue::assertNotPushed(DeliverPush::class);
 });
