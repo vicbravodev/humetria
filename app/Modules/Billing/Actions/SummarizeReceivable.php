@@ -19,15 +19,22 @@ final readonly class SummarizeReceivable
     public function __construct(private StatementBalances $balances, private OpenBalances $open) {}
 
     /**
-     * What the account owes across its issued statements, and how many still have a balance.
+     * What the account owes across its issued statements, how many still have a balance, what of it is past due and how old its
+     * oldest open statement is (null when nothing is).
      *
-     * @return array{outstanding: string, open_statements: int}
+     * @return array{outstanding: string, open_statements: int, overdue: string|null, aging: array{bucket: string, days: int}|null}
      */
     public function handle(BillingAccount $account): array
     {
+        $open = $this->open->handle([$account->id]);
+        $overdue = array_sum(array_map(fn (array $statement): int => $statement['days'] > 0 ? $statement['balance'] : 0, $open));
+        $oldest = $open[0]['days'] ?? null;
+
         return [
             'outstanding' => Money::format($this->balances->outstanding($account)),
-            'open_statements' => Statement::query()->where('billing_account_id', $account->id)->withBalance()->count(),
+            'open_statements' => count($open),
+            'overdue' => $overdue === 0 ? null : Money::format($overdue),
+            'aging' => $oldest === null ? null : ['bucket' => OpenBalances::bucket($oldest), 'days' => abs($oldest)],
         ];
     }
 

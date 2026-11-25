@@ -16,7 +16,7 @@ export default function AccountFigures({
 
     return (
         <section aria-label="Resumen de la cuenta" className="grid gap-4">
-            <dl className="grid gap-6 card p-6 sm:grid-cols-2 lg:grid-cols-4">
+            <dl className="grid grid-cols-2 gap-6 card p-6">
                 <AccountFigure
                     label="Empresas"
                     value={String(summary.companies)}

@@ -1,5 +1,4 @@
 import { usePage } from '@inertiajs/react';
-import AccountFigure from '@/components/billing/account-figure';
 import AccountStatementRowView from '@/components/billing/account-statement-row';
 import RecordPaymentDialog from '@/components/billing/record-payment-dialog';
 import Pagination from '@/components/humetria/pagination';
@@ -11,20 +10,17 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { countOf } from '@/lib/plural';
-import type { Paginated, Receivable, StatementRow } from '@/types';
+import type { Paginated, StatementRow } from '@/types';
 
-/** The statements of the account, newest month first, with what it still owes in all and the way to record a payment. */
+/** The statements of the account, newest month first, with the way to record a payment (what it owes is in the side panel). */
 export default function AccountStatements({
     accountId,
     today,
     statements,
-    receivable,
 }: {
     accountId: string;
     today: string;
     statements: Paginated<StatementRow>;
-    receivable: Receivable;
 }) {
     const { auth } = usePage().props;
 
@@ -41,17 +37,6 @@ export default function AccountStatements({
                     <RecordPaymentDialog accountId={accountId} today={today} />
                 )}
             </div>
-            <dl className="grid gap-6 card p-6 sm:grid-cols-2">
-                <AccountFigure
-                    label="Saldo por cobrar"
-                    value={receivable.outstanding}
-                    hint={
-                        receivable.open_statements === 0
-                            ? 'Sin estados de cuenta pendientes'
-                            : `${countOf(receivable.open_statements, 'estado de cuenta', 'estados de cuenta')} con saldo`
-                    }
-                />
-            </dl>
             <Table>
                 <TableCaption className="sr-only">
                     Estados de cuenta de la cuenta, del mes más reciente al más

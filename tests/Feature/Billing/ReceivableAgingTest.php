@@ -129,3 +129,15 @@ it('reads the whole collection page in a fixed number of queries, whatever the n
 
     $this->get(route('billing.accounts.index'))->assertOk();
 });
+
+it('tells the account page what it owes past due and how old its oldest open statement is, for its head', function (): void {
+    $account = BillingAccount::factory()->create();
+    agedStatement($account, 3_000, 50);
+    agedStatement($account, 1_000, 5);
+    $clean = BillingAccount::factory()->create();
+
+    $this->actingAs(superadmin())->get(route('billing.accounts.show', $account))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable', ['outstanding' => '$4,000', 'open_statements' => 2, 'overdue' => '$3,000', 'aging' => ['bucket' => '31_60', 'days' => 36]]));
+    $this->get(route('billing.accounts.show', $clean))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable', ['outstanding' => '$0', 'open_statements' => 0, 'overdue' => null, 'aging' => null]));
+});

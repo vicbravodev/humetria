@@ -1,16 +1,11 @@
-import { Head, setLayoutProps, usePage } from '@inertiajs/react';
-import AccountCharges from '@/components/billing/account-charges';
-import AccountTransfers from '@/components/billing/account-transfers';
-import AccountPayments from '@/components/billing/account-payments';
-import AccountStatements from '@/components/billing/account-statements';
+import { Head, setLayoutProps } from '@inertiajs/react';
+import AccountBalance from '@/components/billing/account-balance';
 import AccountCompaniesEmpty from '@/components/billing/account-companies-empty';
-import AccountFigures from '@/components/billing/account-figures';
 import AccountCompaniesTable from '@/components/billing/account-companies-table';
-import AccountDialog from '@/components/billing/account-dialog';
-import LinkCompanyDialog from '@/components/billing/link-company-dialog';
-import PageHeader from '@/components/humetria/page-header';
+import AccountFigures from '@/components/billing/account-figures';
+import AccountHeader from '@/components/billing/account-header';
+import AccountLedger from '@/components/billing/account-ledger';
 import Pagination from '@/components/humetria/pagination';
-import { Badge } from '@/components/ui/badge';
 import { index } from '@/routes/billing/accounts';
 import type {
     AccountChargeRow,
@@ -25,7 +20,10 @@ import type {
     TransferRow,
 } from '@/types';
 
-/** One payer account: who it is, and the companies it pays. */
+/**
+ * One payer account (tablero Cuenta de facturación): who it is and whether it is behind, the companies it pays, then its
+ * statements, payments, transfers and charges, with what it owes and what it pays a month in the side panel.
+ */
 export default function Account({
     account,
     companies,
@@ -51,10 +49,9 @@ export default function Account({
     taxRegimes: SatOption[];
     cfdiUses: SatOption[];
 }) {
-    const { auth } = usePage().props;
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Cuentas', href: index() },
+            { title: 'Cuentas y cobranza', href: index() },
             { title: account.legal_name },
         ],
     });
@@ -63,59 +60,48 @@ export default function Account({
         <>
             <Head title={account.legal_name} />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
-                <PageHeader
-                    caption="Cuenta"
-                    title={account.legal_name}
-                    status={<Badge>{account.kind_label}</Badge>}
-                    description={`${account.rfc} · ${account.contact_name}, ${account.contact_email}`}
-                >
-                    {auth.isSuperadmin && (
-                        <>
-                            <AccountDialog
-                                account={account}
-                                taxRegimes={taxRegimes}
-                                cfdiUses={cfdiUses}
-                            />
-                            <LinkCompanyDialog accountId={account.id} />
-                        </>
-                    )}
-                </PageHeader>
-                {companies.data.length > 0 && (
-                    <AccountFigures summary={summary} />
-                )}
-                {companies.data.length === 0 ? (
-                    <AccountCompaniesEmpty />
-                ) : (
-                    <AccountCompaniesTable
-                        companies={companies.data}
-                        accountKind={account.kind}
-                        today={today}
-                    />
-                )}
-                <Pagination
-                    previous="Ver más recientes"
-                    next="Ver más antiguas"
-                    page={companies}
-                    label="Páginas de empresas de la cuenta"
+                <AccountHeader
+                    account={account}
+                    receivable={receivable}
+                    taxRegimes={taxRegimes}
+                    cfdiUses={cfdiUses}
                 />
-                {charges.total > 0 && <AccountCharges charges={charges} />}
-                {statements.total > 0 && (
-                    <AccountStatements
-                        accountId={account.id}
-                        today={today}
-                        statements={statements}
-                        receivable={receivable}
-                    />
-                )}
-                {transfers.total > 0 && (
-                    <AccountTransfers transfers={transfers} />
-                )}
-                {payments.total > 0 && (
-                    <AccountPayments
-                        accountId={account.id}
-                        payments={payments}
-                    />
-                )}
+                <div className="grid gap-8 2xl:grid-cols-[minmax(0,1fr)_360px] 2xl:items-start">
+                    <aside
+                        aria-label="Resumen de la cuenta"
+                        className="grid gap-4 lg:grid-cols-2 2xl:order-last 2xl:grid-cols-1"
+                    >
+                        <AccountBalance receivable={receivable} />
+                        {companies.data.length > 0 && (
+                            <AccountFigures summary={summary} />
+                        )}
+                    </aside>
+                    <div className="flex min-w-0 flex-col gap-8">
+                        {companies.data.length === 0 ? (
+                            <AccountCompaniesEmpty />
+                        ) : (
+                            <AccountCompaniesTable
+                                companies={companies.data}
+                                accountKind={account.kind}
+                                today={today}
+                            />
+                        )}
+                        <Pagination
+                            previous="Ver más recientes"
+                            next="Ver más antiguas"
+                            page={companies}
+                            label="Páginas de empresas de la cuenta"
+                        />
+                        <AccountLedger
+                            accountId={account.id}
+                            today={today}
+                            statements={statements}
+                            payments={payments}
+                            transfers={transfers}
+                            charges={charges}
+                        />
+                    </div>
+                </div>
             </div>
         </>
     );
