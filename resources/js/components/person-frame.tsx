@@ -3,6 +3,8 @@ import type { LucideIcon } from 'lucide-react';
 import { ChevronLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Logo from '@/components/humetria/logo';
+import NewVersionBanner from '@/components/humetria/new-version-banner';
+import { useNewVersion } from '@/hooks/use-new-version';
 import { useRefreshOnResume } from '@/hooks/use-refresh-on-resume';
 import { cn } from '@/lib/utils';
 
@@ -38,6 +40,7 @@ export default function PersonFrame({
     children: ReactNode;
 }) {
     useRefreshOnResume();
+    const version = useNewVersion();
 
     return (
         <div
@@ -85,6 +88,7 @@ export default function PersonFrame({
                 <Logo kind="seal" className="h-4" />
             </footer>
             {bar}
+            {version.ready && <NewVersionBanner onUpdate={version.update} />}
         </div>
     );
 }
