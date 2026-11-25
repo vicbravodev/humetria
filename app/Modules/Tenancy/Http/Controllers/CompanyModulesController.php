@@ -54,7 +54,7 @@ final class CompanyModulesController extends Controller
             // The staff's own notes: the company never sees them.
             'notes' => $page->notes($tenant),
             // The latest of its audit trail, for whoever may read the trail.
-            'activity' => Gate::allows('view-audit') ? $audit->handle($audit->filters('', '', $tenant->id, '', '')) : null,
+            'activity' => Gate::allows('view-audit') ? $audit->handle($audit->filters(q: '', kind: '', family: '', company: $tenant->id, from: '', to: '')) : null,
             'modules' => array_map(fn (ModuleRow $row): array => [
                 'key' => $row->key,
                 'label' => $row->label,
