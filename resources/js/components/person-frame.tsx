@@ -1,3 +1,4 @@
+import CompanyMark from '@/components/company-mark';
 import { Link } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronLeft } from 'lucide-react';
@@ -54,7 +55,7 @@ export default function PersonFrame({
                     </Link>
                 )}
                 <p className="min-w-0 truncate text-base font-semibold">
-                    {company}
+                    <CompanyMark name={company} className="h-8" />
                 </p>
                 {back === undefined && (
                     <p className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">

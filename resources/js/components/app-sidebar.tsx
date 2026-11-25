@@ -10,7 +10,7 @@ import {
     Settings2,
     ShieldCheck,
 } from 'lucide-react';
-import Logo from '@/components/humetria/logo';
+import CompanyMark from '@/components/company-mark';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { NextObligationCard } from '@/components/next-obligation-card';
@@ -75,7 +75,7 @@ export function AppSidebar() {
                     className="flex h-11 w-fit items-center rounded-md px-3 transition-[padding] duration-300 ease-drawer group-data-[collapsible=icon]:px-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                     <span className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
-                        <Logo className="h-7" />
+                        <CompanyMark className="h-7" />
                         {/* Humetría staff outside any company: the platform console (pantalla Consola-Empresas). */}
                         {auth.isStaff && tenant === null && (
                             <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-caption font-medium text-warning-foreground">
@@ -84,7 +84,7 @@ export function AppSidebar() {
                         )}
                     </span>
                     <span className="hidden group-data-[collapsible=icon]:contents">
-                        <Logo kind="symbol" className="h-7" />
+                        <CompanyMark kind="symbol" className="size-7" />
                     </span>
                 </Link>
                 <SidebarMenu>

@@ -1,8 +1,8 @@
 import { usePage } from '@inertiajs/react';
-import Logo from '@/components/humetria/logo';
+import CompanyMark from '@/components/company-mark';
 
 /**
- * The letterhead of a document that goes to paper (a dossier): the Humetría logo, the company and the center, and the
+ * The letterhead of a document that goes to paper (a dossier): the company's logo (Humetría's outside one), the company and the center, and the
  * date it was issued. It shows only when printing; the sheet's page number comes from the `dossier` named page (app.css).
  */
 export default function PrintLetterhead({
@@ -19,7 +19,7 @@ export default function PrintLetterhead({
             data-slot="print-letterhead"
             className="hidden items-center justify-between gap-6 border-b pb-3 print:flex"
         >
-            <Logo className="h-7" />
+            <CompanyMark className="h-7" />
             <div className="flex flex-col text-right text-meta">
                 <p className="font-semibold">
                     {tenant === null

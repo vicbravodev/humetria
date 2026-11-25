@@ -1,3 +1,4 @@
+import CompanyMark from '@/components/company-mark';
 import { ArrowLeft, Lock } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Logo from '@/components/humetria/logo';
@@ -45,7 +46,10 @@ export default function PublicShell({
                             : 'min-w-0 flex-1 truncate text-right text-base font-semibold'
                     }
                 >
-                    {company ?? 'Quejas y denuncias'}
+                    <CompanyMark
+                        name={company ?? 'Quejas y denuncias'}
+                        className="h-8"
+                    />
                 </p>
                 <p className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">
                     <Lock aria-hidden="true" className="size-4" />
