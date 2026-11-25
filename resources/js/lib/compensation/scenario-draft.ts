@@ -27,6 +27,11 @@ export type OtherScenario = {
     name: string;
     first_year_cents: number;
     first_year_text: string;
+    /** "4 %" or "5 % sindicalizados · 3 % confianza". */
+    raise_text: string;
+    /** What its payroll with benefits and quotas grows, in basis points. */
+    payroll_growth_bp: number;
+    per_person_month_cents: number;
 };
 
 export type CompareBar = {
@@ -167,7 +172,10 @@ export function parsePreviewErrors(
 
 /** «Frente a tus otros escenarios»: from the cheapest, each bar against the dearest; nothing without others. */
 export function compareBars(
-    others: OtherScenario[],
+    others: Pick<
+        OtherScenario,
+        'id' | 'name' | 'first_year_cents' | 'first_year_text'
+    >[],
     current: { cents: number; text: string },
 ): CompareBar[] {
     if (others.length === 0) {

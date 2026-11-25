@@ -1,12 +1,13 @@
 import { Head } from '@inertiajs/react';
 import CompensationHeader from '@/components/compensation/compensation-header';
+import ReportPrintHeader from '@/components/compensation/report-print-header';
 import ReportBody from '@/components/compensation/report-body';
 import SharedUnavailable from '@/components/compensation/shared-unavailable';
 import Logo from '@/components/humetria/logo';
 import PrintButton from '@/components/humetria/print-button';
 import ReportLinkBar from '@/components/humetria/report-link-bar';
 import ReportLinkNotice from '@/components/humetria/report-link-notice';
-import { reportSubtitle } from '@/lib/compensation/report-notes';
+import { reportSubtitle, sharedNotice } from '@/lib/compensation/report-notes';
 import type { ScenarioReport } from '@/types';
 
 /**
@@ -17,10 +18,13 @@ import type { ScenarioReport } from '@/types';
 export default function SharedReport({
     company,
     expiresAt,
+    minimum,
     report,
 }: {
     company: string | null;
     expiresAt: string | null;
+    /** The minimum of people per group the company applies. */
+    minimum: number | null;
     report: ScenarioReport | null;
 }) {
     if (report === null) {
@@ -46,11 +50,16 @@ export default function SharedReport({
             >
                 <PrintButton variant="outline" label="Imprimir" />
             </ReportLinkBar>
-            <main className="mx-auto flex min-h-svh w-full max-w-[1240px] flex-col gap-8 px-4 py-4 md:px-10 print:p-0">
+            <main
+                data-report-sheet
+                className="mx-auto flex min-h-svh w-full max-w-[1240px] flex-col gap-8 px-4 py-4 [page:report] md:px-10 print:gap-6 print:p-0"
+            >
+                <ReportPrintHeader
+                    company={company}
+                    scenario={report.scenario.name}
+                />
                 <ReportLinkNotice>
-                    {company} compartió este reporte contigo. Vence el{' '}
-                    {expiresAt}. Los grupos de pocas personas se muestran juntos
-                    como «Otros».
+                    {sharedNotice(report, company, { expiresAt, minimum })}
                 </ReportLinkNotice>
                 <CompensationHeader
                     eyebrow="Reporte de impacto · Compensación"

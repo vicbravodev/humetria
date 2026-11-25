@@ -28,3 +28,17 @@ export function amountText(typed: string): string {
 export function percentText(part: number, whole: number): string {
     return `${TENTHS.format(whole === 0 ? 0 : (part / whole) * 100)} %`;
 }
+
+const TWO_DECIMALS = new Intl.NumberFormat('es-MX', {
+    maximumFractionDigits: 2,
+});
+
+/** "$524.65" for 52,465 cents: the cents always, for a figure of one person that is calculated to the cent. */
+export function exactPesos(cents: number): string {
+    return CENTS.format(cents / 100);
+}
+
+/** "5.82" for 582 basis points, "6" for 600: a percent with the decimals it has, two at most (no sign, no mark). */
+export function bpText(basisPoints: number): string {
+    return TWO_DECIMALS.format(basisPoints / 100);
+}

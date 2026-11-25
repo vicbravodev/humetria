@@ -249,5 +249,16 @@ it('weighs the scenario against the other active ones of the account only, never
             ->has('others', 1)
             ->where('others.0.name', 'Revisión 2027 · 4 %')
             ->where('others.0.first_year_cents', fn (int $cents): bool => $cents > 0)
-            ->where('others.0.first_year_text', fn (string $text): bool => preg_match('/\A\$[\d,]+\z/', $text) === 1));
+            ->where('others.0.first_year_text', fn (string $text): bool => preg_match('/\A\$[\d,]+\z/', $text) === 1)
+            // What the table of scenarios side by side reads: the raise, how much the payroll really grows and a person a month.
+            ->where('others.0.raise_text', fn (string $text): bool => str_contains($text, '4 %'))
+            ->where('others.0.payroll_growth_bp', fn (int $bp): bool => $bp > 0)
+            ->where('others.0.per_person_month_cents', fn (int $cents): bool => $cents > 0));
+});
+
+it('gives what each concept adds to a year of the new salary, retroactivity aside, so the steps of the cost add up to the total', function (): void {
+    $props = $this->get(reportUrl($this->tenant, $this->scenario))->viewData('page')['props'];
+
+    expect(array_sum(array_column($props['concepts'], 'recurring_cents')))->toBe($props['headline']['recurring_cents'])
+        ->and($props['concepts'][0]['recurring_cents'])->toBeGreaterThan(0);
 });

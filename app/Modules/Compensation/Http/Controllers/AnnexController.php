@@ -6,6 +6,7 @@ namespace App\Modules\Compensation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Compensation\Actions\ExportPersonAnnex;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Scenario;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -17,7 +18,12 @@ final class AnnexController extends Controller
     {
         Gate::authorize('manage-compensation');
 
-        $rows = $export->handle(Scenario::query()->findOrFail($scenario));
+        $found = Scenario::query()->findOrFail($scenario);
+
+        // The annex lists the people of the roster: an average payroll has none.
+        abort_unless($found->source === ScenarioSource::Roster, 404);
+
+        $rows = $export->handle($found);
 
         return response()->streamDownload(function () use ($rows): void {
             $out = fopen('php://output', 'w');

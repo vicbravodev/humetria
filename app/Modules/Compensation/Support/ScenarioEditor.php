@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Compensation\Support;
 
 use App\Modules\Compensation\Enums\AssumptionKey;
+use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Enums\RaiseUnit;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
@@ -25,7 +27,7 @@ final readonly class ScenarioEditor
      *                                         comparison); anything that is not a valid value is left at its default
      * @return array<string, mixed>
      */
-    public function props(?Scenario $scenario, CarbonImmutable $today, array $prefill = []): array
+    public function props(?Scenario $scenario, CarbonImmutable $today, ScenarioSource $source, array $prefill = []): array
     {
         $states = [];
 
@@ -34,12 +36,19 @@ final readonly class ScenarioEditor
         }
 
         return [
+            'source' => $source->value,
             'scenario' => $scenario === null ? null : $this->scenario($scenario),
             'assumptions' => $this->assumptions($scenario === null ? AssumptionKey::defaultSnapshot() : $scenario->assumptions),
             'states' => $states,
-            'defaults' => ['effective_on' => $today->addYear()->startOfYear()->toDateString(), 'horizon_years' => 3, ...self::prefill($prefill)],
+            'defaults' => [
+                'effective_on' => $today->addYear()->startOfYear()->toDateString(), 'horizon_years' => 3,
+                // An average payroll starts empty but for the years of service of the usual worker, and is always paid monthly.
+                'average_workers' => '', 'average_monthly_salary' => '', 'average_tenure_years' => '1', 'average_group' => PayGroup::Unionized->value,
+                'pay_basis' => $source === ScenarioSource::Average ? 'monthly' : 'daily',
+                ...self::prefill($prefill),
+            ],
             'horizons' => [3, 4, 5],
-            'others' => $this->others->except($scenario),
+            'others' => $this->others->except($scenario, $source),
             // The cost counts the contract of Prestaciones, never the Vacaciones policy (decision 36): the screen says so when they differ.
             'vacation_notice' => ($notice = $this->rows->vacationNotice($today->toDateString())) === null ? null : "{$notice} El costo usa el contrato.",
         ];
@@ -57,8 +66,14 @@ final readonly class ScenarioEditor
             'retroactive_months' => $scenario->retroactive_months,
             'horizon_years' => $scenario->horizon_years,
             'raise_unit' => $scenario->raise_unit->value,
-            'unionized_raise' => $this->raise($scenario, $scenario->group_changes['unionized'] ?? 0),
-            'trusted_raise' => ($scenario->group_changes['trusted'] ?? null) === null ? '' : $this->raise($scenario, $scenario->group_changes['trusted']),
+            // An average payroll has one group and one raise, which the editor types in the first field.
+            'unionized_raise' => $this->raise($scenario, $scenario->group_changes[$scenario->average_group === PayGroup::Trusted ? 'trusted' : 'unionized'] ?? 0),
+            'trusted_raise' => $scenario->source === ScenarioSource::Average || ($scenario->group_changes['trusted'] ?? null) === null ? '' : $this->raise($scenario, $scenario->group_changes['trusted']),
+            'pay_basis' => $scenario->pay_basis->value,
+            'average_workers' => $scenario->average_workers === null ? '' : (string) $scenario->average_workers,
+            'average_monthly_salary' => $scenario->average_monthly_salary_cents === null ? '' : BenefitValue::decimal($scenario->average_monthly_salary_cents),
+            'average_tenure_years' => $scenario->average_tenure_years === null ? '' : (string) $scenario->average_tenure_years,
+            'average_group' => $scenario->average_group->value ?? PayGroup::Unionized->value,
             'default_state' => $scenario->default_state ?? '',
             'archived' => $scenario->archived_at !== null,
             'term_changes' => $this->termChanges($scenario),

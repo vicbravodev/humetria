@@ -72,3 +72,32 @@ it('refuses changes that are not the shape they should be', function (): void {
     refusedScenario($this->tenant, 'scenarios_term_changes_list', ['term_changes' => '{}']);
     refusedScenario($this->tenant, 'scenarios_assumptions_object', ['assumptions' => '[]']);
 });
+
+it('refuses a source or a pay basis the calculation does not know', function (): void {
+    refusedScenario($this->tenant, 'scenarios_source_known', ['source' => 'imagined']);
+    refusedScenario($this->tenant, 'scenarios_pay_basis_known', ['pay_basis' => 'weekly']);
+    refusedScenario($this->tenant, 'scenarios_average_group_known', ['average_group' => 'boss']);
+});
+
+it('refuses an average payroll that lacks what it is costed with or is not paid monthly', function (array $override): void {
+    $complete = ['source' => 'average', 'average_workers' => 500, 'average_monthly_salary_cents' => 1_500_000, 'average_tenure_years' => 1, 'average_group' => 'unionized', 'pay_basis' => 'monthly'];
+
+    refusedScenario($this->tenant, 'scenarios_average_complete', [...$complete, ...$override]);
+})->with([
+    'no workers' => [['average_workers' => null]],
+    'zero workers' => [['average_workers' => 0]],
+    'no salary' => [['average_monthly_salary_cents' => null]],
+    'a salary of zero' => [['average_monthly_salary_cents' => 0]],
+    'no years of service' => [['average_tenure_years' => null]],
+    'no group' => [['average_group' => null]],
+    'a daily pay basis' => [['pay_basis' => 'daily']],
+]);
+
+it('stores a complete average payroll, and a roster scenario with none', function (): void {
+    $average = Scenario::factory()->average()->create(['tenant_id' => $this->tenant->id]);
+    $roster = Scenario::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    expect(Scenario::query()->findOrFail($average->id)->average_workers)->toBe(500)
+        ->and(Scenario::query()->findOrFail($roster->id)->source->value)->toBe('roster')
+        ->and(Scenario::query()->findOrFail($roster->id)->pay_basis->value)->toBe('daily');
+});

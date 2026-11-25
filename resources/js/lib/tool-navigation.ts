@@ -9,6 +9,7 @@ import { vacationsNavItems } from '@/lib/leave-navigation';
 import { hasModule } from '@/lib/modules';
 import { index as climate } from '@/routes/tenant/climate';
 import { index as compensation } from '@/routes/tenant/compensation';
+import { index as quickEstimates } from '@/routes/tenant/compensation/quick';
 import { index as orgChart, quality } from '@/routes/tenant/org-chart';
 import { index as pulse } from '@/routes/tenant/pulse';
 import type { NavItem, NavTenant } from '@/types';
@@ -105,6 +106,16 @@ export const operationsNavItems = (tenant: NavTenant | null): NavItem[] =>
                           title: 'Compensación',
                           href: compensation(tenant.slug),
                           icon: Calculator,
+                          children: [
+                              {
+                                  title: 'Cotizador rápido',
+                                  href: quickEstimates(tenant.slug),
+                              },
+                              {
+                                  title: 'Compensación avanzada',
+                                  href: compensation(tenant.slug),
+                              },
+                          ],
                       },
                   ],
               ],

@@ -1,32 +1,37 @@
+import ScenarioGroupRaises from '@/components/compensation/scenario-group-raises';
+import ScenarioPayBasisField from '@/components/compensation/scenario-pay-basis-field';
 import ScenarioPeriodFields from '@/components/compensation/scenario-period-fields';
 import ScenarioSection from '@/components/compensation/scenario-section';
-import NumberStepper from '@/components/humetria/number-stepper';
+import ScenarioSingleRaise from '@/components/compensation/scenario-single-raise';
 import PillChoice from '@/components/humetria/pill-choice';
 import type { RaiseDraft } from '@/lib/compensation/raise-draft';
-import {
-    peopleHint,
-    raiseSuffix,
-    stepTrusted,
-    trustedHint,
-} from '@/lib/compensation/raise-draft';
 import type { RaiseUnit } from '@/lib/compensation/scenario-draft';
-import { stepRaise } from '@/lib/compensation/scenario-draft';
+import type { PayBasis, ScenarioSource } from '@/types';
 
 const UNITS: { value: RaiseUnit; label: string }[] = [
     { value: 'percent', label: 'Porcentaje' },
     { value: 'amount', label: 'Monto fijo al mes' },
 ];
 
-/** «El aumento al salario» (board V4-Comp-Escenario): the raise of each group, from when, how far back and how many years. */
+/**
+ * «El aumento al salario» (board V4-Comp-Escenario): the raise of each group, from when, how far back and how many years. An
+ * average payroll has one group and one raise, and is always paid monthly; the roster says how its salaries are paid.
+ */
 export default function ScenarioRaiseCard({
+    source,
     draft,
     onChange,
+    payBasis,
+    onPayBasis,
     groups,
     horizons,
     errors,
 }: {
+    source: ScenarioSource;
     draft: RaiseDraft;
     onChange: (patch: Partial<RaiseDraft>) => void;
+    payBasis: PayBasis;
+    onPayBasis: (payBasis: PayBasis) => void;
     groups: { unionized: number; trusted: number } | undefined;
     horizons: number[];
     errors: Partial<Record<string, string>>;
@@ -40,41 +45,31 @@ export default function ScenarioRaiseCard({
                 value={draft.unit}
                 onChange={(unit) => onChange({ unit })}
             />
-            <div className="grid items-start gap-5 sm:grid-cols-2">
-                <NumberStepper
-                    id="scenario-unionized_raise"
-                    name="unionized_raise"
-                    label="Sindicalizados"
-                    value={draft.unionized}
-                    suffix={raiseSuffix(draft.unit)}
-                    hint={peopleHint(groups?.unionized)}
-                    error={errors['unionized_raise']}
-                    onChange={(unionized) => onChange({ unionized })}
-                    onStep={(direction) =>
-                        onChange({
-                            unionized: stepRaise(
-                                draft.unionized,
-                                direction,
-                                draft.unit,
-                            ),
-                        })
+            {source === 'average' ? (
+                <ScenarioSingleRaise
+                    draft={draft}
+                    onChange={onChange}
+                    people={
+                        groups === undefined
+                            ? undefined
+                            : groups.unionized + groups.trusted
                     }
+                    errors={errors}
                 />
-                <NumberStepper
-                    id="scenario-trusted_raise"
-                    name="trusted_raise"
-                    label="Confianza"
-                    value={draft.trusted}
-                    suffix={raiseSuffix(draft.unit)}
-                    hint={trustedHint(draft, groups?.trusted)}
-                    placeholder={draft.unionized}
-                    error={errors['trusted_raise']}
-                    onChange={(trusted) => onChange({ trusted })}
-                    onStep={(direction) =>
-                        onChange({ trusted: stepTrusted(draft, direction) })
-                    }
-                />
-            </div>
+            ) : (
+                <>
+                    <ScenarioPayBasisField
+                        value={payBasis}
+                        onChange={onPayBasis}
+                    />
+                    <ScenarioGroupRaises
+                        draft={draft}
+                        onChange={onChange}
+                        groups={groups}
+                        errors={errors}
+                    />
+                </>
+            )}
             <ScenarioPeriodFields
                 draft={draft}
                 onChange={onChange}

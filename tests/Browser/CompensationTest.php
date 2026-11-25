@@ -237,7 +237,7 @@ it('saves the individual salary of a person from its sheet', function (): void {
     visit("{$url}/compensation/overrides")
         ->press('Nuevo sueldo')
         ->fill('employee_number', 'E-404')
-        ->fill('daily_salary', '650.25')
+        ->type('#override-daily_salary', '650.25')
         ->press('Guardar sueldo')
         ->assertSee('No hay una persona activa con este ID de la empresa.')
         ->fill('employee_number', 'e-001')
@@ -348,21 +348,25 @@ it('shows the report of a scenario with its analysis, one notice of accuracy and
 
     visitPage('compensation/report', "{$url}/compensation/scenarios/{$scenario->id}/report", $dark, $mobile)
         ->assertSee('Revisión 2027')
-        ->assertSee('para que el número sea exacto')
-        ->assertSee('Costo del primer año')
-        ->assertSee('Hallazgos clave')
+        ->assertSee('Lo que cuesta este aumento')
+        ->assertSee('Cada $1 de aumento cuesta')
         ->assertSee('1. De dónde sale el costo')
-        ->assertSee('2. Quién recibe el aumento')
+        ->assertSee('2. El cálculo paso a paso')
+        ->assertSee('3. Quién recibe el aumento')
         ->assertSee('Operador · A')
-        ->assertSee('3. Los próximos años')
-        ->assertSee('4. Anexo: detalle por concepto')
+        ->assertSee('4. Frente a otros niveles de aumento')
+        ->assertSee('5. Los próximos años')
+        ->assertSee('6. Qué más evaluar')
+        ->assertSee('7. Supuestos y salvedades')
+        ->assertSee('8. Anexo: detalle por concepto')
         ->assertSee('2 de 3 personas costeadas')
         ->assertDontSee('Frente a las otras propuestas')
+        // The assumptions and what is missing live in one place, not folded.
+        ->assertSee('para que el número sea exacto')
+        ->assertSee('Meta de inflación del Banco de México')
         ->click('[data-test="report-detail"]')
         ->assertSee('E-900')
         ->assertSee('Prima de antigüedad')
-        ->assertSee('Supuestos y alcance')
-        ->assertSee('Meta de inflación del Banco de México')
         ->assertDontSee('Valor para la persona y costo para la empresa');
 })->with($looks);
 
@@ -375,6 +379,51 @@ it('has the final figures of the report in print without waiting for the count',
         ->assertSee('Costo del primer año');
 
     emulatePrint($page)->assertScript("(() => { const figures = [...document.querySelectorAll('dd.tabular-nums')].map((figure) => figure.innerText.trim()); return figures.length >= 3 && figures.every((text) => text !== '' && !/^[$]?0(\\.0)?( %)?$/.test(text)); })()", true);
+});
+
+it('prints the report as a letter document: letterhead, no controls, the folded detail open and the summary on the first sheet', function (): void {
+    $url = signInToPanel();
+    $scenario = reportScenario(Tenant::query()->where('slug', 'acme')->sole());
+
+    $page = visit("{$url}/compensation/scenarios/{$scenario->id}/report", ['reducedMotion' => 'reduce'])
+        ->assertSee('Lo que cuesta este aumento')
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'none');
+
+    emulatePrint($page)
+        // The letterhead names the company and the scenario and the day it was issued, and the sheet is the `report` named page.
+        ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\')).display', 'flex')
+        ->assertScript('() => /Emitido el \\d{1,2} de \\w+ de \\d{4}/.test(document.querySelector(\'[data-slot="print-letterhead"]\').innerText)', true)
+        ->assertScript('() => getComputedStyle(document.querySelector("[data-report-sheet]")).page', 'report')
+        // The running head of the next sheets travels as custom properties of the page.
+        ->assertScript('() => getComputedStyle(document.documentElement).getPropertyValue("--print-report-title").includes("Revisión 2027")', true)
+        // Nothing to press on paper: no tabs, buttons or links that are only for the screen.
+        ->assertScript('() => [...document.querySelectorAll("main button, main nav a, main [role=tab]")].filter((element) => element.offsetParent !== null && element.closest("[data-report-sheet]") !== null).length', 0)
+        // The summary is first, and every part of the report is there, in order.
+        ->assertScript('() => { const ids = ["resumen", "costo", "calculo", "quien", "frente", "anios", "evaluar", "supuestos", "anexo"]; const tops = ids.map((id) => document.getElementById(id)?.getBoundingClientRect().top ?? -1); return tops.every((top, index) => top >= 0 && (index === 0 || top > tops[index - 1])); }', true)
+        // What is folded on screen is open on paper.
+        ->assertScript('() => { const details = document.querySelector("details"); return getComputedStyle(details, "::details-content").contentVisibility; }', 'visible')
+        ->assertScript('() => getComputedStyle(document.querySelector("details > summary")).display', 'none')
+        ->assertScript('() => document.querySelector("#costo").classList.contains("print:break-before-page")', false)
+        ->assertScript('() => document.querySelector("#calculo").classList.contains("print:break-before-page")', true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('keeps the columns of the table of raise levels on paper, however narrow the sheet', function (): void {
+    $url = signInToPanel();
+    $scenario = Scenario::factory()->average()->create(['tenant_id' => Tenant::query()->where('slug', 'acme')->sole()->id, 'name' => 'Promedio 2027', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 600, 'trusted' => null]]);
+
+    $page = resizeTo(visit("{$url}/compensation/quick/{$scenario->id}/report", ['reducedMotion' => 'reduce'])->assertSee('Si el aumento fuera distinto'), 620);
+
+    // Narrower than a tablet the table turns into cards on screen; on paper it is always the table of four columns.
+    emulatePrint($page)
+        ->assertScript('() => getComputedStyle(document.querySelector("#frente table")).display', 'table')
+        ->assertScript('() => document.querySelectorAll("#frente thead th").length', 4)
+        // Each figure falls under its heading, and no heading breaks in two lines.
+        ->assertScript('() => { const heads = [...document.querySelectorAll("#frente thead th")]; const cells = [...document.querySelectorAll("#frente tbody tr")[0].children]; return heads.every((head, index) => Math.abs(head.getBoundingClientRect().left - cells[index].getBoundingClientRect().left) < 2 && head.getBoundingClientRect().height < 60); }', true)
+        ->assertScript('() => { const body = document.querySelector("#frente tbody").getBoundingClientRect(); const head = document.querySelector("#frente thead").getBoundingClientRect(); return Math.abs(body.right - head.right) < 2 && Math.abs(body.left - head.left) < 2; }', true)
+        // The proposal in question stands out without color: a thick bar at its side.
+        ->assertScript('() => getComputedStyle(document.querySelector("#frente tbody tr:nth-child(2) td")).borderLeftWidth', '4px')
+        ->assertNoJavaScriptErrors();
 });
 
 /** A script that waits a moment for the tooltip and says whether it opened telling `$start`. */
@@ -390,7 +439,7 @@ it('weighs the report against the other proposals of the account and tells each 
     Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2027 · 4 %', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
 
     visit("{$url}/compensation/scenarios/{$scenario->id}/report")
-        ->assertSee('4. Frente a las otras propuestas')
+        ->assertSee('4. Frente a otros niveles y otras propuestas')
         ->assertSee('Revisión 2027 (esta)')
         ->assertSee('Ver la comparación completa')
         // The keyboard reaches each bar and its tooltip opens; so does the cursor. The chart is on screen first: a tooltip
@@ -412,7 +461,7 @@ it('fits the report and the comparison in the page when another scenario has a l
     $scenario = reportScenario($tenant);
     $other = Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Revisión 2026: contrapropuesta de la empresa al pliego del sindicato', 'effective_on' => '2027-01-01', 'group_changes' => ['unionized' => 400, 'trusted' => null]]);
 
-    $report = visit("{$url}/compensation/scenarios/{$scenario->id}/report")->assertSee('4. Frente a las otras propuestas');
+    $report = visit("{$url}/compensation/scenarios/{$scenario->id}/report")->assertSee('4. Frente a otros niveles y otras propuestas');
     $compare = visit("{$url}/compensation/scenarios/compare?ids[]={$scenario->id}&ids[]={$other->id}")->assertSee('Comparar escenarios');
 
     foreach ([$report, $compare] as $page) {
@@ -512,6 +561,9 @@ it('opens the shared report with no account, the small groups folded into Others
         ->assertSee('Acme compartió este reporte contigo')
         // Finding 37: the common header of the reports by a link, and only one way to print.
         ->assertSee('Vence el')
+        ->assertSee('hora de la Ciudad de México')
+        ->assertSee('Por privacidad, los grupos con menos de')
+        ->assertDontSee('Si el aumento fuera distinto')
         ->assertSeeIn('[data-slot="report-link-bar"]', 'Imprimir')
         ->assertScript('() => Math.round(document.querySelector("[data-slot=report-link-bar]").getBoundingClientRect().height)', 60)
         ->assertScript('() => [...document.querySelectorAll("button")].filter((button) => button.textContent.includes("Imprimir")).length', 1)
@@ -824,4 +876,114 @@ it('saves a new benefit that grows with seniority from its page', function (): v
 
     expect($saved->kind->value)->toBe('salary_percent')->and($saved->sbc_integration->value)->toBe('never')
         ->and($saved->terms()->withoutGlobalScopes()->sole()->tenure_table)->toEqual([['from_years' => 0, 'value' => 1000], ['from_years' => 5, 'value' => 1200]]);
+});
+
+it('shows the Cotizador rápido with its first quote as the next step', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('compensation/scenarios', "{$url}/compensation/quick", $dark, $mobile)
+        ->assertSee('Cotizador rápido')
+        ->assertSee('Todavía no hay cotizaciones')
+        ->assertSee('Nueva cotización');
+})->with($looks);
+
+it('shows the editor of an average payroll, with its own card and one raise', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+
+    visitPage('compensation/scenario', "{$url}/compensation/quick/create", $dark, $mobile)
+        ->assertSee('La plantilla promedio')
+        ->assertSee('Personas trabajadoras')
+        ->assertSee('El aumento al salario')
+        ->assertScript('() => document.querySelector("[name=trusted_raise]") === null && document.querySelector("[name=average_workers]") !== null', true);
+})->with($looks);
+
+it('costs an average payroll as it is typed, saves it and opens its report', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/quick/create")
+        ->fill('name', 'Revisión promedio')
+        ->fill('average_workers', '500')
+        ->type('#scenario-average_monthly_salary', '15000')
+        ->fill('unionized_raise', '6')
+        ->assertSee('500 personas')
+        ->assertSee('Costo del primer año')
+        ->press('Guardar y ver reporte')
+        ->assertPathBeginsWith("{$url}/compensation/quick/")
+        ->waitForText('Escenario guardado.')
+        ->assertSee('Reporte de impacto')
+        ->assertSee('plantilla promedio de 500 personas')
+        ->assertNoJavaScriptErrors();
+
+    $saved = Scenario::query()->withoutGlobalScopes()->sole();
+
+    expect($saved->source->value)->toBe('average')->and($saved->average_workers)->toBe(500)->and($saved->average_monthly_salary_cents)->toBe(1_500_000);
+});
+
+it('shows the report of an average payroll with the notice of the premium of class I and no annex', function (bool $dark, bool $mobile): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $scenario = Scenario::factory()->average()->create(['tenant_id' => $tenant->id, 'name' => 'Promedio 2027', 'effective_on' => '2027-01-01']);
+
+    visitPage('compensation/report', "{$url}/compensation/quick/{$scenario->id}/report", $dark, $mobile)
+        ->assertSee('Reporte de impacto')
+        ->assertSee('plantilla promedio de 500 personas a $15,000.00 al mes')
+        ->assertSee('Riesgo de trabajo con la prima media de clase I.')
+        ->assertSee('Capturar mi prima')
+        // The step by step of one average worker and the ladder of raises, from the engine; no «Quién recibe» for one row.
+        ->assertSee('2. El cálculo paso a paso')
+        ->assertSee('Factor de integración')
+        ->assertSee('3. Frente a otros niveles de aumento')
+        ->assertDontSee('Quién recibe el aumento')
+        ->assertScript('() => [...document.querySelectorAll("a")].every((link) => !link.href.includes("/annex"))', true);
+})->with($looks);
+
+it('fits the editor of an average payroll in a 375 px window', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/quick/create")
+        ->resize(375, 800)
+        ->assertSee('La plantilla promedio')
+        ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('takes the scenarios of an average payroll and the ones of the roster to their own lists', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    Scenario::factory()->average()->create(['tenant_id' => $tenant->id, 'name' => 'Promedio 2027']);
+    Scenario::factory()->create(['tenant_id' => $tenant->id, 'name' => 'Plantilla 2027']);
+
+    visit("{$url}/compensation/quick")->assertSee('Promedio 2027')->assertDontSee('Plantilla 2027')->assertNoJavaScriptErrors();
+    visit("{$url}/compensation/scenarios")->assertSee('Plantilla 2027')->assertDontSee('Promedio 2027')->assertNoJavaScriptErrors();
+});
+
+it('writes the average salary as pesos when the field is left, edits it plain and sends it with no commas', function (): void {
+    $url = signInToPanel();
+
+    visit("{$url}/compensation/quick/create")
+        ->fill('name', 'Con formato')
+        ->fill('average_workers', '500')
+        ->type('#scenario-average_monthly_salary', '15,000.5')
+        ->click('#scenario-average_workers')
+        ->assertValue('#scenario-average_monthly_salary', '15,000.50')
+        ->click('#scenario-average_monthly_salary')
+        ->assertValue('#scenario-average_monthly_salary', '15000.50')
+        ->click('#scenario-average_workers')
+        ->assertValue('#scenario-average_monthly_salary', '15,000.50')
+        ->fill('unionized_raise', '6')
+        ->press('Guardar y ver reporte')
+        ->waitForText('Escenario guardado.')
+        ->assertNoJavaScriptErrors();
+
+    expect(Scenario::query()->withoutGlobalScopes()->sole()->average_monthly_salary_cents)->toBe(1_500_050);
+});
+
+it('shows a saved average salary already written as pesos', function (): void {
+    $url = signInToPanel();
+    $tenant = Tenant::query()->where('slug', 'acme')->sole();
+    $scenario = Scenario::factory()->average()->create(['tenant_id' => $tenant->id, 'average_monthly_salary_cents' => 1_234_567]);
+
+    visit("{$url}/compensation/quick/{$scenario->id}")
+        ->assertValue('#scenario-average_monthly_salary', '12,345.67')
+        ->assertNoJavaScriptErrors();
 });

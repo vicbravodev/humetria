@@ -601,6 +601,38 @@ it('counts the people the cost covers, the categories without a salary and the s
     expect(overviewLine($this, 'compensation')['summary'])->toBe('El costo cubre a las 2 personas; 3 categorías no tienen salario. Tienes 2 escenarios activos.');
 });
 
+it('tells a company that only costs an average payroll that it has started, and where to go to cost it person by person', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->a->id, ['nom035', 'compensation'], CarbonImmutable::now(config('app.display_timezone')));
+    App\Modules\Compensation\Models\Scenario::factory()->average()->count(2)->create(['tenant_id' => $this->a->id]);
+    App\Modules\Compensation\Models\Scenario::factory()->average()->archived()->create(['tenant_id' => $this->a->id]);
+    App\Modules\Compensation\Models\Scenario::factory()->average()->create(['tenant_id' => $this->b->id]);
+    workIn($this->a);
+
+    $line = overviewLine($this, 'compensation');
+
+    // Nothing of the average (the headcount, the salary) nor of the other company: only how many.
+    expect($line)->toBe([
+        'key' => 'compensation',
+        'label' => 'Compensación',
+        'state' => 'in_progress',
+        'stateLabel' => 'En curso',
+        'summary' => 'Aún no cargas a tu gente para costear de sueldo en sueldo. Tienes 2 escenarios con una plantilla promedio.',
+        'link' => "/admin/{$this->a->slug}/compensation/quick",
+    ]);
+});
+
+it('adds the scenarios of an average payroll to what it tells of a company that has loaded its people', function (): void {
+    $grade = App\Modules\Organization\Models\JobGrade::factory()->create(['tenant_id' => $this->a->id]);
+    App\Modules\Compensation\Models\GradeSalary::factory()->create(['tenant_id' => $this->a->id, 'job_grade_id' => $grade->id, 'daily_salary_cents' => 50_000, 'effective_from' => '2026-01-01']);
+    Employee::factory()->count(2)->create(['tenant_id' => $this->a->id, 'job_grade_id' => $grade->id, 'hired_on' => '2025-01-01', 'staff_group' => 'unionized', 'state' => 'JAL']);
+    App\Modules\Compensation\Models\Scenario::factory()->create(['tenant_id' => $this->a->id]);
+    App\Modules\Compensation\Models\Scenario::factory()->average()->create(['tenant_id' => $this->a->id]);
+    Carbon::setTestNow('2026-11-04 10:00:00');
+    workIn($this->a);
+
+    expect(overviewLine($this, 'compensation')['summary'])->toBe('El costo cubre a las 2 personas. Tienes 1 escenario activo y 1 con una plantilla promedio.');
+});
+
 it('tells someone who may not see compensation nothing of it', function (): void {
     App\Modules\Compensation\Models\Scenario::factory()->create(['tenant_id' => $this->a->id]);
     $this->scope = assistantScopeIn($this->a, TenantRole::Viewer);

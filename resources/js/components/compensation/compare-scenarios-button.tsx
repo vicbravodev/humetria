@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { GitCompareArrows } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { compare } from '@/routes/tenant/compensation/scenarios';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
 
 /** Opens the comparison of the ticked scenarios; until two are ticked it says why it cannot. */
 export default function CompareScenariosButton({
@@ -13,6 +13,7 @@ export default function CompareScenariosButton({
     ready: boolean;
 }) {
     const tenantSlug = useTenantSlug();
+    const { compare } = useScenarioRoutes();
 
     return ready ? (
         <Button variant="outline" asChild>

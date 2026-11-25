@@ -14,11 +14,14 @@ import type { AssumptionField, ChoiceOption } from '@/types';
 export default function ScenarioAssumptionsCard({
     assumptions,
     states,
+    stateLabel = 'Estado de quien no tiene uno',
     defaultState,
     errors,
 }: {
     assumptions: AssumptionField[];
     states: ChoiceOption[];
+    /** What the state is for: the one of whoever has none, or where an average payroll works. */
+    stateLabel?: string;
     defaultState: string;
     errors: Partial<Record<string, string>>;
 }) {
@@ -74,7 +77,7 @@ export default function ScenarioAssumptionsCard({
                     ))}
                     <ChoiceField
                         name="default_state"
-                        label="Estado de quien no tiene uno"
+                        label={stateLabel}
                         source={{ options: stateOptions }}
                         defaultValue={stateOptions.find(
                             (option) => option.value === defaultState,

@@ -1,5 +1,4 @@
-import { wholePesos } from '@/lib/compensation/money';
-import { costSteps } from '@/lib/compensation/report-charts';
+import { bpText, wholePesos } from '@/lib/compensation/money';
 import { retroText } from '@/lib/compensation/start';
 import { countOf } from '@/lib/plural';
 import type { ScenarioReport } from '@/types';
@@ -9,20 +8,22 @@ const PESOS = new Intl.NumberFormat('es-MX', {
     currency: 'MXN',
     maximumFractionDigits: 0,
 });
-const TENTHS = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 });
-const MILLIONS = new Intl.NumberFormat('es-MX', {
+const PERCENT = new Intl.NumberFormat('es-MX', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
 });
-const LIST = new Intl.ListFormat('es-MX', { type: 'conjunction' });
+const DRAG = new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+});
 
-/** How a figure of the summary is written as it counts up: pesos, or tenths of a percent with their sign. */
-export type FigureUnit = 'pesos' | 'tenths';
+/** How an anchor of the summary is written as it counts up: whole pesos, hundredths of a percent, or hundredths of a peso. */
+export type FigureUnit = 'pesos' | 'percent' | 'drag';
 
 export type SummaryFigure = {
     key: string;
     caption: string;
-    /** What it counts up to: whole pesos, or tenths of a percent. */
+    /** What it counts up to: whole pesos, hundredths of a percent, or hundredths of a peso. */
     value: number;
     unit: FigureUnit;
     note: string;
@@ -33,17 +34,9 @@ export function figureText(unit: FigureUnit, value: number): string {
         return PESOS.format(value);
     }
 
-    return `${value > 0 ? '+' : ''}${TENTHS.format(value / 10)} %`;
-}
-
-/** "$19.22 millones", or whole pesos under a million. */
-function payrollNote(before: number, after: number): string {
-    const millions = (cents: number): string =>
-        `$${MILLIONS.format(cents / 100_000_000)}`;
-
-    return Math.min(before, after) >= 100_000_000
-        ? `De ${millions(before)} a ${millions(after)} millones al año`
-        : `De ${wholePesos(before)} a ${wholePesos(after)} al año`;
+    return unit === 'percent'
+        ? `${value > 0 ? '+' : ''}${PERCENT.format(value / 100)} %`
+        : DRAG.format(value / 100);
 }
 
 function peopleText(people: number, union: boolean): string {
@@ -54,146 +47,77 @@ function peopleText(people: number, union: boolean): string {
     );
 }
 
-/** The four figures of the summary (board V4-Comp-Reporte): the first year, each year after, the payroll and a person a month. */
+/** What the payroll grows says against the raise of the salary: less when the fixed quota of the IMSS does not move. */
+function payrollNote(report: ScenarioReport): string {
+    const { impact } = report;
+    const salary = `${bpText(impact.salary_growth_bp)} %`;
+
+    return impact.payroll_growth_bp < impact.salary_growth_bp
+        ? `El salario sube ${salary}; la cuota fija del IMSS no sube con él`
+        : `El salario sube ${salary}; las cuotas y prestaciones suben con él`;
+}
+
+/** The four anchors the report opens with: what it costs, what the payroll really grows, a person a month, and each peso dragged. */
 export function summaryFigures(
     report: ScenarioReport,
     union: boolean,
 ): SummaryFigure[] {
-    const { headline } = report;
-    const pesos = (cents: number): number => Math.round(cents / 100);
+    const { headline, impact } = report;
     const months = headline.retroactive_months;
 
     return [
         {
             key: 'first_year',
-            caption: 'Costo del primer año',
-            value: pesos(headline.first_year_cents),
+            caption: 'Cuesta el primer año',
+            value: Math.round(headline.first_year_cents / 100),
             unit: 'pesos',
             note:
                 months > 0
                     ? `Incluye ${wholePesos(headline.retroactive_cents)} de ${retroText(months)}`
-                    : 'Sin retroactivo',
-        },
-        {
-            key: 'recurring',
-            caption: 'Al año, al arranque',
-            value: pesos(headline.recurring_cents),
-            unit: 'pesos',
-            note: 'Los años siguientes cambian: mira la proyección',
+                    : `${wholePesos(headline.recurring_cents)} al año sin retroactivo`,
         },
         {
             key: 'payroll',
-            caption: 'Nómina con cargas',
-            value:
-                headline.before_cents === 0
-                    ? 0
-                    : Math.round(
-                          (headline.recurring_cents / headline.before_cents) *
-                              1000,
-                      ),
-            unit: 'tenths',
-            note: payrollNote(headline.before_cents, headline.after_cents),
+            caption: 'Sube tu nómina',
+            value: impact.payroll_growth_bp,
+            unit: 'percent',
+            note: payrollNote(report),
         },
         {
             key: 'per_person',
             caption: 'Por persona al mes',
-            value:
-                headline.people === 0
-                    ? 0
-                    : pesos(headline.recurring_cents / headline.people / 12),
+            value: Math.round(impact.per_person_month_cents / 100),
             unit: 'pesos',
-            note: `Costo promedio para la empresa, ${peopleText(headline.people, union)}`,
+            note: `Costo extra para la empresa, ${peopleText(headline.people, union)}`,
         },
-    ];
-}
-
-export type Finding = { figure: string; title: string; detail: string };
-
-/** "3 de 4" when the share is near a quarter, "9 de 10" otherwise. */
-function shareFigure(share: number): string {
-    const quarters = Math.round(share * 4);
-
-    return quarters > 0 &&
-        quarters < 4 &&
-        Math.abs(share - quarters / 4) <= 0.03
-        ? `${quarters} de 4`
-        : `${Math.round(share * 10)} de 10`;
-}
-
-/** The names the charges are known by in a sentence: "IMSS", "Infonavit" and the rest in lower case. */
-function chargeName(label: string): string {
-    if (label === 'Cuotas del IMSS') {
-        return 'IMSS';
-    }
-
-    return label === 'Infonavit'
-        ? label
-        : label.charAt(0).toLocaleLowerCase('es-MX') + label.slice(1);
-}
-
-function costFindings(report: ScenarioReport): Finding[] {
-    const steps = costSteps(report.concepts);
-    const salary = steps.find((step) => step.key === 'salary')?.cents ?? 0;
-    const total = report.headline.first_year_cents;
-
-    if (salary <= 0 || total <= 0) {
-        return [];
-    }
-
-    const charges = steps.filter((step) => step.key !== 'salary');
-
-    return [
         {
-            figure: shareFigure(salary / total),
-            title: 'pesos del costo van al salario.',
-            detail: 'El resto son cuotas y prestaciones que suben solas con él.',
+            key: 'drag',
+            caption: 'Cada $1 de aumento cuesta',
+            value: impact.drag_hundredths,
+            unit: 'drag',
+            note: 'Ya con aguinaldo, prima, IMSS e Infonavit',
         },
-        ...(charges.length === 0
-            ? []
-            : [
-                  {
-                      figure: `${Math.round(((total - salary) / salary) * 100)} ¢`,
-                      title: 'de cargas por cada peso de aumento.',
-                      detail: `${LIST.format(charges.map((step) => chargeName(step.label)))}.`,
-                  },
-              ]),
     ];
 }
 
-function raiseFinding(report: ScenarioReport): Finding[] {
-    const raises = report.raises.map((raise) => raise.monthly_raise_cents);
+/** The answer in a sentence: what it costs, how much the payroll really grows, and what it does against inflation. */
+export function verdictSentence(
+    report: ScenarioReport,
+    union: boolean,
+): string[] {
+    const { headline, impact } = report;
 
-    if (raises.length === 0) {
-        return [];
-    }
-
-    const spread = Math.max(...raises) - Math.min(...raises);
-    const amount = report.scenario.raise_unit === 'amount';
-
-    if (spread === 0) {
+    if (headline.people === 0) {
         return [
-            {
-                figure: wholePesos(raises[0] ?? 0),
-                title: 'al mes recibe cada persona.',
-                detail: amount
-                    ? 'Un monto fijo da lo mismo a cada quien, gane lo que gane.'
-                    : 'Todas las categorías reciben lo mismo.',
-            },
+            'Aún no hay personas costeadas: completa los datos del padrón.',
         ];
     }
 
-    return [
-        {
-            figure: wholePesos(spread),
-            title: 'al mes separan al que más y al que menos recibe.',
-            detail: amount
-                ? 'Cada grupo recibe su propio monto fijo.'
-                : 'Un porcentaje igual da más pesos a quien ya gana más.',
-        },
-    ];
-}
+    const real = impact.real_raise_bp;
+    const against = `Frente a una inflación de ${bpText(impact.inflation_bp)} %, el salario ${real < 0 ? 'pierde' : 'gana'} ${bpText(Math.abs(real))} % de poder de compra.`;
 
-/** «Hallazgos clave»: three things to read first, in plain words and computed from the numbers; what cannot be said is left out. */
-export function findings(report: ScenarioReport): Finding[] {
-    return [...costFindings(report), ...raiseFinding(report)];
+    return [
+        `Este aumento cuesta ${wholePesos(headline.first_year_cents)} el primer año a ${peopleText(headline.people, union)}. Con prestaciones y cuotas, la nómina sube ${bpText(impact.payroll_growth_bp)} %, frente al ${bpText(impact.salary_growth_bp)} % del salario.`,
+        against,
+    ];
 }

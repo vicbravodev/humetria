@@ -6,6 +6,7 @@ namespace App\Modules\Compensation\Support;
 
 use App\Modules\Compensation\Contracts\CompensationStanding;
 use App\Modules\Compensation\Data\ContractStanding;
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Organization\Contracts\CompensationRoster;
@@ -23,6 +24,8 @@ final readonly class CompanyCompensationStanding implements CompensationStanding
         $grades = $this->jobGrades->page('', 1)->total();
         $paid = GradeSalary::query()->where('effective_from', '<=', CarbonImmutable::now(config()->string('app.display_timezone'))->toDateString())->distinct()->count('job_grade_id');
 
-        return new ContractStanding($gaps->total, $gaps->costed, max(0, $grades - $paid), Scenario::query()->whereNull('archived_at')->count());
+        $active = fn (ScenarioSource $source): int => Scenario::query()->where('source', $source->value)->whereNull('archived_at')->count();
+
+        return new ContractStanding($gaps->total, $gaps->costed, max(0, $grades - $paid), $active(ScenarioSource::Roster), $active(ScenarioSource::Average));
     }
 }

@@ -29,11 +29,11 @@ export default function ReportPart({
                 pageBreak && 'print:break-before-page',
             )}
         >
-            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 print:break-after-avoid">
                 <div className="flex max-w-[760px] flex-col gap-1">
                     <h2
                         id={`${id}-title`}
-                        className="text-xl leading-7 font-semibold tracking-[-0.005em]"
+                        className="text-xl leading-7 font-semibold tracking-[-0.005em] print:break-after-avoid"
                     >
                         {title}
                     </h2>

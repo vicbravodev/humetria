@@ -176,3 +176,16 @@ it('shows the raise of a category over the minimum when nothing small is left ou
         ->assertInertia(fn (Assert $page) => $page->where('report.raises', fn ($raises): bool => collect($raises)->pluck('label')->all() === ['Operador · A']
             && collect($raises)->pluck('people')->all() === [28]));
 });
+
+it('tells the minimum of people the company really applies, so the notice can name it, and nothing more of the company', function (): void {
+    $this->get(route('compensation.report.shared', $this->token))
+        ->assertInertia(fn (Assert $page) => $page->where('minimum', 5));
+
+    $this->tenant->forceFill(['min_group' => 9])->save();
+
+    $this->get(route('compensation.report.shared', $this->token))
+        ->assertInertia(fn (Assert $page) => $page->where('minimum', 9));
+
+    $this->get(route('compensation.report.shared', str_repeat('q', 64)))
+        ->assertInertia(fn (Assert $page) => $page->where('minimum', null));
+});

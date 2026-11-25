@@ -1,6 +1,7 @@
 import FormSection from '@/components/compensation/form-section';
 import SalaryDateField from '@/components/compensation/salary-date-field';
 import FormField from '@/components/form-field';
+import PesosField from '@/components/pesos-field';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import InputError from '@/components/humetria/input-error';
@@ -29,13 +30,11 @@ export default function OverrideFields({
                 error={errors['employee_number']}
             />
             <div className="grid items-start gap-4 sm:grid-cols-2">
-                <FormField
+                <PesosField
                     name="daily_salary"
                     idPrefix="override"
-                    label="Salario diario ($)"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    placeholder="Como 650.25"
+                    label="Salario diario"
+                    placeholder="650.25"
                     defaultValue={person?.current?.daily_salary}
                     error={errors['daily_salary']}
                 />

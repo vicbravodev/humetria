@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import CompareScenariosButton from '@/components/compensation/compare-scenarios-button';
 import NewScenarioButton from '@/components/compensation/new-scenario-button';
 import ScenariosEmpty from '@/components/compensation/scenarios-empty';
@@ -13,26 +13,42 @@ import type {
     ScenarioCounts,
     ScenarioFilters,
     ScenarioRow,
+    ScenarioSource,
 } from '@/types';
 
 export default function Scenarios({
+    source,
     scenarios,
     counts,
     filters,
 }: {
+    source: ScenarioSource;
     scenarios: Paginated<ScenarioRow>;
     counts: ScenarioCounts;
     filters: ScenarioFilters;
 }) {
     const { chosen, full, ready, toggle } = useScenarioSelection();
+    const quick = source === 'average';
+    const title = quick ? 'Cotizador rápido' : 'Escenarios';
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Ordena tu operación' },
+            { title: 'Compensación' },
+            { title },
+        ],
+    });
 
     return (
         <>
-            <Head title="Escenarios · Compensación" />
+            <Head title={`${title} · Compensación`} />
             <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    title="Escenarios"
-                    description={`${scenariosHeadline(counts)} Cada uno es una propuesta de revisión del contrato: lo que sube el salario, lo que cambia en prestaciones y lo que cuesta.`}
+                    title={title}
+                    description={`${scenariosHeadline(counts)} ${
+                        quick
+                            ? 'Cada uno parte de un promedio, cuántas personas son y cuánto ganan, y te da lo que cuesta el aumento, su reporte y la comparación, sin cargar plantilla ni tabulador.'
+                            : 'Cada uno es una propuesta de revisión del contrato: lo que sube el salario, lo que cambia en prestaciones y lo que cuesta.'
+                    }`}
                 >
                     <CompareScenariosButton chosen={chosen} ready={ready} />
                     <NewScenarioButton />
@@ -53,11 +69,3 @@ export default function Scenarios({
         </>
     );
 }
-
-Scenarios.layout = {
-    breadcrumbs: [
-        { title: 'Ordena tu operación' },
-        { title: 'Compensación' },
-        { title: 'Escenarios' },
-    ],
-};

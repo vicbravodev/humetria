@@ -5,8 +5,7 @@ import CompareDistance from '@/components/compensation/compare-distance';
 import CompensationHeader from '@/components/compensation/compensation-header';
 import ScenarioCompareTable from '@/components/compensation/scenario-compare-table';
 import { Button } from '@/components/ui/button';
-import { useTenantSlug } from '@/hooks/use-tenant-slug';
-import { index } from '@/routes/tenant/compensation';
+import { useScenarioCrumbs } from '@/hooks/use-scenario-routes';
 import type {
     CompareDistance as Distance,
     CompareMidpoint,
@@ -25,13 +24,8 @@ export default function ScenarioCompare(props: {
     moves: CompareMoves;
     midpoint: CompareMidpoint | null;
 }) {
-    const tenantSlug = useTenantSlug();
-    setLayoutProps({
-        breadcrumbs: [
-            { title: 'Compensación', href: index(tenantSlug) },
-            { title: 'Comparar' },
-        ],
-    });
+    const breadcrumbs = useScenarioCrumbs({ title: 'Comparar' });
+    setLayoutProps({ breadcrumbs });
 
     return (
         <>

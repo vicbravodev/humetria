@@ -25,6 +25,12 @@ final readonly class DuplicateScenario
             'term_changes' => $scenario->term_changes,
             'assumptions' => $scenario->assumptions,
             'default_state' => $scenario->default_state,
+            'source' => $scenario->source,
+            'average_workers' => $scenario->average_workers,
+            'average_monthly_salary_cents' => $scenario->average_monthly_salary_cents,
+            'average_tenure_years' => $scenario->average_tenure_years,
+            'average_group' => $scenario->average_group,
+            'pay_basis' => $scenario->pay_basis,
         ]);
 
         Log::info('compensation.scenario_duplicated', ['scenario_id' => $copy->id, 'from_scenario_id' => $scenario->id]);

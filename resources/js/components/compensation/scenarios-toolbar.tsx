@@ -5,7 +5,7 @@ import type {
     ScenarioFilters,
 } from '@/lib/compensation/scenarios';
 import { scenarioQuery } from '@/lib/compensation/scenarios';
-import { index } from '@/routes/tenant/compensation/scenarios';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
 
 /** The active or archived scenarios, each tab with its count. */
 export default function ScenariosToolbar({
@@ -16,6 +16,7 @@ export default function ScenariosToolbar({
     counts: ScenarioCounts;
 }) {
     const tenantSlug = useTenantSlug();
+    const { index } = useScenarioRoutes();
     const tab = (status: ScenarioFilters['status']) => ({
         count: counts[status],
         active: filters.status === status,

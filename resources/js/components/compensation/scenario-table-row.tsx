@@ -5,7 +5,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { useTenantSlug } from '@/hooks/use-tenant-slug';
 import { describeDate } from '@/lib/calendar-date';
 import { countOf } from '@/lib/plural';
-import { edit } from '@/routes/tenant/compensation/scenarios';
+import { useScenarioRoutes } from '@/hooks/use-scenario-routes';
 import type { ScenarioRow } from '@/types';
 
 /** A scenario of the list: its name and when it starts, what it raises and changes, and what it costs in its first year. */
@@ -21,6 +21,7 @@ export default function ScenarioTableRow({
     onChoose: (id: string, checked: boolean) => void;
 }) {
     const tenantSlug = useTenantSlug();
+    const { edit } = useScenarioRoutes();
 
     return (
         <TableRow>

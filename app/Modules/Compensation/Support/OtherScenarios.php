@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Compensation\Support;
 
+use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Support\Calculation\Money;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 
 /**
- * The latest active scenarios of the account but one, with what each costs in its first year: what the editor and the report
- * weigh a scenario against. Only this account's: a union is another account, so its proposals never show here (D1).
+ * The latest active scenarios of the account of the same kind but one (roster or average payroll: they are never weighed against each
+ * other), with what each costs in its first year: what the editor and the report weigh a scenario against. Only this account's: a union is another account, so its proposals never show here (D1).
  */
 final readonly class OtherScenarios
 {
@@ -20,11 +21,12 @@ final readonly class OtherScenarios
     public function __construct(private ScenarioInputBuilder $inputs) {}
 
     /**
-     * @return list<array{id: string, name: string, first_year_cents: int, first_year_text: string}>
+     * @return list<array{id: string, name: string, first_year_cents: int, first_year_text: string, raise_text: string, payroll_growth_bp: int, per_person_month_cents: int}>
      */
-    public function except(?Scenario $scenario): array
+    public function except(?Scenario $scenario, ScenarioSource $source): array
     {
         $others = Scenario::query()
+            ->where('source', $source->value)
             ->whereNull('archived_at')
             ->when($scenario !== null, fn ($query) => $query->whereKeyNot($scenario?->id))
             ->orderByDesc('created_at')->orderByDesc('id')
@@ -34,8 +36,12 @@ final readonly class OtherScenarios
         $rows = [];
 
         foreach ($others as $other) {
-            $cents = ScenarioCost::firstYear($this->inputs->build($other))->firstYearCents();
-            $rows[] = ['id' => $other->id, 'name' => $other->name, 'first_year_cents' => $cents, 'first_year_text' => Money::pesos($cents)];
+            $cost = ScenarioCost::firstYear($this->inputs->build($other));
+            $impact = ReportImpact::of($cost, 0);
+            $rows[] = [
+                'id' => $other->id, 'name' => $other->name, 'first_year_cents' => $cost->firstYearCents(), 'first_year_text' => Money::pesos($cost->firstYearCents()),
+                'raise_text' => RaiseText::of($other), 'payroll_growth_bp' => $impact['payroll_growth_bp'], 'per_person_month_cents' => $impact['per_person_month_cents'],
+            ];
         }
 
         return $rows;
