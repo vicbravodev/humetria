@@ -34,7 +34,7 @@ export default function ReportHeader({
                     !sealOnScreen && 'hidden print:flex',
                 )}
             >
-                <CompanyMark className="h-12" />
+                <CompanyMark className="h-14" />
                 <Logo kind="seal" className="h-4" />
             </div>
             <div className="flex flex-col gap-2.5">

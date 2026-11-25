@@ -55,7 +55,7 @@ export default function PersonFrame({
                     </Link>
                 )}
                 <p className="min-w-0 truncate text-base font-semibold">
-                    <CompanyMark name={company} className="h-8" />
+                    <CompanyMark name={company} className="h-10" />
                 </p>
                 {back === undefined && (
                     <p className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">

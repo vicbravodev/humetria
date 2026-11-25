@@ -72,10 +72,10 @@ export function AppSidebar() {
                             : tenantDashboard(tenant.slug)
                     }
                     prefetch
-                    className="flex h-11 w-fit items-center rounded-md px-3 transition-[padding] duration-300 ease-drawer group-data-[collapsible=icon]:px-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="flex min-h-11 w-fit items-center rounded-md px-3 transition-[padding] duration-300 ease-drawer group-data-[collapsible=icon]:px-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                     <span className="flex items-center gap-2.5 group-data-[collapsible=icon]:hidden">
-                        <CompanyMark className="h-7" />
+                        <CompanyMark className="h-12" />
                         {/* Humetría staff outside any company: the platform console (pantalla Consola-Empresas). */}
                         {auth.isStaff && tenant === null && (
                             <span className="inline-flex h-[26px] items-center rounded-full bg-warning px-2.5 text-caption font-medium text-warning-foreground">

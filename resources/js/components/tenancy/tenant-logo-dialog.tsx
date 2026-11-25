@@ -11,9 +11,10 @@ import {
     DialogFooter,
     DialogTitle,
 } from '@/components/ui/dialog';
-import TenantBrandColorForm from '@/components/tenancy/tenant-brand-color-form';
+import TenantBrandColorField from '@/components/tenancy/tenant-brand-color-field';
 import { Spinner } from '@/components/ui/spinner';
-import { destroy, update } from '@/routes/companies/logo';
+import { update } from '@/routes/companies/brand';
+import { destroy } from '@/routes/companies/logo';
 import type { TenantRow } from '@/types';
 
 /**
@@ -84,6 +85,10 @@ export default function TenantLogoDialog({
                                     message={errors['logo']}
                                 />
                             </div>
+                            <TenantBrandColorField
+                                current={tenant.brand_color}
+                                error={errors['brand_color']}
+                            />
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
                                     <Button variant="outline">Cancelar</Button>
@@ -96,10 +101,6 @@ export default function TenantLogoDialog({
                         </>
                     )}
                 </Form>
-                <TenantBrandColorForm
-                    tenant={tenant}
-                    onDone={() => onOpenChange(false)}
-                />
             </DialogContent>
         </Dialog>
     );

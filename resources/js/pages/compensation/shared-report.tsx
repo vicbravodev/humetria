@@ -33,7 +33,7 @@ export default function SharedReport({
                 <Head title="Enlace no disponible" />
                 <div className="flex min-h-svh flex-col bg-background">
                     <header className="px-4 py-5 md:px-10">
-                        <CompanyMark className="h-7" />
+                        <CompanyMark className="h-10" />
                     </header>
                     <SharedUnavailable />
                 </div>
@@ -45,7 +45,7 @@ export default function SharedReport({
         <>
             <Head title={`Reporte · ${report.scenario.name}`} />
             <ReportLinkBar
-                start={<CompanyMark className="h-7" />}
+                start={<CompanyMark className="h-10" />}
                 className="max-w-[1240px] md:px-10"
             >
                 <PrintButton variant="outline" label="Imprimir" />

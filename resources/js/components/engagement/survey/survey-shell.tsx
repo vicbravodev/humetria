@@ -21,7 +21,10 @@ export default function SurveyShell({
         <div className="flex min-h-dvh flex-col bg-background text-lg leading-7">
             <header className="flex h-[60px] shrink-0 items-center justify-between gap-3 border-b bg-card px-4">
                 <p className="min-w-0 truncate text-base font-semibold">
-                    <CompanyMark name={company ?? 'Encuesta'} className="h-8" />
+                    <CompanyMark
+                        name={company ?? 'Encuesta'}
+                        className="h-10"
+                    />
                 </p>
                 {label !== null && (
                     <p className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">

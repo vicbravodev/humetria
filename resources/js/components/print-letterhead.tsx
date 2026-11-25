@@ -19,7 +19,7 @@ export default function PrintLetterhead({
             data-slot="print-letterhead"
             className="hidden items-center justify-between gap-6 border-b pb-3 print:flex"
         >
-            <CompanyMark className="h-7" />
+            <CompanyMark className="h-10" />
             <div className="flex flex-col text-right text-meta">
                 <p className="font-semibold">
                     {tenant === null

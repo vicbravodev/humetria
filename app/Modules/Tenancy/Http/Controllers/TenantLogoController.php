@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Tenancy\Actions\RemoveTenantLogo;
 use App\Modules\Tenancy\Actions\SetTenantBrandColor;
 use App\Modules\Tenancy\Actions\SetTenantLogo;
-use App\Modules\Tenancy\Http\Requests\UpdateTenantBrandColorRequest;
+use App\Modules\Tenancy\Http\Requests\UpdateTenantBrandRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantLogoRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Http\RedirectResponse;
@@ -38,11 +38,15 @@ final class TenantLogoController extends Controller
         return redirect()->route('companies.index');
     }
 
-    public function color(UpdateTenantBrandColorRequest $request, Tenant $tenant, SetTenantBrandColor $setColor): RedirectResponse
+    public function brand(UpdateTenantBrandRequest $request, Tenant $tenant, SetTenantLogo $setLogo, SetTenantBrandColor $setColor): RedirectResponse
     {
+        if (($logoPath = $request->logoPath()) !== null) {
+            $setLogo->handle($tenant, $logoPath);
+        }
+
         $setColor->handle($tenant, $request->color());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Color guardado.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Marca guardada.']);
 
         return redirect()->route('companies.index');
     }

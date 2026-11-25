@@ -37,7 +37,7 @@ export default function ReportPrintHeader({
             data-slot="print-letterhead"
             className="hidden items-center justify-between gap-6 border-b pb-3 print:flex"
         >
-            <CompanyMark className="h-6" />
+            <CompanyMark className="h-10" />
             <p className="flex flex-col text-right text-meta">
                 <span className="font-semibold">{title}</span>
                 <span className="text-muted-foreground">{issued}</span>
