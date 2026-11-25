@@ -11,6 +11,7 @@ use App\Modules\Compensation\Data\MonthlyCost;
 use App\Modules\Compensation\Enums\BenefitKind;
 use App\Modules\Compensation\Enums\CostConcept;
 use App\Modules\Compensation\Enums\Frequency;
+use App\Modules\Compensation\Enums\PayBasis;
 use App\Modules\Compensation\Enums\SbcIntegration;
 use App\Modules\Compensation\Support\Calculation\Rate;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
@@ -348,4 +349,21 @@ it('keeps an attendance bonus inside 10 percent of the SBC out of the contributi
     expect($cash([]))->toBe(134_048)
         ->and($cash($bonus(8)))->toBe(134_048)
         ->and($cash($bonus(15)))->toBe(139_807);
+});
+
+it('costs a monthly-paid salary as twelve months of thirty days and leaves everything else as it is', function (): void {
+    // LSS art. 29: a monthly pay is divided by 30 for the daily salary, but the year pays 12 months, not 365 days.
+    // $500 a day is $15,000 a month: 12 × 15,000 = $180,000 (18,000,000 cents), not 365 × 500 = $182,500.
+    $raise = ['unionized' => Rate::scaled(6, 2)];
+    $monthly = ScenarioCost::firstYear(scenarioInput(['raises' => $raise, 'payBasis' => PayBasis::Monthly]));
+    $daily = ScenarioCost::firstYear(scenarioInput(['raises' => $raise]));
+    $salary = conceptOf($monthly, CostConcept::Salary, 'salary');
+
+    expect($salary?->beforeCents)->toBe(18_000_000)
+        ->and($salary?->afterCents)->toBe(19_080_000)
+        // Aguinaldo, premium and every IMSS and Infonavit contribution run on the daily salary and the SBC: the basis does not touch them.
+        ->and(array_diff_key(deltasOf($monthly), ['salary:salary' => 0, 'contribution:payroll_tax' => 0]))
+        ->toBe(array_diff_key(deltasOf($daily), ['salary:salary' => 0, 'contribution:payroll_tax' => 0]))
+        // The payroll tax of Jalisco (3 %) is on the pay, so it follows the salary line: 3 % × (1,080,000 + 45,000 + 9,000).
+        ->and(deltasOf($monthly)['contribution:payroll_tax'])->toBe(34_020);
 });

@@ -228,7 +228,7 @@ final class ScenarioCost
         $terms = BenefitCost::lawTerms($benefits, $subject, $in->fiscal);
         $aguinaldo = $terms->aguinaldoCost($salary);
         $premium = $terms->premiumCost($salary);
-        $lines = ['salary:salary' => $salary * self::DAYS_IN_YEAR, 'benefit:christmas_bonus' => $aguinaldo, 'benefit:vacation_premium' => $premium];
+        $lines = ['salary:salary' => $salary * $in->payBasis->paidDays(), 'benefit:christmas_bonus' => $aguinaldo, 'benefit:vacation_premium' => $premium];
         $taxable = $lines['salary:salary'] + ($terms->aguinaldoTaxable ? $aguinaldo : 0) + ($terms->premiumTaxable ? $premium : 0);
         $integrating = Rate::zero();
         $deferred = [];

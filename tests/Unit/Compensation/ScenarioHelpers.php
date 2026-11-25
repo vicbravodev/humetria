@@ -12,6 +12,7 @@ use App\Modules\Compensation\Data\ScenarioInput;
 use App\Modules\Compensation\Enums\BenefitKind;
 use App\Modules\Compensation\Enums\CostConcept;
 use App\Modules\Compensation\Enums\Frequency;
+use App\Modules\Compensation\Enums\PayBasis;
 use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Enums\SbcIntegration;
 use App\Modules\Compensation\Support\Calculation\Rate;
@@ -105,7 +106,7 @@ function scenarioPerson(string $number, int $dailyCents, string $hiredOn = '2025
  * One person (a cell of one) hired on 2025-01-01 with $500 a day, costed from 2026-01-01: always one year of service, so the
  * vacation is 12 days in the 12 months. The premium of work risk is 0.5 % and the state is Jalisco.
  *
- * @param  array{effectiveOn?: string, retroMonths?: int, fiscal?: FiscalSnapshot, cells?: list<HeadcountCell>, individuals?: list<IndividualSalary>, gradeSalaries?: array<string, int>, benefits?: list<BenefitSpec>, raises?: array<string, Rate>, amounts?: array<string, int>, proposed?: list<BenefitSpec>, premium?: ?Rate, state?: ?string}  $with
+ * @param  array{effectiveOn?: string, retroMonths?: int, fiscal?: FiscalSnapshot, cells?: list<HeadcountCell>, individuals?: list<IndividualSalary>, gradeSalaries?: array<string, int>, benefits?: list<BenefitSpec>, raises?: array<string, Rate>, amounts?: array<string, int>, proposed?: list<BenefitSpec>, premium?: ?Rate, state?: ?string, payBasis?: PayBasis}  $with
  */
 function scenarioInput(array $with = []): ScenarioInput
 {
@@ -125,6 +126,7 @@ function scenarioInput(array $with = []): ScenarioInput
         defaultState: array_key_exists('state', $with) ? $with['state'] : 'JAL',
         gaps: new RosterGaps(count($cells), count($cells), [], 0, 0),
         monthlyAmounts: $with['amounts'] ?? [],
+        payBasis: $with['payBasis'] ?? PayBasis::Daily,
     );
 }
 
