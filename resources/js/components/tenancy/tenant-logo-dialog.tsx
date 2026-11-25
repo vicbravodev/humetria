@@ -11,11 +11,15 @@ import {
     DialogFooter,
     DialogTitle,
 } from '@/components/ui/dialog';
+import TenantBrandColorForm from '@/components/tenancy/tenant-brand-color-form';
 import { Spinner } from '@/components/ui/spinner';
 import { destroy, update } from '@/routes/companies/logo';
 import type { TenantRow } from '@/types';
 
-/** The logo a company's people see on their emails: upload one, or take it off so the emails show the name. */
+/**
+ * The brand of a company (white label): its logo and its accent replace Humetría's on its panel, surveys, reports and
+ * emails. Without a logo its pages show its name; without an accent they keep Humetría's.
+ */
 export default function TenantLogoDialog({
     tenant,
     open,
@@ -28,10 +32,12 @@ export default function TenantLogoDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
-                <DialogTitle>Logo de los correos</DialogTitle>
+                <DialogTitle>Marca de la empresa</DialogTitle>
                 <DialogDescription>
-                    Lo ven las personas de {tenant.trade_name} en los correos de
-                    sus evaluaciones. Sin logo, los correos muestran su nombre.
+                    Reemplaza a Humetría en el panel, las encuestas, los
+                    reportes y los correos de {tenant.trade_name}. Sin logo
+                    muestran su nombre; Humetría queda solo como el sello «hecho
+                    con humetría».
                 </DialogDescription>
                 {tenant.logo_url !== null && (
                     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
@@ -90,6 +96,10 @@ export default function TenantLogoDialog({
                         </>
                     )}
                 </Form>
+                <TenantBrandColorForm
+                    tenant={tenant}
+                    onDone={() => onOpenChange(false)}
+                />
             </DialogContent>
         </Dialog>
     );

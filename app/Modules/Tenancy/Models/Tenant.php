@@ -44,12 +44,13 @@ use Illuminate\Database\Query\Builder;
  * @property string $timezone The IANA zone of what is the company's and not a center's (billing, the owner's digests).
  * @property int|null $logo_width
  * @property int|null $logo_height
+ * @property string|null $brand_color The accent of its own pages, as #rrggbb; null follows Humetría's.
  * @property int|null $min_group The company's minimum of people per group (C-23); null follows the platform's.
  * @property CarbonImmutable|null $last_access_at Only on the console's list: the latest sign-in of anyone who belongs to it.
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'type', 'trial_started_at', 'active_until', 'restriction', 'restriction_reason', 'restricted_at', 'logo_path', 'logo_width', 'logo_height', 'min_group'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'type', 'trial_started_at', 'active_until', 'restriction', 'restriction_reason', 'restricted_at', 'logo_path', 'logo_width', 'logo_height', 'brand_color', 'min_group'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantFactory::class)]
 final class Tenant extends Model
 {

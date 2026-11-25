@@ -6,14 +6,16 @@ namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Tenancy\Actions\RemoveTenantLogo;
+use App\Modules\Tenancy\Actions\SetTenantBrandColor;
 use App\Modules\Tenancy\Actions\SetTenantLogo;
+use App\Modules\Tenancy\Http\Requests\UpdateTenantBrandColorRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantLogoRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
-/** The superadmin gives a company the logo its people see on their emails, or takes it off. */
+/** The superadmin gives a company its logo and its accent (white label), or takes them off. */
 final class TenantLogoController extends Controller
 {
     public function update(UpdateTenantLogoRequest $request, Tenant $tenant, SetTenantLogo $setLogo): RedirectResponse
@@ -32,6 +34,15 @@ final class TenantLogoController extends Controller
         $removeLogo->handle($tenant);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Logo quitado.']);
+
+        return redirect()->route('companies.index');
+    }
+
+    public function color(UpdateTenantBrandColorRequest $request, Tenant $tenant, SetTenantBrandColor $setColor): RedirectResponse
+    {
+        $setColor->handle($tenant, $request->color());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Color guardado.']);
 
         return redirect()->route('companies.index');
     }

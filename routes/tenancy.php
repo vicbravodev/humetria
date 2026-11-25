@@ -61,6 +61,10 @@ Route::post('admin/companies/{tenant}/logo', [TenantLogoController::class, 'upda
     ->middleware(['auth', 'verified'])
     ->name('companies.logo.update');
 
+Route::put('admin/companies/{tenant}/brand-color', [TenantLogoController::class, 'color'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.brand-color.update');
+
 Route::delete('admin/companies/{tenant}/logo', [TenantLogoController::class, 'destroy'])
     ->middleware(['auth', 'verified'])
     ->name('companies.logo.destroy');
