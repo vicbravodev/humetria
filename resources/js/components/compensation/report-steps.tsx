@@ -45,7 +45,7 @@ export default function ReportSteps({
                 {reportSteps(report).map((step, index) => (
                     <li
                         key={step.key}
-                        className="grid break-inside-avoid gap-x-6 gap-y-3 p-5 md:grid-cols-[13rem_minmax(0,1fr)]"
+                        className="grid break-inside-avoid gap-x-6 gap-y-3 p-5 md:grid-cols-[13rem_minmax(0,1fr)] print:gap-y-2 print:px-4 print:py-3"
                     >
                         <div className="flex items-start gap-3">
                             <span
@@ -72,7 +72,7 @@ export default function ReportSteps({
                                     </div>
                                 ))}
                             </dl>
-                            <p className="flex flex-wrap items-baseline justify-between gap-x-4 rounded-lg bg-muted px-4 py-2.5">
+                            <p className="flex flex-wrap items-baseline justify-between gap-x-4 rounded-lg bg-muted px-4 py-2.5 print:py-1.5">
                                 <span className="text-sm text-muted-foreground">
                                     {step.result.label}
                                 </span>

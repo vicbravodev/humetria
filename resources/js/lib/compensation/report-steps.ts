@@ -79,7 +79,7 @@ function quotasStep(example: ReportExample): ReportStep {
             ...taxLine(example),
         ],
         result: {
-            label: 'Cuotas patronales adicionales',
+            label: 'Cuotas del SBC, sin impuesto sobre nómina',
             value: `+${exactPesos(Math.round(example.contributions_extra_year_cents / 12))} al mes`,
         },
     };

@@ -72,7 +72,7 @@ describe('reportSteps of an average payroll', () => {
                 },
             ],
             result: {
-                label: 'Cuotas patronales adicionales',
+                label: 'Cuotas del SBC, sin impuesto sobre nómina',
                 value: '+$197.79 al mes',
             },
         });
@@ -112,7 +112,7 @@ describe('reportSteps of an average payroll', () => {
         ]);
         // The highlighted figure is what its label says: the quotas, without the tax.
         expect(steps[3]?.result).toEqual({
-            label: 'Cuotas patronales adicionales',
+            label: 'Cuotas del SBC, sin impuesto sobre nómina',
             value: '+$197.79 al mes',
         });
         expect(steps[4]?.lines.at(-1)).toEqual({
