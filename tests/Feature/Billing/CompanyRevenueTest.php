@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Billing\Contracts\PlatformRevenue;
 use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Enums\SubscriptionStatus;
+use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\ContractedRevenue;
 use App\Modules\Tenancy\Models\Tenant;
@@ -57,4 +58,25 @@ it('reads a page of companies in the same number of queries however many it hold
     };
 
     expect($count($many))->toBe($count($few));
+});
+
+/** @return array{subtotal_cents: int, vat_cents: int, total_cents: int} */
+function billedAmounts(int $subtotal): array
+{
+    return ['subtotal_cents' => $subtotal, 'vat_cents' => intdiv($subtotal * 16, 100), 'total_cents' => $subtotal + intdiv($subtotal * 16, 100)];
+}
+
+it('adds up what was billed each of the last months before VAT, the oldest first, a month without statements in zero', function (): void {
+    Statement::factory()->issued()->create(['period_start' => '2026-11-01', ...billedAmounts(300_000)]);
+    Statement::factory()->issued()->create(['period_start' => '2026-11-01', ...billedAmounts(200_000)]);
+    Statement::factory()->issued()->create(['period_start' => '2026-09-01', ...billedAmounts(100_000)]);
+    // A draft was never billed, and a month out of the window is not counted.
+    Statement::factory()->create(['period_start' => '2026-11-01', ...billedAmounts(999_000)]);
+    Statement::factory()->issued()->create(['period_start' => '2026-08-01', ...billedAmounts(777_000)]);
+
+    expect(app(PlatformRevenue::class)->billedByMonth(3))->toBe([
+        ['month' => '2026-09', 'cents' => 100_000],
+        ['month' => '2026-10', 'cents' => 0],
+        ['month' => '2026-11', 'cents' => 500_000],
+    ]);
 });

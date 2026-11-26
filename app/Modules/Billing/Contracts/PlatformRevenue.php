@@ -20,4 +20,12 @@ interface PlatformRevenue
      * @return array<string, CompanyRevenue> by company id
      */
     public function byCompany(array $tenantIds): array;
+
+    /**
+     * What was billed before VAT in each of the last months (issued statements, by the month they bill), the oldest first
+     * and the current one last; a month without statements is zero.
+     *
+     * @return list<array{month: string, cents: int}> month as Y-m
+     */
+    public function billedByMonth(int $months): array;
 }

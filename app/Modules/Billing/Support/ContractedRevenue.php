@@ -7,9 +7,11 @@ namespace App\Modules\Billing\Support;
 use App\Modules\Billing\Contracts\PlatformRevenue;
 use App\Modules\Billing\Data\CompanyRevenue;
 use App\Modules\Billing\Enums\Profile;
+use App\Modules\Billing\Enums\StatementStatus;
 use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Carbon\CarbonImmutable;
@@ -51,6 +53,24 @@ final readonly class ContractedRevenue implements PlatformRevenue
         }
 
         return $rows;
+    }
+
+    public function billedByMonth(int $months): array
+    {
+        $current = CarbonImmutable::now(config()->string('app.display_timezone'))->startOfMonth();
+        $first = $current->subMonths($months - 1);
+        $billed = Statement::query()
+            ->where('status', StatementStatus::Issued)
+            ->whereBetween('period_start', [$first->toDateString(), $current->endOfMonth()->toDateString()])
+            ->get(['period_start', 'subtotal_cents'])
+            ->groupBy(fn (Statement $statement): string => $statement->period_start->format('Y-m'))
+            ->map(fn ($statements): int => $statements->sum(fn (Statement $statement): int => $statement->subtotal_cents));
+
+        return array_map(function (int $offset) use ($first, $billed): array {
+            $month = $first->addMonths($offset)->format('Y-m');
+
+            return ['month' => $month, 'cents' => $billed->get($month, 0)];
+        }, range(0, $months - 1));
     }
 
     /**

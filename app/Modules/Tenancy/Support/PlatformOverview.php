@@ -25,13 +25,19 @@ final readonly class PlatformOverview
     /** «Hoy» names this many accounts past due; the rest are behind «Ver todo». */
     private const int OVERDUE_SHOWN = 3;
 
+    /** The months «Ingreso mensual» draws, the current one last. */
+    private const int MONTHS_DRAWN = 12;
+
+    /** The latest entries of the audit trail «Actividad reciente» lists. */
+    private const int ACTIVITY_SHOWN = 5;
+
     /** A company nobody has entered for this many days is quiet. */
     private const int QUIET_DAYS = 30;
 
-    public function __construct(private ListTenants $tenants, private PlatformRevenue $revenue, private PlatformCost $cost, private DemoLeads $demos, private Receivables $receivables, private PlatformDeliveries $deliveries) {}
+    public function __construct(private ListTenants $tenants, private PlatformRevenue $revenue, private PlatformCost $cost, private DemoLeads $demos, private Receivables $receivables, private PlatformDeliveries $deliveries, private AuditPages $audit) {}
 
     /**
-     * @return array{companies: array<string, int>, trialsEndingSoon: int, revenueCents: int, demos: array<string, int>, inactive: int, whatsApp: array{messages: int, costCents: int, chargedCents: int, marginCents: int}, overdue: array{cents: int, accounts: list<array{id: string, name: string, cents: int, days: int}>}, demosWaiting: array{new: int, unattended: int}, rejectedToday: int}
+     * @return array{companies: array<string, int>, trialsEndingSoon: int, revenueCents: int, demos: array<string, int>, inactive: int, whatsApp: array{messages: int, costCents: int, chargedCents: int, marginCents: int}, overdue: array{cents: int, accounts: list<array{id: string, name: string, cents: int, days: int}>}, demosWaiting: array{new: int, unattended: int}, rejectedToday: int, billedByMonth: list<array{month: string, cents: int}>, activity: list<array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>}
      */
     public function handle(): array
     {
@@ -59,6 +65,9 @@ final readonly class PlatformOverview
             ],
             'demosWaiting' => ['new' => $waiting->new, 'unattended' => $waiting->unattended],
             'rejectedToday' => $this->rejectedToday(),
+            // The year of billing, month by month, and what happened last on the platform.
+            'billedByMonth' => $this->revenue->billedByMonth(self::MONTHS_DRAWN),
+            'activity' => $this->audit->rows($this->audit->filters(q: '', kind: '', family: '', company: '', from: '', to: ''), self::ACTIVITY_SHOWN),
         ];
     }
 
