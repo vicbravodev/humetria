@@ -108,6 +108,7 @@ export function AppSidebar() {
                         <NavMain
                             key={section.label}
                             label={section.label}
+                            pinned={section.key === 'clients'}
                             icon={
                                 section.key === undefined
                                     ? undefined
