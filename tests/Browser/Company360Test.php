@@ -20,7 +20,7 @@ it('shows the company with its tabs, its people and the side with contact, notes
     memberOf($tenant, TenantRole::Owner);
     TenantNote::factory()->create(['tenant_id' => $tenant->id, 'body' => 'Paga en quincena']);
 
-    visitPage('tenancy/company', "/admin/companies/{$tenant->id}", $dark, $mobile)
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}?tab=miembros", $dark, $mobile)
         ->assertSee('Uso y límites')
         ->assertSee('Cuenta y contacto')
         ->assertSee('Miembro owner')
@@ -34,6 +34,7 @@ it('writes an internal note from the side of the page', function (): void {
 
     visit("/admin/companies/{$tenant->id}")
         ->assertNoJavaScriptErrors()
+        ->click('Agregar')
         ->type('#note-body', 'Pidió mover la campaña')
         ->click('Guardar nota')
         ->assertSee('Nota guardada.')

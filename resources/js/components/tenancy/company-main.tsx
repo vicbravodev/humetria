@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import CompanyActivity from '@/components/tenancy/company-activity';
 import CompanyBilling from '@/components/tenancy/company-billing';
 import CompanyInvitations from '@/components/tenancy/company-invitations';
@@ -5,52 +6,66 @@ import CompanyLimits from '@/components/tenancy/company-limits';
 import CompanyMembers from '@/components/tenancy/company-members';
 import CompanyModules from '@/components/tenancy/company-modules';
 import CompanyOtherUsage from '@/components/tenancy/company-other-usage';
+import CompanyOverview from '@/components/tenancy/company-overview';
 import CompanySection from '@/components/tenancy/company-section';
 import CompanyUsage from '@/components/tenancy/company-usage';
+import type { CompanyTab } from '@/lib/company-360';
 import type { CompanyPage } from '@/types';
 
-/** The parts of a company's page, in the order of its tabs. */
-export default function CompanyMain({ page }: { page: CompanyPage }) {
-    const { company, can_manage: canManage, activity } = page;
+const TABS: Record<CompanyTab, (page: CompanyPage) => ReactNode> = {
+    resumen: (page) => <CompanyOverview page={page} />,
+    modulos: (page) => (
+        <CompanyModules
+            companyId={page.company.id}
+            modules={page.modules}
+            canManage={page.can_manage}
+        />
+    ),
+    uso: (page) => (
+        <>
+            <CompanyLimits limits={page.limits} />
+            <CompanyOtherUsage rows={page.other_usage} />
+        </>
+    ),
+    facturacion: (page) => (
+        <CompanySection id="facturacion" title="Facturación">
+            <CompanyBilling plan={page.plan} />
+        </CompanySection>
+    ),
+    miembros: (page) => (
+        <CompanySection id="miembros" title="Miembros">
+            <CompanyMembers members={page.members} />
+        </CompanySection>
+    ),
+    invitaciones: (page) => (
+        <CompanySection id="invitaciones" title="Invitaciones">
+            <CompanyInvitations invitations={page.invitations} />
+        </CompanySection>
+    ),
+    humi: (page) => (
+        <CompanyUsage
+            companyId={page.company.id}
+            usage={page.usage}
+            history={page.usage_history}
+            canManage={page.can_manage}
+        />
+    ),
+    actividad: (page) =>
+        page.activity === null ? null : (
+            <CompanyActivity
+                companyId={page.company.id}
+                activity={page.activity}
+            />
+        ),
+};
 
-    return (
-        <div className="grid min-w-0 gap-10">
-            <CompanySection shown={false} id="resumen" title="Resumen">
-                <CompanyLimits limits={page.limits} />
-            </CompanySection>
-            <CompanySection shown={false} id="modulos" title="Módulos">
-                <CompanyModules
-                    companyId={company.id}
-                    modules={page.modules}
-                    canManage={canManage}
-                />
-            </CompanySection>
-            <CompanySection shown={false} id="uso" title="Uso y límites">
-                <CompanyUsage
-                    companyId={company.id}
-                    usage={page.usage}
-                    history={page.usage_history}
-                    canManage={canManage}
-                />
-                <CompanyOtherUsage rows={page.other_usage} />
-            </CompanySection>
-            <CompanySection id="facturacion" title="Facturación">
-                <CompanyBilling plan={page.plan} />
-            </CompanySection>
-            <CompanySection id="miembros" title="Miembros">
-                <CompanyMembers members={page.members} />
-            </CompanySection>
-            <CompanySection id="invitaciones" title="Invitaciones">
-                <CompanyInvitations invitations={page.invitations} />
-            </CompanySection>
-            {activity !== null && (
-                <CompanySection id="actividad" title="Actividad">
-                    <CompanyActivity
-                        companyId={company.id}
-                        activity={activity}
-                    />
-                </CompanySection>
-            )}
-        </div>
-    );
+/** What the open tab of a company's page holds. */
+export default function CompanyMain({
+    page,
+    tab,
+}: {
+    page: CompanyPage;
+    tab: CompanyTab;
+}) {
+    return <div className="grid min-w-0 gap-6">{TABS[tab](page)}</div>;
 }

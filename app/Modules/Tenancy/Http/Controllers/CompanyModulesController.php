@@ -23,6 +23,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\AuditPages;
 use App\Modules\Tenancy\Support\CompanyConsolePage;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -139,7 +140,7 @@ final class CompanyModulesController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Módulo concedido.']);
 
-        return redirect()->route('companies.show', $tenant);
+        return $this->toPage($request, $tenant);
     }
 
     public function revoke(RevokeModuleRequest $request, Tenant $tenant, RevokeModule $revoke): RedirectResponse
@@ -152,6 +153,12 @@ final class CompanyModulesController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Módulo quitado.']);
 
-        return redirect()->route('companies.show', $tenant);
+        return $this->toPage($request, $tenant);
+    }
+
+    /** Back to the company, on the modules tab when the change was made there; any other tab asked is ignored. */
+    private function toPage(Request $request, Tenant $tenant): RedirectResponse
+    {
+        return redirect()->route('companies.show', $request->query('tab') === 'modulos' ? [$tenant, 'tab' => 'modulos'] : $tenant);
     }
 }

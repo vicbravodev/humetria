@@ -2,31 +2,57 @@ import { Link } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
 import { Button } from '@/components/ui/button';
 import { eventLabel } from '@/lib/audit';
+import { initials } from '@/lib/initials';
 import { index as audit } from '@/routes/audit';
 import type { AuditEntryRow, Paginated } from '@/types';
 
-/** What happened in the company, newest first, from the audit trail; the whole trail is one link away. */
+const SUMMARY_ROWS = 5;
+
+/**
+ * What happened in the company, newest first, from the audit trail (tablero Empresa 360): who, what and when. The summary
+ * shows the latest five; its tab, a page at a time. The whole trail is one link away.
+ */
 export default function CompanyActivity({
     companyId,
     activity,
+    summary = false,
 }: {
     companyId: string;
     activity: Paginated<AuditEntryRow>;
+    summary?: boolean;
 }) {
+    const rows = summary ? activity.data.slice(0, SUMMARY_ROWS) : activity.data;
+
     return (
-        <div className="grid gap-3">
-            {activity.total === 0 ? (
-                <p className="text-sm text-muted-foreground">
+        <section aria-labelledby="company-activity" className="card">
+            <div className="flex items-center gap-3 border-b px-6 py-4">
+                <h2
+                    id="company-activity"
+                    className="flex-1 text-base font-semibold"
+                >
+                    Actividad
+                </h2>
+                <Button asChild variant="ghost" size="sm">
+                    <Link href={audit.url({ query: { company: companyId } })}>
+                        Ver en bitácora
+                    </Link>
+                </Button>
+            </div>
+            {rows.length === 0 ? (
+                <p className="px-6 py-4 text-sm text-muted-foreground">
                     Todavía no hay nada en su bitácora.
                 </p>
             ) : (
-                <ul className="divide-y card">
-                    {activity.data.map((entry) => (
-                        <li
-                            key={entry.id}
-                            className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 py-3"
-                        >
-                            <span className="flex flex-col">
+                <ul className="divide-y">
+                    {rows.map((entry) => (
+                        <li key={entry.id} className="flex gap-3.5 px-6 py-3">
+                            <span
+                                aria-hidden
+                                className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-caption font-semibold"
+                            >
+                                {initials(entry.actor?.name ?? 'Sistema')}
+                            </span>
+                            <span className="grid min-w-0 flex-1">
                                 <span className="font-medium">
                                     {eventLabel(entry.event)}
                                 </span>
@@ -34,25 +60,20 @@ export default function CompanyActivity({
                                     {entry.actor?.name ?? 'Sistema'}
                                 </span>
                             </span>
-                            <span className="text-sm text-muted-foreground tabular-nums">
+                            <span className="shrink-0 text-caption text-muted-foreground tabular-nums">
                                 {entry.at}
                             </span>
                         </li>
                     ))}
                 </ul>
             )}
-            <div className="flex flex-wrap items-center gap-3">
+            {!summary && (
                 <Pagination
                     page={activity}
                     label="Páginas de la actividad"
                     pinned={false}
                 />
-                <Button asChild variant="ghost" size="sm">
-                    <Link href={audit.url({ query: { company: companyId } })}>
-                        Ver en la bitácora
-                    </Link>
-                </Button>
-            </div>
-        </div>
+            )}
+        </section>
     );
 }

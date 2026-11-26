@@ -2,13 +2,37 @@ import type { TenantView } from './tenancy';
 import type { AuditEntryRow } from './audit';
 import type { Paginated } from './demos';
 import type {
-    CompanyDetail,
     LimitRow,
     ModuleRow,
     OtherUsage,
+    TenantRow,
     UsageMonth,
     UsageSummary,
 } from './tenancy';
+
+/** The company a console page is about. */
+export type CompanyDetail = Pick<
+    TenantRow,
+    | 'id'
+    | 'legal_name'
+    | 'trade_name'
+    | 'rfc'
+    | 'slug'
+    | 'type'
+    | 'status'
+    | 'status_label'
+    | 'restriction_reason'
+    | 'owner'
+    | 'account_manager'
+> & {
+    /** The day it was registered, written for display. */
+    created_on: string;
+    /** The town of its first open work center; null without one. */
+    city: string | null;
+    logo_url: string | null;
+    /** The latest sign-in of anyone who belongs to it; null when nobody has signed in. */
+    last_access: string | null;
+};
 
 /** The plan as Billing tells it: its name and dates, never money. */
 export type ConsolePlan = { name: string; since: string; renews_on: string };
@@ -39,10 +63,20 @@ export type TenantNoteRow = {
     at: string;
 };
 
+/** The account that pays the company now, and what that account (every company it pays) owes past due. */
+export type CompanyPayer = {
+    account_id: string;
+    legal_name: string;
+    kind_label: string;
+    overdue_cents: number;
+    days_past_due: number;
+};
+
 /** What a company's page in the console receives. */
 export type CompanyPage = {
     company: CompanyDetail;
     plan: ConsolePlan | null;
+    payer: CompanyPayer | null;
     modules: ModuleRow[];
     limits: LimitRow[];
     usage: UsageSummary;
