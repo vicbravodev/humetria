@@ -133,6 +133,7 @@ it('lets RH record vacations for somebody and approve them in the same step', fu
         ->click('#record-person')
         ->type('[role="combobox"][aria-controls="record-person-options"]', 'ana')
         ->click('[role="option"]:has-text("Ana Solís")')
+        ->assertScript(calendarClosed(), true)
         ->click('#record-starts-on')
         ->click('[data-state="open"] [data-day="2026-11-02"] button')
         ->assertScript(calendarClosed(), true)

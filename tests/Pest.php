@@ -733,7 +733,8 @@ function settled(): string
  * A script that resolves once no calendar is left in the page, in a popover (desktop) or in a sheet (phone): picking a day
  * closes it with a short animation and, when it unmounts, gives focus back to its field. A click that opens the next date
  * field before that would see its calendar closed again by that focus, so this waits for the unmount, not just for the
- * closed state. A sheet that holds no calendar (a form's own) is not waited on.
+ * closed state. A sheet that holds no calendar (a form's own) is not waited on. A combobox's list is a popover too and
+ * gives focus back the same way: wait for it after picking an option and before opening a date field.
  */
 function calendarClosed(): string
 {
