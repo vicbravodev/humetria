@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Contracts\AttendanceUsage;
+use App\Modules\Billing\Contracts\PlanNames;
 use App\Modules\Billing\Contracts\PlatformRevenue;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Tenancy\Actions\ActivateTenant;
@@ -15,6 +16,7 @@ use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Actions\ReactivateTenant;
 use App\Modules\Tenancy\Actions\RestrictTenant;
 use App\Modules\Tenancy\Actions\UpdateTenant;
+use App\Modules\Tenancy\Data\TenantNarrowing;
 use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Enums\TenantView;
 use App\Modules\Tenancy\Exceptions\DemoRequestUnavailable;
@@ -49,14 +51,15 @@ final class TenantConsoleController extends Controller
         return $pages->companies($request->string('q')->trim()->limit(100, '')->toString());
     }
 
-    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads, StaffDirectory $staff, PlatformRevenue $revenue): Response
+    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads, StaffDirectory $staff, PlatformRevenue $revenue, PlanNames $planNames): Response
     {
         Gate::authorize('view-console');
 
         $search = trim($request->string('q')->toString());
         $view = TenantView::tryFrom($request->string('status')->toString()) ?? TenantView::All;
-        $summary = $listTenants->summary($search);
-        $tenants = $listTenants->handle($search, $view);
+        $filters = $this->narrowing($request, $planNames);
+        $summary = $listTenants->summary($search, $filters['narrowing']);
+        $tenants = $listTenants->handle($search, $view, $filters['narrowing']);
         // One question for the whole page, so the warning before restricting a company costs nothing per row.
         $ids = array_values($tenants->getCollection()->map(fn (Tenant $tenant): string => $tenant->id)->all());
         $usingAttendance = $attendance->among($ids);
@@ -69,7 +72,9 @@ final class TenantConsoleController extends Controller
             // A company about to be created from a demo request opens the dialog already filled; one already converted, or gone, offers nothing.
             'prefill' => $this->prefill($demoLeads, $request->string('demo')->toString()),
             'activationMinDate' => now(config()->string('app.display_timezone'))->addDay()->toDateString(),
-            'filters' => ['q' => $search, 'status' => $view->value],
+            'filters' => ['q' => $search, 'status' => $view->value, ...$filters['chosen']],
+            // The plans the list can be narrowed to, as Billing names them.
+            'plans' => array_map(fn (string $key, string $label): array => ['value' => $key, 'label' => $label], array_keys($planNames->all()), $planNames->all()),
             'counts' => $summary['counts'],
             'trialsEndingSoon' => $summary['trialsEndingSoon'],
             'revenueCents' => $revenue->monthlyContractedCents(),
@@ -109,6 +114,30 @@ final class TenantConsoleController extends Controller
                 ];
             }),
         ]);
+    }
+
+    /**
+     * What the chips narrow the list to: who answers for the companies (an id, or «none»), seats almost used up, a plan.
+     * Anything else is ignored, never trusted.
+     *
+     * @return array{narrowing: TenantNarrowing, chosen: array{manager: string, usage: string, plan: string}}
+     */
+    private function narrowing(Request $request, PlanNames $planNames): array
+    {
+        $manager = $request->string('manager')->toString();
+        $manager = $manager === TenantNarrowing::NOBODY || ctype_digit($manager) ? $manager : '';
+        $usage = $request->string('usage')->toString() === 'high' ? 'high' : '';
+        $plan = $request->string('plan')->toString();
+        $plan = array_key_exists($plan, $planNames->all()) ? $plan : '';
+
+        return [
+            'narrowing' => new TenantNarrowing(
+                manager: $manager === '' ? null : $manager,
+                highUsage: $usage === 'high',
+                companies: $plan === '' ? null : $planNames->companiesOn($plan),
+            ),
+            'chosen' => ['manager' => $manager, 'usage' => $usage, 'plan' => $plan],
+        ];
     }
 
     public function store(StoreTenantRequest $request, CreateTenant $createTenant, CreateTenantFromDemo $createFromDemo): RedirectResponse

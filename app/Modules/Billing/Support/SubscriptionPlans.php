@@ -30,6 +30,16 @@ final class SubscriptionPlans implements CompanyPlans, PlanNames
         return $this->subscription($tenantId)?->plan->value;
     }
 
+    public function companiesOn(string $plan): array
+    {
+        return array_values(Subscription::query()
+            ->where('plan', $plan)
+            ->where('status', '<>', SubscriptionStatus::Ended->value)
+            ->get(['tenant_id'])
+            ->map(fn (Subscription $subscription): string => $subscription->tenant_id)
+            ->all());
+    }
+
     private function subscription(string $tenantId): ?Subscription
     {
         $subscription = Subscription::query()->where('tenant_id', $tenantId)->first();

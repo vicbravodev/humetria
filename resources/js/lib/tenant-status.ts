@@ -85,6 +85,19 @@ export function companiesSummary(
     return parts.join(' · ');
 }
 
+/** The chips that narrow the console's list (who answers, seats almost used up, plan), only the ones set. */
+function chips({
+    manager = '',
+    usage = '',
+    plan = '',
+}: TenantFilters): Partial<Record<'manager' | 'usage' | 'plan', string>> {
+    return Object.fromEntries(
+        Object.entries({ manager, usage, plan }).filter(
+            ([, value]) => value !== '',
+        ),
+    );
+}
+
 /** The console's search and view as its address carries them: without the defaults. */
 export function companiesQuery(
     filters: TenantFilters,
@@ -94,6 +107,7 @@ export function companiesQuery(
     return {
         ...(q === '' ? {} : { q }),
         ...(filters.status === 'all' ? {} : { status: filters.status }),
+        ...chips(filters),
     };
 }
 
@@ -105,5 +119,10 @@ export function tenantsFiltered(
     counts: { all: number },
     filters: TenantFilters,
 ): boolean {
-    return counts.all > 0 || filters.q !== '' || filters.status !== 'all';
+    return (
+        counts.all > 0 ||
+        filters.q !== '' ||
+        filters.status !== 'all' ||
+        Object.keys(chips(filters)).length > 0
+    );
 }

@@ -1,3 +1,4 @@
+import type { TenantView } from './tenancy';
 import type { AuditEntryRow } from './audit';
 import type { Paginated } from './demos';
 import type {
@@ -61,4 +62,16 @@ export type TenantPlan = {
     name: string;
     monthly_cents: number | null;
     renews_on: string;
+};
+
+/** The console's search, view and chips over its companies. */
+export type TenantFilters = {
+    q: string;
+    status: TenantView;
+    /** Who at Humetría answers for them: a staff id, «none», or empty for anyone. */
+    manager?: string;
+    /** «high»: seats almost used up (80 % or more). */
+    usage?: string;
+    /** A plan's key, as Billing names it. */
+    plan?: string;
 };

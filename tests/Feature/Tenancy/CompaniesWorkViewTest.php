@@ -12,6 +12,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Support\Facades\Log;
+use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(AssignAccountManager::class, ExtendTrials::class);
 
@@ -197,4 +198,30 @@ it('tells each company its plan, what it pays a month and when it renews, and th
         ->and($plan['monthly_cents'])->toBeGreaterThan(0)
         ->and($rows->firstWhere('trade_name', 'Sin plan')['plan'])->toBeNull()
         ->and($response->inertiaProps('revenueCents'))->toBe($plan['monthly_cents']);
+});
+
+it('narrows the companies by who answers for them, by seats almost used up and by plan, the tabs counting within', function (): void {
+    $laura = support();
+    $mine = Tenant::factory()->create(['trade_name' => 'De Laura', 'owner_user_id' => $laura->id]);
+    $full = Tenant::factory()->create(['trade_name' => 'Casi llena']);
+    TenantLimit::factory()->create(['tenant_id' => $full->id, 'resource' => 'seats', 'amount' => 100, 'used' => 80]);
+    $roomy = Tenant::factory()->create(['trade_name' => 'Holgada', 'owner_user_id' => $laura->id]);
+    TenantLimit::factory()->create(['tenant_id' => $roomy->id, 'resource' => 'seats', 'amount' => 100, 'used' => 79]);
+    Subscription::factory()->plan(Plan::Integral)->create(['tenant_id' => $full->id]);
+    Subscription::factory()->plan(Plan::Cumplimiento)->create(['tenant_id' => $mine->id]);
+
+    $names = fn (array $query): array => collect($this->actingAs(superadmin())->get(route('companies.index', $query))->inertiaProps('tenants.data'))
+        ->pluck('trade_name')->sort()->values()->all();
+
+    expect($names(['manager' => $laura->id]))->toBe(['De Laura', 'Holgada'])
+        ->and($names(['manager' => 'none']))->toBe(['Casi llena'])
+        ->and($names(['usage' => 'high']))->toBe(['Casi llena'])
+        ->and($names(['plan' => 'integral']))->toBe(['Casi llena'])
+        ->and($names(['plan' => 'nope']))->toBe(['Casi llena', 'De Laura', 'Holgada']);
+
+    $this->actingAs(superadmin())->get(route('companies.index', ['manager' => $laura->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('counts.all', 2)
+            ->where('filters.manager', (string) $laura->id)
+            ->where('plans', [['value' => 'jornada', 'label' => 'Jornada'], ['value' => 'cumplimiento', 'label' => 'Cumplimiento'], ['value' => 'integral', 'label' => 'Integral'], ['value' => 'enterprise', 'label' => 'Enterprise'], ['value' => 'sindicato', 'label' => 'Sindicato']]));
 });

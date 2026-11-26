@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 
@@ -821,5 +822,20 @@ it('finds a company by name from the ⌘K palette of the console and opens its p
         ->assertSee('Textiles del Norte')
         ->keys('#command-search', 'Enter')
         ->assertScript(pathBecomes("/admin/companies/{$tenant->id}"), true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('narrows the companies with the chips of the list, on the server', function (): void {
+    signInAsSuperadmin();
+    $full = Tenant::factory()->create(['trade_name' => 'Casi llena']);
+    TenantLimit::factory()->create(['tenant_id' => $full->id, 'resource' => 'seats', 'amount' => 100, 'used' => 90]);
+    Tenant::factory()->create(['trade_name' => 'Holgada']);
+
+    visit('/admin/companies')
+        ->assertSee('Holgada')
+        ->click('@high-usage')
+        ->assertScript('() => new URL(location.href).searchParams.get("usage")', 'high')
+        ->assertSee('Casi llena')
+        ->assertDontSee('Holgada')
         ->assertNoJavaScriptErrors();
 });

@@ -1,9 +1,10 @@
 import CountTabs from '@/components/humetria/count-tabs';
 import SearchField from '@/components/humetria/search-field';
+import TenantsChips from '@/components/tenancy/tenants-chips';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { companiesQuery } from '@/lib/tenant-status';
 import { index } from '@/routes/companies';
-import type { TenantFilters, TenantView } from '@/types';
+import type { StaffMember, TenantFilters, TenantView } from '@/types';
 
 const VIEWS: { value: TenantView; label: string }[] = [
     { value: 'all', label: 'Todas' },
@@ -21,9 +22,13 @@ const VIEWS: { value: TenantView; label: string }[] = [
 export default function TenantsToolbar({
     filters,
     counts,
+    plans,
+    staff,
 }: {
     filters: TenantFilters;
     counts: Record<TenantView, number>;
+    plans: { value: string; label: string }[];
+    staff: StaffMember[];
 }) {
     const { text, type } = useQueryFilters(
         index.url(),
@@ -39,6 +44,7 @@ export default function TenantsToolbar({
                 onChange={type}
                 className="w-full md:w-[380px]"
             />
+            <TenantsChips filters={filters} plans={plans} staff={staff} />
             <CountTabs
                 label="Estado de las empresas"
                 tabs={VIEWS.map((view) => ({

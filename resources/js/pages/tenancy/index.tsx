@@ -24,6 +24,7 @@ export default function Tenants({
     prefill,
     staff,
     revenueCents,
+    plans,
 }: {
     tenants: Paginated<TenantRow>;
     activationMinDate: string;
@@ -33,6 +34,7 @@ export default function Tenants({
     prefill: TenantPrefill | null;
     staff: StaffMember[];
     revenueCents: number;
+    plans: { value: string; label: string }[];
 }) {
     const { auth } = usePage().props;
     const filtered = tenantsFiltered(counts, filters);
@@ -59,7 +61,12 @@ export default function Tenants({
                     )}
                 </PageHeader>
                 {filtered && (
-                    <TenantsToolbar filters={filters} counts={counts} />
+                    <TenantsToolbar
+                        filters={filters}
+                        counts={counts}
+                        plans={plans}
+                        staff={staff}
+                    />
                 )}
                 {tenants.data.length === 0 ? (
                     <TenantsEmpty filtered={filtered} filters={filters} />

@@ -12,4 +12,11 @@ interface PlanNames
 
     /** The key of the plan the company has now; null when it has none, or its subscription ended. */
     public function keyOf(string $tenantId): ?string;
+
+    /**
+     * The companies that hold that plan now (their subscription not ended), for the console to narrow its list.
+     *
+     * @return list<string>
+     */
+    public function companiesOn(string $plan): array;
 }

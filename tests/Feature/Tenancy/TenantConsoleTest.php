@@ -224,7 +224,7 @@ it('shows one status at a time, counts each within the search, and keeps both in
     $this->actingAs(superadmin())
         ->get(route('companies.index', ['status' => 'trial', 'q' => 'prueba']))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('filters', ['q' => 'prueba', 'status' => 'trial'])
+            ->where('filters', ['q' => 'prueba', 'status' => 'trial', 'manager' => '', 'usage' => '', 'plan' => ''])
             ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'trial_ending' => 0, 'dormant' => 0, 'expired' => 1, 'read_only' => 0, 'suspended' => 0, 'archived' => 0])
             ->where('tenants.first_page_url', fn (string $url): bool => str_contains($url, 'status=trial') && str_contains($url, 'q=prueba')));
 });
