@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Announcements\Actions\StartMaintenance;
 use App\Modules\Announcements\Models\Announcement;
 
 it('lists the announcements to come and running, and opens the dialog of a new one', function (bool $dark, bool $mobile): void {
@@ -31,3 +32,19 @@ it('says there is no announcement yet', function (): void {
     visitPage('announcements/index', '/admin/announcements')
         ->assertSee('No hay avisos programados');
 });
+
+it('asks for the reason and the word before the maintenance, and offers to end it while it runs', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+
+    visitPage('announcements/index', '/admin/announcements', $dark, $mobile, fn ($page) => $page->click('Activar mantenimiento'))
+        ->assertSee('Escribe «MANTENIMIENTO» para confirmar');
+
+    resolve(StartMaintenance::class)->handle('Migración de la base de datos');
+
+    visitPage('announcements/index', '/admin/announcements', $dark, $mobile)
+        ->assertSee('Migración de la base de datos')
+        ->assertSee('Terminar mantenimiento');
+})->with([
+    'light desktop' => [false, false],
+    'dark mobile' => [true, true],
+]);

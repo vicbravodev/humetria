@@ -2,11 +2,17 @@ import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import AnnouncementDialog from '@/components/announcements/announcement-dialog';
 import AnnouncementsTable from '@/components/announcements/announcements-table';
+import MaintenanceCard from '@/components/announcements/maintenance-card';
 import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
 import { index } from '@/routes/announcements';
-import type { AnnouncementOption, AnnouncementRow, Paginated } from '@/types';
+import type {
+    AnnouncementOption,
+    AnnouncementRow,
+    MaintenanceState,
+    Paginated,
+} from '@/types';
 
 /**
  * «Avisos» (tablero Avisos y mantenimiento): what Humetría tells the companies in their panel, the ones to come or running and
@@ -18,12 +24,14 @@ export default function Announcements({
     announcements,
     kinds,
     plans,
+    maintenance,
 }: {
     view: 'current' | 'history';
     counts: { current: number; history: number };
     announcements: Paginated<AnnouncementRow>;
     kinds: AnnouncementOption[];
     plans: AnnouncementOption[];
+    maintenance: MaintenanceState;
 }) {
     // The announcement being edited, null for a new one; undefined while no dialog is open.
     const [editing, setEditing] = useState<
@@ -37,12 +45,13 @@ export default function Announcements({
                 <PageHeader
                     caption="Plataforma"
                     title="Avisos y mantenimiento"
-                    description="Habla con las empresas desde un solo lugar: un banner en su panel, con fecha de inicio y fin. Todo queda en la bitácora."
+                    description="Habla con las empresas desde un solo lugar: un banner en su panel con fecha de inicio y fin, o el modo mantenimiento. Todo queda en la bitácora."
                 >
                     <Button onClick={() => setEditing(null)}>
                         Nuevo aviso
                     </Button>
                 </PageHeader>
+                <MaintenanceCard maintenance={maintenance} />
                 <CountTabs
                     label="Avisos por estado"
                     tabs={[

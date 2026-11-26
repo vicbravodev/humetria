@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
 use App\Modules\Announcements\Models\Announcement;
+use App\Modules\Announcements\Models\MaintenancePeriod;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\CompanyTransfer;
@@ -97,6 +98,7 @@ const PLATFORM_MODELS = [
     Pause::class => 'an operational stop of the whole feature, for every company',
     // What Humetría tells the companies: written from the console, which has no current company, and read by every panel.
     Announcement::class => 'platform data: what the console tells every company, or the ones of a plan',
+    MaintenancePeriod::class => 'platform data: a maintenance of the whole platform, for every company',
 ];
 
 /** @return list<class-string<Model>> */

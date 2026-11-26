@@ -215,6 +215,10 @@ const LABELS: Record<string, string> = {
     'audit.exported': 'Bitácora exportada',
     'announcement.created': 'Aviso creado',
     'announcement.updated': 'Aviso editado',
+    'announcement.maintenance_started':
+        'Mantenimiento de la plataforma iniciado',
+    'announcement.maintenance_ended':
+        'Mantenimiento de la plataforma terminado',
     'billing.payment_reversed': 'Pago revertido',
     'billing.statement_discarded': 'Estado de cuenta descartado',
     'billing.subscription_set': 'Plan de la empresa definido',

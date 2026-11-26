@@ -245,6 +245,7 @@ return [
         'starts_time' => 'hora de inicio',
         'ends_time' => 'hora de fin',
         'publish' => 'publicación',
+        'confirmation' => 'confirmación',
         'mail_enabled' => 'correo',
         'whatsapp_enabled' => 'WhatsApp',
         'preferred' => 'canal preferido',

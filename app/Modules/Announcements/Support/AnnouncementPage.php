@@ -7,6 +7,7 @@ namespace App\Modules\Announcements\Support;
 use App\Modules\Announcements\Enums\AnnouncementAudience;
 use App\Modules\Announcements\Enums\AnnouncementKind;
 use App\Modules\Announcements\Models\Announcement;
+use App\Modules\Announcements\Models\MaintenancePeriod;
 use App\Modules\Billing\Contracts\PlanNames;
 use Carbon\CarbonImmutable;
 
@@ -35,6 +36,7 @@ final readonly class AnnouncementPage
             'counts' => ['current' => Announcement::query()->current()->count(), 'history' => Announcement::query()->history()->count()],
             'announcements' => $query->orderBy('id')->paginate(self::PER_PAGE)->withQueryString()->through(fn (Announcement $announcement): array => $this->row($announcement, $plans)),
             'plans' => array_map(fn (string $key, string $label): array => ['value' => $key, 'label' => $label], array_keys($plans), $plans),
+            'maintenance' => $this->maintenance(),
             'kinds' => array_map(fn (AnnouncementKind $kind): array => ['value' => $kind->value, 'label' => $kind->label()], AnnouncementKind::cases()),
         ];
     }
@@ -66,6 +68,20 @@ final readonly class AnnouncementPage
             'starts_time' => $starts->format('H:i'),
             'ends_on' => $ends->toDateString(),
             'ends_time' => $ends->format('H:i'),
+        ];
+    }
+
+    /**
+     * @return array{active: bool, reason: string|null, since: string|null}
+     */
+    private function maintenance(): array
+    {
+        $period = MaintenancePeriod::query()->whereNull('ended_at')->first();
+
+        return [
+            'active' => $period !== null,
+            'reason' => $period?->reason,
+            'since' => $period === null ? null : $this->moment($this->local($period->started_at)),
         ];
     }
 

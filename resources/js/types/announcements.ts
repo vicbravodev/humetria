@@ -33,3 +33,9 @@ export type PlatformNotice = {
     dismissible: boolean;
 };
 
+/** Whether the platform is in maintenance, why and since when («26 nov 2026, 09:00»). */
+export type MaintenanceState = {
+    active: boolean;
+    reason: string | null;
+    since: string | null;
+};
