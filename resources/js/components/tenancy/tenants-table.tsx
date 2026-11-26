@@ -41,7 +41,7 @@ export default function TenantsTable({
                         </TableHead>
                     )}
                     <TableHead>Empresa</TableHead>
-                    <TableHead>Estado</TableHead>
+                    <TableHead className="max-md:hidden">Estado</TableHead>
                     <TableHead className="hidden md:table-cell">
                         Dueño
                     </TableHead>

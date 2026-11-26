@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import Initials from '@/components/humetria/initials';
 import TenantOwnerCell from '@/components/tenancy/tenant-owner-cell';
+import TenantStatus from '@/components/tenancy/tenant-status';
 import TenantSelectCell from '@/components/tenancy/tenant-select-cell';
 import TenantRowActions from '@/components/tenancy/tenant-row-actions';
 import TenantQuickView from '@/components/tenancy/tenant-quick-view';
@@ -10,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { IdSelection } from '@/hooks/use-id-selection';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { tenantStatusVariant } from '@/lib/tenant-status';
 import { show } from '@/routes/companies';
 import type { TenantRow as Tenant } from '@/types';
 
@@ -59,27 +59,15 @@ export default function TenantRowView({
                     </div>
                 </div>
                 {mobile && (
-                    <div className="mt-3 [overflow-wrap:anywhere]">
+                    <div className="mt-3 flex flex-col gap-3 [overflow-wrap:anywhere]">
+                        {/* On a phone the status rides under the name, so the row's buttons stay in reach. */}
+                        <TenantStatus tenant={tenant} />
                         <TenantOwnerCell tenant={tenant} />
                     </div>
                 )}
             </TableCell>
-            <TableCell className="whitespace-normal max-md:px-2">
-                <div className="flex flex-col items-start gap-1">
-                    <Badge variant={tenantStatusVariant(tenant.status)}>
-                        {tenant.status_label}
-                    </Badge>
-                    {tenant.status_date !== null && (
-                        <span className="text-caption text-muted-foreground">
-                            {tenant.status_date}
-                        </span>
-                    )}
-                    {tenant.restriction_reason !== null && (
-                        <span className="max-w-64 text-caption text-muted-foreground">
-                            Motivo: {tenant.restriction_reason}
-                        </span>
-                    )}
-                </div>
+            <TableCell className="whitespace-normal max-md:hidden">
+                <TenantStatus tenant={tenant} />
             </TableCell>
             <TableCell className="hidden whitespace-normal md:table-cell">
                 {!mobile && <TenantOwnerCell tenant={tenant} />}
