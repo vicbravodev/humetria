@@ -24,3 +24,12 @@ export type AnnouncementRow = {
 };
 
 export type AnnouncementOption = { value: string; label: string };
+
+/** The banner a company's panel shows from the platform; its id changes when the announcement does. */
+export type PlatformNotice = {
+    id: string;
+    kind: AnnouncementKind;
+    message: string;
+    dismissible: boolean;
+};
+

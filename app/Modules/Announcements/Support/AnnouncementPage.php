@@ -15,13 +15,15 @@ final readonly class AnnouncementPage
 {
     private const int PER_PAGE = 20;
 
-    public function __construct(private PlanNames $plans) {}
+    public function __construct(private PlanNames $plans, private LiveNotices $live) {}
 
     /**
      * @return array<string, mixed>
      */
     public function props(string $view): array
     {
+        // Opening the page keeps again what the panels show, should the cache have lost it.
+        $this->live->refresh();
         $history = $view === 'history';
         $plans = $this->plans->all();
         $query = $history

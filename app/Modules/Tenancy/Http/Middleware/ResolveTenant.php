@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Middleware;
 
 use App\Http\Impersonation;
+use App\Modules\Announcements\Contracts\PlatformNotices;
 use App\Modules\Assistant\Contracts\AiAccess;
 use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Contracts\CompanyModules;
@@ -36,6 +37,7 @@ final class ResolveTenant
         private readonly CompanyModules $modules,
         private readonly AiAccess $ai,
         private readonly Impersonation $impersonation,
+        private readonly PlatformNotices $notices,
     ) {}
 
     /**
@@ -144,6 +146,13 @@ final class ResolveTenant
             ], $status->isReadOnly()),
             'permissions' => $permissions,
         ]);
+        // What Humetría tells this company now (a banner of the panel); only here, so no page outside a company carries it, and
+        // only when there is one, so a page without it carries no more than before. It reads no table (PlatformNotices).
+        $notice = $this->notices->forCompany($tenant->id);
+
+        if ($notice !== null) {
+            Inertia::share('platform_notice', $notice->toArray());
+        }
         // For the company switcher: the first few, and how many there are to see them all on their own page.
         Inertia::share('tenants', function () use ($user, $only): array {
             $companies = $this->listUserTenants->handle($user->id, self::SWITCHER_COMPANIES, $only);

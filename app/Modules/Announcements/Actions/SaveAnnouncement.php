@@ -8,19 +8,20 @@ use App\Actions\RecordAudit;
 use App\Modules\Announcements\Data\AnnouncementData;
 use App\Modules\Announcements\Enums\AnnouncementAudience;
 use App\Modules\Announcements\Models\Announcement;
+use App\Modules\Announcements\Support\LiveNotices;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final readonly class SaveAnnouncement
 {
-    public function __construct(private RecordAudit $recordAudit) {}
+    public function __construct(private RecordAudit $recordAudit, private LiveNotices $live) {}
 
     /**
      * Writes a new announcement, or changes one. Publishing keeps the first moment it was published; a draft is never shown.
      */
     public function handle(AnnouncementData $data, ?Announcement $announcement = null): Announcement
     {
-        return DB::transaction(function () use ($data, $announcement): Announcement {
+        $saved = DB::transaction(function () use ($data, $announcement): Announcement {
             $event = $announcement === null ? 'announcement.created' : 'announcement.updated';
             $announcement ??= new Announcement;
             $plan = $data->audience === AnnouncementAudience::Plan ? $data->plan : null;
@@ -41,5 +42,10 @@ final readonly class SaveAnnouncement
 
             return $announcement;
         });
+
+        // Kept once saved, so the next page of every panel shows it.
+        $this->live->refresh();
+
+        return $saved;
     }
 }
