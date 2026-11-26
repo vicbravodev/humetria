@@ -70,7 +70,8 @@ sesión» lo borra todo.
 - Produce: `EndDemoSession::handle(): 'started'|'busy'|'unqueued'|'none'` — sesión a `ending`, corrida `reset`, audita
   `demo.session_ended`; al terminar la corrida, `ResetDemo` marca `ended` la sesión `ending`.
 - Rutas: `POST admin/demo/session` → `demo-room.session.start`; `DELETE admin/demo/session` → `demo-room.session.end`.
-  Validación: `tours` arreglo de 1 a 7 llaves distintas de `TourKey` (Tarea 6; mientras, `in:` con las 7 llaves),
+  Validación: `tours` arreglo de 1 a 6 llaves distintas de `TourKey` **sin `base`** (que siempre va primero; mientras no
+  exista el enum de la Tarea 7, `in:` con las 6 llaves),
   `client_name` nullable, máx. 80.
 
 - [ ] **Paso 1: tests rojos** en `DemoSessionTest`:
@@ -82,7 +83,8 @@ sesión» lo borra todo.
   `it('validates the tours')` (vacío, repetido, llave desconocida, `client_name` de 81).
 - [ ] **Paso 2:** correr `php artisan test --compact tests/Feature/Demos/DemoSessionTest.php` → FALLA (no existe la ruta).
 - [ ] **Paso 3:** migración, modelo, enum, acciones, request (`authorize` con `Gate::authorize('manage-demo')`), rutas y
-  controlador. `StartDemoRun::handle()` acepta `'session'` y despacha `PrepareDemoSession` (Tarea 2).
+  controlador. `StartDemoRun::handle(string $kind, ?string $sessionId = null)` acepta `'session'` (revisar y ampliar el
+  `check` de `demo_runs.kind` si existe) y despacha `PrepareDemoSession($run->id, $sessionId)`.
 - [ ] **Paso 4:** correr el test → PASA; Pint y PHPStan.
 - [ ] **Paso 5:** commit «Sala de demo: empezar y terminar una sesión».
 
@@ -102,7 +104,10 @@ sesión» lo borra todo.
   `prepare()` con los pasos de siempre, luego «Sala de la sesión» → `stageSession`, y `markReady($centerId)`. Si algo
   falla: corrida `failed` y sesión `failed` (se puede terminar o empezar otra).
 
-- [ ] **Paso 1: tests rojos:** `it('stages a new work center, minimum 1 and WhatsApp on')` (con `DemoWorkspace` real
+- [ ] **Paso 1: tests rojos:** `it('lets the demo send mail and WhatsApp without a billed plan and without counting
+  them')` (revisar `MailQuota`, `WhatsAppQuota` y `UsageMeter` en el camino de envío: ni rechazan la demo ni la cuentan en
+  cobros; si alguno la rechaza, la excepción va ahí con su test de empresa real);
+  `it('stages a new work center, minimum 1 and WhatsApp on')` (con `DemoWorkspace` real
   en un test lento ya existente como patrón: `tests/Feature/Demos/PrepareDemoTest.php`); `it('marks the session failed
   when staging fails')` (workspace falso que lanza); `it('names the center after the client')`.
 - [ ] **Paso 2:** correr → FALLA.
@@ -121,15 +126,21 @@ sesión» lo borra todo.
 - Consume: `Instruments\Contracts\Nom035Guides` (`for(int): array`, `instruments(int): array`), que ya usan
   `CreateEvaluationDraft`, `LaunchCampaign`, `CampaignPages`, `WorkCenterController`, `Nom035Route` y `ApplicabilityPages`;
   `Tenancy\Contracts\DemoCompanies::isCurrent()`.
-- Produce: el binding de `Nom035Guides` pasa a `DemoNom035Guides` (decorador de `Nom035GuideRule`): en la demo, con
-  `$workers <= 50` devuelve lo de 16–50 (Guías I y II); fuera de la demo, idéntico a la regla.
+- **Ojo:** Sucursal Monterrey se siembra con 15 personas (solo Guía I) y su historia NOM-035 depende de eso. La
+  excepción va **solo al centro de la sesión**, no a toda la demo.
+- Produce: `Nom035Guides::for(int $workers, ?string $workCenterId = null)` e `instruments(int $workers, ?string
+  $workCenterId = null)`; cada llamador que conoce el centro lo pasa. `Demos\Contracts\DemoSessionCenter::is(string
+  $workCenterId): bool` (implementado en `Demos`, lee la sesión activa). El binding pasa a `DemoNom035Guides` (decorador
+  de `Nom035GuideRule`): si el centro es el de la sesión y `$workers <= 50`, Guías I y II; si no, idéntico a la regla.
 
 - [ ] **Paso 1: tests rojos:** `it('applies guides I and II to 3 workers in the demo')`, `it('keeps guide I only for 3
   workers in a real company')`, `it('launches a demo evaluation of 3 people with guide II')` (feature: borrador y
-  lanzamiento de punta a punta en la demo, sin `DraftOutdated`), `it('keeps I and III over 50 in the demo')`.
+  lanzamiento de punta a punta en el centro de la sesión, sin `DraftOutdated`), `it('keeps I and III over 50 in the
+  demo')`, `it('keeps guide I only in Sucursal Monterrey during a session')`.
 - [ ] **Paso 2:** correr → FALLA.
 - [ ] **Paso 3:** implementar el decorador y el binding.
-- [ ] **Paso 4:** correr; además `--filter=Nom035` para ver que nada real cambió; Pint, PHPStan.
+- [ ] **Paso 4:** correr; además `--filter=Nom035` y el test de preparación de la demo (`--filter=PrepareDemo`); Pint,
+  PHPStan.
 - [ ] **Paso 5:** commit «NOM-035: la demo aplica la Guía II con cualquier número de personas».
 
 ### Tarea 4: WhatsApp en la demo, por todos los canales a la vez
@@ -169,11 +180,16 @@ sesión» lo borra todo.
   `worker.link.show` con un token malo.
 - Produce: `worker_invite_v1` con botón `urlWithVariable('Crear mi acceso', https://…/access/{{1}})` y pie «Humetría»
   (las demás siguen con «Humetria»); `WorkerInvitation::via()` pasa por `ChannelPicker` como las invitaciones de encuesta,
-  con el token como variable del botón.
+  con el token como variable del botón. **Mientras la plantilla no esté aprobada, el acceso sale por correo:** se reusa
+  el patrón de `Campaigns\Listeners\FallBackToMail` (si WhatsApp falla, va por correo) y, además, un interruptor
+  `whatsapp.templates.worker_invite_v1` (`WHATSAPP_WORKER_INVITE=false` por omisión, en `config/whatsapp.php` y
+  `.env.example`) que Victor enciende cuando Meta la apruebe.
 
 - [ ] **Paso 1: tests rojos:** `it('redirects a short link to the company link without using it')`, `it('answers an
   unknown short link like a bad link')`, `it('throttles short links')`, `it('sends the portal invitation by WhatsApp when
-  the company can')`, `it('builds worker_invite_v1 with the access button and the accented footer')`.
+  the company can')`, `it('builds worker_invite_v1 with the access button and the accented footer')`, `it('sends the portal invitation by
+  mail while the template is off, even when WhatsApp comes first')`, `it('falls back to mail when WhatsApp rejects the
+  invitation')`.
 - [ ] **Paso 2:** correr → FALLA.
 - [ ] **Paso 3:** implementar.
 - [ ] **Paso 4:** correr; además `--filter=WorkerAccess`; Pint, PHPStan.
@@ -230,8 +246,10 @@ sesión» lo borra todo.
   canalización); attendance (modo, zona, kiosco, acceso enviado, llave ≥ 1, marca ≥ 1, visitó `tenant.attendance.report`);
   engagement (creada, lanzada, respuestas, visitó resultados); complaints (recibida, atendida); leave (enlace del portal
   abierto — Tarea 9 —, llave, solicitud, aprobada, visitó el saldo); humi (preguntó).
-- «Visitó» se registra en el servidor: la ruta de cada petición de página de la demo se agrega a `demo_sessions.visited`
-  (jsonb, columna nueva en esta tarea) cuando hay sesión activa.
+- «Visitó» se registra en el servidor solo en navegaciones reales de página (no en el sondeo ni en recargas parciales):
+  `Demos\Contracts\DemoGuide::recordVisit(string $routeName): void`, llamado desde `HandleInertiaRequests` al
+  resolver `demoGuide` en una petición sin `X-Inertia-Partial-Data`; agrega a `demo_sessions.visited` (jsonb, columna
+  nueva en esta tarea) cuando hay sesión activa y quien navega es el superadmin en la demo.
 
 - [ ] **Paso 1: tests rojos:** `it('puts base first and keeps the chosen order')`, `it('has unique step keys and routes
   that exist')`, `it('writes no company data in the copy')` (sin `{`, sin nombres sembrados); feature por recorrido:
@@ -256,6 +274,8 @@ sesión» lo borra todo.
   sesión `active`. Forma: `{tours: list<{key, title, done:int, total:int}>, current: ?{key, tour, title, todo, why, kind,
   href, target, ask, live, index, total}, finished: bool, justDone: ?string}` (`href` ya resuelto con el slug de la demo;
   `justDone` = título del paso que se cumplió desde la última lectura, para celebrarlo; se guarda en la sesión).
+- `GET admin/demo/session/guide` → `demo-room.session.guide` (JSON con la misma forma; `null` si ya no hay sesión). No
+  registra visitas.
 - Rutas (autenticadas, `manage-demo`): `POST admin/demo/session/steps/{step}/skip` → `demo-room.session.skip`;
   `POST admin/demo/session/steps/{step}/rewind` → `demo-room.session.rewind` (quita el salto y la visita de ese paso).
 
@@ -286,9 +306,23 @@ sesión» lo borra todo.
   outside the session center')` (404), `it('refuses outside an active session')`.
 - [ ] **Paso 2–5:** FALLA → implementar → PASA → commit «Demo: abrir el portal de una persona de la sesión».
 
+### Tarea 9b: Diseño de la sala y del dock, aprobado por Victor (antes de las Tareas 10 y 11)
+
+`CLAUDE.md`: pantalla nueva o rediseño, primero el diseño aprobado. Se diseñan con `/impeccable shape` (o Claude Design
+con el design system «Humetría») partiendo de la app real (la sala de hoy, el dock de Primeros pasos y el panel de
+Humi): la sala sin sesión, preparando, con sesión y con falla; el dock abierto, minimizado, celebrando un paso y en
+375 px; claro y oscuro. Victor lo aprueba; el enlace va en el PR. Sin código de UI antes de la aprobación.
+
+- [ ] **Paso 1:** maquetas.
+- [ ] **Paso 2:** aprobación de Victor (o sus cambios y otra vuelta).
+
 ### Tarea 10: El dock del guía en el panel
 
 **Archivos:**
+- Mover a `components/humetria/` lo que el dock comparte con otros módulos (un módulo no importa componentes de otro):
+  el avatar de Humi (`humi-avatar.tsx` y `humi-eyes.tsx`) y los estilos del foco de driver.js
+  (`first-steps-tour.css` → `components/humetria/spotlight-tour.css`); actualizar sus importaciones, `DESIGN.md`, su
+  ficha en `docs/design-system/componentes/` y cerrar con `/design-sync` (o el PR dice que queda pendiente).
 - Crear: `resources/js/types/demo-guide.ts`, `resources/js/lib/demos/guide.ts`, `resources/js/hooks/use-demo-guide.ts`,
   `resources/js/components/demos/guide-dock.tsx`, `guide-step-card.tsx`, `guide-tour-list.tsx`, `guide-launcher.tsx`
 - Modificar: `resources/js/layouts/app/app-sidebar-layout.tsx` (monta `GuideDock` junto a Primeros pasos y Humi), las
@@ -300,7 +334,9 @@ sesión» lo borra todo.
   se copian); `openHumi(question)` de `lib/assistant/open-humi`.
 - `lib/demos/guide.ts`: `spotlightFor(current, url): {selector:string}|null` (solo si la página abierta es la del paso);
   `progressLabel(current): string` («Paso 2 de 6 · NOM-035»).
-- `use-demo-guide.ts`: `usePoll(3000, {only: ['demoGuide']})` solo mientras hay guía y el dock está abierto; al cambiar
+- `use-demo-guide.ts`: sondea **su propio endpoint** `GET admin/demo/session/guide` (Tarea 8) cada 3 s con `fetch`,
+  nunca con recargas parciales de la página (una recarga parcial vuelve a correr el controlador de la página, y en
+  resultados o canalización escribe en la bitácora de solo inserción); solo mientras hay guía y el dock está abierto; al cambiar
   `current.key`, ilumina con driver.js si `spotlightFor` da selector.
 - Dock: avatar de Humi, recorrido y paso, «Qué hacer», «Qué está pasando» (`live`), «Por qué importa», etiqueta Hazlo/Mira,
   botones **Llévame** (visita `href` e ilumina), **Pregúntale a Humi** (si `ask`), **Saltar paso**, lista de recorridos
