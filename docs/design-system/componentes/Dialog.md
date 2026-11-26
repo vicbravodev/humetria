@@ -3,8 +3,8 @@ Ventana modal centrada; equivale a `Dialog`/`AlertDialog` de shadcn (`ConfirmDia
 
 **Cuándo sí:** confirmar una decisión (sobre todo la que no se puede deshacer), destruir algo, o una acción corta de uno
 o dos campos sobre algo que ya existe (rechazar, cerrar un caso, compartir, publicar, extender una fecha, registrar un
-pago). También la consola de superadmin y los cobros, y un formulario que necesita el ancho de un mapa (la zona de
-asistencia).
+pago), y un formulario que necesita el ancho de un mapa (la zona de asistencia). La consola y los cobros siguen la misma
+regla que el resto (ver «Formularios» en `design-system.md`).
 **Cuándo no:** dar de alta o editar un registro con varios campos con una lista detrás va en el panel lateral
 (`Sheet.md`).
 

@@ -102,6 +102,19 @@ Lo que hace que una pantalla se vea diseñada y no armada al azar. Valores tomad
     su marco.
   - Una tabla que pasa de una pantalla de alto mantiene visible su cabecera (`sticky`). Hoy la tabla de la app no la fija:
     es para pantallas nuevas y para la auditoría, no un cambio en silencio.
+- **Formularios: panel lateral, diálogo o página, según la tarea, no según el módulo.** Una sola regla para todo el
+  producto, la consola y los cobros incluidos (Carbon, Supabase y ServiceNow dicen lo mismo):
+  - **Diálogo centrado** (`ConfirmDialog`, `FormDialog`): confirmar o destruir, o una acción corta de uno o dos campos
+    sobre algo que ya existe (publicar, rechazar, extender, compartir, registrar un pago). También un formulario que
+    necesita el ancho de un mapa (la zona de asistencia).
+  - **Panel lateral derecho** (`FormSheet`): dar de alta o editar un registro de tres campos o más, con la lista o la
+    página detrás a la vista.
+  - **Página propia:** un flujo largo o de varios pasos (importar empleados, una evaluación nueva, escribir una
+    política). En el portal, los datos de una tarea suben en una hoja desde abajo (ver «Reglas de la app instalable»).
+  - Hoy hay altas de varios campos en diálogo que no siguen la regla (`disclosure/record-dialog`,
+    `leave/record-leave-form`, `interventions/follow-up-dialog`, `billing/account-dialog`, `billing/add-charge-dialog`,
+    `tenancy/create-tenant-dialog`, `campaigns/new-evaluation-dialog`, entre otros): se revisan en la auditoría y se
+    mueven a la forma que les toca. Lo nuevo nace con la regla.
 - **Celular primero en el portal, escritorio primero en el panel:** el panel se revisa a 1024 y 1350 px antes que a
   375; el portal, al revés. Ninguno se rompe en el otro.
 
@@ -164,9 +177,33 @@ Sin sidebar ni migas: una columna para el celular. Lo pinta `PersonFrame` (`comp
 - **Pantallas anónimas** (encuestas, canal de denuncias) no llevan barra, nombre ni enlace al portal: `SurveyShell` (`components/campaigns/survey/survey-shell.tsx`) y `components/complaints-public/public-shell.tsx`.
 - El portal trata de «usted», como la encuesta.
 
+#### Reglas de la app instalable (PWA)
+
+Lo que hace que el portal se sienta una app del teléfono y no una página web. Salen de la app actual y de la guía de
+web.dev, MDN, Apple (barras de pestañas) y Material (hojas y diálogos); se aplican con las piezas y tokens de Humetría.
+
+- **Se instala en ventana propia** (`display: standalone`; en iPhone es el único modo). Nada de cabecera grande de sitio
+  web: el encabezado de `PersonFrame` (60 px) basta.
+- **Zonas seguras:** todo lo fijo arriba o abajo respeta `env(safe-area-inset-*)`, como ya hacen `PersonFrame` y la barra
+  (`--tab-bar-inset`). Nada queda bajo la muesca ni la barra de inicio.
+- **La barra inferior es solo navegación** (Apple): de 3 a 5 destinos, ícono y nombre corto siempre visibles, nunca una
+  acción. Se muestra en las pantallas de primer nivel (el inicio); una tarea o una pantalla anónima no la llevan.
+- **Una tarea:** «Atrás» arriba, una sola acción primaria fija abajo, al alcance del pulgar y sobre la zona segura. Los
+  datos que pide la tarea suben en una **hoja desde abajo** (`request-sheet`, `correction-sheet`); una confirmación
+  urgente o irreversible es un **diálogo** centrado (Material). Nunca una hoja que abre otra hoja.
+- **Primero el celular:** columna de una mano (`max-w-md`), áreas táctiles de 44 px, campos de 16 px (iOS no hace zoom),
+  la información que importa en la primera pantalla. En escritorio es la misma columna con más aire.
+- **Se siente nativo:** los botones, pestañas y menús no se seleccionan como texto; la transición entre pantallas es la
+  del sistema de movimiento (corta, sin rebote); el estado de carga deja ver la forma de la pantalla.
+- **Sin conexión, dicho y útil:** una pantalla propia que dice qué sí funciona (las marcas se guardan y se envían
+  después) y qué no, nunca la página de error del navegador.
+- **Instalar y avisos no interrumpen:** `InstallGuide` y la oferta de avisos van al final del inicio, nunca como ventana
+  emergente al entrar. El aviso push dice solo de qué tipo es.
+- **Confidencialidad visible** donde se contesta: el portal y la encuesta lo dicen antes de preguntar.
+
 ### Consola de superadmin
 
-Es el mismo marco del panel, sin empresa: `CompanyMark` muestra el logo de Humetría con la pastilla «Consola» y los grupos son Consola (Resumen, Empresas, Cuentas), Ventas (Solicitudes de demo, Sala de demo) y Plataforma (`lib/staff-navigation.ts`). Sus pantallas usan las mismas piezas que el panel: `PageHeader`, `CountTabs` y `SearchField` sobre tablas paginadas (`components/tenancy/tenants-toolbar.tsx`, `tenants-table.tsx`), `OverviewCard` en el resumen y diálogos (no paneles laterales) para crear, restringir o cobrar.
+Es el mismo marco del panel, sin empresa: `CompanyMark` muestra el logo de Humetría con la pastilla «Consola» y los grupos son Consola (Resumen, Empresas, Cuentas), Ventas (Solicitudes de demo, Sala de demo) y Plataforma (`lib/staff-navigation.ts`). Sus pantallas usan las mismas piezas que el panel: `PageHeader`, `CountTabs` y `SearchField` sobre tablas paginadas (`components/tenancy/tenants-toolbar.tsx`, `tenants-table.tsx`), `OverviewCard` en el resumen. Sus formularios siguen la misma regla que el panel («Formularios», en «Composición y espacio»); hoy varias altas de la consola y los cobros son diálogos y quedan para la auditoría.
 
 ### Fuera del marco
 

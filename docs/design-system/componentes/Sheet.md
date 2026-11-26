@@ -16,7 +16,8 @@ Confirmar, destruir o una acción de uno o dos campos → modal centrado (`Dialo
 - Lo usan: empleados, compensación, acciones e hileras del programa de intervención, centros de trabajo, días
   festivos y tipos de permiso, compromisos y pulso de clima, y los registros de teletrabajo. Una prueba
   (`tests/Unit/FormSheetArchitectureTest.php`) impide que esos formularios regresen a un diálogo.
-- **Se quedan como modal:** la consola de superadmin y los cobros (empresa, dueño, cuenta, suscripción, cargo: otra
-  audiencia, sin lista del panel detrás), la zona de asistencia (su mapa necesita el ancho del modal), todo
-  `ConfirmDialog` y las acciones cortas sobre algo que ya existe (rechazar, cerrar, compartir, publicar, extender,
-  registrar un pago, ajustar un saldo…).
+- **Se quedan como modal:** la zona de asistencia (su mapa necesita el ancho del modal), todo `ConfirmDialog` y las
+  acciones cortas sobre algo que ya existe (rechazar, cerrar, compartir, publicar, extender, registrar un pago, ajustar
+  un saldo…).
+- La consola y los cobros siguen la misma regla (desde el 2026-11-25): sus altas de varios campos que hoy son
+  diálogo (empresa, cuenta, cargo…) se mueven a este panel en la auditoría. Ver «Formularios» en `design-system.md`.
