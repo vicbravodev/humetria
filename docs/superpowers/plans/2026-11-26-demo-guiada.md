@@ -45,7 +45,7 @@ sesión» lo borra todo.
 
 ---
 
-### Tarea 1: Sesiones de demo — tabla, modelo y acciones de empezar y terminar
+### Task 1: Sesiones de demo — tabla, modelo y acciones de empezar y terminar
 
 **Archivos:**
 - Crear: `database/migrations/2026_11_26_000001_create_demo_sessions_table.php`,
@@ -88,7 +88,7 @@ sesión» lo borra todo.
 - [ ] **Paso 4:** correr el test → PASA; Pint y PHPStan.
 - [ ] **Paso 5:** commit «Sala de demo: empezar y terminar una sesión».
 
-### Tarea 2: Preparar la sesión — centro, mínimo 1 y WhatsApp encendido
+### Task 2: Preparar la sesión — centro, mínimo 1 y WhatsApp encendido
 
 **Archivos:**
 - Crear: `database/seeders/Demo/SessionStage.php`
@@ -115,7 +115,7 @@ sesión» lo borra todo.
 - [ ] **Paso 4:** correr → PASA; Pint, PHPStan.
 - [ ] **Paso 5:** commit «Demo: la sesión prepara su centro, mínimo 1 y WhatsApp».
 
-### Tarea 3: Guías I y II con pocas personas en la demo
+### Task 3: Guías I y II con pocas personas en la demo
 
 **Archivos:**
 - Crear: `app/Modules/Instruments/Support/DemoNom035Guides.php`
@@ -143,7 +143,7 @@ sesión» lo borra todo.
   PHPStan.
 - [ ] **Paso 5:** commit «NOM-035: la demo aplica la Guía II con cualquier número de personas».
 
-### Tarea 4: WhatsApp en la demo, por todos los canales a la vez
+### Task 4: WhatsApp en la demo, por todos los canales a la vez
 
 **Archivos:**
 - Modificar: `app/Modules/Messaging/Support/ChannelRules.php` (`whatsAppOpen`, `route`)
@@ -163,7 +163,7 @@ sesión» lo borra todo.
 - [ ] **Paso 4:** correr; además `--filter=Messaging`; Pint, PHPStan.
 - [ ] **Paso 5:** commit «Mensajes: la demo manda por correo y WhatsApp a la vez».
 
-### Tarea 5: El acceso al portal por WhatsApp y la ruta `access/{token}`
+### Task 5: El acceso al portal por WhatsApp y la ruta `access/{token}`
 
 **Archivos:**
 - Crear: `app/Modules/WorkerAccess/Http/Controllers/ShortLinkController.php`
@@ -195,7 +195,7 @@ sesión» lo borra todo.
 - [ ] **Paso 4:** correr; además `--filter=WorkerAccess`; Pint, PHPStan.
 - [ ] **Paso 5:** commit «Portal: el acceso sale también por WhatsApp con la ruta corta».
 
-### Tarea 6: Lo que pasó desde que empezó la sesión — contratos de lectura
+### Task 6: Lo que pasó desde que empezó la sesión — contratos de lectura
 
 **Archivos (uno por módulo, cada uno con su implementación en `Support/` y su binding en el proveedor):**
 - Crear: `app/Modules/Campaigns/Contracts/CampaignActivity.php` + `Data/CenterCampaignActivity.php`;
@@ -225,7 +225,7 @@ sesión» lo borra todo.
 - [ ] **Paso 4:** correr; Pint, PHPStan; `tests/Unit/ArchitectureTest.php`.
 - [ ] **Paso 5:** un commit por contrato («Asistencia: actividad del centro desde una hora», etc.).
 
-### Tarea 7: El catálogo de recorridos y sus pasos
+### Task 7: El catálogo de recorridos y sus pasos
 
 **Archivos:**
 - Crear: `app/Modules/Demos/Enums/TourKey.php` (`base`, `nom035`, `attendance`, `engagement`, `complaints`, `leave`,
@@ -260,7 +260,7 @@ sesión» lo borra todo.
 - [ ] **Paso 4:** correr; Pint, PHPStan.
 - [ ] **Paso 5:** commit por recorrido.
 
-### Tarea 8: El guía en el servidor — prop `demoGuide`, saltar y reiniciar paso
+### Task 8: El guía en el servidor — prop `demoGuide`, saltar y reiniciar paso
 
 **Archivos:**
 - Crear: `app/Modules/Demos/Contracts/DemoGuide.php`, `app/Modules/Demos/Support/SessionGuide.php`,
@@ -288,7 +288,7 @@ sesión» lo borra todo.
 - [ ] **Paso 4:** correr; Pint, PHPStan; `tests/Unit/ArchitectureTest.php`.
 - [ ] **Paso 5:** commit «Demo: el guía sabe el paso actual con los datos reales».
 
-### Tarea 9: Vacaciones en la pantalla de Victor — abrir el portal de una persona
+### Task 9: Vacaciones en la pantalla de Victor — abrir el portal de una persona
 
 **Archivos:**
 - Modificar: `app/Modules/Demos/Contracts/DemoShowcase.php` (método nuevo), su implementación en
@@ -306,7 +306,7 @@ sesión» lo borra todo.
   outside the session center')` (404), `it('refuses outside an active session')`.
 - [ ] **Paso 2–5:** FALLA → implementar → PASA → commit «Demo: abrir el portal de una persona de la sesión».
 
-### Tarea 9b: Diseño de la sala y del dock, aprobado por Victor (antes de las Tareas 10 y 11)
+### Task 9b: Diseño de la sala y del dock, aprobado por Victor (antes de las Tareas 10 y 11)
 
 `CLAUDE.md`: pantalla nueva o rediseño, primero el diseño aprobado. Se diseñan con `/impeccable shape` (o Claude Design
 con el design system «Humetría») partiendo de la app real (la sala de hoy, el dock de Primeros pasos y el panel de
@@ -316,7 +316,7 @@ Humi): la sala sin sesión, preparando, con sesión y con falla; el dock abierto
 - [ ] **Paso 1:** maquetas.
 - [ ] **Paso 2:** aprobación de Victor (o sus cambios y otra vuelta).
 
-### Tarea 10: El dock del guía en el panel
+### Task 10: El dock del guía en el panel
 
 **Archivos:**
 - Mover a `components/humetria/` lo que el dock comparte con otros módulos (un módulo no importa componentes de otro):
@@ -352,7 +352,7 @@ Humi): la sala sin sesión, preparando, con sesión y con falla; el dock abierto
 - [ ] **Paso 4:** correr → PASA; `npm run check`, `npm run types:check`.
 - [ ] **Paso 5:** commit «Demo: el dock del guía con Humi».
 
-### Tarea 11: La sala, alineada al design system y con sesiones
+### Task 11: La sala, alineada al design system y con sesiones
 
 **Archivos:**
 - Crear: `resources/js/components/demos/room-session-new.tsx` (cliente, recorridos escogibles y reordenables con su
@@ -375,7 +375,7 @@ Humi): la sala sin sesión, preparando, con sesión y con falla; el dock abierto
 - [ ] **Paso 2–4:** FALLA → implementar → PASA; `npm run check`, `types:check`.
 - [ ] **Paso 5:** commit «Sala de demo: sesiones a la medida y el design system».
 
-### Tarea 12: Respaldo — la sesión se termina sola a las 24 h
+### Task 12: Respaldo — la sesión se termina sola a las 24 h
 
 **Archivos:**
 - Crear: `app/Modules/Demos/Console/EndStaleDemoSession.php` (comando `demo:end-stale-session`)
@@ -386,7 +386,7 @@ Humi): la sala sin sesión, preparando, con sesión y con falla; el dock abierto
   demo.session_expired')`.
 - [ ] **Paso 2–5:** FALLA → implementar con `EndDemoSession` → PASA → commit.
 
-### Tarea 13: Documentación, Humi y cierre
+### Task 13: Documentación, Humi y cierre
 
 **Archivos:**
 - Modificar: `docs/operations/demo.md` (nueva §: «La sesión guiada»: empezar, guía, lo que sale por correo y WhatsApp,
