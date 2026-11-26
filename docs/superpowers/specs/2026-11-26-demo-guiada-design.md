@@ -86,7 +86,13 @@ Victor escogió **A**. Humi se suma con un botón «Pregúntale a Humi» en cada
 - **Plantilla de WhatsApp para el acceso al portal**: se registra en `TemplateRegistry` y `WorkerInvitation` pasa por los
   canales. Mientras Meta no la apruebe (trámite de Victor), el acceso sale solo por correo; aprobada, sale también por
   WhatsApp sin tocar código. Aplica a empresas reales también (es la misma notificación), detrás de las reglas de canal
-  de siempre.
+  de siempre. **Enviada a Meta el 2026-11-26** (`worker_invite_v1`, id 1462008746046287, UTILITY, es_MX, pie «Humetría»
+  con acento, botón «Crear mi acceso» → `https://humetria.com.mx/access/{{1}}`). El registro del código lleva ese pie
+  (las demás plantillas siguen con «Humetria» hasta que Victor las reenvíe). Meta solo deja la variable al final del
+  botón y el enlace de hoy lleva la empresa a la mitad (`/me/{empresa}/link/{token}`), así que se construye la ruta
+  pública `access/{token}` (en `worker-access.php`, con throttle y en la lista de `RouteSecurityTest` con su razón):
+  busca la empresa por el hash del token y redirige a `worker.link.show` sin gastarlo; un token desconocido responde la
+  misma página que uno vencido. El correo sigue llevando el enlace de siempre.
 - **Fecha de ingreso**: el guía pide, al dar de alta, una fecha de ingreso de hace dos años, para que la persona tenga
   saldo de vacaciones (LFT: sin días antes del primer año). Es el comportamiento real; no hay excepción.
 
