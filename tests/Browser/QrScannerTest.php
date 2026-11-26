@@ -41,6 +41,15 @@ function punchScreenSeeing(string $path): AwaitableWebpage
     return $page;
 }
 
+/**
+ * Whether the camera the page opened is on. Not the hint «Apunte al código…»: the fake camera shows a code from its first frame,
+ * so on a busy runner the scanner has already read it and put its own message there.
+ */
+function cameraIsLive(): string
+{
+    return eventually('() => window.__camera !== undefined && window.__camera.getTracks().some((track) => track.readyState === "live")');
+}
+
 /** Whether every track of the camera the page opened has ended (the phone's camera indicator is off). */
 function cameraIsOff(): string
 {
@@ -162,13 +171,13 @@ it('turns the camera off when it is closed and when the page is left', function 
     $page = punchScreenSeeing('/a/acme/punch?q=abc123def');
 
     $page->press('button:has-text("Entrada")')
-        ->waitForText('Apunte al código de la pantalla de su centro.')
+        ->assertScript(cameraIsLive(), true)
         ->press('button:has-text("Cerrar cámara")')
         ->assertScript(cameraIsOff(), true)
         ->assertMissing('[role="dialog"]');
 
     $page->press('button:has-text("Entrada")')
-        ->waitForText('Apunte al código de la pantalla de su centro.')
+        ->assertScript(cameraIsLive(), true)
         ->script('() => window.dispatchEvent(new Event("pagehide"))');
 
     $page->assertScript(cameraIsOff(), true);
