@@ -19,7 +19,7 @@ export default function CompanyMark({
         <img
             src={logoUrl}
             alt=""
-            className="size-14 shrink-0 rounded-xl border bg-card object-contain p-1.5"
+            className="size-14 shrink-0 card object-contain p-1.5"
         />
     );
 }

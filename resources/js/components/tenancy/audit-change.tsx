@@ -13,7 +13,7 @@ export default function AuditChange({ change }: { change: Change[] }) {
             >
                 Cambio
             </h3>
-            <ul className="grid gap-2 rounded-lg bg-muted px-3.5 py-3 font-mono text-[13px] leading-5">
+            <ul className="grid gap-2 rounded-lg bg-muted px-3.5 py-3 font-mono text-caption">
                 {change.map((row) => (
                     <li key={row.field} className="grid break-words">
                         <span className="text-risk-alto-fg">
