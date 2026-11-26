@@ -766,11 +766,11 @@ it('shares the report through a temporary link that opens with no account until 
 
     expect($link)->toContain('/report/');
 
-    $page->navigate(parse_url($link, PHP_URL_PATH) ?: '')
+    openPath($page, parse_url($link, PHP_URL_PATH) ?: '')
         ->assertSee('Acme compartió este informe contigo')
         ->assertSee('Diagnóstico de factores de riesgo psicosocial');
 
-    visit("/admin/acme/campaigns/{$campaign->id}/report")
+    $page = visit("/admin/acme/campaigns/{$campaign->id}/report")
         ->assertSee('Enlaces abiertos')
         ->click('Revocar')
         // Nothing is revoked before confirming.
@@ -780,8 +780,8 @@ it('shares the report through a temporary link that opens with no account until 
         ->click('Revocar')
         ->click('[role=dialog] button[type=submit]')
         ->assertSee('Enlace revocado.')
-        ->assertDontSee('Enlaces abiertos')
-        ->navigate(parse_url($link, PHP_URL_PATH) ?: '')
+        ->assertDontSee('Enlaces abiertos');
+    openPath($page, parse_url($link, PHP_URL_PATH) ?: '')
         ->assertSee('Este enlace ya no está disponible');
 });
 

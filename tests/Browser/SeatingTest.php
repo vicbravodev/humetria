@@ -317,11 +317,10 @@ it('keeps the answers when the connection drops and sends them when it is back',
         ->click('input[name="discomfort"][value="2"]');
     // Every request fails as without a network until `__offline` is turned off.
     $page->script('() => { const send = XMLHttpRequest.prototype.send; window.__offline = true; XMLHttpRequest.prototype.send = function (...args) { if (window.__offline) { setTimeout(() => this.onerror?.(), 0); return; } send.apply(this, args); }; }');
-    $page->press('Enviar mis respuestas')
+    accessible($page->press('Enviar mis respuestas')
         ->assertSee('Sin conexión.')
         ->assertSee('Sus respuestas siguen en este teléfono y se envían al volver la conexión.')
-        ->assertSee('Pregunta 2 de 2')
-        ->assertNoAccessibilityIssues(1);
+        ->assertSee('Pregunta 2 de 2'), 1);
 
     expect(PersonInput::query()->withoutGlobalScopes()->count())->toBe(0);
 

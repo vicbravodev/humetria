@@ -320,14 +320,13 @@ it('opens «Personalizar días» for a saved week no template gives, with the re
 it('fixes a schedule on a phone, for one person and for several', function (bool $dark): void {
     $url = schedulesPanel();
 
-    visitPage('attendance/schedules', "{$url}/attendance/schedules", $dark, true)
+    accessible(visitPage('attendance/schedules', "{$url}/attendance/schedules", $dark, true)
         ->click('[aria-label="Acciones de Bob Díaz"]')
         ->click('Fijar horario')
         ->click('Lunes a sábado')
         ->click('Personalizar días')
         ->click('[aria-label="Cambiar la jornada"]')
-        ->assertScript(settled(), true)
-        ->assertNoAccessibilityIssues(1)
+        ->assertScript(settled(), true), 1)
         ->assertScript('() => { const panel = document.querySelector(\'[data-slot="sheet-content"]\'); const edge = panel.getBoundingClientRect().right; return panel.scrollWidth <= panel.clientWidth && [...panel.querySelectorAll("input")].every((input) => input.getBoundingClientRect().right <= edge); }', true)
         ->click('Guardar horario')
         ->waitForText('Horario de Bob Díaz guardado.')

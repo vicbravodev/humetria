@@ -79,9 +79,8 @@ it('lets RH approve a request with its effect in view, adding the mark', functio
     [$url, $ana, $yesterday] = correctionsPanel();
     $request = forgottenStart($ana, $yesterday);
 
-    visit("{$url}/attendance/corrections")
-        ->assertSee('Se agrega la marca de entrada de las 09:00 con evidencia Corregida')
-        ->assertNoAccessibilityIssues(1)
+    accessible(visit("{$url}/attendance/corrections")
+        ->assertSee('Se agrega la marca de entrada de las 09:00 con evidencia Corregida'), 1)
         ->fill('note', 'Lo confirmó su jefa.')
         ->click('#approve-correction')
         ->waitForText('Solicitud aprobada')
@@ -205,9 +204,8 @@ it('lets RH verify a mark made without a connection, which leaves the queue', fu
     [$url, $ana, $yesterday] = correctionsPanel();
     anaOffline($ana, $yesterday);
 
-    visit("{$url}/attendance/corrections?status=offline")
-        ->assertSee('Sin conexión · por verificar')
-        ->assertNoAccessibilityIssues(1)
+    accessible(visit("{$url}/attendance/corrections?status=offline")
+        ->assertSee('Sin conexión · por verificar'), 1)
         ->click('#verify-mark')
         ->waitForText('Marca verificada.')
         ->assertSee('Nada por verificar')
