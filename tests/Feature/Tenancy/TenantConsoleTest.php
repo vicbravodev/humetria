@@ -67,6 +67,7 @@ it('lists each company with its status for the superadmin', function (): void {
                 'account_manager' => null,
                 'seats' => null,
                 'invitation' => null,
+                'plan' => null,
             ]]));
 });
 
@@ -134,7 +135,8 @@ it('reads the page in a fixed number of queries: the superadmin role, the permis
     // A fresh instance, as a real request gets: its roles are not loaded yet.
     $superadmin = superadmin()->fresh();
 
-    $this->expectsDatabaseQueryCount(11);
+    // +3: what each company of the page pays (Billing) and what all of them pay, for the header.
+    $this->expectsDatabaseQueryCount(14);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });
 
@@ -177,7 +179,7 @@ it('lists companies with a fixed number of queries', function (): void {
 
     // The superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page,
     // the owners, their users, the open invitations, which of them use Attendance and the staff a company can be handed to.
-    $this->expectsDatabaseQueryCount(12);
+    $this->expectsDatabaseQueryCount(15);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });
 

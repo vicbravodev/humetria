@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Billing\Enums\Plan;
+use App\Modules\Billing\Models\Subscription;
 use App\Modules\Tenancy\Actions\AssignAccountManager;
 use App\Modules\Tenancy\Actions\ExtendTrials;
 use App\Modules\Tenancy\Models\Tenant;
@@ -179,4 +181,20 @@ it('carries no individual answer in its props', function (): void {
     $props = $this->actingAs(superadmin())->get(route('companies.index'))->inertiaProps();
 
     expect(individualAnswersIn($props))->toBe([]);
+});
+
+it('tells each company its plan, what it pays a month and when it renews, and the page what all of them pay', function (): void {
+    $this->travelTo('2026-11-25 18:00 UTC');
+    $paying = Subscription::factory()->plan(Plan::Integral)->create(['renews_on' => '2026-12-15']);
+    Tenant::factory()->create(['trade_name' => 'Sin plan']);
+
+    $response = $this->actingAs(superadmin())->get(route('companies.index'));
+    $rows = collect($response->inertiaProps('tenants.data'))->keyBy('id');
+    $plan = $rows[$paying->tenant_id]['plan'];
+
+    expect($plan['name'])->toBe('Integral')
+        ->and($plan['renews_on'])->toBe('15 dic 2026')
+        ->and($plan['monthly_cents'])->toBeGreaterThan(0)
+        ->and($rows->firstWhere('trade_name', 'Sin plan')['plan'])->toBeNull()
+        ->and($response->inertiaProps('revenueCents'))->toBe($plan['monthly_cents']);
 });

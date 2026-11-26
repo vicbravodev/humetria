@@ -16,4 +16,10 @@ final class DisplayDate
         // Carbon's Spanish months end in a dot ("oct."); the design system writes "27 oct 2026".
         return str_replace('.', '', $moment->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY'));
     }
+
+    /** A day of the calendar (a renewal, a due date), written as it is: it has no hour to move to another time zone. */
+    public static function date(CarbonInterface $date): string
+    {
+        return str_replace('.', '', $date->isoFormat('D MMM YYYY'));
+    }
 }

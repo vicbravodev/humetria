@@ -6,6 +6,7 @@ namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Attendance\Contracts\AttendanceUsage;
+use App\Modules\Billing\Contracts\PlatformRevenue;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Tenancy\Actions\ActivateTenant;
 use App\Modules\Tenancy\Actions\CreateTenant;
@@ -48,7 +49,7 @@ final class TenantConsoleController extends Controller
         return $pages->companies($request->string('q')->trim()->limit(100, '')->toString());
     }
 
-    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads, StaffDirectory $staff): Response
+    public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads, StaffDirectory $staff, PlatformRevenue $revenue): Response
     {
         Gate::authorize('view-console');
 
@@ -61,6 +62,8 @@ final class TenantConsoleController extends Controller
         $usingAttendance = $attendance->among($ids);
         // The prospect each company was created for, so inviting its owner opens already filled.
         $leads = $demoLeads->forCompanies($ids);
+        // What each company of the page pays and when it renews, from Billing, in the same queries however many there are.
+        $plans = $revenue->byCompany($ids);
 
         return Inertia::render('tenancy/index', [
             // A company about to be created from a demo request opens the dialog already filled; one already converted, or gone, offers nothing.
@@ -69,9 +72,10 @@ final class TenantConsoleController extends Controller
             'filters' => ['q' => $search, 'status' => $view->value],
             'counts' => $summary['counts'],
             'trialsEndingSoon' => $summary['trialsEndingSoon'],
+            'revenueCents' => $revenue->monthlyContractedCents(),
             // Who a company can be handed to: Humetría's own people.
             'staff' => $staff->all(),
-            'tenants' => $tenants->through(function (Tenant $tenant) use ($usingAttendance, $leads): array {
+            'tenants' => $tenants->through(function (Tenant $tenant) use ($usingAttendance, $leads, $plans): array {
                 $status = $tenant->status();
 
                 return [
@@ -97,6 +101,11 @@ final class TenantConsoleController extends Controller
                     'account_manager' => $tenant->owner_user_id === null ? null : ['id' => $tenant->owner_user_id, 'name' => $tenant->account_manager_name],
                     'seats' => $tenant->seats_amount === null ? null : ['used' => $tenant->seats_used ?? 0, 'amount' => $tenant->seats_amount],
                     'invitation' => $this->invitation($tenant),
+                    'plan' => isset($plans[$tenant->id]) ? [
+                        'name' => $plans[$tenant->id]->plan,
+                        'monthly_cents' => $plans[$tenant->id]->monthlyCents,
+                        'renews_on' => DisplayDate::date($plans[$tenant->id]->renewsOn),
+                    ] : null,
                 ];
             }),
         ]);
