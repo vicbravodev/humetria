@@ -181,6 +181,8 @@ export type CampaignPerson = {
     name: string;
     area: string;
     reachable: boolean;
+    /** The channel their link went through, or the one that would reach them before it went; null when none does. */
+    channel: 'mail' | 'whatsapp' | null;
     inSample: boolean;
     guides: ParticipantGuide[];
 };

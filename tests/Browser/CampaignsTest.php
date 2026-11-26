@@ -373,6 +373,21 @@ it('shows how the sending of the links goes until it ends, and offers to resend 
     $page->assertDontSee('Enviando invitaciones');
 })->with($looks);
 
+it('shows in the list of people the channel each link went through', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $tenant->id, 'work_center_id' => $plant->id, 'instruments' => ['nom035.guide-i']]);
+
+    foreach (['whatsapp', 'mail'] as $channel) {
+        $participant = App\Modules\Campaigns\Models\Participant::factory()->create(['campaign_id' => $campaign->id, 'invited_via' => $channel]);
+        App\Modules\Campaigns\Models\ParticipantInstrument::factory()->create(['participant_id' => $participant->id, 'instrument' => 'nom035.guide-i']);
+    }
+
+    visit("/admin/acme/campaigns/{$campaign->id}?status=all")
+        ->assertScript('() => [...document.querySelectorAll(\'[data-test="person-channel"]\')].map((cell) => cell.innerText.trim()).toSorted().join("|")', 'Correo|WhatsApp')
+        ->assertNoJavaScriptErrors();
+});
+
 it('sends the link again only to whom it failed', function (): void {
     Illuminate\Support\Facades\Notification::fake();
     $tenant = campaignsCompany();

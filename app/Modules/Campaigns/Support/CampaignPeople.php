@@ -75,7 +75,7 @@ final readonly class CampaignPeople
     /**
      * The people the filter matches, by name, a page at a time.
      *
-     * @return LengthAwarePaginator<int, array{id: string, name: string, area: string, reachable: bool, inSample: bool, guides: list<array{key: string, title: string, status: string, statusLabel: string}>}>
+     * @return LengthAwarePaginator<int, array{id: string, name: string, area: string, reachable: bool, channel: string|null, inSample: bool, guides: list<array{key: string, title: string, status: string, statusLabel: string}>}>
      */
     public function page(Campaign $campaign, PeopleFilter $filter): LengthAwarePaginator
     {
@@ -96,11 +96,15 @@ final readonly class CampaignPeople
             $participant = $participants->get($person->id) ?? throw new LogicException("Employee [{$person->id}] is not in the campaign.");
             $guides = $participant->instruments->sortBy(fn (ParticipantInstrument $guide): int|false => array_search($guide->instrument, $campaign->instruments, true));
 
+            $reachedBy = SurveyInvitation::channel($person);
+
             return [
                 'id' => $participant->id,
                 'name' => $person->name,
                 'area' => $person->areaName,
-                'reachable' => SurveyInvitation::routes($person) !== [],
+                'reachable' => $reachedBy !== null,
+                // The channel the invitation went through; before it went, the one that would reach the person today.
+                'channel' => $participant->invited_via ?? $reachedBy,
                 'inSample' => $participant->in_sample,
                 'guides' => array_values($guides->map(fn (ParticipantInstrument $guide): array => [
                     'key' => $guide->instrument,
