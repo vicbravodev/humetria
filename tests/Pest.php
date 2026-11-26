@@ -248,6 +248,19 @@ function teleworkPortalOf(string $employeeId): App\Modules\Telework\Support\Open
 }
 
 /**
+ * In the browser: opens `$path` in the page and waits for it to load, once. Not navigate(): Pest retries it like an assertion,
+ * one second per attempt, so a page that takes longer (a busy CI runner) is asked for again while it loads and the next read
+ * lands in the new load («Execution context was destroyed»). A pending page opens on its own address first.
+ */
+function openPath(AwaitableWebpage|PendingAwaitablePage|On $page, string $path): AwaitableWebpage
+{
+    $webpage = $page instanceof AwaitableWebpage ? $page : $page->assertNoJavaScriptErrors();
+    $webpage->page()->goto(Pest\Browser\Support\ComputeUrl::from($path));
+
+    return $webpage;
+}
+
+/**
  * In the browser: the steps of a person (`$employeeId`) who opened a page of theirs without a session and was sent to enter.
  * They open a one-time link they asked for (made here), press «Continuar» and land on that page, which shows `$text`.
  * Use as the `$reach` of visitPage() with the person's page as its address, or on a page just opened with visit() (pending:
@@ -265,7 +278,7 @@ function enteringTo(string $employeeId, string $text): Closure
     // expired to the browser, which runs on the real clock, and every request would start a new session.
     config(['session.expire_on_close' => true]);
 
-    return fn (AwaitableWebpage|PendingAwaitablePage|On $page): AwaitableWebpage => $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
+    return fn (AwaitableWebpage|PendingAwaitablePage|On $page): AwaitableWebpage => openPath($page, "/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
 }
 
 /**
@@ -305,9 +318,9 @@ function enteringProvedTo(string $employeeId, string $text): Closure
 
         $page = $enter($pending);
         $there = $page->url();
-        provedWithCode($page->navigate("/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Pendientes');
+        provedWithCode(openPath($page, "/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Pendientes');
 
-        return $page->navigate($there)->waitForText($text);
+        return openPath($page, $there)->waitForText($text);
     };
 }
 

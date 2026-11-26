@@ -258,7 +258,7 @@ it('folds every family of tools until it is opened, and opens on arriving the on
         ->click('Cumple la norma')
         ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", false);
 
-    $page->navigate('/admin/acme/seating')
+    openPath($page, '/admin/acme/seating')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.getAttribute("aria-expanded")).join(" ")', 'true false false')
         ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", true)
         ->assertNoJavaScriptErrors();

@@ -111,7 +111,7 @@ it('marks with the code the camera read: the mark counts with the QR and the zon
     standingAt($page, 19.4327, -99.1332);
 
     // Marcar opened without the code in its address: the only code there is, is the one the camera reads.
-    $page->navigate('/me/acme/punch')->waitForText(', Ana');
+    openPath($page, '/me/acme/punch')->waitForText(', Ana');
     withCameraShowing($page, originOf($page).'/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()));
 
     // One tap: the reader opens, reads the code and the key follows, with no second button to choose.

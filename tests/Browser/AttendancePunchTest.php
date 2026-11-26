@@ -42,7 +42,7 @@ function phoneAtThePunchScreen(bool $dark = false): AwaitableWebpage
     linkThePhone($page, test()->ana->id);
 
     // The test goes on once the screen of Marcar is really there, not while the browser is still settling the navigation.
-    return $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    return openPath($page, '/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText(', Ana');
 }
 
@@ -176,7 +176,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     });
     linkThePhone($page, test()->ana->id);
     standingAt($page, 19.4327, -99.1332);
-    $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    openPath($page, '/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->waitForText(', Ana')
         ->press('button:has-text("Entrada")')
         ->waitForText('Entrada registrada')
@@ -186,9 +186,9 @@ function bobOnAnasPhone(): AwaitableWebpage
 
     expect($clearKeys)->toBeInstanceOf(Closure::class);
     $clearKeys();
-    linkThePhone($page->navigate(accessLinkPath($bob->id)), $bob->id);
+    linkThePhone(openPath($page, accessLinkPath($bob->id)), $bob->id);
 
-    return $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
+    return openPath($page, '/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true)
         ->assertDontSee('Su día');
 }
@@ -303,7 +303,7 @@ it('asks a remote person for no code nor zone, and not for the position (hallazg
     linkThePhone($page, $this->ana->id);
 
     // From her portal: the page knows how she marks before she signs. She never lets the page read her position.
-    $page->navigate('/me/acme/punch')
+    openPath($page, '/me/acme/punch')
         ->waitForText(', Ana')
         ->assertSee('Marque desde donde esté: no se le pedirá un QR ni estar en una zona.')
         ->assertDontSee('Sobre su ubicación')
@@ -329,7 +329,7 @@ it('accepts the agreement and marks the step that proceeds with one signature, w
     // Linked, without the agreement accepted.
     $page->press('button:has-text("Continuar")')->waitForText('cree su llave de acceso')->press('button:has-text("Crear llave")')->waitForText('Pendientes');
     standingAt($page, 19.4327, -99.1332);
-    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
+    openPath($page, '/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
         ->waitForText(', Ana')
         ->press('¿No es usted?')
         ->waitForText('Regresar de comer')

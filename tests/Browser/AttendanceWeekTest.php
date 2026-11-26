@@ -70,7 +70,7 @@ function anaSeesHerWeek(bool $dark = false): AwaitableWebpage
     $page = visitPage('worker-access/link', $enroll, $dark, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, test()->ana->id);
 
-    return $page->navigate('/me/acme/punch')
+    return openPath($page, '/me/acme/punch')
         ->waitForText('Vea sus marcas y sus horas')
         ->click('Vea sus marcas y sus horas')
         ->waitForText('Ver mi semana')
@@ -260,7 +260,7 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
         ->assertScript(cspViolations(), '[]')
         ->assertScript(smallTouchTargets(), '');
 
-    $page->navigate('/admin/acme/attendance/corrections')
+    openPath($page, '/admin/acme/attendance/corrections')
         ->waitForText('El martes salí a las 20:00, el QR no cargaba.')
         // The panel says first that her confirmed week reopens.
         ->waitForText('ya tenía respuesta: se reabre y le pedimos responderla otra vez')
@@ -268,7 +268,7 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
         ->waitForText('Solicitud aprobada');
 
     $monday = WeekPeriod::containing(CarbonImmutable::now()->subWeek(), 'America/Mexico_City')->start()->toDateString();
-    $page->navigate("/me/acme/week/{$monday}")
+    openPath($page, "/me/acme/week/{$monday}")
         ->waitForText('Ver mi semana')
         ->press('Ver mi semana')
         ->waitForText('Total de la semana')
@@ -290,7 +290,7 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
     // On site, outside the zone of the center (a code read, so the key comes straight after): the mark is refused.
     AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     standingAt($page, 19.4336, -99.1332);
-    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
+    openPath($page, '/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
         ->waitForText(', Ana')
         ->press('button:has-text("Entrada")')
         ->waitForText('Pedir una corrección')
