@@ -9,17 +9,21 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import type { IdSelection } from '@/hooks/use-id-selection';
+import type { TenantPeek } from '@/components/tenancy/tenant-quick-view';
 import type { TenantRow } from '@/types';
 
 export default function TenantsTable({
     tenants,
     activationMinDate,
     selection,
+    peek,
 }: {
     tenants: TenantRow[];
     activationMinDate: string;
     /** Only the superadmin chooses companies to act on several at once. */
     selection: IdSelection | null;
+    /** On a wide screen, the company whose quick view is docked beside the table, and how to choose another. */
+    peek: TenantPeek | null;
 }) {
     return (
         <Table>
@@ -42,16 +46,18 @@ export default function TenantsTable({
                     )}
                     <TableHead>Empresa</TableHead>
                     <TableHead className="max-md:hidden">Estado</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                        Dueño
-                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">Plan</TableHead>
                     <TableHead className="hidden lg:table-cell">
                         Asientos
                     </TableHead>
-                    <TableHead className="hidden 2xl:table-cell">
-                        Responsable
+                    <TableHead className="hidden text-right xl:table-cell">
+                        Al mes
                     </TableHead>
-                    <TableHead className="hidden lg:table-cell">
+                    {/* With the quick view docked (1600 px and up) these two live in it. */}
+                    <TableHead className="hidden min-[1400px]:table-cell min-[1600px]:hidden">
+                        Renueva
+                    </TableHead>
+                    <TableHead className="hidden min-[1500px]:table-cell min-[1600px]:hidden">
                         Último acceso
                     </TableHead>
                     <TableHead>
@@ -66,6 +72,7 @@ export default function TenantsTable({
                         tenant={tenant}
                         activationMinDate={activationMinDate}
                         selection={selection}
+                        peek={peek}
                     />
                 ))}
             </TableBody>

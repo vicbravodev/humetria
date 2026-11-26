@@ -55,3 +55,10 @@ export type CompanyPage = {
     can_manage: boolean;
     can_audit: boolean;
 };
+
+/** A company's plan as its row in the console shows it: what it pays a month before VAT (null while it does not pay) and when it renews. */
+export type TenantPlan = {
+    name: string;
+    monthly_cents: number | null;
+    renews_on: string;
+};

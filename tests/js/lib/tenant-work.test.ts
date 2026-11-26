@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { companyFacts, seatsText, trialExtensionCopy } from '@/lib/tenant-work';
+import {
+    companyFacts,
+    monthlyText,
+    ownerLine,
+    seatsShare,
+    seatsText,
+    trialExtensionCopy,
+} from '@/lib/tenant-work';
 
 describe('seatsText', () => {
     it('writes the seats in use against what the plan covers', () => {
@@ -56,5 +63,49 @@ describe('companyFacts', () => {
             ['Renueva', '—'],
             ['Alta', '14 mar 2026'],
         ]);
+    });
+});
+
+describe('seatsShare', () => {
+    it('says what part of its seats a company uses, rounded', () => {
+        expect(seatsShare({ used: 96, amount: 150 })).toBe('64 %');
+        expect(seatsShare({ used: 1, amount: 3 })).toBe('33 %');
+    });
+
+    it('says nothing without a plan, and 0 % when the plan covers no seat', () => {
+        expect(seatsShare(null)).toBe('');
+        expect(seatsShare({ used: 0, amount: 0 })).toBe('0 %');
+    });
+});
+
+describe('monthlyText', () => {
+    it('writes what a company pays a month, or why it shows no figure', () => {
+        expect(
+            monthlyText({
+                name: 'Integral',
+                monthly_cents: 1_420_000,
+                renews_on: '15 dic 2026',
+            }),
+        ).toBe('$14,200');
+        expect(
+            monthlyText({
+                name: 'Integral',
+                monthly_cents: null,
+                renews_on: '15 dic 2026',
+            }),
+        ).toBe('No paga aún');
+        expect(monthlyText(null)).toBe('—');
+    });
+});
+
+describe('ownerLine', () => {
+    it('names who owns the company under its name, after its RFC', () => {
+        expect(
+            ownerLine('GEJ0101011A1', {
+                name: 'Ana Pérez',
+                email: 'ana@acme.mx',
+            }),
+        ).toBe('GEJ0101011A1 · Dueño: Ana Pérez');
+        expect(ownerLine('GEJ0101011A1', null)).toBe('GEJ0101011A1');
     });
 });

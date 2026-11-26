@@ -120,6 +120,13 @@ describe('companiesSummary', () => {
             '4 empresas · 2 pruebas terminan esta semana',
         );
     });
+
+    it('adds what the companies pay a month when they pay something', () => {
+        expect(companiesSummary(48, 4, 18_460_000)).toBe(
+            '48 empresas · $184,600 al mes contratado · 4 pruebas terminan esta semana',
+        );
+        expect(companiesSummary(3, 0, 0)).toBe('3 empresas');
+    });
 });
 
 describe('companiesQuery', () => {

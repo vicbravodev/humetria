@@ -39,21 +39,26 @@ it('shows the superadmin every company with its status', function (bool $dark, b
         ->assertSee('Empresas')
         ->assertSee('5 empresas')
         ->assertSee('Grupo Ejemplo')
-        ->assertSee('Grupo Ejemplo S.A. de C.V.')
         ->assertSee('GEJ0101011A1')
         ->assertSee('Sin iniciar');
 
     $page->assertSee('Sin invitar')
         ->assertSee('Ana Pérez')
-        ->assertSee('ana@acme.mx')
         ->assertSee('Invitación enviada · vence el')
         ->assertSee('Vencida')
         ->assertSee('carla@acme.mx')
-        ->assertSee('dora@acme.mx')
         ->assertSee('eva@acme.mx');
 
+    // The legal name and the owner's email live in the quick view (tablero Empresas), one line per row in the table.
+    $page->click('[aria-label="Vista rápida de Con owner"]')
+        ->assertSee('ana@acme.mx');
+    visit('/admin/companies')
+        ->click('[aria-label="Vista rápida de Grupo Ejemplo"]')
+        ->assertSee('Grupo Ejemplo S.A. de C.V.');
+
     // A company with an owner offers to change it, from its row's menu.
-    $page->click('[aria-label="Acciones de Con owner"]')
+    visit('/admin/companies')
+        ->click('[aria-label="Acciones de Con owner"]')
         ->assertSee('Cambiar owner');
 })->with($looks);
 

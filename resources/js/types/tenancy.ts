@@ -1,3 +1,4 @@
+import type { TenantPlan } from './company-console';
 import type { TenantCan } from './tenant-can';
 export type TenantOwner = {
     name: string;
@@ -55,6 +56,8 @@ export type TenantRow = {
     /** The seats it uses of its plan; null without a plan. */
     seats: { used: number; amount: number } | null;
     invitation: TenantInvitation | null;
+    /** Its plan from Billing: what it pays a month before VAT (null while it does not pay) and when it renews; null without one. */
+    plan: TenantPlan | null;
 };
 
 /** Someone of Humetría's staff, who a company can be handed to. */

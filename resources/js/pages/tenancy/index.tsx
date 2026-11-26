@@ -2,11 +2,9 @@ import { Head, usePage } from '@inertiajs/react';
 import Pagination from '@/components/humetria/pagination';
 import PageHeader from '@/components/humetria/page-header';
 import CreateTenantDialog from '@/components/tenancy/create-tenant-dialog';
-import TenantsBulkBar from '@/components/tenancy/tenants-bulk-bar';
 import TenantsEmpty from '@/components/tenancy/tenants-empty';
-import TenantsTable from '@/components/tenancy/tenants-table';
 import TenantsToolbar from '@/components/tenancy/tenants-toolbar';
-import { useIdSelection } from '@/hooks/use-id-selection';
+import TenantsWorkArea from '@/components/tenancy/tenants-work-area';
 import { companiesSummary, tenantsFiltered } from '@/lib/tenant-status';
 import type {
     Paginated,
@@ -25,6 +23,7 @@ export default function Tenants({
     trialsEndingSoon,
     prefill,
     staff,
+    revenueCents,
 }: {
     tenants: Paginated<TenantRow>;
     activationMinDate: string;
@@ -33,10 +32,10 @@ export default function Tenants({
     trialsEndingSoon: number;
     prefill: TenantPrefill | null;
     staff: StaffMember[];
+    revenueCents: number;
 }) {
     const { auth } = usePage().props;
     const filtered = tenantsFiltered(counts, filters);
-    const selection = useIdSelection(tenants.data.map((tenant) => tenant.id));
 
     return (
         <>
@@ -44,7 +43,11 @@ export default function Tenants({
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     title="Empresas"
-                    description={companiesSummary(counts.all, trialsEndingSoon)}
+                    description={companiesSummary(
+                        counts.all,
+                        trialsEndingSoon,
+                        revenueCents,
+                    )}
                 >
                     {/* Support sees the console and enters companies; only the superadmin changes them. */}
                     {auth.isSuperadmin && (
@@ -61,19 +64,11 @@ export default function Tenants({
                 {tenants.data.length === 0 ? (
                     <TenantsEmpty filtered={filtered} filters={filters} />
                 ) : (
-                    <div className="flex flex-col gap-2">
-                        <TenantsTable
-                            tenants={tenants.data}
-                            activationMinDate={activationMinDate}
-                            selection={auth.isSuperadmin ? selection : null}
-                        />
-                        {auth.isSuperadmin && (
-                            <TenantsBulkBar
-                                selection={selection}
-                                staff={staff}
-                            />
-                        )}
-                    </div>
+                    <TenantsWorkArea
+                        tenants={tenants.data}
+                        activationMinDate={activationMinDate}
+                        staff={staff}
+                    />
                 )}
                 <Pagination
                     previous="Ver más recientes"

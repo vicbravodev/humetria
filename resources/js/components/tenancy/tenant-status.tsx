@@ -2,23 +2,23 @@ import { Badge } from '@/components/ui/badge';
 import { tenantStatusVariant } from '@/lib/tenant-status';
 import type { TenantRow } from '@/types';
 
-/** A company's status with its date and, when restricted, why. */
+/** A company's status in its row (tablero Empresas): one label; its date and reason are in the quick view and on hover. */
 export default function TenantStatus({ tenant }: { tenant: TenantRow }) {
+    const detail = [
+        tenant.status_date,
+        tenant.restriction_reason === null
+            ? null
+            : `Motivo: ${tenant.restriction_reason}`,
+    ]
+        .filter((line) => line !== null)
+        .join(' · ');
+
     return (
-        <div className="flex flex-col items-start gap-1">
-            <Badge variant={tenantStatusVariant(tenant.status)}>
-                {tenant.status_label}
-            </Badge>
-            {tenant.status_date !== null && (
-                <span className="text-caption text-muted-foreground">
-                    {tenant.status_date}
-                </span>
-            )}
-            {tenant.restriction_reason !== null && (
-                <span className="max-w-64 text-caption text-muted-foreground">
-                    Motivo: {tenant.restriction_reason}
-                </span>
-            )}
-        </div>
+        <Badge
+            variant={tenantStatusVariant(tenant.status)}
+            title={detail === '' ? undefined : detail}
+        >
+            {tenant.status_label}
+        </Badge>
     );
 }
