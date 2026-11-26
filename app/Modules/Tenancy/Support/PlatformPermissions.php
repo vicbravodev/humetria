@@ -25,6 +25,7 @@ final class PlatformPermissions
         'manage-demo' => 'Manejar la sala de demo',
         'manage-platform-users' => 'Ayudar a personas con cuenta y dar o quitar el rol de soporte',
         'view-audit' => 'Leer la bitácora',
+        'view-operations' => 'Ver la salud del sistema y la mensajería',
         'viewHorizon' => 'Ver las colas',
     ];
 
