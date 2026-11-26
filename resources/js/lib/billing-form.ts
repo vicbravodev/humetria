@@ -16,7 +16,6 @@ export const PLANS: Choice<Plan>[] = [
     { value: 'jornada', label: 'Jornada' },
     { value: 'cumplimiento', label: 'Cumplimiento' },
     { value: 'integral', label: 'Integral' },
-    { value: 'enterprise', label: 'Enterprise' },
 ];
 
 const UNION_PLAN: Choice<Plan> = { value: 'sindicato', label: 'Sindicato' };

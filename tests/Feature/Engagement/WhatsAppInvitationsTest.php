@@ -33,7 +33,7 @@ beforeEach(function (): void {
     Notification::fake();
     RateLimiter::clear('survey-invitations');
     config(['whatsapp.enabled' => true, 'whatsapp.paused' => false, 'messaging.recipient_keys' => [1 => base64_encode('a-key')],
-        'billing.versions.v1.plans.cumplimiento.quotas.whatsapp' => 100]);
+        'billing.versions.v2.plans.cumplimiento.quotas.whatsapp' => 100]);
     [, $account] = paidCompany();
     $this->tenant = planFor($account, tenant: Tenant::factory()->create(['trade_name' => 'Autopartes del Bajío']));
     $this->user = User::factory()->create();
@@ -83,7 +83,7 @@ function surveyChannelsSent(): array
 }
 
 it('reserves all the WhatsApp messages of a launch or none (CUJ 2)', function (): void {
-    config(['billing.versions.v1.plans.cumplimiento.quotas.whatsapp' => 5]);
+    config(['billing.versions.v2.plans.cumplimiento.quotas.whatsapp' => 5]);
 
     expect(fn () => waSurveyLaunch($this->tenant, $this->plant, $this->area, $this->user, 6))->toThrow(WhatsAppQuotaExceeded::class);
 

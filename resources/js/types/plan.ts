@@ -29,4 +29,6 @@ export type CompanyChannelsPage = {
     consent: { version: string; text: string };
     costNotice: string;
     whatsAppQuota: { used: number; quota: number };
+    /** The demo company never writes by WhatsApp, whatever its channels say. */
+    isDemo: boolean;
 };

@@ -2,7 +2,7 @@ import { probeText } from '@/lib/attendance/zone-map';
 import type { Probe } from '@/lib/attendance/zone-map';
 import { cn } from '@/lib/utils';
 
-/** What the plan says of the point RH touched: whether a mark made there would count, and how far it is from the center. */
+/** What the map says of the point RH touched: whether a mark made there would count, and how far it is from the center. */
 export default function ZoneProbeNote({ probe }: { probe: Probe | null }) {
     const answer = probe === null ? null : probeText(probe);
 
@@ -17,7 +17,7 @@ export default function ZoneProbeNote({ probe }: { probe: Probe | null }) {
             )}
         >
             {answer === null ? (
-                'Toca cualquier punto del plano para probar si una marca contaría.'
+                'Toca cualquier punto del mapa para probar si una marca contaría.'
             ) : (
                 <>
                     <strong className="font-semibold">{answer.lead}</strong>

@@ -26,6 +26,7 @@ const page = (
     consent: { version: '2026-11-18', text: 'Acepto' },
     costNotice: 'Cuesta',
     whatsAppQuota: { used: 0, quota: 1000 },
+    isDemo: false,
     ...over,
 });
 

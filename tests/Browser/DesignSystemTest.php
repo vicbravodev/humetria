@@ -137,18 +137,18 @@ it('opens an entry into its submenu as the sidebar design draws it', function (b
 it('folds a submenu away from its parent and lights the closest child on a deeper page', function (): void {
     signInToPanel();
 
-    visit('/admin/acme/telework')
+    $page = visit('/admin/acme/telework')
         ->click('[data-sidebar="menu-button"][aria-expanded="true"]')
         // NOM-035 is a submenu too, folded: the one that just folded is NOM-037, and no submenu is open.
-        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"][aria-expanded="false"]\')].some((button) => button.textContent.includes("NOM-037")) && document.querySelector(\'[data-sidebar="menu-sub"]\') === null')
-        ->navigate('/admin/acme/telework/documents')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"][aria-expanded="false"]\')].some((button) => button.textContent.includes("NOM-037")) && document.querySelector(\'[data-sidebar="menu-sub"]\') === null');
+    openPath($page, '/admin/acme/telework/documents')
         ->assertScript('() => document.querySelector(\'[data-sidebar="menu-sub-button"][aria-current="page"]\')?.textContent', 'Documentos');
 });
 
 it('folds the sidebar to its icons and remembers it', function (bool $dark): void {
     $panel = signInToPanel(superadmin());
 
-    $page = visitPage('dashboard', $panel, $dark)
+    $page = accessible(visitPage('dashboard', $panel, $dark)
         ->click('[data-sidebar="trigger"]')
         ->assertScript(SETTLED)
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.collapsible', 'icon')
@@ -159,10 +159,9 @@ it('folds the sidebar to its icons and remembers it', function (bool $dark): voi
         ->hover('[data-sidebar="menu-button"][href$="/admin/companies"]')
         ->assertScript('() => document.querySelector(\'[role="tooltip"]\')?.textContent', 'Empresas')
         // axe reads colors as painted: let the tooltip finish fading in before it judges the contrast.
-        ->assertScript(SETTLED)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(SETTLED), 1);
 
-    $page->refresh()
+    reloadPage($page)
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'collapsed')
         // ⌘B (Ctrl+B) unfolds it again.
         ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })); return true; }')
@@ -249,12 +248,11 @@ it('titles the settings like every other page and marks where you are', function
 it('switches the theme from the app frame and keeps it', function (): void {
     $panel = signInToPanel();
 
-    visitPage('dashboard', $panel)
+    reloadPage(visitPage('dashboard', $panel)
         ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent !== null')
         ->click('[role="radio"][aria-label="Oscuro"]')
         ->assertScript('() => document.documentElement.classList.contains("dark")')
-        ->assertScript('() => document.querySelector(\'[role="radio"][aria-label="Oscuro"]\').getAttribute("aria-checked")', 'true')
-        ->refresh()
+        ->assertScript('() => document.querySelector(\'[role="radio"][aria-label="Oscuro"]\').getAttribute("aria-checked")', 'true'))
         ->assertScript('() => document.documentElement.classList.contains("dark")')
         ->click('[role="radio"][aria-label="Claro"]')
         ->assertScript('() => document.documentElement.classList.contains("dark")', false);
@@ -263,13 +261,12 @@ it('switches the theme from the app frame and keeps it', function (): void {
 it('switches the theme on a phone from one button, leaving the trail its room', function (): void {
     $panel = signInToPanel();
 
-    visitPage('dashboard', $panel, mobile: true)
+    reloadPage(visitPage('dashboard', $panel, mobile: true)
         // The three-way switch would squeeze where the page sits: on a phone the theme is one button with a menu.
         ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent === null')
         ->click('button[aria-label="Tema"]')
         ->click('[role="menuitemradio"]:has-text("Oscuro")')
-        ->assertScript('() => document.documentElement.classList.contains("dark")')
-        ->refresh()
+        ->assertScript('() => document.documentElement.classList.contains("dark")'))
         ->assertScript('() => document.documentElement.classList.contains("dark")')
         ->click('button[aria-label="Tema"]')
         ->assertScript('() => document.querySelector(\'[role="menuitemradio"][aria-checked="true"]\').textContent.trim()', 'Oscuro')

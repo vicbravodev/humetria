@@ -232,7 +232,7 @@ it('keeps what was answered on the device after a reload, and picks up at the fi
     $page->script(ANSWER_SCREEN);
     $page->click('Siguiente')->assertSee('Pregunta 4 de 5');
 
-    $page->refresh()
+    reloadPage($page)
         ->click('Comenzar')
         ->click('Empezar')
         ->assertSee('Sección 1 de 14')
@@ -256,8 +256,7 @@ it('picks up at the first unanswered question on a phone too', function (): void
         $page->click('Siguiente');
     }
 
-    $page->assertSee('Pregunta 3 de 5')
-        ->refresh()
+    reloadPage($page->assertSee('Pregunta 3 de 5'))
         ->click('Comenzar')
         ->click('Empezar')
         ->assertSee('Pregunta 3 de 5')
@@ -341,7 +340,7 @@ it('clears what the device kept for a link once it no longer works', function ()
     $page->script("() => { localStorage.setItem('humetria:survey:the-token:nom035.guide-i', '{\"1\":\"yes\"}'); localStorage.setItem('appearance', 'dark'); return true; }");
     ParticipantInstrument::query()->withoutGlobalScopes()->update(['status' => 'completed', 'completed_at' => now()]);
 
-    $page->refresh()
+    reloadPage($page)
         ->assertSee('Ya contestó todo lo que le correspondía')
         ->assertScript("() => localStorage.getItem('humetria:survey:the-token:nom035.guide-i')", null)
         ->assertScript("() => localStorage.getItem('appearance')", 'dark');

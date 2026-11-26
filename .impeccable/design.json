@@ -1,0 +1,323 @@
+{
+    "schemaVersion": 2,
+    "generatedAt": "2026-11-26T05:25:46.000Z",
+    "title": "Design System: Humetría",
+    "extensions": {
+        "colorMeta": {
+            "primary": {
+                "role": "primary",
+                "displayName": "Jade de Humetría",
+                "canonical": "#0B7A6F",
+                "tonalRamp": [
+                    "#032521",
+                    "#053732",
+                    "#074943",
+                    "#096259",
+                    "#0B7A6F",
+                    "#60A9A1",
+                    "#9DCAC5",
+                    "#DAEBE9"
+                ]
+            },
+            "background": {
+                "role": "neutral",
+                "displayName": "Aire jade",
+                "canonical": "#FBFDFC",
+                "tonalRamp": [
+                    "#4B4C4C",
+                    "#717271",
+                    "#979897",
+                    "#C9CACA",
+                    "#FBFDFC",
+                    "#FCFEFD",
+                    "#FDFEFE",
+                    "#FEFFFF"
+                ]
+            },
+            "foreground": {
+                "role": "neutral",
+                "displayName": "Tinta del logo",
+                "canonical": "#14211F",
+                "tonalRamp": [
+                    "#060A09",
+                    "#090F0E",
+                    "#0C1413",
+                    "#101A19",
+                    "#14211F",
+                    "#666F6D",
+                    "#A1A6A5",
+                    "#DCDEDD"
+                ]
+            },
+            "muted-foreground": {
+                "role": "neutral",
+                "displayName": "Tinta suave",
+                "canonical": "#56635F",
+                "tonalRamp": [
+                    "#1A1E1D",
+                    "#272D2B",
+                    "#343B39",
+                    "#454F4C",
+                    "#56635F",
+                    "#919A97",
+                    "#BBC1BF",
+                    "#E6E8E7"
+                ]
+            },
+            "accent": {
+                "role": "neutral",
+                "displayName": "Acento tenue",
+                "canonical": "#E5F1EE",
+                "tonalRamp": [
+                    "#454847",
+                    "#676C6B",
+                    "#89918F",
+                    "#B7C1BE",
+                    "#E5F1EE",
+                    "#EEF6F4",
+                    "#F5F9F8",
+                    "#FBFDFC"
+                ]
+            },
+            "border": {
+                "role": "neutral",
+                "displayName": "Filo",
+                "canonical": "#DCE5E2",
+                "tonalRamp": [
+                    "#424544",
+                    "#636766",
+                    "#848988",
+                    "#B0B7B5",
+                    "#DCE5E2",
+                    "#E8EEEC",
+                    "#F1F5F3",
+                    "#FAFBFB"
+                ]
+            },
+            "input": {
+                "role": "neutral",
+                "displayName": "Contorno de control",
+                "canonical": "#7E8C88",
+                "tonalRamp": [
+                    "#262A29",
+                    "#393F3D",
+                    "#4C5452",
+                    "#65706D",
+                    "#7E8C88",
+                    "#ABB4B2",
+                    "#CBD1CF",
+                    "#ECEEED"
+                ]
+            },
+            "destructive": {
+                "role": "status",
+                "displayName": "Terracota",
+                "canonical": "#B0463C",
+                "tonalRamp": [
+                    "#351512",
+                    "#4F1F1B",
+                    "#6A2A24",
+                    "#8D3830",
+                    "#B0463C",
+                    "#CC8780",
+                    "#DFB5B1",
+                    "#F3E3E2"
+                ]
+            },
+            "risk-medio": {
+                "role": "status",
+                "displayName": "Arena de riesgo",
+                "canonical": "#A47F2C",
+                "tonalRamp": [
+                    "#31260D",
+                    "#4A3914",
+                    "#624C1A",
+                    "#836623",
+                    "#A47F2C",
+                    "#C4AC76",
+                    "#DBCCAB",
+                    "#F1ECDF"
+                ]
+            }
+        },
+        "typographyMeta": {
+            "display": {
+                "displayName": "Display",
+                "purpose": "Una vez por pantalla: bienvenida o portada de reporte."
+            },
+            "headline": {
+                "displayName": "Headline",
+                "purpose": "Título de página."
+            },
+            "title": {
+                "displayName": "Title",
+                "purpose": "Título de tarjeta y diálogo."
+            },
+            "body": {
+                "displayName": "Body",
+                "purpose": "Texto por defecto e inputs."
+            },
+            "question": {
+                "displayName": "Question",
+                "purpose": "Enunciado de la encuesta."
+            },
+            "label": {
+                "displayName": "Label",
+                "purpose": "Etiquetas, botones y metadatos."
+            }
+        },
+        "shadows": [
+            {
+                "name": "raised",
+                "value": "0 1px 2px rgb(20 33 31 / 5%), 0 4px 16px -6px rgb(20 33 31 / 8%)",
+                "purpose": "El panel de la página sobre el marco del sidebar, las barras inferiores flotantes y la pastilla activa de un control segmentado."
+            },
+            {
+                "name": "float",
+                "value": "0 2px 4px rgb(20 33 31 / 4%), 0 12px 32px -8px rgb(20 33 31 / 16%)",
+                "purpose": "Popover, select abierto, diálogo, tooltip y toast."
+            }
+        ],
+        "motion": [
+            {
+                "name": "ease-out",
+                "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+                "purpose": "Salidas y cambios de estado."
+            },
+            {
+                "name": "ease-in-out",
+                "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+                "purpose": "Movimientos en pantalla."
+            },
+            {
+                "name": "ease-drawer",
+                "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+                "purpose": "Sidebar y lo que se despliega."
+            }
+        ],
+        "breakpoints": [
+            {
+                "name": "md",
+                "value": "768px"
+            }
+        ]
+    },
+    "components": [
+        {
+            "name": "Primary Button",
+            "kind": "button",
+            "refersTo": "button-primary",
+            "description": "La acción principal de la vista; una sola por vista o tarjeta.",
+            "html": "<button class=\"ds-btn ds-btn-primary\">Enviar recordatorio</button>",
+            "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:8px;font:500 16px/24px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,transform .1s cubic-bezier(.23,1,.32,1)}.ds-btn:active{transform:scale(.97)}.ds-btn:focus-visible{outline:2px solid #0B7A6F;outline-offset:2px}.ds-btn-primary{background:#0B7A6F;color:#fff;border:0}.ds-btn-primary:hover{filter:brightness(1.07)}"
+        },
+        {
+            "name": "Outline Button",
+            "kind": "button",
+            "refersTo": "button-outline",
+            "description": "Acción secundaria con contorno de control de 3:1.",
+            "html": "<button class=\"ds-btn ds-btn-outline\">Ver reporte</button>",
+            "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:8px;font:500 16px/24px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,transform .1s cubic-bezier(.23,1,.32,1)}.ds-btn:active{transform:scale(.97)}.ds-btn:focus-visible{outline:2px solid #0B7A6F;outline-offset:2px}.ds-btn-outline{background:#fff;color:#14211F;border:1px solid #7E8C88}.ds-btn-outline:hover{background:#E5F1EE}"
+        },
+        {
+            "name": "Card",
+            "kind": "card",
+            "refersTo": "card",
+            "description": "Contenedor con borde, sin sombra, para una entidad viva con estado y acción.",
+            "html": "<div class=\"ds-card\"><h3>Planta Apodaca</h3><p>Faltan 44 respuestas</p><div class=\"ds-track\"><span></span></div></div>",
+            "css": ".ds-card{background:#fff;border:1px solid #DCE5E2;border-radius:14px;padding:24px;font-family:Figtree,system-ui,sans-serif;color:#14211F;width:280px}.ds-card h3{margin:0 0 4px;font:600 20px/28px Figtree,system-ui,sans-serif}.ds-card p{margin:0 0 16px;color:#56635F;font:400 16px/24px Figtree,system-ui,sans-serif}.ds-track{height:8px;border-radius:9999px;background:#E3EAE7}.ds-track span{display:block;height:100%;width:64%;border-radius:9999px;background:#0B7A6F}"
+        },
+        {
+            "name": "Input",
+            "kind": "input",
+            "refersTo": "input",
+            "description": "Campo de una línea de 44 px con texto de 16 px.",
+            "html": "<input class=\"ds-input\" placeholder=\"nombre@empresa.mx\">",
+            "css": ".ds-input{height:44px;width:260px;padding:0 16px;border:1px solid #7E8C88;border-radius:8px;background:#fff;color:#14211F;font:400 16px/24px Figtree,system-ui,sans-serif}.ds-input:hover{border-color:#14211F99}.ds-input:focus-visible{outline:2px solid #0B7A6F;outline-offset:2px;border-color:#0B7A6F}"
+        },
+        {
+            "name": "Risk Level",
+            "kind": "custom",
+            "refersTo": "badge",
+            "description": "Medidor de 5 segmentos, etiqueta escrita y color: tres señales.",
+            "html": "<span class=\"ds-risk\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"on\"></i><i></i><i></i><b>Riesgo medio</b></span>",
+            "css": ".ds-risk{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;background:#F6EEDC;color:#7A5714;font:500 14px/20px Figtree,system-ui,sans-serif}.ds-risk i{width:8px;height:14px;border-radius:2px;background:#A47F2C33}.ds-risk i.on{background:#A47F2C}.ds-risk b{font-weight:500;margin-left:6px}"
+        },
+        {
+            "name": "Sidebar Item",
+            "kind": "nav",
+            "refersTo": "sidebar-item-active",
+            "description": "Elemento activo de la navegación lateral.",
+            "html": "<nav class=\"ds-nav\"><a class=\"on\">Aplicaciones</a><a>Personal</a></nav>",
+            "css": ".ds-nav{display:flex;flex-direction:column;gap:4px;width:220px;padding:8px;background:#F2F6F5;border-radius:10px;font-family:Figtree,system-ui,sans-serif}.ds-nav a{display:flex;align-items:center;height:44px;padding:0 12px;border-radius:8px;color:#14211F;font:400 14px/20px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s}.ds-nav a:hover{background:#EDF3F1}.ds-nav a.on{background:#fff;box-shadow:0 0 0 1px #DCE5E2;font-weight:500}.ds-nav a.on svg{color:#0B7A6F}"
+        }
+    ],
+    "narrative": {
+        "northStar": "La mesa de trabajo clara",
+        "overview": "**La app es la fuente de verdad:** toda pantalla nueva parte de la más parecida de la app y se arma con sus piezas. Este\ndocumento rige el panel de RH, el portal de la persona trabajadora (la app instalable) y la encuesta. Los marcos, la tabla\nde piezas, las reglas completas de la app instalable, el movimiento y el sitio público están en\n`docs/design-system/design-system.md`; quién usa Humetría y qué no debe parecer, en `PRODUCT.md`.\n\nEl panel es una mesa bien iluminada donde RH ve de un vistazo qué aplicaciones requieren atención y abre cada una para actuar. La personalidad sale de PRODUCT.md: *clara, cercana y rigurosa*. Clara en el siguiente paso que pide, cercana en el trato y el lenguaje de RH en México, rigurosa en lo que comunica sobre estado, privacidad y alcance. El sistema responde con superficies casi blancas, un solo acento jade, bordes en lugar de sombras y una jerarquía que sale del espacio, no del color.\n\nLa densidad es media: una pregunta por pantalla, una acción primaria por vista, listas con filtros junto a los datos y paso del resumen al detalle (modelo Linear y Stripe Dashboard). La encuesta y el portal de la persona trabajadora son otra cosa: una columna para una mano, letra de 18 a 20 px en la encuesta, áreas táctiles de 44 px o más, y nada avanza solo.\n\nEl sistema rechaza lo infantil, lo frío y el gris corporativo, lo cargado, el color sin jerarquía, la plantilla genérica de SaaS con IA y el portal de trámites.",
+        "keyCharacteristics": [
+            "Un solo acento (`primary`), neutros con tinte jade. Con white label, la empresa cambia su logo y su acento (`BrandPalette` lo ajusta a 4.5:1); tipografía y disposición nunca cambian.",
+            "Tarjetas con borde y sin sombra; solo el panel de la página, las barras flotantes y lo que flota llevan sombra.",
+            "Riesgo en tres señales: medidor de 5 segmentos, texto y color sobrio.",
+            "Figtree 400/500/600, cuerpo de 16 px, sin cursivas ni pesos 700+.",
+            "Movimiento que confirma lo hecho, máximo 300 ms; con `prefers-reduced-motion` solo quedan desvanecidos.",
+            "Claro y oscuro con la misma jerarquía.",
+            "Espacio: la página llena hasta 1440 px centrada; formularios y lectura a 880 px a la izquierda; 32 px entre bloques, 48 px entre grupos; margen lateral de 16 px en el celular y 40 px desde `md`."
+        ],
+        "rules": [
+            {
+                "name": "The One Voice Rule",
+                "body": "`primary` es el único acento. `brand-soft` y `brand-deep` viven solo dentro del símbolo del logo, nunca como texto, fondo ni serie.",
+                "section": "colors"
+            },
+            {
+                "name": "The Status Is Earned Rule",
+                "body": "Terracota, arena y jade de riesgo solo aparecen sobre información que lo amerita. Si una pantalla tiene color de estado sin un dato que lo justifique, sobra.",
+                "section": "colors"
+            },
+            {
+                "name": "The Never Color Alone Rule",
+                "body": "Ningún estado ni nivel se comunica solo con color: va con texto, posición o medidor.",
+                "section": "colors"
+            },
+            {
+                "name": "The Tabular Rule",
+                "body": "Cifras de KPI y de tablas llevan `font-variant-numeric: tabular-nums` y se alinean a la derecha.",
+                "section": "typography"
+            },
+            {
+                "name": "The One Family Rule",
+                "body": "Nada de segunda familia, cursivas ni pesos 700+.",
+                "section": "typography"
+            },
+            {
+                "name": "The Border Is Enough Rule",
+                "body": "Botones, inputs y tarjetas no llevan sombra. Si una tarjeta necesita sombra para separarse, falta espacio o borde.",
+                "section": "elevation"
+            }
+        ],
+        "dos": [
+            "partir de la pantalla más parecida de la app y armar la nueva con sus piezas.",
+            "poner el siguiente paso de cada pantalla en un solo botón primario `primary` de 44 px.",
+            "mostrar el estado real de cada aplicación primero, y abrir el detalle desde él; lo que importa, en la primera pantalla y media.",
+            "dejar un solo desplazamiento por eje, el de la página; el marco queda fijo.",
+            "decir la confidencialidad antes de la primera pregunta y prometer solo lo que el sistema garantiza.",
+            "usar `RiskLevel` para todo nivel de riesgo, con medidor, texto y color.",
+            "usar `shadow-float` solo en lo que flota y `shadow-raised` solo en el panel, las barras flotantes y la pastilla de un control segmentado.",
+            "mantener texto ≥ 4.5:1, controles ≥ 3:1 y áreas táctiles ≥ 44 px, en claro y oscuro.",
+            "escribir el panel en tuteo, la encuesta y el portal en «usted», es-MX, sin signos de exclamación ni emoji."
+        ],
+        "donts": [
+            "verse infantil: ni burbujas ni ilustraciones juguetonas. Tarjetas, diálogos y paneles llevan como máximo 14 px de radio; excepciones que ya existen: la hoja inferior del portal (16 px arriba), las barras en píldora y el sitio público.",
+            "verse frío ni gris corporativo: todo neutro lleva el tinte jade (el blanco de `card` y el gris #6B7472 del sello son las dos excepciones).",
+            "cargar la pantalla: más de 3 KPIs, o más de una acción primaria por vista.",
+            "usar color sin jerarquía: ningún segundo acento, ningún color de estado sin un dato que lo justifique.",
+            "hacer plantilla genérica de SaaS con IA: nada de titulares válidos para cualquier empresa, rejillas de tarjetas idénticas para cada módulo (las listas de entidades con estado propio sí van en tarjetas), etiquetas decorativas ni mockups que no muestren el producto.",
+            "hacer portal de trámites: nada de menús que reflejen la estructura del sistema, formularios que piden todo de golpe ni lenguaje normativo donde la persona necesita una instrucción sencilla.",
+            "encerrar contenido en cajas con scroll propio ni tablas de altura fija dentro de la página (excepciones: un espacio de trabajo de altura completa, lo que flota, una tabla ancha en el celular).",
+            "usar rojo ni verde de semáforo, ni comunicar un nivel solo con color.",
+            "usar `border-left` o `border-right` mayor a 1px como acento de tarjeta o alerta (las líneas que estructuran sí: la guía y la marca del submenú del sidebar, los conectores del organigrama, la cita de un comentario), texto con degradado, glassmorphism decorativo (única excepción: las barras inferiores flotantes del celular) ni tarjetas dentro de tarjetas.",
+            "animar propiedades de layout, usar rebotes ni pasar de 300 ms (salvo el informe al abrirse); nunca avanzar la encuesta sola."
+        ]
+    }
+}

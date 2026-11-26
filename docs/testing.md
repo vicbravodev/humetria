@@ -115,6 +115,15 @@ tiene que pasar con **cualquier** dato que Faker pueda dar, no solo con el de ho
     Uno que solo lee (`eventually()`) no lo necesita.
 13. **La página se pinta después de `load`.** React monta el componente un momento después de que `visit()` regresa: antes de
     medir algo de la página se espera a que exista (`eventually()`), o la medida da `null` en un runner ocupado.
+14. **Una página se abre con `openPath()`, nunca con `navigate()`.** Pest reintenta `navigate()` como una aserción, con 1 s por
+    intento: una página que tarda más (un runner ocupado) se pide otra vez mientras carga, y la siguiente lectura cae en la
+    carga nueva («Execution context was destroyed», captura en blanco). `openPath()` la abre una vez con el tiempo de toda la
+    prueba. Lo mismo para recargar: `reloadPage($page)`, nunca `refresh()`, que Pest también reintenta.
+    `tests/Unit/FlakyPatternsTest.php` hace cumplir las dos.
+15. **La accesibilidad se revisa con `accessible($page)`, nunca con `assertNoAccessibilityIssues()`.** Pest le da a axe 5 s fijos,
+    sin importar el timeout de la suite, y una página con el hilo principal ocupado (los videos de la landing en un runner sin
+    GPU) se quedaba sin ellos aunque axe tarda una décima de segundo. `accessible()` revisa lo mismo con el tiempo de la prueba.
+    `tests/Unit/FlakyPatternsTest.php` lo hace cumplir.
 
 ## Cómo se estresa
 

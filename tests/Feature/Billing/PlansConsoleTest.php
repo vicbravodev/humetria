@@ -29,16 +29,16 @@ it('answers 404 to support and to everyone who is not the superadmin', function 
 it('shows the catalog in force, its version and each plan with its price, centers and modules, read from the code', function (): void {
     $this->actingAs(superadmin())->get(route('billing.plans.index'))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('billing/plans')
-        ->where('catalog.version', 'v1')
-        ->where('catalog.effective_on', '9 nov 2026')
+        ->where('catalog.version', 'v2')
+        ->where('catalog.effective_on', '26 nov 2026')
         ->where('catalog.vat_percent', 16)
         ->where('catalog.modules', ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation', 'sso'])
-        ->has('catalog.plans', 5)
+        ->has('catalog.plans', 4)
         ->where('catalog.plans.0', ['key' => 'jornada', 'label' => 'Jornada', 'rate' => '$39', 'flat' => null, 'minimum' => '$1,990', 'included_centers' => 1, 'modules' => ['attendance', 'vacations', 'org_chart'], 'companies' => 0, 'renewing' => 0])
-        ->where('catalog.plans.4.key', 'sindicato')
-        ->where('catalog.plans.4.flat', '$1,990')
-        ->where('catalog.plans.4.rate', null)
-        ->where('catalog.plans.4.minimum', null));
+        ->where('catalog.plans.3.key', 'sindicato')
+        ->where('catalog.plans.3.flat', '$1,990')
+        ->where('catalog.plans.3.rate', null)
+        ->where('catalog.plans.3.minimum', null));
 });
 
 it('counts the companies on each plan, and of them the ones that renew in the next 90 days', function (): void {
@@ -59,7 +59,7 @@ it('lists the negotiated prices in force, the one that ends first on top, by com
     $acme = Tenant::factory()->create(['trade_name' => 'Acme Industrial']);
     $zeta = Tenant::factory()->create(['trade_name' => 'Zeta Servicios']);
     $open = Tenant::factory()->create(['trade_name' => 'Abierta']);
-    Subscription::factory()->plan(Plan::Enterprise)->create(['tenant_id' => $zeta->id, 'negotiated_price_cents' => 1_500_000, 'negotiated_valid_until' => '2027-03-01']);
+    Subscription::factory()->plan(Plan::Integral)->create(['tenant_id' => $zeta->id, 'negotiated_price_cents' => 1_500_000, 'negotiated_valid_until' => '2027-03-01']);
     Subscription::factory()->create(['tenant_id' => $acme->id, 'negotiated_price_cents' => 250_000, 'negotiated_valid_until' => '2026-12-31']);
     Subscription::factory()->create(['tenant_id' => $open->id, 'negotiated_price_cents' => 300_000]);
     Subscription::factory()->create(['negotiated_price_cents' => 100_000, 'negotiated_valid_until' => '2026-11-25']); // expired

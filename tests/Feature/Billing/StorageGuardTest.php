@@ -19,7 +19,7 @@ mutates(LedgerStorageGuard::class);
 /** A company on a plan whose storage quota is exactly `$quota` bytes, with its fake private disk. */
 function guardedCompany(int $quota): Tenant
 {
-    config(['billing.versions.v1.plans.cumplimiento.quotas.storage_bytes' => $quota]);
+    config(['billing.versions.v2.plans.cumplimiento.quotas.storage_bytes' => $quota]);
     [, $account] = paidCompany();
 
     return planFor($account);

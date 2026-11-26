@@ -84,7 +84,7 @@ it('leaves only the button after «Ahora no»', function (): void {
 
     expect(firstStepsRow()?->welcomed_at)->not->toBeNull();
 
-    $page->navigate('/admin/acme')
+    openPath($page, '/admin/acme')
         ->assertDontSee('Te acompañamos en tus primeros pasos')
         ->assertAttribute(FIRST_STEPS_BUTTON, 'aria-label', 'Primeros pasos: 0 de 5 pasos')
         ->assertNoJavaScriptErrors()
@@ -143,7 +143,7 @@ it('says it is done once, then the button is gone', function (): void {
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 
-    $page->navigate('/admin/acme')
+    openPath($page, '/admin/acme')
         ->assertMissing(FIRST_STEPS_BUTTON)
         ->assertDontSee('Listo: Humetria ya está trabajando para ti')
         ->assertNoJavaScriptErrors()
@@ -198,7 +198,7 @@ it('shows a centered bubble when the control is not on the page', function (): v
     $page = visitPage('dashboard', '/admin/acme')->click('Ahora no');
     $page->script('sessionStorage.setItem("humetria:first-steps-tour", "acme:team")');
 
-    $page->navigate('/admin/acme')
+    openPath($page, '/admin/acme')
         ->assertSee('Invita a tu equipo')
         ->assertScript('document.querySelector(".driver-active-element")?.id === "driver-dummy-element"', true)
         ->assertNoJavaScriptErrors()

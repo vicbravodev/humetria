@@ -49,7 +49,7 @@ it('shows RH each person with their keys and the kind of key', function (bool $d
 it('gives RH the link of a person without email once, to hand over, and shows them invited', function (): void {
     $url = accessPanel();
 
-    visit("{$url}/access")
+    reloadPage(visit("{$url}/access")
         ->assertSee('Aún no se le invita')
         ->assertSee('Sin correo no podemos enviarle la invitación: crea su enlace y entrégaselo.')
         ->click('tr:has-text("Bob Díaz") >> text=Crear enlace')
@@ -58,8 +58,7 @@ it('gives RH the link of a person without email once, to hand over, and shows th
         ->assertSee('Funciona una sola vez, vence en 48 h')
         ->assertScript('() => document.querySelector("#access-link").value.includes("/me/acme/link/")', true)
         ->assertSee('Esperando que abra su invitación.')
-        ->assertScript(accessChipOf('Bob Díaz'), 'Invitada')
-        ->refresh()
+        ->assertScript(accessChipOf('Bob Díaz'), 'Invitada'))
         ->assertDontSee('Enlace de acceso de Bob Díaz')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');

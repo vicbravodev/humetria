@@ -70,7 +70,7 @@ Fuera del set de shadcn, pero necesarias para el sistema. Se agregan al mismo `:
 
 ## Radio
 
-`--radius: 0.625rem` (10 px). shadcn deriva `radius-sm` 6 px, `radius-md` 8 px, `radius-lg` 10 px y `radius-xl` 14 px. Botones e inputs usan `rounded-md`, tarjetas y opciones de encuesta `rounded-lg`, diálogos `rounded-xl` y radios, progreso y avatar `rounded-full`.
+`--radius: 0.625rem` (10 px). shadcn deriva `radius-sm` 6 px, `radius-md` 8 px, `radius-lg` 10 px y `radius-xl` 14 px. Botones e inputs usan `rounded-md`, opciones de encuesta `rounded-lg`, tarjetas, el panel de la página, estados vacíos y diálogos `rounded-xl` y radios, progreso y avatar `rounded-full`.
 
 ## Escala tipográfica (Figtree)
 

@@ -48,6 +48,13 @@ it('shows the owner the channels with their defaults, the words to accept and th
         ->where('whatsAppQuota', ['used' => 0, 'quota' => 1000]));
 });
 
+it('tells the owner whether the company is the demo, which never writes by WhatsApp', function (): void {
+    $demo = Tenant::factory()->demo()->create(['slug' => 'demo-acme']);
+
+    $this->actingAs($this->owner)->get(route('tenant.channels.edit', $this->tenant))->assertInertia(fn (Assert $page) => $page->where('isDemo', false));
+    $this->actingAs(ownerOf($demo))->get(route('tenant.channels.edit', $demo))->assertInertia(fn (Assert $page) => $page->where('isDemo', true));
+});
+
 it('says there is no WhatsApp when the function is off in this deployment, or the company has no plan', function (): void {
     config(['whatsapp.enabled' => false]);
     $other = Tenant::factory()->create(['slug' => 'sin-plan']);

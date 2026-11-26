@@ -109,6 +109,9 @@ const appConfig = defineConfig({
             'public/**',
             // Remotion project of the hero video: own package.json and tsconfig.
             'video/**',
+            // /design-sync's previews and scripts (docs/design-system, .design-sync/NOTES.md): they import the virtual
+            // 'humetria' package of the design-system bundle and their names are fixed by the converter, not app code.
+            '.design-sync/**',
             'bootstrap/ssr/**',
             'tailwind.config.js',
             'resources/js/actions/**',
@@ -133,6 +136,8 @@ const appConfig = defineConfig({
             '.claude/**',
             'docs/**',
             'video/**',
+            // /design-sync's own files: the previews are graded by their exact source, so a reformat would void the grades.
+            '.design-sync/**',
             'AGENTS.md',
             'CLAUDE.md',
             'composer.json',

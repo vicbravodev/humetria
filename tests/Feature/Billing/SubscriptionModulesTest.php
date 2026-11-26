@@ -62,14 +62,14 @@ it('enables what a bigger plan adds at once, and keeps what a smaller one takes 
     expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart']);
 
     $set->handle($tenant->id, planOnDay(Plan::Integral, '2026-12-01'));
-    expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation']);
+    expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation', 'sso']);
 
     // Down to Jornada is a reduction: it waits for the cut of the 1st of January and until then it still has everything it had.
     $set->handle($tenant->id, planOnDay(Plan::Jornada, '2027-01-01'));
-    expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation']);
+    expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation', 'sso']);
 
     $this->travelTo('2027-01-01 12:00:00');
-    expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation']);
+    expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation', 'sso']);
     resolve(ApplyScheduledChanges::class)->handle();
     expect(companyModulesNow($tenant))->toBe(['attendance', 'vacations', 'org_chart']);
 
@@ -118,7 +118,7 @@ it('previews the tools a bigger plan adds, and nothing removed', function (): vo
 
     $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'integral', 'starts_on' => '2026-12-01']))
         ->assertOk()
-        ->assertJsonPath('modules.added', ['NOM-035', 'NOM-037', 'Ley Silla', 'Quejas', 'Pulso', 'Clima', 'Compensación'])
+        ->assertJsonPath('modules.added', ['NOM-035', 'NOM-037', 'Ley Silla', 'Quejas', 'Pulso', 'Clima', 'Compensación', 'Inicio de sesión único'])
         ->assertJsonPath('modules.removed', [])
         ->assertJsonPath('modules.removedOn', null);
 });
@@ -141,15 +141,14 @@ it('previews a reduction on the day it takes effect, not today', function (): vo
 
     $this->actingAs(superadmin())->postJson(route('billing.subscriptions.preview', $tenant->id), subscriptionInput(['plan' => 'jornada', 'starts_on' => '2026-12-01']))
         ->assertOk()
-        ->assertJsonPath('modules.removed', ['NOM-035', 'NOM-037', 'Ley Silla', 'Quejas', 'Pulso', 'Clima', 'Compensación'])
+        ->assertJsonPath('modules.removed', ['NOM-035', 'NOM-037', 'Ley Silla', 'Quejas', 'Pulso', 'Clima', 'Compensación', 'Inicio de sesión único'])
         ->assertJsonPath('modules.removedOn', '1 ene 2027');
 });
 
-it('puts Compensación in Integral and Enterprise, and in neither of the plans below, so it can also be hired on its own', function (): void {
+it('puts Compensación in Integral, and in neither of the plans below, so it can also be hired on its own', function (): void {
     $catalog = App\Modules\Billing\Support\Catalog::current();
 
     expect($catalog->modules(Plan::Integral))->toContain('compensation')
-        ->and($catalog->modules(Plan::Enterprise))->toContain('compensation')
         ->and($catalog->modules(Plan::Jornada))->not->toContain('compensation')
         ->and($catalog->modules(Plan::Cumplimiento))->not->toContain('compensation');
 });

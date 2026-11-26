@@ -24,7 +24,7 @@ beforeEach(function (): void {
         config(["filesystems.{$key}" => "fake-{$key}"]);
         Storage::fake("fake-{$key}");
     }
-    config(['billing.versions.v1.plans.cumplimiento.quotas.storage_bytes' => 100_000_000]);
+    config(['billing.versions.v2.plans.cumplimiento.quotas.storage_bytes' => 100_000_000]);
     $this->tenant = Tenant::factory()->create();
     [, $account] = paidCompany();
     planFor($account, [], $this->tenant);

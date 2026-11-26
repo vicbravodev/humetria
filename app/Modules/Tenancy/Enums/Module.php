@@ -46,7 +46,7 @@ enum Module: string
         return true;
     }
 
-    /** Whether a company no plan has spoken for keeps it: single sign-on is an Enterprise feature, never a legacy one. */
+    /** Whether a company no plan has spoken for keeps it: single sign-on comes with the Integral plan, never as a legacy one. */
     public function keptWithoutPlan(): bool
     {
         return $this->existsInCode() && $this !== self::Sso;

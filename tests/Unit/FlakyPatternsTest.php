@@ -47,6 +47,18 @@ it('reads the clock of the app, never time(), date() or strtotime(): a test that
     expect(testLinesMatching('/(?<![>\w$:])(?:time|date|strtotime|mktime)\(/'))->toBe([]);
 });
 
+it('opens a page once with openPath(), never with navigate(): Pest sends navigate() again every second while the page loads', function (): void {
+    expect(testLinesMatching('/->navigate\(/'))->toBe([]);
+});
+
+it('reloads a page once with reloadPage(), never with refresh(): Pest sends refresh() again every second while the page loads', function (): void {
+    expect(testLinesMatching('/(?:^\s*|\$page)->refresh\(\)/'))->toBe([]);
+});
+
+it('checks accessibility with accessible(), never assertNoAccessibilityIssues(): Pest gives axe 5 s whatever the timeout of the suite', function (): void {
+    expect(testLinesMatching('/->assertNoAccessibilityIssues\(/'))->toBe([]);
+});
+
 it('waits for what a browser test asserts, not a fixed number of seconds', function (): void {
     $waits = testLinesMatching('/->wait\(/');
 

@@ -38,12 +38,11 @@ describe('for a union', () => {
         ).toEqual(['union', 'negotiated']);
     });
 
-    it('offers a company the four plans and never the union ones', () => {
+    it('offers a company the three plans and never the union ones', () => {
         expect(planChoices(false).map(({ value }) => value)).toEqual([
             'jornada',
             'cumplimiento',
             'integral',
-            'enterprise',
         ]);
         expect(
             profileChoices('consultant', false).map(({ value }) => value),

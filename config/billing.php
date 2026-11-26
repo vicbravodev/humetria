@@ -12,10 +12,11 @@ declare(strict_types=1);
 | porcentaje en enteros. Los precios negociados no viven aquí: van en la suscripción.
 |
 | Tarifas y mínimos del handoff de monetización v1.0: Jornada $39 (mínimo $1,990), Cumplimiento $49 (mínimo $2,990) e
-| Integral $99 (mínimo $4,990) por persona al mes. Enterprise ($199, mínimo $9,990) es Integral más el inicio de sesión
-| único (SSO) de las personas de RH, y la landing promete además, sin cargo aparte, la implementación asistida y el acompañamiento
-| mensual: se pactan a mano como cargos de la suscripción (AddCharge), sin tarifa publicada. Compensación es un módulo de Integral y de
-| Enterprise; también se contrata sola, por cotización: se concede a la empresa como módulo (GrantModule) con su cargo recurrente.
+| Integral $99 (mínimo $4,990) por persona al mes. Desde v2 (2026-11-26) no hay Enterprise: Integral, el plan más completo, trae
+| además el inicio de sesión único (SSO) de las personas de RH. La implementación asistida y el acompañamiento mensual no son de
+| ningún plan: se cotizan y se pactan a mano como cargos de la suscripción (AddCharge), la implementación de una sola vez y el
+| acompañamiento recurrente. Compensación es un módulo de Integral; también se contrata sola, por cotización: se concede a la
+| empresa como módulo (GrantModule) con su cargo recurrente. v1 se queda como estaba: cada suscripción guarda su versión.
 |
 */
 
@@ -24,7 +25,7 @@ return [
     'currency' => 'MXN',
 
     /* La versión con la que se cotiza una suscripción nueva. */
-    'current_version' => 'v1',
+    'current_version' => 'v2',
 
     /*
     | Lo que tiene una empresa sin suscripción (heredada o en prueba sin plan): la cuota del plan Integral, para no quitarle
@@ -36,7 +37,7 @@ return [
     | WhatsApp: lo que Meta cobra por mensaje (la entrada vigente en la fecha del envío) y el margen de Humetria; el precio de la empresa es
     | costo × (1 + margen), y cada línea de uso guarda las dos cifras. Supuesto por confirmar (Victor, antes de la Fase 3): la tarifa de Meta
     | para plantillas UTILITY en México (0.17 MXN) y el margen (30 %); si ya la tiene, antes del commit 8.
-    | La cuota mensual por plan está en `versions.v1.plans.{plan}.quotas.whatsapp` (supuesto por confirmar: 1000 mensajes); sin plan, 0.
+    | La cuota mensual por plan está en `versions.{versión}.plans.{plan}.quotas.whatsapp` (supuesto por confirmar: 1000 mensajes); sin plan, 0.
     */
     'whatsapp' => [
         'margin_percent' => 30,
@@ -115,6 +116,64 @@ return [
                     'included_centers' => 3,
                     'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation', 'sso'],
                     'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
+                ],
+            ],
+        ],
+
+        'v2' => [
+            /* Sin Enterprise (Victor, 2026-11-26): Integral trae el SSO con la misma tarifa. El resto es v1 tal cual. */
+            'effective_on' => '2026-11-26',
+
+            /* IVA: una línea aparte sobre el subtotal. */
+            'vat_percent' => 16,
+
+            /* Cada centro de trabajo más allá de los incluidos en el plan; no entra al descuento de canal. */
+            'extra_center_cents' => 14_900,
+
+            /* Con más personas que esto no hay tabla: se cotiza a mano (o rige un precio negociado). */
+            'quotation_above' => ['direct' => 100, 'channel_compliance' => 250, 'channel_integral' => 250],
+
+            /* Canal Cumplimiento: banda completa por plantilla. «Hasta N personas» => importe. */
+            'channel_compliance_bands' => [50 => 249_000, 100 => 399_000, 250 => 799_000],
+
+            /* Canal Integral: descuento sobre el importe directo, si la cuenta tiene suficientes empresas con Integral pagado
+               (sin pruebas, y sin empresas suspendidas ni archivadas). */
+            'channel_integral' => ['discount_percent' => 20, 'minimum_companies' => 3],
+
+            'plans' => [
+                'jornada' => [
+                    'rate_cents' => 3_900,
+                    'minimum_cents' => 199_000,
+                    'included_centers' => 1,
+                    'modules' => ['attendance', 'vacations', 'org_chart'],
+                    'quotas' => ['assistant_tokens' => 250_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
+                ],
+                'cumplimiento' => [
+                    'rate_cents' => 4_900,
+                    'minimum_cents' => 299_000,
+                    'included_centers' => 2,
+                    'modules' => ['nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate'],
+                    'quotas' => ['assistant_tokens' => 500_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
+                ],
+                'integral' => [
+                    'rate_cents' => 9_900,
+                    'minimum_cents' => 499_000,
+                    'included_centers' => 3,
+                    'modules' => ['attendance', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'complaints', 'pulse', 'climate', 'compensation', 'sso'],
+                    'quotas' => ['assistant_tokens' => 2_000_000, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 1_000],
+                ],
+                /*
+                | Sindicato: una cuota fija al mes por sindicato, sea cual sea su número de agremiados, y solo Compensación. $1,990 al mes, confirmado
+                | por Victor (2026-11-24); es el mínimo de Jornada, el plan más barato. Sin tarifa por persona ni centros (un sindicato no los
+                | tiene), ni Humi, WhatsApp ni cuota de correo de campañas. El precio negociado lo sustituye, como en cualquier plan.
+                */
+                'sindicato' => [
+                    'flat_cents' => 199_000,
+                    'rate_cents' => 0,
+                    'minimum_cents' => 0,
+                    'included_centers' => 1,
+                    'modules' => ['compensation'],
+                    'quotas' => ['assistant_tokens' => 0, 'email_per_seat' => 8, 'email_minimum' => 500, 'storage_bytes' => 5_368_709_120, 'whatsapp' => 0],
                 ],
             ],
         ],

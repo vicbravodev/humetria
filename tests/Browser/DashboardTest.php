@@ -123,12 +123,11 @@ it('shows no next obligation without an evaluation in course', function (): void
 });
 
 it('starts an action from the ⌘K palette, grouped under its heading', function (): void {
-    visitPage('dashboard', panelCompany())
+    accessible(visitPage('dashboard', panelCompany())
         ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
         ->assertSeeIn('[role="listbox"] [role="group"]', 'Acciones')
         ->type('#command-search', 'csv')
-        ->assertScript('() => document.querySelector(\'[role="option"][aria-selected="true"] [data-slot="command-label"]\')?.textContent', 'Cargar empleados desde CSV')
-        ->assertNoAccessibilityIssues(1)
+        ->assertScript('() => document.querySelector(\'[role="option"][aria-selected="true"] [data-slot="command-label"]\')?.textContent', 'Cargar empleados desde CSV'), 1)
         ->keys('#command-search', 'Enter')
         ->assertScript(pathBecomes('/admin/acme/employees/import'), true)
         ->assertPathIs('/admin/acme/employees/import');
@@ -258,7 +257,7 @@ it('folds every family of tools until it is opened, and opens on arriving the on
         ->click('Cumple la norma')
         ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", false);
 
-    $page->navigate('/admin/acme/seating')
+    openPath($page, '/admin/acme/seating')
         ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="group-label"]\')].map((label) => label.getAttribute("aria-expanded")).join(" ")', 'true false false')
         ->assertScript("() => {$sidebar}.innerText.includes('Ley Silla')", true)
         ->assertNoJavaScriptErrors();

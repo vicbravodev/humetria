@@ -10,7 +10,6 @@ enum Plan: string
     case Jornada = 'jornada';
     case Cumplimiento = 'cumplimiento';
     case Integral = 'integral';
-    case Enterprise = 'enterprise';
     /** A union's: a flat monthly fee for Compensación alone. Only a union can hold it, and a union can hold nothing else. */
     case Sindicato = 'sindicato';
 
@@ -20,7 +19,6 @@ enum Plan: string
             self::Jornada => 'Jornada',
             self::Cumplimiento => 'Cumplimiento',
             self::Integral => 'Integral',
-            self::Enterprise => 'Enterprise',
             self::Sindicato => 'Sindicato',
         };
     }

@@ -2,7 +2,7 @@ Contenedor con borde para agrupar información relacionada; equivale a `Card` de
 
 **Recibe:** `title`, `description`, `children` (contenido) y `footer` (acciones).
 
-- Fondo `card`, borde `border`, radio `radius-lg`, sin sombra.
+- Fondo `card`, borde `border`, radio `radius-xl` (14 px), sin sombra: `Card` de `components/ui/card.tsx` o la utilidad `card` de `resources/css/app.css` cuando el contenedor es una sección, un elemento de lista o un enlace.
 - Padding `space-6`; separa tarjetas con `space-4` o `space-6`.
 - No anides tarjetas dentro de tarjetas.
 

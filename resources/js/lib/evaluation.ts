@@ -154,8 +154,8 @@ const EMPTY_VIEWS: Record<string, { title: string; text: string }> = {
         text: 'Todas las personas invitadas ya contestaron.',
     },
     unreachable: {
-        title: 'Todas tienen correo',
-        text: 'Cada persona invitada recibe su enlace por correo.',
+        title: 'Todas tienen contacto',
+        text: 'Cada persona invitada recibe su enlace por correo o por WhatsApp.',
     },
     failed: {
         title: 'Ningún envío falló',

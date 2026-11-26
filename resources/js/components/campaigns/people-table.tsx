@@ -1,6 +1,6 @@
-import { Mail, MailX } from 'lucide-react';
 import type { ReactNode } from 'react';
 import GuideStatusBadge from '@/components/campaigns/guide-status-badge';
+import PersonChannel from '@/components/campaigns/person-channel';
 import Initials from '@/components/humetria/initials';
 import { peopleEmpty } from '@/lib/evaluation';
 import {
@@ -60,22 +60,7 @@ export default function PeopleTable({
                         </TableCell>
                         <TableCell>{person.area}</TableCell>
                         <TableCell>
-                            <span className="flex items-center gap-1.5 text-sm">
-                                {person.reachable ? (
-                                    <Mail
-                                        aria-hidden="true"
-                                        className="size-4 text-muted-foreground"
-                                    />
-                                ) : (
-                                    <MailX
-                                        aria-hidden="true"
-                                        className="size-4 text-muted-foreground"
-                                    />
-                                )}
-                                {person.reachable
-                                    ? 'Con contacto'
-                                    : 'Sin contacto'}
-                            </span>
+                            <PersonChannel channel={person.channel} />
                         </TableCell>
                         <TableCell>
                             <div className="flex flex-wrap gap-1.5">

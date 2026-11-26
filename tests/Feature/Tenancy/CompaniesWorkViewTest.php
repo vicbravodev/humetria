@@ -223,5 +223,5 @@ it('narrows the companies by who answers for them, by seats almost used up and b
         ->assertInertia(fn (Assert $page) => $page
             ->where('counts.all', 2)
             ->where('filters.manager', (string) $laura->id)
-            ->where('plans', [['value' => 'jornada', 'label' => 'Jornada'], ['value' => 'cumplimiento', 'label' => 'Cumplimiento'], ['value' => 'integral', 'label' => 'Integral'], ['value' => 'enterprise', 'label' => 'Enterprise'], ['value' => 'sindicato', 'label' => 'Sindicato']]));
+            ->where('plans', [['value' => 'jornada', 'label' => 'Jornada'], ['value' => 'cumplimiento', 'label' => 'Cumplimiento'], ['value' => 'integral', 'label' => 'Integral'], ['value' => 'sindicato', 'label' => 'Sindicato']]));
 });

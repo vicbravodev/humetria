@@ -119,13 +119,12 @@ it('folds the switcher to its icon, keeping its name for screen readers', functi
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Beta Foods', 'slug' => 'beta']))->for($user)->create();
     $this->actingAs($user);
 
-    visitPage('dashboard', '/admin/acme')
+    accessible(visitPage('dashboard', '/admin/acme')
         ->click('[data-sidebar="trigger"]')
         ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)')
         ->assertScript('() => { const box = '.SWITCHER.'.getBoundingClientRect(); return box.width >= 44 && box.width < 56 && '.SWITCHER.'.scrollWidth <= box.width; }')
         // Folded, the text leaves the screen but not the accessibility tree: the trigger is still named by company and trial.
-        ->assertScript('() => '.SWITCHER.'.innerText.includes("Acme Industrial Con Un Nombre Muy Largo") && '.SWITCHER.'.innerText.includes("Prueba · quedan 4 días")')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript('() => '.SWITCHER.'.innerText.includes("Acme Industrial Con Un Nombre Muy Largo") && '.SWITCHER.'.innerText.includes("Prueba · quedan 4 días")'), 1);
 });
 
 it('folds the plain-text switcher without losing the name or overflowing', function (): void {
@@ -133,13 +132,12 @@ it('folds the plain-text switcher without losing the name or overflowing', funct
     TenantMembership::factory()->for(Tenant::factory()->create(['trade_name' => 'Acme Industrial', 'slug' => 'acme']))->for($user)->create();
     $this->actingAs($user);
 
-    visitPage('dashboard', '/admin/acme')
+    accessible(visitPage('dashboard', '/admin/acme')
         ->click('[data-sidebar="trigger"]')
         ->assertScript('() => Promise.all(document.getAnimations().map((a) => a.finished)).then(() => true)')
         ->assertScript('() => { const box = '.SWITCHER.'.getBoundingClientRect(); return box.width <= 1 && box.height <= 1; }')
         // Off screen, not display: none, so the name stays in the accessibility tree.
-        ->assertScript('() => getComputedStyle('.SWITCHER.').display !== "none" && '.SWITCHER.'.textContent.includes("Acme Industrial")')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript('() => getComputedStyle('.SWITCHER.').display !== "none" && '.SWITCHER.'.textContent.includes("Acme Industrial")'), 1);
 });
 
 it('tells a person with one suspended company so, with no way to switch', function (bool $dark, bool $mobile): void {

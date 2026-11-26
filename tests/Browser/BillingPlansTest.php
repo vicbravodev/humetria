@@ -10,12 +10,12 @@ it('shows the catalog in force read only, which module each plan brings and the 
     $this->travelTo('2026-11-26 15:00:00');
     signInAsSuperadmin();
     $tenant = Tenant::factory()->create(['trade_name' => 'Aceros Monterrey']);
-    Subscription::factory()->plan(Plan::Enterprise)->create(['tenant_id' => $tenant->id, 'negotiated_price_cents' => 1_500_000, 'negotiated_valid_until' => '2027-01-20']);
+    Subscription::factory()->plan(Plan::Integral)->create(['tenant_id' => $tenant->id, 'negotiated_price_cents' => 1_500_000, 'negotiated_valid_until' => '2027-01-20']);
 
     visitPage('billing/plans', '/admin/billing/plans', $dark, $mobile)
         ->assertSee('Planes y precios')
         ->assertSee('Solo lectura')
-        ->assertSee('Catálogo v1')
+        ->assertSee('Catálogo v2')
         ->assertSee('Cumplimiento')
         ->assertSee('Qué módulo trae cada plan')
         ->assertSee('Organigrama')

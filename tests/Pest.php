@@ -258,6 +258,59 @@ function teleworkPortalOf(string $employeeId): App\Modules\Telework\Support\Open
 }
 
 /**
+ * In the browser: opens `$path` in the page and waits for it to load, once. Not navigate(): Pest retries it like an assertion,
+ * one second per attempt, so a page that takes longer (a busy CI runner) is asked for again while it loads and the next read
+ * lands in the new load («Execution context was destroyed»). A pending page opens on its own address first.
+ */
+function openPath(AwaitableWebpage|PendingAwaitablePage|On $page, string $path): AwaitableWebpage
+{
+    $webpage = $page instanceof AwaitableWebpage ? $page : $page->assertNoJavaScriptErrors();
+    $webpage->page()->goto(Pest\Browser\Support\ComputeUrl::from($path));
+
+    return $webpage;
+}
+
+/**
+ * In the browser: reloads the page and waits for it to load, once. Not refresh(): Pest retries it like an assertion, one second
+ * per attempt, so a reload that takes longer reloads again and the next step lands in that second load («Execution context was
+ * destroyed»), as openPath() explains for navigate().
+ */
+function reloadPage(AwaitableWebpage|PendingAwaitablePage $page): AwaitableWebpage
+{
+    $webpage = $page instanceof AwaitableWebpage ? $page : $page->assertNoJavaScriptErrors();
+    $webpage->page()->reload();
+
+    return $webpage;
+}
+
+/**
+ * In the browser: no accessibility issues at `$level` or worse (axe; 0 critical … 3 minor), as Pest's assertNoAccessibilityIssues()
+ * checks them, but axe gets the timeout of the suite. Pest gives it 5 s whatever that timeout is, and a page whose main thread is
+ * busy (the landing's videos on a CI runner without a GPU) ran out of them although axe takes a tenth of a second here.
+ */
+function accessible(AwaitableWebpage $page, int $level = 1): AwaitableWebpage
+{
+    $threshold = Pest\Browser\Enums\AccessibilityIssueLevel::tryFromLevel($level) ?? throw new InvalidArgumentException("No accessibility level [{$level}].");
+    $browser = $page->page();
+    $browser->waitForLoadState('networkidle');
+    $browser->waitForFunction('document.readyState === "complete"');
+    $found = Pest\Browser\Playwright\Playwright::usingTimeout(
+        Pest\Browser\Playwright\Playwright::timeout(),
+        fn (): mixed => $browser->evaluate('async () => ((await window.axe.run()).violations)'),
+    );
+    $violations = array_values(array_filter(is_array($found) ? $found : [], function (mixed $violation) use ($threshold): bool {
+        $impact = is_array($violation) && is_string($violation['impact'] ?? null) ? $violation['impact'] : null;
+
+        // As Pest counts them: one without an impact counts at any level.
+        return $impact === null || Pest\Browser\Enums\AccessibilityIssueLevel::from($impact)->level() <= $threshold->level();
+    }));
+
+    expect($violations)->toBeEmpty(Pest\Browser\Support\AccessibilityFormatter::format($violations));
+
+    return $page;
+}
+
+/**
  * In the browser: the steps of a person (`$employeeId`) who opened a page of theirs without a session and was sent to enter.
  * They open a one-time link they asked for (made here), press «Continuar» and land on that page, which shows `$text`.
  * Use as the `$reach` of visitPage() with the person's page as its address, or on a page just opened with visit() (pending:
@@ -275,7 +328,7 @@ function enteringTo(string $employeeId, string $text): Closure
     // expired to the browser, which runs on the real clock, and every request would start a new session.
     config(['session.expire_on_close' => true]);
 
-    return fn (AwaitableWebpage|PendingAwaitablePage|On $page): AwaitableWebpage => $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
+    return fn (AwaitableWebpage|PendingAwaitablePage|On $page): AwaitableWebpage => openPath($page, "/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
 }
 
 /**
@@ -315,9 +368,9 @@ function enteringProvedTo(string $employeeId, string $text): Closure
 
         $page = $enter($pending);
         $there = $page->url();
-        provedWithCode($page->navigate("/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Pendientes');
+        provedWithCode(openPath($page, "/me/{$slug}/proof")->waitForText('Confirme que es usted'), 'Pendientes');
 
-        return $page->navigate($there)->waitForText($text);
+        return openPath($page, $there)->waitForText($text);
     };
 }
 
@@ -562,7 +615,7 @@ function pageIsHealthy(AwaitableWebpage $page, bool $mobile): AwaitableWebpage
         $page->assertScript(smallTouchTargets(), '');
     }
 
-    return $page->assertNoAccessibilityIssues(1);
+    return accessible($page, 1);
 }
 
 /**
@@ -690,7 +743,8 @@ function settled(): string
  * A script that resolves once no calendar is left in the page, in a popover (desktop) or in a sheet (phone): picking a day
  * closes it with a short animation and, when it unmounts, gives focus back to its field. A click that opens the next date
  * field before that would see its calendar closed again by that focus, so this waits for the unmount, not just for the
- * closed state. A sheet that holds no calendar (a form's own) is not waited on.
+ * closed state. A sheet that holds no calendar (a form's own) is not waited on. A combobox's list is a popover too and
+ * gives focus back the same way: wait for it after picking an option and before opening a date field.
  */
 function calendarClosed(): string
 {
@@ -1035,14 +1089,14 @@ function paidCompany(string $kind = 'direct'): array
 }
 
 /**
- * A company with single sign-on switched on (the module the Enterprise plan carries) and its owner.
+ * A company with single sign-on switched on (the module the Integral plan carries) and its owner.
  *
  * @return array{0: Tenant, 1: User}
  */
 function ssoCompany(string $slug = 'acme'): array
 {
     $tenant = Tenant::factory()->create(['slug' => $slug]);
-    TenantModule::factory()->for($tenant)->create(['module' => 'sso', 'source' => 'grant', 'reason' => 'Enterprise']);
+    TenantModule::factory()->for($tenant)->create(['module' => 'sso', 'source' => 'grant', 'reason' => 'Integral']);
 
     return [$tenant, memberOf($tenant, TenantRole::Owner)];
 }
@@ -1137,7 +1191,7 @@ function planFor(BillingAccount $account, array $attributes = [], ?Tenant $tenan
  */
 function withMailQuota(Tenant $tenant, int $quota): void
 {
-    config(['billing.versions.v1.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v1.plans.cumplimiento.quotas.email_per_seat' => 0]);
+    config(['billing.versions.v2.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v2.plans.cumplimiento.quotas.email_per_seat' => 0]);
     [, $account] = paidCompany();
     planFor($account, [], $tenant);
 }
