@@ -265,7 +265,14 @@ function enteringTo(string $employeeId, string $text): Closure
     // expired to the browser, which runs on the real clock, and every request would start a new session.
     config(['session.expire_on_close' => true]);
 
-    return fn (AwaitableWebpage|PendingAwaitablePage|On $page): AwaitableWebpage => $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar')->waitForText($text);
+    return function (AwaitableWebpage|PendingAwaitablePage|On $page) use ($slug, $token, $text): AwaitableWebpage {
+        $page = $page->navigate("/me/{$slug}/link/{$token}")->press('Continuar');
+        // Not waitForText alone: it retries only a failed assertion, and a document that loads again while it reads (a busy CI
+        // runner) ends the test with «Execution context was destroyed». A Playwright locator waits across that load.
+        $page->page()->getByText($text)->first()->waitFor(['state' => 'visible']);
+
+        return $page->waitForText($text);
+    };
 }
 
 /**
