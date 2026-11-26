@@ -1,23 +1,25 @@
 import { Link } from '@inertiajs/react';
-import { Check, Mail } from 'lucide-react';
+import { Mail, MessageCircle } from 'lucide-react';
+import ContactChannelRow from '@/components/campaigns/contact-channel-row';
 import ReviewStep from '@/components/campaigns/review-step';
 import Notice from '@/components/humetria/notice';
 import { Button } from '@/components/ui/button';
-import { peopleText } from '@/lib/evaluation';
 import type { DraftContact } from '@/types';
 
 /**
- * How the links will reach people: by email, the one channel there is. Who has no email is said first, with the way to
- * add it.
+ * How the links will reach people: each person by one channel, email or WhatsApp, as the company put them first. Who has
+ * neither is said first, with the way to add one.
  */
 export default function ContactStep({
     contact,
     employeesUrl,
 }: {
     contact: DraftContact;
-    /** The people of the work center, where an email is added. */
+    /** The people of the work center, where an email or a phone is added. */
     employeesUrl: string;
 }) {
+    const emails = contact.reachable - contact.whatsapp;
+
     return (
         <ReviewStep title="Contacto">
             {contact.unreachable > 0 && (
@@ -29,36 +31,33 @@ export default function ContactStep({
                             size="sm"
                             className="border-current bg-transparent text-inherit hover:bg-transparent hover:text-inherit"
                         >
-                            <Link href={employeesUrl}>Agregar correo</Link>
+                            <Link href={employeesUrl}>Agregar contacto</Link>
                         </Button>
                     }
                 >
                     <strong>
                         {contact.unreachable === 1
-                            ? '1 persona no tiene correo.'
-                            : `${contact.unreachable} personas no tienen correo.`}
+                            ? '1 persona no tiene correo ni celular.'
+                            : `${contact.unreachable} personas no tienen correo ni celular.`}
                     </strong>{' '}
                     No recibirán su enlace hasta que lo agregues.
                 </Notice>
             )}
-            <div className="flex min-h-13 items-center gap-3 rounded-[10px] border-2 border-primary bg-accent px-3.5 py-2.5">
-                <span className="inline-flex size-5 items-center justify-center rounded-[5px] bg-primary text-primary-foreground">
-                    <Check
-                        aria-hidden="true"
-                        className="size-3.5"
-                        strokeWidth={3}
+            <div data-test="contact-channels" className="flex flex-col gap-2">
+                {(emails > 0 || contact.whatsapp === 0) && (
+                    <ContactChannelRow
+                        icon={Mail}
+                        label="Correo"
+                        people={emails}
                     />
-                </span>
-                <Mail
-                    aria-hidden="true"
-                    className="size-[18px] text-muted-foreground"
-                />
-                <span className="flex flex-col">
-                    <span className="text-sm font-medium">Correo</span>
-                    <span className="text-xs text-muted-foreground">
-                        {peopleText(contact.reachable)}
-                    </span>
-                </span>
+                )}
+                {contact.whatsapp > 0 && (
+                    <ContactChannelRow
+                        icon={MessageCircle}
+                        label="WhatsApp"
+                        people={contact.whatsapp}
+                    />
+                )}
             </div>
         </ReviewStep>
     );

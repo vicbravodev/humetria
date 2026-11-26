@@ -177,9 +177,31 @@ it('says in the launch dialog how many people will not get the email', function 
     $campaign = Campaign::query()->withoutGlobalScopes()->sole();
 
     visit("/admin/acme/campaigns/{$campaign->id}")
-        ->assertSee('1 persona no tiene correo.')
+        ->assertSee('1 persona no tiene correo ni celular.')
         ->click('Lanzar e invitar a 16 personas')
-        ->assertSeeIn('[role="dialog"]', 'Se enviarán 16 correos hoy. 1 persona no lo recibirá por no tener correo: agrégalo en Empleados.')
+        ->assertSeeIn('[role="dialog"]', 'Se enviarán 16 correos hoy. 1 persona no lo recibirá por no tener correo ni celular: agrégalo en Empleados.')
+        ->assertNoJavaScriptErrors();
+});
+
+// With WhatsApp on, the draft and the launch dialog say through which channel each person is reached, never «correo» for all.
+it('says by channel how the draft reaches people when the company writes by WhatsApp', function (): void {
+    config(['whatsapp.enabled' => true, 'whatsapp.paused' => false, 'messaging.recipient_keys' => [1 => base64_encode('a-key')]]);
+    $tenant = campaignsCompany();
+    Database\Factories\Tenancy\TenantChannelFactory::new()->for($tenant)->whatsAppEnabled()->create(['preference' => 1]);
+    Database\Factories\Tenancy\TenantChannelFactory::new()->for($tenant)->create(['channel' => 'mail', 'preference' => 2]);
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    $people = staffOf($tenant, $plant, 3)->values();
+    $people[0]->forceFill(['email' => null, 'mobile' => '+528186875700'])->save();
+    $people[1]->forceFill(['mobile' => null])->save();
+    $people[2]->forceFill(['email' => null, 'mobile' => null])->save();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visit("/admin/acme/campaigns/{$campaign->id}")
+        ->assertSee('1 persona no tiene correo ni celular.')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-test="contact-channels"] > div\')].map((row) => row.innerText.replace(/\\s+/g, " ").trim()).join("|")', 'Correo 1 persona|WhatsApp 1 persona')
+        ->click('Lanzar e invitar a 2 personas')
+        ->assertSeeIn('[role="dialog"]', 'Se enviarán 1 correo y 1 WhatsApp hoy. 1 persona no lo recibirá por no tener correo ni celular: agrégalo en Empleados.')
         ->assertNoJavaScriptErrors();
 });
 
