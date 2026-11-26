@@ -89,6 +89,19 @@ Lo que hace que una pantalla se vea diseñada y no armada al azar. Valores tomad
   de tarjetas idénticas para todo (ver `PRODUCT.md`, anti-referencias). Lo que se compara va en tabla.
 - **Alineación:** el contenido de todas las páginas empieza en la misma columna (el margen del marco); cifras a la
   derecha con `tabular-nums`; acciones de una fila al final.
+- **Desplazamiento (scroll): uno por eje, el de la página.** El marco queda fijo (sidebar y barra superior `sticky`) y
+  la página entera se desplaza; así lo hace la app. No se encierra el contenido en una caja con su propio scroll dentro
+  de una página que también se desplaza: el usuario pierde el control y el teclado se enreda (Baymard, SAP Fiori).
+  - Lo importante va en la primera pantalla y media: lo que pide atención, el estado y la acción primaria. El detalle
+    puede quedar abajo; casi nadie lo lee si no lo busca (NN/g: ~74 % del tiempo se pasa en las dos primeras pantallas).
+  - Una lista larga se pagina en el servidor y `Pagination` queda fija al pie en escritorio; no se hace una tabla con
+    altura fija y scroll interno.
+  - Excepciones, y solo estas: un **espacio de trabajo de altura completa** donde cada panel se desplaza solo y la
+    página no (lista y detalle lado a lado, el organigrama, la página de Humi); lo que **flota** (`FormSheet`, diálogos,
+    menús), que desplaza su cuerpo con el pie fijo; y una tabla **ancha** en el celular, que se desplaza de lado dentro de
+    su marco.
+  - Una tabla que pasa de una pantalla de alto mantiene visible su cabecera (`sticky`). Hoy la tabla de la app no la fija:
+    es para pantallas nuevas y para la auditoría, no un cambio en silencio.
 - **Celular primero en el portal, escritorio primero en el panel:** el panel se revisa a 1024 y 1350 px antes que a
   375; el portal, al revés. Ninguno se rompe en el otro.
 

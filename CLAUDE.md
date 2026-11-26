@@ -218,7 +218,8 @@ No hay SMS. WhatsApp sale solo por `Messaging`.
 - **Pantalla nueva o rediseño: primero el diseño, aprobado.** Se diseña en Claude Design con el design system «Humetría»
   (o con `/impeccable shape`) y se construye solo cuando el dueño lo aprueba; el PR enlaza el diseño. El código lo replica
   con las piezas que nombra; si una regla del proyecto obliga a desviarse (paginar, privacidad, tenant), se dice en el PR.
-  Un ajuste a una pantalla existente parte de esa pantalla.
+  Un ajuste a una pantalla existente parte de esa pantalla. Las referencias externas (cómo lo resolvió Linear, Stripe o un
+  design system público) informan el diseño, pero se traducen a las piezas y tokens de Humetría: nunca lo reemplazan.
 - Toda pantalla parte de la más parecida y reusa sus piezas (marco con migas, encabezado con estado, tarjetas, tablas
   `muted`, pestañas con conteo, estados vacíos con siguiente paso); una que se vea como un formulario sin diseñar no está
   terminada. Una pieza que usan dos o más módulos vive en `components/humetria/`: es la que llega al design system.
