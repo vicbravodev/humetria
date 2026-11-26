@@ -20,7 +20,6 @@ use App\Modules\Billing\Notifications\OverdueBalanceNotice;
 use App\Modules\Billing\Support\Catalog;
 use App\Modules\Billing\Support\Money;
 use App\Modules\Billing\Support\ShortDate;
-use App\Modules\Billing\Support\StatementBalances;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -38,7 +37,7 @@ use Illuminate\Support\Str;
  */
 final readonly class SendBillingNotices
 {
-    public function __construct(private BuildStatement $build, private CompanyRegistry $companies, private StatementBalances $balances, private RecordAudit $recordAudit) {}
+    public function __construct(private BuildStatement $build, private CompanyRegistry $companies, private RecordAudit $recordAudit) {}
 
     /** @return int notices sent */
     public function handle(?CarbonImmutable $on = null): int
@@ -162,7 +161,6 @@ final readonly class SendBillingNotices
      */
     private function overdueLines(Collection $due): array
     {
-        $paid = $this->balances->paid(array_values($due->map(fn (Statement $statement): string => $statement->id)->all()));
         $names = $this->names(array_values(array_unique($due->map(fn (Statement $statement): string => $statement->tenant_id)->all())));
         $accounts = BillingAccount::query()->whereIn('id', $due->pluck('billing_account_id'))->get()->keyBy('id');
         $byAccount = [];
@@ -171,7 +169,7 @@ final readonly class SendBillingNotices
             $byAccount[] = [$accounts->get($accountId) ?? throw new ModelNotFoundException, $statements, array_values($statements->map(fn (Statement $statement): array => [
                 'company' => $names[$statement->tenant_id] ?? '',
                 'period' => ShortDate::month($statement->period_start),
-                'balance' => Money::format($statement->total_cents - ($paid[$statement->id] ?? 0)),
+                'balance' => Money::format($statement->balance_cents),
             ])->all())];
         }
 
