@@ -1065,14 +1065,14 @@ function paidCompany(string $kind = 'direct'): array
 }
 
 /**
- * A company with single sign-on switched on (the module the Enterprise plan carries) and its owner.
+ * A company with single sign-on switched on (the module the Integral plan carries) and its owner.
  *
  * @return array{0: Tenant, 1: User}
  */
 function ssoCompany(string $slug = 'acme'): array
 {
     $tenant = Tenant::factory()->create(['slug' => $slug]);
-    TenantModule::factory()->for($tenant)->create(['module' => 'sso', 'source' => 'grant', 'reason' => 'Enterprise']);
+    TenantModule::factory()->for($tenant)->create(['module' => 'sso', 'source' => 'grant', 'reason' => 'Integral']);
 
     return [$tenant, memberOf($tenant, TenantRole::Owner)];
 }
@@ -1167,7 +1167,7 @@ function planFor(BillingAccount $account, array $attributes = [], ?Tenant $tenan
  */
 function withMailQuota(Tenant $tenant, int $quota): void
 {
-    config(['billing.versions.v1.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v1.plans.cumplimiento.quotas.email_per_seat' => 0]);
+    config(['billing.versions.v2.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v2.plans.cumplimiento.quotas.email_per_seat' => 0]);
     [, $account] = paidCompany();
     planFor($account, [], $tenant);
 }

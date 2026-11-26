@@ -118,7 +118,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
 - `Seating`: Ley Silla: asientos, evaluación de riesgo, medidas, encuesta.
-- `Sso`: inicio de sesión único (OIDC) de las personas con cuenta, solo plan Enterprise (ver su README).
+- `Sso`: inicio de sesión único (OIDC) de las personas con cuenta, plan Integral (ver su README).
 - `Telework`: NOM-037: teletrabajadores, lista de verificación, documentos, comité, su sección del portal.
 - `Tenancy`: empresas, centros de trabajo, miembros y roles, módulos y límites por empresa (`CompanyModules`).
 - `WorkerAccess`: identidad de la persona trabajadora sin cuenta: llaves, enlaces de un solo uso, sesión y prueba reciente;

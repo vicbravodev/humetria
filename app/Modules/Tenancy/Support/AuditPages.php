@@ -84,7 +84,6 @@ final class AuditPages
         'jornada' => 'Jornada',
         'cumplimiento' => 'Cumplimiento',
         'integral' => 'Integral',
-        'enterprise' => 'Enterprise',
         'sindicato' => 'Sindicato',
         'union' => 'Cuota fija de sindicato',
         'direct' => 'Directo',

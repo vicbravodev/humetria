@@ -25,7 +25,7 @@ final class MailQuotaCampaignNote extends Illuminate\Notifications\Notification 
 /** A company on a plan whose campaign email quota is exactly `$quota` for the month (500 is the floor, so the floor is set). */
 function mailQuotaCompany(int $quota): Tenant
 {
-    config(['billing.versions.v1.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v1.plans.cumplimiento.quotas.email_per_seat' => 0]);
+    config(['billing.versions.v2.plans.cumplimiento.quotas.email_minimum' => $quota, 'billing.versions.v2.plans.cumplimiento.quotas.email_per_seat' => 0]);
     [, $account] = paidCompany();
     $tenant = planFor($account);
     resolve(Companies::class)->enter($tenant->id);

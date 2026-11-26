@@ -31,7 +31,7 @@ beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');
     config(['whatsapp.enabled' => true, 'whatsapp.paused' => false, 'messaging.recipient_keys' => [1 => base64_encode('a-key')],
         'services.resend.webhook_secrets' => ['whsec_'.base64_encode('the-secret')], 'services.resend.webhook_tolerance_seconds' => 300,
-        'billing.versions.v1.plans.cumplimiento.quotas.whatsapp' => 100]);
+        'billing.versions.v2.plans.cumplimiento.quotas.whatsapp' => 100]);
     $this->gateway = new FakeWhatsAppGateway;
     app()->instance(WhatsAppGateway::class, $this->gateway);
     [, $account] = paidCompany();

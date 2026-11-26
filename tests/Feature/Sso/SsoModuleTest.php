@@ -20,16 +20,16 @@ function ssoEnabledFor(Tenant $tenant): bool
     return resolve(CompanyModules::class)->enabled($tenant->id, 'sso');
 }
 
-it('includes single sign-on in the Enterprise plan and in no other', function (): void {
-    $catalog = Catalog::version('v1');
+it('includes single sign-on in the Integral plan and in no other', function (): void {
+    $catalog = Catalog::current();
 
-    expect($catalog->modules(Plan::Enterprise))->toContain('sso')
-        ->and($catalog->modules(Plan::Integral))->not->toContain('sso')
+    expect($catalog->modules(Plan::Integral))->toContain('sso')
+        ->and($catalog->modules(Plan::Sindicato))->not->toContain('sso')
         ->and($catalog->modules(Plan::Cumplimiento))->not->toContain('sso')
         ->and($catalog->modules(Plan::Jornada))->not->toContain('sso');
 });
 
-it('gives single sign-on only to a company on the Enterprise plan', function (Plan $plan, bool $expected): void {
+it('gives single sign-on only to a company on the Integral plan', function (Plan $plan, bool $expected): void {
     $this->travelTo('2026-12-10 12:00:00');
     [$tenant] = paidCompany();
 
@@ -37,9 +37,9 @@ it('gives single sign-on only to a company on the Enterprise plan', function (Pl
 
     expect(ssoEnabledFor($tenant))->toBe($expected);
 })->with([
-    'Enterprise' => [Plan::Enterprise, true],
-    'Integral' => [Plan::Integral, false],
+    'Integral' => [Plan::Integral, true],
     'Cumplimiento' => [Plan::Cumplimiento, false],
+    'Jornada' => [Plan::Jornada, false],
 ]);
 
 it('does not hand single sign-on to a company that has no plan at all', function (): void {

@@ -1,6 +1,6 @@
 /**
  * What the landing says Humetría costs, in pesos before VAT, and what each plan includes. The figures and the modules are
- * the commercial catalog's (config/billing.php, v1): a test pins them to it (tests/Feature/LandingPricingMatchesCatalogTest.php),
+ * the commercial catalog's (config/billing.php, its current version): a test pins them to it (tests/Feature/LandingPricingMatchesCatalogTest.php),
  * so change both or neither.
  */
 export type PricingPlan = {
@@ -66,35 +66,13 @@ export const PRICING_PLANS: readonly PricingPlan[] = [
             'pulse',
             'climate',
             'compensation',
-        ],
-    },
-    {
-        id: 'enterprise',
-        name: 'Enterprise',
-        rate: 199,
-        minimum: 9990,
-        centers: 3,
-        featured: false,
-        modules: [
-            'attendance',
-            'vacations',
-            'org_chart',
-            'nom035',
-            'nom037',
-            'seating',
-            'complaints',
-            'pulse',
-            'climate',
-            'compensation',
             'sso',
         ],
     },
 ];
 
-/** A line of the comparison: what a plan has, by the catalog's modules or, for a service, by the plan that gives it. */
-export type PricingRow =
-    | { label: string; keys: readonly string[] }
-    | { label: string; plan: string };
+/** A line of the comparison: what a plan has, by the catalog's modules. */
+export type PricingRow = { label: string; keys: readonly string[] };
 
 export const PRICING_ROWS: readonly PricingRow[] = [
     { label: 'Asistencia y registro de jornada', keys: ['attendance'] },
@@ -107,15 +85,11 @@ export const PRICING_ROWS: readonly PricingRow[] = [
     { label: 'Clima y pulso', keys: ['climate', 'pulse'] },
     { label: 'Compensación', keys: ['compensation'] },
     { label: 'Inicio de sesión único (SSO)', keys: ['sso'] },
-    { label: 'Implementación asistida', plan: 'enterprise' },
-    { label: 'Acompañamiento mensual', plan: 'enterprise' },
 ];
 
 /** Whether the plan has what the line names. */
 export function planHas(plan: PricingPlan, row: PricingRow): boolean {
-    return 'keys' in row
-        ? row.keys.every((key) => plan.modules.includes(key))
-        : plan.id === row.plan;
+    return row.keys.every((key) => plan.modules.includes(key));
 }
 
 export const PRICING_INTRO =
@@ -125,4 +99,5 @@ export const PRICING_NOTES = [
     'Cada centro de trabajo adicional al incluido en tu plan cuesta $149 MXN al mes.',
     'Compensación también se contrata sola: te cotizamos según tu plantilla.',
     'Con más de 100 personas te cotizamos a tu medida.',
+    'La implementación asistida y el acompañamiento mensual se cotizan aparte.',
 ] as const;

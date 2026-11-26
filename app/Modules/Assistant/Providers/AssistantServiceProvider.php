@@ -69,7 +69,7 @@ final class AssistantServiceProvider extends ServiceProvider
             $app->make(ClimateReader::class),
             $app->make(AttendanceReader::class),
             $app->make(OrgChartReader::class),
-            // Compensación is a module of Integral and Enterprise (or hired alone): told only to a company that has it.
+            // Compensación is a module of Integral (or hired alone): told only to a company that has it.
             $app->make(CompensationReader::class),
             // Roles y permisos are not a module: every company has them.
             $app->make(AccessReader::class),

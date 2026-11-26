@@ -34,7 +34,7 @@ beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');
     Notification::fake();
     config(['whatsapp.enabled' => true, 'whatsapp.paused' => false, 'messaging.recipient_keys' => [1 => base64_encode('a-key')],
-        'billing.versions.v1.plans.cumplimiento.quotas.whatsapp' => 100]);
+        'billing.versions.v2.plans.cumplimiento.quotas.whatsapp' => 100]);
     [, $account] = paidCompany();
     $this->tenant = planFor($account, tenant: Tenant::factory()->create(['trade_name' => 'Autopartes del Bajío']));
     $this->hr = memberOf($this->tenant, TenantRole::Hr);
@@ -151,7 +151,7 @@ it('does not fall back for an invitation that no longer waits', function (): voi
 
 it('rolls everything back when there is no mail quota left', function (): void {
     Log::spy();
-    config(['billing.versions.v1.plans.cumplimiento.quotas.email_minimum' => 3, 'billing.versions.v1.plans.cumplimiento.quotas.email_per_seat' => 0]);
+    config(['billing.versions.v2.plans.cumplimiento.quotas.email_minimum' => 3, 'billing.versions.v2.plans.cumplimiento.quotas.email_per_seat' => 0]);
     resolve(Companies::class)->enter($this->tenant->id);
     resolve(MailQuota::class)->reserve(3);
 
