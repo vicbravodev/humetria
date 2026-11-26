@@ -75,19 +75,21 @@ final class Statement extends Model
 
     /**
      * The one balance of a statement that every view of what is owed reads: its total, plus the issued credits (negative
-     * adjustments) that correct it, minus the payments that stand. A charge (positive adjustment) is paid on its own statement.
+     * adjustments) that correct it, minus the payments that stand, never less than zero: a credit larger than what is left is
+     * not carried to other statements, and a credit itself has nothing to pay. A charge (positive adjustment) is paid on its
+     * own statement.
      */
     private const string BALANCE = <<<'SQL'
-        statements.total_cents
+        GREATEST(0, statements.total_cents
         + COALESCE((SELECT SUM(c.total_cents) FROM statements c WHERE c.adjusts_statement_id = statements.id AND c.status = 'issued' AND c.total_cents < 0), 0)
         - COALESCE((
             SELECT SUM(a.amount_cents) FROM payment_allocations a JOIN payments p ON p.id = a.payment_id
             WHERE a.statement_id = statements.id AND p.reversed_at IS NULL
-        ), 0)
+        ), 0))
     SQL;
 
     /**
-     * Every column plus `balance_cents`, what is left to pay of it (see BALANCE); it can be zero or less.
+     * Every column plus `balance_cents`, what is left to pay of it (see BALANCE).
      *
      * @param  Builder<self>  $query
      */

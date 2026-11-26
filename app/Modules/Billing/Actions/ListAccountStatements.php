@@ -30,6 +30,7 @@ final readonly class ListAccountStatements
     {
         $page = Statement::query()
             ->where('billing_account_id', $account->id)
+            ->selectBalance()
             ->orderByDesc('period_start')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
@@ -42,7 +43,7 @@ final readonly class ListAccountStatements
 
         return $page->through(function (Statement $statement) use ($briefs, $paid): StatementRow {
             $settled = $paid[$statement->id] ?? 0;
-            $state = StatementState::of($statement->status, $statement->total_cents, $settled);
+            $state = StatementState::of($statement->status, $statement->total_cents, $settled, $statement->balance_cents);
             $draft = $statement->status === StatementStatus::Draft;
 
             return new StatementRow(
@@ -53,7 +54,7 @@ final readonly class ListAccountStatements
                 $statement->adjusts_statement_id !== null,
                 Money::format($statement->total_cents),
                 $draft ? null : Money::format($settled),
-                $draft ? null : Money::format($statement->total_cents - $settled),
+                $draft ? null : Money::format($statement->balance_cents),
                 $state->value,
                 $state->label(),
             );

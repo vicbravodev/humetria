@@ -235,6 +235,31 @@ it('shows a draft without paid or balance, and an adjustment pointing at the ori
         ->assertInertia(fn (Assert $page) => $page->has('adjustments', 1)->where('adjustments.0.id', $adjustment->id)->where('adjustments.0.total', '-$116'));
 });
 
+it('shows what is left of a statement after its credits, the same balance the account owes, and a credit with nothing to pay', function (): void {
+    [$tenant, $account] = consoleCompany();
+    $statement = issuedStatement($tenant);
+    $payment = Payment::factory()->create(['billing_account_id' => $account->id, 'amount_cents' => 300_000]);
+    App\Modules\Billing\Models\PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $statement->id, 'amount_cents' => 300_000]);
+    $credit = fn (int $cents) => resolve(App\Modules\Billing\Actions\AdjustStatement::class)->handle($statement, new App\Modules\Billing\Data\AdjustmentData('Ajuste', $cents, 'Error'), User::factory()->create());
+    $credit(-100_000); // -$1,160 of the $2,684 left
+
+    $this->actingAs(support())->get(route('billing.statements.show', $statement))
+        ->assertInertia(fn (Assert $page) => $page->where('statement.paid', '$3,000')->where('statement.balance', '$1,524')->where('statement.state', 'partially_paid'));
+    $this->get(route('billing.accounts.show', $account))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('statements.data.1.id', $statement->id)
+            ->where('statements.data.1.balance', '$1,524')
+            ->where('statements.data.0.state', 'credit')
+            ->where('statements.data.0.balance', '$0')
+            ->where('receivable.outstanding', '$1,524'));
+
+    $credit(-200_000); // -$2,320: more than the $1,524 left
+    $this->get(route('billing.statements.show', $statement))
+        ->assertInertia(fn (Assert $page) => $page->where('statement.balance', '$0')->where('statement.state', 'paid'));
+    $this->get(route('billing.accounts.show', $account))
+        ->assertInertia(fn (Assert $page) => $page->where('statements.data.2.balance', '$0')->where('statements.data.2.state', 'paid')->where('receivable.outstanding', '$0'));
+});
+
 it('hides a statement from everyone but the staff, and answers 404 for one that does not exist', function (): void {
     $statement = issuedStatement();
 
