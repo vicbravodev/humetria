@@ -7,10 +7,7 @@ import type { AuditChange as Change } from '@/types';
 export default function AuditChange({ change }: { change: Change[] }) {
     return (
         <section aria-labelledby="audit-change" className="grid gap-2">
-            <h3
-                id="audit-change"
-                className="text-caption font-medium tracking-wide text-muted-foreground uppercase"
-            >
+            <h3 id="audit-change" className="text-sm font-medium text-muted-foreground">
                 Cambio
             </h3>
             <ul className="grid gap-2 rounded-lg bg-muted px-3.5 py-3 font-mono text-caption">
