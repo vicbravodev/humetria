@@ -1,7 +1,9 @@
 import { Head } from '@inertiajs/react';
 import PageHeader from '@/components/humetria/page-header';
+import AttentionSection from '@/components/tenancy/attention-section';
 import OverviewBreakdown from '@/components/tenancy/overview-breakdown';
 import OverviewCard from '@/components/tenancy/overview-card';
+import { attentionItems } from '@/lib/attention';
 import { DEMO_VIEWS, demoQuery } from '@/lib/demo-requests';
 import { demosLine, pesos, quietLine, whatsAppLine } from '@/lib/overview';
 import { companiesQuery } from '@/lib/tenant-status';
@@ -26,16 +28,28 @@ export default function Overview({
     demos,
     inactive,
     whatsApp,
+    overdue,
+    demosWaiting,
+    rejectedToday,
 }: PlatformOverviewData) {
+    const attention = attentionItems({
+        overdue,
+        trialsEnding: counts.trial_ending,
+        demosWaiting,
+        rejectedToday,
+        dormant: inactive,
+    });
+
     return (
         <>
             <Head title="Resumen de la empresa" />
             <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     title="Resumen"
-                    description="Cómo va la plataforma hoy: empresas, ingreso, demos y quién no ha vuelto."
+                    description="Lo que necesita tu atención hoy y cómo va la plataforma: empresas, ingreso, demos y quién no ha vuelto."
                 />
-                <div className="grid gap-4 md:grid-cols-2">
+                <AttentionSection items={attention} />
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     <OverviewCard
                         title="Empresas"
                         figure={String(counts.all)}
