@@ -42,7 +42,12 @@ export const consoleNavItems = (isSuperadmin: boolean): NavItem[] => [
 
 // The sales desk: the demo requests (support too) and the demo room, which is the superadmin's alone.
 export const salesNavItems = (isSuperadmin: boolean): NavItem[] => [
-    { title: 'Solicitudes de demo', href: demoRequests(), icon: Inbox },
+    // The desk opens on the funnel; the list stays one tab away.
+    {
+        title: 'Solicitudes de demo',
+        href: demoRequests({ query: { view: 'board' } }),
+        icon: Inbox,
+    },
     ...(isSuperadmin
         ? [{ title: 'Sala de demo', href: demoRoom(), icon: Presentation }]
         : []),

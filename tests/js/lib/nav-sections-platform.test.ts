@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import { navSections } from '@/lib/nav-sections';
+import { toUrl } from '@/lib/utils';
 import { can } from '../support/tenant-can';
 
 const titles = (
@@ -62,6 +63,16 @@ describe('navSections for the console', () => {
             'Empresas',
             'Cuentas y cobranza',
         ]);
+    });
+
+    it('opens the demo requests on the funnel', () => {
+        const demos = navSections({ tenant: null, isStaff: true })
+            .find((section) => section.key === 'sales')
+            ?.items.find((item) => item.title === 'Solicitudes de demo');
+
+        expect(toUrl(demos?.href ?? '')).toBe(
+            '/admin/demo-requests?view=board',
+        );
     });
 
     it('links the queue dashboard as a plain address, since it is not a page of the panel', () => {

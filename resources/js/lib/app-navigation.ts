@@ -24,7 +24,7 @@ import {
     handlesCasesOnly,
 } from '@/lib/complaints-navigation';
 import { hasModule } from '@/lib/modules';
-import { toUrl } from '@/lib/utils';
+import { toPath } from '@/lib/utils';
 import type { BreadcrumbItem, InCourse, NavItem, NavTenant } from '@/types';
 
 export type { NavTenant } from '@/types';
@@ -205,7 +205,7 @@ export const navTrail = (
     path: string,
 ): BreadcrumbItem[] => {
     const all = sections.flatMap(({ label, items }) =>
-        items.map((item) => ({ label, item, url: toUrl(item.href) })),
+        items.map((item) => ({ label, item, url: toPath(item.href) })),
     );
     const exact = all.find(({ url }) => url === path);
 
@@ -234,9 +234,9 @@ export const activeChild = (
 ): NavItem | undefined =>
     children.find((child) =>
         [child.href, ...(child.also ?? [])].some(
-            (href) => toUrl(href) === path,
+            (href) => toPath(href) === path,
         ),
     ) ??
     children
-        .filter((child) => path.startsWith(`${toUrl(child.href)}/`))
-        .toSorted((a, b) => toUrl(b.href).length - toUrl(a.href).length)[0];
+        .filter((child) => path.startsWith(`${toPath(child.href)}/`))
+        .toSorted((a, b) => toPath(b.href).length - toPath(a.href).length)[0];
